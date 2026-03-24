@@ -1,36 +1,161 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Finance App - Controle de Finanças Pessoais
 
-## Getting Started
+Um aplicativo web completo para controle de finanças pessoais, desenvolvido com Next.js, Supabase e shadcn/ui.
 
-First, run the development server:
+## 🚀 Funcionalidades
 
+- **Autenticação**: Login/registro com email/senha e Google OAuth
+- **Dashboard**: Visão geral com gráficos de receitas vs despesas
+- **Carteiras**: Múltiplas contas bancárias/wallets
+- **Transações**: Registro de receitas e despesas
+- **Categorias**: Categorias customizáveis
+- **Design Responsivo**: Funciona em desktop e mobile
+
+## 🛠️ Tech Stack
+
+- **Frontend**: Next.js 14+ (App Router)
+- **UI**: shadcn/ui + Tailwind CSS
+- **Backend**: Supabase (PostgreSQL + Auth)
+- **Gráficos**: Recharts
+
+## 📋 Pré-requisitos
+
+- Node.js 18+
+- Conta no Supabase
+
+## 🔧 Configuração
+
+### 1. Clone o projeto
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd finance-app
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configure as variáveis de ambiente
+```bash
+cp .env.example .env.local
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Edite o arquivo `.env.local` e preencha com suas credenciais do Supabase:
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anon-aqui
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**⚠️ Importante:** Nunca commite o arquivo `.env.local` no Git!
 
-## Learn More
+### 3. Configure o banco de dados
 
-To learn more about Next.js, take a look at the following resources:
+Execute o SQL no Supabase SQL Editor:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Acesse o [Supabase Dashboard](https://supabase.com/dashboard)
+2. Vá em **SQL Editor** no seu projeto
+3. Copie todo o conteúdo do arquivo `supabase/schema-production.sql`
+4. Execute o SQL
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Isso irá criar:
+- Tabela `profiles` (estende auth.users)
+- Tabela `wallets` (carteiras do usuário)
+- Tabela `categories` (categorias de transações)
+- Tabela `transactions` (transações)
+- Tabela `transaction_splits` (divisão de transações)
+- Políticas RLS (Row Level Security)
+- Trigger para criar dados padrão para novos usuários
+- Bucket de storage para avatares
 
-## Deploy on Vercel
+### 4. Configure o Storage para Avatares
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+No Supabase Dashboard:
+1. Vá em **Storage** > **New bucket**
+2. Nome: `avatars`
+3. Marque como **Public**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+O schema SQL já cria as políticas necessárias para upload de avatares.
+
+### 5. Instale dependências
+```bash
+npm install
+```
+
+### 6. Execute o projeto
+```bash
+npm run dev
+```
+
+Abra [http://localhost:3000](http://localhost:3000) no seu navegador.
+
+## 📁 Estrutura do Projeto
+
+```
+src/
+├── app/
+│   ├── (auth)/          # Páginas de autenticação
+│   │   ├── login/
+│   │   ├── register/
+│   │   ├── forgot-password/
+│   │   └── reset-password/
+│   ├── (dashboard)/     # Páginas do dashboard
+│   │   ├── dashboard/
+│   │   ├── wallets/
+│   │   ├── transactions/
+│   │   ├── categories/
+│   │   └── settings/
+│   ├── (app)/          # Páginas da conta do usuário
+│   │   ├── account/
+│   │   │   ├── sessions/
+│   │   │   └── activity/
+│   │   ├── notifications/
+│   │   └── plans/
+│   └── page.tsx        # Redirecionamento
+├── components/
+│   ├── ui/             # Componentes shadcn
+│   ├── security/       # Componentes de segurança
+│   ├── skeletons/      # Skeletons de carregamento
+│   └── providers.tsx   # Provider de autenticação
+├── hooks/              # Custom hooks
+├── lib/
+│   ├── supabase.ts     # Cliente Supabase
+│   └── utils.ts       # Utilitários
+└── templates/          # Templates reutilizáveis
+```
+
+## 🔒 Segurança
+
+O projeto implementa:
+
+- **Row Level Security (RLS)**: Usuários só veem seus próprios dados
+- **Autenticação via Supabase Auth**: JWT tokens para sessões
+- **Validação de senhas**: Requisitos mínimos de segurança
+- **Proteção contra CSRF/XSS**: Via Next.js e Supabase
+
+### Variáveis de Ambiente de Segurança
+
+```env
+# Cliente (públicas)
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+
+# Servidor (NUNCA exponha no frontend)
+SUPABASE_SERVICE_ROLE_KEY=...  # Apenas para APIs server-side
+```
+
+## 🎨 Design
+
+O projeto usa shadcn/ui com o preset `b1a1d8m2s`. Para adicionar novos componentes:
+```bash
+npx shadcn@latest add button
+```
+
+## 🐛 Problemas Comuns
+
+### "Missing Supabase environment variables"
+Verifique se o arquivo `.env.local` existe e contém as variáveis corretas.
+
+### "RLS policy denied"
+Certifique-se de executar o SQL do `schema-production.sql` no Supabase.
+
+### "Avatar não carrega"
+Verifique se o bucket `avatars` foi criado no Storage e está público.
+
+## 📄 License
+
+MIT
