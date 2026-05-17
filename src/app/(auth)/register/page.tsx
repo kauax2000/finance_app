@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { SignupForm } from "@/components/signup-form"
 
 export default function SignupPage() {
@@ -22,7 +23,16 @@ export default function SignupPage() {
                         Finance App
                     </span>
                 </a>
-                <SignupForm />
+                <Suspense
+                    fallback={
+                        <div
+                            className="h-[28rem] w-full animate-pulse rounded-xl border bg-card"
+                            aria-hidden
+                        />
+                    }
+                >
+                    <SignupForm />
+                </Suspense>
             </div>
         </div>
     )

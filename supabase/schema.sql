@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     email TEXT NOT NULL,
     full_name TEXT,
     avatar_url TEXT,
+    avatar_color TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -161,3 +162,13 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+
+-- ---------------------------------------------------------------------------
+-- Newer workspace / credit-card features are not inlined here (this file is
+-- the legacy bootstrap). Apply all SQL in supabase/migrations/ in order, or
+-- use `supabase db push` against your project. For category spend alerts on
+-- credit cards, the DDL is in:
+--   supabase/migrations/20260404200000_credit_card_category_spend_alerts.sql
+-- (requires public.workspaces, public.credit_cards, public.categories scoped
+-- to the same workspace, and public.is_workspace_member(uuid).)
+-- ---------------------------------------------------------------------------

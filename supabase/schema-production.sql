@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     email TEXT NOT NULL,
     full_name TEXT,
     avatar_url TEXT,
+    avatar_color TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

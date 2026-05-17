@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
+import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -46,7 +47,6 @@ function ResetPasswordFormContent() {
                 // Also check if there's a token in the query string differently formatted
                 const urlParams = new URLSearchParams(window.location.search)
                 const newAccessToken = urlParams.get("access_token")
-                const newRefreshToken = urlParams.get("refresh_token")
 
                 if (!newAccessToken) {
                     setInvalidToken(true)
@@ -126,7 +126,7 @@ function ResetPasswordFormContent() {
                     router.push("/login")
                 }, 3000)
             }
-        } catch (err) {
+        } catch {
             setError("Ocorreu um erro ao redefinir a senha")
             setLoading(false)
         }
@@ -187,7 +187,7 @@ function ResetPasswordFormContent() {
                         </Button>
                     </div>
                 ) : (
-                    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                    <CustomForm onSubmit={handleSubmit} className="flex flex-col gap-4">
                         {error && (
                             <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
                                 {error}
@@ -218,7 +218,7 @@ function ResetPasswordFormContent() {
                         <Button type="submit" className="w-full hover:bg-primary/90" disabled={loading}>
                             {loading ? "Atualizando..." : "Atualizar Senha"}
                         </Button>
-                    </form>
+                    </CustomForm>
                 )}
 
                 <p className="text-center text-sm text-muted-foreground">

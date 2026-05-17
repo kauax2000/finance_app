@@ -1,0 +1,51 @@
+# Gateway JWT verification was returning 401 `Invalid JWT` for valid user sessions (runtime logs:
+# bodyKind gateway-invalid-jwt) while PostgREST/auth worked. These handlers already validate the
+# user inside Deno via `createClient` + `auth.getUser()`. Disabling gateway verify lets the
+# request reach the function; you must redeploy for hosted projects:
+#   supabase functions deploy sessions activity-logs delete-user --project-ref <ref>
+# Or turn off “Verify JWT” per function in the Dashboard (Edge Functions → function → settings).
+
+[functions.sessions]
+verify_jwt = false
+
+[functions.activity-logs]
+verify_jwt = false
+
+[functions.delete-user]
+verify_jwt = false
+
+[functions.dispatch-notifications]
+verify_jwt = false
+
+[functions.evaluate-budgets]
+verify_jwt = false
+
+[functions.evaluate-credit-card-alerts]
+verify_jwt = false
+
+[functions.credit-card-calendar-alerts]
+verify_jwt = false
+
+[functions.run-recurring-billing]
+verify_jwt = false
+
+[functions.evaluate-bills-reminders]
+verify_jwt = false
+
+# Preflight OPTIONS has no JWT; gateway verify blocks CORS from the browser unless disabled here
+# (same pattern as sessions). Redeploy after changing:
+#   supabase functions deploy workspace-invites-create workspace-invites-accept --project-ref <ref>
+[functions.workspace-invites-create]
+verify_jwt = false
+
+[functions.workspace-invites-accept]
+verify_jwt = false
+
+[functions.workspace-invites-resend]
+verify_jwt = false
+
+[functions.push-subscribe]
+verify_jwt = false
+
+[functions.push-unsubscribe]
+verify_jwt = false

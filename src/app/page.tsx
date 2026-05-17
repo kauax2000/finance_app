@@ -1,26 +1,11 @@
-"use client"
+import HomePageClient from "./page-client"
 
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/components/providers"
+type RouteParams = Record<string, string | string[] | undefined>
 
-export default function HomePage() {
-  const { user, loading } = useAuth()
-  const router = useRouter()
-
-  useEffect(() => {
-    if (!loading) {
-      if (user) {
-        router.push("/dashboard")
-      } else {
-        router.push("/login")
-      }
-    }
-  }, [user, loading, router])
-
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-    </div>
-  )
+export default async function Page(props: {
+    params: Promise<RouteParams>
+    searchParams: Promise<RouteParams>
+}) {
+    await Promise.all([props.params, props.searchParams])
+    return <HomePageClient />
 }
