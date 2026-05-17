@@ -8,8 +8,8 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-heading: var(--font-heading);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -27,6 +27,9 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-muted: var(--destructive-muted);
+  --color-destructive-muted-foreground: var(--destructive-muted-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -39,6 +42,31 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-muted: var(--success-muted);
+  --color-success-muted-foreground: var(--success-muted-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-muted: var(--warning-muted);
+  --color-warning-muted-foreground: var(--warning-muted-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-muted: var(--info-muted);
+  --color-info-muted-foreground: var(--info-muted-foreground);
+  --color-income: var(--income);
+  --color-income-foreground: var(--income-foreground);
+  --color-income-muted: var(--income-muted);
+  --color-income-muted-foreground: var(--income-muted-foreground);
+  --color-expense: var(--expense);
+  --color-expense-foreground: var(--expense-foreground);
+  --color-expense-muted: var(--expense-muted);
+  --color-expense-muted-foreground: var(--expense-muted-foreground);
+  --color-overlay: var(--overlay);
+  --shadow-xs: var(--shadow-xs-value);
+  --shadow-sm: var(--shadow-sm-value);
+  --shadow-md: var(--shadow-md-value);
+  --shadow-lg: var(--shadow-lg-value);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -49,7 +77,7 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
+  --background: oklch(0.985 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -57,30 +85,63 @@
   --popover-foreground: oklch(0.145 0 0);
   --primary: oklch(0.348 0.118 166);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
+  --secondary: oklch(0.955 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.5 0 0);
+  --accent: oklch(0.955 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
+  --destructive-foreground: oklch(0.985 0 0);
+  --destructive-muted: oklch(0.96 0.04 27);
+  --destructive-muted-foreground: oklch(0.45 0.16 27);
+  --border: oklch(0.9 0 0);
+  --input: oklch(0.9 0 0);
   --ring: oklch(0.348 0.118 166);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --success: oklch(0.62 0.13 152);
+  --success-foreground: oklch(0.985 0 0);
+  --success-muted: oklch(0.96 0.03 152);
+  --success-muted-foreground: oklch(0.32 0.1 152);
+  --warning: oklch(0.78 0.13 78);
+  --warning-foreground: oklch(0.21 0 0);
+  --warning-muted: oklch(0.97 0.04 78);
+  --warning-muted-foreground: oklch(0.42 0.1 78);
+  --info: oklch(0.62 0.13 240);
+  --info-foreground: oklch(0.985 0 0);
+  --info-muted: oklch(0.96 0.03 240);
+  --info-muted-foreground: oklch(0.36 0.1 240);
+  --income: var(--success);
+  --income-foreground: var(--success-foreground);
+  /* Finance-only: stronger than generic success-muted (chips, badges, icon wells). */
+  --income-muted: oklch(0.93 0.07 152);
+  --income-muted-foreground: oklch(0.34 0.14 152);
+  --expense: var(--destructive);
+  --expense-foreground: var(--destructive-foreground);
+  --expense-muted: oklch(0.93 0.055 27);
+  --expense-muted-foreground: oklch(0.4 0.22 27);
+  --overlay: oklch(0.145 0 0 / 0.4);
+  --shadow-xs-value: 0 1px 1px 0 oklch(0 0 0 / 0.04);
+  --shadow-sm-value: 0 1px 2px 0 oklch(0 0 0 / 0.06), 0 1px 1px 0 oklch(0 0 0 / 0.04);
+  --shadow-md-value: 0 4px 8px -2px oklch(0 0 0 / 0.08), 0 2px 4px -2px oklch(0 0 0 / 0.04);
+  --shadow-lg-value: 0 12px 24px -6px oklch(0 0 0 / 0.1), 0 6px 12px -4px oklch(0 0 0 / 0.06);
+  --chart-1: oklch(0.62 0.13 152);
+  --chart-2: oklch(0.577 0.245 27.325);
+  --chart-3: oklch(0.348 0.118 166);
+  --chart-4: oklch(0.62 0.13 240);
+  --chart-5: oklch(0.78 0.13 78);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
+  --sidebar: oklch(0.97 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.348 0.118 166);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-border: oklch(0.9 0 0);
   --sidebar-ring: oklch(0.348 0.118 166);
+  /* Mobile shell: fixed header (h-14 = 3.5rem) + safe-area (see SidebarAppShell, MobileBottomNav) */
+  --mobile-header-offset: calc(3.5rem + env(safe-area-inset-top, 0px));
+  /* ~min-h-12 nav bar + pill button (~2.5rem) + gap (0.75rem) + breathing room */
+  --mobile-bottom-pad: calc(6.5rem + env(safe-area-inset-bottom, 0px));
 }
 
 .dark {
@@ -99,14 +160,42 @@
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
+  --destructive-muted: oklch(0.3 0.08 27);
+  --destructive-muted-foreground: oklch(0.92 0.06 27);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.45 0.14 166);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --success: oklch(0.7 0.15 152);
+  --success-foreground: oklch(0.145 0 0);
+  --success-muted: oklch(0.27 0.06 152);
+  --success-muted-foreground: oklch(0.88 0.06 152);
+  --warning: oklch(0.82 0.14 78);
+  --warning-foreground: oklch(0.145 0 0);
+  --warning-muted: oklch(0.3 0.06 78);
+  --warning-muted-foreground: oklch(0.92 0.06 78);
+  --info: oklch(0.72 0.13 240);
+  --info-foreground: oklch(0.145 0 0);
+  --info-muted: oklch(0.28 0.06 240);
+  --info-muted-foreground: oklch(0.9 0.06 240);
+  --income: var(--success);
+  --income-foreground: var(--success-foreground);
+  --income-muted: oklch(0.26 0.1 152);
+  --income-muted-foreground: oklch(0.78 0.12 152);
+  --expense: var(--destructive);
+  --expense-foreground: var(--destructive-foreground);
+  --expense-muted: oklch(0.28 0.11 27);
+  --expense-muted-foreground: oklch(0.82 0.13 27);
+  --overlay: oklch(0 0 0 / 0.6);
+  --shadow-xs-value: 0 1px 1px 0 oklch(0 0 0 / 0.35);
+  --shadow-sm-value: 0 1px 2px 0 oklch(0 0 0 / 0.45), 0 1px 1px 0 oklch(0 0 0 / 0.35);
+  --shadow-md-value: 0 4px 8px -2px oklch(0 0 0 / 0.55), 0 2px 4px -2px oklch(0 0 0 / 0.4);
+  --shadow-lg-value: 0 12px 24px -6px oklch(0 0 0 / 0.6), 0 6px 12px -4px oklch(0 0 0 / 0.45);
+  --chart-1: oklch(0.7 0.15 152);
+  --chart-2: oklch(0.704 0.191 22.216);
+  --chart-3: oklch(0.45 0.14 166);
+  --chart-4: oklch(0.72 0.13 240);
+  --chart-5: oklch(0.82 0.14 78);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.45 0.14 166);
@@ -144,4 +233,81 @@
 
 .animate-shimmer {
   animation: shimmer 1.5s infinite;
+}
+
+/* Bottom sheet mobile fill: slide-up / slide-down (iOS-like) */
+@keyframes sheet-mobile-fill-enter {
+  from {
+    transform: translate3d(0, 100%, 0);
+    opacity: 0.96;
+  }
+
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes sheet-mobile-fill-exit {
+  from {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+
+  to {
+    transform: translate3d(0, 100%, 0);
+    opacity: 0.96;
+  }
+}
+
+@keyframes sheet-mobile-fill-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sheet-mobile-fill-fade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+/**
+ * Bottom sheets (`SheetContent` side=bottom + `fillMobileViewport`):
+ * fixed height from small top gap + safe-area to bottom; overrides Tailwind `h-auto`.
+ */
+@layer utilities {
+  [data-slot="sheet-content"].sheet-mobile-fill[data-side="bottom"] {
+    top: max(0.5rem, env(safe-area-inset-top, 0px));
+    bottom: 0;
+    height: calc(100dvh - max(0.5rem, env(safe-area-inset-top, 0px))) !important;
+    min-height: calc(100dvh - max(0.5rem, env(safe-area-inset-top, 0px))) !important;
+    max-height: calc(100dvh - max(0.5rem, env(safe-area-inset-top, 0px))) !important;
+  }
+
+  [data-slot="sheet-content"].sheet-mobile-fill.sheet-mobile-fill-motion[data-side="bottom"][data-state="open"] {
+    animation: sheet-mobile-fill-enter 300ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  }
+
+  [data-slot="sheet-content"].sheet-mobile-fill.sheet-mobile-fill-motion[data-side="bottom"][data-state="closed"] {
+    animation: sheet-mobile-fill-exit 300ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-slot="sheet-content"].sheet-mobile-fill.sheet-mobile-fill-motion[data-side="bottom"][data-state="open"] {
+      animation: sheet-mobile-fill-fade-in 200ms ease forwards;
+    }
+
+    [data-slot="sheet-content"].sheet-mobile-fill.sheet-mobile-fill-motion[data-side="bottom"][data-state="closed"] {
+      animation: sheet-mobile-fill-fade-out 150ms ease forwards;
+    }
+  }
 }
