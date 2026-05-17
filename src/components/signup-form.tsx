@@ -1,8 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
+import { getSafeInternalNextPath } from "@/lib/auth-return-path"
+import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -65,6 +68,19 @@ interface FieldErrors {
 }
 
 export function SignupForm() {
+    const router = useRouter()
+    const searchParams = useSearchParams()
+    const nextPath = useMemo(
+        () => getSafeInternalNextPath(searchParams.get("next")),
+        [searchParams]
+    )
+    const loginHref = useMemo(
+        () =>
+            nextPath
+                ? `/login?next=${encodeURIComponent(nextPath)}`
+                : "/login",
+        [nextPath]
+    )
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [fullName, setFullName] = useState("")
@@ -130,7 +146,10 @@ export function SignupForm() {
 
         setLoading(true)
 
-        const { error } = await supabase.auth.signUp({
+        const origin = typeof window !== "undefined" ? window.location.origin : ""
+        const emailRedirectTo = nextPath ? `${origin}${nextPath}` : `${origin}/dashboard`
+
+        const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
@@ -138,22 +157,28 @@ export function SignupForm() {
                     full_name: fullName,
                     phone: phone,
                 },
+                emailRedirectTo,
             },
         })
 
         if (error) {
             setError(error.message)
             setLoading(false)
+        } else if (data.session && nextPath) {
+            setLoading(false)
+            router.push(nextPath)
         } else {
             setSuccess(true)
+            setLoading(false)
         }
     }
 
     const handleGoogleSignup = async () => {
+        const path = nextPath ?? "/dashboard"
         const { error } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
-                redirectTo: `${window.location.origin}/dashboard`,
+                redirectTo: `${window.location.origin}${path}`,
             },
         })
         if (error) {
@@ -173,10 +198,17 @@ export function SignupForm() {
                         <p className="text-sm text-muted-foreground">
                             Clique no link para ativar sua conta.
                         </p>
+                        {nextPath ? (
+                            <p className="text-xs text-muted-foreground text-pretty">
+                                Depois de confirmar o e-mail, você será encaminhado para concluir o convite. Se isso não
+                                acontecer, use &quot;Ir para login&quot; abaixo e entre com o mesmo e-mail — você voltará ao
+                                convite automaticamente.
+                            </p>
+                        ) : null}
                     </div>
-                    <Link href="/login">
+                    <Link href={loginHref}>
                         <Button variant="outline" className="w-full">
-                            Voltar para login
+                            Ir para login
                         </Button>
                     </Link>
                 </div>
@@ -187,7 +219,7 @@ export function SignupForm() {
     return (
         <div className="w-full rounded-xl border bg-card text-card-foreground shadow-sm">
             <div className="flex flex-col gap-6 p-6">
-                <form onSubmit={handleSignup} className="flex flex-col gap-4" noValidate>
+                <CustomForm onSubmit={handleSignup} className="flex flex-col gap-4" noValidate>
                     {error && (
                         <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-md text-sm">
                             {error}
@@ -383,7 +415,7 @@ export function SignupForm() {
                     <Button type="submit" className="w-full hover:bg-primary/90" disabled={loading}>
                         {loading ? "Criando conta..." : "Criar conta"}
                     </Button>
-                </form>
+                </CustomForm>
 
                 <div className="relative flex items-center gap-3 text-sm">
                     <div className="h-px flex-1 bg-border" />
@@ -420,7 +452,10 @@ export function SignupForm() {
 
                 <p className="text-center text-sm text-muted-foreground">
                     Já tem uma conta?{" "}
-                    <Link href="/login" className="text-[oklch(0.45_0.14_166)] font-medium underline-offset-4 hover:underline">
+                    <Link
+                        href={loginHref}
+                        className="text-[oklch(0.45_0.14_166)] font-medium underline-offset-4 hover:underline"
+                    >
                         Entrar
                     </Link>
                 </p>

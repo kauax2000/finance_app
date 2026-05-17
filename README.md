@@ -118,6 +118,82 @@ src/
 └── templates/          # Templates reutilizáveis
 ```
 
+## 📲 PWA (iPhone e offline)
+
+O app pode ser instalado na tela inicial (Safari → Compartilhar → **Adicionar à Tela de Início**) e funciona em modo standalone.
+
+### Build e ícones
+
+```bash
+npm run generate:pwa-icons   # gera public/icons/* a partir de public/logo.svg
+npm run build                # webpack + Serwist (gera public/sw.js)
+```
+
+Em desenvolvimento, o service worker fica desligado por padrão. Para testar localmente:
+
+```bash
+NEXT_PUBLIC_PWA_ENABLED=true npm run build && npm start
+```
+
+### Checklist manual (iPhone / Safari)
+
+1. Abrir a URL de produção (HTTPS) e fazer login.
+2. Compartilhar → Adicionar à Tela de Início.
+3. Abrir pelo ícone — sem barra do Safari.
+4. Ativar modo avião → abrir o app → dados em cache ainda visíveis.
+5. Criar uma transação offline → chip de pendências em Configurações.
+6. Desativar modo avião → sincronização automática ao voltar online.
+
+### Testes automatizados
+
+```bash
+npm run test:unit          # inclui mutation-gateway offline
+npx playwright test e2e/pwa.smoke.spec.ts
+```
+
+A migração `supabase/migrations/20260517140000_offline_client_id.sql` adiciona `client_id` para sincronização idempotente.
+
+## 🔔 Push (Web Push + VAPID)
+
+Notificações push usam **Web Push** com chaves VAPID e Edge Functions (`push-subscribe`, `push-unsubscribe`, `deliverNotification` nos produtores).
+
+### Variáveis de ambiente
+
+```bash
+# Cliente (Vercel + .env.local)
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=<chave pública>
+
+# Supabase secrets (nunca no repositório)
+VAPID_PUBLIC_KEY=<mesma chave pública>
+VAPID_PRIVATE_KEY=<chave privada>
+VAPID_SUBJECT=mailto:seu@dominio.com
+```
+
+Gerar par de chaves:
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+Aplicar migração:
+
+```bash
+supabase db push
+```
+
+Deploy das functions (inclui push):
+
+```bash
+npm run supabase:deploy:functions
+```
+
+### Checklist manual (push)
+
+1. **Desktop Chrome:** Configurações → Notificações → ativar **Push no dispositivo** → criar categoria ou disparar orçamento → push + linha na central.
+2. **iPhone (iOS 16.4+):** instalar pela Tela de Início → ativar push nas preferências → permissão do sistema → testar com app em background.
+3. Desligar `notify_push` → sem push; central in-app continua se habilitada.
+4. Revogar permissão no SO → UI mostra estado bloqueado.
+
 ## 🔒 Segurança
 
 O projeto implementa:
