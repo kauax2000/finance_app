@@ -1,14 +1,32 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
+/** Same placeholders as `.github/workflows/ci.yml` — build/SSG only. */
+const BUILD_PLACEHOLDER_SUPABASE_URL = 'https://placeholder.supabase.co'
+const BUILD_PLACEHOLDER_SUPABASE_ANON_KEY =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.placeholder'
 
-// Validate that environment variables are set
-if (!supabaseUrl || !supabaseAnonKey) {
+function resolveSupabaseEnv(): { url: string; anonKey: string } {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
+
+    if (url && anonKey) {
+        return { url, anonKey }
+    }
+
+    // `next build` prerenders app routes; allow CI/Vercel builds before env is configured.
+    if (process.env.NEXT_PHASE === 'phase-production-build') {
+        return {
+            url: BUILD_PLACEHOLDER_SUPABASE_URL,
+            anonKey: BUILD_PLACEHOLDER_SUPABASE_ANON_KEY,
+        }
+    }
+
     throw new Error(
         'Missing Supabase environment variables. Please ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set in your .env.local file.'
     )
 }
+
+const { url: supabaseUrl, anonKey: supabaseAnonKey } = resolveSupabaseEnv()
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
