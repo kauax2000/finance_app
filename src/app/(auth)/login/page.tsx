@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { LoginForm } from "@/components/login-form"
 
 export default function LoginPage() {
@@ -22,7 +23,16 @@ export default function LoginPage() {
                         Finance App
                     </span>
                 </a>
-                <LoginForm />
+                <Suspense
+                    fallback={
+                        <div
+                            className="h-80 w-full animate-pulse rounded-xl border bg-card"
+                            aria-hidden
+                        />
+                    }
+                >
+                    <LoginForm />
+                </Suspense>
             </div>
         </div>
     )

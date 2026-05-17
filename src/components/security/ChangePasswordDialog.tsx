@@ -3,18 +3,44 @@
 import { useState } from "react"
 import { useAuth } from "@/components/providers"
 import { supabase } from "@/lib/supabase"
+import { createActivity } from "@/lib/activity"
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
+import {
+    Sheet,
+    SheetContent,
+    SheetFooter,
+} from "@/components/ui/sheet"
+import {
+    MobileSheetFormDragStrip,
+    MobileSheetFormHeaderCloseButton,
+    MobileSheetFormStickyHeader,
+    mobileFormSheetContentClassName,
+} from "@/components/ui/mobile-sheet-form-chrome"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, CheckCircle2, AlertTriangle, Eye, EyeOff } from "lucide-react"
+import {
+    CheckCircle2,
+    Circle,
+    Eye,
+    EyeOff,
+} from "lucide-react"
+import { ExclamationTriangleIcon, CheckIcon } from "@heroicons/react/24/outline"
+import { cn } from "@/lib/utils"
+
+const dialogFooterClass =
+    "!mx-0 !mb-0 mt-0 shrink-0 flex flex-row flex-wrap justify-end gap-2 border-t border-border bg-background px-6 py-4 sm:flex-row"
+
+const sheetFooterMobileClass =
+    "mt-0 shrink-0 flex-col gap-2 border-t border-border bg-background px-4 py-4"
 
 interface ChangePasswordDialogProps {
     open: boolean
@@ -43,7 +69,32 @@ function isPasswordValid(requirements: PasswordRequirements): boolean {
     return Object.values(requirements).every(Boolean)
 }
 
+function ReqRow({
+    met,
+    label,
+}: {
+    met: boolean
+    label: string
+}) {
+    return (
+        <div
+            className={cn(
+                "flex items-center gap-1.5 text-xs",
+                met ? "text-green-600 dark:text-green-400" : "text-muted-foreground",
+            )}
+        >
+            {met ? (
+                <CheckIcon className="size-3 shrink-0" aria-hidden />
+            ) : (
+                <Circle className="size-3 shrink-0" aria-hidden />
+            )}
+            {label}
+        </div>
+    )
+}
+
 export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialogProps) {
+    const isMobile = useIsMobile()
     const { user } = useAuth()
     const [loading, setLoading] = useState(false)
     const [showCurrentPassword, setShowCurrentPassword] = useState(false)
@@ -67,13 +118,20 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
         setSuccess(false)
     }
 
+    const handleOpenChange = (next: boolean) => {
+        if (!next && loading) return
+        if (!next) {
+            resetForm()
+        }
+        onOpenChange(next)
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!user) return
 
         setError(null)
 
-        // Validate passwords
         if (!passwordIsValid) {
             setError("A senha não atende todos os requisitos")
             return
@@ -87,7 +145,6 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
         setLoading(true)
 
         try {
-            // First verify current password
             const { error: signInError } = await supabase.auth.signInWithPassword({
                 email: user.email || "",
                 password: currentPassword,
@@ -99,7 +156,6 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                 return
             }
 
-            // Update password
             const { error: updateError } = await supabase.auth.updateUser({
                 password: newPassword,
             })
@@ -110,232 +166,211 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                 return
             }
 
+            try {
+                await createActivity({
+                    type: "password_change",
+                    description: "Senha alterada",
+                    status: "success",
+                })
+            } catch {
+                /* log opcional */
+            }
+
             setSuccess(true)
             setTimeout(() => {
-                resetForm()
-                onOpenChange(false)
+                handleOpenChange(false)
             }, 2000)
-        } catch (err) {
+        } catch {
             setError("Ocorreu um erro inesperado")
         } finally {
             setLoading(false)
         }
     }
 
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle>Alterar Senha</DialogTitle>
-                    <DialogDescription>
-                        Atualize sua senha para manter sua conta segura
-                    </DialogDescription>
-                </DialogHeader>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Senha atual */}
-                    <div className="space-y-2">
-                        <Label htmlFor="current-password">Senha atual</Label>
-                        <div className="relative">
-                            <Input
-                                id="current-password"
-                                type={showCurrentPassword ? "text" : "password"}
-                                value={currentPassword}
-                                onChange={(e) => setCurrentPassword(e.target.value)}
-                                placeholder="Digite sua senha atual"
-                                required
-                                disabled={loading}
-                                className="pr-10"
-                            />
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                            >
-                                {showCurrentPassword ? (
-                                    <EyeOff className="h-4 w-4" />
-                                ) : (
-                                    <Eye className="h-4 w-4" />
-                                )}
-                            </Button>
-                        </div>
-                    </div>
-
-                    {/* Nova senha */}
-                    <div className="space-y-2">
-                        <Label htmlFor="new-password">Nova senha</Label>
-                        <div className="relative">
-                            <Input
-                                id="new-password"
-                                type={showNewPassword ? "text" : "password"}
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                placeholder="Digite a nova senha"
-                                required
-                                disabled={loading}
-                                className="pr-10"
-                            />
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                                onClick={() => setShowNewPassword(!showNewPassword)}
-                            >
-                                {showNewPassword ? (
-                                    <EyeOff className="h-4 w-4" />
-                                ) : (
-                                    <Eye className="h-4 w-4" />
-                                )}
-                            </Button>
-                        </div>
-
-                        {/* Password Requirements Visual Indicator */}
-                        {newPassword.length > 0 && (
-                            <div className="space-y-1 mt-2">
-                                <div className="grid grid-cols-2 gap-1 text-xs">
-                                    <div className={`flex items-center gap-1 ${passwordRequirements.hasMinLength ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
-                                        {passwordRequirements.hasMinLength ? (
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                                                <polyline points="20 6 9 17 4 12"></polyline>
-                                            </svg>
-                                        ) : (
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                                                <circle cx="12" cy="12" r="10"></circle>
-                                            </svg>
-                                        )}
-                                        8+ caracteres
-                                    </div>
-                                    <div className={`flex items-center gap-1 ${passwordRequirements.hasLowercase ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
-                                        {passwordRequirements.hasLowercase ? (
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                                                <polyline points="20 6 9 17 4 12"></polyline>
-                                            </svg>
-                                        ) : (
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                                                <circle cx="12" cy="12" r="10"></circle>
-                                            </svg>
-                                        )}
-                                        minúscula
-                                    </div>
-                                    <div className={`flex items-center gap-1 ${passwordRequirements.hasUppercase ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
-                                        {passwordRequirements.hasUppercase ? (
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                                                <polyline points="20 6 9 17 4 12"></polyline>
-                                            </svg>
-                                        ) : (
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                                                <circle cx="12" cy="12" r="10"></circle>
-                                            </svg>
-                                        )}
-                                        maiúscula
-                                    </div>
-                                    <div className={`flex items-center gap-1 ${passwordRequirements.hasDigit ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
-                                        {passwordRequirements.hasDigit ? (
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                                                <polyline points="20 6 9 17 4 12"></polyline>
-                                            </svg>
-                                        ) : (
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                                                <circle cx="12" cy="12" r="10"></circle>
-                                            </svg>
-                                        )}
-                                        número
-                                    </div>
-                                    <div className={`flex items-center gap-1 ${passwordRequirements.hasSymbol ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
-                                        {passwordRequirements.hasSymbol ? (
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                                                <polyline points="20 6 9 17 4 12"></polyline>
-                                            </svg>
-                                        ) : (
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                                                <circle cx="12" cy="12" r="10"></circle>
-                                            </svg>
-                                        )}
-                                        símbolo
-                                    </div>
-                                    <div className={`flex items-center gap-1 ${passwordIsValid ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
-                                        {passwordIsValid ? (
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                                                <polyline points="20 6 9 17 4 12"></polyline>
-                                            </svg>
-                                        ) : (
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                                                <circle cx="12" cy="12" r="10"></circle>
-                                            </svg>
-                                        )}
-                                        senha forte
-                                    </div>
-                                </div>
-                            </div>
+    const passwordFieldsBody = (
+        <div className="space-y-4">
+            <div className="space-y-2">
+                <Label htmlFor="current-password">Senha atual</Label>
+                <div className="relative">
+                    <Input
+                        id="current-password"
+                        type={showCurrentPassword ? "text" : "password"}
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        placeholder="Digite sua senha atual"
+                        required
+                        disabled={loading}
+                        className="pr-10"
+                    />
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    >
+                        {showCurrentPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                        ) : (
+                            <Eye className="h-4 w-4" />
                         )}
+                    </Button>
+                </div>
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="new-password">Nova senha</Label>
+                <div className="relative">
+                    <Input
+                        id="new-password"
+                        type={showNewPassword ? "text" : "password"}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Digite a nova senha"
+                        required
+                        disabled={loading}
+                        className="pr-10"
+                    />
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                    >
+                        {showNewPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                        ) : (
+                            <Eye className="h-4 w-4" />
+                        )}
+                    </Button>
+                </div>
+
+                {newPassword.length > 0 ? (
+                    <div className="mt-2 grid grid-cols-2 gap-1.5 rounded-lg border border-border/80 bg-muted/20 p-3">
+                        <ReqRow met={passwordRequirements.hasMinLength} label="8+ caracteres" />
+                        <ReqRow met={passwordRequirements.hasLowercase} label="minúscula" />
+                        <ReqRow met={passwordRequirements.hasUppercase} label="maiúscula" />
+                        <ReqRow met={passwordRequirements.hasDigit} label="número" />
+                        <ReqRow met={passwordRequirements.hasSymbol} label="símbolo" />
+                        <ReqRow met={passwordIsValid} label="senha forte" />
                     </div>
+                ) : null}
+            </div>
 
-                    {/* Confirmar senha */}
-                    <div className="space-y-2">
-                        <Label htmlFor="confirm-password">Confirmar nova senha</Label>
-                        <div className="relative">
-                            <Input
-                                id="confirm-password"
-                                type={showConfirmPassword ? "text" : "password"}
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                placeholder="Confirme a nova senha"
-                                required
-                                disabled={loading}
-                                className="pr-10"
-                            />
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            >
-                                {showConfirmPassword ? (
-                                    <EyeOff className="h-4 w-4" />
-                                ) : (
-                                    <Eye className="h-4 w-4" />
-                                )}
-                            </Button>
-                        </div>
-                    </div>
+            <div className="space-y-2">
+                <Label htmlFor="confirm-password">Confirmar nova senha</Label>
+                <div className="relative">
+                    <Input
+                        id="confirm-password"
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Confirme a nova senha"
+                        required
+                        disabled={loading}
+                        className="pr-10"
+                    />
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                        {showConfirmPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                        ) : (
+                            <Eye className="h-4 w-4" />
+                        )}
+                    </Button>
+                </div>
+            </div>
 
-                    {/* Mensagens */}
-                    {error && (
-                        <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm flex items-start gap-2">
-                            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-                            {error}
-                        </div>
-                    )}
-                    {success && (
-                        <div className="p-3 rounded-lg bg-green-500/10 text-green-600 dark:text-green-500 text-sm flex items-start gap-2">
-                            <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" />
-                            Senha alterada com sucesso!
-                        </div>
-                    )}
+            {error ? (
+                <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                    <ExclamationTriangleIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    <span className="min-w-0 break-words">{error}</span>
+                </div>
+            ) : null}
+            {success ? (
+                <div className="flex items-start gap-2 rounded-lg border border-green-600/30 bg-green-500/10 px-3 py-2 text-xs text-green-700 dark:border-green-500/30 dark:text-green-400">
+                    <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    <span>Senha alterada com sucesso!</span>
+                </div>
+            ) : null}
+        </div>
+    )
 
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => {
-                                resetForm()
-                                onOpenChange(false)
-                            }}
-                            disabled={loading}
-                        >
-                            {success ? "Fechar" : "Cancelar"}
+    const passwordForm = (
+        <CustomForm onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+            <div
+                className={cn(
+                    "min-h-0 flex-1 overflow-y-auto py-4",
+                    isMobile ? "px-4" : "px-6",
+                )}
+            >
+                {passwordFieldsBody}
+            </div>
+
+            {isMobile ? (
+                <SheetFooter className={sheetFooterMobileClass}>
+                    {!success ? (
+                        <Button type="submit" disabled={loading} className="h-10 w-full">
+                            {loading ? "Alterando..." : "Alterar senha"}
                         </Button>
-                        {!success && (
-                            <Button type="submit" disabled={loading}>
-                                {loading ? "Alterando..." : "Alterar Senha"}
-                            </Button>
-                        )}
-                    </DialogFooter>
-                </form>
+                    ) : null}
+                </SheetFooter>
+            ) : (
+                <DialogFooter className={dialogFooterClass}>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenChange(false)}
+                        disabled={loading}
+                    >
+                        {success ? "Fechar" : "Cancelar"}
+                    </Button>
+                    {!success ? (
+                        <Button type="submit" size="sm" disabled={loading}>
+                            {loading ? "Alterando..." : "Alterar senha"}
+                        </Button>
+                    ) : null}
+                </DialogFooter>
+            )}
+        </CustomForm>
+    )
+
+    if (isMobile) {
+        return (
+            <Sheet open={open} onOpenChange={handleOpenChange}>
+                <SheetContent
+                    side="bottom"
+                    fillMobileViewport
+                    showCloseButton={false}
+                    className={mobileFormSheetContentClassName}
+                >
+                    <MobileSheetFormDragStrip />
+                    <MobileSheetFormStickyHeader
+                        title="Alterar senha"
+                        endAdornment={
+                            <MobileSheetFormHeaderCloseButton disabled={loading} />
+                        }
+                    />
+                    {passwordForm}
+                </SheetContent>
+            </Sheet>
+        )
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={handleOpenChange}>
+            <DialogContent className="flex max-h-[min(90dvh,36rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+                <DialogHeader className="shrink-0 px-6 py-4 text-left">
+                    <DialogTitle>Alterar senha</DialogTitle>
+                </DialogHeader>
+                {passwordForm}
             </DialogContent>
         </Dialog>
     )

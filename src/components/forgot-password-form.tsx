@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
+import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -81,12 +82,12 @@ export function ForgotPasswordForm() {
 
         setLoading(true)
 
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        const { error: _resetError } = await supabase.auth.resetPasswordForEmail(email, {
             redirectTo: undefined,
         })
 
-        if (error) {
-            setError(error.message)
+        if (_resetError) {
+            setError(_resetError.message)
             setLoading(false)
         } else {
             setSuccessMessage("Token enviado! Verifique seu email.")
@@ -140,7 +141,7 @@ export function ForgotPasswordForm() {
                     router.push("/login")
                 }, 3000)
             }
-        } catch (err) {
+        } catch {
             setError("Ocorreu um erro ao redefinir a senha")
             setLoading(false)
         }
@@ -162,7 +163,7 @@ export function ForgotPasswordForm() {
                         </Button>
                     </div>
                 ) : step === "email" ? (
-                    <form onSubmit={handleSendEmail} className="flex flex-col gap-4" noValidate>
+                    <CustomForm onSubmit={handleSendEmail} className="flex flex-col gap-4" noValidate>
                         <div className="text-center mb-2">
                             <p className="text-sm text-muted-foreground">
                                 Digite seu email para receber o token de recuperação.
@@ -173,6 +174,11 @@ export function ForgotPasswordForm() {
                                 {successMessage}
                             </div>
                         )}
+                        {error ? (
+                            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                                {error}
+                            </div>
+                        ) : null}
                         <div className="flex flex-col gap-2">
                             <Label htmlFor="email">Email</Label>
                             <Input
@@ -198,14 +204,19 @@ export function ForgotPasswordForm() {
                         <Button type="submit" className="w-full hover:bg-primary/90" disabled={loading}>
                             {loading ? "Enviando..." : "Enviar token"}
                         </Button>
-                    </form>
+                    </CustomForm>
                 ) : (
-                    <form onSubmit={handleResetPassword} className="flex flex-col gap-4" noValidate>
+                    <CustomForm onSubmit={handleResetPassword} className="flex flex-col gap-4" noValidate>
                         <div className="text-center mb-2">
                             <p className="text-sm text-muted-foreground">
                                 Digite o token enviado para seu email e defina sua nova senha.
                             </p>
                         </div>
+                        {error ? (
+                            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                                {error}
+                            </div>
+                        ) : null}
                         <div className="flex flex-col gap-2">
                             <Label htmlFor="token">Token de recuperação</Label>
                             <Input
@@ -323,7 +334,7 @@ export function ForgotPasswordForm() {
                         >
                             Voltar
                         </Button>
-                    </form>
+                    </CustomForm>
                 )}
 
                 {step === "email" && (
