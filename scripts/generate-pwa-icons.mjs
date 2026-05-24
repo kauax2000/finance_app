@@ -12,7 +12,7 @@ const root = path.join(__dirname, "..")
 const logoPath = path.join(root, "public", "logo.svg")
 const iconsDir = path.join(root, "public", "icons")
 
-const BRAND_BG = { r: 52, g: 140, b: 110, alpha: 1 } // primary green tint
+const ICON_BG = { r: 0, g: 0, b: 0, alpha: 1 }
 
 async function renderIcon(size, { maskable = false } = {}) {
     const padding = maskable ? Math.round(size * 0.2) : Math.round(size * 0.12)
@@ -28,7 +28,7 @@ async function renderIcon(size, { maskable = false } = {}) {
             width: size,
             height: size,
             channels: 4,
-            background: BRAND_BG,
+            background: ICON_BG,
         },
     })
         .composite([{ input: logo, gravity: "centre" }])
