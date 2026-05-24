@@ -1,13 +1,9 @@
 "use client"
 
-import { ArrowPathIcon } from "@heroicons/react/24/outline"
-
 import { AppLogo } from "@/components/layout/app-logo"
-import { Muted } from "@/components/ui/typography"
+import { cn } from "@/lib/utils"
 
 type AppBootstrapScreenProps = {
-    /** Optional short line under the spinner (e.g. redirect status). Hidden by default. */
-    message?: string
     className?: string
 }
 
@@ -15,32 +11,21 @@ type AppBootstrapScreenProps = {
  * Full-viewport loading state while auth (or similar) initializes the app shell.
  * Use instead of ad-hoc spinners so home + AuthGuard stay visually consistent.
  */
-export function AppBootstrapScreen({
-    message,
-    className,
-}: AppBootstrapScreenProps) {
+export function AppBootstrapScreen({ className }: AppBootstrapScreenProps) {
     return (
         <div
-            className={
-                className ??
-                "flex min-h-screen flex-col items-center justify-center gap-5 bg-background px-4"
-            }
+            className={cn(
+                "fixed inset-0 z-50 flex items-center justify-center bg-background",
+                "h-[100dvh] min-h-[100dvh] supports-[height:100dvh]:h-[100dvh]",
+                className,
+            )}
             role="status"
             aria-busy="true"
             aria-live="polite"
-            aria-label={message ?? "Carregando aplicativo"}
+            aria-label="Carregando aplicativo"
             suppressHydrationWarning
         >
             <AppLogo size="xl" />
-            <ArrowPathIcon
-                className="size-6 shrink-0 animate-spin text-muted-foreground"
-                aria-hidden
-            />
-            {message ? (
-                <Muted className="text-center text-sm" suppressHydrationWarning>
-                    {message}
-                </Muted>
-            ) : null}
         </div>
     )
 }
