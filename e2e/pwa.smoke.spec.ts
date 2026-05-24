@@ -20,4 +20,17 @@ test.describe("PWA smoke", () => {
         const viewport = page.locator('meta[name="viewport"]')
         await expect(viewport).toHaveAttribute("content", /viewport-fit=cover/)
     })
+
+    test("login inputs use at least 16px font on mobile to prevent iOS focus zoom", async ({
+        page,
+    }) => {
+        await page.setViewportSize({ width: 390, height: 844 })
+        await page.goto("/login")
+        const email = page.locator("#email")
+        await expect(email).toBeVisible()
+        const fontSizePx = await email.evaluate((el) =>
+            Number.parseFloat(window.getComputedStyle(el).fontSize)
+        )
+        expect(fontSizePx).toBeGreaterThanOrEqual(16)
+    })
 })
