@@ -7,6 +7,7 @@ import { WorkspaceProvider } from "@/components/workspace-provider"
 import { PushNotificationProvider } from "@/components/push/push-notification-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { SwRegister } from "@/app/sw-register"
+import { PWA_ICON_VERSION } from "@/lib/pwa/constants"
 
 const inter = Inter({
   variable: "--font-sans",
@@ -36,8 +37,20 @@ export const metadata: Metadata = {
         telephone: false,
     },
     icons: {
-        icon: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
-        apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+        icon: [
+            {
+                url: `/icons/icon-192.png?v=${PWA_ICON_VERSION}`,
+                sizes: "192x192",
+                type: "image/png",
+            },
+        ],
+        apple: [
+            {
+                url: `/icons/apple-touch-icon.png?v=${PWA_ICON_VERSION}`,
+                sizes: "180x180",
+                type: "image/png",
+            },
+        ],
     },
 }
 
