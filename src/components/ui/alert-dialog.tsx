@@ -71,16 +71,21 @@ function AlertDialogHeader({
   ...props
 }: React.ComponentProps<"div"> & { hideSeparator?: boolean }) {
   return (
-    <div
-      data-slot="alert-dialog-header"
-      className={cn("flex flex-col gap-2", className)}
-      {...props}
-    >
-      {children}
+    <>
+      <div
+        data-slot="alert-dialog-header"
+        className={cn(
+          "flex w-full min-w-0 flex-col gap-2 text-center sm:text-left",
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </div>
       {!hideSeparator ? (
-        <Separator className="bg-border/60" decorative />
+        <Separator className="shrink-0 bg-border/60" decorative />
       ) : null}
-    </div>
+    </>
   )
 }
 
@@ -107,7 +112,10 @@ function AlertDialogTitle({
   return (
     <AlertDialogPrimitive.Title
       data-slot="alert-dialog-title"
-      className={cn("font-heading text-base font-medium leading-none", className)}
+      className={cn(
+        "min-w-0 font-heading text-base font-medium leading-none",
+        className
+      )}
       {...props}
     />
   )
@@ -120,7 +128,7 @@ function AlertDialogDescription({
   return (
     <AlertDialogPrimitive.Description
       data-slot="alert-dialog-description"
-      className={cn("text-sm text-muted-foreground", className)}
+      className={cn("min-w-0 text-sm text-muted-foreground", className)}
       {...props}
     />
   )
