@@ -5,10 +5,11 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover"
+    FormPickerPopoverContent,
+    formPickerListScrollClassName,
+} from "@/components/ui/form-picker-popover"
+import { Popover, PopoverTrigger } from "@/components/ui/popover"
+import { useIsMobile } from "@/hooks/use-mobile"
 import {
     SUBSCRIPTION_SELECT_NONE,
     type ExpenseCategoryOption,
@@ -90,12 +91,20 @@ export function SubscriptionCategoryPicker({
     categoriesHref: string
     disabled?: boolean
 }) {
+    const isMobile = useIsMobile()
     const [open, setOpen] = useState(false)
     const [search, setSearch] = useState("")
 
     const handleOpenChange = (next: boolean) => {
         setOpen(next)
-        if (!next) setSearch("")
+        if (next) {
+            setSearch("")
+            requestAnimationFrame(() => {
+                document
+                    .getElementById("subscription-category-picker")
+                    ?.scrollIntoView({ block: "nearest", behavior: "smooth" })
+            })
+        }
     }
 
     const selected = useMemo(
@@ -107,9 +116,10 @@ export function SubscriptionCategoryPicker({
     )
 
     return (
-        <Popover modal={false} open={open} onOpenChange={handleOpenChange}>
+        <Popover modal={isMobile} open={open} onOpenChange={handleOpenChange}>
             <PopoverTrigger asChild>
                 <Button
+                    id="subscription-category-picker"
                     type="button"
                     variant="outline"
                     size="lg"
@@ -138,13 +148,7 @@ export function SubscriptionCategoryPicker({
                     <ChevronDownIcon className="size-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent
-                side="bottom"
-                align="start"
-                sideOffset={6}
-                collisionPadding={12}
-                className="w-[var(--radix-popover-trigger-width)] max-w-[min(100vw-1.5rem,22rem)] flex flex-col gap-0 overflow-hidden p-0"
-            >
+            <FormPickerPopoverContent>
                 <div className="shrink-0 border-b border-border/50 p-3 pb-2">
                     <div className="relative">
                         <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -158,7 +162,7 @@ export function SubscriptionCategoryPicker({
                     </div>
                 </div>
                 <div
-                    className="max-h-[min(45dvh,15rem)] touch-pan-y overflow-y-auto overflow-x-hidden overscroll-contain px-2 py-1 [-webkit-overflow-scrolling:touch]"
+                    className={formPickerListScrollClassName}
                     onWheel={(e) => e.stopPropagation()}
                 >
                     <ul className="flex flex-col gap-0.5 pr-1">
@@ -203,7 +207,7 @@ export function SubscriptionCategoryPicker({
                         <Link href={categoriesHref}>Gerenciar categorias</Link>
                     </Button>
                 </div>
-            </PopoverContent>
+            </FormPickerPopoverContent>
         </Popover>
     )
 }
