@@ -20,9 +20,16 @@ Secrets / env in Supabase (Edge Functions → *Secrets*):
 | `RESEND_FROM` | Sender on a [verified domain](https://resend.com/domains) (production) |
 | `APP_BASE_URL` | **Production** public app origin, no trailing slash (e.g. `https://app.example.com`). Used when the HTTP `Origin` header is missing (e.g. some server-side invokes). Ensures invite links point at the real site. |
 
-After schema changes, run in SQL Editor (if not already): `workspaces.sql`, RLS files, `workspace-member-directory.sql`, `workspace-invites-token-raw-and-invitee-rls.sql` (stores `token_raw` for copied links + RLS for invitees), etc., then **Settings → API → Reload schema** if PostgREST caches old schema.
+After schema changes, apply migrations with **`supabase db push`** (recommended). Key migrations for sharing:
 
-Linked CLI projects can apply the same SQL via **`supabase/migrations/20260331120000_workspace_invites_token_raw.sql`** (`supabase db push`).
+| Migration | Purpose |
+|-----------|---------|
+| `20260331120000_workspace_invites_token_raw.sql` | `token_raw` on invites + invitee SELECT RLS |
+| **`20260518180000_workspace_core_data_rls.sql`** | **Transactions, categories, splits, budgets** visible/editable by all `workspace_members` (fixes empty lists for invited users) |
+
+For greenfield or manual SQL Editor setup (no CLI), run in order: `workspaces.sql`, `workspaces-rls.sql`, `workspaces-core-migration.sql`, then either `workspaces-core-rls.sql` **or** the migration above (omit the `wallets` block — table removed). Also: `workspace-member-directory.sql`, `workspace-invites-token-raw-and-invitee-rls.sql`.
+
+After any SQL change, **Settings → API → Reload schema** if PostgREST caches old policies (the core-data migration also runs `NOTIFY pgrst, 'reload schema'`).
 
 ### Erro: `Could not find the 'token_raw' column ... in the schema cache`
 
@@ -56,3 +63,19 @@ Run [`workspace-member-directory.sql`](workspace-member-directory.sql) so the **
 1. Owner creates link invite → open `invite_url` in incognito.
 2. **Criar conta** or **Entrar**; confirm the URL still contains `token` when returning to `/invites/accept`.
 3. Success message → **Dashboard** → sidebar switcher shows the shared workspace.
+4. **Convidado(a):** com a carteira compartilhada selecionada, **Transações** e **Categorias** listam os dados do dono (não vazios).
+5. **Convidado(a):** cria uma despesa e uma categoria → o dono vê os mesmos registros na mesma carteira.
+
+Automated policy check (local): `npm run test:db` includes `workspace_core_data_rls.test.sql`.
+
+Production verification (SQL Editor):
+
+```sql
+select tablename, policyname
+from pg_policies
+where schemaname = 'public'
+  and tablename in ('transactions', 'categories')
+order by tablename, policyname;
+```
+
+Expect policies named `Workspace members can view …` and **no** `Users can view own …` on those tables.
