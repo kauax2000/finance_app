@@ -6,3 +6,6 @@ export const PWA_THEME_COLORS = {
 
 export const PWA_INSTALL_VISITS_KEY = "finance-pwa-install-visits"
 export const PWA_INSTALL_DISMISSED_KEY = "finance-pwa-install-dismissed"
+
+/** Bump when home-screen / favicon PNGs change so iOS Safari refetches instead of reusing a cached bitmap. */
+export const PWA_ICON_VERSION = "2"
