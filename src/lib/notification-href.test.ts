@@ -44,6 +44,15 @@ describe("resolveNotificationHref", () => {
             })
         ).toBe("/credit-cards/card-1")
     })
+
+    it("maps member_expense_created to transaction detail", () => {
+        expect(
+            resolveNotificationHref({
+                kind: "member_expense_created",
+                transaction_id: "tx-abc",
+            })
+        ).toBe("/transactions?txn=tx-abc")
+    })
 })
 
 describe("isTypeAllowedForPrefs", () => {

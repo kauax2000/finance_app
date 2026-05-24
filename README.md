@@ -194,6 +194,14 @@ npm run supabase:deploy:functions
 3. Desligar `notify_push` → sem push; central in-app continua se habilitada.
 4. Revogar permissão no SO → UI mostra estado bloqueado.
 
+### Alertas de despesa (carteira compartilhada)
+
+Quando outro membro adiciona uma **despesa manual** em uma carteira compartilhada, os demais membros recebem notificação in-app e push (se habilitados).
+
+**Deploy:** configure o Database Webhook em `public.transactions` (INSERT) → Edge Function `notify-transaction-created`. Detalhes em [`supabase/NOTIFICATION_DEPLOYMENT.md`](supabase/NOTIFICATION_DEPLOYMENT.md).
+
+**Smoke test:** User B adiciona despesa na carteira compartilhada → User A vê central + push no iPhone (PWA instalada).
+
 ## 🔒 Segurança
 
 O projeto implementa:

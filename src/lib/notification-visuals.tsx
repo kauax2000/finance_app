@@ -44,6 +44,7 @@ export type AppNotificationKind =
     | "workspace_role_changed"
     | "workspace_deleted"
     | "transaction_digest"
+    | "member_expense_created"
     | "promo_feature"
     | "bill_reminder"
     | "unknown"
@@ -70,6 +71,7 @@ const ALL_KINDS = new Set<string>([
     "workspace_role_changed",
     "workspace_deleted",
     "transaction_digest",
+    "member_expense_created",
     "promo_feature",
     "bill_reminder",
 ])
@@ -179,6 +181,7 @@ export function getNotificationIcon(n: AppNotification): ReactNode {
         case "workspace_deleted":
             return <TrashIcon className={iconClass()} />
         case "transaction_digest":
+        case "member_expense_created":
             return <ReceiptPercentIcon className={iconClass()} />
         case "promo_feature":
             return <SparklesIcon className={iconClass()} />

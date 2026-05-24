@@ -349,6 +349,7 @@ export function useTransactionsListController(
     const tableLoading = listQuery.isFetching && !listQuery.isPending
 
     const [didAutoOpen, setDidAutoOpen] = useState(false)
+    const [didAutoOpenTxn, setDidAutoOpenTxn] = useState(false)
     const [detailTransaction, setDetailTransaction] =
         useState<Transaction | null>(null)
     const [detailOpen, setDetailOpen] = useState(false)
@@ -719,6 +720,65 @@ export function useTransactionsListController(
         },
         []
     )
+
+    useEffect(() => {
+        if (!isPage) return
+        if (didAutoOpenTxn) return
+        if (loading) return
+        if (!currentWorkspaceId) return
+        if (detailOpen) return
+
+        const txnParam = searchParams?.get("txn")?.trim() ?? ""
+        if (!txnParam || !CARD_QUERY_UUID_RE.test(txnParam)) return
+
+        let cancelled = false
+
+        const openFromTxnParam = async () => {
+            const inList = transactions.find((t) => t.id === txnParam) ?? null
+            if (inList) {
+                setDidAutoOpenTxn(true)
+                openTransactionDetail(inList)
+            } else {
+                const { data, error } = await supabase
+                    .from("transactions")
+                    .select("*")
+                    .eq("id", txnParam)
+                    .eq("workspace_id", currentWorkspaceId)
+                    .maybeSingle()
+
+                if (cancelled) return
+                if (error || !data) {
+                    setDidAutoOpenTxn(true)
+                    return
+                }
+
+                setDidAutoOpenTxn(true)
+                openTransactionDetail(data as Transaction)
+            }
+
+            const nextParams = new URLSearchParams(searchParams.toString())
+            nextParams.delete("txn")
+            const qs = nextParams.toString()
+            router.replace(qs ? `${pathname}?${qs}` : pathname)
+        }
+
+        void openFromTxnParam()
+
+        return () => {
+            cancelled = true
+        }
+    }, [
+        currentWorkspaceId,
+        detailOpen,
+        didAutoOpenTxn,
+        isPage,
+        loading,
+        openTransactionDetail,
+        pathname,
+        router,
+        searchParams,
+        transactions,
+    ])
 
     const handleDetailLaunchEditConsumed = useCallback(() => {
         setDetailLaunchEdit(false)

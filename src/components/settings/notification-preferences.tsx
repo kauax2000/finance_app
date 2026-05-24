@@ -291,8 +291,8 @@ export function NotificationPreferences() {
                                 <li>
                                     <PrefRow
                                         id="pref-tx"
-                                        title="Alertas financeiros importantes"
-                                        description="Sem spam: alertas realmente relevantes"
+                                        title="Despesas de outros membros"
+                                        description="Quando outro membro adiciona uma despesa na carteira compartilhada"
                                         checked={!!prefs?.notify_transactions}
                                         onCheckedChange={(checked) =>
                                             void patch({ notify_transactions: checked })
