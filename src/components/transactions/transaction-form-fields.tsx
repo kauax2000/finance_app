@@ -380,7 +380,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
         typeof setInstallmentEditScope === "function"
 
     return (
-        <div className="space-y-3 py-1 pb-6">
+        <div className="space-y-4 py-1 pb-2">
             {showInstallmentEditScopePicker ? (
                 <div
                     className={transactionSegmentContainerClassName}

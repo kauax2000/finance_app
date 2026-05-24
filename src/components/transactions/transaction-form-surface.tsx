@@ -9,6 +9,7 @@ import {
     DialogDescription,
     DialogFooter,
     DialogHeader,
+    DialogHeaderRow,
     DialogTitle,
 } from "@/components/ui/dialog"
 import { SheetClose, SheetDescription, SheetFooter } from "@/components/ui/sheet"
@@ -86,7 +87,7 @@ export function TransactionFormSurface({
             : variant === "dialog-mobile"
               ? cn("min-h-0 flex-1 overflow-y-auto px-4", scrollClassName)
               : cn(
-                    "min-h-0 flex-1 overflow-y-auto px-6 pt-4",
+                    "scrollbar-thin min-h-0 flex-1 overflow-y-auto px-6 pb-4 pt-4",
                     scrollClassName
                 )
 
@@ -146,24 +147,27 @@ export function TransactionFormSurface({
     return (
         <CustomForm
             onSubmit={handleSubmit}
-            className="flex max-h-[min(90dvh,36rem)] flex-col"
+            className="flex min-h-0 flex-1 flex-col overflow-hidden"
         >
-            <DialogHeader className="flex shrink-0 flex-row items-start justify-between gap-3 px-6 pt-6 pb-0 text-left">
-                <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <DialogHeader className="shrink-0 px-6 pt-6 pb-3">
+                <DialogHeaderRow
+                    endAdornment={
+                        <DialogClose asChild>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-sm"
+                                className="-mr-1 -mt-0.5"
+                                aria-label="Fechar"
+                            >
+                                <XMarkIcon className="h-5 w-5" aria-hidden />
+                            </Button>
+                        </DialogClose>
+                    }
+                >
                     <DialogTitle>{formTitle}</DialogTitle>
                     <DialogDescription>{formDescription}</DialogDescription>
-                </div>
-                <DialogClose asChild>
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        className="shrink-0 -mr-1 -mt-0.5"
-                        aria-label="Fechar"
-                    >
-                        <XMarkIcon className="h-5 w-5" aria-hidden />
-                    </Button>
-                </DialogClose>
+                </DialogHeaderRow>
             </DialogHeader>
             <div className={fieldsScrollClass}>
                 <TransactionFormFields {...fieldsProps} />
