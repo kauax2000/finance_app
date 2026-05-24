@@ -34,7 +34,7 @@ function AuthGuardInner({ children }: AuthGuardProps) {
         if (inviteAcceptPublic) {
             return <>{children}</>
         }
-        return <AppBootstrapScreen message="Redirecionando…" />
+        return <AppBootstrapScreen />
     }
 
     return <>{children}</>
