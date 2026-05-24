@@ -95,7 +95,7 @@ function MobilePaymentsCalendarGrid({
                     </div>
                 ))}
             </div>
-            <div className="grid grid-cols-7 gap-1">
+            <div className="grid grid-cols-7 gap-1 [grid-auto-rows:minmax(2.5rem,1fr)]">
                 {cells.map((cell) => {
                     const list = byYmd.get(cell.ymd) ?? []
                     const hasEvents = list.length > 0
@@ -114,7 +114,7 @@ function MobilePaymentsCalendarGrid({
                                 )
                             }}
                             className={cn(
-                                "flex aspect-square w-full flex-col items-center justify-center rounded-md text-xs font-semibold tabular-nums transition-colors",
+                                "flex min-h-10 w-full flex-col items-center justify-center rounded-md text-xs font-semibold tabular-nums transition-colors",
                                 !cell.inMonth && "opacity-40",
                                 isToday &&
                                     "ring-2 ring-primary ring-offset-2 ring-offset-background",
@@ -722,7 +722,7 @@ export function DashboardPaymentsCalendar({
                                 </PopoverContent>
                             </Popover>
                         ) : null}
-                        <div className="space-y-3">
+                        <div className="relative z-0 space-y-3">
                             {mobileGroupedForList.length === 0 ? (
                                 <p className="py-6 text-center text-sm text-muted-foreground">
                                     Nenhum evento neste mês
@@ -730,7 +730,7 @@ export function DashboardPaymentsCalendar({
                             ) : (
                                 mobileGroupedForList.map(({ ymd, list }) => (
                                     <div key={ymd} className="space-y-1.5">
-                                        <div className="sticky top-0 z-[1] bg-card px-2 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                        <div className="bg-card px-2 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                                             {ymd.split("-").reverse().join("/")}
                                         </div>
                                         <div className="space-y-1.5 pl-1">
