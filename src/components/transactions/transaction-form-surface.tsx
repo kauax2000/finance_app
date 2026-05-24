@@ -81,11 +81,18 @@ export function TransactionFormSurface({
         </Button>
     ) : null
 
+    const formPickersOpen =
+        fieldsProps.categoryPopoverOpen || fieldsProps.creditCardPopoverOpen
+
     const fieldsScrollClass =
         variant === "detail-sheet"
             ? cn("min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-5", scrollClassName)
             : variant === "dialog-mobile"
-              ? cn("min-h-0 flex-1 overflow-y-auto px-4", scrollClassName)
+              ? cn(
+                    "min-h-0 flex-1 px-4",
+                    formPickersOpen ? "overflow-hidden" : "overflow-y-auto",
+                    scrollClassName
+                )
               : cn(
                     "scrollbar-thin min-h-0 flex-1 overflow-y-auto px-6 pb-4 pt-4",
                     scrollClassName
