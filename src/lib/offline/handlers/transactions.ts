@@ -4,6 +4,7 @@ import {
     isTransactionsPaymentColumnsUnsupportedError,
 } from "@/lib/supabase-errors"
 import type { OfflineMutation } from "@/lib/offline/types"
+import { scheduleNotifyTransactionCreated } from "@/lib/transaction-notifications"
 
 function stripPaymentColumns<T extends Record<string, unknown>>(row: T) {
     const next = { ...row } as Record<string, unknown>
@@ -34,15 +35,18 @@ export async function syncTransactionMutation(
     row.client_id = clientId
 
     if (operation === "insert") {
-        let { error } = await supabase.from("transactions").upsert(row, {
+        let { data: inserted, error } = await supabase.from("transactions").upsert(row, {
             onConflict: "client_id",
             ignoreDuplicates: false,
-        })
+        }).select("id, type, subscription_id, installment_plan_id").single()
 
         if (error && isTransactionsPaymentColumnsUnsupportedError(error)) {
             const retry = await supabase
                 .from("transactions")
                 .upsert(stripPaymentColumns(row), { onConflict: "client_id" })
+                .select("id, type, subscription_id, installment_plan_id")
+                .single()
+            inserted = retry.data
             error = retry.error
         }
 
@@ -52,6 +56,16 @@ export async function syncTransactionMutation(
                 error: formatSupabasePostgrestError(error) ?? error.message,
             }
         }
+
+        if (
+            inserted?.id &&
+            inserted.type === "expense" &&
+            !inserted.subscription_id &&
+            !inserted.installment_plan_id
+        ) {
+            scheduleNotifyTransactionCreated(String(inserted.id))
+        }
+
         return { ok: true }
     }
 
