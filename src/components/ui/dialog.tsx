@@ -86,6 +86,30 @@ function DialogContent({
   )
 }
 
+/** Title + description row with optional trailing control (e.g. close). Use inside `DialogHeader`. */
+function DialogHeaderRow({
+  className,
+  children,
+  endAdornment,
+}: React.ComponentProps<"div"> & {
+  endAdornment?: React.ReactNode
+}) {
+  return (
+    <div
+      data-slot="dialog-header-row"
+      className={cn(
+        "grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3",
+        className
+      )}
+    >
+      <div className="min-w-0 space-y-1">{children}</div>
+      {endAdornment != null ? (
+        <div className="shrink-0">{endAdornment}</div>
+      ) : null}
+    </div>
+  )
+}
+
 function DialogHeader({
   className,
   hideSeparator = false,
@@ -93,16 +117,21 @@ function DialogHeader({
   ...props
 }: React.ComponentProps<"div"> & { hideSeparator?: boolean }) {
   return (
-    <div
-      data-slot="dialog-header"
-      className={cn("flex flex-col gap-2", className)}
-      {...props}
-    >
-      {children}
+    <>
+      <div
+        data-slot="dialog-header"
+        className={cn(
+          "flex w-full min-w-0 flex-col gap-2 text-center sm:text-left",
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </div>
       {!hideSeparator ? (
-        <Separator className="bg-border/60" decorative />
+        <Separator className="shrink-0 bg-border/60" decorative />
       ) : null}
-    </div>
+    </>
   )
 }
 
@@ -141,7 +170,7 @@ function DialogTitle({
     <DialogPrimitive.Title
       data-slot="dialog-title"
       className={cn(
-        "font-heading text-base leading-none font-medium",
+        "min-w-0 font-heading text-base leading-none font-medium",
         className
       )}
       {...props}
@@ -157,7 +186,7 @@ function DialogDescription({
     <DialogPrimitive.Description
       data-slot="dialog-description"
       className={cn(
-        "text-sm text-muted-foreground *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
+        "min-w-0 text-sm text-muted-foreground *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
         className
       )}
       {...props}
@@ -172,6 +201,7 @@ export {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogHeaderRow,
   DialogOverlay,
   DialogPortal,
   DialogTitle,
