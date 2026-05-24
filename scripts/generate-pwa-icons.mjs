@@ -11,6 +11,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = path.join(__dirname, "..")
 const logoPath = path.join(root, "public", "logo.svg")
 const iconsDir = path.join(root, "public", "icons")
+const publicDir = path.join(root, "public")
 
 const ICON_BG = { r: 0, g: 0, b: 0, alpha: 1 }
 
@@ -44,6 +45,7 @@ async function main() {
         { name: "icon-512.png", size: 512 },
         { name: "icon-512-maskable.png", size: 512, maskable: true },
         { name: "apple-touch-icon.png", size: 180 },
+        { name: "icon-32.png", size: 32 },
     ]
 
     for (const { name, size, maskable } of sizes) {
@@ -52,24 +54,15 @@ async function main() {
         console.log(`Wrote public/icons/${name}`)
     }
 
-    // Multi-size favicon
-    const favicon16 = await renderIcon(16)
     const favicon32 = await renderIcon(32)
-    await fs.writeFile(path.join(root, "src", "app", "icon.png"), await renderIcon(32))
-    await fs.writeFile(
-        path.join(root, "src", "app", "apple-icon.png"),
-        await renderIcon(180)
-    )
 
-    // favicon.ico from 16+32
     await sharp(favicon32)
-        .toFile(path.join(root, "src", "app", "favicon.ico"))
+        .toFile(path.join(publicDir, "favicon.ico"))
         .catch(async () => {
-            await fs.writeFile(path.join(root, "src", "app", "favicon.ico"), favicon32)
+            await fs.writeFile(path.join(publicDir, "favicon.ico"), favicon32)
         })
 
-    console.log("Wrote src/app/icon.png, apple-icon.png, favicon.ico")
-    void favicon16
+    console.log("Wrote public/favicon.ico")
 }
 
 main().catch((err) => {

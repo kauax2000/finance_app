@@ -125,7 +125,7 @@ O app pode ser instalado na tela inicial (Safari → Compartilhar → **Adiciona
 ### Build e ícones
 
 ```bash
-npm run generate:pwa-icons   # gera public/icons/* a partir de public/logo.svg
+npm run generate:pwa-icons   # gera public/icons/* e public/favicon.ico a partir de public/logo.svg
 npm run build                # webpack + Serwist (gera public/sw.js)
 ```
 
