@@ -49,3 +49,6 @@ verify_jwt = false
 
 [functions.push-unsubscribe]
 verify_jwt = false
+
+[functions.notify-transaction-created]
+verify_jwt = false

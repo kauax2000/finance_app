@@ -49,5 +49,14 @@ export function getNotificationAction(n: AppNotification): NotificationAction | 
         return { label: "Contas a pagar", href: ROUTES.BILLS }
     }
 
+    if (kind === "member_expense_created") {
+        const txnId =
+            typeof meta?.transaction_id === "string" ? meta.transaction_id.trim() : ""
+        return {
+            label: "Ver transação",
+            href: txnId ? `${ROUTES.TRANSACTIONS}?txn=${encodeURIComponent(txnId)}` : ROUTES.TRANSACTIONS,
+        }
+    }
+
     return null
 }

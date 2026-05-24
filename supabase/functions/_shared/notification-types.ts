@@ -68,5 +68,12 @@ export function resolveNotificationHref(metadata: Record<string, unknown>): stri
     return `/categories/${metadata.category_id.trim()}`
   }
   if (kind === 'bill_reminder') return '/bills'
+  if (
+    kind === 'member_expense_created' &&
+    typeof metadata.transaction_id === 'string' &&
+    metadata.transaction_id.trim()
+  ) {
+    return `/transactions?txn=${metadata.transaction_id.trim()}`
+  }
   return '/dashboard'
 }

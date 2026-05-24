@@ -21,7 +21,7 @@
     "supabase:functions:serve": "npx supabase@latest functions serve",
     "supabase:functions:serve:sessions": "npx supabase@latest functions serve sessions",
     "supabase:deploy:sessions": "npx supabase@latest functions deploy sessions",
-    "supabase:deploy:functions": "npx supabase@latest functions deploy sessions activity-logs delete-user dispatch-notifications evaluate-budgets evaluate-credit-card-alerts credit-card-calendar-alerts evaluate-bills-reminders workspace-invites-create workspace-invites-accept workspace-invites-resend run-recurring-billing push-subscribe push-unsubscribe"
+    "supabase:deploy:functions": "npx supabase@latest functions deploy sessions activity-logs delete-user dispatch-notifications evaluate-budgets evaluate-credit-card-alerts credit-card-calendar-alerts evaluate-bills-reminders workspace-invites-create workspace-invites-accept workspace-invites-resend run-recurring-billing push-subscribe push-unsubscribe notify-transaction-created"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
