@@ -15,6 +15,12 @@ test.describe("PWA smoke", () => {
         expect(icon.headers()["content-type"]).toContain("image")
     })
 
+    test("serves favicon", async ({ request }) => {
+        const favicon = await request.get("/favicon.ico")
+        expect(favicon.ok()).toBeTruthy()
+        expect(favicon.headers()["content-type"]).toMatch(/image|icon/)
+    })
+
     test("login page has viewport fit for iOS safe areas", async ({ page }) => {
         await page.goto("/login")
         const viewport = page.locator('meta[name="viewport"]')

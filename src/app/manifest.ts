@@ -1,9 +1,5 @@
 import type { MetadataRoute } from "next"
-import { PWA_ICON_VERSION } from "@/lib/pwa/constants"
-
-function iconSrc(name: string) {
-    return `/icons/${name}?v=${PWA_ICON_VERSION}`
-}
+import { pwaIconSrc } from "@/lib/pwa/icon-url"
 
 export default function manifest(): MetadataRoute.Manifest {
     return {
@@ -23,19 +19,19 @@ export default function manifest(): MetadataRoute.Manifest {
         categories: ["finance", "productivity"],
         icons: [
             {
-                src: iconSrc("icon-192.png"),
+                src: pwaIconSrc("icon-192.png"),
                 sizes: "192x192",
                 type: "image/png",
                 purpose: "any",
             },
             {
-                src: iconSrc("icon-512.png"),
+                src: pwaIconSrc("icon-512.png"),
                 sizes: "512x512",
                 type: "image/png",
                 purpose: "any",
             },
             {
-                src: iconSrc("icon-512-maskable.png"),
+                src: pwaIconSrc("icon-512-maskable.png"),
                 sizes: "512x512",
                 type: "image/png",
                 purpose: "maskable",
@@ -46,13 +42,13 @@ export default function manifest(): MetadataRoute.Manifest {
                 name: "Nova transação",
                 short_name: "Transação",
                 url: "/transactions?new=1",
-                icons: [{ src: iconSrc("icon-192.png"), sizes: "192x192", type: "image/png" }],
+                icons: [{ src: pwaIconSrc("icon-192.png"), sizes: "192x192", type: "image/png" }],
             },
             {
                 name: "Dashboard",
                 short_name: "Início",
                 url: "/dashboard",
-                icons: [{ src: iconSrc("icon-192.png"), sizes: "192x192", type: "image/png" }],
+                icons: [{ src: pwaIconSrc("icon-192.png"), sizes: "192x192", type: "image/png" }],
             },
         ],
     }

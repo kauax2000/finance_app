@@ -1,5 +1,6 @@
 /// <reference types="@serwist/next/typings" />
 
+import { pwaIconSrc } from "@/lib/pwa/icon-url"
 import { defaultCache } from "@serwist/next/worker"
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist"
 import { NetworkOnly, Serwist } from "serwist"
@@ -102,8 +103,8 @@ sw.addEventListener("push", (event) => {
 
             await sw.registration.showNotification(title, {
                 body,
-                icon: "/icons/icon-192.png",
-                badge: "/icons/icon-192.png",
+                icon: pwaIconSrc("icon-192.png"),
+                badge: pwaIconSrc("icon-192.png"),
                 tag: payload.notification_id,
                 data: { href },
             })
