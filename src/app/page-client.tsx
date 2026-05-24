@@ -19,5 +19,5 @@ export default function HomePage() {
     }
   }, [user, loading, router])
 
-  return <AppBootstrapScreen message="Preparando sua sessão…" />
+  return <AppBootstrapScreen />
 }

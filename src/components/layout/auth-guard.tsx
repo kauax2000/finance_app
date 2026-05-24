@@ -27,7 +27,7 @@ function AuthGuardInner({ children }: AuthGuardProps) {
     }, [user, loading, router, pathname, searchParams, inviteAcceptPublic])
 
     if (loading) {
-        return <>{children}</>
+        return <AppBootstrapScreen />
     }
 
     if (!user) {
