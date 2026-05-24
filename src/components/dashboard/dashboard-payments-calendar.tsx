@@ -2,10 +2,7 @@
 
 import * as React from "react"
 import { CalendarDaysIcon } from "@heroicons/react/24/outline"
-import { ptBR } from "date-fns/locale"
-import { getDefaultClassNames } from "react-day-picker"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { Calendar, CalendarDayButton } from "@/components/ui/calendar"
 import { Card, CardContent } from "@/components/ui/card"
 import {
     Popover,
@@ -34,6 +31,113 @@ import type {
 } from "@/components/dashboard/payment-events"
 
 const WEEKDAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
+
+const MOBILE_DAY_MODIFIER_DOT = {
+    hasSub: "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-blue-500",
+    hasInst:
+        "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-amber-500",
+    hasBills:
+        "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-primary",
+    hasCard:
+        "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-neutral-500",
+    hasPosted:
+        "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-emerald-600",
+} as const
+
+type PaymentModifierDateSets = {
+    sub: Date[]
+    inst: Date[]
+    bills: Date[]
+    card: Date[]
+    posted: Date[]
+}
+
+function ymdInModifierDates(ymd: string, dates: Date[]): boolean {
+    return dates.some((d) => localYmdFromDate(d) === ymd)
+}
+
+function mobileDayModifierClasses(
+    ymd: string,
+    sets: PaymentModifierDateSets,
+): string {
+    return cn(
+        ymdInModifierDates(ymd, sets.sub) && MOBILE_DAY_MODIFIER_DOT.hasSub,
+        ymdInModifierDates(ymd, sets.inst) && MOBILE_DAY_MODIFIER_DOT.hasInst,
+        ymdInModifierDates(ymd, sets.bills) && MOBILE_DAY_MODIFIER_DOT.hasBills,
+        ymdInModifierDates(ymd, sets.card) && MOBILE_DAY_MODIFIER_DOT.hasCard,
+        ymdInModifierDates(ymd, sets.posted) &&
+            MOBILE_DAY_MODIFIER_DOT.hasPosted,
+    )
+}
+
+function MobilePaymentsCalendarGrid({
+    cells,
+    todayYmd,
+    modifierDates,
+    byYmd,
+    onDayWithEventsClick,
+}: {
+    cells: { ymd: string; inMonth: boolean; label: number }[]
+    todayYmd: string
+    modifierDates: PaymentModifierDateSets
+    byYmd: Map<string, PaymentEvent[]>
+    onDayWithEventsClick: (ymd: string, anchor: HTMLElement) => void
+}) {
+    return (
+        <div className="min-w-0 w-full shrink-0 rounded-lg border border-border/60 p-1">
+            <div className="mb-2 grid grid-cols-7 gap-1">
+                {WEEKDAYS.map((d) => (
+                    <div
+                        key={d}
+                        className="px-1 py-1 text-center text-[11px] font-medium uppercase tracking-wide text-muted-foreground"
+                    >
+                        {d}
+                    </div>
+                ))}
+            </div>
+            <div className="grid grid-cols-7 gap-1">
+                {cells.map((cell) => {
+                    const list = byYmd.get(cell.ymd) ?? []
+                    const hasEvents = list.length > 0
+                    const isToday = cell.ymd === todayYmd
+                    return (
+                        <button
+                            key={cell.ymd}
+                            type="button"
+                            data-payment-ymd={cell.ymd}
+                            disabled={!hasEvents}
+                            onClick={(e) => {
+                                if (!hasEvents) return
+                                onDayWithEventsClick(
+                                    cell.ymd,
+                                    e.currentTarget,
+                                )
+                            }}
+                            className={cn(
+                                "flex aspect-square w-full flex-col items-center justify-center rounded-md text-xs font-semibold tabular-nums transition-colors",
+                                !cell.inMonth && "opacity-40",
+                                isToday &&
+                                    "ring-2 ring-primary ring-offset-2 ring-offset-background",
+                                hasEvents
+                                    ? "hover:bg-muted/40"
+                                    : "cursor-default hover:bg-transparent",
+                                mobileDayModifierClasses(
+                                    cell.ymd,
+                                    modifierDates,
+                                ),
+                                cell.inMonth
+                                    ? "text-foreground"
+                                    : "text-muted-foreground",
+                            )}
+                        >
+                            {cell.label}
+                        </button>
+                    )
+                })}
+            </div>
+        </div>
+    )
+}
 
 function paymentEventAmountTone(kind: PaymentEventKind) {
     if (kind === "posted_income") return "income" as const
@@ -347,7 +451,6 @@ function EventChips({
 
 export function DashboardPaymentsCalendar({
     calendarYm,
-    onCalendarYmChange,
     events,
     todayYmd,
     summary,
@@ -372,10 +475,6 @@ export function DashboardPaymentsCalendar({
     const isMobile = useIsMobile()
     const byYmd = React.useMemo(() => groupEventsByYmd(events), [events])
     const cells = React.useMemo(() => buildCells(calendarYm), [calendarYm])
-    const monthDate = React.useMemo(() => {
-        const { y, m } = parseYearMonth(calendarYm)
-        return new Date(y, m - 1, 1)
-    }, [calendarYm])
 
     const modifierDates = React.useMemo(() => {
         const sub: Date[] = []
@@ -555,64 +654,16 @@ export function DashboardPaymentsCalendar({
                     <>
                         <div
                             ref={mobileCalendarShellRef}
-                            className="min-w-0 w-full"
+                            className="min-w-0 w-full shrink-0"
                         >
-                            <Calendar
-                                mode="single"
-                                locale={ptBR}
-                                month={monthDate}
-                                components={{
-                                    DayButton: (props) => (
-                                        <CalendarDayButton
-                                            {...props}
-                                            locale={ptBR}
-                                            data-payment-ymd={localYmdFromDate(
-                                                props.day.date,
-                                            )}
-                                        />
-                                    ),
-                                }}
-                                onMonthChange={(d) => {
-                                    const y = d.getFullYear()
-                                    const mo = d.getMonth() + 1
-                                    onCalendarYmChange(
-                                        `${y}-${String(mo).padStart(2, "0")}`
-                                    )
-                                }}
-                                selected={undefined}
-                                onSelect={() => {}}
-                                onDayClick={(date, _modifiers, e) => {
-                                    const ymd = localYmdFromDate(date)
-                                    const list = byYmd.get(ymd) ?? []
-                                    if (list.length === 0) return
-                                    mobileCalendarDayAnchorRef.current =
-                                        e.currentTarget as HTMLElement
+                            <MobilePaymentsCalendarGrid
+                                cells={cells}
+                                todayYmd={todayYmd}
+                                modifierDates={modifierDates}
+                                byYmd={byYmd}
+                                onDayWithEventsClick={(ymd, anchor) => {
+                                    mobileCalendarDayAnchorRef.current = anchor
                                     setMobileDayPopoverYmd(ymd)
-                                }}
-                                className="w-full rounded-lg border border-border/60 p-1"
-                                classNames={{
-                                    root: cn(
-                                        "w-full max-w-full min-w-0",
-                                        getDefaultClassNames().root,
-                                    ),
-                                }}
-                                modifiers={{
-                                    hasSub: modifierDates.sub,
-                                    hasInst: modifierDates.inst,
-                                    hasBills: modifierDates.bills,
-                                    hasCard: modifierDates.card,
-                                    hasPosted: modifierDates.posted,
-                                }}
-                                modifiersClassNames={{
-                                    hasSub: "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-blue-500",
-                                    hasInst:
-                                        "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-amber-500",
-                                    hasBills:
-                                        "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-primary",
-                                    hasCard:
-                                        "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-neutral-500",
-                                    hasPosted:
-                                        "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-emerald-600",
                                 }}
                             />
                         </div>
