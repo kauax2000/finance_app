@@ -9,6 +9,7 @@ import type {
 } from "@/components/transactions/transaction-form-types"
 import { executeMutation } from "@/lib/offline/mutation-gateway"
 import { dispatchFinanceTransactionsMutated } from "@/lib/workspace-data-events"
+import { scheduleNotifyTransactionCreated } from "@/lib/transaction-notifications"
 
 export type SaveTransactionContext = {
     userId: string
@@ -49,7 +50,7 @@ async function saveTransactionOnline(
     payload: TransactionFormSavePayload,
     editingId: string | null,
     row: Record<string, unknown>
-): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
+): Promise<{ ok: true; insertedId?: string } | { ok: false; errorMessage: string }> {
     if (editingId) {
         let { error } = await supabase
             .from("transactions")
@@ -76,12 +77,19 @@ async function saveTransactionOnline(
         return { ok: true }
     }
 
-    let { error } = await supabase.from("transactions").insert(row)
+    let { data: inserted, error } = await supabase
+        .from("transactions")
+        .insert(row)
+        .select("id")
+        .single()
 
     if (error && isTransactionsPaymentColumnsUnsupportedError(error)) {
         const retry = await supabase
             .from("transactions")
             .insert(stripPaymentColumns(row))
+            .select("id")
+            .single()
+        inserted = retry.data
         error = retry.error
     }
 
@@ -94,7 +102,11 @@ async function saveTransactionOnline(
         }
     }
 
-    return { ok: true }
+    if (payload.type === "expense" && inserted?.id) {
+        scheduleNotifyTransactionCreated(String(inserted.id))
+    }
+
+    return { ok: true, insertedId: inserted?.id ? String(inserted.id) : undefined }
 }
 
 export async function saveTransaction(

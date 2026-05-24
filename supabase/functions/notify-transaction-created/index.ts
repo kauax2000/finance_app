@@ -1,15 +1,11 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { deliverNotification } from '../_shared/deliver-notification.ts'
-import { currencyBRL, displayActorName } from '../_shared/formatters.ts'
-import {
-  shouldNotifyMembersForTransaction,
-  type TransactionNotifyRow,
-} from '../_shared/transaction-notify-rules.ts'
+import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
+import { processTransactionNotification } from '../_shared/process-transaction-notification.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type, x-notify-internal-secret',
+    'authorization, x-client-info, apikey, content-type, x-app-session-id, x-notify-internal-secret',
 }
 
 function json(status: number, payload: unknown): Response {
@@ -25,7 +21,7 @@ function bearerToken(authHeader: string | null): string | null {
   return token.length > 0 ? token : null
 }
 
-function isAuthorized(req: Request): boolean {
+function isServiceAuthorized(req: Request): boolean {
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')?.trim()
   const internalSecret = Deno.env.get('NOTIFY_INTERNAL_SECRET')?.trim()
   const bearer = bearerToken(req.headers.get('Authorization'))
@@ -49,23 +45,6 @@ function resolveTransactionId(body: WebhookBody): string | null {
   return null
 }
 
-async function notificationAlreadySent(
-  supabaseAdmin: ReturnType<typeof createClient>,
-  userId: string,
-  workspaceId: string,
-  transactionId: string
-): Promise<boolean> {
-  const { data } = await supabaseAdmin
-    .from('notifications')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('workspace_id', workspaceId)
-    .eq('metadata->>kind', 'member_expense_created')
-    .eq('metadata->>transaction_id', transactionId)
-    .maybeSingle()
-  return !!data?.id
-}
-
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -73,10 +52,6 @@ Deno.serve(async (req: Request) => {
 
   if (req.method !== 'POST') {
     return json(405, { error: 'Method not allowed' })
-  }
-
-  if (!isAuthorized(req)) {
-    return json(401, { error: 'Unauthorized' })
   }
 
   let body: WebhookBody
@@ -93,112 +68,37 @@ Deno.serve(async (req: Request) => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
   const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-  const { data: txRow, error: txErr } = await supabaseAdmin
-    .from('transactions')
-    .select(
-      'id, user_id, workspace_id, type, amount, description, subscription_id, installment_plan_id'
-    )
-    .eq('id', transactionId)
-    .maybeSingle()
-
-  if (txErr) return json(500, { error: txErr.message })
-  if (!txRow) return json(404, { error: 'Transaction not found' })
-
-  const tx = txRow as TransactionNotifyRow
-  const workspaceId = tx.workspace_id
-  if (!workspaceId) {
-    return json(200, { ok: true, skipped: 'no_workspace', notified: 0 })
-  }
-
-  const { data: workspace, error: wsErr } = await supabaseAdmin
-    .from('workspaces')
-    .select('type')
-    .eq('id', workspaceId)
-    .maybeSingle()
-
-  if (wsErr) return json(500, { error: wsErr.message })
-
-  const { count: memberCount, error: memCountErr } = await supabaseAdmin
-    .from('workspace_members')
-    .select('user_id', { count: 'exact', head: true })
-    .eq('workspace_id', workspaceId)
-
-  if (memCountErr) return json(500, { error: memCountErr.message })
-
-  if (
-    !shouldNotifyMembersForTransaction(tx, {
-      type: String(workspace?.type ?? ''),
-      member_count: memberCount ?? 0,
-    })
-  ) {
-    return json(200, { ok: true, skipped: 'not_eligible', notified: 0 })
-  }
-
-  const { data: members, error: memErr } = await supabaseAdmin
-    .from('workspace_members')
-    .select('user_id')
-    .eq('workspace_id', workspaceId)
-    .neq('user_id', tx.user_id)
-
-  if (memErr) return json(500, { error: memErr.message })
-  if (!members?.length) {
-    return json(200, { ok: true, skipped: 'no_recipients', notified: 0 })
-  }
-
-  const { data: actorProfile } = await supabaseAdmin
-    .from('profiles')
-    .select('full_name, email')
-    .eq('id', tx.user_id)
-    .maybeSingle()
-
-  const actorName = displayActorName(actorProfile)
-  const amountLabel = currencyBRL(Number(tx.amount))
-  const description = tx.description?.trim() || 'Sem descrição'
-  const title = `${actorName} adicionou uma despesa`
-  const msgBody = `${amountLabel} — ${description}`
-  const href = `/transactions?txn=${tx.id}`
-
-  let notified = 0
-  const results: Array<{ user_id: string; ok: boolean; skipped?: string }> = []
-
-  for (const member of members) {
-    const memberId = member.user_id as string
-    if (await notificationAlreadySent(supabaseAdmin, memberId, workspaceId, tx.id)) {
-      results.push({ user_id: memberId, ok: true, skipped: 'duplicate' })
-      continue
+  if (!isServiceAuthorized(req)) {
+    const jwt = bearerJwt(req.headers.get('Authorization'))
+    if (!jwt) {
+      return json(401, { error: 'Unauthorized' })
     }
 
-    const delivered = await deliverNotification({
-      supabaseAdmin,
-      userId: memberId,
-      workspaceId,
-      type: 'transaction',
-      title,
-      body: msgBody,
-      metadata: {
-        kind: 'member_expense_created',
-        transaction_id: tx.id,
-        actor_user_id: tx.user_id,
-        href,
-      },
-      allowTransactionType: true,
-    })
-
-    if (!delivered.ok) {
-      results.push({ user_id: memberId, ok: false })
-      continue
+    const authResult = await getAuthUserFromJwt(supabaseUrl, anonKey, jwt)
+    if (authResult.error || !authResult.user) {
+      return json(401, { error: 'Invalid or expired token' })
     }
 
-    if (delivered.skipped) {
-      results.push({ user_id: memberId, ok: true, skipped: delivered.skipped })
-      continue
-    }
+    const { data: txOwner, error: ownerErr } = await supabaseAdmin
+      .from('transactions')
+      .select('user_id')
+      .eq('id', transactionId)
+      .maybeSingle()
 
-    notified += 1
-    results.push({ user_id: memberId, ok: true })
+    if (ownerErr) return json(500, { error: ownerErr.message })
+    if (!txOwner) return json(404, { error: 'Transaction not found' })
+    if (txOwner.user_id !== authResult.user.id) {
+      return json(403, { error: 'Forbidden' })
+    }
   }
 
-  return json(200, { ok: true, notified, results })
+  const result = await processTransactionNotification(supabaseAdmin, transactionId)
+  if (!result.ok) {
+    return json(result.status ?? 500, { error: result.error })
+  }
+
+  return json(200, result)
 })
