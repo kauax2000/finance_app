@@ -1,10 +1,17 @@
 import type {
+    CreditCard,
     Transaction,
     WorkspaceInstallmentPlan,
     WorkspaceSubscription,
 } from "@/lib/supabase"
 import { localYmdFromDate, parseYmdLocal, transactionCalendarParts } from "@/lib/transaction-date"
 import { periodBoundsFromYearMonth } from "@/lib/budget-month"
+import {
+    buildCreditCardClosingLookup,
+    projectedChargeCountsInExpenseMonth,
+    transactionCountsInExpenseMonth,
+    type CreditCardClosingLookup,
+} from "@/lib/expense-month-attribution"
 import {
     buildGlobalInstallmentDedupeKeys,
     expandRemainingInstallmentCharges,
@@ -91,25 +98,28 @@ export function buildCategoryCommitmentsForMonth(args: {
         | "subscription_id"
         | "installment_plan_id"
         | "installment_sequence"
+        | "payment_method"
+        | "payment_credit_card_id"
     >[]
     installmentPlans: WorkspaceInstallmentPlan[]
     subscriptions: WorkspaceSubscription[]
+    creditCards?: Pick<CreditCard, "id" | "closing_day">[]
 }): CategoryCommitmentsById {
     const { period_start, period_end } = periodBoundsFromYearMonth(args.yearMonth)
+    const closingLookup: CreditCardClosingLookup = buildCreditCardClosingLookup(
+        args.creditCards ?? [],
+    )
     const out: CategoryCommitmentsById = {}
 
-    // Posted totals (this month only, by category).
     for (const t of args.transactions) {
         if (t.type !== "expense") continue
         const categoryId = t.category_id
         if (!categoryId) continue
-        const ymd = transactionLocalYmd(t as Pick<Transaction, "date">)
-        if (!ymd || ymd < period_start || ymd > period_end) continue
+        if (!transactionCountsInExpenseMonth(t, args.yearMonth, closingLookup)) continue
         const b = ensureBucket(out, categoryId)
         b.postedTotal += Number(t.amount) || 0
     }
 
-    // Dedupe helpers.
     const installmentDedupe = buildGlobalInstallmentDedupeKeys(args.transactions)
     const postedBySubscriptionDay = new Set<string>()
     for (const t of args.transactions) {
@@ -121,21 +131,30 @@ export function buildCategoryCommitmentsForMonth(args: {
         postedBySubscriptionDay.add(`${sid}:${ymd}`)
     }
 
-    // Projected installments (remaining only), bucketed by category_id.
     for (const p of args.installmentPlans) {
         if (!p.is_active) continue
         const categoryId = p.category_id
         if (!categoryId) continue
         for (const charge of expandRemainingInstallmentCharges(p)) {
-            const ymd = localYmdFromDate(charge.chargeDate)
-            if (ymd < period_start || ymd > period_end) continue
+            const inMonth =
+                p.payment_method === "credit_card" && p.payment_credit_card_id
+                    ? projectedChargeCountsInExpenseMonth(
+                          charge.chargeDate,
+                          p,
+                          args.yearMonth,
+                          closingLookup,
+                      )
+                    : (() => {
+                          const ymd = localYmdFromDate(charge.chargeDate)
+                          return ymd >= period_start && ymd <= period_end
+                      })()
+            if (!inMonth) continue
             if (isProjectedChargeAlreadyPosted(charge, installmentDedupe)) continue
             const b = ensureBucket(out, categoryId)
             b.projectedInstallmentsTotal += Number(charge.amount) || 0
         }
     }
 
-    // Projected subscriptions (within month), bucketed by category_id.
     for (const s of args.subscriptions) {
         if (!s.is_active) continue
         const categoryId = s.category_id
@@ -168,7 +187,6 @@ export function buildCategoryCommitmentsForMonth(args: {
         }
     }
 
-    // Final committed totals.
     for (const [categoryId, b] of Object.entries(out)) {
         out[categoryId] = {
             ...b,
@@ -180,4 +198,3 @@ export function buildCategoryCommitmentsForMonth(args: {
     }
     return out
 }
-

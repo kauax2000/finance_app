@@ -82,15 +82,13 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
 
     const initialLoading = detailQuery.isPending
     const refreshing = detailQuery.isFetching && !detailQuery.isPending
-    const refreshingRef = React.useRef(refreshing)
-    refreshingRef.current = refreshing
 
     const handleMonthChange = React.useCallback(
         (nextYm: string) => {
-            if (refreshingRef.current) return
+            if (refreshing) return
             setYearMonth(nextYm)
         },
-        [],
+        [refreshing],
     )
 
     const categoryDetailDateFilter = React.useMemo(

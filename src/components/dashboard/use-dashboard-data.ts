@@ -18,6 +18,11 @@ import {
     transactionCalendarParts,
 } from "@/lib/transaction-date"
 import { buildCardMonthlyInvoiceSnapshot } from "@/lib/credit-card-billing"
+import {
+    aggregateIncomeExpenseForMonth,
+    buildCreditCardClosingLookup,
+    transactionCountsInExpenseMonth,
+} from "@/lib/expense-month-attribution"
 import { findInstallmentPlansEndingSoon } from "@/lib/credit-card-invoice-analytics"
 import {
     periodBoundsFromYearMonth,
@@ -26,7 +31,6 @@ import {
 } from "@/lib/budget-month"
 import {
     getDashboardPresetRange,
-    previousMonthSamePeriodRange,
     toIsoLocalYmd,
     type DashboardDatePresetKey,
     isDashboardPresetKey,
@@ -46,7 +50,6 @@ import { useMemberDirectoryQuery } from "@/lib/queries/use-member-directory"
 import { useSubscriptionsQuery } from "@/lib/queries/use-subscriptions"
 import {
     useTransactionsRangeQuery,
-    useTransactionsSummaryRangeQuery,
 } from "@/lib/queries/use-transactions-range"
 import { useTransactionsWorkspaceAuxQuery } from "@/lib/queries/use-transactions-workspace-aux-query"
 import { useRecurringBillingCatchup } from "@/lib/queries/use-recurring-billing-catchup"
@@ -103,17 +106,18 @@ function readInitialYm(sp: URLSearchParams): string {
     return formatYearMonth(new Date())
 }
 
-function aggregateIncomeExpense(
-    transactions: Pick<Transaction, "type" | "amount">[],
-) {
-    let income = 0
-    let expense = 0
-    for (const t of transactions) {
-        const n = Number(t.amount)
-        if (t.type === "income") income += n
-        else expense += n
+function paddedCalendarIsoRange(calendarYm: string): TransactionsRangeKey {
+    const { period_start, period_end } = periodBoundsFromYearMonth(calendarYm)
+    const prevCalYm = shiftYearMonth(calendarYm, -1)
+    const nextCalYm = shiftYearMonth(calendarYm, 1)
+    const calPadStart = periodBoundsFromYearMonth(prevCalYm).period_start
+    const calPadEnd = periodBoundsFromYearMonth(nextCalYm).period_end
+    const txFrom = minYmd(period_start, calPadStart)
+    const txTo = maxYmd(period_end, calPadEnd)
+    return {
+        from: filterRangeStartIso(txFrom),
+        to: filterRangeEndIso(txTo),
     }
-    return { income, expense, net: income - expense }
 }
 
 function attachCategoriesToSubscriptions(
@@ -233,31 +237,20 @@ export function useDashboardData() {
 
     const todayYmd = useMemo(() => toIsoLocalYmd(new Date()), [])
 
-    const paddedTxIsoRange = useMemo((): TransactionsRangeKey => {
-        const { from, to } = range
-        const prevCalYm = shiftYearMonth(calendarYm, -1)
-        const nextCalYm = shiftYearMonth(calendarYm, 1)
-        const calPadStart = periodBoundsFromYearMonth(prevCalYm).period_start
-        const calPadEnd = periodBoundsFromYearMonth(nextCalYm).period_end
-        const txFrom = minYmd(from, calPadStart)
-        const txTo = maxYmd(to, calPadEnd)
-        return {
-            from: filterRangeStartIso(txFrom),
-            to: filterRangeEndIso(txTo),
-        }
-    }, [range, calendarYm])
+    const paddedTxIsoRange = useMemo(
+        (): TransactionsRangeKey => paddedCalendarIsoRange(calendarYm),
+        [calendarYm],
+    )
 
-    const prevPeriodSummaryRange = useMemo((): TransactionsRangeKey | null => {
-        const nowYm = formatYearMonth(new Date())
-        const isCurrentMonth = calendarYm === nowYm
-        const effectiveTo = isCurrentMonth ? minYmd(range.to, todayYmd) : range.to
-        const prev = previousMonthSamePeriodRange(calendarYm, effectiveTo)
-        if (!prev) return null
-        return {
-            from: filterRangeStartIso(prev.from),
-            to: filterRangeEndIso(prev.to),
-        }
-    }, [range.to, calendarYm, todayYmd])
+    const prevCalendarYm = useMemo(
+        () => shiftYearMonth(calendarYm, -1),
+        [calendarYm],
+    )
+
+    const prevPaddedTxIsoRange = useMemo(
+        (): TransactionsRangeKey => paddedCalendarIsoRange(prevCalendarYm),
+        [prevCalendarYm],
+    )
 
     const queriesEnabled =
         Boolean(user?.id && currentWorkspaceId) &&
@@ -270,9 +263,10 @@ export function useDashboardData() {
         { enabled: queriesEnabled },
     )
 
-    const prevTxQuery = useTransactionsSummaryRangeQuery(
+    const prevTxQuery = useTransactionsRangeQuery(
         currentWorkspaceId,
-        prevPeriodSummaryRange,
+        prevPaddedTxIsoRange,
+        { enabled: queriesEnabled },
     )
 
     const categoriesQuery = useCategoriesQuery(
@@ -321,8 +315,12 @@ export function useDashboardData() {
             category: t.category_id ? byId.get(t.category_id) : undefined,
         })) as Transaction[]
     }, [txRowsRaw, categories])
-    const prevTransactions = prevTxQuery.data ?? []
+    const prevTransactions = useMemo(() => prevTxQuery.data ?? [], [prevTxQuery.data])
     const creditCards = creditCardsQuery.data ?? []
+    const creditCardClosingLookup = useMemo(
+        () => buildCreditCardClosingLookup(creditCards),
+        [creditCards],
+    )
     const subscriptions = useMemo(
         () =>
             attachCategoriesToSubscriptions(
@@ -424,12 +422,10 @@ export function useDashboardData() {
     }, [currentWorkspaceId, queryClient])
 
     const transactionsInRange = useMemo(() => {
-        return transactionsWide.filter((t) => {
-            const ymd = transactionYmd(t)
-            if (!ymd) return false
-            return ymd >= range.from && ymd <= range.to
-        })
-    }, [transactionsWide, range.from, range.to])
+        return transactionsWide.filter((t) =>
+            transactionCountsInExpenseMonth(t, calendarYm, creditCardClosingLookup),
+        )
+    }, [transactionsWide, calendarYm, creditCardClosingLookup])
 
     const snapshots = useMemo(() => {
         const today = new Date()
@@ -459,12 +455,22 @@ export function useDashboardData() {
     }, [creditCards, snapshots])
 
     const kpiCurrent = useMemo(
-        () => aggregateIncomeExpense(transactionsInRange),
-        [transactionsInRange],
+        () =>
+            aggregateIncomeExpenseForMonth(
+                transactionsWide,
+                calendarYm,
+                creditCardClosingLookup,
+            ),
+        [transactionsWide, calendarYm, creditCardClosingLookup],
     )
     const kpiPrev = useMemo(
-        () => aggregateIncomeExpense(prevTransactions),
-        [prevTransactions],
+        () =>
+            aggregateIncomeExpenseForMonth(
+                prevTransactions,
+                prevCalendarYm,
+                creditCardClosingLookup,
+            ),
+        [prevTransactions, prevCalendarYm, creditCardClosingLookup],
     )
 
     const expenseByCategory = useMemo(() => {

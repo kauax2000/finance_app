@@ -82,19 +82,6 @@ import { buildCategoryCommitmentsForMonth } from "@/lib/category-commitments"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
 
-function aggregateSpendByCategory(
-    rows: { category_id: string | null; amount: number | string }[],
-): Record<string, number> {
-    const out: Record<string, number> = {}
-    for (const r of rows) {
-        if (!r.category_id) continue
-        const n = Number(r.amount)
-        if (!Number.isFinite(n)) continue
-        out[r.category_id] = (out[r.category_id] ?? 0) + n
-    }
-    return out
-}
-
 export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNew?: boolean }) {
     const pathname = usePathname()
     const queryClient = useQueryClient()
@@ -207,11 +194,13 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     const fetchBudgetsAndSpend = useCallback(async () => {
         if (!user || !currentWorkspaceId) return
         setBudgetsLoading(true)
-        const { period_start, period_end } = periodBoundsFromYearMonth(budgetMonthYm)
+        const { period_start } = periodBoundsFromYearMonth(budgetMonthYm)
         const prevYm = shiftYearMonth(budgetMonthYm, -1)
-        const { period_start: prev_start, period_end: prev_end } = periodBoundsFromYearMonth(prevYm)
+        const nextYm = shiftYearMonth(budgetMonthYm, 1)
+        const padStart = periodBoundsFromYearMonth(prevYm).period_start
+        const padEnd = periodBoundsFromYearMonth(nextYm).period_end
 
-        const [budRes, txRes, prevTxRes, plansRes, subsRes] = await Promise.all([
+        const [budRes, txRes, plansRes, subsRes, cardsRes] = await Promise.all([
             supabase
                 .from("budgets")
                 .select("*")
@@ -221,19 +210,12 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             supabase
                 .from("transactions")
                 .select(
-                    "type,amount,date,category_id,subscription_id,installment_plan_id,installment_sequence"
+                    "type,amount,date,category_id,subscription_id,installment_plan_id,installment_sequence,payment_method,payment_credit_card_id",
                 )
                 .eq("workspace_id", currentWorkspaceId)
                 .eq("type", "expense")
-                .gte("date", `${period_start}T00:00:00.000Z`)
-                .lte("date", `${period_end}T23:59:59.999Z`),
-            supabase
-                .from("transactions")
-                .select("category_id,amount")
-                .eq("workspace_id", currentWorkspaceId)
-                .eq("type", "expense")
-                .gte("date", `${prev_start}T00:00:00.000Z`)
-                .lte("date", `${prev_end}T23:59:59.999Z`),
+                .gte("date", `${padStart}T00:00:00.000Z`)
+                .lte("date", `${padEnd}T23:59:59.999Z`),
             supabase
                 .from("workspace_installment_plans")
                 .select("*")
@@ -244,7 +226,14 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 .select("*")
                 .eq("workspace_id", currentWorkspaceId)
                 .order("name", { ascending: true }),
+            supabase
+                .from("credit_cards")
+                .select("id, closing_day")
+                .eq("workspace_id", currentWorkspaceId),
         ])
+
+        const creditCards =
+            (cardsRes.data as { id: string; closing_day: number }[] | null) ?? []
 
         if (budRes.error) {
             console.error(budRes.error)
@@ -258,6 +247,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             setPostedByCategoryId({})
             setProjectedInstallmentsByCategoryId({})
             setProjectedSubscriptionsByCategoryId({})
+            setPrevSpendByCategoryId({})
         } else {
             const monthTx = (txRes.data ?? []) as Pick<
                 Transaction,
@@ -268,6 +258,8 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 | "subscription_id"
                 | "installment_plan_id"
                 | "installment_sequence"
+                | "payment_method"
+                | "payment_credit_card_id"
             >[]
             const plans = (plansRes.data ?? []) as WorkspaceInstallmentPlan[]
             const subs = (subsRes.data ?? []) as WorkspaceSubscription[]
@@ -276,6 +268,14 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 transactions: monthTx,
                 installmentPlans: plans,
                 subscriptions: subs,
+                creditCards,
+            })
+            const prevCommitments = buildCategoryCommitmentsForMonth({
+                yearMonth: prevYm,
+                transactions: monthTx,
+                installmentPlans: plans,
+                subscriptions: subs,
+                creditCards,
             })
 
             const committed: Record<string, number> = {}
@@ -292,13 +292,12 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             setPostedByCategoryId(posted)
             setProjectedInstallmentsByCategoryId(projInst)
             setProjectedSubscriptionsByCategoryId(projSubs)
-        }
 
-        if (prevTxRes.error) {
-            console.error(prevTxRes.error)
-            setPrevSpendByCategoryId({})
-        } else {
-            setPrevSpendByCategoryId(aggregateSpendByCategory(prevTxRes.data ?? []))
+            const prevCommitted: Record<string, number> = {}
+            for (const [cid, t] of Object.entries(prevCommitments)) {
+                prevCommitted[cid] = t.committedTotal
+            }
+            setPrevSpendByCategoryId(prevCommitted)
         }
 
         setBudgetsLoading(false)
