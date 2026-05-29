@@ -17,8 +17,19 @@ vi.mock("@/lib/offline/outbox", () => ({
     enqueueMutation: (...args: unknown[]) => enqueueMutation(...args),
 }))
 
+function ensureNavigator() {
+    if (typeof globalThis.navigator === "undefined") {
+        Object.defineProperty(globalThis, "navigator", {
+            value: { onLine: true },
+            configurable: true,
+            writable: true,
+        })
+    }
+}
+
 function setOnline(value: boolean) {
-    Object.defineProperty(navigator, "onLine", {
+    ensureNavigator()
+    Object.defineProperty(globalThis.navigator, "onLine", {
         value,
         configurable: true,
         writable: true,
