@@ -1,5 +1,11 @@
-import type { Transaction } from "@/lib/supabase"
+import type { CreditCard, Transaction } from "@/lib/supabase"
 import { formatYearMonth, periodBoundsFromYearMonth } from "@/lib/budget-month"
+import {
+    buildCreditCardClosingLookup,
+    expenseYearMonthKey,
+    type CreditCardClosingLookup,
+} from "@/lib/expense-month-attribution"
+import { monthYearKeyFromTransactionDate } from "@/lib/transaction-date"
 
 export function hexToRgba(hex: string, alpha: number) {
     const raw = hex.replace("#", "").trim()
@@ -69,20 +75,30 @@ export function buildDailySeries(
 
 export function buildMonthlySeries(
     baseYm: string,
-    txs: Pick<Transaction, "date" | "amount" | "type" | "category_id">[],
+    txs: Pick<
+        Transaction,
+        "date" | "amount" | "type" | "category_id" | "payment_method" | "payment_credit_card_id"
+    >[],
     categoryId: string,
     typeFilter: "income" | "expense" | null,
     monthsBack: number,
+    creditCards?: Pick<CreditCard, "id" | "closing_day">[],
 ) {
     const months = Array.from({ length: monthsBack }, (_, i) =>
         addMonths(baseYm, -(monthsBack - 1 - i)),
     )
     const totals: Record<string, number> = Object.fromEntries(months.map((m) => [m, 0]))
+    const closingLookup: CreditCardClosingLookup = buildCreditCardClosingLookup(
+        creditCards ?? [],
+    )
 
     for (const t of txs) {
         if (t.category_id !== categoryId) continue
         if (typeFilter && t.type !== typeFilter) continue
-        const mk = monthKeyFromDateISO(t.date)
+        const mk =
+            typeFilter === "expense" && t.type === "expense"
+                ? expenseYearMonthKey(t, closingLookup)
+                : monthYearKeyFromTransactionDate(t.date)
         if (!mk) continue
         if (totals[mk] === undefined) continue
         totals[mk] += Number(t.amount)

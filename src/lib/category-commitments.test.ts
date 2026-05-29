@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest"
 import { buildCategoryCommitmentsForMonth } from "./category-commitments"
 
+const creditCards = [{ id: "card", closing_day: 28 }]
+
 describe("buildCategoryCommitmentsForMonth", () => {
     it("sums posted expenses by category within the month", () => {
         const res = buildCategoryCommitmentsForMonth({
@@ -14,6 +16,8 @@ describe("buildCategoryCommitmentsForMonth", () => {
                     subscription_id: null,
                     installment_plan_id: null,
                     installment_sequence: null,
+                    payment_method: "pix",
+                    payment_credit_card_id: null,
                 },
                 {
                     type: "expense",
@@ -23,6 +27,8 @@ describe("buildCategoryCommitmentsForMonth", () => {
                     subscription_id: null,
                     installment_plan_id: null,
                     installment_sequence: null,
+                    payment_method: "debit_card",
+                    payment_credit_card_id: null,
                 },
                 {
                     type: "expense",
@@ -32,6 +38,8 @@ describe("buildCategoryCommitmentsForMonth", () => {
                     subscription_id: null,
                     installment_plan_id: null,
                     installment_sequence: null,
+                    payment_method: "pix",
+                    payment_credit_card_id: null,
                 },
                 {
                     type: "income",
@@ -41,13 +49,39 @@ describe("buildCategoryCommitmentsForMonth", () => {
                     subscription_id: null,
                     installment_plan_id: null,
                     installment_sequence: null,
+                    payment_method: null,
+                    payment_credit_card_id: null,
                 },
             ],
             installmentPlans: [],
             subscriptions: [],
+            creditCards,
         })
         expect(res.c1?.postedTotal).toBe(30)
         expect(res.c1?.committedTotal).toBe(30)
+    })
+
+    it("assigns credit card purchase on May 29 to June gastos when closing day is 28", () => {
+        const res = buildCategoryCommitmentsForMonth({
+            yearMonth: "2026-06",
+            transactions: [
+                {
+                    type: "expense",
+                    amount: 100,
+                    date: "2026-05-29T12:00:00.000Z",
+                    category_id: "c1",
+                    subscription_id: null,
+                    installment_plan_id: null,
+                    installment_sequence: null,
+                    payment_method: "credit_card",
+                    payment_credit_card_id: "card",
+                },
+            ],
+            installmentPlans: [],
+            subscriptions: [],
+            creditCards,
+        })
+        expect(res.c1?.postedTotal).toBe(100)
     })
 
     it("adds projected installment charges for the month when not posted", () => {
@@ -74,6 +108,7 @@ describe("buildCategoryCommitmentsForMonth", () => {
                 },
             ],
             subscriptions: [],
+            creditCards,
         })
         expect(res.c1?.postedTotal).toBe(0)
         expect(res.c1?.projectedInstallmentsTotal).toBe(100)
@@ -92,6 +127,8 @@ describe("buildCategoryCommitmentsForMonth", () => {
                     subscription_id: null,
                     installment_plan_id: "p1",
                     installment_sequence: 1,
+                    payment_method: "credit_card",
+                    payment_credit_card_id: "card",
                 },
             ],
             installmentPlans: [
@@ -114,6 +151,7 @@ describe("buildCategoryCommitmentsForMonth", () => {
                 },
             ],
             subscriptions: [],
+            creditCards,
         })
         expect(res.c1?.postedTotal).toBe(100)
         expect(res.c1?.projectedInstallmentsTotal).toBe(0)
@@ -146,6 +184,7 @@ describe("buildCategoryCommitmentsForMonth", () => {
                     updated_at: "",
                 },
             ],
+            creditCards,
         })
         expect(res.c1?.projectedSubscriptionsTotal).toBeCloseTo(39.9)
         expect(res.c1?.committedTotal).toBeCloseTo(39.9)
@@ -163,6 +202,8 @@ describe("buildCategoryCommitmentsForMonth", () => {
                     subscription_id: "s1",
                     installment_plan_id: null,
                     installment_sequence: null,
+                    payment_method: "pix",
+                    payment_credit_card_id: null,
                 },
             ],
             installmentPlans: [],
@@ -187,6 +228,7 @@ describe("buildCategoryCommitmentsForMonth", () => {
                     updated_at: "",
                 },
             ],
+            creditCards,
         })
         expect(res.c1?.postedTotal).toBeCloseTo(39.9)
         expect(res.c1?.projectedSubscriptionsTotal).toBe(0)
