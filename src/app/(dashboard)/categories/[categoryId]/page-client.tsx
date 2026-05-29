@@ -79,22 +79,16 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
         () => bundle?.subscriptions ?? [],
         [bundle?.subscriptions],
     )
-    const creditCards = React.useMemo(
-        () => bundle?.creditCards ?? [],
-        [bundle?.creditCards],
-    )
 
     const initialLoading = detailQuery.isPending
     const refreshing = detailQuery.isFetching && !detailQuery.isPending
-    const refreshingRef = React.useRef(refreshing)
-    refreshingRef.current = refreshing
 
     const handleMonthChange = React.useCallback(
         (nextYm: string) => {
-            if (refreshingRef.current) return
+            if (refreshing) return
             setYearMonth(nextYm)
         },
-        [],
+        [refreshing],
     )
 
     const categoryDetailDateFilter = React.useMemo(
@@ -305,7 +299,6 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             transactions: txs,
             installmentPlans,
             subscriptions,
-            creditCards,
         })
         return (
             m[categoryId] ?? {
@@ -315,7 +308,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 committedTotal: postedMonthTotal,
             }
         )
-    }, [category, categoryId, installmentPlans, subscriptions, txs, yearMonth, postedMonthTotal, creditCards])
+    }, [category, categoryId, installmentPlans, subscriptions, txs, yearMonth, postedMonthTotal])
 
     const monthTotal = commitment.committedTotal
     const limit = budget ? Number(budget.amount) : 0
@@ -416,7 +409,6 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                     yearMonth={yearMonth}
                     seriesSource={seriesSource}
                     accentColor={accentColor}
-                    creditCards={creditCards}
                 />
 
                 <CategoryEmbeddedTransactions
