@@ -79,6 +79,10 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
         () => bundle?.subscriptions ?? [],
         [bundle?.subscriptions],
     )
+    const creditCards = React.useMemo(
+        () => bundle?.creditCards ?? [],
+        [bundle?.creditCards],
+    )
 
     const initialLoading = detailQuery.isPending
     const refreshing = detailQuery.isFetching && !detailQuery.isPending
@@ -301,6 +305,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             transactions: txs,
             installmentPlans,
             subscriptions,
+            creditCards,
         })
         return (
             m[categoryId] ?? {
@@ -310,7 +315,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 committedTotal: postedMonthTotal,
             }
         )
-    }, [category, categoryId, installmentPlans, subscriptions, txs, yearMonth, postedMonthTotal])
+    }, [category, categoryId, installmentPlans, subscriptions, txs, yearMonth, postedMonthTotal, creditCards])
 
     const monthTotal = commitment.committedTotal
     const limit = budget ? Number(budget.amount) : 0
@@ -411,6 +416,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                     yearMonth={yearMonth}
                     seriesSource={seriesSource}
                     accentColor={accentColor}
+                    creditCards={creditCards}
                 />
 
                 <CategoryEmbeddedTransactions

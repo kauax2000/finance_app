@@ -15,7 +15,7 @@ import {
     XAxis,
     YAxis,
 } from "recharts"
-import type { Category } from "@/lib/supabase"
+import type { Category, CreditCard } from "@/lib/supabase"
 import {
     buildDailySeries,
     buildMonthlySeries,
@@ -36,6 +36,7 @@ type CategoryDetailTrendsProps = {
     yearMonth: string
     seriesSource: SeriesRow[]
     accentColor: string
+    creditCards?: Pick<CreditCard, "id" | "closing_day">[]
 }
 
 export function CategoryDetailTrends({
@@ -44,6 +45,7 @@ export function CategoryDetailTrends({
     yearMonth,
     seriesSource,
     accentColor,
+    creditCards,
 }: CategoryDetailTrendsProps) {
     const [tab, setTab] = React.useState<"daily" | "monthly">("daily")
     const typeFilter = category.type
@@ -54,8 +56,16 @@ export function CategoryDetailTrends({
         [yearMonth, seriesSource, categoryId, typeFilter],
     )
     const monthlySeries = React.useMemo(
-        () => buildMonthlySeries(yearMonth, seriesSource as never[], categoryId, typeFilter, 12),
-        [yearMonth, seriesSource, categoryId, typeFilter],
+        () =>
+            buildMonthlySeries(
+                yearMonth,
+                seriesSource as never[],
+                categoryId,
+                typeFilter,
+                12,
+                creditCards,
+            ),
+        [yearMonth, seriesSource, categoryId, typeFilter, creditCards],
     )
 
     const dailyTitle = isExpense ? "Despesas por dia" : "Receitas por dia"

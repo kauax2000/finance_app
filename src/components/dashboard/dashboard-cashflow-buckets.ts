@@ -1,4 +1,4 @@
-import type { Transaction } from "@/lib/supabase"
+import type { CreditCard, Transaction } from "@/lib/supabase"
 import {
     localYmdFromDate,
     monthYearKeyFromTransactionDate,
@@ -6,6 +6,11 @@ import {
     transactionCalendarParts,
 } from "@/lib/transaction-date"
 import { labelYearMonthPt } from "@/lib/budget-month"
+import {
+    buildCreditCardClosingLookup,
+    expenseYearMonthKey,
+    type CreditCardClosingLookup,
+} from "@/lib/expense-month-attribution"
 
 export type CashflowBucketRow = {
     key: string
@@ -45,8 +50,12 @@ function weekLabelFromKey(weekStartYmd: string): string {
 export function buildCashflowSeries(
     transactions: Transaction[],
     fromYmd: string,
-    toYmd: string
+    toYmd: string,
+    creditCards?: Pick<CreditCard, "id" | "closing_day">[],
 ): CashflowBucketRow[] {
+    const closingLookup: CreditCardClosingLookup = buildCreditCardClosingLookup(
+        creditCards ?? [],
+    )
     const from = parseYmdLocal(fromYmd)
     const to = parseYmdLocal(toYmd)
     if (!from || !to) return []
@@ -71,7 +80,11 @@ export function buildCashflowSeries(
             key = mondayWeekKey(t.date)
             sort = key
         } else {
-            key = monthYearKeyFromTransactionDate(t.date)
+            key =
+                t.type === "expense"
+                    ? expenseYearMonthKey(t, closingLookup) ??
+                      monthYearKeyFromTransactionDate(t.date)
+                    : monthYearKeyFromTransactionDate(t.date)
             sort = key
         }
         const cur = map.get(key) ?? { income: 0, expense: 0, sort }
