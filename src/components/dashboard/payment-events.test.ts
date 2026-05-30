@@ -94,3 +94,51 @@ describe("buildPaymentEventsForMonth installments", () => {
         expect(installmentKinds[0]?.amount).toBe(50)
     })
 })
+
+describe("buildPaymentEventsForMonth credit card attribution", () => {
+    const card = {
+        id: "card1",
+        workspace_id: "w",
+        user_id: "u",
+        name: "Visa",
+        last_four: "1234",
+        closing_day: 28,
+        due_day: 5,
+        is_active: true,
+        created_at: "",
+        updated_at: "",
+    }
+
+    it("emits CC subscription event in June when charge is May 29", () => {
+        const events = buildPaymentEventsForMonth("2026-06", {
+            todayYmd: "2026-05-01",
+            subscriptions: [
+                {
+                    id: "s1",
+                    workspace_id: "w",
+                    user_id: "u",
+                    name: "Streaming",
+                    amount: 49.9,
+                    billing_interval: "monthly",
+                    currency: "BRL",
+                    start_date: "2026-01-01",
+                    next_billing_date: "2026-05-29",
+                    day_of_month: null,
+                    category_id: "c1",
+                    notes: null,
+                    payment_method: "credit_card",
+                    payment_credit_card_id: "card1",
+                    is_active: true,
+                    created_at: "",
+                    updated_at: "",
+                },
+            ],
+            installmentPlans: [],
+            creditCards: [card],
+            transactions: [],
+        })
+        const subs = events.filter((e) => e.kind === "subscription")
+        expect(subs).toHaveLength(1)
+        expect(subs[0]?.dateYmd).toBe("2026-05-29")
+    })
+})

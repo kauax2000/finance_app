@@ -1,5 +1,10 @@
 import { statementCloseYmdForPurchaseDate } from "@/lib/credit-card-billing"
-import type { CreditCard, Transaction, WorkspaceInstallmentPlan } from "@/lib/supabase"
+import type {
+    CreditCard,
+    Transaction,
+    WorkspaceInstallmentPlan,
+    WorkspaceSubscription,
+} from "@/lib/supabase"
 import { monthYearKeyFromTransactionDate } from "@/lib/transaction-date"
 
 export type CreditCardClosingLookup = Map<string, number>
@@ -84,10 +89,7 @@ export function projectedChargeCountsInExpenseMonth(
     yearMonth: string,
     lookup: CreditCardClosingLookup,
 ): boolean {
-    const y = chargeDate.getFullYear()
-    const mo = chargeDate.getMonth() + 1
-    const d = chargeDate.getDate()
-    const iso = `${y}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}T12:00:00.000Z`
+    const iso = chargeDateToExpenseIso(chargeDate)
     const tx: ExpenseMonthTx = {
         type: "expense",
         date: iso,
@@ -95,4 +97,30 @@ export function projectedChargeCountsInExpenseMonth(
         payment_credit_card_id: plan.payment_credit_card_id,
     }
     return expenseYearMonthKey(tx, lookup) === yearMonth
+}
+
+export function projectedSubscriptionCountsInExpenseMonth(
+    chargeDate: Date,
+    sub: Pick<
+        WorkspaceSubscription,
+        "payment_method" | "payment_credit_card_id"
+    >,
+    yearMonth: string,
+    lookup: CreditCardClosingLookup,
+): boolean {
+    const iso = chargeDateToExpenseIso(chargeDate)
+    const tx: ExpenseMonthTx = {
+        type: "expense",
+        date: iso,
+        payment_method: sub.payment_method,
+        payment_credit_card_id: sub.payment_credit_card_id,
+    }
+    return expenseYearMonthKey(tx, lookup) === yearMonth
+}
+
+export function chargeDateToExpenseIso(chargeDate: Date): string {
+    const y = chargeDate.getFullYear()
+    const mo = chargeDate.getMonth() + 1
+    const d = chargeDate.getDate()
+    return `${y}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}T12:00:00.000Z`
 }

@@ -30,6 +30,19 @@ export function shiftYearMonth(ym: string, deltaMonths: number): string {
     return formatYearMonth(d)
 }
 
+/** Calendar bounds padded ±1 month for credit-card expense-month attribution fetches. */
+export function paddedBoundsForYearMonth(yearMonth: string): {
+    padStart: string
+    padEnd: string
+} {
+    const prevYm = shiftYearMonth(yearMonth, -1)
+    const nextYm = shiftYearMonth(yearMonth, 1)
+    return {
+        padStart: periodBoundsFromYearMonth(prevYm).period_start,
+        padEnd: periodBoundsFromYearMonth(nextYm).period_end,
+    }
+}
+
 export function labelYearMonthPt(ym: string): string {
     const { y, m } = parseYearMonth(ym)
     if (!Number.isFinite(y) || !Number.isFinite(m)) return ym
