@@ -38,6 +38,7 @@ import {
 import {
     buildPaymentEventsForMonth,
     buildUpcomingPaymentsForVisibleMonth,
+    paymentEventCountsInExpenseMonth,
 } from "@/components/dashboard/payment-events"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
@@ -540,10 +541,25 @@ export function useDashboardData() {
             if (key) postedBySubscriptionDay.add(key)
         }
 
+        const expenseMonthArgs = {
+            subscriptions,
+            installmentPlans,
+            closingLookup: creditCardClosingLookup,
+        }
+
         let delta = 0
         for (const e of calendarEvents) {
             if (e.amount == null) continue
             if (e.kind === "installment") {
+                if (
+                    !paymentEventCountsInExpenseMonth(
+                        e,
+                        calendarYm,
+                        expenseMonthArgs,
+                    )
+                ) {
+                    continue
+                }
                 delta += Number(e.amount)
                 continue
             }
@@ -556,11 +572,27 @@ export function useDashboardData() {
                 if (sid && postedBySubscriptionDay.has(`${sid}:${e.dateYmd}`)) {
                     continue
                 }
+                if (
+                    !paymentEventCountsInExpenseMonth(
+                        e,
+                        calendarYm,
+                        expenseMonthArgs,
+                    )
+                ) {
+                    continue
+                }
                 delta += Number(e.amount)
             }
         }
         return delta
-    }, [calendarEvents, transactionsWide])
+    }, [
+        calendarEvents,
+        transactionsWide,
+        calendarYm,
+        subscriptions,
+        installmentPlans,
+        creditCardClosingLookup,
+    ])
 
     const kpiPlanned = useMemo(() => {
         const expense = kpiCurrent.expense + plannedExpenseDelta
@@ -577,6 +609,11 @@ export function useDashboardData() {
     )
 
     const calendarSummary = useMemo(() => {
+        const expenseMonthArgs = {
+            subscriptions,
+            installmentPlans,
+            closingLookup: creditCardClosingLookup,
+        }
         let projected = 0
         let closings = 0
         for (const e of calendarEvents) {
@@ -585,6 +622,16 @@ export function useDashboardData() {
                 e.kind === "installment" ||
                 e.kind === "bill_due"
             ) {
+                if (
+                    (e.kind === "subscription" || e.kind === "installment") &&
+                    !paymentEventCountsInExpenseMonth(
+                        e,
+                        calendarYm,
+                        expenseMonthArgs,
+                    )
+                ) {
+                    continue
+                }
                 projected += e.amount ?? 0
             }
             if (e.kind === "card_close") closings += 1
@@ -594,7 +641,7 @@ export function useDashboardData() {
             if (e.kind === "posted_expense") paid += e.amount ?? 0
         }
         return { projected, paid, closings }
-    }, [calendarEvents])
+    }, [calendarEvents, calendarYm, subscriptions, installmentPlans, creditCardClosingLookup])
 
     const installmentsEndingSoon = useMemo(
         () => findInstallmentPlansEndingSoon(installmentPlans),

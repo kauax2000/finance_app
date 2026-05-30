@@ -155,6 +155,8 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             to: periodEnd,
         },
         initialFilterType: category?.type ?? "all",
+        expenseMonthAttribution:
+            category?.type === "expense" ? { yearMonth } : undefined,
         onWorkspaceDataChanged: () => {
             if (!currentWorkspaceId) return
             void invalidateWorkspaceData(queryClient, currentWorkspaceId, {

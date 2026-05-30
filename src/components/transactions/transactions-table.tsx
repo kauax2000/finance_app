@@ -41,6 +41,7 @@ import {
     type CreditCardInvoiceSlot,
 } from "@/lib/credit-card-billing"
 import type { SortDir, TransactionsListSortKey } from "@/components/transactions/transactions-list-types"
+import { isProjectedTransactionRow } from "@/lib/category-expense-month-rows"
 
 export type TransactionsTableSortKey = TransactionsListSortKey
 
@@ -513,6 +514,7 @@ export function TransactionsTable({
                     </TableHeader>
                     <TableBody className="[&_tr:last-child]:border-b-0">
                         {transactions.map((transaction, index) => {
+                            const isProjected = isProjectedTransactionRow(transaction)
                             const paymentLabel = formatPaymentCell(transaction)
                             const invoiceBadge = creditCardInvoiceBadgeForRow(
                                 transaction,
@@ -608,13 +610,20 @@ export function TransactionsTable({
                                     ) : null}
 
                                     <TableRow
-                                        className="cursor-pointer border-border/80 transition-colors hover:bg-muted/30"
-                                        onClick={() =>
+                                        className={cn(
+                                            "border-border/80 transition-colors",
+                                            isProjected
+                                                ? "bg-muted/20"
+                                                : "cursor-pointer hover:bg-muted/30",
+                                        )}
+                                        onClick={() => {
+                                            if (isProjected) return
                                             openTransactionDetail(transaction)
-                                        }
+                                        }}
                                     >
                                         {enableSelection ? (
                                             <TableCell className="w-10 px-2 py-3 md:w-11 md:px-3">
+                                                {isProjected ? null : (
                                                 <Checkbox
                                                     aria-label={`Selecionar ${formatTransactionDayPtBr(
                                                         transaction.date
@@ -643,6 +652,7 @@ export function TransactionsTable({
                                                         e.stopPropagation()
                                                     }
                                                 />
+                                                )}
                                             </TableCell>
                                         ) : null}
                                         <TableCell className="whitespace-nowrap px-4 py-3 tabular-nums text-muted-foreground">
@@ -663,6 +673,17 @@ export function TransactionsTable({
                                                         </span>
                                                     ) : null}
                                                 </span>
+                                                {isProjected ? (
+                                                    <span
+                                                        className={cn(
+                                                            transactionRowChipShell,
+                                                            tagChipWarning,
+                                                        )}
+                                                        title="Cobrança prevista"
+                                                    >
+                                                        Previsto
+                                                    </span>
+                                                ) : null}
                                                 {transaction.installment_plan_id ? (
                                                     <span
                                                         className={
@@ -786,6 +807,9 @@ export function TransactionsTable({
                                         </TableCell>
                                         {enableActions ? (
                                             <TableCell className="px-3 py-3 pr-4 text-left">
+                                                {isProjected ? (
+                                                    <span className="text-xs text-muted-foreground">—</span>
+                                                ) : (
                                                 <div className="flex items-center justify-start gap-1">
                                                     <Button
                                                         variant="ghost"
@@ -817,6 +841,7 @@ export function TransactionsTable({
                                                         <TrashIcon className="size-3.5" />
                                                     </Button>
                                                 </div>
+                                                )}
                                             </TableCell>
                                         ) : null}
                                     </TableRow>
