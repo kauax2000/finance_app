@@ -8,6 +8,7 @@ import type {
 import type { BillInstanceCalendarRow } from "@/lib/queries/fetch-bills-dashboard"
 import {
     buildGlobalInstallmentDedupeKeys,
+    expandRemainingInstallmentCharges,
     isProjectedChargeAlreadyPosted,
     type ProjectedInstallmentCharge,
 } from "@/lib/credit-card-installment-projection"
@@ -15,8 +16,15 @@ import {
     estimatedDueDateForClose,
     statementCloseInMonth,
 } from "@/lib/credit-card-billing"
+import {
+    buildCreditCardClosingLookup,
+    projectedChargeCountsInExpenseMonth,
+    projectedSubscriptionCountsInExpenseMonth,
+    type CreditCardClosingLookup,
+} from "@/lib/expense-month-attribution"
+import { formatYearMonth, paddedBoundsForYearMonth, periodBoundsFromYearMonth } from "@/lib/budget-month"
+import { expandSubscriptionChargesInYmdRange } from "@/lib/subscription-billing-projection"
 import { localYmdFromDate, parseYmdLocal, transactionCalendarParts } from "@/lib/transaction-date"
-import { formatYearMonth } from "@/lib/budget-month"
 
 export type PaymentEventKind =
     | "subscription"
@@ -142,6 +150,49 @@ const kindSortOrder: Record<PaymentEventKind, number> = {
     posted_income: 6,
 }
 
+/** Whether a projected sub/installment event counts toward expense month `ym`. */
+export function paymentEventCountsInExpenseMonth(
+    e: PaymentEvent,
+    ym: string,
+    args: {
+        subscriptions: WorkspaceSubscription[]
+        installmentPlans: WorkspaceInstallmentPlan[]
+        closingLookup: CreditCardClosingLookup
+    },
+): boolean {
+    if (e.kind !== "subscription" && e.kind !== "installment") return true
+    const chargeDate = parseYmdLocal(e.dateYmd)
+    if (!chargeDate) return false
+
+    if (e.kind === "subscription") {
+        const sub = args.subscriptions.find((s) => s.id === e.metaId)
+        if (!sub) return false
+        if (sub.payment_method === "credit_card" && sub.payment_credit_card_id) {
+            return projectedSubscriptionCountsInExpenseMonth(
+                chargeDate,
+                sub,
+                ym,
+                args.closingLookup,
+            )
+        }
+        const { period_start, period_end } = periodBoundsFromYearMonth(ym)
+        return e.dateYmd >= period_start && e.dateYmd <= period_end
+    }
+
+    const plan = args.installmentPlans.find((p) => p.id === e.metaId)
+    if (!plan) return false
+    if (plan.payment_method === "credit_card" && plan.payment_credit_card_id) {
+        return projectedChargeCountsInExpenseMonth(
+            chargeDate,
+            plan,
+            ym,
+            args.closingLookup,
+        )
+    }
+    const { period_start, period_end } = periodBoundsFromYearMonth(ym)
+    return e.dateYmd >= period_start && e.dateYmd <= period_end
+}
+
 /** All payment / calendar events for a visible month (`YYYY-MM`). */
 export function buildPaymentEventsForMonth(
     ym: string,
@@ -160,78 +211,90 @@ export function buildPaymentEventsForMonth(
     const monthEndYmd = localYmdFromDate(bounds.end)
     const { todayYmd } = args
     const installmentDedupe = buildGlobalInstallmentDedupeKeys(args.transactions)
+    const closingLookup = buildCreditCardClosingLookup(args.creditCards)
+    const { padStart, padEnd } = paddedBoundsForYearMonth(ym)
     const out: PaymentEvent[] = []
+    const postedBySubscriptionDay = new Set<string>()
+    for (const t of args.transactions) {
+        if (t.type !== "expense") continue
+        const sid = t.subscription_id
+        if (!sid) continue
+        const p = transactionCalendarParts(t.date)
+        if (!p) continue
+        const ymd = `${p.y}-${String(p.mo).padStart(2, "0")}-${String(p.d).padStart(2, "0")}`
+        postedBySubscriptionDay.add(`${sid}:${ymd}`)
+    }
 
     for (const s of args.subscriptions) {
         if (!s.is_active) continue
-        const anchor = subscriptionAnchor(s)
-        if (!anchor) continue
-        let cur = new Date(anchor.getTime())
-        let guard = 0
-        while (compareYmd(localYmdFromDate(cur), monthEndYmd) > 0 && guard < 500) {
-            cur = rewindBilling(cur, s.billing_interval)
-            guard++
-        }
-        guard = 0
-        while (compareYmd(localYmdFromDate(cur), monthStartYmd) < 0 && guard < 500) {
-            cur = advanceBilling(cur, s.billing_interval)
-            guard++
-        }
-        guard = 0
-        while (compareYmd(localYmdFromDate(cur), monthEndYmd) <= 0 && guard < 500) {
-            const ymd = localYmdFromDate(cur)
-            if (compareYmd(ymd, monthStartYmd) >= 0) {
-                out.push({
-                    id: `sub-${s.id}-${ymd}`,
-                    dateYmd: ymd,
-                    kind: "subscription",
-                    title: s.name,
-                    amount: Number(s.amount),
-                    sourceHref: `/transactions?sub=${encodeURIComponent(s.id)}`,
-                    status: eventStatus(ymd, todayYmd),
-                    metaId: s.id,
-                })
+        const isCc = s.payment_method === "credit_card" && s.payment_credit_card_id
+        const rangeStart = isCc ? padStart : monthStartYmd
+        const rangeEnd = isCc ? padEnd : monthEndYmd
+        for (const charge of expandSubscriptionChargesInYmdRange(s, rangeStart, rangeEnd)) {
+            if (isCc) {
+                if (
+                    !projectedSubscriptionCountsInExpenseMonth(
+                        charge.chargeDate,
+                        s,
+                        ym,
+                        closingLookup,
+                    )
+                ) {
+                    continue
+                }
+            } else if (
+                compareYmd(charge.chargeYmd, monthStartYmd) < 0 ||
+                compareYmd(charge.chargeYmd, monthEndYmd) > 0
+            ) {
+                continue
             }
-            cur = advanceBilling(cur, s.billing_interval)
-            guard++
+            if (postedBySubscriptionDay.has(`${s.id}:${charge.chargeYmd}`)) continue
+            out.push({
+                id: `sub-${s.id}-${charge.chargeYmd}`,
+                dateYmd: charge.chargeYmd,
+                kind: "subscription",
+                title: s.name,
+                amount: charge.amount,
+                sourceHref: `/transactions?sub=${encodeURIComponent(s.id)}`,
+                status: eventStatus(charge.chargeYmd, todayYmd),
+                metaId: s.id,
+            })
         }
     }
 
     for (const p of args.installmentPlans) {
         if (!p.is_active) continue
-        const remaining = p.total_installments - p.generated_count
-        if (remaining <= 0) continue
-        let cur = parseYmdLocal(p.next_billing_date.slice(0, 10))
-        if (!cur) continue
-        for (let i = 0; i < remaining; i++) {
-            const ymd = localYmdFromDate(cur)
-            if (compareYmd(ymd, monthStartYmd) >= 0 && compareYmd(ymd, monthEndYmd) <= 0) {
-                const amt =
-                    remaining - i === 1
-                        ? Number(p.final_installment_amount)
-                        : Number(p.installment_amount)
-                const projected: ProjectedInstallmentCharge = {
-                    planId: p.id,
-                    chargeDate: new Date(cur.getTime()),
-                    amount: amt,
-                    installmentSequence: p.generated_count + i + 1,
-                }
-                if (
-                    !isProjectedChargeAlreadyPosted(projected, installmentDedupe)
-                ) {
-                    out.push({
-                        id: `inst-${p.id}-${ymd}`,
-                        dateYmd: ymd,
-                        kind: "installment",
-                        title: p.description?.trim() || "Parcelada",
-                        amount: amt,
-                        sourceHref: `/transactions?plan=${encodeURIComponent(p.id)}`,
-                        status: eventStatus(ymd, todayYmd),
-                        metaId: p.id,
-                    })
-                }
+        const isCc = p.payment_method === "credit_card" && p.payment_credit_card_id
+        for (const charge of expandRemainingInstallmentCharges(p)) {
+            const ymd = localYmdFromDate(charge.chargeDate)
+            const inVisibleMonth = isCc
+                ? projectedChargeCountsInExpenseMonth(
+                      charge.chargeDate,
+                      p,
+                      ym,
+                      closingLookup,
+                  )
+                : compareYmd(ymd, monthStartYmd) >= 0 &&
+                  compareYmd(ymd, monthEndYmd) <= 0
+            if (!inVisibleMonth) continue
+            const projected: ProjectedInstallmentCharge = {
+                planId: p.id,
+                chargeDate: charge.chargeDate,
+                amount: charge.amount,
+                installmentSequence: charge.installmentSequence,
             }
-            cur = addMonths(cur, 1)
+            if (!isProjectedChargeAlreadyPosted(projected, installmentDedupe)) {
+                out.push({
+                    id: `inst-${p.id}-${ymd}`,
+                    dateYmd: ymd,
+                    kind: "installment",
+                    title: p.description?.trim() || "Parcelada",
+                    amount: charge.amount,
+                    sourceHref: `/transactions?plan=${encodeURIComponent(p.id)}`,
+                    status: eventStatus(ymd, todayYmd),
+                    metaId: p.id,
+                })
+            }
         }
     }
 

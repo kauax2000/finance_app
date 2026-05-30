@@ -4,11 +4,12 @@ import type {
     WorkspaceInstallmentPlan,
     WorkspaceSubscription,
 } from "@/lib/supabase"
-import { localYmdFromDate, parseYmdLocal, transactionCalendarParts } from "@/lib/transaction-date"
-import { periodBoundsFromYearMonth } from "@/lib/budget-month"
+import { localYmdFromDate, transactionCalendarParts } from "@/lib/transaction-date"
+import { paddedBoundsForYearMonth, periodBoundsFromYearMonth } from "@/lib/budget-month"
 import {
     buildCreditCardClosingLookup,
     projectedChargeCountsInExpenseMonth,
+    projectedSubscriptionCountsInExpenseMonth,
     transactionCountsInExpenseMonth,
     type CreditCardClosingLookup,
 } from "@/lib/expense-month-attribution"
@@ -17,6 +18,7 @@ import {
     expandRemainingInstallmentCharges,
     isProjectedChargeAlreadyPosted,
 } from "@/lib/credit-card-installment-projection"
+import { expandSubscriptionChargesInYmdRange } from "@/lib/subscription-billing-projection"
 
 export type CategoryCommitmentTotals = {
     postedTotal: number
@@ -33,47 +35,6 @@ function transactionLocalYmd(t: Pick<Transaction, "date">): string | null {
     return `${p.y}-${String(p.mo).padStart(2, "0")}-${String(p.d).padStart(2, "0")}`
 }
 
-function addMonths(d: Date, n: number): Date {
-    const y = d.getFullYear()
-    const m0 = d.getMonth()
-    const day = d.getDate()
-    const t = new Date(y, m0 + n, 1, 12, 0, 0, 0)
-    const dim = new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate()
-    t.setDate(Math.min(day, dim))
-    return t
-}
-
-function addDays(d: Date, n: number): Date {
-    const t = new Date(d.getTime())
-    t.setDate(t.getDate() + n)
-    return t
-}
-
-function addYears(d: Date, n: number): Date {
-    return addMonths(d, n * 12)
-}
-
-function advanceBilling(d: Date, interval: "weekly" | "monthly" | "yearly"): Date {
-    if (interval === "weekly") return addDays(d, 7)
-    if (interval === "monthly") return addMonths(d, 1)
-    return addYears(d, 1)
-}
-
-function rewindBilling(d: Date, interval: "weekly" | "monthly" | "yearly"): Date {
-    if (interval === "weekly") return addDays(d, -7)
-    if (interval === "monthly") return addMonths(d, -1)
-    return addYears(d, -1)
-}
-
-function subscriptionAnchor(s: WorkspaceSubscription): Date | null {
-    if (s.next_billing_date) {
-        const d = parseYmdLocal(s.next_billing_date.slice(0, 10))
-        return d ?? null
-    }
-    const d = parseYmdLocal(s.start_date.slice(0, 10))
-    return d ?? null
-}
-
 function ensureBucket(out: CategoryCommitmentsById, categoryId: string): CategoryCommitmentTotals {
     const prev = out[categoryId]
     if (prev) return prev
@@ -85,6 +46,26 @@ function ensureBucket(out: CategoryCommitmentsById, categoryId: string): Categor
     }
     out[categoryId] = next
     return next
+}
+
+function subscriptionChargeInMonth(
+    chargeDate: Date,
+    sub: WorkspaceSubscription,
+    yearMonth: string,
+    period_start: string,
+    period_end: string,
+    closingLookup: CreditCardClosingLookup,
+): boolean {
+    if (sub.payment_method === "credit_card" && sub.payment_credit_card_id) {
+        return projectedSubscriptionCountsInExpenseMonth(
+            chargeDate,
+            sub,
+            yearMonth,
+            closingLookup,
+        )
+    }
+    const ymd = localYmdFromDate(chargeDate)
+    return ymd >= period_start && ymd <= period_end
 }
 
 export function buildCategoryCommitmentsForMonth(args: {
@@ -106,6 +87,7 @@ export function buildCategoryCommitmentsForMonth(args: {
     creditCards?: Pick<CreditCard, "id" | "closing_day">[]
 }): CategoryCommitmentsById {
     const { period_start, period_end } = periodBoundsFromYearMonth(args.yearMonth)
+    const { padStart, padEnd } = paddedBoundsForYearMonth(args.yearMonth)
     const closingLookup: CreditCardClosingLookup = buildCreditCardClosingLookup(
         args.creditCards ?? [],
     )
@@ -159,31 +141,30 @@ export function buildCategoryCommitmentsForMonth(args: {
         if (!s.is_active) continue
         const categoryId = s.category_id
         if (!categoryId) continue
-        const anchor = subscriptionAnchor(s)
-        if (!anchor) continue
-
-        let cur = new Date(anchor.getTime())
-        let guard = 0
-        while (localYmdFromDate(cur) > period_end && guard < 500) {
-            cur = rewindBilling(cur, s.billing_interval)
-            guard++
-        }
-        guard = 0
-        while (localYmdFromDate(cur) < period_start && guard < 500) {
-            cur = advanceBilling(cur, s.billing_interval)
-            guard++
-        }
-        guard = 0
-        while (localYmdFromDate(cur) <= period_end && guard < 500) {
-            const ymd = localYmdFromDate(cur)
-            if (ymd >= period_start) {
-                if (!postedBySubscriptionDay.has(`${s.id}:${ymd}`)) {
-                    const b = ensureBucket(out, categoryId)
-                    b.projectedSubscriptionsTotal += Number(s.amount) || 0
-                }
+        const rangeStart =
+            s.payment_method === "credit_card" && s.payment_credit_card_id
+                ? padStart
+                : period_start
+        const rangeEnd =
+            s.payment_method === "credit_card" && s.payment_credit_card_id
+                ? padEnd
+                : period_end
+        for (const charge of expandSubscriptionChargesInYmdRange(s, rangeStart, rangeEnd)) {
+            if (
+                !subscriptionChargeInMonth(
+                    charge.chargeDate,
+                    s,
+                    args.yearMonth,
+                    period_start,
+                    period_end,
+                    closingLookup,
+                )
+            ) {
+                continue
             }
-            cur = advanceBilling(cur, s.billing_interval)
-            guard++
+            if (postedBySubscriptionDay.has(`${s.id}:${charge.chargeYmd}`)) continue
+            const b = ensureBucket(out, categoryId)
+            b.projectedSubscriptionsTotal += charge.amount
         }
     }
 

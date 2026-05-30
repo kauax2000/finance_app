@@ -4,6 +4,7 @@ import {
     buildCreditCardClosingLookup,
     expenseYearMonthKey,
     projectedChargeCountsInExpenseMonth,
+    projectedSubscriptionCountsInExpenseMonth,
     transactionCountsInExpenseMonth,
 } from "./expense-month-attribution"
 
@@ -152,5 +153,48 @@ describe("projectedChargeCountsInExpenseMonth", () => {
                 lookup,
             ),
         ).toBe(false)
+    })
+})
+
+describe("projectedSubscriptionCountsInExpenseMonth", () => {
+    it("uses billing month for credit card subscription charges", () => {
+        const chargeDate = new Date(2026, 4, 29, 12, 0, 0, 0)
+        expect(
+            projectedSubscriptionCountsInExpenseMonth(
+                chargeDate,
+                {
+                    payment_method: "credit_card",
+                    payment_credit_card_id: "card1",
+                },
+                "2026-06",
+                lookup,
+            ),
+        ).toBe(true)
+        expect(
+            projectedSubscriptionCountsInExpenseMonth(
+                chargeDate,
+                {
+                    payment_method: "credit_card",
+                    payment_credit_card_id: "card1",
+                },
+                "2026-05",
+                lookup,
+            ),
+        ).toBe(false)
+    })
+
+    it("uses calendar month for non-credit-card subscriptions", () => {
+        const chargeDate = new Date(2026, 4, 29, 12, 0, 0, 0)
+        expect(
+            projectedSubscriptionCountsInExpenseMonth(
+                chargeDate,
+                {
+                    payment_method: "pix",
+                    payment_credit_card_id: null,
+                },
+                "2026-05",
+                lookup,
+            ),
+        ).toBe(true)
     })
 })

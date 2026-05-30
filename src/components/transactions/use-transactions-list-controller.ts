@@ -84,6 +84,8 @@ export type UseTransactionsListControllerArgs = {
      * so the list matches the category.
      */
     initialFilterType?: TransactionFilterType
+    /** When true, skip server list fetch (parent supplies rows, e.g. category detail bundle). */
+    skipListQuery?: boolean
 }
 
 export function useTransactionsListController(
@@ -94,6 +96,7 @@ export function useTransactionsListController(
         userOverride,
         onWorkspaceDataChanged,
         initialFilterType = "all",
+        skipListQuery = false,
     }: UseTransactionsListControllerArgs = {}
 ) {
     const isPage = mode === "page"
@@ -320,7 +323,7 @@ export function useTransactionsListController(
                 sortKey,
                 sortDir,
             }),
-        enabled: workspaceBootstrap,
+        enabled: workspaceBootstrap && !skipListQuery,
         placeholderData: keepPreviousData,
         staleTime: 60_000,
     })
@@ -344,7 +347,7 @@ export function useTransactionsListController(
             (categoriesQuery.isPending ||
                 creditCardsQuery.isPending ||
                 workspaceAuxQuery.isPending ||
-                listQuery.isPending))
+                (!skipListQuery && listQuery.isPending)))
 
     const tableLoading = listQuery.isFetching && !listQuery.isPending
 

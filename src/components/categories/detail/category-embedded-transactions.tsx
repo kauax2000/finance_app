@@ -11,6 +11,11 @@ import {
     mergeTransactionsSearchParams,
 } from "@/lib/transactions-list-search-params"
 import type { useTransactionsListController } from "@/components/transactions/use-transactions-list-controller"
+import {
+    applyCategoryTransactionListFilters,
+    sortCategoryExpenseMonthRows,
+} from "@/lib/category-expense-month-rows"
+import type { Transaction } from "@/lib/supabase"
 import { TransactionsToolbar } from "@/components/transactions/transactions-toolbar"
 import { TransactionsActiveFiltersChips } from "@/components/transactions/transactions-active-filters-chips"
 import { TransactionsTable } from "@/components/transactions/transactions-table"
@@ -39,9 +44,14 @@ const currencyFmt = new Intl.NumberFormat("pt-BR", {
 export function CategoryEmbeddedTransactions({
     categoryType,
     controller,
+    expenseMonthRows = null,
+    yearMonth,
 }: {
     categoryType: "income" | "expense"
     controller: ReturnType<typeof useTransactionsListController>
+    /** Expense categories: posted + projected rows from category detail bundle. */
+    expenseMonthRows?: Transaction[] | null
+    yearMonth?: string
 }) {
     const c = controller
 
@@ -129,6 +139,63 @@ export function CategoryEmbeddedTransactions({
     } = c
 
     void _user
+
+    const useBundleExpenseRows = expenseMonthRows != null
+
+    React.useEffect(() => {
+        if (!useBundleExpenseRows || !yearMonth) return
+        setPage(0)
+    }, [setPage, useBundleExpenseRows, yearMonth])
+
+    const bundleFilteredRows = React.useMemo(() => {
+        if (!useBundleExpenseRows || !expenseMonthRows) return null
+        const filtered = applyCategoryTransactionListFilters(expenseMonthRows, {
+            filterType,
+            filterCreditCardIds,
+            filterPaymentMethods,
+            filterAmountMin,
+            filterAmountMax,
+            filterDescriptionQuery,
+            filterInstallmentsOnly,
+            filterInstallmentPlanId,
+            filterSubscriptionId,
+        })
+        return sortCategoryExpenseMonthRows(filtered, sortKey, sortDir)
+    }, [
+        expenseMonthRows,
+        filterAmountMax,
+        filterAmountMin,
+        filterCreditCardIds,
+        filterDescriptionQuery,
+        filterInstallmentPlanId,
+        filterInstallmentsOnly,
+        filterPaymentMethods,
+        filterSubscriptionId,
+        filterType,
+        sortDir,
+        sortKey,
+        useBundleExpenseRows,
+    ])
+
+    const displayTransactions = useBundleExpenseRows
+        ? (bundleFilteredRows ?? []).slice(
+              page * PAGE_SIZE,
+              page * PAGE_SIZE + PAGE_SIZE,
+          )
+        : transactions
+
+    const displayTotalCount = useBundleExpenseRows
+        ? (bundleFilteredRows?.length ?? 0)
+        : totalCount
+
+    const displayHasNoTransactions = useBundleExpenseRows
+        ? (expenseMonthRows?.length ?? 0) === 0
+        : hasNoTransactions
+
+    const displayHasNoMatches = useBundleExpenseRows
+        ? (expenseMonthRows?.length ?? 0) > 0 &&
+          (bundleFilteredRows?.length ?? 0) === 0
+        : hasNoMatches
 
     const transactionsListHref = React.useMemo(() => {
         const next = buildTransactionsListSearchParams({
@@ -363,11 +430,11 @@ export function CategoryEmbeddedTransactions({
                         />
                     ) : null}
 
-                    {!hasNoTransactions && !hasNoMatches ? (
+                    {!displayHasNoTransactions && !displayHasNoMatches ? (
                         <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
                             <CardContent className="relative flex flex-col p-0">
                                 <TransactionsTable
-                                    transactions={transactions}
+                                    transactions={displayTransactions}
                                     selectedIds={selectedIds}
                                     setSelectedIds={setSelectedIds}
                                     sortKey={sortKey}
@@ -383,12 +450,12 @@ export function CategoryEmbeddedTransactions({
                                     page={page}
                                     setPage={setPage}
                                     pageSize={PAGE_SIZE}
-                                    totalCount={totalCount}
+                                    totalCount={displayTotalCount}
                                     invoicePaidByCardClose={invoicePaidByCardClose}
                                 />
                             </CardContent>
                         </Card>
-                    ) : hasNoMatches ? (
+                    ) : displayHasNoMatches ? (
                         <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
                             <CardContent
                                 className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
@@ -492,7 +559,7 @@ export function CategoryEmbeddedTransactions({
                                         ) : pendingDelete?.mode === "bulk" ? (
                                             <ul className="max-h-40 list-inside list-disc overflow-y-auto text-foreground">
                                                 {pendingDelete.ids.slice(0, 8).map((id) => {
-                                                    const t = transactions.find((x) => x.id === id)
+                                                    const t = displayTransactions.find((x) => x.id === id)
                                                     if (!t) {
                                                         return (
                                                             <li key={id}>{id.slice(0, 8)}…</li>
