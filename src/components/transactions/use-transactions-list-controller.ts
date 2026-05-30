@@ -48,11 +48,6 @@ import { ROUTES } from "@/config/navigation"
 import { useCategoriesQuery } from "@/lib/queries/use-categories"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 import { fetchTransactionsListPage } from "@/lib/queries/fetch-transactions-list-page"
-import { paddedBoundsForYearMonth } from "@/lib/budget-month"
-import {
-    buildProjectedCategoryExpenseRows,
-    mergeCategoryExpenseMonthRows,
-} from "@/lib/category-expense-month-rows"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
 import { transactionsKeys } from "@/lib/queries/keys"
 import { useTransactionsWorkspaceAuxQuery } from "@/lib/queries/use-transactions-workspace-aux-query"
@@ -89,8 +84,8 @@ export type UseTransactionsListControllerArgs = {
      * so the list matches the category.
      */
     initialFilterType?: TransactionFilterType
-    /** Expense categories: filter posted + projected rows by billing close month. */
-    expenseMonthAttribution?: { yearMonth: string }
+    /** When true, skip server list fetch (parent supplies rows, e.g. category detail bundle). */
+    skipListQuery?: boolean
 }
 
 export function useTransactionsListController(
@@ -101,17 +96,12 @@ export function useTransactionsListController(
         userOverride,
         onWorkspaceDataChanged,
         initialFilterType = "all",
-        expenseMonthAttribution,
+        skipListQuery = false,
     }: UseTransactionsListControllerArgs = {}
 ) {
     const isPage = mode === "page"
     const isEmbedded = mode === "embedded"
     const lockedId = lockedCategoryId ?? null
-    const expenseMonthActive =
-        isEmbedded &&
-        initialFilterType === "expense" &&
-        Boolean(expenseMonthAttribution?.yearMonth)
-    const expenseMonthYm = expenseMonthAttribution?.yearMonth ?? null
     const lockTransactionType =
         isEmbedded &&
         lockedId !== null &&
@@ -270,7 +260,6 @@ export function useTransactionsListController(
     const transactionsFiltersKey = useMemo(
         () =>
             JSON.stringify({
-                expenseMonthYm: expenseMonthActive ? expenseMonthYm : null,
                 filterType,
                 filterCreditCardIds: [...filterCreditCardIds].sort(),
                 filterPaymentMethods: [...filterPaymentMethods].sort(),
@@ -283,13 +272,11 @@ export function useTransactionsListController(
                 filterInstallmentPlanId,
                 filterSubscriptionId,
                 lockedId,
-                page: expenseMonthActive ? null : page,
+                page,
                 sortKey,
                 sortDir,
             }),
         [
-            expenseMonthActive,
-            expenseMonthYm,
             filterType,
             filterCreditCardIds,
             filterPaymentMethods,
@@ -317,107 +304,41 @@ export function useTransactionsListController(
         queryFn: () =>
             fetchTransactionsListPage({
                 workspaceId: currentWorkspaceId!,
-                pageIndex: expenseMonthActive ? 0 : page,
+                pageIndex: page,
                 filterType,
                 fullPeriod,
                 filterDateFrom,
                 filterDateTo,
                 lockedCategoryId: lockedId,
-                filterCreditCardIds: expenseMonthActive ? [] : filterCreditCardIds,
-                filterPaymentMethods: expenseMonthActive ? [] : filterPaymentMethods,
-                filterCategoryIds,
-                filterUncategorizedOnly,
-                filterAmountMin: expenseMonthActive ? "" : filterAmountMin,
-                filterAmountMax: expenseMonthActive ? "" : filterAmountMax,
-                filterDescriptionQuery: expenseMonthActive ? "" : filterDescriptionQuery,
-                filterInstallmentsOnly: expenseMonthActive ? false : filterInstallmentsOnly,
-                filterInstallmentPlanId: expenseMonthActive ? null : filterInstallmentPlanId,
-                filterSubscriptionId: expenseMonthActive ? null : filterSubscriptionId,
-                sortKey,
-                sortDir,
-                fetchAllInRange: expenseMonthActive || undefined,
-            }),
-        enabled: workspaceBootstrap,
-        placeholderData: keepPreviousData,
-        staleTime: 60_000,
-    })
-
-    const expenseMonthMergedRows = useMemo(() => {
-        if (!expenseMonthActive || !expenseMonthYm || !lockedId) return null
-        const posted = attachPaymentCards(
-            listQuery.data?.transactions ?? [],
-            creditCards,
-        )
-        const projected = buildProjectedCategoryExpenseRows({
-            categoryId: lockedId,
-            yearMonth: expenseMonthYm,
-            installmentPlans,
-            subscriptions,
-            postedTransactions: posted,
-            creditCards,
-            categories,
-        })
-        return mergeCategoryExpenseMonthRows({
-            posted,
-            projected,
-            yearMonth: expenseMonthYm,
-            creditCards,
-            categoryType: "expense",
-            filters: {
-                filterType,
                 filterCreditCardIds,
                 filterPaymentMethods,
+                filterCategoryIds,
+                filterUncategorizedOnly,
                 filterAmountMin,
                 filterAmountMax,
                 filterDescriptionQuery,
                 filterInstallmentsOnly,
                 filterInstallmentPlanId,
                 filterSubscriptionId,
-            },
-            sortKey,
-            sortDir,
-        })
-    }, [
-        expenseMonthActive,
-        expenseMonthYm,
-        lockedId,
-        listQuery.data,
-        creditCards,
-        installmentPlans,
-        subscriptions,
-        categories,
-        filterType,
-        filterCreditCardIds,
-        filterPaymentMethods,
-        filterAmountMin,
-        filterAmountMax,
-        filterDescriptionQuery,
-        filterInstallmentsOnly,
-        filterInstallmentPlanId,
-        filterSubscriptionId,
-        sortKey,
-        sortDir,
-    ])
+                sortKey,
+                sortDir,
+            }),
+        enabled: workspaceBootstrap && !skipListQuery,
+        placeholderData: keepPreviousData,
+        staleTime: 60_000,
+    })
 
-    const transactions = useMemo(() => {
-        if (expenseMonthMergedRows) {
-            const start = page * EXPENSE_MONTH_PAGE_SIZE
-            return expenseMonthMergedRows.slice(
-                start,
-                start + EXPENSE_MONTH_PAGE_SIZE,
-            )
-        }
-        return attachPaymentCards(
-            listQuery.data?.transactions ?? [],
-            creditCards,
-        )
-    }, [creditCards, expenseMonthMergedRows, listQuery.data, page])
+    const transactions = useMemo(
+        () =>
+            attachPaymentCards(
+                listQuery.data?.transactions ?? [],
+                creditCards,
+            ),
+        [creditCards, listQuery.data],
+    )
 
-    const totalCount = expenseMonthMergedRows
-        ? expenseMonthMergedRows.length
-        : listQuery.data != null
-          ? listQuery.data.totalCount
-          : null
+    const totalCount =
+        listQuery.data != null ? listQuery.data.totalCount : null
 
     const loading =
         authLoading ||
@@ -426,7 +347,7 @@ export function useTransactionsListController(
             (categoriesQuery.isPending ||
                 creditCardsQuery.isPending ||
                 workspaceAuxQuery.isPending ||
-                listQuery.isPending))
+                (!skipListQuery && listQuery.isPending)))
 
     const tableLoading = listQuery.isFetching && !listQuery.isPending
 
@@ -454,17 +375,6 @@ export function useTransactionsListController(
 
     useEffect(() => {
         if (!isEmbedded) return
-        if (expenseMonthActive && expenseMonthYm) {
-            const { padStart, padEnd } = paddedBoundsForYearMonth(expenseMonthYm)
-            setFullPeriod(false)
-            setDatePreset(null)
-            setFilterDateFrom(padStart)
-            setFilterDateTo(padEnd)
-            setPeriodDraftFrom(padStart)
-            setPeriodDraftTo(padEnd)
-            setPeriodDraftDirty(false)
-            return
-        }
         if (!defaultPeriodKey || !defaultPeriod) return
         // Embedded lists should not inherit the host route query string; the parent supplies the month window.
         setFullPeriod(defaultPeriod.fullPeriod)
@@ -474,13 +384,7 @@ export function useTransactionsListController(
         setPeriodDraftFrom(defaultPeriod.from)
         setPeriodDraftTo(defaultPeriod.to)
         setPeriodDraftDirty(false)
-    }, [
-        defaultPeriod,
-        defaultPeriodKey,
-        expenseMonthActive,
-        expenseMonthYm,
-        isEmbedded,
-    ])
+    }, [defaultPeriod, defaultPeriodKey, isEmbedded])
 
     const syncPeriodDraftToApplied = useCallback(() => {
         suppressPeriodDraftDirtyRef.current = true

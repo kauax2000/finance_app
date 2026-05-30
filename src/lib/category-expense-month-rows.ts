@@ -77,7 +77,7 @@ function syntheticTransaction(
         subscription_id: partial.subscription_id ?? null,
         created_at: "",
         updated_at: "",
-        category: partial.category ?? null,
+        category: partial.category ?? undefined,
     }
 }
 
@@ -329,10 +329,69 @@ export function mergeCategoryExpenseMonthRows(args: {
         args.creditCards,
         args.categoryType,
     )
-    const merged =
-        args.categoryType === "expense"
-            ? [...filteredPosted, ...args.projected]
-            : filteredPosted
+    const merged = mergeCategoryEmbeddedListRows({
+        posted: filteredPosted,
+        projected: args.projected,
+        categoryType: args.categoryType,
+    })
     const filtered = applyCategoryTransactionListFilters(merged, args.filters)
     return sortCategoryExpenseMonthRows(filtered, args.sortKey, args.sortDir)
+}
+
+/** Posted rows already filtered by expense month (e.g. from category detail bundle). */
+export function mergeCategoryEmbeddedListRows(args: {
+    posted: Transaction[]
+    projected: Transaction[]
+    categoryType: "income" | "expense" | null
+}): Transaction[] {
+    return args.categoryType === "expense"
+        ? [...args.posted, ...args.projected]
+        : args.posted
+}
+
+/** Backfill CC payment fields on legacy posted installments before expense-month attribution. */
+export function enrichPostedTransactionsFromPlans(
+    posted: Transaction[],
+    installmentPlans: WorkspaceInstallmentPlan[],
+): Transaction[] {
+    if (installmentPlans.length === 0) return posted
+    const planById = new Map(installmentPlans.map((p) => [p.id, p]))
+    return posted.map((t) => {
+        if (t.payment_method === "credit_card" && t.payment_credit_card_id) return t
+        const planId = t.installment_plan_id
+        if (!planId) return t
+        const plan = planById.get(planId)
+        if (!plan) return t
+        return {
+            ...t,
+            payment_method: t.payment_method ?? plan.payment_method,
+            payment_credit_card_id:
+                t.payment_credit_card_id ?? plan.payment_credit_card_id,
+        }
+    })
+}
+
+export function buildCategoryEmbeddedExpenseRows(args: {
+    category: Category
+    yearMonth: string
+    posted: Transaction[]
+    installmentPlans: WorkspaceInstallmentPlan[]
+    subscriptions: WorkspaceSubscription[]
+    creditCards: Pick<CreditCard, "id" | "closing_day">[]
+}): Transaction[] {
+    const posted = enrichPostedTransactionsFromPlans(args.posted, args.installmentPlans)
+    const projected = buildProjectedCategoryExpenseRows({
+        categoryId: args.category.id,
+        yearMonth: args.yearMonth,
+        installmentPlans: args.installmentPlans,
+        subscriptions: args.subscriptions,
+        postedTransactions: posted,
+        creditCards: args.creditCards,
+        categories: [args.category],
+    })
+    return mergeCategoryEmbeddedListRows({
+        posted,
+        projected,
+        categoryType: args.category.type,
+    })
 }

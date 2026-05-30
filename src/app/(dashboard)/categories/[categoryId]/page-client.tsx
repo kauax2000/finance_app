@@ -30,6 +30,8 @@ import { usePageChromeSlot } from "@/components/layout/page-chrome-provider"
 import { ROUTES } from "@/config/navigation"
 import { computeAmountStats } from "@/components/categories/detail/category-detail-utils"
 import { buildCategoryCommitmentsForMonth } from "@/lib/category-commitments"
+import { buildCategoryEmbeddedExpenseRows } from "@/lib/category-expense-month-rows"
+import { attachPaymentCards } from "@/lib/transactions-detail-sheet-query"
 import { categoryDetailBundleKeys } from "@/lib/queries/keys"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
 import { useCategoryDetailBundleQuery } from "@/lib/queries/use-category-detail-bundle"
@@ -78,6 +80,10 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     const subscriptions = React.useMemo(
         () => bundle?.subscriptions ?? [],
         [bundle?.subscriptions],
+    )
+    const creditCards = React.useMemo(
+        () => bundle?.creditCards ?? [],
+        [bundle?.creditCards],
     )
 
     const initialLoading = detailQuery.isPending
@@ -155,8 +161,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             to: periodEnd,
         },
         initialFilterType: category?.type ?? "all",
-        expenseMonthAttribution:
-            category?.type === "expense" ? { yearMonth } : undefined,
+        skipListQuery: category == null || category.type === "expense",
         onWorkspaceDataChanged: () => {
             if (!currentWorkspaceId) return
             void invalidateWorkspaceData(queryClient, currentWorkspaceId, {
@@ -164,6 +169,27 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             })
         },
     })
+
+    const expenseMonthRows = React.useMemo(() => {
+        if (!category || category.type !== "expense") return null
+        const posted = attachPaymentCards(txs, txController.creditCards)
+        return buildCategoryEmbeddedExpenseRows({
+            category,
+            yearMonth,
+            posted,
+            installmentPlans,
+            subscriptions,
+            creditCards,
+        })
+    }, [
+        category,
+        creditCards,
+        installmentPlans,
+        subscriptions,
+        txs,
+        txController.creditCards,
+        yearMonth,
+    ])
 
     const handleEditSubmit = React.useCallback(
         async (e: React.FormEvent) => {
@@ -301,6 +327,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             transactions: txs,
             installmentPlans,
             subscriptions,
+            creditCards,
         })
         return (
             m[categoryId] ?? {
@@ -310,7 +337,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 committedTotal: postedMonthTotal,
             }
         )
-    }, [category, categoryId, installmentPlans, subscriptions, txs, yearMonth, postedMonthTotal])
+    }, [category, categoryId, creditCards, installmentPlans, subscriptions, txs, yearMonth, postedMonthTotal])
 
     const monthTotal = commitment.committedTotal
     const limit = budget ? Number(budget.amount) : 0
@@ -416,6 +443,8 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                 <CategoryEmbeddedTransactions
                     categoryType={category.type}
                     controller={txController}
+                    expenseMonthRows={expenseMonthRows}
+                    yearMonth={yearMonth}
                 />
             </div>
 
