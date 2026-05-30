@@ -234,5 +234,35 @@ describe("buildCategoryCommitmentsForMonth", () => {
         expect(res.c1?.projectedSubscriptionsTotal).toBe(0)
         expect(res.c1?.committedTotal).toBeCloseTo(39.9)
     })
-})
 
+    it("attributes CC subscription charge on May 29 to June expense month", () => {
+        const res = buildCategoryCommitmentsForMonth({
+            yearMonth: "2026-06",
+            transactions: [],
+            installmentPlans: [],
+            subscriptions: [
+                {
+                    id: "s1",
+                    workspace_id: "w",
+                    user_id: "u",
+                    name: "Streaming",
+                    amount: 49.9,
+                    billing_interval: "monthly",
+                    currency: "BRL",
+                    start_date: "2026-01-01",
+                    next_billing_date: "2026-05-29",
+                    day_of_month: null,
+                    category_id: "c1",
+                    notes: null,
+                    payment_method: "credit_card",
+                    payment_credit_card_id: "card1",
+                    is_active: true,
+                    created_at: "",
+                    updated_at: "",
+                },
+            ],
+            creditCards: [{ id: "card1", closing_day: 28 }],
+        })
+        expect(res.c1?.projectedSubscriptionsTotal).toBeCloseTo(49.9)
+    })
+})

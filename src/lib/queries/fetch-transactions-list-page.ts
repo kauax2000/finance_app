@@ -56,6 +56,8 @@ export type FetchTransactionsListPageArgs = {
     filterSubscriptionId: string | null
     sortKey: "date" | "amount"
     sortDir: "asc" | "desc"
+    /** When true, returns all rows in the date range (for client-side expense-month merge). */
+    fetchAllInRange?: boolean
 }
 
 export type FetchTransactionsListPageResult = {
@@ -86,6 +88,7 @@ export async function fetchTransactionsListPage(
         filterSubscriptionId,
         sortKey,
         sortDir,
+        fetchAllInRange,
     } = args
 
     const buildListQuery = (selectStr: string) => {
@@ -165,8 +168,8 @@ export async function fetchTransactionsListPage(
             qb = qb.order("created_at", { ascending })
         }
 
-        const from = pageIndex * PAGE_SIZE
-        const to = from + PAGE_SIZE - 1
+        const from = fetchAllInRange ? 0 : pageIndex * PAGE_SIZE
+        const to = fetchAllInRange ? PAGE_SIZE * 50 - 1 : from + PAGE_SIZE - 1
         return qb.range(from, to)
     }
 
