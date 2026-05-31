@@ -568,7 +568,7 @@ export function DashboardPaymentsCalendar({
                             <div className="flex items-baseline justify-between gap-2 text-xs sm:flex-col sm:items-start">
                                 <dt
                                     className="min-w-0 shrink text-muted-foreground"
-                                    title="Assinaturas + parcelas no mês"
+                                    title="Complemento planejado no mês de despesa (assinaturas, parcelas e contas ainda não lançadas)"
                                 >
                                     Previsto
                                 </dt>
