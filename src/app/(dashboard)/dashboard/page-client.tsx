@@ -348,7 +348,6 @@ export default function DashboardPageClient() {
                         />
                         <DashboardInstallmentsEndingSoon
                             endingSoon={d.installmentsEndingSoon}
-                            calendarYm={d.calendarYm}
                             creditCards={d.creditCards}
                             onPlanClick={(plan) => {
                                 openEventPreview({

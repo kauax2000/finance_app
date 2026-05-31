@@ -16,7 +16,6 @@ import {
 import {
     PageSection,
     PageSectionContent,
-    PageSectionDescription,
     PageSectionHeader,
     PageSectionTitle,
 } from "@/components/ui/page-section"
@@ -24,7 +23,6 @@ import { Small, Muted } from "@/components/ui/typography"
 import type { InstallmentEndingSoon } from "@/lib/credit-card-invoice-analytics"
 import { formatTransactionDmyPtBr } from "@/lib/transaction-date"
 import { ROUTES } from "@/config/navigation"
-import { labelYearMonthPt } from "@/lib/budget-month"
 import { transactionParceladaRowChip } from "@/lib/tag-chip-classes"
 import type { CreditCard } from "@/lib/supabase"
 import { cn } from "@/lib/utils"
@@ -138,16 +136,13 @@ function InstallmentPlanCompactRow({
 
 export function DashboardInstallmentsEndingSoon({
     endingSoon,
-    calendarYm,
     creditCards,
     onPlanClick,
 }: {
     endingSoon: InstallmentEndingSoon[]
-    calendarYm: string
     creditCards: CreditCard[]
     onPlanClick?: (plan: InstallmentEndingSoon) => void
 }) {
-    const monthTitle = useMemo(() => labelYearMonthPt(calendarYm), [calendarYm])
     const cardNameById = useMemo(() => {
         const m = new Map<string, string>()
         for (const c of creditCards) {
@@ -161,12 +156,8 @@ export function DashboardInstallmentsEndingSoon({
     return (
         <PageSection className="min-w-0 gap-2">
             <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                <PageSectionHeader className="min-w-0 flex-1 gap-0.5">
+                <PageSectionHeader className="min-w-0 flex-1">
                     <PageSectionTitle>Compras parceladas</PageSectionTitle>
-                    <PageSectionDescription>
-                        Encerrando em breve em {monthTitle}: planos com até 2
-                        parcelas restantes ou cobrança nos próximos 50 dias.
-                    </PageSectionDescription>
                 </PageSectionHeader>
                 <Button
                     asChild

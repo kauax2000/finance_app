@@ -384,10 +384,7 @@ function DashboardInstallmentsSkeleton() {
     return (
         <div className="min-w-0 max-w-full space-y-2">
             <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0 flex-1 space-y-1.5">
-                    <Skeleton className="h-5 w-40 max-w-full rounded-md" />
-                    <Skeleton className="h-4 w-full max-w-md rounded-md" />
-                </div>
+                <Skeleton className="h-5 w-40 max-w-full rounded-md" />
                 <Skeleton className="h-10 w-full rounded-md md:h-8 md:w-32" />
             </div>
             <CardSectionShell>
