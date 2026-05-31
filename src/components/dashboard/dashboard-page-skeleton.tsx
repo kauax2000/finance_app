@@ -388,10 +388,10 @@ function DashboardInstallmentsSkeleton() {
                 <div className="divide-y divide-border">
                     {INSTALLMENT_KEYS.map((key) => (
                         <div key={key} className="space-y-2 px-4 py-3">
-                            <div className="flex min-w-0 items-start justify-between gap-3">
-                                <div className="min-w-0 flex-1 space-y-1">
-                                    <Skeleton className="h-5 w-[min(100%,10rem)] rounded-md" />
-                                    <Skeleton className="h-3 w-24 rounded-md" />
+                            <div className="flex min-w-0 items-center gap-2">
+                                <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
+                                    <Skeleton className="h-5 w-24 shrink-0 rounded-md" />
+                                    <Skeleton className="h-3 min-w-0 flex-1 rounded-md" />
                                 </div>
                                 <Skeleton className="h-4 w-28 shrink-0 rounded-md" />
                             </div>
