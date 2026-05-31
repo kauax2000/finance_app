@@ -69,7 +69,7 @@ function InstallmentPlanCompactRow({
                         </P>
                         <Muted className="shrink-0 text-xs leading-snug">
                             <span className="font-medium text-muted-foreground">
-                                Próxima:
+                                Próx.
                             </span>{" "}
                             <span className="tabular-nums">
                                 {nextLabelCompact}
