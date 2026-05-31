@@ -349,6 +349,17 @@ export default function DashboardPageClient() {
                         <DashboardInstallmentsEndingSoon
                             endingSoon={d.installmentsEndingSoon}
                             calendarYm={d.calendarYm}
+                            creditCards={d.creditCards}
+                            onPlanClick={(plan) => {
+                                openEventPreview({
+                                    kind: "installment",
+                                    dateYmd: plan.nextBilling,
+                                    title: plan.label,
+                                    amount: plan.monthlyAmount,
+                                    sourceHref: null,
+                                    installmentPlanId: plan.planId,
+                                })
+                            }}
                         />
                     </div>
                 </div>

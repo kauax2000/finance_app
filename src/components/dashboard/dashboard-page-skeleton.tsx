@@ -383,36 +383,31 @@ function DashboardInvoicesSkeleton() {
 function DashboardInstallmentsSkeleton() {
     return (
         <div className="min-w-0 max-w-full space-y-2">
-            <SectionTitleRow titleClassName="h-3 w-44" cta="responsive" />
+            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0 flex-1 space-y-1.5">
+                    <Skeleton className="h-5 w-40 max-w-full rounded-md" />
+                    <Skeleton className="h-4 w-full max-w-md rounded-md" />
+                </div>
+                <Skeleton className="h-10 w-full rounded-md md:h-8 md:w-32" />
+            </div>
             <CardSectionShell>
-                <CardSectionHeader />
-                <div className="px-4 py-4 md:px-5 md:py-5">
-                    <div className="space-y-2">
-                        {INSTALLMENT_KEYS.map((key) => (
-                            <div
-                                key={key}
-                                className="overflow-hidden rounded-lg border border-border/60 bg-muted/10 dark:bg-muted/5"
-                            >
-                                <div className="border-b border-border/50 bg-muted/25 px-3 py-2.5 dark:bg-muted/15">
-                                    <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
-                                        <div className="min-w-0 flex-1 space-y-0.5">
-                                            <Skeleton className="h-6 w-[min(100%,16rem)] rounded-md" />
-                                            <Skeleton className="h-4 w-full max-w-[14rem] rounded-md" />
-                                        </div>
-                                        <div className="shrink-0 space-y-1.5 text-right">
-                                            <Skeleton className="ml-auto h-2.5 w-24 rounded-md" />
-                                            <Skeleton className="ml-auto h-7 w-28 rounded-md" />
-                                        </div>
-                                    </div>
+                <div className="divide-y divide-border">
+                    {INSTALLMENT_KEYS.map((key) => (
+                        <div key={key} className="space-y-2 px-4 py-3">
+                            <div className="flex min-w-0 items-center justify-between gap-3">
+                                <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                                    <Skeleton className="h-5 w-16 shrink-0 rounded-full" />
+                                    <Skeleton className="h-4 w-[min(100%,12rem)] rounded-md" />
                                 </div>
-                                <div className="space-y-2 px-3 py-3">
-                                    <Skeleton className="h-4 w-48 max-w-full rounded-md" />
-                                    <Skeleton className="h-3 w-40 max-w-full rounded-md" />
-                                    <Skeleton className="h-2 w-full rounded-full" />
-                                </div>
+                                <Skeleton className="h-4 w-24 shrink-0 rounded-md" />
                             </div>
-                        ))}
-                    </div>
+                            <div className="flex min-w-0 items-center gap-2">
+                                <Skeleton className="h-5 w-10 shrink-0 rounded-full" />
+                                <Skeleton className="h-3 min-w-0 flex-1 rounded-md" />
+                                <Skeleton className="h-1.5 min-w-[4rem] flex-1 rounded-full" />
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </CardSectionShell>
         </div>

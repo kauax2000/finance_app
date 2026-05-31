@@ -414,6 +414,7 @@ export type InstallmentEndingSoon = {
     totalInstallments: number
     monthlyAmount: number
     nextBilling: string
+    paymentCreditCardId: string | null
 }
 
 export function findInstallmentPlansEndingSoon(
@@ -443,6 +444,7 @@ export function findInstallmentPlansEndingSoon(
             totalInstallments: p.total_installments,
             monthlyAmount,
             nextBilling: p.next_billing_date,
+            paymentCreditCardId: p.payment_credit_card_id ?? null,
         })
     }
     return out
