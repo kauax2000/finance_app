@@ -15,7 +15,10 @@ import {
 } from "@/components/ui/empty-state"
 import { P, Muted } from "@/components/ui/typography"
 import type { InstallmentEndingSoon } from "@/lib/credit-card-invoice-analytics"
-import { formatTransactionDmyPtBr } from "@/lib/transaction-date"
+import {
+    formatTransactionCompactPtBr,
+    formatTransactionDmyPtBr,
+} from "@/lib/transaction-date"
 import { ROUTES } from "@/config/navigation"
 import type { CreditCard } from "@/lib/supabase"
 import { cn } from "@/lib/utils"
@@ -39,7 +42,7 @@ function InstallmentPlanCompactRow({
     cardName: string | null
     onSelect?: (plan: InstallmentEndingSoon) => void
 }) {
-    const nextLabel = formatTransactionDmyPtBr(plan.nextBilling)
+    const nextLabelCompact = formatTransactionCompactPtBr(plan.nextBilling)
     const paidCount = Math.max(0, plan.totalInstallments - plan.remainingCount)
     const pctDone =
         plan.totalInstallments > 0
@@ -57,8 +60,11 @@ function InstallmentPlanCompactRow({
                     <P className="min-w-0 truncate text-base font-semibold leading-snug tracking-tight">
                         {plan.label}
                     </P>
-                    <Muted className="min-w-0 shrink-0 text-xs leading-snug tabular-nums">
-                        {nextLabel}
+                    <Muted className="min-w-0 shrink-0 text-xs leading-snug">
+                        <span className="font-medium text-muted-foreground">
+                            Próxima:
+                        </span>{" "}
+                        <span className="tabular-nums">{nextLabelCompact}</span>
                         {cardName ? (
                             <>
                                 <span className="text-muted-foreground/60">
