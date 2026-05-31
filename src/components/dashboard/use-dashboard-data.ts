@@ -40,7 +40,8 @@ import {
     buildUpcomingPaymentsForVisibleMonth,
     paymentEventCountsInExpenseMonth,
 } from "@/components/dashboard/payment-events"
-import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
+import { userFacingFetchError } from "@/lib/supabase-errors"
+import { isPostgrestTransientNetworkError } from "@/lib/transient-network-retry"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
 import { fetchPendingBillInstancesForDashboard } from "@/lib/queries/fetch-bills-dashboard"
 import { useCategoriesQuery } from "@/lib/queries/use-categories"
@@ -407,11 +408,12 @@ export function useDashboardData() {
         if (!queriesEnabled) return
         if (!txQuery.isError) return
         if (!hadTxDataRef.current) return
+        if (isPostgrestTransientNetworkError(txQuery.error)) return
         toastError(
-            txQuery.error instanceof Error
-                ? txQuery.error.message
-                : formatSupabasePostgrestError(txQuery.error) ??
-                      "Não foi possível atualizar o painel. Mostrando a última versão carregada.",
+            userFacingFetchError(
+                txQuery.error,
+                "Não foi possível atualizar o painel. Mostrando a última versão carregada.",
+            ),
         )
     }, [queriesEnabled, txQuery.isError, txQuery.error])
 
