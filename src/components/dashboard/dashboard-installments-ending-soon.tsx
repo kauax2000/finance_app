@@ -183,6 +183,10 @@ export function DashboardInstallmentsEndingSoon({
             </div>
 
             <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                    <div
+                        className="shrink-0 border-b border-border bg-muted/30 px-4 py-2.5"
+                        aria-hidden
+                    />
                     <CardContent className="p-0">
                         {endingSoon.length === 0 ? (
                             <EmptyState className="mx-4 my-6 border-0 bg-transparent py-8">
@@ -228,6 +232,10 @@ export function DashboardInstallmentsEndingSoon({
                             </ul>
                         )}
                     </CardContent>
+                    <div
+                        className="shrink-0 border-t border-border bg-muted/30 px-4 py-2.5"
+                        aria-hidden
+                    />
                 </Card>
         </div>
     )

@@ -385,6 +385,10 @@ function DashboardInstallmentsSkeleton() {
         <div className="min-w-0 max-w-full space-y-2">
             <SectionTitleRow titleClassName="h-3 w-44" cta="responsive" />
             <CardSectionShell>
+                <div
+                    className="shrink-0 border-b border-border bg-muted/30 px-4 py-2.5"
+                    aria-hidden
+                />
                 <div className="divide-y divide-border">
                     {INSTALLMENT_KEYS.map((key) => (
                         <div key={key} className="space-y-2 px-4 py-3">
@@ -401,6 +405,12 @@ function DashboardInstallmentsSkeleton() {
                             </div>
                         </div>
                     ))}
+                </div>
+                <div
+                    className="shrink-0 border-t border-border bg-muted/30 px-4 py-2.5"
+                    aria-hidden
+                >
+                    <Skeleton className="h-0 w-0" />
                 </div>
             </CardSectionShell>
         </div>
