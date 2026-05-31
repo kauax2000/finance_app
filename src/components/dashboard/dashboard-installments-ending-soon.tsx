@@ -55,30 +55,38 @@ function InstallmentPlanCompactRow({
 
     const content = (
         <>
-            <div className="flex min-w-0 items-start justify-between gap-3 sm:items-center">
-                <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-2 sm:gap-y-0">
-                    <P className="min-w-0 truncate text-base font-semibold leading-snug tracking-tight">
-                        {plan.label}
-                    </P>
-                    <Muted className="min-w-0 shrink-0 text-xs leading-snug">
-                        <span className="font-medium text-muted-foreground">
-                            Próxima:
-                        </span>{" "}
-                        <span className="tabular-nums">{nextLabelCompact}</span>
-                        {cardName ? (
-                            <>
-                                <span className="text-muted-foreground/60">
-                                    {" "}
-                                    ·{" "}
-                                </span>
-                                <span className="max-w-[10rem] truncate sm:max-w-[12rem]">
+            <div className="flex min-w-0 items-center gap-2">
+                <div
+                    className={cn(
+                        "min-w-0 flex-1 overflow-hidden pr-1",
+                        "[mask-image:linear-gradient(to_right,black_calc(100%-0.75rem),transparent)]",
+                        "[-webkit-mask-image:linear-gradient(to_right,black_calc(100%-0.75rem),transparent)]",
+                    )}
+                >
+                    <div className="flex min-w-0 items-baseline gap-2 whitespace-nowrap">
+                        <P className="shrink-0 text-base font-semibold leading-snug tracking-tight">
+                            {plan.label}
+                        </P>
+                        <Muted className="shrink-0 text-xs leading-snug">
+                            <span className="font-medium text-muted-foreground">
+                                Próxima:
+                            </span>{" "}
+                            <span className="tabular-nums">
+                                {nextLabelCompact}
+                            </span>
+                            {cardName ? (
+                                <>
+                                    <span className="text-muted-foreground/60">
+                                        {" "}
+                                        ·{" "}
+                                    </span>
                                     {cardName}
-                                </span>
-                            </>
-                        ) : null}
-                    </Muted>
+                                </>
+                            ) : null}
+                        </Muted>
+                    </div>
                 </div>
-                <div className="flex shrink-0 items-baseline gap-0.5 pl-2 tabular-nums">
+                <div className="flex shrink-0 items-baseline gap-0.5 tabular-nums">
                     <MoneyDisplay
                         value={plan.monthlyAmount}
                         size="sm"
