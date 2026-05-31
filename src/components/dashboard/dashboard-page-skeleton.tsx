@@ -386,7 +386,7 @@ function DashboardInstallmentsSkeleton() {
             <SectionTitleRow titleClassName="h-3 w-44" cta="responsive" />
             <CardSectionShell>
                 <div
-                    className="shrink-0 border-b border-border bg-muted/30 px-4 py-2.5"
+                    className="flex min-h-10 shrink-0 items-center border-b border-border bg-muted/30 px-4 py-2.5"
                     aria-hidden
                 />
                 <div className="divide-y divide-border">
@@ -409,9 +409,7 @@ function DashboardInstallmentsSkeleton() {
                 <div
                     className="shrink-0 border-t border-border bg-muted/30 px-4 py-2.5"
                     aria-hidden
-                >
-                    <Skeleton className="h-0 w-0" />
-                </div>
+                />
             </CardSectionShell>
         </div>
     )

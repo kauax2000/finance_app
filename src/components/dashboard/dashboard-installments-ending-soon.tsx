@@ -184,7 +184,7 @@ export function DashboardInstallmentsEndingSoon({
 
             <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
                     <div
-                        className="shrink-0 border-b border-border bg-muted/30 px-4 py-2.5"
+                        className="flex min-h-10 shrink-0 items-center border-b border-border bg-muted/30 px-4 py-2.5"
                         aria-hidden
                     />
                     <CardContent className="p-0">
@@ -233,7 +233,7 @@ export function DashboardInstallmentsEndingSoon({
                         )}
                     </CardContent>
                     <div
-                        className="shrink-0 border-t border-border bg-muted/30 px-4 py-2.5"
+                        className="flex min-h-10 shrink-0 items-center border-t border-border bg-muted/30 px-4 py-2.5"
                         aria-hidden
                     />
                 </Card>
