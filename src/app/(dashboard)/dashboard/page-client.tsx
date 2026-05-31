@@ -43,7 +43,10 @@ import { MoneyDisplay } from "@/components/ui/money-display"
 import { ROUTES } from "@/config/navigation"
 import { supabase } from "@/lib/supabase"
 import type { Transaction } from "@/lib/supabase"
-import { fetchTransactionForDetailSheet } from "@/lib/transactions-detail-sheet-query"
+import {
+    fetchOriginTransactionIdForInstallmentPlan,
+    fetchTransactionForDetailSheet,
+} from "@/lib/transactions-detail-sheet-query"
 import {
     deleteTransactionsByIds,
     persistInstallmentPlanUpdate,
@@ -158,6 +161,26 @@ export default function DashboardPageClient() {
             setDetailOpen(true)
         },
         [d.currentWorkspaceId, d.creditCards],
+    )
+
+    const openInstallmentPlanTransactionDetail = useCallback(
+        async (planId: string) => {
+            if (!d.currentWorkspaceId) return
+            const { transactionId, errorMessage } =
+                await fetchOriginTransactionIdForInstallmentPlan(supabase, {
+                    planId,
+                    workspaceId: d.currentWorkspaceId,
+                })
+            if (!transactionId) {
+                toastError(
+                    errorMessage ??
+                        "Nenhuma transação lançada para esta compra parcelada ainda.",
+                )
+                return
+            }
+            await openTransactionDetailById(transactionId)
+        },
+        [d.currentWorkspaceId, openTransactionDetailById],
     )
 
     const handleDetailLaunchEditConsumed = useCallback(() => {
@@ -350,14 +373,9 @@ export default function DashboardPageClient() {
                             endingSoon={d.installmentsEndingSoon}
                             creditCards={d.creditCards}
                             onPlanClick={(plan) => {
-                                openEventPreview({
-                                    kind: "installment",
-                                    dateYmd: plan.nextBilling,
-                                    title: plan.label,
-                                    amount: plan.monthlyAmount,
-                                    sourceHref: null,
-                                    installmentPlanId: plan.planId,
-                                })
+                                void openInstallmentPlanTransactionDetail(
+                                    plan.planId,
+                                )
                             }}
                         />
                     </div>
