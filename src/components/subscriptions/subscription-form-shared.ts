@@ -12,6 +12,7 @@ export const SUBSCRIPTION_BILLING_OPTIONS: {
     label: string
 }[] = [
     { value: "monthly", label: "Mensal" },
+    { value: "bimonthly", label: "Bimestral" },
     { value: "yearly", label: "Anual" },
     { value: "weekly", label: "Semanal" },
 ]

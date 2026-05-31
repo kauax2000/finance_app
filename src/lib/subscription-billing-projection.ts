@@ -37,6 +37,7 @@ export function advanceBilling(
 ): Date {
     if (interval === "weekly") return addDays(d, 7)
     if (interval === "monthly") return addMonths(d, 1)
+    if (interval === "bimonthly") return addMonths(d, 2)
     return addYears(d, 1)
 }
 
@@ -46,6 +47,7 @@ export function rewindBilling(
 ): Date {
     if (interval === "weekly") return addDays(d, -7)
     if (interval === "monthly") return addMonths(d, -1)
+    if (interval === "bimonthly") return addMonths(d, -2)
     return addYears(d, -1)
 }
 
