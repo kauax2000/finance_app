@@ -48,10 +48,6 @@ function InstallmentPlanCompactRow({
                   Math.max(0, (paidCount / plan.totalInstallments) * 100),
               )
             : 0
-    const remainingLabel =
-        plan.remainingCount === 1
-            ? "1 parcela restante"
-            : `${plan.remainingCount} parcelas restantes`
     const aria = installmentPlanAriaLabel(plan, cardName)
 
     const content = (
@@ -61,10 +57,8 @@ function InstallmentPlanCompactRow({
                     <P className="min-w-0 truncate text-base font-semibold leading-snug tracking-tight">
                         {plan.label}
                     </P>
-                    <Muted className="min-w-0 text-xs leading-snug tabular-nums sm:shrink">
-                        {remainingLabel}
-                        <span className="text-muted-foreground/60"> · </span>
-                        próxima cobrança {nextLabel}
+                    <Muted className="min-w-0 shrink-0 text-xs leading-snug tabular-nums">
+                        {nextLabel}
                         {cardName ? (
                             <>
                                 <span className="text-muted-foreground/60">
