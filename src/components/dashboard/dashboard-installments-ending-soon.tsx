@@ -13,7 +13,7 @@ import {
     EmptyStateDescription,
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
-import { Small, Muted } from "@/components/ui/typography"
+import { P, Muted } from "@/components/ui/typography"
 import type { InstallmentEndingSoon } from "@/lib/credit-card-invoice-analytics"
 import { formatTransactionDmyPtBr } from "@/lib/transaction-date"
 import { ROUTES } from "@/config/navigation"
@@ -54,15 +54,15 @@ function InstallmentPlanCompactRow({
 
     const content = (
         <>
-            <div className="flex min-w-0 items-start justify-between gap-3">
-                <Small className="min-w-0 flex-1 truncate font-medium text-foreground">
+            <div className="flex min-w-0 items-center justify-between gap-3">
+                <P className="min-w-0 flex-1 truncate text-base font-semibold leading-snug tracking-tight">
                     {plan.label}
-                </Small>
-                <div className="flex shrink-0 items-baseline gap-0.5 tabular-nums">
+                </P>
+                <div className="flex shrink-0 items-baseline gap-0.5 pl-2 tabular-nums">
                     <MoneyDisplay
                         value={plan.monthlyAmount}
-                        size="default"
-                        className="font-semibold"
+                        size="sm"
+                        className="text-sm font-semibold sm:text-base"
                     />
                     <Muted className="text-xs">/mês</Muted>
                 </div>
