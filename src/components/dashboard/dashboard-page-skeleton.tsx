@@ -383,10 +383,7 @@ function DashboardInvoicesSkeleton() {
 function DashboardInstallmentsSkeleton() {
     return (
         <div className="min-w-0 max-w-full space-y-2">
-            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                <Skeleton className="h-5 w-40 max-w-full rounded-md" />
-                <Skeleton className="h-10 w-full rounded-md md:h-8 md:w-32" />
-            </div>
+            <SectionTitleRow titleClassName="h-3 w-44" cta="responsive" />
             <CardSectionShell>
                 <div className="divide-y divide-border">
                     {INSTALLMENT_KEYS.map((key) => (
