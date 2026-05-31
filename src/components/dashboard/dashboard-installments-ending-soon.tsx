@@ -17,7 +17,6 @@ import { Small, Muted } from "@/components/ui/typography"
 import type { InstallmentEndingSoon } from "@/lib/credit-card-invoice-analytics"
 import { formatTransactionDmyPtBr } from "@/lib/transaction-date"
 import { ROUTES } from "@/config/navigation"
-import { transactionParceladaRowChip } from "@/lib/tag-chip-classes"
 import type { CreditCard } from "@/lib/supabase"
 import { cn } from "@/lib/utils"
 import { useMemo } from "react"
@@ -56,12 +55,9 @@ function InstallmentPlanCompactRow({
     const content = (
         <>
             <div className="flex min-w-0 items-start justify-between gap-3">
-                <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
-                    <span className={transactionParceladaRowChip}>Parcelada</span>
-                    <Small className="min-w-0 truncate font-medium text-foreground">
-                        {plan.label}
-                    </Small>
-                </div>
+                <Small className="min-w-0 flex-1 truncate font-medium text-foreground">
+                    {plan.label}
+                </Small>
                 <div className="flex shrink-0 items-baseline gap-0.5 tabular-nums">
                     <MoneyDisplay
                         value={plan.monthlyAmount}
