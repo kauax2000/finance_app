@@ -13,12 +13,6 @@ import {
     EmptyStateDescription,
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
-import {
-    PageSection,
-    PageSectionContent,
-    PageSectionHeader,
-    PageSectionTitle,
-} from "@/components/ui/page-section"
 import { Small, Muted } from "@/components/ui/typography"
 import type { InstallmentEndingSoon } from "@/lib/credit-card-invoice-analytics"
 import { formatTransactionDmyPtBr } from "@/lib/transaction-date"
@@ -154,17 +148,21 @@ export function DashboardInstallmentsEndingSoon({
     const transactionsHref = `${ROUTES.TRANSACTIONS}?type=expense&inst=1`
 
     return (
-        <PageSection className="min-w-0 gap-2">
-            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                <PageSectionHeader className="min-w-0 flex-1">
-                    <PageSectionTitle>Compras parceladas</PageSectionTitle>
-                </PageSectionHeader>
+        <div className="min-w-0 space-y-2">
+            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0 space-y-0.5">
+                    <div className="flex h-8 min-w-0 items-end">
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                            Compras parceladas
+                        </p>
+                    </div>
+                </div>
                 <Button
                     asChild
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-10 w-full shrink-0 gap-2 px-2 text-xs md:h-8 md:w-auto"
+                    className="h-10 w-full gap-2 px-2 text-xs md:h-8 md:w-auto"
                 >
                     <Link href={transactionsHref}>
                         <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />
@@ -173,8 +171,7 @@ export function DashboardInstallmentsEndingSoon({
                 </Button>
             </div>
 
-            <PageSectionContent>
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
                     <CardContent className="p-0">
                         {endingSoon.length === 0 ? (
                             <EmptyState className="mx-4 my-6 border-0 bg-transparent py-8">
@@ -221,7 +218,6 @@ export function DashboardInstallmentsEndingSoon({
                         )}
                     </CardContent>
                 </Card>
-            </PageSectionContent>
-        </PageSection>
+        </div>
     )
 }
