@@ -6,145 +6,231 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import {
+    EmptyState,
+    EmptyStateActions,
+    EmptyStateDescription,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
+import {
+    PageSection,
+    PageSectionContent,
+    PageSectionDescription,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
+import { Small, Muted } from "@/components/ui/typography"
 import type { InstallmentEndingSoon } from "@/lib/credit-card-invoice-analytics"
 import { formatTransactionDmyPtBr } from "@/lib/transaction-date"
 import { ROUTES } from "@/config/navigation"
 import { labelYearMonthPt } from "@/lib/budget-month"
+import { transactionParceladaRowChip } from "@/lib/tag-chip-classes"
+import type { CreditCard } from "@/lib/supabase"
+import { cn } from "@/lib/utils"
 import { useMemo } from "react"
+
+function installmentPlanAriaLabel(p: InstallmentEndingSoon, cardName: string | null): string {
+    const paidCount = Math.max(0, p.totalInstallments - p.remainingCount)
+    const nextLabel = formatTransactionDmyPtBr(p.nextBilling)
+    const cardPart = cardName ? `, cartão ${cardName}` : ""
+    return `${p.label}. ${p.remainingCount} ${
+        p.remainingCount === 1 ? "parcela restante" : "parcelas restantes"
+    }. ${paidCount} de ${p.totalInstallments} pagas. Próxima cobrança ${nextLabel}${cardPart}.`
+}
+
+function InstallmentPlanCompactRow({
+    plan,
+    cardName,
+    onSelect,
+}: {
+    plan: InstallmentEndingSoon
+    cardName: string | null
+    onSelect?: (plan: InstallmentEndingSoon) => void
+}) {
+    const nextLabel = formatTransactionDmyPtBr(plan.nextBilling)
+    const paidCount = Math.max(0, plan.totalInstallments - plan.remainingCount)
+    const pctDone =
+        plan.totalInstallments > 0
+            ? Math.min(
+                  100,
+                  Math.max(0, (paidCount / plan.totalInstallments) * 100),
+              )
+            : 0
+    const remainingLabel =
+        plan.remainingCount === 1 ? "1 rest." : `${plan.remainingCount} rest.`
+    const aria = installmentPlanAriaLabel(plan, cardName)
+
+    const content = (
+        <>
+            <div className="flex min-w-0 items-start justify-between gap-3">
+                <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
+                    <span className={transactionParceladaRowChip}>Parcelada</span>
+                    <Small className="min-w-0 truncate font-medium text-foreground">
+                        {plan.label}
+                    </Small>
+                </div>
+                <div className="flex shrink-0 items-baseline gap-0.5 tabular-nums">
+                    <MoneyDisplay
+                        value={plan.monthlyAmount}
+                        size="default"
+                        className="font-semibold"
+                    />
+                    <Muted className="text-xs">/mês</Muted>
+                </div>
+            </div>
+            <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5">
+                <Badge variant="secondary" size="xs" className="tabular-nums">
+                    {paidCount}/{plan.totalInstallments}
+                </Badge>
+                <Muted className="text-xs tabular-nums">
+                    {remainingLabel}
+                    <span className="text-muted-foreground/60"> · </span>
+                    próx. {nextLabel}
+                    {cardName ? (
+                        <>
+                            <span className="text-muted-foreground/60"> · </span>
+                            <span className="max-w-[8rem] truncate sm:max-w-[10rem]">
+                                {cardName}
+                            </span>
+                        </>
+                    ) : null}
+                </Muted>
+                <Progress
+                    value={pctDone}
+                    tone="success"
+                    className="h-1.5 min-w-[4rem] flex-1 basis-24"
+                    aria-label={`${paidCount} de ${plan.totalInstallments} parcelas pagas`}
+                />
+            </div>
+        </>
+    )
+
+    const rowClass = cn(
+        "block w-full px-4 py-3 text-left outline-none transition-colors",
+        onSelect &&
+            "cursor-pointer hover:bg-muted/30 focus-visible:bg-muted/30 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+    )
+
+    if (onSelect) {
+        return (
+            <li className="list-none">
+                <button
+                    type="button"
+                    className={rowClass}
+                    aria-label={aria}
+                    onClick={() => onSelect(plan)}
+                >
+                    {content}
+                </button>
+            </li>
+        )
+    }
+
+    return (
+        <li className="list-none">
+            <div className={rowClass} aria-label={aria}>
+                {content}
+            </div>
+        </li>
+    )
+}
 
 export function DashboardInstallmentsEndingSoon({
     endingSoon,
     calendarYm,
+    creditCards,
+    onPlanClick,
 }: {
     endingSoon: InstallmentEndingSoon[]
     calendarYm: string
+    creditCards: CreditCard[]
+    onPlanClick?: (plan: InstallmentEndingSoon) => void
 }) {
     const monthTitle = useMemo(() => labelYearMonthPt(calendarYm), [calendarYm])
+    const cardNameById = useMemo(() => {
+        const m = new Map<string, string>()
+        for (const c of creditCards) {
+            m.set(c.id, c.name)
+        }
+        return m
+    }, [creditCards])
+
+    const transactionsHref = `${ROUTES.TRANSACTIONS}?type=expense&inst=1`
+
     return (
-        <div className="min-w-0 space-y-2">
-            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex h-8 min-w-0 items-end">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                        Compras parceladas
-                    </p>
-                </div>
+        <PageSection className="min-w-0 gap-2">
+            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <PageSectionHeader className="min-w-0 flex-1 gap-0.5">
+                    <PageSectionTitle>Compras parceladas</PageSectionTitle>
+                    <PageSectionDescription>
+                        Encerrando em breve em {monthTitle}: planos com até 2
+                        parcelas restantes ou cobrança nos próximos 50 dias.
+                    </PageSectionDescription>
+                </PageSectionHeader>
                 <Button
                     asChild
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-10 w-full gap-2 px-2 text-xs md:h-8 md:w-auto"
+                    className="h-10 w-full shrink-0 gap-2 px-2 text-xs md:h-8 md:w-auto"
                 >
-                    <Link href={`${ROUTES.TRANSACTIONS}?type=expense&inst=1`}>
+                    <Link href={transactionsHref}>
                         <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />
                         <span className="truncate">Ver em transações</span>
                     </Link>
                 </Button>
             </div>
 
-            <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
-                <CardContent className="relative flex flex-col gap-0 p-0">
-                    <div
-                        className="flex min-h-10 shrink-0 items-center border-b border-border bg-muted/30 px-4 py-2.5"
-                        aria-live="polite"
-                    >
-                        <p className="text-sm font-semibold capitalize leading-snug text-foreground">
-                            {monthTitle}
-                        </p>
-                    </div>
-                    <div className="px-4 py-4 md:px-5 md:py-5">
-                    {endingSoon.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">
-                            Nenhuma compra parcelada encontrada.
-                        </p>
-                    ) : (
-                        <ul className="space-y-2" role="list">
-                            {endingSoon.map((p) => {
-                                const nextLabel = formatTransactionDmyPtBr(
-                                    p.nextBilling,
-                                )
-                                const paidCount = Math.max(
-                                    0,
-                                    p.totalInstallments - p.remainingCount
-                                )
-                                const pctDone =
-                                    p.totalInstallments > 0
-                                        ? Math.min(
-                                              100,
-                                              Math.max(
-                                                  0,
-                                                  (paidCount / p.totalInstallments) *
-                                                      100
-                                              )
-                                          )
-                                        : 0
-                                return (
-                                    <li
-                                        key={p.planId}
-                                        className="overflow-hidden rounded-lg border border-border/60 bg-muted/10 dark:bg-muted/5"
+            <PageSectionContent>
+                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                    <CardContent className="p-0">
+                        {endingSoon.length === 0 ? (
+                            <EmptyState className="mx-4 my-6 border-0 bg-transparent py-8">
+                                <EmptyStateTitle>
+                                    Nenhuma parcela terminando em breve
+                                </EmptyStateTitle>
+                                <EmptyStateDescription className="mb-4">
+                                    Quando um plano estiver com poucas parcelas
+                                    ou cobrança próxima, ele aparece aqui.
+                                </EmptyStateDescription>
+                                <EmptyStateActions>
+                                    <Button
+                                        asChild
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
                                     >
-                                        <div className="border-b border-border/50 bg-muted/25 px-3 py-2.5 dark:bg-muted/15">
-                                            <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
-                                                <div className="min-w-0 flex-1 space-y-0.5">
-                                                    <p className="truncate text-lg font-semibold leading-snug tracking-tight text-foreground sm:text-xl">
-                                                        {p.label}
-                                                    </p>
-                                                    <p className="min-w-0 truncate text-xs leading-snug text-muted-foreground">
-                                                        <span>Próxima cobrança</span>
-                                                        <span className="text-muted-foreground/80">
-                                                            {": "}
-                                                        </span>
-                                                        <span className="tabular-nums font-medium text-foreground">
-                                                            {nextLabel}
-                                                        </span>
-                                                    </p>
-                                                </div>
-                                                <div className="min-w-0 shrink-0 text-right">
-                                                    <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                                                        Impacto mensal
-                                                    </p>
-                                                    <MoneyDisplay
-                                                        value={p.monthlyAmount}
-                                                        size="xl"
-                                                        className="mt-0.5 block text-right"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="space-y-2 px-3 py-3">
-                                            <p className="text-sm font-medium text-foreground">
-                                                <span className="tabular-nums">
-                                                    {p.remainingCount}
-                                                </span>{" "}
-                                                {p.remainingCount === 1
-                                                    ? "parcela restante"
-                                                    : "parcelas restantes"}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground">
-                                                <span className="tabular-nums font-medium text-foreground/90">
-                                                    {paidCount}
-                                                </span>{" "}
-                                                de{" "}
-                                                <span className="tabular-nums font-medium text-foreground/90">
-                                                    {p.totalInstallments}
-                                                </span>{" "}
-                                                parcelas pagas
-                                            </p>
-                                            <Progress
-                                                value={pctDone}
-                                                tone="success"
-                                                className="h-2 w-full"
-                                                aria-label={`${paidCount} de ${p.totalInstallments} parcelas pagas, ${p.remainingCount} ${p.remainingCount === 1 ? "restante" : "restantes"}`}
-                                            />
-                                        </div>
-                                    </li>
-                                )
-                            })}
-                        </ul>
-                    )}
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
+                                        <Link href={transactionsHref}>
+                                            Ver compras parceladas
+                                        </Link>
+                                    </Button>
+                                </EmptyStateActions>
+                            </EmptyState>
+                        ) : (
+                            <ul
+                                className="divide-y divide-border"
+                                role="list"
+                            >
+                                {endingSoon.map((p) => (
+                                    <InstallmentPlanCompactRow
+                                        key={p.planId}
+                                        plan={p}
+                                        cardName={
+                                            p.paymentCreditCardId
+                                                ? (cardNameById.get(
+                                                      p.paymentCreditCardId,
+                                                  ) ?? null)
+                                                : null
+                                        }
+                                        onSelect={onPlanClick}
+                                    />
+                                ))}
+                            </ul>
+                        )}
+                    </CardContent>
+                </Card>
+            </PageSectionContent>
+        </PageSection>
     )
 }
