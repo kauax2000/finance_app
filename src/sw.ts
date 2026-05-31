@@ -3,7 +3,7 @@
 import { pwaIconSrc } from "@/lib/pwa/icon-url"
 import { defaultCache } from "@serwist/next/worker"
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist"
-import { NetworkOnly, Serwist } from "serwist"
+import { Serwist } from "serwist"
 
 declare global {
     interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -18,15 +18,9 @@ const serwist = new Serwist({
     skipWaiting: true,
     clientsClaim: true,
     navigationPreload: true,
-    runtimeCaching: [
-        {
-            matcher: ({ url }) =>
-                url.hostname.includes("supabase.co") ||
-                url.pathname.includes("/functions/v1/"),
-            handler: new NetworkOnly(),
-        },
-        ...defaultCache,
-    ],
+    // PostgREST / Edge Functions are not cached; omitting a route lets the browser fetch
+    // directly so offline failures surface as normal network errors (not SW no-response).
+    runtimeCaching: [...defaultCache],
 })
 
 serwist.addEventListeners()

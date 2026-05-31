@@ -1,9 +1,18 @@
+import { isPostgrestTransientNetworkError } from "@/lib/transient-network-retry"
+
+/** User-facing copy for offline / flaky network (matches auth fetch messaging). */
+export const TRANSIENT_NETWORK_MESSAGE_PT =
+    "Falha de conexão. Verifique sua internet e tente novamente."
+
 /**
  * Normalizes PostgREST / Supabase client errors for UI and logging.
  * Some failures surface as truthy objects that stringify as `{}` in the DevTools console.
  */
 export function formatSupabasePostgrestError(error: unknown): string | null {
     if (error == null) return null
+    if (isPostgrestTransientNetworkError(error)) {
+        return TRANSIENT_NETWORK_MESSAGE_PT
+    }
     if (typeof error === "string") return error.trim() || null
     if (typeof error !== "object") return String(error)
 
@@ -34,6 +43,11 @@ export function formatSupabasePostgrestError(error: unknown): string | null {
     }
 
     return "Falha ao comunicar com o Supabase (rede, URL ou configuração). Confirme NEXT_PUBLIC_SUPABASE_URL, a chave anon e a ligação à internet."
+}
+
+/** Maps fetch / PostgREST failures to a short PT string for toasts and alerts. */
+export function userFacingFetchError(error: unknown, fallback: string): string {
+    return formatSupabasePostgrestError(error) ?? fallback
 }
 
 /**
