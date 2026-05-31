@@ -61,6 +61,17 @@ export function formatTransactionDmyPtBr(isoOrString: string): string {
     return `${pad2(p.d)}/${pad2(p.mo)}/${p.y}`
 }
 
+/** dd/mm no ano corrente; dd/mm/aa caso contrário — rótulos compactos (ex.: próxima cobrança). */
+export function formatTransactionCompactPtBr(isoOrString: string): string {
+    const p = transactionCalendarParts(isoOrString)
+    if (!p) return isoOrString.trim()
+    const currentYear = new Date().getFullYear()
+    if (p.y === currentYear) {
+        return `${pad2(p.d)}/${pad2(p.mo)}`
+    }
+    return `${pad2(p.d)}/${pad2(p.mo)}/${String(p.y).slice(-2)}`
+}
+
 /** Inclusive range bounds for filtering timestamptz by calendar Y-M-D. */
 export function filterRangeStartIso(ymd: string): string {
     return `${ymd}T00:00:00.000Z`
