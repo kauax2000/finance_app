@@ -95,7 +95,11 @@ export interface CreditCardInvoicePayment {
     updated_at: string
 }
 
-export type SubscriptionBillingInterval = 'weekly' | 'monthly' | 'yearly'
+export type SubscriptionBillingInterval =
+    | 'weekly'
+    | 'monthly'
+    | 'bimonthly'
+    | 'yearly'
 
 export interface WorkspaceSubscription {
     id: string

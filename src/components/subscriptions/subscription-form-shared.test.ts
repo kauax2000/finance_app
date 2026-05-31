@@ -105,6 +105,24 @@ describe("buildSubscriptionFormPayload", () => {
         }
     })
 
+    it("accepts bimonthly billing interval", () => {
+        const r = buildSubscriptionFormPayload({
+            name: "Plano trimestral alternado",
+            amountStr: "120",
+            billing: "bimonthly",
+            billingDate: "2026-04-05",
+            cId: SUBSCRIPTION_SELECT_NONE,
+            n: "",
+            active: true,
+            paymentMethod: null,
+            paymentCreditCardId: "",
+        })
+        expect(r.ok).toBe(true)
+        if (r.ok) {
+            expect(r.payload.billing_interval).toBe("bimonthly")
+        }
+    })
+
     it("rejects empty billing date", () => {
         const r = buildSubscriptionFormPayload({
             name: "S",
