@@ -7,8 +7,7 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
     <div
       className={cn(
         "relative w-full overflow-x-auto",
-        "overscroll-x-contain touch-pan-x",
-        // prevent page-level horizontal scroll chaining on iOS while still allowing table scroll
+        "overscroll-x-contain [-webkit-overflow-scrolling:touch]",
         "[scrollbar-gutter:stable]"
       )}
     >
