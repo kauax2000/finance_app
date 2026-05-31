@@ -49,15 +49,35 @@ function InstallmentPlanCompactRow({
               )
             : 0
     const remainingLabel =
-        plan.remainingCount === 1 ? "1 rest." : `${plan.remainingCount} rest.`
+        plan.remainingCount === 1
+            ? "1 parcela restante"
+            : `${plan.remainingCount} parcelas restantes`
     const aria = installmentPlanAriaLabel(plan, cardName)
 
     const content = (
         <>
-            <div className="flex min-w-0 items-center justify-between gap-3">
-                <P className="min-w-0 flex-1 truncate text-base font-semibold leading-snug tracking-tight">
-                    {plan.label}
-                </P>
+            <div className="flex min-w-0 items-start justify-between gap-3 sm:items-center">
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-2 sm:gap-y-0">
+                    <P className="min-w-0 truncate text-base font-semibold leading-snug tracking-tight">
+                        {plan.label}
+                    </P>
+                    <Muted className="min-w-0 text-xs leading-snug tabular-nums sm:shrink">
+                        {remainingLabel}
+                        <span className="text-muted-foreground/60"> · </span>
+                        próxima cobrança {nextLabel}
+                        {cardName ? (
+                            <>
+                                <span className="text-muted-foreground/60">
+                                    {" "}
+                                    ·{" "}
+                                </span>
+                                <span className="max-w-[10rem] truncate sm:max-w-[12rem]">
+                                    {cardName}
+                                </span>
+                            </>
+                        ) : null}
+                    </Muted>
+                </div>
                 <div className="flex shrink-0 items-baseline gap-0.5 pl-2 tabular-nums">
                     <MoneyDisplay
                         value={plan.monthlyAmount}
@@ -67,23 +87,10 @@ function InstallmentPlanCompactRow({
                     <Muted className="text-xs">/mês</Muted>
                 </div>
             </div>
-            <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5">
+            <div className="mt-2 flex min-w-0 items-center gap-2">
                 <Badge variant="secondary" size="xs" className="tabular-nums">
                     {paidCount}/{plan.totalInstallments}
                 </Badge>
-                <Muted className="text-xs tabular-nums">
-                    {remainingLabel}
-                    <span className="text-muted-foreground/60"> · </span>
-                    próx. {nextLabel}
-                    {cardName ? (
-                        <>
-                            <span className="text-muted-foreground/60"> · </span>
-                            <span className="max-w-[8rem] truncate sm:max-w-[10rem]">
-                                {cardName}
-                            </span>
-                        </>
-                    ) : null}
-                </Muted>
                 <Progress
                     value={pctDone}
                     tone="success"
