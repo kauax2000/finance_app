@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
@@ -60,7 +60,7 @@ import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { parseMoneyBrl, formatMoneyBrlInput, formatMoneyBrlTyping } from "@/lib/money-brl"
 import { toastError } from "@/lib/toast"
 import { FINANCE_CATEGORIES_MUTATED_EVENT } from "@/lib/workspace-data-events"
-import { ROUTES } from "@/config/navigation"
+import { ROUTES, categoryDetailPath } from "@/config/navigation"
 import { categoriesKeys } from "@/lib/queries/keys"
 import { useCategoriesQuery } from "@/lib/queries/use-categories"
 import {
@@ -84,6 +84,8 @@ import { useIsMobile } from "@/hooks/use-mobile"
 
 export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNew?: boolean }) {
     const pathname = usePathname()
+    const router = useRouter()
+    const searchParams = useSearchParams()
     const queryClient = useQueryClient()
     const { user, loading: authLoading } = useAuth()
     const {
@@ -113,6 +115,21 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     const [editingCategory, setEditingCategory] = useState<Category | null>(null)
     const [filterType, setFilterType] = useState<TransactionFilterType>("expense")
     const [budgetMonthYm, setBudgetMonthYm] = useState(() => formatYearMonth(new Date()))
+    const monthParam = searchParams.get("month")
+    useEffect(() => {
+        if (monthParam && /^\d{4}-\d{2}$/.test(monthParam)) {
+            setBudgetMonthYm((prev) => (prev === monthParam ? prev : monthParam))
+        }
+    }, [monthParam])
+    const handleBudgetMonthYmChange = useCallback(
+        (ym: string) => {
+            setBudgetMonthYm(ym)
+            const p = new URLSearchParams()
+            p.set("month", ym)
+            router.replace(`${ROUTES.DASHBOARD_CATEGORIES}?${p.toString()}`, { scroll: false })
+        },
+        [router],
+    )
     const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null)
     const [deleteDeleting, setDeleteDeleting] = useState(false)
 
@@ -133,7 +150,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 filterType === "expense" ? (
                     <MonthNav
                         budgetMonthYm={budgetMonthYm}
-                        onBudgetMonthYmChange={setBudgetMonthYm}
+                        onBudgetMonthYmChange={handleBudgetMonthYmChange}
                         dense
                     />
                 ) : undefined,
@@ -143,6 +160,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             subrouteLabels?.kind,
             filterType,
             budgetMonthYm,
+            handleBudgetMonthYmChange,
         ],
     )
     usePageChromeSlot(categoriesChrome)
@@ -630,7 +648,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 includeAll={false}
                 showMonthControls={filterType === "expense"}
                 budgetMonthYm={budgetMonthYm}
-                onBudgetMonthYmChange={setBudgetMonthYm}
+                onBudgetMonthYmChange={handleBudgetMonthYmChange}
             />
             {isMobile ? (
                 <Sheet open={dialogOpen} onOpenChange={onSheetOpenChange}>
@@ -704,7 +722,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                                 <IncomeCategoryCard
                                     key={category.id}
                                     category={category}
-                                    href={`/categories/${category.id}?type=income`}
+                                    href={categoryDetailPath(category.id, { type: "income" })}
                                     onEdit={() => openDialog(category)}
                                     onDelete={() =>
                                         setPendingDelete({
@@ -745,7 +763,10 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                                         totalMonthSpend={totalMonthSpend}
                                         spendRank={expenseSpendRankById[category.id] ?? 1}
                                         categoriesWithPositiveSpend={categoriesWithPositiveSpend}
-                                        href={`/categories/${category.id}?type=expense`}
+                                        href={categoryDetailPath(category.id, {
+                                            type: "expense",
+                                            month: budgetMonthYm,
+                                        })}
                                         onEdit={() => openDialog(category)}
                                         onDelete={() =>
                                             setPendingDelete({

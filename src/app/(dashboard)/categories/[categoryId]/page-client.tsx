@@ -109,7 +109,9 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     )
     usePageChromeSlot({
         title: "Detalhes da categoria",
-        backHref: category ? ROUTES.DASHBOARD_CATEGORIES : undefined,
+        backHref: category
+            ? `${ROUTES.DASHBOARD_CATEGORIES}?month=${encodeURIComponent(yearMonth)}`
+            : undefined,
         dateFilter: category ? categoryDetailDateFilter : undefined,
     })
 
