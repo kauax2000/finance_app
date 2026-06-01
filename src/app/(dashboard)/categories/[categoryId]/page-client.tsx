@@ -14,7 +14,7 @@ import {
     normalizeCategoryIcon,
     type CategoryIconId,
 } from "@/components/categories/category-appearance-fields"
-import { formatYearMonth, periodBoundsFromYearMonth } from "@/lib/budget-month"
+import { formatYearMonth, parseYearMonthParam, periodBoundsFromYearMonth } from "@/lib/budget-month"
 import { upsertCategoryBudget, deleteCategoryBudgetById } from "@/lib/category-budget-ops"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { parseMoneyBrl, formatMoneyBrlInput } from "@/lib/money-brl"
@@ -45,12 +45,12 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
 
     const [yearMonth, setYearMonth] = React.useState(() => formatYearMonth(new Date()))
 
-    const monthParam = searchParams.get("month")
     React.useEffect(() => {
-        if (monthParam && /^\d{4}-\d{2}$/.test(monthParam)) {
-            setYearMonth(monthParam)
+        const ym = parseYearMonthParam(searchParams?.get("month") ?? null)
+        if (ym) {
+            setYearMonth((prev) => (prev === ym ? prev : ym))
         }
-    }, [monthParam])
+    }, [searchParams])
 
     const detailEnabled =
         !authLoading && !workspaceLoading && Boolean(user && currentWorkspaceId)
@@ -378,7 +378,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     const pageReady = !initialLoading && !txController.loading
 
     if (!pageReady) {
-        const hint = searchParams.get("type")
+        const hint = searchParams?.get("type")
         const typeHint = hint === "income" || hint === "expense" ? hint : null
         return <CategoryDetailSkeleton categoryType={category?.type ?? typeHint ?? null} />
     }

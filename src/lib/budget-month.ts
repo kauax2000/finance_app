@@ -24,6 +24,16 @@ export function parseYearMonth(ym: string): { y: number; m: number } {
     return { y: Number(ys), m: Number(ms) }
 }
 
+/** Returns normalized `YYYY-MM` when the query param is valid, otherwise `null`. */
+export function parseYearMonthParam(raw: string | null | undefined): string | null {
+    if (!raw || !/^\d{4}-\d{2}$/.test(raw)) return null
+    const [ys, ms] = raw.split("-")
+    const y = Number(ys)
+    const m = Number(ms)
+    if (!Number.isFinite(y) || m < 1 || m > 12) return null
+    return `${y}-${String(m).padStart(2, "0")}`
+}
+
 export function shiftYearMonth(ym: string, deltaMonths: number): string {
     const { y, m } = parseYearMonth(ym)
     const d = new Date(y, m - 1 + deltaMonths, 1)
