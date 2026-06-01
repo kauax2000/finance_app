@@ -3,6 +3,7 @@ import {
     formatYearMonth,
     labelYearMonthPt,
     parseYearMonth,
+    parseYearMonthParam,
     periodBoundsFromYearMonth,
     shiftYearMonth,
 } from "./budget-month"
@@ -35,5 +36,13 @@ describe("budget-month", () => {
         const label = labelYearMonthPt("2026-08")
         expect(label.length).toBeGreaterThan(3)
         expect(/^\p{Lu}/u.test(label)).toBe(true)
+    })
+
+    it("parseYearMonthParam accepts valid months and rejects invalid values", () => {
+        expect(parseYearMonthParam("2026-04")).toBe("2026-04")
+        expect(parseYearMonthParam("2026-4")).toBeNull()
+        expect(parseYearMonthParam("2026-13")).toBeNull()
+        expect(parseYearMonthParam("2026-00")).toBeNull()
+        expect(parseYearMonthParam(null)).toBeNull()
     })
 })

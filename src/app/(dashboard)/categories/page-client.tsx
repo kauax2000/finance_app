@@ -75,6 +75,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import {
     formatYearMonth,
+    parseYearMonthParam,
     periodBoundsFromYearMonth,
     shiftYearMonth,
 } from "@/lib/budget-month"
@@ -109,18 +110,18 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     const [projectedSubscriptionsByCategoryId, setProjectedSubscriptionsByCategoryId] =
         useState<Record<string, number>>({})
     const [prevSpendByCategoryId, setPrevSpendByCategoryId] = useState<Record<string, number>>({})
-    const listLoading = categoriesQuery.isPending
+    const listLoading = categoriesQuery.isPending && !categoriesQuery.data
     const [budgetsLoading, setBudgetsLoading] = useState(false)
     const [dialogOpen, setDialogOpen] = useState(() => shouldOpenNew)
     const [editingCategory, setEditingCategory] = useState<Category | null>(null)
     const [filterType, setFilterType] = useState<TransactionFilterType>("expense")
     const [budgetMonthYm, setBudgetMonthYm] = useState(() => formatYearMonth(new Date()))
-    const monthParam = searchParams.get("month")
     useEffect(() => {
-        if (monthParam && /^\d{4}-\d{2}$/.test(monthParam)) {
-            setBudgetMonthYm((prev) => (prev === monthParam ? prev : monthParam))
+        const ym = parseYearMonthParam(searchParams?.get("month") ?? null)
+        if (ym) {
+            setBudgetMonthYm((prev) => (prev === ym ? prev : ym))
         }
-    }, [monthParam])
+    }, [searchParams])
     const handleBudgetMonthYmChange = useCallback(
         (ym: string) => {
             setBudgetMonthYm(ym)
@@ -211,114 +212,119 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
 
     const fetchBudgetsAndSpend = useCallback(async () => {
         if (!user || !currentWorkspaceId) return
+        if (!parseYearMonthParam(budgetMonthYm)) return
         setBudgetsLoading(true)
-        const { period_start } = periodBoundsFromYearMonth(budgetMonthYm)
-        const prevYm = shiftYearMonth(budgetMonthYm, -1)
-        const nextYm = shiftYearMonth(budgetMonthYm, 1)
-        const padStart = periodBoundsFromYearMonth(prevYm).period_start
-        const padEnd = periodBoundsFromYearMonth(nextYm).period_end
+        try {
+            const { period_start } = periodBoundsFromYearMonth(budgetMonthYm)
+            const prevYm = shiftYearMonth(budgetMonthYm, -1)
+            const nextYm = shiftYearMonth(budgetMonthYm, 1)
+            const padStart = periodBoundsFromYearMonth(prevYm).period_start
+            const padEnd = periodBoundsFromYearMonth(nextYm).period_end
 
-        const [budRes, txRes, plansRes, subsRes, cardsRes] = await Promise.all([
-            supabase
-                .from("budgets")
-                .select("*")
-                .eq("workspace_id", currentWorkspaceId)
-                .eq("user_id", user.id)
-                .eq("period_start", period_start),
-            supabase
-                .from("transactions")
-                .select(
-                    "type,amount,date,category_id,subscription_id,installment_plan_id,installment_sequence,payment_method,payment_credit_card_id",
-                )
-                .eq("workspace_id", currentWorkspaceId)
-                .eq("type", "expense")
-                .gte("date", `${padStart}T00:00:00.000Z`)
-                .lte("date", `${padEnd}T23:59:59.999Z`),
-            supabase
-                .from("workspace_installment_plans")
-                .select("*")
-                .eq("workspace_id", currentWorkspaceId)
-                .order("next_billing_date", { ascending: true }),
-            supabase
-                .from("workspace_subscriptions")
-                .select("*")
-                .eq("workspace_id", currentWorkspaceId)
-                .order("name", { ascending: true }),
-            supabase
-                .from("credit_cards")
-                .select("id, closing_day")
-                .eq("workspace_id", currentWorkspaceId),
-        ])
+            const [budRes, txRes, plansRes, subsRes, cardsRes] = await Promise.all([
+                supabase
+                    .from("budgets")
+                    .select("*")
+                    .eq("workspace_id", currentWorkspaceId)
+                    .eq("user_id", user.id)
+                    .eq("period_start", period_start),
+                supabase
+                    .from("transactions")
+                    .select(
+                        "type,amount,date,category_id,subscription_id,installment_plan_id,installment_sequence,payment_method,payment_credit_card_id",
+                    )
+                    .eq("workspace_id", currentWorkspaceId)
+                    .eq("type", "expense")
+                    .gte("date", `${padStart}T00:00:00.000Z`)
+                    .lte("date", `${padEnd}T23:59:59.999Z`),
+                supabase
+                    .from("workspace_installment_plans")
+                    .select("*")
+                    .eq("workspace_id", currentWorkspaceId)
+                    .order("next_billing_date", { ascending: true }),
+                supabase
+                    .from("workspace_subscriptions")
+                    .select("*")
+                    .eq("workspace_id", currentWorkspaceId)
+                    .order("name", { ascending: true }),
+                supabase
+                    .from("credit_cards")
+                    .select("id, closing_day")
+                    .eq("workspace_id", currentWorkspaceId),
+            ])
 
-        const creditCards =
-            (cardsRes.data as { id: string; closing_day: number }[] | null) ?? []
+            const creditCards =
+                (cardsRes.data as { id: string; closing_day: number }[] | null) ?? []
 
-        if (budRes.error) {
-            console.error(budRes.error)
-        } else if (budRes.data) {
-            setBudgets(budRes.data as Budget[])
-        }
-
-        if (txRes.error) {
-            console.error(txRes.error)
-            setSpendByCategoryId({})
-            setPostedByCategoryId({})
-            setProjectedInstallmentsByCategoryId({})
-            setProjectedSubscriptionsByCategoryId({})
-            setPrevSpendByCategoryId({})
-        } else {
-            const monthTx = (txRes.data ?? []) as Pick<
-                Transaction,
-                | "type"
-                | "amount"
-                | "date"
-                | "category_id"
-                | "subscription_id"
-                | "installment_plan_id"
-                | "installment_sequence"
-                | "payment_method"
-                | "payment_credit_card_id"
-            >[]
-            const plans = (plansRes.data ?? []) as WorkspaceInstallmentPlan[]
-            const subs = (subsRes.data ?? []) as WorkspaceSubscription[]
-            const commitments = buildCategoryCommitmentsForMonth({
-                yearMonth: budgetMonthYm,
-                transactions: monthTx,
-                installmentPlans: plans,
-                subscriptions: subs,
-                creditCards,
-            })
-            const prevCommitments = buildCategoryCommitmentsForMonth({
-                yearMonth: prevYm,
-                transactions: monthTx,
-                installmentPlans: plans,
-                subscriptions: subs,
-                creditCards,
-            })
-
-            const committed: Record<string, number> = {}
-            const posted: Record<string, number> = {}
-            const projInst: Record<string, number> = {}
-            const projSubs: Record<string, number> = {}
-            for (const [cid, t] of Object.entries(commitments)) {
-                committed[cid] = t.committedTotal
-                posted[cid] = t.postedTotal
-                projInst[cid] = t.projectedInstallmentsTotal
-                projSubs[cid] = t.projectedSubscriptionsTotal
+            if (budRes.error) {
+                console.error(budRes.error)
+            } else if (budRes.data) {
+                setBudgets(budRes.data as Budget[])
             }
-            setSpendByCategoryId(committed)
-            setPostedByCategoryId(posted)
-            setProjectedInstallmentsByCategoryId(projInst)
-            setProjectedSubscriptionsByCategoryId(projSubs)
 
-            const prevCommitted: Record<string, number> = {}
-            for (const [cid, t] of Object.entries(prevCommitments)) {
-                prevCommitted[cid] = t.committedTotal
+            if (txRes.error) {
+                console.error(txRes.error)
+                setSpendByCategoryId({})
+                setPostedByCategoryId({})
+                setProjectedInstallmentsByCategoryId({})
+                setProjectedSubscriptionsByCategoryId({})
+                setPrevSpendByCategoryId({})
+            } else {
+                const monthTx = (txRes.data ?? []) as Pick<
+                    Transaction,
+                    | "type"
+                    | "amount"
+                    | "date"
+                    | "category_id"
+                    | "subscription_id"
+                    | "installment_plan_id"
+                    | "installment_sequence"
+                    | "payment_method"
+                    | "payment_credit_card_id"
+                >[]
+                const plans = (plansRes.data ?? []) as WorkspaceInstallmentPlan[]
+                const subs = (subsRes.data ?? []) as WorkspaceSubscription[]
+                const commitments = buildCategoryCommitmentsForMonth({
+                    yearMonth: budgetMonthYm,
+                    transactions: monthTx,
+                    installmentPlans: plans,
+                    subscriptions: subs,
+                    creditCards,
+                })
+                const prevCommitments = buildCategoryCommitmentsForMonth({
+                    yearMonth: prevYm,
+                    transactions: monthTx,
+                    installmentPlans: plans,
+                    subscriptions: subs,
+                    creditCards,
+                })
+
+                const committed: Record<string, number> = {}
+                const posted: Record<string, number> = {}
+                const projInst: Record<string, number> = {}
+                const projSubs: Record<string, number> = {}
+                for (const [cid, t] of Object.entries(commitments)) {
+                    committed[cid] = t.committedTotal
+                    posted[cid] = t.postedTotal
+                    projInst[cid] = t.projectedInstallmentsTotal
+                    projSubs[cid] = t.projectedSubscriptionsTotal
+                }
+                setSpendByCategoryId(committed)
+                setPostedByCategoryId(posted)
+                setProjectedInstallmentsByCategoryId(projInst)
+                setProjectedSubscriptionsByCategoryId(projSubs)
+
+                const prevCommitted: Record<string, number> = {}
+                for (const [cid, t] of Object.entries(prevCommitments)) {
+                    prevCommitted[cid] = t.committedTotal
+                }
+                setPrevSpendByCategoryId(prevCommitted)
             }
-            setPrevSpendByCategoryId(prevCommitted)
+        } catch (error) {
+            console.error(error)
+        } finally {
+            setBudgetsLoading(false)
         }
-
-        setBudgetsLoading(false)
     }, [user, currentWorkspaceId, budgetMonthYm])
 
     useEffect(() => {
@@ -369,6 +375,16 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
 
     if (user && currentWorkspaceId && workspaceLoading) {
         return <CategoriesPageGridSkeleton screenReaderLabel="Carregando carteira" />
+    }
+
+    if (categoriesQuery.isError) {
+        return (
+            <Card>
+                <CardContent className="py-8 text-sm text-destructive">
+                    Não foi possível carregar as categorias. Tente recarregar a página.
+                </CardContent>
+            </Card>
+        )
     }
 
     if (showOnboarding && user && currentWorkspaceId && currentWorkspace) {
