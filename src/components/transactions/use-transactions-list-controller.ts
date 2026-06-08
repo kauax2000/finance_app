@@ -616,6 +616,7 @@ export function useTransactionsListController(
                 "credit_cards",
                 "credit_card_expense_rows",
                 "bills",
+                "installment_plans",
             ],
         })
     }, [user, currentWorkspaceId, queryClient])
@@ -858,9 +859,27 @@ export function useTransactionsListController(
             mode === "single"
                 ? [pendingDelete.transaction.id]
                 : pendingDelete.ids
+        const rows =
+            mode === "single"
+                ? [
+                      {
+                          id: pendingDelete.transaction.id,
+                          installment_plan_id:
+                              pendingDelete.transaction.installment_plan_id,
+                      },
+                  ]
+                : pendingDelete.ids.map((id) => {
+                      const t = transactions.find((x) => x.id === id)
+                      return {
+                          id,
+                          installment_plan_id: t?.installment_plan_id ?? null,
+                      }
+                  })
 
         if (!currentWorkspaceId) return
-        const ok = await deleteTransactionsByIds(supabase, ids, currentWorkspaceId)
+        const ok = await deleteTransactionsByIds(supabase, ids, currentWorkspaceId, {
+            rows,
+        })
         if (!ok) {
             setDeleting(false)
             return

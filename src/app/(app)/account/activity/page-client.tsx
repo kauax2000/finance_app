@@ -27,7 +27,6 @@ import {
     tagChipSuccess,
     tagChipWarning,
 } from "@/lib/tag-chip-classes"
-import { useHideMobileFab } from "@/components/layout/mobile-fab-provider"
 import { cn } from "@/lib/utils"
 import { getActivities, type ActivityLog } from "@/lib/activity"
 import { useAuth } from "@/components/providers"
@@ -233,8 +232,6 @@ export default function ActivityPage() {
         }
         void fetchActivities()
     }, [authLoading, authSession, fetchActivities, router])
-
-    useHideMobileFab()
 
     const getFilteredActivities = () => {
         if (filter === "all") return activities

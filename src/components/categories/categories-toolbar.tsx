@@ -10,8 +10,6 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover"
 import { TransactionTypeSegment, type TransactionFilterType } from "@/components/transactions/transaction-type-segment"
-import { MOBILE_FLOATING_ACTION_BUTTON_CLASSNAME } from "@/components/layout/mobile-fab-button-classes"
-import { useMobileFabSlot } from "@/components/layout/mobile-fab-provider"
 import { formatYearMonth, labelYearMonthPt, shiftYearMonth, shortLabelYearMonthPt } from "@/lib/budget-month"
 import { cn } from "@/lib/utils"
 
@@ -355,50 +353,40 @@ export function CategoriesToolbar({
     className?: string
     includeAll?: boolean
 }) {
-    useMobileFabSlot(
-        <Button
-            type="button"
-            variant="default"
-            className={MOBILE_FLOATING_ACTION_BUTTON_CLASSNAME}
-            onClick={onNewCategory}
-        >
-            <Plus className="size-4 shrink-0" />
-            <span className="text-sm font-medium">Nova categoria</span>
-        </Button>,
-    )
-
     return (
         <div
             className={cn(
-                "flex min-w-0 max-w-full flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-3",
+                "flex min-w-0 max-w-full items-center justify-between gap-2 md:flex-wrap md:gap-3",
                 className,
             )}
         >
             <TransactionTypeSegment
                 value={filterType}
                 onChange={onFilterTypeChange}
-                className="max-w-full shrink-0"
+                className="min-w-0 flex-1 md:max-w-full md:flex-none"
                 includeAll={includeAll}
             />
 
-            <div className="hidden shrink-0 md:flex md:flex-wrap md:items-center md:justify-end md:gap-2">
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
                 {showMonthControls ? (
                     <MonthNav
                         budgetMonthYm={budgetMonthYm}
                         onBudgetMonthYmChange={onBudgetMonthYmChange}
                         onJumpToCurrentMonth={onJumpToCurrentMonth}
                         dense
+                        className="hidden md:flex"
                     />
                 ) : null}
                 <Button
                     type="button"
                     variant="default"
                     size="sm"
-                    className="h-8 gap-2 text-xs"
+                    className="size-10 shrink-0 rounded-lg p-0 text-xs md:size-auto md:h-8 md:gap-2 md:px-3"
+                    aria-label="Nova categoria"
                     onClick={onNewCategory}
                 >
                     <Plus className="size-4 shrink-0" />
-                    <span className="truncate">Nova categoria</span>
+                    <span className="hidden truncate md:inline">Nova categoria</span>
                 </Button>
             </div>
         </div>

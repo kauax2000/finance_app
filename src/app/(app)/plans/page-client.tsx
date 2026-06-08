@@ -3,13 +3,10 @@
 import { WrenchIcon, InformationCircleIcon, ReceiptPercentIcon, SparklesIcon } from "@heroicons/react/24/outline"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { useHideMobileFab } from "@/components/layout/mobile-fab-provider"
 import { tagChipInfo, tagChipWarning } from "@/lib/tag-chip-classes"
 import { cn } from "@/lib/utils"
 
 export default function PlansPage() {
-    useHideMobileFab()
-
     return (
         <div className="min-w-0 max-w-full space-y-5">
             <div className="min-w-0 space-y-2">

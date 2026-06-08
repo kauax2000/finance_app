@@ -140,8 +140,15 @@
   --sidebar-ring: oklch(0.348 0.118 166);
   /* Mobile shell: fixed header (h-14 = 3.5rem) + safe-area (see SidebarAppShell, MobileBottomNav) */
   --mobile-header-offset: calc(3.5rem + env(safe-area-inset-top, 0px));
-  /* ~min-h-12 nav bar + pill button (~2.5rem) + gap (0.75rem) + breathing room */
-  --mobile-bottom-pad: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+  /* Floating island nav (see MobileNavIsland) */
+  --mobile-glass-bg: oklch(0.985 0 0 / 55%);
+  --mobile-glass-border: oklch(1 0 0 / 10%);
+  --mobile-nav-island-height: 3.5rem;
+  --mobile-nav-island-margin: 1rem;
+  --mobile-bottom-pad: calc(
+    var(--mobile-nav-island-height) + var(--mobile-nav-island-margin) +
+      env(safe-area-inset-bottom, 0px)
+  );
 }
 
 .dark {
@@ -204,6 +211,8 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.45 0.14 166);
+  --mobile-glass-bg: oklch(0.205 0 0 / 45%);
+  --mobile-glass-border: oklch(1 0 0 / 5%);
 }
 
 @layer base {
@@ -294,6 +303,21 @@
  * fixed height from small top gap + safe-area to bottom; overrides Tailwind `h-auto`.
  */
 @layer utilities {
+  .mobile-glass-surface {
+    background-color: var(--mobile-glass-bg);
+    border-color: var(--mobile-glass-border);
+    backdrop-filter: blur(24px) saturate(1.5);
+    -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .mobile-glass-surface {
+      background-color: var(--background);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+  }
+
   [data-slot="sheet-content"].sheet-mobile-fill[data-side="bottom"] {
     top: max(0.5rem, env(safe-area-inset-top, 0px));
     bottom: 0;

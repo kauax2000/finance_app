@@ -17,6 +17,7 @@ import {
     resolveInstallmentKn,
     totalPurchaseFromPlan,
 } from "@/lib/transaction-installment"
+import { INSTALLMENT_DELETE_WARNING } from "@/lib/transactions/delete-transactions"
 import {
     buildInstallmentScheduleRows,
     type InstallmentPlanSliceInput,
@@ -607,6 +608,10 @@ export function TransactionDetailSheet({
                                     </dd>
                                 </div>
                             </dl>
+
+                            <p className="mt-3 text-[11px] leading-snug text-muted-foreground">
+                                {INSTALLMENT_DELETE_WARNING}
+                            </p>
 
                             <div className="mt-3 overflow-x-auto rounded-lg border border-border/50 bg-background/40">
                                 <Table className="min-w-[280px] text-xs">

@@ -1,57 +1,139 @@
 "use client"
 /* eslint-disable @next/next/no-img-element -- bottom-nav avatar from user metadata URL */
 
-import * as React from "react"
-import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Ellipsis } from "lucide-react"
+import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { QuickActionButton } from "@/components/layout/quick-actions"
-import {
-    MOBILE_FAB_HIDDEN,
-    useMobileFab,
-} from "@/components/layout/mobile-fab-provider"
 import { MobileAccountMenu } from "@/components/layout/mobile-account-menu"
+import { MobileNavIsland } from "@/components/layout/mobile-nav-island"
+import { MobileNavTab } from "@/components/layout/mobile-nav-tab"
+import {
+    mobileNavTabIconClass,
+    mobileNavTabInnerClass,
+    mobileNavTabRootClass,
+} from "@/components/layout/mobile-nav-tab-classes"
 import { useAuth } from "@/components/providers"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
-    isAccountActivityPath,
-    isAccountHubPath,
-    isAccountSessionsPath,
-    isCreditCardDetailPath,
-    isExactPath,
-    isMembersPath,
-    isPlansPath,
-    isSettingsPath,
-    MAIN_NAVIGATION,
-    ROUTES,
-} from "@/config/navigation"
+    getActiveMobileAccountMenuNavItem,
+    getMobileNavTabs,
+    type MobileAccountMenuNavItem,
+} from "@/config/mobile-navigation"
+import { isExactPath, ROUTES } from "@/config/navigation"
 import { getAvatarColor } from "@/lib/avatar"
 import { cn, getInitials } from "@/lib/utils"
 
-const MOBILE_BAR_NAV_COUNT = 4
+function isMobileNavTabActive(pathname: string, href: string): boolean {
+    if (href === ROUTES.DASHBOARD_CATEGORIES) {
+        return pathname === href || pathname.startsWith(`${href}/`)
+    }
+    return isExactPath(pathname, href)
+}
+
+type MobileAccountMenuSlotContentProps = {
+    activeMenuNavItem: MobileAccountMenuNavItem | null
+    showEllipsis: boolean
+    showSkeleton: boolean
+    userName: string
+    avatarColor: string
+    avatarUrl?: string | null
+}
+
+function MobileAccountMenuSlotContent({
+    activeMenuNavItem,
+    showEllipsis,
+    showSkeleton,
+    userName,
+    avatarColor,
+    avatarUrl,
+}: MobileAccountMenuSlotContentProps) {
+    const reduceMotion = useReducedMotion()
+
+    const slotKey = showEllipsis
+        ? "ellipsis"
+        : showSkeleton
+          ? "skeleton"
+          : activeMenuNavItem
+            ? `icon:${activeMenuNavItem.href}`
+            : "avatar"
+
+    function renderSlot() {
+        if (showEllipsis) {
+            return (
+                <Ellipsis
+                    className={mobileNavTabIconClass(false)}
+                    aria-hidden
+                />
+            )
+        }
+
+        if (showSkeleton) {
+            return <Skeleton className="size-6 shrink-0 rounded-md" />
+        }
+
+        if (activeMenuNavItem) {
+            const Icon = activeMenuNavItem.icon
+            return (
+                <Icon className={mobileNavTabIconClass(true)} aria-hidden />
+            )
+        }
+
+        return (
+            <span className="relative flex size-6 shrink-0 select-none overflow-hidden rounded-md bg-muted">
+                {avatarUrl ? (
+                    <img
+                        src={avatarUrl}
+                        alt={userName}
+                        className="aspect-square size-full object-cover"
+                    />
+                ) : (
+                    <span
+                        className={cn(
+                            "flex size-full items-center justify-center text-[10px] font-medium text-white",
+                            avatarColor
+                        )}
+                    >
+                        {getInitials(userName)}
+                    </span>
+                )}
+            </span>
+        )
+    }
+
+    return (
+        <span className="relative grid size-6 shrink-0 place-items-center">
+            <AnimatePresence initial={false} mode="sync">
+                <motion.span
+                    key={slotKey}
+                    className="col-start-1 row-start-1 flex items-center justify-center"
+                    initial={
+                        reduceMotion ? false : { opacity: 0, scale: 0.8 }
+                    }
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={
+                        reduceMotion
+                            ? { opacity: 0 }
+                            : { opacity: 0, scale: 0.8 }
+                    }
+                    transition={{
+                        duration: reduceMotion ? 0 : 0.22,
+                        ease: "easeOut",
+                    }}
+                >
+                    {renderSlot()}
+                </motion.span>
+            </AnimatePresence>
+        </span>
+    )
+}
 
 export function MobileBottomNav() {
     const pathname = usePathname()
-    const fabSlot = useMobileFab()
-    const fabHidden =
-        fabSlot === MOBILE_FAB_HIDDEN ||
-        isCreditCardDetailPath(pathname) ||
-        isAccountSessionsPath(pathname) ||
-        isAccountActivityPath(pathname) ||
-        isPlansPath(pathname) ||
-        isAccountHubPath(pathname) ||
-        isSettingsPath(pathname) ||
-        isMembersPath(pathname)
-    const fabOverride = fabHidden ? null : fabSlot
     const { user, profile, loading, profileReady } = useAuth()
 
-    const barNav = MAIN_NAVIGATION.slice(0, MOBILE_BAR_NAV_COUNT)
-    const overflowNav = MAIN_NAVIGATION.slice(MOBILE_BAR_NAV_COUNT)
-
-    const moreActive =
-        overflowNav.some((item) => isExactPath(pathname, item.href)) ||
-        isExactPath(pathname, ROUTES.MEMBERS) ||
-        isExactPath(pathname, ROUTES.SETTINGS)
+    const navTabs = getMobileNavTabs()
+    const activeMenuNavItem = getActiveMobileAccountMenuNavItem(pathname)
 
     const userName =
         user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuário"
@@ -63,103 +145,44 @@ export function MobileBottomNav() {
     const showEllipsis = !user && !loading
 
     return (
-        <>
-            <nav
-                className="fixed inset-x-0 bottom-0 z-50 border-t border-border/50 bg-background/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden"
-                aria-label="Navegação principal"
-            >
-                <div className="relative grid min-h-14 grid-cols-5 items-stretch px-2.5 py-2">
-                    {barNav.map((item) => {
-                        const Icon = item.icon
-                        const active = isExactPath(pathname, item.href)
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                aria-current={active ? "page" : undefined}
-                                aria-label={item.name}
-                                className={cn(
-                                    "flex min-h-10 items-center justify-center rounded-lg transition-colors",
-                                    active
-                                        ? "text-primary"
-                                        : "text-muted-foreground active:text-foreground"
-                                )}
-                            >
-                                <span
-                                    className={cn(
-                                        "flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors",
-                                        active && "bg-primary/10"
-                                    )}
-                                >
-                                    <Icon className="size-5 shrink-0" />
-                                </span>
-                            </Link>
-                        )
-                    })}
+        <MobileNavIsland trailing={<QuickActionButton variant="fab" />}>
+            <div className="grid h-full grid-cols-4 items-stretch gap-0.5">
+                {navTabs.map((item) => (
+                    <MobileNavTab
+                        key={item.href}
+                        href={item.href}
+                        name={item.name}
+                        icon={item.icon}
+                        active={isMobileNavTabActive(pathname, item.href)}
+                    />
+                ))}
 
-                    <MobileAccountMenu overflowNavItems={overflowNav}>
-                        <button
-                            type="button"
-                            aria-label="Abrir menu da conta e mais opções"
-                            className={cn(
-                                "flex min-h-10 items-center justify-center rounded-lg transition-colors",
-                                showEllipsis &&
-                                    (moreActive
-                                        ? "text-primary"
-                                        : "text-muted-foreground active:text-foreground"),
-                                !showEllipsis &&
-                                    !moreActive &&
-                                    "text-muted-foreground active:text-foreground"
+                <MobileAccountMenu>
+                    <button
+                        type="button"
+                        aria-label={
+                            activeMenuNavItem?.name ??
+                            "Abrir menu da conta e mais opções"
+                        }
+                        className={mobileNavTabRootClass}
+                    >
+                        <span
+                            className={mobileNavTabInnerClass(
+                                activeMenuNavItem != null
                             )}
                         >
-                            {showEllipsis ? (
-                                <span
-                                    className={cn(
-                                        "flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors",
-                                        moreActive && "bg-primary/10"
-                                    )}
-                                >
-                                    <Ellipsis className="size-5 shrink-0" />
-                                </span>
-                            ) : showSkeleton ? (
-                                <Skeleton className="size-8 shrink-0 rounded-lg" />
-                            ) : (
-                                <span
-                                    className={cn(
-                                        "flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors",
-                                        moreActive && "bg-primary/10"
-                                    )}
-                                >
-                                    <div className="group/avatar relative flex size-8 shrink-0 select-none overflow-hidden rounded-lg bg-muted">
-                                        {user?.user_metadata?.avatar_url ? (
-                                            <img
-                                                src={user.user_metadata.avatar_url}
-                                                alt={userName}
-                                                className="aspect-square size-full object-cover"
-                                            />
-                                        ) : (
-                                            <div
-                                                className={`flex h-full w-full items-center justify-center text-sm font-medium text-white ${avatarColor}`}
-                                            >
-                                                {getInitials(userName)}
-                                            </div>
-                                        )}
-                                    </div>
-                                </span>
-                            )}
-                        </button>
-                    </MobileAccountMenu>
-                </div>
-
-                {!fabHidden ? (
-                    <div className="pointer-events-none absolute inset-x-0 top-0 flex -translate-y-full justify-center pb-3">
-                        <div className="pointer-events-auto">
-                            {fabOverride ?? <QuickActionButton variant="fab" />}
-                        </div>
-                    </div>
-                ) : null}
-            </nav>
-
-        </>
+                            <MobileAccountMenuSlotContent
+                                activeMenuNavItem={activeMenuNavItem}
+                                showEllipsis={showEllipsis}
+                                showSkeleton={showSkeleton}
+                                userName={userName}
+                                avatarColor={avatarColor}
+                                avatarUrl={user?.user_metadata?.avatar_url}
+                            />
+                        </span>
+                    </button>
+                </MobileAccountMenu>
+            </div>
+        </MobileNavIsland>
     )
 }

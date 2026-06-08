@@ -47,7 +47,6 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { tagChipInfo, tagChipSuccess } from "@/lib/tag-chip-classes"
-import { useHideMobileFab } from "@/components/layout/mobile-fab-provider"
 import { cn, getInitials } from "@/lib/utils"
 import { getAvatarColor } from "@/lib/avatar"
 import {
@@ -409,8 +408,6 @@ export default function MembersPage() {
         pendingLinkInvite?.token_raw,
         fetchMembersAndInvites,
     ])
-
-    useHideMobileFab()
 
     const handleInvite = async () => {
         if (!currentWorkspaceId || !inviteEmail.trim() || !canManageMembers) return

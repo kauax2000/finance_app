@@ -101,10 +101,9 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
         <header
             className={cn(
                 headerBaseClassName,
-                "flex flex-col",
-                scrolled
-                    ? "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-                    : "bg-background",
+                "flex flex-col bg-background",
+                scrolled &&
+                    "md:bg-background/95 md:backdrop-blur md:supports-[backdrop-filter]:bg-background/60",
             )}
         >
             <div

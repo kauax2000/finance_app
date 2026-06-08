@@ -1,6 +1,5 @@
 /**
- * Shared pill styles for the floating action above `MobileBottomNav`.
- * Overrides `Button` size="default" height; product target is 36px (`h-9`).
+ * FAB to the right of `MobileNavIsland` — same height as the island, solid primary green.
  */
 export const MOBILE_FLOATING_ACTION_BUTTON_CLASSNAME =
-    "h-9 min-h-9 gap-2 rounded-full px-5 shadow-lg hover:bg-primary dark:hover:bg-primary"
+    "h-[var(--mobile-nav-island-height)] min-h-[var(--mobile-nav-island-height)] w-[var(--mobile-nav-island-height)] min-w-[var(--mobile-nav-island-height)] shrink-0 rounded-2xl border-primary bg-primary p-0 text-primary-foreground shadow-md hover:!border-primary hover:!bg-primary active:scale-95 active:!bg-primary dark:hover:!border-primary dark:hover:!bg-primary dark:active:!bg-primary"

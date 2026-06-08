@@ -28,11 +28,9 @@ import { ChangePasswordDialog, DeleteAccountDialog } from "@/components/security
 import { AccountPageSkeleton } from "@/components/account/account-page-skeleton"
 import { EditProfileDialog } from "@/components/account/edit-profile-dialog"
 import { getAvatarColor } from "@/lib/avatar"
-import { useHideMobileFab } from "@/components/layout/mobile-fab-provider"
 
 export default function AccountPage() {
     const { user, profile, loading, profileReady, signOut } = useAuth()
-    useHideMobileFab()
     const [editDialogOpen, setEditDialogOpen] = useState(false)
     const [changePasswordOpen, setChangePasswordOpen] = useState(false)
     const [deleteAccountOpen, setDeleteAccountOpen] = useState(false)

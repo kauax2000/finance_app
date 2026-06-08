@@ -3,41 +3,29 @@ import { QuestionMarkCircleIcon } from "@heroicons/react/24/outline"
 
 import { ROUTES } from "@/config/navigation"
 import { buttonVariants } from "@/components/ui/button"
+import {
+    EmptyState,
+    EmptyStateActions,
+    EmptyStateDescription,
+    EmptyStateIcon,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
 import { cn } from "@/lib/utils"
 
 export function NotFoundShell() {
     return (
         <div className="flex min-h-dvh w-full flex-1 flex-col justify-center bg-background px-4 py-12 sm:px-6">
             <div className="mx-auto w-full max-w-md space-y-8">
-                <div
-                    data-slot="empty-state"
-                    className={cn(
-                        "flex w-full flex-col items-center justify-center rounded-xl border border-dashed border-border/80 bg-card/40 px-6 py-10 text-center",
-                    )}
-                >
-                    <div
-                        data-slot="empty-state-icon"
-                        className="mb-4 flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground [&_svg]:size-6"
-                    >
+                <EmptyState className="w-full border-border/80 bg-card/40 py-10">
+                    <EmptyStateIcon>
                         <QuestionMarkCircleIcon aria-hidden />
-                    </div>
-                    <h2
-                        data-slot="empty-state-title"
-                        className="mb-2 text-center text-base font-semibold tracking-tight text-foreground"
-                    >
-                        Página não encontrada
-                    </h2>
-                    <p
-                        data-slot="empty-state-description"
-                        className="mb-6 max-w-sm text-center text-sm text-muted-foreground"
-                    >
+                    </EmptyStateIcon>
+                    <EmptyStateTitle>Página não encontrada</EmptyStateTitle>
+                    <EmptyStateDescription>
                         O endereço não existe ou foi movido. Verifique o link ou
                         volte ao painel.
-                    </p>
-                    <div
-                        data-slot="empty-state-actions"
-                        className="flex flex-wrap items-center justify-center gap-2"
-                    >
+                    </EmptyStateDescription>
+                    <EmptyStateActions>
                         <Link
                             href={ROUTES.DASHBOARD}
                             className={buttonVariants({ variant: "default" })}
@@ -50,11 +38,11 @@ export function NotFoundShell() {
                         >
                             Página inicial
                         </Link>
-                    </div>
-                </div>
+                    </EmptyStateActions>
+                </EmptyState>
                 <p
                     data-slot="typography-muted"
-                    className="block text-center text-xs text-muted-foreground"
+                    className={cn("block text-center text-xs text-muted-foreground")}
                 >
                     Erro 404 — nada para exibir neste caminho.
                 </p>
