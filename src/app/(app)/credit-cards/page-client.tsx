@@ -48,8 +48,6 @@ import { buildCardCycleSnapshot } from "@/lib/credit-card-billing"
 import type { CcTxRow } from "@/lib/credit-cards-workspace-transactions"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
 import { useCreditCardsPageBundle } from "@/lib/queries/use-credit-cards-page-bundle"
-import { useMobileFabSlot } from "@/components/layout/mobile-fab-provider"
-import { MOBILE_FLOATING_ACTION_BUTTON_CLASSNAME } from "@/components/layout/mobile-fab-button-classes"
 import { Plus } from "lucide-react"
 
 const CreditCardsHistoryChart = dynamic(
@@ -82,9 +80,15 @@ export default function CreditCardsPageClient() {
         Boolean(user && !authLoading && !workspaceLoading),
     )
     const bundle = bundleQuery.data
-    const cards = bundle?.cards ?? []
-    const ccTransactions: CcTxRow[] = bundle?.ccTransactions ?? []
-    const installmentPlans = bundle?.installmentPlans ?? []
+    const cards = useMemo(() => bundle?.cards ?? [], [bundle?.cards])
+    const ccTransactions = useMemo<CcTxRow[]>(
+        () => bundle?.ccTransactions ?? [],
+        [bundle?.ccTransactions],
+    )
+    const installmentPlans = useMemo(
+        () => bundle?.installmentPlans ?? [],
+        [bundle?.installmentPlans],
+    )
     const creditCardsTableMissing = bundle?.creditCardsTableMissing ?? false
     const loading =
         authLoading ||
@@ -104,33 +108,17 @@ export default function CreditCardsPageClient() {
     const [expiryMonth, setExpiryMonth] = useState("")
     const [expiryYear, setExpiryYear] = useState("")
 
-    const fabEligible =
+    const canCreateCard =
         !authLoading &&
         !workspaceLoading &&
         !loading &&
         Boolean(user && currentWorkspaceId) &&
         !creditCardsTableMissing
 
-    useMobileFabSlot(
-        fabEligible ? (
-            <Button
-                type="button"
-                variant="default"
-                className={MOBILE_FLOATING_ACTION_BUTTON_CLASSNAME}
-                aria-label="Novo cartão"
-                onClick={() => setCreateOpen(true)}
-            >
-                <Plus className="size-4 shrink-0" />
-                <span className="text-sm font-medium">Novo cartão</span>
-            </Button>
-        ) : null,
-    )
-
     useEffect(() => {
         didConsumeNewQuery.current = false
     }, [currentWorkspaceId])
 
-    /* eslint-disable react-hooks/set-state-in-effect -- open create sheet/dialog from ?new=1 deep link */
     useEffect(() => {
         if (authLoading || workspaceLoading || loading) return
         if (createOpen) return
@@ -157,7 +145,6 @@ export default function CreditCardsPageClient() {
         router,
         searchParams,
     ])
-    /* eslint-enable react-hooks/set-state-in-effect */
 
     const snapshots = useMemo(() => {
         const today = new Date()
@@ -323,21 +310,23 @@ export default function CreditCardsPageClient() {
 
     return (
         <div className="space-y-4">
-            <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-3">
+            <div className="flex items-center justify-between gap-2 md:flex-wrap md:gap-3">
                 <CreditCardsViewSegment
                     value={pageView}
                     onChange={setPageView}
-                    className="max-w-full shrink-0"
+                    className="min-w-0 flex-1 md:max-w-full md:flex-none"
                 />
                 <Button
                     type="button"
                     variant="default"
                     size="sm"
-                    className="hidden h-8 gap-2 text-xs md:inline-flex md:w-auto"
+                    className="inline-flex size-10 shrink-0 rounded-lg p-0 text-xs md:size-auto md:h-8 md:w-auto md:gap-2 md:px-3"
+                    aria-label="Novo cartão"
+                    disabled={!canCreateCard}
                     onClick={() => setCreateOpen(true)}
                 >
                     <Plus className="size-4 shrink-0" />
-                    Novo cartão
+                    <span className="hidden md:inline">Novo cartão</span>
                 </Button>
             </div>
 

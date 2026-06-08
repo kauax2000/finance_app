@@ -98,8 +98,8 @@ import {
 } from "@/lib/transaction-detail-sheet-mutations"
 import { fetchTransactionForDetailSheet } from "@/lib/transactions-detail-sheet-query"
 import { formatTransactionDayPtBr } from "@/lib/transaction-date"
+import { INSTALLMENT_DELETE_WARNING } from "@/lib/transactions/delete-transactions"
 import { ROUTES, transactionsHrefForCreditCard } from "@/config/navigation"
-import { useHideMobileFab } from "@/components/layout/mobile-fab-provider"
 import { usePageChromeSlot } from "@/components/layout/page-chrome-provider"
 import { cn } from "@/lib/utils"
 
@@ -409,7 +409,16 @@ export default function CreditCardDetailPageClient() {
         const ok = await deleteTransactionsByIds(
             supabase,
             [pendingTransactionDelete.id],
-            currentWorkspaceId
+            currentWorkspaceId,
+            {
+                rows: [
+                    {
+                        id: pendingTransactionDelete.id,
+                        installment_plan_id:
+                            pendingTransactionDelete.installment_plan_id,
+                    },
+                ],
+            }
         )
         setDeletingTransaction(false)
         if (!ok) return
@@ -467,8 +476,6 @@ export default function CreditCardDetailPageClient() {
             installmentPlans,
         })
     }, [card, ccAnalyticsRows, installmentPlans, refDate])
-
-    useHideMobileFab()
 
     usePageChromeSlot({
         backHref: card ? ROUTES.CREDIT_CARDS : undefined,
@@ -973,6 +980,11 @@ export default function CreditCardDetailPageClient() {
                         <AlertDialogDescription asChild>
                             <div className="space-y-2 text-sm text-muted-foreground">
                                 <p>Esta ação não pode ser desfeita.</p>
+                                {pendingTransactionDelete?.installment_plan_id ? (
+                                    <p className="text-foreground">
+                                        {INSTALLMENT_DELETE_WARNING}
+                                    </p>
+                                ) : null}
                                 {pendingTransactionDelete ? (
                                     <ul className="list-inside list-disc text-foreground">
                                         <li>

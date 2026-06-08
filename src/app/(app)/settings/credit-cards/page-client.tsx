@@ -11,7 +11,6 @@ import {
 } from "@/lib/supabase-errors"
 import { toastError, toastSuccess, toastWarning } from "@/lib/toast"
 import { ROUTES } from "@/config/navigation"
-import { useHideMobileFab } from "@/components/layout/mobile-fab-provider"
 import { CustomForm } from "@/components/ui/form"
 import {
     Card,
@@ -92,8 +91,6 @@ export default function CreditCardsPageClient() {
         }
         void load()
     }, [authLoading, workspaceLoading, user, currentWorkspaceId, load])
-
-    useHideMobileFab()
 
     const resetForm = () => {
         setCreateFormKey((k) => k + 1)

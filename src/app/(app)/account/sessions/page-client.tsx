@@ -17,7 +17,6 @@ import {
 import { describeEdgeInvokeClientFailure } from "@/lib/edge-errors"
 import { Session, getSessions, revokeSession, revokeAllSessions } from "@/lib/sessions"
 import { formatRelativeTime } from "@/lib/sessions"
-import { useHideMobileFab } from "@/components/layout/mobile-fab-provider"
 import { useAuth } from "@/components/providers"
 import {
     dismissPageFetchError,
@@ -108,8 +107,6 @@ export default function SessionsPage() {
         }
         void fetchSessions()
     }, [authLoading, authSession, fetchSessions, router])
-
-    useHideMobileFab()
 
     const handleRevokeSession = async (sessionId: string) => {
         setRevoking(sessionId)

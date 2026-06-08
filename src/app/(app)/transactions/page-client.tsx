@@ -30,6 +30,10 @@ import {
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { Plus, Receipt, SearchX } from "lucide-react"
+import {
+    hasInstallmentDeleteImpact,
+    INSTALLMENT_DELETE_WARNING,
+} from "@/lib/transactions/delete-transactions"
 
 const PAGE_SIZE = 100
 
@@ -434,6 +438,27 @@ export default function TransactionsPage() {
                         <AlertDialogDescription asChild>
                             <div className="space-y-2 text-sm text-muted-foreground">
                                 <p>Esta ação não pode ser desfeita.</p>
+                                {pendingDelete &&
+                                hasInstallmentDeleteImpact(
+                                    pendingDelete.mode === "single"
+                                        ? [
+                                              {
+                                                  installment_plan_id:
+                                                      pendingDelete.transaction
+                                                          .installment_plan_id,
+                                              },
+                                          ]
+                                        : pendingDelete.ids.map((id) => ({
+                                              installment_plan_id:
+                                                  transactions.find(
+                                                      (t) => t.id === id
+                                                  )?.installment_plan_id ?? null,
+                                          }))
+                                ) ? (
+                                    <p className="text-foreground">
+                                        {INSTALLMENT_DELETE_WARNING}
+                                    </p>
+                                ) : null}
                                 {pendingDelete?.mode === "single" ? (
                                     <>
                                         <p className="text-foreground">

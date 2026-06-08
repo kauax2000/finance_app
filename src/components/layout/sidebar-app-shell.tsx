@@ -12,7 +12,6 @@ import {
 import { NotificationsUiProvider } from "@/components/layout/notifications-ui-provider"
 import { NotificationsSheet } from "@/components/layout/notifications-sheet"
 import { GlobalShellDialogsProvider } from "@/components/layout/global-shell-dialogs-provider"
-import { MobileFabProvider } from "@/components/layout/mobile-fab-provider"
 import { PageChromeProvider } from "@/components/layout/page-chrome-provider"
 
 type SidebarAppShellProps = {
@@ -34,7 +33,6 @@ export function SidebarAppShell({
                 <PageChromeProvider>
                     <SidebarProvider defaultOpen={defaultSidebarOpen}>
                         <GlobalShellDialogsProvider>
-                            <MobileFabProvider>
                                 <AppSidebar />
                                 <SidebarInset>
                                     <AppHeader pathname={pathname} titleMode={titleMode} />
@@ -43,7 +41,6 @@ export function SidebarAppShell({
                                     </div>
                                     <MobileBottomNav />
                                 </SidebarInset>
-                            </MobileFabProvider>
                         </GlobalShellDialogsProvider>
                     </SidebarProvider>
                     <NotificationsSheet />

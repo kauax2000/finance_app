@@ -19,6 +19,21 @@ export async function syncTransactionMutation(
     const { operation, payload } = mutation
 
     if (operation === "delete") {
+        const cascadePlanId = payload.cascadeInstallmentPlanId
+        if (cascadePlanId != null && String(cascadePlanId).length > 0) {
+            const { error } = await supabase.rpc(
+                "delete_workspace_installment_plan_cascade",
+                { p_plan_id: String(cascadePlanId) }
+            )
+            if (error) {
+                return {
+                    ok: false,
+                    error: formatSupabasePostgrestError(error) ?? error.message,
+                }
+            }
+            return { ok: true }
+        }
+
         const id = String(payload.serverId ?? payload.id ?? "")
         const { error } = await supabase.from("transactions").delete().eq("id", id)
         if (error) {

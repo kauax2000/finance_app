@@ -6,15 +6,24 @@ import { scheduleEvaluateCreditCardAlerts } from "@/lib/credit-card-notification
 import { invokeEdgeJson } from "@/lib/edge-invoke"
 import { isOnline } from "@/lib/offline/connectivity"
 import {
-    deleteTransactionById,
+    deleteInstallmentPlanCascade,
+    deletePlainTransactionById,
     saveTransaction,
     updateInstallmentPlan,
 } from "@/lib/transactions/mutations"
+import {
+    partitionTransactionDeletes,
+    type TransactionDeleteRow,
+} from "@/lib/transactions/delete-transactions"
 import type { Transaction } from "@/lib/supabase"
 import { toastError, toastSuccess } from "@/lib/toast"
 import type { SupabaseClient, User } from "@supabase/supabase-js"
 
 type DbClient = SupabaseClient
+
+export type DeleteTransactionsOptions = {
+    rows?: TransactionDeleteRow[]
+}
 
 export async function persistTransactionSave(options: {
     supabase: DbClient
@@ -123,31 +132,121 @@ export async function persistInstallmentPlanUpdate(options: {
     return true
 }
 
-export async function deleteTransactionsByIds(
-    _supabase: DbClient,
+async function resolveTransactionDeleteRows(
+    supabase: DbClient,
     ids: string[],
-    workspaceId: string
+    workspaceId: string,
+    rows?: TransactionDeleteRow[]
+): Promise<
+    { ok: true; rows: TransactionDeleteRow[] } | { ok: false; errorMessage: string }
+> {
+    if (rows != null && rows.length > 0) {
+        const byId = new Map(rows.map((row) => [row.id, row]))
+        return {
+            ok: true,
+            rows: ids.map((id) => byId.get(id) ?? { id, installment_plan_id: null }),
+        }
+    }
+
+    const { data, error } = await supabase
+        .from("transactions")
+        .select("id, installment_plan_id")
+        .eq("workspace_id", workspaceId)
+        .in("id", ids)
+
+    if (error) {
+        return {
+            ok: false,
+            errorMessage: "Não foi possível carregar as transações para exclusão.",
+        }
+    }
+
+    const byId = new Map(
+        (data ?? []).map((row) => [
+            String(row.id),
+            {
+                id: String(row.id),
+                installment_plan_id:
+                    row.installment_plan_id != null
+                        ? String(row.installment_plan_id)
+                        : null,
+            },
+        ])
+    )
+
+    return {
+        ok: true,
+        rows: ids.map((id) => byId.get(id) ?? { id, installment_plan_id: null }),
+    }
+}
+
+export async function deleteTransactionsByIds(
+    supabase: DbClient,
+    ids: string[],
+    workspaceId: string,
+    options?: DeleteTransactionsOptions
 ): Promise<boolean> {
     if (!ids.length) return false
 
-    for (const id of ids) {
-        const result = await deleteTransactionById(id, workspaceId)
+    const resolved = await resolveTransactionDeleteRows(
+        supabase,
+        ids,
+        workspaceId,
+        options?.rows
+    )
+    if (!resolved.ok) {
+        toastError(resolved.errorMessage)
+        return false
+    }
+
+    const { planIds, plainTransactionIds } = partitionTransactionDeletes(resolved.rows)
+
+    for (const planId of planIds) {
+        const result = await deleteInstallmentPlanCascade(planId, workspaceId)
         if (!result.ok) {
             toastError(result.errorMessage)
             return false
         }
     }
 
-    const deletedCount = ids.length
+    for (const id of plainTransactionIds) {
+        const result = await deletePlainTransactionById(id, workspaceId)
+        if (!result.ok) {
+            toastError(result.errorMessage)
+            return false
+        }
+    }
+
     const offline = !isOnline()
+    const installmentOnly =
+        planIds.length > 0 && plainTransactionIds.length === 0
+
+    if (offline) {
+        toastSuccess(
+            installmentOnly
+                ? planIds.length === 1
+                    ? "Cancelamento enfileirado. Sincroniza ao voltar online."
+                    : `${planIds.length.toLocaleString("pt-BR")} cancelamentos enfileirados.`
+                : ids.length === 1
+                  ? "Exclusão enfileirada. Sincroniza ao voltar online."
+                  : `${ids.length.toLocaleString("pt-BR")} exclusões enfileiradas.`
+        )
+        return true
+    }
+
+    if (installmentOnly) {
+        toastSuccess(
+            planIds.length === 1
+                ? "Compra parcelada cancelada."
+                : `${planIds.length.toLocaleString("pt-BR")} compras parceladas canceladas.`
+        )
+        return true
+    }
+
     toastSuccess(
-        offline
-            ? deletedCount === 1
-                ? "Exclusão enfileirada. Sincroniza ao voltar online."
-                : `${deletedCount.toLocaleString("pt-BR")} exclusões enfileiradas.`
-            : deletedCount === 1
-              ? "Transação excluída."
-              : `${deletedCount.toLocaleString("pt-BR")} transações excluídas.`
+        ids.length === 1
+            ? "Transação excluída."
+            : `${ids.length.toLocaleString("pt-BR")} transações excluídas.`
     )
     return true
 }

@@ -8,12 +8,12 @@ import { useAuth } from "@/components/providers"
 import { AccountMenuUserSummary } from "@/components/layout/account-menu-user-summary"
 import {
     ACCOUNT_MENU_PROFILE_LINK_ITEMS,
-    ACCOUNT_MENU_WORKSPACE_LINK_ITEMS,
 } from "@/components/layout/account-menu-links"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
     Popover,
+    PopoverAnchor,
     PopoverContent,
     PopoverDescription,
     PopoverHeader,
@@ -21,24 +21,81 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
-import type { HeroIcon, NavigationItem } from "@/types/navigation"
-import { isExactPath } from "@/config/navigation"
-import { cn } from "@/lib/utils"
+import {
+    getMobileAccountMenuPinnedNavItems,
+    isMobileAccountMenuNavItemActive,
+    type MobileAccountMenuNavItem,
+} from "@/config/mobile-navigation"
+import {
+    MOBILE_GLASS_MENU_CONTENT_CLASSNAME,
+    MOBILE_GLASS_MENU_INNER_CLASSNAME,
+    MOBILE_GLASS_MENU_ROW_CLASSNAME,
+    MOBILE_GLASS_MENU_SEPARATOR_CLASSNAME,
+} from "@/components/layout/mobile-glass-surface"
 import { AppThemeToggle } from "@/components/settings/app-theme-toggle"
+import { cn } from "@/lib/utils"
 
 export type MobileAccountMenuProps = {
     children: React.ReactElement
-    /** Navegação que não cabe na barra inferior (ex.: Categorias) */
-    overflowNavItems: NavigationItem[]
 }
 
-const rowButtonClass =
-    "flex h-10 w-full min-w-0 items-center justify-start gap-2.5 rounded-lg px-2 font-normal"
+const rowButtonClass = MOBILE_GLASS_MENU_ROW_CLASSNAME
+
+const MOBILE_POPOVER_X_CENTER_QUERY = "(max-width: 767px)"
+
+function useMatchMedia(query: string): boolean {
+    const [matches, setMatches] = React.useState(false)
+
+    React.useEffect(() => {
+        const media = window.matchMedia(query)
+        const update = () => setMatches(media.matches)
+
+        update()
+        media.addEventListener("change", update)
+        return () => media.removeEventListener("change", update)
+    }, [query])
+
+    return matches
+}
+
+/**
+ * Anchor virtual que espelha os limites verticais do trigger (avatar) mas fixa
+ * o eixo X no centro da viewport. Assim o Radix posiciona e anima o popover
+ * nativamente (side=top, align=center), centralizado horizontalmente na tela.
+ */
+function createCenteredViewportAnchor(
+    triggerRef: React.RefObject<HTMLElement | null>
+): { getBoundingClientRect: () => DOMRect } {
+    return {
+        getBoundingClientRect: () => {
+            const viewport = window.visualViewport
+            const viewportWidth = viewport?.width ?? window.innerWidth
+            const offsetLeft = viewport?.offsetLeft ?? 0
+            const centerX = offsetLeft + viewportWidth / 2
+
+            const rect = triggerRef.current?.getBoundingClientRect()
+            const top = rect?.top ?? window.innerHeight
+            const bottom = rect?.bottom ?? window.innerHeight
+
+            return {
+                x: centerX,
+                y: top,
+                width: 0,
+                height: bottom - top,
+                top,
+                bottom,
+                left: centerX,
+                right: centerX,
+                toJSON() {},
+            } as DOMRect
+        },
+    }
+}
 
 type MenuNavLinkRowProps = {
     href: string
     label: string
-    icon: HeroIcon
+    icon: MobileAccountMenuNavItem["icon"]
     active: boolean
     onNavigate: () => void
     beta?: boolean
@@ -89,45 +146,48 @@ function MenuNavLinkRow({
     )
 }
 
-export function MobileAccountMenu({
-    children,
-    overflowNavItems,
-}: MobileAccountMenuProps) {
+export function MobileAccountMenu({ children }: MobileAccountMenuProps) {
     const pathname = usePathname()
     const { signOut } = useAuth()
 
     const [open, setOpen] = React.useState(false)
+    const triggerRef = React.useRef<HTMLElement | null>(null)
+    const isMobileCenter = useMatchMedia(MOBILE_POPOVER_X_CENTER_QUERY)
+    const centeredAnchorRef = React.useRef(
+        createCenteredViewportAnchor(triggerRef)
+    )
 
     const closeMenu = React.useCallback(() => setOpen(false), [])
 
-    const pinnedNavItems = React.useMemo(
-        () => [
-            ...overflowNavItems,
-            ...ACCOUNT_MENU_WORKSPACE_LINK_ITEMS.map(
-                ({ href, label, icon }) => ({
-                    href,
-                    name: label,
-                    icon,
-                })
+    const triggerChild = React.useMemo(
+        () =>
+            React.cloneElement(
+                children as React.ReactElement<{
+                    ref?: React.Ref<HTMLElement>
+                }>,
+                { ref: triggerRef }
             ),
-        ],
-        [overflowNavItems]
+        [children]
     )
 
+    const pinnedNavItems = getMobileAccountMenuPinnedNavItems()
     const hasPinnedNav = pinnedNavItems.length > 0
 
     return (
         <>
             <Popover open={open} onOpenChange={setOpen}>
-                <PopoverTrigger asChild>{children}</PopoverTrigger>
+                <PopoverTrigger asChild>{triggerChild}</PopoverTrigger>
+                {isMobileCenter ? (
+                    <PopoverAnchor virtualRef={centeredAnchorRef} />
+                ) : null}
                 <PopoverContent
                     side="top"
                     align="center"
                     sideOffset={12}
                     collisionPadding={16}
                     className={cn(
-                        "w-[min(calc(100vw-2rem),20rem)] max-w-[min(calc(100vw-2rem),20rem)]",
-                        "max-h-[min(72dvh,29rem)] flex flex-col gap-0 overflow-hidden rounded-xl border border-border bg-popover p-0 shadow-lg ring-1 ring-border/10"
+                        MOBILE_GLASS_MENU_CONTENT_CLASSNAME,
+                        "max-h-[min(72dvh,29rem)]"
                     )}
                 >
                     <PopoverHeader className="sr-only">
@@ -149,7 +209,12 @@ export function MobileAccountMenu({
                             </div>
                         </div>
 
-                        <Separator className="h-px w-full min-w-0 shrink-0 bg-border/60" />
+                        <Separator
+                            className={cn(
+                                "h-px w-full min-w-0 shrink-0",
+                                MOBILE_GLASS_MENU_SEPARATOR_CLASSNAME
+                            )}
+                        />
 
                         <nav
                             className="flex min-h-0 flex-1 flex-col overflow-y-auto px-0"
@@ -157,15 +222,16 @@ export function MobileAccountMenu({
                         >
                             {hasPinnedNav ? (
                                 <>
-                                    <div className="flex flex-col gap-0.5 px-2.5 py-2.5">
+                                    <div className={MOBILE_GLASS_MENU_INNER_CLASSNAME}>
                                         {pinnedNavItems.map((item) => {
                                             const { href, name, icon: Icon } = item
                                             const beta =
                                                 "beta" in item ? item.beta : undefined
-                                            const active = isExactPath(
-                                                pathname,
-                                                href
-                                            )
+                                            const active =
+                                                isMobileAccountMenuNavItemActive(
+                                                    pathname,
+                                                    item
+                                                )
                                             return (
                                                 <MenuNavLinkRow
                                                     key={href}
@@ -179,32 +245,42 @@ export function MobileAccountMenu({
                                             )
                                         })}
                                     </div>
-                                    <Separator className="h-px w-full min-w-0 shrink-0 bg-border/60" />
+                                    <Separator
+                                        className={cn(
+                                            "h-px w-full min-w-0 shrink-0",
+                                            MOBILE_GLASS_MENU_SEPARATOR_CLASSNAME
+                                        )}
+                                    />
                                 </>
                             ) : null}
 
-                            <div className="flex flex-col gap-0.5 px-2.5 py-2.5">
-                                {ACCOUNT_MENU_PROFILE_LINK_ITEMS.map(
-                                    ({ href, label, icon: Icon }) => {
-                                        const active = isExactPath(
+                            <div className={MOBILE_GLASS_MENU_INNER_CLASSNAME}>
+                                {ACCOUNT_MENU_PROFILE_LINK_ITEMS.map((item) => {
+                                    const { href, label, icon: Icon } = item
+                                    const active =
+                                        isMobileAccountMenuNavItemActive(
                                             pathname,
-                                            href
+                                            item
                                         )
-                                        return (
-                                            <MenuNavLinkRow
-                                                key={href}
-                                                href={href}
-                                                label={label}
-                                                icon={Icon}
-                                                active={active}
-                                                onNavigate={closeMenu}
-                                            />
-                                        )
-                                    }
-                                )}
+                                    return (
+                                        <MenuNavLinkRow
+                                            key={href}
+                                            href={href}
+                                            label={label}
+                                            icon={Icon}
+                                            active={active}
+                                            onNavigate={closeMenu}
+                                        />
+                                    )
+                                })}
                             </div>
 
-                            <Separator className="h-px w-full min-w-0 shrink-0 bg-border/60" />
+                            <Separator
+                                className={cn(
+                                    "h-px w-full min-w-0 shrink-0",
+                                    MOBILE_GLASS_MENU_SEPARATOR_CLASSNAME
+                                )}
+                            />
 
                             <div className="flex shrink-0 flex-col px-2.5 pt-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom,0px))]">
                                 <Button

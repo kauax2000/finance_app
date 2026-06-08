@@ -7,6 +7,10 @@ import { ExternalLink, Plus, Receipt, SearchX } from "lucide-react"
 import { ROUTES } from "@/config/navigation"
 import { formatTransactionDayPtBr } from "@/lib/transaction-date"
 import {
+    hasInstallmentDeleteImpact,
+    INSTALLMENT_DELETE_WARNING,
+} from "@/lib/transactions/delete-transactions"
+import {
     buildTransactionsListSearchParams,
     mergeTransactionsSearchParams,
 } from "@/lib/transactions-list-search-params"
@@ -535,6 +539,29 @@ export function CategoryEmbeddedTransactions({
                                 <AlertDialogDescription asChild>
                                     <div className="space-y-2 text-sm text-muted-foreground">
                                         <p>Esta ação não pode ser desfeita.</p>
+                                        {pendingDelete &&
+                                        hasInstallmentDeleteImpact(
+                                            pendingDelete.mode === "single"
+                                                ? [
+                                                      {
+                                                          installment_plan_id:
+                                                              pendingDelete
+                                                                  .transaction
+                                                                  .installment_plan_id,
+                                                      },
+                                                  ]
+                                                : pendingDelete.ids.map((id) => ({
+                                                      installment_plan_id:
+                                                          transactions.find(
+                                                              (t) => t.id === id
+                                                          )?.installment_plan_id ??
+                                                          null,
+                                                  }))
+                                        ) ? (
+                                            <p className="text-foreground">
+                                                {INSTALLMENT_DELETE_WARNING}
+                                            </p>
+                                        ) : null}
                                         {pendingDelete?.mode === "single" ? (
                                             <ul className="list-inside list-disc text-foreground">
                                                 <li>

@@ -22,6 +22,7 @@ function domainsForEvent(type: string): WorkspaceDataDomain[] {
                 "credit_card_expense_rows",
                 "credit_cards",
                 "bills",
+                "installment_plans",
             ]
         case FINANCE_CATEGORIES_MUTATED_EVENT:
             return ["categories", "transactions"]

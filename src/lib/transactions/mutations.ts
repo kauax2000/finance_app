@@ -191,7 +191,48 @@ export async function updateInstallmentPlan(
     return { ok: true }
 }
 
-export async function deleteTransactionById(
+export async function deleteInstallmentPlanCascade(
+    planId: string,
+    workspaceId: string
+): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
+    const gateway = await executeMutation({
+        entity: "transaction",
+        operation: "delete",
+        workspaceId,
+        offlinePayload: { cascadeInstallmentPlanId: planId },
+        onQueued: () => dispatchFinanceTransactionsMutated(),
+        onlineFn: async () => {
+            const { error } = await supabase.rpc(
+                "delete_workspace_installment_plan_cascade",
+                { p_plan_id: planId }
+            )
+            if (error) {
+                throw new Error(
+                    formatSupabasePostgrestError(error) ??
+                        "Não foi possível cancelar a compra parcelada."
+                )
+            }
+            dispatchFinanceTransactionsMutated()
+            return { ok: true as const }
+        },
+    })
+
+    if (!gateway.ok) {
+        return { ok: false, errorMessage: gateway.errorMessage }
+    }
+    if ("queued" in gateway && gateway.queued) {
+        return { ok: true }
+    }
+    if ("data" in gateway) {
+        return gateway.data
+    }
+    return {
+        ok: false,
+        errorMessage: "Resposta inesperada ao cancelar compra parcelada.",
+    }
+}
+
+export async function deletePlainTransactionById(
     id: string,
     workspaceId: string
 ): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
@@ -209,6 +250,7 @@ export async function deleteTransactionById(
                         "Não foi possível excluir a transação."
                 )
             }
+            dispatchFinanceTransactionsMutated()
             return { ok: true as const }
         },
     })
@@ -223,4 +265,12 @@ export async function deleteTransactionById(
         return gateway.data
     }
     return { ok: false, errorMessage: "Resposta inesperada ao salvar transação." }
+}
+
+/** Prefer `deleteTransactionsByIds` for installment-aware batch deletes. */
+export async function deleteTransactionById(
+    id: string,
+    workspaceId: string
+): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
+    return deletePlainTransactionById(id, workspaceId)
 }
