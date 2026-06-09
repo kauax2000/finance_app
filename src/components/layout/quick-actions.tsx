@@ -15,9 +15,9 @@ import { useSidebar } from "@/components/ui/sidebar"
 import { ROUTES } from "@/config/navigation"
 import { MOBILE_FLOATING_ACTION_BUTTON_CLASSNAME } from "@/components/layout/mobile-fab-button-classes"
 import {
-    MOBILE_GLASS_MENU_CONTENT_CLASSNAME,
+    MOBILE_GLASS_FAB_MENU_CONTENT_CLASSNAME,
+    MOBILE_GLASS_FAB_MENU_ITEM_CLASSNAME,
     MOBILE_GLASS_MENU_INNER_CLASSNAME,
-    MOBILE_GLASS_MENU_ITEM_CLASSNAME,
     MOBILE_GLASS_MENU_SEPARATOR_CLASSNAME,
 } from "@/components/layout/mobile-glass-surface"
 import { cn } from "@/lib/utils"
@@ -78,7 +78,7 @@ export function QuickActionResourceLinks({
     mobileGlass?: boolean
 }) {
     const createSubscription = useQuickCreateSubscription()
-    const itemClassName = mobileGlass ? MOBILE_GLASS_MENU_ITEM_CLASSNAME : "gap-2"
+    const itemClassName = mobileGlass ? MOBILE_GLASS_FAB_MENU_ITEM_CLASSNAME : "gap-2"
 
     return (
         <DropdownMenuItem
@@ -106,7 +106,9 @@ function FixedQuickCreateMenuItems({
     /** Splits glass FAB menu so the separator can sit outside padded sections. */
     part?: "all" | "transactions" | "subscription"
 }) {
-    const itemClassName = mobileGlass ? MOBILE_GLASS_MENU_ITEM_CLASSNAME : undefined
+    const itemClassName = mobileGlass
+        ? MOBILE_GLASS_FAB_MENU_ITEM_CLASSNAME
+        : undefined
     const separatorClassName = mobileGlass
         ? MOBILE_GLASS_MENU_SEPARATOR_CLASSNAME
         : undefined
@@ -215,7 +217,7 @@ export function QuickActionButton({ variant = "sidebar" }: QuickActionButtonProp
                 collisionPadding={isFab ? 16 : undefined}
                 className={
                     isFab
-                        ? MOBILE_GLASS_MENU_CONTENT_CLASSNAME
+                        ? MOBILE_GLASS_FAB_MENU_CONTENT_CLASSNAME
                         : "min-w-56 w-max max-w-[min(100vw-2rem,18rem)]"
                 }
                 sideOffset={isFab ? 12 : 8}

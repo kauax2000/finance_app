@@ -27,7 +27,7 @@ import {
     type MobileAccountMenuNavItem,
 } from "@/config/mobile-navigation"
 import {
-    MOBILE_GLASS_MENU_CONTENT_CLASSNAME,
+    MOBILE_GLASS_ACCOUNT_MENU_CONTENT_CLASSNAME,
     MOBILE_GLASS_MENU_INNER_CLASSNAME,
     MOBILE_GLASS_MENU_ROW_CLASSNAME,
     MOBILE_GLASS_MENU_SEPARATOR_CLASSNAME,
@@ -186,7 +186,7 @@ export function MobileAccountMenu({ children }: MobileAccountMenuProps) {
                     sideOffset={12}
                     collisionPadding={16}
                     className={cn(
-                        MOBILE_GLASS_MENU_CONTENT_CLASSNAME,
+                        MOBILE_GLASS_ACCOUNT_MENU_CONTENT_CLASSNAME,
                         "max-h-[min(72dvh,29rem)]"
                     )}
                 >
