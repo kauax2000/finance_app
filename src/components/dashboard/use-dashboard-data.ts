@@ -56,10 +56,6 @@ import {
 import { useTransactionsWorkspaceAuxQuery } from "@/lib/queries/use-transactions-workspace-aux-query"
 import { useRecurringBillingCatchup } from "@/lib/queries/use-recurring-billing-catchup"
 import type { TransactionsRangeKey } from "@/lib/queries/keys"
-import { attachPaymentCards } from "@/lib/transactions-detail-sheet-query"
-
-/** Max rows in dashboard recent transactions (mobile list + desktop table). */
-const DASHBOARD_RECENT_TRANSACTIONS_LIMIT = 15
 
 function ymFromFullCalendarMonth(from: string, to: string): string | null {
     const ym = from.slice(0, 7)
@@ -629,14 +625,6 @@ export function useDashboardData() {
         [installmentPlans],
     )
 
-    const recentTransactions = useMemo(() => {
-        const sorted = [...transactionsInRange].sort((a, b) =>
-            b.date.localeCompare(a.date),
-        )
-        const sliced = sorted.slice(0, DASHBOARD_RECENT_TRANSACTIONS_LIMIT)
-        return attachPaymentCards(sliced, creditCards)
-    }, [transactionsInRange, creditCards])
-
     return {
         todayYmd,
         user,
@@ -663,7 +651,6 @@ export function useDashboardData() {
         calendarSummary,
         upcomingPayments,
         installmentsEndingSoon,
-        recentTransactions,
         memberDirectoryByUserId,
         invoicePaidByCardClose,
         refetch: refetchDashboard,

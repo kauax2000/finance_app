@@ -18,7 +18,6 @@ import { DashboardKpiCards } from "@/components/dashboard/dashboard-kpi-cards"
 import { DashboardPaymentsCalendar } from "@/components/dashboard/dashboard-payments-calendar"
 import { DashboardOpenInvoices } from "@/components/dashboard/dashboard-open-invoices"
 import { DashboardInstallmentsEndingSoon } from "@/components/dashboard/dashboard-installments-ending-soon"
-import { DashboardRecentTransactions } from "@/components/dashboard/dashboard-recent-transactions"
 import {
     DashboardPaymentEventPreviewSheet,
     type DashboardPaymentPreviewModel,
@@ -380,19 +379,6 @@ export default function DashboardPageClient() {
                         />
                     </div>
                 </div>
-            </div>
-
-            <div className="relative">
-                <DashboardRecentTransactions
-                    transactions={d.recentTransactions}
-                    memberDirectoryByUserId={d.memberDirectoryByUserId}
-                    currentUserId={d.user?.id ?? null}
-                    calendarYm={d.calendarYm}
-                    invoicePaidByCardClose={d.invoicePaidByCardClose}
-                    onTransactionClick={(tx) => {
-                        void openTransactionDetailById(tx.id)
-                    }}
-                />
             </div>
 
             {detailTransaction ? (
