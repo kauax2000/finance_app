@@ -2,14 +2,6 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table"
 
 const KPI_KEYS = ["resultado", "receitas", "despesas", "faturas"] as const
 const CATEGORY_LIST_KEYS = [
@@ -21,16 +13,6 @@ const CATEGORY_LIST_KEYS = [
 ] as const
 const INVOICE_KEYS = ["card-1", "card-2", "card-3"] as const
 const INSTALLMENT_KEYS = ["plan-1", "plan-2"] as const
-const RECENT_TX_KEYS = ["tx-1", "tx-2", "tx-3", "tx-4", "tx-5"] as const
-const RECENT_TX_TABLE_ROW_KEYS = [
-    "trow-1",
-    "trow-2",
-    "trow-3",
-    "trow-4",
-    "trow-5",
-    "trow-6",
-    "trow-7",
-] as const
 const UPCOMING_GROUP_KEYS = ["g-1", "g-2", "g-3"] as const
 const UPCOMING_ITEM_KEYS = ["item-1", "item-2"] as const
 const SUMMARY_KEYS = ["projected", "paid", "closings"] as const
@@ -415,97 +397,6 @@ function DashboardInstallmentsSkeleton() {
     )
 }
 
-function DashboardRecentTransactionsSkeleton() {
-    return (
-        <div className="min-w-0 max-w-full space-y-2">
-            <SectionTitleRow titleClassName="h-3 w-40" cta="responsive" />
-            <div className="md:hidden">
-                <CardSectionShell>
-                    <CardSectionHeader />
-                    <div className="divide-y divide-border">
-                        {RECENT_TX_KEYS.map((key) => (
-                            <div
-                                key={key}
-                                className="flex min-h-[44px] items-center gap-3 px-4 py-3"
-                            >
-                                <div className="min-w-0 flex-1 space-y-1.5">
-                                    <Skeleton className="h-4 w-[min(100%,14rem)] rounded-md" />
-                                    <div className="flex items-center gap-1.5">
-                                        <Skeleton className="h-4 w-4 shrink-0 rounded-full" />
-                                        <Skeleton className="h-3 w-[min(100%,18rem)] rounded-md" />
-                                    </div>
-                                </div>
-                                <div className="flex shrink-0 items-center gap-1">
-                                    <Skeleton className="h-4 w-20 rounded-md" />
-                                    <Skeleton className="size-4 shrink-0 rounded-sm" />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    <div
-                        className="shrink-0 border-t border-border bg-muted/15 px-4 py-4 dark:bg-muted/25"
-                        aria-hidden
-                    />
-                </CardSectionShell>
-            </div>
-            <div className="hidden md:block">
-                <CardSectionShell>
-                    <div className="overflow-x-auto">
-                        <Table className="min-w-[640px] text-sm md:min-w-[700px]">
-                            <TableHeader className="bg-muted/50">
-                                <TableRow className="border-0 hover:bg-transparent">
-                                    <TableHead className="h-11 px-4 py-0">
-                                        <Skeleton className="h-3 w-10 rounded-md" />
-                                    </TableHead>
-                                    <TableHead className="h-11 px-4 py-0">
-                                        <Skeleton className="h-3 w-20 rounded-md" />
-                                    </TableHead>
-                                    <TableHead className="h-11 px-4 py-0">
-                                        <Skeleton className="h-3 w-12 rounded-md" />
-                                    </TableHead>
-                                    <TableHead className="hidden h-11 px-4 py-0 md:table-cell">
-                                        <Skeleton className="h-3 w-28 rounded-md" />
-                                    </TableHead>
-                                    <TableHead className="hidden h-11 px-4 py-0 md:table-cell">
-                                        <Skeleton className="h-3 w-16 rounded-md" />
-                                    </TableHead>
-                                    <TableHead className="h-11 px-4 py-0">
-                                        <Skeleton className="h-3 w-10 rounded-md" />
-                                    </TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {RECENT_TX_TABLE_ROW_KEYS.map((key) => (
-                                    <TableRow key={key} className="border-border/80">
-                                        <TableCell className="px-4 py-3">
-                                            <Skeleton className="h-4 w-14 rounded-md" />
-                                        </TableCell>
-                                        <TableCell className="px-4 py-3">
-                                            <Skeleton className="h-4 w-[min(100%,10rem)] max-w-full rounded-md" />
-                                        </TableCell>
-                                        <TableCell className="px-4 py-3">
-                                            <Skeleton className="h-4 w-20 rounded-md" />
-                                        </TableCell>
-                                        <TableCell className="hidden px-4 py-3 md:table-cell">
-                                            <Skeleton className="h-4 w-24 max-w-full rounded-md" />
-                                        </TableCell>
-                                        <TableCell className="hidden px-4 py-3 md:table-cell">
-                                            <Skeleton className="h-4 w-20 max-w-full rounded-md" />
-                                        </TableCell>
-                                        <TableCell className="px-4 py-3">
-                                            <Skeleton className="h-5 w-16 rounded-full" />
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </CardSectionShell>
-            </div>
-        </div>
-    )
-}
-
 export function DashboardPageSkeleton() {
     return (
         <div
@@ -529,8 +420,6 @@ export function DashboardPageSkeleton() {
                     </div>
                 </div>
             </div>
-
-            <DashboardRecentTransactionsSkeleton />
         </div>
     )
 }
