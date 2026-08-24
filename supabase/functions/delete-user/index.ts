@@ -6,6 +6,32 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+/**
+ * Best-effort password-attempt limiter (per isolate; resets on cold start).
+ * GoTrue also rate-limits the token endpoint — this adds a cheap per-user
+ * guard against using this endpoint as a password oracle.
+ */
+const MAX_PASSWORD_ATTEMPTS = 5
+const ATTEMPT_WINDOW_MS = 15 * 60 * 1000
+const passwordAttempts = new Map<string, { count: number; resetAt: number }>()
+
+function passwordAttemptAllowed(userId: string): boolean {
+  const now = Date.now()
+  const entry = passwordAttempts.get(userId)
+  if (!entry || entry.resetAt <= now) return true
+  return entry.count < MAX_PASSWORD_ATTEMPTS
+}
+
+function recordFailedPasswordAttempt(userId: string): void {
+  const now = Date.now()
+  const entry = passwordAttempts.get(userId)
+  if (!entry || entry.resetAt <= now) {
+    passwordAttempts.set(userId, { count: 1, resetAt: now + ATTEMPT_WINDOW_MS })
+    return
+  }
+  entry.count += 1
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -70,21 +96,43 @@ Deno.serve(async (req: Request) => {
       })
     }
 
-    const verifyClient = createClient(supabaseUrl, anonKey)
+    if (!passwordAttemptAllowed(user.id)) {
+      return new Response(
+        JSON.stringify({ error: 'Muitas tentativas. Tente novamente em alguns minutos.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
+    const verifyClient = createClient(supabaseUrl, anonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    })
     const { error: signInError } = await verifyClient.auth.signInWithPassword({
       email,
       password,
     })
 
     if (signInError) {
+      recordFailedPasswordAttempt(user.id)
       return new Response(JSON.stringify({ error: 'Senha incorreta' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
+    // The verification sign-in minted a fresh GoTrue session; revoke it so a
+    // failed deletion later doesn't leave a stray active session behind.
+    try {
+      await verifyClient.auth.signOut({ scope: 'local' })
+    } catch {
+      /* best effort */
+    }
+
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
     const userId = user.id
+
+    // TODO(Fase 5): substituir esta sequência manual por FKs ON DELETE CASCADE
+    // (workspaces, budgets, credit_cards, subscriptions, installment plans,
+    // bills, notifications, push_subscriptions) + uma RPC transacional.
 
     const fail = (message: string) =>
       new Response(JSON.stringify({ error: message }), {

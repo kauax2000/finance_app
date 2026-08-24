@@ -63,110 +63,81 @@ Deno.serve(async (req: Request) => {
 
   const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-  const { data: invite, error: inviteErr } = await supabaseAdmin
-    .from('workspace_invites')
-    .select('*')
-    .eq('token_hash', tokenHash)
-    .maybeSingle()
-
-  if (inviteErr) return json(500, { error: inviteErr.message })
-  if (!invite) return json(404, { error: 'Invite not found' })
-  if (invite.status !== 'pending') return json(400, { error: 'Invite is not pending' })
-  if (new Date(invite.expires_at).getTime() < Date.now()) {
-    await supabaseAdmin.from('workspace_invites').update({ status: 'expired' }).eq('id', invite.id)
-    return json(400, { error: 'Invite expired' })
-  }
-
-  const invitedEmail = invite.invited_email as string | null
-  if (invitedEmail != null && invitedEmail.trim().toLowerCase() !== userEmail) {
-    return json(403, { error: 'Invite email does not match current user' })
-  }
-
-  const maxUses = invite.max_uses as number | null
-  const usageCount = typeof invite.usage_count === 'number' ? invite.usage_count : 0
-
-  const { data: existingMember } = await supabaseAdmin
-    .from('workspace_members')
-    .select('user_id')
-    .eq('workspace_id', invite.workspace_id)
-    .eq('user_id', user.id)
-    .maybeSingle()
-
-  if (existingMember) {
-    return json(200, { ok: true, workspace_id: invite.workspace_id, already_member: true })
-  }
-
-  if (maxUses !== null && usageCount >= maxUses) {
-    return json(400, { error: 'Invite exhausted' })
-  }
-
-  const { error: memberErr } = await supabaseAdmin
-    .from('workspace_members')
-    .upsert(
-      {
-        workspace_id: invite.workspace_id,
-        user_id: user.id,
-        role: 'member',
-      },
-      { onConflict: 'workspace_id,user_id' },
-    )
-
-  if (memberErr) return json(500, { error: memberErr.message })
-
-  const nextUsage = usageCount + 1
-  const exhausted = maxUses !== null && nextUsage >= maxUses
-
-  const patch: Record<string, unknown> = { usage_count: nextUsage }
-  if (exhausted) {
-    patch.status = 'accepted'
-    patch.accepted_at = new Date().toISOString()
-  }
-
-  const { data: claimedRows, error: updErr } = await supabaseAdmin
-    .from('workspace_invites')
-    .update(patch)
-    .eq('id', invite.id)
-    // Only one concurrent accept may advance usage_count; duplicate requests lose the race.
-    .eq('usage_count', usageCount)
-    .select('id')
-
-  if (updErr) return json(500, { error: updErr.message })
-
-  const claimed = Array.isArray(claimedRows) && claimedRows.length > 0
-
-  if (!claimed) {
-    return json(200, { ok: true, workspace_id: invite.workspace_id, idempotent: true })
-  }
-
-  await supabaseAdmin.from('user_activity_logs').insert({
-    user_id: invite.created_by,
-    type: 'family_member_joined',
-    description: 'Convite aceito por membro da família',
-    metadata: { member_id: user.id, workspace_id: invite.workspace_id, invite_id: invite.id },
-    status: 'success',
+  // Atomic validate → claim → join (row-locked; enforces max_uses under
+  // concurrency). See migration 20260824121000_accept_workspace_invite_rpc.sql.
+  const { data: result, error: rpcErr } = await supabaseAdmin.rpc('accept_workspace_invite', {
+    p_token_hash: tokenHash,
+    p_user_id: user.id,
+    p_user_email: userEmail,
   })
 
-  const { data: inviterUser } = await supabaseAdmin.auth.admin.getUserById(invite.created_by)
+  if (rpcErr) return json(500, { error: rpcErr.message })
 
-  const notifyResult = await deliverNotification({
-    supabaseAdmin,
-    userId: invite.created_by,
-    userEmail: inviterUser?.user?.email,
-    workspaceId: invite.workspace_id,
-    type: 'system',
-    title: 'Convite aceito',
-    body: `${user.email ?? 'Um usuário'} aceitou o convite.`,
-    metadata: {
-      kind: 'invite_accepted',
-      workspace_id: invite.workspace_id,
-      invite_id: invite.id,
-      href: '/members',
-    },
-  })
+  const status = typeof result?.status === 'string' ? result.status : 'error'
+  const workspaceId =
+    typeof result?.workspace_id === 'string' ? result.workspace_id : null
 
-  if (!notifyResult.ok) {
-    return json(500, { error: notifyResult.error })
+  switch (status) {
+    case 'not_found':
+      return json(404, { error: 'Invite not found' })
+    case 'not_pending':
+      return json(400, { error: 'Invite is not pending' })
+    case 'expired':
+      return json(400, { error: 'Invite expired' })
+    case 'email_mismatch':
+      return json(403, { error: 'Invite email does not match current user' })
+    case 'exhausted':
+      return json(400, { error: 'Invite exhausted' })
+    case 'invalid_user':
+      return json(400, { error: 'Authenticated user has no email' })
+    case 'already_member':
+      return json(200, { ok: true, workspace_id: workspaceId, already_member: true })
+    case 'accepted':
+      break
+    default:
+      return json(500, { error: 'Unexpected invite acceptance result' })
   }
 
-  return json(200, { ok: true, workspace_id: invite.workspace_id })
+  const inviteId = typeof result?.invite_id === 'string' ? result.invite_id : null
+  const createdBy = typeof result?.created_by === 'string' ? result.created_by : null
+
+  // Membership is committed at this point: activity/notification failures are
+  // logged, never surfaced as errors for an operation that succeeded.
+  if (createdBy && workspaceId) {
+    try {
+      await supabaseAdmin.from('user_activity_logs').insert({
+        user_id: createdBy,
+        type: 'family_member_joined',
+        description: 'Convite aceito por membro da família',
+        metadata: { member_id: user.id, workspace_id: workspaceId, invite_id: inviteId },
+        status: 'success',
+      })
+
+      const { data: inviterUser } = await supabaseAdmin.auth.admin.getUserById(createdBy)
+
+      const notifyResult = await deliverNotification({
+        supabaseAdmin,
+        userId: createdBy,
+        userEmail: inviterUser?.user?.email,
+        workspaceId,
+        type: 'system',
+        title: 'Convite aceito',
+        body: `${user.email ?? 'Um usuário'} aceitou o convite.`,
+        metadata: {
+          kind: 'invite_accepted',
+          workspace_id: workspaceId,
+          invite_id: inviteId,
+          href: '/members',
+        },
+      })
+
+      if (!notifyResult.ok) {
+        console.error('workspace-invites-accept: notify failed:', notifyResult.error)
+      }
+    } catch (error) {
+      console.error('workspace-invites-accept: post-accept side effects failed:', error)
+    }
+  }
+
+  return json(200, { ok: true, workspace_id: workspaceId })
 })

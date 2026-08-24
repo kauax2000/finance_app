@@ -11,6 +11,7 @@
     "lint": "eslint",
     "test:assinaturas-prereqs": "node scripts/verify-assinaturas-prereqs.mjs",
     "test:unit": "vitest run",
+    "test:edge": "deno test supabase/functions/_shared",
     "test:db": "node scripts/ensure-local-supabase-db.mjs && supabase test db",
     "test:db:skip-check": "supabase test db",
     "generate:pwa-icons": "node scripts/generate-pwa-icons.mjs",

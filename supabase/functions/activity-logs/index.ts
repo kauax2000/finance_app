@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
+import { assertCallerSessionAllowed, type SupabaseAdmin } from '../_shared/session-guard.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,111 +8,18 @@ const corsHeaders = {
     'authorization, x-client-info, apikey, content-type, x-app-session-id',
 }
 
-function hashToken(token: string): string {
-  let hash = 0
-  for (let i = 0; i < token.length; i++) {
-    const char = token.charCodeAt(i)
-    hash = ((hash << 5) - hash) + char
-    hash = hash & hash
-  }
-  return hash.toString(16)
-}
-
-async function assertCallerSessionAllowed(
-  supabaseAdmin: ReturnType<typeof createClient>,
+/** Adapts the shared session-guard result to this function's Response shape. */
+async function guardCallerSession(
+  supabaseAdmin: SupabaseAdmin,
   userId: string,
   token: string,
   req: Request
 ): Promise<Response | null> {
-  const tokenHash = hashToken(token)
-  const sessionIdHeader = req.headers.get('x-app-session-id')?.trim() || null
-
-  const { count: totalCount, error: totalErr } = await supabaseAdmin
-    .from('user_sessions')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId)
-
-  if (totalErr) {
-    return new Response(
-      JSON.stringify({ error: totalErr.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-  }
-
-  const { count: activeCount, error: activeErr } = await supabaseAdmin
-    .from('user_sessions')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .eq('is_active', true)
-
-  if (activeErr) {
-    return new Response(
-      JSON.stringify({ error: activeErr.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-  }
-
-  const t = totalCount ?? 0
-  const a = activeCount ?? 0
-
-  if (t === 0) {
-    return null
-  }
-
-  if (a === 0) {
-    return new Response(
-      JSON.stringify({ error: 'Session expired or invalidated' }),
-      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-  }
-
-  const { data: byHash } = await supabaseAdmin
-    .from('user_sessions')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('is_active', true)
-    .eq('token_hash', tokenHash)
-    .maybeSingle()
-
-  if (byHash) {
-    return null
-  }
-
-  if (sessionIdHeader) {
-    const { data: bySid, error: sidErr } = await supabaseAdmin
-      .from('user_sessions')
-      .select('id')
-      .eq('id', sessionIdHeader)
-      .eq('user_id', userId)
-      .eq('is_active', true)
-      .maybeSingle()
-
-    if (sidErr) {
-      return new Response(
-        JSON.stringify({ error: sidErr.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    if (bySid) {
-      const { error: upErr } = await supabaseAdmin
-        .from('user_sessions')
-        .update({ token_hash: tokenHash })
-        .eq('id', bySid.id)
-
-      if (upErr) {
-        return new Response(
-          JSON.stringify({ error: upErr.message }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      }
-      return null
-    }
-  }
-
+  const result = await assertCallerSessionAllowed(supabaseAdmin, userId, token, req)
+  if (result.ok) return null
   return new Response(
-    JSON.stringify({ error: 'Session expired or invalidated' }),
-    { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    JSON.stringify({ error: result.message }),
+    { status: result.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   )
 }
 
@@ -297,7 +205,7 @@ function buildDedupeKey(userId: string, type: string, metadata: Record<string, u
 }
 
 async function shouldInsertActivity(
-  supabaseAdmin: ReturnType<typeof createClient>,
+  supabaseAdmin: SupabaseAdmin,
   userId: string,
   type: string,
   metadata: Record<string, unknown>,
@@ -360,7 +268,7 @@ Deno.serve(async (req: Request) => {
     }
     const user = authResult.user
 
-    const blocked = await assertCallerSessionAllowed(supabaseAdmin, user.id, token, req)
+    const blocked = await guardCallerSession(supabaseAdmin, user.id, token, req)
     if (blocked) return blocked
 
     const { method } = req
@@ -443,13 +351,11 @@ Deno.serve(async (req: Request) => {
       const status =
         body.status && STATUS_VALUES.has(body.status) ? body.status : 'success'
 
-      const headerUa = req.headers.get('user-agent') ?? ''
-      const ua = body.user_agent || headerUa
-      const ip =
-        normalizeIp(body.ip_address) ?? normalizeIp(getClientIp(req))
-      const device =
-        body.device?.trim() ||
-        (ua ? formatDeviceFromUserAgent(ua) : 'Desconhecido')
+      // Audit-trail integrity: ip/device are derived server-side from request
+      // headers only — caller-supplied values would allow forging audit entries.
+      const ua = req.headers.get('user-agent') ?? ''
+      const ip = normalizeIp(getClientIp(req))
+      const device = ua ? formatDeviceFromUserAgent(ua) : 'Desconhecido'
 
       const metadata = body.metadata ?? {}
       const dedupeKey = buildDedupeKey(user.id, type, metadata)

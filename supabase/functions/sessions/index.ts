@@ -1,11 +1,22 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
+import {
+  assertCallerSessionAllowed,
+  assertRegistrationAllowed,
+  jwtAuthSessionId,
+  sha256Hex,
+  type SupabaseAdmin,
+} from '../_shared/session-guard.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
     'authorization, x-client-info, apikey, content-type, x-app-session-id',
 }
+
+/** Columns safe to return to the browser (never token_hash / device_fingerprint). */
+const SESSION_PUBLIC_COLUMNS =
+  'id, user_id, device_id, device_type, device_name, browser, os, ip_address, user_agent, created_at, last_active_at, is_active'
 
 function getClientIp(req: Request): string | null {
   const forwarded = req.headers.get('x-forwarded-for')
@@ -30,130 +41,18 @@ function normalizeIp(ip: string | null | undefined): string | null {
   return null
 }
 
-function hashToken(token: string): string {
-  let hash = 0
-  for (let i = 0; i < token.length; i++) {
-    const char = token.charCodeAt(i)
-    hash = ((hash << 5) - hash) + char
-    hash = hash & hash
-  }
-  return hash.toString(16)
-}
-
-/**
- * Ensures the caller has an active app session row (user_sessions), or is bootstrapping
- * (no rows yet). Revoked devices keep a valid JWT but fail here unless they re-register
- * (POST with user_agent), which is blocked when all sessions were revoked (activeCount === 0
- * but totalCount > 0). Syncs token_hash when JWT rotated and x-app-session-id matches.
- */
-async function assertCallerSessionAllowed(
-  supabaseAdmin: ReturnType<typeof createClient>,
+/** Adapts the shared session-guard result to this function's Response shape. */
+async function guardCallerSession(
+  supabaseAdmin: SupabaseAdmin,
   userId: string,
   token: string,
   req: Request
 ): Promise<Response | null> {
-  const tokenHash = hashToken(token)
-  const sessionIdHeader = req.headers.get('x-app-session-id')?.trim() || null
-
-  const [totalRes, activeRes] = await Promise.all([
-    supabaseAdmin
-      .from('user_sessions')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId),
-    supabaseAdmin
-      .from('user_sessions')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('is_active', true),
-  ])
-
-  if (totalRes.error) {
-    return new Response(
-      JSON.stringify({ error: totalRes.error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-  }
-
-  if (activeRes.error) {
-    return new Response(
-      JSON.stringify({ error: activeRes.error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-  }
-
-  const totalCount = totalRes.count
-  const activeCount = activeRes.count
-
-  const t = totalCount ?? 0
-  const a = activeCount ?? 0
-
-  if (t === 0) {
-    return null
-  }
-
-  if (a === 0) {
-    return new Response(
-      JSON.stringify({ error: 'Session expired or invalidated' }),
-      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-  }
-
-  const { data: hashRows, error: hashErr } = await supabaseAdmin
-    .from('user_sessions')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('is_active', true)
-    .eq('token_hash', tokenHash)
-    .limit(1)
-
-  if (hashErr) {
-    return new Response(
-      JSON.stringify({ error: hashErr.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-  }
-
-  const byHash = hashRows?.[0] ?? null
-
-  if (byHash) {
-    return null
-  }
-
-  if (sessionIdHeader) {
-    const { data: bySid, error: sidErr } = await supabaseAdmin
-      .from('user_sessions')
-      .select('id')
-      .eq('id', sessionIdHeader)
-      .eq('user_id', userId)
-      .eq('is_active', true)
-      .maybeSingle()
-
-    if (sidErr) {
-      return new Response(
-        JSON.stringify({ error: sidErr.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    if (bySid) {
-      const { error: upErr } = await supabaseAdmin
-        .from('user_sessions')
-        .update({ token_hash: tokenHash })
-        .eq('id', bySid.id)
-
-      if (upErr) {
-        return new Response(
-          JSON.stringify({ error: upErr.message }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      }
-      return null
-    }
-  }
-
+  const result = await assertCallerSessionAllowed(supabaseAdmin, userId, token, req)
+  if (result.ok) return null
   return new Response(
-    JSON.stringify({ error: 'Session expired or invalidated' }),
-    { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    JSON.stringify({ error: result.message }),
+    { status: result.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   )
 }
 
@@ -194,12 +93,12 @@ Deno.serve(async (req: Request) => {
     const { method } = req
 
     if (method === 'GET') {
-      const blocked = await assertCallerSessionAllowed(supabaseAdmin, user.id, token, req)
+      const blocked = await guardCallerSession(supabaseAdmin, user.id, token, req)
       if (blocked) return blocked
 
       const { data: sessions, error } = await supabaseAdmin
         .from('user_sessions')
-        .select('*')
+        .select(SESSION_PUBLIC_COLUMNS)
         .eq('user_id', user.id)
         .eq('is_active', true)
         .order('last_active_at', { ascending: false })
@@ -233,7 +132,7 @@ Deno.serve(async (req: Request) => {
       const { action, session_id, except_session_id, user_agent, ip_address, device_id, device_fingerprint } = body
 
       if (action === 'revoke_session' && session_id) {
-        const blocked = await assertCallerSessionAllowed(supabaseAdmin, user.id, token, req)
+        const blocked = await guardCallerSession(supabaseAdmin, user.id, token, req)
         if (blocked) return blocked
 
         const { error } = await supabaseAdmin
@@ -256,7 +155,7 @@ Deno.serve(async (req: Request) => {
       }
 
       if (action === 'revoke_all') {
-        const blocked = await assertCallerSessionAllowed(supabaseAdmin, user.id, token, req)
+        const blocked = await guardCallerSession(supabaseAdmin, user.id, token, req)
         if (blocked) return blocked
 
         let query = supabaseAdmin
@@ -291,16 +190,28 @@ Deno.serve(async (req: Request) => {
         )
       }
 
+      // Revoked-device guard: a device whose session was revoked keeps a valid
+      // JWT until expiry; without this check it could simply re-register.
+      const registrationGate = await assertRegistrationAllowed(supabaseAdmin, user.id, token)
+      if (!registrationGate.ok) {
+        return new Response(
+          JSON.stringify({ error: registrationGate.message }),
+          { status: registrationGate.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
       const did = typeof device_id === 'string' && device_id.trim() ? device_id.trim() : null
       const dfp = typeof device_fingerprint === 'string' && device_fingerprint.trim() ? device_fingerprint.trim() : null
       const resolvedIp = normalizeIp(ip_address) ?? normalizeIp(getClientIp(req))
+      const tokenHash = await sha256Hex(token)
+      const authSessionId = jwtAuthSessionId(token)
 
       const deviceInfo = await getDeviceInfo(user_agent)
 
       if (did) {
         const { data: deviceRows, error: findErr } = await supabaseAdmin
           .from('user_sessions')
-          .select('*')
+          .select(SESSION_PUBLIC_COLUMNS)
           .eq('user_id', user.id)
           .eq('device_id', did)
           .eq('is_active', true)
@@ -321,7 +232,8 @@ Deno.serve(async (req: Request) => {
             .from('user_sessions')
             .update({
               last_active_at: new Date().toISOString(),
-              token_hash: hashToken(token),
+              token_hash: tokenHash,
+              auth_session_id: authSessionId,
               user_agent,
               ...(resolvedIp ? { ip_address: resolvedIp } : {}),
               ...(dfp ? { device_fingerprint: dfp } : {}),
@@ -348,7 +260,7 @@ Deno.serve(async (req: Request) => {
       if (dfp) {
         const { data: legacyRows, error: legErr } = await supabaseAdmin
           .from('user_sessions')
-          .select('*')
+          .select(SESSION_PUBLIC_COLUMNS)
           .eq('user_id', user.id)
           .eq('device_fingerprint', dfp)
           .eq('is_active', true)
@@ -369,7 +281,8 @@ Deno.serve(async (req: Request) => {
             .from('user_sessions')
             .update({
               last_active_at: new Date().toISOString(),
-              token_hash: hashToken(token),
+              token_hash: tokenHash,
+              auth_session_id: authSessionId,
               user_agent,
               device_id: did ?? legacy.device_id,
               device_fingerprint: dfp,
@@ -408,9 +321,10 @@ Deno.serve(async (req: Request) => {
           browser: deviceInfo.browser,
           os: deviceInfo.os,
           is_active: true,
-          token_hash: hashToken(token),
+          token_hash: tokenHash,
+          auth_session_id: authSessionId,
         })
-        .select()
+        .select(SESSION_PUBLIC_COLUMNS)
         .limit(1)
 
       const newSession = insertedRows?.[0] ?? null
@@ -442,7 +356,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (method === 'DELETE') {
-      const blocked = await assertCallerSessionAllowed(supabaseAdmin, user.id, token, req)
+      const blocked = await guardCallerSession(supabaseAdmin, user.id, token, req)
       if (blocked) return blocked
 
       const url = new URL(req.url)
@@ -474,7 +388,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (method === 'PATCH') {
-      const blocked = await assertCallerSessionAllowed(supabaseAdmin, user.id, token, req)
+      const blocked = await guardCallerSession(supabaseAdmin, user.id, token, req)
       if (blocked) return blocked
 
       const url = new URL(req.url)
