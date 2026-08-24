@@ -21,6 +21,10 @@ export function parseWorkspaceDeleteImpactJson(
         categories: n("categories"),
         members: n("members"),
         other_members: n("other_members"),
+        credit_cards: n("credit_cards"),
+        subscriptions: n("subscriptions"),
+        installment_plans: n("installment_plans"),
+        bills: n("bills"),
     }
 }
 

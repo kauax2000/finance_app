@@ -325,6 +325,11 @@ export interface WorkspaceDeleteImpact {
     categories: number
     members: number
     other_members: number
+    /** Também CASCADE em workspace_id (reportados a partir da Fase 5). */
+    credit_cards?: number
+    subscriptions?: number
+    installment_plans?: number
+    bills?: number
 }
 
 export interface WorkspaceMember {
