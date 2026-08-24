@@ -27,14 +27,14 @@ After schema changes, apply migrations with **`supabase db push`** (recommended)
 | `20260331120000_workspace_invites_token_raw.sql` | `token_raw` on invites + invitee SELECT RLS |
 | **`20260518180000_workspace_core_data_rls.sql`** | **Transactions, categories, splits, budgets** visible/editable by all `workspace_members` (fixes empty lists for invited users) |
 
-For greenfield or manual SQL Editor setup (no CLI), run in order: `workspaces.sql`, `workspaces-rls.sql`, `workspaces-core-migration.sql`, then either `workspaces-core-rls.sql` **or** the migration above (omit the `wallets` block — table removed). Also: `workspace-member-directory.sql`, `workspace-invites-token-raw-and-invitee-rls.sql`.
+For greenfield setup, the consolidated baseline migration (`supabase/migrations/00000000000000_baseline.sql`) creates all invite/workspace objects — `supabase db push` (or `supabase start` locally) is all you need. The loose SQL files previously listed here were removed.
 
 After any SQL change, **Settings → API → Reload schema** if PostgREST caches old policies (the core-data migration also runs `NOTIFY pgrst, 'reload schema'`).
 
 ### Erro: `Could not find the 'token_raw' column ... in the schema cache`
 
-1. Garanta a coluna: rode no SQL Editor o conteúdo de [`workspace-invites-token-raw-and-invitee-rls.sql`](workspace-invites-token-raw-and-invitee-rls.sql) (ou a migração acima).
-2. Recarregue o schema do PostgREST: **Settings → API → Reload schema**, ou execute [`reload-postgrest-schema.sql`](reload-postgrest-schema.sql) no SQL Editor (`NOTIFY pgrst, 'reload schema'`).
+1. Garanta que as migrações foram aplicadas (`npx supabase db push`) — a coluna vem do baseline.
+2. Recarregue o schema do PostgREST: **Settings → API → Reload schema** (ou `NOTIFY pgrst, 'reload schema'`).
 3. Gere o link de convite de novo na página **Membros**.
 
 ## Auth redirect URLs (Supabase Dashboard)

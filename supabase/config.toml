@@ -52,3 +52,8 @@ verify_jwt = false
 
 [functions.notify-transaction-created]
 verify_jwt = false
+
+# Local-only: vector/analytics container requires a docker.sock mount that
+# fails under colima; not needed for db/functions development.
+[analytics]
+enabled = false

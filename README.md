@@ -45,22 +45,17 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anon-aqui
 
 ### 3. Configure o banco de dados
 
-Execute o SQL no Supabase SQL Editor:
+O schema inteiro vive em `supabase/migrations/` (baseline consolidado +
+migrações incrementais). Com o projeto linkado no CLI:
 
-1. Acesse o [Supabase Dashboard](https://supabase.com/dashboard)
-2. Vá em **SQL Editor** no seu projeto
-3. Copie todo o conteúdo do arquivo `supabase/schema-production.sql`
-4. Execute o SQL
+```bash
+npx supabase link
+npx supabase db push
+```
 
-Isso irá criar:
-- Tabela `profiles` (estende auth.users)
-- Tabela `wallets` (carteiras do usuário)
-- Tabela `categories` (categorias de transações)
-- Tabela `transactions` (transações)
-- Tabela `transaction_splits` (divisão de transações)
-- Políticas RLS (Row Level Security)
-- Trigger para criar dados padrão para novos usuários
-- Bucket de storage para avatares
+Para desenvolvimento local: `npx supabase start` (constrói o banco do zero a
+partir das migrações). Nunca rode SQL manual no SQL Editor para mudar schema —
+ver `supabase/README.md`.
 
 ### 4. Configure o Storage para Avatares
 
@@ -235,7 +230,7 @@ npx shadcn@latest add button
 Verifique se o arquivo `.env.local` existe e contém as variáveis corretas.
 
 ### "RLS policy denied"
-Certifique-se de executar o SQL do `schema-production.sql` no Supabase.
+Certifique-se de que todas as migrações foram aplicadas (`npx supabase db push`).
 
 ### "Avatar não carrega"
 Verifique se o bucket `avatars` foi criado no Storage e está público.

@@ -45,3 +45,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local notes (contains credentials; never commit)
+Main Notes.md
+
+# supabase CLI cache local
+supabase/.temp/
