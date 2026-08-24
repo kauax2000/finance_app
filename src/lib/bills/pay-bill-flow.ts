@@ -8,7 +8,7 @@ import { computeNextBillInstanceDueYmd } from "@/lib/bills/recurrence"
 import type { VirtualCreditCardBill } from "@/lib/bills/credit-card-bill-projector"
 import { calendarYmdToStorageIso } from "@/lib/transaction-date"
 import type { BillInstance } from "@/lib/supabase"
-import { assertOnline } from "@/lib/offline/mutation-gateway"
+import { assertActionAllowedOffline } from "@/lib/offline/mutation-gateway"
 
 export type PayBillRegularInput = {
     kind: "regular"
@@ -120,7 +120,7 @@ export async function executePayBillFlow(options: {
     payload: PayBillPayload
 }): Promise<{ ok: true } | { ok: false; error: string }> {
     try {
-        assertOnline("Pagar conta")
+        assertActionAllowedOffline("pay_bill_edge", "Pagar conta")
     } catch (err) {
         return {
             ok: false,

@@ -27,7 +27,7 @@ export async function syncSubscriptionMutation(
 
     if (operation === "insert") {
         const { error } = await supabase.from("workspace_subscriptions").upsert(row, {
-            onConflict: "client_id",
+            onConflict: "workspace_id,client_id",
         })
         if (error) {
             return {

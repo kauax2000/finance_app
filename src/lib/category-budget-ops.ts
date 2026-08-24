@@ -49,7 +49,7 @@ export async function upsertCategoryBudget(
         offlinePayload,
         onlineFn: async () => {
             const { error } = await supabase.from("budgets").upsert(row, {
-                onConflict: "user_id,category_id,period_start",
+                onConflict: "workspace_id,category_id,period_start",
             })
             if (error) {
                 throw new Error(

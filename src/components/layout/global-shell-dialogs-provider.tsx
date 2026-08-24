@@ -27,6 +27,7 @@ import {
     dispatchFinanceTransactionsMutated,
     dispatchFinanceSubscriptionsMutated,
 } from "@/lib/workspace-data-events"
+import { createSubscription } from "@/lib/subscriptions/mutations"
 
 export type GlobalShellDialogsContextValue = {
     openTransactionCreate: (mode: NewTransactionMode) => void
@@ -156,19 +157,20 @@ export function GlobalShellDialogsProvider({
 
             setSubscriptionSaving(true)
             try {
-                const { error } = await supabase.from("workspace_subscriptions").insert({
-                    workspace_id: currentWorkspaceId,
-                    user_id: user.id,
-                    ...payload,
+                const result = await createSubscription({
+                    workspaceId: currentWorkspaceId,
+                    userId: user.id,
+                    payload,
                 })
-                if (error) {
-                    toastError(
-                        formatSupabasePostgrestError(error) ??
-                            "Não foi possível cadastrar a assinatura.",
-                    )
+                if (!result.ok) {
+                    toastError(result.errorMessage)
                     return false
                 }
-                toastSuccess("Assinatura cadastrada.")
+                toastSuccess(
+                    result.queued
+                        ? "Assinatura cadastrada (sincroniza ao voltar online)."
+                        : "Assinatura cadastrada.",
+                )
                 dispatchFinanceSubscriptionsMutated()
                 return true
             } finally {

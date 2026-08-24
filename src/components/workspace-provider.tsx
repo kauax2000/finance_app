@@ -15,6 +15,7 @@ import {
     randomWorkspaceAccentColor,
     type WorkspaceIconKey,
 } from "@/lib/workspace-icons"
+import { clearOutboxForWorkspace } from "@/lib/offline/outbox"
 import { useAuth } from "@/components/providers"
 import {
     patchUserSettings,
@@ -380,6 +381,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
                     ok: false,
                     message: workspaceDeleteRpcErrorMessage(rpcError),
                 }
+            }
+            // Mutations offline pendentes deste workspace nunca vão sincronizar.
+            try {
+                await clearOutboxForWorkspace(workspaceId)
+            } catch {
+                /* best effort */
             }
             await queryClient.invalidateQueries({
                 queryKey: workspaceKeys.list(user.id),

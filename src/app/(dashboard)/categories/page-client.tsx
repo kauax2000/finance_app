@@ -226,7 +226,6 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                     .from("budgets")
                     .select("*")
                     .eq("workspace_id", currentWorkspaceId)
-                    .eq("user_id", user.id)
                     .eq("period_start", period_start),
                 supabase
                     .from("transactions")

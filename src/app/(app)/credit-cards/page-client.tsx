@@ -7,6 +7,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { supabase } from "@/lib/supabase"
+import { createCreditCard } from "@/lib/credit-cards/mutations"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { toastError, toastSuccess, toastWarning } from "@/lib/toast"
 import { CustomForm } from "@/components/ui/form"
@@ -226,14 +227,11 @@ export default function CreditCardsPageClient() {
                 ? { expiry_month: exp.month, expiry_year: exp.year }
                 : {}),
         }
-        const { error } = await supabase.from("credit_cards").insert(insertRow)
+        const result = await createCreditCard(insertRow)
         setSaving(false)
 
-        if (error) {
-            toastError(
-                formatSupabasePostgrestError(error) ??
-                    "Não foi possível cadastrar o cartão."
-            )
+        if (!result.ok) {
+            toastError(result.errorMessage)
             return
         }
 

@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { supabase, type CreditCard } from "@/lib/supabase"
+import { createCreditCard, deleteCreditCard } from "@/lib/credit-cards/mutations"
 import {
     formatSupabasePostgrestError,
     isPostgrestRelationMissingError,
@@ -144,7 +145,7 @@ export default function CreditCardsPageClient() {
         const limitVal = creditLimit.trim()
             ? parseFloat(creditLimit.replace(",", "."))
             : null
-        const { error } = await supabase.from("credit_cards").insert({
+        const result = await createCreditCard({
             workspace_id: currentWorkspaceId,
             user_id: user.id,
             name: name.trim(),
@@ -161,11 +162,8 @@ export default function CreditCardsPageClient() {
         })
         setSaving(false)
 
-        if (error) {
-            toastError(
-                formatSupabasePostgrestError(error) ??
-                    "Não foi possível cadastrar o cartão."
-            )
+        if (!result.ok) {
+            toastError(result.errorMessage)
             return
         }
 
@@ -177,16 +175,15 @@ export default function CreditCardsPageClient() {
     const confirmDelete = async () => {
         if (!pendingDelete) return
         setDeleting(true)
-        const { error } = await supabase
-            .from("credit_cards")
-            .delete()
-            .eq("id", pendingDelete.id)
+        const result = currentWorkspaceId
+            ? await deleteCreditCard({
+                  workspaceId: currentWorkspaceId,
+                  cardId: pendingDelete.id,
+              })
+            : ({ ok: false, errorMessage: "Carteira indisponível." } as const)
         setDeleting(false)
-        if (error) {
-            toastError(
-                formatSupabasePostgrestError(error) ??
-                    "Não foi possível excluir o cartão."
-            )
+        if (!result.ok) {
+            toastError(result.errorMessage)
             return
         }
         toastSuccess("Cartão removido.")

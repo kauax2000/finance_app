@@ -29,7 +29,7 @@ export async function syncBillMutation(
 
         const { data: bill, error } = await supabase
             .from(table)
-            .upsert(row, { onConflict: "client_id" })
+            .upsert(row, { onConflict: "workspace_id,client_id" })
             .select("id, due_day_of_month, start_date")
             .single()
 
@@ -52,7 +52,7 @@ export async function syncBillMutation(
                     amount: null,
                     client_id: `${mutation.idempotencyKey}-inst`,
                 },
-                { onConflict: "client_id", ignoreDuplicates: true }
+                { onConflict: "workspace_id,client_id", ignoreDuplicates: true }
             )
         }
 

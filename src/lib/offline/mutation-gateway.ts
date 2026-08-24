@@ -1,5 +1,5 @@
 import { isOnline } from "@/lib/offline/connectivity"
-import { isOfflineWritable } from "@/lib/offline/policies"
+import { isOfflineBlockedAction, isOfflineWritable } from "@/lib/offline/policies"
 import { enqueueMutation } from "@/lib/offline/outbox"
 import type {
     OfflineEntity,
@@ -54,5 +54,18 @@ export function assertOnline(actionLabel?: string): void {
                 ? `${actionLabel} requer conexão com a internet.`
                 : "Esta ação requer conexão com a internet."
         )
+    }
+}
+
+/**
+ * Guard policy-driven para fluxos edge-only (`OFFLINE_BLOCKED_ACTIONS`):
+ * lança quando a ação está na policy e o dispositivo está offline.
+ */
+export function assertActionAllowedOffline(
+    action: string,
+    actionLabel?: string,
+): void {
+    if (isOfflineBlockedAction(action)) {
+        assertOnline(actionLabel)
     }
 }

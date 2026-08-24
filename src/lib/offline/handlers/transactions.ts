@@ -51,14 +51,14 @@ export async function syncTransactionMutation(
 
     if (operation === "insert") {
         let { data: inserted, error } = await supabase.from("transactions").upsert(row, {
-            onConflict: "client_id",
+            onConflict: "workspace_id,client_id",
             ignoreDuplicates: false,
         }).select("id, type, subscription_id, installment_plan_id").single()
 
         if (error && isTransactionsPaymentColumnsUnsupportedError(error)) {
             const retry = await supabase
                 .from("transactions")
-                .upsert(stripPaymentColumns(row), { onConflict: "client_id" })
+                .upsert(stripPaymentColumns(row), { onConflict: "workspace_id,client_id" })
                 .select("id, type, subscription_id, installment_plan_id")
                 .single()
             inserted = retry.data

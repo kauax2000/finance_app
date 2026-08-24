@@ -57,6 +57,12 @@ export async function invalidateWorkspaceData(
                 queryKey: [queryRoot.transactionsWorkspaceAux, workspaceId],
             }),
         )
+        // billingStats do bundle de assinaturas deriva de transactions
+        tasks.push(
+            queryClient.invalidateQueries({
+                queryKey: [queryRoot.subscriptionsPageBundle, workspaceId],
+            }),
+        )
     }
 
     if (all || domains.includes("categories")) {
@@ -80,6 +86,17 @@ export async function invalidateWorkspaceData(
         tasks.push(
             queryClient.invalidateQueries({
                 queryKey: [queryRoot.creditCardsPageBundle, workspaceId],
+            }),
+        )
+        // Estes bundles embutem a lista de cartões (rename/delete ficava stale)
+        tasks.push(
+            queryClient.invalidateQueries({
+                queryKey: billsPageBundleKeys.bundle(workspaceId),
+            }),
+        )
+        tasks.push(
+            queryClient.invalidateQueries({
+                queryKey: [queryRoot.subscriptionsPageBundle, workspaceId],
             }),
         )
     }
@@ -106,6 +123,12 @@ export async function invalidateWorkspaceData(
         tasks.push(
             queryClient.invalidateQueries({
                 queryKey: installmentPlansKeys.list(workspaceId),
+            }),
+        )
+        // creditCardsPageBundle carrega installmentPlans
+        tasks.push(
+            queryClient.invalidateQueries({
+                queryKey: [queryRoot.creditCardsPageBundle, workspaceId],
             }),
         )
     }

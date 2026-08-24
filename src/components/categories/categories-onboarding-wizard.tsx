@@ -34,6 +34,7 @@ import {
     type CategoryIconId,
 } from "@/components/categories/category-appearance-fields"
 import { formatYearMonth, periodBoundsFromYearMonth } from "@/lib/budget-month"
+import { upsertCategoryBudget } from "@/lib/category-budget-ops"
 import { formatMoneyBrlInput, formatMoneyBrlTyping, parseMoneyBrl } from "@/lib/money-brl"
 import {
     formatSupabasePostgrestError,
@@ -199,8 +200,6 @@ export function CategoriesOnboardingWizard({
 
     const ym = useMemo(() => formatYearMonth(new Date()), [])
     const { period_start, period_end } = useMemo(() => periodBoundsFromYearMonth(ym), [ym])
-    const yearInt = useMemo(() => Number(ym.slice(0, 4)), [ym])
-    const monthOfYearInt = useMemo(() => Number(ym.slice(5, 7)), [ym])
 
     const expenseCategories = useMemo(
         () => localCategories.filter((c) => c.type === "expense"),
@@ -286,19 +285,15 @@ export function CategoriesOnboardingWizard({
                     const amt = raw === "" ? null : parseMoneyBrl(raw)
                     if (amt === null || amt <= 0) continue
 
-                    const { error: upErr } = await supabase.from("budgets").upsert(
-                        {
-                            user_id: user.id,
-                            workspace_id: workspaceId,
-                            category_id: c.id,
-                            year: yearInt,
-                            month: monthOfYearInt,
-                            period_start,
-                            period_end,
-                            amount: amt,
-                        },
-                        { onConflict: "user_id,category_id,period_start" },
-                    )
+                    // Caminho único de escrita de orçamento (gateway offline +
+                    // conflito por workspace/categoria/mês).
+                    const { error: upErr } = await upsertCategoryBudget({
+                        userId: user.id,
+                        workspaceId,
+                        categoryId: c.id,
+                        yearMonth: ym,
+                        amount: amt,
+                    })
                     if (upErr) {
                         setError(
                             formatSupabasePostgrestError(upErr) ??

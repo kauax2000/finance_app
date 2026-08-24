@@ -58,6 +58,13 @@ import {
     subscriptionBillingIntervalLabel,
     type SubscriptionFormPayload,
 } from "@/components/subscriptions/subscription-form-shared"
+import {
+    createSubscription,
+    deleteSubscriptions,
+    setSubscriptionActive,
+    updateSubscription,
+} from "@/lib/subscriptions/mutations"
+import { dispatchFinanceSubscriptionsMutated } from "@/lib/workspace-data-events"
 import { tagChipSuccess } from "@/lib/tag-chip-classes"
 import {
     formatSubscriptionChargeDatePtBr,
@@ -317,35 +324,37 @@ export default function SubscriptionsPageClient() {
         setSaving(true)
         try {
             if (updateId) {
-                const { error } = await supabase
-                    .from("workspace_subscriptions")
-                    .update({ ...payload })
-                    .eq("id", updateId)
-                if (error) {
-                    toastError(
-                        formatSupabasePostgrestError(error) ??
-                            "Não foi possível salvar a assinatura."
-                    )
+                const result = await updateSubscription({
+                    workspaceId: currentWorkspaceId,
+                    subscriptionId: updateId,
+                    payload,
+                })
+                if (!result.ok) {
+                    toastError(result.errorMessage)
                     return false
                 }
-                toastSuccess("Assinatura atualizada.")
+                toastSuccess(
+                    result.queued
+                        ? "Assinatura atualizada (sincroniza ao voltar online)."
+                        : "Assinatura atualizada."
+                )
             } else {
-                const { error } = await supabase
-                    .from("workspace_subscriptions")
-                    .insert({
-                        workspace_id: currentWorkspaceId,
-                        user_id: user.id,
-                        ...payload,
-                    })
-                if (error) {
-                    toastError(
-                        formatSupabasePostgrestError(error) ??
-                            "Não foi possível cadastrar a assinatura."
-                    )
+                const result = await createSubscription({
+                    workspaceId: currentWorkspaceId,
+                    userId: user.id,
+                    payload,
+                })
+                if (!result.ok) {
+                    toastError(result.errorMessage)
                     return false
                 }
-                toastSuccess("Assinatura cadastrada.")
+                toastSuccess(
+                    result.queued
+                        ? "Assinatura cadastrada (sincroniza ao voltar online)."
+                        : "Assinatura cadastrada."
+                )
             }
+            dispatchFinanceSubscriptionsMutated()
             void refreshBundle()
             return true
         } finally {
@@ -358,17 +367,16 @@ export default function SubscriptionsPageClient() {
             if (!user || !currentWorkspaceId) return false
             setActiveToggleSaving(true)
             try {
-                const { error } = await supabase
-                    .from("workspace_subscriptions")
-                    .update({ is_active: next })
-                    .eq("id", id)
-                if (error) {
-                    toastError(
-                        formatSupabasePostgrestError(error) ??
-                            "Não foi possível atualizar o status."
-                    )
+                const result = await setSubscriptionActive({
+                    workspaceId: currentWorkspaceId,
+                    subscriptionId: id,
+                    isActive: next,
+                })
+                if (!result.ok) {
+                    toastError(result.errorMessage)
                     return false
                 }
+                dispatchFinanceSubscriptionsMutated()
                 await refreshBundle()
                 return true
             } finally {
@@ -383,30 +391,21 @@ export default function SubscriptionsPageClient() {
 
         setDeleting(true)
         const mode = pendingDelete.mode
+        const ids =
+            mode === "single" ? [pendingDelete.subscription.id] : pendingDelete.ids
 
-        const { error: dErr } =
-            mode === "single"
-                ? await supabase
-                      .from("workspace_subscriptions")
-                      .delete()
-                      .eq("id", pendingDelete.subscription.id)
-                : await supabase
-                      .from("workspace_subscriptions")
-                      .delete()
-                      .in("id", pendingDelete.ids)
+        const result = currentWorkspaceId
+            ? await deleteSubscriptions({ workspaceId: currentWorkspaceId, ids })
+            : ({ ok: false, errorMessage: "Carteira indisponível." } as const)
 
         setDeleting(false)
-        if (dErr) {
-            toastError(
-                formatSupabasePostgrestError(dErr) ??
-                    (mode === "single"
-                        ? "Não foi possível excluir a assinatura."
-                        : "Não foi possível excluir as assinaturas.")
-            )
+        if (!result.ok) {
+            toastError(result.errorMessage)
             return
         }
+        dispatchFinanceSubscriptionsMutated()
 
-        const n = mode === "single" ? 1 : pendingDelete.ids.length
+        const n = ids.length
         toastSuccess(
             n === 1
                 ? "Assinatura removida."

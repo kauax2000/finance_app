@@ -15,6 +15,11 @@ import {
     type WorkspaceInstallmentPlan,
 } from "@/lib/supabase"
 import {
+    deleteCreditCard,
+    setCreditCardActive,
+    updateCreditCard,
+} from "@/lib/credit-cards/mutations"
+import {
     formatSupabasePostgrestError,
     isPostgrestRelationMissingError,
 } from "@/lib/supabase-errors"
@@ -632,9 +637,10 @@ export default function CreditCardDetailPageClient() {
         const limitVal = editCreditLimit.trim()
             ? parseFloat(editCreditLimit.replace(",", "."))
             : null
-        const { data, error } = await supabase
-            .from("credit_cards")
-            .update({
+        const result = await updateCreditCard({
+            workspaceId: currentWorkspaceId,
+            cardId: card.id,
+            patch: {
                 name: editName.trim(),
                 last_four: resolved.lastFour,
                 brand: resolved.brand,
@@ -646,39 +652,29 @@ export default function CreditCardDetailPageClient() {
                 ...(exp.month != null && exp.year != null
                     ? { expiry_month: exp.month, expiry_year: exp.year }
                     : {}),
-            })
-            .eq("id", card.id)
-            .eq("workspace_id", currentWorkspaceId)
-            .select("*")
-            .maybeSingle()
+            },
+        })
         setEditSaving(false)
 
-        if (error) {
-            toastError(
-                formatSupabasePostgrestError(error) ?? "Não foi possível salvar o cartão."
-            )
+        if (!result.ok) {
+            toastError(result.errorMessage)
             return
         }
 
         toastSuccess("Cartão atualizado.")
         closeEdit()
-        if (data) setCard(data)
-        else void load()
+        void load()
     }
 
     const confirmDelete = async () => {
         if (!card) return
         setDeleting(true)
-        const { error } = await supabase
-            .from("credit_cards")
-            .delete()
-            .eq("id", card.id)
+        const result = currentWorkspaceId
+            ? await deleteCreditCard({ workspaceId: currentWorkspaceId, cardId: card.id })
+            : ({ ok: false, errorMessage: "Carteira indisponível." } as const)
         setDeleting(false)
-        if (error) {
-            toastError(
-                formatSupabasePostgrestError(error) ??
-                    "Não foi possível excluir o cartão."
-            )
+        if (!result.ok) {
+            toastError(result.errorMessage)
             return
         }
         toastSuccess("Cartão removido.")
@@ -687,16 +683,14 @@ export default function CreditCardDetailPageClient() {
     }
 
     const handleSetActive = async (active: boolean) => {
-        if (!card) return
-        const { error } = await supabase
-            .from("credit_cards")
-            .update({ is_active: active })
-            .eq("id", card.id)
-        if (error) {
-            toastError(
-                formatSupabasePostgrestError(error) ??
-                    "Não foi possível atualizar o cartão."
-            )
+        if (!card || !currentWorkspaceId) return
+        const result = await setCreditCardActive({
+            workspaceId: currentWorkspaceId,
+            cardId: card.id,
+            isActive: active,
+        })
+        if (!result.ok) {
+            toastError(result.errorMessage)
             return
         }
         toastSuccess(active ? "Cartão ativado." : "Cartão desativado.")

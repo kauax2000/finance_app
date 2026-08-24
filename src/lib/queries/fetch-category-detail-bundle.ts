@@ -43,18 +43,23 @@ export type CategoryDetailBundle = {
     creditCards: Pick<CreditCard, "id" | "closing_day">[]
 }
 
-type RpcCategoryDetailPayload = {
+/** Payload do RPC v2 (migração 20260824160000): bundle completo em 1 round-trip. */
+type RpcCategoryDetailPayloadV2 = {
+    v?: number
     category?: Category | null
     budget?: Budget | null
-    txs_month?: Transaction[]
+    txs_padded?: Transaction[]
     series_rows?: Pick<
         Transaction,
-        "date" | "amount" | "type" | "category_id"
+        "date" | "amount" | "type" | "category_id" | "payment_method" | "payment_credit_card_id"
     >[]
-    workspace_month_rows?: { amount: number | string; type: string }[]
-    prev_category_rows?: { amount: number | string; type: string }[]
+    workspace_padded_rows?: Pick<
+        Transaction,
+        "type" | "amount" | "date" | "payment_method" | "payment_credit_card_id"
+    >[]
     installment_plans?: WorkspaceInstallmentPlan[]
     subscriptions?: WorkspaceSubscription[]
+    credit_cards?: Pick<CreditCard, "id" | "closing_day">[]
 }
 
 function paddedBoundsForYearMonth(yearMonth: string) {
@@ -168,7 +173,6 @@ async function fetchCategoryDetailBundleLegacy(args: {
             .from("budgets")
             .select("*")
             .eq("workspace_id", workspaceId)
-            .eq("user_id", userId)
             .eq("category_id", categoryId)
             .eq("period_start", period_start)
             .maybeSingle(),
@@ -265,9 +269,6 @@ export async function fetchCategoryDetailBundle(args: {
     categoryId: string
     yearMonth: string
 }): Promise<CategoryDetailBundle> {
-    const creditCards = await fetchCreditCardsForWorkspace(args.workspaceId)
-    const { padStart, padEnd } = paddedBoundsForYearMonth(args.yearMonth)
-
     const { data, error } = await supabase.rpc(
         "rpc_fetch_category_detail_bundle",
         {
@@ -278,75 +279,33 @@ export async function fetchCategoryDetailBundle(args: {
     )
 
     if (!error && data && typeof data === "object") {
-        const d = data as RpcCategoryDetailPayload
-        const monthsBack = 12
-        const rangeStartYm = addMonths(args.yearMonth, -(monthsBack - 1))
-        const { period_start: rangeStart } = periodBoundsFromYearMonth(rangeStartYm)
-        const seriesStart = minYmd(rangeStart, padStart)
-
-        const [txPaddedRes, workspacePaddedRes, txSeriesRes] = await Promise.all([
-            supabase
-                .from("transactions")
-                .select(TX_MONTH_SELECT)
-                .eq("workspace_id", args.workspaceId)
-                .eq("category_id", args.categoryId)
-                .gte("date", `${padStart}T00:00:00.000Z`)
-                .lte("date", `${padEnd}T23:59:59.999Z`)
-                .order("date", { ascending: false })
-                .order("created_at", { ascending: false }),
-            supabase
-                .from("transactions")
-                .select("amount,type,date,payment_method,payment_credit_card_id")
-                .eq("workspace_id", args.workspaceId)
-                .gte("date", `${padStart}T00:00:00.000Z`)
-                .lte("date", `${padEnd}T23:59:59.999Z`),
-            supabase
-                .from("transactions")
-                .select(SERIES_SELECT)
-                .eq("workspace_id", args.workspaceId)
-                .eq("category_id", args.categoryId)
-                .gte("date", `${seriesStart}T00:00:00.000Z`)
-                .lte("date", `${padEnd}T23:59:59.999Z`),
-        ])
-
-        const categoryTxsWide =
-            (txPaddedRes.data as Transaction[] | null) ?? d.txs_month ?? []
-        const workspaceTxsWide =
-            (workspacePaddedRes.data as Pick<
-                Transaction,
-                "type" | "amount" | "date" | "payment_method" | "payment_credit_card_id"
-            >[] | null) ?? []
-        const seriesRows =
-            (txSeriesRes.data as Pick<
-                Transaction,
-                "date" | "amount" | "type" | "category_id" | "payment_method" | "payment_credit_card_id"
-            >[] | null) ??
-            (d.series_rows as Pick<
-                Transaction,
-                "date" | "amount" | "type" | "category_id" | "payment_method" | "payment_credit_card_id"
-            >[] | null) ??
-            []
-
-        return applyExpenseMonthAttribution(
-            {
-                category: d.category ?? null,
-                budget: d.budget ?? null,
-                txs: d.txs_month ?? [],
-                seriesSource: seriesRows,
-                workspaceMonthSums: { income: 0, expense: 0 },
-                prevMonthCategoryTotal: 0,
-                installmentPlans: d.installment_plans ?? [],
-                subscriptions: d.subscriptions ?? [],
-            },
-            {
-                categoryId: args.categoryId,
-                yearMonth: args.yearMonth,
-                creditCards,
-                categoryTxsWide,
-                workspaceTxsWide,
-                seriesRows,
-            },
-        )
+        const d = data as RpcCategoryDetailPayloadV2
+        // v2 (migração 20260824160000) devolve bounds com padding + campos de
+        // pagamento + cartões — bundle completo em 1 round-trip. Um payload de
+        // versão anterior cai no caminho legado.
+        if (d.v === 2 && d.txs_padded && d.workspace_padded_rows && d.credit_cards) {
+            const seriesRows = d.series_rows ?? []
+            return applyExpenseMonthAttribution(
+                {
+                    category: d.category ?? null,
+                    budget: d.budget ?? null,
+                    txs: [],
+                    seriesSource: seriesRows,
+                    workspaceMonthSums: { income: 0, expense: 0 },
+                    prevMonthCategoryTotal: 0,
+                    installmentPlans: d.installment_plans ?? [],
+                    subscriptions: d.subscriptions ?? [],
+                },
+                {
+                    categoryId: args.categoryId,
+                    yearMonth: args.yearMonth,
+                    creditCards: d.credit_cards,
+                    categoryTxsWide: d.txs_padded,
+                    workspaceTxsWide: d.workspace_padded_rows,
+                    seriesRows,
+                },
+            )
+        }
     }
 
     if (error) {
@@ -356,6 +315,7 @@ export async function fetchCategoryDetailBundle(args: {
         )
     }
 
+    const creditCards = await fetchCreditCardsForWorkspace(args.workspaceId)
     return fetchCategoryDetailBundleLegacy({
         ...args,
         creditCards,

@@ -24,7 +24,7 @@ export async function syncCreditCardMutation(
 
     if (operation === "insert") {
         const { error } = await supabase.from("credit_cards").upsert(row, {
-            onConflict: "client_id",
+            onConflict: "workspace_id,client_id",
         })
         if (error) {
             return {

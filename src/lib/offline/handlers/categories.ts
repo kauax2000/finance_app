@@ -24,7 +24,7 @@ export async function syncCategoryMutation(
 
     if (operation === "insert") {
         const { error } = await supabase.from("categories").upsert(row, {
-            onConflict: "client_id",
+            onConflict: "workspace_id,client_id",
         })
         if (error) {
             return {
@@ -69,8 +69,10 @@ export async function syncBudgetMutation(
     row.client_id = (row.client_id as string | undefined) ?? mutation.idempotencyKey
 
     if (operation === "insert") {
+        // Replay usa a unicidade de negócio (workspace, categoria, mês): se o
+        // mesmo orçamento foi criado em outro device, atualiza em vez de colidir.
         const { error } = await supabase.from("budgets").upsert(row, {
-            onConflict: "client_id",
+            onConflict: "workspace_id,category_id,period_start",
         })
         if (error) {
             return {
