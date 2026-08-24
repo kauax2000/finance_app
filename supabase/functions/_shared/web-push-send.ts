@@ -1,4 +1,4 @@
-import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import type { SupabaseAdminClient } from './supabase-admin.ts'
 // @deno-types="npm:@types/web-push@3"
 import webpush from 'npm:web-push@3.6.7'
 import { resolveNotificationHref } from './notification-types.ts'
@@ -40,7 +40,7 @@ function isExpiredSubscriptionError(err: unknown): boolean {
 }
 
 export async function sendWebPushToUser(args: {
-  supabaseAdmin: SupabaseClient
+  supabaseAdmin: SupabaseAdminClient
   userId: string
   payload: PushPayload
 }): Promise<{ sent: number; failed: number }> {

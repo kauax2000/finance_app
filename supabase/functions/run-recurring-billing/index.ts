@@ -1,10 +1,9 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { secretMatches } from '../_shared/timing-safe-equal.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type, x-cron-secret',
-}
+// Server-to-server only (cron/scheduler): no CORS — browsers have no business
+// probing this endpoint with the shared secret.
+const corsHeaders = {} as Record<string, string>
 
 function json(status: number, payload: unknown): Response {
   return new Response(JSON.stringify(payload), {
@@ -19,9 +18,7 @@ Deno.serve(async (req: Request) => {
   }
   if (req.method !== 'POST') return json(405, { error: 'Method not allowed' })
 
-  const secret = Deno.env.get('CRON_SECRET')?.trim()
-  const hdr = req.headers.get('x-cron-secret')?.trim()
-  if (!secret || hdr !== secret) {
+  if (!secretMatches(Deno.env.get('CRON_SECRET'), req.headers.get('x-cron-secret'))) {
     return json(401, { error: 'Unauthorized' })
   }
 

@@ -2,6 +2,12 @@
  * Brazilian-style credit card billing cycles from calendar `closing_day` / `due_day`.
  * Uses the browser/workspace-local calendar (consistent with `transaction-date.ts`).
  *
+ * Timezone (decisão Fase 4): o backend usa America/Sao_Paulo como dia de
+ * referência (`public.app_today()` no SQL, `appTodayYmd()` no edge). O cliente
+ * usa o dia local do browser — igual a BRT para o mercado do app. A matemática
+ * de calendário (fechamento/vencimento) é validada contra os mesmos vetores
+ * dourados nas três camadas: ver `billing-calendar-parity.test.ts`.
+ *
  * Assumptions (documented for users in UI copy):
  * - Statement closes on `min(closing_day, daysInMonth)` each month.
  * - Purchases from the day after the previous close through the close date (inclusive) belong to that invoice.

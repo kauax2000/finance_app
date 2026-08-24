@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import { deliverNotification } from '../_shared/deliver-notification.ts'
+import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
 import {
   filterRangeEndIso,
   filterRangeStartIso,
@@ -28,68 +29,6 @@ type Body = {
   payment_credit_card_id: string | null
   category_id: string | null
   occurred_at: string
-}
-
-async function sendEmailResend(args: {
-  to: string
-  subject: string
-  html: string
-}): Promise<void> {
-  const apiKey = Deno.env.get('RESEND_API_KEY')?.trim()
-  if (!apiKey) throw new Error('Missing RESEND_API_KEY')
-
-  const from = Deno.env.get('RESEND_FROM')?.trim() || 'Finance App <no-reply@finance.app>'
-
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from,
-      to: args.to,
-      subject: args.subject,
-      html: args.html,
-    }),
-  })
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '')
-    throw new Error(`Resend error: ${res.status} ${text.slice(0, 300)}`)
-  }
-}
-
-function renderEmailHtml(args: {
-  title: string
-  body: string
-  settingsUrl: string
-}): string {
-  const safeTitle = args.title.replaceAll('<', '&lt;').replaceAll('>', '&gt;')
-  const safeBody = args.body.replaceAll('<', '&lt;').replaceAll('>', '&gt;')
-
-  return `<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>${safeTitle}</title>
-  </head>
-  <body style="margin:0;padding:0;background:#0b0b0d;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;">
-    <div style="max-width:560px;margin:0 auto;padding:24px;">
-      <div style="background:#141418;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px;color:#fff;">
-        <h1 style="margin:0 0 10px;font-size:18px;line-height:1.3;">${safeTitle}</h1>
-        <p style="margin:0;color:rgba(255,255,255,.75);font-size:14px;line-height:1.5;">${safeBody}</p>
-        <div style="margin-top:16px;">
-          <a href="${args.settingsUrl}" style="display:inline-block;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.10);color:#fff;text-decoration:none;font-size:13px;">Gerenciar preferências</a>
-        </div>
-      </div>
-      <p style="margin:14px 4px 0;color:rgba(255,255,255,.55);font-size:12px;line-height:1.4;">
-        Você recebeu este email porque habilitou notificações por email no Finance App.
-      </p>
-    </div>
-  </body>
-</html>`
 }
 
 function brl(n: number): string {
@@ -138,7 +77,7 @@ function sumInOpenWindow(
 }
 
 async function tryClaimDedupe(
-  admin: ReturnType<typeof createClient>,
+  admin: SupabaseAdminClient,
   workspaceId: string,
   cardId: string,
   dedupeKey: string
@@ -151,6 +90,25 @@ async function tryClaimDedupe(
   if (error?.code === '23505') return false
   if (error) throw new Error(error.message)
   return true
+}
+
+/** Compensation when delivery failed after the dedupe row was claimed. */
+async function releaseDedupe(
+  admin: SupabaseAdminClient,
+  workspaceId: string,
+  cardId: string,
+  dedupeKey: string
+): Promise<void> {
+  try {
+    await admin
+      .from('credit_card_notification_dedupe')
+      .delete()
+      .eq('workspace_id', workspaceId)
+      .eq('credit_card_id', cardId)
+      .eq('dedupe_key', dedupeKey)
+  } catch (e) {
+    console.error('evaluate-credit-card-alerts: releaseDedupe failed:', e)
+  }
 }
 
 Deno.serve(async (req: Request) => {
@@ -198,25 +156,6 @@ Deno.serve(async (req: Request) => {
   if (memErr) return json(500, { error: memErr.message })
   if (!membership) return json(403, { error: 'Not a member of this workspace' })
 
-  const { data: prefs, error: prefsErr } = await supabaseAdmin
-    .from('workspace_member_notification_prefs')
-    .select('*')
-    .eq('workspace_id', workspaceId)
-    .eq('user_id', userId)
-    .maybeSingle()
-
-  if (prefsErr) return json(500, { error: prefsErr.message })
-
-  const s = prefs ?? {
-    notify_email: true,
-    notify_in_app: true,
-    notify_credit_cards: true,
-  }
-
-  if (s.notify_credit_cards === false) {
-    return json(200, { ok: true, skipped: true, reason: 'credit_cards_disabled' })
-  }
-
   const { data: card, error: cErr } = await supabaseAdmin
     .from('credit_cards')
     .select('id, workspace_id, name, last_four, closing_day, due_day, credit_limit, is_active')
@@ -257,25 +196,86 @@ Deno.serve(async (req: Request) => {
 
   const results: Record<string, unknown> = {}
 
-  const notifyUser = async (title: string, msg: string, metadata: Record<string, unknown>) => {
-    const result = await deliverNotification({
-      supabaseAdmin,
-      userId,
-      userEmail: authResult.user.email,
-      workspaceId,
-      type: 'credit_card',
-      title,
-      body: msg,
-      metadata: { ...metadata, href },
-    })
-    if (!result.ok) {
-      throw new Error(result.error)
+  // Fan out to every workspace member (deliverNotification honors each
+  // recipient's own prefs). Previously only the acting user was notified, and
+  // the workspace-scoped dedupe key let them starve everyone else for the cycle.
+  const { data: memberRows, error: membersErr } = await supabaseAdmin
+    .from('workspace_members')
+    .select('user_id')
+    .eq('workspace_id', workspaceId)
+
+  if (membersErr) return json(500, { error: membersErr.message })
+
+  const memberIds = (memberRows ?? []).map((m: { user_id: string }) => m.user_id)
+
+  const memberEmails = new Map<string, string | null>()
+  if (memberIds.length > 0) {
+    const { data: profileRows, error: profErr } = await supabaseAdmin
+      .from('profiles')
+      .select('id,email')
+      .in('id', memberIds)
+    if (profErr) return json(500, { error: profErr.message })
+    for (const p of profileRows ?? []) {
+      memberEmails.set(p.id as string, (p.email as string | null) ?? null)
     }
-    return {
-      in_app: result.in_app,
-      email: result.email,
-      push: result.push,
+  }
+
+  /**
+   * Per-member delivery with a per-member dedupe claim. Delivery failures are
+   * recorded (dedupe released so a later evaluation can retry) instead of
+   * aborting the whole request after some members were already notified.
+   */
+  const notifyMembers = async (
+    dedupeKeyBase: string,
+    title: string,
+    msg: string,
+    metadata: Record<string, unknown>
+  ) => {
+    const out: Array<Record<string, unknown>> = []
+    for (const memberId of memberIds) {
+      const dedupeKey = `${dedupeKeyBase}:u:${memberId}`
+      let claimed = false
+      try {
+        claimed = await tryClaimDedupe(supabaseAdmin, workspaceId, cardId, dedupeKey)
+      } catch (e) {
+        console.error('evaluate-credit-card-alerts: dedupe claim failed:', e)
+        out.push({ user_id: memberId, error: 'dedupe_claim_failed' })
+        continue
+      }
+      if (!claimed) {
+        out.push({ user_id: memberId, skipped: true, reason: 'deduped' })
+        continue
+      }
+      try {
+        const result = await deliverNotification({
+          supabaseAdmin,
+          userId: memberId,
+          userEmail: memberEmails.get(memberId) ?? null,
+          workspaceId,
+          type: 'credit_card',
+          title,
+          body: msg,
+          metadata: { ...metadata, href },
+        })
+        if (!result.ok) {
+          await releaseDedupe(supabaseAdmin, workspaceId, cardId, dedupeKey)
+          out.push({ user_id: memberId, error: result.error })
+          continue
+        }
+        out.push({
+          user_id: memberId,
+          in_app: result.in_app,
+          email: result.email,
+          push: result.push,
+          ...(result.skipped ? { skipped: result.skipped } : {}),
+        })
+      } catch (e) {
+        await releaseDedupe(supabaseAdmin, workspaceId, cardId, dedupeKey)
+        console.error('evaluate-credit-card-alerts: delivery failed:', e)
+        out.push({ user_id: memberId, error: e instanceof Error ? e.message : 'delivery_failed' })
+      }
     }
+    return out
   }
 
   // —— Overall limit ——
@@ -326,20 +326,19 @@ Deno.serve(async (req: Request) => {
     }
 
     if (chosen) {
-      const dedupeKey = `limit:${chosen.key}:${periodKey}`
-      const claimed = await tryClaimDedupe(supabaseAdmin, workspaceId, cardId, dedupeKey)
-      if (claimed) {
-        results.limit = await notifyUser(chosen.title, chosen.body, {
+      results.limit = await notifyMembers(
+        `limit:${chosen.key}:${periodKey}`,
+        chosen.title,
+        chosen.body,
+        {
           kind: chosen.kind,
           credit_card_id: cardId,
           percent: p,
           spend: spendTotal,
           limit: limitNum,
           period_end: periodKey,
-        })
-      } else {
-        results.limit = { skipped: true, reason: 'deduped' }
-      }
+        }
+      )
     }
   }
 
@@ -376,18 +375,11 @@ Deno.serve(async (req: Request) => {
     const spendCat = sumInOpenWindow(rows, cardId, openWin, catKey)
     if (spendCat < threshold) continue
 
-    const dedupeKey = `cat:${alert.id}:${periodKey}`
-    const claimed = await tryClaimDedupe(supabaseAdmin, workspaceId, cardId, dedupeKey)
-    if (!claimed) {
-      ;(results.categories as unknown[]).push({ alert_id: alert.id, skipped: true })
-      continue
-    }
-
     const catName = catKey ? (categoryNames.get(catKey) ?? 'Categoria') : 'Sem categoria'
     const title = 'Cartão: alerta por categoria'
     const body = `No cartão ${cardLabel}, a categoria "${catName}" passou do valor definido (${brl(spendCat)} ≥ ${brl(threshold)}) na fatura aberta.`
 
-    const delivered = await notifyUser(title, body, {
+    const delivered = await notifyMembers(`cat:${alert.id}:${periodKey}`, title, body, {
       kind: 'cc_category_limit_crossed',
       credit_card_id: cardId,
       category_id: catKey,

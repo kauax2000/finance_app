@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
+import { secretMatches } from '../_shared/timing-safe-equal.ts'
 import { processTransactionNotification } from '../_shared/process-transaction-notification.ts'
 
 const corsHeaders = {
@@ -22,12 +23,10 @@ function bearerToken(authHeader: string | null): string | null {
 }
 
 function isServiceAuthorized(req: Request): boolean {
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')?.trim()
-  const internalSecret = Deno.env.get('NOTIFY_INTERNAL_SECRET')?.trim()
   const bearer = bearerToken(req.headers.get('Authorization'))
-  if (serviceRoleKey && bearer === serviceRoleKey) return true
-  const headerSecret = req.headers.get('x-notify-internal-secret')?.trim()
-  if (internalSecret && headerSecret === internalSecret) return true
+  if (secretMatches(Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'), bearer)) return true
+  const headerSecret = req.headers.get('x-notify-internal-secret')
+  if (secretMatches(Deno.env.get('NOTIFY_INTERNAL_SECRET'), headerSecret)) return true
   return false
 }
 

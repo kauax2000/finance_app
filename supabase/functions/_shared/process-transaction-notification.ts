@@ -1,5 +1,8 @@
-import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { deliverNotification } from '../_shared/deliver-notification.ts'
+import type { SupabaseAdminClient } from './supabase-admin.ts'
+import {
+  deliverNotification,
+  loadWorkspacePrefsMap,
+} from '../_shared/deliver-notification.ts'
 import { currencyBRL, displayActorName } from '../_shared/formatters.ts'
 import {
   shouldNotifyMembersForTransaction,
@@ -14,24 +17,31 @@ export type NotifyTransactionResult = {
 }
 
 async function notificationAlreadySent(
-  supabaseAdmin: SupabaseClient,
+  supabaseAdmin: SupabaseAdminClient,
   userId: string,
   workspaceId: string,
   transactionId: string
 ): Promise<boolean> {
-  const { data } = await supabaseAdmin
+  // limit(1) — `.maybeSingle()` errored once a duplicate existed, which made
+  // this check return false forever and keep duplicating. A partial unique
+  // index (notifications_member_expense_dedupe) backstops races.
+  const { data, error } = await supabaseAdmin
     .from('notifications')
     .select('id')
     .eq('user_id', userId)
     .eq('workspace_id', workspaceId)
     .eq('metadata->>kind', 'member_expense_created')
     .eq('metadata->>transaction_id', transactionId)
-    .maybeSingle()
-  return !!data?.id
+    .limit(1)
+  if (error) {
+    console.error('notificationAlreadySent:', error.message)
+    return false
+  }
+  return (data?.length ?? 0) > 0
 }
 
 export async function processTransactionNotification(
-  supabaseAdmin: SupabaseClient,
+  supabaseAdmin: SupabaseAdminClient,
   transactionId: string
 ): Promise<NotifyTransactionResult | { ok: false; error: string; status?: number }> {
   const { data: txRow, error: txErr } = await supabaseAdmin
@@ -102,8 +112,10 @@ export async function processTransactionNotification(
   let notified = 0
   const results: Array<{ user_id: string; ok: boolean; skipped?: string }> = []
 
-  for (const member of members) {
-    const memberId = member.user_id as string
+  const memberIds = (members as Array<{ user_id: string }>).map((m) => m.user_id)
+  const prefsMap = await loadWorkspacePrefsMap(supabaseAdmin, workspaceId, memberIds)
+
+  for (const memberId of memberIds) {
     if (await notificationAlreadySent(supabaseAdmin, memberId, workspaceId, tx.id)) {
       results.push({ user_id: memberId, ok: true, skipped: 'duplicate' })
       continue
@@ -123,9 +135,15 @@ export async function processTransactionNotification(
         href,
       },
       allowTransactionType: true,
+      prefs: prefsMap.get(memberId),
     })
 
     if (!delivered.ok) {
+      // Unique-index backstop: a concurrent invocation already inserted it.
+      if (/duplicate key|23505/i.test(delivered.error)) {
+        results.push({ user_id: memberId, ok: true, skipped: 'duplicate' })
+        continue
+      }
       results.push({ user_id: memberId, ok: false })
       continue
     }

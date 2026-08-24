@@ -1,5 +1,10 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { deliverNotification } from '../_shared/deliver-notification.ts'
+import { secretMatches } from '../_shared/timing-safe-equal.ts'
+import {
+  deliverNotification,
+  loadWorkspacePrefsMap,
+} from '../_shared/deliver-notification.ts'
+import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
 import {
   compareYmd,
   diffCalendarDays,
@@ -7,14 +12,14 @@ import {
   nextCloseAfter,
   nextPaymentDueOnOrAfter,
   statementCloseOnOrBefore,
-  utcTodayYmd,
+  appTodayYmd,
 } from '../_shared/credit-card-cycle.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type, x-cron-secret',
-}
+// Server-to-server only (cron/scheduler): no CORS — browsers have no business
+// probing this endpoint with the shared secret.
+const corsHeaders = {} as Record<string, string>
+
+const CARD_PAGE_SIZE = 500
 
 function json(status: number, payload: unknown): Response {
   return new Response(JSON.stringify(payload), {
@@ -23,70 +28,8 @@ function json(status: number, payload: unknown): Response {
   })
 }
 
-async function sendEmailResend(args: {
-  to: string
-  subject: string
-  html: string
-}): Promise<void> {
-  const apiKey = Deno.env.get('RESEND_API_KEY')?.trim()
-  if (!apiKey) throw new Error('Missing RESEND_API_KEY')
-
-  const from = Deno.env.get('RESEND_FROM')?.trim() || 'Finance App <no-reply@finance.app>'
-
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from,
-      to: args.to,
-      subject: args.subject,
-      html: args.html,
-    }),
-  })
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '')
-    throw new Error(`Resend error: ${res.status} ${text.slice(0, 300)}`)
-  }
-}
-
-function renderEmailHtml(args: {
-  title: string
-  body: string
-  settingsUrl: string
-}): string {
-  const safeTitle = args.title.replaceAll('<', '&lt;').replaceAll('>', '&gt;')
-  const safeBody = args.body.replaceAll('<', '&lt;').replaceAll('>', '&gt;')
-
-  return `<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>${safeTitle}</title>
-  </head>
-  <body style="margin:0;padding:0;background:#0b0b0d;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;">
-    <div style="max-width:560px;margin:0 auto;padding:24px;">
-      <div style="background:#141418;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px;color:#fff;">
-        <h1 style="margin:0 0 10px;font-size:18px;line-height:1.3;">${safeTitle}</h1>
-        <p style="margin:0;color:rgba(255,255,255,.75);font-size:14px;line-height:1.5;">${safeBody}</p>
-        <div style="margin-top:16px;">
-          <a href="${args.settingsUrl}" style="display:inline-block;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.10);color:#fff;text-decoration:none;font-size:13px;">Gerenciar preferências</a>
-        </div>
-      </div>
-      <p style="margin:14px 4px 0;color:rgba(255,255,255,.55);font-size:12px;line-height:1.4;">
-        Você recebeu este email porque habilitou notificações por email no Finance App.
-      </p>
-    </div>
-  </body>
-</html>`
-}
-
 async function tryClaimDedupe(
-  admin: ReturnType<typeof createClient>,
+  admin: SupabaseAdminClient,
   workspaceId: string,
   cardId: string,
   dedupeKey: string
@@ -101,6 +44,24 @@ async function tryClaimDedupe(
   return true
 }
 
+async function releaseDedupe(
+  admin: SupabaseAdminClient,
+  workspaceId: string,
+  cardId: string,
+  dedupeKey: string
+): Promise<void> {
+  try {
+    await admin
+      .from('credit_card_notification_dedupe')
+      .delete()
+      .eq('workspace_id', workspaceId)
+      .eq('credit_card_id', cardId)
+      .eq('dedupe_key', dedupeKey)
+  } catch (e) {
+    console.error('credit-card-calendar-alerts: releaseDedupe failed:', e)
+  }
+}
+
 type CardRow = {
   id: string
   workspace_id: string
@@ -111,15 +72,94 @@ type CardRow = {
   is_active: boolean
 }
 
+type CalEvent = {
+  cardId: string
+  href: string
+  dedupeKey: string
+  kind: string
+  title: string
+  body: string
+}
+
+function ddmm(ymd: string): string {
+  return ymd.split('-').reverse().join('/')
+}
+
+function buildCardEvents(card: CardRow, today: ReturnType<typeof appTodayYmd>): CalEvent[] {
+  const closingDay = Number(card.closing_day)
+  const dueDay = Number(card.due_day)
+  if (!closingDay || closingDay < 1 || closingDay > 31 || !dueDay || dueDay < 1 || dueDay > 31) {
+    return []
+  }
+
+  const lastClose = statementCloseOnOrBefore(today, closingDay)
+  const nextClose = nextCloseAfter(lastClose, closingDay)
+  const cardLabel = `${card.name} · ${card.last_four}`
+  const href = `/credit-cards/${encodeURIComponent(card.id)}`
+  const events: CalEvent[] = []
+
+  if (compareYmd(today, lastClose) === 0) {
+    events.push({
+      cardId: card.id,
+      href,
+      dedupeKey: `cal:closed:${formatYmd(today)}:c:${card.id}`,
+      kind: 'cc_invoice_closed',
+      title: 'Fatura fechou',
+      body: `A fatura do cartão ${cardLabel} fecha hoje (${ddmm(formatYmd(today))}).`,
+    })
+  }
+
+  const daysToClose = diffCalendarDays(today, nextClose)
+  if (daysToClose === 3) {
+    events.push({
+      cardId: card.id,
+      href,
+      dedupeKey: `cal:closing_soon:${formatYmd(nextClose)}:c:${card.id}`,
+      kind: 'cc_invoice_closing_soon',
+      title: 'Fatura fecha em breve',
+      body: `Faltam 3 dias para o fechamento da fatura do cartão ${cardLabel} (fechamento em ${ddmm(formatYmd(nextClose))}).`,
+    })
+  }
+
+  let dueNext: ReturnType<typeof nextPaymentDueOnOrAfter>
+  try {
+    dueNext = nextPaymentDueOnOrAfter(today, closingDay, dueDay)
+  } catch {
+    return events
+  }
+
+  if (diffCalendarDays(today, dueNext) === 3) {
+    events.push({
+      cardId: card.id,
+      href,
+      dedupeKey: `cal:due_soon:${formatYmd(dueNext)}:c:${card.id}`,
+      kind: 'cc_payment_due_soon',
+      title: 'Vencimento da fatura se aproxima',
+      body: `Faltam 3 dias para o vencimento estimado da fatura do cartão ${cardLabel} (${ddmm(formatYmd(dueNext))}).`,
+    })
+  }
+
+  if (compareYmd(today, dueNext) === 0) {
+    events.push({
+      cardId: card.id,
+      href,
+      dedupeKey: `cal:due_today:${formatYmd(dueNext)}:c:${card.id}`,
+      kind: 'cc_payment_due_today',
+      title: 'Vencimento da fatura hoje',
+      body: `Hoje é o vencimento estimado da fatura do cartão ${cardLabel}.`,
+    })
+  }
+
+  return events
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
   if (req.method !== 'POST') return json(405, { error: 'Method not allowed' })
 
-  const secret = Deno.env.get('CRON_SECRET')?.trim()
-  const hdr = req.headers.get('x-cron-secret')?.trim()
-  if (!secret || hdr !== secret) {
+  if (!secretMatches(Deno.env.get('CRON_SECRET'), req.headers.get('x-cron-secret'))) {
     return json(401, { error: 'Unauthorized' })
   }
 
@@ -127,149 +167,116 @@ Deno.serve(async (req: Request) => {
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   const admin = createClient(supabaseUrl, supabaseServiceKey)
 
-  const today = utcTodayYmd()
+  const today = appTodayYmd()
 
-  const { data: cards, error: cErr } = await admin
-    .from('credit_cards')
-    .select('id, workspace_id, name, last_four, closing_day, due_day, is_active')
-    .eq('is_active', true)
+  // 1. Paginate the global active-card scan and compute events per workspace.
+  const eventsByWorkspace = new Map<string, CalEvent[]>()
+  let cardsScanned = 0
 
-  if (cErr) return json(500, { error: cErr.message })
+  for (let page = 0; ; page++) {
+    const from = page * CARD_PAGE_SIZE
+    const { data: cards, error: cErr } = await admin
+      .from('credit_cards')
+      .select('id, workspace_id, name, last_four, closing_day, due_day, is_active')
+      .eq('is_active', true)
+      .order('id', { ascending: true })
+      .range(from, from + CARD_PAGE_SIZE - 1)
 
+    if (cErr) return json(500, { error: cErr.message })
+
+    const batch = (cards ?? []) as CardRow[]
+    cardsScanned += batch.length
+
+    for (const card of batch) {
+      const events = buildCardEvents(card, today)
+      if (events.length === 0) continue
+      const list = eventsByWorkspace.get(card.workspace_id) ?? []
+      list.push(...events)
+      eventsByWorkspace.set(card.workspace_id, list)
+    }
+
+    if (batch.length < CARD_PAGE_SIZE) break
+  }
+
+  // 2. Per workspace: load members + prefs + emails ONCE, then fan out.
+  //    Per-item failures are accumulated — one bad workspace never aborts the
+  //    daily run for the rest.
   let notified = 0
+  const errors: Array<Record<string, unknown>> = []
 
-  for (const raw of cards ?? []) {
-    const card = raw as CardRow
-    const closingDay = Number(card.closing_day)
-    const dueDay = Number(card.due_day)
-    if (!closingDay || closingDay < 1 || closingDay > 31 || !dueDay || dueDay < 1 || dueDay > 31) {
-      continue
-    }
-
-    const lastClose = statementCloseOnOrBefore(today, closingDay)
-    const nextClose = nextCloseAfter(lastClose, closingDay)
-    const cardLabel = `${card.name} · ${card.last_four}`
-    const href = `/credit-cards/${encodeURIComponent(card.id)}`
-
-    type CalEvent = {
-      dedupeKey: string
-      kind: string
-      title: string
-      body: string
-    }
-
-    const events: CalEvent[] = []
-
-    if (compareYmd(today, lastClose) === 0) {
-      events.push({
-        dedupeKey: `cal:closed:${formatYmd(today)}:c:${card.id}`,
-        kind: 'cc_invoice_closed',
-        title: 'Fatura fechou',
-        body: `A fatura do cartão ${cardLabel} fecha hoje (${formatYmd(today).split('-').reverse().join('/')}).`,
-      })
-    }
-
-    const daysToClose = diffCalendarDays(today, nextClose)
-    if (daysToClose === 3) {
-      events.push({
-        dedupeKey: `cal:closing_soon:${formatYmd(nextClose)}:c:${card.id}`,
-        kind: 'cc_invoice_closing_soon',
-        title: 'Fatura fecha em breve',
-        body: `Faltam 3 dias para o fechamento da fatura do cartão ${cardLabel} (fechamento em ${formatYmd(nextClose).split('-').reverse().join('/')}).`,
-      })
-    }
-
-    let dueNext: ReturnType<typeof nextPaymentDueOnOrAfter>
+  for (const [workspaceId, events] of eventsByWorkspace) {
     try {
-      dueNext = nextPaymentDueOnOrAfter(today, closingDay, dueDay)
-    } catch {
-      continue
-    }
+      const { data: memberRows, error: mErr } = await admin
+        .from('workspace_members')
+        .select('user_id')
+        .eq('workspace_id', workspaceId)
+      if (mErr) throw new Error(mErr.message)
 
-    if (diffCalendarDays(today, dueNext) === 3) {
-      events.push({
-        dedupeKey: `cal:due_soon:${formatYmd(dueNext)}:c:${card.id}`,
-        kind: 'cc_payment_due_soon',
-        title: 'Vencimento da fatura se aproxima',
-        body: `Faltam 3 dias para o vencimento estimado da fatura do cartão ${cardLabel} (${formatYmd(dueNext).split('-').reverse().join('/')}).`,
-      })
-    }
+      const memberIds = (memberRows ?? []).map((m: { user_id: string }) => m.user_id)
+      if (memberIds.length === 0) continue
 
-    if (compareYmd(today, dueNext) === 0) {
-      events.push({
-        dedupeKey: `cal:due_today:${formatYmd(dueNext)}:c:${card.id}`,
-        kind: 'cc_payment_due_today',
-        title: 'Vencimento da fatura hoje',
-        body: `Hoje é o vencimento estimado da fatura do cartão ${cardLabel}.`,
-      })
-    }
+      const prefsMap = await loadWorkspacePrefsMap(admin, workspaceId, memberIds)
 
-    if (events.length === 0) continue
-
-    const { data: members, error: mErr } = await admin
-      .from('workspace_members')
-      .select('user_id')
-      .eq('workspace_id', card.workspace_id)
-
-    if (mErr) return json(500, { error: mErr.message })
-
-    for (const ev of events) {
-      for (const m of members ?? []) {
-        const userId = m.user_id as string
-
-        const { data: prefs } = await admin
-          .from('workspace_member_notification_prefs')
-          .select('*')
-          .eq('workspace_id', card.workspace_id)
-          .eq('user_id', userId)
-          .maybeSingle()
-
-        const s = prefs ?? {
-          notify_email: true,
-          notify_in_app: true,
-          notify_credit_card_calendar: true,
-        }
-
-        if (s.notify_credit_card_calendar === false) continue
-        if (!s.notify_in_app && !s.notify_email && !(s as { notify_push?: boolean }).notify_push) {
-          continue
-        }
-
-        const userDedupe = `${ev.dedupeKey}:u:${userId}`
-        const claimed = await tryClaimDedupe(admin, card.workspace_id, card.id, userDedupe)
-        if (!claimed) continue
-
-        const { data: prof } = await admin
-          .from('profiles')
-          .select('email')
-          .eq('id', userId)
-          .maybeSingle()
-        const email = (prof?.email as string | undefined)?.trim() || null
-
-        const delivered = await deliverNotification({
-          supabaseAdmin: admin,
-          userId,
-          userEmail: email,
-          workspaceId: card.workspace_id,
-          type: 'credit_card',
-          title: ev.title,
-          body: ev.body,
-          metadata: {
-            kind: ev.kind,
-            credit_card_id: card.id,
-            href,
-          },
-        })
-
-        if (!delivered.ok) {
-          console.error(delivered.error)
-          continue
-        }
-
-        notified += 1
+      const emails = new Map<string, string | null>()
+      const { data: profRows, error: pErr } = await admin
+        .from('profiles')
+        .select('id,email')
+        .in('id', memberIds)
+      if (pErr) throw new Error(pErr.message)
+      for (const p of profRows ?? []) {
+        emails.set(p.id as string, ((p.email as string | null) ?? '').trim() || null)
       }
+
+      for (const ev of events) {
+        for (const userId of memberIds) {
+          const prefs = prefsMap.get(userId)
+          if (!prefs || prefs.notify_credit_card_calendar === false) continue
+          if (!prefs.notify_in_app && !prefs.notify_email && !prefs.notify_push) continue
+
+          const userDedupe = `${ev.dedupeKey}:u:${userId}`
+          try {
+            const claimed = await tryClaimDedupe(admin, workspaceId, ev.cardId, userDedupe)
+            if (!claimed) continue
+
+            const delivered = await deliverNotification({
+              supabaseAdmin: admin,
+              userId,
+              userEmail: emails.get(userId) ?? null,
+              workspaceId,
+              type: 'credit_card',
+              title: ev.title,
+              body: ev.body,
+              metadata: { kind: ev.kind, credit_card_id: ev.cardId, href: ev.href },
+              prefs,
+            })
+
+            if (!delivered.ok) {
+              await releaseDedupe(admin, workspaceId, ev.cardId, userDedupe)
+              errors.push({ workspace_id: workspaceId, user_id: userId, error: delivered.error })
+              continue
+            }
+            notified += 1
+          } catch (e) {
+            await releaseDedupe(admin, workspaceId, ev.cardId, userDedupe)
+            const msg = e instanceof Error ? e.message : 'delivery_failed'
+            console.error('credit-card-calendar-alerts:', msg)
+            errors.push({ workspace_id: workspaceId, user_id: userId, error: msg })
+          }
+        }
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'workspace_failed'
+      console.error('credit-card-calendar-alerts: workspace', workspaceId, msg)
+      errors.push({ workspace_id: workspaceId, error: msg })
     }
   }
 
-  return json(200, { ok: true, notified, today: formatYmd(today) })
+  return json(200, {
+    ok: true,
+    notified,
+    cards_scanned: cardsScanned,
+    workspaces: eventsByWorkspace.size,
+    errors: errors.length > 0 ? errors : undefined,
+    today: formatYmd(today),
+  })
 })
