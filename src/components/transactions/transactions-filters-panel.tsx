@@ -40,7 +40,7 @@ const FILTERS_DRAWER_SECTION_DIVIDER_CLASSNAME =
 
 /** Full-width selects aligned with compact drawer inputs (border, radius, focus). */
 const FILTERS_DRAWER_SELECT_TRIGGER_CLASSNAME =
-    "w-full min-w-0 justify-between gap-2 rounded-lg border border-input bg-transparent px-3 text-left text-sm font-normal tabular-nums text-foreground transition-colors outline-none hover:bg-muted/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 data-placeholder:text-muted-foreground dark:bg-input/30 dark:hover:bg-input/50 [&_svg]:size-4 [&_svg]:shrink-0"
+    "w-full min-w-0 justify-between gap-2 rounded-lg border border-input bg-transparent px-3 text-left text-sm font-normal tabular-nums text-foreground transition-colors outline-none hover:bg-muted/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/70 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 data-placeholder:text-muted-foreground dark:bg-input-fill/30 dark:hover:bg-input-fill/50 [&_svg]:size-4 [&_svg]:shrink-0"
 
 function FilterSection({
     title,

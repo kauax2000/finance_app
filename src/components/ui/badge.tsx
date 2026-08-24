@@ -25,7 +25,7 @@ const badgeVariants = cva(
           "bg-expense-muted text-expense-muted-foreground hover:bg-expense-muted/80",
       },
       size: {
-        xs: "px-2 py-0.5 text-[10px]",
+        xs: "px-2 py-0.5 text-2xs",
         sm: "px-2 py-0.5 text-xs",
         default: "px-3 py-1 text-xs",
       },

@@ -9,8 +9,11 @@ const statCardVariants = cva(
   "group/stat-card flex flex-col gap-2 rounded-xl border border-border/80 bg-card p-4 text-card-foreground shadow-xs ring-1 ring-foreground/5",
   {
     variants: {
+      // O neutro se chama `default` como nos outros componentes com `tone`.
+      // Antes era `neutral` só aqui, e trocar de componente exigia reabrir o
+      // fonte para lembrar qual das duas palavras valia.
       tone: {
-        neutral: "",
+        default: "",
         income: "border-income/25 bg-income-muted/40 dark:bg-income-muted/25",
         expense: "border-expense/20 bg-expense-muted/50 dark:bg-expense-muted/30",
         warning: "border-warning/25 bg-warning-muted/50 dark:bg-warning-muted/30",
@@ -18,7 +21,7 @@ const statCardVariants = cva(
       },
     },
     defaultVariants: {
-      tone: "neutral",
+      tone: "default",
     },
   }
 )
@@ -31,7 +34,7 @@ function StatCard({
   return (
     <div
       data-slot="stat-card"
-      data-tone={tone ?? "neutral"}
+      data-tone={tone ?? "default"}
       className={cn(statCardVariants({ tone }), className)}
       {...props}
     />

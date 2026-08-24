@@ -6,7 +6,7 @@ const LOGO_PATH =
 const sizeClasses = {
     sm: "size-8",
     md: "size-10",
-    lg: "size-[4.5rem] md:size-20",
+    lg: "size-18 md:size-20",
     xl: "size-24 md:size-20",
 } as const
 
@@ -31,7 +31,7 @@ export function AppLogo({
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             className={cn(
-                "shrink-0 text-primary transition-all duration-200 dark:text-white",
+                "shrink-0 text-primary transition-all duration-200 dark:text-foreground",
                 sizeClasses[size],
                 !showWordmark && className,
             )}

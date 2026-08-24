@@ -22,15 +22,30 @@ const alertVariants = cva(
   }
 )
 
+/**
+ * O `role` sai da variante em vez de ser sempre `"alert"`.
+ *
+ * `role="alert"` é uma região viva **assertiva**: o leitor de tela interrompe o
+ * que estiver dizendo para anunciar o conteúdo. Isso é certo para um erro que
+ * acabou de acontecer e errado para um painel explicativo que já estava na
+ * página — e o catálogo usa exatamente esse painel em 87 páginas, o que fazia o
+ * leitor interromper a cada carga. `status` é a região viva educada.
+ *
+ * Continua sobrescrevível: `{...props}` vem depois.
+ */
 function Alert({
   className,
   variant,
+  role,
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof alertVariants>) {
   return (
     <div
       data-slot="alert"
-      role="alert"
+      role={
+        role ??
+        (variant === "destructive" || variant === "warning" ? "alert" : "status")
+      }
       className={cn(alertVariants({ variant }), className)}
       {...props}
     />

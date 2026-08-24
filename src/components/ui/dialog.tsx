@@ -77,7 +77,7 @@ function DialogContent({
             >
               <XMarkIcon
               />
-              <span className="sr-only">Close</span>
+              <span className="sr-only">Fechar</span>
             </Button>
           </DialogPrimitive.Close>
         )}
@@ -155,7 +155,7 @@ function DialogFooter({
       {children}
       {showCloseButton && (
         <DialogPrimitive.Close asChild>
-          <Button variant="outline">Close</Button>
+          <Button type="button" variant="ghost">Cancelar</Button>
         </DialogPrimitive.Close>
       )}
     </div>

@@ -13,9 +13,8 @@ export function Toaster({ ...props }: ToasterProps) {
         <Sonner
             theme={resolvedTheme === "dark" ? "dark" : "light"}
             position="top-right"
-            richColors
             closeButton
-            className="toaster group z-[100]"
+            className="toaster group z-(--z-toast)"
             offset="1rem"
             mobileOffset={{
                 top: "calc(env(safe-area-inset-top, 0px) + 4.5rem)",

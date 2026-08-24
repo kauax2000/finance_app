@@ -53,6 +53,11 @@ function PaginationLink({
           variant: isActive ? "outline" : "ghost",
           size,
         }),
+        // Alvo de dedo. Aqui não dá para usar o pseudo-elemento do Checkbox: os
+        // links ficam lado a lado com 4px de intervalo, e áreas expandidas se
+        // sobreporiam — a pessoa tocaria na página 3 mirando a 2. Então o
+        // controle cresce de verdade, só em ponteiro grosso.
+        "pointer-coarse:min-h-11 pointer-coarse:min-w-11",
         className
       )}
       {...props}
