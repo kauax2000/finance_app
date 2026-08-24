@@ -51,3 +51,7 @@ Main Notes.md
 
 # supabase CLI cache local
 supabase/.temp/
+
+# claude code local
+.claude/
+supabase/.branches/
