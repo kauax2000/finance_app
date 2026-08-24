@@ -14,6 +14,9 @@ const eslintConfig = defineConfig([
     },
   },
   globalIgnores([
+    // Ferramental de agente, não código da aplicação: skills instaladas trazem
+    // seus próprios scripts e afogariam o sinal do lint do produto.
+    ".claude/**",
     ".next/**",
     "out/**",
     "build/**",

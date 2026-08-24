@@ -392,7 +392,7 @@ export function BillDetailSheet({
                             ) : null}
 
                             <div className="grid gap-2 sm:grid-cols-2">
-                                <StatCard tone="neutral">
+                                <StatCard tone="default">
                                     <StatCardLabel>Total pago 90d</StatCardLabel>
                                     <StatCardValue>
                                         <MoneyDisplay value={stats.paidSum} />

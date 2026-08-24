@@ -55,3 +55,6 @@ supabase/.temp/
 # claude code local
 .claude/
 supabase/.branches/
+
+# Estado da skill de design; o relatório de crítica fica em docs/design/
+.impeccable/

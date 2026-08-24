@@ -114,7 +114,7 @@ export function BillHistoryAnalytics({ instances }: { instances: BillInstance[] 
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <StatCard tone="neutral">
+                <StatCard tone="default">
                     <StatCardLabel>Último pago</StatCardLabel>
                     <StatCardValue>
                         <MoneyDisplay value={averages.lastAmt ?? 0} />

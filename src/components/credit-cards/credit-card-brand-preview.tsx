@@ -40,7 +40,7 @@ function GenericLogo({ className }: { className?: string }) {
     return (
         <span
             className={cn(
-                "flex h-7 w-[3.35rem] shrink-0 items-center justify-center rounded-md border border-border/40 bg-muted/15 text-muted-foreground dark:bg-input/25",
+                "flex h-7 w-[3.35rem] shrink-0 items-center justify-center rounded-md border border-border/40 bg-muted/15 text-muted-foreground dark:bg-input-fill/25",
                 className
             )}
             aria-hidden

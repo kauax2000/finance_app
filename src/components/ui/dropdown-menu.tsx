@@ -103,17 +103,28 @@ const DropdownMenuContent = React.forwardRef<
 ))
 DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName
 
+/**
+ * `variant="destructive"` existe porque oito telas escreviam
+ * `text-destructive focus:text-destructive` na mão, e uma delas já tinha
+ * divergido acrescentando `focus:bg-destructive/10`. Padrão que todo consumidor
+ * corrige não é padrão. É a mesma variant que o `ContextMenuItem` do registry já
+ * traz, então os dois menus passam a se comportar igual.
+ */
 const DropdownMenuItem = React.forwardRef<
     React.ElementRef<typeof DropdownMenuPrimitive.Item>,
     React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
         inset?: boolean
+        variant?: "default" | "destructive"
     }
->(({ className, inset, ...props }, ref) => (
+>(({ className, inset, variant = "default", ...props }, ref) => (
     <DropdownMenuPrimitive.Item
         ref={ref}
         data-slot="dropdown-menu-item"
+        data-variant={variant}
         className={cn(
             "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+            variant === "destructive" &&
+                "text-destructive focus:bg-destructive/10 focus:text-destructive [&_svg]:text-destructive",
             inset && "pl-8",
             className
         )}

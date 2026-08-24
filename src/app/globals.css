@@ -63,10 +63,27 @@
   --color-expense-muted: var(--expense-muted);
   --color-expense-muted-foreground: var(--expense-muted-foreground);
   --color-overlay: var(--overlay);
+  --color-skeleton: var(--skeleton);
+  --color-input-fill: var(--input-fill);
+  --color-chart-income: var(--chart-income);
+  --color-chart-expense: var(--chart-expense);
+  --color-identity-1: var(--identity-1);
+  --color-identity-2: var(--identity-2);
+  --color-identity-3: var(--identity-3);
+  --color-identity-4: var(--identity-4);
+  --color-identity-5: var(--identity-5);
+  --color-identity-6: var(--identity-6);
+  --color-identity-1-surface: var(--identity-1-surface);
+  --color-identity-2-surface: var(--identity-2-surface);
+  --color-identity-3-surface: var(--identity-3-surface);
+  --color-identity-4-surface: var(--identity-4-surface);
+  --color-identity-5-surface: var(--identity-5-surface);
+  --color-identity-6-surface: var(--identity-6-surface);
   --shadow-xs: var(--shadow-xs-value);
   --shadow-sm: var(--shadow-sm-value);
   --shadow-md: var(--shadow-md-value);
   --shadow-lg: var(--shadow-lg-value);
+  --shadow-xl: var(--shadow-xl-value);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -74,9 +91,22 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  /* Um degrau abaixo de text-xs, para contagens e metadados dentro de controles
+     pequenos (Badge size="xs"). Sem ele o próximo caso vira text-[11px]. */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: calc(1 / 0.6875);
+  /* O degrau de texto dos controles `size="sm"` (Button, Input, Calendar). Ficava
+     como text-[0.8rem] repetido em quatro lugares, entre text-xs e text-sm. */
+  --text-control-sm: 0.8rem;
+  --text-control-sm--line-height: calc(1.25 / 0.8);
 }
 
-:root {
+/* `.light` repete o seletor da paleta clara para que uma subárvore possa voltar
+   ao tema claro dentro de uma página escura. Serve à página de Cores do
+   /designsystem, que mostra cada token nos dois temas lado a lado: sem isso, a
+   metade "clara" da amostra herda os valores do escuro e as duas ficam iguais. */
+:root,
+.light {
   --background: oklch(0.985 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -96,9 +126,10 @@
   --destructive-muted: oklch(0.96 0.04 27);
   --destructive-muted-foreground: oklch(0.45 0.16 27);
   --border: oklch(0.9 0 0);
-  --input: oklch(0.9 0 0);
+  --input: oklch(0.66 0 0);
+  --input-fill: oklch(0.9 0 0);
   --ring: oklch(0.348 0.118 166);
-  --success: oklch(0.62 0.13 152);
+  --success: oklch(0.542 0.14 152);
   --success-foreground: oklch(0.985 0 0);
   --success-muted: oklch(0.96 0.03 152);
   --success-muted-foreground: oklch(0.32 0.1 152);
@@ -106,7 +137,7 @@
   --warning-foreground: oklch(0.21 0 0);
   --warning-muted: oklch(0.97 0.04 78);
   --warning-muted-foreground: oklch(0.42 0.1 78);
-  --info: oklch(0.62 0.13 240);
+  --info: oklch(0.53 0.15 240);
   --info-foreground: oklch(0.985 0 0);
   --info-muted: oklch(0.96 0.03 240);
   --info-muted-foreground: oklch(0.36 0.1 240);
@@ -124,11 +155,44 @@
   --shadow-sm-value: 0 1px 2px 0 oklch(0 0 0 / 0.06), 0 1px 1px 0 oklch(0 0 0 / 0.04);
   --shadow-md-value: 0 4px 8px -2px oklch(0 0 0 / 0.08), 0 2px 4px -2px oklch(0 0 0 / 0.04);
   --shadow-lg-value: 0 12px 24px -6px oklch(0 0 0 / 0.1), 0 6px 12px -4px oklch(0 0 0 / 0.06);
-  --chart-1: oklch(0.62 0.13 152);
-  --chart-2: oklch(0.577 0.245 27.325);
-  --chart-3: oklch(0.348 0.118 166);
-  --chart-4: oklch(0.62 0.13 240);
-  --chart-5: oklch(0.78 0.13 78);
+  /* Rampa categórica. Antes ela era literalmente as cores de status
+     (success, destructive, primary, info, warning): uma série azul lia como
+     "info" e uma vermelha como "erro", mesmo sendo só duas categorias de gasto.
+     Agora são cinco matizes a ~60° de distância, todos medidos em 3:1 ou mais
+     contra `--card` (WCAG 1.4.11 para objeto gráfico). A claridade varia junto
+     com o matiz para as séries não dependerem só de cor. */
+  --chart-1: oklch(0.45 0.13 166);
+  --chart-2: oklch(0.58 0.11 205);
+  --chart-3: oklch(0.48 0.16 262);
+  --chart-4: oklch(0.55 0.12 55);
+  --chart-5: oklch(0.47 0.17 330);
+  /* Onde verde/vermelho é semântica de dinheiro e não escolha estética
+     (fluxo de caixa, faturas), a série usa estes e não a rampa acima. */
+  --chart-income: var(--income);
+  --chart-expense: var(--expense);
+  /* Tons de identidade — distinguem uma pessoa de outra e nada mais. Seis
+     matizes a 60° de distância, todos com croma 0.09: abaixo do menor croma de
+     status (primary, 0.118), então um avatar nunca é confundido com um estado.
+     Cada tom vem com a superfície opaca correspondente, porque alpha só funciona
+     enquanto nada passa por baixo — em avatares sobrepostos um vazava pelo outro.
+     `in srgb` reproduz exatamente a conta que o browser faria com 12%. */
+  --identity-1: oklch(0.42 0.09 20);
+  --identity-2: oklch(0.42 0.09 80);
+  --identity-3: oklch(0.42 0.09 140);
+  --identity-4: oklch(0.42 0.09 200);
+  --identity-5: oklch(0.42 0.09 260);
+  --identity-6: oklch(0.42 0.09 320);
+  --identity-1-surface: color-mix(in srgb, var(--identity-1) 12%, var(--card));
+  --identity-2-surface: color-mix(in srgb, var(--identity-2) 12%, var(--card));
+  --identity-3-surface: color-mix(in srgb, var(--identity-3) 12%, var(--card));
+  --identity-4-surface: color-mix(in srgb, var(--identity-4) 12%, var(--card));
+  --identity-5-surface: color-mix(in srgb, var(--identity-5) 12%, var(--card));
+  --identity-6-surface: color-mix(in srgb, var(--identity-6) 12%, var(--card));
+  /* Osso de skeleton: `muted` some em telas de baixo gamut, então é um degrau
+     abaixo dele, no mesmo matiz. */
+  --skeleton: oklch(0.925 0 0);
+  --shadow-xl-value: 0 24px 48px -12px oklch(0 0 0 / 0.14);
+
   --radius: 0.625rem;
   --sidebar: oklch(0.97 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -138,6 +202,24 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.9 0 0);
   --sidebar-ring: oklch(0.348 0.118 166);
+  /* Escala de empilhamento. Sem nomes, cada sheet/island/overlay novo chutava um
+     número: o código tinha z-10, z-20, z-30, z-40, z-50 e um z-[100] cru. */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 20;
+  --z-nav-island: 30;
+  --z-overlay: 40;
+  --z-sheet: 50;
+  --z-popover: 60;
+  --z-toast: 100;
+  /* Movimento. As durações e curvas estavam escritas à mão em cada keyframe;
+     a curva enfática é a mesma das sheets iOS-like que o app já usava. */
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-emphasized: cubic-bezier(0.32, 0.72, 0, 1);
+
   /* Mobile shell: fixed header (h-14 = 3.5rem) + safe-area (see SidebarAppShell, MobileBottomNav) */
   --mobile-header-offset: calc(3.5rem + env(safe-area-inset-top, 0px));
   /* Floating island nav (see MobileNavIsland) */
@@ -158,8 +240,13 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.45 0.14 166);
-  --primary-foreground: oklch(0.985 0 0);
+  /* Claro sobre escuro, com texto escuro em cima — o mesmo arranjo que
+     `success`, `warning` e `info` já usavam neste bloco. No valor anterior
+     (0.45) o token media 3,04:1 como texto sobre o fundo e 2,32:1 sobre
+     `muted`, o que reprovava `Button variant="link"`, os rótulos de categoria
+     e todo `Code` com `text-primary`. Agora mede 8,46:1 nas duas direções. */
+  --primary: oklch(0.72 0.13 166);
+  --primary-foreground: oklch(0.145 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -167,12 +254,15 @@
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
+  /* Era o único `-foreground` claro deste bloco sobre um preenchimento também
+     claro: media 2,77:1. Escuro, como os irmãos, mede 6,84:1. */
+  --destructive-foreground: oklch(0.145 0 0);
   --destructive-muted: oklch(0.3 0.08 27);
   --destructive-muted-foreground: oklch(0.92 0.06 27);
   --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.45 0.14 166);
+  --input: oklch(0.55 0 0);
+  --input-fill: oklch(1 0 0 / 15%);
+  --ring: oklch(0.72 0.13 166);
   --success: oklch(0.7 0.15 152);
   --success-foreground: oklch(0.145 0 0);
   --success-muted: oklch(0.27 0.06 152);
@@ -198,19 +288,38 @@
   --shadow-sm-value: 0 1px 2px 0 oklch(0 0 0 / 0.45), 0 1px 1px 0 oklch(0 0 0 / 0.35);
   --shadow-md-value: 0 4px 8px -2px oklch(0 0 0 / 0.55), 0 2px 4px -2px oklch(0 0 0 / 0.4);
   --shadow-lg-value: 0 12px 24px -6px oklch(0 0 0 / 0.6), 0 6px 12px -4px oklch(0 0 0 / 0.45);
-  --chart-1: oklch(0.7 0.15 152);
-  --chart-2: oklch(0.704 0.191 22.216);
-  --chart-3: oklch(0.45 0.14 166);
-  --chart-4: oklch(0.72 0.13 240);
-  --chart-5: oklch(0.82 0.14 78);
+  --chart-1: oklch(0.72 0.14 166);
+  --chart-2: oklch(0.8 0.11 205);
+  --chart-3: oklch(0.7 0.16 262);
+  --chart-4: oklch(0.8 0.13 80);
+  --chart-5: oklch(0.72 0.17 330);
+  --chart-income: var(--income);
+  --chart-expense: var(--expense);
+  /* No escuro os tons de identidade sobem de claridade para ler sobre o card, e
+     a superfície vai a 18% porque 12% de uma cor clara sobre #171717 quase some. */
+  --identity-1: oklch(0.78 0.09 20);
+  --identity-2: oklch(0.78 0.09 80);
+  --identity-3: oklch(0.78 0.09 140);
+  --identity-4: oklch(0.78 0.09 200);
+  --identity-5: oklch(0.78 0.09 260);
+  --identity-6: oklch(0.78 0.09 320);
+  --identity-1-surface: color-mix(in srgb, var(--identity-1) 18%, var(--card));
+  --identity-2-surface: color-mix(in srgb, var(--identity-2) 18%, var(--card));
+  --identity-3-surface: color-mix(in srgb, var(--identity-3) 18%, var(--card));
+  --identity-4-surface: color-mix(in srgb, var(--identity-4) 18%, var(--card));
+  --identity-5-surface: color-mix(in srgb, var(--identity-5) 18%, var(--card));
+  --identity-6-surface: color-mix(in srgb, var(--identity-6) 18%, var(--card));
+  --skeleton: oklch(0.3 0 0);
+  --shadow-xl-value: 0 24px 48px -12px oklch(0 0 0 / 0.7);
+
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.45 0.14 166);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.72 0.13 166);
+  --sidebar-primary-foreground: oklch(0.145 0 0);
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.45 0.14 166);
+  --sidebar-ring: oklch(0.72 0.13 166);
   --mobile-glass-bg: oklch(0.205 0 0 / 45%);
   --mobile-glass-border: oklch(1 0 0 / 5%);
 }
@@ -228,6 +337,41 @@
     @apply font-sans;
   }
 
+  /* Reduced motion: encurtar, não desligar.
+
+     A versão anterior zerava tudo com `animation-duration: 0.01ms` e
+     `iteration-count: 1`. Isso não corrige acessibilidade, troca um problema
+     por outro: o spinner dava uma volta em 0,01ms e **congelava**, e o skeleton
+     parava de pulsar — ou seja, quem liga a preferência perdia todo indicador
+     de "está carregando", que é feedback de estado e não decoração.
+
+     Pior: o kill morava em `@layer base` com `!important`, e a alternativa que
+     este arquivo escreve para a bottom sheet (um fade no lugar do deslize) mora
+     em `@layer utilities` sem `!important`. Entre duas declarações
+     `!important`, a camada mais antiga vence — então o override nunca valia, e
+     a folha aparecia instantaneamente, exatamente o que ele tentava evitar.
+
+     Agora: transições encurtam (o estado final continua chegando), animações
+     que se repetem indefinidamente são preservadas — são as que comunicam
+     progresso —, e o resto para. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+
+    /* Animação de uma passada só (entradas, deslizes): não roda. Quem repete
+       para sempre fica de fora do seletor e continua girando. */
+    *:not(.animate-spin):not(.animate-pulse):not(.animate-shimmer),
+    *:not(.animate-spin):not(.animate-pulse):not(.animate-shimmer)::before,
+    *:not(.animate-spin):not(.animate-pulse):not(.animate-shimmer)::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
+
   /* iOS Safari/PWA: inputs below 16px trigger focus zoom that often persists after blur */
   @media (max-width: 767px) {
     input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
@@ -236,6 +380,55 @@
       font-size: 1rem !important;
     }
   }
+}
+
+/* Algarismos de largura fixa para qualquer valor ou métrica. Estava repetido em
+   MoneyDisplay, MoneyInput e Chart; sem ele uma coluna de valores dança a cada
+   dígito que muda. */
+.nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Ritmo único de título de página, em toda superfície. */
+.page-title {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+/* Toasts do Sonner coloridos pelos tokens do app.
+   O Toaster rodava com `richColors`, ou seja, o verde e o vermelho da própria
+   biblioteca — as únicas cores do produto que não vinham daqui. Remapear os
+   --normal-* por tipo faz cada toast ser um tom suave do token semântico sobre
+   --popover, espelhando as variantes do Alert. */
+[data-sonner-toast][data-type="success"] {
+  --normal-bg: color-mix(in oklab, var(--success) 10%, var(--popover));
+  --normal-border: color-mix(in oklab, var(--success) 25%, var(--popover));
+  --normal-text: var(--success-muted-foreground);
+}
+
+[data-sonner-toast][data-type="info"] {
+  --normal-bg: color-mix(in oklab, var(--info) 10%, var(--popover));
+  --normal-border: color-mix(in oklab, var(--info) 25%, var(--popover));
+  --normal-text: var(--info-muted-foreground);
+}
+
+[data-sonner-toast][data-type="warning"] {
+  --normal-bg: color-mix(in oklab, var(--warning) 15%, var(--popover));
+  --normal-border: color-mix(in oklab, var(--warning) 35%, var(--popover));
+  --normal-text: var(--warning-muted-foreground);
+}
+
+/* O âmbar não escurece sem deixar de ser âmbar: o ícone fica com a cor viva e o
+   texto com a versão legível. */
+[data-sonner-toast][data-type="warning"] [data-icon] {
+  color: var(--warning);
+}
+
+[data-sonner-toast][data-type="error"] {
+  --normal-bg: color-mix(in oklab, var(--destructive) 10%, var(--popover));
+  --normal-border: color-mix(in oklab, var(--destructive) 25%, var(--popover));
+  --normal-text: var(--destructive-muted-foreground);
 }
 
 /* Skeleton shimmer animation */
@@ -327,20 +520,23 @@
   }
 
   [data-slot="sheet-content"].sheet-mobile-fill.sheet-mobile-fill-motion[data-side="bottom"][data-state="open"] {
-    animation: sheet-mobile-fill-enter 300ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
+    animation: sheet-mobile-fill-enter var(--duration-slow) var(--ease-emphasized) forwards;
   }
 
   [data-slot="sheet-content"].sheet-mobile-fill.sheet-mobile-fill-motion[data-side="bottom"][data-state="closed"] {
-    animation: sheet-mobile-fill-exit 300ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
+    animation: sheet-mobile-fill-exit var(--duration-slow) var(--ease-emphasized) forwards;
   }
 
+  /* O `!important` aqui não é força bruta: a regra de reduced motion em
+     `@layer base` também é `!important`, e entre duas declarações marcadas a
+     camada mais antiga vence. Sem ele este override nunca valeu. */
   @media (prefers-reduced-motion: reduce) {
     [data-slot="sheet-content"].sheet-mobile-fill.sheet-mobile-fill-motion[data-side="bottom"][data-state="open"] {
-      animation: sheet-mobile-fill-fade-in 200ms ease forwards;
+      animation: sheet-mobile-fill-fade-in 200ms ease forwards !important;
     }
 
     [data-slot="sheet-content"].sheet-mobile-fill.sheet-mobile-fill-motion[data-side="bottom"][data-state="closed"] {
-      animation: sheet-mobile-fill-fade-out 150ms ease forwards;
+      animation: sheet-mobile-fill-fade-out 150ms ease forwards !important;
     }
   }
 }
