@@ -1,7 +1,6 @@
 "use client"
 
-import { PlusIcon, Trash2Icon } from "lucide-react"
-
+import { PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
@@ -9,11 +8,7 @@ export default function ButtonDoc() {
   return (
     <>
       <Usage>
-        Toda ação clicável. Se o elemento navega, é um link dentro de{" "}
-        <code>asChild</code>; se dispara algo, é um Button. Um{" "}
-        <code>&lt;div onClick&gt;</code>{" "}
-        não recebe foco, não responde ao Enter e
-        não é anunciado como controle.
+        Toda ação clicável. Se navega, é um link dentro de <code>asChild</code>. Um <code>&lt;div onClick&gt;</code> não recebe foco, não responde ao Enter e não é anunciado como controle.
       </Usage>
 
       <DocSection
@@ -67,7 +62,7 @@ export default function ButtonDoc() {
       <DocSection
         title="Com ícone e desabilitado"
         code={`<Button><PlusIcon aria-hidden />Nova transação</Button>
-<Button variant="destructive"><Trash2Icon aria-hidden />Excluir</Button>
+<Button variant="destructive"><TrashIcon aria-hidden />Excluir</Button>
 <Button disabled>Salvando…</Button>`}
       >
         <Button>
@@ -75,29 +70,18 @@ export default function ButtonDoc() {
           Nova transação
         </Button>
         <Button variant="destructive">
-          <Trash2Icon aria-hidden />
+          <TrashIcon aria-hidden />
           Excluir
         </Button>
         <Button disabled>Salvando…</Button>
       </DocSection>
 
       <DocNote title="Rodapé de diálogo: uma hierarquia só">
-        Todo rodapé de <code>Dialog</code> e <code>AlertDialog</code>{" "}
-        tem a mesma
-        forma, e ela não se escolhe por tela: quem sai sem fazer nada é{" "}
-        <code>ghost</code>, a ação que o diálogo veio propor é{" "}
-        <code>default</code>, e <code>destructive</code>{" "}
-        quando não tem volta.
-        Cancelar vem antes da ação. Dois botões de contorno lado a lado pesam
-        igual, e o olho tem que ler os dois para descobrir qual é a saída.
+        Todo rodapé de <code>Dialog</code> e <code>AlertDialog</code> tem a mesma forma, e ela não se escolhe por tela: sair sem fazer nada é <code>ghost</code>, a ação que o diálogo veio propor é <code>default</code>, <code>destructive</code> quando não tem volta. Cancelar vem antes.
       </DocNote>
 
       <DocNote title="type=&quot;submit&quot; é só da ação principal">
-        Dentro de um <code>CustomForm</code>, o Enter aciona o{" "}
-        <code>type=&quot;submit&quot;</code>. Cancelar, dispensar e alternar
-        levam <code>type=&quot;button&quot;</code>{" "}
-        — sem isso, o botão de
-        cancelar vira o alvo do Enter e o formulário fecha em vez de salvar.
+        Dentro de um <code>CustomForm</code>, o Enter aciona o <code>type=&quot;submit&quot;</code>. Cancelar, dispensar e alternar levam <code>type=&quot;button&quot;</code> — sem isso, cancelar vira o alvo do Enter e o formulário fecha em vez de salvar.
       </DocNote>
 
       <PropsTable

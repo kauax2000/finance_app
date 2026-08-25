@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { AdjustmentsHorizontalIcon, XMarkIcon } from "@heroicons/react/24/outline"
+import { AdjustmentsHorizontalIcon } from "@heroicons/react/16/solid"
+import { XMarkIcon } from "@heroicons/react/20/solid"
 import {
     TransactionTypeSegment,
     type TransactionFilterType,

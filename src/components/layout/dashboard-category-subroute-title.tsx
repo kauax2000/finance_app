@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronRightIcon } from "@heroicons/react/24/outline"
+import { ChevronRightIcon } from "@heroicons/react/16/solid"
 import { ROUTES } from "@/config/navigation"
 
 function parseCategoriesSubroute(pathname: string): "new" | "detail" | null {

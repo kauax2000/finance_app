@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/24/outline"
+import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/20/solid"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/components/providers"
 import { AccountMenuUserSummary } from "@/components/layout/account-menu-user-summary"

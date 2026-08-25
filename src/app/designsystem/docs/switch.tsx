@@ -8,11 +8,7 @@ export default function SwitchDoc() {
   return (
     <>
       <Usage>
-        Alternância que <strong>vale no instante em que é tocada</strong>:
-        notificações, tema, um filtro. Se o valor só vale ao salvar, o componente
-        é o <code>Checkbox</code>{" "}
-        — um switch que precisa de um botão de
-        confirmar depois mente sobre o que acabou de acontecer.
+        Alternância que <strong>vale no instante em que é tocada</strong>: notificações, tema, um filtro. Se o valor só vale ao salvar, o componente é o <code>Checkbox</code>.
       </Usage>
 
       <DocSection
@@ -62,14 +58,7 @@ export default function SwitchDoc() {
       </DocSection>
 
       <DocNote title="Quando &ldquo;marcado&rdquo; não diz qual é qual">
-        Um switch nu responde &ldquo;ligado ou não&rdquo;. Isso serve para
-        notificações, e não serve para escolher entre duas coisas igualmente
-        válidas — num alternador de tema, &ldquo;marcado&rdquo; não diz se o
-        escuro é o estado ou o destino. O <code>AppThemeToggle</code> resolve
-        isso desenhando <strong>as duas faces</strong> no trilho: o polegar
-        desliza por baixo do sol e da lua e acende a que está valendo, então o
-        controle continua sendo um switch e volta a responder &ldquo;qual dos
-        dois&rdquo;. Ele é o mesmo controle que este site usa no topo.
+        Um switch nu responde &ldquo;ligado ou não&rdquo;, o que não serve para escolher entre duas coisas igualmente válidas: num alternador de tema, &ldquo;marcado&rdquo; não diz se o escuro é o estado ou o destino. O <code>AppThemeToggle</code> desenha <strong>as duas faces</strong> no trilho e acende a que está valendo — é o controle no topo deste site.
       </DocNote>
 
       <DocNote title="O trilho desligado usa --input-fill">

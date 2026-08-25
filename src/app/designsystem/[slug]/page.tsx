@@ -47,12 +47,23 @@ export default async function DesignSystemDocPage({
             description={entry.description}
             source={entry.source}
             importLine={entry.importLine}
+            // A categoria do vizinho vai junto: numa ordem de leitura de 88
+            // páginas, o que se precisa saber ao avançar é se o próximo passo
+            // ainda é da mesma categoria ou se a leitura mudou de capítulo.
             previous={
                 previous
-                    ? { slug: previous.slug, name: previous.name }
+                    ? {
+                          slug: previous.slug,
+                          name: previous.name,
+                          category: previous.category,
+                      }
                     : undefined
             }
-            next={next ? { slug: next.slug, name: next.name } : undefined}
+            next={
+                next
+                    ? { slug: next.slug, name: next.name, category: next.category }
+                    : undefined
+            }
         >
             <Doc />
         </DocPage>

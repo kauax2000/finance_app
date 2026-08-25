@@ -10,7 +10,7 @@ import { RegisteredCreditCardFace } from "@/components/credit-cards/registered-c
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ChevronRightIcon } from "@heroicons/react/24/outline"
+import { ChevronRightIcon } from "@heroicons/react/16/solid"
 import { cn } from "@/lib/utils"
 
 const currencyFmt = new Intl.NumberFormat("pt-BR", {

@@ -2,8 +2,7 @@
 
 import * as React from "react"
 import { ptBR } from "date-fns/locale"
-import { CalendarIcon } from "@heroicons/react/24/outline"
-
+import { CalendarIcon } from "@heroicons/react/16/solid"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"

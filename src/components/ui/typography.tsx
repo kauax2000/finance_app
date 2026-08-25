@@ -7,7 +7,7 @@ function H1({ className, ...props }: React.ComponentProps<"h1">) {
     <h1
       data-slot="typography-h1"
       className={cn(
-        "font-heading scroll-m-20 text-3xl font-bold tracking-tight text-foreground",
+        "page-title scroll-m-20 text-3xl text-foreground",
         className
       )}
       {...props}

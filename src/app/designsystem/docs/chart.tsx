@@ -29,10 +29,7 @@ export default function ChartDoc() {
   return (
     <>
       <Usage>
-        O invólucro do Recharts. Ele existe para uma coisa: fazer as cores do
-        gráfico virem dos tokens do tema, sem nenhum <code>useTheme</code>{" "}
-        e sem
-        hex no meio do JSX. Qual paleta usar está em{" "}
+        O invólucro do Recharts: faz as cores virem dos tokens do tema, sem <code>useTheme</code> e sem hex no JSX. Qual paleta usar está em{" "}
         <Link href="/designsystem/graficos" className="underline">
           Gráficos
         </Link>
@@ -75,15 +72,7 @@ export default function ChartDoc() {
       </DocSection>
 
       <DocNote title="Como a variável chega ao SVG">
-        <code>ChartStyle</code> escreve um bloco de CSS escopado por{" "}
-        <code>[data-chart=…]</code> declarando{" "}
-        <code>--color-&lt;chave&gt;</code>{" "}
-        para cada série, com um valor no tema
-        claro e outro sob <code>.dark</code>. O atributo <code>fill</code>{" "}
-        do SVG
-        resolve <code>var()</code>{" "}
-        normalmente, então trocar de tema repinta o
-        gráfico sem re-renderizar nada em React.
+        <code>ChartStyle</code> escreve CSS escopado por <code>[data-chart=…]</code> declarando <code>--color-&lt;chave&gt;</code> por série, com um valor no claro e outro sob <code>.dark</code>. O <code>fill</code> resolve <code>var()</code>, então trocar de tema repinta sem re-renderizar React.
       </DocNote>
 
       <DocNote title="O container já tem aspecto">

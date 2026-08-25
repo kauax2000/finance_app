@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline"
+import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { MoneyDisplay } from "@/components/ui/money-display"

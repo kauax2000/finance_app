@@ -1,7 +1,7 @@
 "use client"
 
+import { CalendarIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
-import { Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { BudgetMonthSelects } from "@/components/categories/budget-month-selects"
 import {
@@ -71,7 +71,7 @@ function MonthNavArrowControls({
                 aria-label="Mês anterior"
                 onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, -1))}
             >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeftIcon className="h-4 w-4" />
             </Button>
 
             <div
@@ -148,7 +148,7 @@ function MonthNavArrowControls({
                 aria-label="Próximo mês"
                 onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, 1))}
             >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRightIcon className="h-4 w-4" />
             </Button>
         </>
     )
@@ -250,7 +250,7 @@ export function MonthNav({
                                         {shortLabel}
                                     </span>
                                 )}
-                                <ChevronDown
+                                <ChevronDownIcon
                                     className={cn(
                                         "shrink-0 opacity-60",
                                         iconOnly ? "size-3" : "size-3.5",
@@ -284,7 +284,7 @@ export function MonthNav({
                                         )
                                     }
                                 >
-                                    <ChevronLeft className="h-4 w-4" />
+                                    <ChevronLeftIcon className="h-4 w-4" />
                                 </Button>
                                 <Button
                                     type="button"
@@ -310,7 +310,7 @@ export function MonthNav({
                                         )
                                     }
                                 >
-                                    <ChevronRight className="h-4 w-4" />
+                                    <ChevronRightIcon className="h-4 w-4" />
                                 </Button>
                             </div>
                         </PopoverContent>
@@ -385,7 +385,7 @@ export function CategoriesToolbar({
                     aria-label="Nova categoria"
                     onClick={onNewCategory}
                 >
-                    <Plus className="size-4 shrink-0" />
+                    <PlusIcon className="size-4 shrink-0" />
                     <span className="hidden truncate md:inline">Nova categoria</span>
                 </Button>
             </div>

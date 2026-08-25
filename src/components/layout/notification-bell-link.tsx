@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect } from "react"
-import { BellIcon } from "@heroicons/react/24/outline"
+import { BellIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"

@@ -1,13 +1,12 @@
-import type { LucideIcon } from "lucide-react"
 import type { ComponentType, SVGProps } from "react"
 
-/** Heroicons v2 outline/solid icon component (categories, workspace picker, overflow menus). */
+/** Componente de ícone Heroicons v2. É o tipo de todo ícone de interface. */
 export type HeroIcon = ComponentType<SVGProps<SVGSVGElement>>
 
 export type NavigationItem = {
     name: string
     href: string
-    icon: LucideIcon
+    icon: HeroIcon
     /** Ex.: badge Beta na sidebar e no tooltip quando colapsada */
     beta?: boolean
 }

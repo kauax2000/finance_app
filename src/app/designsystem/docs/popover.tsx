@@ -15,10 +15,7 @@ export default function PopoverDoc() {
   return (
     <>
       <Usage>
-        Uma camada ancorada a um gatilho, aberta por clique. Diferente do
-        tooltip, funciona no toque e pode conter controles. Diferente do diálogo,
-        não bloqueia a tela — o que o torna certo para um ajuste rápido e errado
-        para uma decisão que precisa de atenção.
+        Uma camada ancorada a um gatilho, aberta por clique. Diferente do tooltip, funciona no toque; diferente do diálogo, não bloqueia a tela — certo para um ajuste rápido, errado para uma decisão.
       </Usage>
 
       <DocSection
@@ -49,11 +46,7 @@ export default function PopoverDoc() {
       </DocSection>
 
       <DocNote title="Para seletor ancorado num campo, use FormPickerPopover">
-        Um popover que sai de um campo de formulário precisa de largura igual à
-        do gatilho, de folga de colisão e de não roubar o foco ao abrir.{" "}
-        <code>FormPickerPopoverContent</code>{" "}
-        já resolve os três; repetir isso à
-        mão é como cada seletor acaba se comportando um pouco diferente.
+        Um popover que sai de um campo precisa de largura igual à do gatilho, folga de colisão e não roubar o foco. <code>FormPickerPopoverContent</code> resolve os três; repetir à mão é como cada seletor acaba diferente.
       </DocNote>
     </>
   )

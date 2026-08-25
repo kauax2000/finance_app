@@ -1,5 +1,6 @@
 "use client"
 
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
 import useEmblaCarousel, {
   type UseEmblaCarouselType,
@@ -7,8 +8,6 @@ import useEmblaCarousel, {
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
-
 type CarouselApi = UseEmblaCarouselType[1]
 type UseCarouselParameters = Parameters<typeof useEmblaCarousel>
 type CarouselOptions = UseCarouselParameters[0]

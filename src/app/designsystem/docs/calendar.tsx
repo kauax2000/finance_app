@@ -9,10 +9,7 @@ export default function CalendarDoc() {
   return (
     <>
       <Usage>
-        A grade de um mês. Quase sempre ela aparece dentro de um{" "}
-        <code>DatePicker</code>, que já resolve o popover e o rótulo. Use o
-        Calendar solto quando a grade é o assunto da tela — um mês de
-        vencimentos, por exemplo.
+        A grade de um mês. Quase sempre vem dentro de um <code>DatePicker</code>, que já resolve popover e rótulo. Solto, só quando a grade é o assunto da tela.
       </Usage>
 
       <DocSection
@@ -31,9 +28,7 @@ export default function CalendarDoc() {
       </DocNote>
 
       <DocNote title="Para dia do mês recorrente, ele é o componente errado">
-        &ldquo;Todo dia 5&rdquo; não pertence a nenhum mês. Um calendário obriga
-        a pessoa a escolher um março arbitrário para dizer uma coisa que não tem
-        mês. Ali o certo é um <code>NativeSelect</code> de 1 a 31.
+        &ldquo;Todo dia 5&rdquo; não pertence a nenhum mês, e um calendário obriga a escolher um março arbitrário. Ali o certo é um <code>NativeSelect</code> de 1 a 31.
       </DocNote>
     </>
   )

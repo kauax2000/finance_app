@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ChevronUpDownIcon } from "@heroicons/react/24/outline"
+import { ChevronUpDownIcon } from "@heroicons/react/16/solid"
 import { useWorkspace } from "@/components/workspace-provider"
 import { CreateProjectDialog } from "@/components/workspace/create-project-dialog"
 import { WorkspaceBrandMark } from "@/components/workspace/workspace-brand-mark"

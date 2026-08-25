@@ -7,9 +7,7 @@ export default function BadgeDoc() {
   return (
     <>
       <Usage>
-        Um rótulo que <strong>descreve</strong>, nunca que age. Se o usuário pode
-        clicar, é um Button ou um Toggle — um badge clicável não recebe foco nem
-        é anunciado como controle.
+        Um rótulo que <strong>descreve</strong>, nunca que age. Se dá para clicar, é <code>Button</code> ou <code>Toggle</code> — um badge clicável não recebe foco nem é anunciado como controle.
       </Usage>
 
       <DocSection
@@ -50,11 +48,7 @@ export default function BadgeDoc() {
       </DocSection>
 
       <DocNote title="Badge ou chip?">
-        <code>src/lib/tag-chip-classes.ts</code>{" "}
-        existe para o caso em que a
-        superfície tonal precisa entrar num elemento que já é outro componente —
-        o gatilho de um filtro, um item de menu. Quando o rótulo é só um rótulo,
-        é Badge. Não duplique as classes de chip fora desses dois lugares.
+        <code>tag-chip-classes.ts</code> é para quando a superfície tonal entra num elemento que já é outro componente. Quando o rótulo é só rótulo, é Badge — e as classes de chip não se duplicam fora desses dois lugares.
       </DocNote>
 
       <PropsTable

@@ -1,8 +1,7 @@
 "use client"
 
+import { CheckIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
-import { CheckIcon } from "lucide-react"
-
 import { cn } from "@/lib/utils"
 
 /**

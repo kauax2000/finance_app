@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { PencilIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon, ArrowPathRoundedSquareIcon } from "@heroicons/react/24/outline"
+import { ArrowPathRoundedSquareIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import type { Transaction } from "@/lib/supabase"
 import {
     formatTransactionDayPtBr,

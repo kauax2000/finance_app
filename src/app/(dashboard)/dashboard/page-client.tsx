@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
-import { ExclamationTriangleIcon } from "@heroicons/react/24/outline"
+import { ExclamationTriangleIcon } from "@heroicons/react/16/solid"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"

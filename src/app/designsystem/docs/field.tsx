@@ -17,12 +17,7 @@ export default function FieldDoc() {
   return (
     <>
       <Usage>
-        A estrutura completa de um campo: rótulo, controle, descrição e erro,
-        já com as ligações de acessibilidade entre eles. Escrever isso à mão
-        significa lembrar de <code>htmlFor</code>,{" "}
-        <code>aria-describedby</code> e <code>aria-invalid</code>{" "}
-        toda vez — e o
-        campo em que alguém esquecer é o campo que o leitor de tela não explica.
+        A estrutura completa de um campo, com <code>htmlFor</code>, <code>aria-describedby</code> e <code>aria-invalid</code> já ligados. O campo em que alguém esquecer é o campo que o leitor de tela não explica.
       </Usage>
 
       <DocSection

@@ -13,16 +13,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-    ArrowRightIcon,
-    CalendarIcon,
-    LockClosedIcon,
-    ArrowRightStartOnRectangleIcon,
-    EllipsisVerticalIcon,
-    PencilIcon,
-    TrashIcon,
-} from "@heroicons/react/24/outline"
-import { Activity, UserCheck } from "lucide-react"
+import { ArrowRightIcon, ArrowRightStartOnRectangleIcon, CalendarIcon, ChartBarIcon, CheckBadgeIcon, EllipsisVerticalIcon, LockClosedIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { getInitials } from "@/lib/utils"
 import { ChangePasswordDialog, DeleteAccountDialog } from "@/components/security"
 import { AccountPageSkeleton } from "@/components/account/account-page-skeleton"
@@ -159,7 +150,7 @@ export default function AccountPage() {
                         >
                             <div className="flex min-w-0 flex-1 items-center gap-3">
                                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40">
-                                    <UserCheck className="h-4 w-4 text-muted-foreground" />
+                                    <CheckBadgeIcon className="h-4 w-4 text-muted-foreground" />
                                 </div>
                                 <div className="min-w-0">
                                     <p className="text-sm font-medium">Sessões ativas</p>
@@ -176,7 +167,7 @@ export default function AccountPage() {
                         >
                             <div className="flex min-w-0 flex-1 items-center gap-3">
                                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40">
-                                    <Activity className="h-4 w-4 text-muted-foreground" />
+                                    <ChartBarIcon className="h-4 w-4 text-muted-foreground" />
                                 </div>
                                 <div className="min-w-0">
                                     <p className="text-sm font-medium">Histórico de atividades</p>

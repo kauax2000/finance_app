@@ -1,8 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { ExclamationTriangleIcon } from "@heroicons/react/24/outline"
-
+import { ExclamationTriangleIcon } from "@heroicons/react/16/solid"
 import { ROUTES } from "@/config/navigation"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"

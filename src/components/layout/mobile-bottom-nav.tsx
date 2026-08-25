@@ -1,8 +1,9 @@
 "use client"
+
+import { EllipsisHorizontalIcon } from "@heroicons/react/16/solid"
 /* eslint-disable @next/next/no-img-element -- bottom-nav avatar from user metadata URL */
 
 import { usePathname } from "next/navigation"
-import { Ellipsis } from "lucide-react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { QuickActionButton } from "@/components/layout/quick-actions"
 import { MobileAccountMenu } from "@/components/layout/mobile-account-menu"
@@ -61,7 +62,7 @@ function MobileAccountMenuSlotContent({
     function renderSlot() {
         if (showEllipsis) {
             return (
-                <Ellipsis
+                <EllipsisHorizontalIcon
                     className={mobileNavTabIconClass(false)}
                     aria-hidden
                 />

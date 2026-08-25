@@ -29,11 +29,7 @@ export default function DatasDoc() {
   return (
     <>
       <Usage>
-        Todas em <code>src/lib/transaction-date.ts</code>. Nenhuma tela chama{" "}
-        <code>toLocaleDateString</code> direto: a diferença entre{" "}
-        <code>05/03/26</code> e <code>5 de março</code>{" "}
-        é uma decisão de produto,
-        e ela precisa estar num lugar só.
+        Todas em <code>src/lib/transaction-date.ts</code>. Nenhuma tela chama <code>toLocaleDateString</code> direto: a diferença entre <code>05/03/26</code> e <code>5 de março</code> é decisão de produto, e mora num lugar só.
       </Usage>
 
       <Group title="Os formatos">
@@ -75,14 +71,7 @@ export default function DatasDoc() {
       </Group>
 
       <DocNote title="Fuso: a data de uma transação é uma data, não um instante">
-        Uma compra do dia 1º não pode virar 28 de fevereiro porque o servidor
-        está em UTC. Por isso existem <code>parseYmdLocal</code> e{" "}
-        <code>localYmdFromDate</code>: eles tratam <code>2026-03-01</code>{" "}
-        como
-        um dia do calendário local, e não como meia-noite UTC.{" "}
-        <code>calendarYmdToStorageIso</code>{" "}
-        faz o caminho de volta na hora de
-        gravar.
+        Uma compra do dia 1º não pode virar 28 de fevereiro porque o servidor está em UTC. <code>parseYmdLocal</code> e <code>localYmdFromDate</code> tratam <code>2026-03-01</code> como dia do calendário local; <code>calendarYmdToStorageIso</code> faz o caminho de volta.
       </DocNote>
 
       <DocNote title="O travessão como valor vazio">

@@ -1,10 +1,9 @@
 "use client"
 
+import { Bars3Icon } from "@heroicons/react/16/solid"
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { MenuIcon } from "lucide-react"
-
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
@@ -81,7 +80,7 @@ function DsTopBar() {
               className="lg:hidden"
               aria-label="Abrir navegação do design system"
             >
-              <MenuIcon aria-hidden />
+              <Bars3Icon aria-hidden />
             </Button>
           </SheetTrigger>
           {/* A rolagem é do `div` de dentro, não do `SheetContent`.

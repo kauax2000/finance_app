@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { DevicePhoneMobileIcon } from "@heroicons/react/24/outline"
+import { DevicePhoneMobileIcon } from "@heroicons/react/20/solid"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Muted, P } from "@/components/ui/typography"

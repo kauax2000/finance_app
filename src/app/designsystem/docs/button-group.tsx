@@ -1,7 +1,6 @@
 "use client"
 
-import { ChevronDownIcon } from "lucide-react"
-
+import { ChevronDownIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
 import { DocNote, DocSection, Usage } from "../ds-doc"
@@ -10,12 +9,7 @@ export default function ButtonGroupDoc() {
   return (
     <>
       <Usage>
-        Botões que agem sobre a <strong>mesma coisa</strong>{" "}
-        e por isso ficam
-        colados: uma ação com seu menu de variações, um par de navegação. Se as
-        ações são independentes, elas ficam separadas por <code>gap</code>{" "}
-        — colar
-        sugere uma relação que não existe.
+        Botões que agem sobre a <strong>mesma coisa</strong> e por isso ficam colados: uma ação com seu menu, um par de navegação. Ações independentes ficam separadas por <code>gap</code>.
       </Usage>
 
       <DocSection

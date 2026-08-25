@@ -1,7 +1,7 @@
 "use client"
 
+import { CalendarIcon, ChevronDownIcon, InformationCircleIcon } from "@heroicons/react/16/solid"
 import { useMemo } from "react"
-import { Calendar, ChevronDown, Info } from "lucide-react"
 import { CreditCardBillingFormPreview } from "@/components/credit-cards/credit-card-billing-form-preview"
 import { CreditCardBrandPreview } from "@/components/credit-cards/credit-card-brand-preview"
 import {
@@ -77,7 +77,7 @@ function CreditCardBillingSection({
         <div className="space-y-3 rounded-lg border border-border/60 bg-muted/10 p-3 dark:bg-muted/5">
             <div className="space-y-1">
                 <div className="flex items-center gap-1.5">
-                    <Calendar
+                    <CalendarIcon
                         className="size-3.5 shrink-0 text-muted-foreground"
                         aria-hidden
                     />
@@ -170,7 +170,7 @@ function CreditCardBillingSection({
                     className="flex items-start gap-1.5 text-2xs leading-snug text-warning-muted-foreground"
                     role="status"
                 >
-                    <Info className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                    <InformationCircleIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
                     {CREDIT_CARD_BILLING_FORM.unusualDueWarning}
                 </p>
             ) : null}
@@ -186,7 +186,7 @@ function CreditCardBillingSection({
                         className="group h-9 w-full justify-between gap-2 px-2 text-xs font-medium text-muted-foreground hover:text-foreground"
                     >
                         {CREDIT_CARD_BILLING_FORM.collapsible.trigger}
-                        <ChevronDown
+                        <ChevronDownIcon
                             className="size-3.5 shrink-0 transition-transform group-data-[state=open]:rotate-180"
                             aria-hidden
                         />
@@ -208,7 +208,7 @@ function CreditCardBillingSection({
                         )}
                     </div>
                     <Alert variant="info" className="gap-2 px-3 py-2.5">
-                        <Info className="size-4" aria-hidden />
+                        <InformationCircleIcon className="size-4" aria-hidden />
                         <AlertTitle className="text-xs font-medium">
                             {CREDIT_CARD_BILLING_FORM.results.title}
                         </AlertTitle>

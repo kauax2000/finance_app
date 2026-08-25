@@ -8,9 +8,7 @@ export default function SliderDoc() {
   return (
     <>
       <Usage>
-        Valor contínuo em que o <strong>aproximado basta</strong>: uma faixa de
-        filtro, um limite de alerta. Nunca para um valor em reais que precisa ser
-        exato — ali o componente é o <code>MoneyInput</code>.
+        Valor contínuo em que o <strong>aproximado basta</strong>: uma faixa de filtro, um limite de alerta. Nunca para um valor em reais exato — ali o componente é o <code>MoneyInput</code>.
       </Usage>
 
       <DocSection

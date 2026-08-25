@@ -7,9 +7,7 @@ export default function KbdDoc() {
   return (
     <>
       <Usage>
-        Representa uma tecla numa dica de atalho. Combine teclas com{" "}
-        <code>KbdGroup</code>. Só faz sentido onde existe teclado: numa dica que
-        aparece no telefone, ele é ruído.
+        Representa uma tecla numa dica de atalho; combine com <code>KbdGroup</code>. Só faz sentido onde existe teclado — no telefone é ruído.
       </Usage>
 
       <DocSection

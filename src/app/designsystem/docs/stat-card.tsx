@@ -1,7 +1,6 @@
 "use client"
 
-import { ArrowDownRightIcon, ArrowUpRightIcon } from "lucide-react"
-
+import { ArrowDownRightIcon, ArrowUpRightIcon } from "@heroicons/react/16/solid"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import {
   StatCard,
@@ -15,9 +14,7 @@ export default function StatCardDoc() {
   return (
     <>
       <Usage>
-        Um número que importa, com a variação que o contextualiza. O tom vem do{" "}
-        <strong>tipo do dado</strong>, não de ele ser bom ou ruim: despesa é
-        sempre <code>expense</code>, mesmo quando caiu.
+        Um número que importa, com a variação que o contextualiza. O tom vem do <strong>tipo do dado</strong>: despesa é sempre <code>expense</code>, mesmo quando caiu.
       </Usage>
 
       <DocSection

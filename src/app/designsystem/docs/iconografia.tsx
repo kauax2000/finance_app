@@ -1,16 +1,12 @@
 "use client"
 
-import {
-  ArrowDownRightIcon,
-  ArrowUpRightIcon,
-  CalendarIcon,
-  CreditCardIcon,
-  PiggyBankIcon,
-  ReceiptIcon,
-  SettingsIcon,
-  WalletIcon,
-} from "lucide-react"
-
+import { ArrowDownRightIcon, ArrowUpRightIcon, Cog6ToothIcon } from "@heroicons/react/16/solid"
+// A demo mostra cada degrau no conjunto que lhe corresponde, e não a mesma
+// arte reduzida — que é justamente o erro que esta página existe para evitar.
+import { WalletIcon, WalletIcon as WalletMicroIcon } from "@heroicons/react/16/solid"
+import { WalletIcon as WalletMiniIcon } from "@heroicons/react/20/solid"
+import { WalletIcon as WalletOutlineIcon } from "@heroicons/react/24/outline"
+import { BanknotesIcon, CalendarIcon, CreditCardIcon, ReceiptPercentIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { DocNote, DocSection, Usage } from "../ds-doc"
 import { Group, Spec, Stack } from "../ds-kit"
@@ -27,10 +23,7 @@ export default function IconografiaDoc() {
   return (
     <>
       <Usage>
-        Um ícone sozinho num botão <strong>precisa</strong> de{" "}
-        <code>aria-label</code>: sem ele o leitor de tela anuncia
-        &ldquo;botão&rdquo; e nada mais. Um ícone ao lado de texto é decoração e
-        leva <code>aria-hidden</code>, senão o rótulo é lido duas vezes.
+        Ícone sozinho num botão <strong>precisa</strong> de <code>aria-label</code>: sem ele o leitor de tela anuncia &ldquo;botão&rdquo; e nada mais. Ícone ao lado de texto é decoração e leva <code>aria-hidden</code>.
       </Usage>
 
       <DocSection
@@ -39,14 +32,19 @@ export default function IconografiaDoc() {
         previewClassName="flex-col items-stretch gap-3"
       >
         <Stack className="gap-2">
-          {SIZES.map(([cls, px, use]) => (
+          {SIZES.map(([cls, px_, use]) => (
             <div key={cls} className="flex items-center gap-3">
-              <WalletIcon className={`${cls} shrink-0 text-foreground`} aria-hidden />
+              {(() => {
+                const px = Number(String(px_).replace("px", ""))
+                const Glifo =
+                  px >= 24 ? WalletOutlineIcon : px >= 20 ? WalletMiniIcon : WalletMicroIcon
+                return <Glifo className={`${cls} shrink-0 text-foreground`} aria-hidden />
+              })()}
               <code className="w-20 shrink-0 font-mono text-2xs text-foreground">
                 {cls}
               </code>
               <span className="nums w-12 shrink-0 text-2xs text-muted-foreground">
-                {px}
+                {px_}
               </span>
               <span className="text-xs text-muted-foreground">{use}</span>
             </div>
@@ -62,7 +60,7 @@ export default function IconografiaDoc() {
 </Button>
 
 <Button size="icon" aria-label="Configurações">
-  <SettingsIcon aria-hidden />
+  <Cog6ToothIcon aria-hidden />
 </Button>`}
       >
         <Button>
@@ -70,7 +68,7 @@ export default function IconografiaDoc() {
           Nova carteira
         </Button>
         <Button variant="outline" size="icon" aria-label="Configurações">
-          <SettingsIcon aria-hidden />
+          <Cog6ToothIcon aria-hidden />
         </Button>
         <span className="inline-flex items-center gap-1.5 text-sm text-income">
           <ArrowUpRightIcon className="size-4" aria-hidden />
@@ -88,8 +86,8 @@ export default function IconografiaDoc() {
             {[
               [WalletIcon, "Carteira / conta"],
               [CreditCardIcon, "Cartão de crédito"],
-              [ReceiptIcon, "Fatura / transação"],
-              [PiggyBankIcon, "Meta / reserva"],
+              [ReceiptPercentIcon, "Fatura / transação"],
+              [BanknotesIcon, "Meta / reserva"],
               [CalendarIcon, "Data / vencimento"],
               [ArrowUpRightIcon, "Receita"],
               [ArrowDownRightIcon, "Despesa"],
@@ -108,15 +106,39 @@ export default function IconografiaDoc() {
         </Spec>
       </Group>
 
-      <DocNote title="O projeto usa duas bibliotecas de ícones">
-        <code>components.json</code> declara <code>lucide</code>, e é o que os
-        componentes do registry trazem. Mas Heroicons aparece em 88 arquivos
-        contra 40 do Lucide — inclusive dentro de <code>components/ui/</code>, em{" "}
-        <code>page-header.tsx</code>. As duas famílias têm gramática diferente
-        (traço, cantos, grade), e misturá-las na mesma tela se nota. Unificar é
-        uma migração grande e está no relatório de conformidade; até lá, a regra
-        é <strong>não misturar dentro de uma mesma tela</strong>.
+      <DocNote title="O conjunto muda com o tamanho, não a escala">
+        Os conjuntos menores do Heroicons não são o de 24 reduzido: são{" "}
+        <strong>redesenhos</strong>, e só existem em solid.{" "}
+        <code>size-6</code> e acima usam <code>24/outline</code>;{" "}
+        <code>size-5</code> usa o <strong>mini</strong> (<code>20/solid</code>);
+        e de <code>size-4</code> para baixo é o <strong>micro</strong>{" "}
+        (<code>16/solid</code>). Um ícone sem classe de tamanho também é micro —
+        o componente que o contém aplica <code>size-4</code>.
       </DocNote>
+
+      <DocNote title="Por que não dá para só encolher o outline">
+        O traço do <code>24/outline</code>{" "}
+        é 1,5 desenhado para 24px. A 16 ele vira 1px sobre detalhe que foi
+        construído para caber em 24 — o desenho embola e o ícone fica lavado ao
+        lado do texto. O micro tem menos detalhe e peso sólido justamente para
+        sobreviver ali.
+      </DocNote>
+
+      <DocNote title="Ícone como valor fica no outline">
+        Mapa de ícone e config de navegação — <code>CATEGORY_ICONS</code>,{" "}
+        <code>WORKSPACE_ICON_MAP</code>, <code>NAVIGATION</code>{" "}
+        — não sabem em que tamanho serão desenhados: quem renderiza decide. Esses
+        ficam em <code>24/outline</code>, que é o único conjunto que se comporta
+        bem em qualquer corpo.
+      </DocNote>
+
+      <DocNote title="Círculo puro não é ícone">
+        O ponto do <code>RadioGroup</code>{" "}
+        e o marcador de regra de senha eram um SVG de círculo. Heroicons não traz
+        círculo puro — e nem deveria: <code>rounded-full</code>{" "}
+        com cor de fundo desenha a mesma coisa sem uma requisição.
+      </DocNote>
+
     </>
   )
 }

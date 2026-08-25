@@ -34,8 +34,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { ArrowLeftIcon, TrashIcon } from "@heroicons/react/24/outline"
-
+import { ArrowLeftIcon, TrashIcon } from "@heroicons/react/16/solid"
 export default function CreditCardsPageClient() {
     const { user, loading: authLoading } = useAuth()
     const { currentWorkspaceId, loading: workspaceLoading } = useWorkspace()

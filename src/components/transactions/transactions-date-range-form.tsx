@@ -1,6 +1,6 @@
 "use client"
 
-import { XMarkIcon } from "@heroicons/react/24/outline"
+import { XMarkIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { DatePicker } from "@/components/ui/date-picker"
 import { Label } from "@/components/ui/label"

@@ -17,13 +17,7 @@ export default function DinheiroDoc() {
   return (
     <>
       <Usage>
-        Este é o padrão mais importante deste design system, porque é o assunto
-        do produto. <strong>Nunca</strong> escreva{" "}
-        <code>Intl.NumberFormat</code> ou <code>toLocaleString</code>{" "}
-        numa tela:
-        cada chamada solta é livre para divergir em casas decimais, símbolo e
-        separador, e nenhuma delas aparece quando alguém procura por &ldquo;como
-        formatamos dinheiro&rdquo;.
+        O padrão mais importante deste design system, porque é o assunto do produto. <strong>Nunca</strong> escreva <code>Intl.NumberFormat</code> numa tela: cada chamada solta diverge, e nenhuma aparece quando alguém procura como o app formata dinheiro.
       </Usage>
 
       <Group

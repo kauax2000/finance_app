@@ -1,7 +1,6 @@
 "use client"
 
-import { MoreHorizontalIcon } from "lucide-react"
-
+import { EllipsisHorizontalIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -24,9 +23,7 @@ export default function DropdownMenuDoc() {
   return (
     <>
       <Usage>
-        Ações sobre um item específico. Se as opções <em>selecionam</em> um valor
-        em vez de agir, o componente é <code>Select</code> ou{" "}
-        <code>Combobox</code>: um menu não guarda o que foi escolhido.
+        Ações sobre um item. Se as opções <em>selecionam</em> um valor em vez de agir, use <code>Select</code> ou <code>Combobox</code>: um menu não guarda o que foi escolhido.
       </Usage>
 
       <DocSection
@@ -34,7 +31,7 @@ export default function DropdownMenuDoc() {
         code={`<DropdownMenu>
   <DropdownMenuTrigger asChild>
     <Button variant="ghost" size="icon" aria-label="Ações da transação">
-      <MoreHorizontalIcon aria-hidden />
+      <EllipsisHorizontalIcon aria-hidden />
     </Button>
   </DropdownMenuTrigger>
   <DropdownMenuContent align="end">
@@ -47,7 +44,7 @@ export default function DropdownMenuDoc() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" aria-label="Ações da transação">
-              <MoreHorizontalIcon aria-hidden />
+              <EllipsisHorizontalIcon aria-hidden />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52">

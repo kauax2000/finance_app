@@ -12,9 +12,7 @@ export default function StepperDoc() {
   return (
     <>
       <Usage>
-        Um fluxo com começo e fim conhecidos: onboarding, importação de extrato.
-        Ele responde &ldquo;quanto falta&rdquo;, que é a pergunta que faz alguém
-        desistir no meio. Se o número de etapas varia, ele mente — e aí não use.
+        Um fluxo com começo e fim conhecidos. Ele responde &ldquo;quanto falta&rdquo;, que é a pergunta que faz alguém desistir no meio. Se o número de etapas varia, ele mente.
       </Usage>
 
       <DocSection
@@ -36,11 +34,7 @@ export default function StepperDoc() {
       </DocSection>
 
       <DocNote title="No telefone o rótulo some">
-        Quatro palavras lado a lado não cabem em 360px sem encolher a ponto de
-        não se ler. Abaixo de <code>sm</code>{" "}
-        ficam só os marcadores, e a etapa
-        atual continua nomeada no título acima do componente — o que o leitor de
-        tela sempre teve, via <code>aria-current=&quot;step&quot;</code>.
+        Quatro palavras lado a lado não cabem em 360px. Abaixo de <code>sm</code> ficam só os marcadores, e a etapa atual continua nomeada no título acima — e em <code>aria-current=&quot;step&quot;</code>.
       </DocNote>
 
       <PropsTable

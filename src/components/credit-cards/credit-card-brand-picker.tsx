@@ -2,7 +2,7 @@
 
 import type { ComponentType } from "react"
 import { useMemo, useState } from "react"
-import { NoSymbolIcon, CreditCardIcon } from "@heroicons/react/24/outline"
+import { CreditCardIcon, NoSymbolIcon } from "@heroicons/react/16/solid"
 import {
     LogoAmericanExpress,
     LogoDinersClub,

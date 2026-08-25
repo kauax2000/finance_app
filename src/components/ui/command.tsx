@@ -1,5 +1,6 @@
 "use client"
 
+import { CheckIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
 import { Command as CommandPrimitive } from "cmdk"
 
@@ -15,8 +16,6 @@ import {
   InputGroup,
   InputGroupAddon,
 } from "@/components/ui/input-group"
-import { SearchIcon, CheckIcon } from "lucide-react"
-
 function Command({
   className,
   ...props
@@ -85,7 +84,7 @@ function CommandInput({
           {...props}
         />
         <InputGroupAddon>
-          <SearchIcon className="size-4 shrink-0 opacity-50" />
+          <MagnifyingGlassIcon className="size-4 shrink-0 opacity-50" />
         </InputGroupAddon>
       </InputGroup>
     </div>

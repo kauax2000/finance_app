@@ -52,7 +52,8 @@ import {
     MobileSheetFormStickyHeader,
     mobileFormSheetContentClassName,
 } from "@/components/ui/mobile-sheet-form-chrome"
-import { PlusIcon, ChartPieIcon } from "@heroicons/react/24/outline"
+import { PlusIcon } from "@heroicons/react/16/solid"
+import { ChartPieIcon } from "@heroicons/react/24/outline"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
 import { upsertCategoryBudget, deleteCategoryBudgetById } from "@/lib/category-budget-ops"
 import { deleteCategoryById, saveCategory } from "@/lib/categories/mutations"

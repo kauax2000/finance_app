@@ -21,7 +21,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
-import { ChevronDownIcon, XMarkIcon } from "@heroicons/react/24/outline"
+import { ChevronDownIcon, XMarkIcon } from "@heroicons/react/16/solid"
 import {
     Select,
     SelectContent,

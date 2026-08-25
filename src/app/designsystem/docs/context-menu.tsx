@@ -13,11 +13,7 @@ export default function ContextMenuDoc() {
   return (
     <>
       <Usage>
-        As mesmas ações do <code>DropdownMenu</code>, abertas pelo botão direito.
-        É um atalho para quem já conhece o app, <strong>nunca</strong>{" "}
-        o único
-        caminho para uma ação: não existe botão direito no toque, e ninguém
-        descobre um menu invisível.
+        As ações do <code>DropdownMenu</code>, abertas pelo botão direito. É atalho, <strong>nunca</strong> o único caminho: não existe botão direito no toque.
       </Usage>
 
       <DocSection
@@ -45,9 +41,7 @@ export default function ContextMenuDoc() {
       </DocSection>
 
       <DocNote title="Ainda não há consumidor no produto">
-        Ele entrou junto com o resto do catálogo do registry. Enquanto nenhuma
-        tela o usar, essa página é a única referência — e a regra acima é o que
-        decide se ele deve mesmo aparecer numa tela.
+        Nenhuma tela o usa. Enquanto isso, a regra acima é o que decide se ele deve mesmo aparecer numa.
       </DocNote>
     </>
   )

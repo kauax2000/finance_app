@@ -7,9 +7,7 @@ export default function SheetDragHandleDoc() {
   return (
     <>
       <Usage>
-        A alça no topo de uma folha inferior. Ela é a convenção que diz &ldquo;isto
-        se arrasta e isto se fecha&rdquo; — a mesma que o iOS e o Android usam,
-        e a única pista disso numa folha sem botão de fechar visível.
+        A alça no topo de uma folha inferior. É a convenção de iOS e Android que diz &ldquo;isto se arrasta&rdquo;, e a única pista disso numa folha sem botão de fechar visível.
       </Usage>
 
       <DocSection

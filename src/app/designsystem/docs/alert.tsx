@@ -1,12 +1,6 @@
 "use client"
 
-import {
-  AlertTriangleIcon,
-  CheckCircle2Icon,
-  InfoIcon,
-  XCircleIcon,
-} from "lucide-react"
-
+import { CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XCircleIcon } from "@heroicons/react/16/solid"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
@@ -14,43 +8,39 @@ export default function AlertDoc() {
   return (
     <>
       <Usage>
-        Uma mensagem que fica na tela porque é sobre <strong>o conteúdo dela</strong>:
-        &ldquo;esta fatura já foi fechada&rdquo;, &ldquo;faltam dados para o
-        cálculo&rdquo;. Confirmação de uma ação que acabou de acontecer é{" "}
-        <code>toast</code>; aviso sobre o app inteiro é{" "}
-        <code>AnnouncementBar</code>.
+        Mensagem que fica na tela porque é sobre <strong>o conteúdo dela</strong>. Confirmação do que acabou de acontecer é <code>toast</code>; aviso sobre o app inteiro é <code>AnnouncementBar</code>.
       </Usage>
 
       <DocSection
         title="Variantes"
         code={`<Alert variant="info">
-  <InfoIcon />
+  <InformationCircleIcon />
   <AlertTitle>Título</AlertTitle>
   <AlertDescription>Explicação.</AlertDescription>
 </Alert>`}
         previewClassName="flex-col items-stretch gap-3"
       >
         <Alert>
-          <InfoIcon />
+          <InformationCircleIcon />
           <AlertTitle>Padrão</AlertTitle>
           <AlertDescription>
             Sem cor: o aviso é neutro e não pede ação.
           </AlertDescription>
         </Alert>
         <Alert variant="info">
-          <InfoIcon />
+          <InformationCircleIcon />
           <AlertTitle>Parcelas futuras não entram</AlertTitle>
           <AlertDescription>
             O total considera só o que já foi lançado neste mês.
           </AlertDescription>
         </Alert>
         <Alert variant="success">
-          <CheckCircle2Icon />
+          <CheckCircleIcon />
           <AlertTitle>Fatura paga</AlertTitle>
           <AlertDescription>Registrada em 05/04.</AlertDescription>
         </Alert>
         <Alert variant="warning">
-          <AlertTriangleIcon />
+          <ExclamationTriangleIcon />
           <AlertTitle>Orçamento perto do limite</AlertTitle>
           <AlertDescription>
             Mercado está em 88% com 9 dias restantes.

@@ -1,7 +1,6 @@
 "use client"
 
-import { SearchIcon } from "lucide-react"
-
+import { MagnifyingGlassIcon } from "@heroicons/react/16/solid"
 import {
   InputGroup,
   InputGroupAddon,
@@ -15,24 +14,20 @@ export default function InputGroupDoc() {
   return (
     <>
       <Usage>
-        Um campo com algo acoplado: um ícone de busca, uma unidade, um botão de
-        ação. O conjunto se comporta como um controle só — o foco desenha o anel
-        em volta do grupo inteiro, não do <code>&lt;input&gt;</code>{" "}
-        escondido lá
-        dentro.
+        Um campo com algo acoplado: ícone, unidade, botão. O conjunto se comporta como um controle só — o foco desenha o anel em volta do grupo inteiro.
       </Usage>
 
       <DocSection
         title="Com ícone"
         code={`<InputGroup>
-  <InputGroupAddon><SearchIcon aria-hidden /></InputGroupAddon>
+  <InputGroupAddon><MagnifyingGlassIcon aria-hidden /></InputGroupAddon>
   <InputGroupInput placeholder="Buscar transação" />
 </InputGroup>`}
         previewClassName="flex-col items-stretch"
       >
         <InputGroup className="w-full max-w-sm">
           <InputGroupAddon>
-            <SearchIcon aria-hidden />
+            <MagnifyingGlassIcon aria-hidden />
           </InputGroupAddon>
           <InputGroupInput placeholder="Buscar transação" aria-label="Buscar" />
         </InputGroup>

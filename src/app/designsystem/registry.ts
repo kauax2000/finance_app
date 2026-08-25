@@ -87,7 +87,7 @@ export const REGISTRY: RegistryEntry[] = [
     slug: "tipografia",
     name: "Tipografia",
     category: "Fundações",
-    description: "Inter para texto, Plus Jakarta para títulos, Geist Mono para números.",
+    description: "Inter na interface, Ledger no display, Geist Mono no dinheiro.",
     source: "src/components/ui/typography.tsx",
     importLine: 'import { H1, H2, Lead, P, Muted } from "@/components/ui/typography"',
   },
@@ -123,9 +123,9 @@ export const REGISTRY: RegistryEntry[] = [
     slug: "iconografia",
     name: "Iconografia",
     category: "Fundações",
-    description: "Lucide, tamanhos por contexto e quando um ícone precisa de rótulo.",
-    source: "lucide-react",
-    importLine: 'import { WalletIcon } from "lucide-react"',
+    description: "Heroicons, tamanhos por contexto e quando um ícone precisa de rótulo.",
+    source: "@heroicons/react/24/outline",
+    importLine: 'import { WalletIcon } from "@heroicons/react/24/outline"',
   },
 
   // ── Átomos ──────────────────────────────────────────────────────────────

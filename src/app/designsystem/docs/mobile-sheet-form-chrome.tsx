@@ -11,12 +11,7 @@ export default function MobileSheetFormChromeDoc() {
   return (
     <>
       <Usage>
-        A moldura de um formulário em folha inferior: alça, cabeçalho fixo com
-        título e fechar, e o corpo que rola entre eles. Existe porque um
-        formulário longo no telefone precisa que o título e a ação{" "}
-        <strong>não</strong>{" "}
-        rolem junto — senão a pessoa perde de vista o que
-        está preenchendo e onde fica o salvar.
+        A moldura de um formulário em folha inferior: alça, cabeçalho fixo e o corpo que rola entre eles. O título e a ação <strong>não</strong> rolam junto — senão some de vista o que se preenche e onde fica o salvar.
       </Usage>
 
       <DocSection
@@ -73,13 +68,7 @@ export default function MobileSheetFormChromeDoc() {
       </DocSection>
 
       <DocNote title="Ele só funciona dentro de um Sheet">
-        Com a prop <code>title</code>, o cabeçalho renderiza um{" "}
-        <code>SheetTitle</code>, que lê o contexto do Radix Dialog. Fora de um{" "}
-        <code>Sheet</code> aberto ele lança{" "}
-        <code>`DialogTitle` must be used within `Dialog`</code>{" "}
-        — e por isso a
-        demonstração acima usa <code>children</code>. Isso não é limitação: é o
-        que garante que a folha tenha nome acessível.
+        Com a prop <code>title</code> o cabeçalho renderiza um <code>SheetTitle</code>, que lê o contexto do Radix. Fora de um <code>Sheet</code> aberto ele lança — e é o que garante que a folha tenha nome acessível. Por isso a demonstração acima usa <code>children</code>.
       </DocNote>
 
       <DocNote title="showCloseButton={false} e o fechar no cabeçalho">

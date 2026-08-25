@@ -1,5 +1,6 @@
 "use client"
 
+import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 import { supabase, type Category } from "@/lib/supabase"
@@ -49,8 +50,6 @@ import {
     categoriesOnboardingPanelShellClass,
 } from "@/components/categories/categories-onboarding-panel-styles"
 import { cn } from "@/lib/utils"
-import { Pencil, Plus, Trash2 } from "lucide-react"
-
 type Props = {
     user: User
     workspaceId: string
@@ -522,7 +521,7 @@ export function CategoriesOnboardingWizard({
                         aria-label={`Editar ${c.name}`}
                         onClick={() => openEditDialog(c)}
                     >
-                        <Pencil className="h-3.5 w-3.5" />
+                        <PencilIcon className="h-3.5 w-3.5" />
                     </Button>
                 </div>
                 <div className="flex items-center justify-end gap-2 sm:justify-end">
@@ -558,7 +557,7 @@ export function CategoriesOnboardingWizard({
                         onClick={() => void handleDeleteCategory(c)}
                         aria-label={`Excluir ${c.name}`}
                     >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <TrashIcon className="h-3.5 w-3.5" />
                     </Button>
                 </div>
             </div>
@@ -1004,7 +1003,7 @@ export function CategoriesOnboardingWizard({
                                     disabled={busy || crudBusy}
                                     onClick={() => openAddDialog()}
                                 >
-                                    <Plus className="mr-1 h-3.5 w-3.5" />
+                                    <PlusIcon className="mr-1 h-3.5 w-3.5" />
                                     Adicionar categoria
                                 </Button>
                                 <Button

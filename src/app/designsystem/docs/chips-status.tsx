@@ -31,12 +31,7 @@ export default function ChipsStatusDoc() {
   return (
     <>
       <Usage>
-        O vocabulário de estados do produto, em <code>tag-chip-classes.ts</code>.
-        Ele existe para o caso em que a superfície tonal precisa entrar num
-        elemento que <strong>já é outro componente</strong>{" "}
-        — o gatilho de um
-        menu, um botão de filtro. Quando o rótulo é só um rótulo, o componente é{" "}
-        <code>Badge</code>.
+        A superfície tonal para quando ela precisa entrar num elemento que <strong>já é outro componente</strong> — gatilho de menu, botão de filtro. Quando o rótulo é só rótulo, use <code>Badge</code>.
       </Usage>
 
       <Group title="Os chips">

@@ -1,7 +1,6 @@
 "use client"
 
-import { ChevronDownIcon } from "lucide-react"
-
+import { ChevronDownIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import {
   Collapsible,
@@ -14,10 +13,7 @@ export default function CollapsibleDoc() {
   return (
     <>
       <Usage>
-        Um bloco que expande. É o <code>Accordion</code>{" "}
-        de um item só, sem a
-        semântica de lista. Serve para detalhes avançados de um formulário ou
-        para as linhas que sobram de uma lista longa.
+        Um bloco que expande — o <code>Accordion</code> de um item só, sem a semântica de lista. Para detalhes avançados de um formulário ou o resto de uma lista longa.
       </Usage>
 
       <DocSection

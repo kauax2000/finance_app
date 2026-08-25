@@ -2,7 +2,7 @@
 
 import type { ComponentType } from "react"
 import type React from "react"
-import { CreditCardIcon } from "@heroicons/react/24/outline"
+import { CreditCardIcon } from "@heroicons/react/20/solid"
 import {
     LogoAmericanExpress,
     LogoDinersClub,

@@ -41,11 +41,7 @@ export default function GraficosDoc() {
   return (
     <>
       <Usage>
-        Duas paletas, e escolher entre elas é a decisão inteira: quando verde e
-        vermelho <strong>significam</strong> entrada e saída, a série usa{" "}
-        <code>--chart-income</code> e <code>--chart-expense</code>. Quando as
-        séries são só categorias diferentes, ela usa a rampa{" "}
-        <code>--chart-1</code> a <code>--chart-5</code>.
+        Duas paletas, e escolher entre elas é a decisão inteira: quando verde e vermelho <strong>significam</strong> entrada e saída, use <code>--chart-income</code> e <code>--chart-expense</code>; quando são só categorias, a rampa <code>--chart-1</code> a <code>--chart-5</code>.
       </Usage>
 
       <DocSection
@@ -140,17 +136,7 @@ export default function GraficosDoc() {
       </Group>
 
       <DocNote title="Atributo SVG aceita var(), sim">
-        <code>dashboard-cashflow-chart.tsx</code>{" "}
-        traz um comentário afirmando
-        que &ldquo;SVG/Recharts attrs cannot use var()&rdquo; e por isso fixa{" "}
-        <code>#10B981</code> e <code>#E11D48</code>{" "}
-        na mão. A premissa está
-        errada: <code>fill</code> e <code>stroke</code> resolvem{" "}
-        <code>var()</code>{" "}
-        em todos os navegadores que este app suporta, e é
-        exatamente o que <code>ChartContainer</code>{" "}
-        explora. Essas duas cores
-        estão no relatório de conformidade.
+        <code>dashboard-cashflow-chart.tsx</code> afirma num comentário que &ldquo;SVG/Recharts attrs cannot use var()&rdquo; e por isso fixa <code>#10B981</code> e <code>#E11D48</code>. A premissa está errada: <code>fill</code> e <code>stroke</code> resolvem <code>var()</code>, e é o que <code>ChartContainer</code> explora.
       </DocNote>
     </>
   )

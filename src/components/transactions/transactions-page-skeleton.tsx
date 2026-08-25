@@ -41,7 +41,7 @@ function ToolbarSkeleton() {
                     </div>
                 </div>
                 <Skeleton
-                    className="size-10 shrink-0 rounded-[min(var(--radius-md),12px)] md:hidden"
+                    className="size-10 shrink-0 rounded-md md:hidden"
                     aria-hidden
                 />
             </div>

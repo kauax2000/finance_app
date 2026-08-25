@@ -45,8 +45,7 @@ import {
 } from "@/lib/installment-schedule-rows"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { toastError } from "@/lib/toast"
-import { XMarkIcon } from "@heroicons/react/24/outline"
-
+import { XMarkIcon } from "@heroicons/react/20/solid"
 const currencyFmt = new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",

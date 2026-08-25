@@ -1,9 +1,8 @@
 "use client"
 
+import { MagnifyingGlassIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { SearchIcon } from "lucide-react"
-
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -212,7 +211,7 @@ function DsSearchTrigger({ onClick }: { onClick: () => void }) {
         "lg:border-border lg:bg-background lg:dark:border-input lg:dark:bg-input-fill/30"
       )}
     >
-      <SearchIcon className="shrink-0 opacity-70" aria-hidden />
+      <MagnifyingGlassIcon className="shrink-0 opacity-70" aria-hidden />
       <span className="truncate max-lg:sr-only">Buscar</span>
       <CommandShortcutHint />
     </Button>

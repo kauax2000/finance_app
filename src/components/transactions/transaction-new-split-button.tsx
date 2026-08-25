@@ -1,7 +1,7 @@
 "use client"
 
+import { ChevronDownIcon, PlusIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
-import { ChevronDown, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
@@ -42,7 +42,7 @@ export function TransactionNewSplitButton({
                 className="h-9 min-w-0 flex-1 justify-center gap-2 rounded-r-none border-r border-border/50 text-xs md:h-8"
                 onClick={() => onNew("expense")}
             >
-                <Plus className="h-4 w-4 shrink-0" />
+                <PlusIcon className="h-4 w-4 shrink-0" />
                 <span className="truncate">Nova transação</span>
             </Button>
             <DropdownMenu>
@@ -54,7 +54,7 @@ export function TransactionNewSplitButton({
                         className="h-9 w-8 shrink-0 rounded-l-none border-l-0 px-0 text-xs md:h-8"
                         aria-label="Mais tipos de lançamento"
                     >
-                        <ChevronDown
+                        <ChevronDownIcon
                             className="h-4 w-4 opacity-90"
                             aria-hidden
                         />

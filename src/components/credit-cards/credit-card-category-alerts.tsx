@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { ExclamationTriangleIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline"
+import { ExclamationTriangleIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { useAuth } from "@/components/providers"
 import { Button } from "@/components/ui/button"
 import { CustomForm } from "@/components/ui/form"

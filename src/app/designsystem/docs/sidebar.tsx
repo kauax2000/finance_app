@@ -1,13 +1,7 @@
 "use client"
 
-import {
-  CreditCardIcon,
-  LayoutDashboardIcon,
-  ReceiptIcon,
-  SettingsIcon,
-  WalletIcon,
-} from "lucide-react"
-
+import { Cog6ToothIcon, Squares2X2Icon } from "@heroicons/react/16/solid"
+import { CreditCardIcon, ReceiptPercentIcon, WalletIcon } from "@heroicons/react/24/outline"
 import {
   Sidebar,
   SidebarContent,
@@ -22,8 +16,8 @@ import {
 import { DocNote, DocSection, Usage } from "../ds-doc"
 
 const NAV = [
-  { label: "Início", icon: LayoutDashboardIcon, active: true },
-  { label: "Transações", icon: ReceiptIcon, badge: "42" },
+  { label: "Início", icon: Squares2X2Icon, active: true },
+  { label: "Transações", icon: ReceiptPercentIcon, badge: "42" },
   { label: "Carteiras", icon: WalletIcon },
   { label: "Cartões", icon: CreditCardIcon, badge: "3" },
 ]
@@ -32,9 +26,7 @@ export default function SidebarDoc() {
   return (
     <>
       <Usage>
-        A navegação do desktop. Ela guarda o estado recolhido num cookie, então a
-        escolha sobrevive ao recarregamento e não pisca no primeiro quadro — que
-        é o defeito de guardar isso em <code>localStorage</code>.
+        A navegação do desktop. Guarda o estado recolhido num cookie, então a escolha sobrevive ao recarregamento e não pisca no primeiro quadro.
       </Usage>
 
       <DocSection
@@ -48,7 +40,7 @@ export default function SidebarDoc() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton isActive>
-              <LayoutDashboardIcon aria-hidden />
+              <Squares2X2Icon aria-hidden />
               Início
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -84,7 +76,7 @@ export default function SidebarDoc() {
                   <SidebarMenu>
                     <SidebarMenuItem>
                       <SidebarMenuButton>
-                        <SettingsIcon aria-hidden />
+                        <Cog6ToothIcon aria-hidden />
                         Configurações
                       </SidebarMenuButton>
                     </SidebarMenuItem>

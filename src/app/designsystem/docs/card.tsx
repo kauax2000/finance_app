@@ -17,10 +17,7 @@ export default function CardDoc() {
   return (
     <>
       <Usage>
-        Agrupa conteúdo que se lê junto. Cartão dentro de cartão não: dois níveis
-        de superfície elevada na mesma tela apagam a hierarquia que o primeiro
-        criava. Se precisa de subdivisão, use <code>Separator</code> ou{" "}
-        <code>PageSection</code>.
+        Agrupa conteúdo que se lê junto. Cartão dentro de cartão não: dois níveis de superfície elevada apagam a hierarquia do primeiro. Para subdividir, <code>Separator</code> ou <code>PageSection</code>.
       </Usage>
 
       <DocSection
@@ -74,11 +71,7 @@ export default function CardDoc() {
       </DocSection>
 
       <DocNote title="Título e descrição não levam gap">
-        <code>CardTitle</code> e <code>CardDescription</code>{" "}
-        são o mesmo dado em
-        duas linhas. O <code>CardHeader</code>{" "}
-        já entrega a entrelinha certa;
-        somar <code>gap-1</code> ali faz o par deixar de ler como uma coisa só.
+        <code>CardHeader</code> já entrega a entrelinha. São o mesmo dado em duas linhas — a regra do par de identidade está em <strong>Espaçamento e largura</strong>.
       </DocNote>
     </>
   )

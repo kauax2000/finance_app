@@ -27,12 +27,7 @@ import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-    ExclamationTriangleIcon,
-    CheckCircleIcon,
-    ArrowPathIcon,
-} from "@heroicons/react/24/outline"
-import { ImagePlus, RefreshCw, Trash } from "lucide-react"
+import { ArrowPathIcon, CheckCircleIcon, ExclamationTriangleIcon, PhotoIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { getInitials, cn } from "@/lib/utils"
 import { createActivity } from "@/lib/activity"
 import { getAvatarColor } from "@/lib/avatar"
@@ -286,7 +281,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                                     className="gap-1.5"
                                     onClick={() => fileInputRef.current?.click()}
                                 >
-                                    <RefreshCw className="h-3.5 w-3.5" />
+                                    <ArrowPathIcon className="h-3.5 w-3.5" />
                                     Trocar
                                 </Button>
                                 <Button
@@ -296,7 +291,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                                     className="gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
                                     onClick={handleRemovePhoto}
                                 >
-                                    <Trash className="h-3.5 w-3.5" />
+                                    <TrashIcon className="h-3.5 w-3.5" />
                                     Remover
                                 </Button>
                             </div>
@@ -310,7 +305,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                             className="gap-2"
                             onClick={() => fileInputRef.current?.click()}
                         >
-                            <ImagePlus className="h-4 w-4" />
+                            <PhotoIcon className="h-4 w-4" />
                             Adicionar foto
                         </Button>
                     )

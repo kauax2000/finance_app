@@ -1,7 +1,6 @@
 "use client"
 
-import { PlusIcon } from "lucide-react"
-
+import { PlusIcon } from "@heroicons/react/16/solid"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -26,9 +25,7 @@ export default function PageHeaderDoc() {
   return (
     <>
       <Usage>
-        O topo de toda tela: título, o que ela é, e a ação principal. É uma API
-        de composição e não de props, porque metade das telas precisa de algo no
-        meio — uma trilha, um seletor de período, um chip de status.
+        O topo de toda tela: título, o que ela é, e a ação principal. É API de composição porque metade das telas precisa de algo no meio — trilha, seletor de período, chip de status.
       </Usage>
 
       <DocSection
@@ -101,8 +98,7 @@ export default function PageHeaderDoc() {
       </DocSection>
 
       <DocNote title="Título e descrição não levam gap">
-        <code>PageHeaderTitleRow</code> já entrega a entrelinha certa. Somar{" "}
-        <code>gap</code> ali faz o par deixar de ler como uma coisa só.
+        <code>PageHeaderTitleRow</code> já entrega a entrelinha certa.
       </DocNote>
 
       <DocNote title="Uma ação principal por tela">

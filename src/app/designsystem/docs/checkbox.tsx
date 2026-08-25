@@ -8,9 +8,7 @@ export default function CheckboxDoc() {
   return (
     <>
       <Usage>
-        Escolha booleana dentro de um formulário, que só vale quando o
-        formulário é enviado. Se a mudança vale no instante do toque — uma
-        preferência, um filtro — o componente é o <code>Switch</code>.
+        Escolha booleana que só vale quando o formulário é enviado. Se a mudança vale no instante do toque — uma preferência, um filtro — o componente é o <code>Switch</code>.
       </Usage>
 
       <DocSection

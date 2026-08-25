@@ -7,9 +7,7 @@ export default function ContainerDoc() {
   return (
     <>
       <Usage>
-        A largura máxima do conteúdo e o respiro lateral. Toda tela começa com
-        um, e a escolha do tamanho é sobre <strong>quantas colunas de
-        informação</strong> a tela tem, não sobre quanto espaço existe.
+        A largura máxima do conteúdo e o respiro lateral. Toda tela começa com um, e o tamanho é sobre <strong>quantas colunas de informação</strong> ela tem.
       </Usage>
 
       <DocSection

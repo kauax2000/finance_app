@@ -1,7 +1,7 @@
 "use client"
 
+import { AdjustmentsHorizontalIcon, ChevronDownIcon, PlusIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
-import { ChevronDown, Plus, SlidersHorizontal } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
@@ -202,7 +202,7 @@ export function BillsToolbar({
                             onClick={onNewBill}
                             disabled={!hasTable}
                         >
-                            <Plus className="size-4 shrink-0" />
+                            <PlusIcon className="size-4 shrink-0" />
                             Nova conta
                         </Button>
                         <Button
@@ -221,7 +221,7 @@ export function BillsToolbar({
                                     : "Filtros e ordenação"
                             }
                         >
-                            <SlidersHorizontal className="size-4 opacity-80" />
+                            <AdjustmentsHorizontalIcon className="size-4 opacity-80" />
                             {active ? (
                                 <span
                                     className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary"
@@ -242,7 +242,7 @@ export function BillsToolbar({
                                     disabled={!hasTable}
                                 >
                                     Filtrar: {filterLabel(mode, pendingFilter, modelFilter)}
-                                    <ChevronDown className="size-3.5 opacity-70" />
+                                    <ChevronDownIcon className="size-3.5 opacity-70" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
@@ -279,7 +279,7 @@ export function BillsToolbar({
                                     disabled={!hasTable}
                                 >
                                     Ordenar
-                                    <ChevronDown className="size-3.5 opacity-70" />
+                                    <ChevronDownIcon className="size-3.5 opacity-70" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56">
@@ -301,7 +301,7 @@ export function BillsToolbar({
                             onClick={onNewBill}
                             disabled={!hasTable}
                         >
-                            <Plus className="size-4 shrink-0" />
+                            <PlusIcon className="size-4 shrink-0" />
                             Nova conta
                         </Button>
                     </div>

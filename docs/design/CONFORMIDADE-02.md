@@ -174,9 +174,10 @@ muda a aparência de categorias que já existem.
    que é decisão de produto e não de front end.
 5. **`PropsTable` ausente em 60 das 88 páginas** do catálogo. Trabalho de
    conteúdo, não de código.
-6. **Duas bibliotecas de ícones.** Heroicons em 88 arquivos, Lucide em 40, com
-   `components.json` declarando `lucide`. Migração larga e independente de todo
-   o resto; até lá, a regra mínima é não misturar dentro de uma mesma tela.
+6. ~~**Duas bibliotecas de ícones.**~~ **Resolvido.** O app é Heroicons em
+   todos os arquivos, `components.json` declara `heroicons`, e o pacote
+   `lucide-react` saiu do `package.json`. Os conjuntos passaram a alternar por
+   tamanho (outline 24 / mini 20 / micro 16) em vez de reduzir o outline.
 
 ## Como reproduzir
 

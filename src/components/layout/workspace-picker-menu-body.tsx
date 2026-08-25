@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { CheckIcon, PlusIcon } from "@heroicons/react/24/outline"
+import { PlusIcon } from "@heroicons/react/16/solid"
+import { CheckIcon } from "@heroicons/react/20/solid"
 import { useWorkspace } from "@/components/workspace-provider"
 import { WorkspaceBrandMark } from "@/components/workspace/workspace-brand-mark"
 import { Separator } from "@/components/ui/separator"

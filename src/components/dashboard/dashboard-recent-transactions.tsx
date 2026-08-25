@@ -2,7 +2,8 @@
 
 import { useMemo } from "react"
 import Link from "next/link"
-import { ChevronRightIcon, ArrowTopRightOnSquareIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
+import { ArrowTopRightOnSquareIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
+import { ReceiptPercentIcon } from "@heroicons/react/24/outline"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import type { Transaction } from "@/lib/supabase"

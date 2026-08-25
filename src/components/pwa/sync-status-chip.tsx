@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowPathIcon, CloudArrowUpIcon } from "@heroicons/react/24/outline"
+import { ArrowPathIcon, CloudArrowUpIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { usePwaShellOptional } from "@/components/pwa/pwa-shell-context"

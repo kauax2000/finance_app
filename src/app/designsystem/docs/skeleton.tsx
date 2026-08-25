@@ -7,11 +7,7 @@ export default function SkeletonDoc() {
   return (
     <>
       <Usage>
-        O osso da tela enquanto o dado não chegou. Ele deve ter{" "}
-        <strong>a forma do conteúdo que vai substituí-lo</strong>: três linhas de
-        alturas diferentes onde virá um parágrafo, um círculo onde virá um
-        avatar. Um retângulo genérico não prepara ninguém para nada e ainda
-        provoca um salto de layout quando o dado chega.
+        O osso da tela enquanto o dado não chegou. Precisa ter <strong>a forma do conteúdo que vai substituí-lo</strong> — um retângulo genérico não prepara ninguém e ainda provoca salto de layout.
       </Usage>
 
       <DocSection

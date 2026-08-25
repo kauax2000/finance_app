@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { InformationCircleIcon, ArrowRightStartOnRectangleIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline"
+import { ArrowRightStartOnRectangleIcon, EllipsisVerticalIcon, InformationCircleIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { WorkspaceAppearanceEditDialog } from "@/components/settings/workspace-appearance-edit-dialog"

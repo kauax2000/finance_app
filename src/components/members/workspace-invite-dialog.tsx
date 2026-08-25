@@ -1,14 +1,7 @@
 "use client"
 
 import * as React from "react"
-import {
-    CheckIcon,
-    DocumentDuplicateIcon,
-    LinkIcon,
-    ArrowPathIcon,
-    EnvelopeIcon,
-    PaperAirplaneIcon,
-} from "@heroicons/react/24/outline"
+import { ArrowPathIcon, CheckIcon, DocumentDuplicateIcon, EnvelopeIcon, LinkIcon, PaperAirplaneIcon } from "@heroicons/react/16/solid"
 import type { User } from "@supabase/supabase-js"
 import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"

@@ -11,9 +11,7 @@ export default function ResizableDoc() {
   return (
     <>
       <Usage>
-        Painéis que a pessoa redimensiona. Faz sentido quando ela vai passar
-        muito tempo na tela e tem preferência sobre a proporção — um editor, uma
-        conciliação lado a lado.
+        Painéis que a pessoa redimensiona. Faz sentido quando ela vai passar muito tempo na tela e tem preferência sobre a proporção.
       </Usage>
 
       <DocSection
@@ -60,9 +58,7 @@ export default function ResizableDoc() {
       </DocNote>
 
       <DocNote title="Está no catálogo por paridade">
-        Nenhuma tela o consome hoje. Antes de usá-lo, vale o teste do design
-        system: tem semântica própria, o reuso é previsível, e as variants vêm de
-        uso real?
+        Nenhuma tela o consome hoje. Antes de usá-lo, vale o teste: tem semântica própria, o reuso é previsível, e as variants vêm de uso real?
       </DocNote>
     </>
   )

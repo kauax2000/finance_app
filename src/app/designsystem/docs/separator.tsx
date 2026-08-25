@@ -7,9 +7,7 @@ export default function SeparatorDoc() {
   return (
     <>
       <Usage>
-        Uma régua entre conteúdos que já estão relacionados. Se os dois blocos
-        são assuntos diferentes, o que os separa é espaço, não linha — régua
-        demais transforma a tela numa planilha.
+        Uma régua entre conteúdos que já estão relacionados. Se são assuntos diferentes, o que separa é espaço — régua demais transforma a tela numa planilha.
       </Usage>
 
       <DocSection

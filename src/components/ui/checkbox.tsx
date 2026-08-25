@@ -2,8 +2,7 @@
 
 import * as React from "react"
 import { Checkbox as CheckboxPrimitive } from "radix-ui"
-import { CheckIcon, MinusIcon } from "@heroicons/react/24/outline"
-
+import { CheckIcon, MinusIcon } from "@heroicons/react/16/solid"
 import { cn } from "@/lib/utils"
 
 function Checkbox({

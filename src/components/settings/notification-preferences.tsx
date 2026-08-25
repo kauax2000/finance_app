@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useState, type ReactNode } from "react"
-import { ArrowRightIcon } from "@heroicons/react/24/outline"
+import { ArrowRightIcon } from "@heroicons/react/16/solid"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"

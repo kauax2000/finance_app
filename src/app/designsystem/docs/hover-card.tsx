@@ -13,10 +13,7 @@ export default function HoverCardDoc() {
   return (
     <>
       <Usage>
-        Uma prévia rica ao pousar o cursor: quem é a pessoa, o que tem naquela
-        categoria. Sempre <strong>redundante</strong>{" "}
-        — clicar precisa levar à
-        mesma informação, porque no toque o hover card não existe.
+        Uma prévia rica ao pousar o cursor. Sempre <strong>redundante</strong> — clicar precisa levar à mesma informação, porque no toque ele não existe.
       </Usage>
 
       <DocSection

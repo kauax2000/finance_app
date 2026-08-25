@@ -35,7 +35,8 @@ import type { ExpenseCategoryOption } from "@/components/subscriptions/subscript
 import type { SubscriptionFormPayload } from "@/components/subscriptions/subscription-form-shared"
 import { SubscriptionFormSurface } from "@/components/subscriptions/subscription-form-surface"
 import { useSubscriptionForm } from "@/components/subscriptions/use-subscription-form"
-import { ArrowPathIcon, EllipsisHorizontalIcon, PencilIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/outline"
+import { ArrowPathIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { EllipsisHorizontalIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import { cn } from "@/lib/utils"
 import { Switch } from "@/components/ui/switch"
 import {

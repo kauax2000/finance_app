@@ -15,9 +15,7 @@ export default function MenubarDoc() {
   return (
     <>
       <Usage>
-        A barra de menus no estilo de aplicativo de desktop. Faz sentido em
-        ferramentas densas, com dezenas de comandos organizados por assunto. Este
-        app não é uma delas.
+        A barra de menus de aplicativo de desktop. Faz sentido em ferramentas densas, com dezenas de comandos por assunto. Este app não é uma delas.
       </Usage>
 
       <DocSection
@@ -54,12 +52,7 @@ export default function MenubarDoc() {
       </DocSection>
 
       <DocNote title="Está no catálogo, mas provavelmente não deveria ir para uma tela">
-        A navegação deste produto é a <code>Sidebar</code>{" "}
-        no desktop e a ilha na
-        base no telefone. Uma barra de menus somaria um terceiro sistema de
-        navegação, e o teste de &ldquo;o reuso é previsível?&rdquo; não passa.
-        Ele existe aqui por paridade de catálogo; antes de usá-lo numa tela,
-        vale reabrir essa conversa.
+        A navegação deste produto é a <code>Sidebar</code> e a ilha do telefone. Uma barra de menus seria um terceiro sistema; ele existe aqui por paridade de catálogo.
       </DocNote>
     </>
   )

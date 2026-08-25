@@ -9,10 +9,7 @@ export default function SonnerDoc() {
   return (
     <>
       <Usage>
-        Confirmação passageira do que <strong>acabou de acontecer</strong>, fora
-        do fluxo: &ldquo;transação salva&rdquo;, &ldquo;convite enviado&rdquo;.
-        Nunca coloque num toast informação que a pessoa vai precisar depois — ele
-        some em quatro segundos e não volta.
+        Confirmação passageira do que <strong>acabou de acontecer</strong>, fora do fluxo. Nunca ponha nele informação que a pessoa vai precisar depois: some em quatro segundos e não volta.
       </Usage>
 
       <DocSection
@@ -79,12 +76,7 @@ toast.info("Sincronizando…")`}
       </DocSection>
 
       <DocNote title="richColors saiu">
-        O Toaster rodava com <code>richColors</code>, ou seja, com o verde e o
-        vermelho da própria biblioteca — as únicas cores do produto que não
-        vinham do <code>globals.css</code>. Hoje cada tipo é remapeado por{" "}
-        <code>[data-sonner-toast][data-type=&quot;…&quot;]</code>{" "}
-        a partir dos
-        tokens semânticos, espelhando as variantes do <code>Alert</code>.
+        O Toaster rodava com o verde e o vermelho da própria biblioteca — as únicas cores do produto fora do <code>globals.css</code>. Hoje cada tipo é remapeado por <code>[data-sonner-toast][data-type]</code> a partir dos tokens.
       </DocNote>
 
       <DocNote title="No telefone ele desce abaixo do cabeçalho">

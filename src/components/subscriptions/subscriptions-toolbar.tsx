@@ -1,6 +1,6 @@
 "use client"
 
-import { Plus, ArrowUpDown, ChevronDown } from "lucide-react"
+import { ArrowsUpDownIcon, ChevronDownIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
 import {
@@ -120,7 +120,7 @@ export function SubscriptionsToolbar({
                                 className="size-10 shrink-0 md:hidden"
                                 aria-label="Ordenar"
                             >
-                                <ArrowUpDown className="size-4 opacity-80" />
+                                <ArrowsUpDownIcon className="size-4 opacity-80" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56">
@@ -139,7 +139,7 @@ export function SubscriptionsToolbar({
                                 className="h-8 gap-1.5 text-xs"
                             >
                                 Ordenar
-                                <ChevronDown className="size-3.5 opacity-70" />
+                                <ChevronDownIcon className="size-3.5 opacity-70" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56">
@@ -153,7 +153,7 @@ export function SubscriptionsToolbar({
                         className="h-8 gap-2 text-xs"
                         onClick={onNewSubscription}
                     >
-                        <Plus className="size-4 shrink-0" />
+                        <PlusIcon className="size-4 shrink-0" />
                         Nova assinatura
                     </Button>
                 </div>

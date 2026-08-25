@@ -1,10 +1,9 @@
 "use client"
 
+import { MoonIcon, SunIcon } from "@heroicons/react/24/outline"
 import { useEffect, useState } from "react"
 import { useTheme } from "next-themes"
 import { Switch as SwitchPrimitive } from "radix-ui"
-import { MoonIcon, SunIcon } from "lucide-react"
-
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 

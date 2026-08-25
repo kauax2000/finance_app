@@ -1,7 +1,7 @@
 "use client"
 
+import { XMarkIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
-import { XIcon } from "lucide-react"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
@@ -65,7 +65,7 @@ function AnnouncementBar({
           aria-label={dismissLabel}
           className="-mr-1.5 shrink-0 text-current hover:bg-foreground/10 active:bg-foreground/10"
         >
-          <XIcon aria-hidden />
+          <XMarkIcon aria-hidden />
         </Button>
       ) : null}
     </div>

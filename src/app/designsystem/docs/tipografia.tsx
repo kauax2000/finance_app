@@ -19,20 +19,12 @@ export default function TipografiaDoc() {
   return (
     <>
       <Usage>
-        Três famílias, cada uma com um território: <strong>Inter</strong>{" "}
-        no
-        corpo, <strong>Plus Jakarta Sans</strong> nos títulos e{" "}
-        <strong>Geist Mono</strong>{" "}
-        em número que precisa alinhar. Nunca escolha
-        tamanho e peso soltos numa tela: use os componentes abaixo, ou o próximo
-        título vai nascer <code>text-3xl font-bold</code>{" "}
-        e divergir do anterior
-        por dois pixels.
+        Três famílias, cada uma com um território: <strong>Inter</strong> na interface inteira, <strong>Ledger</strong> no título de tela e na marca, e <strong>Geist Mono</strong> no valor que é o assunto da tela. Nunca escolha tamanho e peso soltos numa tela.
       </Usage>
 
       <DocSection
         title="Títulos"
-        description="Todos em Plus Jakarta (font-heading), com tracking apertado. H2 traz uma régua embaixo — é o divisor de seção de uma página longa, não um título qualquer."
+        description="H1 é o título de tela e usa a serifa de display. H2 para baixo são títulos de interface e seguem na sans — a serifa a 16px perde hierarquia contra o corpo. H2 traz uma régua embaixo: é o divisor de seção de uma página longa, não um título qualquer."
         code={`<H1>Suas finanças</H1>
 <H2>Este mês</H2>
 <H3>Cartões</H3>
@@ -71,8 +63,9 @@ export default function TipografiaDoc() {
               ["text-control-sm", "0,8rem", "texto de controle size=\"sm\""],
               ["text-sm", "0,875rem", "o corpo do produto"],
               ["text-base", "1rem", "campo no telefone (evita o zoom do iOS)"],
-              ["text-lg", "1,125rem", "título de tela"],
-              ["text-2xl", "1,5rem", "título de destaque"],
+              ["text-lg", "1,125rem", "título de bloco, saldo de linha"],
+              ["text-2xl", "1,5rem", "título de tela no telefone"],
+              ["text-3xl", "1,875rem", "título de tela no desktop"],
             ].map(([name, size, use]) => (
               <div key={name} className="flex items-baseline gap-3">
                 <code className="w-32 shrink-0 font-mono text-2xs text-muted-foreground">
@@ -103,14 +96,31 @@ export default function TipografiaDoc() {
         </Spec>
       </Group>
 
+      <DocNote title="A serifa é voz de display, não de título">
+        Ela vive em <code>.page-title</code> e <code>.wordmark</code>, e em mais
+        lugar nenhum. Peso 400 numa serifa de contraste alto a 16px não lê como
+        título — lê como texto menor, e some a hierarquia contra o corpo em
+        Inter. Título de cartão, de diálogo e de seção seguem na sans. Guardar a
+        face para onde ela tem tamanho é o que a mantém bonita.
+      </DocNote>
+
+      <DocNote title="O wordmark é o único texto que não é da interface">
+        Antes o nome saía em Inter seminegrito, sem tratamento nenhum — a marca
+        tinha um símbolo caligráfico ao lado de uma neogrotesca neutra, duas
+        metades falando línguas diferentes. Agora ele usa{" "}
+        <code>.wordmark</code>, que é a mesma serifa do título de tela.
+      </DocNote>
+
+      <DocNote title="Ledger é peso único, e o 400 não se força">
+        A família tem só o 400. Pedir <code>font-semibold</code>{" "}
+        num título dispara o negrito sintético do navegador, que engorda a haste
+        de forma irregular e desmonta justamente o desenho da serifa. É por isso
+        que <code>.page-title</code> declara <code>font-weight: 400</code>{" "}
+        em vez de herdar o 600 dos outros títulos.
+      </DocNote>
+
       <DocNote title="Por que dois degraus fora da escala do Tailwind">
-        <code>--text-2xs</code> e <code>--text-control-sm</code>{" "}
-        existem porque o
-        sistema já tinha ido para <code>text-[10px]</code> e{" "}
-        <code>text-[0.8rem]</code>{" "}
-        em seis lugares. Valor arbitrário repetido é
-        um token que ainda não foi nomeado: cada ocorrência é livre para divergir
-        um pixel, e nenhuma delas aparece quando se procura pela escala.
+        Valor arbitrário repetido é um token que ainda não foi nomeado: <code>text-[10px]</code> e <code>text-[0.8rem]</code> já apareciam em seis lugares, cada um livre para divergir um pixel.
       </DocNote>
 
       <PropsTable

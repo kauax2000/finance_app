@@ -1,6 +1,7 @@
 "use client"
 
-import { CreditCard, Plus } from "lucide-react"
+import { PlusIcon } from "@heroicons/react/16/solid"
+import { CreditCardIcon } from "@heroicons/react/24/outline"
 import { CREDIT_CARDS_EMPTY_BILLING_HINT } from "@/lib/credit-card-billing-copy"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -21,7 +22,7 @@ export function CreditCardsEmptyState({ onAddCard }: CreditCardsEmptyStateProps)
                     className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
                     aria-hidden
                 >
-                    <CreditCard className="size-7 text-muted-foreground" />
+                    <CreditCardIcon className="size-7 text-muted-foreground" />
                 </div>
                 <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
                     Cadastre seus cartões de crédito
@@ -36,7 +37,7 @@ export function CreditCardsEmptyState({ onAddCard }: CreditCardsEmptyStateProps)
                     className="h-8 gap-2 text-xs"
                     onClick={onAddCard}
                 >
-                    <Plus className="size-4 shrink-0" />
+                    <PlusIcon className="size-4 shrink-0" />
                     Novo cartão
                 </Button>
             </CardContent>

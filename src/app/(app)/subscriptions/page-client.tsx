@@ -1,5 +1,7 @@
 "use client"
 
+import { ArrowDownIcon, ArrowUpIcon, ArrowsUpDownIcon, PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { ArrowPathRoundedSquareIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
@@ -33,16 +35,6 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import {
-    ArrowDown,
-    ArrowUp,
-    ArrowUpDown,
-    Pencil,
-    Plus,
-    Repeat,
-    SearchX,
-    Trash2,
-} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ROUTES } from "@/config/navigation"
 import { SubscriptionFormDialog } from "@/components/subscriptions/subscription-form-dialog"
@@ -90,19 +82,19 @@ function formatMoneyBRL(amount: number): string {
 function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
     if (!active) {
         return (
-            <ArrowUpDown
+            <ArrowsUpDownIcon
                 className="ml-1 size-3.5 shrink-0 text-muted-foreground"
                 aria-hidden
             />
         )
     }
     return dir === "asc" ? (
-        <ArrowUp
+        <ArrowUpIcon
             className="ml-1 size-3.5 shrink-0 text-foreground"
             aria-hidden
         />
     ) : (
-        <ArrowDown
+        <ArrowDownIcon
             className="ml-1 size-3.5 shrink-0 text-foreground"
             aria-hidden
         />
@@ -586,7 +578,7 @@ export default function SubscriptionsPageClient() {
                                                 if (s) openDetail(s, { edit: true })
                                             }}
                                         >
-                                            <Pencil className="size-3.5 shrink-0" />
+                                            <PencilIcon className="size-3.5 shrink-0" />
                                             Editar
                                         </Button>
                                         <Button
@@ -601,7 +593,7 @@ export default function SubscriptionsPageClient() {
                                                 })
                                             }
                                         >
-                                            <Trash2 className="size-3.5 shrink-0" />
+                                            <TrashIcon className="size-3.5 shrink-0" />
                                             Excluir
                                         </Button>
                                     </div>
@@ -946,7 +938,7 @@ export default function SubscriptionsPageClient() {
                                                                 )
                                                             }}
                                                         >
-                                                            <Pencil className="size-3.5" />
+                                                            <PencilIcon className="size-3.5" />
                                                         </Button>
                                                         <Button
                                                             variant="ghost"
@@ -964,7 +956,7 @@ export default function SubscriptionsPageClient() {
                                                                 )
                                                             }}
                                                         >
-                                                            <Trash2 className="size-3.5" />
+                                                            <TrashIcon className="size-3.5" />
                                                         </Button>
                                                     </div>
                                                 </TableCell>
@@ -1019,7 +1011,7 @@ export default function SubscriptionsPageClient() {
                             className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
                             aria-hidden
                         >
-                            <SearchX className="size-7 text-muted-foreground" />
+                            <MagnifyingGlassIcon className="size-7 text-muted-foreground" />
                         </div>
                         <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
                             Nenhuma assinatura com esses filtros
@@ -1049,7 +1041,7 @@ export default function SubscriptionsPageClient() {
                             className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
                             aria-hidden
                         >
-                            <Repeat className="size-7 text-muted-foreground" />
+                            <ArrowPathRoundedSquareIcon className="size-7 text-muted-foreground" />
                         </div>
                         <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
                             Cadastre suas assinaturas
@@ -1064,7 +1056,7 @@ export default function SubscriptionsPageClient() {
                             className="gap-1.5"
                             onClick={openCreate}
                         >
-                            <Plus className="size-3.5" />
+                            <PlusIcon className="size-3.5" />
                             Nova assinatura
                         </Button>
                     </CardContent>

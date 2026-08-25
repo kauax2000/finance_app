@@ -7,10 +7,7 @@ export default function CodeDoc() {
   return (
     <>
       <Usage>
-        Um identificador literal dentro do texto: nome de token, caminho de
-        arquivo, chave de configuração. Existe para que essas coisas apareçam
-        sempre com a mesma forma, em vez de cada tela inventar um{" "}
-        <code>font-mono text-xs</code> próprio.
+        Um identificador literal dentro do texto: nome de token, caminho de arquivo, chave. Existe para que essas coisas apareçam sempre com a mesma forma.
       </Usage>
 
       <DocSection

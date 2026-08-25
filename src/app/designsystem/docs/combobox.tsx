@@ -30,10 +30,7 @@ export default function ComboboxDoc() {
   return (
     <>
       <Usage>
-        Um <code>Select</code>{" "}
-        com busca. A partir de umas dez opções, rolar a
-        lista procurando um nome é pior que digitar três letras. Categoria,
-        cartão e membro do workspace são os casos deste app.
+        Um <code>Select</code> com busca. A partir de umas dez opções, rolar procurando um nome é pior que digitar três letras: categoria, cartão, membro.
       </Usage>
 
       <DocSection
@@ -60,19 +57,11 @@ export default function ComboboxDoc() {
       </DocSection>
 
       <DocNote title="Este não é o do registry">
-        A versão do registry para o estilo <code>radix-nova</code>{" "}
-        vem sobre Base
-        UI, e trazê-la adicionaria uma segunda biblioteca de primitivos por causa
-        de um componente só — os outros 30 daqui são todos Radix. Este é o mesmo
-        componente montado sobre <code>Command</code> (cmdk) e{" "}
-        <code>Popover</code>, que já existiam.
+        A versão do registry vem sobre Base UI, e traria uma segunda biblioteca de primitivos por causa de um componente só. Este é o mesmo componente sobre <code>Command</code> e <code>Popover</code>, que já existiam.
       </DocNote>
 
       <DocNote title="Não confundir com FormPickerPopover">
-        Aquele é só o posicionamento de um popover ancorado num campo: largura
-        igual à do gatilho, folga de colisão, foco que não pula. Este resolve
-        busca, navegação por teclado e a semântica de listbox. Os dois se
-        compõem, mas não se substituem.
+        Aquele resolve <em>onde</em> o painel aparece; este resolve busca, teclado e a semântica de listbox. Os dois se compõem, nenhum substitui o outro.
       </DocNote>
 
       <PropsTable

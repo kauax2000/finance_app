@@ -1,6 +1,6 @@
 "use client"
 
-import { SignalSlashIcon } from "@heroicons/react/24/outline"
+import { SignalSlashIcon } from "@heroicons/react/16/solid"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { usePwaShellOptional } from "@/components/pwa/pwa-shell-context"
 

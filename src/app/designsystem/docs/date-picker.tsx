@@ -10,11 +10,7 @@ export default function DatePickerDoc() {
   return (
     <>
       <Usage>
-        Escolha de uma data em popover, com o calendário em pt-BR. Para dia do
-        mês recorrente — vencimento de fatura, dia do salário —, o certo é um{" "}
-        <code>NativeSelect</code>{" "}
-        de 1 a 31: um calendário para escolher
-        &ldquo;todo dia 5&rdquo; pede um mês que não existe.
+        Escolha de uma data em popover, em pt-BR. Para dia do mês recorrente — vencimento de fatura, dia do salário — o certo é um <code>NativeSelect</code> de 1 a 31.
       </Usage>
 
       <DocSection

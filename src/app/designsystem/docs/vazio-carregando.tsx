@@ -1,7 +1,6 @@
 "use client"
 
-import { ReceiptIcon } from "lucide-react"
-
+import { ReceiptPercentIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import {
   EmptyState,
@@ -18,10 +17,7 @@ export default function VazioCarregandoDoc() {
   return (
     <>
       <Usage>
-        Toda tela tem quatro estados, e três deles são fáceis de esquecer:
-        carregando, vazio, com erro e com conteúdo. Uma tela que só desenha o
-        último está incompleta, mesmo que pareça pronta em desenvolvimento, onde
-        os dados chegam em 20ms.
+        Toda tela tem quatro estados: carregando, vazio, com erro e com conteúdo. Uma tela que só desenha o último está incompleta, mesmo parecendo pronta onde os dados chegam em 20ms.
       </Usage>
 
       <Group title="Os quatro estados" layout="grid">
@@ -42,7 +38,7 @@ export default function VazioCarregandoDoc() {
         <Spec title="2 · Vazio" meta="EmptyState">
           <EmptyState className="px-4 py-6">
             <EmptyStateIcon>
-              <ReceiptIcon aria-hidden />
+              <ReceiptPercentIcon aria-hidden />
             </EmptyStateIcon>
             <EmptyStateTitle>Nenhuma transação</EmptyStateTitle>
             <EmptyStateDescription>
@@ -73,20 +69,11 @@ return <Lista itens={itens} />`}
       </DocSection>
 
       <DocNote title="Três vazios diferentes, três textos diferentes">
-        <strong>Nunca teve</strong> pede explicação e a primeira ação.{" "}
-        <strong>O filtro não achou</strong>{" "}
-        pede um botão de limpar, não um de
-        criar — quem filtrou não quer cadastrar, quer ver o que sumiu.{" "}
-        <strong>Deu erro</strong>{" "}
-        pede o que houve e um &ldquo;tentar de
-        novo&rdquo;. Um &ldquo;Nada aqui&rdquo; genérico serve mal aos três.
+        <strong>Nunca teve</strong> pede explicação e a primeira ação. <strong>O filtro não achou</strong> pede limpar, não criar — quem filtrou quer ver o que sumiu. <strong>Deu erro</strong> pede o que houve e um &ldquo;tentar de novo&rdquo;.
       </DocNote>
 
       <DocNote title="O esqueleto tem a forma do que vem depois">
-        Se a lista real tem avatar, duas linhas de texto e um valor à direita, o
-        esqueleto tem as quatro coisas nas mesmas posições. Um retângulo genérico
-        não prepara ninguém para nada e ainda provoca um salto de layout quando o
-        conteúdo chega.
+        Avatar, duas linhas e um valor à direita na lista real viram as quatro coisas nas mesmas posições no esqueleto.
       </DocNote>
 
       <DocNote title="Offline é um quinto estado, e este app tem">

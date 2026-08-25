@@ -1,13 +1,4 @@
-import {
-    LayoutDashboard,
-    ArrowLeftRight,
-    PieChart,
-    Users,
-    Settings,
-    Repeat,
-    CreditCard,
-    ListChecks,
-} from "lucide-react"
+import { ArrowPathRoundedSquareIcon, ArrowsRightLeftIcon, ChartPieIcon, ClipboardDocumentCheckIcon, Cog6ToothIcon, CreditCardIcon, Squares2X2Icon, UserGroupIcon } from "@heroicons/react/24/outline"
 import type { NavigationItem, SubPageMeta } from "@/types/navigation"
 
 /** Canonical path constants for links and active-state checks */
@@ -59,7 +50,7 @@ export function isAccountHubPath(pathname: string): boolean {
     return pathname === ROUTES.ACCOUNT
 }
 
-/** Settings hub and nested settings routes. */
+/** Cog6ToothIcon hub and nested settings routes. */
 export function isSettingsPath(pathname: string): boolean {
     return (
         pathname === ROUTES.SETTINGS || pathname.startsWith(`${ROUTES.SETTINGS}/`)
@@ -92,33 +83,33 @@ export function transactionsHrefForCreditCard(cardId: string): string {
 }
 
 export const MAIN_NAVIGATION: NavigationItem[] = [
-    { name: "Dashboard", href: ROUTES.DASHBOARD, icon: LayoutDashboard },
-    { name: "Categorias", href: ROUTES.DASHBOARD_CATEGORIES, icon: PieChart },
-    { name: "Transações", href: ROUTES.TRANSACTIONS, icon: ArrowLeftRight },
-    { name: "Assinaturas", href: ROUTES.SUBSCRIPTIONS, icon: Repeat },
+    { name: "Dashboard", href: ROUTES.DASHBOARD, icon: Squares2X2Icon },
+    { name: "Categorias", href: ROUTES.DASHBOARD_CATEGORIES, icon: ChartPieIcon },
+    { name: "Transações", href: ROUTES.TRANSACTIONS, icon: ArrowsRightLeftIcon },
+    { name: "Assinaturas", href: ROUTES.SUBSCRIPTIONS, icon: ArrowPathRoundedSquareIcon },
     {
         name: "Contas a pagar",
         href: ROUTES.BILLS,
-        icon: ListChecks,
+        icon: ClipboardDocumentCheckIcon,
         beta: true,
     },
     {
         name: "Cartões de crédito",
         href: ROUTES.CREDIT_CARDS,
-        icon: CreditCard,
+        icon: CreditCardIcon,
     },
 ]
 
 export const MEMBERS_NAV_ITEM: NavigationItem = {
     name: "Membros e convidados",
     href: ROUTES.MEMBERS,
-    icon: Users,
+    icon: UserGroupIcon,
 }
 
 export const SETTINGS_NAV_ITEM: NavigationItem = {
     name: "Configurações",
     href: ROUTES.SETTINGS,
-    icon: Settings,
+    icon: Cog6ToothIcon,
 }
 
 /** Header title for dashboard route group */

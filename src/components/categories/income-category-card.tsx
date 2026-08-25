@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
 import { cn } from "@/lib/utils"
-import { ChevronRightIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline"
+import { ChevronRightIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ColorTile } from "@/components/ui/color-tile"
 
 function stopLinkNavigation(e: React.MouseEvent) {

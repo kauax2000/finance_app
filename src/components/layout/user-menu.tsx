@@ -10,7 +10,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/24/outline"
+import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/16/solid"
 import Link from "next/link"
 import { ACCOUNT_MENU_LINK_ITEMS } from "@/components/layout/account-menu-links"
 import { ROUTES } from "@/config/navigation"

@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/sidebar"
 import { UserMenu } from "@/components/layout/user-menu"
 import { Button } from "@/components/ui/button"
-import { EllipsisVerticalIcon } from "@heroicons/react/24/outline"
+import { EllipsisVerticalIcon } from "@heroicons/react/16/solid"
 import { getInitials } from "@/lib/utils"
 import { getAvatarColor } from "@/lib/avatar"
 import { Skeleton } from "@/components/ui/skeleton"

@@ -1,13 +1,7 @@
 "use client"
 
+import { Cog6ToothIcon, CreditCardIcon, PlusIcon, WalletIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
-import {
-  CreditCardIcon,
-  PlusIcon,
-  SettingsIcon,
-  WalletIcon,
-} from "lucide-react"
-
 import { Button } from "@/components/ui/button"
 import {
   Command,
@@ -27,9 +21,7 @@ export default function CommandDoc() {
   return (
     <>
       <Usage>
-        A paleta de comandos: uma caixa de busca que encontra telas, ações e
-        registros ao mesmo tempo. É o atalho de quem usa o app todo dia e não
-        quer atravessar três cliques de navegação.
+        A paleta de comandos: uma busca que encontra telas, ações e registros ao mesmo tempo. É o atalho de quem usa o app todo dia.
       </Usage>
 
       <DocSection
@@ -60,7 +52,7 @@ export default function CommandDoc() {
                 Cartões
               </CommandItem>
               <CommandItem>
-                <SettingsIcon aria-hidden />
+                <Cog6ToothIcon aria-hidden />
                 Configurações
               </CommandItem>
             </CommandGroup>
@@ -105,21 +97,11 @@ React.useEffect(() => {
       </DocNote>
 
       <DocNote title="O filtro padrão do cmdk é difuso, e isto é em português">
-        <code>Command</code> aceita <code>filter</code>. O padrão pontua por
-        aproximação, então &ldquo;cor&rdquo; devolve Carousel e Combobox junto
-        com Cores. A busca do catálogo troca por substring com os acentos
-        removidos dos dois lados: quem digita &ldquo;graficos&rdquo; acha
-        &ldquo;Gráficos&rdquo;, e a lista não inventa parentesco entre palavras
-        que só compartilham letras.
+        O padrão pontua por aproximação, então &ldquo;cor&rdquo; devolve Carousel e Combobox junto com Cores. A busca do catálogo passa um <code>filter</code> por substring, com acentos removidos dos dois lados.
       </DocNote>
 
       <DocNote title="⌘K precisa de um gatilho visível também">
-        Um atalho que só existe no teclado não existe no telefone e não é
-        descoberto por ninguém. O botão de busca no cabeçalho é o que torna a
-        paleta encontrável; o <kbd>⌘</kbd><kbd>K</kbd>{" "}
-        desenhado dentro dele é o
-        que ensina o atalho a quem ainda não sabe. No telefone o mesmo botão
-        sobra sozinho, sem a tecla — lá o gatilho é o único caminho.
+        Um atalho que só existe no teclado não existe no telefone e ninguém descobre. O botão no cabeçalho é o que torna a paleta encontrável; o <kbd>⌘</kbd><kbd>K</kbd> desenhado dentro dele ensina o atalho.
       </DocNote>
     </>
   )

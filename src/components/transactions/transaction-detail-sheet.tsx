@@ -59,7 +59,8 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { toastError } from "@/lib/toast"
-import { EllipsisHorizontalIcon, PencilIcon, ArrowPathRoundedSquareIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/outline"
+import { ArrowPathRoundedSquareIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { EllipsisHorizontalIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import Link from "next/link"
 import {
     tagChipSky,

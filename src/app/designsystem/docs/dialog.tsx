@@ -19,10 +19,7 @@ export default function DialogDoc() {
   return (
     <>
       <Usage>
-        Uma tarefa curta sem sair da tela: renomear, escolher, ajustar. No
-        telefone, um formulário de verdade cabe melhor num <code>Sheet</code>{" "}
-        de
-        baixo, que usa a altura toda e fica ao alcance do polegar.
+        Uma tarefa curta sem sair da tela: renomear, escolher, ajustar. No telefone, um formulário de verdade cabe melhor num <code>Sheet</code> de baixo.
       </Usage>
 
       <DocSection
@@ -77,11 +74,7 @@ export default function DialogDoc() {
       </DocNote>
 
       <DocNote title="O rodapé tem uma hierarquia só">
-        Cancelar é <code>ghost</code> e vem antes; a ação é <code>default</code>.
-        Como <code>DialogClose</code> é um passa-tudo e não um botão, ele recebe{" "}
-        <code>asChild</code> com um <code>Button variant=&quot;ghost&quot;</code>{" "}
-        dentro — e esse botão precisa de <code>type=&quot;button&quot;</code>,
-        senão vira o alvo do Enter dentro de um formulário.
+        Cancelar é <code>ghost</code> e vem antes; a ação é <code>default</code>. Como <code>DialogClose</code> é um passa-tudo, ele recebe <code>asChild</code> com um <code>Button variant=&quot;ghost&quot; type=&quot;button&quot;</code> dentro — sem o <code>type</code>, vira o alvo do Enter.
       </DocNote>
     </>
   )

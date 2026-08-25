@@ -1,7 +1,6 @@
 import * as React from "react"
 import { Slot } from "radix-ui"
-import { ChevronRightIcon, EllipsisHorizontalIcon } from "@heroicons/react/24/outline"
-
+import { ChevronRightIcon, EllipsisHorizontalIcon } from "@heroicons/react/16/solid"
 import { cn } from "@/lib/utils"
 
 function Breadcrumb({ ...props }: React.ComponentProps<"nav">) {

@@ -8,9 +8,7 @@ export default function TextareaDoc() {
   return (
     <>
       <Usage>
-        Texto de mais de uma linha: observação de transação, motivo de um ajuste.
-        Cresce com o conteúdo via <code>field-sizing-content</code>, então não
-        precisa de <code>rows</code> nem de script de auto-resize.
+        Texto de mais de uma linha: observação de transação, motivo de um ajuste. Cresce com o conteúdo via <code>field-sizing-content</code>, sem <code>rows</code> nem script de auto-resize.
       </Usage>
 
       <DocSection
@@ -39,11 +37,7 @@ export default function TextareaDoc() {
       </DocSection>
 
       <DocNote title="Enter dentro de um Textarea quebra linha">
-        O <code>CustomForm</code>{" "}
-        normaliza o Enter para acionar o submit, mas
-        abre exceção para textarea, select nativo, contenteditable e para os
-        gatilhos de combobox e listbox. Quer dizer: dentro de uma observação, o
-        Enter continua fazendo o que a pessoa espera.
+        O <code>CustomForm</code> normaliza o Enter para o submit, mas abre exceção para textarea: dentro de uma observação, a tecla continua fazendo o que a pessoa espera.
       </DocNote>
     </>
   )

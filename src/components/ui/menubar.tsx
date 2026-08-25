@@ -1,11 +1,10 @@
 "use client"
 
+import { CheckIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
 import { Menubar as MenubarPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
-import { CheckIcon, ChevronRightIcon } from "lucide-react"
-
 function Menubar({
   className,
   ...props

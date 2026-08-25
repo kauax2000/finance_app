@@ -28,11 +28,23 @@ const moneyDisplayVariants = cva("tabular-nums", {
   },
   defaultVariants: {
     tone: "default",
-    /** Sans + tabular-nums; set `tabular` to true for Geist Mono figures. */
-    tabular: false,
     size: "default",
   },
 })
+
+/**
+ * Os tamanhos em que o valor é o assunto da tela, e não um dado de linha.
+ *
+ * Nestes, as figuras vão para Geist Mono por padrão. O saldo é o herói deste
+ * produto, e a face de extrato é a que ele merece: dígito de largura fixa, a
+ * coluna que não dança, e o registro de livro-caixa que combina com a serifa
+ * dos títulos. Nas linhas de lista o valor volta a ser Inter com
+ * `tabular-nums`, que é o certo — mono em 46 linhas de extrato viraria textura.
+ *
+ * `tabular` continua sobrescrevendo nos dois sentidos: passe `false` num saldo
+ * grande e ele volta para a sans.
+ */
+const FIGURE_SIZES = new Set(["xl", "2xl"])
 
 type MoneyDisplayProps = Omit<React.ComponentProps<"span">, "children"> &
   VariantProps<typeof moneyDisplayVariants> & {
@@ -65,10 +77,15 @@ function MoneyDisplay({
     maximumFractionDigits,
   })
 
+  const figures = tabular ?? FIGURE_SIZES.has(size ?? "default")
+
   return (
     <span
       data-slot="money-display"
-      className={cn(moneyDisplayVariants({ tone, tabular, size }), className)}
+      className={cn(
+        moneyDisplayVariants({ tone, tabular: figures, size }),
+        className
+      )}
       {...props}
     >
       {text}

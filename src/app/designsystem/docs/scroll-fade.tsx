@@ -7,9 +7,7 @@ export default function ScrollFadeDoc() {
   return (
     <>
       <Usage>
-        Uma lista cortada em seco na borda de um cartão lê como lista terminada.
-        O gradiente diz que continua. Ele aparece só do lado em que ainda há
-        conteúdo, então quando tudo cabe não aparece nunca.
+        Uma lista cortada em seco na borda lê como lista terminada; o gradiente diz que continua. Aparece só do lado em que ainda há conteúdo.
       </Usage>
 
       <DocSection

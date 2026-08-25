@@ -15,9 +15,7 @@ export default function MobileToqueDoc() {
   return (
     <>
       <Usage>
-        Toda tela deste app é vista num telefone. Metade das regras abaixo são
-        decisões que se toma escrevendo a versão de desktop, e refazer depois
-        custa mais que ler antes.
+        Toda tela deste app é vista num telefone. Metade das regras abaixo se decide escrevendo a versão de desktop, e refazer depois custa mais que ler antes.
       </Usage>
 
       <Group title="As duas portas do alvo de toque" layout="grid">
@@ -77,16 +75,7 @@ export default function MobileToqueDoc() {
       </DocSection>
 
       <DocNote title="Não remova hover: do código para “otimizar para mobile”">
-        A decisão do projeto é manter a variante <code>hover</code>{" "}
-        padrão do
-        Tailwind v4, e não apertá-la para{" "}
-        <code>(hover: hover) and (pointer: fine)</code>. Isso preserva o hover em
-        iPad com trackpad. O que falta em superfícies tocáveis é{" "}
-        <strong>somar</strong> <code>active:</code> ou{" "}
-        <code>group-active:</code>, não subtrair o hover.{" "}
-        <code>src/lib/tailwind-hover-policy.test.ts</code>{" "}
-        falha se alguém
-        redefinir a variante para <code>:hover</code> puro.
+        A decisão é manter a variante <code>hover</code> padrão do Tailwind v4, para o iPad com trackpad continuar tendo hover. O que falta em superfície tocável é <strong>somar</strong> <code>active:</code>, não subtrair o hover. <code>tailwind-hover-policy.test.ts</code> falha se alguém redefinir a variante.
       </DocNote>
 
       <Group title="Área segura">
@@ -104,11 +93,7 @@ export default function MobileToqueDoc() {
       </Group>
 
       <DocNote title="Tabela vira cartão por CSS, nunca por hook">
-        Dois gêmeos e <code>hidden</code>. Um <code>useIsMobile</code> devolve{" "}
-        <code>false</code>{" "}
-        no servidor e no primeiro quadro, então a tela pisca
-        com a tabela antes de trocar pelo cartão. O hook só entra quando a troca
-        é de <em>primitiva</em> — um Dialog que vira Sheet —, não de classe.
+        Dois gêmeos e <code>hidden</code>. Um <code>useIsMobile</code> devolve <code>false</code> no servidor e no primeiro quadro, então a tela pisca. O hook só entra quando a troca é de <em>primitiva</em> — um Dialog que vira Sheet.
       </DocNote>
 
       <DocNote title="Confira com a emulação de dispositivo ligada">

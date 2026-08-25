@@ -1,8 +1,7 @@
 "use client"
 
+import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
-import { CheckIcon, ChevronsUpDownIcon } from "lucide-react"
-
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -153,7 +152,7 @@ function ComboboxTrigger({
         {...props}
       >
         <span className="truncate">{children ?? placeholder}</span>
-        <ChevronsUpDownIcon className="ml-2 size-4 shrink-0 opacity-50" />
+        <ChevronUpDownIcon className="ml-2 size-4 shrink-0 opacity-50" />
       </Button>
     </PopoverTrigger>
   )

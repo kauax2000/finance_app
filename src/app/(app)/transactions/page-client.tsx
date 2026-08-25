@@ -1,5 +1,7 @@
 "use client"
 
+import { PlusIcon } from "@heroicons/react/16/solid"
+import { MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
 import { formatTransactionDayPtBr } from "@/lib/transaction-date"
 import { ROUTES } from "@/config/navigation"
 import {
@@ -29,7 +31,6 @@ import {
 import {
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { Plus, Receipt, SearchX } from "lucide-react"
 import {
     hasInstallmentDeleteImpact,
     INSTALLMENT_DELETE_WARNING,
@@ -368,7 +369,7 @@ export default function TransactionsPage() {
                             className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
                             aria-hidden
                         >
-                            <SearchX className="size-7 text-muted-foreground" />
+                            <MagnifyingGlassIcon className="size-7 text-muted-foreground" />
                         </div>
                         <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
                             Nenhuma transação com esses filtros
@@ -401,7 +402,7 @@ export default function TransactionsPage() {
                             className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
                             aria-hidden
                         >
-                            <Receipt className="size-7 text-muted-foreground" />
+                            <ReceiptPercentIcon className="size-7 text-muted-foreground" />
                         </div>
                         <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
                             Comece a registrar suas movimentações
@@ -415,7 +416,7 @@ export default function TransactionsPage() {
                             size="lg"
                             onClick={() => openDialog()}
                         >
-                            <Plus className="mr-1.5 size-3.5" />
+                            <PlusIcon className="mr-1.5 size-3.5" />
                             Nova transação
                         </Button>
                     </CardContent>

@@ -2,7 +2,8 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { ArrowTopRightOnSquareIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
+import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid"
+import { ReceiptPercentIcon } from "@heroicons/react/24/outline"
 import {
     ResponsiveContainer,
     PieChart,

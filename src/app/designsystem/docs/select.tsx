@@ -16,9 +16,7 @@ export default function SelectDoc() {
   return (
     <>
       <Usage>
-        Poucas opções conhecidas, sem busca. Passando de umas dez, o componente é
-        o <code>Combobox</code>: rolar uma lista suspensa longa procurando um
-        nome é pior que digitar as três primeiras letras.
+        Poucas opções conhecidas, sem busca. Passando de umas dez, o componente é o <code>Combobox</code>.
       </Usage>
 
       <DocSection
@@ -77,13 +75,7 @@ export default function SelectDoc() {
       </DocSection>
 
       <DocNote title="O Enter não é do formulário aqui">
-        Dentro de um <code>CustomForm</code>, o Enter aciona o submit — exceto
-        sobre um gatilho de Select, que o usa para abrir e escolher. O{" "}
-        <code>shouldDeferEnterToWidget</code> reconhece isso pelo{" "}
-        <code>data-slot=&quot;select-trigger&quot;</code>. Um controle novo que
-        também queira o Enter precisa de um <code>data-slot</code>{" "}
-        estável e de
-        uma linha ali.
+        Sobre um gatilho de Select o Enter abre e escolhe, em vez de enviar. O <code>shouldDeferEnterToWidget</code> reconhece isso pelo <code>data-slot=&quot;select-trigger&quot;</code>.
       </DocNote>
     </>
   )

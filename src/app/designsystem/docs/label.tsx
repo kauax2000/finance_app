@@ -9,9 +9,7 @@ export default function LabelDoc() {
   return (
     <>
       <Usage>
-        O nome do campo, ligado a ele por <code>htmlFor</code>. A ligação faz o
-        clique no texto focar o controle e o leitor de tela anunciar os dois
-        juntos. Sem ela, o rótulo é só um texto que por acaso está perto.
+        O nome do campo, ligado a ele por <code>htmlFor</code>. A ligação faz o clique no texto focar o controle e o leitor de tela anunciar os dois juntos.
       </Usage>
 
       <DocSection
@@ -39,9 +37,7 @@ export default function LabelDoc() {
       </DocSection>
 
       <DocNote title="Rótulo e valor empilhados não levam gap">
-        Quando o par é rótulo sobre valor em modo leitura (e não rótulo sobre
-        campo), quem separa é a entrelinha. Ali o componente certo é{" "}
-        <code>DescriptionList</code>.
+        Rótulo sobre valor em modo leitura não é campo: ali o componente é <code>DescriptionList</code>, e quem separa é a entrelinha.
       </DocNote>
     </>
   )

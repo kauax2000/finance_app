@@ -27,13 +27,7 @@ import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-    CheckCircle2,
-    Circle,
-    Eye,
-    EyeOff,
-} from "lucide-react"
-import { ExclamationTriangleIcon, CheckIcon } from "@heroicons/react/24/outline"
+import { CheckCircleIcon, CheckIcon, ExclamationTriangleIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
 import { cn } from "@/lib/utils"
 
 const dialogFooterClass =
@@ -86,7 +80,7 @@ function ReqRow({
             {met ? (
                 <CheckIcon className="size-3 shrink-0" aria-hidden />
             ) : (
-                <Circle className="size-3 shrink-0" aria-hidden />
+                <span className="size-3 shrink-0 rounded-full border border-current" aria-hidden />
             )}
             {label}
         </div>
@@ -210,9 +204,9 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                     >
                         {showCurrentPassword ? (
-                            <EyeOff className="h-4 w-4" />
+                            <EyeSlashIcon className="h-4 w-4" />
                         ) : (
-                            <Eye className="h-4 w-4" />
+                            <EyeIcon className="h-4 w-4" />
                         )}
                     </Button>
                 </div>
@@ -239,9 +233,9 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         onClick={() => setShowNewPassword(!showNewPassword)}
                     >
                         {showNewPassword ? (
-                            <EyeOff className="h-4 w-4" />
+                            <EyeSlashIcon className="h-4 w-4" />
                         ) : (
-                            <Eye className="h-4 w-4" />
+                            <EyeIcon className="h-4 w-4" />
                         )}
                     </Button>
                 </div>
@@ -279,9 +273,9 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     >
                         {showConfirmPassword ? (
-                            <EyeOff className="h-4 w-4" />
+                            <EyeSlashIcon className="h-4 w-4" />
                         ) : (
-                            <Eye className="h-4 w-4" />
+                            <EyeIcon className="h-4 w-4" />
                         )}
                     </Button>
                 </div>
@@ -295,7 +289,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
             ) : null}
             {success ? (
                 <div className="flex items-start gap-2 rounded-lg border border-success/30 bg-success-muted px-3 py-2 text-xs text-success-muted-foreground">
-                    <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    <CheckCircleIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                     <span>Senha alterada com sucesso!</span>
                 </div>
             ) : null}

@@ -122,8 +122,16 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
 - **Texto**: além da escala do Tailwind, `text-2xs` (0,6875rem, para contagem
   dentro de controle pequeno) e `text-control-sm` (0,8rem, o texto dos controles
   `size="sm"`).
+- **Ícones**: **Heroicons**, e o conjunto muda com o tamanho — eles são
+  redesenhos, não escalas. `size-6`+ usa `@heroicons/react/24/outline`; `size-5`
+  usa o mini (`20/solid`); `size-4` e abaixo usam o micro (`16/solid`), o que
+  inclui todo ícone sem classe de tamanho, porque o componente que o contém
+  aplica `size-4`. Ícone passado como valor (mapa de ícone, config de navegação)
+  fica em `24/outline`, já que quem renderiza é que decide o corpo.
+  `components.json` declara `heroicons`.
 - **Fonts**: [`src/app/layout.tsx`](src/app/layout.tsx) define `--font-sans`
-  (Inter), `--font-heading` (Plus Jakarta Sans), `--font-mono` (Geist Mono).
+  (Inter), `--font-display` (Ledger, só em `.page-title` e `.wordmark`),
+  `--font-heading` (aponta para a sans), `--font-mono` (Geist Mono).
 - **Utilitários**: `.nums` (tabular figures) e `.page-title`.
 
 ### Touch devices and hover (Tailwind v4)

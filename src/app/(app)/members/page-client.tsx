@@ -3,16 +3,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import type { User } from "@supabase/supabase-js"
-import {
-    UserGroupIcon,
-    EnvelopeIcon,
-    InformationCircleIcon,
-    ArrowPathIcon,
-    LinkIcon,
-    DocumentDuplicateIcon,
-    CheckIcon,
-    TrashIcon,
-} from "@heroicons/react/24/outline"
+import { ArrowPathIcon, CheckIcon, DocumentDuplicateIcon, EnvelopeIcon, InformationCircleIcon, LinkIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { EnvelopeIcon as EnvelopeOutlineIcon, UserGroupIcon } from "@heroicons/react/24/outline"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { supabase, WorkspaceInvite, WorkspaceMember } from "@/lib/supabase"
@@ -990,7 +982,7 @@ export default function MembersPage() {
                                         className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
                                         aria-hidden
                                     >
-                                        <EnvelopeIcon className="size-7 text-muted-foreground" />
+                                        <EnvelopeOutlineIcon className="size-7 text-muted-foreground" />
                                     </div>
                                     <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
                                         Nenhum convite pendente

@@ -15,10 +15,7 @@ export default function PaginationDoc() {
   return (
     <>
       <Usage>
-        Divide uma lista longa em páginas endereçáveis. Vale quando a pessoa
-        precisa voltar ao mesmo ponto ou compartilhar o link — um extrato
-        filtrado, por exemplo. Para uma lista que só se percorre, rolagem
-        infinita cansa menos.
+        Divide uma lista longa em páginas endereçáveis. Vale quando é preciso voltar ao mesmo ponto ou compartilhar o link. Para uma lista que só se percorre, rolagem infinita cansa menos.
       </Usage>
 
       <DocSection

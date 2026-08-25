@@ -6,8 +6,7 @@ import { Dialog as DialogPrimitive } from "radix-ui"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { XMarkIcon } from "@heroicons/react/24/outline"
-
+import { XMarkIcon } from "@heroicons/react/16/solid"
 function Dialog({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>) {

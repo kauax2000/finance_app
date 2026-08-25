@@ -8,11 +8,7 @@ export default function RadioGroupDoc() {
   return (
     <>
       <Usage>
-        Escolha única entre <strong>poucas</strong>{" "}
-        opções que valem a pena ver
-        todas ao mesmo tempo. Passando de cinco, o componente é o{" "}
-        <code>Select</code>. Radio existe justamente para comparar as opções lado
-        a lado antes de decidir.
+        Escolha única entre <strong>poucas</strong> opções — ele existe para comparar todas lado a lado antes de decidir. Passando de cinco, o componente é o <code>Select</code>.
       </Usage>
 
       <DocSection

@@ -12,11 +12,7 @@ export default function NativeSelectDoc() {
   return (
     <>
       <Usage>
-        O <code>&lt;select&gt;</code>{" "}
-        do sistema. Vale quando a lista é curta e
-        previsível e quando o seletor nativo do telefone é melhor que qualquer
-        coisa desenhada — mês, ano, dia do vencimento. Não dá para estilizar as
-        opções, e é exatamente esse o ponto.
+        O <code>&lt;select&gt;</code> do sistema. Vale quando a lista é curta e previsível e o seletor nativo do telefone ganha de qualquer coisa desenhada — mês, ano, dia do vencimento.
       </Usage>
 
       <DocSection
@@ -61,10 +57,7 @@ export default function NativeSelectDoc() {
       </DocSection>
 
       <DocNote title="Enter dentro dele quebra a regra do formulário">
-        O <code>CustomForm</code>{" "}
-        deixa o Enter passar em cima de um select
-        nativo: ali a tecla pertence ao controle do sistema, e sequestrá-la
-        impediria a escolha pelo teclado.
+        Ali a tecla pertence ao controle do sistema, e sequestrá-la impediria a escolha pelo teclado.
       </DocNote>
     </>
   )

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useTheme } from "next-themes"
-import { MoonIcon, SwatchIcon, SunIcon } from "@heroicons/react/24/outline"
+import { MoonIcon, SunIcon } from "@heroicons/react/16/solid"
+import { SwatchIcon } from "@heroicons/react/20/solid"
 import {
     Card,
     CardDescription,

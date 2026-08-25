@@ -8,11 +8,7 @@ export default function InputDoc() {
   return (
     <>
       <Usage>
-        Todo campo de uma linha. Valor em reais é <code>MoneyInput</code>, que
-        cuida da máscara e do teclado numérico. Todo campo precisa de{" "}
-        <code>Label</code> associado: <code>placeholder</code>{" "}
-        não é rótulo, ele
-        some quando a pessoa começa a digitar.
+        Todo campo de uma linha. Valor em reais é <code>MoneyInput</code>. Todo campo precisa de <code>Label</code> associado: <code>placeholder</code> não é rótulo, ele some ao digitar.
       </Usage>
 
       <DocSection
@@ -50,12 +46,7 @@ export default function InputDoc() {
       </DocSection>
 
       <DocNote title="No telefone o campo é 16px, e não é escolha de design">
-        Safari do iOS dá zoom em qualquer campo com fonte abaixo de 16px, e o
-        zoom costuma não voltar quando o campo perde o foco. Uma regra em{" "}
-        <code>@layer base</code> força <code>font-size: 1rem</code>{" "}
-        em input,
-        textarea e select abaixo de 768px. É por isso que o campo parece maior no
-        telefone que no desktop.
+        Safari do iOS dá zoom em qualquer campo com fonte abaixo de 16px, e o zoom costuma não voltar. Uma regra em <code>@layer base</code> força <code>1rem</code> abaixo de 768px — por isso o campo parece maior no telefone.
       </DocNote>
 
       <DocNote title="size aqui não é o size do HTML">

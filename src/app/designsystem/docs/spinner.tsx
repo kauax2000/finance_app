@@ -8,13 +8,7 @@ export default function SpinnerDoc() {
   return (
     <>
       <Usage>
-        Carregamento <strong>sem fim conhecido</strong>{" "}
-        e de curta duração:
-        dentro de um botão que está salvando, ao lado de um campo que valida.
-        Para uma tela inteira que está buscando dados, o certo é{" "}
-        <code>Skeleton</code>{" "}
-        — o spinner não diz o que vem depois, o esqueleto
-        diz.
+        Carregamento <strong>sem fim conhecido</strong> e curto: dentro de um botão que salva, ao lado de um campo que valida. Para uma tela inteira, <code>Skeleton</code> — o spinner não diz o que vem depois.
       </Usage>
 
       <DocSection

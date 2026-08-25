@@ -5,8 +5,7 @@ import { Dialog as SheetPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { XMarkIcon } from "@heroicons/react/24/outline"
-
+import { XMarkIcon } from "@heroicons/react/16/solid"
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
 }
@@ -67,7 +66,7 @@ function SheetContent({
   /** Symmetric open/close; bottom uses a slightly iOS-like slide curve (tw-animate reads --tw-ease). */
   const motionEase =
     side === "bottom" && !isMobileFillBottom
-      ? "ease-[cubic-bezier(0.32,0.72,0,1)]"
+      ? "ease-(--ease-emphasized)"
       : "ease-in-out"
 
   const bottomSlideOpen = isMobileFillBottom

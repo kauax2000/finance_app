@@ -1,24 +1,25 @@
 import type { HeroIcon } from "@/types/navigation"
 import {
+    ArrowTrendingUpIcon,
+    BeakerIcon,
+    BoltIcon,
     BookOpenIcon,
     BriefcaseIcon,
     BuildingOffice2Icon,
     CameraIcon,
+    ComputerDesktopIcon,
+    FlagIcon,
     GiftIcon,
+    GlobeAltIcon,
     HeartIcon,
     HomeIcon,
-    GlobeAltIcon,
-    ComputerDesktopIcon,
     MusicalNoteIcon,
     PaperAirplaneIcon,
     ShoppingCartIcon,
     SparklesIcon,
-    ArrowTrendingUpIcon,
     UserGroupIcon,
     WalletIcon,
-    BoltIcon,
 } from "@heroicons/react/24/outline"
-import { Coffee, Dumbbell, Target } from "lucide-react"
 
 /** Stable keys stored in `workspaces.icon` (kebab-case, matches DB CHECK). */
 export const WORKSPACE_ICON_KEYS = [
@@ -63,12 +64,12 @@ export const WORKSPACE_ICON_MAP: Record<WorkspaceIconKey, HeroIcon> = {
     "trending-up": ArrowTrendingUpIcon,
     gift: GiftIcon,
     sparkles: SparklesIcon,
-    target: Target,
+    target: FlagIcon,
     zap: BoltIcon,
-    coffee: Coffee,
+    coffee: BeakerIcon,
     music: MusicalNoteIcon,
     camera: CameraIcon,
-    dumbbell: Dumbbell,
+    dumbbell: BoltIcon,
     "book-open": BookOpenIcon,
     globe: GlobeAltIcon,
 }

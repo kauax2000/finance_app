@@ -7,9 +7,7 @@ export default function AspectRatioDoc() {
   return (
     <>
       <Usage>
-        Reserva a proporção antes de o conteúdo chegar. É o que evita o salto de
-        layout quando uma imagem ou um gráfico termina de carregar e empurra tudo
-        que está abaixo.
+        Reserva a proporção antes de o conteúdo chegar. É o que evita o salto de layout quando uma imagem ou um gráfico termina de carregar.
       </Usage>
 
       <DocSection

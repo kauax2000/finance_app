@@ -48,7 +48,12 @@ export function AppLogo({
     return (
         <span className={cn("inline-flex items-center gap-2", className)}>
             {mark}
-            <span className={cn("text-lg font-semibold", wordmarkClassName)}>
+            <span
+                className={cn(
+                    "wordmark text-lg",
+                    wordmarkClassName,
+                )}
+            >
                 Finance App
             </span>
         </span>

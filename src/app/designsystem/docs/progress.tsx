@@ -7,9 +7,7 @@ export default function ProgressDoc() {
   return (
     <>
       <Usage>
-        Quanto de um total já foi consumido: um orçamento de categoria, um limite
-        de cartão. Se o progresso não tem fim conhecido — uma requisição em
-        andamento — o componente é o <code>Spinner</code>.
+        Quanto de um total já foi consumido: um orçamento de categoria, um limite de cartão. Se o progresso não tem fim conhecido, o componente é o <code>Spinner</code>.
       </Usage>
 
       <DocSection
@@ -59,13 +57,7 @@ export default function ProgressDoc() {
       </DocNote>
 
       <DocNote title="O valor real continua sendo anunciado">
-        O Radix rejeita <code>value</code> acima de <code>max</code>: ele avisa no
-        console e trata o progresso como indeterminado, zerando o{" "}
-        <code>aria-valuenow</code>{" "}
-        — ou seja, quem usa leitor de tela perdia o
-        número exatamente na categoria que estourou. O componente limita o valor
-        enviado ao primitivo e manda a porcentagem verdadeira no{" "}
-        <code>aria-valuetext</code>.
+        O Radix rejeita <code>value</code> acima de <code>max</code>: trata o progresso como indeterminado e zera o <code>aria-valuenow</code> — quem usa leitor de tela perdia o número justamente na categoria que estourou. O componente limita o valor enviado e manda a porcentagem verdadeira em <code>aria-valuetext</code>.
       </DocNote>
 
       <PropsTable

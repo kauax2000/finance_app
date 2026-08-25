@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import type { LucideIcon } from "lucide-react"
+import type { HeroIcon } from "@/types/navigation"
 import {
     mobileNavTabIconClass,
     mobileNavTabInnerClass,
@@ -11,7 +11,7 @@ import {
 type MobileNavTabProps = {
     href: string
     name: string
-    icon: LucideIcon
+    icon: HeroIcon
     active: boolean
 }
 

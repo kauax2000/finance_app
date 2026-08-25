@@ -14,9 +14,7 @@ export default function PageSectionDoc() {
   return (
     <>
       <Usage>
-        O bloco que dá ritmo vertical a uma tela. Quem espaça é quem contém: uma
-        tela é uma pilha de <code>PageSection</code> dentro de um{" "}
-        <code>Container</code>, e nenhum filho declara margem própria.
+        O bloco que dá ritmo vertical. Quem espaça é quem contém: uma pilha de <code>PageSection</code> dentro de um <code>Container</code>, e nenhum filho declara margem própria.
       </Usage>
 
       <DocSection

@@ -1,7 +1,6 @@
 "use client"
 
-import { FilterIcon, PlusIcon, SearchIcon } from "lucide-react"
-
+import { FunnelIcon, MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,9 +15,7 @@ export default function ToolbarDoc() {
   return (
     <>
       <Usage>
-        A linha entre o título e a lista: busca e filtros de um lado, ações do
-        outro. Existe porque esse bloco já era desenhado à mão em transações,
-        faturas e membros, com um espaçamento diferente em cada.
+        A linha entre o título e a lista: busca e filtros de um lado, ações do outro. Existe porque esse bloco já era desenhado à mão em cada tela, com um espaçamento diferente.
       </Usage>
 
       <DocSection
@@ -26,7 +23,7 @@ export default function ToolbarDoc() {
         code={`<Toolbar>
   <ToolbarSearch>
     <InputGroup>…</InputGroup>
-    <Button variant="outline"><FilterIcon />Filtros</Button>
+    <Button variant="outline"><FunnelIcon />Filtros</Button>
   </ToolbarSearch>
   <ToolbarActions>
     <Button><PlusIcon />Nova</Button>
@@ -38,12 +35,12 @@ export default function ToolbarDoc() {
           <ToolbarSearch>
             <InputGroup className="max-w-xs">
               <InputGroupAddon>
-                <SearchIcon aria-hidden />
+                <MagnifyingGlassIcon aria-hidden />
               </InputGroupAddon>
               <InputGroupInput placeholder="Buscar" aria-label="Buscar" />
             </InputGroup>
             <Button variant="outline">
-              <FilterIcon aria-hidden />
+              <FunnelIcon aria-hidden />
               Filtros
               <Badge size="xs" variant="secondary">
                 2

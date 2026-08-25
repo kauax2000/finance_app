@@ -1,12 +1,6 @@
+import { ArrowRightIcon } from "@heroicons/react/16/solid"
+import { ArrowUturnLeftIcon, BanknotesIcon, CursorArrowRaysIcon, SwatchIcon } from "@heroicons/react/24/outline"
 import Link from "next/link"
-import {
-    ArrowRightIcon,
-    BanknoteIcon,
-    CornerDownLeftIcon,
-    PaletteIcon,
-    PointerIcon,
-} from "lucide-react"
-
 import { cn } from "@/lib/utils"
 import { Code } from "@/components/ui/code"
 import {
@@ -26,11 +20,11 @@ import {
  * padrões que atravessam telas e a página que governa todas as cores.
  */
 const START_HERE = [
-    { slug: "cores", Icon: PaletteIcon },
-    { slug: "dinheiro", Icon: BanknoteIcon },
+    { slug: "cores", Icon: SwatchIcon },
+    { slug: "dinheiro", Icon: BanknotesIcon },
     // A própria glifa da tecla Enter, que é sobre o que a página fala.
-    { slug: "formularios", Icon: CornerDownLeftIcon },
-    { slug: "mobile-toque", Icon: PointerIcon },
+    { slug: "formularios", Icon: ArrowUturnLeftIcon },
+    { slug: "mobile-toque", Icon: CursorArrowRaysIcon },
 ]
 
 const CATEGORY_BLURB: Record<string, string> = {
@@ -86,7 +80,7 @@ export default function DesignSystemIndexPage() {
                 <h1 className="page-title mt-3 font-heading text-3xl text-foreground sm:text-4xl">
                     Design system
                 </h1>
-                <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground">
+                <p className="mt-4 text-sm leading-relaxed text-pretty text-muted-foreground">
                     Uma página por componente e por padrão, com o espécime vivo ao lado
                     da regra. Os componentes vivem em{" "}
                     <Code>src/components/ui/</Code> e os tokens em{" "}
@@ -122,7 +116,7 @@ export default function DesignSystemIndexPage() {
                     >
                         Comece aqui
                     </h2>
-                    <p className="max-w-xl text-sm text-muted-foreground">
+                    <p className="text-sm text-pretty text-muted-foreground">
                         Quatro páginas antes das outras {REGISTRY.length - 4}. Elas não
                         descrevem um componente: descrevem a decisão que os componentes
                         obedecem.
@@ -242,7 +236,7 @@ export default function DesignSystemIndexPage() {
                                     {group.items.length}
                                 </span>
                             </h2>
-                            <p className="max-w-xl text-sm text-muted-foreground">
+                            <p className="text-sm text-pretty text-muted-foreground">
                                 {CATEGORY_BLURB[group.category]}
                             </p>
                         </div>

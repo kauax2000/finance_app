@@ -1,5 +1,6 @@
 "use client"
 
+import { PlusIcon } from "@heroicons/react/16/solid"
 import dynamic from "next/dynamic"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
@@ -49,8 +50,6 @@ import { buildCardCycleSnapshot } from "@/lib/credit-card-billing"
 import type { CcTxRow } from "@/lib/credit-cards-workspace-transactions"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
 import { useCreditCardsPageBundle } from "@/lib/queries/use-credit-cards-page-bundle"
-import { Plus } from "lucide-react"
-
 const CreditCardsHistoryChart = dynamic(
     () =>
         import("@/components/credit-cards/credit-cards-history-chart").then(
@@ -323,7 +322,7 @@ export default function CreditCardsPageClient() {
                     disabled={!canCreateCard}
                     onClick={() => setCreateOpen(true)}
                 >
-                    <Plus className="size-4 shrink-0" />
+                    <PlusIcon className="size-4 shrink-0" />
                     <span className="hidden md:inline">Novo cartão</span>
                 </Button>
             </div>

@@ -13,12 +13,7 @@ export default function FormDoc() {
   return (
     <>
       <Usage>
-        O <code>&lt;form&gt;</code>{" "}
-        do projeto. Use-o em qualquer fluxo em que
-        campos são salvos ou confirmados; evite <code>&lt;form&gt;</code>{" "}
-        cru,
-        salvo exceção documentada. O padrão completo, com a lista de onde o Enter
-        não é sequestrado, está em{" "}
+        O <code>&lt;form&gt;</code> do projeto, para qualquer fluxo em que campos são salvos ou confirmados. O padrão completo está em{" "}
         <Link href="/designsystem/formularios" className="underline">
           Formulários e Enter
         </Link>
@@ -40,14 +35,7 @@ export default function FormDoc() {
       </DocSection>
 
       <DocNote title="O que ele faz de diferente">
-        Normaliza o <kbd>Enter</kbd> para acionar o{" "}
-        <code>Button type=&quot;submit&quot;</code>{" "}
-        principal, e deixa a tecla
-        passar quando o foco está num controle que a usa para si — textarea,
-        select nativo, contenteditable, gatilho de Select do Radix, combobox e
-        listbox. Num app usado no telefone, onde o teclado virtual mostra
-        &ldquo;ir&rdquo; e não &ldquo;salvar&rdquo;, isso é a diferença entre
-        conseguir salvar e não conseguir.
+        Normaliza o <kbd>Enter</kbd> para o <code>Button type=&quot;submit&quot;</code> principal, e deixa a tecla passar onde o controle a usa para si: textarea, select nativo, contenteditable, gatilho de Select, combobox e listbox.
       </DocNote>
 
       <DocNote title="Um controle novo que use o Enter">

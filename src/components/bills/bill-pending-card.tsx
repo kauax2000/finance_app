@@ -1,6 +1,7 @@
 "use client"
 
-import { CreditCardIcon, EllipsisHorizontalIcon, PencilIcon, ForwardIcon, TrashIcon } from "@heroicons/react/24/outline"
+import { CreditCardIcon, EllipsisHorizontalIcon, ForwardIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { CreditCardIcon as CreditCardMiniIcon } from "@heroicons/react/20/solid"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -134,7 +135,7 @@ export function BillPendingCard({
                                 className="col-start-1 row-span-2 flex size-11 shrink-0 items-center justify-center self-start rounded-lg border border-border bg-muted"
                                 aria-hidden
                             >
-                                <CreditCardIcon className="size-5 text-muted-foreground" />
+                                <CreditCardMiniIcon className="size-5 text-muted-foreground" />
                             </div>
                         ) : (
                             <ColorTile

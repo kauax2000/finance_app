@@ -18,10 +18,7 @@ export default function SheetDoc() {
   return (
     <>
       <Usage>
-        Um painel que desliza de uma borda. É o formulário do telefone: entra de
-        baixo, ocupa a altura útil e deixa a ação principal perto do polegar. No
-        desktop entra pela direita para não cobrir o conteúdo que a pessoa estava
-        lendo.
+        Um painel que desliza de uma borda. É o formulário do telefone: entra de baixo, ocupa a altura útil e deixa a ação principal perto do polegar. No desktop entra pela direita.
       </Usage>
 
       <DocSection
@@ -52,12 +49,7 @@ export default function SheetDoc() {
       </DocSection>
 
       <DocNote title="fillMobileViewport, para formulário no telefone">
-        Com <code>side=&quot;bottom&quot;</code> e{" "}
-        <code>fillMobileViewport</code>, a folha vai de uma folga no topo até a
-        base, com altura fixa em <code>dvh</code>{" "}
-        e respeitando a área segura. É
-        o que impede a folha de encolher quando o teclado do iOS abre e a barra
-        de endereço do Safari se retrai.
+        Com <code>side=&quot;bottom&quot;</code>, a folha vai de uma folga no topo até a base, em <code>dvh</code> e respeitando a área segura. É o que a impede de encolher quando o teclado do iOS abre.
       </DocNote>
 
       <DocNote title="A animação tem curva própria">

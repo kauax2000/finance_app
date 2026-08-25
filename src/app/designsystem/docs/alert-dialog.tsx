@@ -18,11 +18,7 @@ export default function AlertDialogDoc() {
   return (
     <>
       <Usage>
-        Confirmação de uma ação <strong>sem volta</strong>: excluir uma
-        transação, sair de um workspace, apagar a conta. Não use para perguntas
-        comuns — um diálogo que aparece o tempo todo deixa de ser lido, e quando
-        aparecer o que importa a pessoa já vai estar clicando em &ldquo;ok&rdquo;
-        por reflexo.
+        Confirmação de uma ação <strong>sem volta</strong>: excluir uma transação, sair de um workspace. Não use para perguntas comuns — um diálogo que aparece sempre deixa de ser lido.
       </Usage>
 
       <DocSection
@@ -66,12 +62,7 @@ export default function AlertDialogDoc() {
       </DocSection>
 
       <DocNote title="O rodapé tem uma hierarquia só">
-        <code>AlertDialogCancel</code> é <code>ghost</code> e{" "}
-        <strong>não recebe variant</strong>. A ação é <code>default</code>, ou{" "}
-        <code>destructive</code>{" "}
-        quando não tem volta. Cancelar vem primeiro.
-        Dois botões de contorno lado a lado pesam igual, e aí o olho precisa ler
-        os dois para descobrir qual é a saída.
+        <code>AlertDialogCancel</code> é <code>ghost</code> e <strong>não recebe variant</strong>. A ação é <code>default</code>, ou <code>destructive</code> quando não tem volta. Cancelar vem primeiro.
       </DocNote>
 
       <DocNote title="AlertDialog ou Dialog?">

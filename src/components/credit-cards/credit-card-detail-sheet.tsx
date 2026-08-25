@@ -24,15 +24,8 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-    ChevronDownIcon,
-    ListBulletIcon,
-    PencilIcon,
-    PowerIcon,
-    TrashIcon,
-    XMarkIcon,
-} from "@heroicons/react/24/outline"
-import { PowerOff } from "lucide-react"
+import { ChevronDownIcon, ListBulletIcon, PencilIcon, PowerIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { XMarkIcon } from "@heroicons/react/20/solid"
 import { cn } from "@/lib/utils"
 
 const currencyFmt = new Intl.NumberFormat("pt-BR", {
@@ -166,7 +159,7 @@ export function CreditCardDetailSheet({
                                 >
                                     {card.is_active ? (
                                         <>
-                                            <PowerOff className="h-4 w-4" aria-hidden />
+                                            <PowerIcon className="h-4 w-4" aria-hidden />
                                             Desativar cartão
                                         </>
                                     ) : (

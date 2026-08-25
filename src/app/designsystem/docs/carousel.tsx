@@ -22,9 +22,7 @@ export default function CarouselDoc() {
   return (
     <>
       <Usage>
-        Itens de mesma importância que deslizam na horizontal: os cartões de
-        crédito no topo de uma tela, por exemplo. Nunca para conteúdo que
-        precisa ser comparado — o que está fora da tela não se compara com nada.
+        Itens de mesma importância que deslizam na horizontal. Nunca para conteúdo que precisa ser comparado — o que está fora da tela não se compara.
       </Usage>
 
       <DocSection

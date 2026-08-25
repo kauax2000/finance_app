@@ -1,7 +1,6 @@
 "use client"
 
-import { BoldIcon, EyeOffIcon } from "lucide-react"
-
+import { BoldIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
 import { Toggle } from "@/components/ui/toggle"
 import { DocSection, PropsTable, Usage } from "../ds-doc"
 
@@ -9,9 +8,7 @@ export default function ToggleDoc() {
   return (
     <>
       <Usage>
-        Um botão que fica pressionado. Serve para uma opção de visualização —
-        esconder valores, fixar uma coluna. Se a opção pertence a um conjunto
-        onde só uma vale por vez, use <code>ToggleGroup</code>.
+        Um botão que fica pressionado: esconder valores, fixar uma coluna. Se a opção pertence a um conjunto onde só uma vale por vez, use <code>ToggleGroup</code>.
       </Usage>
 
       <DocSection
@@ -25,7 +22,7 @@ export default function ToggleDoc() {
           <BoldIcon aria-hidden />
         </Toggle>
         <Toggle variant="outline" defaultPressed>
-          <EyeOffIcon aria-hidden />
+          <EyeSlashIcon aria-hidden />
           Ocultar valores
         </Toggle>
         <Toggle size="sm" variant="outline">

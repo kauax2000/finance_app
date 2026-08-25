@@ -36,16 +36,7 @@ import { MoneyDisplay } from "@/components/ui/money-display"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
-import {
-    ChartBarIcon,
-    CalendarDaysIcon,
-    ChevronDownIcon,
-    ChevronUpDownIcon,
-    LightBulbIcon,
-    MinusIcon,
-    ArrowTrendingDownIcon,
-    ArrowTrendingUpIcon,
-} from "@heroicons/react/24/outline"
+import { ArrowTrendingDownIcon, ArrowTrendingUpIcon, CalendarDaysIcon, ChartBarIcon, ChevronDownIcon, ChevronUpDownIcon, LightBulbIcon, MinusIcon } from "@heroicons/react/16/solid"
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts"
 import type { CreditCardInvoicePayment } from "@/lib/supabase"
 import { supabase } from "@/lib/supabase"

@@ -1,10 +1,6 @@
 "use client"
 
-import {
-    ArrowTrendingDownIcon,
-    ArrowTrendingUpIcon,
-    MinusIcon,
-} from "@heroicons/react/24/outline"
+import { ArrowTrendingDownIcon, ArrowTrendingUpIcon, MinusIcon } from "@heroicons/react/16/solid"
 import { cn } from "@/lib/utils"
 
 const pctFmt = new Intl.NumberFormat("pt-BR", {

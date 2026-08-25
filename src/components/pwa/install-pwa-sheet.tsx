@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { DevicePhoneMobileIcon, ShareIcon } from "@heroicons/react/24/outline"
+import { ShareIcon } from "@heroicons/react/16/solid"
+import { DevicePhoneMobileIcon } from "@heroicons/react/20/solid"
 import {
     Sheet,
     SheetContent,

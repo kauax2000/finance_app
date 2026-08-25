@@ -1,10 +1,11 @@
 "use client"
 
+import { AdjustmentsHorizontalIcon, PlusIcon } from "@heroicons/react/16/solid"
+import { MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
 import { useCallback, useMemo, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import type { User } from "@supabase/supabase-js"
-import { Plus, Receipt, SearchX, SlidersHorizontal } from "lucide-react"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { Button } from "@/components/ui/button"
@@ -201,7 +202,7 @@ export default function BillsPageClient() {
                 onClick={() => setMobileFiltersSheetOpen(true)}
                 aria-label="Filtros e ordenação"
             >
-                <SlidersHorizontal className="size-4 opacity-80" />
+                <AdjustmentsHorizontalIcon className="size-4 opacity-80" />
                 {billsFilterActiveEarly ? (
                     <span
                         className="pointer-events-none absolute top-1.5 right-1.5 size-2 rounded-full bg-primary"
@@ -627,7 +628,7 @@ export default function BillsPageClient() {
                             className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
                             aria-hidden
                         >
-                            <Receipt className="size-7 text-muted-foreground" />
+                            <ReceiptPercentIcon className="size-7 text-muted-foreground" />
                         </div>
                         <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
                             Cadastre suas contas a pagar
@@ -646,7 +647,7 @@ export default function BillsPageClient() {
                                 setFormOpen(true)
                             }}
                         >
-                            <Plus className="size-3.5" />
+                            <PlusIcon className="size-3.5" />
                             Nova conta
                         </Button>
                     </CardContent>
@@ -662,7 +663,7 @@ export default function BillsPageClient() {
                             className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
                             aria-hidden
                         >
-                            <SearchX className="size-7 text-muted-foreground" />
+                            <MagnifyingGlassIcon className="size-7 text-muted-foreground" />
                         </div>
                         <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
                             Nenhuma conta com esses filtros

@@ -1,6 +1,5 @@
 import Link from "next/link"
-import { QuestionMarkCircleIcon } from "@heroicons/react/24/outline"
-
+import { QuestionMarkCircleIcon } from "@heroicons/react/16/solid"
 import { ROUTES } from "@/config/navigation"
 import { buttonVariants } from "@/components/ui/button"
 import {

@@ -32,9 +32,7 @@ export default function TableDoc() {
   return (
     <>
       <Usage>
-        Dados que se comparam <strong>coluna a coluna</strong>. Se ninguém compara
-        os valores entre linhas, a informação é uma lista, e o componente é{" "}
-        <code>Item</code>. Tabela existe para o olho descer uma coluna.
+        Dados que se comparam <strong>coluna a coluna</strong>. Se ninguém compara os valores entre linhas, a informação é uma lista, e o componente é <code>Item</code>.
       </Usage>
 
       <DocSection
@@ -122,28 +120,15 @@ export default function TableDoc() {
       </DocSection>
 
       <DocNote title="Lista mista pede signed, e este exemplo é normativo">
-        Entrada e saída na mesma coluna: por isso o <code>signed</code>. Sem ele,
-        quem não distingue verde de vermelho lê as duas linhas como idênticas — é
-        o argumento da página{" "}
-        <Link href="/designsystem/dinheiro" className="underline">
-          Dinheiro
-        </Link>
-        , e um exemplo de design system é copiado antes de ser lido.
+        Entrada e saída na mesma coluna: por isso o <code>signed</code>. Sem ele, quem não distingue verde de vermelho lê as duas linhas como idênticas — é o argumento de <Link href="/designsystem/dinheiro" className="underline">Dinheiro</Link>.
       </DocNote>
 
       <DocNote title="O cartão perde o &lt;th&gt;, então rotula o dado">
-        Numa tabela, a coluna diz o que o valor significa. No cartão essa coluna
-        não existe, então o rótulo precisa ir junto do valor — e com a{" "}
-        <strong>mesma palavra</strong>{" "}
-        do cabeçalho da tabela irmã. Duas palavras
-        diferentes para o mesmo dado são duas coisas diferentes para quem lê.
+        No cartão a coluna não existe, então o rótulo vai junto do valor — e com a <strong>mesma palavra</strong> do cabeçalho da tabela irmã. Duas palavras para o mesmo dado são duas coisas diferentes para quem lê.
       </DocNote>
 
       <DocNote title="Não existe DataTable neste catálogo">
-        A versão com ordenação, filtro e paginação embutidos depende de{" "}
-        <code>@tanstack/react-table</code>, que o projeto não tem, e hoje não há
-        nenhuma tela que a consumiria. Instalar a biblioteca e escrever o
-        invólucro agora seria inventar variants antes do primeiro caso de uso.
+        A versão com ordenação e filtro embutidos depende de <code>@tanstack/react-table</code>, que o projeto não tem, e nenhuma tela a consumiria hoje.
       </DocNote>
     </>
   )

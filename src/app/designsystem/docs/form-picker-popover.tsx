@@ -18,11 +18,7 @@ export default function FormPickerPopoverDoc() {
   return (
     <>
       <Usage>
-        O posicionamento de um popover ancorado num campo de formulário: largura
-        igual à do gatilho, folga de colisão com as bordas, altura limitada ao
-        espaço disponível, e o foco que <strong>não</strong>{" "}
-        pula ao abrir nem ao
-        fechar.
+        O posicionamento de um popover ancorado num campo: largura do gatilho, folga de colisão, altura limitada, e o foco que <strong>não</strong> pula ao abrir nem ao fechar.
       </Usage>
 
       <DocSection
@@ -51,11 +47,6 @@ export default function FormPickerPopoverDoc() {
         de uma folha rola a folha junto, e no iOS a rolagem trava no fim.
       </DocNote>
 
-      <DocNote title="Não é o Combobox">
-        Este resolve <em>onde</em> o painel aparece. <code>Combobox</code>{" "}
-        resolve busca, navegação por teclado e semântica de listbox. Os dois se
-        compõem; nenhum substitui o outro.
-      </DocNote>
 
       <PropsTable
         rows={[

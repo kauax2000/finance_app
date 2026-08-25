@@ -7,12 +7,7 @@ export default function MoneyDisplayDoc() {
   return (
     <>
       <Usage>
-        <strong>Todo</strong> valor em reais que o app mostra. Nunca escreva{" "}
-        <code>Intl.NumberFormat</code> nem <code>toLocaleString</code>{" "}
-        numa tela:
-        cada chamada solta é livre para divergir em casas decimais, símbolo e
-        separador, e nenhuma delas aparece quando se procura por &ldquo;como
-        formatamos dinheiro&rdquo;.
+        <strong>Todo</strong> valor em reais que o app mostra. Nunca escreva <code>Intl.NumberFormat</code> numa tela: cada chamada solta é livre para divergir em casas decimais, símbolo e separador.
       </Usage>
 
       <DocSection
@@ -36,6 +31,7 @@ export default function MoneyDisplayDoc() {
 <MoneyDisplay value={1234.5} size="lg" />
 <MoneyDisplay value={1234.5} size="xl" />
 <MoneyDisplay value={1234.5} size="2xl" />`}
+        description="A partir de xl as figuras vão para Geist Mono sozinhas: ali o valor é o assunto da tela, não um dado de linha."
         previewClassName="items-baseline"
       >
         <MoneyDisplay value={1234.5} size="sm" />
@@ -59,7 +55,7 @@ export default function MoneyDisplayDoc() {
 
       <DocSection
         title="Coluna alinhada"
-        description="tabular troca para Geist Mono. O tabular-nums já vem por padrão; a mono só é necessária quando os valores empilham e o alinhamento do símbolo também importa."
+        description="tabular força a Geist Mono nos tamanhos pequenos, para quando os valores empilham e o alinhamento do símbolo também importa. Ele também desliga a mono num tamanho grande, se a tela pedir a sans."
         code={`<MoneyDisplay value={1111.11} tabular />
 <MoneyDisplay value={88.8} tabular />`}
         previewClassName="flex-col items-end gap-1"
@@ -68,6 +64,16 @@ export default function MoneyDisplayDoc() {
         <MoneyDisplay value={88.8} tabular />
         <MoneyDisplay value={9999.99} tabular />
       </DocSection>
+
+      <DocNote title="A face muda com o tamanho, e é de propósito">
+        Do <code>sm</code> ao <code>lg</code>{" "}
+        o valor é Inter com <code>tabular-nums</code> — é um dado de linha, e
+        precisa pertencer ao texto ao redor. Em <code>xl</code> e{" "}
+        <code>2xl</code>{" "}
+        ele vira Geist Mono: ali o valor é o herói da tela, e a face de extrato é
+        a que ele merece. Mono nas 46 linhas de um extrato viraria textura; num
+        saldo, é registro de livro-caixa.
+      </DocNote>
 
       <DocNote title="value aceita null">
         Um valor que ainda não chegou vira <code>0</code> formatado, não{" "}
@@ -84,7 +90,7 @@ export default function MoneyDisplayDoc() {
           { prop: "size", type: '"sm" | "default" | "lg" | "xl" | "2xl"', default: '"default"', description: "O tamanho do texto." },
           { prop: "signed", type: "boolean", default: "false", description: "Mostra o + no positivo." },
           { prop: "compact", type: "boolean", default: "false", description: "1,2 mil em vez de 1.234,50." },
-          { prop: "tabular", type: "boolean", default: "false", description: "Troca para Geist Mono." },
+          { prop: "tabular", type: "boolean", default: "xl e 2xl", description: "Força ou desliga a Geist Mono." },
         ]}
       />
     </>

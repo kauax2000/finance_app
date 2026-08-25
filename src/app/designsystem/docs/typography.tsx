@@ -17,11 +17,7 @@ export default function TypographyDoc() {
   return (
     <>
       <Usage>
-        Os componentes de texto. Use-os em vez de escolher tamanho e peso soltos:
-        o próximo título escrito à mão vai nascer{" "}
-        <code>text-3xl font-bold</code>{" "}
-        e divergir do anterior por dois pixels,
-        e ninguém vai notar até as duas telas aparecerem lado a lado.
+        Os componentes de texto. Use-os em vez de escolher tamanho e peso soltos: o próximo título escrito à mão vai divergir do anterior por dois pixels, e ninguém nota até as telas aparecerem lado a lado.
       </Usage>
 
       <DocSection
@@ -73,7 +69,7 @@ export default function TypographyDoc() {
       <PropsTable
         title="Componentes"
         rows={[
-          { prop: "H1 … H4", type: "ComponentProps<'h1'…'h4'>", description: "Plus Jakarta, tracking apertado. H2 traz a régua." },
+          { prop: "H1 … H4", type: "ComponentProps<'h1'…'h4'>", description: "H1 é a serifa de display; H2–H4 são a sans. H2 traz a régua." },
           { prop: "Lead", type: "ComponentProps<'p'>", description: "text-lg secundário, para abrir uma tela." },
           { prop: "P", type: "ComponentProps<'p'>", description: "text-sm com leading relaxado." },
           { prop: "Muted", type: "ComponentProps<'p'>", description: "text-sm secundário." },

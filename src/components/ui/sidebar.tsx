@@ -1,5 +1,6 @@
 "use client"
 
+import { Bars3Icon } from "@heroicons/react/16/solid"
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
@@ -22,8 +23,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { PanelLeftIcon } from "lucide-react"
-
 import { SIDEBAR_STATE_COOKIE_NAME } from "@/lib/sidebar-state-cookie"
 
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -273,7 +272,7 @@ function SidebarTrigger({
       }}
       {...props}
     >
-      <PanelLeftIcon />
+      <Bars3Icon />
     </Button>
   )
 }

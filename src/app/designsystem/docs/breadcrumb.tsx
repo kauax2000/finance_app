@@ -15,9 +15,7 @@ export default function BreadcrumbDoc() {
   return (
     <>
       <Usage>
-        A trilha até onde a pessoa está, para telas com três níveis ou mais:
-        categoria → detalhe → mês. Numa tela de primeiro nível ele não tem o que
-        mostrar, e uma trilha de um item só é ruído.
+        A trilha até onde a pessoa está, para telas de três níveis ou mais. Numa tela de primeiro nível, uma trilha de um item só é ruído.
       </Usage>
 
       <DocSection

@@ -1,6 +1,6 @@
 "use client"
 
-import { XMarkIcon } from "@heroicons/react/24/outline"
+import { XMarkIcon } from "@heroicons/react/20/solid"
 import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"

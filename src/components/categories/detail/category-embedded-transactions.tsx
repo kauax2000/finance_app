@@ -1,9 +1,9 @@
 "use client"
 
+import { ArrowTopRightOnSquareIcon, PlusIcon } from "@heroicons/react/16/solid"
+import { MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
 import * as React from "react"
 import Link from "next/link"
-import { ExternalLink, Plus, Receipt, SearchX } from "lucide-react"
-
 import { ROUTES } from "@/config/navigation"
 import { formatTransactionDayPtBr } from "@/lib/transaction-date"
 import {
@@ -292,7 +292,7 @@ export function CategoryEmbeddedTransactions({
                                 className="h-10 min-w-0 flex-1 gap-2 px-2 text-xs md:h-8 md:w-auto"
                             >
                                 <Link href={transactionsListHref}>
-                                    <ExternalLink className="size-3.5 shrink-0 md:size-4" />
+                                    <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />
                                     <span className="truncate">Ver em Transações</span>
                                 </Link>
                             </Button>
@@ -470,7 +470,7 @@ export function CategoryEmbeddedTransactions({
                                     className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
                                     aria-hidden
                                 >
-                                    <SearchX className="size-7 text-muted-foreground" />
+                                    <MagnifyingGlassIcon className="size-7 text-muted-foreground" />
                                 </div>
                                 <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
                                     Nenhuma transação com esses filtros
@@ -503,7 +503,7 @@ export function CategoryEmbeddedTransactions({
                                     className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
                                     aria-hidden
                                 >
-                                    <Receipt className="size-7 text-muted-foreground" />
+                                    <ReceiptPercentIcon className="size-7 text-muted-foreground" />
                                 </div>
                                 <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
                                     Comece a registrar suas movimentações
@@ -516,7 +516,7 @@ export function CategoryEmbeddedTransactions({
                                     size="lg"
                                     onClick={() => openDialog()}
                                 >
-                                    <Plus className="mr-1.5 size-3.5" />
+                                    <PlusIcon className="mr-1.5 size-3.5" />
                                     Nova transação
                                 </Button>
                             </CardContent>

@@ -12,10 +12,7 @@ export default function AccordionDoc() {
   return (
     <>
       <Usage>
-        Uma lista de assuntos em que a pessoa lê um ou outro, não todos. Bom para
-        perguntas frequentes e para detalhes secundários. Ruim para conteúdo que
-        precisa ser comparado: o que está fechado não pode ser comparado com
-        nada.
+        Assuntos em que se lê um ou outro, não todos. Nunca para conteúdo que precisa ser comparado: o que está fechado não se compara com nada.
       </Usage>
 
       <DocSection

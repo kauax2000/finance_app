@@ -7,10 +7,7 @@ export default function ScrollAreaDoc() {
   return (
     <>
       <Usage>
-        Uma região rolável com barra estilizada, consistente entre navegadores.
-        Vale para uma lista dentro de um popover ou de um cartão de altura fixa.
-        Não use na página inteira: a rolagem do documento tem comportamento de
-        sistema — inércia, barra de endereço que se retrai — que não se imita.
+        Uma região rolável com barra estilizada. Vale para uma lista dentro de um popover ou de um cartão de altura fixa. Nunca na página inteira: a rolagem do documento tem comportamento de sistema que não se imita.
       </Usage>
 
       <DocSection

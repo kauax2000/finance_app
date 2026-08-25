@@ -1,7 +1,6 @@
 "use client"
 
-import { ChevronRightIcon, ShoppingCartIcon } from "lucide-react"
-
+import { ChevronRightIcon, ShoppingCartIcon } from "@heroicons/react/16/solid"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -21,10 +20,7 @@ export default function ItemDoc() {
   return (
     <>
       <Usage>
-        A linha de uma lista: mídia à esquerda, conteúdo no meio, ações à
-        direita. É a forma que uma <code>Table</code>{" "}
-        assume no telefone, e a
-        forma de qualquer lista que não seja tabular.
+        A linha de uma lista: mídia, conteúdo, ações. É a forma que uma <code>Table</code> assume no telefone, e a de qualquer lista que não seja tabular.
       </Usage>
 
       <DocSection
@@ -95,10 +91,7 @@ export default function ItemDoc() {
       </DocSection>
 
       <DocNote title="Título e descrição não levam gap">
-        <code>ItemContent</code> já entrega a entrelinha. Somar{" "}
-        <code>gap-1</code>{" "}
-        ali faz &ldquo;Mercado&rdquo; e &ldquo;Hoje · Cartão
-        Nubank&rdquo; deixarem de ler como uma coisa só.
+        <code>ItemContent</code> já entrega a entrelinha. Somar <code>gap-1</code> faz &ldquo;Mercado&rdquo; e &ldquo;Hoje · Cartão Nubank&rdquo; deixarem de ler como uma coisa só.
       </DocNote>
 
       <DocNote title="Linha inteira clicável, ou o botão?">

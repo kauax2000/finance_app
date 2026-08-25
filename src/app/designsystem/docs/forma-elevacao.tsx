@@ -5,7 +5,7 @@ import { Group, Spec, Stack } from "../ds-kit"
 
 const RADII = [
   ["rounded-sm", "0,6 × raio", "chip, tag, badge quadrado"],
-  ["rounded-md", "0,8 × raio", "botão pequeno, item de menu"],
+  ["rounded-md", "0,8 × raio", "controle: botão, select, item de menu"],
   ["rounded-lg", "1 × raio", "o padrão: campo, botão, cartão"],
   ["rounded-xl", "1,4 × raio", "cartão de destaque, preview"],
   ["rounded-2xl", "1,8 × raio", "folha, diálogo"],
@@ -25,12 +25,7 @@ export default function FormaElevacaoDoc() {
   return (
     <>
       <Usage>
-        O raio de canto é uma escala derivada: <code>--radius</code>{" "}
-        vale
-        0,625rem e todos os degraus são múltiplos dele. Mudar a marca é mudar uma
-        linha. A sombra é o outro eixo da elevação e não se acumula com a
-        borda — uma superfície tem borda <em>ou</em> sombra, raramente as duas
-        com força.
+        O raio é uma escala derivada de <code>--radius</code>: mudar a marca é mudar uma linha. A sombra é o outro eixo da elevação e não se acumula com a borda.
       </Usage>
 
       <Group title="Raio de canto" layout="grid">
@@ -69,11 +64,7 @@ export default function FormaElevacaoDoc() {
       </Group>
 
       <DocNote title="A sombra troca de valor no tema escuro">
-        Uma sombra preta a 8% sobre um fundo quase preto não existe. Os cinco
-        degraus são declarados duas vezes, em <code>:root</code> e em{" "}
-        <code>.dark</code>, com opacidades bem maiores no escuro. Como a
-        utilidade do Tailwind aponta para a variável, nenhuma tela precisa saber
-        disso.
+        Uma sombra preta a 8% sobre um fundo quase preto não existe. Os cinco degraus são declarados em <code>:root</code> e em <code>.dark</code>, com opacidades bem maiores no escuro.
       </DocNote>
     </>
   )

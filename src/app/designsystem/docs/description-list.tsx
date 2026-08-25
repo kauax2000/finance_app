@@ -13,11 +13,7 @@ export default function DescriptionListDoc() {
   return (
     <>
       <Usage>
-        Pares rótulo/valor numa tela de detalhe: os dados de uma fatura, de uma
-        assinatura, de um cartão. É um <code>&lt;dl&gt;</code>{" "}
-        de verdade, então
-        o leitor de tela associa cada valor ao seu rótulo — coisa que duas{" "}
-        <code>&lt;div&gt;</code> lado a lado não fazem.
+        Pares rótulo/valor numa tela de detalhe. É um <code>&lt;dl&gt;</code> de verdade, então o leitor de tela associa cada valor ao seu rótulo — duas <code>&lt;div&gt;</code> lado a lado não fazem isso.
       </Usage>
 
       <DocSection
@@ -72,8 +68,7 @@ export default function DescriptionListDoc() {
       </DocSection>
 
       <DocNote title="Sem gap entre termo e valor">
-        Eles são o mesmo dado em duas linhas, e quem os separa é a entrelinha. O
-        <code>gap</code> do componente fica entre um par e o próximo.
+        O <code>gap</code> do componente fica entre um par e o próximo, nunca dentro do par.
       </DocNote>
 
       <PropsTable

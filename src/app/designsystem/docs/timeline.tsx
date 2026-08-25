@@ -20,9 +20,7 @@ export default function TimelineDoc() {
   return (
     <>
       <Usage>
-        Histórico em ordem cronológica: o que aconteceu com uma fatura, a
-        atividade do workspace. A ordem é do mais recente para o mais antigo —
-        quem abre um histórico quer saber o que mudou agora, não como começou.
+        Histórico em ordem cronológica, do mais recente para o mais antigo: quem abre um histórico quer saber o que mudou agora.
       </Usage>
 
       <DocSection

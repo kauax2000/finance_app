@@ -1,7 +1,7 @@
 "use client"
 
 import type { ComponentType, ReactNode } from "react"
-import { CreditCardIcon } from "@heroicons/react/24/outline"
+import { CreditCardIcon } from "@heroicons/react/16/solid"
 import {
     LogoAmericanExpress,
     LogoDinersClub,

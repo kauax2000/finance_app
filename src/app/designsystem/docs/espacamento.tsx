@@ -8,9 +8,7 @@ export default function EspacamentoDoc() {
   return (
     <>
       <Usage>
-        Duas decisões: até onde o conteúdo cresce (<code>Container</code>) e o
-        ritmo entre os blocos dentro dele (<code>PageSection</code>). Uma tela
-        que declara as duas não precisa de nenhuma margem própria.
+        Duas decisões: até onde o conteúdo cresce (<code>Container</code>) e o ritmo entre os blocos (<code>PageSection</code>). Uma tela que declara as duas não precisa de margem própria.
       </Usage>
 
       <Group title="Largura" layout="grid">
@@ -95,15 +93,7 @@ export default function EspacamentoDoc() {
       </DocSection>
 
       <DocNote title="Par de identidade: sem gap">
-        Nome sobre e-mail, rótulo sobre valor, título sobre legenda: sempre que
-        dois textos empilhados são <strong>o mesmo dado em duas linhas</strong>,
-        quem os separa é a entrelinha. Não declare <code>gap</code>{" "}
-        entre eles,
-        nem <code>gap-1</code>. Dois pixels bastam para o par deixar de ler como
-        uma coisa só e passar a parecer duas informações empilhadas por acaso.{" "}
-        <code>gap</code>{" "}
-        continua certo entre coisas diferentes: um bloco e o
-        próximo, um campo e o seguinte.
+        Nome sobre e-mail, rótulo sobre valor, título sobre legenda: quando dois textos empilhados são <strong>o mesmo dado em duas linhas</strong>, quem os separa é a entrelinha. Não declare <code>gap</code>, nem <code>gap-1</code> — dois pixels bastam para o par deixar de ler como uma coisa só. Entre coisas diferentes, <code>gap</code> continua certo.
       </DocNote>
 
       <PropsTable

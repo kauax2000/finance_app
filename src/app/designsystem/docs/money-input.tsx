@@ -10,11 +10,7 @@ export default function MoneyInputDoc() {
   return (
     <>
       <Usage>
-        Todo valor em reais que o app <strong>recebe</strong>. Cuida da máscara,
-        do teclado numérico no telefone e da conversão para número — um{" "}
-        <code>Input</code> com <code>type=&quot;number&quot;</code> aceita{" "}
-        <code>e</code> e <code>+</code>, e usa o separador decimal errado para o
-        Brasil.
+        Todo valor em reais que o app <strong>recebe</strong>: máscara, teclado numérico e conversão para número. Um <code>Input</code> com <code>type=&quot;number&quot;</code> aceita <code>e</code> e <code>+</code>, e usa o separador decimal errado.
       </Usage>
 
       <DocSection

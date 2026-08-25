@@ -1,7 +1,6 @@
 "use client"
 
-import { InfoIcon } from "lucide-react"
-
+import { InformationCircleIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { DocNote, DocSection, Usage } from "../ds-doc"
@@ -10,9 +9,7 @@ export default function TooltipDoc() {
   return (
     <>
       <Usage>
-        Um complemento curto para quem já entendeu o essencial. Nunca coloque
-        nele informação necessária: no telefone não existe hover, e o tooltip
-        simplesmente não aparece.
+        Um complemento curto para quem já entendeu o essencial. Nunca informação necessária: no telefone não existe hover, e o tooltip não aparece.
       </Usage>
 
       <DocSection
@@ -21,7 +18,7 @@ export default function TooltipDoc() {
         code={`<Tooltip>
   <TooltipTrigger asChild>
     <Button variant="outline" size="icon" aria-label="Sobre o cálculo">
-      <InfoIcon aria-hidden />
+      <InformationCircleIcon aria-hidden />
     </Button>
   </TooltipTrigger>
   <TooltipContent>Considera só transações efetivadas.</TooltipContent>
@@ -30,7 +27,7 @@ export default function TooltipDoc() {
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="outline" size="icon" aria-label="Sobre o cálculo">
-              <InfoIcon aria-hidden />
+              <InformationCircleIcon aria-hidden />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Considera só transações efetivadas.</TooltipContent>
@@ -46,12 +43,7 @@ export default function TooltipDoc() {
       </DocSection>
 
       <DocNote title="No toque ele não existe">
-        <code>hover:</code> compila para{" "}
-        <code>@media (hover: hover)</code>, e um telefone responde{" "}
-        <code>hover: none</code>. Se a explicação é indispensável, ela vira texto
-        na tela, um <code>Popover</code>{" "}
-        acionado por toque ou a descrição de um
-        campo — não um tooltip que metade dos usuários nunca verá.
+        Se a explicação é indispensável, ela vira texto na tela, um <code>Popover</code> acionado por toque ou a descrição de um campo — nunca um tooltip.
       </DocNote>
 
       <DocNote title="Tooltip não substitui aria-label">

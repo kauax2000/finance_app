@@ -5,19 +5,8 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
-import {
-    UserIcon,
-    KeyIcon,
-    ShieldCheckIcon,
-    CheckCircleIcon,
-    ExclamationTriangleIcon,
-    InformationCircleIcon,
-    UserGroupIcon,
-    UserPlusIcon,
-    UserMinusIcon,
-    ShieldExclamationIcon,
-} from "@heroicons/react/24/outline"
-import { Activity, UserCog } from "lucide-react"
+import { InformationCircleIcon } from "@heroicons/react/16/solid"
+import { ChartBarIcon, CheckCircleIcon, Cog6ToothIcon, ExclamationTriangleIcon, KeyIcon, ShieldCheckIcon, ShieldExclamationIcon, UserGroupIcon, UserIcon, UserMinusIcon, UserPlusIcon } from "@heroicons/react/24/outline"
 import {
     tagChipDanger,
     tagChipFilterIdle,
@@ -46,7 +35,7 @@ const getActivityIcon = (type: string) => {
         case "family_permission_changed":
             return ShieldExclamationIcon
         case "family_role_changed":
-            return UserCog
+            return Cog6ToothIcon
         case "password_change":
             return KeyIcon
         case "profile_update":
@@ -58,7 +47,7 @@ const getActivityIcon = (type: string) => {
         case "device_removed":
             return ExclamationTriangleIcon
         default:
-            return Activity
+            return ChartBarIcon
     }
 }
 
@@ -373,7 +362,7 @@ export default function ActivityPage() {
                                     className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
                                     aria-hidden
                                 >
-                                    <Activity className="size-7 text-muted-foreground" />
+                                    <ChartBarIcon className="size-7 text-muted-foreground" />
                                 </div>
                                 <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
                                     Nenhuma atividade encontrada

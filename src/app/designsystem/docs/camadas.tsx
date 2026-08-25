@@ -19,9 +19,7 @@ export default function CamadasDoc() {
   return (
     <>
       <Usage>
-        Empilhamento é uma decisão global disfarçada de decisão local. Sem uma
-        escala nomeada, cada superfície nova chuta um número que funciona na tela
-        onde foi testada e quebra na primeira vez que aparece junto de outra.
+        Empilhamento é decisão global disfarçada de local. Sem escala nomeada, cada superfície nova chuta um número que funciona onde foi testada e quebra ao lado de outra.
       </Usage>
 
       <Group title="A ordem">
@@ -60,42 +58,19 @@ export default function CamadasDoc() {
       </DocSection>
 
       <DocNote title="A escala foi corrigida para descrever a produção">
-        A primeira versão desta página inventou os números em vez de medi-los:
-        dizia <code>--z-sheet: 50</code> e <code>--z-popover: 60</code> enquanto o
-        app rodava <code>z-[70]</code> na folha e <code>z-[80]</code> no popover,
-        e não tinha degrau nenhum para o 50, onde moram Dialog, Drawer e os menus
-        do Radix. Migrar para a escala antiga teria empilhado a folha no mesmo
-        nível do diálogo. Agora os tokens valem o que o app já valia, e{" "}
-        <code>--z-modal</code> existe.
+        A primeira versão inventou os números: dizia <code>--z-sheet: 50</code> e <code>--z-popover: 60</code> enquanto o app rodava 70 e 80, e não tinha degrau para o 50, onde moram Dialog, Drawer e os menus do Radix. Migrar teria empilhado a folha no nível do diálogo.
       </DocNote>
 
       <DocNote title="Dois tokens foram renomeados pelo que está neles">
-        <code>--z-overlay</code> (40) não tinha um único uso: em toda camada o
-        escurecimento e o conteúdo compartilham o mesmo z, então nunca houve uma
-        camada só de overlay. Quem mora no 40 é o cabeçalho fixo do telefone, e o
-        token virou <code>--z-header</code>. <code>--z-nav-island</code> (30)
-        nomeava a ilha de navegação, que na verdade está no 50 com os modais; o
-        30 é a faixa de offline, e o token virou <code>--z-banner</code>. Token
-        cujo nome não bate com o ocupante é pior que número cru: o número cru
-        não afirma nada.
+        <code>--z-overlay</code> (40) não tinha uso: escurecimento e conteúdo sempre compartilham o mesmo z. Quem mora no 40 é o cabeçalho fixo, e virou <code>--z-header</code>. <code>--z-nav-island</code> (30) nomeava a ilha, que está no 50; o 30 é a faixa de offline, e virou <code>--z-banner</code>. Token cujo nome não bate com o ocupante é pior que número cru.
       </DocNote>
 
       <DocNote title="Empilhamento local não é camada">
-        <code>z-0</code>, <code>z-10</code> e <code>z-[1]</code> dentro de um
-        componente — o polegar acima do trilho, o rótulo acima do verniz — são
-        ordem entre irmãos dentro de um contexto de empilhamento, e continuam
-        números crus de propósito. A escala nomeia o que atravessa telas; forçar
-        token no que não atravessa só faz o nome mentir. Se a decisão pode ser
-        tomada olhando um arquivo só, não é camada.
+        <code>z-0</code>, <code>z-10</code> e <code>z-[1]</code> dentro de um componente são ordem entre irmãos, e continuam números crus. A escala nomeia o que atravessa telas: se a decisão se toma olhando um arquivo só, não é camada.
       </DocNote>
 
       <DocNote title="Escalar para vencer é sempre o sintoma">
-        A toolbar de categorias tinha um <code>PopoverContent</code> forçado a{" "}
-        <code>z-[100]</code> — o nível do toast — e, dentro dele, um{" "}
-        <code>Select</code> em <code>z-[220]</code> para vencer o popover que o
-        continha. O efeito colateral era o app inteiro: aquele popover cobria os
-        toasts. Os dois voltaram para <code>--z-popover</code>. Dois portais no
-        mesmo z se resolvem por ordem no DOM, e o que abre depois entra depois.
+        A toolbar de categorias tinha um <code>PopoverContent</code> em <code>z-[100]</code> — o nível do toast — e um <code>Select</code> em <code>z-[220]</code> para vencer o popover que o continha. O efeito era o popover cobrir os toasts do app inteiro. Dois portais no mesmo z se resolvem por ordem no DOM.
       </DocNote>
     </>
   )

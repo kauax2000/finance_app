@@ -1,7 +1,6 @@
 import * as React from "react"
 import Link from "next/link"
-import { ArrowLeftIcon } from "@heroicons/react/24/outline"
-
+import { ArrowLeftIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -51,8 +50,11 @@ function PageHeaderTitle({
   return (
     <h1
       data-slot="page-header-title"
+      // Era `text-lg sm:text-xl` — 18/20px. Nenhuma tela tinha momento de
+      // display, e por isso a serifa não teria onde aparecer. O `page-title`
+      // traz a família de display, o peso e o tracking.
       className={cn(
-        "font-heading text-lg font-semibold tracking-tight text-foreground sm:text-xl",
+        "page-title text-2xl text-foreground sm:text-3xl",
         className
       )}
       {...props}

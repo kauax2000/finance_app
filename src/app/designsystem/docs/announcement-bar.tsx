@@ -10,10 +10,7 @@ export default function AnnouncementBarDoc() {
   return (
     <>
       <Usage>
-        Um aviso sobre o <strong>app inteiro</strong>, não sobre a tela: modo
-        offline, convite pendente, manutenção programada. Aviso sobre o conteúdo
-        de uma tela é <code>Alert</code>; confirmação do que acabou de acontecer
-        é <code>toast</code>.
+        Aviso sobre o <strong>app inteiro</strong>: modo offline, convite pendente, manutenção. Sobre o conteúdo de uma tela é <code>Alert</code>; sobre o que acabou de acontecer é <code>toast</code>.
       </Usage>
 
       <DocSection
@@ -34,11 +31,7 @@ export default function AnnouncementBarDoc() {
       </DocSection>
 
       <DocNote title="Dispensável por padrão">
-        Um aviso permanente que não se pode fechar vira parte do cenário em uma
-        semana, e aí deixa de avisar. Se o estado é realmente bloqueante,{" "}
-        <strong>não</strong> passe <code>onDismiss</code>{" "}
-        — mas então ele
-        precisa desaparecer sozinho quando o estado mudar.
+        Um aviso permanente que não se pode fechar vira cenário em uma semana, e deixa de avisar. Se o estado é bloqueante, não passe <code>onDismiss</code> — mas então ele precisa sumir sozinho quando o estado mudar.
       </DocNote>
 
       <PropsTable

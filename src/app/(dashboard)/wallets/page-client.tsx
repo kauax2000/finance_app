@@ -1,5 +1,7 @@
 "use client"
 
+import { PencilIcon, PlusIcon, TrashIcon, WalletIcon } from "@heroicons/react/16/solid"
+import { WalletIcon as WalletOutlineIcon } from "@heroicons/react/24/outline"
 import { useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/components/providers"
@@ -14,8 +16,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Plus, Wallet as WalletIcon, Pencil, Trash2 } from "lucide-react"
-
 const walletTypes = [
     { value: "checking", label: "Conta Corrente" },
     { value: "savings", label: "Poupança" },
@@ -232,7 +232,7 @@ export default function WalletsPage() {
                             className="gap-2"
                             onClick={() => openDialog()}
                         >
-                            <Plus className="mr-2 h-4 w-4" />
+                            <PlusIcon className="mr-2 h-4 w-4" />
                             Nova Conta
                         </Button>
                     </DialogTrigger>
@@ -247,7 +247,7 @@ export default function WalletsPage() {
                     </div>
                     <DialogTrigger asChild>
                         <Button type="button" onClick={() => openDialog()}>
-                            <Plus className="mr-2 h-4 w-4" />
+                            <PlusIcon className="mr-2 h-4 w-4" />
                             Nova Conta
                         </Button>
                     </DialogTrigger>
@@ -367,7 +367,7 @@ export default function WalletsPage() {
                                             size="icon"
                                             onClick={() => openDialog(wallet)}
                                         >
-                                            <Pencil className="h-4 w-4" />
+                                            <PencilIcon className="h-4 w-4" />
                                         </Button>
                                         <Button
                                             variant="ghost"
@@ -375,7 +375,7 @@ export default function WalletsPage() {
                                             className="text-destructive hover:text-destructive/80 active:text-destructive/80"
                                             onClick={() => handleDelete(wallet.id)}
                                         >
-                                            <Trash2 className="h-4 w-4" />
+                                            <TrashIcon className="h-4 w-4" />
                                         </Button>
                                     </div>
                                 </div>
@@ -394,10 +394,10 @@ export default function WalletsPage() {
             ) : (
                 <Card>
                     <CardContent className="flex flex-col items-center justify-center py-12">
-                        <WalletIcon className="h-12 w-12 text-muted-foreground mb-4" />
+                        <WalletOutlineIcon className="h-12 w-12 text-muted-foreground mb-4" />
                         <p className="text-muted-foreground mb-4">Nenhuma conta encontrada</p>
                         <Button onClick={() => openDialog()}>
-                            <Plus className="mr-2 h-4 w-4" />
+                            <PlusIcon className="mr-2 h-4 w-4" />
                             Criar Primeira Conta
                         </Button>
                     </CardContent>

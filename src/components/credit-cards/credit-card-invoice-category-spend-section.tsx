@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronRightIcon } from "@heroicons/react/24/outline"
+import { ChevronRightIcon } from "@heroicons/react/16/solid"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts"
 import {

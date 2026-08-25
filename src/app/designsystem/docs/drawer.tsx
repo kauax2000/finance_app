@@ -17,11 +17,7 @@ export default function DrawerDoc() {
   return (
     <>
       <Usage>
-        Uma gaveta que se arrasta. A diferença para o <code>Sheet</code>{" "}
-        é
-        física: o Drawer acompanha o dedo, tem inércia e fecha pelo gesto. Vale
-        quando abrir e fechar é frequente e casual — uma prévia, um seletor
-        rápido.
+        Uma gaveta que se arrasta. A diferença para o <code>Sheet</code> é física: acompanha o dedo, tem inércia e fecha pelo gesto. Vale quando abrir e fechar é casual.
       </Usage>
 
       <DocSection
@@ -59,11 +55,7 @@ export default function DrawerDoc() {
       </DocSection>
 
       <DocNote title="Drawer ou Sheet?">
-        O app já resolve formulário no telefone com{" "}
-        <code>Sheet side=&quot;bottom&quot; fillMobileViewport</code>, e ali o
-        arraste é um problema: um formulário longo precisa rolar, e o gesto de
-        rolar disputa com o gesto de fechar. Use Drawer para conteúdo curto que
-        não rola.
+        O app resolve formulário no telefone com <code>Sheet side=&quot;bottom&quot;</code>, e ali o arraste atrapalha: rolar disputa com fechar. Use Drawer para conteúdo curto que não rola.
       </DocNote>
     </>
   )

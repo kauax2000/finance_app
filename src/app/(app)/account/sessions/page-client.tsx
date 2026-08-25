@@ -6,14 +6,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import {
-    ArrowRightStartOnRectangleIcon,
-    ComputerDesktopIcon,
-    DevicePhoneMobileIcon,
-    GlobeAltIcon,
-    CheckCircleIcon,
-    ArrowPathIcon,
-} from "@heroicons/react/24/outline"
+import { ArrowPathIcon, ArrowRightStartOnRectangleIcon, ComputerDesktopIcon, DevicePhoneMobileIcon, GlobeAltIcon } from "@heroicons/react/16/solid"
+import { CheckCircleIcon } from "@heroicons/react/24/outline"
 import { describeEdgeInvokeClientFailure } from "@/lib/edge-errors"
 import { Session, getSessions, revokeSession, revokeAllSessions } from "@/lib/sessions"
 import { formatRelativeTime } from "@/lib/sessions"

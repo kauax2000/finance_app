@@ -1,8 +1,9 @@
 "use client"
 
+import { ArrowPathRoundedSquareIcon, PlusIcon } from "@heroicons/react/16/solid"
+import { PlusIcon as PlusMiniIcon } from "@heroicons/react/20/solid"
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Repeat } from "lucide-react"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -88,7 +89,7 @@ export function QuickActionResourceLinks({
             }}
             className={itemClassName}
         >
-            <Repeat className={mobileGlass ? undefined : "h-4 w-4"} />
+            <ArrowPathRoundedSquareIcon className={mobileGlass ? undefined : "h-4 w-4"} />
             <span>Assinatura</span>
         </DropdownMenuItem>
     )
@@ -119,7 +120,7 @@ function FixedQuickCreateMenuItems({
                 className={itemClassName}
                 onClick={onPickSubscription}
             >
-                <Repeat className={mobileGlass ? undefined : "h-4 w-4"} />
+                <ArrowPathRoundedSquareIcon className={mobileGlass ? undefined : "h-4 w-4"} />
                 <span>Assinatura</span>
             </DropdownMenuItem>
         )
@@ -151,7 +152,7 @@ function FixedQuickCreateMenuItems({
                 className={itemClassName}
                 onClick={onPickSubscription}
             >
-                <Repeat className={mobileGlass ? undefined : "h-4 w-4"} />
+                <ArrowPathRoundedSquareIcon className={mobileGlass ? undefined : "h-4 w-4"} />
                 <span>Assinatura</span>
             </DropdownMenuItem>
         </>
@@ -198,7 +199,7 @@ export function QuickActionButton({ variant = "sidebar" }: QuickActionButtonProp
                         )}
                         aria-label="Adicionar"
                     >
-                        <Plus className="size-5 shrink-0" />
+                        <PlusMiniIcon className="size-5 shrink-0" />
                     </Button>
                 ) : (
                     <Button
@@ -206,7 +207,7 @@ export function QuickActionButton({ variant = "sidebar" }: QuickActionButtonProp
                         type="button"
                         className="h-9 w-full justify-center gap-2 text-xs group-data-[collapsible=icon]:hidden"
                     >
-                        <Plus className="size-4 shrink-0" />
+                        <PlusIcon className="size-4 shrink-0" />
                         <span className="truncate">Adicionar</span>
                     </Button>
                 )}

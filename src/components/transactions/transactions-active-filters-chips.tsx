@@ -1,8 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { XMarkIcon } from "@heroicons/react/24/outline"
-
+import { XMarkIcon } from "@heroicons/react/16/solid"
 import type { Category, CreditCard } from "@/lib/supabase"
 import {
     paymentMethodLabel,

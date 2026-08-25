@@ -1,7 +1,8 @@
 "use client"
 
 import { useMemo } from "react"
-import { EllipsisHorizontalIcon, PencilIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/outline"
+import { PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { EllipsisHorizontalIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
     Sheet,

@@ -12,11 +12,7 @@ export default function ColorTileDoc() {
   return (
     <>
       <Usage>
-        O ladrilho que carrega uma cor <strong>escolhida pela pessoa</strong> —
-        ícone de categoria, marca de conta, capa de conta a pagar. Se a cor vem
-        do tema e não do banco, isto aqui é o componente errado: use{" "}
-        <code>bg-muted</code> com o ícone em <code>text-muted-foreground</code>,
-        ou um <code>Badge</code>.
+        O ladrilho que carrega uma cor <strong>escolhida pela pessoa</strong>. Se a cor vem do tema e não do banco, é o componente errado: use <code>bg-muted</code> ou um <code>Badge</code>.
       </Usage>
 
       <DocSection
@@ -66,21 +62,11 @@ export default function ColorTileDoc() {
       </DocSection>
 
       <DocNote title="O único lugar onde white e black crus estão certos">
-        A invariante do projeto é token-first, e o auditor marca{" "}
-        <code>border-white</code> e <code>ring-black</code> em qualquer tela. Aqui
-        eles são <strong>material, não tema</strong>: o fundo é uma cor de runtime
-        arbitrária, e o verniz claro por cima com o fio escuro por baixo têm que
-        ser idênticos no claro e no escuro — senão o ladrilho muda de aparência
-        sem que a cor gravada tenha mudado. Este arquivo está na lista de exceção
-        de runtime do auditor; nenhuma tela está.
+        A invariante do projeto é token-first, e o auditor marca <code>border-white</code> em qualquer tela. Aqui eles são <strong>material, não tema</strong>: o fundo é cor de runtime, e o verniz sobre ela precisa ser idêntico nos dois temas. Este arquivo está na exceção do auditor; nenhuma tela está.
       </DocNote>
 
       <DocNote title="O que ele não resolve">
-        O conteúdo é branco sempre. Contra o azul e o violeta acima, sobra
-        contraste; contra um amarelo claro que a pessoa escolheu, o ícone some.
-        Resolver exige medir contraste contra a cor gravada e virar para escuro
-        abaixo do limiar — decisão de produto, porque muda a aparência de
-        categorias que já existem.
+        O conteúdo é branco sempre. Contra um amarelo claro que a pessoa escolheu, o ícone some. Resolver exige medir contraste contra a cor gravada — decisão de produto, porque muda categorias que já existem.
       </DocNote>
 
       <PropsTable

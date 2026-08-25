@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronRightIcon, ArrowLeftIcon } from "@heroicons/react/24/outline"
+import { ArrowLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import {
     APP_PAGE_TITLES,

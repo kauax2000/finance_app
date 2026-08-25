@@ -7,9 +7,7 @@ export default function TabsDoc() {
   return (
     <>
       <Usage>
-        Painéis irmãos, do mesmo nível, dos quais só um aparece por vez. Se as
-        opções <em>filtram</em> a mesma lista em vez de trocar o conteúdo, o
-        componente é <code>ToggleGroup</code>.
+        Painéis irmãos do mesmo nível, dos quais só um aparece por vez. Se as opções <em>filtram</em> a mesma lista em vez de trocar o conteúdo, o componente é <code>ToggleGroup</code>.
       </Usage>
 
       <DocSection
@@ -48,10 +46,7 @@ export default function TabsDoc() {
       </DocSection>
 
       <DocNote title="A aba ativa precisa sobreviver a um refresh">
-        Quando o conteúdo de cada aba é endereçável — e num app de finanças
-        quase sempre é —, o valor da aba pertence à URL, não só ao estado do
-        componente. Sem isso, compartilhar o link manda a pessoa para a primeira
-        aba e o botão voltar do navegador sai da tela inteira.
+        Quando o conteúdo de cada aba é endereçável — e num app de finanças quase sempre é — o valor pertence à URL. Sem isso, compartilhar o link manda a pessoa para a primeira aba.
       </DocNote>
 
       <DocNote title="Poucas abas, e que caibam">

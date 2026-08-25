@@ -30,12 +30,7 @@ export default function FormulariosDoc() {
   return (
     <>
       <Usage>
-        Todo fluxo em que campos são salvos ou confirmados usa{" "}
-        <code>CustomForm</code>, nunca um <code>&lt;form&gt;</code>{" "}
-        cru. Ele
-        normaliza o Enter para acionar a ação principal — o que num app usado no
-        telefone, com teclado virtual que só mostra &ldquo;ir&rdquo;, é a
-        diferença entre salvar e não conseguir salvar.
+        Todo fluxo em que campos são salvos usa <code>CustomForm</code>, nunca um <code>&lt;form&gt;</code> cru. Ele normaliza o Enter para a ação principal — no telefone, a diferença entre salvar e não conseguir.
       </Usage>
 
       <DocSection

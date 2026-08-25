@@ -1,6 +1,8 @@
 "use client"
 
-import { WrenchIcon, InformationCircleIcon, ReceiptPercentIcon, SparklesIcon } from "@heroicons/react/24/outline"
+import { InformationCircleIcon, WrenchIcon } from "@heroicons/react/16/solid"
+import { SparklesIcon } from "@heroicons/react/20/solid"
+import { ReceiptPercentIcon, SparklesIcon as SparklesOutlineIcon } from "@heroicons/react/24/outline"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { tagChipInfo, tagChipWarning } from "@/lib/tag-chip-classes"
@@ -96,7 +98,7 @@ export default function PlansPage() {
                             <div className="flex flex-col items-center text-center">
                                 <div className="relative mb-5" aria-hidden>
                                     <div className="flex size-16 items-center justify-center rounded-2xl bg-muted/60 ring-1 ring-border">
-                                        <SparklesIcon className="size-8 text-primary" />
+                                        <SparklesOutlineIcon className="size-8 text-primary" />
                                     </div>
                                     <span className="absolute -right-0.5 -top-0.5 flex size-3">
                                         <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary/35 opacity-75 motion-reduce:animate-none" />

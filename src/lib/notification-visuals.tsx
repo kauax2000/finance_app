@@ -1,24 +1,7 @@
 "use client"
 
 import type { ReactNode } from "react"
-import {
-    BellIcon,
-    CalendarIcon,
-    ExclamationCircleIcon,
-    ClockIcon,
-    CreditCardIcon,
-    FolderPlusIcon,
-    EnvelopeIcon,
-    ReceiptPercentIcon,
-    ShieldCheckIcon,
-    SparklesIcon,
-    TrashIcon,
-    ArrowTrendingDownIcon,
-    ArrowTrendingUpIcon,
-    UserMinusIcon,
-    UserPlusIcon,
-} from "@heroicons/react/24/outline"
-import { MailX, UserCheck } from "lucide-react"
+import { ArrowTrendingDownIcon, ArrowTrendingUpIcon, BellIcon, CalendarIcon, CheckBadgeIcon, ClockIcon, CreditCardIcon, EnvelopeIcon, ExclamationCircleIcon, FolderPlusIcon, ReceiptPercentIcon, ShieldCheckIcon, SparklesIcon, TrashIcon, UserMinusIcon, UserPlusIcon, XCircleIcon } from "@heroicons/react/16/solid"
 import type { AppNotification, AppNotificationType } from "@/lib/notifications"
 
 /** Semantic notification key from `metadata.kind` (snake_case); reserved for future producers. */
@@ -163,12 +146,12 @@ export function getNotificationIcon(n: AppNotification): ReactNode {
         case "category_created":
             return <FolderPlusIcon className={iconClass()} />
         case "invite_accepted":
-            return <UserCheck className={iconClass()} />
+            return <CheckBadgeIcon className={iconClass()} />
         case "invite_created":
         case "invite_sent":
             return <EnvelopeIcon className={iconClass()} />
         case "invite_declined":
-            return <MailX className={iconClass()} />
+            return <XCircleIcon className={iconClass()} />
         case "invite_expired":
             return <ClockIcon className={iconClass()} />
         case "member_joined":

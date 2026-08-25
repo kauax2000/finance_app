@@ -15,8 +15,7 @@ import {
     type ExpenseCategoryOption,
 } from "@/components/subscriptions/subscription-form-shared"
 import { cn } from "@/lib/utils"
-import { ChevronDownIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
-
+import { ChevronDownIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid"
 function CategoryRows({
     categories,
     search,

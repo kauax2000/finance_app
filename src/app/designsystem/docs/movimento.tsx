@@ -23,10 +23,7 @@ export default function MovimentoDoc() {
   return (
     <>
       <Usage>
-        Movimento explica uma mudança de estado: de onde a folha veio, o que
-        acabou de aparecer. Se a animação não responde a uma dessas duas
-        perguntas, ela é decoração e custa quadros. As durações e curvas são
-        tokens porque estavam escritas à mão dentro de cada keyframe.
+        Movimento explica uma mudança de estado: de onde a folha veio, o que acabou de aparecer. Se a animação não responde a isso, é decoração e custa quadros.
       </Usage>
 
       <Group title="Tokens" layout="grid">
@@ -87,12 +84,7 @@ export default function MovimentoDoc() {
       </DocNote>
 
       <DocNote title="Quando o sistema pede menos animação">
-        A regra encurta transições e desliga animações de uma passada só, mas{" "}
-        <strong>preserva</strong> as que se repetem indefinidamente —{" "}
-        <code>animate-spin</code>, <code>animate-pulse</code> e o shimmer. Elas
-        comunicam &ldquo;está carregando&rdquo;, que é estado e não decoração: um
-        spinner congelado não informa nada. Zerar tudo é a versão fácil da
-        acessibilidade, e troca um problema por outro.
+        A regra encurta transições e desliga animações de uma passada, mas <strong>preserva</strong> as que se repetem — <code>animate-spin</code>, <code>animate-pulse</code>, shimmer. Elas comunicam &ldquo;está carregando&rdquo;, que é estado: um spinner congelado não informa nada.
       </DocNote>
     </>
   )

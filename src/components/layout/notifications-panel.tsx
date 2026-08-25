@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { CheckIcon, EllipsisHorizontalIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/outline"
+import { CheckIcon, EllipsisHorizontalIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { XMarkIcon } from "@heroicons/react/20/solid"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {

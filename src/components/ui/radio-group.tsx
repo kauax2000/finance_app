@@ -2,8 +2,6 @@
 
 import * as React from "react"
 import { RadioGroup as RadioGroupPrimitive } from "radix-ui"
-import { CircleIcon } from "lucide-react"
-
 import { cn } from "@/lib/utils"
 
 function RadioGroup({
@@ -39,7 +37,10 @@ function RadioGroupItem({
         data-slot="radio-group-indicator"
         className="relative flex items-center justify-center"
       >
-        <CircleIcon className="size-2.5 fill-primary text-primary" />
+        {/* Um ponto não precisa ser SVG. O Heroicons é um conjunto de
+            interface e não traz círculo puro — e nem deveria: `rounded-full`
+            com a cor de fundo desenha a mesma coisa sem uma requisição. */}
+        <span className="size-2.5 rounded-full bg-primary" />
       </RadioGroupPrimitive.Indicator>
     </RadioGroupPrimitive.Item>
   )

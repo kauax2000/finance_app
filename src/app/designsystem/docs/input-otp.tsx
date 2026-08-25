@@ -12,9 +12,7 @@ export default function InputOtpDoc() {
   return (
     <>
       <Usage>
-        Código de verificação de poucos dígitos: confirmação de e-mail, segundo
-        fator. Aceita colar o código inteiro de uma vez, que é como a pessoa
-        recebe do SMS ou do gerenciador de senhas.
+        Código de verificação de poucos dígitos. Aceita colar o código inteiro de uma vez, que é como a pessoa recebe do SMS ou do gerenciador de senhas.
       </Usage>
 
       <DocSection
