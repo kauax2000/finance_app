@@ -15,6 +15,7 @@ import { categoryDetailPath } from "@/config/navigation"
 import type { CategoryComparisonRow } from "@/lib/credit-card-invoice-analytics"
 import { currencyBRL } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
+import { ColorTile } from "@/components/ui/color-tile"
 
 const PIE_TOP_N = 5
 
@@ -42,7 +43,7 @@ function resolveFill(raw: string | null | undefined, index: number): string {
 
 function totalCenterAmountTextClass(formatted: string): string {
     const len = formatted.length
-    if (len > 21) return "text-[11px] leading-snug"
+    if (len > 21) return "text-2xs leading-snug"
     if (len > 17) return "text-xs leading-snug"
     if (len > 14) return "text-sm leading-snug"
     if (len > 11) return "text-base leading-snug"
@@ -240,7 +241,7 @@ export function CreditCardInvoiceCategorySpendSection({
                                     <div className="max-w-[min(11rem,82%)] text-center">
                                         {activeCategoryKey == null ? (
                                             <>
-                                                <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                                <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                                     Total gasto
                                                 </p>
                                                 <p
@@ -293,24 +294,9 @@ export function CreditCardInvoiceCategorySpendSection({
                             )
                             const rowBody = (
                                 <div className="flex min-w-0 items-center gap-2">
-                                        <div
-                                            className={cn(
-                                                "relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md sm:h-9 sm:w-9",
-                                                "border border-white/20 shadow-sm ring-1 ring-black/5",
-                                                "backdrop-blur-md",
-                                                "after:absolute after:inset-0 after:bg-gradient-to-br after:from-white/30 after:to-white/5 after:opacity-80",
-                                            )}
-                                            style={{
-                                                backgroundColor:
-                                                    c.color?.trim() || "var(--primary)",
-                                            }}
-                                            aria-hidden
-                                        >
-                                            <CategoryIconPreview
-                                                name={normalizeCategoryIcon(c.icon)}
-                                                className="relative z-10 h-3.5 w-3.5 text-white sm:h-4 sm:w-4"
-                                            />
-                                        </div>
+                                        <ColorTile size="sm" color={c.color} className="sm:h-9 sm:w-9">
+                                            <CategoryIconPreview name={normalizeCategoryIcon(c.icon)} />
+                                        </ColorTile>
                                         <div className="min-w-0 flex-1">
                                             <p className="truncate text-sm font-medium leading-snug text-foreground sm:text-base">
                                                 {c.name}

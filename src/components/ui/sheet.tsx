@@ -37,8 +37,8 @@ function SheetOverlay({
     <SheetPrimitive.Overlay
       data-slot="sheet-overlay"
       className={cn(
-        /** Above mobile chrome (`MobileBottomNav` / FAB use z-50); below `Toaster` z-[100]. */
-        "fixed inset-0 z-[70] bg-overlay ease-in-out supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-open:animation-duration-300 data-closed:animate-out data-closed:fade-out-0 data-closed:animation-duration-300",
+        /** Acima do chrome do telefone (`MobileBottomNav` e FAB estão em `--z-modal`); abaixo do `Toaster`, em `--z-toast`. */
+        "fixed inset-0 z-(--z-sheet) bg-overlay ease-in-out supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-open:animation-duration-(--duration-slow) data-closed:animate-out data-closed:fade-out-0 data-closed:animation-duration-(--duration-slow)",
         className
       )}
       {...props}
@@ -85,7 +85,7 @@ function SheetContent({
         data-side={side}
         data-mobile-fill={isMobileFillBottom ? "true" : undefined}
         className={cn(
-          "fixed z-[70] flex flex-col gap-4 bg-background bg-clip-padding text-sm shadow-lg duration-300 transition-colors will-change-transform motion-reduce:will-change-auto motion-reduce:data-open:animate-none motion-reduce:data-closed:animate-none data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:border-t data-[side=left]:inset-y-0 data-[side=left]:left-0 data-[side=left]:h-full data-[side=left]:w-3/4 data-[side=left]:border-r data-[side=right]:inset-y-0 data-[side=right]:right-0 data-[side=right]:h-full data-[side=right]:w-3/4 data-[side=right]:border-l data-[side=top]:inset-x-0 data-[side=top]:top-0 data-[side=top]:h-auto data-[side=top]:border-b data-[side=left]:sm:max-w-sm data-[side=right]:sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-[side=left]:data-open:slide-in-from-left-12 data-[side=right]:data-open:slide-in-from-right-12 data-[side=top]:data-open:slide-in-from-top-12 data-closed:animate-out data-closed:fade-out-0 data-[side=left]:data-closed:slide-out-to-left-12 data-[side=right]:data-closed:slide-out-to-right-12 data-[side=top]:data-closed:slide-out-to-top-12",
+          "fixed z-(--z-sheet) flex flex-col gap-4 bg-background bg-clip-padding text-sm shadow-lg duration-(--duration-slow) transition-colors will-change-transform motion-reduce:will-change-auto motion-reduce:data-open:animate-none motion-reduce:data-closed:animate-none data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:border-t data-[side=left]:inset-y-0 data-[side=left]:left-0 data-[side=left]:h-full data-[side=left]:w-3/4 data-[side=left]:border-r data-[side=right]:inset-y-0 data-[side=right]:right-0 data-[side=right]:h-full data-[side=right]:w-3/4 data-[side=right]:border-l data-[side=top]:inset-x-0 data-[side=top]:top-0 data-[side=top]:h-auto data-[side=top]:border-b data-[side=left]:sm:max-w-sm data-[side=right]:sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-[side=left]:data-open:slide-in-from-left-12 data-[side=right]:data-open:slide-in-from-right-12 data-[side=top]:data-open:slide-in-from-top-12 data-closed:animate-out data-closed:fade-out-0 data-[side=left]:data-closed:slide-out-to-left-12 data-[side=right]:data-closed:slide-out-to-right-12 data-[side=top]:data-closed:slide-out-to-top-12",
           bottomSlideOpen,
           bottomSlideClosed,
           motionEase,

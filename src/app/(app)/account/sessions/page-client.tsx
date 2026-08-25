@@ -167,7 +167,7 @@ export default function SessionsPage() {
             <div className="min-w-0 space-y-2">
                 <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                     <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                             Sessões ativas
                         </p>
                     </div>
@@ -176,7 +176,7 @@ export default function SessionsPage() {
                             type="button"
                             variant="outline"
                             size="sm"
-                            className="h-10 w-full gap-1.5 border-dashed text-sm sm:h-7 sm:w-fit sm:shrink-0 sm:self-auto sm:text-[0.8rem]"
+                            className="h-10 w-full gap-1.5 border-dashed text-sm sm:h-7 sm:w-fit sm:shrink-0 sm:self-auto sm:text-control-sm"
                             onClick={() => void handleRevokeAll()}
                             disabled={revoking === "all"}
                         >
@@ -229,7 +229,7 @@ export default function SessionsPage() {
                                                             {session.is_current ? (
                                                                 <Badge
                                                                     variant="success"
-                                                                    className="px-1.5 py-0 text-[0.6rem]"
+                                                                    className="px-1.5 py-0 text-2xs"
                                                                 >
                                                                     Atual
                                                                 </Badge>
@@ -265,7 +265,7 @@ export default function SessionsPage() {
                                                     </Button>
                                                 ) : null}
                                             </div>
-                                            <div className="mt-2 flex items-center justify-between border-t border-border/50 pt-2 text-[0.65rem] text-muted-foreground">
+                                            <div className="mt-2 flex items-center justify-between border-t border-border/50 pt-2 text-2xs text-muted-foreground">
                                                 <span>Última atividade</span>
                                                 <span>
                                                     {formatRelativeTime(session.last_active_at)}
@@ -285,7 +285,7 @@ export default function SessionsPage() {
                                     className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
                                     aria-hidden
                                 >
-                                    <CheckCircleIcon className="size-7 text-green-600" />
+                                    <CheckCircleIcon className="size-7 text-success" />
                                 </div>
                                 <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
                                     Todas as sessões foram encerradas

@@ -104,7 +104,7 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                         <>
                             <div className="flex flex-col gap-2">
                                 <div className="rounded-lg border border-border/60 bg-muted/15 px-2.5 py-2 dark:bg-muted/10">
-                                    <p className="text-[11px] font-medium text-muted-foreground">
+                                    <p className="text-2xs font-medium text-muted-foreground">
                                         Fatura aberta (planejada)
                                     </p>
                                     <p className="mt-0.5 text-base font-semibold tabular-nums text-foreground">
@@ -114,7 +114,7 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                                     </p>
                                     {(snapshot.projectedOpenInstallmentsTotal ?? 0) >
                                     0 ? (
-                                        <p className="mt-1 text-[10px] leading-snug text-muted-foreground">
+                                        <p className="mt-1 text-2xs leading-snug text-muted-foreground">
                                             Total registrado{" "}
                                             {currencyFmt.format(snapshot.openTotal)}
                                             {" · "}
@@ -127,13 +127,13 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-background/80 px-2.5 py-2 text-[11px] dark:bg-background/50">
+                            <div className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-background/80 px-2.5 py-2 text-2xs dark:bg-background/50">
                                 <span className="text-muted-foreground">Comparação</span>
                                 <span
                                     className={cn(
                                         "tabular-nums font-semibold",
-                                        delta > 0 && "text-rose-600 dark:text-rose-500",
-                                        delta < 0 && "text-emerald-600 dark:text-emerald-500",
+                                        delta > 0 && "text-warning-muted-foreground",
+                                        delta < 0 && "text-success",
                                         delta === 0 && "text-foreground"
                                     )}
                                 >
@@ -141,7 +141,7 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                                 </span>
                             </div>
 
-                            <div className="space-y-1 text-[11px] leading-snug text-muted-foreground">
+                            <div className="space-y-1 text-2xs leading-snug text-muted-foreground">
                                 <p className="flex items-center justify-between gap-2">
                                     <span>
                                         <span className="font-medium text-foreground/80">
@@ -165,7 +165,7 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
 
                             {usagePct != null ? (
                                 <div className="space-y-1">
-                                    <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                                    <div className="flex items-center justify-between text-2xs text-muted-foreground">
                                         <span>Uso da fatura aberta no limite</span>
                                         <span className="tabular-nums font-medium text-foreground">
                                             {usagePct.toFixed(0)}%

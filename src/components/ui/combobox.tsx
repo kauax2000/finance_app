@@ -115,6 +115,14 @@ function Combobox({
  * O gatilho. `placeholder` aparece enquanto nada foi escolhido; o rótulo do item
  * selecionado entra como children para o consumidor decidir como formatá-lo.
  */
+/**
+ * `aria-haspopup="listbox"` é declarado de propósito.
+ *
+ * `PopoverTrigger` anuncia `aria-haspopup="dialog"`, e o que abre aqui é a
+ * lista do cmdk. O leitor de tela prometia um diálogo — com o contrato de foco
+ * preso e Esc que um diálogo tem — e entregava uma listbox. Vem antes de
+ * `{...props}` para o consumidor ainda poder trocar.
+ */
 function ComboboxTrigger({
   className,
   placeholder = "Selecionar…",
@@ -135,6 +143,7 @@ function ComboboxTrigger({
         size={size}
         role="combobox"
         aria-expanded={open}
+        aria-haspopup="listbox"
         data-slot="combobox-trigger"
         data-placeholder={value ? undefined : ""}
         className={cn(

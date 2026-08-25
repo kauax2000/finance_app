@@ -188,7 +188,7 @@ export function CreditCardBrandPicker({
                 <SelectContent
                     position="popper"
                     align="start"
-                    className="z-[100] min-w-[var(--radix-select-trigger-width)] p-1"
+                    className="z-(--z-toast) min-w-[var(--radix-select-trigger-width)] p-1"
                     sideOffset={6}
                     collisionPadding={12}
                 >

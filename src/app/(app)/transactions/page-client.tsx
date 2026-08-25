@@ -156,7 +156,7 @@ export default function TransactionsPage() {
     if (workspaceError) {
         return (
             <Card>
-                <CardContent className="py-6 text-sm text-red-500">
+                <CardContent className="py-6 text-sm text-destructive">
                     {workspaceError}
                 </CardContent>
             </Card>

@@ -85,7 +85,7 @@ export function DashboardUpcomingPayments({
     return (
         <div className="min-w-0 max-w-full space-y-2">
             <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                     Próximos pagamentos
                 </p>
             </div>
@@ -182,7 +182,7 @@ export function DashboardUpcomingPayments({
                                                     {meta ? (
                                                         <span
                                                             className={cn(
-                                                                "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold leading-none",
+                                                                "shrink-0 rounded-full px-2 py-0.5 text-2xs font-semibold leading-none",
                                                                 meta.className,
                                                             )}
                                                         >

@@ -11,7 +11,7 @@ export function OfflineBanner() {
     return (
         <Alert
             variant="default"
-            className="fixed inset-x-0 top-[var(--mobile-header-offset)] z-30 rounded-none border-x-0 border-t-0 md:top-0"
+            className="fixed inset-x-0 top-[var(--mobile-header-offset)] z-(--z-banner) rounded-none border-x-0 border-t-0 md:top-0"
         >
             <SignalSlashIcon className="size-4 shrink-0" aria-hidden />
             <AlertDescription>

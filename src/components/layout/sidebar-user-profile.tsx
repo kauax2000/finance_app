@@ -66,6 +66,7 @@ export function SidebarUserProfile() {
                                     src={user.user_metadata.avatar_url}
                                     alt={userName}
                                     className="aspect-square size-full object-cover"
+                                    decoding="async"
                                 />
                             ) : (
                                 <div className={`flex h-full w-full items-center justify-center text-white text-sm font-medium ${avatarColor}`}>

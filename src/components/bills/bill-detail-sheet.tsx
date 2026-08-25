@@ -45,8 +45,9 @@ import {
     tagChipNeutral,
     tagChipWarning,
 } from "@/lib/tag-chip-classes"
+import { ColorTile } from "@/components/ui/color-tile"
 
-const EXPENSE_CATEGORY_FALLBACK_COLOR = "#EF4444"
+const EXPENSE_CATEGORY_FALLBACK_COLOR = "var(--expense)"
 
 function cmpYmd(a: string, b: string): number {
     return a.localeCompare(b)
@@ -184,21 +185,9 @@ export function BillDetailSheet({
                         {loading && !bill ? (
                             <Skeleton className="size-11 shrink-0 rounded-lg" />
                         ) : bill ? (
-                            <div
-                                className={cn(
-                                    "relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg",
-                                    "border border-white/20 shadow-sm ring-1 ring-black/5",
-                                    "backdrop-blur-md",
-                                    "after:absolute after:inset-0 after:bg-gradient-to-br after:from-white/30 after:to-white/5 after:opacity-80",
-                                )}
-                                style={{ backgroundColor: headerColor }}
-                                aria-hidden
-                            >
-                                <CategoryIconPreview
-                                    name={iconId}
-                                    className="relative z-10 h-5 w-5 text-white"
-                                />
-                            </div>
+                            <ColorTile size="lg" color={headerColor}>
+                                <CategoryIconPreview name={iconId} />
+                            </ColorTile>
                         ) : (
                             <div className="size-11 shrink-0 rounded-lg bg-muted" aria-hidden />
                         )}
@@ -322,7 +311,7 @@ export function BillDetailSheet({
                         <div className="space-y-6">
                             {nextInst ? (
                                 <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                    <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
                                         Próxima parcela
                                     </p>
                                     <div className="mt-2 flex flex-wrap items-center justify-between gap-2">

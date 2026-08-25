@@ -21,6 +21,7 @@ import CheckboxDoc from "./docs/checkbox"
 import ChipsStatusDoc from "./docs/chips-status"
 import CodeDoc from "./docs/code"
 import CollapsibleDoc from "./docs/collapsible"
+import ColorTileDoc from "./docs/color-tile"
 import ComboboxDoc from "./docs/combobox"
 import CommandDoc from "./docs/command"
 import ContainerDoc from "./docs/container"
@@ -110,6 +111,7 @@ export const DOCS: Record<string, ComponentType> = {
   "chips-status": ChipsStatusDoc,
   "code": CodeDoc,
   "collapsible": CollapsibleDoc,
+  "color-tile": ColorTileDoc,
   "combobox": ComboboxDoc,
   "command": CommandDoc,
   "container": ContainerDoc,

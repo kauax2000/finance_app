@@ -12,6 +12,7 @@ import {
 import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
 import { cn } from "@/lib/utils"
 import { ChevronRightIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline"
+import { ColorTile } from "@/components/ui/color-tile"
 
 function stopLinkNavigation(e: React.MouseEvent) {
     e.preventDefault()
@@ -49,21 +50,9 @@ export function IncomeCategoryCard({
             >
                 <CardHeader className="border-b border-border/60 bg-muted/25 !py-3">
                     <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3">
-                        <div
-                            className={cn(
-                                "relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md",
-                                "border border-white/20 shadow-sm ring-1 ring-black/5",
-                                "backdrop-blur-md",
-                                "after:absolute after:inset-0 after:bg-gradient-to-br after:from-white/30 after:to-white/5 after:opacity-80",
-                            )}
-                            style={{ backgroundColor: color }}
-                            aria-hidden
-                        >
-                            <CategoryIconPreview
-                                name={normalizeCategoryIcon(category.icon)}
-                                className="relative z-10 h-4 w-4 text-white"
-                            />
-                        </div>
+                        <ColorTile color={color}>
+                            <CategoryIconPreview name={normalizeCategoryIcon(category.icon)} />
+                        </ColorTile>
                         <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pr-1">
                             <CardTitle
                                 className={cn(

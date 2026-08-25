@@ -33,15 +33,15 @@ import type {
 const WEEKDAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
 
 const MOBILE_DAY_MODIFIER_DOT = {
-    hasSub: "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-blue-500",
+    hasSub: "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-info",
     hasInst:
-        "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-amber-500",
+        "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-warning",
     hasBills:
         "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-primary",
     hasCard:
-        "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-neutral-500",
+        "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-muted-foreground",
     hasPosted:
-        "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-emerald-600",
+        "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-success",
 } as const
 
 type PaymentModifierDateSets = {
@@ -89,7 +89,7 @@ function MobilePaymentsCalendarGrid({
                 {WEEKDAYS.map((d) => (
                     <div
                         key={d}
-                        className="px-1 py-1 text-center text-[11px] font-medium uppercase tracking-wide text-muted-foreground"
+                        className="px-1 py-1 text-center text-2xs font-medium uppercase tracking-wide text-muted-foreground"
                     >
                         {d}
                     </div>
@@ -418,7 +418,7 @@ function EventChips({
                 <div
                     key={e.id}
                     className={cn(
-                        "truncate rounded px-1 py-0.5 text-[10px] font-medium leading-tight",
+                        "truncate rounded px-1 py-0.5 text-2xs font-medium leading-tight",
                         postedParcela
                             ? tagChipWarning
                             : e.kind === "posted_income" ||
@@ -441,7 +441,7 @@ function EventChips({
                 )
             })}
             {rest > 0 ? (
-                <span className="text-[10px] font-medium text-muted-foreground">
+                <span className="text-2xs font-medium text-muted-foreground">
                     +{rest}
                 </span>
             ) : null}
@@ -547,7 +547,7 @@ export function DashboardPaymentsCalendar({
         <div className="min-w-0 max-w-full space-y-2">
             <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div className="flex h-8 min-w-0 items-end">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                         Calendário de pagamentos
                     </p>
                 </div>
@@ -602,7 +602,7 @@ export function DashboardPaymentsCalendar({
                     </div>
                     <div className="flex min-w-0 flex-col border-b border-border lg:flex-row lg:items-stretch">
                     <div className="hidden min-w-0 shrink-0 border-b border-border px-4 py-3 lg:block lg:w-80 lg:border-b-0 lg:border-e lg:border-border lg:px-3 xl:px-4">
-                        <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        <p className="mb-2 text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                             Próximos lançamentos
                         </p>
                         {upcomingRows.length === 0 ? (
@@ -619,7 +619,7 @@ export function DashboardPaymentsCalendar({
                             <div className="space-y-3">
                                 {upcomingGrouped.map(({ ymd, list }) => (
                                     <div key={ymd} className="space-y-1.5">
-                                        <div className="bg-card px-2 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                        <div className="bg-card px-2 py-1 text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                             {ymd.split("-").reverse().join("/")}
                                         </div>
                                         <div className="space-y-1.5 pl-1">
@@ -730,7 +730,7 @@ export function DashboardPaymentsCalendar({
                             ) : (
                                 mobileGroupedForList.map(({ ymd, list }) => (
                                     <div key={ymd} className="space-y-1.5">
-                                        <div className="bg-card px-2 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                        <div className="bg-card px-2 py-1 text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                             {ymd.split("-").reverse().join("/")}
                                         </div>
                                         <div className="space-y-1.5 pl-1">
@@ -779,7 +779,7 @@ export function DashboardPaymentsCalendar({
                                 {WEEKDAYS.map((d) => (
                                     <div
                                         key={d}
-                                        className="px-1 py-1 text-center text-[11px] font-medium uppercase tracking-wide text-muted-foreground"
+                                        className="px-1 py-1 text-center text-2xs font-medium uppercase tracking-wide text-muted-foreground"
                                     >
                                         {d}
                                     </div>

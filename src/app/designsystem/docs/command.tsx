@@ -96,21 +96,30 @@ React.useEffect(() => {
         <CommandDialogDemo />
       </DocSection>
 
-      <DocNote title="O app ainda não tem busca global">
-        Não existe nenhuma ocorrência de <code>CommandDialog</code>{" "}
-        fora desta
-        página. Este é o componente que a lacuna pede, e a tela que o consumir
-        precisa decidir duas coisas que o componente não decide: o que entra na
-        lista (telas, ações, transações, categorias) e como o resultado é
-        ordenado quando vem de fontes diferentes.
+      <DocNote title="O primeiro consumidor é este catálogo">
+        A busca do cabeçalho aqui em cima é um <code>CommandDialog</code>{" "}
+        — abra com <kbd>⌘</kbd><kbd>K</kbd>. O código está em{" "}
+        <code>src/app/designsystem/ds-search.tsx</code> e serve de referência
+        para as duas decisões que o componente não toma: o que entra na lista e
+        como se filtra.
+      </DocNote>
+
+      <DocNote title="O filtro padrão do cmdk é difuso, e isto é em português">
+        <code>Command</code> aceita <code>filter</code>. O padrão pontua por
+        aproximação, então &ldquo;cor&rdquo; devolve Carousel e Combobox junto
+        com Cores. A busca do catálogo troca por substring com os acentos
+        removidos dos dois lados: quem digita &ldquo;graficos&rdquo; acha
+        &ldquo;Gráficos&rdquo;, e a lista não inventa parentesco entre palavras
+        que só compartilham letras.
       </DocNote>
 
       <DocNote title="⌘K precisa de um gatilho visível também">
         Um atalho que só existe no teclado não existe no telefone e não é
         descoberto por ninguém. O botão de busca no cabeçalho é o que torna a
         paleta encontrável; o <kbd>⌘</kbd><kbd>K</kbd>{" "}
-        é o atalho para quem já
-        sabe.
+        desenhado dentro dele é o
+        que ensina o atalho a quem ainda não sabe. No telefone o mesmo botão
+        sobra sozinho, sem a tecla — lá o gatilho é o único caminho.
       </DocNote>
     </>
   )

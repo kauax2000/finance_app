@@ -88,7 +88,7 @@ export function DashboardRecentTransactions({
         <div className="min-w-0 max-w-full space-y-2">
             <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex h-8 min-w-0 items-end">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                         {sectionTitle}
                     </p>
                 </div>
@@ -247,6 +247,8 @@ export function DashboardRecentTransactions({
                                                                 src={avatarUrl}
                                                                 alt={author}
                                                                 className="size-full object-cover"
+                                                                loading="lazy"
+                                                                decoding="async"
                                                             />
                                                         ) : (
                                                             <div
@@ -259,7 +261,7 @@ export function DashboardRecentTransactions({
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <p className="min-w-0 flex-1 truncate leading-none text-[11px] text-muted-foreground">
+                                                    <p className="min-w-0 flex-1 truncate leading-none text-2xs text-muted-foreground">
                                                         {catName ? (
                                                             <>
                                                                 <span>

@@ -379,7 +379,7 @@ export function WorkspaceInviteDialog({
                                                                         }
                                                                     >
                                                                         {linkCopied ? (
-                                                                            <CheckIcon className="h-4 w-4 text-green-600" />
+                                                                            <CheckIcon className="h-4 w-4 text-success" />
                                                                         ) : (
                                                                             <DocumentDuplicateIcon className="h-4 w-4" />
                                                                         )}
@@ -597,7 +597,7 @@ export function WorkspaceInviteDialog({
                                                                     }
                                                                 >
                                                                     {linkCopied ? (
-                                                                        <CheckIcon className="h-4 w-4 text-green-600" />
+                                                                        <CheckIcon className="h-4 w-4 text-success" />
                                                                     ) : (
                                                                         <DocumentDuplicateIcon className="h-4 w-4" />
                                                                     )}

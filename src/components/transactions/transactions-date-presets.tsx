@@ -103,7 +103,7 @@ export function TransactionsDatePresets({
                             size="xs"
                             aria-pressed={selected}
                             className={cn(
-                                "h-7 rounded-full px-2.5 text-[11px] font-semibold shadow-none",
+                                "h-7 rounded-full px-2.5 text-2xs font-semibold shadow-none",
                                 selected ? tagChipFilterSelected : tagChipFilterIdle
                             )}
                             onClick={() => applyPreset(p.key)}

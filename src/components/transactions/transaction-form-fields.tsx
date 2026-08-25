@@ -449,7 +449,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
             )}
 
             {showInstallmentFields && segmentMode === "edit" ? (
-                <p className="rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-[11px] leading-snug text-amber-950 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-100">
+                <p className="rounded-lg border border-warning/25 bg-warning-muted px-3 py-2 text-2xs leading-snug text-warning-muted-foreground">
                     Parcelas já lançadas no extrato não mudam automaticamente;
                     só as próximas cobranças usam os novos valores do plano.
                 </p>
@@ -815,10 +815,10 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                                 </Popover>
                             )}
                             {creditInvoiceFormHint ? (
-                                <p className="flex min-w-0 flex-nowrap items-center gap-1.5 text-[11px] leading-tight text-muted-foreground">
+                                <p className="flex min-w-0 flex-nowrap items-center gap-1.5 text-2xs leading-tight text-muted-foreground">
                                     <span
                                         className={cn(
-                                            "inline-flex shrink-0 rounded-full border-0 px-2 py-0.5 text-[10px] font-semibold leading-tight",
+                                            "inline-flex shrink-0 rounded-full border-0 px-2 py-0.5 text-2xs font-semibold leading-tight",
                                             creditInvoiceSlotStatusChipClass(
                                                 creditInvoiceFormHint.slot
                                             )

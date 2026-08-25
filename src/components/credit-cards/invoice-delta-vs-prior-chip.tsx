@@ -130,10 +130,9 @@ export function InvoiceDeltaVsPriorChip({
     return (
         <span
             className={cn(
-                "inline-flex items-center gap-1 text-[11px] font-medium tabular-nums",
-                meta.direction === "down" &&
-                    "text-emerald-700 dark:text-emerald-400",
-                meta.direction === "up" && "text-rose-700 dark:text-rose-400",
+                "inline-flex items-center gap-1 text-2xs font-medium tabular-nums",
+                meta.direction === "down" && "text-success",
+                meta.direction === "up" && "text-warning-muted-foreground",
                 meta.direction === "flat" && "text-muted-foreground",
                 className
             )}

@@ -137,7 +137,7 @@ export function SubscriptionFormFields({
                         <SelectContent
                             position="popper"
                             align="start"
-                            className="z-[100] min-w-[var(--radix-select-trigger-width)] p-1"
+                            className="z-(--z-toast) min-w-[var(--radix-select-trigger-width)] p-1"
                             sideOffset={6}
                             collisionPadding={12}
                         >
@@ -158,7 +158,7 @@ export function SubscriptionFormFields({
                 <Label htmlFor="sub-form-billing-date" className="text-xs">
                     Data da próxima cobrança
                 </Label>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-2xs text-muted-foreground">
                     Usamos esta data como referência do ciclo (cartão, débito,
                     etc.). Ela é salva como início e próxima cobrança.
                 </p>
@@ -178,7 +178,7 @@ export function SubscriptionFormFields({
                 <Label htmlFor="sub-form-payment-method" className="text-xs">
                     Forma de cobrança (opcional)
                 </Label>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-2xs text-muted-foreground">
                     Define como o lançamento automático será registrado (útil para
                     crédito e fatura). Débito automático costuma ser débito em
                     conta.
@@ -210,7 +210,7 @@ export function SubscriptionFormFields({
                     <SelectContent
                         position="popper"
                         align="start"
-                        className="z-[100] min-w-[var(--radix-select-trigger-width)] p-1"
+                        className="z-(--z-toast) min-w-[var(--radix-select-trigger-width)] p-1"
                         sideOffset={6}
                         collisionPadding={12}
                     >
@@ -271,7 +271,7 @@ export function SubscriptionFormFields({
                             <SelectContent
                                 position="popper"
                                 align="start"
-                                className="z-[100] min-w-[var(--radix-select-trigger-width)] p-1"
+                                className="z-(--z-toast) min-w-[var(--radix-select-trigger-width)] p-1"
                                 sideOffset={6}
                                 collisionPadding={12}
                             >

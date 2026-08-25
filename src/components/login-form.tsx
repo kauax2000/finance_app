@@ -136,7 +136,7 @@ export function LoginForm() {
                         {fieldErrors.email ? (
                             <p
                                 id="login-email-error"
-                                className="text-[0.8rem] font-medium text-destructive"
+                                className="text-control-sm font-medium text-destructive"
                             >
                                 {fieldErrors.email}
                             </p>
@@ -194,7 +194,7 @@ export function LoginForm() {
                         {fieldErrors.password ? (
                             <p
                                 id="login-password-error"
-                                className="text-[0.8rem] font-medium text-destructive"
+                                className="text-control-sm font-medium text-destructive"
                             >
                                 {fieldErrors.password}
                             </p>
@@ -242,7 +242,7 @@ export function LoginForm() {
                     Não tem uma conta?{" "}
                     <Link
                         href={registerHref}
-                        className="text-[oklch(0.45_0.14_166)] font-medium underline-offset-4 hover:underline"
+                        className="text-primary font-medium underline-offset-4 hover:underline"
                     >
                         Criar conta
                     </Link>

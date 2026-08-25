@@ -358,14 +358,30 @@ function committedVsPriorDeltaPct(snapshot: CardCycleSnapshot): {
     }
 }
 
+/**
+ * Uso do limite é **estado**, não direção de dinheiro: um limite folgado é
+ * "deu certo" (`success`), não "entrou dinheiro" (`income`). Por isso a rampa
+ * aqui é success/warning/destructive, e não a paleta de dinheiro.
+ */
 function limitGaugeFillClass(pct: number): string {
-    if (pct < 30)
-        return "bg-emerald-500/80 dark:bg-emerald-400/80"
-    if (pct < 70) return "bg-amber-500/80 dark:bg-amber-400/80"
-    return "bg-rose-500/80 dark:bg-rose-400/80"
+    if (pct < 30) return "bg-success/80"
+    if (pct < 70) return "bg-warning/80"
+    return "bg-destructive/80"
 }
 
-type InsightNoticeVariant = "sky" | "teal" | "amber" | "violet" | "emerald"
+type InsightNoticeVariant = "info" | "success" | "warning" | "neutral"
+
+/**
+ * Mesma forma que `Alert`: `border-<estado>/30 bg-<estado>-muted
+ * text-<estado>-muted-foreground`. Eram cinco matizes cruas (sky, teal, amber,
+ * violet, emerald) que não acompanhavam o tema escuro; os dois verdes diziam a
+ * mesma coisa e viraram um só.
+ */
+const insightShellBase = "rounded-md border px-2.5 py-2"
+const insightIconBase =
+    "inline-flex shrink-0 items-center justify-center"
+const insightEyebrowBase =
+    "text-2xs font-semibold uppercase tracking-wide"
 
 function insightNoticeStyles(variant: InsightNoticeVariant): {
     shell: string
@@ -373,45 +389,29 @@ function insightNoticeStyles(variant: InsightNoticeVariant): {
     eyebrow: string
 } {
     switch (variant) {
-        case "sky":
+        case "info":
             return {
-                shell: "rounded-md border border-sky-200/60 bg-sky-50/70 px-2.5 py-2 dark:border-sky-800/45 dark:bg-sky-950/30",
-                iconWrap:
-                    "inline-flex shrink-0 items-center justify-center text-sky-800 dark:text-sky-300",
-                eyebrow:
-                    "text-[10px] font-semibold uppercase tracking-wide text-sky-900/90 dark:text-sky-200/95",
+                shell: `${insightShellBase} border-info/30 bg-info-muted`,
+                iconWrap: `${insightIconBase} text-info-muted-foreground`,
+                eyebrow: `${insightEyebrowBase} text-info-muted-foreground`,
             }
-        case "teal":
+        case "success":
             return {
-                shell: "rounded-md border border-teal-200/60 bg-teal-50/70 px-2.5 py-2 dark:border-teal-800/45 dark:bg-teal-950/30",
-                iconWrap:
-                    "inline-flex shrink-0 items-center justify-center text-teal-800 dark:text-teal-300",
-                eyebrow:
-                    "text-[10px] font-semibold uppercase tracking-wide text-teal-900/90 dark:text-teal-200/95",
+                shell: `${insightShellBase} border-success/30 bg-success-muted`,
+                iconWrap: `${insightIconBase} text-success-muted-foreground`,
+                eyebrow: `${insightEyebrowBase} text-success-muted-foreground`,
             }
-        case "amber":
+        case "warning":
             return {
-                shell: "rounded-md border border-amber-200/60 bg-amber-50/70 px-2.5 py-2 dark:border-amber-800/45 dark:bg-amber-950/30",
-                iconWrap:
-                    "inline-flex shrink-0 items-center justify-center text-amber-900 dark:text-amber-300",
-                eyebrow:
-                    "text-[10px] font-semibold uppercase tracking-wide text-amber-950/90 dark:text-amber-200/95",
-            }
-        case "emerald":
-            return {
-                shell: "rounded-md border border-emerald-200/60 bg-emerald-50/70 px-2.5 py-2 dark:border-emerald-800/45 dark:bg-emerald-950/30",
-                iconWrap:
-                    "inline-flex shrink-0 items-center justify-center text-emerald-800 dark:text-emerald-300",
-                eyebrow:
-                    "text-[10px] font-semibold uppercase tracking-wide text-emerald-900/90 dark:text-emerald-200/95",
+                shell: `${insightShellBase} border-warning/30 bg-warning-muted`,
+                iconWrap: `${insightIconBase} text-warning-muted-foreground`,
+                eyebrow: `${insightEyebrowBase} text-warning-muted-foreground`,
             }
         default:
             return {
-                shell: "rounded-md border border-violet-200/60 bg-violet-50/70 px-2.5 py-2 dark:border-violet-800/45 dark:bg-violet-950/30",
-                iconWrap:
-                    "inline-flex shrink-0 items-center justify-center text-violet-800 dark:text-violet-300",
-                eyebrow:
-                    "text-[10px] font-semibold uppercase tracking-wide text-violet-900/90 dark:text-violet-200/95",
+                shell: `${insightShellBase} border-border bg-muted`,
+                iconWrap: `${insightIconBase} text-muted-foreground`,
+                eyebrow: `${insightEyebrowBase} text-muted-foreground`,
             }
     }
 }
@@ -419,11 +419,11 @@ function insightNoticeStyles(variant: InsightNoticeVariant): {
 function closingInsightVariant(diagnosis: ClosingDiagnosis): InsightNoticeVariant {
     switch (diagnosis) {
         case "lighter_near_close":
-            return "teal"
+            return "success"
         case "heavier_near_close":
-            return "amber"
+            return "warning"
         default:
-            return "violet"
+            return "neutral"
     }
 }
 
@@ -773,7 +773,7 @@ export function CreditCardInvoiceAnalyticsPanel({
             <div className="min-w-0 max-w-full space-y-2">
                 <div className="flex min-w-0 flex-col gap-2 md:flex-row md:items-center md:justify-between">
                     <div className="flex h-8 min-w-0 items-end">
-                        <h2 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        <h2 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                             Fatura
                         </h2>
                     </div>
@@ -809,7 +809,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                             <div className="min-w-0">
                                     <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1.5">
                                         <div className="min-w-0 flex-1 space-y-1">
-                                            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                            <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
                                                 Valor
                                             </p>
                                             <p className="text-3xl font-bold tabular-nums tracking-tight text-foreground">
@@ -859,7 +859,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                     aria-label={`Período da fatura: aberto desde ${formatDatePtBr(snapshot.openWindow.start)}, fecha em ${formatDatePtBr(snapshot.nextClose)}`}
                                 >
                                     <span className="inline-flex items-baseline gap-1">
-                                        <span className="text-[11px] font-semibold uppercase tracking-wide">
+                                        <span className="text-2xs font-semibold uppercase tracking-wide">
                                             Aberto
                                         </span>
                                         <span className="tabular-nums font-medium text-foreground">
@@ -867,7 +867,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                         </span>
                                     </span>
                                     <span className="inline-flex items-baseline gap-1">
-                                        <span className="text-[11px] font-semibold uppercase tracking-wide">
+                                        <span className="text-2xs font-semibold uppercase tracking-wide">
                                             Fecha
                                         </span>
                                         <span className="tabular-nums font-medium text-foreground">
@@ -920,7 +920,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                             invoiceYearMonth={invoiceYearMonth}
                         />
 
-                        <InsightNoticePanel variant="emerald" icon={<LightBulbIcon className="size-3.5" />}>
+                        <InsightNoticePanel variant="success" icon={<LightBulbIcon className="size-3.5" />}>
                             {analytics.summaryText}{" "}
                             <span className="font-normal text-muted-foreground">
                                 Priorize revisar essa categoria neste período.
@@ -1004,7 +1004,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                         >
                                             {activeSlice === null ? (
                                                 <>
-                                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                                    <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
                                                         Distribuição
                                                     </p>
                                                     <p className="mt-1 max-w-[min(11rem,82%)] text-lg font-semibold tabular-nums text-foreground md:text-xl">
@@ -1106,7 +1106,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                             <div className="rounded-md border border-border/50 bg-muted/20 px-3 py-2 dark:bg-muted/10">
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0 flex-1 space-y-1">
-                                        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                        <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
                                             Dias úteis
                                         </p>
                                         <p className="text-base font-semibold tabular-nums leading-snug text-foreground">
@@ -1123,7 +1123,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                             <div className="rounded-md border border-border/50 bg-muted/20 px-3 py-2 dark:bg-muted/10">
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0 flex-1 space-y-1">
-                                        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                        <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
                                             Fim de semana
                                         </p>
                                         <p className="text-base font-semibold tabular-nums leading-snug text-foreground">
@@ -1140,7 +1140,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                         </div>
                         <div className="space-y-2">
                             <InsightNoticePanel
-                                variant="sky"
+                                variant="info"
                                 icon={<ChartBarIcon className="size-3.5" />}
                             >
                                 {strongestWeek != null && strongestWeekTotal > 0 ? (
@@ -1174,7 +1174,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                             </h3>
                             <Badge
                                 variant="secondary"
-                                className="shrink-0 text-[10px] font-semibold uppercase tracking-wide"
+                                className="shrink-0 text-2xs font-semibold uppercase tracking-wide"
                             >
                                 {spendingProfileShortLabel(
                                     analytics.spendingProfile
@@ -1185,7 +1185,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                         <div className="grid gap-2 text-xs sm:grid-cols-2">
                             <div className="rounded-md border border-border/50 bg-muted/20 px-3 py-2 dark:bg-muted/10">
                                 <div className="space-y-1">
-                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                    <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
                                         Ticket médio
                                     </p>
                                     <p className="text-base font-semibold tabular-nums leading-snug text-foreground">
@@ -1193,14 +1193,14 @@ export function CreditCardInvoiceAnalyticsPanel({
                                             ? currencyFmt.format(analytics.meanTicket)
                                             : "—"}
                                     </p>
-                                    <p className="text-[11px] leading-snug text-muted-foreground">
+                                    <p className="text-2xs leading-snug text-muted-foreground">
                                         Valor médio por despesa na fatura aberta.
                                     </p>
                                 </div>
                             </div>
                             <div className="rounded-md border border-border/50 bg-muted/20 px-3 py-2 dark:bg-muted/10">
                                 <div className="space-y-1">
-                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                    <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
                                         Ticket mediano
                                     </p>
                                     <p className="text-base font-semibold tabular-nums leading-snug text-foreground">
@@ -1208,7 +1208,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                             ? currencyFmt.format(analytics.medianTicket)
                                             : "—"}
                                     </p>
-                                    <p className="text-[11px] leading-snug text-muted-foreground">
+                                    <p className="text-2xs leading-snug text-muted-foreground">
                                         Metade das despesas ficou abaixo deste valor.
                                     </p>
                                 </div>
@@ -1222,7 +1222,7 @@ export function CreditCardInvoiceAnalyticsPanel({
             <div className="min-w-0 max-w-full space-y-2">
                 <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex h-8 min-w-0 items-end">
-                        <h2 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        <h2 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                             Parcelas e compromissos
                         </h2>
                     </div>
@@ -1233,7 +1233,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                             className="flex min-h-10 shrink-0 flex-wrap items-center border-b border-border bg-muted/30 px-4 py-2.5"
                             aria-live="polite"
                         >
-                            <p className="min-w-0 text-[11px] leading-snug text-muted-foreground">
+                            <p className="min-w-0 text-2xs leading-snug text-muted-foreground">
                                 {committedDetailLine}
                             </p>
                         </div>
@@ -1241,7 +1241,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                     <CardContent className="space-y-3 py-4">
                     <div className="space-y-2">
                         <div className="space-y-1">
-                            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                            <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 Total mínimo comprometido
                             </p>
                             <p className="text-2xl font-bold tabular-nums tracking-tight text-foreground md:text-3xl">

@@ -73,7 +73,7 @@ function BrandMark({
         return (
             <span
                 className={cn(
-                    "flex h-6 min-w-[2.5rem] items-center justify-center rounded-md border border-border/50 bg-muted/40 px-1.5 text-[9px] font-bold tracking-wide text-foreground backdrop-blur-sm @3xs:h-7 @3xs:min-w-[2.85rem] @3xs:px-2 @3xs:text-[10px] @2xs:text-[11px]",
+                    "flex h-6 min-w-[2.5rem] items-center justify-center rounded-md border border-border/50 bg-muted/40 px-1.5 text-2xs font-bold tracking-wide text-foreground backdrop-blur-sm @3xs:h-7 @3xs:min-w-[2.85rem] @3xs:px-2 @3xs:text-2xs @2xs:text-2xs",
                     className
                 )}
                 aria-hidden
@@ -244,7 +244,7 @@ export function RegisteredCreditCardFace({
                 <div className="pointer-events-none absolute left-3 top-2.5 z-10 @3xs:left-3.5 @3xs:top-3">
                     <Badge
                         variant="secondary"
-                        className="text-[10px] @3xs:text-[11px] @xs:text-xs"
+                        className="text-2xs @3xs:text-2xs @xs:text-xs"
                     >
                         Inativo
                     </Badge>
@@ -300,7 +300,7 @@ export function RegisteredCreditCardFace({
                         className={cn(
                             "items-center justify-center overflow-hidden rounded-md border border-white/25 bg-white/16 text-white shadow-sm shadow-black/15 backdrop-blur-md",
                             isSmall
-                                ? "h-5 min-w-8 px-1.5 text-[9px] @3xs:h-6 @3xs:min-w-9 @3xs:text-[10px] @2xs:text-[11px] @xs:h-7 @xs:min-w-[2.85rem] [&>svg]:h-5 [&>svg]:w-11 @3xs:[&>svg]:h-6 @3xs:[&>svg]:w-12 @xs:[&>svg]:h-7 @xs:[&>svg]:w-[3.9rem]"
+                                ? "h-5 min-w-8 px-1.5 text-2xs @3xs:h-6 @3xs:min-w-9 @3xs:text-2xs @2xs:text-2xs @xs:h-7 @xs:min-w-[2.85rem] [&>svg]:h-5 [&>svg]:w-11 @3xs:[&>svg]:h-6 @3xs:[&>svg]:w-12 @xs:[&>svg]:h-7 @xs:[&>svg]:w-[3.9rem]"
                                 : "h-7 min-w-[2.85rem] [&>svg]:h-7 [&>svg]:w-[3.9rem]"
                         )}
                     />
@@ -318,7 +318,7 @@ export function RegisteredCreditCardFace({
                         className={cn(
                             "truncate font-mono font-semibold tracking-[0.08em] text-white/95",
                             isSmall
-                                ? "text-[10px] leading-none @3xs:text-[11px] @2xs:text-xs @xs:text-sm"
+                                ? "text-2xs leading-none @3xs:text-2xs @2xs:text-xs @xs:text-sm"
                                 : "text-sm sm:text-base"
                         )}
                     >
@@ -330,7 +330,7 @@ export function RegisteredCreditCardFace({
                                 className={cn(
                                     "truncate font-semibold uppercase tracking-[0.14em] text-white/90",
                                     isSmall
-                                        ? "text-[8px] leading-tight @3xs:text-[9px] @2xs:text-[10px] @xs:text-xs @xs:leading-snug"
+                                        ? "text-[8px] leading-tight @3xs:text-2xs @2xs:text-2xs @xs:text-xs @xs:leading-snug"
                                         : "text-xs sm:text-sm"
                                 )}
                             >
@@ -343,7 +343,7 @@ export function RegisteredCreditCardFace({
                                     className={cn(
                                         "font-medium uppercase tracking-wider text-white/55",
                                         isSmall
-                                            ? "text-[7px] leading-none @3xs:text-[8px] @2xs:text-[9px] @xs:text-[10px]"
+                                            ? "text-[7px] leading-none @3xs:text-[8px] @2xs:text-2xs @xs:text-2xs"
                                             : "text-[8px]"
                                     )}
                                 >
@@ -353,7 +353,7 @@ export function RegisteredCreditCardFace({
                                     className={cn(
                                         "tabular-nums font-semibold text-white/90",
                                         isSmall
-                                            ? "text-[9px] leading-tight @3xs:text-[10px] @2xs:text-[11px] @xs:text-xs"
+                                            ? "text-2xs leading-tight @3xs:text-2xs @2xs:text-2xs @xs:text-xs"
                                             : "text-xs"
                                     )}
                                 >

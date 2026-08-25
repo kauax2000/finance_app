@@ -50,7 +50,7 @@ const EMPTY_INVOICE_PAID_KEYS: ReadonlySet<string> = new Set()
 function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
     if (!active) return null
     return (
-        <span className="ml-1 inline-flex text-[10px] leading-none text-muted-foreground">
+        <span className="ml-1 inline-flex text-2xs leading-none text-muted-foreground">
             {dir === "asc" ? "▲" : "▼"}
         </span>
     )
@@ -310,7 +310,7 @@ export function TransactionsTable({
                             </Button>
                         </div>
                         {selectedIds.size !== 1 ? (
-                            <p className="-mt-1 text-center text-[11px] leading-tight text-muted-foreground">
+                            <p className="-mt-1 text-center text-2xs leading-tight text-muted-foreground">
                                 Editar uma transação por vez
                             </p>
                         ) : null}
@@ -375,7 +375,7 @@ export function TransactionsTable({
                 )}
             >
                 {showMobileScrollHint ? (
-                    <div className="border-b border-border/60 bg-muted/30 px-3 py-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground sm:hidden">
+                    <div className="border-b border-border/60 bg-muted/30 px-3 py-2 text-2xs font-medium uppercase tracking-wide text-muted-foreground sm:hidden">
                         Arraste para ver mais →
                     </div>
                 ) : null}
@@ -506,7 +506,7 @@ export function TransactionsTable({
                                 Tipo
                             </TableHead>
                             {enableActions ? (
-                                <TableHead className="h-11 w-[4.5rem] px-3 py-0 pr-4 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground md:w-[5.25rem]">
+                                <TableHead className="h-11 w-[4.5rem] px-3 py-0 pr-4 text-left text-2xs font-semibold uppercase tracking-wider text-muted-foreground md:w-[5.25rem]">
                                     Ações
                                 </TableHead>
                             ) : null}

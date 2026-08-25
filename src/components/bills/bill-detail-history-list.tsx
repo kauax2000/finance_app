@@ -227,7 +227,7 @@ export function BillDetailHistoryList({
                                             <Badge
                                                 variant="secondary"
                                                 className={cn(
-                                                    "border-0 text-[11px]",
+                                                    "border-0 text-2xs",
                                                     badge.className
                                                 )}
                                             >
@@ -235,7 +235,7 @@ export function BillDetailHistoryList({
                                             </Badge>
                                             {inst.status === "paid" &&
                                             inst.paid_at ? (
-                                                <span className="text-[11px] text-muted-foreground">
+                                                <span className="text-2xs text-muted-foreground">
                                                     Pago{" "}
                                                     {formatTransactionDmyPtBr(
                                                         inst.paid_at
@@ -243,7 +243,7 @@ export function BillDetailHistoryList({
                                                 </span>
                                             ) : null}
                                             {pm ? (
-                                                <span className="text-[11px] text-muted-foreground">
+                                                <span className="text-2xs text-muted-foreground">
                                                     {pm}
                                                 </span>
                                             ) : null}

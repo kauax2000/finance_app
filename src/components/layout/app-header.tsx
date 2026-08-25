@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 const headerBaseClassName =
-    "w-full min-w-0 shrink-0 border-b border-border max-md:fixed max-md:inset-x-0 max-md:top-0 max-md:z-40 max-md:pt-[env(safe-area-inset-top,0px)] md:sticky md:top-0 md:z-10 transition-[background-color] duration-200"
+    "w-full min-w-0 shrink-0 border-b border-border max-md:fixed max-md:inset-x-0 max-md:top-0 max-md:z-(--z-header) max-md:pt-[env(safe-area-inset-top,0px)] md:sticky md:top-0 md:z-10 transition-[background-color] duration-200"
 
 const headerRowClassName =
     "flex h-16 max-md:h-14 w-full min-w-0 items-center gap-0 transition-[height] ease-linear md:group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"

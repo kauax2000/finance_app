@@ -141,7 +141,7 @@ function TableSkeleton({ rowCount }: { rowCount: number }) {
         <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
             <CardContent className="relative flex flex-col p-0">
                 <div className="min-w-0 overflow-hidden rounded-t-xl">
-                    <div className="border-b border-border/60 bg-muted/30 px-3 py-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground sm:hidden">
+                    <div className="border-b border-border/60 bg-muted/30 px-3 py-2 text-2xs font-medium uppercase tracking-wide text-muted-foreground sm:hidden">
                         Arraste para ver mais →
                     </div>
                     <Table className="min-w-[640px] text-sm md:min-w-[700px]">
@@ -168,7 +168,7 @@ function TableSkeleton({ rowCount }: { rowCount: number }) {
                                 <TableHead className="h-11 min-w-[5.5rem] px-4 py-0">
                                     <Skeleton className="h-3.5 w-8" />
                                 </TableHead>
-                                <TableHead className="h-11 w-[4.5rem] px-3 py-0 pr-4 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground md:w-[5.25rem]">
+                                <TableHead className="h-11 w-[4.5rem] px-3 py-0 pr-4 text-left text-2xs font-semibold uppercase tracking-wider text-muted-foreground md:w-[5.25rem]">
                                     <Skeleton className="h-3 w-10" />
                                 </TableHead>
                             </TableRow>

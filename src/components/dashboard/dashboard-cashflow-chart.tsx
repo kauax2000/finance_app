@@ -16,13 +16,23 @@ import {
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import type { CashflowBucketRow } from "@/components/dashboard/dashboard-cashflow-buckets"
-import { hexToRgba } from "@/components/categories/detail/category-detail-utils"
 
-const incomeBar = "#10B981"
-const expenseBar = "#E11D48"
-/** Matches :root --primary oklch(0.348 0.118 166); SVG/Recharts attrs cannot use var(). */
-const lineCumulative = "#1f6a59"
-const chartReferenceLineStroke = "#e5e5e5"
+/**
+ * `fill` e `stroke` **resolvem** `var()` em todo navegador que o app suporta.
+ * O comentário que estava aqui dizia o contrário e fixava quatro hex, e o
+ * cursor do `Tooltip` logo abaixo — `color-mix(in oklch, var(--muted) …)` — já
+ * provava o contrário no mesmo arquivo. Com hex, o gráfico era a única parte da
+ * tela que não acompanhava o tema escuro.
+ */
+const incomeBar = "var(--chart-income)"
+const expenseBar = "var(--chart-expense)"
+const lineCumulative = "var(--primary)"
+const chartReferenceLineStroke = "var(--border)"
+
+/** O que `hexToRgba` fazia, sem precisar que a cor seja hex. */
+function alpha(color: string, pct: number): string {
+    return `color-mix(in oklab, ${color} ${pct}%, transparent)`
+}
 
 const currencyFmt = new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -106,23 +116,23 @@ function CashflowTooltip({
 function LegendStrip() {
     return (
         <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
-            <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1.5 text-2xs text-muted-foreground">
                 <span
                     className="size-2 rounded-full"
-                    style={{ backgroundColor: hexToRgba(incomeBar, 0.75) }}
+                    style={{ backgroundColor: alpha(incomeBar, 75) }}
                     aria-hidden
                 />
                 Receitas
             </span>
-            <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1.5 text-2xs text-muted-foreground">
                 <span
                     className="size-2 rounded-full"
-                    style={{ backgroundColor: hexToRgba(expenseBar, 0.65) }}
+                    style={{ backgroundColor: alpha(expenseBar, 65) }}
                     aria-hidden
                 />
                 Despesas
             </span>
-            <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1.5 text-2xs text-muted-foreground">
                 <span
                     className="h-0.5 w-4 rounded-full bg-primary"
                     aria-hidden
@@ -170,7 +180,7 @@ export function DashboardCashflowChart({
         <div className="min-w-0 space-y-2">
             <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div className="flex h-8 min-w-0 items-end">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                         Fluxo de caixa
                     </p>
                 </div>
@@ -182,33 +192,33 @@ export function DashboardCashflowChart({
                     {data.length > 0 ? (
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                             <div>
-                                <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                     Resultado
                                 </p>
                                 <p
                                     className={cn(
                                         "mt-0.5 text-lg font-semibold tabular-nums leading-tight",
                                         totals.net >= 0
-                                            ? "text-green-600 dark:text-green-400"
-                                            : "text-red-600 dark:text-red-400",
+                                            ? "text-income"
+                                            : "text-expense",
                                     )}
                                 >
                                     {currencyFmt.format(totals.net)}
                                 </p>
                             </div>
                             <div>
-                                <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                     Receitas
                                 </p>
-                                <p className="mt-0.5 text-lg font-semibold tabular-nums leading-tight text-green-600 dark:text-green-400">
+                                <p className="mt-0.5 text-lg font-semibold tabular-nums leading-tight text-income">
                                     {currencyFmt.format(totals.income)}
                                 </p>
                             </div>
                             <div>
-                                <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                     Despesas
                                 </p>
-                                <p className="mt-0.5 text-lg font-semibold tabular-nums leading-tight text-red-600 dark:text-red-400">
+                                <p className="mt-0.5 text-lg font-semibold tabular-nums leading-tight text-expense">
                                     {currencyFmt.format(totals.expense)}
                                 </p>
                             </div>
@@ -236,13 +246,13 @@ export function DashboardCashflowChart({
                                 <XAxis
                                     dataKey="label"
                                     tickLine={false}
-                                    className="text-[10px] text-muted-foreground"
+                                    className="text-2xs text-muted-foreground"
                                     interval="preserveStartEnd"
                                 />
                                 <YAxis
                                     width={48}
                                     tickLine={false}
-                                    className="text-[10px] text-muted-foreground"
+                                    className="text-2xs text-muted-foreground"
                                     domain={yDomain}
                                     tickFormatter={(v) =>
                                         Number(v).toLocaleString("pt-BR", {
@@ -267,19 +277,19 @@ export function DashboardCashflowChart({
                                 <Bar
                                     dataKey="income"
                                     name="Receitas"
-                                    fill={hexToRgba(incomeBar, 0.55)}
+                                    fill={alpha(incomeBar, 55)}
                                     radius={[3, 3, 0, 0]}
                                     activeBar={{
-                                        fill: hexToRgba(incomeBar, 0.75),
+                                        fill: alpha(incomeBar, 75),
                                     }}
                                 />
                                 <Bar
                                     dataKey="expense"
                                     name="Despesas"
-                                    fill={hexToRgba(expenseBar, 0.5)}
+                                    fill={alpha(expenseBar, 50)}
                                     radius={[3, 3, 0, 0]}
                                     activeBar={{
-                                        fill: hexToRgba(expenseBar, 0.72),
+                                        fill: alpha(expenseBar, 72),
                                     }}
                                 />
                                 <Line

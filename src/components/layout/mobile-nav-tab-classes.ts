@@ -8,7 +8,7 @@ export function mobileNavTabInnerClass(active: boolean) {
     return cn(
         "flex h-full w-full items-center justify-center rounded-xl transition-[background-color,color,transform] duration-300 ease-out motion-reduce:transition-none",
         active
-            ? "bg-foreground/10 text-foreground dark:bg-white/12 dark:text-primary-foreground"
+            ? "bg-foreground/10 text-foreground dark:bg-foreground/12 dark:text-primary-foreground"
             : "text-muted-foreground group-active:text-foreground"
     )
 }

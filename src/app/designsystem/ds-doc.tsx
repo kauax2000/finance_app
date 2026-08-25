@@ -1,10 +1,20 @@
 "use client"
 
 import * as React from "react"
-import { CheckIcon, CopyIcon, InfoIcon } from "lucide-react"
+import Link from "next/link"
+import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, CopyIcon, InfoIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { slugifyCategory } from "./registry"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 import { Button } from "@/components/ui/button"
 import { Code } from "@/components/ui/code"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -30,6 +40,8 @@ export type Category =
   | "Organismos"
   | "Padrões"
 
+export type DocNeighbor = { slug: string; name: string }
+
 /**
  * O casco de uma página de componente: cabeçalho, linha de import e o corpo.
  *
@@ -44,6 +56,8 @@ export function DocPage({
   description,
   source,
   importLine,
+  previous,
+  next,
   children,
 }: {
   name: string
@@ -51,16 +65,39 @@ export function DocPage({
   description: string
   source?: string
   importLine?: string
+  previous?: DocNeighbor
+  next?: DocNeighbor
   children: React.ReactNode
 }) {
   return (
     <article className="flex min-w-0 flex-col gap-8 pb-16">
       <div className="flex flex-col gap-3">
+        {/* Era uma sobrancelha: a categoria em maiúsculas acima do título,
+            parecendo link e não sendo. Como breadcrumb ela diz a mesma coisa e
+            leva de volta — que é o que a forma sempre prometeu. */}
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/designsystem">Design system</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href={`/designsystem#${slugifyCategory(category)}`}>
+                  {category}
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{name}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
         <PageHeader>
           <PageHeaderTitleRow>
-            <span className="text-xs font-medium tracking-wide text-primary uppercase">
-              {category}
-            </span>
             <PageHeaderTitle className="page-title text-2xl sm:text-2xl">
               {name}
             </PageHeaderTitle>
@@ -77,7 +114,75 @@ export function DocPage({
         ) : null}
       </div>
       {children}
+      <DocPager previous={previous} next={next} />
     </article>
+  )
+}
+
+/**
+ * O par anterior/próximo no pé.
+ *
+ * Sem ele, a única saída de uma página era voltar à lista e procurar de novo —
+ * e o catálogo tem uma ordem de leitura real, categoria por categoria, que
+ * ninguém conseguia seguir. É a mesma ordem da navegação lateral.
+ */
+function DocPager({
+  previous,
+  next,
+}: {
+  previous?: DocNeighbor
+  next?: DocNeighbor
+}) {
+  if (!previous && !next) return null
+  return (
+    <nav
+      aria-label="Páginas vizinhas"
+      className="mt-4 grid gap-3 border-t border-border pt-6 sm:grid-cols-2"
+    >
+      {previous ? (
+        <DocPagerLink entry={previous} direction="previous" />
+      ) : (
+        <span className="hidden sm:block" />
+      )}
+      {next ? <DocPagerLink entry={next} direction="next" /> : null}
+    </nav>
+  )
+}
+
+function DocPagerLink({
+  entry,
+  direction,
+}: {
+  entry: DocNeighbor
+  direction: "previous" | "next"
+}) {
+  const isNext = direction === "next"
+  return (
+    <Link
+      href={`/designsystem/${entry.slug}`}
+      className={cn(
+        "group flex min-h-11 items-center gap-2 rounded-lg border border-border px-3 py-2.5 transition-colors",
+        "hover:bg-accent/60 active:bg-accent/60",
+        "focus-visible:ring-3 focus-visible:ring-ring/70 focus-visible:outline-none",
+        isNext && "sm:col-start-2 sm:flex-row-reverse sm:text-right"
+      )}
+    >
+      {isNext ? (
+        <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+      ) : (
+        <ChevronLeftIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+      )}
+      {/* Rótulo e nome são o mesmo dado em duas linhas: quem os separa é a
+          entrelinha, não um gap. */}
+      <span className="flex min-w-0 flex-col">
+        <span className="text-2xs tracking-wide text-muted-foreground uppercase">
+          {isNext ? "Próximo" : "Anterior"}
+        </span>
+        <span className="truncate text-sm font-medium text-foreground">
+          {entry.name}
+        </span>
+      </span>
+    </Link>
   )
 }
 

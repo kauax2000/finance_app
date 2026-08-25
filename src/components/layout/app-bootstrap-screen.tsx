@@ -15,7 +15,7 @@ export function AppBootstrapScreen({ className }: AppBootstrapScreenProps) {
     return (
         <div
             className={cn(
-                "fixed inset-0 z-50 flex items-center justify-center bg-background",
+                "fixed inset-0 z-(--z-modal) flex items-center justify-center bg-background",
                 "h-[100dvh] min-h-[100dvh] supports-[height:100dvh]:h-[100dvh]",
                 className,
             )}

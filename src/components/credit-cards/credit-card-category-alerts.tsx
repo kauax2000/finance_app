@@ -192,14 +192,14 @@ export function CreditCardCategoryAlerts({
 
             {!loading && triggered.length > 0 ? (
                 <div
-                    className="rounded-xl border border-amber-500/35 bg-amber-500/[0.08] p-4 dark:bg-amber-500/10"
+                    className="rounded-xl border border-warning/35 bg-warning-muted p-4"
                     role="status"
                 >
-                    <div className="mb-3 flex items-center gap-2 text-amber-950 dark:text-amber-100">
+                    <div className="mb-3 flex items-center gap-2 text-warning-muted-foreground">
                         <ExclamationTriangleIcon className="size-4 shrink-0 opacity-90" aria-hidden />
                         <span className="text-sm font-semibold">Limite atingido nesta fatura</span>
                     </div>
-                    <ul className="space-y-2 text-sm text-amber-950/90 dark:text-amber-50/95">
+                    <ul className="space-y-2 text-sm text-warning-muted-foreground">
                         {triggered.map((a) => {
                             const row = comparison.find(
                                 (c) => (c.categoryId ?? "__none__") === a.categoryKey
@@ -208,10 +208,10 @@ export function CreditCardCategoryAlerts({
                             return (
                                 <li
                                     key={a.id}
-                                    className="flex flex-col gap-0.5 border-t border-amber-500/20 pt-2 first:border-t-0 first:pt-0 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3"
+                                    className="flex flex-col gap-0.5 border-t border-warning/20 pt-2 first:border-t-0 first:pt-0 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3"
                                 >
                                     <span className="font-medium">{name}</span>
-                                    <span className="tabular-nums text-amber-950/80 dark:text-amber-100/85">
+                                    <span className="tabular-nums text-warning-muted-foreground/85">
                                         Limite{" "}
                                         {a.thresholdBrl.toLocaleString("pt-BR", {
                                             style: "currency",
@@ -309,7 +309,7 @@ export function CreditCardCategoryAlerts({
                                 <SelectContent
                                     position="popper"
                                     align="start"
-                                    className="z-[100] min-w-[var(--radix-select-trigger-width)] max-h-72 p-1"
+                                    className="z-(--z-toast) min-w-[var(--radix-select-trigger-width)] max-h-72 p-1"
                                     sideOffset={6}
                                     collisionPadding={12}
                                 >

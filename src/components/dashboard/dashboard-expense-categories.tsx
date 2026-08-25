@@ -47,7 +47,7 @@ function resolveFill(raw: string | undefined, index: number): string {
 /** Keeps the donut center label readable without overlapping slice edges. */
 function totalCenterAmountTextClass(formatted: string): string {
     const len = formatted.length
-    if (len > 21) return "text-[11px] leading-snug"
+    if (len > 21) return "text-2xs leading-snug"
     if (len > 17) return "text-xs leading-snug"
     if (len > 14) return "text-sm leading-snug"
     if (len > 11) return "text-base leading-snug"
@@ -232,7 +232,7 @@ export function DashboardExpenseCategories({
         <div className="min-w-0 space-y-2">
             <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex h-8 min-w-0 items-end">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                         Despesas por categoria
                     </p>
                 </div>
@@ -315,7 +315,7 @@ export function DashboardExpenseCategories({
                                             aria-hidden
                                         >
                                             <div className="max-w-[min(11rem,82%)] text-center md:max-w-[min(13rem,82%)]">
-                                                <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                                <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                                     Total gasto
                                                 </p>
                                                 <p
@@ -351,7 +351,7 @@ export function DashboardExpenseCategories({
                             </div>
 
                             <div className="space-y-2">
-                                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                     Todas as categorias
                                 </p>
                                 <ul className="grid grid-cols-1 gap-y-2" role="list">
@@ -412,7 +412,7 @@ export function DashboardExpenseCategories({
                                                                     row.value,
                                                                 )}
                                                             </span>
-                                                            <span className="text-[10px] text-muted-foreground">
+                                                            <span className="text-2xs text-muted-foreground">
                                                                 {pctFmt.format(
                                                                     row.pct,
                                                                 )}

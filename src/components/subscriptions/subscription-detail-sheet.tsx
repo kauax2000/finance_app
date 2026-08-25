@@ -102,7 +102,7 @@ function SectionLabel({
     return (
         <p
             className={cn(
-                "text-[11px] font-semibold uppercase tracking-wide text-muted-foreground",
+                "text-2xs font-semibold uppercase tracking-wide text-muted-foreground",
                 className
             )}
         >
@@ -499,7 +499,7 @@ export function SubscriptionDetailSheet({
                                 <p className="text-sm font-semibold text-foreground">
                                     Assinatura vinculada ao extrato
                                 </p>
-                                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                <p className="mt-0.5 text-2xs text-muted-foreground">
                                     {txSummaryLine}
                                 </p>
                             </div>
@@ -509,13 +509,13 @@ export function SubscriptionDetailSheet({
                             <Table className="min-w-[280px] text-xs">
                                 <TableHeader>
                                     <TableRow className="hover:bg-transparent">
-                                        <TableHead className="h-8 px-2 text-[10px] font-semibold uppercase tracking-wide">
+                                        <TableHead className="h-8 px-2 text-2xs font-semibold uppercase tracking-wide">
                                             Cobrança
                                         </TableHead>
-                                        <TableHead className="h-8 px-2 text-right text-[10px] font-semibold uppercase tracking-wide">
+                                        <TableHead className="h-8 px-2 text-right text-2xs font-semibold uppercase tracking-wide">
                                             Valor
                                         </TableHead>
-                                        <TableHead className="h-8 px-2 text-[10px] font-semibold uppercase tracking-wide">
+                                        <TableHead className="h-8 px-2 text-2xs font-semibold uppercase tracking-wide">
                                             Status
                                         </TableHead>
                                     </TableRow>
@@ -554,7 +554,7 @@ export function SubscriptionDetailSheet({
                                                 <TableCell className="px-2 py-1.5">
                                                     <span
                                                         className={cn(
-                                                            "inline-flex h-5 w-fit items-center justify-center rounded-full border-0 px-2 py-0 text-[9px] font-medium uppercase tracking-wide",
+                                                            "inline-flex h-5 w-fit items-center justify-center rounded-full border-0 px-2 py-0 text-2xs font-medium uppercase tracking-wide",
                                                             subscriptionChargeStatusChipClassName(
                                                                 row.status
                                                             )

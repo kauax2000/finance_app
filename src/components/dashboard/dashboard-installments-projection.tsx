@@ -59,11 +59,11 @@ export function DashboardInstallmentsProjection({
                             <XAxis
                                 dataKey="label"
                                 tickLine={false}
-                                className="text-[10px] text-muted-foreground"
+                                className="text-2xs text-muted-foreground"
                             />
                             <YAxis
                                 tickLine={false}
-                                className="text-[10px] text-muted-foreground"
+                                className="text-2xs text-muted-foreground"
                                 tickFormatter={(v) =>
                                     Number(v).toLocaleString("pt-BR", {
                                         notation: "compact",
@@ -91,7 +91,7 @@ export function DashboardInstallmentsProjection({
                 )}
 
                 <div className="space-y-2">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                         Encerrando em breve
                     </p>
                     {endingSoon.length === 0 ? (

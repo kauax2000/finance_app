@@ -48,7 +48,7 @@ function extrairTextoDeBusca(src) {
   for (const m of src.matchAll(/\btitle="([^"]+)"/g)) pedacos.push(m[1])
   for (const m of src.matchAll(/\bdescription="([^"]+)"/g)) pedacos.push(m[1])
 
-  return pedacos
+  const prosa = pedacos
     .join(" ")
     // fora tags, expressões JSX e entidades
     .replace(/<[^>]*>/g, " ")
@@ -56,6 +56,39 @@ function extrairTextoDeBusca(src) {
     .replace(/&[a-z]+;/gi, " ")
     .replace(/\s+/g, " ")
     .trim()
+
+  return [prosa, ...nomesDeToken(src, prosa)].join(" ").trim()
+}
+
+/**
+ * Os nomes que a página **lista** em vez de narrar.
+ *
+ * A prosa acima cobre o que a página argumenta, mas as escalas moram em arrays
+ * — `["rounded-2xl", "1,8 × raio", "folha, diálogo"]` — e nada disso entrava no
+ * índice. Medido antes desta função: `raio` e `sombra` achavam a página de
+ * Forma e elevação; `rounded-2xl` e `shadow-md` devolviam zero. E nome de
+ * classe é a primeira coisa que se digita.
+ *
+ * Uma string sem espaço e com hífen é um nome; com espaço é `className` de
+ * layout, que só faria a busca casar com tudo. Os blocos `code={}` ficam de
+ * fora por tamanho: são 122, e dobrariam um índice que já tem 67 KB e viaja
+ * para o cliente.
+ */
+function nomesDeToken(src, prosa) {
+  const vistos = new Set()
+  const jaNaProsa = prosa.toLowerCase()
+
+  for (const m of src.matchAll(/"([^"\s]+)"/g)) {
+    const valor = m[1]
+    const ehNome =
+      valor.length <= 40 &&
+      (valor.startsWith("--") || /^[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/.test(valor))
+    if (!ehNome) continue
+    if (jaNaProsa.includes(valor.toLowerCase())) continue
+    vistos.add(valor)
+  }
+
+  return [...vistos]
 }
 
 const indice = slugs.map((s) => {

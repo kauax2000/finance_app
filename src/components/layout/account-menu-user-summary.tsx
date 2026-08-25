@@ -32,6 +32,7 @@ export function AccountMenuUserSummary({ className }: AccountMenuUserSummaryProp
                         src={user.user_metadata.avatar_url}
                         alt={userName}
                         className="aspect-square size-full object-cover"
+                        decoding="async"
                     />
                 ) : !profileReady ? (
                     <div

@@ -84,7 +84,7 @@ export function DatePicker({
                 </Button>
             </PopoverTrigger>
             <PopoverContent
-                className={cn("z-[100] w-auto p-0", classNamePopoverContent)}
+                className={cn("z-(--z-toast) w-auto p-0", classNamePopoverContent)}
                 align="start"
                 onCloseAutoFocus={(e) => e.preventDefault()}
             >

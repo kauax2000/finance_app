@@ -133,7 +133,7 @@ export function TransactionsDateRangeMenu({
                 }}
             >
                 <div className="space-y-2">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
                         Período
                     </p>
                     <Button
@@ -192,7 +192,7 @@ export function TransactionsDateRangeMenu({
                 </div>
 
                 <div className="space-y-2 border-t border-border/60 pt-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
                         Personalizado
                     </p>
                     <TransactionsDateRangeForm

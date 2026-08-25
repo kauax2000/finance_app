@@ -22,8 +22,9 @@ import {
     tagChipNeutral,
     tagChipWarning,
 } from "@/lib/tag-chip-classes"
+import { ColorTile } from "@/components/ui/color-tile"
 
-const EXPENSE_CATEGORY_FALLBACK_COLOR = "#EF4444"
+const EXPENSE_CATEGORY_FALLBACK_COLOR = "var(--expense)"
 
 function cmpYmd(a: string, b: string): number {
     return a.localeCompare(b)
@@ -93,21 +94,9 @@ export function BillSummaryCard({
             >
                 <CardHeader className="border-b border-border/60 bg-muted/25 !py-3">
                     <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] grid-rows-[auto_auto] items-start gap-x-3 gap-y-1">
-                        <div
-                            className={cn(
-                                "relative col-start-1 row-span-2 flex h-11 w-11 shrink-0 items-center justify-center self-start overflow-hidden rounded-lg",
-                                "border border-white/20 shadow-sm ring-1 ring-black/5",
-                                "backdrop-blur-md",
-                                "after:absolute after:inset-0 after:bg-gradient-to-br after:from-white/30 after:to-white/5 after:opacity-80",
-                            )}
-                            style={{ backgroundColor: headerColor }}
-                            aria-hidden
-                        >
-                            <CategoryIconPreview
-                                name={iconId}
-                                className="relative z-10 h-5 w-5 text-white"
-                            />
-                        </div>
+                        <ColorTile size="lg" color={headerColor} className="col-start-1 row-span-2 self-start">
+                            <CategoryIconPreview name={iconId} />
+                        </ColorTile>
 
                         <CardTitle
                             className={cn(
@@ -152,7 +141,7 @@ export function BillSummaryCard({
 
                 <CardContent className="space-y-3 px-4 pb-3 pt-3">
                     <div className="rounded-lg border border-border/80 bg-muted/15 px-3 py-2.5">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
                             Próxima parcela
                         </p>
                         {nextDueYmd ? (
@@ -199,18 +188,18 @@ export function BillSummaryCard({
 
                     <div className="grid grid-cols-3 gap-2 text-center">
                         <div className="rounded-lg border border-border/60 bg-background/60 px-2 py-2">
-                            <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                            <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                 Pago 90d
                             </p>
                             <p className="mt-0.5 text-xs font-semibold tabular-nums">
                                 <MoneyDisplay value={paid90Total} size="sm" />
                             </p>
-                            <p className="text-[10px] text-muted-foreground">
+                            <p className="text-2xs text-muted-foreground">
                                 {paid90Count} pag.
                             </p>
                         </div>
                         <div className="rounded-lg border border-border/60 bg-background/60 px-2 py-2">
-                            <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                            <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                 Média
                             </p>
                             <p className="mt-0.5 text-xs font-semibold tabular-nums">
@@ -222,7 +211,7 @@ export function BillSummaryCard({
                             </p>
                         </div>
                         <div className="rounded-lg border border-border/60 bg-background/60 px-2 py-2">
-                            <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                            <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                 Atrasos 90d
                             </p>
                             <p className="mt-0.5 text-sm font-semibold tabular-nums">
@@ -231,7 +220,7 @@ export function BillSummaryCard({
                         </div>
                     </div>
 
-                    <p className="text-center text-[11px] text-muted-foreground">
+                    <p className="text-center text-2xs text-muted-foreground">
                         Toque para ver histórico completo
                     </p>
                 </CardContent>

@@ -72,7 +72,7 @@ function SectionLabel({
     return (
         <p
             className={cn(
-                "text-[11px] font-semibold uppercase tracking-wide text-muted-foreground",
+                "text-2xs font-semibold uppercase tracking-wide text-muted-foreground",
                 className,
             )}
         >
@@ -387,7 +387,7 @@ export function DashboardPaymentEventPreviewSheet({
                                         <p className="mt-0.5 text-2xl font-semibold tabular-nums tracking-tight text-foreground">
                                             −{currencyFmt.format(preview!.amount)}
                                         </p>
-                                        <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+                                        <p className="mt-1 text-2xs leading-snug text-muted-foreground">
                                             Em compras parceladas, o valor acima é desta
                                             parcela no extrato; o total da compra aparece em
                                             Compra parcelada.
@@ -460,7 +460,7 @@ export function DashboardPaymentEventPreviewSheet({
                                                     </p>
                                                 )}
                                                 {preview!.amount != null ? (
-                                                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                                    <p className="mt-0.5 text-2xs text-muted-foreground">
                                                         Esta parcela:{" "}
                                                         <span className="font-medium text-foreground">
                                                             {currencyFmt.format(preview!.amount)}
@@ -515,16 +515,16 @@ export function DashboardPaymentEventPreviewSheet({
                                             <Table className="min-w-[280px] text-xs">
                                                 <TableHeader>
                                                     <TableRow className="hover:bg-transparent">
-                                                        <TableHead className="h-8 w-10 px-2 text-[10px] font-semibold uppercase tracking-wide">
+                                                        <TableHead className="h-8 w-10 px-2 text-2xs font-semibold uppercase tracking-wide">
                                                             #
                                                         </TableHead>
-                                                        <TableHead className="h-8 px-2 text-[10px] font-semibold uppercase tracking-wide">
+                                                        <TableHead className="h-8 px-2 text-2xs font-semibold uppercase tracking-wide">
                                                             Data
                                                         </TableHead>
-                                                        <TableHead className="h-8 px-2 text-right text-[10px] font-semibold uppercase tracking-wide">
+                                                        <TableHead className="h-8 px-2 text-right text-2xs font-semibold uppercase tracking-wide">
                                                             Valor da parcela
                                                         </TableHead>
-                                                        <TableHead className="h-8 px-2 text-[10px] font-semibold uppercase tracking-wide">
+                                                        <TableHead className="h-8 px-2 text-2xs font-semibold uppercase tracking-wide">
                                                             Status
                                                         </TableHead>
                                                     </TableRow>
@@ -559,7 +559,7 @@ export function DashboardPaymentEventPreviewSheet({
                                                                             {row.slot}
                                                                             {isCurrent ? (
                                                                                 <span
-                                                                                    className="ml-1 text-[9px] font-normal text-muted-foreground"
+                                                                                    className="ml-1 text-2xs font-normal text-muted-foreground"
                                                                                     title="Esta parcela"
                                                                                 >
                                                                                     ●
@@ -615,7 +615,7 @@ export function DashboardPaymentEventPreviewSheet({
 
                                         {!installmentBlock.slicesLoading &&
                                         installmentBlock.futureSlots > 0 ? (
-                                            <p className="mt-2.5 text-[11px] leading-snug text-muted-foreground">
+                                            <p className="mt-2.5 text-2xs leading-snug text-muted-foreground">
                                                 Faltam{" "}
                                                 <span className="font-medium text-foreground">
                                                     {installmentBlock.futureSlots}

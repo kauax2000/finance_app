@@ -7,7 +7,7 @@ export const CATEGORIES_ONBOARDING_OUTER_CLASS =
 /** Shared card chrome around the onboarding panel. */
 export const CATEGORIES_ONBOARDING_PANEL_CARD_CLASS = cn(
     "rounded-2xl border bg-card text-card-foreground shadow-lg",
-    "ring-1 ring-border/60 dark:ring-white/10",
+    "ring-1 ring-border/60 dark:ring-foreground/10",
     "overflow-hidden",
 )
 

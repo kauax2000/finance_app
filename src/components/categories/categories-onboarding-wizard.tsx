@@ -131,7 +131,7 @@ function OnboardingDialogPanel({
             aria-labelledby={titleId}
         >
             <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border/80 px-4 py-2.5 sm:px-5">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {stepIndex + 1}/{stepCount}
                 </span>
                 <StepDots step={stepIndex} total={stepCount} />
@@ -547,7 +547,7 @@ export function CategoriesOnboardingWizard({
                             />
                         </>
                     ) : (
-                        <span className="text-[11px] text-muted-foreground">Sem orçamento</span>
+                        <span className="text-2xs text-muted-foreground">Sem orçamento</span>
                     )}
                     <Button
                         type="button"
@@ -1033,7 +1033,7 @@ export function CategoriesOnboardingWizard({
                                 <div className="space-y-4 pb-1">
                                     {incomeCategories.length > 0 ? (
                                         <div className="space-y-2">
-                                            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                            <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
                                                 Receitas
                                             </p>
                                             <div className="space-y-2 rounded-xl border border-border/50 bg-muted/10 p-2">
@@ -1042,7 +1042,7 @@ export function CategoriesOnboardingWizard({
                                         </div>
                                     ) : null}
                                     <div className="space-y-2">
-                                        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                        <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
                                             Despesas
                                         </p>
                                         {expenseCategories.length === 0 ? (
@@ -1098,7 +1098,7 @@ export function CategoriesOnboardingWizard({
                                         </span>
                                     </div>
                                     <div className="flex shrink-0 flex-col gap-0.5 sm:items-end">
-                                        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                        <span className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                             Limite
                                         </span>
                                         <span className="tabular-nums text-sm font-semibold text-foreground">

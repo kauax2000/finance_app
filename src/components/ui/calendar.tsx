@@ -8,17 +8,26 @@ import {
   type Locale,
 } from "react-day-picker"
 
+import { ptBR } from "date-fns/locale"
+
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from "@heroicons/react/24/outline"
 
+/**
+ * O `locale` tem padrão porque o app tem um só.
+ *
+ * O `DatePicker` já passava `ptBR`; o `Calendar` usado direto caía no inglês do
+ * `react-day-picker` e mostrava "August" e "Mo Tu We" no meio de uma tela em
+ * português. Um padrão que só vale quando alguém lembra de passar não é padrão.
+ */
 function Calendar({
   className,
   classNames,
   showOutsideDays = true,
   captionLayout = "label",
   buttonVariant = "ghost",
-  locale,
+  locale = ptBR,
   formatters,
   components,
   ...props

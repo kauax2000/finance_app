@@ -17,7 +17,7 @@ export function MobileNavIsland({
 }: MobileNavIslandProps) {
     return (
         <nav
-            className="pointer-events-none fixed inset-x-0 bottom-0 z-50 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] md:hidden"
+            className="pointer-events-none fixed inset-x-0 bottom-0 z-(--z-modal) pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] md:hidden"
             aria-label="Navegação principal"
         >
             <div className="pointer-events-auto mx-4 flex items-stretch gap-2">

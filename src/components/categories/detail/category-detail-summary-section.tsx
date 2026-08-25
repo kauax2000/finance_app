@@ -127,13 +127,13 @@ const categorySummaryHeaderClassName =
     "flex shrink-0 min-h-14 flex-col justify-center gap-1 border-b border-border bg-muted/40 px-4 py-2.5 md:min-h-11 md:flex-row md:items-center md:justify-between md:gap-2 md:px-5"
 
 const categorySummaryTitleClassName =
-    "min-w-0 flex-1 text-[11px] leading-[14px] font-medium uppercase tracking-wide text-muted-foreground"
+    "min-w-0 flex-1 text-2xs leading-[14px] font-medium uppercase tracking-wide text-muted-foreground"
 
 const categorySummaryBodyClassName = "bg-muted/10"
 
 /** Alinhado a `DeltaBadge` em dashboard-kpi-cards (KPI cards). */
 const momBadgeClassName =
-    "shrink-0 gap-1 px-2 py-0.5 text-[11px] font-medium tabular-nums whitespace-nowrap"
+    "shrink-0 gap-1 px-2 py-0.5 text-2xs font-medium tabular-nums whitespace-nowrap"
 
 function MomBadge({ model }: { model: MomBadgeModel }) {
     if (!model.show) return null
@@ -142,7 +142,7 @@ function MomBadge({ model }: { model: MomBadgeModel }) {
         return (
             <Badge
                 variant={model.variant}
-                className="max-w-[min(100%,7.5rem)] shrink-0 gap-1 truncate px-2 py-0.5 text-[11px] font-medium tabular-nums"
+                className="max-w-[min(100%,7.5rem)] shrink-0 gap-1 truncate px-2 py-0.5 text-2xs font-medium tabular-nums"
                 aria-label={model.ariaLabel}
                 title={model.ariaLabel}
                 role="status"
@@ -226,18 +226,18 @@ function ExpenseBudgetOverviewCard({
     return (
         <div className="min-w-0 space-y-2 md:col-span-6">
             <div className="flex min-w-0 items-center justify-between gap-2">
-                <p className="min-w-0 flex-1 truncate text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                <p className="min-w-0 flex-1 truncate text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                     Orçamento do mês
                 </p>
 
                 <div className="flex shrink-0 items-center gap-2">
                     {hasBudget ? (
-                        <p className="hidden tabular-nums text-[11px] text-muted-foreground md:block">
+                        <p className="hidden tabular-nums text-2xs text-muted-foreground md:block">
                             Limite{" "}
                             <span className="font-medium text-foreground">{formatCurrencyBRL(limit)}</span>
                         </p>
                     ) : (
-                        <p className="hidden text-[11px] font-medium uppercase tracking-wide text-muted-foreground md:block">
+                        <p className="hidden text-2xs font-medium uppercase tracking-wide text-muted-foreground md:block">
                             Sem limite
                         </p>
                     )}
@@ -250,16 +250,16 @@ function ExpenseBudgetOverviewCard({
                     {hasBudget ? (
                         <>
                             <div className="flex w-full items-center justify-between gap-2 rounded-md border border-border/60 bg-muted/20 px-3 py-2 md:hidden">
-                                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                     Limite
                                 </p>
-                                <p className="tabular-nums text-[11px] font-medium text-foreground">
+                                <p className="tabular-nums text-2xs font-medium text-foreground">
                                     {formatCurrencyBRL(limit)}
                                 </p>
                             </div>
                             <div className="grid grid-cols-2 items-end gap-3 md:flex md:flex-wrap md:justify-between md:gap-x-6 md:gap-y-4">
                                 <div className="min-w-0 space-y-1">
-                                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                         Gasto
                                     </p>
                                     <p className="truncate text-lg font-semibold tabular-nums leading-tight sm:text-xl md:text-2xl">
@@ -332,7 +332,7 @@ function ExpenseBudgetOverviewCard({
                                 </div>
 
                                 <div className="min-w-0 justify-self-end space-y-1 text-right">
-                                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                         {overBudget ? "Acima do limite" : "Restante"}
                                     </p>
                                     <p
@@ -347,7 +347,7 @@ function ExpenseBudgetOverviewCard({
                             </div>
 
                             <div className="space-y-2">
-                                <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                                <div className="flex items-center justify-between gap-2 text-2xs text-muted-foreground">
                                     <span className="min-w-0 truncate">Uso do orçamento</span>
                                     <span className="shrink-0 tabular-nums font-medium text-foreground">
                                         {budgetPctRounded}%
@@ -373,7 +373,7 @@ function ExpenseBudgetOverviewCard({
                         </>
                     ) : (
                         <div className="space-y-1">
-                            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                            <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                 Restante
                             </p>
                             <p className="text-xl font-semibold tabular-nums leading-tight md:text-2xl">

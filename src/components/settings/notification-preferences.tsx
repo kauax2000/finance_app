@@ -180,7 +180,7 @@ export function NotificationPreferences() {
         <div className="min-w-0 space-y-2">
             <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div className="flex h-8 min-w-0 items-end">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                         Notificações desta carteira
                     </p>
                 </div>
@@ -188,7 +188,7 @@ export function NotificationPreferences() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-10 w-full gap-1.5 border-dashed text-sm sm:h-7 sm:w-fit sm:shrink-0 sm:self-auto sm:text-[0.8rem]"
+                    className="h-10 w-full gap-1.5 border-dashed text-sm sm:h-7 sm:w-fit sm:shrink-0 sm:self-auto sm:text-control-sm"
                     onClick={() => openNotifications()}
                 >
                     Ver histórico

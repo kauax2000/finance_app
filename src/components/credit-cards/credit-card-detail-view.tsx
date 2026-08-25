@@ -239,7 +239,7 @@ export function CreditCardDetailView({
                     <div id="cc-ficha-details" hidden={!fichaExpanded}>
                         {fichaExpanded && (
                             <>
-                                <p className="pb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                <p className="pb-2 text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
                                     Ficha do cartão
                                 </p>
                                 <dl className="grid gap-2 text-sm">
@@ -311,7 +311,7 @@ export function CreditCardDetailView({
                                     ) : null}
                                 </dl>
                                 {!card.is_active ? (
-                                    <p className="mt-2 text-xs text-amber-600 dark:text-amber-500">
+                                    <p className="mt-2 text-xs text-warning-muted-foreground">
                                         Cartão inativo — não aparece ao lançar despesas no
                                         crédito.
                                     </p>

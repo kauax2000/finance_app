@@ -437,7 +437,7 @@ export default function SubscriptionsPageClient() {
     if (workspaceError) {
         return (
             <Card>
-                <CardContent className="py-6 text-sm text-red-500">
+                <CardContent className="py-6 text-sm text-destructive">
                     {workspaceError}
                 </CardContent>
             </Card>
@@ -606,7 +606,7 @@ export default function SubscriptionsPageClient() {
                                         </Button>
                                     </div>
                                     {selectedIds.size !== 1 ? (
-                                        <p className="-mt-1 text-center text-[11px] leading-tight text-muted-foreground">
+                                        <p className="-mt-1 text-center text-2xs leading-tight text-muted-foreground">
                                             Editar uma assinatura por vez
                                         </p>
                                     ) : null}
@@ -803,7 +803,7 @@ export default function SubscriptionsPageClient() {
                                         <TableHead className="h-11 min-w-[4.5rem] px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground">
                                             Status
                                         </TableHead>
-                                        <TableHead className="h-11 w-[5.25rem] px-3 py-0 pr-4 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                        <TableHead className="h-11 w-[5.25rem] px-3 py-0 pr-4 text-left text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
                                             Ações
                                         </TableHead>
                                     </TableRow>
@@ -867,7 +867,7 @@ export default function SubscriptionsPageClient() {
                                                         >
                                                             {s.name}
                                                         </span>
-                                                        <span className="text-[11px] text-muted-foreground">
+                                                        <span className="text-2xs text-muted-foreground">
                                                             {txLine}
                                                         </span>
                                                     </div>

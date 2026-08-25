@@ -176,7 +176,7 @@ function ResetPasswordFormContent() {
             <div className="flex flex-col gap-6 p-6">
                 {success ? (
                     <div className="flex flex-col gap-4">
-                        <div className="bg-green-500/10 text-green-600 dark:text-green-400 text-sm p-3 rounded-md">
+                        <div className="bg-success-muted text-success-muted-foreground text-sm p-3 rounded-md">
                             <p className="font-medium">Senha atualizada!</p>
                             <p className="text-muted-foreground mt-1">
                                 Você será redirecionado para o login em breve.

@@ -248,7 +248,7 @@ export function CategoryEmbeddedTransactions({
     if (workspaceError) {
         return (
             <Card>
-                <CardContent className="py-6 text-sm text-red-500">
+                <CardContent className="py-6 text-sm text-destructive">
                     {workspaceError}
                 </CardContent>
             </Card>
@@ -278,7 +278,7 @@ export function CategoryEmbeddedTransactions({
                         treatPeriodAsAlwaysDefault={lockPeriodToDefault}
                         toolbarLeading={() => (
                             <div className="flex h-8 min-w-0 items-end">
-                                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                     Lançamentos do mês
                                 </p>
                             </div>

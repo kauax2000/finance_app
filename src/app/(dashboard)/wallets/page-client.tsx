@@ -73,7 +73,7 @@ export default function WalletsPage() {
     if (workspaceError) {
         return (
             <Card>
-                <CardContent className="py-8 text-sm text-red-500">
+                <CardContent className="py-8 text-sm text-destructive">
                     {workspaceError}
                 </CardContent>
             </Card>
@@ -311,7 +311,7 @@ export default function WalletsPage() {
                                                 key={c}
                                                 type="button"
                                                 onClick={() => setColor(c)}
-                                                className={`w-8 h-8 rounded-full border-2 ${color === c ? "border-gray-900" : "border-transparent"
+                                                className={`w-8 h-8 rounded-full border-2 ${color === c ? "border-foreground" : "border-transparent"
                                                     }`}
                                                 style={{ backgroundColor: c }}
                                             />
@@ -372,7 +372,7 @@ export default function WalletsPage() {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="text-red-500 hover:text-red-600"
+                                            className="text-destructive hover:text-destructive/80 active:text-destructive/80"
                                             onClick={() => handleDelete(wallet.id)}
                                         >
                                             <Trash2 className="h-4 w-4" />

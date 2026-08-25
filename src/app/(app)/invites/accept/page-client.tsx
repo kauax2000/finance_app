@@ -130,13 +130,13 @@ export default function AcceptInvitePageClient() {
                             </div>
                         </>
                     ) : error ? (
-                        <div className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/5 p-3 text-sm text-red-600">
+                        <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive-muted p-3 text-sm text-destructive-muted-foreground">
                             <ExclamationCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
                             <span>{error}</span>
                         </div>
                     ) : showSuccess ? (
                         <div className="space-y-2">
-                            <div className="flex items-start gap-2 rounded-lg border border-green-500/30 bg-green-500/5 p-3 text-sm text-green-700 dark:text-green-400">
+                            <div className="flex items-start gap-2 rounded-lg border border-success/30 bg-success-muted p-3 text-sm text-success-muted-foreground">
                                 <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
                                 <div className="space-y-1">
                                     <p className="font-medium">Convite aceito com sucesso.</p>

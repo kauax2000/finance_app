@@ -5,12 +5,13 @@ import { Group, Spec, Stack } from "../ds-kit"
 
 const LAYERS = [
   ["--z-base", "0", "o conteúdo da página"],
-  ["--z-raised", "10", "o que se destaca sem sair do fluxo: ponto de timeline, avatar sobreposto"],
-  ["--z-sticky", "20", "cabeçalho fixo, linha de cabeçalho de tabela"],
-  ["--z-nav-island", "30", "a ilha de navegação do telefone"],
-  ["--z-overlay", "40", "o escurecimento atrás de um modal"],
-  ["--z-sheet", "50", "diálogo, folha, gaveta"],
-  ["--z-popover", "60", "popover e menu — precisam abrir por cima de uma folha"],
+  ["--z-raised", "10", "o que se destaca sem sair do fluxo: ponto de timeline, cabeçalho grudado no desktop"],
+  ["--z-sticky", "20", "a alça de redimensionar da sidebar"],
+  ["--z-banner", "30", "a faixa de offline, abaixo do cabeçalho"],
+  ["--z-header", "40", "o cabeçalho fixo do telefone"],
+  ["--z-modal", "50", "Dialog, AlertDialog, Drawer, Tooltip, HoverCard, Menubar, ContextMenu"],
+  ["--z-sheet", "70", "a folha lateral, que cobre o modal"],
+  ["--z-popover", "80", "Popover, DropdownMenu e Select — abrem por cima da folha"],
   ["--z-toast", "100", "o toast, sempre por último"],
 ]
 
@@ -58,24 +59,43 @@ export default function CamadasDoc() {
         </div>
       </DocSection>
 
-      <DocNote title="Ainda não migrado — hoje convivem três escalas">
-        Esta escala existe, mas o produto ainda não a usa. Medido agora:{" "}
-        <code>z-10</code> aparece 28 vezes e <code>z-50</code> 19, enquanto{" "}
-        <code>z-(--z-*)</code> aparece duas vezes fora deste catálogo. E existe
-        uma terceira convenção em produção que não é nenhuma das duas —{" "}
-        <code>z-[70]</code> no Sheet, <code>z-[80]</code> em Popover, Dropdown e
-        Select, <code>z-[100]</code> no Toaster —, documentada em comentários
-        dentro dos próprios componentes.
+      <DocNote title="A escala foi corrigida para descrever a produção">
+        A primeira versão desta página inventou os números em vez de medi-los:
+        dizia <code>--z-sheet: 50</code> e <code>--z-popover: 60</code> enquanto o
+        app rodava <code>z-[70]</code> na folha e <code>z-[80]</code> no popover,
+        e não tinha degrau nenhum para o 50, onde moram Dialog, Drawer e os menus
+        do Radix. Migrar para a escala antiga teria empilhado a folha no mesmo
+        nível do diálogo. Agora os tokens valem o que o app já valia, e{" "}
+        <code>--z-modal</code> existe.
       </DocNote>
 
-      <DocNote title="O mapeamento pretendido">
-        A migração é trocar 70 por <code>--z-sheet</code>, 80 por{" "}
-        <code>--z-popover</code> e 100 por <code>--z-toast</code>, preservando a
-        ordem relativa: o popover precisa abrir por cima da folha, que é
-        exatamente o que os números crus codificam hoje. Está no backlog em{" "}
-        <code>docs/design/CONFORMIDADE-01.md</code>. Até lá, código novo usa os
-        tokens; componente existente não se altera isoladamente, porque quem
-        importa é a ordem entre eles.
+      <DocNote title="Dois tokens foram renomeados pelo que está neles">
+        <code>--z-overlay</code> (40) não tinha um único uso: em toda camada o
+        escurecimento e o conteúdo compartilham o mesmo z, então nunca houve uma
+        camada só de overlay. Quem mora no 40 é o cabeçalho fixo do telefone, e o
+        token virou <code>--z-header</code>. <code>--z-nav-island</code> (30)
+        nomeava a ilha de navegação, que na verdade está no 50 com os modais; o
+        30 é a faixa de offline, e o token virou <code>--z-banner</code>. Token
+        cujo nome não bate com o ocupante é pior que número cru: o número cru
+        não afirma nada.
+      </DocNote>
+
+      <DocNote title="Empilhamento local não é camada">
+        <code>z-0</code>, <code>z-10</code> e <code>z-[1]</code> dentro de um
+        componente — o polegar acima do trilho, o rótulo acima do verniz — são
+        ordem entre irmãos dentro de um contexto de empilhamento, e continuam
+        números crus de propósito. A escala nomeia o que atravessa telas; forçar
+        token no que não atravessa só faz o nome mentir. Se a decisão pode ser
+        tomada olhando um arquivo só, não é camada.
+      </DocNote>
+
+      <DocNote title="Escalar para vencer é sempre o sintoma">
+        A toolbar de categorias tinha um <code>PopoverContent</code> forçado a{" "}
+        <code>z-[100]</code> — o nível do toast — e, dentro dele, um{" "}
+        <code>Select</code> em <code>z-[220]</code> para vencer o popover que o
+        continha. O efeito colateral era o app inteiro: aquele popover cobria os
+        toasts. Os dois voltaram para <code>--z-popover</code>. Dois portais no
+        mesmo z se resolvem por ordem no DOM, e o que abre depois entra depois.
       </DocNote>
     </>
   )

@@ -108,7 +108,7 @@ function InvoiceRow({
                                     </p>
                                     <Badge
                                         variant={statusVariant}
-                                        className="shrink-0 px-2 py-0.5 text-[11px] font-medium whitespace-nowrap"
+                                        className="shrink-0 px-2 py-0.5 text-2xs font-medium whitespace-nowrap"
                                     >
                                         {statusLabel}
                                     </Badge>
@@ -124,7 +124,7 @@ function InvoiceRow({
                         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:items-stretch">
                             <div className="min-w-0 rounded-lg border border-border/70 bg-muted/10 p-3 dark:bg-muted/5">
                                 <div className="flex flex-col gap-2 min-[480px]:flex-row min-[480px]:items-baseline min-[480px]:justify-between">
-                                    <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                         Total do cartão
                                     </p>
                                     <p className="text-xl font-semibold tabular-nums tracking-tight text-foreground min-[480px]:text-right">
@@ -132,7 +132,7 @@ function InvoiceRow({
                                     </p>
                                 </div>
                                 {postedTotal > 0 || projectedParcelas > 0 ? (
-                                    <div className="mt-3 space-y-1 border-t border-border/50 pt-3 text-[11px] leading-relaxed text-muted-foreground">
+                                    <div className="mt-3 space-y-1 border-t border-border/50 pt-3 text-2xs leading-relaxed text-muted-foreground">
                                         {postedTotal > 0 ? (
                                             <p className="tabular-nums">
                                                 <span className="font-medium text-foreground/80">
@@ -155,7 +155,7 @@ function InvoiceRow({
 
                             <div className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-col sm:gap-2">
                                 <div className="min-w-0 rounded-md border border-border/60 bg-muted/15 px-2.5 py-2 dark:bg-muted/10">
-                                    <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                         Fechamento
                                     </p>
                                     <p className="mt-0.5 truncate text-sm font-medium tabular-nums text-foreground">
@@ -163,7 +163,7 @@ function InvoiceRow({
                                     </p>
                                 </div>
                                 <div className="min-w-0 rounded-md border border-border/60 bg-muted/15 px-2.5 py-2 dark:bg-muted/10">
-                                    <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                         Vencimento
                                     </p>
                                     <p className="mt-0.5 truncate text-sm font-medium tabular-nums text-foreground">
@@ -197,7 +197,7 @@ export function DashboardOpenInvoices({
             <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0 space-y-0.5">
                     <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                             Faturas do mês
                         </p>
                     </div>
@@ -260,7 +260,7 @@ export function DashboardOpenInvoices({
                                         className="min-w-0 space-y-2 rounded-lg border border-border/60 bg-background/60 p-3 max-sm:shadow-xs sm:space-y-1.5 sm:rounded-none sm:border-transparent sm:bg-transparent sm:p-0 sm:shadow-none"
                                     >
                                         <div className="flex min-w-0 flex-col gap-1">
-                                            <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                            <dt className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                                 Total comprometido
                                             </dt>
                                             <dd className="min-w-0">
@@ -275,7 +275,7 @@ export function DashboardOpenInvoices({
                                         className="min-w-0 space-y-2 rounded-lg border border-border/60 bg-background/60 p-3 max-sm:shadow-xs sm:space-y-1.5 sm:rounded-none sm:border-transparent sm:bg-transparent sm:p-0 sm:shadow-none"
                                     >
                                         <div className="flex min-w-0 flex-col gap-1">
-                                            <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                            <dt className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                                 Vencimento
                                             </dt>
                                             <dd className="min-w-0 text-lg font-semibold tabular-nums leading-snug tracking-tight text-foreground sm:text-base">

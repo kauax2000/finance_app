@@ -77,7 +77,7 @@ export function CategoryDetailTrends({
                 <div className="flex h-8 min-w-0 items-end gap-2">
                     <h3
                         id="category-trends-heading"
-                        className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground"
+                        className="text-2xs font-medium uppercase tracking-wide text-muted-foreground"
                     >
                         Tendência
                     </h3>

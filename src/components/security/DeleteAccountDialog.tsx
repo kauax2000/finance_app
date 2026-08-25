@@ -152,7 +152,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                     )}
                 >
                     {success ? (
-                        <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" aria-hidden />
+                        <CheckCircle2 className="h-5 w-5 shrink-0 text-success" aria-hidden />
                     ) : (
                         <TrashIcon className="h-5 w-5 shrink-0" aria-hidden />
                     )}
@@ -179,7 +179,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                 }
             >
                 {success ? (
-                    <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" aria-hidden />
+                    <CheckCircle2 className="h-5 w-5 shrink-0 text-success" aria-hidden />
                 ) : (
                     <TrashIcon className="h-5 w-5 shrink-0" aria-hidden />
                 )}
@@ -192,8 +192,8 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
     const bodySuccess = (
         <div className={scrollPadding}>
             <div className="flex flex-col items-center justify-center py-4">
-                <div className="mb-4 rounded-full bg-green-500/15 p-4 dark:bg-green-950/40">
-                    <CheckCircle2 className="h-12 w-12 text-green-600 dark:text-green-400" />
+                <div className="mb-4 rounded-full bg-success-muted p-4">
+                    <CheckCircle2 className="h-12 w-12 text-success" />
                 </div>
                 <p className="text-center text-sm text-muted-foreground">
                     Todos os seus dados foram removidos permanentemente.
@@ -269,7 +269,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                             placeholder={userEmail}
                             value={confirmEmail}
                             onChange={(e) => setConfirmEmail(e.target.value)}
-                            className={emailsMatch && confirmEmail ? "border-green-600/50" : ""}
+                            className={emailsMatch && confirmEmail ? "border-success/50" : ""}
                         />
                         {confirmEmail && !emailsMatch ? (
                             <p className="text-xs text-destructive">O email não confere</p>

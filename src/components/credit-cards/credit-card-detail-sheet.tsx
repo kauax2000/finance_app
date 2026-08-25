@@ -52,7 +52,7 @@ function SectionLabel({
     return (
         <p
             className={cn(
-                "text-[11px] font-semibold uppercase tracking-wide text-muted-foreground",
+                "text-2xs font-semibold uppercase tracking-wide text-muted-foreground",
                 className
             )}
         >
@@ -211,7 +211,7 @@ export function CreditCardDetailSheet({
                                         )}
                                     </span>
                                     {snapshot.projectedOpenInstallmentsTotal > 0 ? (
-                                        <span className="block text-[11px] font-normal text-muted-foreground">
+                                        <span className="block text-2xs font-normal text-muted-foreground">
                                             Total registrado{" "}
                                             {currencyFmt.format(snapshot.openTotal)}
                                             {" · "}
@@ -244,7 +244,7 @@ export function CreditCardDetailSheet({
                                 </dd>
                             </div>
                         </dl>
-                        <p className="text-[11px] leading-snug text-muted-foreground">
+                        <p className="text-2xs leading-snug text-muted-foreground">
                             Fechamento e vencimento seguem os dias cadastrados; bancos podem
                             diferir em finais de semana e feriados.
                         </p>
@@ -272,7 +272,7 @@ export function CreditCardDetailSheet({
                             </p>
                         ) : null}
                         {!card.is_active ? (
-                            <p className="mt-2 text-amber-600 dark:text-amber-500">
+                            <p className="mt-2 text-warning-muted-foreground">
                                 Cartão inativo — não aparece ao lançar despesas no crédito.
                             </p>
                         ) : null}

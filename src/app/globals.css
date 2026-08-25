@@ -202,18 +202,41 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.9 0 0);
   --sidebar-ring: oklch(0.348 0.118 166);
-  /* Escala de empilhamento. Sem nomes, cada sheet/island/overlay novo chutava um
-     número: o código tinha z-10, z-20, z-30, z-40, z-50 e um z-[100] cru. */
+  /* Escala de empilhamento.
+
+     A rodada 01 nomeou os números, mas nomeou os números errados: a escala dizia
+     sheet 50 / popover 60 enquanto a produção rodava sheet 70 / popover 80, e
+     não tinha slot nenhum para o 50, onde moram Dialog, AlertDialog, Drawer,
+     Tooltip, HoverCard, Menubar e ContextMenu. Migrar as classes cruas para a
+     escala antiga teria colapsado Sheet em cima de Dialog.
+
+     Estes são os valores que o app usa hoje. Cada degrau existe porque tem
+     alguém nele — `--z-header` era `--z-overlay`, um nome sem nenhum uso, já
+     que overlay e conteúdo de cada camada compartilham o mesmo z. */
   --z-base: 0;
   --z-raised: 10;
   --z-sticky: 20;
-  --z-nav-island: 30;
-  --z-overlay: 40;
-  --z-sheet: 50;
-  --z-popover: 60;
+  --z-banner: 30;
+  --z-header: 40;
+  --z-modal: 50;
+  --z-sheet: 70;
+  --z-popover: 80;
   --z-toast: 100;
-  /* Movimento. As durações e curvas estavam escritas à mão em cada keyframe;
-     a curva enfática é a mesma das sheets iOS-like que o app já usava. */
+  /* Movimento.
+
+     `--duration-instant` entrou depois, e pelo mesmo motivo que `--z-modal`:
+     a escala não descrevia o que o app usava. Havia nove `duration-100` em
+     menu, dropdown e select — o degrau que faltava. Empurrá-los para os 150ms
+     do `fast` os deixaria 50% mais lentos, e num menu que abre sob o cursor
+     isso se sente.
+
+     `--ease-out` **sobrescreve** o `ease-out` do tema do Tailwind
+     (`cubic-bezier(0, 0, 0.2, 1)`), porque os dois moram em `:root` e este vem
+     depois. Não é acidente e não deve ser desfeito: é o que faz a classe
+     `ease-out` de qualquer componente entregar a curva do projeto sem precisar
+     escrever `ease-(--ease-out)`. A curva enfática é a mesma das sheets
+     iOS-like que o app já usava. */
+  --duration-instant: 100ms;
   --duration-fast: 150ms;
   --duration-base: 200ms;
   --duration-slow: 300ms;

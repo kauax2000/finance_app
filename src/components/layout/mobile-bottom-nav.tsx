@@ -86,11 +86,12 @@ function MobileAccountMenuSlotContent({
                         src={avatarUrl}
                         alt={userName}
                         className="aspect-square size-full object-cover"
+                        decoding="async"
                     />
                 ) : (
                     <span
                         className={cn(
-                            "flex size-full items-center justify-center text-[10px] font-medium text-white",
+                            "flex size-full items-center justify-center text-2xs font-medium text-white",
                             avatarColor
                         )}
                     >

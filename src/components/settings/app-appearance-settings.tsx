@@ -45,7 +45,7 @@ export function AppAppearanceSettings() {
                 <div className="shrink-0">
                     {mounted ? (
                         <div
-                            className="flex w-fit max-w-full items-center gap-2.5 rounded-full border-0 bg-neutral-100 px-3 py-2 text-neutral-700 dark:bg-zinc-800 dark:text-zinc-200"
+                            className="flex w-fit max-w-full items-center gap-2.5 rounded-full border-0 bg-muted px-3 py-2 text-muted-foreground"
                             role="group"
                             aria-label="Alternar tema claro ou escuro"
                         >

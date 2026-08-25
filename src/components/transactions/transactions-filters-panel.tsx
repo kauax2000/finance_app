@@ -231,7 +231,7 @@ export function TransactionsFiltersPanel({
                     <FilterSection title="Período">
                         <div className="space-y-3">
                             <div>
-                                <p className="mb-2 text-[11px] font-medium text-muted-foreground">
+                                <p className="mb-2 text-2xs font-medium text-muted-foreground">
                                     Rápido
                                 </p>
                                 <TransactionsDatePresets
@@ -247,7 +247,7 @@ export function TransactionsFiltersPanel({
                             </div>
 
                             <div>
-                                <p className="mb-2 text-[11px] font-medium text-muted-foreground">
+                                <p className="mb-2 text-2xs font-medium text-muted-foreground">
                                     Personalizado
                                 </p>
                                 <div className="rounded-xl border border-border/60 bg-muted/20 p-3 dark:bg-muted/10">
@@ -345,11 +345,7 @@ export function TransactionsFiltersPanel({
                                     <Badge
                                         key={pm}
                                         variant="success"
-                                        className={cn(
-                                            "inline-flex items-center gap-1.5 pr-1.5",
-                                            "bg-emerald-50 text-emerald-800 hover:bg-emerald-100",
-                                            "dark:bg-emerald-950 dark:text-emerald-100 dark:hover:bg-emerald-900"
-                                        )}
+                                        className="inline-flex items-center gap-1.5 pr-1.5"
                                         title={label}
                                     >
                                         <span className="min-w-0 max-w-[12rem] truncate">
@@ -359,8 +355,7 @@ export function TransactionsFiltersPanel({
                                             type="button"
                                             className={cn(
                                                 "inline-flex size-5 shrink-0 items-center justify-center rounded-full",
-                                                "text-emerald-700/80 hover:bg-emerald-200/60 hover:text-emerald-950",
-                                                "dark:text-emerald-100/80 dark:hover:bg-emerald-800/60 dark:hover:text-emerald-50",
+                                                "opacity-70 hover:bg-success/20 hover:opacity-100 active:bg-success/25 active:opacity-100",
                                                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2"
                                             )}
                                             aria-label={`Remover ${label}`}
@@ -387,7 +382,7 @@ export function TransactionsFiltersPanel({
                                         type="button"
                                         variant="ghost"
                                         size="sm"
-                                        className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                                        className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground"
                                         disabled={sortedCards.length === 0}
                                         onClick={() => {
                                             for (const c of sortedCards) {
@@ -403,7 +398,7 @@ export function TransactionsFiltersPanel({
                                         type="button"
                                         variant="ghost"
                                         size="sm"
-                                        className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                                        className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground"
                                         disabled={creditCardIds.length === 0}
                                         onClick={() => {
                                             for (const id of creditCardIds) {
@@ -509,7 +504,7 @@ export function TransactionsFiltersPanel({
                                                 type="button"
                                                 variant="ghost"
                                                 size="sm"
-                                                className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                                                className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground"
                                                 disabled={
                                                     uncategorizedOnly ||
                                                     allCategoryIds.length === 0
@@ -527,7 +522,7 @@ export function TransactionsFiltersPanel({
                                                 type="button"
                                                 variant="ghost"
                                                 size="sm"
-                                                className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                                                className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground"
                                                 disabled={categoryIds.length === 0}
                                                 onClick={() => {
                                                     for (const id of categoryIds)
@@ -642,7 +637,7 @@ export function TransactionsFiltersPanel({
                                         type="button"
                                         variant="ghost"
                                         size="sm"
-                                        className="h-8 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                                        className="h-8 px-2 text-2xs text-muted-foreground hover:text-foreground"
                                         disabled={uncategorizedOnly}
                                         onClick={onClearAllCategories}
                                         aria-label="Limpar todas as categorias selecionadas"
@@ -658,11 +653,7 @@ export function TransactionsFiltersPanel({
                                     {uncategorizedOnly ? (
                                         <Badge
                                             variant="success"
-                                            className={cn(
-                                                "inline-flex items-center gap-1.5 pr-1.5",
-                                                "bg-emerald-50 text-emerald-800 hover:bg-emerald-100",
-                                                "dark:bg-emerald-950 dark:text-emerald-100 dark:hover:bg-emerald-900"
-                                            )}
+                                            className="inline-flex items-center gap-1.5 pr-1.5"
                                             title="Sem categoria"
                                         >
                                             <span className="min-w-0 max-w-[12rem] truncate">
@@ -672,8 +663,7 @@ export function TransactionsFiltersPanel({
                                                 type="button"
                                                 className={cn(
                                                     "inline-flex size-5 shrink-0 items-center justify-center rounded-full",
-                                                    "text-emerald-700/80 hover:bg-emerald-200/60 hover:text-emerald-950",
-                                                    "dark:text-emerald-100/80 dark:hover:bg-emerald-800/60 dark:hover:text-emerald-50",
+                                                    "opacity-70 hover:bg-success/20 hover:opacity-100 active:bg-success/25 active:opacity-100",
                                                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2"
                                                 )}
                                                 aria-label="Remover filtro sem categoria"
@@ -692,11 +682,7 @@ export function TransactionsFiltersPanel({
                                             <Badge
                                                 key={cat.id}
                                                 variant="success"
-                                                className={cn(
-                                                    "inline-flex items-center gap-1.5 pr-1.5",
-                                                    "bg-emerald-50 text-emerald-800 hover:bg-emerald-100",
-                                                    "dark:bg-emerald-950 dark:text-emerald-100 dark:hover:bg-emerald-900"
-                                                )}
+                                                className="inline-flex items-center gap-1.5 pr-1.5"
                                                 title={name}
                                             >
                                                 <span
@@ -715,8 +701,7 @@ export function TransactionsFiltersPanel({
                                                     type="button"
                                                     className={cn(
                                                         "inline-flex size-5 shrink-0 items-center justify-center rounded-full",
-                                                        "text-emerald-700/80 hover:bg-emerald-200/60 hover:text-emerald-950",
-                                                        "dark:text-emerald-100/80 dark:hover:bg-emerald-800/60 dark:hover:text-emerald-50",
+                                                        "opacity-70 hover:bg-success/20 hover:opacity-100 active:bg-success/25 active:opacity-100",
                                                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2"
                                                     )}
                                                     aria-label={`Remover ${name}`}
@@ -748,7 +733,7 @@ export function TransactionsFiltersPanel({
                     <div className="space-y-2">
                         <Label
                             htmlFor={`${fieldUid}-amt-min`}
-                            className="text-[11px] text-muted-foreground"
+                            className="text-2xs text-muted-foreground"
                         >
                             Mínimo
                         </Label>
@@ -764,7 +749,7 @@ export function TransactionsFiltersPanel({
                     <div className="space-y-2">
                         <Label
                             htmlFor={`${fieldUid}-amt-max`}
-                            className="text-[11px] text-muted-foreground"
+                            className="text-2xs text-muted-foreground"
                         >
                             Máximo
                         </Label>
@@ -800,7 +785,7 @@ export function TransactionsFiltersPanel({
                     <div className="space-y-2">
                         <Label
                             htmlFor={`${fieldUid}-origem-plan`}
-                            className="text-[11px] text-muted-foreground"
+                            className="text-2xs text-muted-foreground"
                         >
                             Plano parcelado
                         </Label>
@@ -822,7 +807,7 @@ export function TransactionsFiltersPanel({
                                 position="popper"
                                 sideOffset={8}
                                 collisionPadding={16}
-                                className="max-h-72 z-[70] p-1"
+                                className="max-h-72 z-(--z-sheet) p-1"
                             >
                                 <SelectItem value="__any__">Qualquer plano</SelectItem>
                                 {installmentPlans.map((p) => (
@@ -837,7 +822,7 @@ export function TransactionsFiltersPanel({
                     <div className="space-y-2">
                         <Label
                             htmlFor={`${fieldUid}-origem-sub`}
-                            className="text-[11px] text-muted-foreground"
+                            className="text-2xs text-muted-foreground"
                         >
                             Assinatura
                         </Label>
@@ -859,7 +844,7 @@ export function TransactionsFiltersPanel({
                                 position="popper"
                                 sideOffset={8}
                                 collisionPadding={16}
-                                className="max-h-72 z-[70] p-1"
+                                className="max-h-72 z-(--z-sheet) p-1"
                             >
                                 <SelectItem value="__any__">
                                     Qualquer assinatura

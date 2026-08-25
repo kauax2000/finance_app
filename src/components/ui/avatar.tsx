@@ -40,6 +40,21 @@ function Avatar({
   )
 }
 
+/**
+ * A foto entra em fade quando termina de carregar.
+ *
+ * Sem isso ela aparece de estalo por cima das iniciais, e o troco é visível
+ * justamente onde o avatar mais aparece: uma lista de membros ou de transações,
+ * onde uma dúzia deles resolve em momentos diferentes e a tela pisca em
+ * pedaços.
+ *
+ * É **animação de entrada**, e não transição. O `Avatar.Image` do Radix não
+ * publica `data-state` nem renderiza cedo: ele simplesmente não monta enquanto
+ * a imagem não carregou. Transição precisa de dois estados no mesmo elemento e
+ * aqui só existe um — a primeira versão disto usava
+ * `data-[state=loaded]:opacity-100` e deixava toda foto de perfil invisível,
+ * porque o seletor nunca casava.
+ */
 const AvatarImage = React.forwardRef<
   HTMLImageElement,
   React.ComponentProps<typeof AvatarPrimitive.Image>
@@ -48,7 +63,11 @@ const AvatarImage = React.forwardRef<
     ref={ref}
     data-slot="avatar-image"
     alt={alt}
-    className={cn("aspect-square h-full w-full object-cover", className)}
+    className={cn(
+      "aspect-square h-full w-full object-cover",
+      "animate-in fade-in duration-(--duration-base) ease-(--ease-out)",
+      className
+    )}
     {...props}
   />
 ))

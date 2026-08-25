@@ -81,7 +81,11 @@ function StepperItem({
       {label ? (
         <span
           className={cn(
-            "hidden truncate text-xs sm:block",
+            // `hidden` tirava o rótulo da árvore de acessibilidade no telefone:
+            // quem enxerga via "1 2 3" e entende pela largura; quem usa leitor
+            // ouvia "1 2 3" e mais nada. `sr-only` esconde do olho e mantém no
+            // leitor, que é o que "esconder no mobile" queria dizer.
+            "sr-only truncate text-xs sm:not-sr-only sm:block",
             state === "upcoming" ? "text-muted-foreground" : "text-foreground"
           )}
         >

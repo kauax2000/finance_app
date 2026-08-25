@@ -3,6 +3,7 @@
 import type { ReactNode } from "react"
 import { ArrowDownIcon, ArrowUpIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline"
 import { Button } from "@/components/ui/button"
+import { ColorTile } from "@/components/ui/color-tile"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -39,21 +40,9 @@ export function CategoryDetailHero({
             <div className="flex w-full min-w-0 items-center justify-between gap-2 md:hidden">
                 <div className="flex min-w-0 flex-1 items-center gap-2">
                     <div className="flex min-w-0 max-w-full flex-1 items-center gap-2 overflow-hidden">
-                        <div
-                            className={cn(
-                                "relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-md",
-                                "border border-white/20 shadow-sm ring-1 ring-black/5",
-                                "backdrop-blur-md",
-                                "after:absolute after:inset-0 after:bg-gradient-to-br after:from-white/30 after:to-white/5 after:opacity-80",
-                            )}
-                            style={{ backgroundColor: accentColor }}
-                            aria-hidden
-                        >
-                            <CategoryIconPreview
-                                name={normalizeCategoryIcon(category.icon)}
-                                className="relative z-10 h-4 w-4 text-white"
-                            />
-                        </div>
+                        <ColorTile size="sm" color={accentColor}>
+                            <CategoryIconPreview name={normalizeCategoryIcon(category.icon)} />
+                        </ColorTile>
 
                         <div className="flex min-w-0 items-center gap-2">
                             <h2 className="min-w-0 shrink truncate text-base font-semibold leading-snug tracking-tight md:text-lg">
@@ -61,10 +50,10 @@ export function CategoryDetailHero({
                             </h2>
                             <span
                                 className={cn(
-                                    "inline-flex h-5 shrink-0 items-center gap-1 rounded-full pl-1.5 pr-2 text-[11px] font-medium leading-none",
+                                    "inline-flex h-5 shrink-0 items-center gap-1 rounded-full pl-1.5 pr-2 text-2xs font-medium leading-none",
                                     isExpense
-                                        ? "bg-red-500/10 text-red-600 dark:bg-red-500/15 dark:text-red-400"
-                                        : "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400",
+                                        ? "bg-expense-muted text-expense-muted-foreground"
+                                        : "bg-income-muted text-income-muted-foreground",
                                 )}
                             >
                                 {isExpense ? (
@@ -123,31 +112,19 @@ export function CategoryDetailHero({
                 <div className="min-w-0">
                     <div className="flex min-h-10 min-w-0 items-center gap-2.5">
                         <div className="flex min-w-0 max-w-full flex-1 items-center gap-2 overflow-hidden">
-                            <div
-                                className={cn(
-                                    "relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-md",
-                                    "border border-white/20 shadow-sm ring-1 ring-black/5",
-                                    "backdrop-blur-md",
-                                    "after:absolute after:inset-0 after:bg-gradient-to-br after:from-white/30 after:to-white/5 after:opacity-80",
-                                )}
-                                style={{ backgroundColor: accentColor }}
-                                aria-hidden
-                            >
-                                <CategoryIconPreview
-                                    name={normalizeCategoryIcon(category.icon)}
-                                    className="relative z-10 h-4 w-4 text-white"
-                                />
-                            </div>
+                            <ColorTile size="sm" color={accentColor}>
+                                <CategoryIconPreview name={normalizeCategoryIcon(category.icon)} />
+                            </ColorTile>
                             <div className="flex min-w-0 items-center gap-2">
                                 <h2 className="min-w-0 shrink truncate text-base font-semibold leading-snug tracking-tight md:text-lg">
                                     {category.name}
                                 </h2>
                                 <span
                                     className={cn(
-                                        "inline-flex h-5 shrink-0 items-center gap-1 rounded-full pl-1.5 pr-2 text-[11px] font-medium leading-none",
+                                        "inline-flex h-5 shrink-0 items-center gap-1 rounded-full pl-1.5 pr-2 text-2xs font-medium leading-none",
                                         isExpense
-                                            ? "bg-red-500/10 text-red-600 dark:bg-red-500/15 dark:text-red-400"
-                                            : "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400",
+                                            ? "bg-expense-muted text-expense-muted-foreground"
+                                            : "bg-income-muted text-income-muted-foreground",
                                     )}
                                 >
                                     {isExpense ? (

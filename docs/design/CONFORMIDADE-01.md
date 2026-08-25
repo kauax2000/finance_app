@@ -1,5 +1,14 @@
 # Conformidade com o design system — rodada 01
 
+> **Registro histórico. O estado atual está em
+> [`CONFORMIDADE-02.md`](CONFORMIDADE-02.md).**
+>
+> A rodada 02 executou a maior parte deste backlog e derrubou os achados de
+> 1.179 para 622. Duas prescrições daqui estavam **erradas** e a 02 explica por
+> quê: o mapeamento de `z-[70]`/`z-[80]` para a escala de camadas teria quebrado
+> o empilhamento, porque era a escala que estava errada, não o código. O resto
+> se confirmou, inclusive a premissa falsa sobre `var()` no Recharts.
+
 Gerado por `npm run ds:audit` sobre `src/app` e `src/components`, com a rota
 `src/app/designsystem` excluída da varredura.
 

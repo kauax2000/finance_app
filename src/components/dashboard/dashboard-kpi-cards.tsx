@@ -31,7 +31,7 @@ function DeltaBadge({
         return (
             <Badge
                 variant="outline"
-                className="max-w-[min(100%,7.5rem)] shrink-0 gap-1 truncate px-2 py-0.5 text-[11px] font-medium tabular-nums"
+                className="max-w-[min(100%,7.5rem)] shrink-0 gap-1 truncate px-2 py-0.5 text-2xs font-medium tabular-nums"
                 title="Sem valor no período anterior para comparar"
             >
                 Sem base
@@ -49,7 +49,7 @@ function DeltaBadge({
         return (
             <Badge
                 variant="outline"
-                className="shrink-0 gap-1 px-2 py-0.5 text-[11px] font-medium tabular-nums whitespace-nowrap"
+                className="shrink-0 gap-1 px-2 py-0.5 text-2xs font-medium tabular-nums whitespace-nowrap"
                 aria-label="Sem variação percentual vs. mesmo período do mês anterior"
             >
                 <MinusIcon
@@ -67,7 +67,7 @@ function DeltaBadge({
     return (
         <Badge
             variant={variant}
-            className="shrink-0 gap-1 px-2 py-0.5 text-[11px] font-medium tabular-nums whitespace-nowrap"
+            className="shrink-0 gap-1 px-2 py-0.5 text-2xs font-medium tabular-nums whitespace-nowrap"
             aria-label={`${display} vs. mesmo período do mês anterior`}
         >
             <Icon
@@ -103,7 +103,7 @@ function KpiCard({
                         )}
                         aria-hidden
                     />
-                    <p className="min-w-0 truncate text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    <p className="min-w-0 truncate text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                         {label}
                     </p>
                 </div>
@@ -134,7 +134,7 @@ export function DashboardKpiCards({
             <KpiCard
                 label="Despesas"
                 icon={ArrowTrendingDownIcon}
-                iconClassName="text-rose-600 dark:text-rose-400"
+                iconClassName="text-expense"
                 value={
                     <MoneyDisplay
                         value={kpiPlanned.expense}
@@ -154,7 +154,7 @@ export function DashboardKpiCards({
             <KpiCard
                 label="Receitas"
                 icon={ArrowTrendingUpIcon}
-                iconClassName="text-emerald-600 dark:text-emerald-400"
+                iconClassName="text-income"
                 value={
                     <MoneyDisplay
                         value={kpiCurrent.income}

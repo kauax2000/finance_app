@@ -21,9 +21,24 @@ import {
     previousStatementCloseBefore,
     statementCloseOnOrBefore,
 } from "@/lib/credit-card-billing"
-import { hexToRgba } from "@/components/categories/detail/category-detail-utils"
 
-const BAR_COLORS = ["#10B981", "#6366F1", "#F59E0B", "#E11D48", "#06B6D4", "#A855F7"]
+/**
+ * A rampa neutra do design system: cinco matizes que só identificam séries,
+ * sem dizer nada sobre estado. Eram seis hex que não acompanhavam o tema.
+ * O acesso é por módulo, então o número de faixas não precisa bater.
+ */
+const BAR_COLORS = [
+    "var(--chart-1)",
+    "var(--chart-2)",
+    "var(--chart-3)",
+    "var(--chart-4)",
+    "var(--chart-5)",
+]
+
+/** O que `hexToRgba` fazia, sem exigir que a cor seja hex. */
+function alpha(color: string, pct: number): string {
+    return `color-mix(in oklab, ${color} ${pct}%, transparent)`
+}
 
 const currencyFmt = new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -115,13 +130,13 @@ function CreditCardsHistoryTooltip({
                             <span className="flex min-w-0 items-center gap-1.5">
                                 <span
                                     className="size-2 shrink-0 rounded-full"
-                                    style={{ backgroundColor: hexToRgba(color, 0.75) }}
+                                    style={{ backgroundColor: alpha(color, 75) }}
                                     aria-hidden
                                 />
                                 <span className="truncate text-muted-foreground">
                                     {c.name}
                                     {isOpen ? (
-                                        <span className="text-[10px] text-amber-600 dark:text-amber-400">
+                                        <span className="text-2xs text-warning-muted-foreground">
                                             {" "}
                                             (aberta)
                                         </span>
@@ -147,11 +162,11 @@ function LegendStrip({ cards }: { cards: CreditCardRow[] }) {
                 return (
                     <span
                         key={c.id}
-                        className="flex max-w-[10rem] items-center gap-1.5 text-[10px] text-muted-foreground"
+                        className="flex max-w-[10rem] items-center gap-1.5 text-2xs text-muted-foreground"
                     >
                         <span
                             className="size-2 shrink-0 rounded-full"
-                            style={{ backgroundColor: hexToRgba(color, 0.75) }}
+                            style={{ backgroundColor: alpha(color, 75) }}
                             aria-hidden
                         />
                         <span className="truncate">{c.name}</span>
@@ -269,7 +284,7 @@ export function CreditCardsHistoryChart({
         <div className="min-w-0 space-y-2">
             <div className="flex min-w-0 flex-row items-center justify-between gap-x-3 gap-y-1">
                 <div className="flex min-h-8 min-w-0 shrink-0 items-center">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                         Histórico de faturas
                     </p>
                 </div>
@@ -342,13 +357,13 @@ export function CreditCardsHistoryChart({
                                     <XAxis
                                         dataKey="label"
                                         tickLine={false}
-                                        className="text-[10px] text-muted-foreground"
+                                        className="text-2xs text-muted-foreground"
                                         interval="preserveStartEnd"
                                     />
                                     <YAxis
                                         width={48}
                                         tickLine={false}
-                                        className="text-[10px] text-muted-foreground"
+                                        className="text-2xs text-muted-foreground"
                                         domain={yDomain}
                                         tickFormatter={(v) =>
                                             Number(v).toLocaleString("pt-BR", {
@@ -372,10 +387,10 @@ export function CreditCardsHistoryChart({
                                                 key={c.id}
                                                 dataKey={c.id}
                                                 name={c.name}
-                                                fill={hexToRgba(color, 0.65)}
+                                                fill={alpha(color, 65)}
                                                 radius={[3, 3, 0, 0]}
                                                 activeBar={{
-                                                    fill: hexToRgba(color, 0.85),
+                                                    fill: alpha(color, 85),
                                                 }}
                                             />
                                         )

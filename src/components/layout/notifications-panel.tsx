@@ -178,7 +178,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                                 {unreadCount > 0 ? (
                                     <Badge
                                         variant="success"
-                                        className="shrink-0 px-2 py-0.5 text-[11px] font-semibold leading-none"
+                                        className="shrink-0 px-2 py-0.5 text-2xs font-semibold leading-none"
                                     >
                                         {unreadCount} nova{unreadCount > 1 ? "s" : ""}
                                     </Badge>
@@ -252,7 +252,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                                             </span>
                                         </button>
                                         <div className="flex shrink-0 self-start items-center gap-2 pt-1">
-                                            <span className="text-[11px] leading-none text-muted-foreground/80">
+                                            <span className="text-2xs leading-none text-muted-foreground/80">
                                                 {formatRelativeTime(notification.created_at)}
                                             </span>
                                             <DropdownMenu>

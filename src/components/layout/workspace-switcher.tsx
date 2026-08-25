@@ -56,7 +56,7 @@ export function WorkspaceSwitcher({
                         />
                     ) : (
                         <div className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                            <span className="text-[10px] font-semibold">?</span>
+                            <span className="text-2xs font-semibold">?</span>
                         </div>
                     )}
                     {loading ? (

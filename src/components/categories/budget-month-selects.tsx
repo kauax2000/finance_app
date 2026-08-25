@@ -105,7 +105,7 @@ export function BudgetMonthSelects({
                             side="bottom"
                             align="start"
                             sideOffset={6}
-                            className="z-[220] max-h-64 min-w-[calc(var(--radix-select-trigger-width)+0.5rem)] p-1"
+                            className="max-h-64 min-w-[calc(var(--radix-select-trigger-width)+0.5rem)] p-1"
                         >
                             {months.map((opt) => (
                                 <SelectItem
@@ -132,7 +132,7 @@ export function BudgetMonthSelects({
                             side="bottom"
                             align="start"
                             sideOffset={6}
-                            className="z-[220] max-h-56 min-w-[var(--radix-select-trigger-width)] p-1"
+                            className="max-h-56 min-w-[var(--radix-select-trigger-width)] p-1"
                         >
                             {years.map((opt) => (
                                 <SelectItem

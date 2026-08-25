@@ -80,7 +80,7 @@ function ReqRow({
         <div
             className={cn(
                 "flex items-center gap-1.5 text-xs",
-                met ? "text-green-600 dark:text-green-400" : "text-muted-foreground",
+                met ? "text-success" : "text-muted-foreground",
             )}
         >
             {met ? (
@@ -294,7 +294,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                 </div>
             ) : null}
             {success ? (
-                <div className="flex items-start gap-2 rounded-lg border border-green-600/30 bg-green-500/10 px-3 py-2 text-xs text-green-700 dark:border-green-500/30 dark:text-green-400">
+                <div className="flex items-start gap-2 rounded-lg border border-success/30 bg-success-muted px-3 py-2 text-xs text-success-muted-foreground">
                     <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                     <span>Senha alterada com sucesso!</span>
                 </div>

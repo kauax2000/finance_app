@@ -2,7 +2,7 @@ import { notFound } from "next/navigation"
 
 import { DocPage } from "../ds-doc"
 import { DOCS } from "../docs-map"
-import { REGISTRY, getEntry } from "../registry"
+import { REGISTRY, getEntry, getNeighbors } from "../registry"
 
 /**
  * Uma rota para todas as páginas do catálogo. O registry decide o que existe; o
@@ -38,6 +38,7 @@ export default async function DesignSystemDocPage({
     const entry = getEntry(slug)
     const Doc = DOCS[slug]
     if (!entry || !Doc) notFound()
+    const { previous, next } = getNeighbors(slug)
 
     return (
         <DocPage
@@ -46,6 +47,12 @@ export default async function DesignSystemDocPage({
             description={entry.description}
             source={entry.source}
             importLine={entry.importLine}
+            previous={
+                previous
+                    ? { slug: previous.slug, name: previous.name }
+                    : undefined
+            }
+            next={next ? { slug: next.slug, name: next.name } : undefined}
         >
             <Doc />
         </DocPage>

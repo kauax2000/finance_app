@@ -30,7 +30,7 @@ export function CreditCardBillingFormPreview({
 
     return (
         <p
-            className="rounded-md border border-border/50 bg-background/80 px-2.5 py-2 text-[11px] leading-snug text-muted-foreground dark:bg-background/40"
+            className="rounded-md border border-border/50 bg-background/80 px-2.5 py-2 text-2xs leading-snug text-muted-foreground dark:bg-background/40"
             role="status"
             aria-live="polite"
         >

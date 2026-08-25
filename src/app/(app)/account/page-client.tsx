@@ -60,7 +60,7 @@ export default function AccountPage() {
             <div className="min-w-0 space-y-2">
                 <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                     <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                             Perfil
                         </p>
                     </div>
@@ -75,6 +75,7 @@ export default function AccountPage() {
                                             src={currentAvatarUrl}
                                             alt={userName}
                                             className="aspect-square size-full object-cover"
+                                            decoding="async"
                                         />
                                     ) : (
                                         <div
@@ -145,7 +146,7 @@ export default function AccountPage() {
             <div className="min-w-0 space-y-2">
                 <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                     <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                             Segurança
                         </p>
                     </div>

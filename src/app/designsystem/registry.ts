@@ -31,7 +31,7 @@ const ATOMS = new Set([
   "checkbox", "radio-group", "switch", "select", "native-select", "slider",
   "progress", "toggle", "toggle-group", "input-group", "input-otp", "kbd",
   "avatar", "separator", "tooltip", "aspect-ratio", "spinner", "skeleton",
-  "code", "money-display", "money-input",
+  "code", "money-display", "money-input", "color-tile",
 ])
 
 const MOLECULES = new Set([
@@ -95,7 +95,7 @@ export const REGISTRY: RegistryEntry[] = [
     slug: "forma-elevacao",
     name: "Forma e elevação",
     category: "Fundações",
-    description: "A escala de raio de canto e os quatro degraus de sombra.",
+    description: "Os sete degraus de raio de canto e os cinco de sombra.",
     source: "src/app/globals.css",
   },
   {
@@ -149,6 +149,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("input-otp", "Input OTP", "Entrada de código de verificação.", ui("input-otp"), "InputOTP, InputOTPSlot"),
   entry("kbd", "Kbd", "Representação de teclas em dicas de atalho.", ui("kbd"), "Kbd, KbdGroup"),
   entry("avatar", "Avatar", "Imagem ou iniciais, em cinco tamanhos.", ui("avatar"), "Avatar, AvatarImage, AvatarFallback"),
+  entry("color-tile", "Color Tile", "O ladrilho que carrega uma cor escolhida pela pessoa.", ui("color-tile"), "ColorTile"),
   entry("separator", "Separator", "Divisor entre conteúdos.", ui("separator"), "Separator"),
   entry("tooltip", "Tooltip", "Dica curta ancorada a um gatilho.", ui("tooltip"), "Tooltip, TooltipTrigger, TooltipContent"),
   entry("aspect-ratio", "Aspect Ratio", "Mantém a proporção de um contêiner.", ui("aspect-ratio"), "AspectRatio"),
@@ -271,4 +272,32 @@ export function groupedRegistry(): { category: Category; items: RegistryEntry[] 
     category,
     items: REGISTRY.filter((e) => e.category === category),
   }))
+}
+
+/**
+ * A ordem de leitura do catálogo: a mesma da navegação lateral, categoria por
+ * categoria. É ela que sustenta o anterior/próximo no pé de cada página — sem
+ * isso, a única saída de uma página era voltar à lista e procurar de novo.
+ */
+export function readingOrder(): RegistryEntry[] {
+  return groupedRegistry().flatMap((g) => g.items)
+}
+
+export function getNeighbors(slug: string): {
+  previous?: RegistryEntry
+  next?: RegistryEntry
+} {
+  const order = readingOrder()
+  const i = order.findIndex((e) => e.slug === slug)
+  if (i < 0) return {}
+  return { previous: order[i - 1], next: order[i + 1] }
+}
+
+/** O id de âncora de uma categoria no índice. Usado também pelo breadcrumb. */
+export function slugifyCategory(category: string): string {
+  return category
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
 }

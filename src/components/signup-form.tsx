@@ -221,7 +221,7 @@ export function SignupForm() {
             <div className="flex flex-col gap-6 p-6">
                 <CustomForm onSubmit={handleSignup} className="flex flex-col gap-4" noValidate>
                     {error && (
-                        <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-md text-sm">
+                        <div className="bg-destructive-muted text-destructive-muted-foreground p-3 rounded-md text-sm">
                             {error}
                         </div>
                     )}
@@ -242,7 +242,7 @@ export function SignupForm() {
                             className={fieldErrors.fullName ? "border-destructive" : ""}
                         />
                         {fieldErrors.fullName && (
-                            <p className="text-[0.8rem] font-medium text-destructive">
+                            <p className="text-control-sm font-medium text-destructive">
                                 {fieldErrors.fullName}
                             </p>
                         )}
@@ -264,7 +264,7 @@ export function SignupForm() {
                             className={fieldErrors.email ? "border-destructive" : ""}
                         />
                         {fieldErrors.email && (
-                            <p className="text-[0.8rem] font-medium text-destructive">
+                            <p className="text-control-sm font-medium text-destructive">
                                 {fieldErrors.email}
                             </p>
                         )}
@@ -282,7 +282,7 @@ export function SignupForm() {
                             maxLength={15}
                         />
                         {fieldErrors.phone && (
-                            <p className="text-[0.8rem] font-medium text-destructive">
+                            <p className="text-control-sm font-medium text-destructive">
                                 {fieldErrors.phone}
                             </p>
                         )}
@@ -324,7 +324,7 @@ export function SignupForm() {
                             </button>
                         </div>
                         {fieldErrors.password && (
-                            <p className="text-[0.8rem] font-medium text-destructive">
+                            <p className="text-control-sm font-medium text-destructive">
                                 {fieldErrors.password}
                             </p>
                         )}
@@ -336,7 +336,7 @@ export function SignupForm() {
                                     Requisitos da senha:
                                 </p>
                                 <div className="grid grid-cols-2 gap-1 text-xs">
-                                    <div className={`flex items-center gap-1 ${passwordRequirements.hasMinLength ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
+                                    <div className={`flex items-center gap-1 ${passwordRequirements.hasMinLength ? "text-success" : "text-muted-foreground"}`}>
                                         {passwordRequirements.hasMinLength ? (
                                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                                                 <polyline points="20 6 9 17 4 12"></polyline>
@@ -348,7 +348,7 @@ export function SignupForm() {
                                         )}
                                         8+ caracteres
                                     </div>
-                                    <div className={`flex items-center gap-1 ${passwordRequirements.hasLowercase ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
+                                    <div className={`flex items-center gap-1 ${passwordRequirements.hasLowercase ? "text-success" : "text-muted-foreground"}`}>
                                         {passwordRequirements.hasLowercase ? (
                                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                                                 <polyline points="20 6 9 17 4 12"></polyline>
@@ -360,7 +360,7 @@ export function SignupForm() {
                                         )}
                                         minúscula
                                     </div>
-                                    <div className={`flex items-center gap-1 ${passwordRequirements.hasUppercase ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
+                                    <div className={`flex items-center gap-1 ${passwordRequirements.hasUppercase ? "text-success" : "text-muted-foreground"}`}>
                                         {passwordRequirements.hasUppercase ? (
                                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                                                 <polyline points="20 6 9 17 4 12"></polyline>
@@ -372,7 +372,7 @@ export function SignupForm() {
                                         )}
                                         maiúscula
                                     </div>
-                                    <div className={`flex items-center gap-1 ${passwordRequirements.hasDigit ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
+                                    <div className={`flex items-center gap-1 ${passwordRequirements.hasDigit ? "text-success" : "text-muted-foreground"}`}>
                                         {passwordRequirements.hasDigit ? (
                                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                                                 <polyline points="20 6 9 17 4 12"></polyline>
@@ -384,7 +384,7 @@ export function SignupForm() {
                                         )}
                                         número
                                     </div>
-                                    <div className={`flex items-center gap-1 ${passwordRequirements.hasSymbol ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
+                                    <div className={`flex items-center gap-1 ${passwordRequirements.hasSymbol ? "text-success" : "text-muted-foreground"}`}>
                                         {passwordRequirements.hasSymbol ? (
                                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                                                 <polyline points="20 6 9 17 4 12"></polyline>
@@ -396,7 +396,7 @@ export function SignupForm() {
                                         )}
                                         símbolo
                                     </div>
-                                    <div className={`flex items-center gap-1 ${passwordIsValid ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
+                                    <div className={`flex items-center gap-1 ${passwordIsValid ? "text-success" : "text-muted-foreground"}`}>
                                         {passwordIsValid ? (
                                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                                                 <polyline points="20 6 9 17 4 12"></polyline>
@@ -454,7 +454,7 @@ export function SignupForm() {
                     Já tem uma conta?{" "}
                     <Link
                         href={loginHref}
-                        className="text-[oklch(0.45_0.14_166)] font-medium underline-offset-4 hover:underline"
+                        className="text-primary font-medium underline-offset-4 hover:underline"
                     >
                         Entrar
                     </Link>

@@ -107,7 +107,7 @@ function SectionLabel({
     return (
         <p
             className={cn(
-                "text-[11px] font-semibold uppercase tracking-wide text-muted-foreground",
+                "text-2xs font-semibold uppercase tracking-wide text-muted-foreground",
                 className
             )}
         >
@@ -422,7 +422,7 @@ export function TransactionDetailSheet({
                             className={cn(
                                 "mt-0.5 text-2xl font-semibold tabular-nums tracking-tight",
                                 isIncome
-                                    ? "text-green-600 dark:text-green-400"
+                                    ? "text-income"
                                     : "text-foreground"
                             )}
                         >
@@ -430,7 +430,7 @@ export function TransactionDetailSheet({
                             {currencyFmt.format(Number(t.amount))}
                         </p>
                         {t.installment_plan_id ? (
-                            <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+                            <p className="mt-1 text-2xs leading-snug text-muted-foreground">
                                 Em compras parceladas, o valor acima é desta
                                 parcela no extrato; o total da compra aparece em
                                 Compra parcelada.
@@ -488,7 +488,7 @@ export function TransactionDetailSheet({
                                     </p>
                                     <p className="mt-1">{paymentLine}</p>
                                     {creditInvoiceHint ? (
-                                        <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
+                                        <p className="mt-2 text-2xs leading-snug text-muted-foreground">
                                             <span className="font-medium text-foreground/90">
                                                 {creditCardInvoiceSlotLabelPt(
                                                     creditInvoiceHint.slot
@@ -557,7 +557,7 @@ export function TransactionDetailSheet({
                                             pagamento.
                                         </p>
                                     )}
-                                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                    <p className="mt-0.5 text-2xs text-muted-foreground">
                                         Esta parcela:{" "}
                                         <span className="font-medium text-foreground">
                                             {currencyFmt.format(
@@ -609,7 +609,7 @@ export function TransactionDetailSheet({
                                 </div>
                             </dl>
 
-                            <p className="mt-3 text-[11px] leading-snug text-muted-foreground">
+                            <p className="mt-3 text-2xs leading-snug text-muted-foreground">
                                 {INSTALLMENT_DELETE_WARNING}
                             </p>
 
@@ -617,16 +617,16 @@ export function TransactionDetailSheet({
                                 <Table className="min-w-[280px] text-xs">
                                     <TableHeader>
                                         <TableRow className="hover:bg-transparent">
-                                            <TableHead className="h-8 w-10 px-2 text-[10px] font-semibold uppercase tracking-wide">
+                                            <TableHead className="h-8 w-10 px-2 text-2xs font-semibold uppercase tracking-wide">
                                                 #
                                             </TableHead>
-                                            <TableHead className="h-8 px-2 text-[10px] font-semibold uppercase tracking-wide">
+                                            <TableHead className="h-8 px-2 text-2xs font-semibold uppercase tracking-wide">
                                                 Data
                                             </TableHead>
-                                            <TableHead className="h-8 px-2 text-right text-[10px] font-semibold uppercase tracking-wide">
+                                            <TableHead className="h-8 px-2 text-right text-2xs font-semibold uppercase tracking-wide">
                                                 Valor da parcela
                                             </TableHead>
-                                            <TableHead className="h-8 px-2 text-[10px] font-semibold uppercase tracking-wide">
+                                            <TableHead className="h-8 px-2 text-2xs font-semibold uppercase tracking-wide">
                                                 Status
                                             </TableHead>
                                         </TableRow>
@@ -662,7 +662,7 @@ export function TransactionDetailSheet({
                                                                 {row.slot}
                                                                 {isCurrent ? (
                                                                     <span
-                                                                        className="ml-1 text-[9px] font-normal text-muted-foreground"
+                                                                        className="ml-1 text-2xs font-normal text-muted-foreground"
                                                                         title="Esta transação"
                                                                     >
                                                                         ●
@@ -718,7 +718,7 @@ export function TransactionDetailSheet({
 
                             {!installmentBlock.slicesLoading &&
                             installmentBlock.futureSlots > 0 ? (
-                                <p className="mt-2.5 text-[11px] leading-snug text-muted-foreground">
+                                <p className="mt-2.5 text-2xs leading-snug text-muted-foreground">
                                     Faltam{" "}
                                     <span className="font-medium text-foreground">
                                         {installmentBlock.futureSlots}

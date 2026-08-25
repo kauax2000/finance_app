@@ -16,7 +16,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 O design system deste projeto tem três partes, e nenhuma delas se presume de
 memória:
 
-- **Componentes** em [`src/components/ui/`](src/components/ui) — 73 hoje.
+- **Componentes** em [`src/components/ui/`](src/components/ui) — 74 hoje.
 - **Tokens** em [`src/app/globals.css`](src/app/globals.css).
 - **Documentação viva** em `/designsystem`, com uma página por componente e por
   padrão. Sempre disponível em desenvolvimento; em produção, atrás de
@@ -110,6 +110,13 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   `--duration-*` / `--ease-*`. Prefira utilitários como `bg-success-muted`,
   `text-expense-muted-foreground`, `z-(--z-sheet)` — **não** adicione classes
   cruas da paleta do Tailwind (`text-green-600`, `bg-rose-100`).
+- **Camadas**: `--z-base` 0, `--z-raised` 10, `--z-sticky` 20, `--z-banner` 30,
+  `--z-header` 40, `--z-modal` 50, `--z-sheet` 70, `--z-popover` 80, `--z-toast`
+  100. Os números são os que o app usa — a rodada 02 corrigiu a escala, que
+  descrevia sheet 50 / popover 60 enquanto a produção rodava 70 / 80. **Escalar
+  para vencer é sempre sintoma**: se um popover precisa passar de
+  `--z-popover`, o que está errado é quem o contém. Empilhamento local (`z-0`,
+  `z-10`, `z-[1]` dentro de um componente) não é camada e fica como número cru.
 - **Shadows**: `shadow-xs` / `shadow-sm` / `shadow-md` / `shadow-lg` /
   `shadow-xl`, todos com valores próprios no tema escuro.
 - **Texto**: além da escala do Tailwind, `text-2xs` (0,6875rem, para contagem
@@ -139,11 +146,12 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
 - **Money**: [`MoneyDisplay`](src/components/ui/money-display.tsx) and [`MoneyInput`](src/components/ui/money-input.tsx); formatting helpers in [`src/lib/formatters.ts`](src/lib/formatters.ts) (`currencyBRL`, `signedCurrencyBRL`, `percentBR`).
 - **Dates**: [`src/lib/transaction-date.ts`](src/lib/transaction-date.ts) — e.g. `formatDatePtBr`, `formatTransactionDmyPtBr`, `formatDateLongPtBr`, `formatRelativeDayPtBr`.
 - **Status chips / filters**: [`src/lib/tag-chip-classes.ts`](src/lib/tag-chip-classes.ts) — token-based classes only.
+- **Cor escolhida pela pessoa**: [`ColorTile`](src/components/ui/color-tile.tsx) para o ladrilho que carrega `categories.color`, `bills.color` ou a marca de um workspace. Se a cor vem do tema e não do banco, é o componente errado — use `bg-muted` ou um `Badge`. É o único lugar do app onde `white` e `black` crus são a resposta certa: o fundo é cor de runtime, e o verniz sobre ela é material, não tema. Por isso ele está na lista de exceção do auditor — e nenhuma tela está.
 - **Alerts / tabs / forms**: [`Alert`](src/components/ui/alert.tsx), [`Tabs`](src/components/ui/tabs.tsx), [`Textarea`](src/components/ui/textarea.tsx), [`ScrollArea`](src/components/ui/scroll-area.tsx), [`Toggle` / `ToggleGroup`](src/components/ui/toggle.tsx), [`Slider`](src/components/ui/slider.tsx), [`RadioGroup`](src/components/ui/radio-group.tsx), [`Pagination`](src/components/ui/pagination.tsx), [`Collapsible`](src/components/ui/collapsible.tsx), [`Breadcrumb`](src/components/ui/breadcrumb.tsx), [`ChartContainer` + chart helpers](src/components/ui/chart.tsx) for Recharts.
 - **Campos**: [`Field`](src/components/ui/field.tsx) para rótulo + descrição + erro já ligados; [`InputGroup`](src/components/ui/input-group.tsx) para campo com ícone ou botão acoplado; [`Combobox`](src/components/ui/combobox.tsx) quando a lista passa de umas dez opções.
 - **Listas e detalhe**: [`Item`](src/components/ui/item.tsx) para linha de lista (e para o que a `Table` vira no telefone), [`DescriptionList`](src/components/ui/description-list.tsx) para pares termo/valor, [`Timeline`](src/components/ui/timeline.tsx) para histórico, [`Toolbar`](src/components/ui/toolbar.tsx) para a linha de filtros e ações.
 - **Carregando**: [`Skeleton`](src/components/ui/skeleton.tsx) para uma tela esperando dado; [`Spinner`](src/components/ui/spinner.tsx) só para ação curta sem fim conhecido.
-- **Busca**: [`Command`](src/components/ui/command.tsx) — o app ainda não tem busca global, e é a lacuna que ele preenche.
+- **Busca**: [`Command`](src/components/ui/command.tsx) — a paleta de comandos. O catálogo `/designsystem` é o primeiro consumidor ([`ds-search.tsx`](src/app/designsystem/ds-search.tsx)): gatilho no meio do cabeçalho com o `Kbd` do atalho, `⌘K` e `/` para abrir, e `filter` próprio, porque o padrão do cmdk é difuso e erra em português. O **app** ainda não tem busca global, e é a lacuna que ele preenche.
 
 ### Component rules
 
@@ -159,17 +167,24 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
 
 ### Backlog de migração
 
-A rodada 01 entregou tokens, componentes, documentação e o auditor. **As telas
-não foram migradas.** O que falta está medido em
-[`docs/design/CONFORMIDADE-01.md`](docs/design/CONFORMIDADE-01.md): **1.179
-achados em 144 arquivos**, com ordem sugerida por razão entre impacto e risco.
+A rodada 01 entregou tokens, componentes, documentação e o auditor, sem migrar
+as telas. A rodada 02 migrou o que quebrava o tema escuro e corrigiu a escala de
+camadas, que descrevia números que a produção não usava. O estado atual está em
+[`docs/design/CONFORMIDADE-02.md`](docs/design/CONFORMIDADE-02.md): **1.179 →
+622 achados**, com ordem sugerida por razão entre impacto e risco.
+[`CONFORMIDADE-01.md`](docs/design/CONFORMIDADE-01.md) virou registro histórico —
+duas das correções que ele prescrevia estavam erradas, e a 02 diz quais.
 
-Os dois maiores blocos:
+O que sobra, do mais barato ao mais caro:
 
-- **259 valores arbitrários com token disponível** — `text-[11px]` e
-  `text-[10px]` (205 ocorrências) viram `text-2xs`; `z-[100]` e `z-[70]` viram a
-  escala de camadas. Risco quase zero.
-- **286 usos da paleta crua do Tailwind** — 135 verdes, 57 branco/preto, 38
-  âmbares. A parte não mecânica: decidir entre `success` e `income` caso a caso.
+- **86 `hover:` sem par de toque.** No telefone essas superfícies não respondem
+  ao toque. A correção é **somar** `active:`, nunca remover o `hover:`.
+- **77 formatações fora dos helpers** — `Intl.*` e `toLocaleDateString` na tela,
+  cada um livre para divergir. Destino: `@/lib/formatters` e
+  `@/lib/transaction-date`.
+- **51 primitivos crus** com equivalente no design system, quase todos
+  `<button>`. Muda tipos de props: `npx tsc --noEmit` a cada arquivo.
+- **357 valores arbitrários**, hoje majoritariamente legítimos: `w-[…]` e `h-[…]`
+  de esqueleto, que existem para casar com a largura do conteúdo real.
 
 Reproduza a qualquer momento com `npm run ds:audit`.

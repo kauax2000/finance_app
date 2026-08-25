@@ -271,7 +271,7 @@ export default function ActivityPage() {
             <div className="min-w-0 space-y-2">
                 <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                     <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                             Histórico de atividades
                         </p>
                     </div>
@@ -342,13 +342,13 @@ export default function ActivityPage() {
                                                             {activity.status === "failed" ? (
                                                                 <Badge
                                                                     variant="destructive"
-                                                                    className="shrink-0 px-1.5 py-0 text-[0.6rem]"
+                                                                    className="shrink-0 px-1.5 py-0 text-2xs"
                                                                 >
                                                                     Falha
                                                                 </Badge>
                                                             ) : null}
                                                         </div>
-                                                        <span className="shrink-0 text-[0.65rem] tabular-nums text-muted-foreground">
+                                                        <span className="shrink-0 text-2xs tabular-nums text-muted-foreground">
                                                             {formatRelativeTime(activity.created_at)}
                                                         </span>
                                                     </div>

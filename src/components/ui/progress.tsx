@@ -6,7 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
-const progressIndicatorVariants = cva("h-full transition-[width] duration-300 ease-out", {
+const progressIndicatorVariants = cva("h-full transition-[width] duration-(--duration-slow) ease-out", {
   variants: {
     // `income` e `expense` existem aqui porque esta é a barra de orçamento
     // consumido: uma categoria que estourou o limite é gasto, não erro do

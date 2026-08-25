@@ -245,12 +245,14 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                             src={avatarPreview}
                             alt="Preview"
                             className="aspect-square size-full object-cover"
+                            decoding="async"
                         />
                     ) : currentAvatarUrl && !removeCurrentPhoto ? (
                         <img
                             src={currentAvatarUrl}
                             alt={userName}
                             className="aspect-square size-full object-cover"
+                            decoding="async"
                         />
                     ) : !profileReady ? (
                         <div className="size-full animate-pulse bg-muted" aria-hidden />
@@ -345,7 +347,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                     placeholder="seu@email.com"
                 />
                 {editEmail !== userEmail && (
-                    <p className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500">
+                    <p className="flex items-center gap-1 text-xs text-warning-muted-foreground">
                         <ExclamationTriangleIcon className="h-3 w-3 shrink-0" />
                         Você receberá um link de confirmação no novo email
                     </p>
@@ -377,7 +379,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                 </div>
             )}
             {successMessage && (
-                <div className="flex items-start gap-2 rounded-lg border border-green-600/30 bg-green-500/10 px-3 py-2 text-xs text-green-700 dark:border-green-500/30 dark:text-green-400">
+                <div className="flex items-start gap-2 rounded-lg border border-success/30 bg-success-muted px-3 py-2 text-xs text-success-muted-foreground">
                     <CheckCircleIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                     <span className="min-w-0 break-words">{successMessage}</span>
                 </div>

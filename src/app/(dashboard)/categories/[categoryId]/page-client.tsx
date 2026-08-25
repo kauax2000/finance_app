@@ -360,7 +360,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     if (workspaceError) {
         return (
             <Card>
-                <CardContent className="py-8 text-sm text-red-500">{workspaceError}</CardContent>
+                <CardContent className="py-8 text-sm text-destructive">{workspaceError}</CardContent>
             </Card>
         )
     }

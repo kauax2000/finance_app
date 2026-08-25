@@ -152,7 +152,7 @@ export function ForgotPasswordForm() {
             <div className="flex flex-col gap-6 p-6">
                 {success ? (
                     <div className="flex flex-col gap-4">
-                        <div className="bg-green-500/10 text-green-600 dark:text-green-400 text-sm p-3 rounded-md">
+                        <div className="bg-success-muted text-success-muted-foreground text-sm p-3 rounded-md">
                             <p className="font-medium">Senha atualizada!</p>
                             <p className="text-muted-foreground mt-1">
                                 Você será redirecionado para o login em breve.
@@ -170,7 +170,7 @@ export function ForgotPasswordForm() {
                             </p>
                         </div>
                         {successMessage && (
-                            <div className="bg-green-500/10 text-green-600 dark:text-green-400 text-sm p-3 rounded-md">
+                            <div className="bg-success-muted text-success-muted-foreground text-sm p-3 rounded-md">
                                 {successMessage}
                             </div>
                         )}
@@ -196,7 +196,7 @@ export function ForgotPasswordForm() {
                                 className={fieldErrors.email ? "border-destructive" : ""}
                             />
                             {fieldErrors.email && (
-                                <p className="text-[0.8rem] font-medium text-destructive">
+                                <p className="text-control-sm font-medium text-destructive">
                                     {fieldErrors.email}
                                 </p>
                             )}
@@ -234,7 +234,7 @@ export function ForgotPasswordForm() {
                                 className={fieldErrors.token ? "border-destructive" : ""}
                             />
                             {fieldErrors.token && (
-                                <p className="text-[0.8rem] font-medium text-destructive">
+                                <p className="text-control-sm font-medium text-destructive">
                                     {fieldErrors.token}
                                 </p>
                             )}
@@ -276,7 +276,7 @@ export function ForgotPasswordForm() {
                                 </button>
                             </div>
                             {fieldErrors.password && (
-                                <p className="text-[0.8rem] font-medium text-destructive">
+                                <p className="text-control-sm font-medium text-destructive">
                                     {fieldErrors.password}
                                 </p>
                             )}
@@ -318,7 +318,7 @@ export function ForgotPasswordForm() {
                                 </button>
                             </div>
                             {fieldErrors.confirmPassword && (
-                                <p className="text-[0.8rem] font-medium text-destructive">
+                                <p className="text-control-sm font-medium text-destructive">
                                     {fieldErrors.confirmPassword}
                                 </p>
                             )}
@@ -340,7 +340,7 @@ export function ForgotPasswordForm() {
                 {step === "email" && (
                     <p className="text-center text-sm text-muted-foreground">
                         Lembrou a senha?{" "}
-                        <Link href="/login" className="text-[oklch(0.45_0.14_166)] font-medium underline-offset-4 hover:underline">
+                        <Link href="/login" className="text-primary font-medium underline-offset-4 hover:underline">
                             Fazer login
                         </Link>
                     </p>

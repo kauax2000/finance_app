@@ -12,7 +12,7 @@ export default function PlansPage() {
             <div className="min-w-0 space-y-2">
                 <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                     <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                             Plano atual
                         </p>
                     </div>
@@ -35,7 +35,7 @@ export default function PlansPage() {
                                         <Badge
                                             variant="secondary"
                                             className={cn(
-                                                "shrink-0 px-1.5 py-0 text-[0.6rem]",
+                                                "shrink-0 px-1.5 py-0 text-2xs",
                                                 tagChipInfo,
                                             )}
                                         >
@@ -62,7 +62,7 @@ export default function PlansPage() {
             <div className="min-w-0 space-y-2">
                 <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                     <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                             Planos disponíveis
                         </p>
                     </div>
@@ -77,7 +77,7 @@ export default function PlansPage() {
                                 <Badge
                                     variant="secondary"
                                     className={cn(
-                                        "px-1.5 py-0 text-[0.65rem] font-semibold uppercase tracking-wide",
+                                        "px-1.5 py-0 text-2xs font-semibold uppercase tracking-wide",
                                         tagChipWarning,
                                     )}
                                 >
@@ -148,7 +148,7 @@ export default function PlansPage() {
             <div className="min-w-0 space-y-2">
                 <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                     <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                             Histórico de pagamentos
                         </p>
                     </div>

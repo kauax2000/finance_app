@@ -85,7 +85,7 @@ function CreditCardBillingSection({
                         {CREDIT_CARD_BILLING_FORM.sectionTitle}
                     </p>
                 </div>
-                <p className="text-[11px] leading-snug text-muted-foreground">
+                <p className="text-2xs leading-snug text-muted-foreground">
                     {CREDIT_CARD_BILLING_FORM.lead}
                 </p>
             </div>
@@ -111,7 +111,7 @@ function CreditCardBillingSection({
                         <SelectContent
                             position="popper"
                             align="start"
-                            className="z-[100] min-w-[var(--radix-select-trigger-width)] p-1"
+                            className="z-(--z-toast) min-w-[var(--radix-select-trigger-width)] p-1"
                             sideOffset={6}
                             collisionPadding={12}
                         >
@@ -147,7 +147,7 @@ function CreditCardBillingSection({
                         <SelectContent
                             position="popper"
                             align="start"
-                            className="z-[100] min-w-[var(--radix-select-trigger-width)] p-1"
+                            className="z-(--z-toast) min-w-[var(--radix-select-trigger-width)] p-1"
                             sideOffset={6}
                             collisionPadding={12}
                         >
@@ -167,7 +167,7 @@ function CreditCardBillingSection({
 
             {showUnusualDueWarning ? (
                 <p
-                    className="flex items-start gap-1.5 text-[11px] leading-snug text-warning-muted-foreground"
+                    className="flex items-start gap-1.5 text-2xs leading-snug text-warning-muted-foreground"
                     role="status"
                 >
                     <Info className="mt-0.5 size-3.5 shrink-0" aria-hidden />
@@ -193,7 +193,7 @@ function CreditCardBillingSection({
                     </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="space-y-3 pt-2">
-                    <div className="space-y-4 text-[11px] leading-relaxed text-muted-foreground">
+                    <div className="space-y-4 text-2xs leading-relaxed text-muted-foreground">
                         {CREDIT_CARD_BILLING_FORM.collapsible.sections.map(
                             (section) => (
                                 <div key={section.id} className="space-y-1.5">
@@ -212,7 +212,7 @@ function CreditCardBillingSection({
                         <AlertTitle className="text-xs font-medium">
                             {CREDIT_CARD_BILLING_FORM.results.title}
                         </AlertTitle>
-                        <AlertDescription className="text-[11px] leading-snug">
+                        <AlertDescription className="text-2xs leading-snug">
                             <ul className="list-inside list-disc space-y-0.5">
                                 {CREDIT_CARD_BILLING_FORM.results.items.map((item) => (
                                     <li key={item}>{item}</li>
@@ -277,12 +277,12 @@ export function CreditCardFormFields({
                     required={!savedLastFour}
                 />
                 {savedLastFour && normalizeCardDigits(cardNumber).length === 0 ? (
-                    <p className="text-[11px] leading-snug text-muted-foreground">
+                    <p className="text-2xs leading-snug text-muted-foreground">
                         Final salvo: •••• {savedLastFour}. Deixe em branco para manter ou
                         informe o número completo para alterar.
                     </p>
                 ) : (
-                    <p className="text-[11px] leading-snug text-muted-foreground">
+                    <p className="text-2xs leading-snug text-muted-foreground">
                         O número completo não é salvo.
                     </p>
                 )}

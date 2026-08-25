@@ -61,8 +61,6 @@ function Chip({
             variant="success"
             className={cn(
                 "inline-flex max-w-[9.5rem] shrink-0 items-center gap-1.5 pr-1.5 sm:max-w-[11rem]",
-                "bg-emerald-50 text-emerald-800 hover:bg-emerald-100",
-                "dark:bg-emerald-950 dark:text-emerald-100 dark:hover:bg-emerald-900",
                 className
             )}
             title={title ?? label}
@@ -72,8 +70,7 @@ function Chip({
                 type="button"
                 className={cn(
                     "inline-flex size-5 shrink-0 items-center justify-center rounded-full",
-                    "text-emerald-700/80 hover:bg-emerald-200/60 hover:text-emerald-950",
-                    "dark:text-emerald-100/80 dark:hover:bg-emerald-800/60 dark:hover:text-emerald-50",
+                    "opacity-70 hover:bg-success/20 hover:opacity-100 active:bg-success/25 active:opacity-100",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2"
                 )}
                 aria-label={`Remover filtro: ${label}`}
@@ -461,7 +458,7 @@ export function TransactionsActiveFiltersChips({
                         className="w-max max-w-[min(100vw-2rem,20rem)] gap-0 p-0"
                     >
                         <div className="border-b border-border/60 px-2 py-1.5">
-                            <p className="text-[11px] font-medium leading-tight text-muted-foreground">
+                            <p className="text-2xs font-medium leading-tight text-muted-foreground">
                                 Mais filtros ativos
                             </p>
                         </div>

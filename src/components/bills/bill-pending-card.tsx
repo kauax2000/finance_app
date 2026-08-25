@@ -31,8 +31,9 @@ import {
     tagChipNeutral,
     tagChipWarning,
 } from "@/lib/tag-chip-classes"
+import { ColorTile } from "@/components/ui/color-tile"
 
-const EXPENSE_CATEGORY_FALLBACK_COLOR = "#EF4444"
+const EXPENSE_CATEGORY_FALLBACK_COLOR = "var(--expense)"
 
 function cmpYmd(a: string, b: string): number {
     return a.localeCompare(b)
@@ -66,13 +67,6 @@ function daysDeltaLabel(dueYmd: string, todayYmd: string): string {
     const a = Math.abs(days)
     return `há ${a} dia${a === 1 ? "" : "s"}`
 }
-
-const categoryIconTileClass = cn(
-    "relative flex h-11 w-11 shrink-0 items-center justify-center self-start overflow-hidden rounded-lg",
-    "border border-white/20 shadow-sm ring-1 ring-black/5",
-    "backdrop-blur-md",
-    "after:absolute after:inset-0 after:bg-gradient-to-br after:from-white/30 after:to-white/5 after:opacity-80"
-)
 
 export type BillPendingCardProps = {
     row: BillPendingRow
@@ -133,31 +127,27 @@ export function BillPendingCard({
                 <CardHeader className="border-b border-border/60 bg-muted/25 !py-3">
                     <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] grid-rows-[auto_auto] items-start gap-x-3 gap-y-1">
                         {row.kind === "virtual_cc" ? (
+                            /* Fatura de cartão não tem cor escolhida por
+                               ninguém: o ladrilho é de tema, e o verniz do
+                               ColorTile não teria sobre o que brilhar. */
                             <div
-                                className={cn(
-                                    categoryIconTileClass,
-                                    "col-start-1 row-span-2 bg-muted"
-                                )}
+                                className="col-start-1 row-span-2 flex size-11 shrink-0 items-center justify-center self-start rounded-lg border border-border bg-muted"
                                 aria-hidden
                             >
-                                <CreditCardIcon className="relative z-10 h-5 w-5 text-muted-foreground" />
+                                <CreditCardIcon className="size-5 text-muted-foreground" />
                             </div>
                         ) : (
-                            <div
-                                className={cn(
-                                    categoryIconTileClass,
-                                    "col-start-1 row-span-2"
-                                )}
-                                style={{ backgroundColor: headerColor }}
-                                aria-hidden
+                            <ColorTile
+                                size="lg"
+                                color={headerColor}
+                                className="col-start-1 row-span-2 self-start"
                             >
                                 <CategoryIconPreview
                                     name={normalizeCategoryIcon(
                                         row.bill.icon ?? "receipt"
                                     )}
-                                    className="relative z-10 h-5 w-5 text-white"
                                 />
-                            </div>
+                            </ColorTile>
                         )}
 
                         <CardTitle
@@ -213,7 +203,7 @@ export function BillPendingCard({
 
                 <CardContent className="space-y-3 px-4 pb-4 pt-3">
                     <div className="rounded-lg border border-border/80 bg-muted/15 px-3 py-2.5">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
                             Valor estimado
                         </p>
                         <div className="mt-1 flex flex-wrap items-baseline gap-1 tabular-nums">

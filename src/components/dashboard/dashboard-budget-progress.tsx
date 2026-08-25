@@ -69,7 +69,7 @@ export function DashboardBudgetProgress({
                                         className={cn(
                                             "shrink-0 tabular-nums text-xs",
                                             over
-                                                ? "font-semibold text-amber-700 dark:text-amber-300"
+                                                ? "font-semibold text-warning-muted-foreground"
                                                 : "text-muted-foreground"
                                         )}
                                     >
@@ -79,11 +79,9 @@ export function DashboardBudgetProgress({
                                 </div>
                                 <Progress
                                     value={Math.min(100, r.pct)}
-                                    className={cn(
-                                        "h-2",
-                                        over && "[&>div]:bg-amber-600"
-                                    )}
-                                />
+                                    tone={over ? "warning" : "default"}
+                                    className="h-2"
+                                    />
                             </div>
                         )
                     })

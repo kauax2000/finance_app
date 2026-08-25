@@ -56,7 +56,7 @@ export function TransactionsDateRangeForm({
                 <div className="min-w-0 space-y-1">
                     <Label
                         htmlFor={fromId}
-                        className="text-[11px] text-muted-foreground"
+                        className="text-2xs text-muted-foreground"
                     >
                         De
                     </Label>
@@ -75,7 +75,7 @@ export function TransactionsDateRangeForm({
                 <div className="min-w-0 space-y-1">
                     <Label
                         htmlFor={toId}
-                        className="text-[11px] text-muted-foreground"
+                        className="text-2xs text-muted-foreground"
                     >
                         Até
                     </Label>
