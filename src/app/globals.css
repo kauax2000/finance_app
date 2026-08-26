@@ -39,8 +39,10 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary-hover: var(--secondary-hover);
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-accent: var(--primary-accent);
   --color-primary: var(--primary);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
@@ -117,10 +119,21 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.348 0.118 166);
+  --primary: oklch(0.42 0.12 166);
   --primary-foreground: oklch(0.985 0 0);
+  /* O mesmo verde em dois papéis que se contradizem no tema escuro: `--primary`
+     preenche (precisa contrastar com texto claro por cima) e `--primary-accent`
+     é texto (precisa contrastar com a página escura por baixo). No claro os
+     dois são a mesma cor — a divisão só existe onde a física obriga. */
+  --primary-accent: oklch(0.42 0.12 166);
   --secondary: oklch(0.955 0 0);
   --secondary-foreground: oklch(0.205 0 0);
+  /* O hover do secundário puxa a base na direção do próprio texto: escurece no
+     claro, clareia no escuro. Sempre na direção do contato, e por isso não é um
+     alfa único servindo os dois temas — `bg-secondary/80` dava 1,03:1 contra a
+     base nos dois, invisível, e ainda em direções trocadas: clareava no claro e
+     no escuro afundava o botão na página. */
+  --secondary-hover: oklch(0.88 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.5 0 0);
   --accent: oklch(0.955 0 0);
@@ -130,7 +143,10 @@
   --destructive-muted: oklch(0.96 0.04 27);
   --destructive-muted-foreground: oklch(0.45 0.16 27);
   --border: oklch(0.9 0 0);
-  --input: oklch(0.66 0 0);
+  /* Mesmo contorno do cartão. Antes `--input` era `oklch(0.66)` para a borda
+     sozinha alcançar os 3:1 da WCAG 1.4.11 num campo sem preenchimento; agora
+     o campo é preenchido nos dois temas e o contorno acompanha a superfície. */
+  --input: oklch(0.9 0 0);
   --input-fill: oklch(0.9 0 0);
   --ring: oklch(0.348 0.118 166);
   --success: oklch(0.542 0.14 152);
@@ -200,7 +216,7 @@
   --radius: 0.625rem;
   --sidebar: oklch(0.97 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.348 0.118 166);
+  --sidebar-primary: oklch(0.42 0.12 166);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
@@ -272,10 +288,12 @@
      (0.45) o token media 3,04:1 como texto sobre o fundo e 2,32:1 sobre
      `muted`, o que reprovava `Button variant="link"`, os rótulos de categoria
      e todo `Code` com `text-primary`. Agora mede 8,46:1 nas duas direções. */
-  --primary: oklch(0.72 0.13 166);
-  --primary-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.5 0.125 166);
+  --primary-foreground: oklch(0.985 0 0);
+  --primary-accent: oklch(0.66 0.13 166);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
+  --secondary-hover: oklch(0.36 0 0);
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
   --accent: oklch(0.269 0 0);
@@ -287,7 +305,7 @@
   --destructive-muted: oklch(0.3 0.08 27);
   --destructive-muted-foreground: oklch(0.92 0.06 27);
   --border: oklch(1 0 0 / 10%);
-  --input: oklch(0.55 0 0);
+  --input: oklch(1 0 0 / 10%);
   --input-fill: oklch(1 0 0 / 15%);
   --ring: oklch(0.72 0.13 166);
   --success: oklch(0.7 0.15 152);
@@ -341,8 +359,8 @@
 
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.72 0.13 166);
-  --sidebar-primary-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.5 0.125 166);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);

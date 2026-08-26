@@ -44,8 +44,8 @@ export function NotificationBellLink() {
     return (
         <Button
             type="button"
-            variant="ghost"
-            size="icon"
+            variant="tertiary"
+            size="icon-lg"
             className="relative"
             aria-label="Notificações"
             aria-expanded={isOpen}

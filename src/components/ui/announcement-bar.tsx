@@ -59,7 +59,7 @@ function AnnouncementBar({
       {onDismiss ? (
         <Button
           type="button"
-          variant="ghost"
+          variant="tertiary"
           size="xs"
           onClick={onDismiss}
           aria-label={dismissLabel}

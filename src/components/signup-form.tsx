@@ -454,7 +454,7 @@ export function SignupForm() {
                     Já tem uma conta?{" "}
                     <Link
                         href={loginHref}
-                        className="text-primary font-medium underline-offset-4 hover:underline"
+                        className="text-primary-accent font-medium underline-offset-4 hover:underline"
                     >
                         Entrar
                     </Link>

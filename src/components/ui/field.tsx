@@ -135,7 +135,7 @@ function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
       className={cn(
         "text-left text-sm leading-normal font-normal text-muted-foreground group-has-data-horizontal/field:text-balance [[data-variant=legend]+&]:-mt-1.5",
         "last:mt-0 nth-last-2:-mt-1",
-        "[&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
+        "[&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary-accent",
         className
       )}
       {...props}
@@ -155,19 +155,28 @@ function FieldSeparator({
       data-slot="field-separator"
       data-content={!!children}
       className={cn(
-        "relative -my-2 h-5 text-sm group-data-[variant=outline]/field-group:-mb-2",
+        "-my-2 flex h-5 items-center gap-2 text-sm group-data-[variant=outline]/field-group:-mb-2",
         className
       )}
       {...props}
     >
-      <Separator className="absolute inset-0 top-1/2" />
+      {/* Duas metades de linha com o rótulo entre elas, em vez de uma linha
+          inteira com um retângulo por cima mascarando o meio. O retângulo
+          pintava `bg-background`, que só acerta quando o separador está direto
+          na página: dentro de um cartão, de um `Dialog` ou de um `Sheet` ele
+          desenhava a cor da página sobre outra superfície. Sem fundo não há o
+          que casar, e o separador funciona em qualquer lugar. */}
+      <Separator className="flex-1" />
       {children && (
-        <span
-          className="relative mx-auto block w-fit bg-background px-2 text-muted-foreground"
-          data-slot="field-separator-content"
-        >
-          {children}
-        </span>
+        <>
+          <span
+            className="shrink-0 text-muted-foreground"
+            data-slot="field-separator-content"
+          >
+            {children}
+          </span>
+          <Separator className="flex-1" />
+        </>
       )}
     </div>
   )

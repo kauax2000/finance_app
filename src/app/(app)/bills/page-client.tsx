@@ -196,7 +196,7 @@ export default function BillsPageClient() {
             <Button
                 type="button"
                 variant="outline"
-                size="icon"
+                size="icon-lg"
                 className="relative size-9 shrink-0"
                 disabled={!billsHasTableEarly}
                 onClick={() => setMobileFiltersSheetOpen(true)}
@@ -640,7 +640,7 @@ export default function BillsPageClient() {
                         </p>
                         <Button
                             type="button"
-                            size="lg"
+                            size="xl"
                             className="gap-1.5"
                             onClick={() => {
                                 setEditingBill(null)
@@ -674,7 +674,7 @@ export default function BillsPageClient() {
                         <Button
                             type="button"
                             variant="outline"
-                            size="lg"
+                            size="xl"
                             className="min-w-[10rem] text-xs"
                             onClick={resetFilters}
                         >

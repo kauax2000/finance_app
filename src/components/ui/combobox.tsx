@@ -126,7 +126,7 @@ function ComboboxTrigger({
   className,
   placeholder = "Selecionar…",
   children,
-  size = "default",
+  size = "md",
   ...props
 }: Omit<React.ComponentProps<typeof Button>, "children"> & {
   placeholder?: string

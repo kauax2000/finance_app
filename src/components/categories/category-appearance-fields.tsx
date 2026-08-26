@@ -162,7 +162,7 @@ export function CategoryIconGrid({
                     className={cn(
                         "flex h-9 w-9 items-center justify-center rounded-lg border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
                         normalized === key
-                            ? "border-primary bg-primary/10 text-primary"
+                            ? "border-primary-accent bg-primary/10 text-primary-accent"
                             : "border-border/80 bg-background",
                     )}
                     aria-label={`Ícone ${key}`}

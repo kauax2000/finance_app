@@ -7,6 +7,7 @@ import {
   InputGroupButton,
   InputGroupInput,
   InputGroupText,
+  InputGroupTextarea,
 } from "@/components/ui/input-group"
 import { DocNote, DocSection, Usage } from "../ds-doc"
 
@@ -55,6 +56,34 @@ export default function InputGroupDoc() {
           <InputGroupInput placeholder="Convidar por e-mail" aria-label="E-mail" />
           <InputGroupAddon align="inline-end">
             <InputGroupButton>Convidar</InputGroupButton>
+          </InputGroupAddon>
+        </InputGroup>
+      </DocSection>
+
+      <DocSection
+        title="Acoplado acima e abaixo"
+        description="align aceita quatro valores, e os dois de bloco ocupam a largura toda: block-start entra acima do controle, block-end abaixo. Servem para o que acompanha o campo sem disputar a linha dele — uma contagem, uma barra de ação sob um textarea."
+        code={`<InputGroup>
+  <InputGroupTextarea placeholder="Observação" />
+  <InputGroupAddon align="block-end">
+    <InputGroupText>0/280</InputGroupText>
+  </InputGroupAddon>
+</InputGroup>`}
+        previewClassName="flex-col items-stretch gap-3"
+      >
+        <InputGroup className="w-full max-w-sm">
+          <InputGroupAddon align="block-start">
+            <InputGroupText>Aparece no extrato</InputGroupText>
+          </InputGroupAddon>
+          <InputGroupInput placeholder="Mercado" aria-label="Descrição" />
+        </InputGroup>
+        <InputGroup className="w-full max-w-sm">
+          <InputGroupTextarea
+            placeholder="Observação da transação"
+            aria-label="Observação"
+          />
+          <InputGroupAddon align="block-end">
+            <InputGroupText>0/280</InputGroupText>
           </InputGroupAddon>
         </InputGroup>
       </DocSection>

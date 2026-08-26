@@ -713,7 +713,7 @@ export default function MembersPage() {
                                         <Card
                                             className={cn(
                                                 "gap-0 overflow-hidden rounded-lg border border-border/80 bg-muted/20 py-0 shadow-none ring-0 transition-colors hover:bg-muted/30",
-                                                isMe && "border-primary/30 bg-primary/5 hover:bg-primary/10"
+                                                isMe && "border-primary-accent/30 bg-primary/5 hover:bg-primary/10"
                                             )}
                                         >
                                             <CardContent className="flex items-center gap-3 p-3 sm:p-3.5">
@@ -762,7 +762,7 @@ export default function MembersPage() {
                                                 {canManageMembers && !isOwner && !isMe ? (
                                                     <Button
                                                         type="button"
-                                                        variant="ghost"
+                                                        variant="tertiary"
                                                         size="icon-sm"
                                                         className="size-8 shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
                                                         disabled={busyMemberId === member.user_id}
@@ -886,7 +886,7 @@ export default function MembersPage() {
                                                         <Button
                                                             type="button"
                                                             variant="outline"
-                                                            size="icon"
+                                                            size="icon-lg"
                                                             className="shrink-0"
                                                             aria-label={
                                                                 linkCopied ? "Link copiado" : "Copiar link"

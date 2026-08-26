@@ -56,7 +56,7 @@ function StepperItem({
             state === "complete" &&
               "border-transparent bg-primary text-primary-foreground",
             state === "current" &&
-              "border-primary bg-primary/10 text-primary",
+              "border-primary-accent bg-primary/10 text-primary-accent",
             state === "upcoming" &&
               "border-border bg-transparent text-muted-foreground"
           )}

@@ -198,7 +198,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                     />
                     <Button
                         type="button"
-                        variant="ghost"
+                        variant="tertiary"
                         size="sm"
                         className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                         onClick={() => setShowCurrentPassword(!showCurrentPassword)}
@@ -227,7 +227,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                     />
                     <Button
                         type="button"
-                        variant="ghost"
+                        variant="tertiary"
                         size="sm"
                         className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                         onClick={() => setShowNewPassword(!showNewPassword)}
@@ -267,7 +267,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                     />
                     <Button
                         type="button"
-                        variant="ghost"
+                        variant="tertiary"
                         size="sm"
                         className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}

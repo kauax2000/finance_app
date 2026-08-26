@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { Button } from "@/components/ui/button"
-import { ButtonGroup } from "@/components/ui/button-group"
 import { tagChipFilterIdle, tagChipFilterSelected } from "@/lib/tag-chip-classes"
 import { cn } from "@/lib/utils"
 
@@ -99,7 +98,7 @@ export function TransactionsDatePresets({
                         <Button
                             key={p.key}
                             type="button"
-                            variant="ghost"
+                            variant="tertiary"
                             size="xs"
                             aria-pressed={selected}
                             className={cn(
@@ -120,35 +119,33 @@ export function TransactionsDatePresets({
     return (
         <div
             className={cn(
-                "inline-flex h-8 shrink-0 items-stretch rounded-lg bg-muted/60 p-0.5 ring-1 ring-border/60 dark:bg-muted/40",
+                "inline-flex h-8 shrink-0 items-stretch gap-0.5 rounded-lg bg-muted/60 p-0.5 ring-1 ring-border/60 dark:bg-muted/40",
                 className
             )}
             role="group"
             aria-label="Filtros rápidos de período"
         >
-            <ButtonGroup className="h-full min-h-0 gap-0.5">
-                {PRESETS.map((p) => {
-                    const selected = value === p.key
-                    return (
-                        <Button
-                            key={p.key}
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            aria-pressed={selected}
-                            className={cn(
-                                "h-full min-h-0 px-2.5 text-xs font-medium shadow-none",
-                                selected
-                                    ? "relative z-[1] border border-border/80 bg-background text-foreground shadow-sm dark:bg-card dark:shadow-[0_1px_2px_0_rgb(0_0_0/0.35)]"
-                                    : "border border-transparent text-muted-foreground hover:bg-transparent hover:text-foreground"
-                            )}
-                            onClick={() => applyPreset(p.key)}
-                        >
-                            {p.label}
-                        </Button>
-                    )
-                })}
-            </ButtonGroup>
+            {PRESETS.map((p) => {
+                const selected = value === p.key
+                return (
+                    <Button
+                        key={p.key}
+                        type="button"
+                        size="sm"
+                        variant="tertiary"
+                        aria-pressed={selected}
+                        className={cn(
+                            "h-full min-h-0 px-2.5 text-xs font-medium shadow-none",
+                            selected
+                                ? "relative z-[1] border border-border/80 bg-background text-foreground shadow-sm dark:bg-card dark:shadow-[0_1px_2px_0_rgb(0_0_0/0.35)]"
+                                : "border border-transparent text-muted-foreground hover:bg-transparent hover:text-foreground"
+                        )}
+                        onClick={() => applyPreset(p.key)}
+                    >
+                        {p.label}
+                    </Button>
+                )
+            })}
         </div>
     )
 }

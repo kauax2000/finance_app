@@ -45,7 +45,7 @@ export default function DrawerDoc() {
             <DrawerFooter>
               <Button>Aplicar</Button>
               <DrawerClose asChild>
-                <Button type="button" variant="ghost">
+                <Button type="button" variant="tertiary">
                   Cancelar
                 </Button>
               </DrawerClose>

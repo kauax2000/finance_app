@@ -27,7 +27,7 @@ export function NotFoundShell() {
                     <EmptyStateActions>
                         <Link
                             href={ROUTES.DASHBOARD}
-                            className={buttonVariants({ variant: "default" })}
+                            className={buttonVariants({ variant: "primary" })}
                         >
                             Ir para o painel
                         </Link>

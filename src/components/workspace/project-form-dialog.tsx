@@ -44,7 +44,7 @@ function sheetHeaderCloseControl(submitting: boolean) {
         <SheetClose asChild>
             <Button
                 type="button"
-                variant="ghost"
+                variant="tertiary"
                 size="icon-sm"
                 className="shrink-0 -mr-1"
                 aria-label="Fechar"

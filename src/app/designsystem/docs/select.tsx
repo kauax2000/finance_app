@@ -1,6 +1,12 @@
 "use client"
 
 import {
+  BanknotesIcon,
+  ShoppingCartIcon,
+  TruckIcon,
+} from "@heroicons/react/16/solid"
+
+import {
   Select,
   SelectContent,
   SelectGroup,
@@ -71,6 +77,136 @@ export default function SelectDoc() {
             <SelectValue placeholder="Desabilitado" />
           </SelectTrigger>
           <SelectContent />
+        </Select>
+      </DocSection>
+
+      <DocSection
+        title="Com ícone na opção"
+        description="O ícone entra dentro do SelectItem, antes do texto, e sobe junto para o gatilho quando a opção é escolhida — o Radix leva o conteúdo inteiro do item para o valor. Ícone aqui identifica a categoria de relance; se ele não diz nada que o texto já não diga, é ruído."
+        code={`<SelectItem value="mercado">
+  <ShoppingCartIcon aria-hidden />
+  Mercado
+</SelectItem>`}
+      >
+        <Select defaultValue="mercado">
+          <SelectTrigger className="w-56" aria-label="Categoria">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="mercado">
+              <ShoppingCartIcon aria-hidden />
+              Mercado
+            </SelectItem>
+            <SelectItem value="transporte">
+              <TruckIcon aria-hidden />
+              Transporte
+            </SelectItem>
+            <SelectItem value="salario">
+              <BanknotesIcon aria-hidden />
+              Salário
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </DocSection>
+
+      <DocSection
+        title="Opção destrutiva"
+        description="Uma escolha que apaga alguma coisa fica em vermelho na lista, como no DropdownMenu e no ContextMenu. É a mesma variant nos três, para escolher uma opção se comportar igual em qualquer um deles."
+        code={`<SelectItem value="excluir" variant="destructive">
+  Excluir categoria
+</SelectItem>`}
+      >
+        <Select>
+          <SelectTrigger className="w-56" aria-label="Ação da categoria">
+            <SelectValue placeholder="Escolha uma ação" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="renomear">Renomear</SelectItem>
+            <SelectItem value="arquivar">Arquivar</SelectItem>
+            <SelectSeparator />
+            <SelectItem value="excluir" variant="destructive">
+              Excluir categoria
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </DocSection>
+
+      <DocSection
+        title="Estados"
+        description="O gatilho segue os estados do campo: vazio mostra o placeholder em cinza, aria-invalid pinta a borda e o anel de destructive, e desabilitado ganha o mesmo preenchimento do Input desabilitado."
+        code={`<SelectTrigger aria-invalid>…</SelectTrigger>
+<SelectTrigger disabled>…</SelectTrigger>`}
+        previewClassName="flex-col items-stretch gap-3"
+      >
+        <Select>
+          <SelectTrigger className="w-56" aria-label="Vazio">
+            <SelectValue placeholder="Nada escolhido ainda" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="a">Alimentação</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select>
+          <SelectTrigger className="w-56" aria-invalid aria-label="Com erro">
+            <SelectValue placeholder="Escolha uma categoria" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="a">Alimentação</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select disabled>
+          <SelectTrigger className="w-56" aria-label="Desabilitado">
+            <SelectValue placeholder="Indisponível" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="a">Alimentação</SelectItem>
+          </SelectContent>
+        </Select>
+      </DocSection>
+
+      <DocSection
+        title="Opção desabilitada"
+        description="Uma opção que existe mas não pode ser escolhida agora fica na lista, esmaecida e sem foco. Some da lista só o que não existe — o que existe e está indisponível ensina mais ficando visível."
+        code={`<SelectItem value="anual" disabled>
+  Anual — só no plano pago
+</SelectItem>`}
+      >
+        <Select>
+          <SelectTrigger className="w-64" aria-label="Periodicidade">
+            <SelectValue placeholder="Escolha a periodicidade" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="mensal">Mensal</SelectItem>
+            <SelectItem value="anual" disabled>
+              Anual — só no plano pago
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </DocSection>
+
+      <DocSection
+        title="Lista longa rola sozinha"
+        description="Passando da altura disponível, o conteúdo ganha os botões de rolagem no topo e no rodapé. Mas lista longa é sinal: acima de umas dez opções quem resolve é o Combobox, que tem busca."
+        code={`<SelectContent>
+  {meses.map((m) => (
+    <SelectItem key={m} value={m}>{m}</SelectItem>
+  ))}
+</SelectContent>`}
+      >
+        <Select>
+          <SelectTrigger className="w-56" aria-label="Mês de referência">
+            <SelectValue placeholder="Mês de referência" />
+          </SelectTrigger>
+          <SelectContent>
+            {[
+              "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+              "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+            ].map((m) => (
+              <SelectItem key={m} value={m.toLowerCase()}>
+                {m}
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>
       </DocSection>
 

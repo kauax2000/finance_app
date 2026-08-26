@@ -77,7 +77,7 @@ export function BudgetMonthSelects({
         emit(formatYearMonth(new Date(yearNum, m - 1, 1)))
     }
 
-    const triggerSize = dense ? "sm" : "default"
+    const triggerSize = dense ? "sm" : "md"
     const monthLabelCurrent = months.find((o) => o.value === monthValue)?.label ?? "Mês"
     const monthTriggerClass = dense
         ? "h-7 min-w-[8.5rem] max-w-[12rem] capitalize"

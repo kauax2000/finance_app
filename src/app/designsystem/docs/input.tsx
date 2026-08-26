@@ -13,15 +13,17 @@ export default function InputDoc() {
 
       <DocSection
         title="Tamanhos"
-        description="Batem com os do Button, para os dois alinharem numa mesma linha."
-        code={`<Input size="sm" placeholder="sm" />
-<Input placeholder="default" />
-<Input size="lg" placeholder="lg" />`}
+        description="Mesma escada do Button, mesmos nomes e mesmas alturas: sm 28, md 32, lg 36, xl 40. O padrão é md, então <Input> e <Button> alinham sem ninguém dizer size."
+        code={`<Input size="sm" placeholder="sm · 28" />
+<Input placeholder="md · 32" />
+<Input size="lg" placeholder="lg · 36" />
+<Input size="xl" placeholder="xl · 40" />`}
         previewClassName="flex-col items-stretch"
       >
-        <Input size="sm" placeholder="sm" aria-label="Exemplo sm" />
-        <Input placeholder="default" aria-label="Exemplo default" />
-        <Input size="lg" placeholder="lg" aria-label="Exemplo lg" />
+        <Input size="sm" placeholder="sm · 28" aria-label="Exemplo sm" />
+        <Input placeholder="md · 32" aria-label="Exemplo md" />
+        <Input size="lg" placeholder="lg · 36" aria-label="Exemplo lg" />
+        <Input size="xl" placeholder="xl · 40" aria-label="Exemplo xl" />
       </DocSection>
 
       <DocSection
@@ -62,9 +64,9 @@ export default function InputDoc() {
         rows={[
           {
             prop: "size",
-            type: '"sm" | "default" | "lg"',
-            default: '"default"',
-            description: "Altura do campo, alinhada com o Button.",
+            type: '"sm" | "md" | "lg" | "xl"',
+            default: '"md"',
+            description: "Altura: sm 28, md 32, lg 36, xl 40 — a mesma escada do Button.",
           },
           {
             prop: "aria-invalid",

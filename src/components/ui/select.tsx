@@ -18,7 +18,7 @@ function SelectGroup({
   return (
     <SelectPrimitive.Group
       data-slot="select-group"
-      className={cn("scroll-my-1 p-1", className)}
+      className={cn("scroll-my-1", className)}
       {...props}
     />
   )
@@ -32,18 +32,18 @@ function SelectValue({
 
 function SelectTrigger({
   className,
-  size = "default",
+  size = "md",
   children,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
-  size?: "sm" | "default" | "lg"
+  size?: "sm" | "md" | "lg" | "xl"
 }) {
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "flex w-fit items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-2 pl-2.5 text-base whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/70 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-placeholder:text-muted-foreground data-[size=default]:h-9 data-[size=lg]:h-10 data-[size=sm]:h-7 data-[size=sm]:rounded-md *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 md:text-sm dark:bg-input-fill/30 dark:hover:bg-input-fill/50 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "flex w-fit items-center justify-between gap-1.5 rounded-lg border border-input bg-input-fill/30 py-1 pr-2.5 pl-3 text-base whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/70 hover:bg-input-fill/50 active:bg-input-fill/50 disabled:cursor-not-allowed disabled:bg-input-fill/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-placeholder:text-muted-foreground data-[size=md]:h-8 data-[size=lg]:h-9 data-[size=xl]:h-10 data-[size=sm]:h-7 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 md:text-sm dark:disabled:bg-input-fill/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}
@@ -83,6 +83,15 @@ function SelectContent({
         <SelectPrimitive.Viewport
           data-position={position}
           className={cn(
+            // O respiro do painel mora aqui, não no `SelectGroup`. Agrupar é
+            // semântica opcional; a lista sem grupo — que é o caso mais comum —
+            // ficava colada nas quatro bordas, encostando no canto arredondado.
+            //
+            // `w-full` porque em `item-aligned` o painel herda a largura do
+            // gatilho mas o viewport encolhia para o conteúdo: com um gatilho
+            // de largura fixa sobravam dezenas de pixels vazios à direita, e o
+            // separador parava no meio do painel.
+            "w-full p-1",
             "data-[position=popper]:h-(--radix-select-trigger-height) data-[position=popper]:w-full data-[position=popper]:min-w-(--radix-select-trigger-width)",
             position === "popper" && ""
           )}
@@ -102,22 +111,35 @@ function SelectLabel({
   return (
     <SelectPrimitive.Label
       data-slot="select-label"
-      className={cn("px-1.5 py-1 text-xs text-muted-foreground", className)}
+      className={cn("px-2 py-1 text-xs text-muted-foreground", className)}
       {...props}
     />
   )
 }
 
+/**
+ * `variant="destructive"` fecha um seletor que já existia sem dono: o CSS deste
+ * item sempre trouxe `not-data-[variant=destructive]:…`, mas a prop que escreve
+ * esse atributo nunca veio junto, então a exceção não tinha como acontecer.
+ * É a mesma variant do `DropdownMenuItem` e do `ContextMenuItem`, para os três
+ * lugares onde se escolhe uma opção se comportarem igual.
+ */
 function SelectItem({
   className,
+  variant = "default",
   children,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Item>) {
+}: React.ComponentProps<typeof SelectPrimitive.Item> & {
+  variant?: "default" | "destructive"
+}) {
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
+      data-variant={variant}
       className={cn(
-        "relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+        "relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-2 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+        variant === "destructive" &&
+          "text-destructive focus:bg-destructive/10 focus:text-destructive [&_svg]:text-destructive",
         className
       )}
       {...props}

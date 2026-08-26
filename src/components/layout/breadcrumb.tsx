@@ -71,7 +71,7 @@ export function SubPageBackButton({ pathname }: SubPageBackButtonProps) {
 
     return (
         <div className="-mt-2">
-            <Button variant="ghost" size="sm" asChild className="gap-2">
+            <Button variant="tertiary" size="sm" asChild className="gap-2">
                 <Link href={subPage.parent}>
                     <ArrowLeftIcon className="h-4 w-4" />
                     Voltar

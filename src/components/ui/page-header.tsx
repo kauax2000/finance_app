@@ -101,10 +101,10 @@ function PageHeaderBack({
 }) {
   return (
     <Button
-      variant="ghost"
-      size="icon"
+      variant="tertiary"
+      size="icon-md"
       className={cn(
-        "-ml-2 size-8 shrink-0 active:bg-accent group-active:bg-accent",
+        "-ml-2 shrink-0 active:bg-accent group-active:bg-accent",
         className
       )}
       asChild

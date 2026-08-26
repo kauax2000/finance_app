@@ -287,7 +287,7 @@ export function TransactionsFiltersPanel({
                             <Button
                                 type="button"
                                 variant="outline"
-                                size="lg"
+                                size="xl"
                                 className="w-full justify-between gap-2 px-3 font-normal"
                             >
                                 <span className="truncate text-left">
@@ -380,7 +380,7 @@ export function TransactionsFiltersPanel({
                                 <div className="flex items-center gap-1">
                                     <Button
                                         type="button"
-                                        variant="ghost"
+                                        variant="tertiary"
                                         size="sm"
                                         className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground"
                                         disabled={sortedCards.length === 0}
@@ -396,7 +396,7 @@ export function TransactionsFiltersPanel({
                                     </Button>
                                     <Button
                                         type="button"
-                                        variant="ghost"
+                                        variant="tertiary"
                                         size="sm"
                                         className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground"
                                         disabled={creditCardIds.length === 0}
@@ -482,7 +482,7 @@ export function TransactionsFiltersPanel({
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        size="lg"
+                                        size="xl"
                                         className="w-full justify-between gap-2 px-3 font-normal"
                                     >
                                         <span className="truncate text-left">
@@ -502,7 +502,7 @@ export function TransactionsFiltersPanel({
                                         <div className="flex flex-wrap items-center gap-1">
                                             <Button
                                                 type="button"
-                                                variant="ghost"
+                                                variant="tertiary"
                                                 size="sm"
                                                 className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground"
                                                 disabled={
@@ -520,7 +520,7 @@ export function TransactionsFiltersPanel({
                                             </Button>
                                             <Button
                                                 type="button"
-                                                variant="ghost"
+                                                variant="tertiary"
                                                 size="sm"
                                                 className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground"
                                                 disabled={categoryIds.length === 0}
@@ -635,7 +635,7 @@ export function TransactionsFiltersPanel({
                                 <div className="flex justify-end">
                                     <Button
                                         type="button"
-                                        variant="ghost"
+                                        variant="tertiary"
                                         size="sm"
                                         className="h-8 px-2 text-2xs text-muted-foreground hover:text-foreground"
                                         disabled={uncategorizedOnly}

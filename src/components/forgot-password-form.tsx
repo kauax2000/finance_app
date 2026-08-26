@@ -340,7 +340,7 @@ export function ForgotPasswordForm() {
                 {step === "email" && (
                     <p className="text-center text-sm text-muted-foreground">
                         Lembrou a senha?{" "}
-                        <Link href="/login" className="text-primary font-medium underline-offset-4 hover:underline">
+                        <Link href="/login" className="text-primary-accent font-medium underline-offset-4 hover:underline">
                             Fazer login
                         </Link>
                     </p>

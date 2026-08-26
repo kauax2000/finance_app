@@ -189,8 +189,8 @@ export function QuickActionButton({ variant = "sidebar" }: QuickActionButtonProp
             <DropdownMenuTrigger asChild>
                 {isFab || isSidebarCollapsed ? (
                     <Button
-                        variant="default"
-                        size="icon"
+                        variant="primary"
+                        size="icon-lg"
                         type="button"
                         className={cn(
                             isFab && MOBILE_FLOATING_ACTION_BUTTON_CLASSNAME,
@@ -203,7 +203,7 @@ export function QuickActionButton({ variant = "sidebar" }: QuickActionButtonProp
                     </Button>
                 ) : (
                     <Button
-                        variant="default"
+                        variant="primary"
                         type="button"
                         className="h-9 w-full justify-center gap-2 text-xs group-data-[collapsible=icon]:hidden"
                     >

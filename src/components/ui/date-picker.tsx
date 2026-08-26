@@ -63,7 +63,7 @@ export function DatePicker({
                     id={id}
                     type="button"
                     variant="outline"
-                    size="lg"
+                    size="md"
                     disabled={disabled}
                     aria-labelledby={ariaLabelledBy}
                     className={cn(

@@ -27,7 +27,7 @@ function sheetHeaderCloseControl() {
         <SheetClose asChild>
             <Button
                 type="button"
-                variant="ghost"
+                variant="tertiary"
                 size="icon-sm"
                 className="shrink-0 -mr-1"
                 aria-label="Fechar"
@@ -162,7 +162,7 @@ export function TransactionFormSurface({
                         <DialogClose asChild>
                             <Button
                                 type="button"
-                                variant="ghost"
+                                variant="tertiary"
                                 size="icon-sm"
                                 className="-mr-1 -mt-0.5"
                                 aria-label="Fechar"

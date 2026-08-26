@@ -32,7 +32,7 @@ export function CreditCardsEmptyState({ onAddCard }: CreditCardsEmptyStateProps)
                 </p>
                 <Button
                     type="button"
-                    variant="default"
+                    variant="primary"
                     size="sm"
                     className="h-8 gap-2 text-xs"
                     onClick={onAddCard}

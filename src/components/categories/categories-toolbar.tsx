@@ -52,7 +52,7 @@ function MonthNavArrowControls({
         <>
             <Button
                 type="button"
-                variant="ghost"
+                variant="tertiary"
                 size="sm"
                 className={cn(
                     "shrink-0 text-muted-foreground",
@@ -66,7 +66,7 @@ function MonthNavArrowControls({
             <Button
                 type="button"
                 variant="outline"
-                size="icon"
+                size="icon-lg"
                 className={cn("shrink-0", dense ? monthNavDenseIconButtonClassName : "size-10")}
                 aria-label="Mês anterior"
                 onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, -1))}
@@ -124,7 +124,7 @@ function MonthNavArrowControls({
                             <div className="border-t border-border p-2 md:hidden">
                                 <Button
                                     type="button"
-                                    variant="ghost"
+                                    variant="tertiary"
                                     size="sm"
                                     className="h-8 w-full text-xs text-muted-foreground hover:text-foreground"
                                     onClick={() => {
@@ -143,7 +143,7 @@ function MonthNavArrowControls({
             <Button
                 type="button"
                 variant="outline"
-                size="icon"
+                size="icon-lg"
                 className={cn("shrink-0", dense ? monthNavDenseIconButtonClassName : "size-10")}
                 aria-label="Próximo mês"
                 onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, 1))}
@@ -211,8 +211,8 @@ export function MonthNav({
                         <PopoverTrigger asChild>
                             <Button
                                 type="button"
-                                variant="ghost"
-                                size={iconOnly ? "icon-lg" : undefined}
+                                variant="tertiary"
+                                size={iconOnly ? "icon-xl" : undefined}
                                 aria-label={pickerAriaLabel}
                                 aria-expanded={open}
                                 className={cn(
@@ -275,7 +275,7 @@ export function MonthNav({
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    size="icon"
+                                    size="icon-lg"
                                     className="size-8"
                                     aria-label="Mês anterior"
                                     onClick={() =>
@@ -288,7 +288,7 @@ export function MonthNav({
                                 </Button>
                                 <Button
                                     type="button"
-                                    variant="ghost"
+                                    variant="tertiary"
                                     size="sm"
                                     className="h-8 px-2 text-xs text-muted-foreground"
                                     onClick={() => {
@@ -301,7 +301,7 @@ export function MonthNav({
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    size="icon"
+                                    size="icon-lg"
                                     className="size-8"
                                     aria-label="Próximo mês"
                                     onClick={() =>
@@ -379,7 +379,7 @@ export function CategoriesToolbar({
                 ) : null}
                 <Button
                     type="button"
-                    variant="default"
+                    variant="primary"
                     size="sm"
                     className="size-10 shrink-0 rounded-lg p-0 text-xs md:size-auto md:h-8 md:gap-2 md:px-3"
                     aria-label="Nova categoria"

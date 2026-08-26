@@ -260,7 +260,7 @@ export function CreditCardCategoryAlerts({
                                         </div>
                                         <Button
                                             type="button"
-                                            variant="ghost"
+                                            variant="tertiary"
                                             size="icon-sm"
                                             className="shrink-0 text-muted-foreground hover:text-destructive"
                                             disabled={mutating}
@@ -301,7 +301,7 @@ export function CreditCardCategoryAlerts({
                             >
                                 <SelectTrigger
                                     id="cc-alert-cat"
-                                    size="default"
+                                    size="md"
                                     className={selectTriggerClass}
                                 >
                                     <SelectValue placeholder="Escolha uma categoria" />
@@ -348,8 +348,8 @@ export function CreditCardCategoryAlerts({
                     <div className="flex sm:col-start-3 sm:row-start-2 sm:justify-start sm:pt-0">
                         <Button
                             type="submit"
-                            variant="default"
-                            size="default"
+                            variant="primary"
+                            size="lg"
                             className="h-8 w-full gap-1.5 sm:w-auto"
                             disabled={!canSubmit}
                         >

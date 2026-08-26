@@ -1,14 +1,13 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { ButtonGroup } from "@/components/ui/button-group"
 import { cn } from "@/lib/utils"
 
 export type TransactionFilterType = "all" | "income" | "expense"
 
 /** Shared chrome for filter + form type segments (matches transaction toolbar). */
 export const transactionSegmentContainerClassName =
-    "inline-flex h-10 w-full items-stretch rounded-lg bg-muted/60 p-0.5 ring-1 ring-border/60 md:h-8 md:w-auto dark:bg-muted/40"
+    "inline-flex h-10 w-full items-stretch gap-0.5 rounded-lg bg-muted/60 p-0.5 ring-1 ring-border/60 md:h-8 md:w-auto dark:bg-muted/40"
 
 export function transactionSegmentTabClassName(selected: boolean) {
     return cn(
@@ -54,25 +53,23 @@ export function TransactionFormKindSegment({
             role="tablist"
             aria-label="Tipo de lançamento"
         >
-            <ButtonGroup className="h-full min-h-0 w-full gap-0.5 md:w-auto">
-                {FORM_KIND_TABS.map((tab) => {
-                    const selected = value === tab.value
-                    return (
-                        <Button
-                            key={tab.value}
-                            type="button"
-                            role="tab"
-                            aria-selected={selected}
-                            size="sm"
-                            variant="ghost"
-                            className={transactionSegmentTabClassName(selected)}
-                            onClick={() => onChange(tab.value)}
-                        >
-                            {tab.label}
-                        </Button>
-                    )
-                })}
-            </ButtonGroup>
+            {FORM_KIND_TABS.map((tab) => {
+                const selected = value === tab.value
+                return (
+                    <Button
+                        key={tab.value}
+                        type="button"
+                        role="tab"
+                        aria-selected={selected}
+                        size="sm"
+                        variant="tertiary"
+                        className={transactionSegmentTabClassName(selected)}
+                        onClick={() => onChange(tab.value)}
+                    >
+                        {tab.label}
+                    </Button>
+                )
+            })}
         </div>
     )
 }
@@ -102,34 +99,27 @@ export function TransactionFormTypeSegment({
             role="tablist"
             aria-label="Tipo de lançamento"
         >
-            <ButtonGroup
-                className={cn(
-                    "h-full min-h-0 gap-0.5",
-                    fullWidth ? "flex w-full min-w-0 md:w-full" : "w-full md:w-auto",
-                )}
-            >
-                {FORM_TYPE_TABS.map((tab) => {
-                    const selected = value === tab.value
-                    return (
-                        <Button
-                            key={tab.value}
-                            type="button"
-                            role="tab"
-                            aria-selected={selected}
-                            size="sm"
-                            variant="ghost"
-                            className={cn(
-                                transactionSegmentTabClassName(selected),
-                                fullWidth && "md:min-w-0 md:flex-1",
-                            )}
-                            disabled={disabled}
-                            onClick={() => onChange(tab.value)}
-                        >
-                            {tab.label}
-                        </Button>
-                    )
-                })}
-            </ButtonGroup>
+            {FORM_TYPE_TABS.map((tab) => {
+                const selected = value === tab.value
+                return (
+                    <Button
+                        key={tab.value}
+                        type="button"
+                        role="tab"
+                        aria-selected={selected}
+                        size="sm"
+                        variant="tertiary"
+                        className={cn(
+                            transactionSegmentTabClassName(selected),
+                            fullWidth && "md:min-w-0 md:flex-1",
+                        )}
+                        disabled={disabled}
+                        onClick={() => onChange(tab.value)}
+                    >
+                        {tab.label}
+                    </Button>
+                )
+            })}
         </div>
     )
 }
@@ -152,25 +142,23 @@ export function TransactionTypeSegment({
             role="tablist"
             aria-label="Filtrar por tipo de lançamento"
         >
-            <ButtonGroup className="h-full min-h-0 w-full gap-0.5 md:w-auto">
-                {tabs.map((tab) => {
-                    const selected = value === tab.value
-                    return (
-                        <Button
-                            key={tab.value}
-                            type="button"
-                            role="tab"
-                            aria-selected={selected}
-                            size="sm"
-                            variant="ghost"
-                            className={transactionSegmentTabClassName(selected)}
-                            onClick={() => onChange(tab.value)}
-                        >
-                            {tab.label}
-                        </Button>
-                    )
-                })}
-            </ButtonGroup>
+            {tabs.map((tab) => {
+                const selected = value === tab.value
+                return (
+                    <Button
+                        key={tab.value}
+                        type="button"
+                        role="tab"
+                        aria-selected={selected}
+                        size="sm"
+                        variant="tertiary"
+                        className={transactionSegmentTabClassName(selected)}
+                        onClick={() => onChange(tab.value)}
+                    >
+                        {tab.label}
+                    </Button>
+                )
+            })}
         </div>
     )
 }

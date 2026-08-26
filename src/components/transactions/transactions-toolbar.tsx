@@ -183,7 +183,7 @@ export function TransactionsToolbar({
         <Button
             type="button"
             variant="outline"
-            size="icon"
+            size="icon-lg"
             className="relative size-10 shrink-0 md:hidden"
             onClick={() => setFiltersSheetOpen(true)}
             aria-label={
@@ -335,7 +335,7 @@ export function TransactionsToolbar({
                             </p>
                             <Button
                                 type="button"
-                                variant="ghost"
+                                variant="tertiary"
                                 size="icon-sm"
                                 className="shrink-0"
                                 onClick={() => setFiltersSheetOpen(false)}
@@ -360,7 +360,7 @@ export function TransactionsToolbar({
                             <Button
                                 type="button"
                                 variant="destructive"
-                                size={isMobile ? "lg" : "default"}
+                                size={isMobile ? "xl" : "lg"}
                                 className={isMobile ? "w-full" : undefined}
                                 onClick={() => {
                                     resetAllFilters()

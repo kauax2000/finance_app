@@ -2,7 +2,6 @@
 
 import { ArrowsUpDownIcon, ChevronDownIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
-import { ButtonGroup } from "@/components/ui/button-group"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -86,29 +85,27 @@ export function SubscriptionsToolbar({
                         role="tablist"
                         aria-label="Status da assinatura"
                     >
-                        <ButtonGroup className="h-full min-h-0 w-full gap-0.5 md:w-auto">
-                            {STATUS_TABS.map((tab) => {
-                                const selected = statusFilter === tab.value
-                                return (
-                                    <Button
-                                        key={tab.value}
-                                        type="button"
-                                        role="tab"
-                                        aria-selected={selected}
-                                        size="sm"
-                                        variant="ghost"
-                                        className={transactionSegmentTabClassName(
-                                            selected
-                                        )}
-                                        onClick={() =>
-                                            onStatusFilterChange(tab.value)
-                                        }
-                                    >
-                                        {tab.label}
-                                    </Button>
-                                )
-                            })}
-                        </ButtonGroup>
+                        {STATUS_TABS.map((tab) => {
+                            const selected = statusFilter === tab.value
+                            return (
+                                <Button
+                                    key={tab.value}
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={selected}
+                                    size="sm"
+                                    variant="tertiary"
+                                    className={transactionSegmentTabClassName(
+                                        selected
+                                    )}
+                                    onClick={() =>
+                                        onStatusFilterChange(tab.value)
+                                    }
+                                >
+                                    {tab.label}
+                                </Button>
+                            )
+                        })}
                     </div>
 
                     <DropdownMenu>
@@ -116,7 +113,7 @@ export function SubscriptionsToolbar({
                             <Button
                                 type="button"
                                 variant="outline"
-                                size="icon"
+                                size="icon-lg"
                                 className="size-10 shrink-0 md:hidden"
                                 aria-label="Ordenar"
                             >
@@ -148,7 +145,7 @@ export function SubscriptionsToolbar({
                     </DropdownMenu>
                     <Button
                         type="button"
-                        variant="default"
+                        variant="primary"
                         size="sm"
                         className="h-8 gap-2 text-xs"
                         onClick={onNewSubscription}

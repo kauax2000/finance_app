@@ -20,7 +20,7 @@ export default function CollapsibleDoc() {
         title="Padrão"
         code={`<Collapsible>
   <CollapsibleTrigger asChild>
-    <Button variant="ghost">Opções avançadas</Button>
+    <Button variant="tertiary">Opções avançadas</Button>
   </CollapsibleTrigger>
   <CollapsibleContent>…</CollapsibleContent>
 </Collapsible>`}
@@ -28,7 +28,7 @@ export default function CollapsibleDoc() {
       >
         <Collapsible className="w-full">
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="gap-1.5">
+            <Button variant="tertiary" className="gap-1.5">
               Opções avançadas
               <ChevronDownIcon
                 className="transition-transform duration-(--duration-fast) group-data-[state=open]:rotate-180"

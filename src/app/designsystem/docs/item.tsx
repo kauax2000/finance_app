@@ -83,7 +83,7 @@ export default function ItemDoc() {
           </ItemContent>
           <ItemActions>
             <MoneyDisplay value={1482.3} tone="expense" />
-            <Button variant="ghost" size="icon-sm" aria-label="Abrir cartão">
+            <Button variant="tertiary" size="icon-sm" aria-label="Abrir cartão">
               <ChevronRightIcon aria-hidden />
             </Button>
           </ItemActions>

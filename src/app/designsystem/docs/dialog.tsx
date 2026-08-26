@@ -33,7 +33,7 @@ export default function DialogDoc() {
     </DialogHeader>
     …
     <DialogFooter>
-      <DialogClose asChild><Button variant="ghost">Cancelar</Button></DialogClose>
+      <DialogClose asChild><Button variant="tertiary">Cancelar</Button></DialogClose>
       <Button type="submit">Salvar</Button>
     </DialogFooter>
   </DialogContent>
@@ -56,7 +56,7 @@ export default function DialogDoc() {
             </div>
             <DialogFooter>
               <DialogClose asChild>
-                <Button type="button" variant="ghost">
+                <Button type="button" variant="tertiary">
                   Cancelar
                 </Button>
               </DialogClose>

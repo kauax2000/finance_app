@@ -193,11 +193,14 @@ function DsSearchTrigger({ onClick }: { onClick: () => void }) {
   return (
     <Button
       type="button"
-      // `ghost` é a base, e o contorno entra só no desktop. No telefone ele é
-      // um ícone entre outros ícones: contorno ali desenhava uma caixa em volta
-      // de um botão de 36px ao lado de um switch sem caixa nenhuma.
-      variant="ghost"
-      size="icon"
+      // `tertiary` é a base, e o contorno entra só no desktop. No telefone ele
+      // é um ícone entre outros ícones: contorno ali desenhava uma caixa em
+      // volta de um botão ao lado de um switch sem caixa nenhuma.
+      //
+      // No desktop ele finge ser um campo de busca, então usa a altura de campo
+      // — `md`, 32 — e não a de botão de ícone que tinha antes.
+      variant="tertiary"
+      size="icon-md"
       onClick={onClick}
       aria-haspopup="dialog"
       aria-keyshortcuts="Meta+K Control+K"
@@ -206,9 +209,9 @@ function DsSearchTrigger({ onClick }: { onClick: () => void }) {
         "text-muted-foreground",
         // O ponto de virada é `lg`, o mesmo em que a busca sai do meio da
         // barra: campo largo só existe onde há meio para centralizá-lo.
-        "max-lg:size-9 max-lg:px-0",
-        "lg:h-9 lg:w-full lg:max-w-sm lg:justify-start lg:gap-2 lg:px-3 lg:font-normal",
-        "lg:border-border lg:bg-background lg:dark:border-input lg:dark:bg-input-fill/30"
+        "max-lg:size-8 max-lg:px-0",
+        "lg:h-8 lg:w-full lg:max-w-sm lg:justify-start lg:gap-2 lg:px-3 lg:font-normal",
+        "lg:border-border lg:bg-input-fill/30"
       )}
     >
       <MagnifyingGlassIcon className="shrink-0 opacity-70" aria-hidden />

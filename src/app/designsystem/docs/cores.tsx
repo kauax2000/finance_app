@@ -94,12 +94,25 @@ export default function CoresDoc() {
 
         <TokenGrid label="Marca e foco">
           <TokenTile name="Primary" token="--primary" onToken="--primary-foreground" />
+          {/* Dois papéis do mesmo verde. `--primary` preenche e por isso é
+              medido contra o texto que fica em cima; `--primary-accent` é
+              texto e por isso é medido contra o cartão que fica embaixo. No
+              tema claro os dois são a mesma cor — a divisão só existe no
+              escuro, onde nenhum valor único atende os dois. Até esta rodada a
+              página só media o primeiro, e por isso não viu quando o segundo
+              caiu para 2,8:1. */}
+          <TokenTile name="Primary (texto)" token="--primary-accent" rule="text" />
           <TokenTile name="Ring (foco)" token="--ring" rule="ui" />
-          {/* Sem regra: `--border` é contorno de cartão, divisória e fio de
-              seção — não o contorno de um controle. A 1.4.11 fala do que
-              identifica uma peça acionável, e é `--input` que responde por
-              isso. Carimbar "falha" nos 1,3:1 daqui seria a página reprovar a
-              própria decisão certa. */}
+          {/* `--input` foi igualado a `--border` a pedido: o contorno do campo
+              agora é o mesmo do cartão, e o campo ganhou preenchimento nos dois
+              temas em vez de só no escuro.
+              O ladrilho abaixo continua com `rule="ui"` de propósito, e por
+              isso aparece em vermelho: a 1.4.11 pede 3:1 para o que identifica
+              uma peça acionável, e 1,3:1 não cumpre. Silenciar a régua
+              esconderia a decisão; deixá-la acesa a mantém à vista de quem
+              abrir a página. Antes `--input` valia `oklch(0.66)` — 3,11:1, no
+              piso da norma — porque no tema claro o campo era transparente e a
+              borda identificava o controle sozinha. */}
           <TokenTile name="Border" token="--border" />
           <TokenTile name="Input (borda)" token="--input" rule="ui" />
           <TokenTile name="Skeleton" token="--skeleton" />

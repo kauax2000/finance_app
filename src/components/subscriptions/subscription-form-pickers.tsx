@@ -121,7 +121,7 @@ export function SubscriptionCategoryPicker({
                     id="subscription-category-picker"
                     type="button"
                     variant="outline"
-                    size="lg"
+                    size="xl"
                     disabled={disabled}
                     className="w-full justify-between px-3 text-left text-sm font-normal"
                     aria-label="Categoria de despesa"
@@ -198,8 +198,8 @@ export function SubscriptionCategoryPicker({
                 <div className="shrink-0 border-t border-border/50 bg-muted/25 p-2">
                     <Button
                         type="button"
-                        variant="ghost"
-                        size="lg"
+                        variant="tertiary"
+                        size="xl"
                         className="w-full text-xs"
                         asChild
                     >

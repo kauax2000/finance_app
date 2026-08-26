@@ -203,7 +203,7 @@ export default function SessionsPage() {
                                             className={cn(
                                                 "rounded-lg border p-3 transition-colors sm:p-3.5",
                                                 session.is_current
-                                                    ? "border-primary/30 bg-primary/5 hover:bg-primary/10"
+                                                    ? "border-primary-accent/30 bg-primary/5 hover:bg-primary/10"
                                                     : "border-border/80 bg-muted/20 hover:bg-muted/30",
                                             )}
                                         >
@@ -243,7 +243,7 @@ export default function SessionsPage() {
                                                 {!session.is_current ? (
                                                     <Button
                                                         type="button"
-                                                        variant="ghost"
+                                                        variant="tertiary"
                                                         size="icon-sm"
                                                         onClick={() =>
                                                             void handleRevokeSession(session.id)

@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex items-center justify-center rounded-full border border-transparent text-center font-medium leading-tight transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+  "inline-flex items-center justify-center rounded-full border border-transparent text-center font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
   {
     variants: {
       variant: {
@@ -24,10 +24,17 @@ const badgeVariants = cva(
         expense:
           "bg-expense-muted text-expense-muted-foreground hover:bg-expense-muted/80",
       },
+      // Cada degrau tem entrelinha própria porque é ela, não o padding, que
+      // manda na altura de um rótulo desta escala: `leading-tight` na base
+      // resolvia para 16px tanto no texto de 11px quanto no de 12px, e por isso
+      // `xs` e `sm` saíam com a mesma altura — três nomes, duas alturas.
+      //
+      // Altura = entrelinha + 2×py + 2 (a borda transparente da base, que fica
+      // para o `outline` ter contorno sem mudar a geometria dos outros).
       size: {
-        xs: "px-2 py-0.5 text-2xs",
-        sm: "px-2 py-0.5 text-xs",
-        default: "px-3 py-1 text-xs",
+        xs: "px-1.5 py-0 text-2xs leading-3",
+        sm: "px-2 py-0 text-xs leading-4",
+        default: "px-2.5 py-0.5 text-xs leading-4",
       },
     },
     defaultVariants: {

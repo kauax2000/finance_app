@@ -381,7 +381,7 @@ export default function TransactionsPage() {
                         <Button
                             type="button"
                             variant="outline"
-                            size="lg"
+                            size="xl"
                             className="min-w-[10rem] text-xs"
                             onClick={() => {
                                 resetAllFilters()
@@ -413,7 +413,7 @@ export default function TransactionsPage() {
                         </p>
                         <Button
                             type="button"
-                            size="lg"
+                            size="xl"
                             onClick={() => openDialog()}
                         >
                             <PlusIcon className="mr-1.5 size-3.5" />

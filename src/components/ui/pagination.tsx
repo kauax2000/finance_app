@@ -40,7 +40,7 @@ type PaginationLinkProps = {
 function PaginationLink({
   className,
   isActive,
-  size = "icon",
+  size = "icon-md",
   ...props
 }: PaginationLinkProps) {
   return (
@@ -49,7 +49,7 @@ function PaginationLink({
       data-slot="pagination-link"
       className={cn(
         buttonVariants({
-          variant: isActive ? "outline" : "ghost",
+          variant: isActive ? "outline" : "tertiary",
           size,
         }),
         // Alvo de dedo. Aqui não dá para usar o pseudo-elemento do Checkbox: os
@@ -71,7 +71,7 @@ function PaginationPrevious({
   return (
     <PaginationLink
       aria-label="Ir para página anterior"
-      size="default"
+      size="md"
       className={cn("gap-1 pl-2.5", className)}
       {...props}
     >
@@ -88,7 +88,7 @@ function PaginationNext({
   return (
     <PaginationLink
       aria-label="Ir para próxima página"
-      size="default"
+      size="md"
       className={cn("gap-1 pr-2.5", className)}
       {...props}
     >
@@ -106,7 +106,7 @@ function PaginationEllipsis({
     <span
       data-slot="pagination-ellipsis"
       aria-hidden
-      className={cn("flex size-9 items-center justify-center", className)}
+      className={cn("flex size-8 items-center justify-center", className)}
       {...props}
     >
       <EllipsisHorizontalIcon className="size-4 text-muted-foreground" />

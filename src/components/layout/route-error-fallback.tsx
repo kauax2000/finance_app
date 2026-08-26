@@ -37,7 +37,7 @@ export function RouteErrorFallback({ error, reset }: RouteErrorFallbackProps) {
                         novo ou voltar ao painel.
                     </EmptyStateDescription>
                     <EmptyStateActions>
-                        <Button type="button" variant="default" onClick={reset}>
+                        <Button type="button" variant="primary" onClick={reset}>
                             Tentar novamente
                         </Button>
                         <Button type="button" variant="outline" asChild>

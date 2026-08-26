@@ -37,8 +37,8 @@ export function TransactionNewSplitButton({
         >
             <Button
                 type="button"
-                variant="default"
-                size="default"
+                variant="primary"
+                size="lg"
                 className="h-9 min-w-0 flex-1 justify-center gap-2 rounded-r-none border-r border-border/50 text-xs md:h-8"
                 onClick={() => onNew("expense")}
             >
@@ -49,8 +49,8 @@ export function TransactionNewSplitButton({
                 <DropdownMenuTrigger asChild>
                     <Button
                         type="button"
-                        variant="default"
-                        size="default"
+                        variant="primary"
+                        size="lg"
                         className="h-9 w-8 shrink-0 rounded-l-none border-l-0 px-0 text-xs md:h-8"
                         aria-label="Mais tipos de lançamento"
                     >

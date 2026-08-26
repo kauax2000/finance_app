@@ -300,7 +300,7 @@ function DocPagerLink({
  */
 export function Usage({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-col border-l-2 border-primary/60 pl-4">
+    <div className="flex flex-col border-l-2 border-primary-accent/60 pl-4">
       <p className={cn(EYEBROW, "text-muted-foreground")}>Quando usar</p>
       <div
         className={cn(
@@ -464,7 +464,7 @@ function CopyButton({ code }: { code: string }) {
   return (
     <Button
       type="button"
-      variant="ghost"
+      variant="tertiary"
       size="icon-sm"
       onClick={copy}
       aria-label="Copiar código"
@@ -562,7 +562,7 @@ export function PropsTable({
                 {/* Uma união de oito literais é o conteúdo mais longo da
                     tabela. Em ladrilho ela quebrava em três retângulos
                     desalinhados; em texto mono ela quebra como texto. */}
-                <TableCell className="font-mono text-xs break-words text-primary">
+                <TableCell className="font-mono text-xs break-words text-primary-accent">
                   {r.type}
                 </TableCell>
                 <TableCell className="font-mono text-xs break-words text-muted-foreground">

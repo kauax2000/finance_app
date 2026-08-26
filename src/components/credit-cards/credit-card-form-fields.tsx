@@ -181,7 +181,7 @@ function CreditCardBillingSection({
                 <CollapsibleTrigger asChild>
                     <Button
                         type="button"
-                        variant="ghost"
+                        variant="tertiary"
                         size="sm"
                         className="group h-9 w-full justify-between gap-2 px-2 text-xs font-medium text-muted-foreground hover:text-foreground"
                     >

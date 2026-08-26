@@ -17,7 +17,7 @@ export default function TooltipDoc() {
         description="O TooltipProvider já está montado no layout raiz, então não é preciso repeti-lo."
         code={`<Tooltip>
   <TooltipTrigger asChild>
-    <Button variant="outline" size="icon" aria-label="Sobre o cálculo">
+    <Button variant="outline" size="icon-md" aria-label="Sobre o cálculo">
       <InformationCircleIcon aria-hidden />
     </Button>
   </TooltipTrigger>
@@ -26,7 +26,7 @@ export default function TooltipDoc() {
       >
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline" size="icon" aria-label="Sobre o cálculo">
+            <Button variant="outline" size="icon-md" aria-label="Sobre o cálculo">
               <InformationCircleIcon aria-hidden />
             </Button>
           </TooltipTrigger>
@@ -34,7 +34,7 @@ export default function TooltipDoc() {
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost">Passe o cursor</Button>
+            <Button variant="tertiary">Passe o cursor</Button>
           </TooltipTrigger>
           <TooltipContent side="right">
             Atalho: <kbd>⌘</kbd> <kbd>K</kbd>

@@ -19,7 +19,7 @@ export default function ContainerDoc() {
           <div key={name} className="rounded-lg bg-muted/40 py-2">
             <Container
               size={name as keyof typeof containerSizes}
-              className="rounded-md border border-dashed border-primary/40 py-2"
+              className="rounded-md border border-dashed border-primary-accent/40 py-2"
             >
               <span className="text-xs text-muted-foreground">
                 size=&quot;{name}&quot; · {cls}

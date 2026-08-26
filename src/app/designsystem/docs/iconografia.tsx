@@ -59,7 +59,7 @@ export default function IconografiaDoc() {
   Nova carteira
 </Button>
 
-<Button size="icon" aria-label="Configurações">
+<Button variant="outline" size="icon-md" aria-label="Configurações">
   <Cog6ToothIcon aria-hidden />
 </Button>`}
       >
@@ -67,7 +67,7 @@ export default function IconografiaDoc() {
           <WalletIcon aria-hidden />
           Nova carteira
         </Button>
-        <Button variant="outline" size="icon" aria-label="Configurações">
+        <Button variant="outline" size="icon-md" aria-label="Configurações">
           <Cog6ToothIcon aria-hidden />
         </Button>
         <span className="inline-flex items-center gap-1.5 text-sm text-income">

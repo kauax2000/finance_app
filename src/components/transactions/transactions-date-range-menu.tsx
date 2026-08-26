@@ -100,7 +100,7 @@ export function TransactionsDateRangeMenu({
             <DropdownMenuTrigger asChild disabled={disabled}>
                 <Button
                     type="button"
-                    size={iconOnly ? "icon" : "sm"}
+                    size={iconOnly ? "icon-lg" : "sm"}
                     variant="outline"
                     className={cn(
                         iconOnly
@@ -138,7 +138,7 @@ export function TransactionsDateRangeMenu({
                     </p>
                     <Button
                         type="button"
-                        variant="ghost"
+                        variant="tertiary"
                         size="sm"
                         aria-pressed={fullPeriod}
                         className={cn(
@@ -166,7 +166,7 @@ export function TransactionsDateRangeMenu({
                                 <Button
                                     key={key}
                                     type="button"
-                                    variant="ghost"
+                                    variant="tertiary"
                                     size="sm"
                                     aria-pressed={selected}
                                     className={cn(

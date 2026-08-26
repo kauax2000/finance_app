@@ -106,7 +106,7 @@ export function CreditCardDetailSheet({
                 </SheetTitle>
                 <Button
                     type="button"
-                    variant="ghost"
+                    variant="tertiary"
                     size="icon-sm"
                     className="shrink-0"
                     onClick={() => onOpenChange(false)}

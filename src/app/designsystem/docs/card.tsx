@@ -26,7 +26,7 @@ export default function CardDoc() {
   <CardHeader>
     <CardTitle>Fatura de março</CardTitle>
     <CardDescription>Fecha em 28/03</CardDescription>
-    <CardAction><Button variant="ghost" size="sm">Ver</Button></CardAction>
+    <CardAction><Button variant="tertiary" size="sm">Ver</Button></CardAction>
   </CardHeader>
   <CardContent>…</CardContent>
   <CardFooter>…</CardFooter>
@@ -38,7 +38,7 @@ export default function CardDoc() {
             <CardTitle>Fatura de março</CardTitle>
             <CardDescription>Fecha em 28/03, vence em 05/04</CardDescription>
             <CardAction>
-              <Button variant="ghost" size="sm">
+              <Button variant="tertiary" size="sm">
                 Ver
               </Button>
             </CardAction>

@@ -4,7 +4,6 @@ import { AdjustmentsHorizontalIcon, ChevronDownIcon, PlusIcon } from "@heroicons
 import * as React from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ButtonGroup } from "@/components/ui/button-group"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -158,31 +157,29 @@ export function BillsToolbar({
                         role="tablist"
                         aria-label="Modo de visualização"
                     >
-                        <ButtonGroup className="h-full min-h-0 w-fit gap-0.5">
-                            {MODE_TABS.map((tab) => {
-                                const selected = mode === tab.value
-                                return (
-                                    <Button
-                                        key={tab.value}
-                                        type="button"
-                                        role="tab"
-                                        aria-selected={selected}
-                                        size="sm"
-                                        variant="ghost"
-                                        disabled={!hasTable}
-                                        className={cn(
-                                            transactionSegmentTabClassName(
-                                                selected
-                                            ),
-                                            "flex-none"
-                                        )}
-                                        onClick={() => onModeChange(tab.value)}
-                                    >
-                                        {tab.label}
-                                    </Button>
-                                )
-                            })}
-                        </ButtonGroup>
+                        {MODE_TABS.map((tab) => {
+                            const selected = mode === tab.value
+                            return (
+                                <Button
+                                    key={tab.value}
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={selected}
+                                    size="sm"
+                                    variant="tertiary"
+                                    disabled={!hasTable}
+                                    className={cn(
+                                        transactionSegmentTabClassName(
+                                            selected
+                                        ),
+                                        "flex-none"
+                                    )}
+                                    onClick={() => onModeChange(tab.value)}
+                                >
+                                    {tab.label}
+                                </Button>
+                            )
+                        })}
                     </div>
                     <Badge
                         size="xs"
@@ -197,7 +194,7 @@ export function BillsToolbar({
                     <div className="flex flex-row items-stretch gap-2 md:hidden">
                         <Button
                             type="button"
-                            variant="default"
+                            variant="primary"
                             className="h-10 min-w-0 flex-1 gap-2 text-sm"
                             onClick={onNewBill}
                             disabled={!hasTable}
@@ -208,7 +205,7 @@ export function BillsToolbar({
                         <Button
                             type="button"
                             variant="outline"
-                            size="icon"
+                            size="icon-lg"
                             className={cn(
                                 "relative size-10 shrink-0",
                                 mobileFiltersTrigger === "external" && "hidden",
@@ -295,7 +292,7 @@ export function BillsToolbar({
                         </DropdownMenu>
                         <Button
                             type="button"
-                            variant="default"
+                            variant="primary"
                             size="sm"
                             className="h-8 gap-2 text-xs"
                             onClick={onNewBill}

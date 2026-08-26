@@ -18,7 +18,7 @@ export default function SpinnerDoc() {
       >
         <Spinner className="size-4" />
         <Spinner className="size-6" />
-        <Spinner className="size-8 text-primary" />
+        <Spinner className="size-8 text-primary-accent" />
       </DocSection>
 
       <DocSection

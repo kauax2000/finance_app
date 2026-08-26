@@ -75,8 +75,10 @@ function DsTopBar() {
         <Sheet>
           <SheetTrigger asChild>
             <Button
-              variant="ghost"
-              size="icon"
+              variant="tertiary"
+              // Mesmo degrau do gatilho de busca ao lado: os dois são ícone na
+              // mesma barra, e 36 contra 32 deixava a linha torta no telefone.
+              size="icon-md"
               className="lg:hidden"
               aria-label="Abrir navegação do design system"
             >

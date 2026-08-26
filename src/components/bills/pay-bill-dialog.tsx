@@ -304,7 +304,7 @@ export function PayBillDialog({
                     </Button>
                     <Button
                         type="button"
-                        variant="ghost"
+                        variant="tertiary"
                         className="w-full"
                         disabled={saving}
                         onClick={() => onOpenChange(false)}

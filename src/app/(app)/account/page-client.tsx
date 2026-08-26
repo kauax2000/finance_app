@@ -88,8 +88,8 @@ export default function AccountPage() {
                                     <DropdownMenuTrigger asChild>
                                         <Button
                                             type="button"
-                                            variant="ghost"
-                                            size="icon"
+                                            variant="tertiary"
+                                            size="icon-lg"
                                             className="size-9 shrink-0 text-muted-foreground hover:text-foreground"
                                             aria-label="Mais opções da conta"
                                         >

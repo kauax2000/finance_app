@@ -25,7 +25,7 @@ export default function EspacamentoDoc() {
                   </code>
                 </div>
                 <span
-                  className={`h-2 rounded-full bg-primary/25 ${
+                  className={`h-2 rounded-full bg-primary-accent/25 ${
                     name === "sm"
                       ? "w-1/3"
                       : name === "default"

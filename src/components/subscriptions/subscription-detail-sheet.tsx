@@ -331,7 +331,7 @@ export function SubscriptionDetailSheet({
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     type="button"
-                                    variant="ghost"
+                                    variant="tertiary"
                                     size="icon-sm"
                                     className="shrink-0"
                                     aria-label="Mais opções"
@@ -360,7 +360,7 @@ export function SubscriptionDetailSheet({
                         </DropdownMenu>
                         <Button
                             type="button"
-                            variant="ghost"
+                            variant="tertiary"
                             size="icon-sm"
                             className="shrink-0 -mr-1"
                             onClick={() => onOpenChange(false)}

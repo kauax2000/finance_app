@@ -1,7 +1,6 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { ButtonGroup } from "@/components/ui/button-group"
 import {
     transactionSegmentContainerClassName,
     transactionSegmentTabClassName,
@@ -30,25 +29,23 @@ export function CreditCardsViewSegment({
             role="tablist"
             aria-label="Visão da página de cartões"
         >
-            <ButtonGroup className="h-full min-h-0 w-full gap-0.5 md:w-auto">
-                {TABS.map((tab) => {
-                    const selected = value === tab.value
-                    return (
-                        <Button
-                            key={tab.value}
-                            type="button"
-                            role="tab"
-                            aria-selected={selected}
-                            size="sm"
-                            variant="ghost"
-                            className={transactionSegmentTabClassName(selected)}
-                            onClick={() => onChange(tab.value)}
-                        >
-                            {tab.label}
-                        </Button>
-                    )
-                })}
-            </ButtonGroup>
+            {TABS.map((tab) => {
+                const selected = value === tab.value
+                return (
+                    <Button
+                        key={tab.value}
+                        type="button"
+                        role="tab"
+                        aria-selected={selected}
+                        size="sm"
+                        variant="tertiary"
+                        className={transactionSegmentTabClassName(selected)}
+                        onClick={() => onChange(tab.value)}
+                    >
+                        {tab.label}
+                    </Button>
+                )
+            })}
         </div>
     )
 }

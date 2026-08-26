@@ -30,7 +30,7 @@ export default function DropdownMenuDoc() {
         title="Menu de item"
         code={`<DropdownMenu>
   <DropdownMenuTrigger asChild>
-    <Button variant="ghost" size="icon" aria-label="Ações da transação">
+    <Button variant="tertiary" size="icon-lg" aria-label="Ações da transação">
       <EllipsisHorizontalIcon aria-hidden />
     </Button>
   </DropdownMenuTrigger>
@@ -43,7 +43,7 @@ export default function DropdownMenuDoc() {
       >
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label="Ações da transação">
+            <Button variant="tertiary" size="icon-lg" aria-label="Ações da transação">
               <EllipsisHorizontalIcon aria-hidden />
             </Button>
           </DropdownMenuTrigger>

@@ -162,7 +162,7 @@ function ResetPasswordFormContent() {
                         <Link href="/forgot-password">Solicitar novo link</Link>
                     </Button>
                     <p className="text-center text-sm text-muted-foreground">
-                        <Link href="/login" className="text-primary font-medium underline-offset-4 hover:underline">
+                        <Link href="/login" className="text-primary-accent font-medium underline-offset-4 hover:underline">
                             Voltar ao login
                         </Link>
                     </p>
@@ -222,7 +222,7 @@ function ResetPasswordFormContent() {
                 )}
 
                 <p className="text-center text-sm text-muted-foreground">
-                    <Link href="/login" className="text-primary font-medium underline-offset-4 hover:underline">
+                    <Link href="/login" className="text-primary-accent font-medium underline-offset-4 hover:underline">
                         Voltar ao login
                     </Link>
                 </p>

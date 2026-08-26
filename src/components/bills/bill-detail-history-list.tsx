@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ButtonGroup } from "@/components/ui/button-group"
 import { Badge } from "@/components/ui/badge"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import {
@@ -131,32 +130,30 @@ export function BillDetailHistoryList({
     return (
         <div className="space-y-3">
             <div
-                className={cn(transactionSegmentContainerClassName, "w-full")}
+                className={cn(transactionSegmentContainerClassName, "w-full flex-wrap")}
                 role="tablist"
                 aria-label="Filtrar histórico"
             >
-                <ButtonGroup className="h-full min-h-0 w-full flex-wrap gap-0.5">
-                    {TABS.map((t) => {
-                        const selected = tab === t.value
-                        return (
-                            <Button
-                                key={t.value}
-                                type="button"
-                                role="tab"
-                                aria-selected={selected}
-                                size="sm"
-                                variant="ghost"
-                                className={transactionSegmentTabClassName(selected)}
-                                onClick={() => {
-                                    setTab(t.value)
-                                    setShown(PAGE)
-                                }}
-                            >
-                                {t.label}
-                            </Button>
-                        )
-                    })}
-                </ButtonGroup>
+                {TABS.map((t) => {
+                    const selected = tab === t.value
+                    return (
+                        <Button
+                            key={t.value}
+                            type="button"
+                            role="tab"
+                            aria-selected={selected}
+                            size="sm"
+                            variant="tertiary"
+                            className={transactionSegmentTabClassName(selected)}
+                            onClick={() => {
+                                setTab(t.value)
+                                setShown(PAGE)
+                            }}
+                        >
+                            {t.label}
+                        </Button>
+                    )
+                })}
             </div>
 
             <div className="space-y-1">
@@ -285,7 +282,7 @@ export function BillDetailHistoryList({
                 <div className="pt-1 text-center">
                     <Button
                         type="button"
-                        variant="ghost"
+                        variant="tertiary"
                         size="sm"
                         className="text-xs"
                         onClick={() => setShown((s) => s + PAGE)}

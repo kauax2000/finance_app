@@ -64,8 +64,8 @@ function defaultMobileBackHref(pathname: string): string | undefined {
 function MobileHeaderBack({ href }: { href: string }) {
     return (
         <Button
-            variant="ghost"
-            size="icon"
+            variant="tertiary"
+            size="icon-lg"
             className="-ml-1 size-9 shrink-0 active:bg-accent group-active:bg-accent"
             asChild
         >

@@ -244,7 +244,7 @@ export function DashboardOpenInvoices({
                             <Button
                                 asChild
                                 type="button"
-                                variant="default"
+                                variant="primary"
                                 size="sm"
                                 className="w-full max-w-xs sm:w-auto"
                             >

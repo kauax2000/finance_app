@@ -78,6 +78,37 @@ instalação real deste projeto ele reescreveu `button.tsx`, `input.tsx`,
 `src/components/ui/` antes e devolva ao estado anterior tudo que já existia — o
 procedimento está em `.claude/skills/design-system-guard/SKILL.md`.
 
+### Maiúscula inicial do CTA é do sistema
+
+O rótulo de um botão não depende de quem o escreve: `Button` embrulha texto cru
+num `<span data-slot="button-label">` e aplica `::first-letter` nele — `salvar`
+sai **Salvar**. O embrulho existe porque `::first-letter` **não vale em
+`inline-flex`** (medido, não suposto), e o botão precisa ser flex para alinhar
+ícone. Com `asChild` o embrulho desce um nível e envolve o texto do filho, para
+`<Button asChild><Link>` continuar coberto.
+
+**Quem passa um elemento em vez de texto assume a caixa alta** — é a saída para
+o rótulo raro que precisa mesmo de minúscula (`<Button><span>git
+push</span></Button>`). O catálogo não usa essa saída: ele escreve os rótulos em
+minúscula e deixa a regra agir, porque uma página que demonstra o componente não
+pode mostrá-lo fazendo o contrário do que ele faz.
+
+**A garantia é do `Button`, não do `buttonVariants()`.** Nove arquivos aplicam
+as classes direto num `<a>` ou num primitivo do Radix; ali não há `span`, e a
+regra não alcança. Hoje todos esses rótulos já começam em maiúscula, então não
+há defeito visível — mas quem quiser a garantia de verdade nesses pontos troca
+`className={buttonVariants(...)}` por `<Button asChild>`.
+
+### ButtonGroup cola; trilho segmentado é outra coisa
+
+`ButtonGroup` junta botões numa peça só — uma ação com seu menu, um par de
+navegação. Ele achata os cantos internos e sobrepõe as bordas vizinhas em 1px,
+então a emenda é um fio, não uma linha dupla. **Não embrulhe um controle
+segmentado nele**: um `role="group"` entre um `role="tablist"` e suas
+`role="tab"` quebra a posse ARIA, e o leitor de tela deixa de anunciar "aba 1 de
+3". O trilho segmentado do app é `transactionSegmentContainerClassName` +
+`transactionSegmentTabClassName`, e as abas são filhas diretas do `tablist`.
+
 ### Rodapé de diálogo: uma hierarquia só
 
 Todo rodapé de `Dialog` e de `AlertDialog` tem a mesma forma, e ela não se
@@ -85,8 +116,8 @@ escolhe por tela:
 
 | Papel | Variant |
 | --- | --- |
-| Sair sem fazer nada (`AlertDialogCancel`, `DialogClose`) | `ghost` |
-| A ação que o diálogo veio propor | `default` |
+| Sair sem fazer nada (`AlertDialogCancel`, `DialogClose`) | `tertiary` |
+| A ação que o diálogo veio propor | `primary` |
 | A mesma ação, quando não tem volta | `destructive` |
 
 Cancelar vem antes da ação, e leva `type="button"`. Dois botões de contorno lado
@@ -104,7 +135,23 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
 
 - **Semantic colors** live in [`src/app/globals.css`](src/app/globals.css):
   `success`, `warning`, `info`, `income`, `expense`, e os pares `-muted` de cada
-  um. Além deles: `--identity-1..6` (+ `-surface`) para distinguir pessoas,
+  um. **O verde da marca tem dois tokens, e a escolha é pelo papel**:
+  **`--secondary-hover`** existe pela mesma razão que a divisão acima: um alfa
+  único não serve os dois temas. `bg-secondary/80` dava 1,03:1 contra a base
+  — invisível — e em direções trocadas, clareando no claro e afundando o botão
+  na página no escuro. O token puxa a base na direção do próprio texto: escurece
+  no claro (1,26:1), clareia no escuro (1,39:1). Sempre na direção do contato.
+  `--primary` **preenche** (botão, checkbox, switch, faixa do slider) e é medido
+  contra o texto que fica em cima; `--primary-accent` é **marca sobre o fundo**
+  — texto, ícone, e todo traço fino: barra lateral de citação, contorno de chip
+  selecionado, anel do thumb. Regra prática: se a cor vai carregar texto claro
+  por cima, é `--primary`; se ela mesma precisa ser enxergada contra a página,
+  é `--primary-accent`. **Traço com alfa é sempre acento** — `--primary` a 60%
+  sobre a página escura cai para 2:1 e some, enquanto `--primary-accent` a 60%
+  dá 3,07:1. No tema claro
+  os dois são a mesma cor; no escuro nenhum valor único atende os dois — 4,5:1
+  contra a página exige subir a cor, e aí o texto branco sobre o preenchimento
+  reprova. Por isso **`text-primary` não existe**: use `text-primary-accent`. Além deles: `--identity-1..6` (+ `-surface`) para distinguir pessoas,
   `--skeleton`, `--input-fill`, `--overlay`, a rampa `--chart-1..5` mais
   `--chart-income` / `--chart-expense`, a escala `--z-*` e os tokens de movimento
   `--duration-*` / `--ease-*`. Prefira utilitários como `bg-success-muted`,
@@ -133,6 +180,22 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   (Inter), `--font-display` (Ledger, só em `.page-title` e `.wordmark`),
   `--font-heading` (aponta para a sans), `--font-mono` (Geist Mono).
 - **Utilitários**: `.nums` (tabular figures) e `.page-title`.
+
+### Contorno de campo: decisão consciente fora da 1.4.11
+
+`--input` vale o mesmo que `--border`, e o campo ganhou preenchimento
+(`bg-input-fill/30`) nos dois temas em vez de só no escuro. Foi escolha de
+design, tomada com o custo medido na mesa: **o conjunto identifica o controle a
+1,3:1, e a WCAG 1.4.11 pede 3:1.** A página `/designsystem/cores` mantém a régua
+acesa no ladrilho `--input` — ele aparece reprovando nos dois temas de
+propósito, para a decisão ficar visível em vez de silenciada.
+
+Antes `--input` era `oklch(0.66)` no claro (3,11:1, no piso da norma), porque o
+campo era transparente e a borda identificava o controle sozinha. **Sobre
+superfície branca não existe meio-termo suave**: qualquer cinza que alcance 3:1
+já é um cinza visível. Quem quiser voltar à conformidade troca `--input` de volta
+para `oklch(0.66 0 0)` no claro e `oklch(0.55 0 0)` no escuro — uma linha em cada
+tema.
 
 ### Touch devices and hover (Tailwind v4)
 
@@ -164,11 +227,38 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
 ### Component rules
 
 - **`Badge`**: use semantic `variant` + `size` (`xs` | `sm` | `default`); avoid duplicating chip classes outside `tag-chip-classes` / Badge.
-- **`Button`**: includes `success` and `warning` variants; keep primary actions `type="submit"` inside `CustomForm`.
-- **`Input` / `SelectTrigger` / `Button`**: os três compartilham a escala de altura
-  `sm` = 28px, `default` = 36px, `lg` = 40px, para um botão ao lado de um campo
-  alinhar sem ajuste. `xs` e `icon-xs` ficam fora dela: são para dentro de outro
-  controle, não para uma linha de formulário.
+- **`Button` — a hierarquia é uma escada, e ela desce em peso visual**:
+  `primary` preenche de verde, `secondary` preenche de cinza, `tertiary` não
+  preenche nada. Uma tela tem um `primary` só. Fora da escada, de propósito:
+  `outline` é a exceção para quando o controle precisa de contorno próprio e
+  nenhum degrau serve, `destructive` é o que não tem volta, `link` é ação que se
+  comporta como texto. **Não existe `variant="default"` nem `variant="ghost"`**
+  — viraram `primary` e `tertiary`, para o nome dizer o degrau; os dois saíram
+  do tipo, então o compilador acusa quem os escrever. **`success` e `warning`
+  também saíram**: nomeavam um estado, não um peso, e nenhuma tela do app
+  chegou a usá-los — estado de sucesso e de atenção é trabalho do `Badge` e do
+  `Alert`, que mantêm os deles. Ação principal segue `type="submit"` dentro de
+  `CustomForm`.
+- **Uma escada de controle, para todos**: `xs` 24, `sm` 28, **`md` 32 (o
+  padrão)**, `lg` 36, `xl` 40. Falam-na com os mesmos nomes e o mesmo padrão o
+  `Button`, o `Input`, o `SelectTrigger`, o `NativeSelect` e o
+  `ComboboxTrigger` — então botão ao lado de campo alinha **sem ninguém dizer
+  `size`**, e mudar um degrau move os dois pelo mesmo nome. Nem todo controle
+  oferece todos os degraus (campo não desce a 24), mas nenhum usa um nome para
+  uma altura diferente.
+- **`Button`** ainda tem a coluna `icon-*`, que espelha a de texto degrau a
+  degrau: `icon-xs` 24 … `icon-xl` 40. Botão de ícone ao lado de botão de texto
+  usa o par, não o vizinho. `xs` e `icon-xs` são para dentro de outro controle,
+  não para uma linha de formulário.
+- **Não existe `size="default"`** em `Button`, `Input`, `SelectTrigger` nem
+  `NativeSelect`, e não existe `size="icon"` em `Button`. O nome `default` dizia
+  *o padrão* e apontava para 36, que deixou de ser o padrão quando `md` assumiu.
+  Foram removidos dos tipos, então o compilador acusa quem os escrever — os
+  substitutos são `lg` e `icon-lg`.
+- **Fora da escada, de propósito**: `TabsList` é contêiner com `p-1`, e a 32 o
+  gatilho interno cairia a 24, abaixo do piso de um controle de texto; fica em
+  36. `Toggle`, o campo do `Command` e a célula da `Table` já valiam 32 e não se
+  mexeram.
 - **`Progress`**: Radix-based; pass `tone` (`default` | `success` | `warning` | `destructive`) for budget / status bars.
 - **`Avatar`**: Radix-based with `size` prop; keep `data-slot` for tests and form deferrals.
 - **Overlays**: `Dialog` / `Sheet` / `AlertDialog` use `bg-overlay` (not hardcoded `bg-black/10`).

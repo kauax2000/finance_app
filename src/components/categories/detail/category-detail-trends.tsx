@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { Button } from "@/components/ui/button"
-import { ButtonGroup } from "@/components/ui/button-group"
 import { Card, CardContent } from "@/components/ui/card"
 import {
     Area,
@@ -90,30 +89,28 @@ export function CategoryDetailTrends({
                     role="tablist"
                     aria-label="Período do gráfico"
                 >
-                    <ButtonGroup className="h-full min-h-0 w-full gap-0.5 md:w-auto">
-                        <Button
-                            type="button"
-                            role="tab"
-                            aria-selected={tab === "daily"}
-                            size="sm"
-                            variant="ghost"
-                            className={transactionSegmentTabClassName(tab === "daily")}
-                            onClick={() => setTab("daily")}
-                        >
-                            Dia a dia
-                        </Button>
-                        <Button
-                            type="button"
-                            role="tab"
-                            aria-selected={tab === "monthly"}
-                            size="sm"
-                            variant="ghost"
-                            className={transactionSegmentTabClassName(tab === "monthly")}
-                            onClick={() => setTab("monthly")}
-                        >
-                            12 meses
-                        </Button>
-                    </ButtonGroup>
+                    <Button
+                        type="button"
+                        role="tab"
+                        aria-selected={tab === "daily"}
+                        size="sm"
+                        variant="tertiary"
+                        className={transactionSegmentTabClassName(tab === "daily")}
+                        onClick={() => setTab("daily")}
+                    >
+                        Dia a dia
+                    </Button>
+                    <Button
+                        type="button"
+                        role="tab"
+                        aria-selected={tab === "monthly"}
+                        size="sm"
+                        variant="tertiary"
+                        className={transactionSegmentTabClassName(tab === "monthly")}
+                        onClick={() => setTab("monthly")}
+                    >
+                        12 meses
+                    </Button>
                 </div>
             </div>
             <Card size="sm">

@@ -262,7 +262,7 @@ function SidebarTrigger({
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
       type="button"
-      variant="ghost"
+      variant="tertiary"
       size="icon-sm"
       aria-label="Alternar barra lateral"
       className={cn(className)}

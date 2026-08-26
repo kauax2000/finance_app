@@ -367,7 +367,7 @@ export function TransactionDetailSheet({
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     type="button"
-                                    variant="ghost"
+                                    variant="tertiary"
                                     size="icon-sm"
                                     className="shrink-0"
                                     aria-label="Mais opções"
@@ -393,7 +393,7 @@ export function TransactionDetailSheet({
                         </DropdownMenu>
                         <Button
                             type="button"
-                            variant="ghost"
+                            variant="tertiary"
                             size="icon-sm"
                             className="shrink-0 -mr-1"
                             onClick={() => onOpenChange(false)}

@@ -553,8 +553,8 @@ export default function SubscriptionsPageClient() {
                                         </p>
                                         <Button
                                             type="button"
-                                            variant="ghost"
-                                            size="lg"
+                                            variant="tertiary"
+                                            size="xl"
                                             className="shrink-0 px-3 text-xs text-muted-foreground hover:text-foreground"
                                             onClick={() =>
                                                 setSelectedIds(new Set())
@@ -616,7 +616,7 @@ export default function SubscriptionsPageClient() {
                                     <div className="flex flex-wrap items-center justify-end gap-2">
                                         <Button
                                             type="button"
-                                            variant="ghost"
+                                            variant="tertiary"
                                             size="sm"
                                             className="h-8 text-xs"
                                             onClick={() =>
@@ -924,7 +924,7 @@ export default function SubscriptionsPageClient() {
                                                 <TableCell className="px-3 py-3 pr-4 text-left">
                                                     <div className="flex items-center justify-start gap-1">
                                                         <Button
-                                                            variant="ghost"
+                                                            variant="tertiary"
                                                             size="icon-sm"
                                                             type="button"
                                                             className="size-7"
@@ -941,7 +941,7 @@ export default function SubscriptionsPageClient() {
                                                             <PencilIcon className="size-3.5" />
                                                         </Button>
                                                         <Button
-                                                            variant="ghost"
+                                                            variant="tertiary"
                                                             size="icon-sm"
                                                             type="button"
                                                             className="size-7 text-destructive hover:text-destructive"
@@ -1022,7 +1022,7 @@ export default function SubscriptionsPageClient() {
                         <Button
                             type="button"
                             variant="outline"
-                            size="lg"
+                            size="xl"
                             className="min-w-[10rem] text-xs"
                             onClick={resetFilters}
                         >
@@ -1052,7 +1052,7 @@ export default function SubscriptionsPageClient() {
                         </p>
                         <Button
                             type="button"
-                            size="lg"
+                            size="xl"
                             className="gap-1.5"
                             onClick={openCreate}
                         >

@@ -99,7 +99,7 @@ export function TransactionsDateRangeForm({
                 <Button
                     type="button"
                     size="sm"
-                    variant="ghost"
+                    variant="tertiary"
                     className="h-8 px-2 text-xs text-muted-foreground"
                     onClick={() => onClear()}
                 >

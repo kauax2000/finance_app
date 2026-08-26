@@ -34,8 +34,8 @@ export function WorkspaceSwitcher({
             <DropdownMenuTrigger asChild>
                 <Button
                     type="button"
-                    variant="ghost"
-                    size="icon-lg"
+                    variant="tertiary"
+                    size="icon-xl"
                     aria-haspopup="menu"
                     aria-label="Trocar carteira"
                     className={cn(

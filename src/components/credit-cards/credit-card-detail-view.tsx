@@ -172,7 +172,7 @@ export function CreditCardDetailView({
                                 <DropdownMenuTrigger asChild>
                                     <Button
                                         type="button"
-                                        variant="ghost"
+                                        variant="tertiary"
                                         size="icon-sm"
                                         className="shrink-0"
                                         aria-label="Mais opções"
@@ -314,7 +314,7 @@ export function CreditCardDetailView({
                     </div>
                     <Button
                         type="button"
-                        variant="ghost"
+                        variant="tertiary"
                         size="sm"
                         className={cn(
                             "h-8 min-h-8 w-full justify-center gap-1.5 px-3 text-xs font-medium text-muted-foreground hover:text-foreground",

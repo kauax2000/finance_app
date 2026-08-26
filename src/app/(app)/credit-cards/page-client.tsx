@@ -315,7 +315,7 @@ export default function CreditCardsPageClient() {
                 />
                 <Button
                     type="button"
-                    variant="default"
+                    variant="primary"
                     size="sm"
                     className="inline-flex size-10 shrink-0 rounded-lg p-0 text-xs md:size-auto md:h-8 md:w-auto md:gap-2 md:px-3"
                     aria-label="Novo cartão"

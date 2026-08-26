@@ -98,7 +98,7 @@ export default function PlansPage() {
                             <div className="flex flex-col items-center text-center">
                                 <div className="relative mb-5" aria-hidden>
                                     <div className="flex size-16 items-center justify-center rounded-2xl bg-muted/60 ring-1 ring-border">
-                                        <SparklesOutlineIcon className="size-8 text-primary" />
+                                        <SparklesOutlineIcon className="size-8 text-primary-accent" />
                                     </div>
                                     <span className="absolute -right-0.5 -top-0.5 flex size-3">
                                         <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary/35 opacity-75 motion-reduce:animate-none" />

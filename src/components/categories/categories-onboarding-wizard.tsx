@@ -514,8 +514,8 @@ export function CategoriesOnboardingWizard({
                     <span className="min-w-0 flex-1 truncate text-xs font-medium">{c.name}</span>
                     <Button
                         type="button"
-                        variant="ghost"
-                        size="icon"
+                        variant="tertiary"
+                        size="icon-lg"
                         className="h-8 w-8 shrink-0"
                         disabled={crudBusy}
                         aria-label={`Editar ${c.name}`}
@@ -550,8 +550,8 @@ export function CategoriesOnboardingWizard({
                     )}
                     <Button
                         type="button"
-                        variant="ghost"
-                        size="icon"
+                        variant="tertiary"
+                        size="icon-lg"
                         className="h-8 w-8 shrink-0 text-destructive hover:text-destructive"
                         disabled={crudBusy}
                         onClick={() => void handleDeleteCategory(c)}

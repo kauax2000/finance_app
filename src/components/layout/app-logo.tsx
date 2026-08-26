@@ -31,7 +31,7 @@ export function AppLogo({
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             className={cn(
-                "shrink-0 text-primary transition-all duration-200 dark:text-foreground",
+                "shrink-0 text-primary-accent transition-all duration-200 dark:text-foreground",
                 sizeClasses[size],
                 !showWordmark && className,
             )}

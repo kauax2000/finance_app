@@ -42,7 +42,7 @@ export default function FormulariosDoc() {
     <Input id="desc" />
   </Field>
   <div className="flex justify-end gap-2">
-    <Button type="button" variant="ghost">Cancelar</Button>
+    <Button type="button" variant="tertiary">Cancelar</Button>
     <Button type="submit">Salvar</Button>
   </div>
 </CustomForm>`}
@@ -114,7 +114,7 @@ function FormDemo() {
         <Input id="ds-form-desc" placeholder="Mercado" />
       </Field>
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="ghost">
+        <Button type="button" variant="tertiary">
           Cancelar
         </Button>
         <Button type="submit">Salvar</Button>

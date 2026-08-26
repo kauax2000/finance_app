@@ -148,7 +148,7 @@ function MomBadge({ model }: { model: MomBadgeModel }) {
                 role="status"
             >
                 <InformationCircleIcon
-                    className="hidden size-3 shrink-0 text-primary md:block"
+                    className="hidden size-3 shrink-0 text-primary-accent md:block"
                     aria-hidden
                 />
                 <span>{model.display}</span>

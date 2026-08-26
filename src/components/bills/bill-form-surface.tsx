@@ -88,7 +88,7 @@ export function BillFormSurface({
                     {footer}
                     <Button
                         type="button"
-                        variant="ghost"
+                        variant="tertiary"
                         className="sm:w-full sm:justify-center"
                         onClick={onCancel}
                         disabled={saving}

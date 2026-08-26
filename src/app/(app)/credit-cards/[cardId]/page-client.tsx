@@ -745,7 +745,7 @@ export default function CreditCardDetailPageClient() {
                     está incorreto.
                 </EmptyStateDescription>
                 <EmptyStateActions>
-                    <Button type="button" variant="default" size="sm" asChild>
+                    <Button type="button" variant="primary" size="sm" asChild>
                         <Link href={ROUTES.CREDIT_CARDS}>Ver todos os cartões</Link>
                     </Button>
                 </EmptyStateActions>

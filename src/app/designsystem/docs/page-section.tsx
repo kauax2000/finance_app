@@ -46,7 +46,7 @@ export default function PageSectionDoc() {
           <PageSection>
             <PageSectionHeader className="flex-row items-center justify-between">
               <PageSectionTitle>Últimas transações</PageSectionTitle>
-              <Button variant="ghost" size="sm">
+              <Button variant="tertiary" size="sm">
                 Ver todas
               </Button>
             </PageSectionHeader>

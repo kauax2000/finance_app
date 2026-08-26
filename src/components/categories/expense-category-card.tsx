@@ -210,8 +210,8 @@ export function ExpenseCategoryCard({
                                 <DropdownMenuTrigger asChild>
                                     <Button
                                         type="button"
-                                        variant="ghost"
-                                        size="icon"
+                                        variant="tertiary"
+                                        size="icon-lg"
                                         className="size-8 text-muted-foreground hover:text-foreground"
                                         aria-label={`Opções da categoria ${category.name}`}
                                         onClick={(e) => stopLinkNavigation(e)}

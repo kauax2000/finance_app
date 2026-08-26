@@ -189,7 +189,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                     </div>
                     <Button
                         type="button"
-                        variant="ghost"
+                        variant="tertiary"
                         size="icon-sm"
                         className="shrink-0 -mr-1"
                         onClick={() => close()}
@@ -260,7 +260,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                                                 <DropdownMenuTrigger asChild>
                                                     <Button
                                                         type="button"
-                                                        variant="ghost"
+                                                        variant="tertiary"
                                                         size="icon-sm"
                                                         className="shrink-0"
                                                         aria-label="Mais opções"
@@ -299,7 +299,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                 <div className="shrink-0 border-t border-border">
                     <Button
                         type="button"
-                        variant="ghost"
+                        variant="tertiary"
                         className="h-12 w-full rounded-none text-destructive hover:text-destructive"
                         onClick={() => void onClearAll()}
                     >

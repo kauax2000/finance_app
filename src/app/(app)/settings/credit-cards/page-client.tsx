@@ -211,7 +211,7 @@ export default function CreditCardsPageClient() {
         return (
             <div className="space-y-4">
                 <div className="hidden items-center gap-2 md:flex">
-                    <Button variant="ghost" size="icon-sm" asChild>
+                    <Button variant="tertiary" size="icon-sm" asChild>
                         <Link href={ROUTES.SETTINGS} aria-label="Voltar às configurações">
                             <ArrowLeftIcon className="size-4" />
                         </Link>
@@ -266,7 +266,7 @@ export default function CreditCardsPageClient() {
     return (
         <div className="space-y-6">
             <div className="hidden items-center gap-2 md:flex">
-                <Button variant="ghost" size="icon-sm" asChild>
+                <Button variant="tertiary" size="icon-sm" asChild>
                     <Link href={ROUTES.SETTINGS} aria-label="Voltar às configurações">
                         <ArrowLeftIcon className="size-4" />
                     </Link>
@@ -342,7 +342,7 @@ export default function CreditCardsPageClient() {
                                     </div>
                                     <Button
                                         type="button"
-                                        variant="ghost"
+                                        variant="tertiary"
                                         size="icon-sm"
                                         className="shrink-0 text-destructive hover:text-destructive"
                                         aria-label={`Excluir ${c.name}`}

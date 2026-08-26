@@ -25,7 +25,6 @@ import {
     transactionSegmentTabClassName,
     type TransactionFormKind,
 } from "@/components/transactions/transaction-type-segment"
-import { ButtonGroup } from "@/components/ui/button-group"
 import { splitTotalAcrossInstallments } from "@/lib/installment-amounts"
 import { formatMoneyBrlTyping, parseMoneyBrl } from "@/lib/money-brl"
 import { Button } from "@/components/ui/button"
@@ -134,7 +133,7 @@ function PaymentMethodChips({
                         key={opt.value}
                         type="button"
                         size="sm"
-                        variant="ghost"
+                        variant="tertiary"
                         aria-pressed={selected}
                         className={cn(
                             "h-auto min-h-8 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold shadow-none transition-colors",
@@ -406,34 +405,32 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                     role="tablist"
                     aria-label="O que editar"
                 >
-                    <ButtonGroup className="h-full min-h-0 w-full gap-0.5 md:w-auto">
-                        <Button
-                            type="button"
-                            role="tab"
-                            aria-selected={installmentEditScope === "slice"}
-                            size="sm"
-                            variant="ghost"
-                            className={transactionSegmentTabClassName(
-                                installmentEditScope === "slice"
-                            )}
-                            onClick={() => setInstallmentEditScope("slice")}
-                        >
-                            Esta parcela
-                        </Button>
-                        <Button
-                            type="button"
-                            role="tab"
-                            aria-selected={installmentEditScope === "plan"}
-                            size="sm"
-                            variant="ghost"
-                            className={transactionSegmentTabClassName(
-                                installmentEditScope === "plan"
-                            )}
-                            onClick={() => setInstallmentEditScope("plan")}
-                        >
-                            Plano da compra
-                        </Button>
-                    </ButtonGroup>
+                    <Button
+                        type="button"
+                        role="tab"
+                        aria-selected={installmentEditScope === "slice"}
+                        size="sm"
+                        variant="tertiary"
+                        className={transactionSegmentTabClassName(
+                            installmentEditScope === "slice"
+                        )}
+                        onClick={() => setInstallmentEditScope("slice")}
+                    >
+                        Esta parcela
+                    </Button>
+                    <Button
+                        type="button"
+                        role="tab"
+                        aria-selected={installmentEditScope === "plan"}
+                        size="sm"
+                        variant="tertiary"
+                        className={transactionSegmentTabClassName(
+                            installmentEditScope === "plan"
+                        )}
+                        onClick={() => setInstallmentEditScope("plan")}
+                    >
+                        Plano da compra
+                    </Button>
                 </div>
             ) : null}
 
@@ -463,46 +460,44 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                             role="tablist"
                             aria-label="Modo de valor da parcela"
                         >
-                            <ButtonGroup className="h-full min-h-0 w-full gap-0.5 md:w-auto">
-                                <Button
-                                    type="button"
-                                    role="tab"
-                                    aria-selected={
-                                        installmentValueMode === "total"
-                                    }
-                                    size="sm"
-                                    variant="ghost"
-                                    className={transactionSegmentTabClassName(
-                                        installmentValueMode === "total"
-                                    )}
-                                    onClick={() =>
-                                        setInstallmentValueMode("total")
-                                    }
-                                >
-                                    Total e parcelas
-                                </Button>
-                                <Button
-                                    type="button"
-                                    role="tab"
-                                    aria-selected={
-                                        installmentValueMode ===
+                            <Button
+                                type="button"
+                                role="tab"
+                                aria-selected={
+                                    installmentValueMode === "total"
+                                }
+                                size="sm"
+                                variant="tertiary"
+                                className={transactionSegmentTabClassName(
+                                    installmentValueMode === "total"
+                                )}
+                                onClick={() =>
+                                    setInstallmentValueMode("total")
+                                }
+                            >
+                                Total e parcelas
+                            </Button>
+                            <Button
+                                type="button"
+                                role="tab"
+                                aria-selected={
+                                    installmentValueMode ===
+                                    "per_installment"
+                                }
+                                size="sm"
+                                variant="tertiary"
+                                className={transactionSegmentTabClassName(
+                                    installmentValueMode ===
                                         "per_installment"
-                                    }
-                                    size="sm"
-                                    variant="ghost"
-                                    className={transactionSegmentTabClassName(
-                                        installmentValueMode ===
-                                            "per_installment"
-                                    )}
-                                    onClick={() =>
-                                        setInstallmentValueMode(
-                                            "per_installment"
-                                        )
-                                    }
-                                >
-                                    Valor da parcela
-                                </Button>
-                            </ButtonGroup>
+                                )}
+                                onClick={() =>
+                                    setInstallmentValueMode(
+                                        "per_installment"
+                                    )
+                                }
+                            >
+                                Valor da parcela
+                            </Button>
                         </div>
                     </div>
 
@@ -609,7 +604,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                         <Button
                             type="button"
                             variant="outline"
-                            size="lg"
+                            size="xl"
                             className="w-full justify-between px-3 text-left text-sm font-normal"
                             id="tx-category"
                         >
@@ -668,8 +663,8 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                         <div className="shrink-0 border-t border-border/50 bg-muted/25 p-2">
                             <Button
                                 type="button"
-                                variant="ghost"
-                                size="lg"
+                                variant="tertiary"
+                                size="xl"
                                 className="w-full text-xs"
                                 asChild
                             >
@@ -761,7 +756,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                                         <Button
                                             type="button"
                                             variant="outline"
-                                            size="lg"
+                                            size="xl"
                                             id="tx-credit-card"
                                             className="w-full justify-between px-3 text-left text-sm font-normal"
                                         >
@@ -800,8 +795,8 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                                         <div className="shrink-0 border-t border-border/50 bg-muted/25 p-2">
                                             <Button
                                                 type="button"
-                                                variant="ghost"
-                                                size="lg"
+                                                variant="tertiary"
+                                                size="xl"
                                                 className="w-full text-xs"
                                                 asChild
                                             >

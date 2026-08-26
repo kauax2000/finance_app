@@ -356,7 +356,7 @@ export function DashboardPaymentEventPreviewSheet({
                                 <div className="flex shrink-0 items-center gap-0.5">
                                     <Button
                                         type="button"
-                                        variant="ghost"
+                                        variant="tertiary"
                                         size="icon-sm"
                                         className="shrink-0 -mr-1"
                                         onClick={() => onOpenChange(false)}
@@ -634,7 +634,7 @@ export function DashboardPaymentEventPreviewSheet({
                             {preview!.sourceHref ? (
                                 <Button
                                     variant="outline"
-                                    size="default"
+                                    size="lg"
                                     className="w-full"
                                     asChild
                                 >
@@ -705,7 +705,7 @@ export function DashboardPaymentEventPreviewSheet({
                                 <div className="flex shrink-0 items-center gap-0.5">
                                     <Button
                                         type="button"
-                                        variant="ghost"
+                                        variant="tertiary"
                                         size="icon-sm"
                                         className="shrink-0 -mr-1"
                                         onClick={() => onOpenChange(false)}
@@ -763,7 +763,7 @@ export function DashboardPaymentEventPreviewSheet({
                             {preview.sourceHref ? (
                                 <Button
                                     variant="outline"
-                                    size="default"
+                                    size="lg"
                                     className="w-full"
                                     asChild
                                 >

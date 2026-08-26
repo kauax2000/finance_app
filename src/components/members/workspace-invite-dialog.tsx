@@ -360,7 +360,7 @@ export function WorkspaceInviteDialog({
                                                                     <Button
                                                                         type="button"
                                                                         variant="outline"
-                                                                        size="icon"
+                                                                        size="icon-lg"
                                                                         className="shrink-0"
                                                                         aria-label={
                                                                             linkCopied
@@ -578,7 +578,7 @@ export function WorkspaceInviteDialog({
                                                                 <Button
                                                                     type="button"
                                                                     variant="outline"
-                                                                    size="icon"
+                                                                    size="icon-lg"
                                                                     className="shrink-0"
                                                                     aria-label={
                                                                         linkCopied

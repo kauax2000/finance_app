@@ -82,7 +82,7 @@ function WorkspacePickerWorkspaceRow({
                     aria-hidden
                 >
                     <CheckIcon
-                        className={comfortable ? "size-5 text-primary" : "size-4 text-primary"}
+                        className={comfortable ? "size-5 text-primary-accent" : "size-4 text-primary-accent"}
                         aria-hidden
                     />
                 </span>
@@ -342,7 +342,7 @@ export function WorkspacePickerMenuBody({
                     <p className="mt-1 text-xs leading-snug text-muted-foreground">{error}</p>
                     <button
                         type="button"
-                        className="mt-2 text-xs font-medium text-primary underline-offset-4 hover:underline"
+                        className="mt-2 text-xs font-medium text-primary-accent underline-offset-4 hover:underline"
                         onClick={() => void refreshWorkspaces()}
                     >
                         Tentar novamente

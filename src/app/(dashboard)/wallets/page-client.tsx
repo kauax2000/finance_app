@@ -363,15 +363,15 @@ export default function WalletsPage() {
                                     </div>
                                     <div className="flex gap-1">
                                         <Button
-                                            variant="ghost"
-                                            size="icon"
+                                            variant="tertiary"
+                                            size="icon-lg"
                                             onClick={() => openDialog(wallet)}
                                         >
                                             <PencilIcon className="h-4 w-4" />
                                         </Button>
                                         <Button
-                                            variant="ghost"
-                                            size="icon"
+                                            variant="tertiary"
+                                            size="icon-lg"
                                             className="text-destructive hover:text-destructive/80 active:text-destructive/80"
                                             onClick={() => handleDelete(wallet.id)}
                                         >

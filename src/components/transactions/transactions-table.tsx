@@ -273,8 +273,8 @@ export function TransactionsTable({
                             </p>
                             <Button
                                 type="button"
-                                variant="ghost"
-                                size="lg"
+                                variant="tertiary"
+                                size="xl"
                                 className="shrink-0 px-3 text-xs text-muted-foreground hover:text-foreground"
                                 onClick={() => setSelectedIds(new Set())}
                                 aria-label="Limpar seleção"
@@ -329,7 +329,7 @@ export function TransactionsTable({
                         <div className="flex flex-wrap items-center justify-end gap-2">
                             <Button
                                 type="button"
-                                variant="ghost"
+                                variant="tertiary"
                                 size="sm"
                                 className="h-8 text-xs"
                                 onClick={() => setSelectedIds(new Set())}
@@ -812,7 +812,7 @@ export function TransactionsTable({
                                                 ) : (
                                                 <div className="flex items-center justify-start gap-1">
                                                     <Button
-                                                        variant="ghost"
+                                                        variant="tertiary"
                                                         size="icon-sm"
                                                         type="button"
                                                         className="size-7"
@@ -827,7 +827,7 @@ export function TransactionsTable({
                                                         <PencilIcon className="size-3.5" />
                                                     </Button>
                                                     <Button
-                                                        variant="ghost"
+                                                        variant="tertiary"
                                                         size="icon-sm"
                                                         type="button"
                                                         className="size-7 text-destructive hover:text-destructive"
@@ -890,8 +890,8 @@ export function TransactionsTable({
                     <div className="flex items-center rounded-lg border border-border/80 bg-background/80 p-0.5 shadow-sm">
                         <Button
                             type="button"
-                            variant="ghost"
-                            size="icon"
+                            variant="tertiary"
+                            size="icon-lg"
                             className="size-8 rounded-md text-muted-foreground hover:text-foreground disabled:opacity-40"
                             disabled={page <= 0 || total === 0}
                             aria-label="Página anterior"
@@ -901,8 +901,8 @@ export function TransactionsTable({
                         </Button>
                         <Button
                             type="button"
-                            variant="ghost"
-                            size="icon"
+                            variant="tertiary"
+                            size="icon-lg"
                             className="size-8 rounded-md text-muted-foreground hover:text-foreground disabled:opacity-40"
                             disabled={page >= totalPages - 1 || total === 0}
                             aria-label="Próxima página"
