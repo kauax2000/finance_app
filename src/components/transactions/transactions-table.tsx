@@ -746,7 +746,7 @@ export function TransactionsTable({
                                                         ? "income"
                                                         : "expense"
                                                 }
-                                                size="default"
+                                                size="md"
                                             />
                                         </TableCell>
                                         <TableCell

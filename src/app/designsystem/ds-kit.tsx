@@ -391,9 +391,14 @@ export function TokenTile({
           {name}
         </span>
         <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
-          <code className="font-mono text-2xs break-all text-muted-foreground">
-            {token}
-          </code>
+          {/* O nome do token e o valor dele são o mesmo dado: ficam juntos, e
+              quem se separa deles é a medição, do outro lado da linha. */}
+          <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+            <code className="font-mono text-2xs break-all text-muted-foreground">
+              {token}
+            </code>
+            <SwatchHex token={token} />
+          </span>
           <SwatchContrast token={token} onToken={onToken} rule={rule} />
         </div>
       </figcaption>
@@ -434,6 +439,121 @@ export function TokenGrid({
       </div>
     </div>
   )
+}
+
+/**
+ * O hexadecimal do token, no tema que está valendo.
+ *
+ * Os tokens são escritos em `oklch`, e é assim que eles devem ser editados —
+ * mas ninguém abre o Figma, o seletor de cor do sistema ou a paleta de um
+ * gráfico digitando `oklch(0.42 0.12 166)`. O hex é a ponte para fora do CSS, e
+ * ele não fica no fonte porque aí seriam dois valores para manter em acordo:
+ * este é lido da cor que o browser resolveu, como a razão de contraste ao lado.
+ *
+ * **Ele é uma projeção em sRGB, não o token.** O canvas de leitura é sRGB, e um
+ * `oklch` fora desse gamute chega aqui já aparado — num monitor P3 a tela mostra
+ * mais cor do que este número descreve. Para editar o token, o valor é o de
+ * `globals.css`; este aqui é para levar a cor embora.
+ *
+ * Token translúcido responde com a cor de base mais o alpha (`--border` é
+ * branco a 10%, e é isso que aparece), porque é o que se copia. O composto —
+ * a cor que a tela de fato mostra — está no ladrilho logo acima.
+ */
+function SwatchHex({ token }: { token: string }) {
+  const [values, setValues] = React.useState<{
+    light: string
+    dark: string
+  } | null>(null)
+  const probeRef = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    const host = probeRef.current
+    if (!host) return
+    const read = createColorReader()
+
+    const measure = (dark: boolean) => {
+      const el = document.createElement("div")
+      el.className = dark ? "dark" : "light"
+      el.style.backgroundColor = `var(${token})`
+      host.append(el)
+      const css = getComputedStyle(el).backgroundColor
+      el.remove()
+      return read(css)
+    }
+
+    const light = measure(false)
+    const dark = measure(true)
+    if (light && dark) setValues({ light, dark })
+  }, [token])
+
+  return (
+    <span className="contents" ref={probeRef}>
+      {values ? (
+        <>
+          <code className="font-mono text-2xs text-foreground dark:hidden">
+            {values.light}
+          </code>
+          <code className="hidden font-mono text-2xs text-foreground dark:inline">
+            {values.dark}
+          </code>
+        </>
+      ) : null}
+    </span>
+  )
+}
+
+/**
+ * Lê uma cor CSS resolvida como `#RRGGBB`, com o alpha atrás quando existe.
+ *
+ * Mesmo motivo do compositor: `getComputedStyle` devolve `oklch(...)` ou
+ * `color(srgb ...)`, e converter essas strings à mão é reescrever o conversor do
+ * browser. Aqui a camada é **uma só** e sobre o canvas limpo, justamente porque
+ * `getImageData` devolve os bytes sem o alpha aplicado — é o que separa a cor de
+ * base do alpha dela, e o que o compositor ao lado precisa evitar.
+ */
+function createColorReader() {
+  const canvas = document.createElement("canvas")
+  canvas.width = 1
+  canvas.height = 1
+  const ctx = canvas.getContext("2d", { willReadFrequently: true })
+
+  const paint = (color: string) => {
+    ctx!.clearRect(0, 0, 1, 1)
+    ctx!.fillStyle = color
+    ctx!.fillRect(0, 0, 1, 1)
+    return ctx!.getImageData(0, 0, 1, 1).data
+  }
+
+  return (css: string): string | null => {
+    if (!ctx) return null
+
+    const [r, g, b, a] = paint(css)
+    if (a === 0) return null
+
+    // A cor de base sai de `rgb(from … r g b / 1)`, a mesma cor sem o alpha.
+    //
+    // O `/ 1` não é enfeite: omitir o canal alpha na sintaxe relativa **herda o
+    // da origem**, então `rgb(from oklch(1 0 0 / 0.1) r g b)` volta a 10% e o
+    // pixel translúcido de novo — que é o problema que esta linha resolve.
+    //
+    // Lê-la direto do pixel translúcido não serve: o canvas guarda o byte
+    // premultiplicado e `getImageData` desfaz a conta, e a 10% de alpha sobram
+    // 26 níveis por canal para reconstruir 256. Branco a 10% — que é o
+    // `--border` do tema escuro — voltava como `#F5FFFF`.
+    //
+    // Opaca, a cor atravessa o canvas byte a byte. O sentinela detecta browser
+    // sem sintaxe relativa: `fillStyle` ignora valor que não sabe analisar, e
+    // aí o que resta é a leitura translúcida, imprecisa mas presente.
+    ctx.fillStyle = "#123456"
+    ctx.fillStyle = `rgb(from ${css} r g b / 1)`
+    const base = ctx.fillStyle === "#123456" ? [r, g, b] : paint(ctx.fillStyle)
+
+    const hex = `#${[base[0], base[1], base[2]]
+      .map((c) => c.toString(16).padStart(2, "0"))
+      .join("")}`.toUpperCase()
+    // 255 não é "100%": o alpha do canvas é um byte, então 10% volta como 26.
+    return a === 255 ? hex : `${hex} ${Math.round((a / 255) * 100)}%`
+  }
 }
 
 /**

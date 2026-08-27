@@ -24,13 +24,14 @@ import {
 } from "@/components/ui/mobile-sheet-form-chrome"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { CustomForm } from "@/components/ui/form"
+import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ArrowPathIcon, CheckCircleIcon, ExclamationTriangleIcon, PhotoIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { getInitials, cn } from "@/lib/utils"
 import { createActivity } from "@/lib/activity"
-import { getAvatarColor } from "@/lib/avatar"
+import { identityToneFor } from "@/lib/avatar"
 
 const dialogFooterClass =
     "!mx-0 !mb-0 mt-0 shrink-0 flex flex-row flex-wrap justify-end gap-2 border-t border-border bg-background px-6 py-4 sm:flex-row"
@@ -61,9 +62,10 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
     const userName =
         user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuário"
     const userEmail = user?.email || ""
-    const avatarColor =
-        profile?.avatar_color?.trim() ||
-        (user?.email ? getAvatarColor(user.email) : getAvatarColor(userName))
+    const avatarTone = identityToneFor(
+        profile?.avatar_color,
+        user?.email || userName
+    )
     const currentAvatarUrl = user?.user_metadata?.avatar_url
 
     useEffect(() => {
@@ -253,7 +255,11 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                         <div className="size-full animate-pulse bg-muted" aria-hidden />
                     ) : (
                         <div
-                            className={`flex size-full items-center justify-center text-2xl font-semibold text-white ${avatarColor}`}
+                            className={cn(
+                                "flex size-full items-center justify-center text-2xl font-semibold",
+                                avatarTone.surface,
+                                avatarTone.ink
+                            )}
                         >
                             {getInitials(editName || userName)}
                         </div>
@@ -402,7 +408,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                         <Button type="submit" disabled={saving} className="h-10 w-full">
                             {saving ? (
                                 <>
-                                    <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                                    <Spinner />
                                     Salvando...
                                 </>
                             ) : (
@@ -426,7 +432,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                         <Button type="submit" size="sm" disabled={saving}>
                             {saving ? (
                                 <>
-                                    <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                                    <Spinner />
                                     Salvando...
                                 </>
                             ) : (

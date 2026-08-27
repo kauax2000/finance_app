@@ -55,15 +55,35 @@ export default function MoneyDisplayDoc() {
 
       <DocSection
         title="Coluna alinhada"
-        description="tabular força a Geist Mono nos tamanhos pequenos, para quando os valores empilham e o alinhamento do símbolo também importa. Ele também desliga a mono num tamanho grande, se a tela pedir a sans."
-        code={`<MoneyDisplay value={1111.11} tabular />
-<MoneyDisplay value={88.8} tabular />`}
+        description="mono força a Geist Mono nos tamanhos pequenos, para quando os valores empilham e o alinhamento do símbolo também importa. Ele também desliga a mono num tamanho grande, se a tela pedir a sans. A figura tabular não é opcional: ela está sempre ligada."
+        code={`<MoneyDisplay value={1111.11} mono />
+<MoneyDisplay value={88.8} mono />`}
         previewClassName="flex-col items-end gap-1"
       >
-        <MoneyDisplay value={1111.11} tabular />
-        <MoneyDisplay value={88.8} tabular />
-        <MoneyDisplay value={9999.99} tabular />
+        <MoneyDisplay value={1111.11} mono />
+        <MoneyDisplay value={88.8} mono />
+        <MoneyDisplay value={9999.99} mono />
       </DocSection>
+
+      <DocSection
+        title="Sem valor, e valor compacto"
+        description="null e undefined desenham travessão, não R$ 0,00 — “ainda não carregou” e “o saldo é zero” são respostas diferentes, e num app de finanças a segunda é a que ninguém pode inventar. O compacto carrega o valor cheio no title e no nome acessível, porque R$ 1,23 mi não diz se são 1.234.567 ou 1.230.000."
+        code={`<MoneyDisplay value={null} />
+<MoneyDisplay value={1234567} compact />`}
+      >
+        <MoneyDisplay value={null} />
+        <MoneyDisplay value={undefined} tone="muted" />
+        <MoneyDisplay value={1234567} compact />
+        <MoneyDisplay value={1234567} compact size="xl" />
+      </DocSection>
+
+      <DocNote title="O menos é o tipográfico, nos dois caminhos">
+        O <code>Intl</code> devolve <code>-R$ 89,90</code>{" "}
+        com hífen-menos (U+002D), e o caminho de <code>signed</code>{" "}
+        sempre usou o menos de verdade (U+2212). Numa coluna que mistura os dois
+        — um extrato com filtro de entradas — o traço trocava de largura de
+        linha para linha. Hoje os dois passam pelo mesmo glifo.
+      </DocNote>
 
       <DocNote title="A face muda com o tamanho, e é de propósito">
         Do <code>sm</code> ao <code>lg</code>{" "}

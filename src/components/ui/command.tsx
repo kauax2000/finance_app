@@ -74,7 +74,11 @@ function CommandInput({
 }: React.ComponentProps<typeof CommandPrimitive.Input>) {
   return (
     <div data-slot="command-input-wrapper" className="p-1 pb-0">
-      <InputGroup className="h-8! rounded-lg! border-input/30 bg-input-fill/30 shadow-none! *:data-[slot=input-group-addon]:pl-2!">
+      {/* Os `!important` que estavam aqui brigavam com o nada: `h-8!` sobre o
+          `h-8` do grupo, `rounded-lg!` sobre o `rounded-lg` dele e `shadow-none!`
+          sobre uma peça que nunca teve sombra. Sobrou o que de fato diverge —
+          a borda mais apagada da paleta de comandos. */}
+      <InputGroup className="border-input/30">
         <CommandPrimitive.Input
           data-slot="command-input"
           className={cn(

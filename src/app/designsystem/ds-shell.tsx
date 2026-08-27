@@ -6,9 +6,10 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { AppThemeToggle } from "@/components/settings/app-theme-toggle"
-import { AppLogo } from "@/components/layout/app-logo"
+import { AppWordmark } from "@/components/layout/app-wordmark"
 import { CATEGORY_ORDER, REGISTRY } from "./registry"
 import { DsSearch } from "./ds-search"
 
@@ -104,9 +105,12 @@ function DsTopBar() {
               Navegação do design system
             </SheetTitle>
             <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-border px-4 pr-14">
-              <AppLogo className="size-6 shrink-0" />
-              <span className="truncate font-heading text-sm font-semibold tracking-tight text-foreground">
-                Design system
+              <AppWordmark size="sm" className="shrink-0" aria-hidden />
+              <Separator orientation="vertical" />
+              {/* O `SheetTitle` acima já diz "Navegação do design system" ao
+                  leitor de tela; aqui a sigla é só o que se vê. */}
+              <span className="font-display text-base leading-none text-foreground">
+                DS
               </span>
             </div>
             <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-4">
@@ -124,31 +128,45 @@ function DsTopBar() {
           </SheetContent>
         </Sheet>
 
-        {/* A marca identifica o produto e o texto identifica a seção. Não repete
-            "Finance" ao lado do símbolo: seria dizer duas vezes a mesma coisa
-            numa barra de 56px que ainda precisa caber num telefone.
+        {/* A marca identifica o produto, o fio separa, e a sigla identifica a
+            seção — três peças que não competem porque nenhuma repete a outra.
 
-            O símbolo é 28px e o nome 16px: a 24/14 anteriores a marca ficava
-            miúda numa barra de 56, sem peso para ancorar o canto. */}
+            "Design system" por extenso não cabia: o lockup mede ~101px e a
+            barra de 56 ainda carrega menu e busca, então a 320px o rótulo
+            truncava para "Design sy…". A sigla resolve por subtração, e ela vem
+            na serifa da marca de propósito — é o mesmo corpo de display do
+            lockup ao lado, o que faz o par ler como uma assinatura só em vez de
+            marca mais legenda.
+
+            A serifa a 16px contraria o "nada abaixo de 24px" que a fundação de
+            tipografia pede para texto de display. Duas maiúsculas não são
+            texto: não há descendente para se perder nem palavra para soletrar,
+            e o que sobra da Ledger nesse corpo é justamente o contraste de
+            traço que amarra a sigla ao lockup. */}
         <Link
           href="/designsystem"
           // Sem `shrink-0`: com ele o link mantinha a largura inteira dentro do
-          // grupo elástico, e a 320px o nome corria por baixo do switch de tema
-          // em vez de truncar.
+          // grupo elástico, e a 320px empurrava os controles para fora.
           className="-ml-1 flex min-w-0 items-center gap-2.5 rounded-md px-1 py-1 outline-none transition-opacity hover:opacity-70 focus-visible:ring-3 focus-visible:ring-ring/70 active:opacity-70"
         >
-          <AppLogo className="size-7 shrink-0" />
-          {/* O nome fica visível também no telefone. Ele estava escondido
-              porque a busca ocupava o meio da barra; agora que ela é um ícone
-              no fim, sobra espaço. O `truncate` com o `min-w-0` do grupo
-              resolve a largura de 320px: o nome encurta em vez de empurrar os
-              controles para fora. */}
-          {/* `leading-tight`, e não `leading-none`: com entrelinha 1 a caixa da
-              linha mede exatamente o corpo da fonte, e o `overflow-hidden` que
-              vem junto do `truncate` decepava a descendente do "g" de Design. */}
-          <span className="truncate font-heading text-base leading-tight font-semibold tracking-tight text-foreground">
-            Design system
+          <AppWordmark className="shrink-0" aria-hidden />
+          <Separator orientation="vertical" />
+          {/* `leading-none` porque não há ascendente nem descendente para a
+              caixa da linha acomodar — só as duas maiúsculas.
+
+              O fio fica nos 16px do `Separator`: altura crua não vence o
+              `data-[orientation=vertical]:h-4` dele, que é classe com variante
+              e não entra no mesmo grupo do merge. 16 contra as 24 do lockup é
+              a proporção certa de qualquer forma — o fio marca a junta, não
+              divide a barra. */}
+          <span className="font-display text-lg leading-none text-foreground">
+            DS
           </span>
+          {/* O nome acessível fica "DS Design system": a sigla vem primeiro
+              porque é o que se vê — quem navega por voz diz o que está escrito
+              — e a expansão vem atrás porque "DS" sozinho não diz nada em voz
+              alta. */}
+          <span className="sr-only">Design system</span>
         </Link>
         </div>
 
@@ -176,6 +194,22 @@ function DsTopBar() {
 }
 
 /**
+ * Qual rota abriu esta carga de página, e se ela já foi deixada para trás.
+ *
+ * Mora no módulo, e não num `useRef`, por dois motivos. A lista é renderizada
+ * em duas instâncias — a coluna do desktop e a folha do telefone —, e as duas
+ * precisam da mesma resposta. E o `StrictMode` do Next em desenvolvimento
+ * simula um desmonte e uma remontagem, o que **desfaz e refaz os refs**: um
+ * simples booleano de "já animei" seria gasto pela montagem descartada, e a
+ * animação nunca apareceria em dev. Comparar a rota sobrevive a isso, porque a
+ * rota das duas montagens é a mesma.
+ *
+ * Recarregar a página reavalia o módulo e zera os dois.
+ */
+let caminhoDeEntrada: string | null = null
+let saiuDaEntrada = false
+
+/**
  * A navegação lateral: percorrer o catálogo na ordem, categoria por categoria.
  *
  * Ela **não** busca mais. O campo que ficava aqui filtrava esta lista, então
@@ -186,6 +220,67 @@ function DsTopBar() {
  */
 function DsNav() {
   const pathname = usePathname()
+
+  /**
+   * Trazer o item ativo para a parte visível da lista.
+   *
+   * São 89 entradas numa coluna que rola sozinha, e o browser não guarda o
+   * `scrollTop` de um contêiner interno: recarregar em `/designsystem/toolbar`
+   * devolvia a lista no topo, com o item ativo umas quinze telas abaixo. Quem
+   * chega por link, por recarga ou pela paleta de busca não faz ideia de onde
+   * está no catálogo.
+   *
+   * É `ref` de callback e não `useEffect` por dois motivos. Ele roda no commit,
+   * já com a lista medida, então a viagem começa no primeiro quadro em vez de
+   * esperar um ciclo. E callback de ref não existe no servidor, o que dispensa
+   * o `useLayoutEffect` que o Next avisaria estar rodando em vão na
+   * renderização de servidor.
+   *
+   * A rolagem só é **animada na entrada** — a carga da página, com a coluna já
+   * à vista. Ali a viagem responde uma pergunta: no corte seco a lista aparecia
+   * no meio do catálogo, e não dava para saber se ela tinha rolado ou se o item
+   * ativo por acaso morava ali.
+   *
+   * Depois disso, corte seco. Navegar é gesto de quem já sabe para onde vai, e
+   * a folha do telefone nunca anima: ela mesma está entrando na tela, e uma
+   * lista rolando por baixo de um painel que chega são dois movimentos
+   * disputando a atenção — sem contar que o começo da viagem acontece antes de
+   * o painel terminar de abrir, então metade dela nem é vista.
+   *
+   * Rola o contêiner, e não com `scrollIntoView`: este último rola **todos** os
+   * ancestrais roláveis, e levaria a janela junto — a coluna é `sticky`, e
+   * mover a página para acertar a lista é o oposto do pedido.
+   */
+  const revelarAtivo = React.useCallback(
+    (link: HTMLAnchorElement | null) => {
+      if (!link) return
+      const rolagem = scrollerDe(link)
+      if (!rolagem) return
+
+      if (caminhoDeEntrada === null) caminhoDeEntrada = pathname
+      else if (pathname !== caminhoDeEntrada) saiuDaEntrada = true
+
+      const naFolha =
+        rolagem.closest('[data-slot="sheet-content"]') !== null
+      const animar = !saiuDaEntrada && !naFolha && !prefereMenosMovimento()
+
+      const l = link.getBoundingClientRect()
+      const r = rolagem.getBoundingClientRect()
+      // Já à vista, não mexe. É o que faz clicar num item da própria lista não
+      // sacudir a lista embaixo do ponteiro.
+      if (l.top >= r.top && l.bottom <= r.bottom) return
+
+      // Centraliza, para o item ativo chegar com vizinhos dos dois lados — a
+      // lista responde "onde estou" melhor encostada no meio que na borda. O
+      // browser apara o valor no fim da rolagem, então não há caso especial
+      // para item perto do topo ou do fim.
+      const destino =
+        rolagem.scrollTop + l.top - r.top - (r.height - l.height) / 2
+
+      rolagem.scrollTo({ top: destino, behavior: animar ? "smooth" : "auto" })
+    },
+    [pathname]
+  )
 
   const groups = React.useMemo(
     () =>
@@ -202,7 +297,11 @@ function DsNav() {
           o catálogo inteiro dependia de acertar a marca no cabeçalho — que não
           se anuncia como link para lugar nenhum. */}
       <div className="flex flex-col gap-0.5 pb-5">
-        <DsNavLink href="/designsystem" active={pathname === "/designsystem"}>
+        <DsNavLink
+          href="/designsystem"
+          active={pathname === "/designsystem"}
+          ref={pathname === "/designsystem" ? revelarAtivo : undefined}
+        >
           Visão geral
         </DsNavLink>
       </div>
@@ -220,11 +319,16 @@ function DsNav() {
           </h2>
           {group.items.map((item) => {
             const href = `/designsystem/${item.slug}`
+            const active = pathname === href
             return (
               <DsNavLink
                 key={item.slug}
                 href={href}
-                active={pathname === href}
+                active={active}
+                // Só o ativo carrega o ref. Ao navegar, o React limpa o do item
+                // que deixou de ser ativo e chama o do novo — que é exatamente
+                // quando a lista precisa se reposicionar.
+                ref={active ? revelarAtivo : undefined}
               >
                 {item.name}
               </DsNavLink>
@@ -236,17 +340,57 @@ function DsNav() {
   )
 }
 
+/**
+ * O `scroll-behavior: auto !important` que o tema aplica em
+ * `prefers-reduced-motion` vale para rolagem disparada pelo CSS; o argumento de
+ * `scrollTo` vence a folha de estilo, então a preferência precisa ser
+ * consultada aqui, em JavaScript.
+ */
+function prefereMenosMovimento() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches
+}
+
+/**
+ * O ancestral que de fato rola.
+ *
+ * A lista mora em dois contêineres diferentes — o `aside` grudado no desktop e
+ * a folha lateral no telefone — e nenhum dos dois é pai direto do link. Subir
+ * até achar quem tem transbordo e rolagem cobre os dois sem que a navegação
+ * precise saber em qual deles está.
+ *
+ * No telefone o `aside` é `display: none`, e aí `scrollHeight` e `clientHeight`
+ * valem zero: a condição falha sozinha e a busca segue para cima, sem caso
+ * especial.
+ */
+function scrollerDe(node: HTMLElement): HTMLElement | null {
+  let atual = node.parentElement
+  while (atual) {
+    const { overflowY } = getComputedStyle(atual)
+    if (
+      (overflowY === "auto" || overflowY === "scroll") &&
+      atual.scrollHeight > atual.clientHeight
+    ) {
+      return atual
+    }
+    atual = atual.parentElement
+  }
+  return null
+}
+
 function DsNavLink({
   href,
   active,
   children,
+  ref,
 }: {
   href: string
   active: boolean
   children: React.ReactNode
+  ref?: React.Ref<HTMLAnchorElement>
 }) {
   return (
     <Link
+      ref={ref}
       href={href}
       aria-current={active ? "page" : undefined}
       className={cn(

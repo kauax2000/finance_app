@@ -37,9 +37,22 @@ export default function CoresDoc() {
 
       <DocNote title="Como ler esta página">
         A página mostra o tema que está selecionado no alternador do cabeçalho —
-        troque nele para ver o outro. O número na legenda é a razão de contraste
-        daquele tema, calculada no navegador sobre a cor que ele realmente
-        resolveu, nunca escrita à mão.
+        troque nele para ver o outro. O hexadecimal e a razão de contraste na
+        legenda são os daquele tema, os dois calculados no navegador sobre a cor
+        que ele realmente resolveu, nunca escritos à mão.
+      </DocNote>
+
+      <DocNote title="O hex é para levar a cor embora, não para editar o token">
+        Os tokens são escritos em <code>oklch</code>{" "}
+        e é assim que se mexe neles, em{" "}
+        <code>globals.css</code>. O hex existe porque ninguém digita{" "}
+        <code>oklch(0.42 0.12 166)</code>{" "}
+        no Figma, no seletor de cor do sistema ou na paleta de um gráfico
+        exportado. Ele é uma <strong>projeção em sRGB</strong>: num monitor P3 a
+        tela mostra mais cor do que o número descreve. Token translúcido vem com
+        a cor de base e o alpha atrás — <code>#FFFFFF 10%</code>{" "}
+        é o que se copia; o composto, que é o que a tela mostra, está no
+        ladrilho acima.
       </DocNote>
 
       <DocNote title="O que cada número mede">
@@ -57,6 +70,25 @@ export default function CoresDoc() {
         âmbar com o nome do tema aparece ao lado do número — que é o defeito que
         ninguém acharia sem trocar de tema e comparar de memória. Quando o outro
         passa, nada aparece.
+      </DocNote>
+
+      <DocNote title="Os cinzas do claro são mais escuros do que parece necessário">
+        <code>--secondary</code>, <code>--muted</code>, <code>--accent</code>{" "}
+        e <code>--sidebar-accent</code>{" "}
+        são o chão que fica <em>sobre</em> uma superfície: item ativo de
+        navegação, hover de botão, pastilha de badge. No claro eles moram em
+        0,93–0,94, e não nos 0,955–0,97 que a paleta de origem traz.
+        <br />
+        <br />O motivo é aritmético. A razão da WCAG é{" "}
+        <code>(L1+0,05)/(L2+0,05)</code>. Perto do preto aquele{" "}
+        <code>+0,05</code>{" "}
+        domina o denominador e uma diferença pequena rende muito; perto do
+        branco ele é ruído e a mesma diferença rende quase nada.{" "}
+        <strong>O tema claro precisa de degraus maiores para parecer igual.</strong>{" "}
+        Com os valores de origem, a página ativa do menu do app media{" "}
+        <strong>1,00</strong>{" "}
+        contra a lateral — literalmente a mesma cor, e só o peso da fonte
+        marcava o estado. Hoje mede 1,18, que é o que o escuro sempre teve.
       </DocNote>
 
       <Group
@@ -341,11 +373,16 @@ export default function CoresDoc() {
         porque é a conta que o browser faria.
       </DocNote>
 
-      <DocNote title="Estes tokens ainda não são os dos avatares">
-        <code>src/lib/avatar.ts</code>{" "}
-        ainda usa a paleta crua do Tailwind, e a cor de cada pessoa está gravada
-        em <code>profiles.avatar_color</code>{" "}
-        como string de classe. A troca precisa de migração de dados.
+      <DocNote title="Agora estes tokens são os dos avatares">
+        Esta nota dizia que a troca precisava de migração de dados. Não
+        precisava: <code>profiles.avatar_color</code>{" "}
+        é gravado <strong>uma vez, por trigger no signup</strong>, sorteando
+        entre 17 classes conhecidas, e nenhuma tela do app o atualiza. Valor
+        conhecido não migra — se lê.{" "}
+        <code>identityToneFor</code>{" "}
+        dobra as 17 nas seis identidades pela região do círculo de matiz, então
+        quem era avermelhado segue avermelhado, e o que estava guardado continua
+        decidindo quem é quem. Só o desenho passou a ser de token.
       </DocNote>
     </>
   )

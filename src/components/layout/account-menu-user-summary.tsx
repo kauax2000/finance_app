@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element -- menu avatar from user metadata URL */
 
 import { useAuth } from "@/components/providers"
-import { getAvatarColor } from "@/lib/avatar"
+import { identityToneFor } from "@/lib/avatar"
 import { cn, getInitials } from "@/lib/utils"
 
 type AccountMenuUserSummaryProps = {
@@ -15,9 +15,10 @@ export function AccountMenuUserSummary({ className }: AccountMenuUserSummaryProp
     const userName =
         user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuário"
     const userEmail = user?.email || ""
-    const avatarColor =
-        profile?.avatar_color?.trim() ||
-        (user?.email ? getAvatarColor(user.email) : getAvatarColor(userName))
+    const avatarTone = identityToneFor(
+        profile?.avatar_color,
+        user?.email || userName
+    )
 
     return (
         <div
@@ -41,7 +42,11 @@ export function AccountMenuUserSummary({ className }: AccountMenuUserSummaryProp
                     />
                 ) : (
                     <div
-                        className={`flex h-full w-full items-center justify-center text-sm font-medium text-white ${avatarColor}`}
+                        className={cn(
+                            "flex h-full w-full items-center justify-center text-sm font-medium",
+                            avatarTone.surface,
+                            avatarTone.ink
+                        )}
                     >
                         {getInitials(userName)}
                     </div>

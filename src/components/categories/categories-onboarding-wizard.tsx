@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 import { supabase, type Category } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
+import { MoneyInput } from "@/components/ui/money-input"
 import { CustomForm } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -36,7 +37,7 @@ import {
 } from "@/components/categories/category-appearance-fields"
 import { formatYearMonth, periodBoundsFromYearMonth } from "@/lib/budget-month"
 import { upsertCategoryBudget } from "@/lib/category-budget-ops"
-import { formatMoneyBrlInput, formatMoneyBrlTyping, parseMoneyBrl } from "@/lib/money-brl"
+import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
 import {
     formatSupabasePostgrestError,
     isPostgrestRpcFunctionNotFoundError,
@@ -530,19 +531,18 @@ export function CategoriesOnboardingWizard({
                             <Label htmlFor={`bud-${c.id}`} className="sr-only">
                                 Limite {c.name}
                             </Label>
-                            <Input
+                            <MoneyInput
                                 id={`bud-${c.id}`}
-                                inputMode="decimal"
                                 placeholder="0,00"
                                 title="Valor em reais (ex.: 1.500,00)"
                                 value={amountByCategoryId[c.id] ?? ""}
-                                onChange={(e) =>
+                                onValueChange={(masked) =>
                                     setAmountByCategoryId((prev) => ({
                                         ...prev,
-                                        [c.id]: formatMoneyBrlTyping(e.target.value),
+                                        [c.id]: masked,
                                     }))
                                 }
-                                className="h-8 min-w-[6.75rem] w-[6.75rem] shrink-0 text-right text-xs tabular-nums sm:min-w-[7.25rem] sm:w-[7.25rem]"
+                                className="h-8 min-w-[6.75rem] w-[6.75rem] shrink-0 text-right text-xs sm:min-w-[7.25rem] sm:w-[7.25rem]"
                             />
                         </>
                     ) : (
@@ -734,21 +734,18 @@ export function CategoriesOnboardingWizard({
                                                 <Label htmlFor={`onb-edit-bud-${editCategoryId}`}>
                                                     Limite no mês (R$)
                                                 </Label>
-                                                <Input
+                                                <MoneyInput
                                                     id={`onb-edit-bud-${editCategoryId}`}
-                                                    inputMode="decimal"
                                                     placeholder="0,00"
                                                     title="Valor em reais (ex.: 1.500,00)"
                                                     value={amountByCategoryId[editCategoryId] ?? ""}
-                                                    onChange={(e) =>
+                                                    onValueChange={(masked) =>
                                                         setAmountByCategoryId((prev) => ({
                                                             ...prev,
-                                                            [editCategoryId]: formatMoneyBrlTyping(
-                                                                e.target.value,
-                                                            ),
+                                                            [editCategoryId]: masked,
                                                         }))
                                                     }
-                                                    className="text-sm tabular-nums"
+                                                    className="text-sm"
                                                     disabled={crudBusy}
                                                 />
                                             </div>
@@ -815,21 +812,18 @@ export function CategoriesOnboardingWizard({
                                             <Label htmlFor={`onb-edit-bud-${editCategoryId}`}>
                                                 Limite no mês (R$)
                                             </Label>
-                                            <Input
+                                            <MoneyInput
                                                 id={`onb-edit-bud-${editCategoryId}`}
-                                                inputMode="decimal"
                                                 placeholder="0,00"
                                                 title="Valor em reais (ex.: 1.500,00)"
                                                 value={amountByCategoryId[editCategoryId] ?? ""}
-                                                onChange={(e) =>
+                                                onValueChange={(masked) =>
                                                     setAmountByCategoryId((prev) => ({
                                                         ...prev,
-                                                        [editCategoryId]: formatMoneyBrlTyping(
-                                                            e.target.value,
-                                                        ),
+                                                        [editCategoryId]: masked,
                                                     }))
                                                 }
-                                                className="text-sm tabular-nums"
+                                                className="text-sm"
                                                 disabled={crudBusy}
                                             />
                                         </div>
@@ -968,14 +962,14 @@ export function CategoriesOnboardingWizard({
                         <Label htmlFor="income" className="text-xs">
                             Estimativa mensal (R$)
                         </Label>
-                        <Input
+                        <MoneyInput
                             id="income"
-                            inputMode="decimal"
                             placeholder="Ex: 5.000 ou 5000"
                             value={monthlyIncome}
-                            onChange={(e) => setMonthlyIncome(formatMoneyBrlTyping(e.target.value))}
+                            
                             className="text-sm"
-                        />
+                        onValueChange={setMonthlyIncome}
+                            />
                     </CustomForm>
                 ) : null}
 

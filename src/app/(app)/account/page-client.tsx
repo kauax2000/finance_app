@@ -14,11 +14,11 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ArrowRightIcon, ArrowRightStartOnRectangleIcon, CalendarIcon, ChartBarIcon, CheckBadgeIcon, EllipsisVerticalIcon, LockClosedIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
-import { getInitials } from "@/lib/utils"
+import { cn, getInitials } from "@/lib/utils"
 import { ChangePasswordDialog, DeleteAccountDialog } from "@/components/security"
 import { AccountPageSkeleton } from "@/components/account/account-page-skeleton"
 import { EditProfileDialog } from "@/components/account/edit-profile-dialog"
-import { getAvatarColor } from "@/lib/avatar"
+import { identityToneFor } from "@/lib/avatar"
 
 export default function AccountPage() {
     const { user, profile, loading, profileReady, signOut } = useAuth()
@@ -29,9 +29,10 @@ export default function AccountPage() {
     const userName =
         user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuário"
     const userEmail = user?.email || ""
-    const avatarColor =
-        profile?.avatar_color?.trim() ||
-        (user?.email ? getAvatarColor(user.email) : getAvatarColor(userName))
+    const avatarTone = identityToneFor(
+        profile?.avatar_color,
+        user?.email || userName
+    )
     const createdAt = user?.created_at
         ? new Date(user.created_at).toLocaleDateString("pt-BR", {
               day: "2-digit",
@@ -70,7 +71,11 @@ export default function AccountPage() {
                                         />
                                     ) : (
                                         <div
-                                            className={`flex size-full items-center justify-center text-sm font-semibold text-white ${avatarColor}`}
+                                            className={cn(
+                                                "flex size-full items-center justify-center text-sm font-semibold",
+                                                avatarTone.surface,
+                                                avatarTone.ink
+                                            )}
                                         >
                                             {getInitials(userName)}
                                         </div>

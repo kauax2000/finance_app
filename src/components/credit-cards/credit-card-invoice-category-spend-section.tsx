@@ -316,7 +316,7 @@ export function CreditCardInvoiceCategorySpendSection({
                                             />
                                             <MoneyDisplay
                                                 value={c.total}
-                                                size="default"
+                                                size="md"
                                                 tone={c.categoryId == null ? "muted" : undefined}
                                                 className="font-semibold sm:text-base"
                                             />

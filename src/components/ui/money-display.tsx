@@ -6,7 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { currencyBRL } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 
-const moneyDisplayVariants = cva("tabular-nums", {
+const moneyDisplayVariants = cva("nums", {
   variants: {
     tone: {
       default: "text-foreground",
@@ -14,13 +14,20 @@ const moneyDisplayVariants = cva("tabular-nums", {
       expense: "text-expense",
       muted: "text-muted-foreground",
     },
-    tabular: {
+    /**
+     * A **face**, não a figura tabular.
+     *
+     * O prop se chamava `tabular` e mentia: a figura tabular está na base e
+     * está sempre ligada — `tabular={false}` não a desligava, desligava a
+     * Geist Mono. O nome descrevia a coisa errada.
+     */
+    mono: {
       true: "font-mono",
       false: "",
     },
     size: {
       sm: "text-xs",
-      default: "text-sm",
+      md: "text-sm",
       lg: "text-base",
       xl: "text-lg font-semibold",
       "2xl": "text-2xl font-semibold",
@@ -28,7 +35,7 @@ const moneyDisplayVariants = cva("tabular-nums", {
   },
   defaultVariants: {
     tone: "default",
-    size: "default",
+    size: "md",
   },
 })
 
@@ -38,20 +45,21 @@ const moneyDisplayVariants = cva("tabular-nums", {
  * Nestes, as figuras vão para Geist Mono por padrão. O saldo é o herói deste
  * produto, e a face de extrato é a que ele merece: dígito de largura fixa, a
  * coluna que não dança, e o registro de livro-caixa que combina com a serifa
- * dos títulos. Nas linhas de lista o valor volta a ser Inter com
- * `tabular-nums`, que é o certo — mono em 46 linhas de extrato viraria textura.
+ * dos títulos. Nas linhas de lista o valor volta a ser Inter com figura
+ * tabular, que é o certo — mono em 46 linhas de extrato viraria textura.
  *
- * `tabular` continua sobrescrevendo nos dois sentidos: passe `false` num saldo
+ * `mono` continua sobrescrevendo nos dois sentidos: passe `false` num saldo
  * grande e ele volta para a sans.
  */
 const FIGURE_SIZES = new Set(["xl", "2xl"])
 
 type MoneyDisplayProps = Omit<React.ComponentProps<"span">, "children"> &
-  VariantProps<typeof moneyDisplayVariants> & {
+  Omit<VariantProps<typeof moneyDisplayVariants>, "mono"> & {
     value: number | null | undefined
     currency?: string
     signed?: boolean
     compact?: boolean
+    mono?: boolean
     minimumFractionDigits?: number
     maximumFractionDigits?: number
   }
@@ -65,25 +73,40 @@ function MoneyDisplay({
   minimumFractionDigits,
   maximumFractionDigits,
   tone,
-  tabular,
+  mono,
   size,
   ...props
 }: MoneyDisplayProps) {
-  const text = currencyBRL(value ?? 0, {
+  const opts = {
     currency,
     signed,
-    compact,
     minimumFractionDigits,
     maximumFractionDigits,
-  })
+  }
 
-  const figures = tabular ?? FIGURE_SIZES.has(size ?? "default")
+  // `null` é ausência de dado, não zero. Ele desenhava R$ 0,00 — a mesma coisa
+  // que um saldo zerado de verdade — enquanto um `NaN` já respondia "—". Duas
+  // respostas para a mesma pergunta, e num app de finanças a errada é a que
+  // afirma um número que ninguém apurou. `NaN` cai no travessão do formatador.
+  const text = currencyBRL(value ?? NaN, { ...opts, compact })
+
+  // A notação compacta joga fora a precisão: `R$ 1,23 mi` não diz se são
+  // 1.234.567 ou 1.230.000. O valor cheio fica no `title`, para o ponteiro, e
+  // no nome acessível, para quem não tem ponteiro.
+  const exact =
+    compact && value != null && Number.isFinite(value)
+      ? currencyBRL(value, opts)
+      : undefined
+
+  const figures = mono ?? FIGURE_SIZES.has(size ?? "md")
 
   return (
     <span
       data-slot="money-display"
+      title={exact}
+      aria-label={exact}
       className={cn(
-        moneyDisplayVariants({ tone, tabular: figures, size }),
+        moneyDisplayVariants({ tone, mono: figures, size }),
         className
       )}
       {...props}

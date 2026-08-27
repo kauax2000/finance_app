@@ -1,6 +1,6 @@
 "use client"
 
-import { AppLogo } from "@/components/layout/app-logo"
+import { AppWordmark } from "@/components/layout/app-wordmark"
 import { cn } from "@/lib/utils"
 
 type AppBootstrapScreenProps = {
@@ -25,7 +25,7 @@ export function AppBootstrapScreen({ className }: AppBootstrapScreenProps) {
             aria-label="Carregando aplicativo"
             suppressHydrationWarning
         >
-            <AppLogo size="xl" />
+            <AppWordmark size="xl" aria-hidden />
         </div>
     )
 }

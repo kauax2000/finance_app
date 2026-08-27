@@ -61,6 +61,46 @@ export default function InputGroupDoc() {
       </DocSection>
 
       <DocSection
+        title="Tamanhos"
+        description="A mesma escada do Input e do Button: 28, 32, 36 e 40. O degrau desce para dentro — o campo pega o corpo de texto dele e o botão acoplado desce um degrau sozinho, então ninguém escreve size duas vezes."
+        code={`<InputGroup size="lg">
+  <InputGroupInput placeholder="Buscar" />
+  <InputGroupAddon align="inline-end">
+    <InputGroupButton>Buscar</InputGroupButton>
+  </InputGroupAddon>
+</InputGroup>`}
+        previewClassName="flex-col items-stretch gap-3"
+      >
+        {(["sm", "md", "lg", "xl"] as const).map((size) => (
+          <div key={size} className="flex w-full max-w-sm items-center gap-3">
+            <code className="w-8 shrink-0 font-mono text-2xs text-muted-foreground">
+              {size}
+            </code>
+            <InputGroup size={size}>
+              <InputGroupAddon>
+                <MagnifyingGlassIcon aria-hidden />
+              </InputGroupAddon>
+              <InputGroupInput
+                placeholder="Buscar transação"
+                aria-label={`Buscar (${size})`}
+              />
+              <InputGroupAddon align="inline-end">
+                <InputGroupButton>Buscar</InputGroupButton>
+              </InputGroupAddon>
+            </InputGroup>
+          </div>
+        ))}
+      </DocSection>
+
+      <DocNote title="O grupo alinha com o campo ao lado sem ninguém dizer altura">
+        <code>InputGroup</code>, <code>Input</code>, <code>SelectTrigger</code>,{" "}
+        <code>NativeSelect</code> e <code>Button</code>{" "}
+        usam os mesmos quatro nomes para as mesmas quatro alturas. Numa barra de
+        filtros, trocar o degrau move todos pelo mesmo nome — antes o grupo era
+        preso a 32 e a linha saía torta quando o vizinho era <code>lg</code>.
+      </DocNote>
+
+      <DocSection
         title="Acoplado acima e abaixo"
         description="align aceita quatro valores, e os dois de bloco ocupam a largura toda: block-start entra acima do controle, block-end abaixo. Servem para o que acompanha o campo sem disputar a linha dele — uma contagem, uma barra de ação sob um textarea."
         code={`<InputGroup>

@@ -38,6 +38,30 @@ export default function SliderDoc() {
         </div>
       </DocSection>
 
+      <DocSection
+        title="Desativado"
+        description="Vem da raiz, e apaga a peça inteira — trilho, faixa e punho."
+        code={`<Slider defaultValue={[40]} max={100} disabled />`}
+        previewClassName="flex-col items-stretch"
+      >
+        <div className="w-full max-w-sm">
+          <Slider
+            defaultValue={[40]}
+            max={100}
+            disabled
+            aria-label="Limite (desativado)"
+          />
+        </div>
+      </DocSection>
+
+      <DocNote title="O punho é 14px, e o alvo é 44">
+        Um punho grande o bastante para o dedo seria grande demais para o olho: a
+        14px sobre um trilho de 8 ele lê como a ponta do preenchimento, e não
+        como um disco pousado em cima. O alvo de toque cresce por baixo, num
+        pseudo-elemento de 44px — a mesma saída do <code>Switch</code>. Cresce a
+        área de contato sem crescer o desenho.
+      </DocNote>
+
       <DocNote title="O valor precisa aparecer em algum lugar">
         Um slider sozinho não diz onde parou. Mostre o número ao lado ou acima —
         e não só no tooltip do arraste, que não existe no toque.

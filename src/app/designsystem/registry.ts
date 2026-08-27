@@ -30,7 +30,7 @@ const ATOMS = new Set([
   "button", "button-group", "badge", "input", "textarea", "label", "field",
   "checkbox", "radio-group", "switch", "select", "native-select", "slider",
   "progress", "toggle", "toggle-group", "input-group", "input-otp", "kbd",
-  "avatar", "separator", "tooltip", "aspect-ratio", "spinner", "skeleton",
+  "avatar", "separator", "tooltip", "spinner", "skeleton",
   "code", "money-display", "money-input", "color-tile",
 ])
 
@@ -120,6 +120,14 @@ export const REGISTRY: RegistryEntry[] = [
     source: "src/app/globals.css",
   },
   {
+    slug: "marca",
+    name: "Marca",
+    category: "Fundações",
+    description: "O símbolo, o lockup escrito e onde cada um se apresenta.",
+    source: "src/components/layout/app-wordmark.tsx",
+    importLine: 'import { AppWordmark } from "@/components/layout/app-wordmark"',
+  },
+  {
     slug: "iconografia",
     name: "Iconografia",
     category: "Fundações",
@@ -147,12 +155,11 @@ export const REGISTRY: RegistryEntry[] = [
   entry("toggle-group", "Toggle Group", "Conjunto de toggles: seleção única ou múltipla.", ui("toggle-group"), "ToggleGroup, ToggleGroupItem"),
   entry("input-group", "Input Group", "Campo com ícones, texto ou botões acoplados.", ui("input-group"), "InputGroup, InputGroupInput"),
   entry("input-otp", "Input OTP", "Entrada de código de verificação.", ui("input-otp"), "InputOTP, InputOTPSlot"),
-  entry("kbd", "Kbd", "Representação de teclas em dicas de atalho.", ui("kbd"), "Kbd, KbdGroup"),
+  entry("kbd", "Kbd", "Uma tecla, um acorde ou uma sequência numa dica de atalho.", ui("kbd"), "Kbd, KbdGroup"),
   entry("avatar", "Avatar", "Imagem ou iniciais, em cinco tamanhos.", ui("avatar"), "Avatar, AvatarImage, AvatarFallback"),
   entry("color-tile", "Color Tile", "O ladrilho que carrega uma cor escolhida pela pessoa.", ui("color-tile"), "ColorTile"),
   entry("separator", "Separator", "Divisor entre conteúdos.", ui("separator"), "Separator"),
   entry("tooltip", "Tooltip", "Dica curta ancorada a um gatilho.", ui("tooltip"), "Tooltip, TooltipTrigger, TooltipContent"),
-  entry("aspect-ratio", "Aspect Ratio", "Mantém a proporção de um contêiner.", ui("aspect-ratio"), "AspectRatio"),
   entry("spinner", "Spinner", "Carregamento sem progresso conhecido.", ui("spinner"), "Spinner"),
   entry("skeleton", "Skeleton", "O osso da tela enquanto o dado não chegou.", ui("skeleton"), "Skeleton"),
   entry("code", "Code", "Identificador literal dentro do texto.", ui("code"), "Code"),

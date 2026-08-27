@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 import type { Budget, Category } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
+import { MoneyInput } from "@/components/ui/money-input"
 import { CustomForm } from "@/components/ui/form"
 import {
     Dialog,
@@ -28,7 +29,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { periodBoundsFromYearMonth } from "@/lib/budget-month"
 import { upsertCategoryBudget, deleteCategoryBudgetById } from "@/lib/category-budget-ops"
-import { formatMoneyBrlInput, formatMoneyBrlTyping, parseMoneyBrl } from "@/lib/money-brl"
+import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 
 type Props = {
@@ -121,14 +122,14 @@ export function CategoryBudgetDialog({
         <div className="space-y-4 py-2">
             <div className="space-y-2">
                 <Label htmlFor="budget-amount">Valor limite (R$)</Label>
-                <Input
+                <MoneyInput
                     id="budget-amount"
-                    inputMode="decimal"
                     placeholder="Ex: 1.500,00"
                     value={amount}
-                    onChange={(e) => setAmount(formatMoneyBrlTyping(e.target.value))}
+                    
                     required
-                />
+                onValueChange={setAmount}
+                            />
             </div>
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
         </div>

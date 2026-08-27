@@ -13,6 +13,7 @@ import {
     SheetTitle,
 } from "@/components/ui/sheet"
 import { SheetDragHandle } from "@/components/ui/sheet-drag-handle"
+import { Spinner } from "@/components/ui/spinner"
 import { mobileSheetChromeBelowHeaderClassName } from "@/components/ui/mobile-sheet-form-chrome"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -35,7 +36,7 @@ import type { ExpenseCategoryOption } from "@/components/subscriptions/subscript
 import type { SubscriptionFormPayload } from "@/components/subscriptions/subscription-form-shared"
 import { SubscriptionFormSurface } from "@/components/subscriptions/subscription-form-surface"
 import { useSubscriptionForm } from "@/components/subscriptions/use-subscription-form"
-import { ArrowPathIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { EllipsisHorizontalIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import { cn } from "@/lib/utils"
 import { Switch } from "@/components/ui/switch"
@@ -385,8 +386,8 @@ export function SubscriptionDetailSheet({
                             }
                         >
                             {activeToggleSaving ? (
-                                <ArrowPathIcon
-                                    className="size-3.5 shrink-0 animate-spin text-muted-foreground"
+                                <Spinner
+                                    className="size-3.5 shrink-0 text-muted-foreground"
                                     aria-hidden
                                 />
                             ) : (

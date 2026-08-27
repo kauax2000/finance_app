@@ -13,6 +13,7 @@ import {
     TransactionFormTypeSegment,
 } from "@/components/transactions/transaction-type-segment"
 import { CustomForm } from "@/components/ui/form"
+import { MoneyInput } from "@/components/ui/money-input"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -41,7 +42,7 @@ import {
     formatYearMonth,
     periodBoundsFromYearMonth,
 } from "@/lib/budget-month"
-import { parseMoneyBrl, formatMoneyBrlTyping } from "@/lib/money-brl"
+import { parseMoneyBrl } from "@/lib/money-brl"
 import { toastError } from "@/lib/toast"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
 import {
@@ -223,14 +224,12 @@ export function CategoryCreateDialog({
                     </p>
                     <div className="space-y-2">
                         <Label htmlFor="global-cat-budget">Valor limite (R$)</Label>
-                        <Input
+                        <MoneyInput
                             id="global-cat-budget"
-                            inputMode="decimal"
                             placeholder="Ex: 1.500,00"
                             value={editBudgetAmount}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                                setEditBudgetAmount(formatMoneyBrlTyping(e.target.value))
-                            }
+                            
+                        onValueChange={setEditBudgetAmount}
                         />
                     </div>
                 </div>

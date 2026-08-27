@@ -26,8 +26,9 @@ import {
     type TransactionFormKind,
 } from "@/components/transactions/transaction-type-segment"
 import { splitTotalAcrossInstallments } from "@/lib/installment-amounts"
-import { formatMoneyBrlTyping, parseMoneyBrl } from "@/lib/money-brl"
+import { parseMoneyBrl } from "@/lib/money-brl"
 import { Button } from "@/components/ui/button"
+import { MoneyInput } from "@/components/ui/money-input"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { DatePicker } from "@/components/ui/date-picker"
@@ -506,15 +507,13 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                             <Label htmlFor="tx-inst-total" className="text-xs">
                                 Valor total (R$)
                             </Label>
-                            <Input
+                            <MoneyInput
                                 id="tx-inst-total"
-                                inputMode="decimal"
                                 value={installmentTotal}
-                                onChange={(e) =>
-                                    setInstallmentTotal(formatMoneyBrlTyping(e.target.value))
-                                }
+                                
                                 placeholder="Ex: 1.200,00"
-                                className="text-sm tabular-nums"
+                                className="text-sm"
+                            onValueChange={setInstallmentTotal}
                             />
                         </div>
                     ) : (
@@ -522,15 +521,13 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                             <Label htmlFor="tx-inst-per" className="text-xs">
                                 Valor de cada parcela (R$)
                             </Label>
-                            <Input
+                            <MoneyInput
                                 id="tx-inst-per"
-                                inputMode="decimal"
                                 value={installmentPerAmount}
-                                onChange={(e) =>
-                                    setInstallmentPerAmount(formatMoneyBrlTyping(e.target.value))
-                                }
+                                
                                 placeholder="Ex: 100,00"
-                                className="text-sm tabular-nums"
+                                className="text-sm"
+                            onValueChange={setInstallmentPerAmount}
                             />
                         </div>
                     )}
@@ -564,17 +561,15 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                     <Label htmlFor="tx-amount" className="text-xs">
                         Valor (R$)
                     </Label>
-                    <Input
+                    <MoneyInput
                         id="tx-amount"
-                        inputMode="decimal"
                         value={amount}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                            setAmount(formatMoneyBrlTyping(e.target.value))
-                        }
+                        
                         placeholder="Ex: 50,00 ou 1.500,00"
-                        className="text-sm tabular-nums"
+                        className="text-sm"
                         required={segmentMode === "edit" || formKind !== "installment"}
-                    />
+                    onValueChange={setAmount}
+                        />
                 </div>
             )}
 

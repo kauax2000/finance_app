@@ -80,8 +80,7 @@ export function DashboardBudgetProgress({
                                 <Progress
                                     value={Math.min(100, r.pct)}
                                     tone={over ? "warning" : "default"}
-                                    className="h-2"
-                                    />
+                                />
                             </div>
                         )
                     })

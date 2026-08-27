@@ -69,15 +69,15 @@ export default function DinheiroDoc() {
           <Stack className="gap-1">
             <div className="flex items-baseline justify-between gap-4">
               <span className="text-sm text-muted-foreground">Salário</span>
-              <MoneyDisplay value={8432.15} signed tone="income" tabular />
+              <MoneyDisplay value={8432.15} signed tone="income" mono />
             </div>
             <div className="flex items-baseline justify-between gap-4">
               <span className="text-sm text-muted-foreground">Mercado</span>
-              <MoneyDisplay value={-128.4} signed tone="expense" tabular />
+              <MoneyDisplay value={-128.4} signed tone="expense" mono />
             </div>
             <div className="flex items-baseline justify-between gap-4">
               <span className="text-sm text-muted-foreground">Streaming</span>
-              <MoneyDisplay value={-39.9} signed tone="expense" tabular />
+              <MoneyDisplay value={-39.9} signed tone="expense" mono />
             </div>
           </Stack>
         </Spec>
@@ -89,11 +89,11 @@ export default function DinheiroDoc() {
             </p>
             <div className="flex items-baseline justify-between gap-4">
               <span className="text-sm text-muted-foreground">Mercado</span>
-              <MoneyDisplay value={128.4} tabular />
+              <MoneyDisplay value={128.4} mono />
             </div>
             <div className="flex items-baseline justify-between gap-4">
               <span className="text-sm text-muted-foreground">Streaming</span>
-              <MoneyDisplay value={39.9} tabular />
+              <MoneyDisplay value={39.9} mono />
             </div>
           </Stack>
         </Spec>
@@ -115,7 +115,7 @@ export default function DinheiroDoc() {
         <code>MoneyDisplay</code>{" "}
         já traz. Sem ele, uma coluna de valores dança a
         cada dígito que muda e o olho perde a linha que estava seguindo.{" "}
-        <code>tabular</code>{" "}
+        <code>mono</code>{" "}
         vai além e troca para Geist Mono, quando o
         alinhamento do símbolo também importa.
       </DocNote>

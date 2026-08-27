@@ -128,7 +128,7 @@ function DialogHeader({
         {children}
       </div>
       {!hideSeparator ? (
-        <Separator className="shrink-0 bg-border/60" decorative />
+        <Separator tone="soft" decorative />
       ) : null}
     </>
   )

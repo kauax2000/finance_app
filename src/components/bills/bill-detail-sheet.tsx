@@ -187,7 +187,8 @@ export function BillDetailSheet({
                             <Skeleton className="size-11 shrink-0 rounded-lg" />
                         ) : bill ? (
                             <ColorTile size="lg" color={headerColor}>
-                                <CategoryIconPreview name={iconId} />
+                                {/* `lg` desenha o ícone a 20px, e a 20 o conjunto é o mini. */}
+                                <CategoryIconPreview name={iconId} size="mini" />
                             </ColorTile>
                         ) : (
                             <div className="size-11 shrink-0 rounded-lg bg-muted" aria-hidden />

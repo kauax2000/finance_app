@@ -126,17 +126,41 @@
      é texto (precisa contrastar com a página escura por baixo). No claro os
      dois são a mesma cor — a divisão só existe onde a física obriga. */
   --primary-accent: oklch(0.42 0.12 166);
-  --secondary: oklch(0.955 0 0);
+  /* ── A camada de chão do tema claro ──────────────────────────────────────
+
+     `--secondary`, `--muted` e `--accent` são os cinzas que ficam *sobre* uma
+     superfície: item ativo de navegação, hover de botão, faixa de cabeçalho de
+     tabela, pastilha de badge. Eles desceram de 0,955/0,97 para 0,93/0,94, e o
+     motivo é aritmético, não estético.
+
+     A razão da WCAG é `(L1+0,05)/(L2+0,05)`. Perto do preto aquele `+0,05`
+     domina o denominador e uma diferença pequena de luminosidade rende muito:
+     no escuro, `--accent` (0,269) sobre `--sidebar` (0,205) dá 1,31. Perto do
+     branco o mesmo `+0,05` é ruído e a mesma diferença rende quase nada: no
+     claro, os antigos 0,955 sobre 0,985 davam **1,09**.
+
+     O tema claro precisa de degraus **maiores** para parecer igual, e a paleta
+     dava a ele degraus menores. O sintoma apareceu quatro vezes em componentes
+     diferentes — trilho de slider, trilho de progress, ligado do toggle,
+     pastilha de kbd —, e cada um foi remendado pulando esta camada inteira e
+     caindo direto em `--input-fill`. Quatro remendos com a mesma causa são um
+     problema de token, não de componente.
+
+     O bloco `.dark` não se mexeu: lá os números já estavam certos. */
+  --secondary: oklch(0.93 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   /* O hover do secundário puxa a base na direção do próprio texto: escurece no
      claro, clareia no escuro. Sempre na direção do contato, e por isso não é um
      alfa único servindo os dois temas — `bg-secondary/80` dava 1,03:1 contra a
      base nos dois, invisível, e ainda em direções trocadas: clareava no claro e
-     no escuro afundava o botão na página. */
-  --secondary-hover: oklch(0.88 0 0);
-  --muted: oklch(0.97 0 0);
+     no escuro afundava o botão na página.
+
+     Desceu junto com `--secondary` para o passo entre os dois seguir valendo os
+     mesmos 1,26 de antes; parado em 0,88 ele teria encolhido para 1,17. */
+  --secondary-hover: oklch(0.855 0 0);
+  --muted: oklch(0.94 0 0);
   --muted-foreground: oklch(0.5 0 0);
-  --accent: oklch(0.955 0 0);
+  --accent: oklch(0.93 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
@@ -209,8 +233,13 @@
   --identity-5-surface: color-mix(in srgb, var(--identity-5) 12%, var(--card));
   --identity-6-surface: color-mix(in srgb, var(--identity-6) 12%, var(--card));
   /* Osso de skeleton: `muted` some em telas de baixo gamut, então é um degrau
-     abaixo dele, no mesmo matiz. */
-  --skeleton: oklch(0.925 0 0);
+     abaixo dele, no mesmo matiz.
+
+     Desceu junto com a camada de chão. Parado em 0,925 ele ficaria a 1,05 do
+     `--muted` novo — o degrau prometido pelo comentário teria virado empate, e
+     um esqueleto desenhado sobre superfície `muted` sumiria. Em 0,90 ele mede
+     1,35 contra o cartão, que é o mesmo 1,32 que o tema escuro já entregava. */
+  --skeleton: oklch(0.9 0 0);
   --shadow-xl-value: 0 24px 48px -12px oklch(0 0 0 / 0.14);
 
   --radius: 0.625rem;
@@ -218,8 +247,20 @@
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.42 0.12 166);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
+  /* Era `oklch(0.97)` — **o mesmo valor de `--sidebar`**. A página ativa do
+     menu pintava um fundo idêntico ao da lateral: razão 1,00, e o único sinal
+     que sobrava era o `font-medium`. No escuro os dois sempre foram 0,205 e
+     0,269.
+
+     Desce mais que `--accent` porque a superfície de baixo já é cinza (0,97) e
+     não branca: para render os mesmos ~1,18 do escuro, o degrau precisa sair de
+     um piso mais alto. */
+  --sidebar-accent: oklch(0.915 0 0);
+  /* Era 0,205 contra os 0,145 de `--sidebar-foreground`: o texto do item
+     **ativo** saía mais claro que o dos inativos, e a cor trabalhava contra o
+     estado. Iguais, como já eram no escuro — quem marca o ativo é o chão e o
+     peso. */
+  --sidebar-accent-foreground: oklch(0.145 0 0);
   --sidebar-border: oklch(0.9 0 0);
   --sidebar-ring: oklch(0.348 0.118 166);
   /* Escala de empilhamento.
@@ -409,9 +450,9 @@
 
     /* Animação de uma passada só (entradas, deslizes): não roda. Quem repete
        para sempre fica de fora do seletor e continua girando. */
-    *:not(.animate-spin):not(.animate-pulse):not(.animate-shimmer),
-    *:not(.animate-spin):not(.animate-pulse):not(.animate-shimmer)::before,
-    *:not(.animate-spin):not(.animate-pulse):not(.animate-shimmer)::after {
+    *:not(.animate-spin):not(.animate-pulse),
+    *:not(.animate-spin):not(.animate-pulse)::before,
+    *:not(.animate-spin):not(.animate-pulse)::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
     }
@@ -504,20 +545,6 @@
   --normal-text: var(--destructive-muted-foreground);
 }
 
-/* Skeleton shimmer animation */
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-.animate-shimmer {
-  animation: shimmer 1.5s infinite;
-}
 
 /* Bottom sheet mobile fill: slide-up / slide-down (iOS-like) */
 @keyframes sheet-mobile-fill-enter {

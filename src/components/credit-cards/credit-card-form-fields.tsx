@@ -10,6 +10,7 @@ import {
 } from "@/lib/credit-card-number"
 import { CREDIT_CARD_BILLING_FORM } from "@/lib/credit-card-billing-copy"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { MoneyInput } from "@/components/ui/money-input"
 import { Button } from "@/components/ui/button"
 import {
     Collapsible,
@@ -18,7 +19,6 @@ import {
 } from "@/components/ui/collapsible"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { formatMoneyBrlTyping } from "@/lib/money-brl"
 import {
     Select,
     SelectContent,
@@ -333,15 +333,14 @@ export function CreditCardFormFields({
                 <Label htmlFor={`${idPrefix}-limit`} className="text-xs">
                     Limite (opcional)
                 </Label>
-                <Input
+                <MoneyInput
                     id={`${idPrefix}-limit`}
-                    type="text"
-                    inputMode="decimal"
                     value={creditLimit}
-                    onChange={(e) => onCreditLimitChange(formatMoneyBrlTyping(e.target.value))}
+                    
                     placeholder="0,00"
-                    className="text-sm tabular-nums"
-                />
+                    className="text-sm"
+                onValueChange={onCreditLimitChange}
+                            />
             </div>
             <CreditCardBillingSection
                 idPrefix={idPrefix}

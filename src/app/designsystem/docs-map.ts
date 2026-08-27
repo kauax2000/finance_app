@@ -6,7 +6,6 @@ import AccordionDoc from "./docs/accordion"
 import AlertDoc from "./docs/alert"
 import AlertDialogDoc from "./docs/alert-dialog"
 import AnnouncementBarDoc from "./docs/announcement-bar"
-import AspectRatioDoc from "./docs/aspect-ratio"
 import AvatarDoc from "./docs/avatar"
 import BadgeDoc from "./docs/badge"
 import BreadcrumbDoc from "./docs/breadcrumb"
@@ -50,6 +49,7 @@ import InputOtpDoc from "./docs/input-otp"
 import ItemDoc from "./docs/item"
 import KbdDoc from "./docs/kbd"
 import LabelDoc from "./docs/label"
+import MarcaDoc from "./docs/marca"
 import MenubarDoc from "./docs/menubar"
 import MobileSheetFormChromeDoc from "./docs/mobile-sheet-form-chrome"
 import MobileToqueDoc from "./docs/mobile-toque"
@@ -96,7 +96,6 @@ export const DOCS: Record<string, ComponentType> = {
   "alert": AlertDoc,
   "alert-dialog": AlertDialogDoc,
   "announcement-bar": AnnouncementBarDoc,
-  "aspect-ratio": AspectRatioDoc,
   "avatar": AvatarDoc,
   "badge": BadgeDoc,
   "breadcrumb": BreadcrumbDoc,
@@ -140,6 +139,7 @@ export const DOCS: Record<string, ComponentType> = {
   "item": ItemDoc,
   "kbd": KbdDoc,
   "label": LabelDoc,
+  "marca": MarcaDoc,
   "menubar": MenubarDoc,
   "mobile-sheet-form-chrome": MobileSheetFormChromeDoc,
   "mobile-toque": MobileToqueDoc,

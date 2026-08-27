@@ -102,7 +102,8 @@ function InstallmentPlanCompactRow({
                 <Progress
                     value={pctDone}
                     tone="success"
-                    className="h-1.5 min-w-[4rem] flex-1 basis-24"
+                    size="sm"
+                    className="min-w-16 flex-1 basis-24"
                     aria-label={`${paidCount} de ${plan.totalInstallments} parcelas pagas`}
                 />
             </div>

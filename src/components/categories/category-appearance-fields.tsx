@@ -1,28 +1,56 @@
 "use client"
 
-import { useState } from "react"
+/* Heroicons são redesenhos, não escalas: o glifo de 24 tem traço fino e detalhe
+   que somem quando espremido em 16. O ladrilho renderiza a 16 (`ColorTile` sm e
+   md) ou a 20 (`lg`), então os dois conjuntos sólidos entram e o de contorno
+   sai — era ele que estava aqui, desenhado para 24 e encolhido nas duas.
+
+   Os dois vêm com nome, e não por `import *`: indexar um namespace derrota o
+   tree-shaking e traria as ~300 peças de cada conjunto para o pacote. */
 import {
-    AcademicCapIcon,
-    ArrowTrendingUpIcon,
-    BeakerIcon,
-    BoltIcon,
-    BriefcaseIcon,
-    CakeIcon,
-    ComputerDesktopIcon,
-    EllipsisHorizontalIcon,
-    FaceSmileIcon,
-    GiftIcon,
-    HeartIcon,
-    HomeIcon,
-    PaperAirplaneIcon,
-    PhoneIcon,
-    PuzzlePieceIcon,
-    ReceiptPercentIcon,
-    ShoppingBagIcon,
-    ShoppingCartIcon,
-    TruckIcon,
-    UserGroupIcon,
-} from "@heroicons/react/24/outline"
+    AcademicCapIcon as MicroAcademicCapIcon,
+    ArrowTrendingUpIcon as MicroArrowTrendingUpIcon,
+    BeakerIcon as MicroBeakerIcon,
+    BoltIcon as MicroBoltIcon,
+    BriefcaseIcon as MicroBriefcaseIcon,
+    CakeIcon as MicroCakeIcon,
+    ComputerDesktopIcon as MicroComputerDesktopIcon,
+    EllipsisHorizontalIcon as MicroEllipsisHorizontalIcon,
+    FaceSmileIcon as MicroFaceSmileIcon,
+    GiftIcon as MicroGiftIcon,
+    HeartIcon as MicroHeartIcon,
+    HomeIcon as MicroHomeIcon,
+    PaperAirplaneIcon as MicroPaperAirplaneIcon,
+    PhoneIcon as MicroPhoneIcon,
+    PuzzlePieceIcon as MicroPuzzlePieceIcon,
+    ReceiptPercentIcon as MicroReceiptPercentIcon,
+    ShoppingBagIcon as MicroShoppingBagIcon,
+    ShoppingCartIcon as MicroShoppingCartIcon,
+    TruckIcon as MicroTruckIcon,
+    UserGroupIcon as MicroUserGroupIcon,
+} from "@heroicons/react/16/solid"
+import {
+    AcademicCapIcon as MiniAcademicCapIcon,
+    ArrowTrendingUpIcon as MiniArrowTrendingUpIcon,
+    BeakerIcon as MiniBeakerIcon,
+    BoltIcon as MiniBoltIcon,
+    BriefcaseIcon as MiniBriefcaseIcon,
+    CakeIcon as MiniCakeIcon,
+    ComputerDesktopIcon as MiniComputerDesktopIcon,
+    EllipsisHorizontalIcon as MiniEllipsisHorizontalIcon,
+    FaceSmileIcon as MiniFaceSmileIcon,
+    GiftIcon as MiniGiftIcon,
+    HeartIcon as MiniHeartIcon,
+    HomeIcon as MiniHomeIcon,
+    PaperAirplaneIcon as MiniPaperAirplaneIcon,
+    PhoneIcon as MiniPhoneIcon,
+    PuzzlePieceIcon as MiniPuzzlePieceIcon,
+    ReceiptPercentIcon as MiniReceiptPercentIcon,
+    ShoppingBagIcon as MiniShoppingBagIcon,
+    ShoppingCartIcon as MiniShoppingCartIcon,
+    TruckIcon as MiniTruckIcon,
+    UserGroupIcon as MiniUserGroupIcon,
+} from "@heroicons/react/20/solid"
 import type { HeroIcon } from "@/types/navigation"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
@@ -71,33 +99,36 @@ export const CATEGORY_ICONS = [
 
 export type CategoryIconId = (typeof CATEGORY_ICONS)[number]
 
-const categoryIconComponents: Record<CategoryIconId, HeroIcon> = {
-    utensils: CakeIcon,
-    car: TruckIcon,
-    home: HomeIcon,
-    "gamepad-2": PuzzlePieceIcon,
-    heart: HeartIcon,
-    "graduation-cap": AcademicCapIcon,
-    laptop: ComputerDesktopIcon,
-    briefcase: BriefcaseIcon,
-    "trending-up": ArrowTrendingUpIcon,
-    gift: GiftIcon,
-    "shopping-cart": ShoppingCartIcon,
-    coffee: BeakerIcon,
-    plane: PaperAirplaneIcon,
-    phone: PhoneIcon,
-    zap: BoltIcon,
-    "more-horizontal": EllipsisHorizontalIcon,
-    "paw-print": HeartIcon,
-    dog: FaceSmileIcon,
-    cat: FaceSmileIcon,
-    "users-round": UserGroupIcon,
-    "shopping-bag": ShoppingBagIcon,
-    receipt: ReceiptPercentIcon,
-    bus: TruckIcon,
-    bike: TruckIcon,
-    pill: BeakerIcon,
-    stethoscope: HeartIcon,
+/** O corpo do ícone acompanha a caixa em que ele é desenhado. */
+type CategoryIconSet = { micro: HeroIcon; mini: HeroIcon }
+
+const categoryIconComponents: Record<CategoryIconId, CategoryIconSet> = {
+    utensils: { micro: MicroCakeIcon, mini: MiniCakeIcon },
+    car: { micro: MicroTruckIcon, mini: MiniTruckIcon },
+    home: { micro: MicroHomeIcon, mini: MiniHomeIcon },
+    "gamepad-2": { micro: MicroPuzzlePieceIcon, mini: MiniPuzzlePieceIcon },
+    heart: { micro: MicroHeartIcon, mini: MiniHeartIcon },
+    "graduation-cap": { micro: MicroAcademicCapIcon, mini: MiniAcademicCapIcon },
+    laptop: { micro: MicroComputerDesktopIcon, mini: MiniComputerDesktopIcon },
+    briefcase: { micro: MicroBriefcaseIcon, mini: MiniBriefcaseIcon },
+    "trending-up": { micro: MicroArrowTrendingUpIcon, mini: MiniArrowTrendingUpIcon },
+    gift: { micro: MicroGiftIcon, mini: MiniGiftIcon },
+    "shopping-cart": { micro: MicroShoppingCartIcon, mini: MiniShoppingCartIcon },
+    coffee: { micro: MicroBeakerIcon, mini: MiniBeakerIcon },
+    plane: { micro: MicroPaperAirplaneIcon, mini: MiniPaperAirplaneIcon },
+    phone: { micro: MicroPhoneIcon, mini: MiniPhoneIcon },
+    zap: { micro: MicroBoltIcon, mini: MiniBoltIcon },
+    "more-horizontal": { micro: MicroEllipsisHorizontalIcon, mini: MiniEllipsisHorizontalIcon },
+    "paw-print": { micro: MicroHeartIcon, mini: MiniHeartIcon },
+    dog: { micro: MicroFaceSmileIcon, mini: MiniFaceSmileIcon },
+    cat: { micro: MicroFaceSmileIcon, mini: MiniFaceSmileIcon },
+    "users-round": { micro: MicroUserGroupIcon, mini: MiniUserGroupIcon },
+    "shopping-bag": { micro: MicroShoppingBagIcon, mini: MiniShoppingBagIcon },
+    receipt: { micro: MicroReceiptPercentIcon, mini: MiniReceiptPercentIcon },
+    bus: { micro: MicroTruckIcon, mini: MiniTruckIcon },
+    bike: { micro: MicroTruckIcon, mini: MiniTruckIcon },
+    pill: { micro: MicroBeakerIcon, mini: MiniBeakerIcon },
+    stethoscope: { micro: MicroHeartIcon, mini: MiniHeartIcon },
 }
 
 export function isKnownCategoryIcon(id: string | null | undefined): id is CategoryIconId {
@@ -108,8 +139,20 @@ export function normalizeCategoryIcon(id: string | null | undefined): CategoryIc
     return isKnownCategoryIcon(id) ? id : CATEGORY_ICONS[0]
 }
 
-export function CategoryIconPreview({ name, className }: { name: string; className?: string }) {
-    const Cmp = categoryIconComponents[normalizeCategoryIcon(name)] ?? EllipsisHorizontalIcon
+export function CategoryIconPreview({
+    name,
+    className,
+    size = "micro",
+}: {
+    name: string
+    className?: string
+    /** `micro` para caixa de 16px, `mini` para 20px — a régua de Iconografia. */
+    size?: "micro" | "mini"
+}) {
+    const set =
+        categoryIconComponents[normalizeCategoryIcon(name)] ??
+        categoryIconComponents["more-horizontal"]
+    const Cmp = set[size]
     return <Cmp className={className} aria-hidden />
 }
 

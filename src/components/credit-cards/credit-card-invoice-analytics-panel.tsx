@@ -491,7 +491,7 @@ function InstallmentPlanRowProgressBlock({
             <Progress
                 value={row.pctDone}
                 tone="success"
-                className="h-1.5"
+                size="sm"
                 aria-label={`${row.paid} de ${row.total} parcelas pagas, ${row.remaining} ${row.remaining === 1 ? "restante" : "restantes"}`}
             />
             <div className="space-y-0.5 md:hidden" aria-label="Detalhes do parcelamento">
@@ -1088,7 +1088,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                 </>
                             )}
                     </section>
-                    <Separator className="bg-border/60" />
+                    <Separator tone="soft" />
                     <section className="space-y-3 py-6 text-sm">
                         <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                             Hábitos de consumo
@@ -1157,7 +1157,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                             </InsightNoticePanel>
                         </div>
                     </section>
-                    <Separator className="bg-border/60" />
+                    <Separator tone="soft" />
                     <section className="space-y-3 pt-6 text-sm">
                         <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-2">
                             <h3 className="self-end text-xs font-semibold uppercase tracking-wide leading-none text-muted-foreground">
@@ -1255,7 +1255,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                             <span className="flex shrink-0 items-baseline gap-0.5 tabular-nums">
                                                 <MoneyDisplay
                                                     value={row.monthlyCharge}
-                                                    size="default"
+                                                    size="md"
                                                     className="font-semibold"
                                                 />
                                                 <span className="text-xs font-medium text-muted-foreground">

@@ -83,8 +83,8 @@ export default function DesignSystemIndexPage() {
                 <p className="mt-4 text-sm leading-relaxed text-pretty text-muted-foreground">
                     Uma página por componente e por padrão, com o espécime vivo ao lado
                     da regra. Os componentes vivem em{" "}
-                    <Code>src/components/ui/</Code> e os tokens em{" "}
-                    <Code>src/app/globals.css</Code>.
+                    <Code variant="inline">src/components/ui/</Code> e os tokens em{" "}
+                    <Code variant="inline">src/app/globals.css</Code>.
                 </p>
                 <dl className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border pt-4 text-sm">
                     <div className="flex items-baseline gap-2">

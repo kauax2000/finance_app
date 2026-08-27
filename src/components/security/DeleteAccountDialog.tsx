@@ -26,10 +26,11 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { CustomForm } from "@/components/ui/form"
+import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ArrowPathIcon, ExclamationTriangleIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { ExclamationTriangleIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { CheckCircleIcon, TrashIcon as TrashMiniIcon } from "@heroicons/react/20/solid"
 import { CheckCircleIcon as CheckCircleOutlineIcon } from "@heroicons/react/24/outline"
 const dialogFooterClass =
@@ -305,7 +306,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                     >
                         {loading ? (
                             <>
-                                <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
+                                <Spinner className="mr-2" />
                                 Excluindo...
                             </>
                         ) : (
@@ -350,7 +351,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                     >
                         {loading ? (
                             <>
-                                <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
+                                <Spinner className="mr-2" />
                                 Excluindo...
                             </>
                         ) : (

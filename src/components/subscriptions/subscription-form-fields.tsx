@@ -9,8 +9,8 @@ import type {
 } from "@/lib/supabase"
 import type { PaymentMethod } from "@/lib/payment-methods"
 import { Input } from "@/components/ui/input"
+import { MoneyInput } from "@/components/ui/money-input"
 import { Label } from "@/components/ui/label"
-import { formatMoneyBrlTyping } from "@/lib/money-brl"
 import {
     Select,
     SelectContent,
@@ -107,15 +107,15 @@ export function SubscriptionFormFields({
                     <Label htmlFor="sub-form-amount" className="text-xs">
                         Valor
                     </Label>
-                    <Input
+                    <MoneyInput
                         id="sub-form-amount"
-                        inputMode="decimal"
                         value={amount}
-                        onChange={(e) => setAmount(formatMoneyBrlTyping(e.target.value))}
+                        
                         placeholder="0,00"
-                        className="text-sm tabular-nums"
+                        className="text-sm"
                         required
-                    />
+                    onValueChange={setAmount}
+                            />
                 </div>
                 <div className="space-y-1.5">
                     <Label htmlFor="sub-form-billing" className="text-xs">

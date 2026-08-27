@@ -22,7 +22,7 @@ import {
     type MobileAccountMenuNavItem,
 } from "@/config/mobile-navigation"
 import { isExactPath, ROUTES } from "@/config/navigation"
-import { getAvatarColor } from "@/lib/avatar"
+import { identityToneFor, type IdentityTone } from "@/lib/avatar"
 import { cn, getInitials } from "@/lib/utils"
 
 function isMobileNavTabActive(pathname: string, href: string): boolean {
@@ -37,7 +37,7 @@ type MobileAccountMenuSlotContentProps = {
     showEllipsis: boolean
     showSkeleton: boolean
     userName: string
-    avatarColor: string
+    avatarTone: IdentityTone
     avatarUrl?: string | null
 }
 
@@ -46,7 +46,7 @@ function MobileAccountMenuSlotContent({
     showEllipsis,
     showSkeleton,
     userName,
-    avatarColor,
+    avatarTone,
     avatarUrl,
 }: MobileAccountMenuSlotContentProps) {
     const reduceMotion = useReducedMotion()
@@ -92,8 +92,9 @@ function MobileAccountMenuSlotContent({
                 ) : (
                     <span
                         className={cn(
-                            "flex size-full items-center justify-center text-2xs font-medium text-white",
-                            avatarColor
+                            "flex size-full items-center justify-center text-2xs font-medium",
+                            avatarTone.surface,
+                            avatarTone.ink
                         )}
                     >
                         {getInitials(userName)}
@@ -139,9 +140,10 @@ export function MobileBottomNav() {
 
     const userName =
         user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuário"
-    const avatarColor =
-        profile?.avatar_color?.trim() ||
-        (user?.email ? getAvatarColor(user.email) : getAvatarColor(userName))
+    const avatarTone = identityToneFor(
+        profile?.avatar_color,
+        user?.email || userName
+    )
 
     const showSkeleton = loading || (user != null && !profileReady)
     const showEllipsis = !user && !loading
@@ -178,7 +180,7 @@ export function MobileBottomNav() {
                                 showEllipsis={showEllipsis}
                                 showSkeleton={showSkeleton}
                                 userName={userName}
-                                avatarColor={avatarColor}
+                                avatarTone={avatarTone}
                                 avatarUrl={user?.user_metadata?.avatar_url}
                             />
                         </span>

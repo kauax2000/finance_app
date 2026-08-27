@@ -11,7 +11,7 @@ import type { WorkspaceMemberDirectoryEntry } from "@/components/dashboard/use-d
 import { transactionParceladaRowChip } from "@/lib/tag-chip-classes"
 import { formatTransactionDayPtBr } from "@/lib/transaction-date"
 import { cn, getInitials } from "@/lib/utils"
-import { getAvatarColor } from "@/lib/avatar"
+import { identityToneFor } from "@/lib/avatar"
 import { ROUTES } from "@/config/navigation"
 import { labelYearMonthPt } from "@/lib/budget-month"
 import { signedCurrencyBRL } from "@/lib/formatters"
@@ -165,15 +165,14 @@ export function DashboardRecentTransactions({
                                 const entry =
                                     memberDirectoryByUserId[transaction.user_id]
                                 const avatarUrl = entry?.avatar_url?.trim() || null
-                                const avatarColor =
-                                    entry?.avatar_color?.trim() ||
-                                    getAvatarColor(
-                                        initialsSource(
-                                            transaction.user_id,
-                                            currentUserId,
-                                            memberDirectoryByUserId,
-                                        ),
-                                    )
+                                const avatarTone = identityToneFor(
+                                    entry?.avatar_color,
+                                    initialsSource(
+                                        transaction.user_id,
+                                        currentUserId,
+                                        memberDirectoryByUserId,
+                                    ),
+                                )
                                 const initials = getInitials(
                                     initialsSource(
                                         transaction.user_id,
@@ -254,8 +253,9 @@ export function DashboardRecentTransactions({
                                                         ) : (
                                                             <div
                                                                 className={cn(
-                                                                    "flex size-full items-center justify-center text-[8px] font-semibold text-white",
-                                                                    avatarColor,
+                                                                    "flex size-full items-center justify-center text-[8px] font-semibold",
+                                                                    avatarTone.surface,
+                                                                    avatarTone.ink,
                                                                 )}
                                                             >
                                                                 {initials}

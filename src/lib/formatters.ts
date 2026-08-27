@@ -31,6 +31,20 @@ function getNumberFormat(opts: CurrencyFormatOptions): Intl.NumberFormat {
 }
 
 /**
+ * O menos tipográfico, e não o hífen do teclado.
+ *
+ * O `Intl` devolve `-R$ 89,90` com U+002D; o caminho de `signed` sempre usou
+ * U+2212. Numa coluna que mistura os dois — um extrato com filtro de entradas —
+ * o traço trocava de largura e de altura de linha para linha. O `Intl` não
+ * deixa escolher o glifo, então a troca é depois da formatação.
+ */
+const MINUS = "\u2212"
+
+function withTypographicMinus(text: string): string {
+  return text.replace("-", MINUS)
+}
+
+/**
  * Formats a value as BRL (or another currency) for display.
  */
 export function currencyBRL(
@@ -46,10 +60,10 @@ export function currencyBRL(
   })
   if (signed) {
     if (value === 0) return fmt.format(0)
-    const sign = value > 0 ? "+" : "−"
+    const sign = value > 0 ? "+" : MINUS
     return `${sign}${fmt.format(Math.abs(value))}`
   }
-  return fmt.format(value)
+  return withTypographicMinus(fmt.format(value))
 }
 
 export function currencyCompactBRL(

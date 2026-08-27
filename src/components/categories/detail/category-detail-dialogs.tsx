@@ -7,6 +7,7 @@ import {
     mobileFormSheetContentClassName,
 } from "@/components/ui/mobile-sheet-form-chrome"
 import { Sheet, SheetContent, SheetFooter } from "@/components/ui/sheet"
+import { MoneyInput } from "@/components/ui/money-input"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -36,7 +37,6 @@ import {
 } from "@/components/categories/category-appearance-fields"
 import type { Budget, Category } from "@/lib/supabase"
 import { periodBoundsFromYearMonth } from "@/lib/budget-month"
-import { formatMoneyBrlTyping } from "@/lib/money-brl"
 import { CategoryDeleteAlertBody } from "@/components/categories/category-delete-alert-body"
 
 type CategoryDetailDialogsProps = {
@@ -138,14 +138,12 @@ export function CategoryDetailDialogs({
                     </p>
                     <div className="space-y-2">
                         <Label htmlFor="category-edit-budget-amount">Valor limite (R$)</Label>
-                        <Input
+                        <MoneyInput
                             id="category-edit-budget-amount"
-                            inputMode="decimal"
                             placeholder="Ex: 1.500,00"
                             value={editBudgetAmount}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                                onEditBudgetAmountChange(formatMoneyBrlTyping(e.target.value))
-                            }
+                            
+                        onValueChange={onEditBudgetAmountChange}
                         />
                     </div>
                     {budget ? (

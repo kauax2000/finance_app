@@ -17,7 +17,7 @@ export default function ToggleGroupDoc() {
   <ToggleGroupItem value="mes">Mês</ToggleGroupItem>
 </ToggleGroup>`}
       >
-        <ToggleGroup type="single" defaultValue="mes" variant="outline">
+        <ToggleGroup type="single" defaultValue="mes">
           <ToggleGroupItem value="semana">Semana</ToggleGroupItem>
           <ToggleGroupItem value="mes">Mês</ToggleGroupItem>
           <ToggleGroupItem value="ano">Ano</ToggleGroupItem>
@@ -30,7 +30,7 @@ export default function ToggleGroupDoc() {
   <ToggleGroupItem value="pix">Pix</ToggleGroupItem>
 </ToggleGroup>`}
       >
-        <ToggleGroup type="multiple" defaultValue={["pix"]} variant="outline">
+        <ToggleGroup type="multiple" defaultValue={["pix"]}>
           <ToggleGroupItem value="pix">Pix</ToggleGroupItem>
           <ToggleGroupItem value="cartao">Cartão</ToggleGroupItem>
           <ToggleGroupItem value="dinheiro">Dinheiro</ToggleGroupItem>

@@ -1,9 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { ArrowPathIcon, CheckIcon, DocumentDuplicateIcon, EnvelopeIcon, LinkIcon, PaperAirplaneIcon } from "@heroicons/react/16/solid"
+import { CheckIcon, DocumentDuplicateIcon, EnvelopeIcon, LinkIcon, PaperAirplaneIcon } from "@heroicons/react/16/solid"
 import type { User } from "@supabase/supabase-js"
 import { CustomForm } from "@/components/ui/form"
+import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -325,7 +326,7 @@ export function WorkspaceInviteDialog({
                                                 >
                                                     {savingInvite ? (
                                                         <>
-                                                            <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
+                                                            <Spinner className="mr-2" />
                                                             Enviando...
                                                         </>
                                                     ) : (
@@ -398,7 +399,7 @@ export function WorkspaceInviteDialog({
                                                                     }
                                                                 >
                                                                     {busyInviteId === pendingLinkInvite.id ? (
-                                                                        <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                                                                        <Spinner />
                                                                     ) : (
                                                                         "Excluir link"
                                                                     )}
@@ -422,7 +423,7 @@ export function WorkspaceInviteDialog({
                                                 >
                                                     {savingLink ? (
                                                         <>
-                                                            <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
+                                                            <Spinner className="mr-2" />
                                                             Gerando...
                                                         </>
                                                     ) : (
@@ -468,7 +469,7 @@ export function WorkspaceInviteDialog({
                                                                         }
                                                                     >
                                                                         {busyResendInviteId === invite.id ? (
-                                                                            <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                                                                            <Spinner />
                                                                         ) : (
                                                                             <PaperAirplaneIcon className="h-4 w-4" />
                                                                         )}
@@ -541,7 +542,7 @@ export function WorkspaceInviteDialog({
                                             >
                                                 {savingInvite ? (
                                                     <>
-                                                        <ArrowPathIcon className="h-4 w-4 animate-spin mr-2" />
+                                                        <Spinner className="mr-2" />
                                                         Enviando...
                                                     </>
                                                 ) : (
@@ -617,7 +618,7 @@ export function WorkspaceInviteDialog({
                                                             >
                                                                 {busyInviteId ===
                                                                 pendingLinkInvite.id ? (
-                                                                    <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                                                                    <Spinner />
                                                                 ) : (
                                                                     "Excluir link"
                                                                 )}
@@ -643,7 +644,7 @@ export function WorkspaceInviteDialog({
                                             >
                                                 {savingLink ? (
                                                     <>
-                                                        <ArrowPathIcon className="h-4 w-4 animate-spin mr-2" />
+                                                        <Spinner className="mr-2" />
                                                         Gerando...
                                                     </>
                                                 ) : (
@@ -693,7 +694,7 @@ export function WorkspaceInviteDialog({
                                                                 >
                                                                     {busyResendInviteId ===
                                                                     invite.id ? (
-                                                                        <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                                                                        <Spinner />
                                                                     ) : (
                                                                         <PaperAirplaneIcon className="h-4 w-4" />
                                                                     )}

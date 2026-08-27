@@ -14,7 +14,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
-import { Kbd } from "@/components/ui/kbd"
+import { KbdShortcut } from "@/components/ui/kbd-shortcut"
 import { CATEGORY_ORDER, REGISTRY } from "./registry"
 import { SEARCH_INDEX } from "./search-index"
 
@@ -216,38 +216,11 @@ function DsSearchTrigger({ onClick }: { onClick: () => void }) {
     >
       <MagnifyingGlassIcon className="shrink-0 opacity-70" aria-hidden />
       <span className="truncate max-lg:sr-only">Buscar</span>
-      <CommandShortcutHint />
+      {/* `aria-hidden` porque o atalho já é anunciado pelo
+          `aria-keyshortcuts` do próprio botão — repetir a tecla no nome
+          acessível diria a mesma coisa duas vezes. */}
+      <KbdShortcut keys="mod+k" aria-hidden className="ml-auto max-lg:hidden" />
     </Button>
   )
 }
 
-/**
- * `⌘K` no Mac, `Ctrl K` no resto.
- *
- * A escolha depende do `navigator`, que não existe no servidor. Renderizar o
- * palpite e corrigir depois faria a tecla piscar de errada para certa na
- * primeira pintura, então até saber ele não mostra nada — e o que aparece,
- * aparece certo.
- */
-function CommandShortcutHint() {
-  const [shortcut, setShortcut] = React.useState<string | null>(null)
-
-  React.useEffect(() => {
-    const isApple = /mac|iphone|ipad|ipod/i.test(
-      navigator.platform || navigator.userAgent
-    )
-    // `⌘K` cola porque o símbolo já é uma tecla; `Ctrl K` precisa do espaço,
-    // senão vira uma palavra só.
-    setShortcut(isApple ? "⌘K" : "Ctrl K")
-  }, [])
-
-  if (shortcut == null) return null
-
-  // Uma tecla só, e não `KbdGroup` com duas: o atalho é um gesto, não duas
-  // teclas em sequência. Separadas, o olho lê "⌘" e "K" como dois passos.
-  return (
-    <Kbd className="ml-auto max-lg:hidden" aria-hidden>
-      {shortcut}
-    </Kbd>
-  )
-}

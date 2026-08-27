@@ -97,18 +97,23 @@ export default function TipografiaDoc() {
       </Group>
 
       <DocNote title="A serifa é voz de display, não de título">
-        Ela vive em <code>.page-title</code> e <code>.wordmark</code>, e em mais
-        lugar nenhum. Peso 400 numa serifa de contraste alto a 16px não lê como
-        título — lê como texto menor, e some a hierarquia contra o corpo em
-        Inter. Título de cartão, de diálogo e de seção seguem na sans. Guardar a
-        face para onde ela tem tamanho é o que a mantém bonita.
+        Ela vive em <code>.page-title</code> e <code>.wordmark</code>, mais o
+        &ldquo;DS&rdquo; do cabeçalho deste catálogo — e em mais lugar nenhum.
+        Peso 400 numa serifa de contraste alto a 16px não lê como título — lê
+        como texto menor, e some a hierarquia contra o corpo em Inter. Título
+        de cartão, de diálogo e de seção seguem na sans. Guardar a face para
+        onde ela tem tamanho é o que a mantém bonita. A sigla é a exceção que
+        confirma a régua: duas maiúsculas não são texto, e o motivo dela está
+        em <strong>Marca</strong>.
       </DocNote>
 
-      <DocNote title="O wordmark é o único texto que não é da interface">
-        Antes o nome saía em Inter seminegrito, sem tratamento nenhum — a marca
-        tinha um símbolo caligráfico ao lado de uma neogrotesca neutra, duas
-        metades falando línguas diferentes. Agora ele usa{" "}
-        <code>.wordmark</code>, que é a mesma serifa do título de tela.
+      <DocNote title=".wordmark é o nome quando ele precisa ser texto">
+        O nome escrito virou desenho: quem apresenta a marca é o lockup de{" "}
+        <strong>Marca</strong>, um SVG onde símbolo e palavra estão no mesmo
+        traçado. A classe continua valendo para onde não cabe SVG — assunto de
+        e-mail, título de janela, texto puro — e ela existe pela mesma razão de
+        sempre: antes o nome saía em Inter seminegrito ao lado de um símbolo
+        caligráfico, duas metades da marca falando línguas diferentes.
       </DocNote>
 
       <DocNote title="Ledger é peso único, e o 400 não se força">

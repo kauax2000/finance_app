@@ -48,6 +48,18 @@ export default function SkeletonDoc() {
         ))}
       </DocSection>
 
+      <DocNote title="A animação é pulse, e o shimmer não existe mais">
+        O <code>globals.css</code>{" "}
+        carregava <code>@keyframes shimmer</code>{" "}
+        e uma classe <code>.animate-shimmer</code>{" "}
+        que <strong>nenhum arquivo usava</strong> — nem o Skeleton, nem tela
+        alguma. Ela ainda ocupava lugar na lista de exceções do{" "}
+        <code>prefers-reduced-motion</code>, protegendo algo que não existia.
+        Saiu. O osso pulsa, e pulso é animação que se repete: ela continua
+        rodando mesmo com movimento reduzido, porque é ela que comunica que a
+        tela está viva.
+      </DocNote>
+
       <DocNote title="Ele tem token próprio">
         <code>--skeleton</code> é um degrau abaixo de <code>--muted</code>. Com o
         cinza de muted, o osso some em telas de baixo gamut e em ambiente claro,

@@ -143,10 +143,13 @@ export function BillPendingCard({
                                 color={headerColor}
                                 className="col-start-1 row-span-2 self-start"
                             >
+                                {/* `lg` desenha o ícone a 20px, e a 20 o
+                                    conjunto é o mini. */}
                                 <CategoryIconPreview
                                     name={normalizeCategoryIcon(
                                         row.bill.icon ?? "receipt"
                                     )}
+                                    size="mini"
                                 />
                             </ColorTile>
                         )}

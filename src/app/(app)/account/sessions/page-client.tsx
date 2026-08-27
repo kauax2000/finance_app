@@ -3,10 +3,11 @@
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
+import { Spinner } from "@/components/ui/spinner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowPathIcon, ArrowRightStartOnRectangleIcon, ComputerDesktopIcon, DevicePhoneMobileIcon, GlobeAltIcon } from "@heroicons/react/16/solid"
+import { ArrowRightStartOnRectangleIcon, ComputerDesktopIcon, DevicePhoneMobileIcon, GlobeAltIcon } from "@heroicons/react/16/solid"
 import { CheckCircleIcon } from "@heroicons/react/24/outline"
 import { describeEdgeInvokeClientFailure } from "@/lib/edge-errors"
 import { Session, getSessions, revokeSession, revokeAllSessions } from "@/lib/sessions"
@@ -175,7 +176,7 @@ export default function SessionsPage() {
                             disabled={revoking === "all"}
                         >
                             {revoking === "all" ? (
-                                <ArrowPathIcon className="size-4 animate-spin sm:size-3.5" />
+                                <Spinner className="sm:size-3.5" />
                             ) : (
                                 <ArrowRightStartOnRectangleIcon className="size-4 opacity-70 sm:size-3.5" />
                             )}
@@ -252,7 +253,7 @@ export default function SessionsPage() {
                                                         className="shrink-0 text-muted-foreground hover:text-destructive md:size-icon-xs"
                                                     >
                                                         {revoking === session.id ? (
-                                                            <ArrowPathIcon className="h-4 w-4 animate-spin md:h-3.5 md:w-3.5" />
+                                                            <Spinner className="md:h-3.5 md:w-3.5" />
                                                         ) : (
                                                             <ArrowRightStartOnRectangleIcon className="h-4 w-4 md:h-3.5 md:w-3.5" />
                                                         )}

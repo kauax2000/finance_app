@@ -136,10 +136,10 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                 <div className="hidden min-w-0 flex-1 items-center gap-2 md:flex">
                     <div className="flex shrink-0 items-center gap-2">
                         <SidebarTrigger className="-ml-1" />
-                        <Separator
-                            orientation="vertical"
-                            className="h-7 shrink-0 bg-border"
-                        />
+                        {/* O `h-7` finalmente vale: enquanto as medidas da
+                            base eram classes com variante, ele não vencia e a
+                            régua saía com os 16px do padrão. */}
+                        <Separator orientation="vertical" className="h-7" />
                     </div>
                     <div className="min-w-0 flex-1">
                         {titleMode === "dashboard" ? (

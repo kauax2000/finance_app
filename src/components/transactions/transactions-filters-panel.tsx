@@ -11,11 +11,11 @@ import { TransactionsDatePresets } from "@/components/transactions/transactions-
 import type { TransactionsDatePresetKey } from "@/components/transactions/transactions-date-presets"
 import { TransactionsDateRangeForm } from "@/components/transactions/transactions-date-range-form"
 import { Badge } from "@/components/ui/badge"
+import { MoneyInput } from "@/components/ui/money-input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { formatMoneyBrlTyping } from "@/lib/money-brl"
 import {
     Popover,
     PopoverContent,
@@ -32,11 +32,12 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 
+/* A régua sangra para fora do padding da gaveta, por isso a largura calculada.
+   Ela precisava copiar o prefixo `data-[orientation=horizontal]:` para vencer o
+   `w-full` da base — agora a base é classe crua e a daqui ganha sozinha. O
+   `opacity-60` virou `tone="soft"`, que é o mesmo peso com nome. */
 const FILTERS_DRAWER_SECTION_DIVIDER_CLASSNAME =
-    "my-2.5 -mx-4 opacity-60 sm:-mx-5 " +
-    "data-[orientation=horizontal]:max-w-none " +
-    "data-[orientation=horizontal]:w-[calc(100%+2rem)] " +
-    "sm:data-[orientation=horizontal]:w-[calc(100%+2.5rem)]"
+    "my-2.5 -mx-4 max-w-none w-[calc(100%+2rem)] sm:-mx-5 sm:w-[calc(100%+2.5rem)]"
 
 /** Full-width selects aligned with compact drawer inputs (border, radius, focus). */
 const FILTERS_DRAWER_SELECT_TRIGGER_CLASSNAME =
@@ -276,7 +277,7 @@ export function TransactionsFiltersPanel({
                         </div>
                     </FilterSection>
 
-                    <Separator className={FILTERS_DRAWER_SECTION_DIVIDER_CLASSNAME} />
+                    <Separator tone="soft" className={FILTERS_DRAWER_SECTION_DIVIDER_CLASSNAME} />
                 </>
             ) : null}
 
@@ -737,14 +738,13 @@ export function TransactionsFiltersPanel({
                         >
                             Mínimo
                         </Label>
-                        <Input
+                        <MoneyInput
                             id={`${fieldUid}-amt-min`}
-                            type="text"
-                            inputMode="decimal"
                             placeholder="0,00"
                             value={amountMin}
-                            onChange={(e) => onAmountMinChange(formatMoneyBrlTyping(e.target.value))}
-                        />
+                            
+                        onValueChange={onAmountMinChange}
+                            />
                     </div>
                     <div className="space-y-2">
                         <Label
@@ -753,19 +753,18 @@ export function TransactionsFiltersPanel({
                         >
                             Máximo
                         </Label>
-                        <Input
+                        <MoneyInput
                             id={`${fieldUid}-amt-max`}
-                            type="text"
-                            inputMode="decimal"
                             placeholder="0,00"
                             value={amountMax}
-                            onChange={(e) => onAmountMaxChange(formatMoneyBrlTyping(e.target.value))}
-                        />
+                            
+                        onValueChange={onAmountMaxChange}
+                            />
                     </div>
                 </div>
             </FilterSection>
 
-            <Separator className={FILTERS_DRAWER_SECTION_DIVIDER_CLASSNAME} />
+            <Separator tone="soft" className={FILTERS_DRAWER_SECTION_DIVIDER_CLASSNAME} />
 
             <FilterSection title="Descrição">
                 <Input
@@ -778,7 +777,7 @@ export function TransactionsFiltersPanel({
                 />
             </FilterSection>
 
-            <Separator className={FILTERS_DRAWER_SECTION_DIVIDER_CLASSNAME} />
+            <Separator tone="soft" className={FILTERS_DRAWER_SECTION_DIVIDER_CLASSNAME} />
 
             <FilterSection title="Origem">
                 <div className="space-y-6">

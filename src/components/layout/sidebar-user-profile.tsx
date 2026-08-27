@@ -1,5 +1,4 @@
 "use client"
-/* eslint-disable @next/next/no-img-element -- sidebar avatar from user metadata URL */
 
 import Link from "next/link"
 import { useAuth } from "@/components/providers"
@@ -8,10 +7,11 @@ import {
     SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { UserMenu } from "@/components/layout/user-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { EllipsisVerticalIcon } from "@heroicons/react/16/solid"
-import { getInitials } from "@/lib/utils"
-import { getAvatarColor } from "@/lib/avatar"
+import { cn, getInitials } from "@/lib/utils"
+import { identityToneFor } from "@/lib/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ROUTES } from "@/config/navigation"
 
@@ -19,9 +19,10 @@ export function SidebarUserProfile() {
     const { user, profile, loading, profileReady } = useAuth()
     const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuário"
     const userEmail = user?.email || ""
-    const avatarColor =
-        profile?.avatar_color?.trim() ||
-        (user?.email ? getAvatarColor(user.email) : getAvatarColor(userName))
+    const avatarTone = identityToneFor(
+        profile?.avatar_color,
+        user?.email || userName
+    )
 
     if (loading || (user && !profileReady)) {
         return (
@@ -60,20 +61,23 @@ export function SidebarUserProfile() {
             <SidebarMenuItem>
                 <UserMenu>
                     <button className="w-full flex items-center gap-2 overflow-hidden rounded-md p-2 text-left ring-sidebar-ring outline-hidden transition-[width,height,padding] group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-0! hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 h-12 text-sm">
-                        <div className="group/avatar relative flex h-8 w-8 shrink-0 select-none rounded-lg overflow-hidden bg-muted">
+                        {/* Era markup desenhado à mão: uma caixa recortada com
+                            a foto crua dentro. O `Avatar` do design system faz
+                            o mesmo recorte, entra em fade quando a foto chega e
+                            cai nas iniciais sozinho quando ela falha — que era
+                            justamente o que a versão à mão não fazia: endereço
+                            quebrado deixava um quadrado cinza vazio. */}
+                        <Avatar size="sm" shape="rounded" className="select-none">
                             {user?.user_metadata?.avatar_url ? (
-                                <img
+                                <AvatarImage
                                     src={user.user_metadata.avatar_url}
-                                    alt={userName}
-                                    className="aspect-square size-full object-cover"
-                                    decoding="async"
+                                    alt=""
                                 />
-                            ) : (
-                                <div className={`flex h-full w-full items-center justify-center text-white text-sm font-medium ${avatarColor}`}>
-                                    {getInitials(userName)}
-                                </div>
-                            )}
-                        </div>
+                            ) : null}
+                            <AvatarFallback className={cn(avatarTone.surface, avatarTone.ink)}>
+                                {getInitials(userName)}
+                            </AvatarFallback>
+                        </Avatar>
                         <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                             <span className="truncate font-medium">{userName}</span>
                             <span className="truncate text-xs text-muted-foreground">{userEmail}</span>

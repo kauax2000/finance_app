@@ -38,9 +38,30 @@ const [reais, setReais] = React.useState<number | null>(null)
         pergunta de onde fica a vírgula.
       </DocNote>
 
-      <DocNote title="Geist Mono e tabular-nums">
-        Com largura de dígito variável, o número inteiro se desloca a cada
-        centavo digitado e o olho perde o dígito que estava conferindo.
+      <DocNote title="A figura tabular é obrigatória; a Geist Mono é opcional">
+        Com largura de dígito variável o número inteiro se desloca a cada
+        centavo digitado, e o olho perde o dígito que estava conferindo — por
+        isso a figura tabular está sempre ligada. A <strong>face</strong>{" "}
+        é outra conversa: <code>mono</code>{" "}
+        existe para quem quer o registro de livro-caixa, e vem desligado.
+        <br />
+        <br />
+        Ela vinha cravada, e era a única decisão do componente que era de
+        desenho e não de comportamento — provavelmente o motivo de{" "}
+        <strong>dez campos de dinheiro do app</strong>{" "}
+        terem sido escritos à mão em vez de usá-lo: adotar mudava a cara da
+        tela. Os dez foram migrados junto com esta mudança.
+      </DocNote>
+
+      <DocNote title="Três armadilhas, resolvidas de uma vez">
+        <code>type=&quot;text&quot;</code>{" "}
+        e nunca <code>number</code>, que aceita <code>e</code> e <code>+</code>{" "}
+        e briga com a vírgula do teclado pt-BR;{" "}
+        <code>inputMode=&quot;decimal&quot;</code>, sem o qual o telefone abre o
+        teclado de texto; e a renormalização no <code>onBlur</code>. Os dez
+        campos à mão tinham a máscara e{" "}
+        <strong>nenhum tinha o blur</strong> — um valor colado ou meio digitado
+        saía do campo como estava.
       </DocNote>
 
       <PropsTable

@@ -1,9 +1,8 @@
 "use client"
-/* eslint-disable @next/next/no-img-element -- member avatars from arbitrary URLs */
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import type { User } from "@supabase/supabase-js"
-import { ArrowPathIcon, CheckIcon, DocumentDuplicateIcon, EnvelopeIcon, InformationCircleIcon, LinkIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { CheckIcon, DocumentDuplicateIcon, EnvelopeIcon, InformationCircleIcon, LinkIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { EnvelopeIcon as EnvelopeOutlineIcon, UserGroupIcon } from "@heroicons/react/24/outline"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
@@ -18,6 +17,7 @@ import {
     toastSuccess,
 } from "@/lib/toast"
 import { Card, CardContent } from "@/components/ui/card"
+import { Spinner } from "@/components/ui/spinner"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -40,7 +40,8 @@ import {
 } from "@/components/ui/tooltip"
 import { tagChipInfo, tagChipSuccess } from "@/lib/tag-chip-classes"
 import { cn, getInitials } from "@/lib/utils"
-import { getAvatarColor } from "@/lib/avatar"
+import { identityToneFor } from "@/lib/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
     dispatchFinanceMembersMutated,
     FINANCE_MEMBERS_MUTATED_EVENT,
@@ -666,7 +667,7 @@ export default function MembersPage() {
                         >
                             {removeTarget && busyMemberId === removeTarget.userId ? (
                                 <>
-                                    <ArrowPathIcon className="h-4 w-4 animate-spin mr-2" />
+                                    <Spinner className="mr-2" />
                                     Removendo...
                                 </>
                             ) : (
@@ -701,9 +702,10 @@ export default function MembersPage() {
                                 const email = member.profile?.email || ""
                                 const labelForAvatar =
                                     name === "Membro" ? (email || "Membro") : name
-                                const avatarColor =
-                                    member.profile?.avatar_color?.trim() ||
-                                    getAvatarColor(labelForAvatar)
+                                const avatarTone = identityToneFor(
+                                    member.profile?.avatar_color,
+                                    labelForAvatar
+                                )
                                 const displayAvatarUrl =
                                     member.profile?.avatar_url?.trim() || null
                                 const isOwner = member.role === "owner"
@@ -717,26 +719,36 @@ export default function MembersPage() {
                                             )}
                                         >
                                             <CardContent className="flex items-center gap-3 p-3 sm:p-3.5">
-                                                <div className="relative flex size-9 shrink-0 select-none overflow-hidden rounded-lg bg-muted">
+                                                {/* `sm` são 32px contra os 36 que
+                                                    este cartão desenhava à mão.
+                                                    36 não é degrau de nenhuma
+                                                    escala — foi medida escolhida
+                                                    no olho —, e 32 é o mesmo
+                                                    tamanho do avatar da lateral,
+                                                    que é a mesma peça: uma pessoa
+                                                    numa linha. */}
+                                                <Avatar
+                                                    size="sm"
+                                                    shape="rounded"
+                                                    className="select-none"
+                                                >
                                                     {displayAvatarUrl ? (
-                                                        <img
+                                                        <AvatarImage
                                                             src={displayAvatarUrl}
-                                                            alt={name}
-                                                            className="aspect-square size-full object-cover"
+                                                            alt=""
                                                             loading="lazy"
-                                                            decoding="async"
                                                         />
-                                                    ) : (
-                                                        <div
-                                                            className={cn(
-                                                                "flex h-full w-full items-center justify-center text-xs font-semibold text-white",
-                                                                avatarColor
-                                                            )}
-                                                        >
-                                                            {getInitials(labelForAvatar)}
-                                                        </div>
-                                                    )}
-                                                </div>
+                                                    ) : null}
+                                                    <AvatarFallback
+                                                        className={cn(
+                                                            "font-semibold",
+                                                            avatarTone.surface,
+                                                            avatarTone.ink
+                                                        )}
+                                                    >
+                                                        {getInitials(labelForAvatar)}
+                                                    </AvatarFallback>
+                                                </Avatar>
                                                 <div className="min-w-0 flex-1">
                                                     <div className="flex flex-wrap items-center gap-1.5">
                                                         <span className="truncate text-sm font-medium leading-snug">
@@ -777,7 +789,7 @@ export default function MembersPage() {
                                                         }
                                                     >
                                                         {busyMemberId === member.user_id ? (
-                                                            <ArrowPathIcon className="size-4 animate-spin" />
+                                                            <Spinner />
                                                         ) : (
                                                             <TrashIcon className="size-4" />
                                                         )}
@@ -851,7 +863,7 @@ export default function MembersPage() {
                                         >
                                             {savingInvite ? (
                                                 <>
-                                                    <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
+                                                    <Spinner className="mr-2" />
                                                     Enviando...
                                                 </>
                                             ) : (
@@ -916,7 +928,7 @@ export default function MembersPage() {
                                                         }
                                                     >
                                                         {busyInviteId === pendingLinkInvite.id ? (
-                                                            <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                                                            <Spinner />
                                                         ) : (
                                                             "Excluir link"
                                                         )}
@@ -940,7 +952,7 @@ export default function MembersPage() {
                                     >
                                         {savingLink ? (
                                             <>
-                                                <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
+                                                <Spinner className="mr-2" />
                                                 Gerando...
                                             </>
                                         ) : (
@@ -1054,10 +1066,7 @@ export default function MembersPage() {
                                                             }
                                                         >
                                                             {busyResendInviteId === invite.id ? (
-                                                                <ArrowPathIcon
-                                                                    className="size-4 animate-spin"
-                                                                    aria-hidden
-                                                                />
+                                                                <Spinner aria-hidden />
                                                             ) : (
                                                                 "Reenviar"
                                                             )}
@@ -1085,7 +1094,7 @@ export default function MembersPage() {
                                                         >
                                                             {busyInviteId === invite.id ? (
                                                                 <>
-                                                                    <ArrowPathIcon className="mr-1.5 h-4 w-4 animate-spin" />
+                                                                    <Spinner className="mr-1.5" />
                                                                     Revogando...
                                                                 </>
                                                             ) : (

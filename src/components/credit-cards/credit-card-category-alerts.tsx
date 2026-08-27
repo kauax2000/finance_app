@@ -4,10 +4,10 @@ import { useEffect, useMemo, useState } from "react"
 import { ExclamationTriangleIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { useAuth } from "@/components/providers"
 import { Button } from "@/components/ui/button"
+import { MoneyInput } from "@/components/ui/money-input"
 import { CustomForm } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { formatMoneyBrlTyping } from "@/lib/money-brl"
 import {
     Select,
     SelectContent,
@@ -244,7 +244,7 @@ export function CreditCardCategoryAlerts({
                             const name = row?.name ?? a.categoryKey
                             return (
                                 <li key={a.id}>
-                                    {i > 0 ? <Separator className="bg-border/80" /> : null}
+                                    {i > 0 ? <Separator /> : null}
                                     <div className="flex items-center gap-3 px-3 py-2.5 sm:px-4">
                                         <div className="min-w-0 flex-1">
                                             <p className="truncate text-sm font-medium">{name}</p>
@@ -334,14 +334,14 @@ export function CreditCardCategoryAlerts({
                             Limite na fatura aberta
                         </Label>
                         <div className="w-full sm:col-start-2 sm:row-start-2">
-                            <Input
+                            <MoneyInput
                                 id="cc-alert-th"
-                                inputMode="decimal"
                                 placeholder="500,00"
                                 value={threshold}
                                 disabled={disabledFields}
-                                onChange={(e) => setThreshold(formatMoneyBrlTyping(e.target.value))}
-                                className="h-8 tabular-nums"
+                                
+                                className="h-8"
+                            onValueChange={setThreshold}
                             />
                         </div>
                     </div>

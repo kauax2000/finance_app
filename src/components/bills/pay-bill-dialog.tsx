@@ -205,7 +205,7 @@ export function PayBillDialog({
             <div className="scrollbar-thin flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 sm:px-6">
                 <div className="grid gap-2">
                     <Label htmlFor="pay-amt">Valor pago</Label>
-                    <MoneyInput
+                    <MoneyInput mono
                         id="pay-amt"
                         value={amountStr}
                         onValueChange={(v) => setAmountStr(v)}

@@ -24,6 +24,7 @@ import {
     type WorkspaceSubscription,
 } from "@/lib/supabase"
 import { Card, CardContent } from "@/components/ui/card"
+import { MoneyInput } from "@/components/ui/money-input"
 import { CustomForm } from "@/components/ui/form"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -58,7 +59,7 @@ import { invokeEdgeJson } from "@/lib/edge-invoke"
 import { upsertCategoryBudget, deleteCategoryBudgetById } from "@/lib/category-budget-ops"
 import { deleteCategoryById, saveCategory } from "@/lib/categories/mutations"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
-import { parseMoneyBrl, formatMoneyBrlInput, formatMoneyBrlTyping } from "@/lib/money-brl"
+import { parseMoneyBrl, formatMoneyBrlInput } from "@/lib/money-brl"
 import { toastError } from "@/lib/toast"
 import { FINANCE_CATEGORIES_MUTATED_EVENT } from "@/lib/workspace-data-events"
 import { ROUTES, categoryDetailPath } from "@/config/navigation"
@@ -620,14 +621,12 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                         <Label htmlFor="grid-category-budget-amount">
                             Valor limite (R$)
                         </Label>
-                        <Input
+                        <MoneyInput
                             id="grid-category-budget-amount"
-                            inputMode="decimal"
                             placeholder="Ex: 1.500,00"
                             value={editBudgetAmount}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                                setEditBudgetAmount(formatMoneyBrlTyping(e.target.value))
-                            }
+                            
+                        onValueChange={setEditBudgetAmount}
                         />
                     </div>
                     {dialogExistingBudget ? (
