@@ -11,12 +11,15 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
+  EdgePanel,
+  EdgePanelContent,
+} from "@/components/ui/edge-panel"
+import {
+  DialogCloseButton,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Tooltip,
@@ -180,8 +183,12 @@ function Sidebar({
 
   if (isMobile) {
     return (
-      <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
-        <SheetContent
+      // `EdgePanel`, e não `Sheet`: navegação entra pelo lado em qualquer
+      // largura. O `Sheet` vira gaveta de baixo no telefone — certo para um
+      // formulário, errado para um menu, que ficaria com alça de arraste e
+      // canto arredondado no topo para listar seis links.
+      <EdgePanel open={openMobile} onOpenChange={setOpenMobile} {...props}>
+        <EdgePanelContent
           dir={dir}
           data-sidebar="sidebar"
           data-slot="sidebar"
@@ -194,13 +201,14 @@ function Sidebar({
           }
           side={side}
         >
-          <SheetHeader className="sr-only">
-            <SheetTitle>Sidebar</SheetTitle>
-            <SheetDescription>Displays the mobile sidebar.</SheetDescription>
-          </SheetHeader>
+          <DialogHeader className="sr-only" hideSeparator>
+            <DialogTitle>Sidebar</DialogTitle>
+            <DialogDescription>Displays the mobile sidebar.</DialogDescription>
+          </DialogHeader>
           <div className="flex h-full w-full flex-col">{children}</div>
-        </SheetContent>
-      </Sheet>
+        <DialogCloseButton />
+        </EdgePanelContent>
+      </EdgePanel>
     )
   }
 

@@ -29,8 +29,8 @@ export function AppAppearanceSettings() {
     const isLight = mounted && effective === "light"
 
     return (
-        <Card size="sm" className="gap-0 py-0">
-            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-x-4 gap-y-3 pb-3">
+        <Card padding="none">
+            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-x-4 gap-y-3 px-4 pt-4 pb-3">
                 <div className="flex min-w-0 flex-1 items-center gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted shadow-sm">
                         <SwatchIcon className="h-5 w-5 text-muted-foreground" />

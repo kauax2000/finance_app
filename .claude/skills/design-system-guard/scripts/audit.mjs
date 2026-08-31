@@ -1,0 +1,465 @@
+#!/usr/bin/env node
+/**
+ * audit.mjs — acha o que uma tela violou do design system.
+ *
+ * O script é deliberadamente burro: ele acha padrões e diz onde, sem opinião
+ * sobre o que fazer. O julgamento é de quem lê. A vantagem sobre reler o arquivo
+ * a olho é que ele não cansa e não erra diferente a cada vez.
+ *
+ * Uso:
+ *   node audit.mjs src/app/(app)/transactions/page-client.tsx
+ *   node audit.mjs src/components/credit-cards      # a pasta inteira
+ *   node audit.mjs                                  # src/app + src/components
+ *   node audit.mjs --json
+ *   node audit.mjs --rule D3                        # só uma regra
+ */
+
+import { readFileSync, readdirSync, statSync, existsSync } from "node:fs"
+import { join, relative, resolve, dirname, sep } from "node:path"
+import { fileURLToPath } from "node:url"
+
+// ---------------------------------------------------------------------------
+// Tabelas de conhecimento
+// ---------------------------------------------------------------------------
+
+/** Primitivo cru -> componente do design system que já existe. */
+const PRIMITIVE_TO_COMPONENT = {
+  button: "Button",
+  input: "Input",
+  textarea: "Textarea",
+  select: "Select (ou NativeSelect)",
+  table: "Table",
+  label: "Label",
+  dialog: "Dialog",
+  progress: "Progress",
+  hr: "Separator",
+}
+
+/**
+ * Primitivos sem equivalente no design system. Sinalizar é útil, mas o veredito
+ * é diferente: são lacuna, não correção.
+ */
+const PRIMITIVE_WITHOUT_COMPONENT = new Set(["details", "summary", "meter", "fieldset"])
+
+/** A paleta padrão do Tailwind. Nenhuma delas acompanha o tema. */
+const TAILWIND_PALETTE =
+  "slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose"
+
+/**
+ * `transparent`, `current` e `inherit` ficam de fora de propósito: são palavras
+ * neutras, não cor. `border-transparent` aparece dentro do próprio Badge.
+ */
+const COLOR_UTILITY = new RegExp(
+  `\\b(?:bg|text|border|ring|fill|stroke|from|via|to|decoration|outline|shadow|divide|placeholder|caret|accent)-(?:${TAILWIND_PALETTE})-\\d{2,3}\\b`,
+  "g"
+)
+const BARE_BW = /\b(?:bg|text|border|ring|fill|stroke|divide|placeholder)-(?:white|black)\b/g
+
+/**
+ * Onde uma cor literal **não é** decisão de tema, e por isso não deve segui-lo.
+ *
+ * Dois casos: cor que a pessoa escolheu e o banco guardou (categoria,
+ * workspace, avatar), e material que representa um objeto do mundo — a marca
+ * do cartão, a tinta clara sobre a face de plástico. Nos dois, seguir o tema
+ * seria o erro, não o acerto.
+ */
+const RUNTIME_COLOR_FILES = [
+  "category-appearance-fields",
+  "workspace-appearance-form-fields",
+  "workspace-appearance-edit-dialog",
+  "credit-card-brand-logos",
+  "registered-credit-card-face",
+  "color-tile",
+  "avatar.ts",
+  "manifest.ts",
+  "global-error.tsx",
+]
+
+/**
+ * Bibliotecas de ícone que não são a deste projeto.
+ *
+ * Nenhuma delas está no `package.json` — e é justamente por isso que a regra
+ * existe: o custo de instalar uma é um `npm i`, e o de conviver com duas é
+ * permanente. Dois conjuntos não empilham: eles têm espessura de traço, grade e
+ * cantos diferentes, e uma barra com um ícone de cada lê como um erro de
+ * renderização, não como uma escolha.
+ */
+const FOREIGN_ICON_PACKAGES =
+  /from\s+["'](lucide-react|react-icons(?:\/[\w-]+)?|@radix-ui\/react-icons|@tabler\/icons-react|phosphor-react|@phosphor-icons\/react|react-feather|feather-icons|@fortawesome\/[\w-]+|@mui\/icons-material|boxicons|ionicons)["']/g
+
+/**
+ * Onde um `<svg>` inline **não** é um ícone, e por isso não tem substituto no
+ * Heroicons.
+ *
+ * Duas coisas: **marca** — o logo, a marca escrita, as bandeiras de cartão, que
+ * são propriedade de outra pessoa e não existem em biblioteca de ícone — e
+ * **primitivo desenhado**, como a roda do `Spinner`, cuja geometria é o
+ * comportamento e não um pictograma.
+ *
+ * A lista é curta de propósito. Se um arquivo novo quiser entrar aqui, a
+ * pergunta é se ele desenha uma marca ou um movimento; qualquer outra coisa é
+ * um ícone, e ícone vem do Heroicons.
+ */
+const DRAWN_SVG_FILES = [
+  "app-logo",
+  "app-wordmark",
+  "credit-card-brand-logos",
+  "registered-credit-card-face",
+  "spinner",
+]
+
+/**
+ * O conjunto do Heroicons muda com o tamanho, porque eles são **redesenhos** e
+ * não escalas: o micro tem menos detalhe e traço mais grosso, para sobreviver a
+ * 16px. Usar o de 24 num `size-4` entrega um desenho que some.
+ *
+ * `size-6` ou maior -> `24/outline`; `size-5` -> `20/solid`; `size-4` ou menor
+ * -> `16/solid`. Sem classe de tamanho conta como `size-4`, porque é o que o
+ * componente que o contém aplica.
+ */
+function heroiconSetForSize(n) {
+  if (n >= 6) return "24"
+  if (n >= 5) return "20"
+  return "16"
+}
+
+const SKIP_DIRS = new Set(["node_modules", ".next", ".git", "designsystem"])
+
+// ---------------------------------------------------------------------------
+// Varredura
+// ---------------------------------------------------------------------------
+
+function walk(target, acc = []) {
+  const st = statSync(target)
+  if (st.isFile()) {
+    if (/\.(tsx|ts)$/.test(target) && !/\.test\.tsx?$/.test(target)) acc.push(target)
+    return acc
+  }
+  for (const entry of readdirSync(target)) {
+    if (SKIP_DIRS.has(entry)) continue
+    walk(join(target, entry), acc)
+  }
+  return acc
+}
+
+/** Remove comentários e o conteúdo de blocos de string longos ao contar linhas. */
+function lineOf(src, index) {
+  let line = 1
+  for (let i = 0; i < index; i++) if (src[i] === "\n") line++
+  return line
+}
+
+// ---------------------------------------------------------------------------
+// Detectores
+// ---------------------------------------------------------------------------
+
+function auditFile(absPath, project) {
+  const src = readFileSync(absPath, "utf8")
+  const rel = relative(project, absPath)
+  const findings = []
+  const add = (rule, index, message, snippet) =>
+    findings.push({
+      rule,
+      file: rel,
+      line: lineOf(src, index),
+      message,
+      snippet: (snippet ?? "").trim().slice(0, 90),
+    })
+
+  const inApp = rel.startsWith(`src${sep}app${sep}`) || rel.startsWith("src/app/")
+  const isUi =
+    rel.startsWith(`src${sep}components${sep}ui${sep}`) ||
+    rel.startsWith("src/components/ui/")
+  const isRuntimeColor = RUNTIME_COLOR_FILES.some((f) => rel.includes(f))
+  const isDrawnSvg = DRAWN_SVG_FILES.some((f) => rel.includes(f))
+
+  // ── A. Componente nascendo dentro da tela ─────────────────────────────────
+  // O caso central. Um componente definido em `app/` é invisível para todas as
+  // outras telas: na próxima vez alguém escreve o mesmo de novo, um pouco
+  // diferente, e o design system deixa de descrever o produto.
+  // Arquivos que *são* uma convenção de rota do Next não podem morar em outro
+  // lugar: `loading.tsx`, `error.tsx` e companhia só existem em `app/`, e o que
+  // eles exportam é a rota, não um componente que fugiu do design system.
+  const isRouteConvention =
+    /(?:^|[\\/])(?:loading|error|global-error|not-found|not-found-shell|template|default|sw-register|manifest)\.tsx?$/.test(
+      rel
+    )
+
+  if (inApp && !isRouteConvention) {
+    for (const m of src.matchAll(
+      /^(?:export\s+)?(?:default\s+)?function\s+([A-Z]\w*)\s*\(/gm
+    )) {
+      const name = m[1]
+      // A função de rota é o próprio arquivo, não um componente extraído.
+      if (/^(Page|Layout|Loading|Error|NotFound|Template|Default)$/.test(name)) continue
+      if (/^\w*(Page|Layout|PageClient|Client|Route)$/.test(name)) continue
+      add("A", m.index, `\`${name}\` é declarado dentro de src/app/`, m[0])
+    }
+  }
+
+  // ── A2. cva() fora de components/ui/ ──────────────────────────────────────
+  if (!isUi) {
+    for (const m of src.matchAll(/\bcva\s*\(/g)) {
+      add("A2", m.index, "`cva()` fora de components/ui/", m[0])
+    }
+  }
+
+  // ── C / C'. Primitivo cru com (ou sem) equivalente no DS ──────────────────
+  if (!isUi) {
+    for (const m of src.matchAll(/<([a-z][a-z0-9]*)\b/g)) {
+      const tag = m[1]
+      if (PRIMITIVE_TO_COMPONENT[tag]) {
+        add(
+          "C",
+          m.index,
+          `\`<${tag}>\` cru — existe \`${PRIMITIVE_TO_COMPONENT[tag]}\` no design system`,
+          m[0]
+        )
+      } else if (PRIMITIVE_WITHOUT_COMPONENT.has(tag)) {
+        add("C'", m.index, `\`<${tag}>\` cru — sem equivalente no design system`, m[0])
+      }
+    }
+  }
+
+  // ── D. Cor literal ────────────────────────────────────────────────────────
+  //
+  // Numa **máscara** o valor não é cor: `mask-image` usa só o canal alfa, e o
+  // preto é o estêncil convencional para "opaco". Uma rampa de máscara é uma
+  // curva de transparência, e trocá-la por token não faria sentido — não há
+  // tema que a acompanhe.
+  //
+  // A janela é generosa (900 caracteres) porque uma rampa de máscara se escreve
+  // em muitas paradas, e a última fica longe do nome da declaração: com 400 a
+  // regra pegava as quatro primeiras e marcava a quinta.
+  const emMascara = (index) =>
+    /mask/i.test(src.slice(Math.max(0, index - 900), index + 80))
+
+  if (!isRuntimeColor) {
+    for (const m of src.matchAll(/#[0-9a-fA-F]{3,8}\b/g)) {
+      if (emMascara(m.index)) continue
+      // Um hex dentro de um seletor de atributo é alvo, não escolha: o
+      // `[stroke='#ccc']` do ChartContainer existe justamente para sobrescrever
+      // a cor que o Recharts carimba sozinho.
+      const around = src.slice(Math.max(0, m.index - 40), m.index + 20)
+      if (/\[[\w-]+=['"]?$/.test(src.slice(Math.max(0, m.index - 40), m.index))) continue
+      if (/\[[\w-]+=['"]#[0-9a-fA-F]{3,8}['"]?\]/.test(around)) continue
+      add("D", m.index, "cor literal em hex", m[0])
+    }
+    for (const m of src.matchAll(/\brgba?\s*\(/g)) {
+      if (emMascara(m.index)) continue
+      add("D", m.index, "cor literal em rgb()", m[0])
+    }
+  }
+
+  // ── D3. Paleta padrão do Tailwind ─────────────────────────────────────────
+  if (!isRuntimeColor) {
+    for (const m of src.matchAll(COLOR_UTILITY)) {
+      add("D3", m.index, `\`${m[0]}\` não acompanha o tema — use um token`, m[0])
+    }
+    for (const m of src.matchAll(BARE_BW)) {
+      add(
+        "D3",
+        m.index,
+        `\`${m[0]}\` — use \`bg-card\`, \`bg-background\` ou \`text-foreground\``,
+        m[0]
+      )
+    }
+  }
+
+  // ── D2. Valor arbitrário ──────────────────────────────────────────────────
+  for (const m of src.matchAll(
+    /\b(?:p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|gap|w|h|size|text|rounded|z|top|left|right|bottom|leading|tracking)-\[[^\]]+\]/g
+  )) {
+    // Variáveis CSS e cálculos com env() são legítimos: a área segura e a
+    // largura do gatilho do Radix não têm token que os substitua.
+    if (/var\(|env\(|calc\(|--/.test(m[0])) continue
+    add("D2", m.index, `valor arbitrário \`${m[0]}\``, m[0])
+  }
+
+  // ── F. Semântica e acessibilidade ─────────────────────────────────────────
+  for (const m of src.matchAll(/<div[^>]*\bonClick=/g)) {
+    add("F", m.index, "`<div onClick>` não recebe foco nem responde ao Enter", m[0])
+  }
+  for (const m of src.matchAll(/<img\b(?![^>]*\balt=)[^>]*>/g)) {
+    add("F", m.index, "`<img>` sem `alt`", m[0])
+  }
+
+  // ── G. Ícone fora do Heroicons ────────────────────────────────────────────
+  // Um conjunto de ícones é uma tipografia: o que o faz ler como sistema é
+  // todos virem do mesmo desenho. Este projeto usa Heroicons, declarado em
+  // `components.json`.
+  for (const m of src.matchAll(FOREIGN_ICON_PACKAGES)) {
+    add("G", m.index, `\`${m[1]}\` — o projeto usa Heroicons`, m[0])
+  }
+
+  // `<svg>` escrito à mão é o furo que nenhuma checagem de dependência pega:
+  // não há import, e o glifo entrou por cópia.
+  if (!isDrawnSvg) {
+    for (const m of src.matchAll(/<svg\b/g)) {
+      add(
+        "G",
+        m.index,
+        "`<svg>` inline — use um ícone do Heroicons (marca e spinner são a exceção)",
+        "<svg"
+      )
+    }
+  }
+
+  // O conjunto certo para o tamanho. Todos são Heroicons, então isto não é
+  // sobre a biblioteca — é sobre pegar o desenho que aguenta aquele corpo.
+  const heroiconSet = new Map()
+  for (const m of src.matchAll(
+    /import\s*(?:type\s*)?\{([^}]+)\}\s*from\s*["']@heroicons\/react\/(16|20|24)\/(?:solid|outline)["']/g
+  )) {
+    for (const raw of m[1].split(",")) {
+      const name = raw.trim().split(/\s+as\s+/).pop().trim()
+      if (name) heroiconSet.set(name, m[2])
+    }
+  }
+  if (heroiconSet.size) {
+    for (const m of src.matchAll(/<([A-Z][A-Za-z0-9]*)\b([^>]*)>/g)) {
+      const declared = heroiconSet.get(m[1])
+      if (!declared) continue
+      const found = m[2].match(/\bsize-(\d+(?:\.\d+)?)\b/)
+      const n = found ? parseFloat(found[1]) : 4
+      const want = heroiconSetForSize(n)
+      if (want !== declared) {
+        add(
+          "G",
+          m.index,
+          `\`${m[1]}\` em \`size-${n}\` pede o conjunto \`${want}\`, e veio do \`${declared}\``,
+          m[0]
+        )
+      }
+    }
+  }
+
+  // ── H. hover: sem par de toque (regra própria deste projeto) ──────────────
+  // `hover:` compila para @media (hover: hover), e um telefone responde
+  // `hover: none`. A resposta não é remover o hover: é somar `active:`.
+  // Ver src/lib/tailwind-hover-policy.test.ts.
+  for (const m of src.matchAll(/className=\{?["'`]([^"'`]{0,2000})["'`]/g)) {
+    const classes = m[1]
+    const hasHover = /(?:^|\s)(?:group-)?hover:(?:bg|text|border|ring)-/.test(classes)
+    const hasActive = /(?:^|\s)(?:group-)?active:/.test(classes)
+    if (hasHover && !hasActive) {
+      add(
+        "H",
+        m.index,
+        "`hover:` sem `active:` — no toque essa resposta não existe",
+        classes.slice(0, 70)
+      )
+    }
+  }
+
+  // ── I. Formatação de dinheiro ou data fora dos helpers ────────────────────
+  for (const m of src.matchAll(/\bIntl\.(?:NumberFormat|DateTimeFormat)\b/g)) {
+    add(
+      "I",
+      m.index,
+      "use `@/lib/formatters` ou `@/lib/transaction-date`",
+      m[0]
+    )
+  }
+  for (const m of src.matchAll(/\.toLocaleDateString\s*\(|\.toLocaleString\s*\(/g)) {
+    add("I", m.index, "use `@/lib/transaction-date` ou `@/lib/formatters`", m[0])
+  }
+
+  return findings
+}
+
+// ---------------------------------------------------------------------------
+// Saída
+// ---------------------------------------------------------------------------
+
+const RULE_LABEL = {
+  A: "componente nascendo dentro de src/app/",
+  A2: "cva() fora de components/ui/",
+  C: "primitivo cru com equivalente no design system",
+  "C'": "primitivo cru sem equivalente (lacuna)",
+  D: "cor literal",
+  D2: "valor arbitrário",
+  D3: "paleta padrão do Tailwind",
+  F: "semântica / acessibilidade",
+  G: "ícone fora do Heroicons",
+  H: "hover: sem par de toque",
+  I: "formatação fora dos helpers",
+}
+
+function render(findings) {
+  if (!findings.length) {
+    console.log("Nenhum achado. A tela está conforme.")
+    return
+  }
+
+  const porRegra = {}
+  for (const f of findings) (porRegra[f.rule] ??= []).push(f)
+
+  const porArquivo = {}
+  for (const f of findings) (porArquivo[f.file] ??= []).push(f)
+
+  console.log(
+    `${findings.length} achados em ${Object.keys(porArquivo).length} arquivos\n`
+  )
+
+  console.log("## Por regra\n")
+  for (const rule of Object.keys(RULE_LABEL)) {
+    const list = porRegra[rule]
+    if (!list) continue
+    console.log(`- **${rule}** (${list.length}) — ${RULE_LABEL[rule]}`)
+  }
+  console.log("")
+
+  console.log("## Por arquivo\n")
+  const ordenado = Object.entries(porArquivo).sort((a, b) => b[1].length - a[1].length)
+  for (const [file, list] of ordenado) {
+    console.log(`### ${file} — ${list.length}\n`)
+    for (const f of list.slice(0, 20)) {
+      console.log(`- \`${f.file}:${f.line}\` **${f.rule}** ${f.message}`)
+    }
+    if (list.length > 20) console.log(`- … e mais ${list.length - 20}`)
+    console.log("")
+  }
+}
+
+// ---------------------------------------------------------------------------
+// CLI
+// ---------------------------------------------------------------------------
+
+function main() {
+  const args = process.argv.slice(2)
+  const asJson = args.includes("--json")
+  const ruleIdx = args.indexOf("--rule")
+  const onlyRule = ruleIdx !== -1 ? args[ruleIdx + 1] : null
+  const targets = args.filter((a, i) => {
+    if (a.startsWith("--")) return false
+    if (ruleIdx !== -1 && i === ruleIdx + 1) return false
+    return true
+  })
+
+  const here = dirname(fileURLToPath(import.meta.url))
+  const project = existsSync(join(process.cwd(), "src/components/ui"))
+    ? process.cwd()
+    : resolve(here, "../../../..")
+
+  const roots = targets.length
+    ? targets.map((t) => resolve(project, t))
+    : [join(project, "src/app"), join(project, "src/components")]
+
+  const files = []
+  for (const root of roots) {
+    if (!existsSync(root)) {
+      console.error(`Não existe: ${root}`)
+      process.exit(1)
+    }
+    walk(root, files)
+  }
+
+  let findings = files.flatMap((f) => auditFile(f, project))
+  if (onlyRule) findings = findings.filter((f) => f.rule === onlyRule)
+
+  if (asJson) console.log(JSON.stringify(findings, null, 2))
+  else render(findings)
+}
+
+main()

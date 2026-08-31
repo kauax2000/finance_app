@@ -15,7 +15,7 @@ import {
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { toastError, toastSuccess } from "@/lib/toast"
 import { Card, CardContent } from "@/components/ui/card"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
     AlertDialog,
@@ -1164,9 +1164,6 @@ export default function SubscriptionsPageClient() {
                         </AlertDialogCancel>
                         <AlertDialogAction
                             type="button"
-                            className={buttonVariants({
-                                variant: "destructive",
-                            })}
                             disabled={deleting}
                             onClick={(e) => {
                                 e.preventDefault()

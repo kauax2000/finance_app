@@ -50,14 +50,17 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
-import { Sheet, SheetContent, SheetFooter } from "@/components/ui/sheet"
+import {
+  Sheet,
+  SheetContent,
+} from "@/components/ui/sheet"
 import {
     MobileSheetFormDragStrip,
     MobileSheetFormHeaderCloseButton,
@@ -764,7 +767,6 @@ export default function CreditCardDetailPageClient() {
             <SheetContent
                 side="bottom"
                 fillMobileViewport
-                showCloseButton={false}
                 className={mobileFormSheetContentClassName}
             >
                 <MobileSheetFormDragStrip />
@@ -801,7 +803,7 @@ export default function CreditCardDetailPageClient() {
                             />
                         </div>
                     </div>
-                    <SheetFooter className="mt-0 shrink-0 gap-2 border-t border-border/60 px-4 pt-4">
+                    <DialogFooter className="flex-col mt-0 shrink-0 gap-2 border-t border-border/60 px-4 pt-4">
                         <Button
                             type="submit"
                             size="sm"
@@ -810,7 +812,7 @@ export default function CreditCardDetailPageClient() {
                         >
                             {editSaving ? "Salvando…" : "Salvar"}
                         </Button>
-                    </SheetFooter>
+                    </DialogFooter>
                 </CustomForm>
             </SheetContent>
         </Sheet>
@@ -821,7 +823,7 @@ export default function CreditCardDetailPageClient() {
                 if (!open && !editSaving) closeEdit()
             }}
         >
-            <DialogContent className="flex max-h-[min(90dvh,36rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+            <DialogContent layout="fixed">
                 <CustomForm
                     onSubmit={handleSaveEdit}
                     className="flex min-h-0 flex-1 flex-col"
@@ -947,7 +949,6 @@ export default function CreditCardDetailPageClient() {
                     <AlertDialogFooter>
                         <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
                         <AlertDialogAction
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             disabled={deleting}
                             onClick={(e) => {
                                 e.preventDefault()
@@ -1009,7 +1010,6 @@ export default function CreditCardDetailPageClient() {
                             Cancelar
                         </AlertDialogCancel>
                         <AlertDialogAction
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             disabled={deletingTransaction}
                             onClick={(e) => {
                                 e.preventDefault()

@@ -26,7 +26,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card"
 import { MoneyInput } from "@/components/ui/money-input"
 import { CustomForm } from "@/components/ui/form"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { CategoryDeleteAlertBody } from "@/components/categories/category-delete-alert-body"
@@ -40,14 +40,18 @@ import {
     type TransactionFilterType,
 } from "@/components/transactions/transaction-type-segment"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogCloseButton,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
-import { Sheet, SheetContent, SheetFooter } from "@/components/ui/sheet"
+import {
+  Sheet,
+  SheetContent,
+} from "@/components/ui/sheet"
 import {
     MobileSheetFormDragStrip,
     MobileSheetFormStickyHeader,
@@ -670,7 +674,6 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                     <SheetContent
                         side="bottom"
                         fillMobileViewport
-                        showCloseButton
                         className={cn(
                             mobileFormSheetContentClassName,
                             "sm:mx-auto sm:max-w-lg",
@@ -688,7 +691,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                             <div className="min-h-0 flex-1 overflow-y-auto px-4">
                                 {categoryFormFields}
                             </div>
-                            <SheetFooter className="mt-0 shrink-0 gap-2 border-t border-border/60 px-4 pt-4">
+                            <DialogFooter className="flex-col mt-0 shrink-0 gap-2 border-t border-border/60 px-4 pt-4">
                                 <Button
                                     type="submit"
                                     disabled={saving || editBudgetRemoving}
@@ -697,13 +700,14 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                                 >
                                     {saving ? "Salvando..." : "Salvar"}
                                 </Button>
-                            </SheetFooter>
+                            </DialogFooter>
                         </CustomForm>
+                    <DialogCloseButton />
                     </SheetContent>
                 </Sheet>
             ) : (
                 <Dialog open={dialogOpen} onOpenChange={onSheetOpenChange}>
-                    <DialogContent className="flex max-h-[min(90dvh,36rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+                    <DialogContent layout="fixed">
                         <DialogHeader className="shrink-0 px-6 pt-6 pb-2">
                             <DialogTitle>{sheetTitle}</DialogTitle>
                             <DialogDescription>{sheetDescription}</DialogDescription>
@@ -835,7 +839,6 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                         </AlertDialogCancel>
                         <AlertDialogAction
                             type="button"
-                            className={buttonVariants({ variant: "destructive" })}
                             disabled={deleteDeleting}
                             onClick={(e) => {
                                 e.preventDefault()

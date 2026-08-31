@@ -28,14 +28,17 @@ import {
 } from "@/components/credit-cards/credit-cards-view-segment"
 import { Button } from "@/components/ui/button"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
-import { Sheet, SheetContent, SheetFooter } from "@/components/ui/sheet"
+import {
+  Sheet,
+  SheetContent,
+} from "@/components/ui/sheet"
 import {
     MobileSheetFormDragStrip,
     MobileSheetFormHeaderCloseButton,
@@ -363,7 +366,6 @@ export default function CreditCardsPageClient() {
                     <SheetContent
                         side="bottom"
                         fillMobileViewport
-                        showCloseButton={false}
                         className={mobileFormSheetContentClassName}
                     >
                         <MobileSheetFormDragStrip />
@@ -399,7 +401,7 @@ export default function CreditCardsPageClient() {
                                     />
                                 </div>
                             </div>
-                            <SheetFooter className="mt-0 shrink-0 gap-2 border-t border-border/60 px-4 pt-4">
+                            <DialogFooter className="flex-col mt-0 shrink-0 gap-2 border-t border-border/60 px-4 pt-4">
                                 <Button
                                     type="submit"
                                     size="sm"
@@ -408,7 +410,7 @@ export default function CreditCardsPageClient() {
                                 >
                                     {saving ? "Salvando…" : "Cadastrar"}
                                 </Button>
-                            </SheetFooter>
+                            </DialogFooter>
                         </CustomForm>
                     </SheetContent>
                 </Sheet>
@@ -421,7 +423,7 @@ export default function CreditCardsPageClient() {
                         if (!o && !saving) resetCreateForm()
                     }}
                 >
-                    <DialogContent className="flex max-h-[min(90dvh,36rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+                    <DialogContent layout="fixed">
                         <CustomForm
                             onSubmit={handleCreate}
                             className="flex min-h-0 flex-1 flex-col"

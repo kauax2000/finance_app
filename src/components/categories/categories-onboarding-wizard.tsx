@@ -10,17 +10,17 @@ import { CustomForm } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogCloseButton,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import {
-    Sheet,
-    SheetContent,
-    SheetFooter,
+  Sheet,
+  SheetContent,
 } from "@/components/ui/sheet"
 import {
     MobileSheetFormDragStrip,
@@ -571,7 +571,6 @@ export function CategoriesOnboardingWizard({
                     <SheetContent
                         side="bottom"
                         fillMobileViewport
-                        showCloseButton
                         className={mobileFormSheetContentClassName}
                     >
                         <MobileSheetFormDragStrip />
@@ -614,12 +613,13 @@ export function CategoriesOnboardingWizard({
                                     />
                                 </div>
                             </div>
-                            <SheetFooter className="mt-0 shrink-0 gap-2 border-t border-border/60 px-4 pt-4">
+                            <DialogFooter className="flex-col mt-0 shrink-0 gap-2 border-t border-border/60 px-4 pt-4">
                                 <Button type="submit" disabled={crudBusy} className="h-10 w-full">
                                     {crudBusy ? "Salvando…" : "Criar"}
                                 </Button>
-                            </SheetFooter>
+                            </DialogFooter>
                         </CustomForm>
+                    <DialogCloseButton />
                     </SheetContent>
                 </Sheet>
             ) : (
@@ -687,7 +687,6 @@ export function CategoriesOnboardingWizard({
                     <SheetContent
                         side="bottom"
                         fillMobileViewport
-                        showCloseButton
                         className={mobileFormSheetContentClassName}
                     >
                         <MobileSheetFormDragStrip />
@@ -752,13 +751,14 @@ export function CategoriesOnboardingWizard({
                                         ) : null}
                                     </div>
                                 </div>
-                                <SheetFooter className="mt-0 shrink-0 gap-2 border-t border-border/60 px-4 pt-4">
+                                <DialogFooter className="flex-col mt-0 shrink-0 gap-2 border-t border-border/60 px-4 pt-4">
                                     <Button type="submit" disabled={crudBusy} className="h-10 w-full">
                                         {crudBusy ? "Salvando…" : "Salvar"}
                                     </Button>
-                                </SheetFooter>
+                                </DialogFooter>
                             </CustomForm>
                         ) : null}
+                    <DialogCloseButton />
                     </SheetContent>
                 </Sheet>
             ) : (

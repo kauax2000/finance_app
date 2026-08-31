@@ -5,7 +5,7 @@ import dynamic from "next/dynamic"
 import { ExclamationTriangleIcon } from "@heroicons/react/16/solid"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Alert, AlertActions, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -281,21 +281,20 @@ export default function DashboardPageClient() {
 
     if (workspaceError) {
         return (
-            <Alert variant="destructive">
+            <Alert tone="destructive">
                 <ExclamationTriangleIcon />
                 <AlertTitle>Não foi possível carregar as carteiras</AlertTitle>
-                <AlertDescription className="flex flex-col gap-3">
-                    <span>{workspaceError}</span>
+                <AlertDescription>{workspaceError}</AlertDescription>
+                <AlertActions>
                     <Button
                         type="button"
-                        variant="outline"
+                        variant="tertiary"
                         size="sm"
-                        className="w-fit border-destructive/40 bg-transparent text-destructive-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                         onClick={() => void refreshWorkspaces()}
                     >
                         Tentar novamente
                     </Button>
-                </AlertDescription>
+                </AlertActions>
             </Alert>
         )
     }
@@ -469,7 +468,6 @@ export default function DashboardPageClient() {
                             Cancelar
                         </AlertDialogCancel>
                         <AlertDialogAction
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             disabled={deleting}
                             onClick={(e) => {
                                 e.preventDefault()

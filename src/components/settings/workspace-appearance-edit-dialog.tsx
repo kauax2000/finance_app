@@ -5,17 +5,17 @@ import { useWorkspace } from "@/components/workspace-provider"
 import { WorkspaceAppearanceFormFields } from "@/components/workspace/workspace-appearance-form-fields"
 import { Button } from "@/components/ui/button"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogCloseButton,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import {
-    Sheet,
-    SheetContent,
-    SheetFooter,
+  Sheet,
+  SheetContent,
 } from "@/components/ui/sheet"
 import {
     MobileSheetFormDragStrip,
@@ -128,11 +128,11 @@ export function WorkspaceAppearanceEditDialog({
                 />
             </div>
             {isMobile ? (
-                <SheetFooter className={sheetFooterMobileClass}>
+                <DialogFooter className={sheetFooterMobileClass}>
                     <Button type="submit" disabled={submitting} className="h-10 w-full">
                         {submitting ? "Salvando…" : "Salvar alterações"}
                     </Button>
-                </SheetFooter>
+                </DialogFooter>
             ) : (
                 <DialogFooter className={dialogFooterClass}>
                     <Button
@@ -161,7 +161,6 @@ export function WorkspaceAppearanceEditDialog({
                 <SheetContent
                     side="bottom"
                     fillMobileViewport
-                    showCloseButton
                     className={mobileFormSheetContentClassName}
                 >
                     <MobileSheetFormDragStrip />
@@ -170,6 +169,7 @@ export function WorkspaceAppearanceEditDialog({
                         description="Altere nome, ícone e cor de destaque da carteira."
                     />
                     {innerForm}
+                <DialogCloseButton />
                 </SheetContent>
             </Sheet>
         )
@@ -177,7 +177,7 @@ export function WorkspaceAppearanceEditDialog({
 
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogContent className="flex max-h-[min(90dvh,36rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+            <DialogContent layout="fixed">
                 <DialogHeader className="shrink-0 px-6 py-4 text-left">
                     <DialogTitle>Editar carteira</DialogTitle>
                     <DialogDescription className="text-xs leading-snug">

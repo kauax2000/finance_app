@@ -894,7 +894,6 @@ export default function BillsPageClient() {
                         <AlertDialogCancel type="button">Cancelar</AlertDialogCancel>
                         <AlertDialogAction
                             type="button"
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             onClick={(e) => {
                                 e.preventDefault()
                                 void handleDeleteBill()

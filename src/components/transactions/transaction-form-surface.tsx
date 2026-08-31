@@ -5,14 +5,16 @@ import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
-    DialogClose,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogHeaderRow,
-    DialogTitle,
+  DialogClose,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogHeaderRow,
+  DialogTitle,
 } from "@/components/ui/dialog"
-import { SheetClose, SheetDescription, SheetFooter } from "@/components/ui/sheet"
+import {
+  SheetClose,
+} from "@/components/ui/sheet"
 import {
     MobileSheetFormDragStrip,
     MobileSheetFormStickyHeader,
@@ -106,9 +108,9 @@ export function TransactionFormSurface({
                     title={formTitle}
                     endAdornment={sheetHeaderCloseControl()}
                 />
-                <SheetDescription className="sr-only">
+                <DialogDescription className="sr-only">
                     {formDescription}
-                </SheetDescription>
+                </DialogDescription>
                 <CustomForm
                     onSubmit={handleSubmit}
                     className="flex min-h-0 flex-1 flex-col"
@@ -117,9 +119,9 @@ export function TransactionFormSurface({
                         <TransactionFormFields {...fieldsProps} />
                     </div>
                     {showFooter ? (
-                        <SheetFooter className="mt-0 shrink-0 gap-2 border-t border-border/60 px-4 pt-4">
+                        <DialogFooter className="flex-col mt-0 shrink-0 gap-2 border-t border-border/60 px-4 pt-4">
                             {footer}
-                        </SheetFooter>
+                        </DialogFooter>
                     ) : null}
                 </CustomForm>
             </>
@@ -136,16 +138,16 @@ export function TransactionFormSurface({
                     title={formTitle}
                     endAdornment={sheetHeaderCloseControl()}
                 />
-                <SheetDescription className="sr-only">
+                <DialogDescription className="sr-only">
                     {formDescription}
-                </SheetDescription>
+                </DialogDescription>
                 <div className={fieldsScrollClass}>
                     <TransactionFormFields {...fieldsProps} />
                 </div>
                 {showFooter ? (
-                    <SheetFooter className="shrink-0 flex-col gap-2 border-t border-border/60 px-4 py-4 sm:flex-row sm:flex-wrap sm:justify-end sm:px-5">
+                    <DialogFooter className="shrink-0 flex-col gap-2 border-t border-border/60 px-4 py-4 sm:flex-row sm:flex-wrap sm:justify-end sm:px-5">
                         {footer}
-                    </SheetFooter>
+                    </DialogFooter>
                 ) : null}
             </CustomForm>
         )

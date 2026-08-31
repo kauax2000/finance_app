@@ -33,6 +33,7 @@ import DialogDoc from "./docs/dialog"
 import DinheiroDoc from "./docs/dinheiro"
 import DrawerDoc from "./docs/drawer"
 import DropdownMenuDoc from "./docs/dropdown-menu"
+import EdgePanelDoc from "./docs/edge-panel"
 import EmptyStateDoc from "./docs/empty-state"
 import EspacamentoDoc from "./docs/espacamento"
 import FieldDoc from "./docs/field"
@@ -123,6 +124,7 @@ export const DOCS: Record<string, ComponentType> = {
   "dinheiro": DinheiroDoc,
   "drawer": DrawerDoc,
   "dropdown-menu": DropdownMenuDoc,
+  "edge-panel": EdgePanelDoc,
   "empty-state": EmptyStateDoc,
   "espacamento": EspacamentoDoc,
   "field": FieldDoc,

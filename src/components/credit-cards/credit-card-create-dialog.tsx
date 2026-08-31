@@ -6,14 +6,17 @@ import type { User } from "@supabase/supabase-js"
 import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
-import { Sheet, SheetContent, SheetFooter } from "@/components/ui/sheet"
+import {
+  Sheet,
+  SheetContent,
+} from "@/components/ui/sheet"
 import {
     MobileSheetFormDragStrip,
     MobileSheetFormHeaderCloseButton,
@@ -159,7 +162,6 @@ export function CreditCardCreateDialog({
                 <SheetContent
                     side="bottom"
                     fillMobileViewport
-                    showCloseButton={false}
                     className={mobileFormSheetContentClassName}
                 >
                     <MobileSheetFormDragStrip />
@@ -195,7 +197,7 @@ export function CreditCardCreateDialog({
                                 />
                             </div>
                         </div>
-                        <SheetFooter className="mt-0 shrink-0 gap-2 border-t border-border/60 px-4 pt-4">
+                        <DialogFooter className="flex-col mt-0 shrink-0 gap-2 border-t border-border/60 px-4 pt-4">
                             <Button
                                 type="submit"
                                 size="sm"
@@ -204,7 +206,7 @@ export function CreditCardCreateDialog({
                             >
                                 {saving ? "Salvando…" : "Cadastrar"}
                             </Button>
-                        </SheetFooter>
+                        </DialogFooter>
                     </CustomForm>
                 </SheetContent>
             </Sheet>
@@ -213,7 +215,7 @@ export function CreditCardCreateDialog({
 
     return (
         <Dialog open={open} onOpenChange={handleDismiss}>
-            <DialogContent className="flex max-h-[min(90dvh,36rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+            <DialogContent layout="fixed">
                 <CustomForm
                     onSubmit={handleCreate}
                     className="flex min-h-0 flex-1 flex-col"

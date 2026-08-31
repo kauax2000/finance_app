@@ -207,9 +207,9 @@ function CreditCardBillingSection({
                             )
                         )}
                     </div>
-                    <Alert variant="info" className="gap-2 px-3 py-2.5">
-                        <InformationCircleIcon className="size-4" aria-hidden />
-                        <AlertTitle className="text-xs font-medium">
+                    <Alert tone="info" size="sm">
+                        <InformationCircleIcon aria-hidden />
+                        <AlertTitle>
                             {CREDIT_CARD_BILLING_FORM.results.title}
                         </AlertTitle>
                         <AlertDescription className="text-2xs leading-snug">

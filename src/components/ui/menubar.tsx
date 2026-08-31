@@ -1,23 +1,153 @@
 "use client"
 
-import { CheckIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
+import { CheckIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
+import { cva, type VariantProps } from "class-variance-authority"
 import { Menubar as MenubarPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import {
+  menuIndicatorItemClassName,
+  menuIndicatorSlotClassName,
+  menuItemClassName,
+  menuLabelClassName,
+  menuSeparatorClassName,
+  menuShortcutClassName,
+  menuSubSurfaceClassName,
+  menuSubTriggerClassName,
+  menuSurfaceClassName,
+} from "@/lib/menu-classes"
+
+/**
+ * As duas classes que trazem o nome da primitiva — escritas por extenso, e não
+ * montadas. O Tailwind varre o código como texto: uma classe interpolada em
+ * tempo de execução não existe para o scanner, e o CSS dela nunca é gerado.
+ */
+const MENUBAR_POPPER =
+  "max-h-(--radix-menubar-content-available-height) max-w-(--radix-menubar-content-available-width) origin-(--radix-menubar-content-transform-origin)"
+
+/**
+ * A barra de menus.
+ *
+ * ## A superfície é a mesma dos outros dois menus
+ *
+ * `DropdownMenu`, `ContextMenu` e `Menubar` desenham o mesmo painel e diferem
+ * só em como são invocados — clique num gatilho, botão direito, e uma fileira
+ * de gatilhos que se percorre com a seta. Por isso o painel, a linha, o rótulo,
+ * o fio e o atalho vêm de [`lib/menu-classes`](../../lib/menu-classes.ts). O
+ * que sobra aqui é o que só a barra tem: a fileira e os seus gatilhos.
+ *
+ * ## O que esta revisão corrigiu
+ *
+ * 1. **O gatilho tinha 24px** — medido. A barra era `h-8` com 3px de recuo e uma
+ *    borda, e o que sobrava para o gatilho era o degrau `xs`, que o projeto
+ *    reserva para dentro de outro controle. É o mesmo defeito que o `TabsList`
+ *    teve; a diferença é que lá ninguém tinha medido este.
+ * 2. **Sem teto de altura** (`max-height: none`). Um menu longo saía da tela.
+ * 3. **Sem animação de saída** — o painel tinha `data-open:*` e nenhum
+ *    `data-closed:*`, então ele sumia seco enquanto o próprio submenu
+ *    desvanecia.
+ * 4. **Indicador de marca à esquerda** e **rádio com o tique da caixa**, as
+ *    duas coisas que os menus irmãos já tinham corrigido.
+ *
+ * ## O tamanho é do gatilho, e não da barra
+ *
+ * Aqui está a única divergência deliberada em relação ao `TabsList`, que ancora
+ * a escada no contêiner. As abas dele esticam (`flex-1` com
+ * `h-[calc(100%-1px)]`), então a altura da lista **determina** a do gatilho. Os
+ * gatilhos de uma barra de menus são do tamanho do próprio rótulo: não esticam,
+ * e a altura da barra é consequência deles. Ancorar no contêiner foi
+ * exatamente o que produziu os 24px.
+ *
+ * Então `size` mede o gatilho — `sm` 28, `md` 32, `lg` 36 —, e a barra cresce em
+ * volta. Todos os três estão no piso da escada ou acima.
+ */
+
+type MenubarSize = "sm" | "md" | "lg"
+type MenubarVariant = "outline" | "ghost" | "solid"
+
+/**
+ * O tamanho e a superfície descem pelo contexto porque duas peças precisam
+ * concordar sobre eles: a barra dá a moldura, o gatilho dá a altura e o realce
+ * — e o realce depende de sobre o que ele acende. Mesmo motivo do `InputGroup`.
+ */
+const MenubarContext = React.createContext<{
+  size: MenubarSize
+  variant: MenubarVariant
+}>({ size: "md", variant: "outline" })
+
+const menubarVariants = cva("flex w-fit items-center gap-0.5 rounded-lg p-0.5", {
+  variants: {
+    variant: {
+      /** A barra que se sustenta sozinha, sobre a página. */
+      outline: "border border-border bg-background",
+      /** Dentro de um cabeçalho que já tem a própria moldura. */
+      ghost: "border border-transparent bg-transparent",
+      /** Bandeja preenchida, como a do `TabsList`. */
+      solid: "border border-transparent bg-muted",
+    },
+    size: { sm: "", md: "", lg: "" },
+  },
+  defaultVariants: { variant: "outline", size: "md" },
+})
+
+/**
+ * O gatilho.
+ *
+ * Na bandeja `solid` o realce **sobe** em vez de tingir: `--accent` e `--muted`
+ * são praticamente a mesma cor no tema claro e **exatamente** a mesma no
+ * escuro (`oklch(0.269 0 0)` nos dois), então acender com `accent` sobre uma
+ * bandeja `muted` não desenharia nada. É a mesma saída do `TabsTrigger` — o
+ * item ativo ganha `bg-background` e um fio, e se destaca por altura em vez de
+ * por tinta.
+ */
+const menubarTriggerVariants = cva(
+  [
+    "flex shrink-0 items-center gap-1.5 rounded-md px-2 text-sm font-medium whitespace-nowrap outline-hidden select-none",
+    "transition-colors",
+    "focus-visible:ring-3 focus-visible:ring-ring/70",
+    "disabled:pointer-events-none disabled:opacity-50",
+    "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  ],
+  {
+    variants: {
+      variant: {
+        outline:
+          "hover:bg-muted active:bg-muted aria-expanded:bg-muted aria-expanded:text-foreground",
+        ghost:
+          "hover:bg-muted active:bg-muted aria-expanded:bg-muted aria-expanded:text-foreground",
+        solid:
+          "hover:bg-background/60 active:bg-background/60 aria-expanded:border-border/80 aria-expanded:bg-background aria-expanded:text-foreground aria-expanded:shadow-xs border border-transparent",
+      },
+      /** O piso é 28: `xs` (24) é para dentro de outro controle, não para uma barra. */
+      size: { sm: "h-7", md: "h-8", lg: "h-9" },
+    },
+    defaultVariants: { variant: "outline", size: "md" },
+  }
+)
+
 function Menubar({
   className,
+  variant = "outline",
+  size = "md",
   ...props
-}: React.ComponentProps<typeof MenubarPrimitive.Root>) {
+}: React.ComponentProps<typeof MenubarPrimitive.Root> &
+  VariantProps<typeof menubarVariants>) {
+  const ctx = React.useMemo(
+    () => ({ size: size ?? "md", variant: variant ?? "outline" }),
+    [size, variant]
+  )
+
   return (
-    <MenubarPrimitive.Root
-      data-slot="menubar"
-      className={cn(
-        "flex h-8 items-center gap-0.5 rounded-lg border p-[3px]",
-        className
-      )}
-      {...props}
-    />
+    <MenubarContext.Provider value={ctx}>
+      <MenubarPrimitive.Root
+        data-slot="menubar"
+        data-variant={variant}
+        data-size={size}
+        className={cn(menubarVariants({ variant, size }), className)}
+        {...props}
+      />
+    </MenubarContext.Provider>
   )
 }
 
@@ -51,13 +181,12 @@ function MenubarTrigger({
   className,
   ...props
 }: React.ComponentProps<typeof MenubarPrimitive.Trigger>) {
+  const { size, variant } = React.useContext(MenubarContext)
+
   return (
     <MenubarPrimitive.Trigger
       data-slot="menubar-trigger"
-      className={cn(
-        "flex items-center rounded-sm px-1.5 py-[2px] text-sm font-medium outline-hidden select-none hover:bg-muted aria-expanded:bg-muted",
-        className
-      )}
+      className={cn(menubarTriggerVariants({ variant, size }), className)}
       {...props}
     />
   )
@@ -77,7 +206,7 @@ function MenubarContent({
         align={align}
         alignOffset={alignOffset}
         sideOffset={sideOffset}
-        className={cn("z-(--z-modal) min-w-36 origin-(--radix-menubar-content-transform-origin) overflow-hidden rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-(--duration-instant) data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95", className )}
+        className={cn(menuSurfaceClassName, MENUBAR_POPPER, className)}
         {...props}
       />
     </MenubarPortal>
@@ -98,10 +227,7 @@ function MenubarItem({
       data-slot="menubar-item"
       data-inset={inset}
       data-variant={variant}
-      className={cn(
-        "group/menubar-item relative flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-inset:pl-7 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 data-[variant=destructive]:*:[svg]:text-destructive!",
-        className
-      )}
+      className={cn(menuItemClassName, className)}
       {...props}
     />
   )
@@ -120,17 +246,13 @@ function MenubarCheckboxItem({
     <MenubarPrimitive.CheckboxItem
       data-slot="menubar-checkbox-item"
       data-inset={inset}
-      className={cn(
-        "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-1.5 pl-7 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0",
-        className
-      )}
+      className={cn(menuIndicatorItemClassName, className)}
       checked={checked}
       {...props}
     >
-      <span className="pointer-events-none absolute left-1.5 flex size-4 items-center justify-center [&_svg:not([class*='size-'])]:size-4">
+      <span className={menuIndicatorSlotClassName}>
         <MenubarPrimitive.ItemIndicator>
-          <CheckIcon
-          />
+          <CheckIcon aria-hidden />
         </MenubarPrimitive.ItemIndicator>
       </span>
       {children}
@@ -150,16 +272,13 @@ function MenubarRadioItem({
     <MenubarPrimitive.RadioItem
       data-slot="menubar-radio-item"
       data-inset={inset}
-      className={cn(
-        "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-1.5 pl-7 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        className
-      )}
+      className={cn(menuIndicatorItemClassName, className)}
       {...props}
     >
-      <span className="pointer-events-none absolute left-1.5 flex size-4 items-center justify-center [&_svg:not([class*='size-'])]:size-4">
+      <span className={menuIndicatorSlotClassName}>
         <MenubarPrimitive.ItemIndicator>
-          <CheckIcon
-          />
+          {/* Um ponto, e não o tique da caixa — ver `RadioGroup`. */}
+          <span className="size-2 rounded-full bg-current" />
         </MenubarPrimitive.ItemIndicator>
       </span>
       {children}
@@ -178,10 +297,7 @@ function MenubarLabel({
     <MenubarPrimitive.Label
       data-slot="menubar-label"
       data-inset={inset}
-      className={cn(
-        "px-1.5 py-1 text-sm font-medium data-inset:pl-7",
-        className
-      )}
+      className={cn(menuLabelClassName, className)}
       {...props}
     />
   )
@@ -194,7 +310,7 @@ function MenubarSeparator({
   return (
     <MenubarPrimitive.Separator
       data-slot="menubar-separator"
-      className={cn("-mx-1 my-1 h-px bg-border", className)}
+      className={cn(menuSeparatorClassName, className)}
       {...props}
     />
   )
@@ -207,10 +323,7 @@ function MenubarShortcut({
   return (
     <span
       data-slot="menubar-shortcut"
-      className={cn(
-        "ml-auto text-xs tracking-widest text-muted-foreground group-focus/menubar-item:text-accent-foreground",
-        className
-      )}
+      className={cn(menuShortcutClassName, className)}
       {...props}
     />
   )
@@ -234,14 +347,11 @@ function MenubarSubTrigger({
     <MenubarPrimitive.SubTrigger
       data-slot="menubar-sub-trigger"
       data-inset={inset}
-      className={cn(
-        "flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-none select-none focus:bg-accent focus:text-accent-foreground data-inset:pl-7 data-open:bg-accent data-open:text-accent-foreground [&_svg:not([class*='size-'])]:size-4",
-        className
-      )}
+      className={cn(menuSubTriggerClassName, className)}
       {...props}
     >
       {children}
-      <ChevronRightIcon className="ml-auto size-4" />
+      <ChevronRightIcon aria-hidden className="ml-auto" />
     </MenubarPrimitive.SubTrigger>
   )
 }
@@ -253,7 +363,7 @@ function MenubarSubContent({
   return (
     <MenubarPrimitive.SubContent
       data-slot="menubar-sub-content"
-      className={cn("z-(--z-modal) min-w-32 origin-(--radix-menubar-content-transform-origin) overflow-hidden rounded-lg bg-popover p-1 text-popover-foreground shadow-lg ring-1 ring-foreground/10 duration-(--duration-instant) data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
+      className={cn(menuSubSurfaceClassName, MENUBAR_POPPER, className)}
       {...props}
     />
   )
@@ -261,19 +371,21 @@ function MenubarSubContent({
 
 export {
   Menubar,
-  MenubarPortal,
-  MenubarMenu,
-  MenubarTrigger,
+  MenubarCheckboxItem,
   MenubarContent,
   MenubarGroup,
-  MenubarSeparator,
-  MenubarLabel,
   MenubarItem,
-  MenubarShortcut,
-  MenubarCheckboxItem,
+  MenubarLabel,
+  MenubarMenu,
+  MenubarPortal,
   MenubarRadioGroup,
   MenubarRadioItem,
+  MenubarSeparator,
+  MenubarShortcut,
   MenubarSub,
-  MenubarSubTrigger,
   MenubarSubContent,
+  MenubarSubTrigger,
+  MenubarTrigger,
+  menubarTriggerVariants,
+  menubarVariants,
 }

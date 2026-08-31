@@ -5,11 +5,13 @@ import { PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { EllipsisHorizontalIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
-    Sheet,
-    SheetContent,
-    SheetDescription,
-    SheetTitle,
+  Sheet,
+  SheetContent,
 } from "@/components/ui/sheet"
+import {
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { SheetDragHandle } from "@/components/ui/sheet-drag-handle"
 import { mobileSheetChromeBelowHeaderClassName } from "@/components/ui/mobile-sheet-form-chrome"
 import { Button } from "@/components/ui/button"
@@ -164,12 +166,11 @@ export function BillDetailSheet({
                     "flex w-full flex-col gap-0 overflow-hidden p-0 data-[side=right]:sm:max-w-md",
                     isMobile && "rounded-t-2xl pt-0 sm:max-w-full"
                 )}
-                showCloseButton={false}
             >
                 {isMobile ? <SheetDragHandle /> : null}
-                <SheetDescription className="sr-only">
+                <DialogDescription className="sr-only">
                     {bill ? `Conta ${bill.name}. Detalhes e histórico de parcelas.` : "Carregando conta."}
-                </SheetDescription>
+                </DialogDescription>
 
                 <div
                     className={cn(
@@ -199,9 +200,9 @@ export function BillDetailSheet({
                                 <Skeleton className="h-5 w-40" />
                             ) : bill ? (
                                 <>
-                                    <SheetTitle className="font-heading text-base font-medium leading-tight">
+                                    <DialogTitle className="font-heading text-base font-medium leading-tight">
                                         {bill.name}
-                                    </SheetTitle>
+                                    </DialogTitle>
                                     <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                                         {bill.category ? (
                                             <span className="inline-flex max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5">
@@ -236,9 +237,9 @@ export function BillDetailSheet({
                                     </p>
                                 </>
                             ) : (
-                                <SheetTitle className="text-base">
+                                <DialogTitle className="text-base">
                                     Conta não encontrada
-                                </SheetTitle>
+                                </DialogTitle>
                             )}
                         </div>
 

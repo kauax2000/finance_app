@@ -45,7 +45,7 @@ export function RouteErrorFallback({ error, reset }: RouteErrorFallbackProps) {
                         </Button>
                     </EmptyStateActions>
                 </EmptyState>
-                <Alert variant="destructive" className="w-full">
+                <Alert tone="destructive" className="w-full">
                     <ExclamationTriangleIcon />
                     <AlertTitle>Detalhes técnicos</AlertTitle>
                     <AlertDescription className="break-words font-mono text-xs">

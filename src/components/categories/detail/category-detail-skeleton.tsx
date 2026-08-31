@@ -124,7 +124,7 @@ function SummaryExpenseSkeleton() {
                     </div>
                 </div>
 
-                <Card size="sm" className="min-w-0">
+                <Card padding="none" className="min-w-0">
                     <CardContent className="space-y-4 p-3 md:p-4">
                         <div className="flex w-full items-center justify-between gap-2 rounded-md border border-border/60 bg-muted/20 px-3 py-2 md:hidden">
                             <Skeleton className="h-3 w-12" />
@@ -171,7 +171,7 @@ function TrendsSkeleton() {
                 </div>
             </div>
 
-            <Card size="sm">
+            <Card padding="none">
                 <CardContent className="p-3">
                     <Skeleton className="mb-2 h-3 w-48 max-w-full" />
                     <Skeleton className="h-[200px] w-full rounded-md" />

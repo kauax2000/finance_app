@@ -4,19 +4,17 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/providers"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogCloseButton,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import {
-    Sheet,
-    SheetContent,
-    SheetDescription,
-    SheetFooter,
-    SheetTitle,
+  Sheet,
+  SheetContent,
 } from "@/components/ui/sheet"
 import {
     MobileSheetFormDragStrip,
@@ -138,7 +136,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
     const stickyHeader = (
         <MobileSheetFormStickyHeader>
             <>
-                <SheetTitle
+                <DialogTitle
                     className={cn(
                         "flex items-center gap-2 font-heading text-base font-medium leading-tight",
                         success
@@ -154,10 +152,10 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                         <TrashMiniIcon className="h-5 w-5 shrink-0" aria-hidden />
                     )}
                     {title}
-                </SheetTitle>
-                <SheetDescription className="mt-1 text-sm text-muted-foreground">
+                </DialogTitle>
+                <DialogDescription className="mt-1 text-sm text-muted-foreground">
                     {description}
-                </SheetDescription>
+                </DialogDescription>
             </>
         </MobileSheetFormStickyHeader>
     )
@@ -238,11 +236,11 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
     )
 
     const footerWarning = isMobile ? (
-        <SheetFooter className={sheetFooterMobileClass}>
+        <DialogFooter className={sheetFooterMobileClass}>
             <Button type="button" variant="destructive" className="h-10 w-full" onClick={handleContinue}>
                 Continuar
             </Button>
-        </SheetFooter>
+        </DialogFooter>
     ) : (
         <DialogFooter className={dialogFooterClass}>
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
@@ -297,7 +295,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
             </div>
 
             {isMobile ? (
-                <SheetFooter className={sheetFooterMobileClass}>
+                <DialogFooter className={sheetFooterMobileClass}>
                     <Button
                         type="submit"
                         variant="destructive"
@@ -328,7 +326,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                     >
                         Voltar
                     </Button>
-                </SheetFooter>
+                </DialogFooter>
             ) : (
                 <DialogFooter className={dialogFooterClass}>
                     <Button
@@ -411,10 +409,10 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                 <SheetContent
                     side="bottom"
                     fillMobileViewport
-                    showCloseButton
                     className={mobileFormSheetContentClassName}
                 >
                     {shellMobile}
+                <DialogCloseButton />
                 </SheetContent>
             </Sheet>
         )
@@ -422,7 +420,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
 
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogContent className="flex max-h-[min(90dvh,36rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+            <DialogContent layout="fixed">
                 {shellDesktop}
             </DialogContent>
         </Dialog>

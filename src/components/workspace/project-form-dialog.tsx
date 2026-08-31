@@ -6,17 +6,16 @@ import { useWorkspace } from "@/components/workspace-provider"
 import { WorkspaceAppearanceFormFields } from "@/components/workspace/workspace-appearance-form-fields"
 import { Button } from "@/components/ui/button"
 import {
-    Dialog,
-    DialogContent,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import {
-    Sheet,
-    SheetClose,
-    SheetContent,
-    SheetFooter,
+  Sheet,
+  SheetClose,
+  SheetContent,
 } from "@/components/ui/sheet"
 import {
     MobileSheetFormDragStrip,
@@ -127,11 +126,11 @@ export function ProjectFormDialog({
                 />
             </div>
             {isMobile ? (
-                <SheetFooter className={sheetFooterMobileClass}>
+                <DialogFooter className={sheetFooterMobileClass}>
                     <Button type="submit" disabled={submitting} className="h-10 w-full">
                         {submitting ? "Criando…" : "Criar carteira"}
                     </Button>
-                </SheetFooter>
+                </DialogFooter>
             ) : (
                 <DialogFooter className={dialogFooterClass}>
                     <Button
@@ -156,7 +155,6 @@ export function ProjectFormDialog({
                 <SheetContent
                     side="bottom"
                     fillMobileViewport
-                    showCloseButton={false}
                     className={mobileFormSheetContentClassName}
                 >
                     <MobileSheetFormDragStrip />
@@ -172,7 +170,7 @@ export function ProjectFormDialog({
 
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogContent className="flex max-h-[min(90dvh,36rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+            <DialogContent layout="fixed">
                 <DialogHeader className="shrink-0 px-6 py-4 text-left">
                     <DialogTitle>Nova carteira</DialogTitle>
                 </DialogHeader>

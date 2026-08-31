@@ -91,10 +91,7 @@ function CategoryCardShellSkeleton({ children }: { children: ReactNode }) {
             className="block h-full rounded-xl"
             aria-hidden
         >
-            <Card
-                size="sm"
-                className="flex h-full flex-col gap-0 overflow-hidden !py-0"
-            >
+            <Card padding="none" className="h-full">
                 {children}
             </Card>
         </div>

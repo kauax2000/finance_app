@@ -42,13 +42,13 @@ export function IncomeCategoryCard({
             aria-label={`Abrir categoria ${category.name}. Ver detalhes.`}
         >
             <Card
-                size="sm"
+                padding="none"
                 className={cn(
-                    "flex h-full flex-col gap-0 overflow-hidden !py-0 transition-shadow",
+                    "h-full transition-shadow",
                     "group-hover:shadow-md group-active:shadow-md",
                 )}
             >
-                <CardHeader className="border-b border-border/60 bg-muted/25 !py-3">
+                <CardHeader className="border-b border-border/60 bg-muted/25 px-3 py-3">
                     <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3">
                         <ColorTile color={color}>
                             <CategoryIconPreview name={normalizeCategoryIcon(category.icon)} />
@@ -98,7 +98,7 @@ export function IncomeCategoryCard({
                     </div>
                 </CardHeader>
 
-                <CardContent className="flex flex-1 flex-col gap-3 bg-card pb-3 pt-3">
+                <CardContent className="flex flex-1 flex-col gap-3 bg-card px-3 pt-3 pb-3">
                     <div
                         className={cn(
                             "inline-flex w-full items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors",

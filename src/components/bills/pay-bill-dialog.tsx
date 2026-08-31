@@ -2,14 +2,18 @@
 
 import { useEffect, useMemo, useState } from "react"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogCloseButton,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
-import { Sheet, SheetContent, SheetFooter } from "@/components/ui/sheet"
+import {
+  Sheet,
+  SheetContent,
+} from "@/components/ui/sheet"
 import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -298,7 +302,7 @@ export function PayBillDialog({
             </div>
 
             {isMobile ? (
-                <SheetFooter className="gap-3 border-border/80 shrink-0 border-t bg-muted/10 px-4 py-4 sm:flex-col sm:px-5">
+                <DialogFooter className="gap-3 border-border/80 shrink-0 border-t bg-muted/10 px-4 py-4 sm:flex-col sm:px-5">
                     <Button type="submit" disabled={saving} className="w-full">
                         Registrar pagamento
                     </Button>
@@ -311,7 +315,7 @@ export function PayBillDialog({
                     >
                         Cancelar
                     </Button>
-                </SheetFooter>
+                </DialogFooter>
             ) : (
                 <DialogFooter className="shrink-0 gap-3 border-border/80 border-t bg-muted/10 px-6 py-4">
                     <Button
@@ -342,10 +346,10 @@ export function PayBillDialog({
                 <SheetContent
                     side="bottom"
                     fillMobileViewport
-                    showCloseButton
                     className={mobileFormSheetContentClassName}
                 >
                     {formInner}
+                <DialogCloseButton />
                 </SheetContent>
             </Sheet>
         )
@@ -359,7 +363,7 @@ export function PayBillDialog({
                 onOpenChange(v)
             }}
         >
-            <DialogContent className="flex max-h-[min(90dvh,36rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+            <DialogContent layout="fixed">
                 {formInner}
             </DialogContent>
         </Dialog>

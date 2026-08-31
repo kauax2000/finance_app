@@ -10,11 +10,13 @@ import { CreditCardFaceTilt } from "@/components/credit-cards/credit-card-face-t
 import { RegisteredCreditCardFace } from "@/components/credit-cards/registered-credit-card-face"
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
-    Sheet,
-    SheetContent,
-    SheetDescription,
-    SheetTitle,
+  Sheet,
+  SheetContent,
 } from "@/components/ui/sheet"
+import {
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { SheetDragHandle } from "@/components/ui/sheet-drag-handle"
 import { mobileSheetChromeBelowHeaderClassName } from "@/components/ui/mobile-sheet-form-chrome"
 import { Button } from "@/components/ui/button"
@@ -91,9 +93,9 @@ export function CreditCardDetailSheet({
     const viewBody = (
         <div className="flex min-h-0 flex-1 flex-col gap-0">
             {isMobile ? <SheetDragHandle /> : null}
-            <SheetDescription className="sr-only">
+            <DialogDescription className="sr-only">
                 Cartão {card.name}, final {card.last_four}.
-            </SheetDescription>
+            </DialogDescription>
             <div
                 className={cn(
                     "flex shrink-0 items-center gap-2 border-b border-border px-4 py-3 sm:px-5",
@@ -101,9 +103,9 @@ export function CreditCardDetailSheet({
                     isMobile && "pt-1",
                 )}
             >
-                <SheetTitle className="font-heading min-w-0 flex-1 truncate text-base font-medium leading-tight">
+                <DialogTitle className="font-heading min-w-0 flex-1 truncate text-base font-medium leading-tight">
                     {card.name}
-                </SheetTitle>
+                </DialogTitle>
                 <Button
                     type="button"
                     variant="tertiary"
@@ -288,7 +290,6 @@ export function CreditCardDetailSheet({
                     "flex w-full flex-col gap-0 overflow-hidden p-0 data-[side=right]:sm:max-w-md",
                     isMobile && "rounded-t-2xl pt-0 sm:max-w-full"
                 )}
-                showCloseButton={false}
             >
                 {viewBody}
             </SheetContent>

@@ -7,7 +7,15 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import {
+  EdgePanel,
+  EdgePanelContent,
+  EdgePanelTrigger,
+} from "@/components/ui/edge-panel"
+import {
+  DialogCloseButton,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { AppThemeToggle } from "@/components/settings/app-theme-toggle"
 import { AppWordmark } from "@/components/layout/app-wordmark"
 import { CATEGORY_ORDER, REGISTRY } from "./registry"
@@ -64,6 +72,24 @@ export function DsShell({ children }: { children: React.ReactNode }) {
  * sem número mágico em lugar nenhum.
  */
 function DsTopBar() {
+  const pathname = usePathname()
+  const [navAberta, setNavAberta] = React.useState(false)
+
+  /**
+   * Navegar fecha o painel.
+   *
+   * O painel é controlado só por isso: `DsNav` é o **mesmo** componente na
+   * coluna fixa do desktop e aqui dentro, então envolver os links num
+   * `EdgePanelClose` — que é o idioma do Radix — lançaria no desktop, onde não
+   * existe painel para fechar.
+   *
+   * Fechar pela **rota**, e não pelo clique, cobre também quem chega pela
+   * paleta de busca com o painel aberto, e pelo botão de voltar do navegador.
+   */
+  React.useEffect(() => {
+    setNavAberta(false)
+  }, [pathname])
+
   return (
     <header className="sticky top-0 z-(--z-sticky) h-14 border-b border-border bg-background/85 backdrop-blur">
       {/* Esquerda e direita são as duas `flex-1`, e a busca no meio não encolhe.
@@ -73,8 +99,12 @@ function DsTopBar() {
           lados elásticos de peso igual centralizam de verdade. */}
       <div className="mx-auto flex h-full w-full max-w-7xl items-center gap-2 px-4 sm:gap-3 sm:px-6 lg:px-8">
         <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
-        <Sheet>
-          <SheetTrigger asChild>
+        {/* `EdgePanel`, e não `Sheet`: isto é navegação, e navegação entra
+            pelo lado em qualquer largura. O `Sheet` vira gaveta de baixo no
+            telefone — certo para um formulário, errado para uma lista de 89
+            links, que abriria com alça de arraste e canto arredondado. */}
+        <EdgePanel open={navAberta} onOpenChange={setNavAberta}>
+          <EdgePanelTrigger asChild>
             <Button
               variant="tertiary"
               // Mesmo degrau do gatilho de busca ao lado: os dois são ícone na
@@ -85,8 +115,8 @@ function DsTopBar() {
             >
               <Bars3Icon aria-hidden />
             </Button>
-          </SheetTrigger>
-          {/* A rolagem é do `div` de dentro, não do `SheetContent`.
+          </EdgePanelTrigger>
+          {/* A rolagem é do `div` de dentro, não do `EdgePanelContent`.
               Com `overflow-y-auto` na própria folha, o botão de fechar — que é
               `absolute` dentro dela — rolava junto e sumia depois de uns
               poucos itens, numa lista de 88.
@@ -100,14 +130,23 @@ function DsTopBar() {
 
               O `pr-14` é o território: 56px reservados à direita, para o título
               não correr por baixo do botão. */}
-          <SheetContent side="left" className="w-72 gap-0 overflow-hidden p-0">
-            <SheetTitle className="sr-only">
+          <EdgePanelContent
+            side="left"
+            className="w-72 gap-0 overflow-hidden p-0"
+            // O efeito acima cobre toda navegação, menos uma: clicar no link da
+            // página em que já se está não muda a rota, e o painel ficaria
+            // aberto sobre a página que ele acabou de dizer que é a atual.
+            onClick={(e) => {
+              if ((e.target as HTMLElement).closest("a")) setNavAberta(false)
+            }}
+          >
+            <DialogTitle className="sr-only">
               Navegação do design system
-            </SheetTitle>
+            </DialogTitle>
             <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-border px-4 pr-14">
               <AppWordmark size="sm" className="shrink-0" aria-hidden />
               <Separator orientation="vertical" />
-              {/* O `SheetTitle` acima já diz "Navegação do design system" ao
+              {/* O `DialogTitle` acima já diz "Navegação do design system" ao
                   leitor de tela; aqui a sigla é só o que se vê. */}
               <span className="font-display text-base leading-none text-foreground">
                 DS
@@ -125,8 +164,9 @@ function DsTopBar() {
               </div>
               <DsNav />
             </div>
-          </SheetContent>
-        </Sheet>
+          <DialogCloseButton />
+          </EdgePanelContent>
+        </EdgePanel>
 
         {/* A marca identifica o produto, o fio separa, e a sigla identifica a
             seção — três peças que não competem porque nenhuma repete a outra.
@@ -242,10 +282,12 @@ function DsNav() {
    * ativo por acaso morava ali.
    *
    * Depois disso, corte seco. Navegar é gesto de quem já sabe para onde vai, e
-   * a folha do telefone nunca anima: ela mesma está entrando na tela, e uma
+   * **nenhuma superfície modal anima**: ela mesma está entrando na tela, e uma
    * lista rolando por baixo de um painel que chega são dois movimentos
    * disputando a atenção — sem contar que o começo da viagem acontece antes de
-   * o painel terminar de abrir, então metade dela nem é vista.
+   * o painel terminar de abrir, então metade dela nem é vista. Vale para o
+   * painel de borda, para a folha e para a gaveta, e a checagem é pelo
+   * `data-surface` que as três carregam.
    *
    * Rola o contêiner, e não com `scrollIntoView`: este último rola **todos** os
    * ancestrais roláveis, e levaria a janela junto — a coluna é `sticky`, e
@@ -260,9 +302,14 @@ function DsNav() {
       if (caminhoDeEntrada === null) caminhoDeEntrada = pathname
       else if (pathname !== caminhoDeEntrada) saiuDaEntrada = true
 
-      const naFolha =
-        rolagem.closest('[data-slot="sheet-content"]') !== null
-      const animar = !saiuDaEntrada && !naFolha && !prefereMenosMovimento()
+      // `data-surface` e não um `data-slot` específico: a superfície modal do
+      // telefone já se chamou `sheet-content` e hoje pode ser `panel`, `sheet`
+      // ou `drawer`. Amarrar a checagem a um nome fez a animação voltar assim
+      // que a navegação trocou de componente — o atributo que todas carregam
+      // não tem esse problema.
+      const dentroDeUmaSuperficie = rolagem.closest("[data-surface]") !== null
+      const animar =
+        !saiuDaEntrada && !dentroDeUmaSuperficie && !prefereMenosMovimento()
 
       const l = link.getBoundingClientRect()
       const r = rolagem.getBoundingClientRect()

@@ -4,12 +4,12 @@ import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
-import { SheetFooter } from "@/components/ui/sheet"
+
 import {
     MobileSheetFormDragStrip,
     MobileSheetFormStickyHeader,
@@ -84,7 +84,7 @@ export function BillFormSurface({
                 <div className={scrollClass}>
                     <BillFormFields {...fieldsProps} />
                 </div>
-                <SheetFooter className="gap-3 border-border/80 shrink-0 border-t bg-muted/10 px-4 py-4 sm:flex-col sm:px-5">
+                <DialogFooter className="gap-3 border-border/80 shrink-0 border-t bg-muted/10 px-4 py-4 sm:flex-col sm:px-5">
                     {footer}
                     <Button
                         type="button"
@@ -95,7 +95,7 @@ export function BillFormSurface({
                     >
                         Cancelar
                     </Button>
-                </SheetFooter>
+                </DialogFooter>
             </CustomForm>
         )
     }

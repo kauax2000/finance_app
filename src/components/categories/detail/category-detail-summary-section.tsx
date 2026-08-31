@@ -245,7 +245,7 @@ function ExpenseBudgetOverviewCard({
                 </div>
             </div>
 
-            <Card size="sm" className="min-w-0">
+            <Card padding="none" className="min-w-0">
                 <CardContent className="space-y-4 p-3 md:p-4">
                     {hasBudget ? (
                         <>

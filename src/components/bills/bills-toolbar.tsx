@@ -11,12 +11,15 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
-    Sheet,
-    SheetContent,
-    SheetDescription,
-    SheetHeader,
-    SheetTitle,
+  Sheet,
+  SheetContent,
 } from "@/components/ui/sheet"
+import {
+  DialogCloseButton,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { SheetDragHandle } from "@/components/ui/sheet-drag-handle"
 import { mobileSheetChromeBelowHeaderClassName } from "@/components/ui/mobile-sheet-form-chrome"
 import {
@@ -309,21 +312,21 @@ export function BillsToolbar({
                 <SheetContent
                     side="bottom"
                     fillMobileViewport
-                    showCloseButton
                     className="flex w-full flex-col rounded-t-2xl px-4 pt-0 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]"
                 >
                     <SheetDragHandle />
-                    <SheetHeader
+                    <DialogHeader
+                        hideSeparator
                         className={cn(
                             "shrink-0 px-0 pt-1 pb-3 text-left",
                             mobileSheetChromeBelowHeaderClassName,
                         )}
                     >
-                        <SheetTitle>Filtros e ordenação</SheetTitle>
-                        <SheetDescription>
+                        <DialogTitle>Filtros e ordenação</DialogTitle>
+                        <DialogDescription>
                             Ajuste o que aparece na lista e a ordem dos itens.
-                        </SheetDescription>
-                    </SheetHeader>
+                        </DialogDescription>
+                    </DialogHeader>
                     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
                     <div className="space-y-6 pb-2">
                         <div className="space-y-2">
@@ -402,6 +405,7 @@ export function BillsToolbar({
                         </Button>
                     </div>
                     </div>
+                <DialogCloseButton />
                 </SheetContent>
             </Sheet>
         </>

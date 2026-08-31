@@ -181,13 +181,13 @@ export function ExpenseCategoryCard({
             aria-label={`Abrir categoria ${category.name}. Ver detalhes.`}
         >
             <Card
-                size="sm"
+                padding="none"
                 className={cn(
-                    "flex h-full flex-col gap-0 overflow-hidden !py-0 transition-shadow",
+                    "h-full transition-shadow",
                     "group-hover:shadow-md group-active:shadow-md",
                 )}
             >
-                <CardHeader className="border-b border-border/60 bg-muted/25 !py-3">
+                <CardHeader className="border-b border-border/60 bg-muted/25 px-3 py-3">
                     <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3">
                         <ColorTile color={color} className="col-start-1 row-start-1 self-start">
                             <CategoryIconPreview name={normalizeCategoryIcon(category.icon)} />
@@ -242,7 +242,7 @@ export function ExpenseCategoryCard({
                     </div>
                 </CardHeader>
 
-                <CardContent className="flex flex-1 flex-col gap-3 bg-card pb-3 pt-3">
+                <CardContent className="flex flex-1 flex-col gap-3 bg-card px-3 pt-3 pb-3">
                     <div className="flex items-start justify-between gap-2">
                         <p className="min-w-0 text-2xl font-bold tabular-nums tracking-tight">{currency(spent)}</p>
                         <div

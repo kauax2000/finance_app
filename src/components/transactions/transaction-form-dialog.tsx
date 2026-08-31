@@ -91,7 +91,6 @@ export function TransactionFormDialog({
                 <SheetContent
                     side="bottom"
                     fillMobileViewport
-                    showCloseButton={false}
                     className="flex w-full flex-col gap-0 overflow-hidden rounded-t-2xl px-0 pt-0 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]"
                 >
                     <TransactionFormSurface
@@ -111,10 +110,7 @@ export function TransactionFormDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent
-                showCloseButton={false}
-                className="flex max-h-[min(90dvh,36rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-md"
-            >
+            <DialogContent layout="fixed" showCloseButton={false}>
                 <TransactionFormSurface
                     variant="dialog-desktop"
                     handleSubmit={handleSubmit}

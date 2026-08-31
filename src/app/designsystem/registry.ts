@@ -40,6 +40,7 @@ const MOLECULES = new Set([
   "stat-card", "stepper", "accordion", "collapsible", "hover-card", "item",
   "pagination", "context-menu", "menubar", "command", "combobox", "drawer",
   "form", "form-picker-popover", "description-list", "announcement-bar",
+  "edge-panel",
   "page-header", "page-section", "container", "toolbar",
 ])
 
@@ -167,17 +168,18 @@ export const REGISTRY: RegistryEntry[] = [
   entry("money-input", "Money Input", "Todo valor em reais que o app recebe.", ui("money-input"), "MoneyInput"),
 
   // ── Moléculas ───────────────────────────────────────────────────────────
-  entry("card", "Card", "Contêiner com cabeçalho, corpo e rodapé.", ui("card"), "Card, CardHeader, CardContent"),
-  entry("alert", "Alert", "Mensagem em destaque dentro do conteúdo.", ui("alert"), "Alert, AlertTitle, AlertDescription"),
-  entry("alert-dialog", "Alert Dialog", "Confirmação de uma ação sem volta.", ui("alert-dialog"), "AlertDialog, AlertDialogAction"),
-  entry("dialog", "Dialog", "Janela modal para uma tarefa focada.", ui("dialog"), "Dialog, DialogContent, DialogTrigger"),
-  entry("sheet", "Sheet", "Painel deslizante: lateral no desktop, de baixo no telefone.", ui("sheet"), "Sheet, SheetContent, SheetTrigger"),
+  entry("card", "Card", "Cartão de conteúdo e painel — a superfície, o ritmo e as três tiras.", ui("card"), "Card, CardToolbar, CardContent, CardNote"),
+  entry("alert", "Alert", "Aviso dentro do conteúdo — o tom, a forma e o corpo.", ui("alert"), "Alert, AlertTitle, AlertDescription, AlertActions"),
+  entry("alert-dialog", "Alert Dialog", "Confirmação de uma ação sem volta, na régua do Dialog.", ui("alert-dialog"), "AlertDialog, AlertDialogAction, AlertDialogCancel"),
+  entry("dialog", "Dialog", "Janela modal — a largura, a altura e o corpo que rola.", ui("dialog"), "Dialog, DialogContent, DialogBody, DialogFooter"),
+  entry("sheet", "Sheet", "Folha no desktop, gaveta no telefone — uma API só.", ui("sheet"), "Sheet, SheetContent, SheetTrigger, SheetClose"),
+  entry("edge-panel", "Edge Panel", "Painel preso a uma borda, em qualquer largura. É a navegação.", ui("edge-panel"), "EdgePanel, EdgePanelContent, EdgePanelTrigger"),
   entry("drawer", "Drawer", "Gaveta arrastável, com física de toque.", ui("drawer"), "Drawer, DrawerContent, DrawerTrigger"),
   entry("popover", "Popover", "Camada flutuante ancorada a um gatilho.", ui("popover"), "Popover, PopoverContent, PopoverTrigger"),
-  entry("form-picker-popover", "Form Picker Popover", "O posicionamento dos seletores ancorados num campo.", ui("form-picker-popover"), "FormPickerPopoverContent"),
+  entry("form-picker-popover", "Form Picker Popover", "O seletor ancorado num campo: busca, lista e pé.", ui("form-picker-popover"), "FormPickerPopover, FormPickerPopoverTrigger, FormPickerPopoverContent, FormPickerPopoverSearch, FormPickerPopoverList, FormPickerPopoverItem, FormPickerPopoverFooter"),
   entry("dropdown-menu", "Dropdown Menu", "Menu de ações, com checkbox, radio e submenu.", ui("dropdown-menu"), "DropdownMenu, DropdownMenuItem"),
   entry("context-menu", "Context Menu", "O mesmo menu, aberto pelo botão direito.", ui("context-menu"), "ContextMenu, ContextMenuItem"),
-  entry("menubar", "Menubar", "Barra de menus no estilo desktop.", ui("menubar"), "Menubar, MenubarMenu"),
+  entry("menubar", "Menubar", "Fileira de menus percorrida com a seta, em três superfícies.", ui("menubar"), "Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem, MenubarCheckboxItem, MenubarRadioItem, MenubarSub"),
   entry("command", "Command", "Paleta de comandos com busca.", ui("command"), "Command, CommandInput, CommandItem"),
   entry("combobox", "Combobox", "Select com busca e navegação por teclado.", ui("combobox"), "Combobox, ComboboxTrigger, ComboboxItem"),
   entry("tabs", "Tabs", "Alterna entre painéis do mesmo nível.", ui("tabs"), "Tabs, TabsList, TabsTrigger"),

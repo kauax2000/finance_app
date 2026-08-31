@@ -5,11 +5,13 @@ import Link from "next/link"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
 import {
-    Sheet,
-    SheetContent,
-    SheetDescription,
-    SheetTitle,
+  Sheet,
+  SheetContent,
 } from "@/components/ui/sheet"
+import {
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { SheetDragHandle } from "@/components/ui/sheet-drag-handle"
 import { mobileSheetChromeBelowHeaderClassName } from "@/components/ui/mobile-sheet-form-chrome"
 import { formatDatePtBr, formatTransactionDayPtBr, formatTransactionDmyPtBr } from "@/lib/transaction-date"
@@ -325,13 +327,12 @@ export function DashboardPaymentEventPreviewSheet({
                         "flex w-full flex-col gap-0 overflow-hidden p-0 data-[side=right]:sm:max-w-md",
                         isMobile && "rounded-t-2xl pt-0 sm:max-w-full",
                     )}
-                    showCloseButton={false}
                 >
                     <div className="flex min-h-0 flex-1 flex-col gap-0">
                         {isMobile ? <SheetDragHandle /> : null}
-                        <SheetDescription className="sr-only">
+                        <DialogDescription className="sr-only">
                             Detalhes da compra parcelada prevista.
-                        </SheetDescription>
+                        </DialogDescription>
 
                         {/* ── Header ── */}
                         <div
@@ -348,9 +349,9 @@ export function DashboardPaymentEventPreviewSheet({
                             >
                                 <div className="flex min-w-0 flex-1 items-center gap-3">
                                     <div className="min-w-0 flex-1">
-                                        <SheetTitle className="font-heading text-base font-medium leading-tight">
+                                        <DialogTitle className="font-heading text-base font-medium leading-tight">
                                             Detalhe da transação
-                                        </SheetTitle>
+                                        </DialogTitle>
                                     </div>
                                 </div>
                                 <div className="flex shrink-0 items-center gap-0.5">
@@ -659,16 +660,15 @@ export function DashboardPaymentEventPreviewSheet({
                     "flex w-full flex-col gap-0 overflow-hidden p-0 data-[side=right]:sm:max-w-md",
                     isMobile && "rounded-t-2xl pt-0 sm:max-w-full",
                 )}
-                showCloseButton={false}
             >
                 {preview ? (
                     <div className="flex min-h-0 flex-1 flex-col gap-0">
                         {isMobile ? <SheetDragHandle /> : null}
 
-                        <SheetDescription className="sr-only">
+                        <DialogDescription className="sr-only">
                             Detalhes do evento previsto no calendário de
                             pagamentos.
-                        </SheetDescription>
+                        </DialogDescription>
 
                         {/* ── Header ── */}
                         <div
@@ -686,9 +686,9 @@ export function DashboardPaymentEventPreviewSheet({
                                 <div className="flex min-w-0 flex-1 items-center gap-3">
                                     <div className="min-w-0 flex-1">
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <SheetTitle className="font-heading text-base font-medium leading-5">
+                                            <DialogTitle className="font-heading text-base font-medium leading-5">
                                                 {preview.title}
-                                            </SheetTitle>
+                                            </DialogTitle>
                                             {meta ? (
                                                 <span
                                                     className={cn(

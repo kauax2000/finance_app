@@ -30,11 +30,13 @@ import {
 } from "@/lib/credit-card-billing"
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
-    Sheet,
-    SheetContent,
-    SheetDescription,
-    SheetTitle,
+  Sheet,
+  SheetContent,
 } from "@/components/ui/sheet"
+import {
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { SheetDragHandle } from "@/components/ui/sheet-drag-handle"
 import { mobileSheetChromeBelowHeaderClassName } from "@/components/ui/mobile-sheet-form-chrome"
 import { Button } from "@/components/ui/button"
@@ -339,10 +341,10 @@ export function TransactionDetailSheet({
     const viewBody = (
         <div className="flex min-h-0 flex-1 flex-col gap-0">
             {isMobile ? <SheetDragHandle /> : null}
-            <SheetDescription className="sr-only">
+            <DialogDescription className="sr-only">
                 {isIncome ? "Receita" : "Despesa"}. {formatTransactionDayPtBr(t.date)}.
                 Valor {currencyFmt.format(Number(t.amount))}.
-            </SheetDescription>
+            </DialogDescription>
             <div
                 className={cn(
                     "shrink-0 border-b border-border",
@@ -357,9 +359,9 @@ export function TransactionDetailSheet({
                 >
                     <div className="flex min-w-0 flex-1 items-center gap-3">
                         <div className="min-w-0 flex-1">
-                            <SheetTitle className="font-heading text-base font-medium leading-tight">
+                            <DialogTitle className="font-heading text-base font-medium leading-tight">
                                 Detalhe da transação
-                            </SheetTitle>
+                            </DialogTitle>
                         </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-0.5">
@@ -747,7 +749,6 @@ export function TransactionDetailSheet({
                     "flex w-full flex-col gap-0 overflow-hidden p-0 data-[side=right]:sm:max-w-md",
                     isMobile && "rounded-t-2xl pt-0 sm:max-w-full"
                 )}
-                showCloseButton={false}
             >
                 {detailMode === "edit" ? (
                     <div className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden">

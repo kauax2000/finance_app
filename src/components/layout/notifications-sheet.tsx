@@ -1,11 +1,13 @@
 "use client"
 
 import {
-    Sheet,
-    SheetContent,
-    SheetDescription,
-    SheetTitle,
+  Sheet,
+  SheetContent,
 } from "@/components/ui/sheet"
+import {
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { SheetDragHandle } from "@/components/ui/sheet-drag-handle"
 import { useNotificationsUi } from "@/components/layout/notifications-ui-provider"
 import { NotificationsPanel } from "@/components/layout/notifications-panel"
@@ -27,7 +29,6 @@ export function NotificationsSheet() {
             <SheetContent
                 side={isMobile ? "bottom" : "right"}
                 fillMobileViewport={isMobile}
-                showCloseButton={false}
                 className={cn(
                     "flex w-full flex-col gap-0 p-0",
                     isMobile
@@ -35,10 +36,10 @@ export function NotificationsSheet() {
                         : "h-full max-h-[100dvh] border-l sm:max-w-md"
                 )}
             >
-                <SheetTitle className="sr-only">Notificações</SheetTitle>
-                <SheetDescription className="sr-only">
+                <DialogTitle className="sr-only">Notificações</DialogTitle>
+                <DialogDescription className="sr-only">
                     Alertas e avisos da carteira atual. Marque como lidas ou exclua.
-                </SheetDescription>
+                </DialogDescription>
                 {isMobile ? <SheetDragHandle /> : null}
                 <NotificationsPanel isActive={isOpen} />
             </SheetContent>

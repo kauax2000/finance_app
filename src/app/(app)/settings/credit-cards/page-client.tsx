@@ -376,7 +376,6 @@ export default function CreditCardsPageClient() {
                             Cancelar
                         </AlertDialogCancel>
                         <AlertDialogAction
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             disabled={deleting}
                             onClick={(e) => {
                                 e.preventDefault()

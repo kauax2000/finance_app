@@ -1,32 +1,37 @@
-"use client"
+"use client";
 
-import { MagnifyingGlassIcon } from "@heroicons/react/16/solid"
-import * as React from "react"
-import { useRouter } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { MagnifyingGlassIcon } from "@heroicons/react/16/solid";
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandDialog,
   CommandEmpty,
+  CommandEmptyDescription,
+  CommandEmptyTitle,
+  CommandFooter,
+  CommandHint,
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandItemContent,
+  CommandItemDescription,
+  CommandItemTitle,
   CommandList,
-} from "@/components/ui/command"
-import { KbdShortcut } from "@/components/ui/kbd-shortcut"
-import { CATEGORY_ORDER, REGISTRY } from "./registry"
-import { SEARCH_INDEX } from "./search-index"
+} from "@/components/ui/command";
+import { Kbd } from "@/components/ui/kbd";
+import { KbdShortcut } from "@/components/ui/kbd-shortcut";
+import { CATEGORY_ORDER, REGISTRY } from "./registry";
+import { SEARCH_INDEX } from "./search-index";
 
 /**
  * Acentos fora dos dois lados da comparação: quem digita "graficos" acha
  * "Gráficos", e quem digita "Gráficos" também.
  */
 function normalize(value: string): string {
-  return value
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
+  return value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }
 
 /**
@@ -38,9 +43,9 @@ function normalize(value: string): string {
  * telefone ficava dentro da folha de navegação, atrás de dois toques.
  */
 export function DsSearch() {
-  const router = useRouter()
-  const [open, setOpen] = React.useState(false)
-  const [query, setQuery] = React.useState("")
+  const router = useRouter();
+  const [open, setOpen] = React.useState(false);
+  const [query, setQuery] = React.useState("");
 
   /**
    * `⌘K` e `/` abrem a paleta.
@@ -51,23 +56,23 @@ export function DsSearch() {
    */
   React.useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      const target = event.target as HTMLElement | null
+      const target = event.target as HTMLElement | null;
       const typing =
         target instanceof HTMLInputElement ||
         target instanceof HTMLTextAreaElement ||
-        target?.isContentEditable === true
+        target?.isContentEditable === true;
 
-      const isSlash = event.key === "/" && !typing
+      const isSlash = event.key === "/" && !typing;
       const isCmdK =
-        event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey)
-      if (!isSlash && !isCmdK) return
+        event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey);
+      if (!isSlash && !isCmdK) return;
 
-      event.preventDefault()
-      setOpen((current) => !current)
+      event.preventDefault();
+      setOpen((current) => !current);
     }
-    document.addEventListener("keydown", onKeyDown)
-    return () => document.removeEventListener("keydown", onKeyDown)
-  }, [])
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   /**
    * Fechar zera a busca.
@@ -81,8 +86,8 @@ export function DsSearch() {
    * item e o botão — e a versão por botão esqueceria pelo menos um.
    */
   React.useEffect(() => {
-    if (!open) setQuery("")
-  }, [open])
+    if (!open) setQuery("");
+  }, [open]);
 
   const groups = React.useMemo(
     () =>
@@ -90,16 +95,16 @@ export function DsSearch() {
         category,
         items: REGISTRY.filter((e) => e.category === category),
       })).filter((g) => g.items.length > 0),
-    []
-  )
+    [],
+  );
 
   const go = React.useCallback(
     (slug: string) => {
-      setOpen(false)
-      router.push(`/designsystem/${slug}`)
+      setOpen(false);
+      router.push(`/designsystem/${slug}`);
     },
-    [router]
-  )
+    [router],
+  );
 
   return (
     <>
@@ -110,72 +115,104 @@ export function DsSearch() {
         onOpenChange={setOpen}
         title="Buscar no design system"
         description={`Busque entre as ${REGISTRY.length} páginas pelo nome, pela descrição ou pelo texto de cada uma.`}
+        // A busca do catálogo é por substring sem acento, não a difusa do
+        // cmdk: "cor" tem que achar "Cores" e não "Carousel" e "Combobox".
+        commandProps={{
+          // A busca é por substring sem acento, não a difusa do cmdk: "cor"
+          // tem que achar "Cores" e não "Carousel" e "Combobox".
+          //
+          // E ela **gradua**. Antes devolvia 1 ou 0, então tudo empatava e
+          // vencia a ordem do registro: digitar "badge" trazia "Cores" na
+          // frente do `Badge`, porque a palavra aparece no texto daquela
+          // página. Um placeholder que diz "buscar componente" precisa que o
+          // componente venha primeiro — o nome pesa mais que o corpo.
+          filter: (value, search, keywords) => {
+            const q = normalize(search);
+            if (!q) return 1;
+            const nome = normalize(value);
+            if (nome.startsWith(q)) return 1;
+            if (nome.includes(q)) return 0.8;
+            const corpo = normalize((keywords ?? []).join(" "));
+            return corpo.includes(q) ? 0.4 : 0;
+          },
+        }}
       >
-        <Command
-          // A busca do catálogo é por substring sem acento, não a difusa do
-          // cmdk: "cor" tem que achar "Cores" e não "Carousel" e "Combobox".
-          filter={(value, search, keywords) => {
-            const q = normalize(search)
-            if (!q) return 1
-            const haystack = normalize([value, ...(keywords ?? [])].join(" "))
-            return haystack.includes(q) ? 1 : 0
-          }}
-        >
-          <CommandInput
-            autoFocus
-            value={query}
-            onValueChange={setQuery}
-            placeholder={`Buscar entre ${REGISTRY.length} páginas…`}
-          />
+        <CommandInput
+          autoFocus
+          value={query}
+          onValueChange={setQuery}
+          // Os três tipos de coisa que o catálogo guarda, na ordem em que a
+          // barra lateral os lista: token (Fundações), componente (Átomos,
+          // Moléculas, Organismos) e padrão (Padrões). "89 páginas" contava o
+          // continente e não o conteúdo — quem abre a busca não procura uma
+          // página, procura o `Badge`, o `--z-popover` ou a regra de dinheiro.
+          placeholder="Buscar componente, token ou padrão…"
+        />
 
-          <CommandList>
-            {/* Busca vazia não pode ser beco sem saída: além de dizer o que a
+        <CommandList>
+          {/* Busca vazia não pode ser beco sem saída: além de dizer o que a
                 busca cobre, ela oferece a volta. */}
-            <CommandEmpty className="flex flex-col items-center gap-3 py-10 text-center">
-              <p className="text-sm text-foreground">
-                {`Nada encontrado para "${query}".`}
-              </p>
-              <p className="max-w-xs text-xs text-muted-foreground">
-                {`A busca cobre o nome, a descrição e o texto de cada uma das ${REGISTRY.length} páginas — inclusive as palavras que a página ensina, como "contraste" ou "tabular".`}
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setQuery("")}
-              >
-                Limpar busca
-              </Button>
-            </CommandEmpty>
+          <CommandEmpty>
+            <CommandEmptyTitle>
+              {`Nada encontrado para "${query}".`}
+            </CommandEmptyTitle>
+            <CommandEmptyDescription>
+              {`A busca cobre o nome, a descrição e o texto de cada uma das ${REGISTRY.length} páginas.`}
+            </CommandEmptyDescription>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setQuery("")}
+            >
+              Limpar busca
+            </Button>
+          </CommandEmpty>
 
-            {groups.map((group) => (
-              <CommandGroup key={group.category} heading={group.category}>
-                {group.items.map((item) => (
-                  <CommandItem
-                    key={item.slug}
-                    value={`${item.name} ${item.slug} ${item.description}`}
-                    keywords={[SEARCH_INDEX[item.slug] ?? ""]}
-                    onSelect={() => go(item.slug)}
-                  >
-                    {/* Nome sobre descrição é o mesmo dado em duas linhas:
-                        quem os separa é a entrelinha, não um gap. */}
-                    <span className="flex min-w-0 flex-col">
-                      <span className="truncate font-medium text-foreground">
-                        {item.name}
-                      </span>
-                      <span className="truncate text-xs text-muted-foreground">
-                        {item.description}
-                      </span>
-                    </span>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            ))}
-          </CommandList>
-        </Command>
+          {groups.map((group) => (
+            <CommandGroup key={group.category} heading={group.category}>
+              {group.items.map((item) => (
+                <CommandItem
+                  key={item.slug}
+                  value={`${item.name} ${item.slug} ${item.description}`}
+                  keywords={[SEARCH_INDEX[item.slug] ?? ""]}
+                  onSelect={() => go(item.slug)}
+                >
+                  <CommandItemContent>
+                    <CommandItemTitle>{item.name}</CommandItemTitle>
+                    <CommandItemDescription>
+                      {item.description}
+                    </CommandItemDescription>
+                  </CommandItemContent>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          ))}
+        </CommandList>
+
+        <CommandFooter>
+          <CommandHint>
+            <Kbd>↑</Kbd>
+            <Kbd>↓</Kbd>
+            navegar
+          </CommandHint>
+          {/* Navegar fica sozinho à esquerda; abrir e fechar andam juntos à
+              direita, porque os dois encerram a interação e o `justify-between`
+              do rodapé espalharia os três em vez de agrupá-los. */}
+          <div className="flex items-center gap-3">
+            <CommandHint>
+              <Kbd>↵</Kbd>
+              abrir
+            </CommandHint>
+            <CommandHint>
+              <Kbd>esc</Kbd>
+              fechar
+            </CommandHint>
+          </div>
+        </CommandFooter>
       </CommandDialog>
     </>
-  )
+  );
 }
 
 /**
@@ -211,7 +248,7 @@ function DsSearchTrigger({ onClick }: { onClick: () => void }) {
         // barra: campo largo só existe onde há meio para centralizá-lo.
         "max-lg:size-8 max-lg:px-0",
         "lg:h-8 lg:w-full lg:max-w-sm lg:justify-start lg:gap-2 lg:px-3 lg:font-normal",
-        "lg:border-border lg:bg-input-fill/30"
+        "lg:border-border lg:bg-input-fill/30",
       )}
     >
       <MagnifyingGlassIcon className="shrink-0 opacity-70" aria-hidden />
@@ -221,6 +258,5 @@ function DsSearchTrigger({ onClick }: { onClick: () => void }) {
           acessível diria a mesma coisa duas vezes. */}
       <KbdShortcut keys="mod+k" aria-hidden className="ml-auto max-lg:hidden" />
     </Button>
-  )
+  );
 }
-

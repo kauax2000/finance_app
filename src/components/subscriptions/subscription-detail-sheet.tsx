@@ -7,11 +7,13 @@ import { supabase } from "@/lib/supabase"
 import { paymentMethodLabel } from "@/lib/payment-methods"
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
-    Sheet,
-    SheetContent,
-    SheetDescription,
-    SheetTitle,
+  Sheet,
+  SheetContent,
 } from "@/components/ui/sheet"
+import {
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { SheetDragHandle } from "@/components/ui/sheet-drag-handle"
 import { Spinner } from "@/components/ui/spinner"
 import { mobileSheetChromeBelowHeaderClassName } from "@/components/ui/mobile-sheet-form-chrome"
@@ -304,10 +306,10 @@ export function SubscriptionDetailSheet({
     const viewBody = (
         <div className="flex min-h-0 flex-1 flex-col gap-0">
             {isMobile ? <SheetDragHandle /> : null}
-            <SheetDescription className="sr-only">
+            <DialogDescription className="sr-only">
                 Assinatura {s.name}. Valor {currencyFmt.format(Number(s.amount))}.
                 Próxima cobrança {formatDatePtBr(nextCharge)}.
-            </SheetDescription>
+            </DialogDescription>
             <div
                 className={cn(
                     "shrink-0 border-b border-border",
@@ -322,9 +324,9 @@ export function SubscriptionDetailSheet({
                 >
                     <div className="flex min-w-0 flex-1 items-center gap-3">
                         <div className="min-w-0 flex-1">
-                            <SheetTitle className="font-heading text-base font-medium leading-tight">
+                            <DialogTitle className="font-heading text-base font-medium leading-tight">
                                 Detalhe da assinatura
-                            </SheetTitle>
+                            </DialogTitle>
                         </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-0.5">
@@ -611,7 +613,6 @@ export function SubscriptionDetailSheet({
                     "flex w-full flex-col gap-0 overflow-hidden p-0 data-[side=right]:sm:max-w-md",
                     isMobile && "rounded-t-2xl pt-0 sm:max-w-full"
                 )}
-                showCloseButton={false}
             >
                 {detailMode === "edit" ? (
                     <div className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden">

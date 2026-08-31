@@ -71,7 +71,7 @@ function TooltipContent({
         data-slot="tooltip-content"
         sideOffset={sideOffset}
         className={cn(
-          "z-(--z-modal) w-fit max-w-xs origin-(--radix-tooltip-content-transform-origin)",
+          "z-(--z-popover) w-fit max-w-xs origin-(--radix-tooltip-content-transform-origin)",
           "rounded-md border border-border bg-popover px-3 py-1.5 shadow-md",
           "text-sm font-medium text-balance text-popover-foreground",
           // Entra deslizando do lado do gatilho, o que dá direção ao movimento

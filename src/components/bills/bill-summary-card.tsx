@@ -76,9 +76,9 @@ export function BillSummaryCard({
 
     return (
         <Card
-            size="sm"
+            padding="none"
             className={cn(
-                "gap-0 overflow-hidden py-0 transition-shadow",
+                "transition-shadow",
                 !bill.is_active && "opacity-[0.82]"
             )}
         >

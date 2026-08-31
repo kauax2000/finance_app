@@ -113,7 +113,7 @@ export function CategoryDetailTrends({
                     </Button>
                 </div>
             </div>
-            <Card size="sm">
+            <Card padding="none">
                 <CardContent className="p-3">
                     <p className="mb-2 w-full text-xs font-medium text-muted-foreground md:min-w-0 md:truncate">
                         {tab === "daily" ? dailyTitle : monthlyTitle}

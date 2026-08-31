@@ -7,17 +7,17 @@ import { Button } from "@/components/ui/button"
 import { MoneyInput } from "@/components/ui/money-input"
 import { CustomForm } from "@/components/ui/form"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogCloseButton,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import {
-    Sheet,
-    SheetContent,
-    SheetFooter,
+  Sheet,
+  SheetContent,
 } from "@/components/ui/sheet"
 import {
     MobileSheetFormDragStrip,
@@ -141,7 +141,6 @@ export function CategoryBudgetDialog({
                 <SheetContent
                     side="bottom"
                     fillMobileViewport
-                    showCloseButton
                     className={mobileFormSheetContentClassName}
                 >
                     <MobileSheetFormDragStrip />
@@ -151,7 +150,7 @@ export function CategoryBudgetDialog({
                     />
                     <CustomForm onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
                         <div className="min-h-0 flex-1 overflow-y-auto px-4">{fieldsBlock}</div>
-                        <SheetFooter className="mt-0 shrink-0 flex-col gap-2 border-t border-border/60 px-4 pt-4">
+                        <DialogFooter className="mt-0 shrink-0 flex-col gap-2 border-t border-border/60 px-4 pt-4">
                             {existing ? (
                                 <Button
                                     type="button"
@@ -170,8 +169,9 @@ export function CategoryBudgetDialog({
                             >
                                 {saving ? "Salvando…" : "Salvar"}
                             </Button>
-                        </SheetFooter>
+                        </DialogFooter>
                     </CustomForm>
+                <DialogCloseButton />
                 </SheetContent>
             </Sheet>
         )

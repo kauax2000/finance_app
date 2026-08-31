@@ -18,17 +18,17 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogCloseButton,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import {
-    Sheet,
-    SheetContent,
-    SheetFooter,
+  Sheet,
+  SheetContent,
 } from "@/components/ui/sheet"
 import {
     MobileSheetFormDragStrip,
@@ -248,7 +248,6 @@ export function CategoryCreateDialog({
                 <SheetContent
                     side="bottom"
                     fillMobileViewport
-                    showCloseButton
                     className={mobileFormSheetContentClassName}
                 >
                     <MobileSheetFormDragStrip />
@@ -263,7 +262,7 @@ export function CategoryCreateDialog({
                         <div className="min-h-0 flex-1 overflow-y-auto px-4">
                             {fieldsBlock}
                         </div>
-                        <SheetFooter className="mt-0 shrink-0 gap-2 border-t border-border/60 px-4 pt-4">
+                        <DialogFooter className="flex-col mt-0 shrink-0 gap-2 border-t border-border/60 px-4 pt-4">
                             <Button
                                 type="submit"
                                 disabled={saving}
@@ -271,8 +270,9 @@ export function CategoryCreateDialog({
                             >
                                 {saving ? "Salvando..." : "Salvar"}
                             </Button>
-                        </SheetFooter>
+                        </DialogFooter>
                     </CustomForm>
+                <DialogCloseButton />
                 </SheetContent>
             </Sheet>
         )
@@ -280,7 +280,7 @@ export function CategoryCreateDialog({
 
     return (
         <Dialog open={open} onOpenChange={onSheetOpenChange}>
-            <DialogContent className="flex max-h-[min(90dvh,36rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+            <DialogContent layout="fixed">
                 <DialogHeader className="shrink-0 px-6 pt-6 pb-2">
                     <DialogTitle>Nova categoria</DialogTitle>
                     <DialogDescription>{description}</DialogDescription>

@@ -5,16 +5,15 @@ import { useAuth } from "@/components/providers"
 import { supabase } from "@/lib/supabase"
 import { createActivity } from "@/lib/activity"
 import {
-    Dialog,
-    DialogContent,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import {
-    Sheet,
-    SheetContent,
-    SheetFooter,
+  Sheet,
+  SheetContent,
 } from "@/components/ui/sheet"
 import {
     MobileSheetFormDragStrip,
@@ -308,13 +307,13 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
             </div>
 
             {isMobile ? (
-                <SheetFooter className={sheetFooterMobileClass}>
+                <DialogFooter className={sheetFooterMobileClass}>
                     {!success ? (
                         <Button type="submit" disabled={loading} className="h-10 w-full">
                             {loading ? "Alterando..." : "Alterar senha"}
                         </Button>
                     ) : null}
-                </SheetFooter>
+                </DialogFooter>
             ) : (
                 <DialogFooter className={dialogFooterClass}>
                     <Button
@@ -342,7 +341,6 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                 <SheetContent
                     side="bottom"
                     fillMobileViewport
-                    showCloseButton={false}
                     className={mobileFormSheetContentClassName}
                 >
                     <MobileSheetFormDragStrip />
@@ -360,7 +358,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
 
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogContent className="flex max-h-[min(90dvh,36rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+            <DialogContent layout="fixed">
                 <DialogHeader className="shrink-0 px-6 py-4 text-left">
                     <DialogTitle>Alterar senha</DialogTitle>
                 </DialogHeader>

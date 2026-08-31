@@ -4,7 +4,13 @@ import * as React from "react"
 import { XMarkIcon } from "@heroicons/react/20/solid"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { SheetClose, SheetDescription, SheetTitle } from "@/components/ui/sheet"
+import {
+  SheetClose,
+} from "@/components/ui/sheet"
+import {
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { SheetDragHandle } from "@/components/ui/sheet-drag-handle"
 
 /** Pass to `SheetContent` (`side="bottom"`, `fillMobileViewport`) for form layouts. */
@@ -19,7 +25,7 @@ export function MobileSheetFormDragStrip() {
     return <SheetDragHandle />
 }
 
-/** Close control for `MobileSheetFormStickyHeader` (`endAdornment`); pair with `showCloseButton={false}` on `SheetContent`. */
+/** Close control for `MobileSheetFormStickyHeader` (`endAdornment`). The sheet no longer injects a floating ×, so this is the only one. */
 export function MobileSheetFormHeaderCloseButton({
     disabled,
 }: {
@@ -72,14 +78,14 @@ export function MobileSheetFormStickyHeader({
         ) : (
             <>
                 {title != null ? (
-                    <SheetTitle className="font-heading text-base font-medium leading-tight">
+                    <DialogTitle className="font-heading text-base font-medium leading-tight">
                         {title}
-                    </SheetTitle>
+                    </DialogTitle>
                 ) : null}
                 {description != null ? (
-                    <SheetDescription className="mt-1 text-sm text-muted-foreground">
+                    <DialogDescription className="mt-1 text-sm text-muted-foreground">
                         {description}
-                    </SheetDescription>
+                    </DialogDescription>
                 ) : null}
             </>
         )

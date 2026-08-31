@@ -53,7 +53,20 @@ Main Notes.md
 supabase/.temp/
 
 # claude code local
-.claude/
+#
+# Tudo em .claude/ é ferramental do agente e fica de fora — menos o
+# design-system-guard, que é o motor de regras DESTE projeto: o AGENTS.md manda
+# rodar `npm run ds:audit` e `npm run ds:catalog`, e os dois scripts do
+# package.json apontam para dentro dele. Ignorado, um clone novo não conseguia
+# rodar nenhum dos dois.
+#
+# Os níveis são reabertos um a um de propósito: o git não reinclui um arquivo
+# cujo diretório pai está excluído, então um `!` sozinho sobre `.claude/` não
+# teria efeito nenhum.
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/design-system-guard/
 supabase/.branches/
 
 # Estado da skill de design; o relatório de crítica fica em docs/design/

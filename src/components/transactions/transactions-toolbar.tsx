@@ -17,12 +17,14 @@ import {
 } from "@/components/transactions/transactions-filters-panel"
 import { Button } from "@/components/ui/button"
 import {
-    Sheet,
-    SheetContent,
-    SheetDescription,
-    SheetFooter,
-    SheetTitle,
+  Sheet,
+  SheetContent,
 } from "@/components/ui/sheet"
+import {
+  DialogDescription,
+  DialogFooter,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { SheetDragHandle } from "@/components/ui/sheet-drag-handle"
 import { mobileSheetChromeBelowHeaderClassName } from "@/components/ui/mobile-sheet-form-chrome"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -307,7 +309,6 @@ export function TransactionsToolbar({
                 <SheetContent
                     side={isMobile ? "bottom" : "right"}
                     fillMobileViewport={isMobile}
-                    showCloseButton={false}
                     className={cn(
                         "flex w-full flex-col gap-0 overflow-hidden p-0",
                         isMobile
@@ -316,12 +317,12 @@ export function TransactionsToolbar({
                     )}
                 >
                     <div className="flex h-full flex-col">
-                        <SheetTitle className="sr-only">Filtros</SheetTitle>
-                        <SheetDescription className="sr-only">
+                        <DialogTitle className="sr-only">Filtros</DialogTitle>
+                        <DialogDescription className="sr-only">
                             {hidePeriodInFilters
                                 ? "Origem, pagamento, categorias e mais."
                                 : "Período, origem, pagamento, categorias e mais."}
-                        </SheetDescription>
+                        </DialogDescription>
                         {isMobile ? <SheetDragHandle /> : null}
                         <div
                             className={cn(
@@ -351,9 +352,9 @@ export function TransactionsToolbar({
                             </div>
                         </div>
 
-                        <SheetFooter
+                        <DialogFooter
                             className={cn(
-                                "gap-2 border-t bg-background px-4 py-3 sm:px-5",
+                                "flex-col gap-2 border-t bg-background px-4 py-3 sm:px-5",
                                 !isMobile && "flex-row justify-end"
                             )}
                         >
@@ -368,7 +369,7 @@ export function TransactionsToolbar({
                             >
                                 Limpar tudo
                             </Button>
-                        </SheetFooter>
+                        </DialogFooter>
                     </div>
                 </SheetContent>
             </Sheet>

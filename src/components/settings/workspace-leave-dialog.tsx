@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { useWorkspace } from "@/components/workspace-provider"
-import { buttonVariants } from "@/components/ui/button"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -86,7 +85,6 @@ export function WorkspaceLeaveDialog({
                     </AlertDialogCancel>
                     <AlertDialogAction
                         type="button"
-                        className={buttonVariants({ variant: "destructive" })}
                         disabled={leaving}
                         onClick={(e) => {
                             e.preventDefault()

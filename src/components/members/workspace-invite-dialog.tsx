@@ -9,11 +9,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogCloseButton,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import {
     Sheet,
@@ -282,7 +283,6 @@ export function WorkspaceInviteDialog({
                     <SheetContent
                         side="bottom"
                         fillMobileViewport
-                        showCloseButton
                         className={mobileFormSheetContentClassName}
                     >
                         <MobileSheetFormDragStrip />
@@ -496,11 +496,12 @@ export function WorkspaceInviteDialog({
                                 )}
                             </div>
                         </div>
+                    <DialogCloseButton />
                     </SheetContent>
                 </Sheet>
             ) : (
                 <Dialog open={open} onOpenChange={onOpenChange}>
-                    <DialogContent className="flex max-h-[min(90dvh,32rem)] flex-col gap-0 overflow-hidden sm:max-w-md">
+                    <DialogContent className="flex max-h-[min(90dvh,32rem)] flex-col gap-0 overflow-hidden">
                         <DialogHeader className="shrink-0">
                             <DialogTitle>Novo membro</DialogTitle>
                             <DialogDescription>

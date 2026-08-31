@@ -109,9 +109,9 @@ export function BillPendingCard({
             : undefined
     return (
         <Card
-            size="sm"
+            padding="none"
             className={cn(
-                "gap-0 overflow-hidden py-0 transition-shadow",
+                "transition-shadow",
                 row.kind === "regular" && !row.bill.is_active && "opacity-[0.82]"
             )}
         >

@@ -4,17 +4,16 @@
 import { useEffect, useRef, useState } from "react"
 import { useAuth } from "@/components/providers"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import {
-    Sheet,
-    SheetContent,
-    SheetFooter,
+  Sheet,
+  SheetContent,
 } from "@/components/ui/sheet"
 import {
     MobileSheetFormDragStrip,
@@ -403,7 +402,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
             </div>
 
             {isMobile ? (
-                <SheetFooter className={sheetFooterMobileClass}>
+                <DialogFooter className={sheetFooterMobileClass}>
                     {!successMessage && (
                         <Button type="submit" disabled={saving} className="h-10 w-full">
                             {saving ? (
@@ -416,7 +415,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                             )}
                         </Button>
                     )}
-                </SheetFooter>
+                </DialogFooter>
             ) : (
                 <DialogFooter className={dialogFooterClass}>
                     <Button
@@ -451,7 +450,6 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                 <SheetContent
                     side="bottom"
                     fillMobileViewport
-                    showCloseButton={false}
                     className={mobileFormSheetContentClassName}
                 >
                     <MobileSheetFormDragStrip />
@@ -470,7 +468,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
 
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogContent className="flex max-h-[min(90dvh,36rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+            <DialogContent layout="fixed">
                 <DialogHeader className="shrink-0 px-6 py-4 text-left">
                     <DialogTitle>Editar perfil</DialogTitle>
                     <DialogDescription className="text-xs leading-snug">

@@ -1,14 +1,188 @@
 "use client"
 
 import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
 import { Drawer as DrawerPrimitive } from "vaul"
 
 import { cn } from "@/lib/utils"
+import { EDGE_PANEL_OVERLAY_CLASS } from "@/components/ui/edge-panel"
+
+/**
+ * A gaveta — **em qualquer largura de tela**.
+ *
+ * ## O lugar dela entre as quatro superfícies
+ *
+ * O projeto tem quatro, e cada uma responde a uma pergunta diferente:
+ *
+ * | | Onde encosta | Responde ao dedo | Muda com a largura |
+ * | --- | --- | --- | --- |
+ * | `Dialog` | no meio | não | só na largura da caixa |
+ * | `EdgePanel` | numa borda | não | não |
+ * | **`Drawer`** | **no topo ou no rodapé** | **sim** | **não** |
+ * | `Sheet` | borda no desktop, rodapé no telefone | no telefone | **sim** |
+ *
+ * `Sheet` é a que **troca de superfície**: painel acima de 768px, gaveta
+ * abaixo. `Drawer` é gaveta sempre — é o que se usa quando o gesto é a
+ * afordância, e não uma consequência de a tela ser estreita.
+ *
+ * ## O que esta versão corrigiu
+ *
+ * A anterior era o arquivo do shadcn intacto, sem nenhuma tela, e repetia
+ * exatamente o defeito que a rodada do `Sheet` tirou de 37 telas: a alça era
+ * uma `div` decorativa — sem `data-vaul-handle`, sem área de toque, sem gesto.
+ * Ela **desenhava a promessa do arraste** enquanto a física ficava só na
+ * documentação. Agora a alça é `DrawerPrimitive.Handle`: ela é a área de
+ * arraste, tem os 44px de alvo que o vaul injeta, e o clique nela fecha.
+ *
+ * Junto vieram as decisões que o `Sheet` já tinha tomado e esta não seguia:
+ * `--z-sheet` em vez de `--z-modal` (duas gavetas em camadas diferentes),
+ * `bg-background` em vez de `bg-popover` (que é token de camada pequena),
+ * `dvh` + área segura em vez de `80vh` (que mente quando a barra do navegador
+ * recolhe), e `repositionInputs`, que é o que impede a gaveta de encolher
+ * quando o teclado do iOS sobe.
+ *
+ * ## A cromagem não é daqui
+ *
+ * `DrawerHeader`, `DrawerTitle`, `DrawerDescription` e `DrawerFooter` **saíram
+ * do arquivo**. Cabeçalho, título, corpo rolável e rodapé vêm do `Dialog`, como
+ * já vêm na folha, e pelo mesmo motivo: `vaul` é construído sobre
+ * `@radix-ui/react-dialog`, há uma instância só em `node_modules`, e por isso
+ * `DialogTitle` encontra o contexto de que precisa **dentro** de um
+ * `DrawerContent`. Manter uma segunda cromagem aqui era manter dois títulos de
+ * gaveta que divergiam — e o daqui divergia: centralizava o texto, contra a
+ * decisão de que o cabeçalho é alinhado à esquerda em toda largura.
+ *
+ * ## Só o eixo vertical
+ *
+ * `direction` aceita `bottom` e `top`, e não `left` / `right`. Não é
+ * simplificação: o `[data-vaul-handle]` do vaul declara `touch-action: pan-y`,
+ * ou seja, a alça **só arrasta na vertical**. Uma gaveta lateral teria a alça
+ * de enfeite outra vez. Painel preso a uma borda lateral é `EdgePanel`, que não
+ * promete gesto nenhum.
+ */
+
+/**
+ * A alça, e por que ela leva `!`.
+ *
+ * O `vaul` injeta `[data-vaul-handle]` numa folha de estilo própria, com
+ * `background` num cinza literal (`e2e2e4`), `height: 5px` e `width: 32px` —
+ * valores que não conhecem tema nem a escala daqui. As três
+ * marcações com `!` são o que troca esse hex por token e a medida por uma que
+ * casa com o resto do app. É a exceção que se paga: o alvo é a folha do vaul,
+ * não uma classe deste projeto.
+ */
+const DRAWER_HANDLE_CLASS =
+  "mx-auto my-2.5 !h-1.5 !w-12 shrink-0 rounded-full !bg-muted-foreground/35"
+
+const drawerContentVariants = cva(
+  [
+    // `group/dialog-content` é o que a cromagem do `Dialog` procura — é por
+    // este nome que `DialogHeader` sabe que está num layout `fixed`.
+    "group/dialog-content fixed inset-x-0 z-(--z-sheet)",
+    "flex flex-col bg-background text-sm shadow-lg",
+    "focus:outline-none",
+    // O contrato que a cromagem do `Dialog` lê — o mesmo que `EdgePanelContent`
+    // declara, palavra por palavra, para o cabeçalho e o rodapé medirem igual
+    // na folha, no painel e aqui.
+    "[--dialog-px:--spacing(4)]",
+    "[--dialog-bleed:0px]",
+    // A reserva do × vem de **haver** um ×, não de um prop.
+    "[--dialog-close:0px] has-[>[data-slot=dialog-close-button]]:[--dialog-close:--spacing(11)]",
+    // As alturas saem de variáveis para uma gaveta poder baixar o teto sem
+    // reescrever a fórmula: uma lista curta pede menos que 85%.
+    "[--drawer-max-h:85dvh]",
+    // A área segura é da superfície. As 11 telas que hoje escrevem
+    // `pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]` à mão o fazem porque
+    // a folha não a carregava; aqui ela vem de fábrica, e some sozinha no
+    // aparelho que não tem barra de gestos.
+    "data-[vaul-drawer-direction=bottom]:pb-(--drawer-safe)",
+    "data-[vaul-drawer-direction=top]:pt-(--drawer-safe)",
+    "data-[vaul-drawer-direction=bottom]:[--drawer-safe:env(safe-area-inset-bottom,0px)]",
+    "data-[vaul-drawer-direction=top]:[--drawer-safe:env(safe-area-inset-top,0px)]",
+    // A folga do topo muda com o aparelho, então ela também é variável.
+    "data-[vaul-drawer-direction=bottom]:[--drawer-h:calc(100dvh-max(0.5rem,env(safe-area-inset-top,0px)))]",
+    "data-[vaul-drawer-direction=top]:[--drawer-h:calc(100dvh-max(0.5rem,env(safe-area-inset-bottom,0px)))]",
+    // O raio e a borda ficam do lado que **não** encosta na tela.
+    "data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:rounded-t-2xl data-[vaul-drawer-direction=bottom]:border-t",
+    "data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:rounded-b-2xl data-[vaul-drawer-direction=top]:border-b",
+  ],
+  {
+    variants: {
+      /**
+       * Gaveta alta: ocupa quase a tela, com uma folga na borda oposta. Sem
+       * ela, a gaveta mede o próprio conteúdo e para no teto de 85%.
+       */
+      fill: {
+        true: "h-(--drawer-h)",
+        false: "max-h-(--drawer-max-h)",
+      },
+      /**
+       * Onde a gaveta encosta.
+       *
+       * `flush` cola nas três bordas e arredonda só o lado de dentro — é a
+       * gaveta do telefone, e o padrão. `inset` a solta da tela: margem nos
+       * três lados, cantos completos, e a página aparecendo em volta. A segunda
+       * forma existe porque uma gaveta **de desktop** coberta de borda a borda
+       * lê como um erro de layout, não como uma superfície.
+       */
+      variant: {
+        flush: "",
+        inset: [
+          "inset-x-(--drawer-inset) rounded-2xl border",
+          "data-[vaul-drawer-direction=bottom]:bottom-(--drawer-inset)",
+          "data-[vaul-drawer-direction=top]:top-(--drawer-inset)",
+          "[--drawer-inset:--spacing(2)]",
+        ].join(" "),
+      },
+      /**
+       * O teto de largura.
+       *
+       * Uma gaveta de baixo numa janela de 1900px vira uma linha de leitura de
+       * 1900px, que nenhuma medida de texto suporta. `md` e `lg` a centralizam
+       * e param; `full` é o comportamento do telefone, e continua o padrão
+       * porque é lá que a gaveta nasceu.
+       */
+      size: {
+        full: "",
+        md: "mx-auto sm:max-w-lg",
+        lg: "mx-auto sm:max-w-2xl",
+      },
+    },
+    defaultVariants: {
+      fill: false,
+      variant: "flush",
+      size: "full",
+    },
+  }
+)
+
+type DrawerDirection = "bottom" | "top"
 
 function Drawer({
+  direction = "bottom",
+  repositionInputs = true,
   ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Root>) {
-  return <DrawerPrimitive.Root data-slot="drawer" {...props} />
+}: React.ComponentProps<typeof DrawerPrimitive.Root> & {
+  /**
+   * Só o eixo vertical — a alça do vaul é `touch-action: pan-y`.
+   *
+   * A restrição é uma **interseção**, e não um `Omit`: os props da raiz do
+   * `vaul` são uma união discriminada (com e sem `fadeFromIndex`), e `Omit`
+   * sobre união achata os dois lados num objeto só, que depois não é
+   * atribuível a nenhum deles. A interseção distribui e preserva a união.
+   */
+  direction?: DrawerDirection
+}) {
+  return (
+    <DrawerPrimitive.Root
+      data-slot="drawer"
+      direction={direction}
+      // O motivo é o mesmo que o `Sheet` documenta: é `repositionInputs` que
+      // impede a superfície de encolher quando o teclado do iOS sobe.
+      repositionInputs={repositionInputs}
+      {...props}
+    />
+  )
 }
 
 function DrawerTrigger({
@@ -20,7 +194,7 @@ function DrawerTrigger({
 function DrawerPortal({
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Portal>) {
-  return <DrawerPrimitive.Portal data-slot="drawer-portal" {...props} />
+  return <DrawerPrimitive.Portal {...props} />
 }
 
 function DrawerClose({
@@ -29,6 +203,11 @@ function DrawerClose({
   return <DrawerPrimitive.Close data-slot="drawer-close" {...props} />
 }
 
+/**
+ * O véu — o mesmo do painel e o mesmo da folha, escrito uma vez em
+ * `edge-panel.tsx`. Sem a duração fixa que o painel acrescenta: aqui o véu
+ * acompanha o dedo, e um keyframe brigaria com o arraste.
+ */
 function DrawerOverlay({
   className,
   ...props
@@ -36,10 +215,7 @@ function DrawerOverlay({
   return (
     <DrawerPrimitive.Overlay
       data-slot="drawer-overlay"
-      className={cn(
-        "fixed inset-0 z-(--z-modal) bg-overlay supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
-        className
-      )}
+      className={cn(EDGE_PANEL_OVERLAY_CLASS, className)}
       {...props}
     />
   )
@@ -48,87 +224,58 @@ function DrawerOverlay({
 function DrawerContent({
   className,
   children,
+  fill,
+  variant,
+  size,
+  showHandle = true,
   ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Content>) {
+}: React.ComponentProps<typeof DrawerPrimitive.Content> &
+  VariantProps<typeof drawerContentVariants> & {
+    /**
+     * A gaveta sem alça — para quando ela não se arrasta (`dismissible={false}`
+     * na raiz). Com o gesto ligado, desligar a alça é tirar a única pista de
+     * que ele existe.
+     */
+    showHandle?: boolean
+  }) {
   return (
-    <DrawerPortal data-slot="drawer-portal">
+    <DrawerPortal>
       <DrawerOverlay />
       <DrawerPrimitive.Content
         data-slot="drawer-content"
-        className={cn(
-          "group/drawer-content fixed z-(--z-modal) flex h-auto flex-col bg-popover text-sm text-popover-foreground data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:max-h-[80vh] data-[vaul-drawer-direction=bottom]:rounded-t-xl data-[vaul-drawer-direction=bottom]:border-t data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:w-3/4 data-[vaul-drawer-direction=left]:rounded-r-xl data-[vaul-drawer-direction=left]:border-r data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:w-3/4 data-[vaul-drawer-direction=right]:rounded-l-xl data-[vaul-drawer-direction=right]:border-l data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:max-h-[80vh] data-[vaul-drawer-direction=top]:rounded-b-xl data-[vaul-drawer-direction=top]:border-b data-[vaul-drawer-direction=left]:sm:max-w-sm data-[vaul-drawer-direction=right]:sm:max-w-sm",
-          className
-        )}
+        data-surface="drawer"
+        data-variant={variant}
+        data-size={size}
+        // `fixed` é o que a cromagem do `Dialog` lê para dar recuo ao cabeçalho
+        // e deixar o corpo rolar entre ele e o rodapé.
+        data-layout="fixed"
+        className={cn(drawerContentVariants({ fill, variant, size }), className)}
         {...props}
       >
-        <div className="mx-auto mt-4 hidden h-1 w-[100px] shrink-0 rounded-full bg-muted group-data-[vaul-drawer-direction=bottom]/drawer-content:block" />
+        {showHandle ? (
+          <DrawerPrimitive.Handle
+            data-slot="drawer-handle"
+            className={cn(
+              DRAWER_HANDLE_CLASS,
+              // Na gaveta de cima a alça é a borda de baixo — a que o dedo
+              // puxa. Sem isto ela nasceria do lado que encosta na tela.
+              "group-data-[vaul-drawer-direction=top]/dialog-content:order-last"
+            )}
+          />
+        ) : null}
         {children}
       </DrawerPrimitive.Content>
     </DrawerPortal>
   )
 }
 
-function DrawerHeader({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="drawer-header"
-      className={cn(
-        "flex flex-col gap-0.5 p-4 group-data-[vaul-drawer-direction=bottom]/drawer-content:text-center group-data-[vaul-drawer-direction=top]/drawer-content:text-center md:gap-0.5 md:text-left",
-        className
-      )}
-      {...props}
-    />
-  )
-}
-
-function DrawerFooter({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="drawer-footer"
-      className={cn("mt-auto flex flex-col gap-2 p-4", className)}
-      {...props}
-    />
-  )
-}
-
-function DrawerTitle({
-  className,
-  ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Title>) {
-  return (
-    <DrawerPrimitive.Title
-      data-slot="drawer-title"
-      className={cn(
-        "font-heading text-base font-medium text-foreground",
-        className
-      )}
-      {...props}
-    />
-  )
-}
-
-function DrawerDescription({
-  className,
-  ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Description>) {
-  return (
-    <DrawerPrimitive.Description
-      data-slot="drawer-description"
-      className={cn("text-sm text-muted-foreground", className)}
-      {...props}
-    />
-  )
-}
-
 export {
   Drawer,
-  DrawerPortal,
-  DrawerOverlay,
-  DrawerTrigger,
   DrawerClose,
   DrawerContent,
-  DrawerHeader,
-  DrawerFooter,
-  DrawerTitle,
-  DrawerDescription,
+  DrawerOverlay,
+  DrawerPortal,
+  DrawerTrigger,
+  DRAWER_HANDLE_CLASS,
+  drawerContentVariants,
 }

@@ -19,6 +19,15 @@ function shouldDeferEnterToWidget(target: HTMLElement): boolean {
   if (target.closest('[data-slot="select-trigger"]')) {
     return true
   }
+  // A busca de um seletor ancorado num campo. Ela **não** está dentro do
+  // `<form>` no DOM — o popover é portalizado —, mas eventos de portal do React
+  // sobem pela árvore do **React**, e a raiz do seletor é filha deste
+  // formulário. Medido: sem esta regra, o Enter enquanto se busca uma categoria
+  // salvava a transação. Ali o Enter não é "salvar" nem é nada: a lista já
+  // filtra a cada tecla.
+  if (target.closest('[data-slot="form-picker-popover-search"]')) {
+    return true
+  }
   const role = target.getAttribute("role")
   if (role === "combobox" || role === "listbox") {
     return true

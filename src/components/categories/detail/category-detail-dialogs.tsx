@@ -6,18 +6,22 @@ import {
     MobileSheetFormStickyHeader,
     mobileFormSheetContentClassName,
 } from "@/components/ui/mobile-sheet-form-chrome"
-import { Sheet, SheetContent, SheetFooter } from "@/components/ui/sheet"
+import {
+  Sheet,
+  SheetContent,
+} from "@/components/ui/sheet"
 import { MoneyInput } from "@/components/ui/money-input"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogCloseButton,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import { CustomForm } from "@/components/ui/form"
 import {
@@ -169,7 +173,6 @@ export function CategoryDetailDialogs({
                     <SheetContent
                         side="bottom"
                         fillMobileViewport
-                        showCloseButton
                         className={mobileFormSheetContentClassName}
                     >
                         <MobileSheetFormDragStrip />
@@ -184,7 +187,7 @@ export function CategoryDetailDialogs({
                             <div className="min-h-0 flex-1 overflow-y-auto px-4">
                                 {editFields}
                             </div>
-                            <SheetFooter className="mt-0 shrink-0 gap-2 border-t border-border/60 px-4 pt-4">
+                            <DialogFooter className="flex-col mt-0 shrink-0 gap-2 border-t border-border/60 px-4 pt-4">
                                 <Button
                                     type="submit"
                                     disabled={editSaving || editBudgetRemoving}
@@ -192,8 +195,9 @@ export function CategoryDetailDialogs({
                                 >
                                     {editSaving ? "Salvando…" : "Salvar"}
                                 </Button>
-                            </SheetFooter>
+                            </DialogFooter>
                         </CustomForm>
+                    <DialogCloseButton />
                     </SheetContent>
                 </Sheet>
             ) : (
@@ -232,7 +236,6 @@ export function CategoryDetailDialogs({
                         </AlertDialogCancel>
                         <AlertDialogAction
                             type="button"
-                            className={buttonVariants({ variant: "destructive" })}
                             disabled={deleteDeleting}
                             onClick={(e) => {
                                 e.preventDefault()

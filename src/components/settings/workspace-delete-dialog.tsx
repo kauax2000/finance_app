@@ -4,17 +4,17 @@ import { useEffect, useState } from "react"
 import { useWorkspace } from "@/components/workspace-provider"
 import { Button } from "@/components/ui/button"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogCloseButton,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import {
-    Sheet,
-    SheetContent,
-    SheetFooter,
+  Sheet,
+  SheetContent,
 } from "@/components/ui/sheet"
 import {
     MobileSheetFormDragStrip,
@@ -209,7 +209,7 @@ export function WorkspaceDeleteDialog({
     )
 
     const footerActions = isMobile ? (
-        <SheetFooter className={sheetFooterMobileClass}>
+        <DialogFooter className={sheetFooterMobileClass}>
             <Button
                 type="button"
                 variant="destructive"
@@ -219,7 +219,7 @@ export function WorkspaceDeleteDialog({
             >
                 {deleting ? "Excluindo…" : "Excluir carteira"}
             </Button>
-        </SheetFooter>
+        </DialogFooter>
     ) : (
         <DialogFooter className={dialogFooterClass}>
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={deleting}>
@@ -242,7 +242,6 @@ export function WorkspaceDeleteDialog({
                 <SheetContent
                     side="bottom"
                     fillMobileViewport
-                    showCloseButton
                     className={mobileFormSheetContentClassName}
                 >
                     <MobileSheetFormDragStrip />
@@ -252,6 +251,7 @@ export function WorkspaceDeleteDialog({
                     />
                     <div className="flex min-h-0 flex-1 flex-col">{scrollBody}</div>
                     {footerActions}
+                <DialogCloseButton />
                 </SheetContent>
             </Sheet>
         )
@@ -259,7 +259,11 @@ export function WorkspaceDeleteDialog({
 
     return (
         <Dialog open={showDialog} onOpenChange={handleOpenChange}>
-            <DialogContent className="max-h-[min(92vh,40rem)] gap-0 overflow-hidden p-0 sm:max-w-lg">
+            <DialogContent
+                    layout="fixed"
+                    size="lg"
+                    className="[--dialog-max-h:min(92vh,40rem)]"
+                >
                 <DialogHeader className="px-6 py-4 text-left">
                     <DialogTitle>Excluir carteira</DialogTitle>
                     <DialogDescription>Esta ação é permanente e não pode ser desfeita.</DialogDescription>

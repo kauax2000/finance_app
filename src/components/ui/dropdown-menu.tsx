@@ -1,273 +1,399 @@
 "use client"
 
 import * as React from "react"
+import { CheckIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
+import { cva, type VariantProps } from "class-variance-authority"
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui"
+
 import { cn } from "@/lib/utils"
-
-const DropdownMenu = ({
-  ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) => (
-  <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />
-)
-
-const DropdownMenuTrigger = ({
-  ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger>) => (
-  <DropdownMenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />
-)
-
-const DropdownMenuGroup = ({
-  ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Group>) => (
-  <DropdownMenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />
-)
-
-const DropdownMenuPortal = ({
-  ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Portal>) => (
-  <DropdownMenuPrimitive.Portal data-slot="dropdown-menu-portal" {...props} />
-)
-
-const DropdownMenuSub = ({
-  ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Sub>) => (
-  <DropdownMenuPrimitive.Sub data-slot="dropdown-menu-sub" {...props} />
-)
-
-const DropdownMenuRadioGroup = ({
-  ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.RadioGroup>) => (
-  <DropdownMenuPrimitive.RadioGroup
-    data-slot="dropdown-menu-radio-group"
-    {...props}
-  />
-)
-
-const DropdownMenuSubTrigger = React.forwardRef<
-    React.ElementRef<typeof DropdownMenuPrimitive.SubTrigger>,
-    React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubTrigger> & {
-        inset?: boolean
-    }
->(({ className, inset, children, ...props }, ref) => (
-    <DropdownMenuPrimitive.SubTrigger
-        ref={ref}
-        data-slot="dropdown-menu-sub-trigger"
-        className={cn(
-            "flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden focus:bg-accent data-[state=open]:bg-accent [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
-            inset && "pl-8",
-            className
-        )}
-        {...props}
-    >
-        {children}
-    </DropdownMenuPrimitive.SubTrigger>
-))
-DropdownMenuSubTrigger.displayName =
-    DropdownMenuPrimitive.SubTrigger.displayName
-
-const DropdownMenuSubContent = React.forwardRef<
-    React.ElementRef<typeof DropdownMenuPrimitive.SubContent>,
-    React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubContent>
->(({ className, ...props }, ref) => (
-    <DropdownMenuPrimitive.SubContent
-        ref={ref}
-        data-slot="dropdown-menu-sub-content"
-        className={cn(
-            /** Above Sheet overlay/content (`z-(--z-sheet)`); below Toaster (`z-(--z-toast)`). */
-            "z-(--z-popover) min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
-            className
-        )}
-        {...props}
-    />
-))
-DropdownMenuSubContent.displayName =
-    DropdownMenuPrimitive.SubContent.displayName
-
-const DropdownMenuContent = React.forwardRef<
-    React.ElementRef<typeof DropdownMenuPrimitive.Content>,
-    React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>
->(({ className, sideOffset = 4, ...props }, ref) => (
-    <DropdownMenuPrimitive.Portal>
-        <DropdownMenuPrimitive.Content
-            ref={ref}
-            data-slot="dropdown-menu-content"
-            sideOffset={sideOffset}
-            className={cn(
-                /** Above Sheet overlay/content (`z-(--z-sheet)`); below Toaster (`z-(--z-toast)`). */
-                "z-(--z-popover) min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
-                className
-            )}
-            {...props}
-        />
-    </DropdownMenuPrimitive.Portal>
-))
-DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName
+import {
+  menuSubSurfaceClassName,
+  menuSurfaceClassName,
+  menuIndicatorItemClassName,
+  menuIndicatorSlotClassName,
+  menuItemClassName,
+  menuLabelClassName,
+  menuSeparatorClassName,
+  menuShortcutClassName,
+  menuSubTriggerClassName,
+} from "@/lib/menu-classes"
 
 /**
- * `variant="destructive"` existe porque oito telas escreviam
- * `text-destructive focus:text-destructive` na mão, e uma delas já tinha
- * divergido acrescentando `focus:bg-destructive/10`. Padrão que todo consumidor
- * corrige não é padrão. É a mesma variant que o `ContextMenuItem` do registry já
- * traz, então os dois menus passam a se comportar igual.
+ * As duas classes que trazem o nome da primitiva — escritas por extenso, e não
+ * montadas. O Tailwind varre o código como texto: uma classe interpolada em
+ * tempo de execução não existe para o scanner, e o CSS dela nunca é gerado.
+ * Medido: com a versão interpolada, o `max-height` computado era `none` mesmo
+ * com a variável do Radix valendo 318,75px.
  */
-const DropdownMenuItem = React.forwardRef<
-    React.ElementRef<typeof DropdownMenuPrimitive.Item>,
-    React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
-        inset?: boolean
-        variant?: "default" | "destructive"
-    }
->(({ className, inset, variant = "default", ...props }, ref) => (
-    <DropdownMenuPrimitive.Item
-        ref={ref}
-        data-slot="dropdown-menu-item"
-        data-variant={variant}
-        className={cn(
-            "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
-            variant === "destructive" &&
-                "text-destructive focus:bg-destructive/10 focus:text-destructive [&_svg]:text-destructive",
-            inset && "pl-8",
-            className
-        )}
-        {...props}
-    />
-))
-DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName
+const DROPDOWN_POPPER =
+  "max-h-(--radix-dropdown-menu-content-available-height) max-w-(--radix-dropdown-menu-content-available-width) origin-(--radix-dropdown-menu-content-transform-origin)"
 
-const DropdownMenuCheckboxItem = React.forwardRef<
-    React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>,
-    React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem>
->(({ className, children, checked, ...props }, ref) => (
-    <DropdownMenuPrimitive.CheckboxItem
-        ref={ref}
-        data-slot="dropdown-menu-checkbox-item"
-        className={cn(
-            "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-            className
-        )}
-        checked={checked}
-        {...props}
-    >
-        <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-            <DropdownMenuPrimitive.ItemIndicator>
-                <svg
-                    width="15"
-                    height="15"
-                    viewBox="0 0 15 15"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4"
-                >
-                    <path
-                        d="M11.4669 3.72684C11.7558 3.91574 11.8369 4.30308 11.648 4.59198L7.39799 11.092C7.29783 11.2452 7.13556 11.3467 6.95402 11.3699C6.77247 11.3931 6.58989 11.3355 6.45446 11.2124L3.70446 8.71241C3.44905 8.48022 3.43023 8.08494 3.66242 7.82953C3.89461 7.57412 4.28989 7.55529 4.5453 7.78749L6.75292 9.79441L10.6018 3.90792C10.7907 3.61902 11.178 3.53795 11.4669 3.72684Z"
-                        fill="currentColor"
-                        fillRule="evenodd"
-                        clipRule="evenodd"
-                    />
-                </svg>
-            </DropdownMenuPrimitive.ItemIndicator>
-        </span>
-        {children}
-    </DropdownMenuPrimitive.CheckboxItem>
-))
-DropdownMenuCheckboxItem.displayName =
-    DropdownMenuPrimitive.CheckboxItem.displayName
+/**
+ * O menu de um gatilho.
+ *
+ * ## O que esta revisão corrigiu
+ *
+ * Este era o arquivo mais atrasado do diretório — quase o do shadcn intacto —
+ * e ao mesmo tempo o mais usado: **21 telas, 54 linhas de menu**. O
+ * `ContextMenu`, que desenha a mesma superfície, não tinha nenhum consumidor e
+ * já estava moderno. A régua que venceu foi a dele, e agora as duas vivem em
+ * [`lib/menu-classes`](../../lib/menu-classes.ts).
+ *
+ * Quatro defeitos eram funcionais, não cosméticos:
+ *
+ * 1. **`SubTrigger` não desenhava chevron nenhum** — medido. Nada dizia que
+ *    havia submenu; a pessoa descobria por acidente ao passar o cursor.
+ * 2. **Sem teto de altura** (`max-height: none`, medido). Um menu longo saía da
+ *    tela, sem rolagem e sem fim.
+ * 3. **`[&_svg]:size-4` forçava o tamanho** e engolia um `size-5` explícito de
+ *    quem chamava.
+ * 4. **Os indicadores eram SVG do Radix Icons colados** — outro conjunto de
+ *    ícone dentro de um projeto que usa Heroicons, e a regra **G** do auditor
+ *    os acusava.
+ *
+ * A conversão de `forwardRef` para função veio junto: no React 19 `ref` é um
+ * prop comum e desce no `{...props}`, então o embrulho não fazia mais nada além
+ * de manter dois estilos de arquivo no mesmo diretório — e a indentação deste
+ * arquivo era literalmente as duas, 2 espaços no topo e 4 do meio para baixo.
+ */
 
-const DropdownMenuRadioItem = React.forwardRef<
-    React.ElementRef<typeof DropdownMenuPrimitive.RadioItem>,
-    React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.RadioItem>
->(({ className, children, ...props }, ref) => (
-    <DropdownMenuPrimitive.RadioItem
-        ref={ref}
-        data-slot="dropdown-menu-radio-item"
-        className={cn(
-            "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-            className
-        )}
-        {...props}
-    >
-        <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-            <DropdownMenuPrimitive.ItemIndicator>
-                <svg
-                    width="15"
-                    height="15"
-                    viewBox="0 0 15 15"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                >
-                    <path
-                        d="M7.5 0.875C5.01914 0.875 3.125 2.76914 3.125 5.25C3.125 7.73086 5.01914 9.625 7.5 9.625C9.98086 9.625 11.875 7.73086 11.875 5.25C11.875 2.76914 9.98086 0.875 7.5 0.875ZM7.5 8.5C5.567 8.5 4 6.933 4 5C4 3.067 5.567 1.5 7.5 1.5C9.433 1.5 11 3.067 11 5C11 6.933 9.433 8.5 7.5 8.5Z"
-                        fill="currentColor"
-                        fillRule="evenodd"
-                        clipRule="evenodd"
-                    />
-                </svg>
-            </DropdownMenuPrimitive.ItemIndicator>
-        </span>
-        {children}
-    </DropdownMenuPrimitive.RadioItem>
-))
-DropdownMenuRadioItem.displayName = DropdownMenuPrimitive.RadioItem.displayName
-
-const DropdownMenuLabel = React.forwardRef<
-    React.ElementRef<typeof DropdownMenuPrimitive.Label>,
-    React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Label> & {
-        inset?: boolean
-    }
->(({ className, inset, ...props }, ref) => (
-    <DropdownMenuPrimitive.Label
-        ref={ref}
-        data-slot="dropdown-menu-label"
-        className={cn(
-            "px-2 py-1.5 text-sm font-semibold",
-            inset && "pl-8",
-            className
-        )}
-        {...props}
-    />
-))
-DropdownMenuLabel.displayName = DropdownMenuPrimitive.Label.displayName
-
-const DropdownMenuSeparator = React.forwardRef<
-    React.ElementRef<typeof DropdownMenuPrimitive.Separator>,
-    React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Separator>
->(({ className, ...props }, ref) => (
-    <DropdownMenuPrimitive.Separator
-        ref={ref}
-        data-slot="dropdown-menu-separator"
-        className={cn("-mx-1 my-1 h-px bg-muted", className)}
-        {...props}
-    />
-))
-DropdownMenuSeparator.displayName = DropdownMenuPrimitive.Separator.displayName
-
-const DropdownMenuShortcut = ({
-    className,
-    ...props
-}: React.HTMLAttributes<HTMLSpanElement>) => {
-    return (
-        <span
-            data-slot="dropdown-menu-shortcut"
-            className={cn("ml-auto text-xs tracking-widest opacity-60", className)}
-            {...props}
-        />
-    )
+function DropdownMenu({
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
+  return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />
 }
-DropdownMenuShortcut.displayName = "DropdownMenuShortcut"
+
+function DropdownMenuTrigger({
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger>) {
+  return (
+    <DropdownMenuPrimitive.Trigger
+      data-slot="dropdown-menu-trigger"
+      {...props}
+    />
+  )
+}
+
+function DropdownMenuGroup({
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Group>) {
+  return (
+    <DropdownMenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />
+  )
+}
+
+function DropdownMenuPortal({
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Portal>) {
+  return (
+    <DropdownMenuPrimitive.Portal data-slot="dropdown-menu-portal" {...props} />
+  )
+}
+
+function DropdownMenuSub({
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Sub>) {
+  return <DropdownMenuPrimitive.Sub data-slot="dropdown-menu-sub" {...props} />
+}
+
+function DropdownMenuRadioGroup({
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.RadioGroup>) {
+  return (
+    <DropdownMenuPrimitive.RadioGroup
+      data-slot="dropdown-menu-radio-group"
+      {...props}
+    />
+  )
+}
+
+/**
+ * Os dois eixos do painel, e ambos saem de contagem, não de gosto.
+ *
+ * **`size` é a largura**, como no `Dialog` — e não uma altura de controle. Das
+ * 25 chamadas do app, **18 declaram só uma largura**, e sempre uma destas
+ * quatro: `w-44` (8×), `w-48` (5×), `w-56` (3×), `w-52` (2×). Quatro valores
+ * repetidos dezoito vezes é uma escala que já existe; só não tinha nome.
+ * `auto` continua o padrão, então nada muda para quem não pede.
+ *
+ * **`variant` é a superfície.** `menu` é a lista de comandos. `panel` é o que
+ * o `UserMenu` e o `WorkspaceSwitcher` montavam à mão — `rounded-xl p-0` mais
+ * uma sombra e um anel próprios — porque ali dentro não há comandos, e sim um
+ * cabeçalho de conta, um avatar, blocos. É a mesma distinção que o `Card` faz
+ * com `padding="none"`: a casca cede o recuo para o conteúdo sangrar.
+ */
+const dropdownMenuContentVariants = cva(
+  [menuSurfaceClassName, DROPDOWN_POPPER],
+  {
+    variants: {
+      variant: {
+        menu: "",
+        // O recuo sai do casco e passa para `DropdownMenuSection`, que é quem
+        // o devolve onde há comandos. Assim o `-mx-1` do separador continua
+        // valendo: ele sangra o recuo da seção e alcança a borda do painel.
+        panel: "rounded-xl p-0",
+      },
+      size: {
+        auto: "",
+        sm: "w-44",
+        md: "w-48",
+        lg: "w-52",
+        xl: "w-56",
+      },
+    },
+    defaultVariants: { variant: "menu", size: "auto" },
+  }
+)
+
+function DropdownMenuContent({
+  className,
+  sideOffset = 4,
+  variant,
+  size,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Content> &
+  VariantProps<typeof dropdownMenuContentVariants>) {
+  return (
+    <DropdownMenuPrimitive.Portal>
+      <DropdownMenuPrimitive.Content
+        data-slot="dropdown-menu-content"
+        data-variant={variant}
+        sideOffset={sideOffset}
+        className={cn(
+          dropdownMenuContentVariants({ variant, size }),
+          className
+        )}
+        {...props}
+      />
+    </DropdownMenuPrimitive.Portal>
+  )
+}
+
+/**
+ * `variant="destructive"` existe porque as telas escreviam
+ * `text-destructive focus:text-destructive` na mão. **Ela ainda espera por
+ * elas**: hoje são 14 chamadas em 12 arquivos, todas na mesma grafia, e nenhuma
+ * usa a variant — que além da tinta traz o `focus:bg-destructive/10` e o par
+ * escuro que a grafia manual não tem.
+ */
+/**
+ * A faixa de identidade do painel — avatar, nome, contexto.
+ *
+ * Ela sangra até a borda e traz o próprio fio embaixo, como `CardToolbar` e
+ * `DialogHeader`. Existe porque o `variant="panel"` sem ela empurrava a
+ * geometria para quem chama: o `UserMenu` e o `WorkspaceSwitcher` escreviam
+ * esta `div` à mão, e a demonstração deste catálogo escreveu uma terceira
+ * grafia.
+ */
+function DropdownMenuHeader({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="dropdown-menu-header"
+      className={cn(
+        "flex shrink-0 items-center gap-2.5 border-b border-border px-3 py-2.5 text-sm",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+/**
+ * A região de comandos dentro de um painel.
+ *
+ * Ela devolve o recuo que o `variant="panel"` tirou do casco — e é o que faz a
+ * conta do separador fechar. O `-mx-1` do `DropdownMenuSeparator` sangra
+ * exatamente este `p-1`, então o fio alcança a borda do painel em vez de parar
+ * 4px antes. Sem a seção, o painel tinha dois traços horizontais de larguras
+ * diferentes: 224px o do cabeçalho, 216px o do meio.
+ */
+function DropdownMenuSection({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="dropdown-menu-section"
+      className={cn("p-1", className)}
+      {...props}
+    />
+  )
+}
+
+function DropdownMenuItem({
+  className,
+  inset,
+  variant = "default",
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Item> & {
+  inset?: boolean
+  variant?: "default" | "destructive"
+}) {
+  return (
+    <DropdownMenuPrimitive.Item
+      data-slot="dropdown-menu-item"
+      data-inset={inset}
+      data-variant={variant}
+      className={cn(menuItemClassName, className)}
+      {...props}
+    />
+  )
+}
+
+function DropdownMenuSubTrigger({
+  className,
+  inset,
+  children,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.SubTrigger> & {
+  inset?: boolean
+}) {
+  return (
+    <DropdownMenuPrimitive.SubTrigger
+      data-slot="dropdown-menu-sub-trigger"
+      data-inset={inset}
+      className={cn(menuSubTriggerClassName, className)}
+      {...props}
+    >
+      {children}
+      {/* A seta é a única coisa que diz que há um submenu. Ela não existia. */}
+      <ChevronRightIcon aria-hidden className="ml-auto" />
+    </DropdownMenuPrimitive.SubTrigger>
+  )
+}
+
+function DropdownMenuSubContent({
+  className,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.SubContent>) {
+  return (
+    <DropdownMenuPrimitive.SubContent
+      data-slot="dropdown-menu-sub-content"
+      className={cn(menuSubSurfaceClassName, DROPDOWN_POPPER, className)}
+      {...props}
+    />
+  )
+}
+
+function DropdownMenuCheckboxItem({
+  className,
+  children,
+  checked,
+  inset,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.CheckboxItem> & {
+  inset?: boolean
+}) {
+  return (
+    <DropdownMenuPrimitive.CheckboxItem
+      data-slot="dropdown-menu-checkbox-item"
+      data-inset={inset}
+      className={cn(menuIndicatorItemClassName, className)}
+      checked={checked}
+      {...props}
+    >
+      <span className={menuIndicatorSlotClassName}>
+        <DropdownMenuPrimitive.ItemIndicator>
+          <CheckIcon aria-hidden />
+        </DropdownMenuPrimitive.ItemIndicator>
+      </span>
+      {children}
+    </DropdownMenuPrimitive.CheckboxItem>
+  )
+}
+
+function DropdownMenuRadioItem({
+  className,
+  children,
+  inset,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.RadioItem> & {
+  inset?: boolean
+}) {
+  return (
+    <DropdownMenuPrimitive.RadioItem
+      data-slot="dropdown-menu-radio-item"
+      data-inset={inset}
+      className={cn(menuIndicatorItemClassName, className)}
+      {...props}
+    >
+      <span className={menuIndicatorSlotClassName}>
+        <DropdownMenuPrimitive.ItemIndicator>
+          {/* Um ponto, e não o mesmo tique da caixa: rádio é "escolha uma",
+              caixa é "marque quantas quiser", e usar o mesmo desenho nos dois
+              apaga a diferença. O `RadioGroup` já decidiu isto — um ponto não
+              precisa ser SVG, e o Heroicons não traz círculo puro. */}
+          <span className="size-2 rounded-full bg-current" />
+        </DropdownMenuPrimitive.ItemIndicator>
+      </span>
+      {children}
+    </DropdownMenuPrimitive.RadioItem>
+  )
+}
+
+function DropdownMenuLabel({
+  className,
+  inset,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Label> & {
+  inset?: boolean
+}) {
+  return (
+    <DropdownMenuPrimitive.Label
+      data-slot="dropdown-menu-label"
+      data-inset={inset}
+      className={cn(menuLabelClassName, className)}
+      {...props}
+    />
+  )
+}
+
+function DropdownMenuSeparator({
+  className,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Separator>) {
+  return (
+    <DropdownMenuPrimitive.Separator
+      data-slot="dropdown-menu-separator"
+      className={cn(menuSeparatorClassName, className)}
+      {...props}
+    />
+  )
+}
+
+function DropdownMenuShortcut({
+  className,
+  ...props
+}: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="dropdown-menu-shortcut"
+      className={cn(menuShortcutClassName, className)}
+      {...props}
+    />
+  )
+}
 
 export {
-    DropdownMenu,
-    DropdownMenuTrigger,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuCheckboxItem,
-    DropdownMenuRadioItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuShortcut,
-    DropdownMenuGroup,
-    DropdownMenuPortal,
-    DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuSubTrigger,
-    DropdownMenuRadioGroup,
+  dropdownMenuContentVariants,
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuHeader,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSection,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
 }

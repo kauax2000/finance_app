@@ -15,7 +15,7 @@ import { TransactionsTable } from "@/components/transactions/transactions-table"
 import { useTransactionsListController } from "@/components/transactions/use-transactions-list-controller"
 import { TransactionDetailSheet } from "@/components/transactions/transaction-detail-sheet"
 import { Card, CardContent } from "@/components/ui/card"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { TransactionsPageSkeleton } from "@/components/transactions/transactions-page-skeleton"
 import {
@@ -559,9 +559,6 @@ export default function TransactionsPage() {
                         </AlertDialogCancel>
                         <AlertDialogAction
                             type="button"
-                            className={buttonVariants({
-                                variant: "destructive",
-                            })}
                             disabled={deleting}
                             onClick={(e) => {
                                 e.preventDefault()

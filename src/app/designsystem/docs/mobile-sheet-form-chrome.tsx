@@ -20,7 +20,6 @@ export default function MobileSheetFormChromeDoc() {
         code={`<SheetContent
   side="bottom"
   fillMobileViewport
-  showCloseButton={false}
   className={mobileFormSheetContentClassName}
 >
   <MobileSheetFormDragStrip />
@@ -38,7 +37,7 @@ export default function MobileSheetFormChromeDoc() {
       >
         <div className="flex h-80 w-full flex-col overflow-hidden rounded-t-2xl border border-border bg-card">
           <MobileSheetFormDragStrip />
-          {/* `title` renderiza um SheetTitle, que precisa do contexto do Sheet.
+          {/* `title` renderiza um DialogTitle, que precisa do contexto do Sheet.
               Fora dele, `children` substitui a linha inteira — que é também o
               que uma tela usa quando o cabeçalho tem mais que título e legenda. */}
           <MobileSheetFormStickyHeader>
@@ -68,15 +67,14 @@ export default function MobileSheetFormChromeDoc() {
       </DocSection>
 
       <DocNote title="Ele só funciona dentro de um Sheet">
-        Com a prop <code>title</code> o cabeçalho renderiza um <code>SheetTitle</code>, que lê o contexto do Radix. Fora de um <code>Sheet</code> aberto ele lança — e é o que garante que a folha tenha nome acessível. Por isso a demonstração acima usa <code>children</code>.
+        Com a prop <code>title</code> o cabeçalho renderiza um <code>DialogTitle</code> — o mesmo do diálogo, porque a folha é a mesma primitiva do Radix —, que lê o contexto. Fora de um <code>Sheet</code> aberto ele lança — e é o que garante que a folha tenha nome acessível. Por isso a demonstração acima usa <code>children</code>.
       </DocNote>
 
-      <DocNote title="showCloseButton={false} e o fechar no cabeçalho">
-        O X padrão do <code>SheetContent</code>{" "}
-        flutua sobre o conteúdo e some
-        atrás do cabeçalho fixo assim que a pessoa rola.{" "}
-        <code>MobileSheetFormHeaderCloseButton</code>{" "}
-        o coloca dentro do
+      <DocNote title="O fechar mora no cabeçalho">
+        Um × flutuante passa por cima do conteúdo e some atrás do cabeçalho fixo
+        assim que a pessoa rola — e foi por isso que o{" "}
+        <code>SheetContent</code> deixou de injetar um.{" "}
+        <code>MobileSheetFormHeaderCloseButton</code> o coloca dentro do
         cabeçalho, onde ele fica.
       </DocNote>
 
