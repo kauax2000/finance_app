@@ -3,95 +3,90 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { useScrollFade } from "@/hooks/use-scroll-fade"
+import {
+  scrollFadeViewportClassName,
+  scrollFadeViewportXClassName,
+} from "@/lib/scroll-fade-classes"
 
 /**
- * Área rolável cujas bordas desaparecem em gradiente enquanto há mais conteúdo.
+ * Área rolável cujas bordas dissolvem o conteúdo enquanto ainda há mais.
  *
- * Resolve o problema de saber que a lista continua: uma lista cortada em seco na
- * borda de um cartão lê como lista terminada. Os gradientes aparecem só do lado
- * em que ainda há conteúdo, então quando tudo cabe eles não aparecem nunca.
+ * Resolve o problema de saber que a lista continua: **uma lista cortada em seco
+ * na borda de um cartão lê como lista terminada**. A dissolução aparece só do
+ * lado em que ainda há conteúdo, então quando tudo cabe ela não aparece nunca.
  *
- * `pointer-events-none` nas máscaras é o que impede que elas comam o clique dos
- * itens que ficam debaixo delas.
+ * ## Ele é conveniência, não a primitiva
+ *
+ * A máquina mora em `lib/scroll-fade-classes` + `hooks/use-scroll-fade`, e este
+ * componente é o caso em que **ninguém é dono da casca**: uma região rolável
+ * solta, que precisa de um elemento para segurar a moldura e a altura enquanto
+ * outro rola. Quem já tem casca própria — o `Command`, um popover, um menu —
+ * compõe as classes direto e não passa por aqui, porque um `<div>` interposto
+ * quebraria o contexto do Radix ou do cmdk.
+ *
+ * ## Por que máscara, e não um gradiente pintado
+ *
+ * A versão anterior desenhava dois `<span>` absolutos com
+ * `bg-gradient from-card`. Uma **cor cravada**: dentro de um `PopoverContent`
+ * (`bg-popover`) ou de um menu, ela pintava uma faixa clara em vez de dissolver
+ * — o mesmo defeito que o `Command` registrou ao tentar pintar o rodapé, e a
+ * razão de este componente nunca ter tido um consumidor.
+ *
+ * Máscara é **alfa, não cor**: ela serve qualquer superfície sem precisar saber
+ * de que cor é o fundo. E `pointer-events` deixou de ser assunto — não há mais
+ * nada por cima do conteúdo para comer o clique dos itens que ficam embaixo.
+ *
+ * ## O que ele não faz
+ *
+ * **Os dois eixos ao mesmo tempo.** É um gradiente por elemento: a spec define
+ * `mask-image: none` como camada preta transparente, então compor duas máscaras
+ * com `mask-composite: intersect` daria alfa zero e apagaria o elemento.
+ *
+ * **Faixa fixa por cima ou por baixo.** Para o conteúdo passar *por trás* de um
+ * cabeçalho, quem publica a altura dele é a casca, e aí a composição é manual —
+ * ver `scrollFadeBandsClassName`.
  */
 function ScrollFade({
   className,
   viewportClassName,
-  orientation = "vertical",
+  axis = "y",
+  sides = "both",
   children,
   ...props
 }: React.ComponentProps<"div"> & {
-  orientation?: "vertical" | "horizontal"
+  /** O eixo que dissolve. Os dois não se combinam. */
+  axis?: "y" | "x"
+  /** Desliga uma das pontas: `start` só dissolve no começo, `end` só no fim. */
+  sides?: "both" | "start" | "end"
   viewportClassName?: string
 }) {
-  const viewportRef = React.useRef<HTMLDivElement>(null)
-  const [atStart, setAtStart] = React.useState(true)
-  const [atEnd, setAtEnd] = React.useState(true)
-
-  const sync = React.useCallback(() => {
-    const el = viewportRef.current
-    if (!el) return
-    const [pos, size, client] =
-      orientation === "vertical"
-        ? [el.scrollTop, el.scrollHeight, el.clientHeight]
-        : [el.scrollLeft, el.scrollWidth, el.clientWidth]
-    setAtStart(pos <= 1)
-    // 1px de folga: alturas fracionárias nunca fecham a conta exatamente.
-    setAtEnd(pos + client >= size - 1)
-  }, [orientation])
-
-  React.useEffect(() => {
-    const el = viewportRef.current
-    if (!el) return
-    sync()
-    const observer = new ResizeObserver(sync)
-    observer.observe(el)
-    for (const child of Array.from(el.children)) observer.observe(child)
-    return () => observer.disconnect()
-  }, [sync])
-
-  const isVertical = orientation === "vertical"
+  const vertical = axis === "y"
 
   return (
+    // A moldura, a altura e a tinta moram aqui — e **só** aqui. O elemento
+    // mascarado não pode desenhar nada: a máscara recorta o alfa dele inteiro,
+    // borda e sombra externa junto, e um retângulo com os cantos apagados e os
+    // lados opacos lê como falha de renderização.
     <div
       data-slot="scroll-fade"
-      data-orientation={orientation}
+      data-axis={axis}
       className={cn("relative min-h-0", className)}
       {...props}
     >
       <div
-        ref={viewportRef}
-        onScroll={sync}
+        ref={useScrollFade({ axis, sides })}
         className={cn(
           "min-h-0 overscroll-contain",
-          isVertical
+          vertical
             ? "h-full touch-pan-y overflow-y-auto"
             : "touch-pan-x overflow-x-auto",
+          vertical ? scrollFadeViewportClassName : scrollFadeViewportXClassName,
           viewportClassName
         )}
       >
         {children}
       </div>
-      <span
-        aria-hidden
-        data-visible={atStart ? undefined : ""}
-        className={cn(
-          "pointer-events-none absolute opacity-0 transition-opacity duration-(--duration-fast) data-visible:opacity-100",
-          isVertical
-            ? "inset-x-0 top-0 h-6 bg-gradient-to-b from-card to-transparent"
-            : "inset-y-0 left-0 w-6 bg-gradient-to-r from-card to-transparent"
-        )}
-      />
-      <span
-        aria-hidden
-        data-visible={atEnd ? undefined : ""}
-        className={cn(
-          "pointer-events-none absolute opacity-0 transition-opacity duration-(--duration-fast) data-visible:opacity-100",
-          isVertical
-            ? "inset-x-0 bottom-0 h-6 bg-gradient-to-t from-card to-transparent"
-            : "inset-y-0 right-0 w-6 bg-gradient-to-l from-card to-transparent"
-        )}
-      />
     </div>
   )
 }

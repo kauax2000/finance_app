@@ -11,6 +11,12 @@ import {
   menuSeparatorClassName,
 } from "@/lib/menu-classes"
 import {
+  scrollFadeBandsClassName,
+  scrollFadeBleedClassName,
+  scrollFadeViewportClassName,
+} from "@/lib/scroll-fade-classes"
+import { useScrollFade } from "@/hooks/use-scroll-fade"
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -45,25 +51,28 @@ const commandVariants = cva(
   [
     "flex size-full flex-col overflow-hidden bg-popover/85 text-popover-foreground backdrop-blur",
     "[--command-list-max-h:--spacing(72)]",
-    // A altura da faixa de busca, para a lista saber quanto recuar:
-    // campo (32) + recuo (16) + o fio (1).
-    "[--command-band-h:calc(--spacing(8)+--spacing(4)+1px)]",
-    // A altura do rodapé. Ela é bem maior que o texto que carrega, de
-    // propósito: a metade de cima é a distância que o conteúdo tem para se
-    // dissolver, e dissolução curta lê como corte.
-    // Sem rolagem o rodapé é só a linha do texto; com rolagem ele ganha a zona
-    // onde o conteúdo se dissolve. É a regra que o `ScrollFade` já enuncia: o
-    // gradiente aparece só do lado em que ainda há conteúdo. Sem isso, um
-    // painel de dois itens exibia 44px de vazio entre a última linha e a
-    // legenda — medido.
+    // A casca só publica as duas medidas estruturais, porque só ela enxerga as
+    // faixas como **irmãs** do rolável. Todo o resto da dissolução — âncoras,
+    // rampa, máscara — mora na própria lista, em `scroll-fade-y`.
     //
-    // As duas vão em **variável**, e não em classe sob variante: variável
-    // herda e não disputa especificidade.
-    "[--command-footer-h:--spacing(9)] [--command-footer-mask:none]",
-    "data-[scrollable=true]:[--command-footer-h:--spacing(18)]",
-    "data-[scrollable=true]:[--command-footer-mask:var(--command-footer-ramp)]",
-    // Onde a legenda mora: daqui para baixo o conteúdo já sumiu por completo.
-    "[--command-footer-text-h:--spacing(7)]",
+    // A altura da faixa de busca é campo (32) + recuo (16). Não há fio a somar:
+    // ele saiu quando o topo passou a dissolver o conteúdo em vez de aparar.
+    //
+    // As duas são **condicionais à presença da faixa**, nunca à rolagem. Três
+    // demos do catálogo montam `CommandList` sem `CommandInput`, e sem a
+    // condição a rampa dissolveria o primeiro item a partir da borda do painel,
+    // sem nada acima que justificasse. E o rodapé já dependeu de
+    // `data-scrollable`: como `pb` é `foot-h + 4`, declarar "esta lista rola"
+    // **acrescentava 36px ao próprio conteúdo** e realimentava a condição que
+    // produziu a decisão — histerese, não laço divergente, e por isso passou
+    // despercebida. Medido: uma demo com 288 de altura e 297 de conteúdo estava
+    // marcada como rolável quando, com `pb` de 40, ela não rolaria.
+    //
+    // O `Combobox`, que nunca renderiza rodapé, deixa de carregar uma calha
+    // vazia de 76px no fim de cada popover.
+    scrollFadeBandsClassName,
+    "has-[[data-slot=command-input-wrapper]]:[--scroll-fade-band-h:calc(--spacing(8)+--spacing(4))]",
+    "has-[[data-slot=command-footer]]:[--scroll-fade-foot-h:--spacing(9)]",
   ],
   {
     variants: {
@@ -98,34 +107,6 @@ function Command({
     <CommandPrimitive
       data-slot="command"
       data-variant={resolvida}
-      // A rampa da máscara do rodapé, curvada. Ela vive aqui e não numa classe
-      // por duas razões: sete paradas com um `calc()` em cada uma viram uma
-      // string ilegível, e uma classe montada em tempo de execução nunca
-      // chegaria ao CSS — o Tailwind varre o código como texto.
-      style={
-        {
-          // A rampa desce 1 → 0,12, e o piso **não** é zero. Duas versões
-          // erraram para os lados opostos: em `transparent` o conteúdo
-          // desaparecia inteiro e a última linha ganhava uma borda de
-          // extinção — era isso que lia como fade forte; em 0,26 ele
-          // continuava legível e disputava com a legenda. Em 0,12 a lista lê
-          // como se seguisse por baixo, sem reivindicar leitura.
-          //
-          // Numa máscara o valor não é cor: só o canal alfa conta, e o preto é
-          // o estêncil de "opaco".
-          "--command-footer-ramp": [
-            "linear-gradient(to bottom",
-            "#000 0",
-            "#000 calc(100% - var(--command-footer-h))",
-            "rgb(0 0 0 / 0.88) calc(100% - var(--command-footer-h) + 16px)",
-            "rgb(0 0 0 / 0.66) calc(100% - var(--command-footer-h) + 30px)",
-            "rgb(0 0 0 / 0.42) calc(100% - var(--command-footer-h) + 42px)",
-            "rgb(0 0 0 / 0.24) calc(100% - var(--command-footer-h) + 54px)",
-            "rgb(0 0 0 / 0.12) 100%)",
-          ].join(", "),
-          ...props.style,
-        } as React.CSSProperties
-      }
       className={cn(commandVariants({ variant: resolvida }), className)}
       {...props}
     />
@@ -194,10 +175,7 @@ function CommandDialog({
             elemento ficava no fluxo normal da página, e como `DialogHeader`
             embute `w-full` — que vence o `width: 1px` do `sr-only` —, ele
             empurrava o documento em 40px e criava rolagem horizontal a 320px. */}
-        {/* `hideSeparator` porque o cabeçalho aqui é só o nome acessível: um
-            fio embaixo de um bloco invisível é decoração sem dono — e, num
-            casco `p-0`, ele ainda sangrava 24px para fora de cada lado. */}
-        <DialogHeader className="sr-only" hideSeparator>
+        <DialogHeader className="sr-only">
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
@@ -259,7 +237,22 @@ function CommandInput({
       // e passa a ficar **sobre** ela, do jeito que o `<header>` do catálogo
       // fica sobre a página. É o que faz o conteúdo rolar por trás do campo em
       // vez de parar embaixo dele.
-      className="relative z-10 flex shrink-0 items-center border-b border-border bg-popover/85 p-2 backdrop-blur"
+      //
+      // **Sem fio e sem tinta.** É o que o rodapé sempre foi, e pela mesma
+      // razão: quem marca o limite é o conteúdo sumindo, não uma superfície
+      // cobrindo. A primeira tentativa tirou só o fio e manteve o vidro, e o
+      // resultado continuava lendo como duas faixas — porque **era**: a faixa
+      // repintava `bg-popover/85` sobre um casco que já é `bg-popover/85`, e
+      // dois 85% empilhados dão 97,75%. No tema escuro `--popover` é mais claro
+      // que a página, então a faixa era um retângulo **mais claro** com uma
+      // aresta na base. É exatamente o defeito que o rodapé já registrava:
+      // superfície cheia sobre superfície a 85% lê como bloco aceso. O
+      // `backdrop-blur` saiu junto, senão a borda do borrão desenharia a mesma
+      // linha sozinha.
+      //
+      // O `relative z-10` fica: sem ele o campo não pintaria por cima da lista
+      // que passa atrás dele.
+      className="relative z-10 flex shrink-0 items-center p-2"
     >
       {/* Sem anel de foco, e é decisão e não esquecimento: o campo é
             autofocado quando a paleta abre, então o anel nasceria aceso e
@@ -299,70 +292,25 @@ function CommandInput({
   )
 }
 
-/**
- * Marca na casca se há ou não o que rolar.
- *
- * A decisão precisa chegar ao **rodapé**, que é irmão da lista e não seu
- * descendente — por isso o atributo sobe até `[data-slot="command"]`, de onde
- * as duas variáveis (altura e máscara) descem por herança. Escrever no
- * ancestral é o que evita um contexto do React para transportar um booleano.
- */
-function useMarcaRolagem() {
-  return React.useCallback((el: HTMLDivElement | null) => {
-    if (!el) return
-    const casca = el.closest<HTMLElement>('[data-slot="command"]')
-    if (!casca) return
-
-    const sincronizar = () => {
-      // 1px de folga: alturas fracionárias nunca fecham a conta exatamente —
-      // a mesma tolerância que o `ScrollFade` usa.
-      casca.dataset.scrollable = String(el.scrollHeight > el.clientHeight + 1)
-    }
-    sincronizar()
-
-    const ro = new ResizeObserver(sincronizar)
-    ro.observe(el)
-    // O conteúdo muda a cada tecla, e o tamanho da lista não: quem cresce e
-    // encolhe é o filho que o cmdk mede.
-    const sizer = el.firstElementChild
-    if (sizer) ro.observe(sizer)
-    return () => ro.disconnect()
-  }, [])
-}
-
 function CommandList({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.List>) {
-  const marcarRolagem = useMarcaRolagem()
-
   return (
     <CommandPrimitive.List
-      ref={marcarRolagem}
+      ref={useScrollFade()}
       data-slot="command-list"
       className={cn(
-        // `max-h-72` era cravado: numa paleta em diálogo ela é a janela, e 288px
-        // desperdiçava metade da tela. O teto agora depende do contexto, e o
-        // `in-data-[variant=dialog]` lê a variante que a raiz carimba.
         "no-scrollbar overflow-x-hidden overflow-y-auto p-1 outline-none",
-        // A folga de rolagem tem que conhecer a faixa que cobre o topo. O
-        // `scroll-py-1` de antes dava 4px, e o `scrollIntoView` do cmdk
-        // encostava o primeiro item no topo **real** da lista — ou seja, atrás
-        // do campo de busca. Subir ao primeiro item com a seta o escondia.
-        "scroll-pt-[calc(var(--command-band-h)+--spacing(1))]",
-        "scroll-pb-[calc(var(--command-footer-h)+--spacing(1))]",
-        // Sobe para trás da faixa e devolve o mesmo tanto em recuo: o primeiro
-        // item nasce abaixo dela, e o que rola passa por baixo em vez de sumir
-        // numa borda.
-        "-mt-(--command-band-h) pt-[calc(var(--command-band-h)+--spacing(1))]",
-        // O mesmo por baixo: a lista passa sob o rodapé em vez de terminar
-        // numa borda, e é isso que dá ao gradiente o que dissolver.
-        "-mb-(--command-footer-h) pb-[calc(var(--command-footer-h)+--spacing(1))]",
-        // A máscara é o fade. Ela some com o conteúdo antes de ele alcançar a
-        // legenda, sem acrescentar cor nenhuma — por isso o rodapé deixa de
-        // parecer um bloco. As paradas são curvadas pelo mesmo motivo que as do
-        // gradiente eram: alfa linear deixa duas quinas visíveis.
-        "[mask-image:var(--command-footer-mask)] [-webkit-mask-image:var(--command-footer-mask)]",
+        // A dissolução das duas pontas — âncoras, rampa, máscara e a folga de
+        // rolagem. A casca só publica as alturas das faixas; o resto mora aqui,
+        // no elemento que de fato rola.
+        scrollFadeViewportClassName,
+        // O conteúdo sobe para trás das faixas e devolve o mesmo tanto em
+        // recuo: o primeiro item nasce abaixo do campo de busca, e o que rola
+        // passa por baixo em vez de sumir numa borda. É isto que dá à rampa o
+        // que dissolver.
+        scrollFadeBleedClassName,
         // A lista só **lê** o teto; quem o declara é a casca. O seletor que
         // estava aqui (`in-data-[variant=dialog]`) apontava para uma variante
         // que deixou de existir quando `dialog` foi apagada — medido, a lista
@@ -398,9 +346,9 @@ function CommandEmpty({
         // quem os separa é a entrelinha. O `gap-3` que estava aqui afastava os
         // dois como se fossem blocos diferentes.
         "flex flex-col items-center px-6 text-center text-sm text-muted-foreground",
-        // O recuo próprio é curto porque a lista já reserva 53px em cima e
-        // 76px embaixo para as faixas — somar `py-10` empurrava o bloco para
-        // fora do centro óptico.
+        // O recuo próprio é curto porque a lista já reserva 52px em cima e
+        // 40px embaixo para as faixas — quando elas existem; zero quando não —,
+        // e somar `py-10` empurrava o bloco para fora do centro óptico.
         "py-6",
         // A ação **é** outra coisa, e por isso ganha respiro. É a mesma regra
         // ao contrário: gap entre coisas diferentes, entrelinha entre as
@@ -477,7 +425,32 @@ function CommandGroup({
         // 2px à direita do texto das linhas que ele encima. E `p-0` no grupo
         // porque a casca já recua — dois `p-1` empilhados punham o item a 8px da
         // borda enquanto o estado vazio ficava a 4px.
-        "overflow-hidden p-0 text-foreground **:[[cmdk-group-heading]]:px-1.5 **:[[cmdk-group-heading]]:py-1 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:font-medium **:[[cmdk-group-heading]]:text-muted-foreground",
+        "overflow-hidden p-0 text-foreground **:[[cmdk-group-heading]]:px-1.5 **:[[cmdk-group-heading]]:text-2xs **:[[cmdk-group-heading]]:font-semibold **:[[cmdk-group-heading]]:tracking-wider **:[[cmdk-group-heading]]:uppercase **:[[cmdk-group-heading]]:text-muted-foreground",
+        // **O cabeçalho deixou de ser um item apagado.** Ele era `text-xs
+        // font-medium` — o mesmo peso das linhas, um degrau menor e mais
+        // claro, que é a receita de "linha desabilitada" e não de rótulo.
+        // Caixa alta com `tracking-wider` é a mesma régua que o cabeçalho da
+        // `Table` já usa neste projeto: nenhum item jamais se parece com isso,
+        // então o olho separa os grupos antes de ler as palavras.
+        // **O respiro do cabeçalho é assimétrico, e é o que o faz pertencer à
+        // lista abaixo dele.** Com `py-1` nos dois lados ele ficava equidistante
+        // dos dois grupos e lia como mais uma linha apagada — o que ficou óbvio
+        // quando as descrições saíram da busca do catálogo e todo item virou uma
+        // linha só. É a mesma conta do par de identidade, um degrau acima.
+        "**:[[cmdk-group-heading]]:pt-1 **:[[cmdk-group-heading]]:pb-0.5",
+        // **A folga entre grupos é margem no grupo, não recuo no cabeçalho.**
+        // Duas propriedades diferentes não disputam; um `pt` base mais um `pt`
+        // sob variante seriam a mesma propriedade duas vezes, decidida por ordem
+        // de emissão do Tailwind e não pelo que se escreveu.
+        //
+        // **O primeiro grupo visível não recebe a folga**, e o irmão geral (`~`)
+        // é o que torna isso robusto: o cmdk esconde os grupos sem resultado com
+        // o atributo `hidden` **sem os tirar do DOM**, então eles ficam no meio
+        // da fileira. Medido buscando "card": `Átomos` sai escondido entre
+        // `Fundações` e `Moléculas`, e um seletor de adjacência (`+`) perderia o
+        // segundo grupo visível. `~` casa quem tem **algum** grupo visível
+        // antes, que é a pergunta certa.
+        "[[cmdk-group]:not([hidden])~&]:mt-2.5",
         className
       )}
       {...props}
@@ -609,11 +582,15 @@ function CommandFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="command-footer"
       className={cn(
-        // **Fade, e não vidro.** A faixa de cima se separa por um fio porque ela
-        // é um controle e precisa de limite. O rodapé é legenda: ele não
-        // começa, ele **termina** — o conteúdo se dissolve nele e a paleta
-        // acaba. Um fio ali desenharia uma terceira divisão numa caixa que já
-        // tem duas.
+        // **Fade, e não vidro** — e hoje isso vale para as duas pontas, que
+        // aprenderam com esta. Nenhuma delas desenha aresta: o conteúdo se
+        // dissolve e a paleta acaba.
+        //
+        // A caixa mede **só a linha da legenda**. Ela já embutiu a pista de
+        // dissolução (72px = 28 + 44), e era o que produzia ~44px de branco
+        // entre o último item e o texto sempre que se rolava até o fim — no
+        // fim não há conteúdo para dissolver ali. A pista virou
+        // `--command-foot-fade`, que é máscara e não ocupa espaço.
         //
         // O gradiente vai a `popover` cheio embaixo, e não a `popover/85`: é a
         // borda inferior da paleta, onde não há nada ao lado para comparar, e
@@ -631,8 +608,12 @@ function CommandFooter({ className, ...props }: React.ComponentProps<"div">) {
         // Quem desaparece agora é o **conteúdo**: a lista leva uma máscara que
         // apaga os últimos pixels dela. A superfície continua uniforme de ponta
         // a ponta, e a legenda fica sobre a mesma cor de todo o resto.
-        "pointer-events-none relative z-10 flex shrink-0 items-end justify-between gap-3 px-3 pb-2 text-xs text-muted-foreground",
-        "h-(--command-footer-h)",
+        // `items-center`, e não `items-end`: este último era vestígio da caixa
+        // de 72px, que tinha 44 de pista de dissolução morta em cima. Com 36
+        // fixos ele punha o texto em [12, 28] — 12 acima, 8 abaixo, torto sem
+        // motivo.
+        "pointer-events-none relative z-10 flex shrink-0 items-center justify-between gap-3 px-3 py-2 text-xs text-muted-foreground",
+        "h-(--scroll-fade-foot-h)",
         className
       )}
       {...props}

@@ -304,6 +304,22 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-emphasized: cubic-bezier(0.32, 0.72, 0, 1);
 
+  /* A dissolução das bordas de uma região rolável. Uma lista cortada em seco
+     numa borda lê como lista terminada; estes dois números são o quanto ela tem
+     para se dissolver e quanto dela sobra no fim.
+
+     `--scroll-fade-h` é a distância no eixo vertical. `--scroll-fade-x-h` é
+     menor de propósito: uma célula de tabela mede ~100px, e 44 dissolveria
+     quase metade de uma coluna.
+
+     O piso **não é zero**. Três versões erraram para os dois lados: em
+     `transparent` o conteúdo sumia inteiro e a última linha ganhava uma borda
+     de extinção; em 0,26 e depois em 0,12 ele continuava legível e disputava
+     — embaixo com a legenda, em cima com o placeholder de um campo de busca. */
+  --scroll-fade-h: 2.75rem;
+  --scroll-fade-x-h: 2rem;
+  --scroll-fade-floor: 0.06;
+
   /* Mobile shell: fixed header (h-14 = 3.5rem) + safe-area (see SidebarAppShell, MobileBottomNav) */
   --mobile-header-offset: calc(3.5rem + env(safe-area-inset-top, 0px));
   /* Floating island nav (see MobileNavIsland) */
@@ -588,6 +604,151 @@
 
   to {
     opacity: 0;
+  }
+}
+
+/* ── A dissolução das bordas de uma região rolável ─────────────────────────
+ *
+ * Quem aplica isto é o elemento que **rola**, e ele não pode desenhar nada:
+ * sem `bg`, sem `ring`, sem `radius`, sem `shadow`. A máscara recorta o alfa do
+ * elemento inteiro — fundo, borda e sombra externa junto —, então mascarar um
+ * nó que pinta apaga os cantos e as arestas dele, não o conteúdo.
+ *
+ * As faixas são opcionais. `--scroll-fade-band-h` e `--scroll-fade-foot-h` são
+ * publicadas por um ancestral que enxergue as faixas como irmãs do rolável (via
+ * `has-[]`), e sem esse ancestral elas caem no fallback `0px`: aí a dissolução
+ * acontece na borda do próprio rolável. **Não são dois modos** — o modo sem
+ * faixa é o modo com faixa de altura zero.
+ *
+ * `--scroll-fade-start` e `--scroll-fade-end` são escritas pelo JS
+ * (`useScrollFade`), a partir do quanto já se rolou e do quanto falta. Elas
+ * crescem no mesmo passo em que cada ponta consome o conteúdo, e é isso que
+ * evita um pop: nos dois extremos não há zona, e o item da ponta fica nítido.
+ * O `clamp` é aqui, para o teto não existir em dois lugares.
+ *
+ * **Isto não pode virar uma declaração em `:root`.** O `var()` de dentro de uma
+ * custom property é substituído no elemento que a declara — no `:root` as
+ * âncoras não existem, a rampa vira *guaranteed-invalid* e `mask-image` cai
+ * para `none` no app inteiro.
+ *
+ * As paradas são frações de `--scroll-fade-h` para a curva acompanhar quando a
+ * distância muda (é o que o eixo X faz). A curva é **sigmoide**: as inclinações
+ * sobem, passam pelo pico no meio e caem. Uma ease-out sairia do chapado com
+ * inclinação máxima, e descontinuidade de derivada contra superfície lisa é o
+ * que o olho mais detecta — banda de Mach, numa linha que atravessa a caixa
+ * inteira. Vê-se o começo do fade, não um fade. */
+@utility scroll-fade-y {
+  --scroll-fade-top-h: calc(
+    var(--scroll-fade-band-h, 0px) +
+      clamp(0px, var(--scroll-fade-start, 0px), var(--scroll-fade-h))
+  );
+  --scroll-fade-bottom-h: calc(
+    var(--scroll-fade-foot-h, 0px) +
+      clamp(0px, var(--scroll-fade-end, 0px), var(--scroll-fade-h))
+  );
+  /* A guarda de cruzamento: numa caixa mais curta que as duas zonas somadas,
+     as paradas de baixo resolveriam antes das de cima e o *color-stop fixup*
+     deixaria um degrau em poucos pixels, sobre conteúdo real. Assim a rampa de
+     baixo cede e a de cima vence. */
+  --scroll-fade-bottom-y: max(
+    var(--scroll-fade-top-h),
+    calc(100% - var(--scroll-fade-bottom-h))
+  );
+  --scroll-fade-ramp: linear-gradient(
+    to bottom,
+    rgb(0 0 0 / var(--scroll-fade-floor))
+      calc(var(--scroll-fade-top-h) - var(--scroll-fade-h)),
+    rgb(0 0 0 / 0.1) calc(var(--scroll-fade-top-h) - var(--scroll-fade-h) * 0.82),
+    rgb(0 0 0 / 0.2) calc(var(--scroll-fade-top-h) - var(--scroll-fade-h) * 0.64),
+    rgb(0 0 0 / 0.4) calc(var(--scroll-fade-top-h) - var(--scroll-fade-h) * 0.45),
+    rgb(0 0 0 / 0.68) calc(var(--scroll-fade-top-h) - var(--scroll-fade-h) * 0.27),
+    rgb(0 0 0 / 0.9) calc(var(--scroll-fade-top-h) - var(--scroll-fade-h) * 0.14),
+    #000 var(--scroll-fade-top-h),
+    #000 var(--scroll-fade-bottom-y),
+    rgb(0 0 0 / 0.9) calc(var(--scroll-fade-bottom-y) + var(--scroll-fade-h) * 0.14),
+    rgb(0 0 0 / 0.68) calc(var(--scroll-fade-bottom-y) + var(--scroll-fade-h) * 0.27),
+    rgb(0 0 0 / 0.4) calc(var(--scroll-fade-bottom-y) + var(--scroll-fade-h) * 0.45),
+    rgb(0 0 0 / 0.2) calc(var(--scroll-fade-bottom-y) + var(--scroll-fade-h) * 0.64),
+    rgb(0 0 0 / 0.1) calc(var(--scroll-fade-bottom-y) + var(--scroll-fade-h) * 0.82),
+    rgb(0 0 0 / var(--scroll-fade-floor))
+      calc(var(--scroll-fade-bottom-y) + var(--scroll-fade-h))
+  );
+  /* A folga de rolagem conta a zona **inteira**, e não a que está aberta agora:
+     senão um `scrollIntoView` deposita o item ativo dentro dela e a navegação
+     por teclado o renderiza dissolvido. Fixa no máximo de propósito — amarrá-la
+     à zona viva reescreveria uma propriedade adjacente a layout a cada frame. */
+  scroll-padding-block-start: calc(
+    var(--scroll-fade-band-h, 0px) + var(--scroll-fade-h) + 0.25rem
+  );
+  scroll-padding-block-end: calc(
+    var(--scroll-fade-foot-h, 0px) + var(--scroll-fade-h) + 0.25rem
+  );
+  mask-image: var(--scroll-fade-mask, none);
+  -webkit-mask-image: var(--scroll-fade-mask, none);
+
+  /* Desligada quando não há o que rolar. As zonas já fechariam sozinhas, mas
+     assim se evita a camada de composição e a perda de antialiasing subpixel. */
+  &[data-scroll-fade="on"] {
+    --scroll-fade-mask: var(--scroll-fade-ramp);
+  }
+
+  /* Em alto contraste a máscara não é neutralizada por ninguém, e o conteúdo
+     ficaria no piso sem superfície que compensasse. */
+  @media (forced-colors: active) {
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+}
+
+/* O mesmo, no eixo horizontal. A distância é menor porque o que se dissolve ali
+   costuma ser coluna de tabela, não linha de lista.
+   **Os dois eixos não se combinam:** é um gradiente por elemento, e compor duas
+   máscaras é proibido — `mask-image: none` é definido como camada preta
+   transparente, então `none` num `mask-composite: intersect` apaga o elemento. */
+@utility scroll-fade-x {
+  --scroll-fade-start-x: calc(
+    var(--scroll-fade-band-h, 0px) +
+      clamp(0px, var(--scroll-fade-start, 0px), var(--scroll-fade-x-h))
+  );
+  --scroll-fade-end-w: calc(
+    var(--scroll-fade-foot-h, 0px) +
+      clamp(0px, var(--scroll-fade-end, 0px), var(--scroll-fade-x-h))
+  );
+  --scroll-fade-end-x: max(
+    var(--scroll-fade-start-x),
+    calc(100% - var(--scroll-fade-end-w))
+  );
+  --scroll-fade-ramp-x: linear-gradient(
+    to right,
+    rgb(0 0 0 / var(--scroll-fade-floor))
+      calc(var(--scroll-fade-start-x) - var(--scroll-fade-x-h)),
+    rgb(0 0 0 / 0.1) calc(var(--scroll-fade-start-x) - var(--scroll-fade-x-h) * 0.82),
+    rgb(0 0 0 / 0.2) calc(var(--scroll-fade-start-x) - var(--scroll-fade-x-h) * 0.64),
+    rgb(0 0 0 / 0.4) calc(var(--scroll-fade-start-x) - var(--scroll-fade-x-h) * 0.45),
+    rgb(0 0 0 / 0.68) calc(var(--scroll-fade-start-x) - var(--scroll-fade-x-h) * 0.27),
+    rgb(0 0 0 / 0.9) calc(var(--scroll-fade-start-x) - var(--scroll-fade-x-h) * 0.14),
+    #000 var(--scroll-fade-start-x),
+    #000 var(--scroll-fade-end-x),
+    rgb(0 0 0 / 0.9) calc(var(--scroll-fade-end-x) + var(--scroll-fade-x-h) * 0.14),
+    rgb(0 0 0 / 0.68) calc(var(--scroll-fade-end-x) + var(--scroll-fade-x-h) * 0.27),
+    rgb(0 0 0 / 0.4) calc(var(--scroll-fade-end-x) + var(--scroll-fade-x-h) * 0.45),
+    rgb(0 0 0 / 0.2) calc(var(--scroll-fade-end-x) + var(--scroll-fade-x-h) * 0.64),
+    rgb(0 0 0 / 0.1) calc(var(--scroll-fade-end-x) + var(--scroll-fade-x-h) * 0.82),
+    rgb(0 0 0 / var(--scroll-fade-floor))
+      calc(var(--scroll-fade-end-x) + var(--scroll-fade-x-h))
+  );
+  scroll-padding-inline-start: calc(var(--scroll-fade-x-h) + 0.25rem);
+  scroll-padding-inline-end: calc(var(--scroll-fade-x-h) + 0.25rem);
+  mask-image: var(--scroll-fade-mask, none);
+  -webkit-mask-image: var(--scroll-fade-mask, none);
+
+  &[data-scroll-fade="on"] {
+    --scroll-fade-mask: var(--scroll-fade-ramp-x);
+  }
+
+  @media (forced-colors: active) {
+    mask-image: none;
+    -webkit-mask-image: none;
   }
 }
 

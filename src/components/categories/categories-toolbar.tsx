@@ -7,6 +7,7 @@ import { BudgetMonthSelects } from "@/components/categories/budget-month-selects
 import {
     Popover,
     PopoverContent,
+    PopoverFooter,
     PopoverTrigger,
 } from "@/components/ui/popover"
 import { TransactionTypeSegment, type TransactionFilterType } from "@/components/transactions/transaction-type-segment"
@@ -121,7 +122,7 @@ function MonthNavArrowControls({
                             }
                         />
                         {esteMesInsidePopoverOnNarrow ? (
-                            <div className="border-t border-border p-2 md:hidden">
+                            <PopoverFooter className="md:hidden">
                                 <Button
                                     type="button"
                                     variant="tertiary"
@@ -134,7 +135,7 @@ function MonthNavArrowControls({
                                 >
                                     Este mês
                                 </Button>
-                            </div>
+                            </PopoverFooter>
                         ) : null}
                     </PopoverContent>
                 </Popover>
@@ -271,7 +272,7 @@ export function MonthNav({
                                 afterChange={() => setOpen(false)}
                                 className="p-3"
                             />
-                            <div className="flex items-center justify-between border-t px-3 py-2">
+                            <PopoverFooter className="justify-between">
                                 <Button
                                     type="button"
                                     variant="outline"
@@ -312,7 +313,7 @@ export function MonthNav({
                                 >
                                     <ChevronRightIcon className="h-4 w-4" />
                                 </Button>
-                            </div>
+                            </PopoverFooter>
                         </PopoverContent>
                     </Popover>
                     </div>

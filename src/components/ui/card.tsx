@@ -43,6 +43,16 @@ const cardVariants = cva(
     // para dentro, deixando um filete de `bg-card` acima ou abaixo dela. O
     // casco recolhe o próprio padding **daquele lado** — e só quando a tira
     // está na ponta, porque uma barra no meio da pilha não toca borda nenhuma.
+    // O ritmo vertical da tira, e ele é **constante** em todas as variantes de
+    // `padding`. A razão está três linhas abaixo: os `has-[]` recolhem o respiro
+    // do casco daquele lado sempre que a tira está na ponta, então quem dá o ar
+    // acima do rótulo é a própria tira — em `padding="none"` e em `md` igual.
+    //
+    // 12px, e a conta é neutra: a tira tingida media `py-2.5` (10) + `text-xs`
+    // (16) = 36, forçados a 40 pelo `min-h-10`. Aqui 12+16+12 = **40**. Nenhuma
+    // tira muda de altura ao perder o fio e a tinta, e é isso que torna a
+    // migração das cópias verificável: qualquer deslocamento é bug.
+    "[--card-strip-py:--spacing(3)]",
     "has-[>[data-slot=card-toolbar]:first-child]:pt-0",
     "has-[>[data-slot=card-footer]:last-child]:pb-0",
     "has-[>[data-slot=card-note]:last-child]:pb-0",
@@ -160,7 +170,6 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
         // Quem põe um fio no cabeçalho o transforma em tira, e uma tira precisa
         // do próprio pé. Continua atendido — mas o caminho novo é `CardToolbar`,
         // que já vem com fio, tinta e altura mínima.
-        "[.border-b]:pb-(--card-strip-px)",
         className
       )}
       {...props}
@@ -242,16 +251,45 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
  * o caso comum — texto curto e apagado —; `Badge` e `Button` dentro trazem o
  * próprio.
  */
-function CardToolbar({ className, ...props }: React.ComponentProps<"div">) {
+const cardToolbarVariants = cva(
+  [
+    "flex shrink-0 flex-wrap items-center justify-between gap-3",
+    "px-(--card-strip-px) py-(--card-strip-py)",
+  ],
+  {
+    variants: {
+      /**
+       * **Sem tinta, o tipo é o componente.**
+       *
+       * Enquanto a barra era tingida, título e rótulo dentro dela liam como a
+       * mesma coisa — a banda dizia "isto é uma tira" e a letra só variava. Sem
+       * a tinta, a letra é a única coisa que distingue tira de conteúdo, e
+       * cravar um tipo só faria as chamadas de título sobrescreverem por
+       * `className` no mesmo dia. A divisão sai de contagem: das 23 barras
+       * escritas à mão no app, **8 são título** (o mês do dashboard, o período
+       * da fatura) e 7 são rótulo.
+       */
+      variant: {
+        /** `text-xs font-medium text-muted-foreground` — o mesmo `menuLabelClassName`. */
+        label: "text-xs font-medium text-muted-foreground",
+        /** O dado que nomeia o cartão: um mês, um período, um total. */
+        title: "text-sm font-semibold leading-snug text-foreground",
+      },
+    },
+    defaultVariants: { variant: "label" },
+  }
+)
+
+function CardToolbar({
+  className,
+  variant,
+  ...props
+}: React.ComponentProps<"div"> & VariantProps<typeof cardToolbarVariants>) {
   return (
     <div
       data-slot="card-toolbar"
-      className={cn(
-        "flex min-h-10 shrink-0 flex-wrap items-center justify-between gap-3",
-        "border-b border-border bg-muted/30 px-(--card-strip-px) py-2.5",
-        "text-xs font-medium text-muted-foreground",
-        className
-      )}
+      data-variant={variant ?? "label"}
+      className={cn(cardToolbarVariants({ variant }), className)}
       {...props}
     />
   )
@@ -260,11 +298,16 @@ function CardToolbar({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * O rodapé de ações: onde ficam os botões que fecham o cartão.
  *
- * O tingido caiu de `bg-muted/50` para `bg-muted/30`, o mesmo da barra de topo.
- * Barra e rodapé são a **mesma coisa** — estrutura que emoldura o corpo — e
- * pintá-los em tons diferentes dizia que eram degraus distintos de uma
- * hierarquia que não existe. Quem é mais quieto é a `CardNote`, e ela é mais
- * quieta porque é letra miúda, não porque está embaixo.
+ * **Sem fio e sem tinta**, como a barra de topo e a nota. Barra e rodapé são a
+ * mesma coisa — estrutura que emoldura o corpo —, e o que os separa do corpo é o
+ * respiro que eles trazem (`--card-strip-py`), não um degrau de cor. Quem é mais
+ * quieto é a `CardNote`, e ela é mais quieta porque é letra miúda, não porque
+ * está embaixo.
+ *
+ * O tingido já foi `bg-muted/50`, depois `bg-muted/30`. Ele saiu inteiro: uma
+ * tira pintada é uma **superfície diferente** do corpo, e é o mesmo defeito que
+ * o rodapé da paleta de comandos e o do seletor de formulário já registraram ao
+ * perder o deles.
  */
 function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -272,7 +315,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="card-footer"
       className={cn(
         "flex shrink-0 flex-wrap items-center gap-2",
-        "border-t border-border bg-muted/30 px-(--card-strip-px) py-3",
+        "px-(--card-strip-px) py-(--card-strip-py)",
         className
       )}
       {...props}
@@ -283,10 +326,10 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * A letra miúda no pé: a contagem, a origem do número, a ressalva.
  *
- * São 18 no app, em nove grafias, e a vencedora está reproduzida aqui letra por
- * letra — inclusive o `dark:bg-muted/25`, que existe porque 15% de `--muted`
- * sobre `--card` **desaparece** no tema escuro, onde os dois estão a menos de
- * um passo de claridade um do outro.
+ * São 18 no app, em nove grafias. **Sem fio e sem tinta**: o par
+ * `bg-muted/15 dark:bg-muted/25` existia porque 15% de `--muted` sobre `--card`
+ * desaparece no escuro — um remendo que só era preciso porque havia tinta. Sem
+ * ela não há o que medir, e quem dá profundidade ao pé é o respiro.
  *
  * Não é `CardFooter`. Um rodapé de ações tem alvos de toque e pesa; uma nota
  * não se clica e não deve pesar. Eram dois papéis usando um nome — e como o
@@ -299,7 +342,7 @@ function CardNote({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="card-note"
       className={cn(
         "flex shrink-0 items-start gap-2",
-        "border-t border-border bg-muted/15 px-(--card-strip-px) py-3 dark:bg-muted/25",
+        "px-(--card-strip-px) py-(--card-strip-py)",
         "text-xs leading-relaxed text-muted-foreground",
         className
       )}

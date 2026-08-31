@@ -197,7 +197,7 @@ export function CreditCardCreateDialog({
                                 />
                             </div>
                         </div>
-                        <DialogFooter className="flex-col mt-0 shrink-0 gap-2 border-t border-border/60 px-4 pt-4">
+                        <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
                             <Button
                                 type="submit"
                                 size="sm"
@@ -249,7 +249,7 @@ export function CreditCardCreateDialog({
                             />
                         </div>
                     </div>
-                    <DialogFooter className="mx-0 mb-0 mt-0 shrink-0 flex-row flex-wrap justify-end gap-2 rounded-b-xl border-t border-border/60 bg-background px-6 pt-4 pb-5 sm:gap-3">
+                    <DialogFooter className="mx-0 mb-0 mt-0 shrink-0 flex-row flex-wrap justify-end gap-2 rounded-b-xl bg-background px-6 pt-4 pb-5 sm:gap-3">
                         <Button
                             type="button"
                             variant="outline"

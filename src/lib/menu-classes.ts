@@ -59,12 +59,37 @@ const MENU_TOUCH_TARGET = "pointer-coarse:min-h-11"
  */
 export const menuSurfaceClassName = [
   /** Acima do véu da Sheet (`z-(--z-sheet)`); abaixo do Toaster (`z-(--z-toast)`). */
-  "z-(--z-popover) min-w-36 overflow-x-hidden overflow-y-auto",
-  "rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10",
+  "z-(--z-popover) flex min-w-36 flex-col overflow-hidden",
+  "rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10",
   "duration-(--duration-instant)",
   "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
   "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
 ].join(" ")
+
+/**
+ * O **viewport** — o nó de dentro que de fato rola, e que recebe a dissolução
+ * das bordas.
+ *
+ * Ele existe porque a máscara recorta o alfa do elemento **inteiro**: fundo,
+ * borda e sombra externa junto. Aplicada na casca, ela apagaria o
+ * `ring-1 ring-foreground/10` e o `shadow-md` nas duas pontas — e os
+ * `rounded-lg` de 8px caem inteiros dentro da zona de dissolução, então os
+ * quatro arcos de canto seriam desenhados no piso enquanto os lados continuam
+ * opacos. Isso lê como falha de renderização, não como fade. Pior: o
+ * `bg-popover` mora na casca, e mascarar ali deixaria as pontas translúcidas
+ * contra a página, trocando "a lista continua por baixo da superfície" por "o
+ * painel está se dissolvendo".
+ *
+ * O `p-1` desceu da casca para cá, e o `-mx-1` do `menuSeparatorClassName`
+ * continua correto: ele sangra o recuo do **seu pai**, que agora é este nó. É a
+ * mesma cirurgia que o `variant="panel"` do `DropdownMenu` já fazia ao ceder o
+ * recuo para o `DropdownMenuSection`.
+ *
+ * O teto de altura **não** desce junto — ele fica na casca, escrito por extenso
+ * em cada menu, pela razão do bloco acima.
+ */
+export const menuViewportClassName =
+  "min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain p-1 outline-hidden"
 
 /**
  * O submenu. Ele **é** a casca — antes divergia dela dentro do mesmo arquivo

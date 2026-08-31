@@ -334,6 +334,40 @@ function auditFile(absPath, project) {
     }
   }
 
+  // ── J. Faixa de superfície desenhada à mão ────────────────────────────────
+  //
+  // Uma tira de topo ou de pé — a barra de um cartão, o cabeçalho de um popover,
+  // o rodapé de um diálogo — **não desenha fio nem tinta**. O que a separa do
+  // corpo é o respiro que ela traz e, onde há rolagem, o conteúdo dissolvendo
+  // por baixo dela. Uma tira pintada é uma superfície diferente do corpo, e o
+  // fio em cima dela é o segundo sinal para a mesma emenda.
+  //
+  // A regra existe porque a lição já foi aprendida caro: quando o `border-t`
+  // saiu do `DialogFooter`, o app **não perdeu o fio** — 24 chamadas o
+  // repunham à mão, e a mudança do componente não chegou à tela. Sem um guarda,
+  // as 50 faixas que esta rodada migrou voltam pelo mesmo caminho.
+  //
+  // O que ela **não** acusa: separador de itens repetidos (`TableRow`,
+  // `AccordionItem`), que é o que torna uma lista varrível; moldura (`border`
+  // completo, com ou sem `rounded-`); e `PageHeader`/`H2`/`TableHeader`, que
+  // ficaram fora do escopo por decisão.
+  for (const m of src.matchAll(/className=\{?["'`]([^"'`]{0,2000})["'`]/g)) {
+    const classes = m[1]
+    const temFio = /(?:^|\s)border-[bt](?:\s|$)/.test(classes)
+    const temTinta = /(?:^|\s)(?:dark:)?bg-muted\/\d+(?:\s|$)/.test(classes)
+    const eMoldura = /(?:^|\s)(?:border|rounded-)/.test(
+      classes.replace(/border-[bt]\b/g, "").replace(/border-(?:border|input)\S*/g, "")
+    )
+    if (temFio && temTinta && !eMoldura) {
+      add(
+        "J",
+        m.index,
+        "faixa desenhada à mão — fio + tinta numa tira é `CardToolbar`, `CardNote`, `PopoverHeader` ou `DialogFooter`",
+        classes.slice(0, 70)
+      )
+    }
+  }
+
   // ── H. hover: sem par de toque (regra própria deste projeto) ──────────────
   // `hover:` compila para @media (hover: hover), e um telefone responde
   // `hover: none`. A resposta não é remover o hover: é somar `active:`.
@@ -384,6 +418,7 @@ const RULE_LABEL = {
   G: "ícone fora do Heroicons",
   H: "hover: sem par de toque",
   I: "formatação fora dos helpers",
+  J: "faixa de superfície desenhada à mão",
 }
 
 function render(findings) {

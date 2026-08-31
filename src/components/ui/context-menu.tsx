@@ -5,6 +5,8 @@ import { CheckIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
 import { ContextMenu as ContextMenuPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
+import { useScrollFade } from "@/hooks/use-scroll-fade"
 import {
   menuSubSurfaceClassName,
   menuSurfaceClassName,
@@ -15,6 +17,7 @@ import {
   menuSeparatorClassName,
   menuShortcutClassName,
   menuSubTriggerClassName,
+  menuViewportClassName,
 } from "@/lib/menu-classes"
 
 /**
@@ -105,6 +108,7 @@ function ContextMenuRadioGroup({
  */
 function ContextMenuContent({
   className,
+  children,
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Content>) {
   return (
@@ -113,7 +117,15 @@ function ContextMenuContent({
         data-slot="context-menu-content"
         className={cn(menuSurfaceClassName, CONTEXT_POPPER, className)}
         {...props}
-      />
+      >
+        <div
+          ref={useScrollFade()}
+          data-slot="context-menu-viewport"
+          className={cn(menuViewportClassName, scrollFadeViewportClassName)}
+        >
+          {children}
+        </div>
+      </ContextMenuPrimitive.Content>
     </ContextMenuPrimitive.Portal>
   )
 }
@@ -161,6 +173,7 @@ function ContextMenuSubTrigger({
 
 function ContextMenuSubContent({
   className,
+  children,
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.SubContent>) {
   return (
@@ -168,7 +181,15 @@ function ContextMenuSubContent({
       data-slot="context-menu-sub-content"
       className={cn(menuSubSurfaceClassName, CONTEXT_POPPER, className)}
       {...props}
-    />
+    >
+      <div
+        ref={useScrollFade()}
+        data-slot="context-menu-sub-viewport"
+        className={cn(menuViewportClassName, scrollFadeViewportClassName)}
+      >
+        {children}
+      </div>
+    </ContextMenuPrimitive.SubContent>
   )
 }
 

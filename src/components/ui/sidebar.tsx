@@ -7,6 +7,8 @@ import { Slot } from "radix-ui"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
+import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
+import { useScrollFade } from "@/hooks/use-scroll-fade"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
@@ -201,7 +203,7 @@ function Sidebar({
           }
           side={side}
         >
-          <DialogHeader className="sr-only" hideSeparator>
+          <DialogHeader className="sr-only">
             <DialogTitle>Sidebar</DialogTitle>
             <DialogDescription>Displays the mobile sidebar.</DialogDescription>
           </DialogHeader>
@@ -342,7 +344,15 @@ function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="sidebar-header"
       data-sidebar="header"
-      className={cn("sticky top-0 z-10 flex h-16 flex-col justify-center gap-2 px-2 bg-sidebar", className)}
+      // Sem `sticky top-0 z-10 bg-sidebar`: as faixas são **irmãs** do
+      // rolável, não descendentes dele, então não havia ancestral rolante
+      // contra o qual grudar — o `sticky` era inerte, e o `z-10` mais o
+      // `bg-sidebar` existiam para esconder um conteúdo que nunca passou por
+      // baixo. Quem marca o limite agora é a dissolução do conteúdo.
+      className={cn(
+        "flex h-16 shrink-0 flex-col justify-center gap-2 px-2",
+        className
+      )}
       {...props}
     />
   )
@@ -353,7 +363,10 @@ function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="sidebar-footer"
       data-sidebar="footer"
-      className={cn("sticky bottom-0 z-10 mt-auto flex flex-col gap-2 p-2 bg-sidebar", className)}
+      className={cn(
+        "mt-auto flex shrink-0 flex-col gap-2 p-2",
+        className
+      )}
       {...props}
     />
   )
@@ -376,10 +389,25 @@ function SidebarSeparator({
 function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
+      ref={useScrollFade()}
       data-slot="sidebar-content"
       data-sidebar="content"
       className={cn(
         "no-scrollbar flex min-h-0 flex-1 flex-col gap-0 overflow-auto group-data-[collapsible=icon]:overflow-hidden",
+        // Modo **sem faixa**: o cabeçalho e o rodapé têm altura variável, e
+        // medi-los exigiria um segundo observador escrevendo a altura do JS,
+        // com flash na primeira pintura. Aqui a dissolução acontece na borda do
+        // próprio rolável, e as duas faixas ficam onde estão.
+        //
+        // O ganho é maior aqui do que em qualquer outra superfície: com
+        // `no-scrollbar`, esta lista rolava sem **nenhum** indicador.
+        scrollFadeViewportClassName,
+        // A guarda do modo ícone, e é um defeito concreto: um elemento com
+        // `overflow: hidden` **continua** tendo `scrollHeight > clientHeight`,
+        // então a máscara acenderia — e como não há evento de rolagem possível,
+        // as duas pontas congelariam no piso para sempre, apagando o primeiro e
+        // o último ícone de navegação.
+        "group-data-[collapsible=icon]:[--scroll-fade-mask:none]",
         className
       )}
       {...props}
@@ -387,20 +415,18 @@ function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function SidebarGroup({
-  className,
-  variant = "default",
-  ...props
-}: React.ComponentProps<"div"> & {
-  variant?: "default" | "action"
-}) {
+function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sidebar-group"
       data-sidebar="group"
       className={cn(
         "relative flex w-full min-w-0 flex-col justify-start p-2",
-        variant === "action" && "border-b border-sidebar-border",
+        // `action` já teve um `border-b border-sidebar-border`. Ele saiu porque
+        // esta faixa é o primeiro filho do `SidebarContent`, que **é** o
+        // viewport com a dissolução — o limite já está dito, e um fio ali seria
+        // o segundo sinal para a mesma emenda. O que separa o botão de ação da
+        // navegação é o `p-2` daqui mais o respiro do grupo seguinte.
         className
       )}
       {...props}

@@ -21,6 +21,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import {
+  scrollFadeBandsClassName,
+  scrollFadeBleedClassName,
+  scrollFadeViewportClassName,
+} from "@/lib/scroll-fade-classes"
+import { useScrollFade } from "@/hooks/use-scroll-fade"
 
 /**
  * O seletor ancorado num campo — e agora também o que vai dentro dele.
@@ -36,6 +42,9 @@ import {
  * | Busca | `shrink-0 border-b border-border/50 p-3 pb-2` mais lupa `absolute` | 2 |
  * | Lista | `formPickerListScrollClassName` + `onWheel` que para a propagação | 3 |
  * | Rodapé | `shrink-0 border-t border-border/50 bg-muted/25 p-2` | 3 |
+ *
+ * (Os dois fios e a tinta do rodapé saíram desde então: as faixas não pintam
+ * nem aparam, e quem marca o limite é o conteúdo dissolvendo por baixo delas.)
  * | Ação do rodapé | `Button tertiary xl w-full text-xs asChild` com um `Link` | 3 |
  * | Gatilho | `Button outline xl w-full justify-between px-3 …` mais chevron | 3 |
  * | Raiz | `modal={isMobile}` | 3 |
@@ -180,6 +189,20 @@ function FormPickerPopoverContent({
       padding="none"
       className={cn(
         "flex min-h-0 w-(--radix-popover-trigger-width) max-w-88 flex-col overflow-hidden",
+        // A casca publica a altura das duas faixas, porque só ela as enxerga
+        // como **irmãs** da lista. As duas são condicionais à presença da faixa
+        // — sem ela, a zona daquele lado vale zero e a dissolução acontece na
+        // borda do próprio rolável.
+        //
+        // **Medidas: 53,2 e 49,4.** Elas não caem na escala de espaçamento, e
+        // por isso ficam no degrau **abaixo** (52 e 48) em vez do acima.
+        // Superestimar põe a borda opaca depois do fim da faixa, e sobra uma
+        // tira de conteúdo chapado logo abaixo dela; subestimar só antecipa a
+        // dissolução em pouco mais de um pixel, ainda dentro da faixa. Errar
+        // para baixo é invisível, errar para cima não.
+        scrollFadeBandsClassName,
+        "has-[[data-slot=form-picker-popover-search]]:[--scroll-fade-band-h:--spacing(13)]",
+        "has-[[data-slot=form-picker-popover-footer]]:[--scroll-fade-foot-h:--spacing(12)]",
         className
       )}
       {...props}
@@ -215,7 +238,10 @@ function FormPickerPopoverSearch({
   return (
     <div
       data-slot="form-picker-popover-search"
-      className="shrink-0 border-b border-border/50 p-3 pb-2"
+      // **Sem fio.** Quem marca o limite é o conteúdo dissolvendo por baixo, e
+      // não uma aresta. O `relative z-10` é o que põe a faixa sobre a lista, em
+      // vez de ao lado dela: o conteúdo passa por trás.
+      className="relative z-10 shrink-0 p-3 pb-2"
     >
       <InputGroup size={size}>
         <InputGroupAddon>
@@ -262,8 +288,22 @@ function FormPickerPopoverList({
 }: React.ComponentProps<"div">) {
   return (
     <div
+      ref={useScrollFade()}
       data-slot="form-picker-popover-list"
-      className={cn(formPickerListScrollClassName, className)}
+      className={cn(
+        formPickerListScrollClassName,
+        // As duas pontas dissolvem, e o conteúdo passa **por trás** das faixas
+        // em vez de parar numa borda — é isso que dá à rampa o que dissolver.
+        //
+        // A dissolução vai aqui e não na constante `formPickerListScrollClassName`
+        // de propósito: as telas importam a constante, e uma delas com máscara
+        // ligada mas sem a casca publicando `band-h` ganharia meio tratamento —
+        // um fade começando 1px abaixo do fio escrito à mão, que são os dois
+        // sinais que o sistema está tentando não ter juntos.
+        scrollFadeViewportClassName,
+        scrollFadeBleedClassName,
+        className
+      )}
       onWheel={(e) => {
         e.stopPropagation()
         onWheel?.(e)
@@ -334,8 +374,7 @@ function FormPickerPopoverItem({
 
 /**
  * O pé — onde mora a saída para gerenciar o que a lista mostra ("Gerenciar
- * categorias", "Cadastrar cartão"). Tinta mais quieta que a lista, porque não é
- * uma das opções.
+ * categorias", "Cadastrar cartão").
  */
 function FormPickerPopoverFooter({
   className,
@@ -345,7 +384,11 @@ function FormPickerPopoverFooter({
     <div
       data-slot="form-picker-popover-footer"
       className={cn(
-        "shrink-0 border-t border-border/50 bg-muted/25 p-2",
+        // **Sem fio e sem tinta.** O `bg-muted/25` fazia do rodapé uma
+        // superfície diferente da lista, e o degrau de tom na emenda é o mesmo
+        // "bloco aceso" que a paleta de comandos registrou ao tentar pintar o
+        // pé dela. Quem separa agora é a dissolução do conteúdo.
+        "relative z-10 shrink-0 p-2",
         className
       )}
       {...props}
@@ -356,6 +399,14 @@ function FormPickerPopoverFooter({
 /**
  * A ação do pé. Sempre a mesma forma nas três telas, sempre um `Link` dentro —
  * então `asChild` vem de fábrica e quem chama passa só o destino.
+ *
+ * **Ela preenche (`secondary`), e não é contradição com a escada.** O degrau
+ * mais quieto conta com uma moldura em volta para se distinguir do fundo, e o
+ * rodapé perdeu a dele quando o fio e a tinta saíram: um `tertiary` ali fica
+ * indistinguível de uma linha da lista até o cursor chegar — que é o problema
+ * que a dissolução não resolve, porque ela separa por gradiente e não por
+ * peso. O cinza preenchido devolve a borda que a faixa não desenha mais. E não
+ * disputa com o `primary` da tela: ele mora no rodapé do formulário, não aqui.
  */
 function FormPickerPopoverFooterAction({
   className,
@@ -365,7 +416,7 @@ function FormPickerPopoverFooterAction({
     <Button
       data-slot="form-picker-popover-footer-action"
       type="button"
-      variant="tertiary"
+      variant="secondary"
       size="lg"
       asChild
       className={cn("w-full", className)}

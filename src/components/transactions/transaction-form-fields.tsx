@@ -34,7 +34,10 @@ import { Label } from "@/components/ui/label"
 import { DatePicker } from "@/components/ui/date-picker"
 import {
     FormPickerPopoverContent,
-    formPickerListScrollClassName,
+    FormPickerPopoverFooter,
+    FormPickerPopoverFooterAction,
+    FormPickerPopoverList,
+    FormPickerPopoverSearch,
 } from "@/components/ui/form-picker-popover"
 import { Popover, PopoverTrigger } from "@/components/ui/popover"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -43,7 +46,7 @@ import {
     tagChipFilterSelected,
 } from "@/lib/tag-chip-classes"
 import { cn } from "@/lib/utils"
-import { ChevronDownIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid"
+import { ChevronDownIcon } from "@heroicons/react/16/solid"
 function CategoryRows({
     categories,
     search,
@@ -629,24 +632,15 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                         </Button>
                     </PopoverTrigger>
                     <FormPickerPopoverContent>
-                        <div className="shrink-0 border-b border-border/50 p-3 pb-2">
-                            <div className="relative">
-                                <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-                                <Input
-                                    value={categorySearch}
-                                    onChange={(e) =>
-                                        setCategorySearch(e.target.value)
-                                    }
-                                    placeholder="Buscar categoria..."
-                                    className="pl-9 text-sm"
-                                    autoComplete="off"
-                                />
-                            </div>
-                        </div>
-                        <div
-                            className={formPickerListScrollClassName}
-                            onWheel={(e) => e.stopPropagation()}
-                        >
+                        <FormPickerPopoverSearch
+                            value={categorySearch}
+                            onChange={(e) =>
+                                setCategorySearch(e.target.value)
+                            }
+                            onClear={() => setCategorySearch("")}
+                            placeholder="Buscar categoria..."
+                        />
+                        <FormPickerPopoverList>
                             <CategoryRows
                                 categories={filteredCategories}
                                 search={categorySearch}
@@ -654,20 +648,14 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                                 onPick={pickCategory}
                                 embedInScrollContainer
                             />
-                        </div>
-                        <div className="shrink-0 border-t border-border/50 bg-muted/25 p-2">
-                            <Button
-                                type="button"
-                                variant="tertiary"
-                                size="xl"
-                                className="w-full text-xs"
-                                asChild
-                            >
+                        </FormPickerPopoverList>
+                        <FormPickerPopoverFooter>
+                            <FormPickerPopoverFooterAction className="text-xs">
                                 <Link href={categoriesHref}>
                                     Gerenciar categorias
                                 </Link>
-                            </Button>
-                        </div>
+                            </FormPickerPopoverFooterAction>
+                        </FormPickerPopoverFooter>
                     </FormPickerPopoverContent>
                 </Popover>
             </div>
@@ -771,35 +759,21 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                                         </Button>
                                     </PopoverTrigger>
                                     <FormPickerPopoverContent>
-                                        <div
-                                            className={cn(
-                                                formPickerListScrollClassName,
-                                                "py-2"
-                                            )}
-                                            onWheel={(e) =>
-                                                e.stopPropagation()
-                                            }
-                                        >
+                                        <FormPickerPopoverList className="py-2">
                                             <CreditCardRows
                                                 cards={creditCards}
                                                 value={paymentCreditCardId}
                                                 onPick={pickCard}
                                                 embedInScrollContainer
                                             />
-                                        </div>
-                                        <div className="shrink-0 border-t border-border/50 bg-muted/25 p-2">
-                                            <Button
-                                                type="button"
-                                                variant="tertiary"
-                                                size="xl"
-                                                className="w-full text-xs"
-                                                asChild
-                                            >
+                                        </FormPickerPopoverList>
+                                        <FormPickerPopoverFooter>
+                                            <FormPickerPopoverFooterAction className="text-xs">
                                                 <Link href={creditCardsHref}>
                                                     Cadastrar cartão
                                                 </Link>
-                                            </Button>
-                                        </div>
+                                            </FormPickerPopoverFooterAction>
+                                        </FormPickerPopoverFooter>
                                     </FormPickerPopoverContent>
                                 </Popover>
                             )}

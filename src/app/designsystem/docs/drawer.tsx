@@ -35,7 +35,7 @@ export default function DrawerDoc() {
         code={`<Drawer>
   <DrawerTrigger asChild><Button>Abrir</Button></DrawerTrigger>
   <DrawerContent>
-    <DialogHeader hideSeparator>
+    <DialogHeader>
       <DialogTitle>Filtros</DialogTitle>
       <DialogDescription>Arraste para baixo para fechar.</DialogDescription>
     </DialogHeader>
@@ -56,7 +56,7 @@ export default function DrawerDoc() {
           <DrawerContent>
             {/* A alça e o contorno da gaveta já dizem onde ela começa — o fio
                 do cabeçalho seria um terceiro sinal para a mesma divisão. */}
-            <DialogHeader hideSeparator>
+            <DialogHeader>
               <DialogTitle>Filtros</DialogTitle>
               <DialogDescription>
                 Arraste a alça para baixo para fechar, ou toque fora.
@@ -102,7 +102,7 @@ export default function DrawerDoc() {
                 </Button>
               </DrawerTrigger>
               <DrawerContent variant={c.v} size={c.s}>
-                <DialogHeader hideSeparator>
+                <DialogHeader>
                   <DialogTitle>{c.rotulo}</DialogTitle>
                   <DialogDescription>
                     Arraste a alça para baixo para fechar.

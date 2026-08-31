@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 import { InformationCircleIcon } from "@heroicons/react/16/solid"
@@ -152,16 +152,16 @@ function ActivityPageSkeleton() {
                 </div>
                 <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
                     <CardContent className="flex flex-col p-0">
-                        <div className="flex min-h-10 shrink-0 items-center justify-end border-b border-border bg-muted/30 px-4 py-2.5">
+                        <CardToolbar className="justify-end">
                             <Skeleton className="h-3 w-28 shrink-0" />
-                        </div>
-                        <div className="border-b border-border bg-muted/20 px-4 py-2.5">
+                        </CardToolbar>
+                        <CardToolbar>
                             <div className="flex flex-wrap gap-2">
                                 {[1, 2, 3, 4].map((i) => (
                                     <Skeleton key={i} className="h-8 w-24 shrink-0 rounded-full" />
                                 ))}
                             </div>
-                        </div>
+                        </CardToolbar>
                         <ul className="divide-y divide-border" role="list">
                             {[1, 2, 3, 4, 5].map((i) => (
                                 <li key={i}>
@@ -178,10 +178,10 @@ function ActivityPageSkeleton() {
                                 </li>
                             ))}
                         </ul>
-                        <div className="flex shrink-0 items-start gap-2 border-t border-border bg-muted/15 px-4 py-3 dark:bg-muted/25">
+                        <CardNote>
                             <Skeleton className="mt-0.5 size-3.5 shrink-0 rounded" />
                             <Skeleton className="h-3 w-full max-w-md" />
-                        </div>
+                        </CardNote>
                     </CardContent>
                 </Card>
             </div>
@@ -267,13 +267,13 @@ export default function ActivityPage() {
                 </div>
                 <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
                     <CardContent className="flex flex-col p-0">
-                        <div className="flex min-h-10 shrink-0 items-center justify-end border-b border-border bg-muted/30 px-4 py-2.5">
+                        <CardToolbar className="justify-end">
                             <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
                                 {filteredActivities.length} registro
                                 {filteredActivities.length !== 1 ? "s" : ""}
                             </p>
-                        </div>
-                        <div className="border-b border-border bg-muted/20 px-4 py-2.5">
+                        </CardToolbar>
+                        <CardToolbar>
                             <div className="flex flex-wrap gap-2">
                                 {filters.map(({ key, label }) => (
                                     <button
@@ -291,7 +291,7 @@ export default function ActivityPage() {
                                     </button>
                                 ))}
                             </div>
-                        </div>
+                        </CardToolbar>
                         {filteredActivities.length > 0 ? (
                             <ul className="divide-y divide-border" role="list">
                                 {filteredActivities.map((activity) => {
@@ -374,12 +374,12 @@ export default function ActivityPage() {
                                 </p>
                             </div>
                         )}
-                        <div className="flex shrink-0 items-start gap-2 border-t border-border bg-muted/15 px-4 py-3 text-xs leading-relaxed text-muted-foreground dark:bg-muted/25">
+                        <CardNote>
                             <InformationCircleIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
                             <p className="min-w-0 break-words">
                                 O histórico de atividades é mantido por 90 dias para sua segurança.
                             </p>
-                        </div>
+                        </CardNote>
                     </CardContent>
                 </Card>
             </div>

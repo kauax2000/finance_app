@@ -123,7 +123,7 @@ export default function SheetDoc() {
         title="Formulário no telefone"
         description="No telefone isto é uma gaveta. fillMobileViewport a faz alta — quase a tela inteira, com folga no topo e área segura embaixo; sem ela, a gaveta mede o próprio conteúdo e para em 85%. Dentro, a mesma tríade do diálogo: cabeçalho parado, DialogBody rolando, rodapé parado. A alça vem da superfície e é o gesto, não um desenho dele."
         code={`<SheetContent fillMobileViewport>
-  <DialogHeader hideSeparator>
+  <DialogHeader>
     <DialogTitle>Nova transação</DialogTitle>
   </DialogHeader>
   <DialogBody>…</DialogBody>

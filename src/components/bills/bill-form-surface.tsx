@@ -84,7 +84,7 @@ export function BillFormSurface({
                 <div className={scrollClass}>
                     <BillFormFields {...fieldsProps} />
                 </div>
-                <DialogFooter className="gap-3 border-border/80 shrink-0 border-t bg-muted/10 px-4 py-4 sm:flex-col sm:px-5">
+                <DialogFooter className="gap-3 shrink-0 px-4 py-4 sm:flex-col sm:px-5">
                     {footer}
                     <Button
                         type="button"
@@ -112,7 +112,7 @@ export function BillFormSurface({
             <div className={scrollClass}>
                 <BillFormFields {...fieldsProps} />
             </div>
-            <DialogFooter className="shrink-0 gap-3 border-border/80 border-t bg-muted/10 px-6 py-4 sm:justify-between">
+            <DialogFooter className="shrink-0 gap-3 px-6 py-4 sm:justify-between">
                 {footer}
             </DialogFooter>
         </CustomForm>

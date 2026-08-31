@@ -13,7 +13,7 @@ import {
     Line,
     ReferenceLine,
 } from "recharts"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import type { CashflowBucketRow } from "@/components/dashboard/dashboard-cashflow-buckets"
 
@@ -188,7 +188,7 @@ export function DashboardCashflowChart({
             </div>
 
             <Card className="relative gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
-                <div className="border-b border-border bg-muted/40 px-4 py-3">
+                <CardToolbar className="py-3">
                     {data.length > 0 ? (
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                             <div>
@@ -229,7 +229,7 @@ export function DashboardCashflowChart({
                             selecionado.
                         </p>
                     )}
-                </div>
+                </CardToolbar>
 
                 <CardContent className="relative min-h-[300px] p-4">
                     {data.length > 0 ? (

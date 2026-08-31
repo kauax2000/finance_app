@@ -16,7 +16,7 @@ import {
     toastPageFetchError,
     toastSuccess,
 } from "@/lib/toast"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
 import { Spinner } from "@/components/ui/spinner"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
@@ -118,10 +118,10 @@ function MembersSectionSkeleton() {
             </div>
             <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
                 <CardContent className="flex flex-col p-0">
-                    <div className="flex min-h-10 shrink-0 items-center justify-between gap-3 border-b border-border bg-muted/30 px-4 py-2.5">
+                    <CardToolbar>
                         <Skeleton className="h-4 w-32 max-w-[55%]" />
                         <Skeleton className="h-4 w-20 shrink-0" />
-                    </div>
+                    </CardToolbar>
                     <ul
                         className="flex list-none flex-col gap-2.5 px-3 py-3 sm:px-4 sm:py-4"
                         role="list"
@@ -144,10 +144,10 @@ function MembersSectionSkeleton() {
                             </li>
                         ))}
                     </ul>
-                    <div className="flex shrink-0 items-start gap-2 border-t border-border bg-muted/15 px-4 py-3 dark:bg-muted/25">
+                    <CardNote>
                         <Skeleton className="mt-0.5 size-3.5 shrink-0 rounded" />
                         <Skeleton className="h-3 w-full max-w-md" />
-                    </div>
+                    </CardNote>
                 </CardContent>
             </Card>
         </div>
@@ -175,10 +175,10 @@ const membersPageSkeleton = (
                         <Skeleton className="h-3 w-full max-w-sm" />
                         <Skeleton className="mt-3 h-9 w-full max-w-[14rem] rounded-md" />
                     </div>
-                    <div className="flex shrink-0 items-start gap-2 border-t border-border bg-muted/15 px-4 py-3 dark:bg-muted/25">
+                    <CardNote>
                         <Skeleton className="mt-0.5 size-3.5 shrink-0 rounded" />
                         <Skeleton className="h-3 w-full max-w-md" />
-                    </div>
+                    </CardNote>
                 </CardContent>
             </Card>
         </div>
@@ -206,10 +206,10 @@ const membersPageSkeleton = (
                             </li>
                         ))}
                     </ul>
-                    <div className="flex shrink-0 items-center gap-1.5 border-t border-border bg-muted/15 px-4 py-2.5 text-xs dark:bg-muted/25">
+                    <CardNote className="items-center gap-1.5 py-2.5">
                         <Skeleton className="size-3 shrink-0 rounded" />
                         <Skeleton className="h-3 w-36" />
-                    </div>
+                    </CardNote>
                 </CardContent>
             </Card>
         </div>
@@ -688,11 +688,11 @@ export default function MembersPage() {
                 </div>
                 <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
                     <CardContent className="flex flex-col p-0">
-                        <div className="flex min-h-10 shrink-0 items-center justify-end border-b border-border bg-muted/30 px-4 py-2.5">
+                        <CardToolbar className="justify-end">
                             <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
                                 {members.length} membro{members.length !== 1 ? "s" : ""}
                             </p>
-                        </div>
+                        </CardToolbar>
                         <ul
                             className="flex list-none flex-col gap-2.5 px-3 py-3 sm:px-4 sm:py-4"
                             role="list"
@@ -801,13 +801,13 @@ export default function MembersPage() {
                                 )
                             })}
                         </ul>
-                        <div className="flex shrink-0 items-start gap-2 border-t border-border bg-muted/15 px-4 py-3 text-xs leading-relaxed text-muted-foreground dark:bg-muted/25">
+                        <CardNote>
                             <InformationCircleIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
                             <p className="min-w-0 break-words">
                                 Apenas o owner pode remover membros. Você não pode remover a si mesmo nem o owner do
                                 carteira.
                             </p>
-                        </div>
+                        </CardNote>
                     </CardContent>
                 </Card>
             </div>
@@ -831,9 +831,9 @@ export default function MembersPage() {
                     ) : null}
                     <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
                         <CardContent className="flex flex-col p-0">
-                            <div className="border-b border-border bg-muted/20 px-4 py-2.5">
+                            <CardToolbar>
                                 <p className="text-xs leading-snug text-muted-foreground">Por e-mail ou link</p>
-                            </div>
+                            </CardToolbar>
                             <div className="flex flex-col gap-2 px-4 py-3">
                                 <CustomForm
                                     className="space-y-2"
@@ -978,12 +978,12 @@ export default function MembersPage() {
                     </div>
                     <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
                         <CardContent className="flex flex-col p-0">
-                            <div className="flex min-h-10 shrink-0 items-center justify-end border-b border-border bg-muted/30 px-4 py-2.5">
+                            <CardToolbar className="justify-end">
                                 <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
                                     {pendingEmailInvites.length} pendente
                                     {pendingEmailInvites.length !== 1 ? "s" : ""}
                                 </p>
-                            </div>
+                            </CardToolbar>
                             {pendingEmailInvites.length === 0 ? (
                                 <div
                                     className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
@@ -1108,8 +1108,7 @@ export default function MembersPage() {
                                     ))}
                                 </ul>
                             )}
-                            <div
-                                className="shrink-0 border-t border-border bg-muted/15 py-3 dark:bg-muted/25"
+                            <CardNote
                                 aria-hidden
                             />
                         </CardContent>

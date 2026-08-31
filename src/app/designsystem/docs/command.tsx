@@ -160,6 +160,35 @@ React.useEffect(() => {
         </div>
       </DocSection>
 
+      <DocNote title="O grupo se separa por respiro e por rótulo, nunca por fio">
+        Duas coisas faziam os grupos se dissolverem numa fileira só. O
+        cabeçalho era <code>text-xs font-medium</code> — <strong>o mesmo peso
+        das linhas</strong>, um degrau menor e mais claro, que é a receita de
+        &quot;linha desabilitada&quot; e não de rótulo. E o{" "}
+        <code>py-1</code> simétrico o deixava equidistante dos dois grupos,
+        pertencendo a nenhum. Agora ele é caixa alta com{" "}
+        <code>tracking-wider</code>, a mesma régua do cabeçalho da{" "}
+        <code>Table</code>, e o respiro é assimétrico: 10px de margem acima do
+        grupo contra 2px abaixo do rótulo, então ele pertence à lista que
+        encima. Ficou visível quando a busca deste catálogo perdeu as
+        descrições e todo item virou uma linha só.
+        <br />
+        <strong>
+          A folga é margem no grupo, não recuo no cabeçalho
+        </strong>{" "}
+        — duas propriedades diferentes não disputam, enquanto um{" "}
+        <code>pt</code> base mais um <code>pt</code> sob variante seriam a mesma
+        propriedade duas vezes, decidida por ordem de emissão do Tailwind. E o
+        primeiro grupo <em>visível</em> não recebe a folga por{" "}
+        <code>[cmdk-group]:not([hidden])~&amp;</code>: o cmdk esconde os grupos
+        sem resultado com o atributo <code>hidden</code>{" "}
+        <strong>sem os tirar do DOM</strong>, então eles ficam no meio da
+        fileira. Medido buscando &quot;card&quot;: <code>Átomos</code> sai
+        escondido entre <code>Fundações</code> e <code>Moléculas</code>, e um
+        seletor de adjacência (<code>+</code>) perderia o segundo grupo
+        visível.
+      </DocNote>
+
       <DocNote title="O tique que nunca acendia">
         A linha renderizava um <code>CheckIcon</code> escondido por{" "}
         <code>opacity-0</code> e revelado por{" "}
@@ -186,7 +215,7 @@ React.useEffect(() => {
       <DocSection
         title="As três faixas"
         code={`<Command variant="panel">
-  <CommandInput placeholder="Buscar…" />   {/* rente, com o fio embaixo */}
+  <CommandInput placeholder="Buscar…" />   {/* rente, sem fio: o conteúdo dissolve */}
   <CommandList>…</CommandList>             {/* o recuo é daqui */}
   <CommandFooter>                          {/* sangra, tinta mais quieta */}
     <CommandHint><Kbd>↵</Kbd> abrir</CommandHint>
@@ -215,14 +244,90 @@ React.useEffect(() => {
         </Command>
       </DocSection>
 
-      <DocNote title="A superfície é uma só, e o que separa as faixas é o fio">
-        A casca pinta e borra — <code>bg-popover/85</code> com{" "}
-        <code>backdrop-blur</code> —, e as três faixas não têm tinta própria.
-        Houve uma versão com vidro só nas pontas (<code>bg-background/85</code>,
-        o do <code>&lt;header&gt;</code>) e ela ficava{" "}
+      <DocNote title="A superfície é uma só, e o que separa as faixas é a dissolução">
+        A cor é declarada <strong>uma vez</strong>, na casca —{" "}
+        <code>bg-popover/85</code> com <code>backdrop-blur</code>. Houve uma
+        versão com vidro só nas pontas (<code>bg-background/85</code>, o do{" "}
+        <code>&lt;header&gt;</code>) e ela ficava{" "}
         <strong>mais escura que o meio</strong>: <code>oklch(0.145)</code> nas
         faixas contra <code>oklch(0.205)</code> na lista, no tema escuro. Tom
         igual só é garantido quando a cor é declarada uma vez.
+        <br />
+        <br />
+        <strong>Nenhuma das três faixas pinta</strong>, e o que marca os limites
+        é o conteúdo sumindo, não uma superfície cobrindo. O rodapé sempre foi
+        assim: transparente, só reservando altura, com uma{" "}
+        <code>mask-image</code> na própria lista fazendo o trabalho. A faixa de
+        busca passou a ser também.
+        <br />
+        <br />
+        Tirar dela só o fio não bastava, e o motivo é aritmético: ela repintava{" "}
+        <code>bg-popover/85</code> sobre um casco que já é{" "}
+        <code>bg-popover/85</code>, e dois 85% empilhados dão{" "}
+        <strong>97,75%</strong>. No tema escuro <code>--popover</code> é mais
+        claro que a página, então a faixa era um retângulo <em>mais claro</em>{" "}
+        com uma aresta na base — o mesmo bloco aceso que o rodapé já tinha
+        registrado ao tentar pintar um gradiente. O <code>backdrop-blur</code>{" "}
+        saiu junto: a borda do borrão desenha a linha sozinha. Quem esconde o
+        conteúdo sob o campo é a rampa, não uma tinta.
+      </DocNote>
+
+      <DocNote title="Uma curva só, e ela cresce com a rolagem nos dois lados">
+        Cada ponta dá <strong>44px</strong> ao conteúdo para se dissolver, com a
+        mesma curva espelhada e o mesmo piso (0,06). E a zona{" "}
+        <strong>cresce no passo em que a ponta consome o conteúdo</strong> — em
+        cima com o <code>scrollTop</code>, embaixo com o que falta rolar.
+        <br />
+        <br />
+        Um interruptor seria um pop severo, e a conta explica: o item da ponta
+        nasce a 4px da faixa e mede 28px, então ele cabe <em>inteiro</em> dentro
+        da zona — ligá-la de uma vez o levaria de chapado a um degradê de
+        15%→80% em 1px de rolagem. Crescendo junto, nos dois extremos não há
+        zona e o item da ponta fica nítido.
+        <br />
+        <br />
+        A curva é <strong>sigmoide</strong>, e isso não é preciosismo: uma
+        ease-out sai do chapado com inclinação máxima, e descontinuidade de
+        derivada contra uma superfície lisa é o que o olho mais detecta — banda
+        de Mach, numa linha horizontal que atravessa a paleta inteira. Vê-se o{" "}
+        <em>começo</em> do fade, não um fade.
+      </DocNote>
+
+      <DocNote title="O rodapé mede só a legenda, e é por isso que não sobra branco">
+        <code>--command-footer-h</code> já embutiu a pista de dissolução (72px =
+        28 da legenda + 44 de pista), e era o que produzia{" "}
+        <strong>~44px de branco</strong> entre o último item e o texto sempre
+        que se rolava até o fim: no fim não há conteúdo para dissolver ali. A
+        pista virou <code>--command-foot-fade</code>, que é máscara e não ocupa
+        espaço. Hoje o vão é de 4px, medido.
+        <br />
+        <br />
+        A altura depende da <strong>presença do rodapé</strong> — nunca da
+        rolagem —, como a da faixa de busca depende da presença do campo. Ela já
+        dependeu de <code>data-scrollable</code>, e isso era um laço:{" "}
+        <code>pb</code> é <code>footer-h + 4</code>, então declarar “esta lista
+        rola” <em>acrescentava 36px ao próprio conteúdo</em> e realimentava a
+        condição que produziu a decisão. Uma lista que transbordava 20px virava
+        rolável, ganhava <code>pb</code> 76, passava a transbordar 56, e nunca
+        mais era reavaliada — <strong>histerese</strong>, não laço divergente, e
+        por isso passou despercebida. Medido: uma demo desta página com 288 de
+        altura e 297 de conteúdo estava marcada como rolável quando, com{" "}
+        <code>pb</code> de 40, ela não rolaria.
+        <br />
+        <br />
+        O <code>Combobox</code> pagava o mesmo sem nunca ter rodapé: 76px de
+        calha vazia no fim de cada popover, e uma lista que só rolava por causa
+        do próprio recuo. Agora <code>footer-h</code> é 0 lá.
+      </DocNote>
+
+      <DocNote title="scroll-pb é carga estrutural, não simetria">
+        Ele conta a zona <em>inteira</em> (
+        <code>footer-h + fade-h + 4</code> = 84), e sem isso a navegação por
+        seta quebra: o <code>scrollIntoView</code> do cmdk depositaria o item
+        selecionado a 40px do fundo enquanto a zona de baixo chega a 80 — item
+        ativo renderizado a 0,05 de alfa. Medido depois: o item ativo para a
+        4px da zona, fora dela. A margem já existia antes (76 contra 72), mas
+        por acidente, e ninguém a tinha registrado.
       </DocNote>
 
       <DocNote title="O recuo é da lista, e o vidro precisa de algo atrás">

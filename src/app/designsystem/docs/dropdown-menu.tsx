@@ -129,11 +129,11 @@ export default function DropdownMenuDoc() {
 
       <DocSection
         title="Painel"
-        code={`<DropdownMenuContent variant="panel" size="xl">
-  <DropdownMenuHeader>
-    <Avatar><AvatarFallback>KL</AvatarFallback></Avatar>
-    <div className="flex min-w-0 flex-col">…nome e contexto…</div>
-  </DropdownMenuHeader>
+        code={`<DropdownMenuContent
+  variant="panel"
+  size="xl"
+  header={<DropdownMenuHeader>…avatar, nome e contexto…</DropdownMenuHeader>}
+>
   <DropdownMenuSection>
     <DropdownMenuItem>Configurações</DropdownMenuItem>
     <DropdownMenuSeparator />
@@ -145,19 +145,25 @@ export default function DropdownMenuDoc() {
           <DropdownMenuTrigger asChild>
             <Button variant="outline">Conta</Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent variant="panel" size="xl" align="start">
-            <DropdownMenuHeader>
-              <Avatar>
-                <AvatarFallback>KL</AvatarFallback>
-              </Avatar>
-              {/* Nome sobre contexto é par de identidade: sem `gap`. */}
-              <div className="flex min-w-0 flex-col">
-                <span className="truncate font-medium">Kauã Leandro</span>
-                <span className="truncate text-xs text-muted-foreground">
-                  Carteira pessoal
-                </span>
-              </div>
-            </DropdownMenuHeader>
+          <DropdownMenuContent
+            variant="panel"
+            size="xl"
+            align="start"
+            header={
+              <DropdownMenuHeader>
+                <Avatar>
+                  <AvatarFallback>KL</AvatarFallback>
+                </Avatar>
+                {/* Nome sobre contexto é par de identidade: sem `gap`. */}
+                <div className="flex min-w-0 flex-col">
+                  <span className="truncate font-medium">Kauã Leandro</span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    Carteira pessoal
+                  </span>
+                </div>
+              </DropdownMenuHeader>
+            }
+          >
             <DropdownMenuSection>
               <DropdownMenuItem>Configurações</DropdownMenuItem>
               <DropdownMenuItem>Membros</DropdownMenuItem>
@@ -177,7 +183,7 @@ export default function DropdownMenuDoc() {
       </DocNote>
 
       <DocNote title="O painel tem faixas, e não é quem chama que as desenha">
-        <code>DropdownMenuHeader</code> sangra até a borda e traz o próprio fio;{" "}
+        <code>DropdownMenuHeader</code> sangra até a borda;{" "}
         <code>DropdownMenuSection</code> devolve o recuo onde há comandos. A
         segunda não é enfeite: o <code>-mx-1</code> do{" "}
         <code>DropdownMenuSeparator</code> sangra exatamente esse{" "}
@@ -186,6 +192,25 @@ export default function DropdownMenuDoc() {
         o do cabeçalho, 216px o do meio —, que é o mesmo defeito que o{" "}
         <code>DialogHeader</code> já tinha corrigido com{" "}
         <code>--dialog-bleed</code>.
+      </DocNote>
+
+      <DocNote title="O fio entre a identidade e os comandos é do slot, não da faixa">
+        A faixa de identidade não rotula os comandos abaixo dela — ela é{" "}
+        <strong>um bloco de outra natureza</strong> empilhado sobre uma lista.
+        A fronteira entre os dois é a mesma que o painel já marca entre grupos
+        com <code>DropdownMenuSeparator</code>, e por isso ela mantém o fio, no
+        mesmo peso: é o traço que divide <strong>itens</strong>, não
+        superfícies — a categoria que nunca perdeu o fio. A dissolução do
+        viewport continua e não disputa com ele: ela diz &quot;há mais conteúdo
+        acima&quot;, que é outra informação.
+        <br />
+        Ele mora no <em>slot</em> <code>header</code> e não em{" "}
+        <code>DropdownMenuHeader</code> porque o consumidor real do padrão não
+        usa aquela peça: o <code>UserMenu</code> passa um{" "}
+        <code>DropdownMenuLabel</code> com um <code>AccountMenuUserSummary</code>{" "}
+        dentro. Uma regra escrita na faixa alcançaria este catálogo e deixaria
+        o app de fora — que é como o <code>border-t</code> do{" "}
+        <code>DialogFooter</code> já enganou este projeto uma vez.
       </DocNote>
 
       <DocNote title="Painel não é lista de comandos">

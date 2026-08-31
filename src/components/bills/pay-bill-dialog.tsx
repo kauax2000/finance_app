@@ -302,7 +302,7 @@ export function PayBillDialog({
             </div>
 
             {isMobile ? (
-                <DialogFooter className="gap-3 border-border/80 shrink-0 border-t bg-muted/10 px-4 py-4 sm:flex-col sm:px-5">
+                <DialogFooter className="gap-3 shrink-0 px-4 py-4 sm:flex-col sm:px-5">
                     <Button type="submit" disabled={saving} className="w-full">
                         Registrar pagamento
                     </Button>
@@ -317,7 +317,7 @@ export function PayBillDialog({
                     </Button>
                 </DialogFooter>
             ) : (
-                <DialogFooter className="shrink-0 gap-3 border-border/80 border-t bg-muted/10 px-6 py-4">
+                <DialogFooter className="shrink-0 gap-3 px-6 py-4">
                     <Button
                         type="button"
                         variant="outline"

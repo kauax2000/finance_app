@@ -34,15 +34,18 @@ export function UserMenu({ children }: UserMenuProps) {
                 {children}
             </DropdownMenuTrigger>
             <DropdownMenuContent
-                className="w-60 max-w-[calc(100vw-2rem)] rounded-xl p-0 shadow-lg ring-1 ring-border/10"
+                variant="panel"
+                className="w-60 max-w-[calc(100vw-2rem)]"
                 align="end"
                 side="right"
                 sideOffset={8}
-            >
-                <div className="overflow-hidden rounded-xl py-1">
+                header={
                     <DropdownMenuLabel className="p-0 font-normal">
                         <AccountMenuUserSummary />
                     </DropdownMenuLabel>
+                }
+            >
+                <div className="overflow-hidden rounded-xl py-1">
 
                     <div
                         className="flex items-center justify-between gap-3 px-2.5 py-1.5"

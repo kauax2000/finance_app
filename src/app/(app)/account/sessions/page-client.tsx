@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
 import { Spinner } from "@/components/ui/spinner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
@@ -32,9 +32,9 @@ function SessionsPageSkeleton() {
                 </div>
                 <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
                     <CardContent className="flex flex-col p-0">
-                        <div className="flex min-h-10 shrink-0 items-center justify-end border-b border-border bg-muted/30 px-4 py-2.5">
+                        <CardToolbar className="justify-end">
                             <Skeleton className="h-3 w-24 shrink-0" />
-                        </div>
+                        </CardToolbar>
                         <ul
                             className="flex list-none flex-col gap-2.5 px-3 py-3 sm:px-4 sm:py-4"
                             role="list"
@@ -63,8 +63,7 @@ function SessionsPageSkeleton() {
                                 </li>
                             ))}
                         </ul>
-                        <div
-                            className="shrink-0 border-t border-border bg-muted/15 px-4 py-3 dark:bg-muted/25"
+                        <CardNote
                             aria-hidden
                         />
                     </CardContent>
@@ -186,13 +185,13 @@ export default function SessionsPage() {
                 </div>
                 <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
                     <CardContent className="flex flex-col p-0">
-                        <div className="flex min-h-10 shrink-0 items-center justify-end border-b border-border bg-muted/30 px-4 py-2.5">
+                        <CardToolbar className="justify-end">
                             <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
                                 {activeSessionCount} sessão
                                 {activeSessionCount !== 1 ? "s" : ""} ativa
                                 {activeSessionCount !== 1 ? "s" : ""}
                             </p>
-                        </div>
+                        </CardToolbar>
                         {sessions.length > 0 ? (
                             <ul
                                 className="flex list-none flex-col gap-2.5 px-3 py-3 sm:px-4 sm:py-4"
@@ -290,8 +289,7 @@ export default function SessionsPage() {
                                 </p>
                             </div>
                         )}
-                        <div
-                            className="shrink-0 border-t border-border bg-muted/15 px-4 py-3 dark:bg-muted/25"
+                        <CardNote
                             aria-hidden
                         />
                     </CardContent>

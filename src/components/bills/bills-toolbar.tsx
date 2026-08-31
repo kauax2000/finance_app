@@ -316,7 +316,6 @@ export function BillsToolbar({
                 >
                     <SheetDragHandle />
                     <DialogHeader
-                        hideSeparator
                         className={cn(
                             "shrink-0 px-0 pt-1 pb-3 text-left",
                             mobileSheetChromeBelowHeaderClassName,

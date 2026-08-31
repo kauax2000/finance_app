@@ -12,6 +12,7 @@ import {
 } from "@/lib/transaction-date"
 import { cn } from "@/lib/utils"
 import { ROUTES } from "@/config/navigation"
+import { CardNote, CardToolbar } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -182,7 +183,6 @@ export type TransactionsTableProps = {
     /** @default true */
     showPaginationFooter?: boolean
     /** @default true */
-    showMobileScrollHint?: boolean
 }
 
 const EMPTY_SELECTED_IDS = new Set<string>()
@@ -212,7 +212,6 @@ export function TransactionsTable({
     enableSort = true,
     enableActions = true,
     showPaginationFooter = true,
-    showMobileScrollHint = true,
 }: TransactionsTableProps) {
     const selectedIds = selectedIdsProp ?? EMPTY_SELECTED_IDS
     const setSelectedIds = setSelectedIdsProp ?? noopSetSelectedIds
@@ -259,7 +258,7 @@ export function TransactionsTable({
     return (
         <>
             {enableSelection && selectedIds.size > 0 ? (
-                <div className="border-b border-border bg-muted/40">
+                <CardToolbar>
                     <div
                         className="flex flex-col gap-3 px-3 py-3 sm:hidden"
                         role="toolbar"
@@ -363,7 +362,7 @@ export function TransactionsTable({
                             </Button>
                         </div>
                     </div>
-                </div>
+                </CardToolbar>
             ) : null}
 
             <div
@@ -374,11 +373,6 @@ export function TransactionsTable({
                     !showPaginationFooter && "rounded-b-xl"
                 )}
             >
-                {showMobileScrollHint ? (
-                    <div className="border-b border-border/60 bg-muted/30 px-3 py-2 text-2xs font-medium uppercase tracking-wide text-muted-foreground sm:hidden">
-                        Arraste para ver mais →
-                    </div>
-                ) : null}
                 <Table className="min-w-[640px] text-sm md:min-w-[700px]">
                     <TableHeader className="sticky top-0 z-10 bg-muted/50 [&_tr]:border-b-0">
                         <TableRow className="border-0 hover:bg-transparent [&>th]:border-b [&>th]:border-border">
@@ -853,7 +847,7 @@ export function TransactionsTable({
             </div>
 
             {showPaginationFooter ? (
-                <div className="flex shrink-0 flex-col gap-2.5 rounded-b-xl border-t border-border bg-muted/40 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4">
+                <CardNote className="flex-col gap-2.5 rounded-b-xl px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4">
                 <p className="text-xs leading-relaxed text-muted-foreground">
                     {total === 0 ? (
                         "Nenhuma transação nesta página."
@@ -914,7 +908,7 @@ export function TransactionsTable({
                         </Button>
                     </div>
                 </div>
-            </div>
+            </CardNote>
             ) : null}
         </>
     )

@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label"
 import {
     Popover,
     PopoverContent,
+    PopoverHeader,
     PopoverTrigger,
 } from "@/components/ui/popover"
 import { ChevronDownIcon, XMarkIcon } from "@heroicons/react/16/solid"
@@ -499,7 +500,7 @@ export function TransactionsFiltersPanel({
                                     align="start"
                                     className="w-[var(--radix-popover-trigger-width)] max-w-[min(100vw-1.5rem,22rem)] flex flex-col gap-0 overflow-hidden p-0"
                                 >
-                                    <div className="flex flex-col gap-2.5 border-b border-border/60 p-2">
+                                    <PopoverHeader className="gap-2.5">
                                         <div className="flex flex-wrap items-center gap-1">
                                             <Button
                                                 type="button"
@@ -542,7 +543,7 @@ export function TransactionsFiltersPanel({
                                             }
                                             disabled={sortedCategories.length === 0}
                                         />
-                                    </div>
+                                    </PopoverHeader>
                                     <div className="max-h-56 overflow-y-auto p-2">
                                         <div className="space-y-0.5">
                                             <div className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50">

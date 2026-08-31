@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { CalendarDaysIcon } from "@heroicons/react/24/outline"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { cn } from "@/lib/utils"
 import {
@@ -96,16 +96,16 @@ export function DashboardUpcomingPayments({
                 )}
             >
                 <CardContent className="flex flex-col p-0">
-                    <div className="flex min-h-10 shrink-0 items-center border-b border-border bg-muted/30 px-4 py-2.5">
+                    <CardToolbar>
                         <p className="min-w-0 text-sm font-semibold leading-snug text-foreground">
                             <span className="font-medium text-muted-foreground">
                                 Resumo de{" "}
                             </span>
                             <span className="capitalize">{monthTitle}</span>
                         </p>
-                    </div>
+                    </CardToolbar>
 
-                    <div className="shrink-0 border-b border-border bg-muted/10 px-3 py-2.5 dark:bg-muted/20">
+                    <CardToolbar>
                         <dl className="space-y-1.5">
                             <div className="flex items-baseline justify-between gap-2 text-xs">
                                 <dt
@@ -141,7 +141,7 @@ export function DashboardUpcomingPayments({
                                 </dd>
                             </div>
                         </dl>
-                    </div>
+                    </CardToolbar>
 
                     {rows.length === 0 ? (
                         <div className="flex flex-col items-center justify-center gap-2 px-4 py-10 text-center">

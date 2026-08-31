@@ -691,7 +691,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                             <div className="min-h-0 flex-1 overflow-y-auto px-4">
                                 {categoryFormFields}
                             </div>
-                            <DialogFooter className="flex-col mt-0 shrink-0 gap-2 border-t border-border/60 px-4 pt-4">
+                            <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
                                 <Button
                                     type="submit"
                                     disabled={saving || editBudgetRemoving}
@@ -719,7 +719,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                             <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-2">
                                 {categoryFormFields}
                             </div>
-                            <DialogFooter className="mx-0 mb-0 mt-0 shrink-0 flex-row flex-wrap justify-end gap-2 rounded-b-xl border-t border-border/60 bg-background px-6 pt-4 pb-5">
+                            <DialogFooter className="mx-0 mb-0 mt-0 shrink-0 flex-row flex-wrap justify-end gap-2 rounded-b-xl bg-background px-6 pt-4 pb-5">
                                 <Button
                                     type="submit"
                                     size="sm"

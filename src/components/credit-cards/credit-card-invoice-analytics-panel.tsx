@@ -25,7 +25,7 @@ import {
 import { localYmdFromDate } from "@/lib/transaction-date"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -779,8 +779,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                     </div>
                 </div>
                 <Card className="gap-0 overflow-hidden border-border/80 py-0 shadow-sm">
-                    <div
-                        className="flex min-h-10 shrink-0 items-center justify-between gap-3 border-b border-border bg-muted/30 px-4 py-2.5"
+                    <CardToolbar
                         aria-live="polite"
                     >
                         <p className="min-w-0 flex-1 truncate text-sm font-semibold leading-snug text-foreground">
@@ -794,7 +793,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                             onMarkPaid={handleMarkInvoicePaid}
                             onUnmarkPaid={handleUnmarkInvoicePaid}
                         />
-                    </div>
+                    </CardToolbar>
                     <CardContent className="space-y-5 pt-4 pb-5">
                         <div className="space-y-2">
                             <div className="min-w-0">
@@ -1220,14 +1219,13 @@ export function CreditCardInvoiceAnalyticsPanel({
                 </div>
                 <Card className="gap-0 overflow-hidden border-border/80 py-0 shadow-sm">
                     {committedDetailLine ? (
-                        <div
-                            className="flex min-h-10 shrink-0 flex-wrap items-center border-b border-border bg-muted/30 px-4 py-2.5"
+                        <CardToolbar
                             aria-live="polite"
                         >
                             <p className="min-w-0 text-2xs leading-snug text-muted-foreground">
                                 {committedDetailLine}
                             </p>
-                        </div>
+                        </CardToolbar>
                     ) : null}
                     <CardContent className="space-y-3 py-4">
                     <div className="space-y-2">

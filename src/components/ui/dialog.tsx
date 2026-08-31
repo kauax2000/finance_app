@@ -6,8 +6,9 @@ import { Dialog as DialogPrimitive } from "radix-ui"
 import { XMarkIcon } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
+import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
+import { useScrollFade } from "@/hooks/use-scroll-fade"
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
 
 /**
  * O recuo que desvia do botão de fechar.
@@ -222,48 +223,28 @@ function DialogHeaderRow({
  */
 function DialogHeader({
   className,
-  hideSeparator = false,
   children,
   ...props
-}: React.ComponentProps<"div"> & { hideSeparator?: boolean }) {
+}: React.ComponentProps<"div">) {
   return (
-    <>
-      <div
-        data-slot="dialog-header"
-        className={cn(
-          // Sempre à esquerda. `text-center sm:text-left` centralizava o título
-          // no telefone — e dentro de um `DialogHeaderRow`, que é uma grade de
-          // duas colunas, ele centralizava numa coluna de 188px que termina a
-          // 131px da borda direita: um eixo que não é o de nada. Um cabeçalho
-          // de diálogo é o mesmo cabeçalho nas duas larguras.
-          "flex w-full min-w-0 shrink-0 flex-col gap-2 text-left",
-          "group-data-[layout=fixed]/dialog-content:px-(--dialog-px)",
-          "group-data-[layout=fixed]/dialog-content:pt-(--dialog-px)",
-          "group-data-[layout=fixed]/dialog-content:pb-4",
-          className
-        )}
-        {...props}
-      >
-        {children}
-      </div>
-      {!hideSeparator ? (
-        // O fio sangra pela mesma variável do rodapé. Sem isso ele media 295px
-        // enquanto o fio do rodapé media 343 — dois traços horizontais a 16px
-        // um do outro, com larguras diferentes, no mesmo diálogo. Em `fixed` o
-        // casco não tem recuo e a variável é zero: o fio já nascia inteiro.
-        <Separator
-          tone="soft"
-          decorative
-          className={cn(
-            "-mx-(--dialog-bleed) w-auto",
-            // Sem corpo entre o cabeçalho e o rodapé, os dois fios ficam a 16px
-            // um do outro com uma faixa vazia no meio — e o rodapé já tem o
-            // dele. Quem chega primeiro cede.
-            "[&:has(+[data-slot=dialog-footer])]:hidden"
-          )}
-        />
-      ) : null}
-    </>
+    <div
+      data-slot="dialog-header"
+      className={cn(
+        // Sempre à esquerda. `text-center sm:text-left` centralizava o título
+        // no telefone — e dentro de um `DialogHeaderRow`, que é uma grade de
+        // duas colunas, ele centralizava numa coluna de 188px que termina a
+        // 131px da borda direita: um eixo que não é o de nada. Um cabeçalho
+        // de diálogo é o mesmo cabeçalho nas duas larguras.
+        "flex w-full min-w-0 shrink-0 flex-col gap-2 text-left",
+        "group-data-[layout=fixed]/dialog-content:px-(--dialog-px)",
+        "group-data-[layout=fixed]/dialog-content:pt-(--dialog-px)",
+        "group-data-[layout=fixed]/dialog-content:pb-4",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </div>
   )
 }
 
@@ -320,9 +301,21 @@ function DialogCloseButton({
 function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
+      ref={useScrollFade()}
       data-slot="dialog-body"
       className={cn(
         "min-h-0 flex-1 overflow-y-auto overscroll-contain px-(--dialog-px) py-4",
+        // A dissolução das duas bordas, **no lugar dos dois fios**. É o modo
+        // sem faixa: o cabeçalho e o rodapé têm altura variável — título com
+        // ou sem descrição, botões que empilham no telefone —, e medi-los
+        // exigiria um observador escrevendo a altura do JS, com flash na
+        // primeira pintura. Aqui o conteúdo dissolve na borda do próprio
+        // corpo, e as duas faixas ficam onde estão.
+        //
+        // Ele também traz a folga de rolagem, e ela é bem-vinda num formulário:
+        // um campo que ganha foco perto da borda para 48px dentro, fora da
+        // zona, em vez de encostar nela.
+        scrollFadeViewportClassName,
         className
       )}
       {...props}
@@ -358,7 +351,13 @@ function DialogFooter({
     <div
       data-slot="dialog-footer"
       className={cn(
-        "flex shrink-0 flex-col-reverse gap-2 rounded-b-xl border-t border-border",
+        // **Sem fio.** Nem aqui nem no cabeçalho: o diálogo é uma superfície só,
+        // e o que separa as faixas é o conteúdo dissolvendo quando há rolagem, e
+        // o respiro quando não há. Um traço horizontal para cada emenda numa
+        // caixa de três blocos era o que o próprio arquivo já criticava ao
+        // explicar por que o `bg-muted/50` saiu daqui: o peso dos botões e o
+        // recuo já dizem que ali começa outra coisa.
+        "flex shrink-0 flex-col-reverse gap-2 rounded-b-xl",
         "-mx-(--dialog-bleed) -mb-(--dialog-bleed)",
         "px-(--dialog-px) py-4 sm:flex-row sm:justify-end",
         className

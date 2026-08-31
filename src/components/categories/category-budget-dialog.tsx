@@ -150,7 +150,7 @@ export function CategoryBudgetDialog({
                     />
                     <CustomForm onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
                         <div className="min-h-0 flex-1 overflow-y-auto px-4">{fieldsBlock}</div>
-                        <DialogFooter className="mt-0 shrink-0 flex-col gap-2 border-t border-border/60 px-4 pt-4">
+                        <DialogFooter className="mt-0 shrink-0 flex-col gap-2 px-4 pt-4">
                             {existing ? (
                                 <Button
                                     type="button"

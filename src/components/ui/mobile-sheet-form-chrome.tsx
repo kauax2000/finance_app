@@ -3,6 +3,8 @@
 import * as React from "react"
 import { XMarkIcon } from "@heroicons/react/20/solid"
 import { cn } from "@/lib/utils"
+import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
+import { useScrollFade } from "@/hooks/use-scroll-fade"
 import { Button } from "@/components/ui/button"
 import {
   SheetClose,
@@ -50,10 +52,42 @@ export function MobileSheetFormHeaderCloseButton({
 /** Margin below sticky sheet headers before the scrolling body (bottom sheets). */
 export const mobileSheetChromeBelowHeaderClassName = "mb-3"
 
+// **Sem fio.** Quem marca o limite é o conteúdo dissolvendo na borda de cima do
+// `MobileSheetFormBody`, 12px abaixo daqui (o `mb-3`). É modo **sem faixa**, e a
+// razão é que esta altura não é conhecível: quinze das vinte e quatro chamadas
+// passam `description`, que quebra em telas estreitas, e o `pt` muda por
+// breakpoint. Medir isso exigiria um observador escrevendo a altura do JS.
 const stickyStripClass = cn(
-    "flex shrink-0 flex-row items-start justify-between gap-3 border-b border-border px-4 pb-3 pt-2 text-left sm:px-5 md:pt-3",
+    "flex shrink-0 flex-row items-start justify-between gap-3 px-4 pb-3 pt-2 text-left sm:px-5 md:pt-3",
     mobileSheetChromeBelowHeaderClassName,
 )
+
+/**
+ * O corpo rolável de uma folha de formulário — e ele é o dono da dissolução.
+ *
+ * Ele nasceu porque **o corpo não era do componente**: cada uma das ~20 telas
+ * escrevia `min-h-0 flex-1 overflow-y-auto px-4` à mão, quase sempre dentro de
+ * um `<CustomForm>`, o que faz dele nem irmão do cabeçalho. Sem um dono, tirar
+ * o fio da faixa de cima tiraria o limite e não devolveria nada — o pior
+ * resultado possível.
+ */
+export function MobileSheetFormBody({
+    className,
+    ...props
+}: React.ComponentProps<"div">) {
+    return (
+        <div
+            ref={useScrollFade()}
+            data-slot="mobile-sheet-form-body"
+            className={cn(
+                "min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 sm:px-5",
+                scrollFadeViewportClassName,
+                className,
+            )}
+            {...props}
+        />
+    )
+}
 
 export type MobileSheetFormStickyHeaderProps = {
     className?: string

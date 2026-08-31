@@ -23,7 +23,7 @@ export function AccountMenuUserSummary({ className }: AccountMenuUserSummaryProp
     return (
         <div
             className={cn(
-                "flex items-center gap-3 border-b border-border/60 px-2.5 pb-2.5 pt-2 text-left",
+                "flex items-center gap-3 px-2.5 pb-2.5 pt-2 text-left",
                 className
             )}
         >

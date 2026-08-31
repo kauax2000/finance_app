@@ -11,7 +11,9 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
     Popover,
+    PopoverBody,
     PopoverContent,
+    PopoverHeader,
     PopoverTrigger,
 } from "@/components/ui/popover"
 import {
@@ -456,12 +458,12 @@ export function TransactionsActiveFiltersChips({
                         align="end"
                         className="w-max max-w-[min(100vw-2rem,20rem)] gap-0 p-0"
                     >
-                        <div className="border-b border-border/60 px-2 py-1.5">
+                        <PopoverHeader>
                             <p className="text-2xs font-medium leading-tight text-muted-foreground">
                                 Mais filtros ativos
                             </p>
-                        </div>
-                        <div className="max-h-64 overflow-y-auto p-1.5">
+                        </PopoverHeader>
+                        <PopoverBody className="max-h-64 py-1.5">
                             <div className="inline-flex max-w-full flex-col items-stretch gap-1.5">
                                 {overflow.map((item) => (
                                     <Chip
@@ -473,7 +475,7 @@ export function TransactionsActiveFiltersChips({
                                     />
                                 ))}
                             </div>
-                        </div>
+                        </PopoverBody>
                     </PopoverContent>
                 </Popover>
             ) : null}

@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardNote } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
 /** Placeholder layout while auth / profile data loads on Minha conta. */
@@ -26,10 +26,10 @@ export function AccountPageSkeleton() {
                             </div>
                             <Skeleton className="size-9 shrink-0 rounded-md" />
                         </div>
-                        <div className="flex shrink-0 items-start gap-2 border-t border-border bg-muted/15 px-4 py-3 dark:bg-muted/25">
+                        <CardNote>
                             <Skeleton className="mt-0.5 size-3.5 shrink-0 rounded" />
                             <Skeleton className="h-3 w-44 max-w-full" />
-                        </div>
+                        </CardNote>
                     </CardContent>
                 </Card>
             </div>

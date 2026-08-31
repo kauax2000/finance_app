@@ -4,6 +4,7 @@ import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 import { supabase, type Category } from "@/lib/supabase"
+import { CardNote } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { MoneyInput } from "@/components/ui/money-input"
 import { CustomForm } from "@/components/ui/form"
@@ -148,9 +149,9 @@ function OnboardingDialogPanel({
 
             <div className={bodyClassName}>{children}</div>
 
-            <div className="w-full shrink-0 border-t border-border/80 bg-muted/25">
+            <CardNote>
                 <div className="px-4 py-3 sm:px-5">{footer}</div>
-            </div>
+            </CardNote>
         </div>
     )
 }
@@ -613,7 +614,7 @@ export function CategoriesOnboardingWizard({
                                     />
                                 </div>
                             </div>
-                            <DialogFooter className="flex-col mt-0 shrink-0 gap-2 border-t border-border/60 px-4 pt-4">
+                            <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
                                 <Button type="submit" disabled={crudBusy} className="h-10 w-full">
                                     {crudBusy ? "Salvando…" : "Criar"}
                                 </Button>
@@ -751,7 +752,7 @@ export function CategoriesOnboardingWizard({
                                         ) : null}
                                     </div>
                                 </div>
-                                <DialogFooter className="flex-col mt-0 shrink-0 gap-2 border-t border-border/60 px-4 pt-4">
+                                <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
                                     <Button type="submit" disabled={crudBusy} className="h-10 w-full">
                                         {crudBusy ? "Salvando…" : "Salvar"}
                                     </Button>

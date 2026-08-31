@@ -40,7 +40,7 @@ export function AppSidebar() {
             */}
             <WorkspaceSwitcher />
             <SidebarContent className="group-data-[collapsible=icon]:overflow-y-auto">
-                <SidebarGroup variant="action">
+                <SidebarGroup>
                     <QuickActionButton variant="sidebar" />
                 </SidebarGroup>
                 <SidebarGroup className="mt-2">

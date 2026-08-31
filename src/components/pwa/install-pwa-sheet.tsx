@@ -43,7 +43,7 @@ export function InstallPwaSheet({ open, onOpenChange }: InstallPwaSheetProps) {
                 fillMobileViewport
                 className="gap-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]"
             >
-                <DialogHeader hideSeparator>
+                <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <DevicePhoneMobileIcon className="size-5" aria-hidden />
                         Instalar no iPhone

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import { useAuth } from "@/components/providers"
 import { useNotificationsUi } from "@/components/layout/notifications-ui-provider"
 import { useWorkspaceNotificationPrefs } from "@/hooks/use-workspace-notification-prefs"
@@ -28,17 +28,11 @@ function PrefSubheaderBar({
     withTopBorder?: boolean
 }) {
     return (
-        <div
-            className={
-                withTopBorder
-                    ? "flex min-h-10 shrink-0 items-center border-t border-b border-border bg-muted/30 px-4 py-2.5"
-                    : "flex min-h-10 shrink-0 items-center border-b border-border bg-muted/30 px-4 py-2.5"
-            }
-        >
+        <CardToolbar>
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 {children}
             </p>
-        </div>
+        </CardToolbar>
     )
 }
 

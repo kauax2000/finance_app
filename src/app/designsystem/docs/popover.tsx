@@ -56,7 +56,7 @@ export default function PopoverDoc() {
     <PopoverTitle>Ocultar transferências</PopoverTitle>
   </PopoverHeader>
   <PopoverClose asChild>
-    <Button type="button" variant="tertiary" size="sm">Entendi</Button>
+    <Button type="button" variant="secondary" size="sm">Entendi</Button>
   </PopoverClose>
 </PopoverContent>`}
       >
@@ -73,7 +73,7 @@ export default function PopoverDoc() {
               </PopoverDescription>
             </PopoverHeader>
             <PopoverClose asChild>
-              <Button type="button" variant="tertiary" size="sm">
+              <Button type="button" variant="secondary" size="sm">
                 Entendi
               </Button>
             </PopoverClose>
@@ -92,11 +92,11 @@ export default function PopoverDoc() {
             <Button variant="outline">Escolher período</Button>
           </PopoverTrigger>
           <PopoverContent padding="none" className="w-auto">
-            <div className="border-b border-border px-3 py-2">
+            <PopoverHeader>
               <p className="text-xs font-medium text-muted-foreground">
                 Período
               </p>
-            </div>
+            </PopoverHeader>
             <div className="flex flex-col p-1">
               {["Este mês", "Trimestre", "Ano"].map((r) => (
                 <PopoverClose asChild key={r}>

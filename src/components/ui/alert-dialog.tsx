@@ -7,7 +7,6 @@ import { type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { dialogContentVariants } from "@/components/ui/dialog"
-import { Separator } from "@/components/ui/separator"
 
 function AlertDialog({
   ...props
@@ -80,37 +79,28 @@ function AlertDialogContent({
   )
 }
 
+/**
+ * **Sem fio**, pela mesma razão do `DialogHeader`: o diálogo é uma superfície
+ * só, e o que separa as faixas é o respiro — ou o conteúdo dissolvendo, onde há
+ * rolagem. Numa confirmação, que costuma ser cabeçalho e rodapé e nada no meio,
+ * um traço em cada emenda era o mais gratuito de todos.
+ */
 function AlertDialogHeader({
   className,
-  hideSeparator = false,
   children,
   ...props
-}: React.ComponentProps<"div"> & { hideSeparator?: boolean }) {
+}: React.ComponentProps<"div">) {
   return (
-    <>
-      <div
-        data-slot="alert-dialog-header"
-        className={cn(
-          "flex w-full min-w-0 shrink-0 flex-col gap-2 text-left",
-          className
-        )}
-        {...props}
-      >
-        {children}
-      </div>
-      {!hideSeparator ? (
-        <Separator
-          tone="soft"
-          decorative
-          className={cn(
-            "-mx-(--dialog-bleed) w-auto",
-            // Uma confirmação costuma ser exatamente isto: cabeçalho e rodapé,
-            // nada no meio. Aí o fio do rodapé basta.
-            "[&:has(+[data-slot=alert-dialog-footer])]:hidden"
-          )}
-        />
-      ) : null}
-    </>
+    <div
+      data-slot="alert-dialog-header"
+      className={cn(
+        "flex w-full min-w-0 shrink-0 flex-col gap-2 text-left",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </div>
   )
 }
 

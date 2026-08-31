@@ -11,7 +11,7 @@ import {
     Bar,
 } from "recharts"
 import { CreditCardIcon } from "@heroicons/react/24/outline"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import type { CreditCard as CreditCardRow, WorkspaceInstallmentPlan } from "@/lib/supabase"
 import type { CcTxRow } from "@/lib/credit-cards-workspace-transactions"
@@ -297,7 +297,7 @@ export function CreditCardsHistoryChart({
 
             <Card className="relative gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
                 <CardContent className="relative flex flex-col gap-0 p-0">
-                    <div className="shrink-0 border-b border-border bg-muted/10 px-3 py-2.5 dark:bg-muted/20">
+                    <CardToolbar>
                         {chartData.length > 0 && hasAnyValue ? (
                             <dl className="grid grid-cols-1 gap-x-6 gap-y-1.5 sm:grid-cols-3">
                                 <div className="flex items-baseline justify-between gap-2 text-xs sm:flex-col sm:items-start">
@@ -340,7 +340,7 @@ export function CreditCardsHistoryChart({
                                 Barras agrupadas por cartão.
                             </p>
                         )}
-                    </div>
+                    </CardToolbar>
 
                     <div className="relative min-h-[300px] p-4">
                         {chartData.length > 0 && hasAnyValue ? (

@@ -159,7 +159,7 @@ export default function CardDoc() {
 
       <DocSection
         title="Cabeçalho"
-        description="Título, descrição e a ação da linha do título. CardHeader compartilha a superfície do corpo — quem tem fio e tinta é o CardToolbar. Título e descrição não levam gap: são o mesmo dado em duas linhas, e quem os separa é a entrelinha."
+        description="Título, descrição e a ação da linha do título. CardHeader vive dentro do respiro do casco; o CardToolbar traz o próprio. Título e descrição não levam gap: são o mesmo dado em duas linhas, e quem os separa é a entrelinha."
         code={`<Card>
   <CardHeader>
     <CardTitle>Saldo disponível</CardTitle>
@@ -190,7 +190,7 @@ export default function CardDoc() {
 
       <DocSection
         title="Rodapé de ações"
-        description="CardFooter é a tira onde ficam os botões que fecham o cartão. Ela pesa: tem alvo de toque e tinta de estrutura, a mesma da barra de topo. Se o que vai no pé é letra miúda que ninguém clica, é CardNote — os dois papéis já usaram este nome, e foi por isso que as 18 notas do app nasceram fora do design system."
+        description="CardFooter é a tira onde ficam os botões que fecham o cartão. Ela pesa pelo alvo de toque dos botões, não por tinta. Se o que vai no pé é letra miúda que ninguém clica, é CardNote — os dois papéis já usaram este nome, e foi por isso que as 18 notas do app nasceram fora do design system."
         code={`<Card>
   <CardHeader>…</CardHeader>
   <CardContent>…</CardContent>
@@ -254,7 +254,7 @@ export default function CardDoc() {
         title="Anatomia"
         description="Sete peças, e a ordem no JSX é a ordem na tela. As três tiras — CardToolbar, CardFooter e CardNote — sangram até a borda, e o casco recolhe o próprio respiro daquele lado sozinho: não existe rounded-t-xl para escrever, nem pt-0 para lembrar."
         code={`<Card>
-  <CardToolbar />   {/* tira de topo: fio embaixo, tinta de estrutura */}
+  <CardToolbar />   {/* tira de topo: sem fio, sem tinta, respiro próprio */}
   <CardHeader>      {/* dentro do respiro, na superfície do corpo    */}
     <CardTitle />
     <CardDescription />
@@ -374,7 +374,7 @@ export default function CardDoc() {
             prop: "CardFooter",
             type: "div",
             description:
-              "Tira de ações no pé. Mesma tinta da barra de topo, porque é a mesma coisa: estrutura emoldurando o corpo.",
+              "Tira de ações no pé. Mesmo respiro da barra de topo, porque é a mesma coisa: estrutura emoldurando o corpo.",
           },
           {
             prop: "CardNote",
@@ -386,11 +386,20 @@ export default function CardDoc() {
       />
 
       <DocNote title="Barra de topo não é cabeçalho">
-        <code>CardToolbar</code> tem fio, tinta e altura mínima: ela emoldura o
-        corpo, e é a peça certa quando o conteúdo sangra até a borda.{" "}
-        <code>CardHeader</code> compartilha a superfície do corpo e vive dentro
-        do respiro. Pôr fio e fundo num <code>CardHeader</code> ainda funciona —
-        ele acerta o pé sozinho —, mas é a forma antiga de escrever a barra.
+        <code>CardToolbar</code> traz o <strong>próprio respiro</strong>{" "}
+        (<code>--card-strip-py</code>) e o tipo de rótulo: ela emoldura o corpo,
+        e é a peça certa quando o conteúdo sangra até a borda.{" "}
+        <code>CardHeader</code> vive dentro do respiro do casco e não tem ritmo
+        próprio.
+        <br />
+        <br />
+        Ela já teve fio e tinta — <code>border-b border-border bg-muted/30</code>{" "}
+        — e os dois saíram. Uma tira pintada é uma <strong>superfície
+        diferente</strong> do corpo, e o cartão é uma superfície só; o fio, em
+        cima dela, era o segundo sinal para a mesma emenda. A troca é
+        aritmeticamente neutra: <code>py-2.5</code> mais <code>min-h-10</code>{" "}
+        davam 40px, e 12 + 16 + 12 dão os mesmos 40. Quem separa agora é o
+        respiro e a letra.
       </DocNote>
 
       <DocNote title="Cartão não tem tom de dinheiro">

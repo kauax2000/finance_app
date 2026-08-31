@@ -3,7 +3,7 @@
 import * as React from "react"
 import { CalendarDaysIcon } from "@heroicons/react/20/solid"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import {
     Popover,
     PopoverAnchor,
@@ -555,15 +555,14 @@ export function DashboardPaymentsCalendar({
             <div ref={measureRef} className="min-h-0">
             <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
                 <CardContent className="relative flex flex-col gap-0 p-0">
-                    <div
-                        className="flex min-h-10 shrink-0 items-center border-b border-border bg-muted/30 px-4 py-2.5"
+                    <CardToolbar
                         aria-live="polite"
                     >
                         <p className="text-sm font-semibold capitalize leading-snug text-foreground">
                             {monthTitle}
                         </p>
-                    </div>
-                    <div className="shrink-0 border-b border-border bg-muted/10 px-3 py-2.5 dark:bg-muted/20">
+                    </CardToolbar>
+                    <CardToolbar>
                         <dl className="grid grid-cols-1 gap-x-6 gap-y-1.5 sm:grid-cols-3">
                             <div className="flex items-baseline justify-between gap-2 text-xs sm:flex-col sm:items-start">
                                 <dt
@@ -599,7 +598,7 @@ export function DashboardPaymentsCalendar({
                                 </dd>
                             </div>
                         </dl>
-                    </div>
+                    </CardToolbar>
                     <div className="flex min-w-0 flex-col border-b border-border lg:flex-row lg:items-stretch">
                     <div className="hidden min-w-0 shrink-0 border-b border-border px-4 py-3 lg:block lg:w-80 lg:border-b-0 lg:border-e lg:border-border lg:px-3 xl:px-4">
                         <p className="mb-2 text-2xs font-medium uppercase tracking-wide text-muted-foreground">

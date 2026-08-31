@@ -6,6 +6,8 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
+import { useScrollFade } from "@/hooks/use-scroll-fade"
 import {
   menuSubSurfaceClassName,
   menuSurfaceClassName,
@@ -16,6 +18,7 @@ import {
   menuSeparatorClassName,
   menuShortcutClassName,
   menuSubTriggerClassName,
+  menuViewportClassName,
 } from "@/lib/menu-classes"
 
 /**
@@ -131,7 +134,12 @@ const dropdownMenuContentVariants = cva(
         // O recuo sai do casco e passa para `DropdownMenuSection`, que é quem
         // o devolve onde há comandos. Assim o `-mx-1` do separador continua
         // valendo: ele sangra o recuo da seção e alcança a borda do painel.
-        panel: "rounded-xl p-0",
+        panel: [
+          "rounded-xl",
+          // O recuo mudou de dono: ele saiu da casca e foi para o viewport, e
+          // aqui o painel o cede de novo para o `DropdownMenuSection`.
+          "[&>[data-slot=dropdown-menu-viewport]]:p-0",
+        ].join(" "),
       },
       size: {
         auto: "",
@@ -147,12 +155,33 @@ const dropdownMenuContentVariants = cva(
 
 function DropdownMenuContent({
   className,
+  children,
+  header,
+  footer,
   sideOffset = 4,
   variant,
   size,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Content> &
-  VariantProps<typeof dropdownMenuContentVariants>) {
+  VariantProps<typeof dropdownMenuContentVariants> & {
+    /**
+     * A faixa de identidade do painel — avatar, nome, contexto.
+     *
+     * Ela é **prop e não filho** por um motivo medido: para o conteúdo dissolver
+     * por baixo dela, ela precisa ser **irmã** do viewport, e não estar dentro
+     * dele. Detectar isso em tempo de execução com `React.Children` não
+     * funcionaria — o consumidor real do padrão é o `UserMenu`, e ali a faixa
+     * não é um `DropdownMenuHeader`, é um `<AccountMenuUserSummary />`. Um teste
+     * por `child.type` nunca a encontraria, ela cairia dentro do viewport, a
+     * máscara a dissolveria, e ninguém descobriria até rolar.
+     *
+     * Slot-como-prop é o idioma daqui: `DialogHeaderRow` tem `endAdornment`, o
+     * `MobileSheetFormStickyHeader` também.
+     */
+    header?: React.ReactNode
+    /** A faixa de pé, pelas mesmas razões. */
+    footer?: React.ReactNode
+  }) {
   return (
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.Content
@@ -164,7 +193,31 @@ function DropdownMenuContent({
           className
         )}
         {...props}
-      />
+      >
+        {header ? (
+          // **O fio é do slot, não da faixa.** Ele vive aqui e não em
+          // `DropdownMenuHeader` porque o consumidor real do padrão não usa
+          // aquela peça: o `UserMenu` passa um `DropdownMenuLabel` embrulhando
+          // um `<AccountMenuUserSummary />`. Uma regra escrita na faixa
+          // alcançaria o catálogo e deixaria o app de fora — que é exatamente
+          // como o `border-t` do `DialogFooter` já enganou este projeto uma
+          // vez.
+          <div
+            data-slot="dropdown-menu-header-slot"
+            className="relative z-10 shrink-0 border-b border-border"
+          >
+            {header}
+          </div>
+        ) : null}
+        <div
+          ref={useScrollFade()}
+          data-slot="dropdown-menu-viewport"
+          className={cn(menuViewportClassName, scrollFadeViewportClassName)}
+        >
+          {children}
+        </div>
+        {footer}
+      </DropdownMenuPrimitive.Content>
     </DropdownMenuPrimitive.Portal>
   )
 }
@@ -179,11 +232,25 @@ function DropdownMenuContent({
 /**
  * A faixa de identidade do painel — avatar, nome, contexto.
  *
- * Ela sangra até a borda e traz o próprio fio embaixo, como `CardToolbar` e
- * `DialogHeader`. Existe porque o `variant="panel"` sem ela empurrava a
- * geometria para quem chama: o `UserMenu` e o `WorkspaceSwitcher` escreviam
- * esta `div` à mão, e a demonstração deste catálogo escreveu uma terceira
- * grafia.
+ * Ela sangra até a borda, como `CardToolbar` e `DialogHeader`. Existe porque o
+ * `variant="panel"` sem ela empurrava a geometria para quem chama: o
+ * `UserMenu` e o `WorkspaceSwitcher` escreviam esta `div` à mão, e a
+ * demonstração deste catálogo escreveu uma terceira grafia.
+ *
+ * **Aqui o fio fica, e não é exceção à regra das tiras.** Uma tira de
+ * superfície rotula o corpo que vem abaixo — `CardToolbar` diz o que a lista é
+ * —, e ali o fio é o segundo sinal para a mesma emenda. Esta faixa não rotula
+ * comando nenhum: ela é **um bloco de outra natureza** (identidade) empilhado
+ * sobre uma lista de comandos, e a fronteira entre os dois é a mesma que o
+ * painel já marca entre grupos de comando com `DropdownMenuSeparator`. Mesmo
+ * papel, mesmo peso (`border-border`) — é a categoria que o projeto sempre
+ * manteve com fio: o traço que divide **itens**, não superfícies.
+ *
+ * A dissolução do viewport continua valendo e não disputa com ele: ela diz "há
+ * mais conteúdo acima", que é outra informação. Um `DropdownMenuSeparator`
+ * dentro de uma lista rolável convive com o fade pela mesma razão. E o painel
+ * do `UserMenu` não rola, então sem o fio a identidade não tinha fronteira
+ * nenhuma.
  */
 function DropdownMenuHeader({
   className,
@@ -193,7 +260,10 @@ function DropdownMenuHeader({
     <div
       data-slot="dropdown-menu-header"
       className={cn(
-        "flex shrink-0 items-center gap-2.5 border-b border-border px-3 py-2.5 text-sm",
+        // **A faixa não desenha fio nem tinta** — quem o desenha é o slot que a
+        // recebe, e por isso ela continua chegando pela prop `header`, como
+        // irmã do viewport e não como filha.
+        "relative z-10 flex shrink-0 items-center gap-2.5 px-3 py-2.5 text-sm",
         className
       )}
       {...props}
@@ -267,6 +337,7 @@ function DropdownMenuSubTrigger({
 
 function DropdownMenuSubContent({
   className,
+  children,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.SubContent>) {
   return (
@@ -274,7 +345,15 @@ function DropdownMenuSubContent({
       data-slot="dropdown-menu-sub-content"
       className={cn(menuSubSurfaceClassName, DROPDOWN_POPPER, className)}
       {...props}
-    />
+    >
+      <div
+        ref={useScrollFade()}
+        data-slot="dropdown-menu-sub-viewport"
+        className={cn(menuViewportClassName, scrollFadeViewportClassName)}
+      >
+        {children}
+      </div>
+    </DropdownMenuPrimitive.SubContent>
   )
 }
 

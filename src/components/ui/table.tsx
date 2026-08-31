@@ -1,14 +1,30 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { scrollFadeViewportXClassName } from "@/lib/scroll-fade-classes"
+import { useScrollFade } from "@/hooks/use-scroll-fade"
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div
+      ref={useScrollFade({ axis: "x" })}
+      data-slot="table-viewport"
       className={cn(
         "relative w-full overflow-x-auto",
         "overscroll-x-contain [-webkit-overflow-scrolling:touch]",
-        "[scrollbar-gutter:stable]"
+        "[scrollbar-gutter:stable]",
+        // A dissolução lateral diz que **há mais coluna**, e substitui o
+        // "Arraste para ver mais →" que a tela de transações escrevia à mão.
+        // A barra fica: as duas dizem coisas diferentes — a barra, onde você
+        // está; a dissolução, que continua.
+        //
+        // Este nó pode ser mascarado direto porque ele não desenha nada. Quem
+        // pinta é a `<table>` de dentro.
+        //
+        // A distância aqui é `--scroll-fade-x-h` (32) e não os 44 do eixo
+        // vertical: uma célula mede ~100px, e 44 dissolveria quase metade de
+        // uma coluna.
+        scrollFadeViewportXClassName
       )}
     >
       <table

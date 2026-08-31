@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardNote, CardToolbar } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
     Table,
@@ -34,9 +34,9 @@ function CardSectionShell({ children }: { children: React.ReactNode }) {
 
 function CardSectionHeader() {
     return (
-        <div className="flex min-h-10 shrink-0 items-center border-b border-border bg-muted/30 px-4 py-2.5">
+        <CardToolbar>
             <Skeleton className="h-5 w-36 max-w-[min(100%,12rem)] rounded-md" />
-        </div>
+        </CardToolbar>
     )
 }
 
@@ -119,9 +119,9 @@ function InvoicePanelSkeleton() {
             <SectionTitleRow titleClassName="h-3 w-14 rounded-sm" cta="cycle" />
 
             <Card className="gap-0 overflow-hidden border-border/80 py-0 shadow-sm">
-                <div className="flex min-h-10 shrink-0 items-center border-b border-border bg-muted/30 px-4 py-2.5">
+                <CardToolbar>
                     <Skeleton className="h-5 w-36 max-w-[min(100%,12rem)]" />
-                </div>
+                </CardToolbar>
                 <CardContent className="space-y-5 pt-4 pb-5">
                     <div className="space-y-2">
                         <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1.5">
@@ -202,7 +202,7 @@ function InstallmentsBlockSkeleton() {
                                 key={key}
                                 className="overflow-hidden rounded-lg border border-border/60 bg-muted/15 dark:bg-muted/10"
                             >
-                                <div className="border-b border-border/50 bg-muted/25 px-3 py-2.5 dark:bg-muted/15">
+                                <CardToolbar>
                                     <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
                                         <div className="min-w-0 flex-1 space-y-1">
                                             <Skeleton className="h-4 w-[min(100%,14rem)] max-w-full" />
@@ -210,7 +210,7 @@ function InstallmentsBlockSkeleton() {
                                         </div>
                                         <Skeleton className="h-4 w-[4.75rem] shrink-0 tabular-nums" />
                                     </div>
-                                </div>
+                                </CardToolbar>
                                 <div className="space-y-2 px-3 py-3">
                                     <Skeleton className="h-1.5 w-full rounded-full" />
                                     <div className="flex items-center justify-between gap-3">
@@ -254,8 +254,7 @@ function RecentTransactionsSkeleton() {
                             </div>
                         ))}
                     </div>
-                    <div
-                        className="shrink-0 border-t border-border bg-muted/15 px-4 py-4 dark:bg-muted/25"
+                    <CardNote className="py-4"
                         aria-hidden
                     />
                 </CardSectionShell>

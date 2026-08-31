@@ -14,7 +14,7 @@ import {
 } from "@/lib/supabase"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { toastError, toastSuccess } from "@/lib/toast"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -539,7 +539,7 @@ export default function SubscriptionsPageClient() {
                 <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
                     <CardContent className="relative flex flex-col p-0">
                         {selectedIds.size > 0 ? (
-                            <div className="border-b border-border bg-muted/40">
+                            <CardToolbar>
                                 <div
                                     className="flex flex-col gap-3 px-3 py-3 sm:hidden"
                                     role="toolbar"
@@ -657,7 +657,7 @@ export default function SubscriptionsPageClient() {
                                         </Button>
                                     </div>
                                 </div>
-                            </div>
+                            </CardToolbar>
                         ) : null}
                         <div
                             className={cn(
@@ -966,7 +966,7 @@ export default function SubscriptionsPageClient() {
                                 </TableBody>
                             </Table>
                         </div>
-                        <div className="flex shrink-0 flex-col gap-2 rounded-b-xl border-t border-border bg-muted/40 px-3 py-2.5 sm:px-4">
+                        <CardNote className="flex-col rounded-b-xl px-3 py-2.5 sm:px-4">
                             <p className="text-xs leading-relaxed text-muted-foreground">
                                 {filteredSorted.length === 0 ? (
                                     "Nenhuma assinatura na lista filtrada."
@@ -997,7 +997,7 @@ export default function SubscriptionsPageClient() {
                                     </>
                                 )}
                             </p>
-                        </div>
+                        </CardNote>
                     </CardContent>
                 </Card>
             ) : hasNoMatches ? (

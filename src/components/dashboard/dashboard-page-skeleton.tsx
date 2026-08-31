@@ -1,6 +1,6 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
 const KPI_KEYS = ["resultado", "receitas", "despesas", "faturas"] as const
@@ -36,9 +36,9 @@ function CardSectionShell({
 
 function CardSectionHeader() {
     return (
-        <div className="flex min-h-10 shrink-0 items-center border-b border-border bg-muted/30 px-4 py-2.5">
+        <CardToolbar>
             <Skeleton className="h-5 w-40 max-w-full rounded-md" />
-        </div>
+        </CardToolbar>
     )
 }
 
@@ -91,7 +91,7 @@ function DashboardKpiSkeleton() {
                     key={key}
                     className="gap-0 overflow-hidden py-0 shadow-none"
                 >
-                    <div className="flex min-h-11 items-center justify-between gap-2 border-b border-border bg-muted/40 px-4 py-2.5">
+                    <CardToolbar>
                         <div className="flex min-w-0 flex-1 items-center gap-2">
                             <Skeleton className="hidden size-3.5 shrink-0 rounded-sm md:block" />
                             <Skeleton className="h-3 w-20 max-w-full" />
@@ -99,7 +99,7 @@ function DashboardKpiSkeleton() {
                         {index !== 3 ? (
                             <Skeleton className="h-5 w-12 shrink-0 rounded-full" />
                         ) : null}
-                    </div>
+                    </CardToolbar>
                     <div className="px-4 pt-4 pb-4 md:pt-5 md:pb-5">
                         <Skeleton className="h-7 w-28 max-w-full" />
                         {index === 2 ? (
@@ -120,7 +120,7 @@ function CalendarSummarySkeleton({
     cols: 1 | 3
 }) {
     return (
-        <div className="shrink-0 border-b border-border bg-muted/10 px-3 py-2.5 dark:bg-muted/20">
+        <CardToolbar>
             <div
                 className={
                     cols === 3
@@ -142,7 +142,7 @@ function CalendarSummarySkeleton({
                     </div>
                 ))}
             </div>
-        </div>
+        </CardToolbar>
     )
 }
 
@@ -309,7 +309,7 @@ function DashboardInvoicesSkeleton() {
             <SectionTitleRow titleClassName="h-3 w-32" cta="responsive" />
             <CardSectionShell>
                 <CardSectionHeader />
-                <div className="shrink-0 border-b border-border bg-muted/10 px-3 py-2.5 dark:bg-muted/20">
+                <CardToolbar>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-1.5">
                         <div className="flex min-w-0 flex-col gap-2 rounded-lg border border-border/60 bg-background/60 p-3 max-sm:shadow-xs sm:gap-1.5 sm:rounded-none sm:border-transparent sm:bg-transparent sm:p-0 sm:shadow-none">
                             <Skeleton className="h-3 w-32 rounded-md" />
@@ -321,7 +321,7 @@ function DashboardInvoicesSkeleton() {
                             <Skeleton className="h-3 w-32 rounded-md" />
                         </div>
                     </div>
-                </div>
+                </CardToolbar>
                 <ul className="m-0 list-none p-0">
                     {INVOICE_KEYS.map((key) => (
                         <li
@@ -367,10 +367,7 @@ function DashboardInstallmentsSkeleton() {
         <div className="min-w-0 max-w-full space-y-2">
             <SectionTitleRow titleClassName="h-3 w-44" cta="responsive" />
             <CardSectionShell>
-                <div
-                    className="flex min-h-10 shrink-0 items-center border-b border-border bg-muted/30 px-4 py-2.5"
-                    aria-hidden
-                />
+                <CardToolbar aria-hidden />
                 <div className="divide-y divide-border">
                     {INSTALLMENT_KEYS.map((key) => (
                         <div key={key} className="space-y-2 px-4 py-3">
@@ -388,8 +385,7 @@ function DashboardInstallmentsSkeleton() {
                         </div>
                     ))}
                 </div>
-                <div
-                    className="shrink-0 border-t border-border bg-muted/30 px-4 py-2.5"
+                <CardNote className="py-2.5"
                     aria-hidden
                 />
             </CardSectionShell>

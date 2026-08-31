@@ -4,7 +4,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useAuth } from "@/components/providers"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardNote } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
@@ -131,10 +131,10 @@ export default function AccountPage() {
                                 </DropdownMenu>
                             </div>
                         </div>
-                        <div className="flex shrink-0 items-center justify-center gap-2 border-t border-border bg-muted/15 px-4 py-3 text-xs leading-relaxed text-muted-foreground dark:bg-muted/25">
+                        <CardNote className="items-center justify-center">
                             <CalendarIcon className="size-3.5 shrink-0" aria-hidden />
                             <p className="min-w-0 break-words">Membro desde {createdAt}</p>
-                        </div>
+                        </CardNote>
                     </CardContent>
                 </Card>
             </div>

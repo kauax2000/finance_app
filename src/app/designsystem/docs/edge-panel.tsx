@@ -40,7 +40,7 @@ export default function EdgePanelDoc() {
               <Button variant="outline">{side}</Button>
             </EdgePanelTrigger>
             <EdgePanelContent side={side}>
-              <DialogHeader hideSeparator>
+              <DialogHeader>
                 <DialogTitle>Navegação</DialogTitle>
                 <DialogDescription>
                   Entra de <code>{side}</code>, em qualquer largura.

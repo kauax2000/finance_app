@@ -5,6 +5,8 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Popover as PopoverPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
+import { useScrollFade } from "@/hooks/use-scroll-fade"
 
 /**
  * Um popover é um `role="dialog"` — e ele precisa de nome.
@@ -75,13 +77,21 @@ const popoverContentVariants = cva(
     /** Above Sheet overlay/content (`z-(--z-sheet)`); below Toaster (`z-(--z-toast)`). */
     "z-(--z-popover) flex w-72 origin-(--radix-popover-content-transform-origin) flex-col rounded-lg bg-popover text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-hidden",
     "max-h-(--radix-popover-content-available-height) overflow-y-auto overscroll-contain",
+    // Quem declara um corpo rolável **cede a rolagem da casca**. Sem isto o
+    // popover e o `PopoverBody` rolariam os dois, um dentro do outro. Quem não
+    // declara continua exatamente como antes.
+    "has-[[data-slot=popover-body]]:overflow-hidden",
     "duration-(--duration-instant) data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
   ],
   {
     variants: {
       padding: {
-        default: "gap-2.5 p-2.5",
-        none: "gap-0 p-0",
+        // O recuo das tiras acompanha o do casco: onde o casco já recua, a tira
+        // não recua duas vezes. Em `none` ela vira dona do próprio — e os 12/8
+        // são exatamente o que as seis faixas escritas à mão pelo app já
+        // escreviam (`px-3 py-2`).
+        default: "gap-2.5 p-2.5 [--popover-strip-px:0px] [--popover-strip-py:0px]",
+        none: "gap-0 p-0 [--popover-strip-px:--spacing(3)] [--popover-strip-py:--spacing(2)]",
       },
     },
     defaultVariants: { padding: "default" },
@@ -140,6 +150,23 @@ function PopoverAnchor({
 }
 
 /**
+ * A faixa de topo — e ela **não tem fio**.
+ *
+ * Ela não tinha borda nenhuma, e era por isso que seis telas escreviam a faixa
+ * à mão em duas grafias (`border-b border-border px-3 py-2` e
+ * `border-b border-border/60 px-2 py-1.5`) — inclusive a demonstração dentro da
+ * doc deste componente, que ensinava a grafia. Agora a faixa é a peça, e o que
+ * a separa do corpo é o respiro que ela traz mais a dissolução, quando há
+ * `PopoverBody`.
+ *
+ * O `relative z-10` é o que põe a faixa **sobre** o corpo em vez de ao lado
+ * dele: o conteúdo passa por trás. É o mesmo do `FormPickerPopoverSearch`.
+ *
+ * Ele **não** ganha tipo de rótulo (`text-xs text-muted-foreground`): este é o
+ * par título+descrição que registra `aria-labelledby`, e carimbar tipo de
+ * rótulo aqui faria a peça mentir sobre a própria função. Uma faixa que é só um
+ * rótulo põe um `<p>` com esse tipo dentro.
+ *
  * Título sobre descrição é **o mesmo dado em duas linhas**, e quem os separa é
  * a entrelinha. O `gap-0.5` que estava aqui bastava para o par deixar de ler
  * como uma coisa só.
@@ -148,7 +175,56 @@ function PopoverHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="popover-header"
-      className={cn("flex flex-col text-sm", className)}
+      className={cn(
+        "relative z-10 flex shrink-0 flex-col text-sm",
+        "px-(--popover-strip-px) py-(--popover-strip-py)",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+/**
+ * O corpo rolável, para o popover que hospeda uma lista longa.
+ *
+ * Ele existe porque **o `PopoverContent` não pode ser o elemento mascarado**: a
+ * máscara recorta o alfa do elemento inteiro, e ali moram o `bg-popover`, o
+ * `ring-1`, o `rounded-lg` e a sombra — os quatro cantos do painel sairiam
+ * apagados enquanto os lados continuam opacos. Quem rola e dissolve é este nó,
+ * que não desenha nada.
+ *
+ * **Modo sem faixa**, de propósito: o cabeçalho tem `PopoverDescription`
+ * opcional, logo altura variável, e medi-la exigiria um observador escrevendo
+ * a altura do JS. A dissolução acontece na borda do próprio corpo, logo abaixo
+ * da faixa — que é a delimitação que se quer.
+ */
+function PopoverBody({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      ref={useScrollFade()}
+      data-slot="popover-body"
+      className={cn(
+        "min-h-0 flex-1 overflow-y-auto overscroll-contain",
+        "px-(--popover-strip-px)",
+        scrollFadeViewportClassName,
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+/** A faixa de pé — espelho do cabeçalho, e sem fio pela mesma razão. */
+function PopoverFooter({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="popover-footer"
+      className={cn(
+        "relative z-10 flex shrink-0 flex-wrap items-center gap-2",
+        "px-(--popover-strip-px) py-(--popover-strip-py)",
+        className
+      )}
       {...props}
     />
   )
@@ -204,6 +280,8 @@ export {
   PopoverClose,
   PopoverContent,
   PopoverDescription,
+  PopoverBody,
+  PopoverFooter,
   PopoverHeader,
   PopoverTitle,
   PopoverTrigger,

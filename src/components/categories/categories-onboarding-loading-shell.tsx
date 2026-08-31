@@ -1,5 +1,6 @@
 "use client"
 
+import { CardNote } from "@/components/ui/card"
 import {
     CATEGORIES_ONBOARDING_OUTER_CLASS,
     CATEGORIES_ONBOARDING_PANEL_CARD_CLASS,
@@ -49,14 +50,14 @@ export function CategoriesOnboardingLoadingShell() {
                     <Skeleton className="h-9 w-full rounded-md" />
                 </div>
 
-                <div className="w-full shrink-0 border-t border-border/80 bg-muted/25 px-4 py-3 sm:px-5">
+                <CardNote>
                     <div className="flex flex-col gap-2">
                         <Skeleton className="h-10 w-full rounded-md" />
                         <div className="flex justify-center">
                             <Skeleton className="h-3 w-32 rounded-md" />
                         </div>
                     </div>
-                </div>
+                </CardNote>
             </div>
             <p className="mt-4 text-center text-xs text-muted-foreground">
                 Carregando configuração inicial…

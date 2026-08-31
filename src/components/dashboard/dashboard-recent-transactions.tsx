@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import Link from "next/link"
 import { ArrowTopRightOnSquareIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
 import { ReceiptPercentIcon } from "@heroicons/react/24/outline"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import type { Transaction } from "@/lib/supabase"
 import type { WorkspaceMemberDirectoryEntry } from "@/components/dashboard/use-dashboard-data"
@@ -110,14 +110,13 @@ export function DashboardRecentTransactions({
             {transactions.length === 0 ? (
                 <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
                     <CardContent className="flex flex-col gap-0 p-0">
-                        <div
-                            className="flex min-h-10 shrink-0 items-center border-b border-border bg-muted/30 px-4 py-2.5"
+                        <CardToolbar
                             aria-live="polite"
                         >
                             <p className="text-sm font-semibold capitalize leading-snug text-foreground">
                                 {monthTitle}
                             </p>
-                        </div>
+                        </CardToolbar>
                         <div className="flex flex-col items-center justify-center gap-2 px-4 py-10 text-center">
                             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/60">
                                 <ReceiptPercentIcon className="h-6 w-6 text-muted-foreground" />
@@ -126,8 +125,7 @@ export function DashboardRecentTransactions({
                                 {emptyMessage}
                             </p>
                         </div>
-                        <div
-                            className="shrink-0 border-t border-border bg-muted/15 px-4 py-4 dark:bg-muted/25"
+                        <CardNote className="py-4"
                             aria-hidden
                         />
                     </CardContent>
@@ -137,14 +135,13 @@ export function DashboardRecentTransactions({
                     <div className="md:hidden">
                         <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
                             <CardContent className="flex flex-col gap-0 p-0">
-                                <div
-                                    className="flex min-h-10 shrink-0 items-center border-b border-border bg-muted/30 px-4 py-2.5"
+                                <CardToolbar
                                     aria-live="polite"
                                 >
                                     <p className="text-sm font-semibold capitalize leading-snug text-foreground">
                                         {monthTitle}
                                     </p>
-                                </div>
+                                </CardToolbar>
                                 <ul className="divide-y divide-border" role="list">
                                     {transactions.map((transaction) => {
                                 const primary =
@@ -305,8 +302,7 @@ export function DashboardRecentTransactions({
                                 )
                             })}
                         </ul>
-                                <div
-                                    className="shrink-0 border-t border-border bg-muted/15 px-4 py-4 dark:bg-muted/25"
+                                <CardNote className="py-4"
                                     aria-hidden
                                 />
                             </CardContent>
@@ -327,7 +323,6 @@ export function DashboardRecentTransactions({
                                     enableSort={false}
                                     enableActions={false}
                                     showPaginationFooter={false}
-                                    showMobileScrollHint={false}
                                     invoicePaidByCardClose={
                                         invoicePaidByCardClose
                                     }

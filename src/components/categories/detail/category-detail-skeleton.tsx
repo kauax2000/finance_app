@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardNote } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
     Table,
@@ -265,13 +265,13 @@ function EmbeddedTransactionsSkeleton({ rowCount = 8 }: { rowCount?: number }) {
                             </TableBody>
                         </Table>
                     </div>
-                    <div className="flex shrink-0 flex-col gap-2.5 rounded-b-xl border-t border-border bg-muted/40 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4">
+                    <CardNote className="flex-col gap-2.5 rounded-b-xl px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4">
                         <Skeleton className="h-4 w-[min(100%,14rem)] max-w-full" />
                         <div className="flex items-center justify-between gap-3 sm:justify-end">
                             <Skeleton className="h-4 w-28 shrink-0 sm:mr-1" />
                             <Skeleton className="h-9 w-[4.75rem] shrink-0 rounded-lg" />
                         </div>
-                    </div>
+                    </CardNote>
                 </CardContent>
             </Card>
         </section>

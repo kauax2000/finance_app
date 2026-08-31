@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardTitle, CardToolbar } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -187,7 +187,7 @@ export function ExpenseCategoryCard({
                     "group-hover:shadow-md group-active:shadow-md",
                 )}
             >
-                <CardHeader className="border-b border-border/60 bg-muted/25 px-3 py-3">
+                <CardToolbar className="px-3">
                     <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3">
                         <ColorTile color={color} className="col-start-1 row-start-1 self-start">
                             <CategoryIconPreview name={normalizeCategoryIcon(category.icon)} />
@@ -240,7 +240,7 @@ export function ExpenseCategoryCard({
                             </DropdownMenu>
                         </div>
                     </div>
-                </CardHeader>
+                </CardToolbar>
 
                 <CardContent className="flex flex-1 flex-col gap-3 bg-card px-3 pt-3 pb-3">
                     <div className="flex items-start justify-between gap-2">

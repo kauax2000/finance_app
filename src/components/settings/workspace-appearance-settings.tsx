@@ -9,7 +9,7 @@ import { WorkspaceDeleteDialog } from "@/components/settings/workspace-delete-di
 import { WorkspaceLeaveDialog } from "@/components/settings/workspace-leave-dialog"
 import { WorkspaceBrandMark } from "@/components/workspace/workspace-brand-mark"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardNote } from "@/components/ui/card"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -248,12 +248,12 @@ export function WorkspaceAppearanceSettings() {
                                             onLeave={() => setLeaveOpen(true)}
                                         />
                                     </div>
-                                    <div className="flex shrink-0 items-start gap-2 border-t border-border bg-muted/15 px-4 py-3 text-xs leading-relaxed text-muted-foreground dark:bg-muted/25">
+                                    <CardNote>
                                         <InformationCircleIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
                                         <p className="min-w-0 break-words">
                                             Só o dono pode alterar nome, ícone e cor.
                                         </p>
-                                    </div>
+                                    </CardNote>
                                 </>
                             ) : (
                                 <div className="flex min-w-0 items-center justify-between gap-3 px-4 py-3 sm:py-3.5">

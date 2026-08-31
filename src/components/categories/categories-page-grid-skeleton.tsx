@@ -1,7 +1,7 @@
 "use client"
 
 import type { ReactNode } from "react"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { transactionSegmentContainerClassName } from "@/components/transactions/transaction-type-segment"
 import { cn } from "@/lib/utils"
@@ -105,7 +105,7 @@ function ExpenseCategoryCardSkeleton({ seed }: { seed: number }) {
 
     return (
         <CategoryCardShellSkeleton>
-            <CardHeader className="border-b border-border/60 bg-muted/25 !py-3">
+            <CardToolbar className="px-3">
                 <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3">
                     <div className="col-start-1 row-start-1 self-start">
                         <CategoryIconSkeleton />
@@ -121,7 +121,7 @@ function ExpenseCategoryCardSkeleton({ seed }: { seed: number }) {
                         <Skeleton className="size-8 shrink-0 rounded-md" />
                     </div>
                 </div>
-            </CardHeader>
+            </CardToolbar>
             <CardContent className="flex flex-1 flex-col gap-3 bg-card pb-3 pt-3">
                 <div className="flex items-start justify-between gap-2">
                     <Skeleton className={cn("h-8 max-w-full", valueWidth)} />
@@ -148,7 +148,7 @@ function IncomeCategoryCardSkeleton({ seed }: { seed: number }) {
 
     return (
         <CategoryCardShellSkeleton>
-            <CardHeader className="border-b border-border/60 bg-muted/25 !py-3">
+            <CardToolbar className="px-3">
                 <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3">
                     <CategoryIconSkeleton />
                     <div className="flex min-w-0 items-center pr-1">
@@ -156,7 +156,7 @@ function IncomeCategoryCardSkeleton({ seed }: { seed: number }) {
                     </div>
                     <Skeleton className="size-8 shrink-0 rounded-md" />
                 </div>
-            </CardHeader>
+            </CardToolbar>
             <CardContent className="flex flex-1 flex-col gap-3 bg-card pb-3 pt-3">
                 <div className="mt-auto flex justify-center">
                     <Skeleton className="h-3 w-24 rounded-md" />

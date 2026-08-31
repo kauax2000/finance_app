@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardNote } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
     Table,
@@ -141,9 +141,6 @@ function TableSkeleton({ rowCount }: { rowCount: number }) {
         <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
             <CardContent className="relative flex flex-col p-0">
                 <div className="min-w-0 overflow-hidden rounded-t-xl">
-                    <div className="border-b border-border/60 bg-muted/30 px-3 py-2 text-2xs font-medium uppercase tracking-wide text-muted-foreground sm:hidden">
-                        Arraste para ver mais →
-                    </div>
                     <Table className="min-w-[640px] text-sm md:min-w-[700px]">
                         <TableHeader className="sticky top-0 z-10 bg-muted/50 [&_tr]:border-b-0">
                             <TableRow className="border-0 hover:bg-transparent [&>th]:border-b [&>th]:border-border">
@@ -178,7 +175,7 @@ function TableSkeleton({ rowCount }: { rowCount: number }) {
                         </TableBody>
                     </Table>
                 </div>
-                <div className="flex shrink-0 flex-col gap-2.5 rounded-b-xl border-t border-border bg-muted/40 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4">
+                <CardNote className="flex-col gap-2.5 rounded-b-xl px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4">
                     <Skeleton className="h-4 w-[min(100%,14rem)] max-w-full" />
                     <div className="flex items-center justify-between gap-3 sm:justify-end">
                         <Skeleton className="h-4 w-28 shrink-0 sm:mr-1" />
@@ -187,7 +184,7 @@ function TableSkeleton({ rowCount }: { rowCount: number }) {
                             <Skeleton className="size-8 shrink-0 rounded-md" />
                         </div>
                     </div>
-                </div>
+                </CardNote>
             </CardContent>
         </Card>
     )

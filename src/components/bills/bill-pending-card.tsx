@@ -8,8 +8,8 @@ import {
     Card,
     CardContent,
     CardDescription,
-    CardHeader,
     CardTitle,
+    CardToolbar,
 } from "@/components/ui/card"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import {
@@ -125,7 +125,7 @@ export function BillPendingCard({
                 onClick={onOpenDetail}
                 aria-label={`Abrir ${row.title}`}
             >
-                <CardHeader className="border-b border-border/60 bg-muted/25 !py-3">
+                <CardToolbar className="px-3">
                     <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] grid-rows-[auto_auto] items-start gap-x-3 gap-y-1">
                         {row.kind === "virtual_cc" ? (
                             /* Fatura de cartão não tem cor escolhida por
@@ -203,7 +203,7 @@ export function BillPendingCard({
                             )}
                         </CardDescription>
                     </div>
-                </CardHeader>
+                </CardToolbar>
 
                 <CardContent className="space-y-3 px-4 pb-4 pt-3">
                     <div className="rounded-lg border border-border/80 bg-muted/15 px-3 py-2.5">

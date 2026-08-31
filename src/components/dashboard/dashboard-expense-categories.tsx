@@ -11,7 +11,7 @@ import {
     Cell,
     Tooltip,
 } from "recharts"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ROUTES } from "@/config/navigation"
 import { labelYearMonthPt } from "@/lib/budget-month"
@@ -253,14 +253,13 @@ export function DashboardExpenseCategories({
 
             <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
                 <CardContent className="relative flex flex-col gap-0 p-0">
-                    <div
-                        className="flex min-h-10 shrink-0 items-center border-b border-border bg-muted/30 px-4 py-2.5"
+                    <CardToolbar
                         aria-live="polite"
                     >
                         <p className="text-sm font-semibold capitalize leading-snug text-foreground">
                             {monthTitle}
                         </p>
-                    </div>
+                    </CardToolbar>
                     <div className="space-y-4 p-4">
                     {data.length > 0 ? (
                         <>

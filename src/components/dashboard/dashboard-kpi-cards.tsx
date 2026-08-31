@@ -6,7 +6,7 @@ import type { HeroIcon } from "@/types/navigation"
 import type { ReactNode } from "react"
 
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { cn } from "@/lib/utils"
 
@@ -95,7 +95,7 @@ function KpiCard({
 }) {
     return (
         <Card className="gap-0 overflow-hidden py-0 shadow-none">
-            <div className="flex min-h-11 items-center justify-between gap-2 border-b border-border bg-muted/40 px-4 py-2.5">
+            <CardToolbar>
                 <div className="flex min-w-0 flex-1 items-center gap-2">
                     <Icon
                         className={cn(
@@ -111,7 +111,7 @@ function KpiCard({
                 {badge ? (
                     <div className="flex min-w-0 shrink-0 justify-end">{badge}</div>
                 ) : null}
-            </div>
+            </CardToolbar>
             <CardContent className="pt-4 pb-4 md:pt-5 md:pb-5">
                 <div className="leading-tight">{value}</div>
             </CardContent>

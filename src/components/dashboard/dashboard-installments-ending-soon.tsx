@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardToolbar } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Button } from "@/components/ui/button"
@@ -184,10 +184,7 @@ export function DashboardInstallmentsEndingSoon({
             </div>
 
             <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
-                    <div
-                        className="flex min-h-10 shrink-0 items-center border-b border-border bg-muted/30 px-4 py-2.5"
-                        aria-hidden
-                    />
+                    <CardToolbar aria-hidden />
                     <CardContent className="p-0">
                         {endingSoon.length === 0 ? (
                             <EmptyState className="mx-4 my-6 border-0 bg-transparent py-8">
@@ -233,10 +230,7 @@ export function DashboardInstallmentsEndingSoon({
                             </ul>
                         )}
                     </CardContent>
-                    <div
-                        className="flex min-h-10 shrink-0 items-center border-t border-border bg-muted/30 px-4 py-2.5"
-                        aria-hidden
-                    />
+                    <CardFooter aria-hidden />
                 </Card>
         </div>
     )

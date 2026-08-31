@@ -4,7 +4,7 @@ import { InformationCircleIcon, WrenchIcon } from "@heroicons/react/16/solid"
 import { SparklesIcon } from "@heroicons/react/20/solid"
 import { ReceiptPercentIcon, SparklesIcon as SparklesOutlineIcon } from "@heroicons/react/24/outline"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
 import { tagChipInfo, tagChipWarning } from "@/lib/tag-chip-classes"
 import { cn } from "@/lib/utils"
 
@@ -50,13 +50,13 @@ export default function PlansPage() {
                                 </div>
                             </div>
                         </div>
-                        <div className="flex shrink-0 items-start gap-2 border-t border-border bg-muted/15 px-4 py-3 text-xs leading-relaxed text-muted-foreground dark:bg-muted/25">
+                        <CardNote>
                             <InformationCircleIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
                             <p className="min-w-0 break-words">
                                 Você está usando o plano padrão. Sem cobranças ou assinaturas
                                 ativas.
                             </p>
-                        </div>
+                        </CardNote>
                     </CardContent>
                 </Card>
             </div>
@@ -71,7 +71,7 @@ export default function PlansPage() {
                 </div>
                 <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
                     <CardContent className="flex flex-col p-0">
-                        <div className="flex min-h-10 shrink-0 items-center justify-between gap-3 border-b border-border bg-muted/30 px-4 py-2.5">
+                        <CardToolbar>
                             <p className="min-w-0 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                                 Status
                             </p>
@@ -89,7 +89,7 @@ export default function PlansPage() {
                                     0 planos
                                 </p>
                             </div>
-                        </div>
+                        </CardToolbar>
                         <div
                             className="flex flex-col gap-6 px-4 py-8 md:py-10"
                             role="status"
@@ -136,13 +136,13 @@ export default function PlansPage() {
                                 </ul>
                             </div>
                         </div>
-                        <div className="flex shrink-0 items-start gap-2 border-t border-border bg-muted/15 px-4 py-3 text-xs leading-relaxed text-muted-foreground dark:bg-muted/25">
+                        <CardNote>
                             <InformationCircleIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
                             <p className="min-w-0 break-words">
                                 Quando os planos estiverem disponíveis, você verá tudo aqui e também
                                 poderá receber um aviso na central de notificações.
                             </p>
-                        </div>
+                        </CardNote>
                     </CardContent>
                 </Card>
             </div>
@@ -157,11 +157,11 @@ export default function PlansPage() {
                 </div>
                 <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
                     <CardContent className="flex flex-col p-0">
-                        <div className="flex min-h-10 shrink-0 items-center justify-end border-b border-border bg-muted/30 px-4 py-2.5">
+                        <CardToolbar className="justify-end">
                             <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
                                 0 pagamentos
                             </p>
-                        </div>
+                        </CardToolbar>
                         <div
                             className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
                             role="status"
@@ -181,8 +181,7 @@ export default function PlansPage() {
                                 aparecer neste histórico.
                             </p>
                         </div>
-                        <div
-                            className="shrink-0 border-t border-border bg-muted/15 py-3 dark:bg-muted/25"
+                        <CardNote
                             aria-hidden
                         />
                     </CardContent>

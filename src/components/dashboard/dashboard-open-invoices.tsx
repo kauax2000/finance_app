@@ -5,7 +5,7 @@ import Link from "next/link"
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid"
 import { CreditCardIcon as CreditCardGlyph } from "@heroicons/react/24/outline"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { CreditCardFaceTilt } from "@/components/credit-cards/credit-card-face-tilt"
@@ -219,14 +219,13 @@ export function DashboardOpenInvoices({
 
             <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
                 <CardContent className="p-0">
-                    <div
-                        className="flex min-h-10 shrink-0 items-center border-b border-border bg-muted/30 px-4 py-2.5"
+                    <CardToolbar
                         aria-live="polite"
                     >
                         <p className="text-sm font-semibold capitalize leading-snug text-foreground">
                             {monthTitle}
                         </p>
-                    </div>
+                    </CardToolbar>
                     {active.length === 0 ? (
                         <div className="flex flex-col items-center justify-center gap-4 px-4 py-10 text-center">
                             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/60">
@@ -255,7 +254,7 @@ export function DashboardOpenInvoices({
                         </div>
                     ) : (
                         <>
-                            <div className="shrink-0 border-b border-border bg-muted/10 px-3 py-2.5 dark:bg-muted/20">
+                            <CardToolbar>
                                 <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-1.5">
                                     <div
                                         className="min-w-0 space-y-2 rounded-lg border border-border/60 bg-background/60 p-3 max-sm:shadow-xs sm:space-y-1.5 sm:rounded-none sm:border-transparent sm:bg-transparent sm:p-0 sm:shadow-none"
@@ -293,7 +292,7 @@ export function DashboardOpenInvoices({
                                         </p>
                                     </div>
                                 </dl>
-                            </div>
+                            </CardToolbar>
 
                             <ul className="m-0 p-0">
                                 {active.map((card) => (

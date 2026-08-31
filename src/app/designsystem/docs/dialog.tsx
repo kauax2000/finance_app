@@ -249,9 +249,9 @@ export default function DialogDoc() {
         rows={[
           {
             prop: "DialogHeader",
-            type: "div · hideSeparator",
+            type: "div",
             description:
-              "Título e descrição, com um fio embaixo. Já vem shrink-0 e, em layout=\"fixed\", com o recuo da tira — as duas coisas que as 16 chamadas escreviam toda vez.",
+              "Título e descrição, sem fio embaixo: o que separa as faixas é o respiro, e o conteúdo dissolvendo onde há rolagem. Já vem shrink-0 e, em layout=\"fixed\", com o recuo da tira — as duas coisas que as 16 chamadas escreviam toda vez.",
           },
           {
             prop: "DialogHeaderRow",
@@ -269,7 +269,7 @@ export default function DialogDoc() {
             prop: "DialogFooter",
             type: "div · showCloseButton",
             description:
-              "A tira de ações encostada na borda de baixo, nos dois layouts. Sem tingido: o fio e o peso dos botões já dizem que ali começa outra coisa.",
+              "A tira de ações encostada na borda de baixo, nos dois layouts. Sem tingido e sem fio: o recuo e o peso dos botões já dizem que ali começa outra coisa.",
           },
         ]}
       />
