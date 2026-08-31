@@ -6,6 +6,8 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Menubar as MenubarPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
+import { useScrollFade } from "@/hooks/use-scroll-fade"
 import {
   menuIndicatorItemClassName,
   menuIndicatorSlotClassName,
@@ -16,6 +18,7 @@ import {
   menuSubSurfaceClassName,
   menuSubTriggerClassName,
   menuSurfaceClassName,
+  menuViewportClassName,
 } from "@/lib/menu-classes"
 
 /**
@@ -52,12 +55,17 @@ const MENUBAR_POPPER =
  *
  * ## O tamanho é do gatilho, e não da barra
  *
- * Aqui está a única divergência deliberada em relação ao `TabsList`, que ancora
- * a escada no contêiner. As abas dele esticam (`flex-1` com
- * `h-[calc(100%-1px)]`), então a altura da lista **determina** a do gatilho. Os
- * gatilhos de uma barra de menus são do tamanho do próprio rótulo: não esticam,
- * e a altura da barra é consequência deles. Ancorar no contêiner foi
- * exatamente o que produziu os 24px.
+ * Ancorar no contêiner foi exatamente o que produziu os 24px: os gatilhos de
+ * uma barra de menus são do tamanho do próprio rótulo, e a altura da barra é
+ * consequência deles.
+ *
+ * Isto já foi descrito aqui como "a única divergência deliberada em relação ao
+ * `TabsList`, porque as abas dele esticam" — e a premissa era falsa duas vezes.
+ * `flex-1` dentro de um `w-fit` distribui sobra **zero**, então as abas nunca
+ * esticaram; e o gatilho delas media **27px**, não os 28 que a conta do
+ * `TabsList` prometia, porque ela nunca subtraía o `-1px` do
+ * `h-[calc(100%-1px)]`. O `Tabs` foi corrigido e hoje ancora no gatilho, como
+ * esta barra. Não há mais divergência.
  *
  * Então `size` mede o gatilho — `sm` 28, `md` 32, `lg` 36 —, e a barra cresce em
  * volta. Todos os três estão no piso da escada ou acima.
@@ -83,7 +91,12 @@ const menubarVariants = cva("flex w-fit items-center gap-0.5 rounded-lg p-0.5", 
       outline: "border border-border bg-background",
       /** Dentro de um cabeçalho que já tem a própria moldura. */
       ghost: "border border-transparent bg-transparent",
-      /** Bandeja preenchida, como a do `TabsList`. */
+      /**
+       * Bandeja preenchida, da mesma **tinta** que a do `TabsList` — e não da
+       * mesma medida. Aqui o recuo é `p-0.5` mais borda; lá é `p-1`, porque é
+       * o que mantém um anel de 3px dentro de uma trilha que rola. Uma barra de
+       * menus não rola.
+       */
       solid: "border border-transparent bg-muted",
     },
     size: { sm: "", md: "", lg: "" },
@@ -194,6 +207,7 @@ function MenubarTrigger({
 
 function MenubarContent({
   className,
+  children,
   align = "start",
   alignOffset = -4,
   sideOffset = 8,
@@ -208,7 +222,15 @@ function MenubarContent({
         sideOffset={sideOffset}
         className={cn(menuSurfaceClassName, MENUBAR_POPPER, className)}
         {...props}
-      />
+      >
+        <div
+          ref={useScrollFade()}
+          data-slot="menubar-viewport"
+          className={cn(menuViewportClassName, scrollFadeViewportClassName)}
+        >
+          {children}
+        </div>
+      </MenubarPrimitive.Content>
     </MenubarPortal>
   )
 }
@@ -358,6 +380,7 @@ function MenubarSubTrigger({
 
 function MenubarSubContent({
   className,
+  children,
   ...props
 }: React.ComponentProps<typeof MenubarPrimitive.SubContent>) {
   return (
@@ -365,7 +388,15 @@ function MenubarSubContent({
       data-slot="menubar-sub-content"
       className={cn(menuSubSurfaceClassName, MENUBAR_POPPER, className)}
       {...props}
-    />
+    >
+      <div
+        ref={useScrollFade()}
+        data-slot="menubar-sub-viewport"
+        className={cn(menuViewportClassName, scrollFadeViewportClassName)}
+      >
+        {children}
+      </div>
+    </MenubarPrimitive.SubContent>
   )
 }
 

@@ -4,6 +4,13 @@ import * as React from "react"
 import { Select as SelectPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import {
+  fieldDisabledClassName,
+  fieldFocusRingClassName,
+  fieldInvalidClassName,
+  fieldSurfaceClassName,
+  fieldTriggerHoverClassName,
+} from "@/lib/field-classes"
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/16/solid"
 function Select({
   ...props
@@ -43,7 +50,18 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "flex w-fit items-center justify-between gap-1.5 rounded-lg border border-input bg-input-fill/30 py-1 pr-2.5 pl-3 text-base whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/70 hover:bg-input-fill/50 active:bg-input-fill/50 disabled:cursor-not-allowed disabled:bg-input-fill/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-placeholder:text-muted-foreground data-[size=md]:h-8 data-[size=lg]:h-9 data-[size=xl]:h-10 data-[size=sm]:h-7 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 md:text-sm dark:disabled:bg-input-fill/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        // A superfície de campo mora em `lib/field-classes` — a mesma que o
+        // `Input` e o `ComboboxTrigger` vestem. Antes esta linha e a do `Input`
+        // eram duas cópias que ninguém garantia iguais.
+        fieldSurfaceClassName,
+        fieldFocusRingClassName,
+        fieldInvalidClassName,
+        fieldDisabledClassName,
+        fieldTriggerHoverClassName,
+        "flex w-fit items-center justify-between gap-1.5 py-1 pr-2.5 pl-3 whitespace-nowrap select-none data-placeholder:text-muted-foreground",
+        "data-[size=sm]:h-7 data-[size=md]:h-8 data-[size=lg]:h-9 data-[size=xl]:h-10",
+        "*:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5",
+        "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}

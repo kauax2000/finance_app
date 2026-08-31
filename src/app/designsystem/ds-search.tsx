@@ -4,9 +4,9 @@ import { MagnifyingGlassIcon } from "@heroicons/react/16/solid";
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { commandFilter } from "@/lib/command-filter";
 import { Button } from "@/components/ui/button";
 import {
-  Command,
   CommandDialog,
   CommandEmpty,
   CommandEmptyDescription,
@@ -17,7 +17,6 @@ import {
   CommandInput,
   CommandItem,
   CommandItemContent,
-  CommandItemDescription,
   CommandItemTitle,
   CommandList,
 } from "@/components/ui/command";
@@ -25,14 +24,6 @@ import { Kbd } from "@/components/ui/kbd";
 import { KbdShortcut } from "@/components/ui/kbd-shortcut";
 import { CATEGORY_ORDER, REGISTRY } from "./registry";
 import { SEARCH_INDEX } from "./search-index";
-
-/**
- * Acentos fora dos dois lados da comparação: quem digita "graficos" acha
- * "Gráficos", e quem digita "Gráficos" também.
- */
-function normalize(value: string): string {
-  return value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-}
 
 /**
  * A busca do catálogo: um gatilho no meio do cabeçalho e a paleta de comandos.
@@ -115,26 +106,11 @@ export function DsSearch() {
         onOpenChange={setOpen}
         title="Buscar no design system"
         description={`Busque entre as ${REGISTRY.length} páginas pelo nome, pela descrição ou pelo texto de cada uma.`}
-        // A busca do catálogo é por substring sem acento, não a difusa do
-        // cmdk: "cor" tem que achar "Cores" e não "Carousel" e "Combobox".
         commandProps={{
-          // A busca é por substring sem acento, não a difusa do cmdk: "cor"
-          // tem que achar "Cores" e não "Carousel" e "Combobox".
-          //
-          // E ela **gradua**. Antes devolvia 1 ou 0, então tudo empatava e
-          // vencia a ordem do registro: digitar "badge" trazia "Cores" na
-          // frente do `Badge`, porque a palavra aparece no texto daquela
-          // página. Um placeholder que diz "buscar componente" precisa que o
-          // componente venha primeiro — o nome pesa mais que o corpo.
-          filter: (value, search, keywords) => {
-            const q = normalize(search);
-            if (!q) return 1;
-            const nome = normalize(value);
-            if (nome.startsWith(q)) return 1;
-            if (nome.includes(q)) return 0.8;
-            const corpo = normalize((keywords ?? []).join(" "));
-            return corpo.includes(q) ? 0.4 : 0;
-          },
+          // A busca por substring sem acento, graduada, mora em
+          // `lib/command-filter` — a mesma que o `Combobox` usa. Era escrita
+          // aqui, inline, e o segundo consumidor não tinha como achá-la.
+          filter: commandFilter,
         }}
       >
         <CommandInput
@@ -178,11 +154,14 @@ export function DsSearch() {
                   keywords={[SEARCH_INDEX[item.slug] ?? ""]}
                   onSelect={() => go(item.slug)}
                 >
+                  {/* Só o nome. A descrição continua no `value` acima, então
+                      ela ainda **encontra** a página — ela só deixou de ser
+                      desenhada. Numa lista de 80 páginas a segunda linha dobra
+                      a altura de cada resultado e corta o número de opções
+                      visíveis pela metade, e ela é justamente o texto que quem
+                      busca por nome não lê. */}
                   <CommandItemContent>
                     <CommandItemTitle>{item.name}</CommandItemTitle>
-                    <CommandItemDescription>
-                      {item.description}
-                    </CommandItemDescription>
                   </CommandItemContent>
                 </CommandItem>
               ))}

@@ -264,6 +264,16 @@ tema.
 - **Money**: [`MoneyDisplay`](src/components/ui/money-display.tsx) and [`MoneyInput`](src/components/ui/money-input.tsx); formatting helpers in [`src/lib/formatters.ts`](src/lib/formatters.ts) (`currencyBRL`, `signedCurrencyBRL`, `percentBR`).
 - **Dates**: [`src/lib/transaction-date.ts`](src/lib/transaction-date.ts) — e.g. `formatDatePtBr`, `formatTransactionDmyPtBr`, `formatDateLongPtBr`, `formatRelativeDayPtBr`.
 - **Status chips / filters**: [`src/lib/tag-chip-classes.ts`](src/lib/tag-chip-classes.ts) — token-based classes only.
+- **Régua compartilhada em `lib/`**: além de
+  [`tag-chip-classes`](src/lib/tag-chip-classes.ts),
+  [`menu-classes`](src/lib/menu-classes.ts) e
+  [`scroll-fade-classes`](src/lib/scroll-fade-classes.ts), agora
+  [`field-classes`](src/lib/field-classes.ts) — a superfície de campo que
+  `Input`, `SelectTrigger` e `ComboboxTrigger` vestem — e
+  [`command-filter`](src/lib/command-filter.ts) — a busca por substring sem
+  acento, graduada, que a paleta do catálogo e o `Combobox` dividem. **Nada de
+  `cva` nesses arquivos**: a regra A2 do auditor o reprova fora de
+  `components/ui/`.
 - **Cor escolhida pela pessoa**: [`ColorTile`](src/components/ui/color-tile.tsx) para o ladrilho que carrega `categories.color`, `bills.color` ou a marca de um workspace. Se a cor vem do tema e não do banco, é o componente errado — use `bg-muted` ou um `Badge`. É o único lugar do app onde `white` e `black` crus são a resposta certa: o fundo é cor de runtime, e o que se apoia sobre ele — a tinta do ícone e o fio da borda — é material, não tema. Por isso ele está na lista de exceção do auditor — e nenhuma tela está. **O ladrilho é chapado**: o verniz que ele já teve (degradê branco, borda clara, sombra) saiu porque o resto do sistema preenche chapado. E a tinta não é branca por decreto — ela vira escura quando a cor gravada é clara demais para o branco alcançar 3:1.
 - **Alerts / tabs / forms**: [`Alert`](src/components/ui/alert.tsx), [`Tabs`](src/components/ui/tabs.tsx), [`Textarea`](src/components/ui/textarea.tsx), [`ScrollArea`](src/components/ui/scroll-area.tsx), [`Toggle` / `ToggleGroup`](src/components/ui/toggle.tsx), [`Slider`](src/components/ui/slider.tsx), [`RadioGroup`](src/components/ui/radio-group.tsx), [`Pagination`](src/components/ui/pagination.tsx), [`Collapsible`](src/components/ui/collapsible.tsx), [`Breadcrumb`](src/components/ui/breadcrumb.tsx), [`ChartContainer` + chart helpers](src/components/ui/chart.tsx) for Recharts.
 - **Campos**: [`Field`](src/components/ui/field.tsx) para rótulo + descrição + erro já ligados; [`InputGroup`](src/components/ui/input-group.tsx) para campo com ícone ou botão acoplado; [`Combobox`](src/components/ui/combobox.tsx) quando a lista passa de umas dez opções.
@@ -277,6 +287,15 @@ tema.
   busca; `Select` quando é curta, `Combobox` quando cabe numa palavra.
 - **Listas e detalhe**: [`Item`](src/components/ui/item.tsx) para linha de lista (e para o que a `Table` vira no telefone), [`DescriptionList`](src/components/ui/description-list.tsx) para pares termo/valor, [`Timeline`](src/components/ui/timeline.tsx) para histórico, [`Toolbar`](src/components/ui/toolbar.tsx) para a linha de filtros e ações.
 - **Carregando**: [`Skeleton`](src/components/ui/skeleton.tsx) para uma tela esperando dado; [`Spinner`](src/components/ui/spinner.tsx) só para ação curta sem fim conhecido.
+- **Borda de região rolável**: a dissolução é uma **primitiva do sistema**, não
+  um efeito da paleta de comandos. Ela mora em três camadas — as `@utility`
+  `scroll-fade-y` / `scroll-fade-x` em [`globals.css`](src/app/globals.css), a
+  gramática em [`lib/scroll-fade-classes`](src/lib/scroll-fade-classes.ts) e o
+  mecanismo em [`hooks/use-scroll-fade`](src/hooks/use-scroll-fade.ts). O
+  [`ScrollFade`](src/components/ui/scroll-fade.tsx) **consome** a primitiva; ele
+  não é ela, e serve o caso em que ninguém é dono da casca. Quem já tem casca
+  própria compõe as classes direto, porque um `<div>` interposto quebraria o
+  contexto do Radix ou do cmdk.
 - **Busca**: [`Command`](src/components/ui/command.tsx) — a paleta de comandos. O catálogo `/designsystem` é o primeiro consumidor ([`ds-search.tsx`](src/app/designsystem/ds-search.tsx)): gatilho no meio do cabeçalho com o `Kbd` do atalho, `⌘K` e `/` para abrir, e `filter` próprio, porque o padrão do cmdk é difuso e erra em português. O **app** ainda não tem busca global, e é a lacuna que ele preenche.
 
 ### Component rules
@@ -310,9 +329,19 @@ tema.
   *o padrão* e apontava para 36, que deixou de ser o padrão quando `md` assumiu.
   Foram removidos dos tipos, então o compilador acusa quem os escrever — os
   substitutos são `lg` e `icon-lg`.
-- **Fora da escada, de propósito**: `TabsList` é contêiner com `p-1`, e a 32 o
-  gatilho interno cairia a 24, abaixo do piso de um controle de texto; fica em
-  36. `Toggle`, o campo do `Command` e a célula da `Table` já valiam 32 e não se
+- **O `Tabs` entrou na escada, e a exceção que ele tinha era uma conta
+  errada.** O texto anterior dizia que `TabsList` é contêiner com `p-1` e que
+  "a 32 o gatilho interno cairia a 24", logo ficava em 36. A conta faz 36 − 8 =
+  28 e para: ela nunca subtraía o `-1px` do `h-[calc(100%-1px)]` que o próprio
+  componente escrevia. **O gatilho media 27** — abaixo do piso de 28 —, e a
+  altura declarada protegia um piso que ela já violava. A raiz é ancorar a
+  escada no **contêiner**, o mesmo defeito que o `Menubar` teve e corrigiu.
+  Hoje `size` mede o gatilho (`sm` 28, `md` 32, `lg` 36) e a bandeja deriva
+  (`gatilho + 8`); a bandeja padrão passou de 36 para 40, porque `md` é o padrão
+  do sistema, e `size="sm"` reproduz os 36 de antes com o gatilho correto.
+  [`tabs-size-ladder.test.ts`](src/components/ui/tabs-size-ladder.test.ts) tranca
+  isso, e a asserção que vale é a de que **a lista não declara altura nenhuma**.
+  `Toggle`, o campo do `Command` e a célula da `Table` já valiam 32 e não se
   mexeram.
 - **`Card` tem dois eixos, e eles são independentes**: `variant` decide a
   **superfície** (`outline` chapado — o padrão —, `elevated` levantado, `muted`
@@ -382,10 +411,11 @@ tema.
   desviam do território dele por conta própria — e só quando há um × para
   desviar. Sem isso, um título longo ou um `endAdornment` passa por baixo do
   botão em 16px, medidos.
-- **O rodapé e o fio do cabeçalho sangram por variável** (`--dialog-bleed`), não
-  por número: em `auto` ele desconta o recuo do casco, em `fixed` não há o que
-  descontar. O `-mx-4 -mb-4` anterior pressupunha um `p-4` que a forma dominante
-  do app não usa, e era por isso que sete telas o anulavam com `mx-0`.
+- **O rodapé sangra por variável** (`--dialog-bleed`), não por número: em `auto`
+  ela desconta o recuo do casco, em `fixed` não há o que descontar. O `-mx-4
+  -mb-4` anterior pressupunha um `p-4` que a forma dominante do app não usa, e
+  era por isso que sete telas o anulavam com `mx-0`. (O fio do cabeçalho também
+  sangrava por ela; ele deixou de existir — ver a dissolução, mais abaixo.)
 - **Duas coisas se chamavam `Sheet`, e elas respondem diferente ao telefone.**
   **Conteúdo** — formulário, detalhe, filtros — é `Sheet`, e vira gaveta.
   **Navegação presa a uma borda** é [`EdgePanel`](src/components/ui/edge-panel.tsx),
@@ -512,6 +542,22 @@ tema.
   nos dois indicadores, o que apaga a diferença entre "escolha uma" e "marque
   quantas quiser". O ponto segue a decisão já tomada no `RadioGroup`: um
   círculo não precisa ser SVG, e o Heroicons não traz círculo puro.
+- **Variante empilhada é seletor de descendente.** `group-hover/x:group-data-[y]/x:`
+  compila para uma **cadeia**, e quando as duas apontam para o mesmo elemento o
+  seletor não casa com nada. Quando um valor depende de dois estados ao mesmo
+  tempo — no `AppThemeToggle`, de que lado está o polegar **e** se há cursor —,
+  a saída é inverter quem carrega o quê: **o estado mora em variável na raiz, e
+  o hover só troca qual variável o filho lê**. Cada classe fica com um variante
+  só. (`[--theme-blob-rest:0%] [--theme-blob-dest:100%]` mais
+  `data-[visual=light]:` invertendo as duas, e no filho
+  `translate-x-(--theme-blob-rest)` contra
+  `group-hover/theme:translate-x-(--theme-blob-dest)`.)
+- **`hover:` e `dark:` empatam em especificidade, e o `dark:` é emitido depois.**
+  `&:hover` e `&:is(.dark *)` são ambos 0,2,0, então no tema escuro um
+  `dark:bg-*` **anula** o `hover:bg-*` — silenciosamente, e só num tema. Medido no
+  `AppThemeToggle`, onde o hover estava morto no escuro havia tempo. Quem pinta
+  fundo diferente no escuro precisa do par `dark:hover:`, como o `Button` já faz
+  com `dark:hover:bg-muted/50`.
 - **Classe montada em tempo de execução não existe.** O Tailwind varre o código
   como **texto**: `` `max-h-(--radix-${prefix}-content-...)` `` nunca chega ao
   CSS, porque a string não aparece em fonte nenhuma. Medido: a variável do Radix
@@ -528,7 +574,7 @@ tema.
   sim cabeçalho de conta e blocos. A casca cede o recuo, como o `Card` faz em
   `padding="none"`.
 - **O painel tem faixas, e quem chama não as desenha.** `DropdownMenuHeader`
-  sangra até a borda com o próprio fio; `DropdownMenuSection` devolve o recuo
+  sangra até a borda; `DropdownMenuSection` devolve o recuo
   onde há comandos. A seção não é enfeite — o `-mx-1` do
   `DropdownMenuSeparator` sangra exatamente aquele `p-1`. Sem ela o painel saía
   com **dois traços horizontais de larguras diferentes** (224px o do cabeçalho,
@@ -537,6 +583,21 @@ tema.
   compensar com `[&_[data-slot=…-separator]]:mx-0 my-0` e piorou: matou também
   o respiro vertical do fio. Compensar geometria por seletor é sintoma de que
   falta uma peça.
+- **O fio entre a identidade e os comandos é do slot, não da faixa.** A faixa de
+  identidade do painel **não rotula** os comandos abaixo dela — ela é um bloco
+  de outra natureza empilhado sobre uma lista, e a fronteira entre os dois é a
+  mesma que o painel já marca entre grupos com `DropdownMenuSeparator`. Por
+  isso ela mantém o fio, no mesmo peso (`border-border`): é o traço que divide
+  **itens**, não superfícies — a categoria que nunca o perdeu. A dissolução do
+  viewport não disputa com ele, porque diz outra coisa ("há mais conteúdo
+  acima"); e o painel do `UserMenu` **não rola**, então sem o fio a identidade
+  ficava sem fronteira nenhuma. Medido: fio, separador e painel todos a 224px,
+  na mesma cor.
+  **Ele mora no slot `header`, e não em `DropdownMenuHeader`**, porque o
+  consumidor real do padrão não usa aquela peça — o `UserMenu` passa um
+  `DropdownMenuLabel` com um `AccountMenuUserSummary` dentro. Regra escrita na
+  faixa alcançaria o catálogo e deixaria o app de fora, que é exatamente como o
+  `border-t` do `DialogFooter` já enganou este projeto uma vez.
 - **Os três menus ganharam teto horizontal.** `max-w-(--radix-*-content-available-width)`
   entrou junto do teto vertical, que já existia. Sem ele um menu largo perto da
   borda transbordava na horizontal — o Radix já publicava a variável e ninguém
@@ -558,16 +619,93 @@ tema.
   cartão cadastrado" é ausência de dado.
 - **O `Menubar` tem `variant` e `size`, e o `size` mede o gatilho.** `variant`
   é a superfície da fileira (`outline` se sustenta sozinha, `ghost` entra num
-  cabeçalho que já tem moldura, `solid` é bandeja como a do `TabsList`) e desce
+  cabeçalho que já tem moldura, `solid` é bandeja da mesma **tinta** que a do
+  `TabsList`, e não da mesma medida — `p-0.5` mais borda contra `p-1`, porque o
+  `p-1` do `Tabs` é o que mantém um anel de 3px dentro de uma trilha que rola, e
+  uma barra de menus nunca rola) e desce
   por contexto até o gatilho, porque o realce depende de sobre o que ele
   acende — na bandeja ele **sobe** para `bg-background` em vez de tingir, já que
   `--accent` e `--muted` são a mesma cor no tema escuro.
-  **`size` mede o gatilho (28 | 32 | 36), e não a barra**, ao contrário do
-  `TabsList`: as abas dele esticam, então a lista determina o gatilho; os
-  gatilhos de uma barra de menus são do tamanho do rótulo, e a barra cresce em
-  volta. Ancorar no contêiner foi o que produziu o defeito medido — barra `h-8`
-  com 3px de recuo e uma borda deixava **24px** para o gatilho, o degrau `xs`,
-  que é para dentro de outro controle.
+  **`size` mede o gatilho (28 | 32 | 36), e não a barra.** Ancorar no contêiner
+  foi o que produziu o defeito medido — barra `h-8` com 3px de recuo e uma borda
+  deixava **24px** para o gatilho, o degrau `xs`, que é para dentro de outro
+  controle. O `TabsList` era citado aqui como a exceção legítima, "porque as
+  abas dele esticam" — e a premissa era falsa duas vezes: `flex-1` dentro de um
+  `w-fit` distribui sobra **zero**, então as abas nunca esticaram, e o `Tabs`
+  hoje mede o gatilho como esta barra. Não há mais exceção: os dois ancoram no
+  gatilho.
+- **O `Tabs` tem três eixos, e a moldura não é a fileira.** `variant` é a
+  superfície (`solid` bandeja — o padrão —, `underline` um fio sob a fileira com
+  o marcador pousando nele, `ghost` sem nada); `size` mede o **gatilho**;
+  `stretch` divide a linha em partes iguais (ligado só em `solid`, porque uma
+  bandeja lê como controle segmentado e uma fileira de abas de página não); e
+  `scrollable` faz a fileira rolar dissolvendo nas pontas.
+  **Quem pinta é uma moldura `<div>` por fora da `Tabs.List`, e a lista não
+  desenha nada** — a dissolução recorta o alfa do elemento inteiro, então uma
+  bandeja mascarada sairia com os quatro cantos apagados e os lados opacos. E a
+  moldura fica **fora**: um nó entre um `role="tablist"` e as suas `role="tab"`
+  mexe na posse ARIA. O `p-1` mora na **lista**, não na moldura: `overflow-x`
+  recorta no padding box, e com o recuo na moldura o anel de foco de 3px seria
+  cortado nos quatro lados. `underline` sempre ocupa a largura toda, porque o
+  fio dele **é** a fronteira com o painel — um fio que para depois da última aba
+  lê como sublinhado do grupo. `orientation="vertical"` vale nas três, estilizado
+  só por `data-orientation`, que o Radix carimba nos quatro nós (nos dois de
+  baixo via `RovingFocusGroup`).
+  **`scrollable` é opt-in**, e a razão é medida: `scroll-fade-x` declara 36px de
+  `scroll-padding-inline`, e ligá-la sempre mudaria o `scrollIntoView` de toda
+  barra de abas do app. Ele vence `stretch`, porque os dois juntos não fazem
+  nada — com filhos `flex-1` a trilha nunca transborda, e a prop falharia calada.
+  O `pointer-coarse:min-h-11` só entra quando **não** há `stretch`: aba de
+  largura total já tem área de alvo grande; aba de largura de rótulo com 28px
+  não tem.
+- **O marcador do `Tabs` é um objeto só, e ele viaja — menos no `ghost`.** O
+  realce saiu do gatilho e virou um nó (`tabs-indicator`) absoluto dentro da
+  fileira: a trilha publica a caixa da aba ativa em `--tabs-indicator-x/y/w/h` e
+  o marcador transiciona para ela em `--duration-base` com `--ease-out`. Antes,
+  cada gatilho acendia e apagava o próprio realce, e isso **teleporta** — três
+  marcadores piscando não dizem o que um marcador se movendo diz.
+  **O `ghost` não viaja**, e a razão é o trilho: o marcador corre *ao longo de
+  alguma coisa*, e a bandeja do `solid` e o fio do `underline` são essa coisa.
+  Sem nenhuma das duas, o mesmo movimento vira um bloco preenchido deslizando
+  sozinho sobre o fundo — na variante que existe exatamente para não chamar
+  atenção. Ali cada gatilho pinta o próprio realce, e a tinta troca com
+  `transition-colors`: mudança de cor, não deslocamento.
+  **O nó está fora do fluxo**, então animar `width`/`height` nele não reflui
+  irmão nenhum; `scaleX` foi rejeitado porque distorce o raio e a borda de 1px
+  do `solid`. A medição são dois observadores (`ResizeObserver` na trilha e nos
+  gatilhos, `MutationObserver` em `data-state`) — nada de `requestAnimationFrame`
+  em laço —, e ela lê `offsetLeft`/`offsetTop` **relativos à trilha**, não
+  `getBoundingClientRect`, senão o marcador escorregaria para fora da aba a cada
+  pixel rolado em `scrollable`.
+  **Sem JavaScript o gatilho ainda se pinta.** Não há caixa para medir antes da
+  hidratação, e um marcador sem posição deixaria a aba ativa sem marca na
+  primeira pintura — verificado no HTML do servidor: zero nós de marcador, e os
+  onze gatilhos ativos com as classes de realce. A troca é um booleano no
+  contexto, e **não** um seletor: `in-*` e `group-*` compilam com `:where()`, que
+  não soma especificidade, e este projeto já pagou essa medição duas vezes.
+  **Movimento reduzido não precisou de regra própria**: o bloco global encurta
+  transições para 0,01ms, o marcador salta e o estado final chega igual.
+- **O gatilho do `Combobox` é um campo, não um botão.** Ele era
+  `Button variant="outline"` — `border-border` + `bg-background` no tema claro —
+  enquanto `Select` e `Input` são `border-input` + `bg-input-fill/30`: os dois só
+  convergiam sob `dark:`, e no tema claro um combobox ao lado de um select eram
+  **duas superfícies visivelmente diferentes** fazendo o mesmo trabalho. Medido
+  depois da troca: zero diferença em altura, borda, preenchimento, raio, corpo e
+  recuo, nos dois temas. Ele sai do `Button` e, com isso, da garantia de
+  maiúscula do CTA — o que é correto, porque placeholder de campo não é rótulo
+  de ação.
+  **`multiple` é união discriminada**, e por isso `<Combobox multiple={x}>` com
+  um booleano não estreita: precisa de literal. A união **nunca desce pelo
+  contexto** — o `ComboboxItem` recebe `isSelected` e `toggle`, e não vê
+  genérico nenhum.
+  **`ComboboxClear` é irmão do gatilho, não filho**, porque `button` não aninha
+  em `button`; ele mora no `ComboboxField`, que é um `PopoverAnchor` — sem ele o
+  painel sairia com a largura do gatilho e não a do campo. Quem recua para o ×
+  é o **rótulo**, não o gatilho: recuar o gatilho empurra o chevron para dentro e
+  o empilha sobre o ×, 25px de sobreposição, medidos.
+  **O tique não escreve `aria-selected`**: o cmdk usa esse atributo para a linha
+  *realçada* pela seta, e sobrescrevê-lo apagaria o cursor de teclado do leitor
+  de tela. Quem diz "este é o escolhido" é um rótulo `sr-only`.
 - **O `Command` é a quarta superfície de comandos, e o corpo dela é o mesmo.**
   A geometria vem de `menuItemGeometryClassName`; os **estados** ficam no
   arquivo dele porque o cmdk os escreve diferente — a linha ativa é
@@ -596,20 +734,158 @@ tema.
   passou a não casar com nada; e o fato de que o `in-*` do Tailwind compila com
   `:where()`, que **não soma especificidade** — uma classe sob esse variante
   perde para a classe base no mesmo elemento. Variável herda e não disputa.
-- **A paleta é uma superfície só, e o que separa as faixas é o fio.** A casca
-  pinta e borra (`bg-popover/85` + `backdrop-blur`); busca, lista e rodapé não
-  têm tinta própria. Houve uma versão com vidro só nas pontas, usando o
-  `bg-background/85` do `<header>`, e ela ficava **mais escura que o meio** —
-  `oklch(0.145)` contra `oklch(0.205)` no tema escuro. Tom igual só é garantido
-  quando a cor é declarada uma vez. O campo de busca repete as medidas do
-  gatilho do cabeçalho (`h-8`, `rounded-lg`, `border-border`,
-  `bg-input-fill/30`), porque quem abre a paleta vem de clicar nele. E o vidro
-  impôs a sua condição: `backdrop-filter` sobre cor opaca não desenha nada,
-  então o casco do `CommandDialog` ficou transparente.
+- **A paleta é uma superfície só, e o que separa as faixas é a dissolução.** A
+  cor é declarada **uma vez**, na casca (`bg-popover/85` + `backdrop-blur`).
+  Houve uma versão com vidro só nas pontas, usando o `bg-background/85` do
+  `<header>`, e ela ficava **mais escura que o meio** — `oklch(0.145)` contra
+  `oklch(0.205)` no tema escuro. Tom igual só é garantido quando a cor é
+  declarada uma vez. O campo de busca repete as medidas do gatilho do cabeçalho
+  (`h-8`, `rounded-lg`, `border-border`, `bg-input-fill/30`), porque quem abre a
+  paleta vem de clicar nele. E o vidro impôs a sua condição: `backdrop-filter`
+  sobre cor opaca não desenha nada, então o casco do `CommandDialog` ficou
+  transparente.
+- **As tiras de superfície não têm fio nem tinta.** `CardToolbar`, `CardFooter`,
+  `CardNote`, `PopoverHeader`, `PopoverFooter`, `DropdownMenuHeader`, o
+  cabeçalho da folha e os dois do `Dialog` — nenhum desenha traço nem pinta
+  fundo. (O painel do `DropdownMenu` desenha um fio **no slot** que recebe a
+  faixa, e é separador de itens, não emenda de superfície — ver acima.) O que separa a tira do corpo é o respiro que ela traz
+  (`--card-strip-py`, 12px) e, onde há rolagem, o conteúdo dissolvendo por
+  baixo dela. **Uma tira pintada é uma superfície diferente do corpo**, e o fio
+  em cima dela é o segundo sinal para a mesma emenda.
+  A troca foi aritmeticamente neutra: `py-2.5` mais `min-h-10` davam 40px, e
+  12+16+12 dão os mesmos 40 — nenhuma tira mudou de altura, e é isso que tornou
+  a migração de **50 cópias** verificável.
+  **`CardToolbar` ganhou `variant: label | title`** porque sem tinta o tipo é o
+  componente: das 23 barras escritas à mão, 8 eram título e 7 eram rótulo, e
+  cravar um só faria as 8 sobrescreverem por `className` no mesmo dia.
+- **O que continua tendo fio, e por quê.** Separador de **itens repetidos** —
+  `TableRow`, `AccordionItem`, `SelectSeparator`, `ItemSeparator` —, porque ali
+  o fio não divide superfície: é o que torna a lista varrível. **Moldura**
+  (`border` completo). E `PageHeader`, `H2`, `TableHeader` e `TableFooter`, que
+  ficaram fora do escopo por decisão.
+- **A regra `J` do auditor é o que impede tudo isso de voltar.** Ela acusa fio
+  **mais** tinta na mesma classe de uma tira, ignorando moldura. Ela existe
+  porque a lição já custou caro: quando o `border-t` saiu do `DialogFooter`, o
+  app **não perdeu o fio** — 24 chamadas o repunham à mão, e a mudança do
+  componente nunca chegou à tela. Hoje ela está em **zero**.
+- **Quem recebeu a dissolução, e quem não.** `Command`, `ScrollFade`,
+  `FormPickerPopover` (com as 3 telas migradas para as peças dele), `Sidebar`,
+  `Table` (eixo X) e os viewports de `DropdownMenu` / `ContextMenu` / `Menubar`.
+  **E o `Dialog`**: o `DialogBody` dissolve nas duas bordas, e **os fios saíram
+  de vez** — o separador do cabeçalho e o `border-t` do rodapé, nos dois
+  layouts, no `Dialog` e no `AlertDialog`. Com eles saiu o prop
+  `hideSeparator`, que existia para desligar o fio e era usado por 9 chamadas.
+  Uma primeira versão manteve o fio em `layout="auto"`, argumentando que ali
+  nada rola e o fade nunca apareceria — e isso criava uma costura visível: um
+  `fixed` de conteúdo curto também não rola, e ficava **sem** fio nenhum,
+  enquanto um `auto` igualmente curto ficava com **dois**. Mesma situação
+  visual, dois tratamentos. O diálogo é uma superfície só; o que separa as
+  faixas é o respiro, e a dissolução onde há rolagem.
+  **Fora, por mecanismo:** o `Select` — em `position="item-aligned"`
+  o Radix escreve `viewport.scrollTop` à mão para alinhar o item selecionado, e
+  ele abriria dissolvido, sem `scroll-padding` que resolva; o
+  `DropdownMenu variant="panel"` — o cabeçalho é filho do viewport e a máscara
+  o apagaria; e o `PopoverContent`, porque ele é ao mesmo tempo casca e
+  rolável, e um viewport interno quebraria o `FormPickerPopoverContent`, que
+  conta com os filhos serem itens de flex diretos. Ali a resposta é compor um
+  `ScrollFade` dentro, e a página do catálogo demonstra.
+- **Três invariantes que a primitiva carrega, e as três vieram de bug medido.**
+  `data-scroll-fade` só alimenta o que **não** é layout (alimentar `pb` foi a
+  histerese da rodada anterior); **o elemento mascarado não desenha nada**, e é
+  por isso que menu e popover precisam de nó interno — a máscara recorta fundo,
+  anel e sombra junto, e os `rounded-lg` de 8px caem inteiros na zona, saindo
+  com os quatro cantos apagados e os lados opacos; e **todo `-` binário dentro
+  de um `calc()` arbitrário se escreve `_-_`** — o Tailwind normaliza espaço em
+  torno de `+`, `*` e `/`, mas não pode com `-`, que seria indistinguível de
+  `--var`.
+- **Nenhuma das três faixas pinta, e quem marca o limite é o conteúdo sumindo.**
+  O `CommandFooter` **não pinta fade nenhum** — ele é transparente e só reserva
+  altura para a legenda; quem dissolve é uma `mask-image` na própria
+  `CommandList`, um gradiente em preto puro usado como estêncil de alfa. A faixa
+  de busca passou a ser igual. **Tirar dela só o `border-b` não bastou, e o
+  motivo é aritmético**: ela repintava `bg-popover/85` sobre um casco que já é
+  `bg-popover/85`, e dois 85% empilhados dão **97,75%**. No escuro `--popover` é
+  mais claro que a página, então a faixa era um retângulo *mais claro* com uma
+  aresta na base — o mesmo bloco aceso que o rodapé já registrava ao tentar
+  pintar um gradiente. O `backdrop-blur` saiu junto: a borda do borrão desenha a
+  linha sozinha. **Quem esconde o conteúdo sob o campo é a rampa, não uma
+  tinta** — por isso o topo da máscara não pode voltar a ser opaco até a borda
+  da faixa, que foi a primeira tentativa e o que produziu o divisor.
+- **Cada ponta dá 44px ao conteúdo, com a mesma curva espelhada e o mesmo piso
+  (0,06).** Os 44 têm um nome só, `--command-fade-h`, lido pelos dois lados. A
+  curva é **sigmoide** de propósito: uma ease-out sai do chapado com inclinação
+  máxima, e descontinuidade de derivada contra superfície lisa é o que o olho
+  mais detecta — banda de Mach, numa linha que atravessa a paleta inteira. E o
+  piso não desce mais: 0,06 foi escolhido contra o caso mais difícil que existe
+  ali (texto do mesmo corpo e peso das linhas, atrás do placeholder), e 0,03 é
+  perceptualmente zero, que é o `transparent` já registrado como rejeitado.
+- **A zona cresce no passo em que a ponta consome o conteúdo** — em cima com o
+  `scrollTop`, embaixo com o que falta rolar —, e nunca liga de uma vez. O item
+  da ponta nasce a 4px da faixa e mede 28px, então ele cabe inteiro dentro dela:
+  um interruptor o levaria de chapado a um degradê de 15%→80% em 1px de rolagem.
+  Nos dois extremos não há zona, e o item da ponta fica nítido.
+- **`--command-footer-h` mede só a legenda, e depende da presença do rodapé —
+  nunca da rolagem.** Ela já embutiu a pista de dissolução (72 = 28 + 44), e era
+  isso que deixava **~44px de branco** entre o último item e a legenda sempre
+  que se rolava até o fim: ali não há conteúdo para dissolver. A pista virou
+  `--command-foot-fade`, que é máscara e não ocupa espaço.
+  **A versão condicionada a `data-scrollable` era um laço**, e um dos sorrateiros:
+  `pb` é `footer-h + 4`, então declarar "esta lista rola" *acrescentava 36px ao
+  próprio conteúdo* e realimentava a condição que produziu a decisão. Uma lista
+  que transbordava 20px virava rolável, ganhava `pb` 76, passava a transbordar
+  56, e nunca mais era reavaliada — **histerese**, não divergência, e por isso
+  ninguém viu. Medido: uma demo do catálogo com 288 de altura e 297 de conteúdo
+  estava marcada como rolável quando, com `pb` de 40, ela não rolaria. **O
+  `Combobox` pagava o mesmo sem nunca ter rodapé**: 76px de calha vazia no fim de
+  cada popover, e uma lista que só rolava por causa do próprio recuo.
+- **`scroll-pb` conta a zona inteira (`footer-h + fade-h + 4` = 84), e isso é
+  carga estrutural.** Sem ele o `scrollIntoView` do cmdk deposita o item
+  selecionado a 40px do fundo enquanto a zona de baixo chega a 80 — item ativo a
+  0,05 de alfa na navegação por seta. A margem já existia antes (76 contra 72),
+  mas por acidente.
+- **`--command-bottom-y` é a guarda de cruzamento.** As duas zonas somam 172, e
+  numa lista mais curta que isso elas se cruzam: o *color-stop fixup* arrasta as
+  paradas de baixo para junto das de cima e sobra um degrau em poucos pixels,
+  sobre conteúdo real. É alcançável — dentro do `CommandDialog` a lista é
+  `flex-1` sob `min(60dvh, 24rem)`, e num telefone deitado ela mede ~144px.
+  `max(top-h, calc(100% - bottom-h))` faz a rampa de baixo ceder em vez de
+  inverter. **E os `_` da classe arbitrária não são cosméticos**: escrita com
+  espaços literais, `calc(100% - …)` encerra o token do Tailwind no meio, a
+  variável não é declarada, a rampa vira inválida em cascata e `mask-image` cai
+  para `none`. Medido, nesta mesma rodada.
+- **A rampa é um gradiente só, com os dois lados dentro dele — nunca duas
+  máscaras compostas.** `mask-image: none` é definido como *camada preta
+  transparente*, então `none` num `mask-composite: intersect` dá alfa zero e
+  **apaga a lista**; e `mask-composite` e `-webkit-mask-composite` são
+  propriedades distintas, com valores distintos, cuja ordem de emissão o
+  Tailwind não deixa o autor controlar. Com um gradiente só, uma variável
+  indefinida derruba a propriedade para `none` — **desliga o fade em vez de
+  apagar o componente**. E **a ordem das paradas do topo é o mecanismo**: elas
+  são ancoradas por deslocamento *negativo a partir do fim da zona*, com um
+  `#000` de bookend antes, e é isso que faz o *color-stop fixup* do CSS
+  colapsá-las em opaco quando a zona tem largura zero. Ancoradas ao contrário, o
+  mesmo fixup deixaria o fade **ligado e gigante**.
+- **O grupo da paleta se separa por respiro e por rótulo, nunca por fio.** Duas
+  coisas faziam os grupos lerem como uma fileira só: o cabeçalho era `text-xs
+  font-medium`, **o mesmo peso das linhas** e só um degrau menor e mais claro —
+  a receita de "linha desabilitada", não de rótulo —, e o `py-1` simétrico o
+  deixava equidistante dos dois grupos, pertencendo a nenhum. Agora ele é caixa
+  alta com `tracking-wider`, a mesma régua do cabeçalho da `Table`, e o respiro
+  é assimétrico: 10px de margem acima do grupo contra 2px abaixo do rótulo.
+  **A folga é margem no grupo, não recuo no cabeçalho** — duas propriedades
+  diferentes não disputam, enquanto um `pt` base mais um `pt` sob variante
+  seriam a mesma propriedade duas vezes, decidida por ordem de emissão do
+  Tailwind e não pelo que se escreveu. E o primeiro grupo **visível** não
+  recebe a folga por `[cmdk-group]:not([hidden])~&`: o cmdk esconde os grupos
+  sem resultado com o atributo `hidden` **sem os tirar do DOM**, então eles
+  ficam no meio da fileira — medido buscando "card", `Átomos` sai escondido
+  entre `Fundações` e `Moléculas`, e um seletor de adjacência (`+`) perderia o
+  segundo grupo visível.
 - **A paleta tem três faixas, e a casca não tem recuo.** O campo era um
   `InputGroup` flutuando dentro do `p-1` da casca — uma caixa dentro de outra,
   a 8px de distância, com dois raios concêntricos. Numa paleta o campo **é** o
-  cabeçalho: largura toda, fio embaixo, como `DialogHeader` e `CardToolbar`. O
+  cabeçalho: largura toda, rente às bordas, como `DialogHeader` e `CardToolbar`
+  — mas sem o fio deles, porque aqui quem marca o limite é a dissolução. O
   recuo saiu da casca e foi para o `CommandList`, que é onde há linhas — e com
   isso o `-mx-1` do separador volta a sangrar exatamente ele.
   `CommandFooter` é a terceira faixa, e ela é **legenda de teclado**: uma
@@ -780,5 +1056,47 @@ E o que a rodada dos menus deixou:
   agrupado por assunto — são ações de um objeto, que é o caso do
   `DropdownMenu`. Uma barra de menus se paga por volta de três grupos e uma
   dúzia de comandos. Medido, não estimado: `grep -c '<DropdownMenuItem'`.
+
+E o que a rodada do `Tabs` e do `Combobox` deixou:
+
+- **10 `role="tablist"` escritos à mão, em 7 arquivos, com 43 referências às
+  duas strings de `transaction-type-segment.tsx`** — uma pasta de *feature*
+  fazendo o trabalho do design system, que é o invariante 1 no nível do sistema.
+  Nenhum deles tem foco itinerante, setas, `aria-controls` ou `role="tabpanel"`:
+  eles **anunciam** o padrão ARIA de abas e entregam botões soltos. Destino: seis
+  são `Tabs variant="solid" stretch`, e **quatro são filtros e querem
+  `ToggleGroup`** — `bills-toolbar`, `subscriptions-toolbar`,
+  `bill-detail-history-list` e o `TransactionTypeSegment` de filtro. A página do
+  próprio `Tabs` já ensinava essa regra enquanto o app a quebrava quatro vezes.
+- **`transactionSegmentTabClassName` tem uma sombra literal** —
+  `dark:shadow-[0_1px_2px_0_rgb(0_0_0/0.35)]` — e um `z-[1]`. Saem junto na
+  migração.
+- **`input-group.tsx:69` reimplementa a superfície de campo em forma `has-[…]`**
+  — a quarta ocorrência, e a prova de que a régua era real. Não dá para consumir
+  `field-classes` direto porque ali as classes vivem sob `has-`; o destino é uma
+  variante do arquivo, não uma cópia.
+- **`Input` e `SelectTrigger` discordam em `disabled:pointer-events-none`**: o
+  primeiro o tem, o segundo não. Ficou fora de `fieldDisabledClassName` de
+  propósito — igualá-los é conserto de comportamento, não extração. O `Input` é
+  o que está fora do padrão.
+- **Três gatilhos de campo em duas aparências.** `SelectTrigger` e
+  `ComboboxTrigger` vestem `field-classes`; `FormPickerPopoverTrigger` continua
+  `Button variant="outline" size="xl"` por decisão registrada. Vale reabrir a
+  decisão agora que os outros dois convergiram.
+- **`Drawer`, `ContextMenu` e `Menubar` continuam sem consumidor**, e agora o
+  `Tabs` e o `Combobox` também — a diferença é que estes dois têm um consumidor
+  **nomeado** e contado acima.
+- **Dois cadáveres de seletor, da família "sobreviveu à remoção" que este
+  arquivo já documenta.** Um foi apagado nesta rodada:
+  `in-data-[slot=combobox-content]:focus-within:*` em `input-group.tsx`, que só
+  casava quando `ComboboxInput` renderizava um `InputGroup` — e hoje o
+  `CommandInput` desenha a própria casca. O outro **fica**: **`no-scrollbar` é
+  usada em quatro arquivos (`ds-shell` ×2, `command.tsx`, `sidebar.tsx`) e não
+  está definida em lugar nenhum** — nem em `globals.css`, nem em `tw-animate-css`.
+  Defini-la faria quatro superfícies não relacionadas passarem a esconder a barra
+  de rolagem em Windows e Linux, o que é mudança de comportamento fora do escopo
+  de uma rodada de componente. O `Tabs` escreve
+  `[scrollbar-width:none] [&::-webkit-scrollbar]:hidden` por extenso enquanto
+  isso não se decide.
 
 Reproduza a qualquer momento com `npm run ds:audit`.
