@@ -1,6 +1,6 @@
 "use client"
 
-import { CalendarIcon, ChevronDownIcon, InformationCircleIcon } from "@heroicons/react/16/solid"
+import { CalendarIcon, InformationCircleIcon } from "@heroicons/react/16/solid"
 import { useMemo } from "react"
 import { CreditCardBillingFormPreview } from "@/components/credit-cards/credit-card-billing-form-preview"
 import { CreditCardBrandPreview } from "@/components/credit-cards/credit-card-brand-preview"
@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 import {
     Collapsible,
     CollapsibleContent,
+    CollapsibleMarker,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { Input } from "@/components/ui/input"
@@ -183,13 +184,10 @@ function CreditCardBillingSection({
                         type="button"
                         variant="tertiary"
                         size="sm"
-                        className="group h-9 w-full justify-between gap-2 px-2 text-xs font-medium text-muted-foreground hover:text-foreground"
+                        className="h-9 w-full justify-between gap-2 px-2 text-xs font-medium text-muted-foreground hover:text-foreground active:text-foreground"
                     >
                         {CREDIT_CARD_BILLING_FORM.collapsible.trigger}
-                        <ChevronDownIcon
-                            className="size-3.5 shrink-0 transition-transform group-data-[state=open]:rotate-180"
-                            aria-hidden
-                        />
+                        <CollapsibleMarker />
                     </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="space-y-3 pt-2">

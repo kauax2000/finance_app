@@ -904,6 +904,168 @@ tema.
   `data-selected` e `data-value`. No `Combobox`, que desenha o próprio check,
   cada linha saía com **dois ícones**, um permanentemente invisível. Quem marca
   seleção é quem sabe o que está selecionado, e isso não é a paleta.
+- **`Accordion` e `Collapsible` são a mesma interação, e agora dividem uma
+  régua.** Ela mora em [`lib/disclosure-classes`](src/lib/disclosure-classes.ts)
+  — geometria da linha, marcador, realce, alvo de toque e foco —, pelo mesmo
+  precedente de `menu-classes` e `field-classes`. Antes eles divergiam em tudo,
+  porque **um desenhava a linha e o outro não desenhava nada**: altura `py-2.5`
+  sem nome contra o que o consumidor pusesse, dois ícones se revezando contra
+  `rotate-180` e `rotate-90` escritos à mão, `hover:underline` contra nada, alvo
+  de toque em nenhum dos dois.
+- **A linha de divulgação entrou na escada, e o piso dela é 32.** `md` 32, `lg`
+  36, `xl` 40 — os mesmos números que esses nomes têm em `Button`, `Input` e
+  `Tabs`. Ela não desce a 28 porque carrega **frase** e não rótulo de botão, e a
+  medida é **`min-h`** e nunca `h`: um rótulo que quebra em duas linhas tem que
+  fazer a linha crescer, não ser recortado.
+  [`disclosure-ladder.test.ts`](src/components/ui/disclosure-ladder.test.ts)
+  tranca isso. Era a terceira porta do mesmo defeito — `Menubar` entregou 24px e
+  `Tabs` entregou 27, os dois por ancorar a escada no contêiner; aqui a altura
+  era um resto de tipografia, que é pior, porque muda sozinha quando o corpo do
+  texto muda.
+- **Um marcador que gira, e não dois que se revezam.** O `Accordion` trazia um
+  `ChevronDown` e um `ChevronUp` alternando por `hidden`/`inline`. É a decisão
+  que a rodada do `Tabs` já julgou, e aqui o conserto era de graça: a seta para
+  baixo girada em 180° **é** a seta para cima. Atenção ao medir: **o Tailwind v4
+  usa a propriedade independente `rotate`**, então `getComputedStyle(x).transform`
+  responde `none` mesmo com a rotação ativa — quem responde é `.rotate`. E
+  `transition-transform` na v4 já cobre `transform, translate, scale, rotate`.
+- **O realce da linha de divulgação não troca a cor de fundo.** Ele chegou a ser
+  `hover:bg-accent/60`, a língua do menu e da lateral — e é errado aqui pela
+  razão que separa os dois casos: **aqueles sabem sobre o que estão pousados, e
+  um acordeão não.** Ele mora dentro de `Card`, de `muted`, de diálogo e direto
+  na página; sobre `bg-muted` o `accent` quase some, e sobre `bg-card` num dos
+  temas ele é quase o próprio cartão. Realce não pode depender de uma informação
+  que o componente não tem. São dois sinais, e nenhum pinta fundo: o **rótulo**
+  sublinha e o **marcador** tinge e se desloca.
+- **O sublinhado é do rótulo, e nunca da linha.** O `hover:underline` original
+  ficava no botão, e `text-decoration` desce para todo descendente em linha — o
+  total em dinheiro do slot `trailing` vinha sublinhado junto, e traço sob número
+  lê como rasura. Medido depois do conserto: com o cursor na linha, "Mercado" sai
+  `underline` e "−R$ 612,40" sai `none`.
+- **A seta se desloca no sentido em que o clique vai levar** — 2px para baixo
+  quando o bloco vai abrir, 2px para cima quando vai fechar. A direção depende de
+  **dois** estados (cursor e aberto), e variante empilhada apontando para o mesmo
+  elemento compila uma cadeia de descendente que não casa com nada: é a medição
+  do `AppThemeToggle`, e a saída é a mesma — `--disclosure-nudge` na linha,
+  `data-[state=open]:` invertendo, e o filho lendo a variável sob um variante só.
+  No Tailwind v4 `translate` e `rotate` são propriedades independentes e o
+  `translate` resolve **antes** do `rotate`, então os 2px descem na tela mesmo com
+  a seta de cabeça para baixo. Por isso a transição nomeia
+  `[rotate,translate,color]`: o que se move não é `transform`, e
+  `transition-transform` deixaria a tinta trocando de estalo.
+- **O anel de foco da linha é interno, e é a única divergência consciente do
+  `ring-3` do sistema.** A linha sangra até a borda do bloco: um anel externo ou
+  é recortado pelo `overflow-hidden` do `variant="contained"` (nos quatro lados
+  da primeira e da última linha), ou cavalga o fio da linha vizinha em `plain` e
+  vira um traço duplo de 4px. `focus-visible:inset-ring-3` resolve os dois sem
+  exceção por variante — e ele **compila** nesta versão do Tailwind (4.2.2),
+  verificado, porque `inset-ring-<número>` não é óbvio que exista.
+- **`Accordion` tem três eixos.** `variant` é a moldura (`plain` fio entre itens
+  — o padrão —, `contained` uma caixa só com os fios por dentro, `separated` cada
+  item solto); `size` é o degrau da linha; `markerSide` põe o marcador antes do
+  rótulo, para o acordeão de **estrutura**, onde as setas na mesma coluna deixam
+  a hierarquia legível numa varredura vertical. **`separated` não entra num
+  `Card`** — cartão dentro de cartão é sempre errado, e aqui tem consequência
+  prática: a segunda moldura não desenha fronteira nenhuma que a primeira já não
+  tenha. O recuo horizontal é variável (`--accordion-px`, 0 em `plain`, 16 nas
+  molduradas), como o `--dialog-px` — e não um número repetido em duas peças.
+- **`AccordionTrigger` tem `trailing`, e ele é prop porque a alternativa não
+  funciona.** A versão componível exigiria duas margens automáticas na mesma
+  linha de flex, e **duas `ml-auto` dividem a sobra em partes iguais** em vez de
+  empurrar a segunda para a borda: o valor terminaria flutuando no meio da linha.
+- **Nenhum envelope declara como altura a medida que ele próprio produz.** O
+  `AccordionContent` trazia `h-(--radix-accordion-content-height)` no nó interno
+  — a variável que o Radix escreve a partir do `offsetHeight` **desse mesmo nó**.
+  Ela congela na primeira medição, e um parágrafo que reflui (janela estreita,
+  tradução longa) passa a ser recortado.
+- **`peek` é o "mostrar mais" do `Collapsible`, e o fechado deixa de ser altura
+  zero.** Três degraus de leitura (`sm` ~3 linhas, `md` ~5, `lg` ~7), com a base
+  **dissolvendo** — a primitiva do sistema, e não um véu pintado. A rampa é
+  `min(2.5rem, 40%)`: fixa em 40px ela comia dois terços do degrau curto.
+  Ele custa três armadilhas, e as três foram medidas:
+  **(a)** `forceMount` é consequência de `peek` e não uma segunda decisão, e o
+  `hidden` que o Radix escreve é vencido por `data-closed:block` — o texto
+  continua na árvore de acessibilidade, verificado;
+  **(b)** os keyframes `collapsible-down/up` saem de cena, senão disputam a
+  altura com a transição;
+  **(c)** **quem mede não pode ser quem é medido.** O Radix calcula
+  `--radix-collapsible-content-height` lendo a caixa da própria `Content`, que em
+  `peek` é o nó preso à espiada — ele publicava **100px** como "altura do
+  conteúdo" contra um `scrollHeight` de 206, e abrir levava de 100 a 100 com o
+  texto recortado. A saída é a da casa: um `ResizeObserver` num envelope interno
+  livre escreve `--collapsible-full`, como `useScrollFade` e o marcador do `Tabs`
+  já fazem.
+- **A espiada abre de uma vez, e é limite medido, não esquecimento.** O mesmo
+  recálculo síncrono que o Radix força ao trocar de estado acontece **na mesma
+  passagem** em que o `data-state` vira `open`: as duas alturas nunca aparecem em
+  recálculos diferentes, então não há transição para começar (medido a 16, 40,
+  80, 140 e 260ms — 100px e depois 206px, sem nada no meio). Quatro consertos
+  falharam, e estão no cabeçalho de `collapsible.tsx` para ninguém repetir:
+  `!important` na duração (vence o inline, e o salto continua), envelope externo
+  com `has-data-[state=open]` (o recálculo é do documento inteiro), o
+  `data-medido` do `Command` (resolve a primeira pintura, não a disputa), e Web
+  Animations API a partir de um `MutationObserver` (funciona ao abrir, não ao
+  fechar — e trajeto num sentido só é pior que nenhum). **Não há classe de
+  transição no componente**, para o código não prometer o que não faz. Quem for
+  fechar isso provavelmente precisa não usar a `Collapsible.Content` do Radix em
+  `peek` — sob `forceMount` ela só contribui com o `id` que o `aria-controls` do
+  gatilho aponta.
+- **`HoverCard` é um popover que abre com o cursor**, e a superfície dele era uma
+  cópia **incompleta** da do `PopoverContent`: faltavam o teto
+  (`max-h-(--radix-hover-card-content-available-height)`), a rolagem que o teto
+  exige, e o `collisionPadding`. Uma prévia alta perto da borda de baixo saía da
+  tela, com o Radix já publicando a variável que ninguém lia. Copiar a casca não
+  é o defeito — as classes que carregam o nome da primitiva **têm** que ser
+  literais em cada arquivo. Ele ganhou `size` (`sm` 224 | **`md` 256** | `lg`
+  320, e o teto é de propósito: acima disso a prévia vira a página que ela
+  deveria adiar), `padding` (`default` | `none`, o mesmo eixo do `Popover`), as
+  tiras `HoverCardHeader` / `Title` / `Description` / `Footer`, e `HoverCardArrow`
+  — o único lugar do sistema onde a seta se paga, porque uma prévia dispara sobre
+  **uma palavra dentro de um parágrafo**.
+- **`HoverCardBody` fecha o vocabulário de faixas, e ele traz o próprio `py`.**
+  Com `padding="none"` o casco cede o respiro e **cada faixa passa a ser dona do
+  seu** — o meio não era, então a demonstração do catálogo adivinhava
+  `<div className="px-3 pb-1">`, dois números soltos onde existe
+  `--hover-card-strip-px`. O `py` não é cosmético: sem ele *tudo* fica a 8px e
+  identidade, rótulo, número, datas e rodapé leem como cinco linhas soltas.
+  Com ele a distância **entre** regiões é 16 e **dentro** do corpo é 8 — a razão
+  de 2 para 1 que separa "outro assunto" de "mesmo assunto". **Ele não rola**,
+  pela mesma razão que não existe `Close`: uma prévia que precisa rolar ou se
+  reter não é prévia, é `Popover`.
+- **Um número sem rótulo é ambíguo, e num app de finanças isso custa caro.**
+  A prévia de fatura mostrava `−R$ 1.284,60` sozinho no meio do cartão — pode ser
+  o total, o mínimo ou o que falta pagar. O par termo/valor do
+  `DescriptionList` é o conserto, e ele existe para isto: a documentação dele
+  nomeia "a fatura" como caso de uso.
+- **Vocabulário e semântica de estado saem do produto, não da demonstração.** A
+  página do `HoverCard` escrevia `Em aberto` num `Badge variant="warning"`.
+  O app não fala assim: em `credit-card-display.ts` o ciclo aberto se chama
+  **`Aberta`** e é **verde** (`tagChipSuccess`), com o âmbar reservado para
+  `Fechada` e o vermelho para `Anterior`. Catálogo que inventa palavra e cor
+  próprias ensina a divergir do produto.
+- **`HoverCardHeader` tem `endAdornment`, com o nome e a forma do
+  `DialogHeaderRow`** — grade de duas colunas, `items-start`, para o `Badge` de
+  estado no canto superior direito. O `items-start` é o que prende o adorno ao
+  **topo** em vez de centralizá-lo quando a descrição quebra em duas linhas, e
+  uma prévia de fatura sempre tem duas. A alternativa (um `absolute` no canto,
+  escrito pela tela) é pior de dois jeitos: passaria por cima de um título longo,
+  e o recuo do canto viraria um número na tela em vez de
+  `--hover-card-strip-px`. **Ele diverge do `DialogHeaderRow` num ponto**: não há
+  `space-y-1` no par título+descrição, porque ali é o mesmo dado em duas linhas e
+  quem separa é a entrelinha — o `space-y-1` de lá continua no backlog.
+- **As tiras do `HoverCard` não levam `shrink-0`, e a do `Popover` leva.** Lá a
+  faixa é irmã de um `PopoverBody` com `flex-1`, que a espremeria na vertical.
+  Aqui não há corpo com `flex-1`, e a faixa é usada **dentro de uma linha**, ao
+  lado de um avatar — nesse contexto `shrink-0` impede o encolhimento
+  **horizontal**, a descrição para de quebrar, e como `overflow-y: auto` promove
+  o eixo X a `auto` junto (regra da spec: um eixo não-`visible` promove o outro),
+  o texto sai **recortado**. Medido: "42 transações" saía "42 transaç".
+- **Os atrasos do `HoverCard` são decisão, e o padrão do Radix não serve.**
+  `openDelay` 400 e `closeDelay` 200. Setecentos milissegundos numa prévia presa
+  a um nome em texto corrido lê como componente quebrado; zero dispara em toda
+  passagem de cursor. E **o gatilho precisa ser focável** — o Radix abre no foco
+  além do cursor, e em volta de um `<span>` a prévia passa a existir só para quem
+  tem mouse.
 - **`Progress`**: Radix-based; pass `tone` (`default` | `success` | `warning` | `destructive`) for budget / status bars.
 - **`Avatar`**: Radix-based with `size` prop; keep `data-slot` for tests and form deferrals.
 - **Overlays**: `Dialog` / `Sheet` / `AlertDialog` use `bg-overlay` (not hardcoded `bg-black/10`).
@@ -1098,5 +1260,25 @@ E o que a rodada do `Tabs` e do `Combobox` deixou:
   de uma rodada de componente. O `Tabs` escreve
   `[scrollbar-width:none] [&::-webkit-scrollbar]:hidden` por extenso enquanto
   isso não se decide.
+
+E o que a rodada da divulgação e da prévia deixou:
+
+- **Animar a espiada.** Ela abre de uma vez hoje, pelo limite medido acima. É a
+  única promessa desta rodada que não foi entregue, e o caminho está escrito.
+- **O `peek` não tem consumidor no app.** Ele está correto, medido e
+  documentado, mas quem prova um componente é uma tela. Os candidatos honestos
+  são a descrição longa de uma assinatura e o texto de ajuda de fatura em
+  `credit-card-form-fields`, que hoje abre de altura zero e some inteiro.
+- **`markerSide="start"` também não tem.** O caso é o agrupamento de categorias
+  por seção, que hoje não existe como acordeão.
+- **O `HoverCard` continua com um consumidor só, e é a página do catálogo.** As
+  tiras, a seta e os três degraus foram desenhados contra casos reais do app
+  (membro de workspace, fatura), mas nenhuma tela os usa ainda — o par
+  identidade + saldo numa lista de membros é o primeiro.
+- **`separated` e `contained` do `Accordion` também nascem sem tela.** O app tem
+  **zero** usos do `Accordion` hoje; o único consumidor de qualquer um dos três
+  é o `Collapsible`, em duas telas.
+- **`SheetDragHandle` e companhia continuam onde estavam.** Nada nesta rodada
+  tocou a limpeza mecânica pendente das outras.
 
 Reproduza a qualquer momento com `npm run ds:audit`.

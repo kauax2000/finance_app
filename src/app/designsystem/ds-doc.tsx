@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import {
   Collapsible,
   CollapsibleContent,
+  CollapsibleMarker,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import {
@@ -422,13 +423,7 @@ function PreviewCode({ code }: { code: string }) {
             "pointer-coarse:min-h-11"
           )}
         >
-          <ChevronRightIcon
-            aria-hidden
-            className={cn(
-              "size-3.5 shrink-0 transition-transform duration-(--duration-fast) ease-(--ease-out)",
-              open && "rotate-90"
-            )}
-          />
+          <CollapsibleMarker className="size-3.5" />
           Código
         </CollapsibleTrigger>
         <CopyButton code={code} />
