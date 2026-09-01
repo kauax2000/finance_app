@@ -1074,6 +1074,162 @@ tema.
   ordem do DOM — então os 17 rodapés que vieram da folha declaram `flex-col`
   explicitamente, e é de propósito.
 
+### A trilha dobra o miolo, e nunca quebra a linha
+
+O `Breadcrumb` era o shadcn intacto, com `flex-wrap`. **Medido a 375px, com
+293px disponíveis: uma trilha de quatro níveis saía com 46px de altura, em duas
+linhas**, logo acima do título — e a página do catálogo *documentava* isso em
+vez de resolvê-lo.
+
+**A `BreadcrumbList` passou a ser dona dos separadores**, e é isso que torna o
+colapso possível: não se dobra um miolo que não se possui. Enquanto o
+`<BreadcrumbSeparator />` era escrito à mão n−1 vezes, a lista não sabia quais
+filhos eram degraus e quais eram enfeite. Hoje ela recebe só `BreadcrumbItem`,
+insere os separadores, e `maxItems` (padrão 4, piso 3) mantém a raiz e os dois
+últimos.
+
+São **duas defesas, para casos diferentes**. `maxItems` cobre a trilha
+profunda; `truncate` nos ancestrais cobre o rótulo único e longo, que contagem
+nenhuma resolve. A página atual é `shrink-0` e só cede depois de todos os
+outros: **quem cede é o caminho, e nunca o destino** — medido numa caixa de
+240px, o ancestral encolhe de 123 para 52px enquanto "Nubank Ultravioleta"
+mantém os 132 dele.
+
+**As reticências não são um beco.** `BreadcrumbMenu` abre um `DropdownMenu` com
+os degraus dobrados, e a lista o monta sozinha. O que entra ali é o **link**, e
+não o `<li>` que o embrulha na trilha: passar o `BreadcrumbItem` inteiro para o
+`DropdownMenuItem asChild` produzia `role="menuitem"` num `<li>` sem `href`,
+com a âncora aninhada dentro — medido. Junto vem `BreadcrumbLink
+variant="menu"`, que tira do link a apresentação da trilha, porque ali a
+geometria é do item de menu.
+
+Três correções que não são de layout:
+
+- **`BreadcrumbPage` deixou de ser um link.** `role="link"` mais
+  `aria-disabled="true"` é como o shadcn a entrega: um papel de link num
+  elemento que não navega faz o leitor anunciar um link e convidar à ativação.
+  `aria-current="page"` num `span` é o que a APG prescreve.
+- **O `sr-only` dentro do `aria-hidden` saiu.** `BreadcrumbEllipsis` embrulhava
+  um `<span class="sr-only">Mais</span>` num elemento `aria-hidden="true"` —
+  texto morto, que nunca chegou à árvore de acessibilidade. Um marcador visual
+  não precisa de nome; precisa é de não mentir. `PaginationEllipsis` tinha o
+  mesmo, e saiu junto.
+- **A caixa das reticências era `size-8`.** Numa linha de texto de 20px isso
+  fazia a trilha inteira medir 32 — 60% mais alta por causa do marcador.
+
+E o alvo de dedo cresce por **pseudo-elemento**, não por altura: 12px na
+vertical (20 + 24 = 44, medido), onde não há nada, e 4px na horizontal, que é
+metade do `gap` — dois ancestrais vizinhos encostam sem se sobrepor.
+
+### Paginação é uma posição e dois movimentos
+
+Não é uma fileira de números. Numa lista de transações, "1–20 de 342" responde
+a pergunta que a pessoa tem; um link para a página 7 quase nunca. Por isso
+**`PaginationStatus` existe como peça** — a documentação antiga já citava esse
+texto sem entregá-lo, e toda tela o escreveria à mão. E por isso `align`
+(`center` | `between` | `end`) substituiu o `mx-auto … justify-center` cravado,
+que impedia a forma mais comum: contagem à esquerda, controles à direita.
+
+**A página atual preenche.** Ela era `variant="outline"`: medido no tema claro,
+`oklch(0.985)` de preenchimento contra uma página de `oklch(1)` — 1,03:1, um
+contorno de 1px numa fileira de links transparentes. Hoje é `secondary`, que é
+a língua de "selecionado" que `Button`, `Toggle` e a bandeja do `Tabs` já
+falam.
+
+**`disabled` precisa ser prop porque um `<a>` não desabilita**, e nas duas
+pontas da lista os dois extremos precisam disso. Com ele sai um `<span>` sem
+`href`, com `aria-disabled` e a opacidade do `Button`.
+
+**Os extremos ficam quadrados no telefone.** Medido antes: com o rótulo
+escondido abaixo de `sm`, `PaginationPrevious` saía **40×32**, com 10px de
+recuo à esquerda e 12 à direita, ao lado de números de 32×32 — um retângulo
+torto numa fileira de quadrados. Depois, a 375px, todos os controles medem
+44×44.
+
+E `.nums` em todo link e no status: sem figuras tabulares, 1, 10 e 100 têm
+larguras diferentes, e a fileira inteira se reacomoda ao virar a página.
+
+### A escada do `Item`, e o `gap` que a documentação já negava
+
+`size` tinha `default` e `sm` com **a mesma string** (`gap-2.5 px-3 py-2.5`) —
+dois nomes, uma medida. É o terceiro parente do mesmo defeito: `Menubar`
+entregou 24px e `Tabs` entregou 27, os dois por ancorar a escada no contêiner;
+aqui a âncora estava certa e o degrau é que não existia.
+[`item-size-ladder.test.ts`](src/components/ui/item-size-ladder.test.ts) tranca
+isso, e a asserção que vale é a de que **nenhum par de degraus produz a mesma
+string**. `default` e `xs` saíram do tipo; `xs` porque a única coisa que o
+distinguia era `in-data-[slot=dropdown-menu-content]:p-0`, um componente
+conhecendo o contêiner de outro.
+
+**A escada mede recuo, `gap` e a mídia — nunca altura.** `Button` e `Input`
+medem altura porque são controles: a caixa é conhecida antes do conteúdo. Uma
+linha de lista cresce com o que carrega.
+
+**`ItemContent` declarava `gap-1`, e a página do catálogo já dizia o
+contrário** — "`ItemContent` já entrega a entrelinha". Medidos 4px entre o
+título e a descrição, que é exatamente o que o par de identidade proíbe. A
+documentação estava certa; o código é que discordava.
+
+**`interactive` substituiu o `[a]:hover:bg-muted` implícito.** Aquilo só valia
+quando o próprio `Item` fosse um `<a>`, e não tinha par `active:` — o realce
+compila dentro de `@media (hover: hover)`, verificado no CSS emitido, então no
+telefone não existia em caso nenhum. Agora é explícito, como o `interactive` do
+`Card`, com o par de toque, o anel de foco e `pointer-coarse:min-h-11`.
+
+**`ItemGroup variant="divided"` não usa `divide-y`, e a razão foi medida.**
+`divide-*` compila com `:where(& > :not(:last-child))`, que não soma
+especificidade, enquanto o `Item` traz `border-transparent` **no próprio
+elemento** — a primeira versão saía com os fios transparentes, a lista dividida
+sem nenhuma divisão, calada. O seletor
+`[&>[data-slot=item]:not(:last-child)]:border-b-border` tem classe + atributo +
+pseudo-classe e ganha. **No `DescriptionList` o mesmo `divided` usa `divide-y` e
+funciona**, porque lá o item não declara borda nenhuma para disputar: é o par
+que mostra que a armadilha não é da utility, e sim da colisão.
+
+**E em `divided` o raio sai.** O fio é a borda de baixo do próprio `Item`, que
+traz `rounded-lg` — uma borda de baixo num elemento arredondado curva nas duas
+pontas (10px neste tema, medidos), e o traço saía arqueado no meio da lista. A
+causa não é o fio: é que **uma linha de lista dividida não é um cartão**, e
+cartão é a única coisa que tem canto. `TableRow` desenha `border-b` e o arquivo
+inteiro não tem um `rounded`; `AccordionItem` desenha `not-last:border-b` e o
+raio mora no contêiner. Em `spaced` o raio fica, porque ali a linha **é** um
+cartão. O segundo ganho não é o traço: com `interactive`, o realce de uma linha
+dividida vira faixa de largura inteira em vez de pílula flutuando na lista. E o
+raio das pontas continua sendo de quem contém — cravar `first:rounded-t-lg`
+copiaria para dentro do componente um número do contêiner, que é o defeito que
+a variante `bare` do `Command` enterrou.
+
+**Ordem importa no arquivo:** `npm run ds:catalog` lê o **primeiro** `variants:`
+de cada fonte. Com `itemGroupVariants` declarado antes, o catálogo reportava
+`spaced | divided` como se fossem os eixos do `Item`. `itemVariants` vai no
+topo.
+
+### O layout do `DescriptionList` se declara uma vez
+
+Ele precisava ser passado **duas** vezes — na lista e em cada item —, e a
+página do catálogo documentava isso como se fosse regra. Não era:
+`<DescriptionList layout="inline">` sozinho não fazia nada, calado. Hoje o item
+lê o do pai por `in-data-[layout=…]`, e o prop local vira o que devia ser: uma
+sobrescrita para a linha que foge do padrão.
+
+**A armadilha que isso custa está escrita no arquivo.** `in-*` compila com
+`:where()` e não soma especificidade — funciona aqui porque a base do item é
+`min-w-0` e mais nada. Quem acrescentar uma base que colida (um `flex-col`
+fixo, um `text-*`) reabre o problema, que é exatamente o que aconteceu com o
+`divide-y` do `ItemGroup` nesta mesma rodada.
+
+Três eixos novos, e cada um saiu de um caso do produto: **`layout="grid"`**
+(duas colunas a partir de `sm`, para o detalhe de cartão com seis campos, que
+empilhado é uma coluna alta com a metade direita vazia); **`divided`** (o fio
+entre pares, que é o desenho de extrato e de fatura); e **`DescriptionDetails
+size="lg"`** para a linha do total. O eixo do peso mora no `<dd>` e não no
+item porque **só o valor pesa — o rótulo do total continua quieto** —, e
+porque prop no próprio elemento escapa da armadilha de especificidade acima.
+
+E **`.nums` sai de fábrica** em todo `DescriptionDetails`: dígito em lista de
+detalhe é sempre dado, e a própria página do catálogo escrevia
+`className="nums"` à mão em três linhas seguidas.
+
 ### Backlog de migração
 
 A rodada 01 entregou tokens, componentes, documentação e o auditor, sem migrar
@@ -1280,5 +1436,26 @@ E o que a rodada da divulgação e da prévia deixou:
   é o `Collapsible`, em duas telas.
 - **`SheetDragHandle` e companhia continuam onde estavam.** Nada nesta rodada
   tocou a limpeza mecânica pendente das outras.
+
+E o que a rodada da trilha, da paginação e das duas listas deixou:
+
+- **Os quatro continuam sem consumidor no app**, e agora com os candidatos
+  nomeados: linha de transação → `Item variant="divided"`; detalhe de fatura e
+  de cartão → `DescriptionList` (`divided` para o extrato, `grid` para os seis
+  campos, `size="lg"` na linha do total); as telas de três níveis
+  (`/cartoes/[id]/faturas/[mes]`, `/categorias/[id]`) → `Breadcrumb` dentro de
+  `PageHeaderBreadcrumb`; a lista de transações → `Pagination align="between"`
+  com `PaginationStatus`.
+- **A regra H do auditor não enxerga `cva()` nem `cn()`.** Ela varre
+  `className="…"`, e os dois `hover:` sem par de toque desta rodada estavam
+  dentro das duas — por isso os quatro arquivos saíam "conformes" com o defeito
+  dentro. Ampliar o alcance da regra é conserto do auditor, e ficou de fora.
+- **`Breadcrumb` virou módulo de cliente.** O `size` desce por contexto até o
+  separador e as reticências, o que exige `createContext`. Custou pouco (o
+  módulo é pequeno, e quase todo `src/components/ui/` já é `"use client"`), mas
+  `PageHeader`, que é servidor, agora atravessa uma fronteira ao renderizá-lo.
+- **`BreadcrumbEllipsis` sobrevive sem chamador.** Com `maxItems`, a lista monta
+  `BreadcrumbMenu` sozinha, e o marcador estático só serve a quem colapsa à
+  mão. Fica exportado porque é o degrau de saída, não porque alguém o use.
 
 Reproduza a qualquer momento com `npm run ds:audit`.

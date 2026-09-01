@@ -7,7 +7,6 @@ import {
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
-  BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { Button } from "@/components/ui/button"
 import {
@@ -49,7 +48,6 @@ export default function PageHeaderDoc() {
                 <BreadcrumbItem>
                   <BreadcrumbLink href="#">Início</BreadcrumbLink>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   <BreadcrumbPage>Transações</BreadcrumbPage>
                 </BreadcrumbItem>
