@@ -362,6 +362,61 @@ React.useEffect(() => {
         a lista está cheia, que é como a paleta abre.
       </DocNote>
 
+      <DocNote title="E a base desce deslizando, com a medida que o cmdk já publicava">
+        O topo estava resolvido, mas a borda de baixo <strong>saltava</strong> —
+        medido, digitando na busca: 626 → 584 → 478, em degraus instantâneos.
+        <br />
+        <br />
+        A régua para consertar já existia e ninguém a lia:{" "}
+        <code>Command.List</code> do cmdk envolve os filhos num{" "}
+        <code>[cmdk-list-sizer]</code>, observa esse wrapper e publica a altura
+        do conteúdo em <code>--cmdk-list-height</code>. A lista passou a derivar
+        a própria <code>height</code> dela e a transicionar em{" "}
+        <code>--duration-base</code>.
+        <br />
+        <br />
+        <strong>O teto é o do casco inteiro, e não o que sobra das faixas</strong>{" "}
+        — o que parece errado até a conta fechar. A lista mede em{" "}
+        <code>border-box</code> e carrega o recuo das duas faixas, mas a
+        dissolução cancela os dois com margem negativa: uma caixa de altura{" "}
+        <code>H</code> ocupa <code>H − 84</code> no fluxo, e somando as faixas de
+        volta dá <code>H</code>. Descontá-las aqui as descontaria duas vezes — foi
+        o que a primeira versão fez, e a paleta com 7 resultados travava em 300
+        onde antes media 342.
+        <br />
+        <br />
+        <strong>A transição só liga depois da primeira medida.</strong> A
+        variável do cmdk chega dois quadros depois de montar; sem a espera, a
+        lista nasceria no teto e deslizaria até o tamanho certo <em>toda vez</em>{" "}
+        que a paleta abrisse. É o mesmo cuidado que o marcador do{" "}
+        <code>Tabs</code> toma com <code>indicatorReady</code>.
+      </DocNote>
+
+      <DocNote title="Ela abre sem nada selecionado, e a primeira seta entra na lista">
+        O cmdk marca a primeira linha assim que os itens se registram, e de novo
+        a cada tecla. Numa paleta isso lê como se o cursor já estivesse na lista
+        — mas o foco está no campo, e ninguém escolheu nada. É{" "}
+        <code>autoSelectFirst={"{false}"}</code>, que o{" "}
+        <code>CommandDialog</code> liga sozinho. O <code>Combobox</code> fica
+        como está: ali a lista é um seletor de valor, e abrir com o primeiro
+        item realçado é o que se espera de um select.
+        <br />
+        <br />
+        <strong>Esconder o realce com CSS seria o caminho errado.</strong> O cmdk
+        escreve <code>aria-selected</code> no item e alimenta o{" "}
+        <code>aria-activedescendant</code> da lista: um leitor de tela
+        continuaria anunciando uma linha ativa que ninguém vê. A seleção precisa
+        não existir, e não ficar invisível.
+        <br />
+        <br />
+        <strong>A seta para baixo sai de graça.</strong> Sem seleção, o cmdk
+        procura o item seguinte a um índice <code>-1</code> e acha o{" "}
+        <strong>primeiro</strong> — não há tecla a interceptar. Só a de cima
+        precisou de código, porque <code>itens[-1]</code> não existe e a tecla
+        ficaria morta; ela salta para a última linha. E o Enter sem seleção não
+        faz nada, porque não há item que o cmdk possa disparar.
+      </DocNote>
+
       <DocNote title="Duas variantes, e a pergunta é quem desenha a moldura">
         <code>bare</code> não desenha nada — nem borda, nem canto: ele{" "}
         <strong>herda o raio de quem o contém</strong>. Dentro de um{" "}
@@ -402,6 +457,13 @@ React.useEffect(() => {
             default: '"bare"',
             description:
               "bare não desenha moldura e herda o canto de quem o contém; panel traz borda e sombra próprias, para a paleta solta numa página.",
+          },
+          {
+            prop: "autoSelectFirst",
+            type: "boolean",
+            default: "true",
+            description:
+              "false abre sem nada selecionado: a primeira seta para baixo entra na primeira linha, a de cima vai para a última, e o Enter sem seleção não dispara nada. O CommandDialog já liga. Ele é dono do value — não combine com um value controlado por fora.",
           },
           {
             prop: "CommandItemContent",

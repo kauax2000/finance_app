@@ -16,6 +16,7 @@ import {
   scrollFadeViewportClassName,
 } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
+import { useCommandIdleSelection } from "@/hooks/use-command-idle-selection"
 import {
   Dialog,
   DialogContent,
@@ -95,13 +96,33 @@ const commandVariants = cva(
   }
 )
 
+/**
+ * `autoSelectFirst={false}` faz a paleta abrir **sem nada selecionado** — e o
+ * mecanismo inteiro, com a razão de cada peça, está em
+ * [`use-command-idle-selection`](src/hooks/use-command-idle-selection.ts).
+ *
+ * O padrão é `true` porque o comportamento de hoje serve o `Combobox`, que é o
+ * consumidor de produto: ali a lista é um seletor de valor, e abrir com o
+ * primeiro item realçado é o que se espera de um select. Quem liga o modo ocioso
+ * é o `CommandDialog`, onde a lista é um destino de busca e não um valor.
+ *
+ * **Ele é dono do `value`.** Com `autoSelectFirst={false}`, um `value` controlado
+ * por fora seria sobrescrito a cada tecla — as duas coisas são mutuamente
+ * exclusivas, e é por isso que o hook devolve `{}` quando está desligado, em vez
+ * de devolver handlers inertes que ainda ocupariam as props.
+ */
 function Command({
   className,
   variant,
+  autoSelectFirst = true,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive> &
-  VariantProps<typeof commandVariants>) {
+  VariantProps<typeof commandVariants> & {
+    /** Abrir com a primeira linha já selecionada. `false` = modo ocioso. */
+    autoSelectFirst?: boolean
+  }) {
   const resolvida = variant ?? "bare"
+  const ocioso = useCommandIdleSelection(!autoSelectFirst)
 
   return (
     <CommandPrimitive
@@ -109,6 +130,20 @@ function Command({
       data-variant={resolvida}
       className={cn(commandVariants({ variant: resolvida }), className)}
       {...props}
+      // Os três handlers são **compostos**, e não sobrescritos: um `{...ocioso}`
+      // antes de `{...props}` deixaria o `onKeyDown` de quem chama apagar o do
+      // modo ocioso, e depois seria o contrário. O de quem chama roda primeiro,
+      // para poder prevenir — o do hook confere `defaultPrevented`.
+      value={ocioso.value ?? props.value}
+      onValueChange={ocioso.onValueChange ?? props.onValueChange}
+      onKeyDown={(event) => {
+        props.onKeyDown?.(event)
+        ocioso.onKeyDown?.(event)
+      }}
+      onInput={(event) => {
+        props.onInput?.(event)
+        ocioso.onInput?.(event)
+      }}
     />
   )
 }
@@ -189,11 +224,34 @@ function CommandDialog({
           // O seletor de descendente, e não uma classe na lista: a lista solta
           // numa página não tem altura definida acima dela, e ali `flex-1`
           // colapsaria o conteúdo.
+          // A paleta abre **sem nada selecionado**. Vem antes do spread para o
+          // consumidor poder voltar atrás por `commandProps`.
+          autoSelectFirst={false}
           className={cn(
             "max-h-(--command-dialog-h)",
             "[&_[data-slot=command-list]]:max-h-none",
             "[&_[data-slot=command-list]]:min-h-0",
-            "[&_[data-slot=command-list]]:flex-1"
+            // **O teto da lista, e a transição, são declarados pela casca** — a
+            // mesma regra que este arquivo já segue para as faixas: a casca
+            // publica a medida estrutural, a lista lê.
+            //
+            // **E o teto é o do casco inteiro, não o que sobra das faixas** — o
+            // que parece errado até a conta fechar. A lista mede em `border-box`
+            // e carrega o `pt`/`pb` das faixas, mas `scrollFadeBleedClassName`
+            // cancela os dois com margem negativa: uma caixa de altura `H` ocupa
+            // `H − band − foot` no fluxo. Somando as duas faixas de volta,
+            // `(H − 84) + 48 + 36 = H`. Descontá-las aqui as descontaria duas
+            // vezes, e foi o que a primeira versão fez — a paleta com 7
+            // resultados travava em 300 onde antes media 342.
+            "[--command-list-ceiling:var(--command-dialog-h)]",
+            // Só o diálogo anima. O `Combobox` mora num popover que se
+            // reposiciona quando o conteúdo muda de tamanho, e ali uma altura em
+            // movimento faria o painel perseguir o gatilho.
+            "[--command-list-transition:var(--duration-base)]",
+            // **O `flex-1` saiu**, e não é cosmética: `flex: 1 1 0%` faz o
+            // `flex-basis: 0` vencer qualquer `height`, e sem isso a altura
+            // derivada da lista — que é o que anima — nunca chegaria ao layout.
+            // Com ela, o `Command` e o `DialogContent` encolhem junto.
           )}
           {...commandProps}
         >
@@ -292,14 +350,65 @@ function CommandInput({
   )
 }
 
+/**
+ * A lista — e a altura dela é **medida**, não deixada ao layout.
+ *
+ * ## A régua já existia, e ninguém a lia
+ *
+ * `Command.List` do cmdk renderiza um wrapper interno `[cmdk-list-sizer]` e
+ * mantém um `ResizeObserver` sobre ele, publicando a altura do conteúdo em
+ * **`--cmdk-list-height`** no próprio elemento da lista. É a API oficial para
+ * animar altura, e nenhum arquivo deste projeto a lia — a paleta encolhia aos
+ * saltos com a medida disponível ao lado. Medido antes: a borda de baixo do
+ * diálogo ia de 626 a 584 a 478 em degraus instantâneos.
+ *
+ * ## Por que a conta soma as faixas de volta
+ *
+ * O projeto roda `box-sizing: border-box`, e esta lista carrega o `pt`/`pb` de
+ * `scrollFadeBleedClassName` — o recuo que devolve o espaço das faixas depois de
+ * o conteúdo subir para trás delas. `--cmdk-list-height` mede só o **conteúdo**,
+ * então a altura da caixa precisa somar os dois recuos mais os 4px de folga que
+ * cada um traz. Medido: sizer 144 → 236px, e a altura computada bateu.
+ *
+ * ## Quem decide o teto e a transição é a casca
+ *
+ * `--command-list-ceiling` cai no `--command-list-max-h` de sempre quando ninguém
+ * diz nada, e `--command-list-transition` em `0s` — então **nada muda** para o
+ * `Combobox` e para a paleta solta numa página. O `CommandDialog` sobrescreve as
+ * duas. É a mesma divisão que este arquivo já usa para as faixas, e pela mesma
+ * razão: só a casca enxerga as faixas como irmãs do rolável.
+ *
+ * ## A transição não vale na primeira pintura
+ *
+ * A variável do cmdk só existe depois de dois quadros — ele mede num
+ * `ResizeObserver` e escreve dentro de um `requestAnimationFrame`. Sem a espera,
+ * a lista nasceria no teto e **deslizaria** até o tamanho certo toda vez que a
+ * paleta abrisse. É o mesmo problema que o `Tabs` resolve com `indicatorReady`, e
+ * a espera aqui são dois `requestAnimationFrame` encadeados — o padrão que o
+ * `AppThemeToggle` já usa, e exatamente o tempo que a medida leva para chegar.
+ */
 function CommandList({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.List>) {
+  const [medido, setMedido] = React.useState(false)
+
+  React.useEffect(() => {
+    let segundo: number | null = null
+    const primeiro = requestAnimationFrame(() => {
+      segundo = requestAnimationFrame(() => setMedido(true))
+    })
+    return () => {
+      cancelAnimationFrame(primeiro)
+      if (segundo !== null) cancelAnimationFrame(segundo)
+    }
+  }, [])
+
   return (
     <CommandPrimitive.List
       ref={useScrollFade()}
       data-slot="command-list"
+      data-medido={medido || undefined}
       className={cn(
         "no-scrollbar overflow-x-hidden overflow-y-auto p-1 outline-none",
         // A dissolução das duas pontas — âncoras, rampa, máscara e a folga de
@@ -318,6 +427,19 @@ function CommandList({
         // seletor ainda perderia a disputa: o `in-*` do Tailwind compila com
         // `:where()`, que não soma especificidade.
         "max-h-(--command-list-max-h)",
+        // **Os dois padrões moram no `var()`, e não numa declaração aqui.** Um
+        // `[--command-list-ceiling:…]` neste elemento venceria o que o
+        // `CommandDialog` declara no ancestral — declaração local ganha de
+        // herdada, e a casca nunca conseguiria mandar. Com o fallback, quem não
+        // diz nada fica no comportamento de sempre e quem diz é obedecido.
+        //
+        // A altura medida. O `_-_` do `calc()` não é cosmético: o Tailwind
+        // normaliza espaço em torno de `+`, `*` e `/`, mas não pode com `-`, que
+        // seria indistinguível de `--var`. (Aqui não há subtração, e os `_+_`
+        // seguem a mesma grafia por consistência.)
+        "h-[min(calc(var(--cmdk-list-height,var(--command-list-ceiling,var(--command-list-max-h)))_+_var(--scroll-fade-band-h)_+_var(--scroll-fade-foot-h)_+_--spacing(2)),var(--command-list-ceiling,var(--command-list-max-h)))]",
+        // Só transiciona depois da primeira medida — ver o cabeçalho.
+        "data-medido:transition-[height] data-medido:duration-[var(--command-list-transition,0s)] data-medido:ease-(--ease-out)",
         className
       )}
       {...props}
