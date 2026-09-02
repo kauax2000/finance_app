@@ -43,6 +43,8 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-accent: var(--primary-accent);
+  --color-primary-muted: var(--primary-muted);
+  --color-primary-muted-foreground: var(--primary-muted-foreground);
   --color-primary: var(--primary);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
@@ -126,6 +128,13 @@
      é texto (precisa contrastar com a página escura por baixo). No claro os
      dois são a mesma cor — a divisão só existe onde a física obriga. */
   --primary-accent: oklch(0.42 0.12 166);
+  /* A marca em tinta suave, para chip e contagem — a mesma receita de
+     `success`/`info` (`0.96 0.03` claro, `0.27 0.06` escuro), no matiz 166.
+     Ela existe porque as 8 variantes do `Badge` são tintas suaves e não havia
+     nenhuma de marca: `variant="primary"` renderizava `--info-muted`, ou seja
+     azul, num sistema onde `primary` significa o verde em todo o resto. */
+  --primary-muted: oklch(0.96 0.03 166);
+  --primary-muted-foreground: oklch(0.32 0.1 166);
   /* ── A camada de chão do tema claro ──────────────────────────────────────
 
      `--secondary`, `--muted` e `--accent` são os cinzas que ficam *sobre* uma
@@ -348,6 +357,8 @@
   --primary: oklch(0.5 0.125 166);
   --primary-foreground: oklch(0.985 0 0);
   --primary-accent: oklch(0.66 0.13 166);
+  --primary-muted: oklch(0.27 0.06 166);
+  --primary-muted-foreground: oklch(0.88 0.06 166);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --secondary-hover: oklch(0.36 0 0);

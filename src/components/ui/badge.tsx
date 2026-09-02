@@ -8,8 +8,21 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
+        /**
+         * A marca, em tinta suave — como as outras sete.
+         *
+         * Ela rendia `bg-info-muted`, ou seja **azul**, num sistema em que
+         * `primary` é o verde da marca em todo o resto (o `Button primary`
+         * preenche de verde). Medido: 4/44/67 em RGB — azul escuro. O nome mentia, e havia
+         * um consumidor vivo — o "Beta" de `bills-toolbar.tsx:189`, que saía
+         * azul sem ninguém ter pedido azul.
+         *
+         * O par `--primary-muted` foi criado para isto: não existia, e sem ele
+         * a única saída seria preencher de `--primary` cheio, que seria a
+         * única variante saturada entre oito tintas.
+         */
         primary:
-          "bg-info-muted text-info-muted-foreground hover:bg-info-muted/80",
+          "bg-primary-muted text-primary-muted-foreground hover:bg-primary-muted/80",
         secondary: "bg-muted text-muted-foreground hover:bg-muted/80",
         destructive:
           "bg-destructive-muted text-destructive-muted-foreground hover:bg-destructive-muted/80",

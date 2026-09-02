@@ -276,7 +276,7 @@ tema.
   `components/ui/`.
 - **Cor escolhida pela pessoa**: [`ColorTile`](src/components/ui/color-tile.tsx) para o ladrilho que carrega `categories.color`, `bills.color` ou a marca de um workspace. Se a cor vem do tema e não do banco, é o componente errado — use `bg-muted` ou um `Badge`. É o único lugar do app onde `white` e `black` crus são a resposta certa: o fundo é cor de runtime, e o que se apoia sobre ele — a tinta do ícone e o fio da borda — é material, não tema. Por isso ele está na lista de exceção do auditor — e nenhuma tela está. **O ladrilho é chapado**: o verniz que ele já teve (degradê branco, borda clara, sombra) saiu porque o resto do sistema preenche chapado. E a tinta não é branca por decreto — ela vira escura quando a cor gravada é clara demais para o branco alcançar 3:1.
 - **Alerts / tabs / forms**: [`Alert`](src/components/ui/alert.tsx), [`Tabs`](src/components/ui/tabs.tsx), [`Textarea`](src/components/ui/textarea.tsx), [`ScrollArea`](src/components/ui/scroll-area.tsx), [`Toggle` / `ToggleGroup`](src/components/ui/toggle.tsx), [`Slider`](src/components/ui/slider.tsx), [`RadioGroup`](src/components/ui/radio-group.tsx), [`Pagination`](src/components/ui/pagination.tsx), [`Collapsible`](src/components/ui/collapsible.tsx), [`Breadcrumb`](src/components/ui/breadcrumb.tsx), [`ChartContainer` + chart helpers](src/components/ui/chart.tsx) for Recharts.
-- **Campos**: [`Field`](src/components/ui/field.tsx) para rótulo + descrição + erro já ligados; [`InputGroup`](src/components/ui/input-group.tsx) para campo com ícone ou botão acoplado; [`Combobox`](src/components/ui/combobox.tsx) quando a lista passa de umas dez opções.
+- **Campos**: [`Field`](src/components/ui/field.tsx) para rótulo + descrição + erro **já ligados — e agora ligados de verdade**: quem escreve `htmlFor`, `id`, `aria-describedby`, `aria-invalid` e `data-invalid` é o `FieldControl`, não a memória de quem escreve a tela. Esta linha afirmava o mesmo antes de o mecanismo existir; ver a rodada 11. [`FieldRow`](src/components/ui/field.tsx) para a linha de dois campos; [`InputGroup`](src/components/ui/input-group.tsx) para campo com ícone ou botão acoplado; [`Combobox`](src/components/ui/combobox.tsx) quando a lista passa de umas dez opções.
 - **Seletor ancorado num campo**:
   [`FormPickerPopover`](src/components/ui/form-picker-popover.tsx) e as suas
   faixas — `FormPickerPopoverTrigger` (o gatilho **é** o campo: `outline`,
@@ -315,6 +315,7 @@ tema.
   `CustomForm`.
 - **Uma escada de controle, para todos**: `xs` 24, `sm` 28, **`md` 32 (o
   padrão)**, `lg` 36, `xl` 40. Falam-na com os mesmos nomes e o mesmo padrão o
+  `TabsList` (pela **bandeja**, ver a rodada 13) e o
   `Button`, o `Input`, o `SelectTrigger`, o `NativeSelect` e o
   `ComboboxTrigger` — então botão ao lado de campo alinha **sem ninguém dizer
   `size`**, e mudar um degrau move os dois pelo mesmo nome. Nem todo controle
@@ -1635,6 +1636,499 @@ explícita — a variante `sticky` seria melhor ali, mas a tela exige sessão
 autenticada e a troca **não deu para verificar**. Trocar layout sem medir é o
 que produziu o bug do calendário nesta mesma série.
 
+### O `Field` prometia uma ligação que não existia
+
+Três lugares afirmavam que ele entregava `htmlFor`, `aria-describedby` e
+`aria-invalid` "já ligados": esta linha, o índice de busca do catálogo e a
+página do componente. Um quarto — `lib/field-classes.ts` — dizia o contrário, e
+era o que estava certo: **não havia `useId`, nem contexto, nem
+`aria-describedby` em `field.tsx`**.
+
+A prova mais dura estava na própria página que fazia a promessa: **19 `htmlFor`
+escritos à mão, 4 `aria-invalid` e 1 `aria-describedby`** em 313 linhas. No app,
+**24 `aria-invalid` contra 5 `aria-describedby`** — campos marcados como
+inválidos cujo texto de erro nunca chegava ao leitor de tela. E **zero
+consumidores**: nenhum arquivo fora de `src/app/designsystem/` importava o
+componente, enquanto 27 arquivos montavam **104 campos à mão** em **5 dialetos
+de espaçamento** (`space-y-2` 39, `space-y-1.5` 27, `grid gap-2` 18,
+`flex flex-col gap-2` 12, `flex flex-col gap-1.5` 5).
+
+O mecanismo agora é o do `Popover`: `FieldDescription` e `FieldError` **se
+registram**, e o `aria-describedby` só é escrito quando existe alvo — apontar
+para um `id` ausente deixa a descrição vazia. Renderizar um `FieldError` é o que
+torna o campo inválido, então o fato deixa de ser escrito duas vezes.
+
+**`FieldControl` é embrulho explícito, e não um hook dentro do `Input`.** Um
+`Field` pode conter mais de um controle — o app tem 8 linhas de dois campos lado
+a lado —, e um hook faria os dois reivindicarem o mesmo `id`, com a
+reivindicação sendo estado durante o render. **E não é um `Slot`**: o `Slot` do
+Radix resolve conflito com `{...slotProps, ...childProps}`, o filho vence, e
+para `aria-describedby` isso perderia calado o id da descrição e o do erro. Aqui
+os três são compostos.
+
+**Cinco seletores mortos saíram**, todos da família "sobreviveu à remoção":
+`data-[invalid=true]` e `group-data-[disabled=true]/field` (ninguém escrevia
+nenhum dos dois atributos — agora o componente os carimba),
+`has-[>[data-slot=checkbox-group]]` e `data-[slot=checkbox-group]` (não existe
+`data-slot="checkbox-group"` neste projeto, e o segundo ainda testava o slot do
+**próprio** elemento), e `group-data-[variant=outline]/field-group`
+(`FieldGroup` nunca teve prop `variant`).
+
+**`orientation="responsive"` nunca tinha funcionado.** Ela lê
+`@md/field-group:`, e o contêiner só existe dentro de `FieldGroup` — que tinha
+**zero** usos, inclusive no catálogo, onde só `horizontal` era demonstrada.
+Um contêiner **não consulta a si mesmo**: uma *container query* vale para os
+descendentes, e a direção do flex é declarada no próprio `Field`, então declarar
+`@container/field` ali não resolveria. `FieldSet` e `FieldRow` passaram a
+declarar o contêiner também, e a página demonstra a virada. Medido: coluna a
+384px, linha a 600, coluna de novo a 380 — **por contêiner, com o viewport
+parado**.
+
+**`size` deu nome a um degrau que já existia**: 29 `<Label className="text-xs">`
+e 73 textos de ajuda em `text-xs`/`text-2xs` contra um `FieldDescription` que
+era `text-sm`. Ele desce **por contexto React**, e não por `data-*` com `in-*` —
+esse variante compila com `:where()`, que não soma especificidade. E **ele não
+decide a altura do controle**: ancorar a escada no contêiner é o defeito
+cometido quatro vezes nesta base, e um `Field` não sabe que controle carrega.
+Medido: rótulo e ajuda a 14px com controle de 32 em `md`, 12px com 28 em `sm`.
+
+**O contorno do cartão de escolha estava errado nas duas metades.** Era
+`border-primary/30`. No tema claro `--primary` e `--primary-accent` são a mesma
+cor; no escuro divergem, e a 30% davam **1,32:1** contra **1,64:1** — os dois
+invisíveis. Varrendo os degraus contra o fundo real do cartão, **60% é o
+primeiro que alcança 3:1** — 3,01 no claro e 2,99 no escuro, contra 1,35 e 1,32
+do não selecionado. E o realce ganhou par `active:`, verificado no CSS emitido:
+a regra de `:hover` aninha `@media (hover: hover)` e a de `:active` não tem
+media nenhuma.
+
+Mais: `FieldLabel` e `FieldTitle` emitiam **o mesmo `data-slot`**, e nenhum
+seletor os distinguia; `FieldContent` separava título e descrição com `gap-0.5`,
+que é o par de identidade sendo violado pela terceira vez (depois de
+`ItemContent` e `StatCard`); `FieldDescription` compensava geometria de outra
+peça com duas margens negativas; e `role="group"` era carimbado em **todo**
+campo, **sem nome** — a mesma medição do `Popover`, um papel sem nome é
+anunciado como o papel e nada mais. Hoje o papel é opt-in e sai com
+`aria-labelledby`.
+
+**`FieldRow` é a única peça nova**, e sai de contagem: 8 linhas de dois campos em
+4 grafias, cinco delas **sem empilhar no telefone**. Não entrou um
+`FormSection` — as ~50 grafias de cabeçalho de seção já têm peça (`FieldSet` +
+`FieldLegend`), que tinha zero usos porque era `text-base`/`text-sm` enquanto o
+app escreve `text-xs font-medium`; com o eixo `size` ela passa a servir. Nem um
+marcador de obrigatório: existem **zero** no app, e a convenção é **invertida**
+— marca-se o opcional, que é o que `FieldLabel optional` codifica.
+
+### O `CustomForm` está pronto, e as três lacunas eram de uma linha
+
+**38 consumidores, 2 `<form>` crus** — os dois dentro do próprio componente. A
+mecânica do Enter está correta, inclusive a parte difícil: o `form.id` para o
+botão portalizado num `DialogFooter`, e a regra do
+`form-picker-popover-search`. Nada disso mudou, e o layout também não: os 38
+consumidores trazem o próprio `gap`.
+
+O que entrou: **guarda de `isComposing`** — a string não aparecia em lugar
+nenhum do repositório, e o Enter durante a composição de um acento enviava o
+formulário no meio da palavra —, **`⌘/Ctrl+Enter`** para enviar de dentro de um
+controle que fica com a tecla, e `data-slot="form"`. Verificado no componente
+real: Enter no textarea não envia, `⌘+Enter` envia, `Ctrl+Enter` envia,
+`isComposing` **não** envia nem com `⌘`, e Shift+Enter nunca envia.
+
+**A lista de regras virou fonte.** A página `formularios` a redigitava, e já
+tinha divergido: mostrava **6** regras enquanto o código checava **7**, e a que
+faltava era justamente a do seletor ancorado. Hoje é `ENTER_DEFERRAL_RULES`, e a
+página a importa. `shouldDeferEnterToWidget` passou a ser exportada — enquanto
+era privada, as sete regras eram promessa sem asserção, e não existia
+`form.test.ts`.
+
+### A tese do `Toolbar` era contradita pelas seis barras que ele deveria descrever
+
+Ele dizia "no telefone os itens quebram em linhas em vez de encolher", e a
+página repetia. **Nenhuma das 6 barras reais faz isso**: todas renderizam duas
+árvores e **trocam o conteúdo** — um botão só de ícone no telefone, o mesmo
+comando rotulado no desktop. Ele tinha **zero consumidores** enquanto existiam
+`transactions-toolbar` (378 linhas), `bills-toolbar` (412),
+`categories-toolbar` (395), `subscriptions-toolbar` (160) e
+`dashboard-toolbar` (27), mais **um clone de cada num arquivo de esqueleto**,
+com as strings copiadas.
+
+**Ele não ganhou eixo nenhum, e isso é a leitura honesta das contagens.** Não há
+`cva` no arquivo, como em `Container` e `PageSection`. `sticky` foi reprovado
+(zero barras fixas no app; `--z-sticky` tem um consumidor no projeto inteiro);
+`align` foi reprovado porque as 4 grafias (`justify-between`,
+`md:justify-between`, `ml-auto`, `md:justify-end`) querem a mesma coisa; e
+empilhar no telefone parecia 2 de 6 e é **1**, porque o `flex-col` de
+`subscriptions-toolbar` é vestigial — na largura de telefone a raiz tem um filho
+visível.
+
+**O que substitui as 4 grafias é uma `ms-auto` em `ToolbarActions`**, e não
+`justify-between` na raiz. As duas empatam com dois grupos, e só a margem acerta
+os outros dois casos: com **um** grupo, `justify-between` renderiza
+`flex-start`; com **três**, o `transactions-toolbar` chega a alternar
+`md:justify-between` ↔ `md:justify-end` em tempo de execução. Ela é a **única**
+margem automática do arquivo, e o teste tranca a contagem — duas dividem a sobra
+em partes iguais.
+
+**A densidade virou variável, e não eixo.** A raiz publica
+`--toolbar-control`; `toolbarControlClassName` e `toolbarIconControlClassName`
+a leem. Ela chega por `className` e não por seletor descendente porque `in-*` e
+`group-*` compilam com `:where()` e empatariam com o `h-8` do próprio `Button`,
+perdendo por ordem de emissão; por `className` quem decide é o `twMerge`, que
+**remove** o degrau conflitante. Medido no navegador: com a régua, 40px e 56px
+quando a variável muda; sem ela, 32px fixos do degrau do `Button`; e o `h-8` de
+fato **sai** da lista de classes.
+
+**E a pergunta é o dedo, não a largura.** As 6 barras escrevem `md:h-8` — 19
+vezes, mais 6 esqueletos, mais quatro constantes `monthNavDense*` cujo ramo
+`false` é código morto. Com `md:`, um desktop de 700px recebe 40px que ninguém
+pede e um tablet em paisagem recebe 32px que o dedo não acerta. A regra já
+estava escrita no item de menu, e o `Calendar` já a aplica: aqui é
+`pointer-coarse:`. Não custou migração nenhuma — o componente não tinha
+consumidor. Medido: 32px com ponteiro fino, **40px com ponteiro grosso**, com os
+botões sem régua ficando em 32 e mostrando exatamente a lacuna que ela fecha.
+
+`ToolbarSearch` virou **`ToolbarFilters`**: nenhuma barra do app tem campo de
+busca — a de transações mora dentro da folha de filtros —, e o que o grupo da
+esquerda carrega em 5 das 6 é um trilho segmentado. O nome descrevia a única
+demonstração da página, que por sua vez não descrevia tela nenhuma. Entraram
+**`ToolbarRow`** (a linha do telefone que se dissolve no `md` — `md:contents`
+aparece 5× no app, escrita à mão; medido: `flex` a 375px, `contents` a 1443) e
+**`ToolbarFilterIndicator`** (o ponto de filtro ativo, hoje em **4 grafias**;
+ficou a que três das quatro compartilham, e a que saiu era a que sangrava para
+fora da caixa do botão).
+
+**A decisão de não carimbar `role="toolbar"` fica, e ganhou o contraexemplo**: o
+app o escreve à mão em 4 barras de seleção, nenhuma com foco itinerante, e duas
+delas são cópia literal das outras duas.
+
+**E o embrulho vai no controle, nunca no invólucro.** Medido nas próprias
+demonstrações do catálogo, depois de escritas: `<FieldControl><Select>…` clona
+a raiz do Radix, que **não renderiza nó nenhum** — o `id` não chega a lugar
+algum e o rótulo aponta para o vazio. E `<FieldControl><InputGroup>…` põe o
+`id` na `div` do grupo: o alvo existe, não é rotulável, e o `<label for>` deixa
+de fazer qualquer coisa. Os dois são o defeito que esta rodada existe para
+eliminar, reproduzido por quem acabara de consertá-lo. A forma certa põe o
+embrulho no `SelectTrigger` e no `InputGroupInput`, e a varredura que fecha o
+assunto é dura: **todo `[data-slot=field-label][for]` da página tem de apontar
+para um elemento que existe e é rotulável** — 16 de 16 na página do `Field`.
+
+### Duas lições de método desta rodada
+
+**`getComputedStyle` pode devolver valor velho no mesmo passo.** A primeira
+medição da régua de densidade disse que ela **não governava** — a variável
+mudava e a altura não. O componente estava certo; o instrumento não. Lendo dois
+quadros depois, a altura acompanha. A prova de que o erro era meu: um
+`height: 48px !important` inline também "não valia", o que é impossível.
+**Medição de layout se lê depois de um quadro, nunca no mesmo passo da
+mutação.**
+
+**Classe montada em tempo de execução não existe — inclusive na sonda.** Ao
+varrer os degraus de alfa do contorno, `/70` e `/80` deram contraste *menor* que
+`/60`. Não era inversão: essas classes não aparecem em fonte nenhuma, o Tailwind
+nunca as emitiu, e a borda caía para o valor padrão. A regra que este arquivo já
+registra pegou a própria ferramenta de medição.
+
+### A revisão da barra, e três coisas que ela achou
+
+A rodada 11 entregou a `Toolbar` e a página dela. A revisão apontou três
+problemas, e nos três a medição mudou o tamanho do achado.
+
+**A busca tinha sido removida por um argumento meio certo.** Ela saiu porque
+nenhuma tela do app tem busca na barra, e a demonstração era a única da página —
+ensinar uma forma inexistente é pior que não ensinar. Mas a conclusão estava
+errada: o conserto era **somar** as formas reais, não apagar a busca. Este
+catálogo nunca foi só espelho do app — `Drawer`, `ContextMenu`, `Menubar`,
+`HoverCard` e `Stepper` foram todos documentados sem consumidor, de propósito —
+e o `ToolbarFilters` é `min-w-0 flex-1`: ele tem a geometria de um campo que
+cresce, e nada usava isso.
+
+**O trilho estava com o componente semanticamente defensável e a aparência
+errada.** As seis barras do app desenham um *segmented control* — bandeja
+`bg-muted` com realce —, que neste sistema é `Tabs variant="solid"`. A
+demonstração usava `ToggleGroup variant="outline"`, uma fileira de botões
+contornados: quem copiasse do catálogo construiria algo que não se parece com o
+produto. Trocar o componente certo pela aparência errada é o defeito menos
+visível de uma página de catálogo, porque ela continua "correta".
+
+### O inventário dos trilhos: não são seis, são onze, e em três grupos
+
+| Grupo | Quantos | O que decide |
+| --- | --- | --- |
+| **Aba** | 4 | faturas `Contas/Pendentes` troca o card **e reseta o eixo de ordenação**; cartões `Cartões/Histórico` troca uma grade por um gráfico de 12 meses |
+| **Filtro** | 3 | transações vira `qb.eq("type", …)` na **mesma** tabela montada; assinaturas é `rows.filter(...)`; histórico de fatura ainda reseta a paginação |
+| **Controle de formulário** | 4 | o valor é a coluna que vai ser gravada, ou a pergunta que decide qual grupo de campos aparece |
+
+Dois achados valem mais que a contagem. **`TransactionTypeSegment` é aba numa
+tela e filtro na outra**: em `transactions-toolbar` ele filtra a tabela; em
+`categories-toolbar` ele troca `IncomeCategoryCard` pela grade de despesa e
+esconde o navegador de mês. Mesmo componente, semânticas opostas. E **quatro
+`role="tablist"` estão dentro de formulários**, um deles debaixo de um
+`<Label>Como informar os valores?</Label>` — rádio vestido de aba, e o pior dos
+onze.
+
+Os dez anunciam o padrão ARIA de abas com **zero `tabpanel`**, zero
+`aria-controls` e zero foco itinerante.
+
+### `Tabs` para o trilho, e o `ToggleGroup` que não segura o invariante
+
+A escolha foi `Tabs variant="solid"`, e ela custa uma dívida registrada: os 3
+filtros ficam com `role="tab"` sem painel. O destino deles é `ToggleGroup`, que
+hoje não serve — **medido: clicar no item já ativo de um `type="single"`
+desmarca tudo**, os três vão para `off`, zero selecionados. Num filtro que já
+tem "Todas" como neutro, isso é um quarto estado que ninguém pediu. Ele ainda
+emite `role="radio"` dentro de `role="group"`, e não de `radiogroup`. Tem zero
+consumidores, então o conserto é grátis — e é ele que destrava a saída.
+
+**A bandeja é 8px mais alta que o gatilho, e isso é certo.** A régua da barra
+mede **controle**, e uma bandeja não é um controle: é o contêiner que segura um.
+`Tabs size="md"` põe o gatilho em **32** — exatamente o degrau de ponteiro fino
+da barra, medido — e a bandeja em 40. Forçar a bandeja a 32 exigiria um gatilho
+de 24, que é o degrau `xs`, reservado para dentro de outro controle. Ancorar
+escada em contêiner é o defeito que esta base já cometeu quatro vezes.
+
+### A vertical carregava a altura da bandeja, e isso quebrava três coisas de uma vez
+
+Medido: a moldura vertical saía com **36px para 108px de conteúdo**. Uma causa,
+três sintomas — e os três foram relatados como problemas separados:
+
+1. **Dois dos três gatilhos ficavam fora da moldura.** Eles ainda pintavam
+   (`overflow: visible`), então o defeito lia como "a lista não está toda
+   visível" em vez de "a caixa está errada".
+2. **O `border-e` — o fio — percorria só os 36 primeiros pixels.** Ele aparecia
+   como um traço parado ao lado da primeira aba que **não se movia** ao trocar
+   de aba, e por isso era natural confundi-lo com o marcador. Não era: o
+   marcador estava correto o tempo todo, em `y: 74px`, do lado de fora da caixa.
+3. A altura declarada não tinha significado nenhum ali.
+
+**Na vertical `size` não nomeia altura.** Ali o eixo cruzado é a **largura**, e
+a altura é a soma das linhas. A classe passou a ser escopada —
+`data-[orientation=horizontal]:h-9` —, e o teste de régua agora exige as duas
+coisas: que a altura exista **e** que ela nunca apareça solta.
+
+**E os rótulos estavam centrados.** Com `justify-center` nas duas orientações,
+numa coluna de 105px os três textos começavam a **35, 24 e 10px** — 25px de
+borda serrilhada, porque cada aba centrava o próprio rótulo numa largura comum.
+Uma coluna de navegação se lê pela margem esquerda:
+`data-[orientation=vertical]:justify-start`. Medido depois: 10, 10 e 10, com a
+horizontal seguindo centrada.
+
+### As três variantes do `Tabs` eram a mesma coisa pintada de três jeitos
+
+Medido, com as três lado a lado e nenhum `size` declarado: **moldura 32, gatilho
+28 e fonte 12,8px nas três**. Elas diferiam só no que a moldura pintava —
+bandeja, fio ou nada — e em mais nada. Isso está errado porque elas não são a
+mesma coisa:
+
+- **`solid`** é um controle segmentado, e vive numa **linha de controles**: a
+  bandeja tem de medir 32 para ficar rente ao `Button` ao lado.
+- **`underline` e `ghost`** são **abas de página**. Não dividem linha com
+  controle nenhum; dividem a página com título e texto corrido.
+
+Hoje `size` tem padrão **por variante** — `md` no `solid`, `lg` nas outras duas.
+E o ganho não é só de altura: **`lg` é o degrau em que o rótulo volta ao corpo
+de texto da página**, porque só `sm` e `md` carregam `text-control-sm`. Uma aba
+de página em 12,8px era o defeito. Medido depois: `solid` 32/28/**12,8px**,
+`underline` e `ghost` 36/32/**14px**.
+
+A forma tem precedente no próprio arquivo — `stretch` resolve assim desde a
+rodada do `Tabs` (`stretch ?? variant === "solid"`). Esta é a segunda prop a
+usá-la, e é o que faz as três serem três **tipos** em vez de três pinturas. O
+padrão mora em `defaultTabsSize(variant)`, exportado, para ser inspecionável em
+vez de enterrado numa expressão.
+
+**A regressão que importava não aconteceu**: as 5 `TabsList` da `Toolbar` são
+`solid`, e continuam com bandeja 32 rente aos controles. E no ponteiro grosso as
+três convergem para 40/36, com o marcador acompanhando.
+
+A página do catálogo passou a ser dividida **pelos três tipos**, com o que é de
+cada um dentro dele — a nota de que o `ghost` não viaja agora fica ao lado da
+demonstração que ela explica, em vez de vinte seções abaixo. As seções que de
+fato atravessam os três (altura, distribuição, excesso horizontal, vertical)
+ficaram depois. E saíram os botões de comparação que eu tinha posto ao lado de
+cada bandeja: a equivalência com o `Button` já está escrita na dica de cada
+degrau, e eles poluíam uma seção que é sobre a escada.
+
+### `--primary-muted`: a marca não tinha tinta suave, e o `Badge` mentia
+
+O `Badge` tem oito variantes e todas são tintas `-muted`. **Nenhuma era a
+marca** — e `variant="primary"` renderizava `--info-muted`, ou seja **azul**
+(medido: 4/44/67 em RGB), num sistema em que `primary` é o verde em todo o
+resto. Havia um consumidor vivo da mentira: o "Beta" de
+`bills-toolbar.tsx:189`, que saía azul sem ninguém ter pedido azul.
+
+O par `--primary-muted` / `--primary-muted-foreground` entrou nos dois temas,
+com a mesma receita de `success` e `info` no matiz da marca (166): `0.96 0.03` /
+`0.32 0.1` no claro, `0.27 0.06` / `0.88 0.06` no escuro.
+
+**O que motivou**: a contagem de filtros na barra. O app já fala verde para
+"filtro ativo" — as três grafias da bolinha usam `bg-primary` —, e trocar o
+ponto por um badge cinza mantinha a informação e perdia o sinal.
+
+**E a medição corrigiu a minha própria leitura.** A primeira conta olhou a
+pílula contra o botão e deu **1,06** no claro, pior que os 1,19 do cinza — o que
+parecia reprovar o token. Calibrando contra a família, a pílula é invisível no
+claro em **todas** as variantes tonais (`success` 1,06, `warning` 1,06): ali
+quem sinaliza é a **tinta**, e nela o verde dá **11,26** contra os **5,76** do
+cinza. No escuro a conta se inverte e é a pílula que carrega (14,71). Medir o
+componente errado quase enterrou a decisão certa.
+
+### `size` no `Tabs` passa a nomear a bandeja — e a rodada anterior parou no meio
+
+O eixo `padding` da rodada 12 tornou o alinhamento **possível**, mas por opt-in,
+e o padrão continuou entregando 40 numa linha de 32. A prova de que o padrão
+estava errado é a própria migração: **6 de 6** chamadas pediam `tight`, nenhuma
+usava o padrão. Padrão que ninguém escolhe não é padrão.
+
+E o problema era maior que o recuo. A frase **"alinha sem ninguém dizer
+`size`"** é a promessa desta casa — está nas páginas do `button`, do `input` e
+do `toggle`, e nas três é verdadeira porque ali `size` nomeia **a altura do
+elemento que se posiciona** (`h-7 / h-8 / h-9 / h-10`, medido em `Button`,
+`Toggle`, `Select` e `NativeSelect`). **O `Tabs` era o único do sistema em que
+`size` nomeava uma peça interna**, e herdou a frase sem herdar o comportamento.
+
+Hoje `size` nomeia a bandeja, o gatilho deriva, e o eixo `padding` saiu:
+
+| `size` | bandeja | gatilho |
+| --- | --- | --- |
+| `sm` | 28 | 24 |
+| **`md`** | **32** | 28 |
+| `lg` | 36 | 32 |
+| `xl` | 40 | 36 |
+
+Os oito números são degraus da escada. Medido nos quatro: **a bandeja é idêntica
+ao `Button` de mesmo nome**, com o gatilho em bandeja − 4.
+
+**Isto não repete o defeito das rodadas do `Menubar` e do `Tabs`.** Lá o
+`TabsList` era `h-9` com `p-1` e o gatilho saía `h-[calc(100%-1px)]` = **27** —
+número que não existe na escada, enquanto a documentação dizia 32. O defeito era
+a **mentira**, não o modelo. Aqui os dois números são reais e os dois estão
+escritos. O gatilho de `sm` cai a 24, e isso é correto: `xs` é o degrau que a
+escada reserva para "dentro de outro controle", e é onde ele está.
+
+**Fechou o defeito do ponteiro grosso** que a rodada 12 deixou aberto (bandeja
+48 contra controles de 40): quem cresce no toque passou a ser a bandeja, com
+piso de 40 — o mesmo degrau que a `Toolbar` publica —, e o gatilho vai a 36.
+Medido a 375px: 40/36, **exatamente a geometria que o app já renderiza no
+telefone** (`h-10 … p-0.5 items-stretch`). O `pointer-coarse:min-h-11` saiu do
+gatilho: era ele que empurrava a bandeja para 48.
+
+O recuo virou 2px fixo. O custo é medido e aceito: sob `scrollable` o anel de
+foco perde **1px** nas pontas, e este arquivo já aceita uma troca maior — em
+`underline` ele perde **3px** na base.
+
+### A armadilha que esta rodada pagou: classe montada em runtime
+
+As alturas foram escritas primeiro como template literal
+(`` `${ALTURA_CLASS[...]} pointer-coarse:${ALTURA_CLASS[...]}` ``). Medido no CSS
+emitido: **`pointer-coarse:h-9` estava no elemento e não existia na folha** — o
+gatilho ficou em 28 dentro de uma bandeja de 40, com 6px de faixa morta. A
+altura base funcionava, e `pointer-coarse:h-10` funcionava por coincidência
+(existe literal em outro arquivo), o que deixou o defeito parcial e mais difícil
+de ver.
+
+É a regra que este arquivo já registra — *o Tailwind varre o código como
+texto* —, e ela pegou a mesma pessoa que a escreveu. As classes voltaram a ser
+literais, e o teste passou a provar que os literais não divergem da tabela.
+
+### O `Tabs` ganhou `padding`, porque quem fica na linha é a bandeja
+
+A revisão apontou o defeito e ele é real: `size="md"` dava **gatilho 32 e
+bandeja 40**, e numa barra de controles de 32 o componente inteiro saía 8px mais
+alto. Eu tinha defendido isso com um argumento de nomenclatura — "a régua mede
+controle, e bandeja não é controle" —, e a nomenclatura estava certa enquanto o
+resultado estava errado: **quem fica lado a lado com um `Button` não é o
+gatilho, é a bandeja.**
+
+O recuo saiu do `variant` e virou eixo próprio. A bandeja é `gatilho + 2×recuo`:
+
+| `size` | gatilho | `default` | `tight` |
+| --- | --- | --- | --- |
+| `sm` | 28 | 36 | **32** |
+| `md` | 32 | 40 | **36** |
+| `lg` | 36 | 44 | **40** |
+
+Com `tight` as três caem nos degraus da escada de controles, e o trilho de uma
+barra vira `size="sm" padding="tight"` — 28 dentro de 32. **É a receita que o
+app já escreve à mão**: `transaction-type-segment.tsx` usa `p-0.5` com
+`md:h-8`. E `size` continua nomeando a caixa real do gatilho, que é a correção
+que consertou o `Menubar` (entregava 24) e o próprio `Tabs` (entregava 27) —
+o defeito daquelas rodadas era a **mentira**, não o modelo.
+
+`default` segue padrão porque o `p-1` é carga estrutural sob `scrollable`:
+`overflow-x` recorta no padding box e o anel de foco de 3px precisa dos 4px.
+Por isso `scrollable` **força** `default`, com a mesma precedência explícita com
+que já vence `stretch`.
+
+**E não dava para consertar de fora**: o `className` do `TabsList` cai na
+moldura (recuo 0), enquanto o `p-1` mora na trilha, sem prop que a alcançasse.
+
+### O que não fechou, e por quê
+
+No ponteiro grosso a bandeja **ainda não fica rente**: medido a 375px, 48 contra
+controles de 40. O `stretch={false}` liga `pointer-coarse:min-h-11` (44) no
+gatilho, e 44 + 4 dá 48.
+
+E não há combinação que feche, porque **uma bandeja com recuo nunca iguala o
+gatilho**. Ficar rente exige que a **bandeja** seja a coisa dimensionada e o
+gatilho derive — que é exatamente o que o app faz (`h-10 md:h-8` com
+`items-stretch`). O `Tabs` dimensiona o gatilho, e o `h-7` do degrau vence
+qualquer `items-stretch`: medido, uma moldura forçada a 40 deixa o gatilho em 28
+e sobra uma faixa morta de 6px em cima e embaixo.
+
+Fechar isso é trocar o `h-*` do degrau por `min-h-*` e dar altura à bandeja —
+mudança de semântica do `size`, e decisão de uma próxima rodada. Fica registrado
+com o número em vez de silenciado.
+
+### `SearchInput`: a regra existia e não tinha casa
+
+O `AGENTS.md` registra desde a rodada do seletor ancorado que `type="search"`
+traz um × desenhado pelo WebKit — azul do sistema, fora do tema e fora da
+escada — e que ele deve ser suprimido e substituído por um botão nosso, e diz
+que *"vale para qualquer campo de busca do app"*. Medido: o
+`FormPickerPopoverSearch` acerta sozinho, e as **três** buscas de
+`transactions-filters-panel.tsx` (418, 538, 772) são `<Input type="search">`
+cru. **Quatro usos, três violações.** Foi a contagem que transformou a regra em
+peça; a semântica fica (é ela que dá a tecla "Buscar" no iOS), só o desenho sai.
+
+**E ele custou um defeito de API, achado ao medir.** Na primeira versão o
+`className` ia para o `<input>`: um `max-w-xs` encolhia a área de digitação e
+deixava a **moldura com a largura toda**, com o botão de limpar **354px** à
+direita do texto. `className` passou a dimensionar a superfície — que é quem
+desenha a borda e ancora os addons —, e o caso raro virou `inputClassName`.
+Medido depois: superfície 320, botão a 5px da borda.
+
+### O indicador: contagem no rótulo, ponto só no ícone
+
+Num botão com rótulo a marca é a **contagem**, num `Badge` dentro do fluxo do
+flex: ela diz *quantos* filtros há em vez de só que há, e não sobrepõe nada.
+Medido antes: a bolinha absoluta encostava no "s" de "Filtros" em 2px, nos dois
+eixos. Depois: **6px de folga**.
+
+**A âncora do ponto passou de `top-1.5` para `top-1`**, e os números são
+medidos: a 1.5 ele invadia a caixa do ícone em **3px**; a 1 invade **1**, e a
+folga até a curva do canto continua **4,59px** — a mesma, porque a distância ao
+centro do arco é simétrica em torno dele. Descer a `top-0.5` zera a invasão do
+ícone mas derruba a folga da curva para 1,76, e aí o ponto passa mesmo a ler
+como estando na borda. A aritmética está trancada em
+[`toolbar-density-ladder.test.ts`](src/components/ui/toolbar-density-ladder.test.ts).
+
+### Duas lições de método, e uma delas é um erro meu
+
+**Confundi folga com sobreposição, e reportei o defeito errado.** A primeira
+medição do ponto calculou a distância do vértice ao centro do arco (4,24 contra
+raio 10) e eu li aquilo como "5,76px dentro da curva", concluindo que o ponto
+cavalgava a borda. **Era o contrário**: a folga entre a borda do ponto e a curva
+é de **4,59px** — ele está confortavelmente dentro. O defeito real era o texto,
+2px, que a mesma medição já mostrava. Uma métrica cujo *sinal* não é óbvio
+precisa ser nomeada pelo que ela mede (`folgaAteACurva`), não pelo que se espera
+encontrar.
+
+**E de novo: medição de layout se lê depois de um quadro.** Um botão de 40px
+mediu 34,2 logo após um `resize_window`, e daí saiu uma "sobreposição" de 5,89px
+que não existia. Com o layout assentado: 40, e 3px. É a terceira vez nesta série
+— e na quarta, a leitura estática dos `tabIndex` do `Tabs` (todos `-1`) quase
+virou um defeito de acessibilidade inexistente, até um `Tab` de verdade mostrar
+o foco entrando na lista e o gatilho ativo virando `0`.
+
 ### Backlog de migração
 
 A rodada 01 entregou tokens, componentes, documentação e o auditor, sem migrar
@@ -1937,5 +2431,87 @@ E o que a rodada da trilha, da paginação e das duas listas deixou:
 - **`BreadcrumbEllipsis` sobrevive sem chamador.** Com `maxItems`, a lista monta
   `BreadcrumbMenu` sozinha, e o marcador estático só serve a quem colapsa à
   mão. Fica exportado porque é o degrau de saída, não porque alguém o use.
+
+E o que a rodada do campo, do formulário e da barra deixou:
+
+- **104 campos à mão**, em 27 arquivos e 5 dialetos de espaçamento. Destino:
+  `Field` + `FieldControl`. É a migração mais cara e a de maior retorno — ela é
+  que transforma os 24 `aria-invalid` órfãos em campos que o leitor de tela
+  explica. Os 2 achados **C'** de `<fieldset>` cru em
+  `workspace-appearance-form-fields.tsx` são o auditor apontando a mesma lacuna.
+- **A escada dos controles de campo está incompleta**, e é o que obriga os 15
+  `h-9` / `className="text-sm"` escritos à mão nos três formulários maiores:
+  `Input` e `SelectTrigger` têm `sm md lg xl`; **`NativeSelect` só tem `sm md`**,
+  e **`MoneyInput` e `Textarea` não têm nenhum**. Um campo de valor não consegue
+  ter a mesma altura do campo de texto ao lado dele. Ficou fora porque é conserto
+  de três componentes que esta rodada não abriu.
+- **`NativeSelect` é a quinta cópia da superfície de campo** — escreve
+  `rounded-lg border border-input bg-input-fill/30 … aria-invalid:…` inline em
+  vez de consumir `field-classes`. O backlog já chamava `input-group.tsx:69` de
+  "a quarta ocorrência". Junto vêm dois desvios só dele:
+  `data-[size=sm]:rounded-md` (raio diferente num degrau, que nenhum outro
+  controle faz) e `dark:hover:bg-input-fill/50`, um `hover:` sem par `active:` e
+  só no tema escuro.
+- **6 barras de filtro à mão** (1.372 linhas) mais **6 clones em esqueleto** com
+  as strings copiadas, mais `monthNavDense*` (4 constantes, ramo `false` morto),
+  `transactionSegment*` e o booleano `dense` costurado por três componentes.
+  Destino: `Toolbar` + `ToolbarRow` + as duas réguas. São 19 `md:h-8` em 14
+  arquivos.
+- **4 barras de seleção com `role="toolbar"` escrito à mão**, nenhuma com foco
+  itinerante — e `transactions-table.tsx:260,318` está copiado verbatim em
+  `subscriptions/page-client.tsx:545,607`.
+- **`bills/page-client.tsx:196`** renderiza o gatilho de filtro em `size-9`
+  (**36**) enquanto `bills-toolbar.tsx:211` renderiza o mesmo controle em
+  `size-10` (**40**). Um terceiro valor, na mesma tela.
+- **3 dialetos de erro de campo** — `text-sm font-normal` (`FieldError`),
+  `text-control-sm font-medium` (login, signup, forgot, reset) e
+  `text-sm font-medium` (workspace-appearance) — e **4 resumos de erro no topo
+  do formulário com 3 contratos de acessibilidade diferentes**: um com
+  `role="alert" aria-live="polite"`, um só com `role="alert"`, um sem nada.
+  Destino: `FieldError` e `Alert tone="destructive" variant="plain"`.
+- **7 alternadores de senha** em 4 arquivos, com dois conjuntos de ícone — e os
+  de `login-form.tsx` são `<svg>` do Lucide colados à mão (regra G).
+  `InputGroup` cobre.
+- **`<select>` cru com 350 caracteres de classe** em
+  `wallets/page-client.tsx:277`, com tokens obsoletos (`h-10`, `rounded-md`,
+  `focus-visible:ring-2`, `ring-offset-background`). `NativeSelect` existe.
+- **`ChangePasswordDialog.tsx:32-36`** deriva à mão a classe do rodapé do
+  diálogo **e** a da folha, com três `!important` brigando com as margens do
+  `DialogFooter`. E falta um `MobileSheetFormFooter`: o chrome cobre cabeçalho e
+  corpo, não o rodapé.
+- **4 `maxLength` silenciosos**, um deles em 120 caracteres, sem contador. Quatro
+  é pouco para uma peça, mas truncar sem avisar é defeito.
+- **`field-classes.ts` não está no catálogo.** É régua compartilhada como
+  `formatters` (Padrão *dinheiro*) e `transaction-date` (Padrão *datas*), e as
+  duas têm página. Ela não.
+- **A regra H do auditor não enxerga `cn()` nem `cva()`** — já registrado na
+  rodada 08, e continua valendo: o par `active:` do cartão de escolha teve de ser
+  verificado no CSS emitido, porque o auditor não o alcança.
+- **Uma regra de auditor nova, se alguém quiser fechar a porta**: um campo
+  montado à mão (`<Label>` seguido de controle, sem `Field` em volta) é medível,
+  e é o que impediria as 104 de voltarem. Foi assim que a regra J nasceu.
+
+E o que a revisão da barra deixou:
+
+- **`ToggleGroup type="single"` desmarca tudo** ao clicar no item ativo, e emite
+  `role="radio"` dentro de `role="group"`. **Zero consumidores**, então o
+  conserto é grátis — e é ele que tira os 3 filtros de `role="tab"`. Sem isso,
+  cada tela migrada precisaria do próprio guarda
+  (`onValueChange={(v) => v && setX(v)}`): 6 grafias duplicadas.
+- **4 `role="tablist"` dentro de formulários**, um deles sob um `<Label>`.
+  Destino: `RadioGroup`. É o pior dos onze e não é assunto de barra.
+- **`TransactionTypeSegment` é aba numa tela e filtro na outra.** Separar é
+  pré-requisito de qualquer migração dos trilhos.
+- **A cromagem de seis telas mora numa pasta de *feature*.**
+  `transactionSegmentContainerClassName` e `transactionSegmentTabClassName` são
+  exportados de `components/transactions/` e importados por faturas, cartões,
+  assinaturas e categorias — o invariante 1 no nível do sistema. Levam junto a
+  sombra literal `dark:shadow-[0_1px_2px_0_rgb(0_0_0/0.35)]` e um `z-[1]`.
+- **3 `<Input type="search">` sem a supressão do ×** em
+  `transactions-filters-panel.tsx` (418, 538, 772), e o
+  `FormPickerPopoverSearch`, que hoje reimplementa o que o `SearchInput` faz.
+  Destino: os quatro passam a consumir a peça.
+- **A busca não existe na barra em nenhuma tela.** O catálogo agora mostra a
+  forma e diz que o app não a tem; tomar a decisão é trabalho de produto.
 
 Reproduza a qualquer momento com `npm run ds:audit`.

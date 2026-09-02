@@ -104,7 +104,7 @@ import { useScrollFade } from "@/hooks/use-scroll-fade"
  * exatamente "menos movimento, mesmo significado".
  */
 
-type TabsSize = "sm" | "md" | "lg"
+type TabsSize = "sm" | "md" | "lg" | "xl"
 type TabsVariant = "solid" | "underline" | "ghost"
 type TabsOrientation = "horizontal" | "vertical"
 
@@ -116,9 +116,111 @@ type TabsOrientation = "horizontal" | "vertical"
  * que interessa: nenhum degrau abaixo de 28, passos de 4, e nenhuma altura
  * declarada na lista.
  */
-export const TABS_TRIGGER_HEIGHTS = { sm: 28, md: 32, lg: 36 } as const
+/**
+ * A escada do `Tabs` — **e `size` nomeia a bandeja**, que é a caixa que um
+ * layout posiciona.
+ *
+ * Era o único componente do sistema em que `size` nomeava uma peça **interna**:
+ * `Button`, `Toggle`, `Select` e `NativeSelect` todos medem a própria altura
+ * (`h-7 / h-8 / h-9 / h-10`). Com o gatilho nomeado, `size="md"` entregava um
+ * componente de **40** numa linha de controles de 32, e a promessa que a página
+ * do `Button` faz — *"alinha sem ninguém dizer `size`"* — era falsa só aqui.
+ *
+ * **Isto não repete o defeito que a rodada anterior consertou.** Lá o
+ * `TabsList` era `h-9` (36) com `p-1` e o gatilho saía `h-[calc(100%-1px)]` =
+ * **27** — um número que não existe na escada, enquanto a documentação dizia
+ * 32. O defeito era a **mentira**, não o modelo. Aqui a bandeja é 32, o gatilho
+ * é 28, os dois são degraus reais, e os dois estão escritos.
+ *
+ * | `size` | bandeja | gatilho |
+ * | --- | --- | --- |
+ * | `sm` | 28 | 24 |
+ * | `md` | **32** | 28 |
+ * | `lg` | 36 | 32 |
+ * | `xl` | 40 | 36 |
+ *
+ * `xl` não é enfeite: 40 com gatilho 36 é exatamente o que o app renderiza no
+ * telefone — `transaction-type-segment.tsx` escreve `h-10 … p-0.5
+ * items-stretch`.
+ */
+/**
+ * O degrau padrão de cada variante — e as três **não** compartilham um.
+ *
+ * Medido antes desta rodada, com as três lado a lado e nenhum `size` declarado:
+ * moldura 32, gatilho 28 e fonte 12,8px nas **três**. Elas diferiam só no que a
+ * moldura pintava, e em mais nada — o que é errado, porque elas não são a mesma
+ * coisa:
+ *
+ * - **`solid`** é um controle segmentado, e vive numa **linha de controles**.
+ *   A bandeja tem de medir 32 para ficar rente ao `Button` e ao `Input` ao lado.
+ * - **`underline` e `ghost`** são **abas de página**. Elas não dividem linha com
+ *   controle nenhum; dividem a página com título e texto corrido.
+ *
+ * E `lg` não é só mais alto: é o degrau em que o rótulo **volta ao corpo de
+ * texto da página**. Só `sm` e `md` carregam `text-control-sm` (12,8px); `lg` e
+ * `xl` herdam o `text-sm` da base. Uma aba de página em 12,8px era o defeito.
+ *
+ * A forma tem precedente no próprio arquivo: `stretch` resolve assim desde a
+ * rodada do `Tabs` (`stretch ?? variant === "solid"`). Esta é a segunda prop a
+ * usá-la, e é o que faz as três variantes serem três **tipos** em vez de três
+ * pinturas.
+ */
+export function defaultTabsSize(variant: TabsVariant): TabsSize {
+  return variant === "solid" ? "md" : "lg"
+}
 
-const TRIGGER_HEIGHT_CLASS = { 28: "h-7", 32: "h-8", 36: "h-9" } as const
+export const TABS_SIZES = {
+  sm: { tray: 28, trigger: 24 },
+  md: { tray: 32, trigger: 28 },
+  lg: { tray: 36, trigger: 32 },
+  xl: { tray: 40, trigger: 36 },
+} as const
+
+/**
+ * O recuo da trilha, e ele é **um só**.
+ *
+ * A rodada anterior o transformou em eixo (`default` 4 / `tight` 2), e a
+ * migração provou que o eixo não existia: **6 de 6** chamadas pediam `tight` e
+ * nenhuma usava o padrão. Eixo sem contagem sai.
+ *
+ * O custo é medido e aceito: sob `scrollable`, `overflow-x` recorta no *padding
+ * box*, então o anel de foco de 3px perde **1px** nas pontas horizontais. Este
+ * mesmo arquivo já aceita uma troca maior — em `underline` o anel perde **3px**
+ * na base, "medido, aceito, e visível nos outros três lados".
+ */
+const TABS_TRACK_PADDING = 2
+
+/** Mantido para quem media o gatilho; hoje ele é derivada da bandeja. */
+export const TABS_TRIGGER_HEIGHTS = {
+  sm: TABS_SIZES.sm.trigger,
+  md: TABS_SIZES.md.trigger,
+  lg: TABS_SIZES.lg.trigger,
+  xl: TABS_SIZES.xl.trigger,
+} as const
+
+export const TABS_TRAY_HEIGHTS = {
+  sm: TABS_SIZES.sm.tray,
+  md: TABS_SIZES.md.tray,
+  lg: TABS_SIZES.lg.tray,
+  xl: TABS_SIZES.xl.tray,
+} as const
+
+/**
+ * A ponte número → classe. **Ela não monta classe nenhuma em runtime** — o
+ * Tailwind varre o código como texto, e uma classe construída por template
+ * literal nunca chega ao CSS. Medido nesta rodada: `pointer-coarse:h-9` estava
+ * no elemento e **não existia** na folha, enquanto a altura base funcionava.
+ *
+ * As classes são escritas por extenso nos `cva` acima; esta tabela existe para
+ * o teste provar que os literais e a escada não divergiram.
+ */
+export const ALTURA_CLASS = {
+  24: "h-6",
+  28: "h-7",
+  32: "h-8",
+  36: "h-9",
+  40: "h-10",
+} as const
 
 /**
  * Quem tem marcador viajante — e o `ghost` não tem, de propósito.
@@ -241,33 +343,73 @@ const tabsListFrameVariants = cva("flex", {
      * deveria rolar por dentro.
      */
     fill: { true: "w-full min-w-0", false: "w-fit shrink-0" },
+    /**
+     * **A altura do componente.** É esta caixa que um layout posiciona, e é
+     * por isso que `size` a nomeia — como em `Button`, `Toggle`, `Select` e
+     * `NativeSelect`.
+     *
+     * O piso de toque é `pointer-coarse:h-10` (40), o mesmo degrau que a
+     * `Toolbar` publica em `--toolbar-control` e a mesma altura que o app
+     * renderiza no telefone. A pergunta é o **apontador** e não a largura da
+     * janela — é a regra já registrada no item de menu, e o `Calendar` a aplica
+     * do mesmo jeito.
+     */
+    /**
+     * **A altura só existe na horizontal.** Ali `size` nomeia a bandeja, que é
+     * a caixa que um layout posiciona numa linha de controles.
+     *
+     * Na vertical ela não significa nada — o eixo cruzado passa a ser a
+     * largura, e a altura vira a soma das linhas. Enquanto a classe era
+     * incondicional, a moldura vertical saía com **36px para 106px de
+     * conteúdo**: dois dos três gatilhos ficavam fora dela, e o `border-e`
+     * (o fio) percorria só os 36 primeiros pixels — aparecendo como um traço
+     * parado ao lado da primeira aba, que **não se movia** ao trocar de aba,
+     * porque não era o marcador. Medido.
+     */
+    size: {
+      sm: "data-[orientation=horizontal]:h-7 pointer-coarse:data-[orientation=horizontal]:h-10",
+      md: "data-[orientation=horizontal]:h-8 pointer-coarse:data-[orientation=horizontal]:h-10",
+      lg: "data-[orientation=horizontal]:h-9 pointer-coarse:data-[orientation=horizontal]:h-10",
+      xl: "data-[orientation=horizontal]:h-10",
+    },
   },
-  defaultVariants: { variant: "solid", fill: false },
+  defaultVariants: { variant: "solid", size: "md", fill: false },
 })
 
 /**
  * A trilha. Ela **não desenha nada** — ver a invariante 2 no cabeçalho — e é
  * quem carrega o recuo, a rolagem e a máscara.
  */
-const tabsListTrackVariants = cva("relative flex min-w-0 items-center", {
-  variants: {
-    variant: {
-      solid: "gap-0.5 p-1",
-      underline: "gap-1 p-1 data-[orientation=horizontal]:pb-0 data-[orientation=vertical]:pe-0",
-      ghost: "gap-0.5 p-1",
+const tabsListTrackVariants = cva(
+  "relative flex min-w-0 items-center p-0.5",
+  {
+    variants: {
+      variant: {
+        solid: "gap-0.5",
+        underline:
+          "gap-1 data-[orientation=horizontal]:pb-0 data-[orientation=vertical]:pe-0",
+        ghost: "gap-0.5",
+      },
+      orientation: {
+        horizontal: "flex-row",
+        vertical: "flex-col items-stretch",
+      },
+      fill: { true: "w-full", false: "" },
     },
-    orientation: {
-      horizontal: "flex-row",
-      vertical: "flex-col items-stretch",
-    },
-    fill: { true: "w-full", false: "" },
-  },
-  defaultVariants: { variant: "solid", orientation: "horizontal", fill: false },
-})
+    defaultVariants: { variant: "solid", orientation: "horizontal", fill: false },
+  }
+)
+
 
 const tabsTriggerVariants = cva(
   [
-    "relative flex shrink-0 cursor-default items-center justify-center gap-1.5 text-sm font-medium whitespace-nowrap outline-hidden select-none",
+    "relative flex shrink-0 cursor-default items-center gap-1.5 text-sm font-medium whitespace-nowrap outline-hidden select-none",
+    // Centrado na horizontal, alinhado ao início na vertical. Medido com
+    // `justify-center` nas duas: numa coluna de 105px os rótulos começavam a
+    // 35, 24 e 10px — 25px de borda serrilhada, porque cada aba centrava o
+    // próprio texto numa largura comum. Uma coluna de navegação se lê pela
+    // margem esquerda.
+    "data-[orientation=horizontal]:justify-center data-[orientation=vertical]:justify-start",
     // A mesma duração e a mesma curva do marcador: a tinta do rótulo e o
     // deslocamento do realce são **um** evento, e relógios diferentes fariam a
     // aba acender antes de o marcador chegar.
@@ -302,10 +444,16 @@ const tabsTriggerVariants = cva(
           "data-[state=active]:text-foreground",
         ].join(" "),
       },
+      /**
+       * A altura do gatilho **deriva** da bandeja: `bandeja − 2×recuo`. Quem
+       * escolhe é o `size` do `TabsList`, e os quatro resultados são degraus
+       * da escada — 24 · 28 · 32 · 36.
+       */
       size: {
-        sm: `${TRIGGER_HEIGHT_CLASS[TABS_TRIGGER_HEIGHTS.sm]} text-control-sm`,
-        md: TRIGGER_HEIGHT_CLASS[TABS_TRIGGER_HEIGHTS.md],
-        lg: TRIGGER_HEIGHT_CLASS[TABS_TRIGGER_HEIGHTS.lg],
+        sm: "h-6 pointer-coarse:h-9 text-control-sm",
+        md: "h-7 pointer-coarse:h-9 text-control-sm",
+        lg: "h-8 pointer-coarse:h-9",
+        xl: "h-9",
       },
       /**
        * O alvo de toque cresce **só quando a aba não estica**.
@@ -321,7 +469,16 @@ const tabsTriggerVariants = cva(
        */
       stretch: {
         true: "min-w-0 flex-1",
-        false: "pointer-coarse:min-h-11",
+        /**
+         * O `pointer-coarse:min-h-11` saiu daqui.
+         *
+         * Ele dava 44px de alvo a uma aba de largura de rótulo, e era ele que
+         * fazia a bandeja medir **48** contra controles de 40 no telefone —
+         * medido a 375px. Hoje quem cresce no toque é a **bandeja**, que sobe
+         * um degrau e leva o gatilho junto: `md` vira 40/36, que é a mesma
+         * geometria que o app já renderiza no telefone.
+         */
+        false: "",
       },
     },
     defaultVariants: { variant: "solid", size: "md", stretch: true },
@@ -399,7 +556,7 @@ const tabsIndicatorVariants = cva(
 
 function TabsList({
   className,
-  size = "md",
+  size,
   variant = "solid",
   stretch,
   scrollable = false,
@@ -428,6 +585,11 @@ function TabsList({
    * (`scrollWidth === clientWidth`), o hook marca `data-scroll-fade="off"` e a
    * prop não faria **nada** — sem erro, sem aviso.
    */
+  /**
+   * O padrão do degrau depende da variante — ver `defaultTabsSize`. Um `size`
+   * explícito continua vencendo.
+   */
+  const resolvedSize = size ?? defaultTabsSize(variant)
   const doesStretch = scrollable ? false : (stretch ?? variant === "solid")
   const axis = orientation === "vertical" ? "y" : "x"
 
@@ -506,11 +668,11 @@ function TabsList({
       ro.disconnect()
       mo.disconnect()
     }
-  }, [viaja, variant, doesStretch, size, orientation, scrollable])
+  }, [viaja, variant, doesStretch, resolvedSize, orientation, scrollable])
 
   return (
     <TabsListContext.Provider
-      value={{ size, variant, stretch: doesStretch, indicatorReady }}
+      value={{ size: resolvedSize, variant, stretch: doesStretch, indicatorReady }}
     >
       <div
         data-slot="tabs-list-frame"
@@ -518,6 +680,7 @@ function TabsList({
         className={cn(
           tabsListFrameVariants({
             variant,
+            size: resolvedSize,
             // O `underline` **horizontal** ocupa a largura toda mesmo sem
             // esticar as abas: o fio dele é a fronteira entre a fileira e o
             // painel, e um fio que para depois da última aba lê como

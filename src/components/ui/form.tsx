@@ -8,7 +8,36 @@ export interface CustomFormProps extends React.FormHTMLAttributes<HTMLFormElemen
   onSubmit?: React.FormEventHandler<HTMLFormElement>
 }
 
-function shouldDeferEnterToWidget(target: HTMLElement): boolean {
+/**
+ * Onde o Enter **não** é sequestrado, e por quê.
+ *
+ * Esta lista é a fonte: a página `/designsystem/formularios` a importa em vez
+ * de redigitá-la. Ela era uma cópia à mão, e já tinha divergido — a página
+ * mostrava 6 regras enquanto o código checava 7, e a que faltava era
+ * justamente a do seletor ancorado, que é a lição mais geral do arquivo.
+ * Documentação que duplica um dado sempre atrasa; a que o lê, não.
+ */
+export const ENTER_DEFERRAL_RULES = [
+  { match: "<textarea>", why: "o Enter quebra linha" },
+  { match: "<select> nativo", why: "o Enter escolhe a opção" },
+  { match: "contenteditable", why: "o Enter quebra linha" },
+  {
+    match: '[data-slot="select-trigger"]',
+    why: "o Enter abre o Select do Radix",
+  },
+  {
+    match: '[data-slot="form-picker-popover-search"]',
+    why: "a lista já filtra a cada tecla — ali o Enter não é nada",
+  },
+  { match: 'role="combobox"', why: "o Enter confirma o item destacado" },
+  { match: 'role="listbox"', why: "o Enter confirma o item destacado" },
+] as const
+
+/**
+ * Exportada para poder ser testada. Enquanto era privada, as 7 regras acima
+ * eram uma promessa sem asserção — e não existia `form.test.ts`.
+ */
+export function shouldDeferEnterToWidget(target: HTMLElement): boolean {
   if (
     target.tagName === "TEXTAREA" ||
     target.tagName === "SELECT" ||
@@ -38,27 +67,45 @@ function shouldDeferEnterToWidget(target: HTMLElement): boolean {
   return false
 }
 
+/**
+ * Enquanto uma tecla morta está compondo um caractere, o Enter **confirma o
+ * candidato** — ele pertence ao editor de método de entrada, não ao
+ * formulário. Sem esta guarda, digitar `ç` ou `ã` num teclado que compõe
+ * enviava o formulário no meio da palavra.
+ *
+ * `isComposing` não aparecia em lugar nenhum deste repositório. O `keyCode
+ * 229` é o mesmo fato pela porta antiga, para os navegadores que não publicam
+ * a propriedade.
+ */
+function isComposing(e: React.KeyboardEvent): boolean {
+  return e.nativeEvent.isComposing || e.nativeEvent.keyCode === 229
+}
+
+function submitFrom(form: HTMLFormElement) {
+  let submitButton = form.querySelector(
+    'button[type="submit"]:not(:disabled)'
+  ) as HTMLButtonElement | null
+  // O botão pode viver fora do `<form>` — num `DialogFooter` ou num cabeçalho
+  // fixo de folha —, ligado pelo atributo `form`.
+  if (!submitButton && form.id) {
+    submitButton = document.querySelector(
+      `button[type="submit"][form="${CSS.escape(form.id)}"]:not(:disabled)`
+    ) as HTMLButtonElement | null
+  }
+  submitButton?.click()
+}
+
 const CustomForm = React.forwardRef<HTMLFormElement, CustomFormProps>(
   ({ className, onSubmit, onKeyDown, children, ...props }, ref) => {
     const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        const target = e.target as HTMLElement
-        if (shouldDeferEnterToWidget(target)) {
-          onKeyDown?.(e)
-          return
-        }
-        e.preventDefault()
-        const form = e.currentTarget
-        let submitButton = form.querySelector(
-          "button[type=\"submit\"]:not(:disabled)"
-        ) as HTMLButtonElement | null
-        if (!submitButton && form.id) {
-          submitButton = document.querySelector(
-            `button[type="submit"][form="${CSS.escape(form.id)}"]:not(:disabled)`,
-          ) as HTMLButtonElement | null
-        }
-        if (submitButton) {
-          submitButton.click()
+      if (e.key === "Enter" && !e.shiftKey && !isComposing(e)) {
+        // `⌘/Ctrl + Enter` envia **de dentro** do controle que ficaria com a
+        // tecla. É a saída para o textarea, que defere o Enter e por isso não
+        // tinha nenhuma forma de enviar sem tirar a mão do teclado.
+        const forced = e.metaKey || e.ctrlKey
+        if (forced || !shouldDeferEnterToWidget(e.target as HTMLElement)) {
+          e.preventDefault()
+          submitFrom(e.currentTarget)
         }
       }
       onKeyDown?.(e)
@@ -67,6 +114,7 @@ const CustomForm = React.forwardRef<HTMLFormElement, CustomFormProps>(
     return (
       <form
         ref={ref}
+        data-slot="form"
         className={cn(className)}
         onSubmit={onSubmit}
         onKeyDown={handleKeyDown}

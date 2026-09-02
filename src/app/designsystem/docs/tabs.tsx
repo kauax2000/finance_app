@@ -3,22 +3,11 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
-const SUPERFICIES = [
-  ["solid", "A bandeja preenchida. O padrão, e a forma que o app já usa."],
-  ["underline", "Um fio sob a fileira, e o marcador pousa nele. Para abas de página."],
-  ["ghost", "Nem bandeja nem fio, para dentro de um cartão que já tem moldura."],
-] as const
-
-const MARCADOR = [
-  ["solid", "o realce corre dentro da bandeja."],
-  ["underline", "o traço de acento corre sobre o fio."],
-  ["ghost", "não viaja: sem bandeja e sem fio não há trilho, e esta é a variante que existe para não chamar atenção."],
-] as const
-
 const DEGRAUS = [
-  ["sm", "28px — a bandeja fica com 36, a altura da versão anterior."],
-  ["md", "32px — o padrão do sistema. A bandeja fica com 40."],
-  ["lg", "36px — para uma barra que carrega a página inteira."],
+  ["sm", "bandeja 28, gatilho 24 — para dentro de um cartão apertado."],
+  ["md", "bandeja 32, gatilho 28 — o padrão, e a altura de um Button md."],
+  ["lg", "bandeja 36, gatilho 32."],
+  ["xl", "bandeja 40, gatilho 36 — o trilho do telefone."],
 ] as const
 
 const MESES = [
@@ -79,11 +68,110 @@ export default function TabsDoc() {
       </DocSection>
 
       <DocSection
-        title="Altura do gatilho"
-        description="size mede o gatilho, e a bandeja cresce em volta. Os mesmos nomes e os mesmos números do Button, do Input e do SelectTrigger — botão ao lado de aba alinha sem ninguém dizer size."
-        code={`<TabsList size="sm">…</TabsList>
-<TabsList size="md">…</TabsList>  {/* o padrão */}
-<TabsList size="lg">…</TabsList>`}
+        title="Solid — o controle segmentado"
+        description="A bandeja preenchida, e a forma que o app já usa. Ela vive numa linha de controles: a bandeja mede 32 para ficar rente ao Button e ao Input ao lado, e por isso o padrão dela é md. O marcador corre dentro da bandeja."
+        code={`<TabsList>…</TabsList>  {/* variant="solid" size="md", os dois de fábrica */}`}
+        previewClassName="flex-col flex-nowrap items-stretch gap-6 p-6"
+      >
+        <div className="flex flex-col gap-2">
+          <Tabs defaultValue="jan">
+            <TabsList stretch={false}>
+              <TabsTrigger value="jan">Janeiro</TabsTrigger>
+              <TabsTrigger value="fev">Fevereiro</TabsTrigger>
+              <TabsTrigger value="mar">Março</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <p className="text-xs text-muted-foreground">
+            Troque de aba: o realce é um objeto só que se desloca dentro da
+            bandeja.
+          </p>
+        </div>
+      </DocSection>
+
+      <DocNote title="Ele é o único que nasce esticado">
+        <code>stretch</code> vem ligado aqui e desligado nas outras duas, porque
+        uma bandeja lê como <strong>controle segmentado</strong> — e um controle
+        segmentado divide a largura que tem. Uma fileira de abas de página não.
+      </DocNote>
+
+      <DocSection
+        title="Underline — as abas de página"
+        description="Um fio sob a fileira, e o marcador pousa nele. Aqui não há bandeja para caber em linha de controle nenhuma: são abas que dividem a página com título e texto corrido, então o padrão é lg — o degrau em que o rótulo volta aos 14px."
+        code={`<TabsList variant="underline">…</TabsList>  {/* size="lg" de fábrica */}`}
+        previewClassName="flex-col flex-nowrap items-stretch gap-6 p-6"
+      >
+        <div className="flex flex-col gap-2">
+          <Tabs defaultValue="visao">
+            <TabsList variant="underline">
+              <TabsTrigger value="visao">Visão geral</TabsTrigger>
+              <TabsTrigger value="limites">Limites</TabsTrigger>
+              <TabsTrigger value="faturas">Faturas</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <p className="text-xs text-muted-foreground">
+            O traço de acento corre sobre o fio.
+          </p>
+        </div>
+      </DocSection>
+
+      <DocNote title="O fio sempre atravessa a largura toda">
+        Ele é a fronteira entre a fileira e o painel de baixo. Um fio que
+        <strong> para depois da última aba</strong> lê como sublinhado do grupo,
+        não como base da página — por isso a moldura do <code>underline</code>{" "}
+        ocupa a largura toda mesmo com as abas do tamanho do rótulo.
+      </DocNote>
+
+      <DocSection
+        title="Ghost — dentro de uma moldura que já existe"
+        description="Nem bandeja nem fio: para dentro de um cartão ou de um diálogo que já tem contorno próprio. Também é abas de página, então também nasce lg."
+        code={`<TabsList variant="ghost">…</TabsList>  {/* size="lg" de fábrica */}`}
+        previewClassName="flex-col flex-nowrap items-stretch gap-6 p-6"
+      >
+        <div className="flex flex-col gap-2">
+          <Tabs defaultValue="jan">
+            <TabsList variant="ghost">
+              <TabsTrigger value="jan">Janeiro</TabsTrigger>
+              <TabsTrigger value="fev">Fevereiro</TabsTrigger>
+              <TabsTrigger value="mar">Março</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <p className="text-xs text-muted-foreground">
+            Aqui o marcador não viaja: a tinta troca no lugar.
+          </p>
+        </div>
+      </DocSection>
+
+      <DocNote title="ghost não viaja, e a razão é o trilho">
+        O marcador viaja <em>ao longo de alguma coisa</em>: a bandeja do{" "}
+        <code>solid</code> e o fio do <code>underline</code> são o trilho que dá
+        sentido ao deslocamento. O <code>ghost</code> não desenha nem um nem
+        outro, então ali o mesmo movimento deixa de ser um realce correndo por um
+        trilho e vira um bloco preenchido deslizando sozinho sobre o fundo — na
+        variante escolhida justamente para uma fileira que <strong>não</strong>{" "}
+        deve chamar atenção. A mais silenciosa das três não pode ficar com o
+        marcador mais barulhento. Sem marcador ela cai no mesmo caminho de antes
+        da hidratação: cada gatilho pinta o próprio realce, e a tinta troca com{" "}
+        <code>transition-colors</code> — mudança de cor, não deslocamento.
+      </DocNote>
+
+      <DocNote title="As três não compartilham um padrão, e é de propósito">
+        Antes desta rodada elas saíam idênticas — moldura 32, gatilho 28 e fonte
+        de 12,8px nas três, medidas —, diferindo só no que a moldura pintava.
+        Hoje <code>solid</code> nasce <code>md</code> porque a bandeja dele tem
+        de ficar rente a um <code>Button</code>, e as outras duas nascem{" "}
+        <code>lg</code> porque <strong>é ali que o rótulo volta ao corpo de
+        texto da página</strong>: só <code>sm</code> e <code>md</code> carregam{" "}
+        <code>text-control-sm</code>. Um <code>size</code> explícito continua
+        vencendo.
+      </DocNote>
+
+      <DocSection
+        title="Altura da bandeja"
+        description="size mede a bandeja — a caixa que um layout posiciona —, e o gatilho deriva dela. Os mesmos nomes e os mesmos números do Button, do Input e do SelectTrigger: botão ao lado de aba alinha sem ninguém dizer size."
+        code={`<TabsList size="sm">…</TabsList>  {/* bandeja 28 */}
+<TabsList size="md">…</TabsList>  {/* bandeja 32 — o padrão */}
+<TabsList size="lg">…</TabsList>  {/* bandeja 36 */}
+<TabsList size="xl">…</TabsList>  {/* bandeja 40 */}`}
         previewClassName="flex-col flex-nowrap items-start gap-5 p-6"
       >
         {DEGRAUS.map(([size, dica]) => (
@@ -96,61 +184,6 @@ export default function TabsDoc() {
             </Tabs>
             <p className="text-xs text-muted-foreground">
               <code className="font-mono">{size}</code> — {dica}
-            </p>
-          </div>
-        ))}
-      </DocSection>
-
-      <DocSection
-        title="Superfície"
-        description="variant escolhe o que a moldura desenha. Quem pinta é ela; a fileira de abas não desenha nada, porque é ela que rola e dissolve."
-        code={`<TabsList variant="solid">…</TabsList>  {/* o padrão */}
-<TabsList variant="underline">…</TabsList>
-<TabsList variant="ghost">…</TabsList>`}
-        previewClassName="flex-col flex-nowrap items-stretch gap-6 p-6"
-      >
-        {SUPERFICIES.map(([variant, dica]) => (
-          <div key={variant} className="flex flex-col gap-2">
-            <Tabs defaultValue="visao">
-              <TabsList variant={variant}>
-                <TabsTrigger value="visao">Visão geral</TabsTrigger>
-                <TabsTrigger value="limites">Limites</TabsTrigger>
-                <TabsTrigger value="faturas">Faturas</TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <p className="text-xs text-muted-foreground">
-              <code className="font-mono">{variant}</code> — {dica}
-            </p>
-          </div>
-        ))}
-      </DocSection>
-
-      <DocSection
-        title="O marcador viaja"
-        description="Troque de aba nas fileiras abaixo. Em solid e underline o realce é um objeto só que se desloca; antes desta rodada ele era apagado numa aba e aceso na outra, o que lê como marcadores piscando em vez de um se movendo. Em ghost ele não viaja, e a terceira fileira mostra a diferença."
-        code={`// nada a declarar: o marcador vem de fábrica.
-// A trilha publica a caixa da aba ativa em quatro variáveis
-// e o marcador transiciona para ela.
-<TabsList>
-  <TabsTrigger value="jan">Janeiro</TabsTrigger>
-</TabsList>
-
-// ghost não tem marcador viajante: sem bandeja e sem fio,
-// não há trilho por onde ele correria.
-<TabsList variant="ghost">…</TabsList>`}
-        previewClassName="flex-col flex-nowrap items-stretch gap-6 p-6"
-      >
-        {MARCADOR.map(([variant, dica]) => (
-          <div key={variant} className="flex flex-col gap-2">
-            <Tabs defaultValue="jan">
-              <TabsList variant={variant} stretch={false}>
-                <TabsTrigger value="jan">Janeiro</TabsTrigger>
-                <TabsTrigger value="fev">Fevereiro</TabsTrigger>
-                <TabsTrigger value="mar">Março</TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <p className="text-xs text-muted-foreground">
-              <code className="font-mono">{variant}</code> — {dica}
             </p>
           </div>
         ))}
@@ -258,16 +291,17 @@ export default function TabsDoc() {
         rows={[
           {
             prop: "size",
-            type: '"sm" | "md" | "lg"',
-            default: '"md"',
+            type: '"sm" | "md" | "lg" | "xl"',
+            default: '"md" em solid · "lg" em underline e ghost',
             description:
-              "A altura do gatilho — 28, 32, 36. A bandeja é consequência dele, nunca o contrário.",
+              "A altura da bandeja — 28, 32, 36, 40 —, que é a caixa que um layout posiciona. O gatilho deriva (bandeja − 4): 24, 28, 32, 36. Os oito números são degraus da escada. No ponteiro grosso a bandeja tem piso de 40.",
           },
           {
             prop: "variant",
             type: '"solid" | "underline" | "ghost"',
             default: '"solid"',
-            description: "O que a moldura desenha: bandeja, fio ou nada.",
+            description:
+              "O tipo de aba, e não só o que a moldura desenha: ele decide também o padrão de size e o de stretch. solid é controle segmentado; underline e ghost são abas de página.",
           },
           {
             prop: "stretch",
@@ -358,19 +392,6 @@ export default function TabsDoc() {
         moldura e quem rola é a fileira, que não desenha nada. E ela fica{" "}
         <em>fora</em>: um nó entre um <code>{'role="tablist"'}</code> e as suas{" "}
         <code>{'role="tab"'}</code> mexe na posse ARIA.
-      </DocNote>
-
-      <DocNote title="ghost não viaja, e a razão é o trilho">
-        O marcador viaja <em>ao longo de alguma coisa</em>: a bandeja do{" "}
-        <code>solid</code> e o fio do <code>underline</code> são o trilho que dá
-        sentido ao deslocamento. O <code>ghost</code> não desenha nem um nem
-        outro, então ali o mesmo movimento deixa de ser um realce correndo por um
-        trilho e vira um bloco preenchido deslizando sozinho sobre o fundo — na
-        variante escolhida justamente para uma fileira que <strong>não</strong>{" "}
-        deve chamar atenção. A mais silenciosa das três não pode ficar com o
-        marcador mais barulhento. Sem marcador ela cai no mesmo caminho de antes
-        da hidratação: cada gatilho pinta o próprio realce, e a tinta troca com{" "}
-        <code>transition-colors</code> — mudança de cor, não deslocamento.
       </DocNote>
 
       <DocNote title="Por que o marcador é um nó só, e não o gatilho">

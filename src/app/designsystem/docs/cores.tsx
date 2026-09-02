@@ -211,6 +211,15 @@ export default function CoresDoc() {
         </TokenGrid>
 
         <TokenGrid label="Tonal" meta="fundo suave" columns={2}>
+          {/* A marca em tinta suave. Ela não existia, e a consequência era o
+              `Badge variant="primary"` renderizar `--info-muted` — azul — num
+              sistema onde `primary` é o verde em todo o resto. */}
+          <TokenTile
+            name="Primary muted"
+            token="--primary-muted"
+            onToken="--primary-muted-foreground"
+            sample="2"
+          />
           <TokenTile
             name="Success muted"
             token="--success-muted"

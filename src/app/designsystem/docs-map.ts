@@ -68,6 +68,7 @@ import RadioGroupDoc from "./docs/radio-group"
 import ResizableDoc from "./docs/resizable"
 import ScrollAreaDoc from "./docs/scroll-area"
 import ScrollFadeDoc from "./docs/scroll-fade"
+import SearchInputDoc from "./docs/search-input"
 import SelectDoc from "./docs/select"
 import SeparatorDoc from "./docs/separator"
 import SheetDoc from "./docs/sheet"
@@ -159,6 +160,7 @@ export const DOCS: Record<string, ComponentType> = {
   "resizable": ResizableDoc,
   "scroll-area": ScrollAreaDoc,
   "scroll-fade": ScrollFadeDoc,
+  "search-input": SearchInputDoc,
   "select": SelectDoc,
   "separator": SeparatorDoc,
   "sheet": SheetDoc,
