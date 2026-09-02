@@ -8,6 +8,14 @@ import {
 } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
+import {
+  fieldDisabledClassName,
+  fieldFocusRingClassName,
+  fieldInvalidClassName,
+  fieldSurfaceClassName,
+  fieldTriggerHoverClassName,
+  fieldTriggerSizeClassName,
+} from "@/lib/field-classes"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
 import {
@@ -115,34 +123,55 @@ function FormPickerPopover({
 }
 
 /**
- * O gatilho **é o campo** — por isso ele parece um campo e não um botão: mesma
- * altura da escada (`xl`, 40), peso normal, texto à esquerda e o valor
- * truncando em vez de empurrar o chevron para fora.
+ * O gatilho **é o campo** — e agora ele veste a superfície de campo, em vez de
+ * parecê-la.
+ *
+ * A versão anterior era `Button variant="outline" size="xl"`, e a nota aqui
+ * dizia que ele "parece um campo e não um botão". Parecia só sob `dark:`: no
+ * tema claro `outline` é `border-border` + `bg-background` **opaco**, enquanto
+ * `Input` e `SelectTrigger` são `border-input` + `bg-input-fill/30`
+ * translúcido. É a mesma medição que tirou o `Combobox` do `Button` na rodada
+ * 06 — e este era o outro gatilho que faltava converger.
+ *
+ * A altura não muda: `xl` (40) é a que ele já tinha. A conversão é de
+ * **superfície**, não de medida.
  */
 function FormPickerPopoverTrigger({
   className,
   children,
+  size = "xl",
   ...props
-}: React.ComponentProps<typeof Button>) {
+}: Omit<React.ComponentProps<"button">, "size"> & {
+  size?: "sm" | "md" | "lg" | "xl"
+}) {
   return (
-    <PopoverTrigger asChild>
-      <Button
-        data-slot="form-picker-popover-trigger"
-        type="button"
-        variant="outline"
-        size="xl"
-        className={cn(
-          "w-full justify-between px-3 text-left text-sm font-normal",
-          className
-        )}
-        {...props}
-      >
-        <span className="flex min-w-0 items-center gap-2">{children}</span>
-        <ChevronDownIcon
-          aria-hidden
-          className="size-4 shrink-0 text-muted-foreground transition-transform duration-(--duration-fast) group-data-open/button:rotate-180"
-        />
-      </Button>
+    <PopoverTrigger
+      data-slot="form-picker-popover-trigger"
+      data-size={size}
+      type="button"
+      className={cn(
+        fieldSurfaceClassName,
+        fieldFocusRingClassName,
+        fieldInvalidClassName,
+        fieldDisabledClassName,
+        fieldTriggerHoverClassName,
+        fieldTriggerSizeClassName,
+        "group/picker-trigger flex w-full min-w-0 items-center justify-between gap-2 px-3 text-left font-normal",
+        "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        className
+      )}
+      {...props}
+    >
+      <span className="flex min-w-0 items-center gap-2">{children}</span>
+      {/* O grupo é nomeado, e não `in-*`. O `data-state` mora no próprio
+          gatilho, então o filho precisa de um seletor de grupo — e `in-*`
+          casaria com **qualquer** ancestral que carregue `data-state`, além de
+          compilar com `:where()`. Antes isto lia `group-data-open/button`, que
+          era o grupo do `Button`: sem o `Button`, o grupo deixa de existir. */}
+      <ChevronDownIcon
+        aria-hidden
+        className="shrink-0 text-muted-foreground transition-transform duration-(--duration-fast) group-data-[state=open]/picker-trigger:rotate-180"
+      />
     </PopoverTrigger>
   )
 }

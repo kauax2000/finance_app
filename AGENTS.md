@@ -1230,6 +1230,411 @@ E **`.nums` sai de fábrica** em todo `DescriptionDetails`: dígito em lista de
 detalhe é sempre dado, e a própria página do catálogo escrevia
 `className="nums"` à mão em três linhas seguidas.
 
+### O campo de data era o quarto gatilho fora da régua
+
+O backlog da rodada do `Tabs` dizia "três gatilhos de campo em duas aparências…
+vale reabrir a decisão agora que os outros dois convergiram". **A conta era
+quatro.** `Select` e `Combobox` vestiam `field-classes`; `DatePicker` e
+`FormPickerPopoverTrigger` continuavam sendo `Button variant="outline"`.
+
+Medido no tema claro, lado a lado com o `Input`: o gatilho do `DatePicker` saía
+**32px contra 36**, com preenchimento `oklch(0.985)` **opaco** contra
+`oklab(0.9 0 0 / 0.3)` translúcido. Um campo de data ao lado de um campo de
+texto era mais baixo e de outra superfície — e a nota do
+`FormPickerPopoverTrigger` afirmava que ele "parece um campo e não um botão",
+o que só era verdade sob `dark:`, onde `outline` recebe `dark:border-input
+dark:bg-input-fill/30`.
+
+Os dois convergiram. Depois: **36px, `oklch(0.9)`, `oklab(0.9 0 0 / 0.3)`** —
+idênticos ao `Input`, medidos. O `DatePicker` passa a `lg` (a altura do campo);
+o `FormPickerPopover` mantém `xl` (40), porque a conversão ali é de superfície e
+não de medida.
+
+**A escada de altura entrou em `field-classes`**, como
+`fieldTriggerSizeClassName`. O arquivo argumentava — com razão na época — que
+ela não podia entrar porque os três consumidores a aplicavam por três mecânicas
+diferentes. O que mudou foi a contagem: com os dois gatilhos novos resolvendo
+por `data-size` como o `ComboboxTrigger`, são três escrevendo a mesma linha.
+`Input` e `SelectTrigger` seguem de fora, e o argumento original continua valendo
+para eles.
+
+Sair do `Button` também tira os dois da garantia de maiúscula inicial do CTA, e
+isso é correto: `Selecione a data` é placeholder de campo, não rótulo de ação.
+
+### Três defeitos do `DatePicker` que não se viam
+
+- **O foco ficava no `<body>` ao fechar.** Havia um `onCloseAutoFocus` prevenido
+  — exatamente o bug que o `FormPickerPopover` já tinha registrado e consertado.
+  A justificativa (o salto de rolagem) vale para **abrir** e não para fechar,
+  porque o Radix devolve o foco com `preventScroll`. Medido depois: `Esc` põe o
+  foco de volta no gatilho.
+- **`modal={false}` cravado.** Sem `modal` no telefone, rolar a grade arrasta a
+  folha que contém o formulário. Agora é `modal={isMobile}`, como o
+  `FormPickerPopover`.
+- **Dois `toLocaleDateString` inline**, a regra **I** do auditor com
+  `@/lib/transaction-date` ao lado. O `Calendar` tinha mais dois. Os quatro
+  saíram; `formatMonthShortPtBr` entrou no helper para o seletor de mês.
+
+E o ícone media `size-3.5` com um `mr-2` empilhado sobre o `gap-1.5` do próprio
+`Button` — 14px de distância e um ícone fora da regra `size-4`. Hoje o `gap` do
+campo é o único que decide.
+
+**`mode` é união discriminada**, como o `multiple` do `Combobox`: `<DatePicker
+mode={x}>` com uma variável não estreita, e o estreitamento tem de ser por
+literal em **cada** ponto de uso — um `const isRange = props.mode === "range"`
+não faz nada pelo tipo. O intervalo não é luxo:
+`transactions-date-range-form.tsx` monta um período com dois `DatePicker`
+independentes, que não sabem um do outro.
+
+**O seletor de ano precisou de limite.** Ligar `captionLayout="dropdown"` sem
+`startMonth`/`endMonth` faz o `react-day-picker` oferecer **±100 anos** —
+medido: 101 opções começando em 1926. O padrão passou a ser cinco anos para cada
+lado, que cobre lançamento retroativo e conta agendada.
+
+### A célula do `Calendar` entra na escada, e o `p-0` é o que a faz valer
+
+O botão de dia declarava `size="icon-lg"` — 36 pela escada — e **media 28**,
+porque o `className` do próprio componente o sobrescrevia com `size-auto w-full
+min-w-(--cell-size)`. É a terceira porta do mesmo defeito: `Menubar` entregou 24,
+`Tabs` entregou 27.
+
+Trocar por `md` só mudaria a mentira de 36 para 32, então o botão deixou de
+carimbar `data-size` — **um atributo que não corresponde à caixa é pior que
+atributo nenhum**. Quem nomeia a medida é o `size` do `Calendar` (`sm` 28, `md`
+32, `lg` 36), e ele é **piso**: a grade é elástica, e em ponteiro grosso a célula
+sobe para 44 em qualquer degrau.
+
+**E o `p-0` no dia é carga estrutural, não cosmética.** A raiz é `w-fit`, então a
+largura da grade sai do `max-content` das células. Enquanto o botão trouxesse o
+`px-3` do degrau `md` do `Button`, era esse recuo que dimensionava a coluna:
+medido, **39px em todos os três degraus**, com o `min-w-(--cell-size)` nunca
+chegando a valer e o `size` sem efeito nenhum. Foi um defeito **introduzido**
+nesta rodada ao remover o `size="icon-lg"`, e só apareceu porque a inspeção mediu
+os três degraus em vez de um. Com o recuo em zero: 28 / 32 / 36, medidos.
+
+**A ponte do intervalo passou a derivar da célula.** Era `after:w-4` — 16px fixos
+contra uma célula que vai a 44 no toque. Hoje é `calc(var(--cell-size)/2)`:
+medido, 16px a 32 e **22px a 44**. E a declaração dupla de `rounded-*` em
+`range-start` / `range-end` saiu — a mesma propriedade duas vezes na mesma
+string, decidida por ordem de emissão.
+
+### O seletor de mês do calendário é o do sistema, e os rótulos falam português
+
+O `react-day-picker` desenha o salto de mês com um `<select>` **nativo** em
+`absolute inset-0 opacity-0` por cima de um rótulo falso — é como o shadcn
+entrega. Funciona, e o painel que abre é o do sistema operacional: fonte,
+medida, cantos e realce fora do tema, sem tema escuro, e sem nenhuma das
+decisões que este projeto tomou sobre superfície de comando. O componente
+`Dropdown` passou a ser o `Select` do design system.
+
+**A ponte precisa ficar escrita.** O `onChange` do `react-day-picker` é um
+`ChangeEventHandler<HTMLSelectElement>`, e o handler interno lê **só
+`e.target.value`** (`DayPicker.js`: `Number(e.target.value)`). O Radix entrega
+`onValueChange(valor: string)`, então o adaptador é um objeto com a única
+propriedade que o outro lado consulta, com um `as` sobre um evento incompleto —
+incompletude **medida**, não esquecida. Verificado ponta a ponta: escolher "dez"
+levou a grade de `2026-03-01` para `2026-11-29`.
+
+Com o nativo fora, `dropdown` deixou de receber classe, e `caption_label` perdeu
+o ramo que desenhava o rótulo falso.
+
+**Mas o `relative` do `dropdown_root` não era resto, e tirá-lo custou um bug.**
+A `nav` do `react-day-picker` é `absolute inset-x-0 w-full` com um botão em cada
+ponta — ela cobre **também o meio do cabeçalho**, que é onde vivem os seletores.
+Enquanto o `dropdown_root` era posicionado, ele pintava por cima; estático, caiu
+para trás da faixa e os seletores pararam de responder ao clique. Medido com
+`elementFromPoint` no centro do gatilho: quem respondia era o `<nav>`.
+
+O conserto é de raiz — a faixa recebe `pointer-events-none` e os dois botões
+`pointer-events-auto`, porque um contêiner de largura total que só tem conteúdo
+nas pontas não deve capturar o vão entre elas — e o `relative z-10` volta ao
+`dropdown_root` com o motivo certo escrito.
+
+**E a lição de método é maior que o conserto.** O bug atravessou uma inspeção
+inteira porque a verificação usava `dispatchEvent` direto no elemento, e **evento
+sintético pula o hit-testing**: o painel abria no teste e não abria para uma
+pessoa. Quem foi medir foi o usuário. Empilhamento e área de clique só se
+verificam com `elementFromPoint` ou com clique de verdade — nunca com
+`dispatchEvent`.
+
+**E o gatilho é compacto de propósito.** A fileira vive num `month_caption` que
+já reserva `--cell-size` de cada lado para as setas, e como a raiz é `w-fit`, um
+`SelectTrigger` com recuo padrão faria **a grade inteira crescer para caber a
+legenda** — o calendário passaria a ser dimensionado pelo cabeçalho. Medido
+depois: as três larguras seguem 214 / 242 / 270.
+
+**Os rótulos de acessibilidade estavam todos em inglês.** O `locale` do
+`date-fns` traduz **nomes** — meses, dias da semana — e nada mais; as frases
+conectivas são strings cravadas no pacote: `"Go to the Previous Month"`,
+`"Choose the Month"`, `"Choose the Year"`, e o `"Today, … , selected"` que o
+leitor de tela anuncia em **cada uma das 42 células**. A grade parecia traduzida
+e a camada de acessibilidade nunca esteve. `ROTULOS_PT_BR` conserta isso pela
+mesma razão que o `locale` tem padrão neste arquivo: um idioma que só vale
+quando alguém lembra de passar não é o idioma do app. Verificado na árvore de
+acessibilidade: `"1 de março de 2026"`, `"Ir para o mês anterior"`.
+
+### O `StatCard` compõe, e o par de identidade voltou a ser um
+
+A superfície era montada à mão: `rounded-xl border border-border/80 bg-card p-4
+shadow-xs ring-1 ring-foreground/5`. Cada pedaço é um eixo que o `Card` já
+governa — e o `border-border/80` era um **quarto peso de borda** no app, que é
+exatamente o que o `tone` do `Separator` existe para não deixar acontecer. Hoje
+ele é um `Card padding="none"`, e o que fica sendo dele é o **tom de dinheiro**,
+que é justamente o que o `Card` não tem.
+
+**O rótulo e o valor levavam `gap-2`** — 8px medidos. É o par de identidade que
+este arquivo nomeia com estas palavras ("rótulo sobre valor"), e o invariante diz
+"nem `gap-1`". Mesmo defeito que o `ItemContent` teve na rodada 08. A base virou
+`gap-0`, e **o respiro voltou a existir só entre o par e a variação** — declarado
+pelo contêiner (`[&>[data-slot=stat-card-delta]]:mt-2`), não carregado pela
+variação. Não é compensar geometria por seletor: é o contêiner dizendo qual dos
+filhos abre um bloco novo, como o `ItemGroup variant="divided"` faz.
+
+**`StatCardValue` reimplementava `MoneyDisplay size="2xl"`** e divergia num
+ponto: `letter-spacing` **−0,6px contra `normal`**, medidos. A face mono está
+certa e é decisão registrada do `MoneyDisplay` para figura-herói; o que não podia
+era duas definições da mesma figura diferirem por um `tracking-tight`. Ele saiu,
+e o corpo passou a vir de `--stat-card-value`, que o `size` declara.
+
+**`StatCardDelta` chamava o neutro de `neutral` enquanto o `StatCard` chamava de
+`default`** — e o comentário no topo do mesmo arquivo dizia que renomear tinha
+sido feito justamente porque "trocar de componente exigia reabrir o fonte para
+lembrar qual das duas palavras valia". O arquivo contradizia o próprio
+comentário. Zero telas usavam o delta, então corrigir custou nada.
+
+**`direction` desenha a seta, e não decide o tom.** Em finanças subir não é boa
+notícia por si só: despesa caindo é bom, entrada caindo é ruim. Um componente que
+pintasse de verde tudo que sobe mentiria em metade dos cartões deste app.
+
+### O respiro do `EmptyState` é do pai
+
+As quatro peças carregavam `mb-4`, `mb-2` e `mb-6`, e o contêiner ficava em
+`gap: normal` — medido. O layout era decidido **de baixo para cima**: tirar a
+descrição mudava sozinho o respiro entre o ícone e o título, e a última peça da
+pilha deixava 24px de margem contra a borda de baixo do bloco. Agora o `gap` é do
+`EmptyState` e nenhum filho declara margem — medido, zero `margin-bottom` nos
+quatro.
+
+**O título deixou de ser um `<h2>` cravado.** Ele punha um `h2` na página toda
+vez que um bloco vazio aparecia, inclusive dentro de seção que já tinha o seu —
+o caso de duas das quatro telas. O padrão é um `<p>`; quem precisa de cabeçalho
+usa `asChild` com o nível certo.
+
+**`variant` existe porque duas telas já a escreviam.** `not-found-shell` e
+`route-error-fallback` abrem com a **mesma string** — `className="w-full
+border-border/80 bg-card/40 py-10"`. Duas cópias idênticas de uma sobrescrita são
+uma variante faltando. `plain` fecha o terceiro caso: dentro de um `Card`, que já
+tem moldura própria.
+
+E `EmptyStateIcon` ganhou `tone`, que é o `bg-destructive-muted
+text-destructive-muted-foreground` que o `route-error-fallback` pintava à mão.
+
+### O toast estava na fonte do sistema operacional
+
+As cores dele vieram para os tokens numa rodada anterior — o bloco por tipo em
+`globals.css`, com a nota "as únicas cores do produto que não vinham daqui".
+**O trabalho parou nas cores.** Medido no toast renderizado:
+
+| | toast | o resto do app |
+| --- | --- | --- |
+| tipografia | `ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto…` | `Inter` |
+| corpo | 13px | 12 ou 14 |
+| raio | 8px | 10 |
+| sombra | `0 4px 12px oklch(0 0 0 / .1)`, sem par no escuro | `--shadow-md`, com valor por tema |
+| fechar | 20×20 | 44 em ponteiro grosso |
+
+A primeira linha é a que decide: **o toast era a única superfície do app que
+trocava de tipografia com o sistema operacional** — SF Pro no Mac, Segoe no
+Windows, Roboto no Android —, e são **222 chamadas**.
+
+**Empatar a especificidade não bastou, e a razão vale para qualquer biblioteca
+que injete folha própria.** O sonner declara raio e sombra em
+`[data-sonner-toast][data-styled=true]` (0,2,0) e injeta o CSS **em tempo de
+execução**, ou seja depois da folha do app: com a mesma especificidade, quem vem
+depois ganha. Medido duas vezes — com um atributo só, a fonte entrou e o raio
+ficou em 8px; com 0,2,0 dos dois lados, o raio **continuou** em 8px. O seletor
+daqui é descendente (0,3,0), o mínimo para vencer sem `!important`. (A
+tipografia foi a exceção e por um motivo próprio: o sonner a declara no
+**contêiner**, então declará-la no próprio toast já ganha — propriedade posta no
+elemento vence a que ele herdaria, qualquer que seja a especificidade.)
+
+**Os ícones não eram Heroicons**, e é o único lugar onde a regra **G** vazava
+sem nenhum guarda pegar: o ESLint olha imports, o auditor olha o repositório, e
+esses SVGs moram em `node_modules`. Medido no DOM: `viewBox="0 0 20 20"` sem
+`data-slot` no ícone de tipo, `0 0 24 24` no ×. Hoje entram pelo prop `icons`.
+
+**E as cores só ficaram certas na rodada seguinte.** O bloco afirmava
+"espelhando as variantes do `Alert`" e **não espelhava**: o Alert usa o token
+`bg-{tom}-muted`, e ali havia `color-mix(--{tom} 10%, --popover)` — segunda
+receita para a mesma superfície. Medido no claro, o mesmo aviso em dois cremes:
+`255,243,216` no Alert contra `252,243,230` no toast, distância RGB **14** (os
+outros três, entre 6 e 9). Nenhum reprovava em contraste, então nunca foi
+acessibilidade: era uma medida escrita à mão ao lado de outra que precisava
+concordar com ela. Hoje os dois leem os mesmos tokens — **distância 0** nos
+quatro tons, nos dois temas.
+
+Junto vieram três superfícies que nunca tinham saído da paleta da biblioteca:
+
+- **O toast sem tipo, e o `loading` do `toastPromise`, estavam em preto puro.**
+  Medido no escuro: fundo `0,0,0` contra os `23,23,23` do `--popover`, borda
+  `51,51,51` contra `25,26,26`. **Preto puro é uma cor que este design system
+  não usa em superfície nenhuma** — a página é `37,37,37`. No claro passou
+  batido porque o branco do sonner e o `--popover` coincidem, e é exatamente
+  assim que um defeito de tema escuro sobrevive.
+- **A descrição saía em cinza** (`rgb(63,63,63)`) sobre a superfície colorida —
+  a decisão que o `Alert` documenta e reverteu. Hoje é `currentColor` a 85%.
+- **O × e o botão de ação não vestiam o tom**: borda cinza e tinta quase preta
+  sobre um toast verde, e o "Desfazer" como preenchido invertido. Hoje são
+  contorno e `currentColor`, como o `AlertActions` — **mas o fundo dos dois é
+  diferente**, e tratá-los como a mesma peça custou um bug. O botão de ação vive
+  *dentro* do toast, então fantasma é o certo; o × é `position: absolute` e
+  **cavalga a borda** (medido: 6px para fora em cima e à esquerda), então
+  transparente ele lia como um furo no canto, mostrando a página. Ele leva a
+  superfície do próprio toast.
+
+  A quebra veio junto com o conserto: os dois estavam numa regra só com
+  `background: transparent`, e o × só começou a vazar quando a especificidade
+  subiu para 0,4,0 **para consertar o preenchimento do "Desfazer"**. A medição
+  de verificação foi feita antes de a mudança valer no ×, e por isso passou.
+
+  E **a borda do botão de ação só apareceu quando ganhou largura**: havia só
+  `border-color`, a cor era aplicada e a borda nunca desenhava, porque o sonner
+  deixa `border-style: none`. O "Desfazer" era texto pelado. Com os três, ele
+  fica **idêntico ao botão da `AnnouncementBar`** em sete medidas — 24 de
+  altura, `0 8px`, raio 10, corpo 12, peso 500, `1px solid`, `currentColor/25` —,
+  que é o `Button variant="tertiary" size="xs"` que ela usa. Ali não dá para
+  usar o componente (quem renderiza é o sonner), dá para chegar na mesma caixa.
+
+  **E chegar na mesma caixa foi mais do que a borda.** Um diff dos 693
+  computados contra o botão da barra acusava **14 diferenças** depois dela, e as
+  que importavam eram de estado: **nenhum anel de foco** — medido, `box-shadow:
+  none` e `outline: none` num controle alcançável por teclado —, sem o
+  `active:translate-y-px` que todo botão do app tem, e o realce em **400ms com a
+  curva do navegador** contra os 150ms e a curva do Tailwind. Mais
+  `white-space: wrap` com `overflow-wrap: anywhere` herdados do sonner, que
+  deixam um rótulo de duas palavras quebrar no meio de uma delas.
+
+  A última a cair foi a **entrelinha**: 18px contra os 16 do `text-xs`, porque
+  eu tinha declarado `font-size` sem `line-height` — o mesmo erro da borda sem
+  largura, um passo adiante. Num botão de 24px isso desloca o centro óptico do
+  rótulo. Hoje o diff dá **zero**.
+
+  A lição de método: **um diff de todos os computados acha o que a conferência
+  propriedade a propriedade não acha.** Eu tinha conferido sete medidas à mão e
+  declarado paridade; faltavam nove.
+
+  **E o realce dos três se alinhou em `current/10`.** O `AlertActions` sempre
+  disse "borda, tinta e realce saem de `currentColor`"; a `AnnouncementBar`
+  tinha nascido com `foreground/10` — quase igual no escuro, visivelmente
+  diferente no claro —, e o toast herdaria a divergência ao copiar dela.
+
+E a exceção do ícone âmbar **saiu**: ela existia para compensar o mix de 15% que
+lavava o amarelo, e com `--warning-muted` de verdade a causa desapareceu.
+Medido depois: 7,81 no claro e 10,8 no escuro, bem acima dos 3:1 que um ícone
+pede.
+
+**A cascata cobrou de novo, e num lugar diferente.** As regras de tipo precisam
+ficar acima da base (senão a base apaga as tonais), e os **controles** precisam
+de `[data-styled]` no seletor: o sonner os declara em 0,3,0, e com o empate a
+cor e a borda pegavam mas o **preenchimento não** — o "Desfazer" continuava um
+bloco invertido, medido. Com `[data-styled]` são 0,4,0.
+
+**E a física continua sendo do sonner, de propósito**: empilhamento, arraste,
+`promise`, deduplicação por `id` e a largura de 356px. É o mesmo julgamento da
+rodada do `vaul` — pega-se o mecanismo emprestado e veste-se a cromagem própria.
+
+`lib/toast.ts` ganhou `toastInfo` (o tipo já estava estilizado no CSS e não
+tinha helper), `toastUndo` e `toastPromise`. **O desfazer é o que permite
+excluir sem diálogo**: ele troca um clique de confirmação cobrado de todo mundo
+por uma janela de arrependimento que só quem errou usa. Por isso a duração dele
+é a mais longa da casa (8s) — quem apagou por engano leva alguns segundos para
+perceber, e um desfazer que expira antes disso não existe. Ele **não** substitui
+o `AlertDialog` no que não tem volta.
+
+### O `Stepper` sabia menos que a lista que o contém
+
+`StepperItem` recebia `step` e `isLast` como props, com `Omit<…, "children">` —
+os dois são exatamente o que o **pai** sabe e o filho não. Quem chamava escrevia
+`isLast={i === ETAPAS.length - 1}` toda vez, e errar isso desenhava um conector
+para lugar nenhum. É a mesma correção que a `BreadcrumbList` recebeu na rodada
+08 ao assumir os separadores: o contêiner deriva do índice, e o item volta a
+aceitar `children`.
+
+**A trilha parava a 78% da largura.** Todos os itens eram `flex-1`, inclusive o
+último — que não desenha conector. Medido: quatro itens de 218px, com o último
+ocupando os mesmos 218 para mostrar um marcador de 24, e **~192px de vão morto**
+depois dele. Com `flex-none` no último: 278/278/278/**37**, e 13px até a borda.
+
+**O estado existia só em cor e ícone.** `data-state` não é lido por tecnologia
+assistiva e o tique é `aria-hidden`, então uma etapa concluída e uma futura
+soavam idênticas. Cada item carrega "concluída" / "etapa atual" / "não iniciada"
+em `sr-only` — **depois** do rótulo, para o anúncio sair "Conta, concluída".
+
+**E o rótulo não estava centrado no marcador.** O `<span>` era `sm:block` e
+ocupava a **célula inteira** — 278px medidos — com o texto rente à esquerda:
+flush com a borda do marcador, mas com o centro da caixa a **127px** do centro
+dele. O olho lia a palavra pendurada no círculo em vez de presa a ele. Hoje o
+rótulo é `w-max` deslocado por meia largura do marcador (que virou variável, para
+não ser um número repetido em dois lugares que precisam concordar). Medido
+depois: desalinhamento **0** nos degraus 2, 3 e 4.
+
+**A primeira é a exceção, e é geometria e não gosto:** o marcador dela encosta na
+borda esquerda da trilha, então centrar a palavra a faria sair para fora — 5px
+com "Conta", e proporcional ao comprimento do nome. A última não precisa da
+exceção porque a trilha deixa 13px de folga ali, contra os ~6 que ela pede. E a
+condição é `step === 1`, **não `first:`**: o rótulo não é o primeiro filho do
+corpo — o marcador é —, então o variante não casaria com nada.
+
+**A vertical tinha o mesmo defeito nos dois eixos dela.** O rótulo fica ao lado
+do marcador com `items-start`, e o marcador (24) é mais alto que a caixa de uma
+linha de texto (20): os topos coincidiam e os **centros ficavam a 2px** um do
+outro — igual nos quatro degraus, que é a assinatura de desalinhamento
+sistemático e não de acaso. E o conector vertical usava `ms-2.5`/`ms-3`, meia
+largura do marcador escrita à mão por degrau, sem descontar a espessura do
+próprio fio: o traço de 1px caía com o centro **1px à direita**. Hoje o rótulo
+tem `min-h` do marcador com `items-center`, e o conector recua
+`calc((var(--stepper-marker) - 1px) / 2)`. Medido depois: **0 e 0**, nos quatro.
+
+**E `asChild` custou dois consertos medidos.** O `Slot` do Radix exige um filho
+único, e a linha da etapa tem três nós: a primeira versão lançava
+`React.Children.only expected to receive a single React element child` e a
+página inteira caía no limite de erro. A saída é a do `Button`: clona-se o
+elemento de quem chama e injeta-se o corpo como filhos **dele**. Depois disso,
+medido de novo, o nome acessível do botão saía **"concluída"** — porque o rótulo
+ainda vivia fora do corpo clicável. O corpo passou a ser tudo: hoje o alvo é
+278×46 e o nome é "Conta, concluída".
+
+### A faixa dizia a gravidade só com cor
+
+A `AnnouncementBar` não tinha ícone em **nenhum** dos cinco tons — medido. É
+exatamente o que o `Alert` resolve com um, e a mecânica adotada é a de lá: o
+ícone entra como filho direto e é medido por variável, com o espaço se
+adaptando por `has-[…]`.
+
+**`role="status"` era cravado, inclusive em `destructive`** — um erro bloqueante
+anunciado com polidez. Hoje o papel segue o tom: `alert` no destrutivo, `status`
+nos outros quatro, e `role` explícito ainda sobrescreve.
+
+**A altura dependia do botão de fechar**: 40px sem, **44px com**, medidos — o
+`Button size="xs"` (24) é mais alto que a linha de texto, então era ele quem
+mandava, e uma barra que ganha o × ao mudar de estado saltava 4px. A linha passa
+a declarar `min-h`, e o alvo do × cresce por **pseudo-elemento** e não por
+medida — crescer de verdade devolveria o salto. Medido depois: 44 constante, com
+e sem o botão, e alvo efetivo de 44 no telefone.
+
+Ganhou `AnnouncementBarActions` (o caso canônico "você está offline — tentar de
+novo" não tinha lugar), `size` e `sticky`, que aplica a camada `--z-banner` que
+a escala reservava para isto.
+
+**E o consumidor apareceu.** `offline-banner.tsx` era um `Alert` desfazendo a
+própria forma em cinco classes, com `AlertDescription` sem `AlertTitle` — o que
+a documentação do `Alert` proíbe. Ele passou a ser uma `AnnouncementBar`, e o
+tom deixou de ser `default`: cinza neutro para um estado que é, por definição,
+degradado. **O posicionamento continuou `fixed`**, e isso é uma decisão
+explícita — a variante `sticky` seria melhor ali, mas a tela exige sessão
+autenticada e a troca **não deu para verificar**. Trocar layout sem medir é o
+que produziu o bug do calendário nesta mesma série.
+
 ### Backlog de migração
 
 A rodada 01 entregou tokens, componentes, documentação e o auditor, sem migrar
@@ -1436,6 +1841,81 @@ E o que a rodada da divulgação e da prévia deixou:
   é o `Collapsible`, em duas telas.
 - **`SheetDragHandle` e companhia continuam onde estavam.** Nada nesta rodada
   tocou a limpeza mecânica pendente das outras.
+
+**A `AnnouncementBar` passou pela mesma régua, e quase toda ela já estava
+certa.** Medida a cor resolvida dos cinco tons, `info`, `success`, `warning` e
+`destructive` batem com o `Alert` em **distância 0** nos dois temas — ela sempre
+leu os tokens `-muted`, ao contrário do toast. Dois pontos saíram:
+
+- **O texto do tom neutro era o mais fraco de todos.** Com
+  `text-muted-foreground`, 5,04 no claro e 5,86 no escuro, contra 6,9–10,8 dos
+  quatro tonais. O `Alert default` usa o foreground **cheio**
+  (`text-card-foreground`), e a barra não seguia: justamente o tom que não tem
+  cor para ajudar a ler tinha o texto mais fraco. Depois: **16,61** e **14,50**.
+- **O fio do `sticky` era `border-border/50`** — cinza sobre superfície
+  colorida, a mesma família do texto cinza que o `Alert` reverteu. Virou
+  `current/20`, uma linha para os cinco tons.
+
+**E o realce do × ficou mais forte que o do botão de ação, de propósito.** A
+primeira leitura foi que o hover estava fraco; a medição disse outra coisa:
+`current/10` dava 1,28–1,35 no escuro, enquanto o hover do `Button tertiary` do
+app dá **1,11** e o do menu **1,14** — o delta já era maior que o da casa. O que
+faltava era **área**: um ícone de 12px numa caixa de 24 sem contorno tem um
+quarto da superfície de um botão de texto, e a mesma diferença de cor lê como
+menos. Por isso duas alavancas em vez de uma: 15% de preenchimento **e** o
+contorno aparecendo, que é o que delimita o alvo. O botão de ação fica em 10%,
+porque ele já tem borda e rótulo.
+
+**E o instrumento de medição errou antes do código.** A primeira leitura do
+hover deu contraste 18,78 e um botão "preto" sobre a barra verde — o medidor
+compunha a cor sobre `#000`, e `bg-current/15` **tem alfa**. Cor com alfa
+precisa ser composta sobre o fundo real, não sobre preto. As medições anteriores
+desta série usavam `color-mix(…, bg)` — sem alfa — e por isso estavam certas; a
+primeira com `/15` não estava. Vale a regra: **medir alfa exige pintar o fundo
+verdadeiro por baixo.**
+
+**O fundo do `default` continua divergindo do `Alert`, e é decisão.** O Alert
+fica dentro do conteúdo, onde `--card` já o separa da página; esta faixa
+atravessa o topo, e ali `--card` seria quase invisível — medido no escuro, 23 de
+distância da página contra os 48 do `--muted`. Uma faixa que não se separa do
+fundo não é faixa.
+
+E o que a rodada do toast, do passo e da faixa deixou:
+
+- **`offline-banner.tsx` ainda posiciona à mão.** Ele usa a `AnnouncementBar`,
+  mas com `fixed` e o `--mobile-header-offset` no `className`, porque a troca
+  para `sticky` não pôde ser verificada sem sessão. Quem abrir o app logado
+  fecha isso em duas linhas — e ganha de brinde a barra deixando de cobrir a
+  primeira linha do conteúdo.
+- **`export { toast } from "sonner"` continua em `lib/toast.ts`**, e é a porta
+  que deixa qualquer tela pular os helpers e, com eles, as durações. Hoje só o
+  `sync-engine` a usa; fechá-la é decidir se aquele caso vira helper.
+- **`Stepper` e `AnnouncementBar` seguem sem consumidor** além do
+  `offline-banner`. O candidato honesto do `Stepper` é o onboarding de conta
+  nova, que hoje não existe como fluxo numerado.
+- **`toastUndo` e `toastPromise` nascem sem tela.** O primeiro cabe na exclusão
+  de transação (que hoje abre `AlertDialog`), o segundo na sincronização
+  manual — os dois estão nomeados aqui para não virarem código morto.
+
+E o que a rodada do campo de data e dos dois cartões deixou:
+
+- **A aparência de 8 telas mudou sem que nenhuma fosse editada** — 5 do
+  `DatePicker` e 3 do `FormPickerPopover`. É o efeito pretendido da convergência
+  de superfície, e vale conferir tela a tela se algum campo ficou apertado com os
+  4px a mais de altura.
+- **As sobrescritas que agora têm variante** continuam à mão: as duas strings
+  idênticas do `EmptyState` (`not-found-shell`, `route-error-fallback`), o
+  `bg-destructive-muted` do ícone de erro, e os `displayStyle="numeric"` que hoje
+  podem vir acompanhados de `size`.
+- **`transactions-date-range-form.tsx` reimplementa `parseYmdLocal` e
+  `localYmdFromDate`** como `ymdToLocalDate` / `localDateToYmd`, e monta o
+  período com dois seletores. Agora ele cabe num `DatePicker mode="range"` só.
+- **`StatCardDelta`, `StatCardIcon`, `StatCardValueSkeleton` e o `size` do
+  `Calendar` nascem sem tela.** As duas telas de `StatCard` usam rótulo e valor e
+  mais nada.
+- **`Button variant="tertiary"` não tem par `active:`** — achado colateral desta
+  rodada, e vale para o app inteiro: todo botão terciário fica sem resposta ao
+  toque. É conserto do `Button`, e ficou fora do escopo de propósito.
 
 E o que a rodada da trilha, da paginação e das duas listas deixou:
 

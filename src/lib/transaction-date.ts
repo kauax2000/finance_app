@@ -169,3 +169,20 @@ export function formatTransactionMonthYearPtBr(isoOrString: string): string {
         timeZone: "UTC",
     })
 }
+
+/**
+ * O mês abreviado em pt-BR, a partir de uma `Date` — "jan", "fev", "mar".
+ *
+ * Existe para o seletor de mês do `Calendar`, que formatava o nome do mês
+ * inline com a API do `Intl`: a regra **I** do auditor, e um ponto a mais em
+ * que a língua do app era decidida fora daqui.
+ *
+ * O ponto final sai. O `Intl` devolve "jan." em pt-BR, e num `<select>` de doze
+ * itens a abreviação pontuada só acrescenta ruído — o mesmo motivo pelo qual as
+ * outras abreviações deste arquivo também não o trazem.
+ */
+export function formatMonthShortPtBr(d: Date): string {
+    return d
+        .toLocaleString("pt-BR", { month: "short" })
+        .replace(/\.$/, "")
+}

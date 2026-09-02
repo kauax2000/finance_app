@@ -36,11 +36,11 @@
  *    o que insinuar ao cursor; um gatilho que abre painel tem. Por isso o par
  *    mora num export próprio, que o `Input` não importa.
  *
- * A **escada de altura** também não entrou, e não por esquecimento: os três
- * consumidores a aplicam por três mecânicas diferentes — o `Input` por
- * condicional em JS, o `SelectTrigger` por `data-[size=…]` inline, o `Button`
- * por variante de `cva`. Uma constante só serviria os do meio, e uma régua que
- * serve um terço dos casos é uma quarta grafia disfarçada de solução.
+ * A **escada de altura** entrou depois, e só para quem a resolve por
+ * `data-size` — ver `fieldTriggerSizeClassName`, no fim do arquivo. O
+ * argumento original (três mecânicas, uma constante servindo um terço) continua
+ * correto para `Input` e `SelectTrigger`, que decidem a altura por outro
+ * caminho e seguem de fora.
  *
  * ## Duas armadilhas mecânicas
  *
@@ -108,3 +108,26 @@ export const fieldDisabledClassName = [
  */
 export const fieldTriggerHoverClassName =
   "hover:bg-input-fill/50 active:bg-input-fill/50"
+
+/**
+ * A escada de altura — **só para o gatilho que a resolve por `data-size`**.
+ *
+ * O cabeçalho deste arquivo argumentava, com razão na época, que a escada não
+ * podia entrar: os três consumidores a aplicavam por três mecânicas diferentes
+ * (o `Input` por condicional em JS, o `SelectTrigger` por `data-[size=…]`
+ * inline, o `Button` por variante de `cva`), e uma constante que serve um terço
+ * dos casos é uma quarta grafia disfarçada de solução.
+ *
+ * O que mudou é a contagem. Com o `DatePicker` e o `FormPickerPopoverTrigger`
+ * saindo do `Button` e passando a resolver por `data-size` como o
+ * `ComboboxTrigger`, são **três** gatilhos escrevendo a mesma linha — e aí ela
+ * deixa de ser um terço dos casos e passa a ser a regra do grupo que a usa.
+ *
+ * `Input` e `SelectTrigger` continuam de fora, e continuam sendo os que decidem
+ * a altura por outro caminho. Igualá-los é conserto de mecânica, não extração.
+ *
+ * Os quatro degraus são os do sistema — 28, 32, 36, 40 —, e um gatilho de campo
+ * não desce a 24: `xs` é para dentro de outro controle.
+ */
+export const fieldTriggerSizeClassName =
+  "data-[size=sm]:h-7 data-[size=md]:h-8 data-[size=lg]:h-9 data-[size=xl]:h-10"

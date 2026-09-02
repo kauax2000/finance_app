@@ -89,6 +89,19 @@ export default function FormPickerPopoverDoc() {
         importa.
       </DocNote>
 
+      <DocNote title="O gatilho veste a superfície de campo">
+        Ele era <code>Button variant=&quot;outline&quot;</code>, e a nota daqui
+        dizia que &ldquo;parece um campo e não um botão&rdquo;. Parecia só sob{" "}
+        <code>dark:</code>: no tema claro <code>outline</code> é{" "}
+        <code>border-border</code> + <code>bg-background</code> <strong>opaco</strong>,
+        enquanto <code>Input</code> e <code>SelectTrigger</code> são{" "}
+        <code>border-input</code> + <code>bg-input-fill/30</code> translúcido —
+        duas superfícies visivelmente diferentes fazendo o mesmo trabalho. Hoje
+        ele compõe <code>field-classes</code>, como <code>Select</code>,{" "}
+        <code>Combobox</code> e <code>DatePicker</code>. A altura não mudou:{" "}
+        <code>xl</code> (40) é a que ele já tinha, e a conversão é de superfície.
+      </DocNote>
+
       <DocNote title="O foco volta ao gatilho ao fechar">
         <code>onOpenAutoFocus</code> continua com <code>preventDefault()</code>:
         roubar o foco ao abrir fecha o teclado do telefone e faz a folha inteira
