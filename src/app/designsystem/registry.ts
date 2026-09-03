@@ -17,38 +17,211 @@ export const CATEGORY_ORDER: Category[] = [
   "Átomos",
   "Moléculas",
   "Organismos",
+  "Templates",
   "Padrões",
 ]
 
 const ui = (name: string) => `@/components/ui/${name}`
 
 /**
- * A categoria sai do slug em vez de ser repetida em cada entrada: com 80 itens,
- * a repetição é onde a lista começa a mentir.
+ * A camada de cada peça, pelo modelo do atomic design.
+ *
+ * **Isto era dois `Set` e um *fall-through*.** O que não estivesse em `ATOMS`
+ * nem em `MOLECULES` virava Organismo em silêncio — e foi assim que
+ * `Typography` (nove átomos de texto que não compõem nada) apareceu ao lado da
+ * `Sidebar`, e `Container` (uma `div`) ao lado do `Dialog`. Medido antes da
+ * correção: **32 dos 75 componentes estavam na camada errada**, 43% do
+ * catálogo. O comentário que vivia aqui já previa a falha — *"com 80 itens, a
+ * repetição é onde a lista começa a mentir"* —, e a saída dele (derivar do
+ * slug) foi o que produziu a mentira.
+ *
+ * Agora é um mapa explícito, e ele é **exaustivo por tipo**: um componente novo
+ * sem camada não compila. Nascer classificado é a única forma de a lista não
+ * voltar a mentir.
+ *
+ * ## A regra, e ela é a canônica
+ *
+ * | Camada | A definição | O teste |
+ * | --- | --- | --- |
+ * | `Fundações` | os átomos abstratos: cor, tipo, forma, movimento, camada | é decisão em `globals.css`, não componente |
+ * | `Átomos` | o elemento indivisível — quebrá-lo o faz deixar de funcionar | não compõe componente do sistema, e é **um** elemento |
+ * | `Moléculas` | grupos simples de átomos funcionando como unidade | várias peças que só existem juntas, compondo no máximo átomos |
+ * | `Organismos` | seções relativamente complexas da interface | compõe duas ou mais moléculas, ou compõe molécula **e** tem estado próprio |
+ * | `Templates` | objetos de nível de página, que dispõem componentes num layout | o que estrutura a página, e não o que ela contém |
+ * | `Padrões` | decisões que atravessam telas | não é componente |
+ *
+ * `Container` é **Átomo** e não Template: pelo teste canônico ele é
+ * indivisível — uma `div` com largura —, e não dispõe nada. Quem dispõe é o
+ * `PageHeader` e o `PageSection`, e por isso os dois são Templates.
  */
-const ATOMS = new Set([
-  "button", "button-group", "badge", "input", "textarea", "label", "field",
-  "checkbox", "radio-group", "switch", "select", "native-select", "slider",
-  "progress", "toggle", "toggle-group", "input-group", "input-otp", "kbd",
-  "search-input",
-  "avatar", "separator", "tooltip", "spinner", "skeleton",
-  "code", "money-display", "money-input", "color-tile",
-])
+type Layer = Exclude<Category, "Fundações" | "Padrões">
 
-const MOLECULES = new Set([
-  "card", "alert", "alert-dialog", "tabs", "breadcrumb", "dialog", "sheet",
-  "popover", "dropdown-menu", "sonner", "calendar", "date-picker", "empty-state",
-  "stat-card", "stepper", "accordion", "collapsible", "hover-card", "item",
-  "pagination", "context-menu", "menubar", "command", "combobox", "drawer",
-  "form", "form-picker-popover", "description-list", "announcement-bar",
-  "edge-panel",
-  "page-header", "page-section", "container", "toolbar",
-])
+/**
+ * De onde a peça veio, quando ela mudou de camada na rodada 17.
+ *
+ * Existe para quem tem o mapa antigo na cabeça não achar que a página sumiu, e
+ * é **temporária**: some quando o campo for apagado destas entradas. A regra de
+ * remoção está no `AGENTS.md` — a próxima rodada que tocar este arquivo apaga.
+ */
+const MOVED_FROM: Partial<Record<string, Layer>> = {
+  // Compõem outro componente, ou são um grupo de átomos: molécula.
+  field: "Átomos",
+  "input-group": "Átomos",
+  select: "Átomos",
+  "native-select": "Átomos",
+  "toggle-group": "Átomos",
+  "radio-group": "Átomos",
+  "button-group": "Átomos",
+  "input-otp": "Átomos",
+  "money-input": "Átomos",
+  "search-input": "Átomos",
+  tooltip: "Átomos",
+  avatar: "Átomos",
+  // Seções complexas: compõem duas moléculas, ou uma mais estado próprio.
+  command: "Moléculas",
+  combobox: "Moléculas",
+  "date-picker": "Moléculas",
+  calendar: "Moléculas",
+  sheet: "Moléculas",
+  drawer: "Moléculas",
+  "form-picker-popover": "Moléculas",
+  "alert-dialog": "Moléculas",
+  // Não compõem nada, e estavam em Organismos por *fall-through*.
+  table: "Organismos",
+  chart: "Organismos",
+  timeline: "Organismos",
+  carousel: "Organismos",
+  resizable: "Organismos",
+  "navigation-menu": "Organismos",
+  typography: "Organismos",
+  "scroll-area": "Organismos",
+  "scroll-fade": "Organismos",
+  // Um elemento só.
+  container: "Moléculas",
+  form: "Moléculas",
+  // Dispõem conteúdo numa página.
+  "page-header": "Moléculas",
+  "page-section": "Moléculas",
+}
+
+/**
+ * A camada de cada componente. Sem padrão: o tipo obriga a listar todos.
+ *
+ * Os comentários dizem **por que**, e não o que — a camada já está na chave.
+ */
+const LAYER: Record<string, Layer> = {
+  // ── Átomos: um elemento, e não compõem nada do sistema ──────────────────
+  button: "Átomos",
+  badge: "Átomos",
+  input: "Átomos",
+  textarea: "Átomos",
+  label: "Átomos",
+  checkbox: "Átomos",
+  switch: "Átomos",
+  slider: "Átomos",
+  progress: "Átomos",
+  toggle: "Átomos",
+  kbd: "Átomos",
+  separator: "Átomos",
+  spinner: "Átomos",
+  skeleton: "Átomos",
+  code: "Átomos",
+  "color-tile": "Átomos",
+  "money-display": "Átomos",
+  /** Uma `div` com largura e calha. Indivisível — o teste canônico de átomo. */
+  container: "Átomos",
+  /** Nove componentes de texto **independentes** no mesmo arquivo. Um arquivo
+   *  que empacota átomos não vira molécula por isso: nenhum deles precisa dos
+   *  outros para funcionar. */
+  typography: "Átomos",
+  /** Uma casca rolável, e uma máscara. Nenhum dos dois compõe nada. */
+  "scroll-area": "Átomos",
+  "scroll-fade": "Átomos",
+  /** Um `<form>` com a política de Enter. Comportamento, não composição. */
+  form: "Átomos",
+
+  // ── Moléculas: peças que só existem juntas, sobre átomos ────────────────
+  /** O exemplo canônico do Frost: rótulo + controle + erro. */
+  field: "Moléculas",
+  "input-group": "Moléculas",
+  "search-input": "Moléculas",
+  "money-input": "Moléculas",
+  select: "Moléculas",
+  "native-select": "Moléculas",
+  "radio-group": "Moléculas",
+  "toggle-group": "Moléculas",
+  "button-group": "Moléculas",
+  "input-otp": "Moléculas",
+  tooltip: "Moléculas",
+  /** Compõe o `Kbd` e resolve a plataforma: um acorde é um grupo de teclas. */
+  "kbd-shortcut": "Moléculas",
+  avatar: "Moléculas",
+  card: "Moléculas",
+  alert: "Moléculas",
+  "empty-state": "Moléculas",
+  "stat-card": "Moléculas",
+  "announcement-bar": "Moléculas",
+  item: "Moléculas",
+  "description-list": "Moléculas",
+  pagination: "Moléculas",
+  accordion: "Moléculas",
+  collapsible: "Moléculas",
+  tabs: "Moléculas",
+  stepper: "Moléculas",
+  timeline: "Moléculas",
+  table: "Moléculas",
+  chart: "Moléculas",
+  carousel: "Moléculas",
+  resizable: "Moléculas",
+  "navigation-menu": "Moléculas",
+  popover: "Moléculas",
+  "hover-card": "Moléculas",
+  "dropdown-menu": "Moléculas",
+  "context-menu": "Moléculas",
+  menubar: "Moléculas",
+  "edge-panel": "Moléculas",
+  sonner: "Moléculas",
+
+  // ── Organismos: seções complexas da interface ───────────────────────────
+  /** Compõe o `DropdownMenu` para o miolo dobrado, e carrega contexto de
+   *  tamanho: molécula + estado próprio é a definição de organismo. */
+  breadcrumb: "Organismos",
+  dialog: "Organismos",
+  "alert-dialog": "Organismos",
+  sheet: "Organismos",
+  drawer: "Organismos",
+  command: "Organismos",
+  combobox: "Organismos",
+  calendar: "Organismos",
+  "date-picker": "Organismos",
+  "form-picker-popover": "Organismos",
+  toolbar: "Organismos",
+  sidebar: "Organismos",
+  "mobile-sheet-form-chrome": "Organismos",
+  /** Renderiza `null`, mas consome o contexto do `Sheet` — ele é uma peça do
+   *  organismo, e não um componente por conta própria. O *fall-through* o
+   *  deixava aqui por acidente; agora está aqui por decisão. */
+  "sheet-drag-handle": "Organismos",
+
+  // ── Templates: o que estrutura a página ─────────────────────────────────
+  "page-header": "Templates",
+  "page-section": "Templates",
+}
 
 function categoryForSlug(slug: string): Category {
-  if (ATOMS.has(slug)) return "Átomos"
-  if (MOLECULES.has(slug)) return "Moléculas"
-  return "Organismos"
+  const layer = LAYER[slug]
+  if (!layer) {
+    throw new Error(
+      `[registry] "${slug}" não tem camada. Classifique-o em LAYER — ` +
+        `nascer sem camada é como 32 componentes foram parar no lugar errado.`
+    )
+  }
+  return layer
+}
+
+/** De qual camada a peça veio, para a marca temporária do catálogo. */
+export function movedFrom(slug: string): Category | undefined {
+  return MOVED_FROM[slug]
 }
 
 function sourcePath(source: string): string {
@@ -99,13 +272,6 @@ export const REGISTRY: RegistryEntry[] = [
     category: "Fundações",
     description: "Os sete degraus de raio de canto e os cinco de sombra.",
     source: "src/app/globals.css",
-  },
-  {
-    slug: "espacamento",
-    name: "Espaçamento e largura",
-    category: "Fundações",
-    description: "O ritmo vertical das seções e os quatro degraus de largura de conteúdo.",
-    source: "src/components/ui/container.tsx",
   },
   {
     slug: "movimento",
@@ -159,6 +325,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("input-group", "Input Group", "Campo com ícones, texto ou botões acoplados.", ui("input-group"), "InputGroup, InputGroupInput"),
   entry("input-otp", "Input OTP", "Entrada de código de verificação.", ui("input-otp"), "InputOTP, InputOTPSlot"),
   entry("kbd", "Kbd", "Uma tecla, um acorde ou uma sequência numa dica de atalho.", ui("kbd"), "Kbd, KbdGroup"),
+  entry("kbd-shortcut", "Kbd Shortcut", "O acorde inteiro numa tecla só, e a formatação por sistema operacional.", "@/components/ui/kbd-shortcut", "KbdShortcut, formatShortcut"),
   entry("avatar", "Avatar", "Imagem ou iniciais, em cinco tamanhos.", ui("avatar"), "Avatar, AvatarImage, AvatarFallback"),
   entry("color-tile", "Color Tile", "O ladrilho que carrega uma cor escolhida pela pessoa.", ui("color-tile"), "ColorTile"),
   entry("separator", "Separator", "Divisor entre conteúdos.", ui("separator"), "Separator"),
@@ -201,9 +368,9 @@ export const REGISTRY: RegistryEntry[] = [
   entry("announcement-bar", "Announcement Bar", "Aviso de largura total sobre o estado do app, com ícone e ação.", ui("announcement-bar"), "AnnouncementBar, AnnouncementBarContent, AnnouncementBarActions"),
   entry("toolbar", "Toolbar", "A linha de filtros e ações acima de uma lista, e a densidade dela.", ui("toolbar"), "Toolbar, ToolbarRow, ToolbarFilters, ToolbarActions, ToolbarFilterIndicator"),
   entry("form", "Form", "O formulário do projeto e o contrato do Enter.", ui("form"), "CustomForm, ENTER_DEFERRAL_RULES"),
-  entry("page-header", "Page Header", "Título, descrição e ações de uma tela.", ui("page-header"), "PageHeader"),
-  entry("page-section", "Page Section", "O bloco que dá ritmo vertical a uma tela.", ui("page-section"), "PageSection"),
-  entry("container", "Container", "A largura máxima do conteúdo.", ui("container"), "Container"),
+  entry("page-header", "Page Header", "O topo de uma tela: trilha, título, fatos e a ação principal.", ui("page-header"), "PageHeader, PageHeaderTitleRow, PageHeaderTitle, PageHeaderDescription, PageHeaderEyebrow, PageHeaderMeta, PageHeaderActions"),
+  entry("page-section", "Page Section", "O bloco que dá ritmo vertical a uma tela, com título e ação.", ui("page-section"), "PageSection, PageSectionHeader, PageSectionTitle, PageSectionDescription"),
+  entry("container", "Container", "Espaçamento e largura: até onde o conteúdo cresce, a calha e o ritmo dos blocos.", ui("container"), "Container, containerSizes, containerGutters, containerStacks"),
 
   // ── Organismos ──────────────────────────────────────────────────────────
   entry("table", "Table", "Tabela de dados, e o que ela vira no telefone.", ui("table"), "Table, TableRow, TableCell"),

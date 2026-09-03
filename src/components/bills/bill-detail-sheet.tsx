@@ -246,7 +246,8 @@ export function BillDetailSheet({
                         <div className="flex shrink-0 flex-col items-end gap-2">
                             {bill && !loading ? (
                                 <Badge
-                                    variant={bill.is_active ? "success" : "outline"}
+                                    variant={bill.is_active ? "soft" : "outline"}
+                                    tone={bill.is_active ? "success" : "neutral"}
                                     className="shrink-0"
                                 >
                                     {bill.is_active ? "Ativa" : "Inativa"}
@@ -330,7 +331,7 @@ export function BillDetailSheet({
                                             )
                                             return (
                                                 <Badge
-                                                    variant="secondary"
+                                                    tone="neutral"
                                                     className={cn(
                                                         "border-0 text-xs",
                                                         pill.className

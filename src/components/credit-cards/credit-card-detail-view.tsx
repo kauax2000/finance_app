@@ -163,7 +163,8 @@ export function CreditCardDetailView({
                         <div className="flex shrink-0 items-center gap-1.5 pl-1">
                             <Badge
                                 size="sm"
-                                variant={card.is_active ? "success" : "outline"}
+                                variant={card.is_active ? "soft" : "outline"}
+                                tone={card.is_active ? "success" : "neutral"}
                                 className="shrink-0"
                             >
                                 {card.is_active ? "Ativo" : "Inativo"}

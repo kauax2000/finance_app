@@ -35,7 +35,7 @@ function MomComparisonBadge({ now, prev }: { now: number; prev: number }) {
     if (prev <= 0 && now <= 0) {
         const label = "Sem gasto"
         return (
-            <Badge variant="secondary" className={base}>
+            <Badge tone="neutral" className={base}>
                 {label}
             </Badge>
         )
@@ -44,7 +44,7 @@ function MomComparisonBadge({ now, prev }: { now: number; prev: number }) {
     if (prev <= 0 && now > 0) {
         const full = "Novo gasto"
         return (
-            <Badge variant="expense" title={full} aria-label={full} className={base}>
+            <Badge tone="expense" title={full} aria-label={full} className={base}>
                 Novo
             </Badge>
         )
@@ -53,7 +53,7 @@ function MomComparisonBadge({ now, prev }: { now: number; prev: number }) {
     if (isMomFlat(now, prev)) {
         const full = "Estável vs mês anterior"
         return (
-            <Badge variant="warning" title={full} aria-label={full} className={base}>
+            <Badge tone="warning" title={full} aria-label={full} className={base}>
                 Estável
             </Badge>
         )
@@ -64,7 +64,7 @@ function MomComparisonBadge({ now, prev }: { now: number; prev: number }) {
         const pct = ((drop / prev) * 100).toFixed(0)
         const full = `−${pct}% vs mês anterior`
         return (
-            <Badge variant="success" title={full} aria-label={full} className={base}>
+            <Badge tone="success" title={full} aria-label={full} className={base}>
                 −{pct}%
             </Badge>
         )
@@ -75,7 +75,7 @@ function MomComparisonBadge({ now, prev }: { now: number; prev: number }) {
         const pct = ((rise / prev) * 100).toFixed(0)
         const full = `+${pct}% vs mês anterior`
         return (
-            <Badge variant="expense" title={full} aria-label={full} className={base}>
+            <Badge tone="expense" title={full} aria-label={full} className={base}>
                 +{pct}%
             </Badge>
         )
@@ -83,7 +83,7 @@ function MomComparisonBadge({ now, prev }: { now: number; prev: number }) {
 
     const full = "Igual ao mês anterior"
     return (
-        <Badge variant="secondary" title={full} aria-label={full} className={base}>
+        <Badge tone="neutral" title={full} aria-label={full} className={base}>
             Igual
         </Badge>
     )

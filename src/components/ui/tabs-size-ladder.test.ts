@@ -38,7 +38,7 @@ import {
  */
 
 const SIZES = ["sm", "md", "lg", "xl"] as const
-const VARIANTS = ["solid", "underline", "ghost"] as const
+const VARIANTS = ["solid", "underline", "plain"] as const
 
 /** O piso da escada de controles: `xs` (24) é para dentro de outro controle. */
 const PISO = 28
@@ -132,7 +132,7 @@ describe("o anel de foco é o do sistema", () => {
 })
 
 describe("o marcador viaja com os tokens do sistema", () => {
-  const VARIANTS_ = ["solid", "underline", "ghost"] as const
+  const VARIANTS_ = ["solid", "underline", "plain"] as const
 
   it("a duração e a curva vêm de token, nunca de um número solto", () => {
     // A página de Movimento é explícita: "não invente um número novo em
@@ -246,11 +246,11 @@ describe("a escada do Tabs — `size` nomeia a bandeja", () => {
   })
 
   it("8. cada variante tem o seu degrau padrão — as três não são a mesma coisa", () => {
-    // O defeito medido: sem `size` declarado, `solid`, `underline` e `ghost`
+    // O defeito medido: sem `size` declarado, `solid`, `underline` e `plain`
     // saíam idênticos — moldura 32, gatilho 28, fonte 12,8px nas três.
     expect(defaultTabsSize("solid")).toBe("md")
     expect(defaultTabsSize("underline")).toBe("lg")
-    expect(defaultTabsSize("ghost")).toBe("lg")
+    expect(defaultTabsSize("plain")).toBe("lg")
 
     // `solid` é controle segmentado: a bandeja fica rente a um `Button md`.
     expect(TABS_SIZES[defaultTabsSize("solid")].tray).toBe(32)
@@ -260,7 +260,7 @@ describe("a escada do Tabs — `size` nomeia a bandeja", () => {
 
   it("9. `lg` e `xl` não carregam o texto miúdo — é a razão do padrão", () => {
     // Se alguém acrescentar `text-control-sm` a `lg`, o motivo de `underline` e
-    // `ghost` terem padrão `lg` evapora em silêncio: eles vão para lá porque é
+    // `plain` terem padrão `lg` evapora em silêncio: eles vão para lá porque é
     // ali que o rótulo volta ao corpo de texto da página (14px).
     for (const size of ["sm", "md"] as const) {
       expect(tabsTriggerVariants({ size })).toContain("text-control-sm")

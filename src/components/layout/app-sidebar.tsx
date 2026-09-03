@@ -54,7 +54,6 @@ export function AppSidebar() {
                                               <span>{item.name}</span>
                                               <Badge
                                                   size="xs"
-                                                  variant="primary"
                                                   className="shrink-0"
                                               >
                                                   Beta
@@ -89,7 +88,6 @@ export function AppSidebar() {
                                                 {item.beta ? (
                                                     <Badge
                                                         size="xs"
-                                                        variant="primary"
                                                         className="shrink-0"
                                                     >
                                                         Beta

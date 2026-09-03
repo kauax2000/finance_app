@@ -134,7 +134,6 @@ function MenuNavLinkRow({
                     {beta ? (
                         <Badge
                             size="xs"
-                            variant="primary"
                             className="shrink-0"
                         >
                             Beta

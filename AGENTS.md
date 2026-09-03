@@ -29,6 +29,13 @@ memória:
 - **Documentação viva** em `/designsystem`, com uma página por componente e por
   padrão. Sempre disponível em desenvolvimento; em produção, atrás de
   `NEXT_PUBLIC_DS_DOCS`.
+- **A taxonomia é atomic design canônico**, e mora no mapa `LAYER` de
+  [`registry.ts`](src/app/designsystem/registry.ts): Fundações → Átomos →
+  Moléculas → Organismos → **Templates** → Padrões. Ele é **exaustivo**: um
+  componente novo sem camada não compila. A regra de cada nível está escrita no
+  topo do arquivo, e [`taxonomy.test.ts`](src/app/designsystem/taxonomy.test.ts)
+  a tranca — em especial *nenhum átomo compõe outro componente*, que é a
+  asserção que faltava quando 43% do catálogo estava no lugar errado.
 
 **Antes de escrever uma tela, saiba o que já existe:**
 
@@ -254,7 +261,16 @@ tema.
 
 ### Required primitives for new screens
 
-- **Page chrome**: [`PageHeader`](src/components/ui/page-header.tsx) + [`PageSection`](src/components/ui/page-section.tsx) + [`Container`](src/components/ui/container.tsx) for titles, descriptions, actions, and section spacing.
+- **Page chrome**: [`PageHeader`](src/components/ui/page-header.tsx) +
+  [`PageSection`](src/components/ui/page-section.tsx) +
+  [`Container`](src/components/ui/container.tsx). Os três têm `size` (`sm` |
+  **`md`** | `lg`) e os dois primeiros têm `variant` — a régua, que no cabeçalho
+  é **embaixo** e na seção é **em cima**. O `Container` também tem `full`, e
+  **não tem `default`** — a escada dele é 448 · **576** · 672 · 1280 · sem teto,
+  e a calha (`gutter`) é **opt-in**, porque quem é dono dela neste app é a casca.
+  `PageHeaderTitleRow` recebe `back` e `endAdornment`;
+  `PageSectionHeader` recebe `actions` — as três apagam anatomias que o catálogo
+  escrevia à mão. Não existe `PageSectionContent`: ver a rodada 15.
 - **Cartão e painel**: [`Card`](src/components/ui/card.tsx) e suas peças —
   `CardToolbar`, `CardHeader`, `CardContent`, `CardFooter`, `CardNote`. O
   painel do app é `<Card padding="none">`; nada de `border-b bg-muted/30`
@@ -2129,6 +2145,399 @@ que não existia. Com o layout assentado: 40, e 3px. É a terceira vez nesta sé
 virou um defeito de acessibilidade inexistente, até um `Tab` de verdade mostrar
 o foco entrando na lista e o gatilho ativo virando `0`.
 
+### O cabeçalho de página era uma linha de flex, e a trilha caía dentro dela
+
+`PageHeader`, `PageSection` e `Container` são as três peças que este arquivo
+declara **obrigatórias para toda tela nova**. Medido: os três tinham **zero
+consumidores no app** — e estavam sendo reescritos à mão dentro do próprio
+catálogo, em cinco lugares e em quatro gramáticas.
+
+| Onde | O que era | Contagem |
+| --- | --- | --- |
+| `DocSection` (`ds-doc.tsx`) | cabeçalho de seção: `border-t pt-8` + `font-heading text-lg font-semibold tracking-tight` | **247 usos** |
+| `Group` (`ds-kit.tsx`) | **a mesma string**, no outro arquivo | **22 usos** |
+| `PropsTable` (`ds-doc.tsx`) | a mesma string, uma terceira vez | 90 páginas |
+| `DocPage` | cabeçalho de página com adorno em `items-baseline justify-between` | 88 páginas |
+| índice `/designsystem` | outro cabeçalho, um degrau maior, com sobrancelha e faixa de fatos | 1 |
+| `ds-shell.tsx` (×2) | `mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8` — o `Container size="lg"` | 2 |
+
+**O defeito de maior consequência estava na demonstração principal.** Medido a
+1280px, na seção "Completo" da própria página do componente: `sm:flex-row` sem
+`flex-wrap` punha `PageHeaderBreadcrumb` (618px) **à esquerda** do título, o
+`PageHeaderTitleRow` saía com **largura 0** e 362px de altura — a descrição
+quebrando uma palavra por linha — e o título passava por baixo do botão de ação.
+
+E o `sm:col-span-full` que a trilha carregava não era classe morta por acaso:
+**era o fóssil da implementação correta**, escrita para uma grade que nunca
+existiu. Hoje o cabeçalho é grade, e a classe finalmente significa alguma coisa.
+
+### As duas escadas saíram de contagem, e descem por variável
+
+`PageHeaderTitle` oferecia **um** corpo (`text-2xl sm:text-3xl`) enquanto o
+catálogo renderizava **dois** — `md` na página de componente e `lg` no índice.
+O terceiro degrau, `sm`, é a tela de detalhe, que a própria página demonstrava
+sem ter como declarar. O mesmo no `PageSection`: `text-base` no componente
+contra `text-lg` nas 269 seções.
+
+| | `sm` | `md` | `lg` |
+| --- | --- | --- | --- |
+| `PageHeader` (título) | 20 → 24 | **24 → 30** | 30 → 36 |
+| `PageSection` (título / respiro) | 14/20 · gap 12 | **16/24 · gap 16** | 18/28 · gap 16 |
+
+**A escada desce por variável CSS, e não por contexto React.** Contexto exigiria
+`"use client"`, e `PageHeader` é um dos poucos componentes de `ui/` que ainda é
+servidor; `in-*` e `group-*` compilam com `:where()`, que não soma
+especificidade e perderia para a classe base no mesmo elemento. É o mecanismo de
+`--toolbar-control` e `--command-list-max-h`: variável herda e não disputa.
+
+A entrelinha do título de página **não** entra na variável, porque `.page-title`
+declara `1.25` e vence — ela está **fora de qualquer `@layer`**
+(`globals.css:518`, depois do `@layer base` que fecha em 496), e CSS sem camada
+vence CSS em camada. Verificado no navegador: o `font-heading` que três arquivos
+escreviam ao lado dela nunca decidiu nada, e a família resolvida é Ledger. No
+`PageSection` a entrelinha **é** uma segunda variável, porque ali não há classe
+equivalente e `text-(length:…)` declara só o tamanho.
+
+### Peças novas, e cada uma tem a cópia que a prova
+
+- **`PageHeaderEyebrow`** — a sobrancelha em versalete existia em **duas cópias
+  da mesma string**. A régua mora agora em `pageEyebrowClassName`, e `ds-doc`
+  importa. Ela **não é enfeite acima de todo título**: só se paga quando há um
+  pai de verdade a nomear.
+- **`PageHeaderMeta`** — a faixa de fatos que o índice escrevia à mão. Ela traz
+  8px do próprio respiro em cima porque o espaço **acima** de uma régua tem que
+  ser maior que o de baixo (24 contra 16, com o `gap` da grade contando junto).
+  `asChild` porque o elemento certo depende do conteúdo: um `<dl>` quando são
+  pares termo/valor, que é o caso comum num app de finanças.
+- **`endAdornment` em `PageHeaderTitleRow`** — o mesmo nome e a mesma forma que
+  `DialogHeaderRow` e `HoverCardHeader` já usam, e é o link de categoria do
+  `DocPage`.
+- **`back` em `PageHeaderTitleRow`** — apaga o `<div className="flex
+  items-center gap-1">` que a demonstração inventava.
+- **`actions` em `PageSectionHeader`** — apaga o `<PageSectionHeader
+  className="flex-row items-center justify-between">` que a demonstração
+  inventava. É o precedente de `FormPickerPopoverEmpty` e `HoverCardBody`:
+  quando o catálogo escreve a anatomia, falta uma peça.
+
+**O voltar e o adorno se alinham por mecânicas diferentes, e é de propósito.**
+O adorno é texto, e alinha pela linha de base — é o que o prende à primeira
+linha do título quando o nome quebra em duas. O voltar é um controle **sem
+texto**: numa caixa de `items-baseline` a linha de base dele seria sintetizada
+na borda de baixo e a fileira inteira afundaria. Ele sai do alinhamento com
+`self-start` e se centra dentro de uma caixa de exatamente uma linha de título
+(`--page-title-line`), sem número mágico e acompanhando o degrau. Medido: centro
+do botão e centro da primeira linha do título em **439px os dois**, diferença
+zero.
+
+O `-me-2` do voltar não é compensação de gosto: o `gap` é a distância mínima
+entre **caixas**, e a caixa do botão é 10px mais larga que o glifo desse lado.
+Devolvendo 8 deles, a distância seta→título cai nos **18px** que o cabeçalho do
+app renderiza — medidos, 18.
+
+### O par de identidade, pela quarta vez
+
+`PageHeaderTitleRow` e `PageSectionHeader` declaravam `gap-1`, e a página do
+`PageHeader` **já dizia o contrário**: "Título e descrição não levam gap —
+`PageHeaderTitleRow` já entrega a entrelinha certa". Documentação certa, código
+discordando: é exatamente como `ItemContent` (rodada 08), `StatCard` (10) e
+`FieldContent` (11) foram achados.
+
+O respiro voltou a existir só onde há mudança de assunto, e quem o declara é o
+contêiner: `[&>[data-slot=page-header-eyebrow]]:mb-3` diz qual filho abre um
+bloco, como o `StatCard` faz com a variação.
+
+Consequência visível: o índice do catálogo **perdeu os 16px** que separavam o
+título da frase de abertura. Ele era o único cabeçalho do catálogo com essa
+folga; os outros 89 já tinham zero.
+
+### `PageSectionContent` foi apagado pela própria medição
+
+Ele era um `<div>` com string de classe vazia. A primeira versão desta rodada
+tentou salvá-lo dando-lhe `min-w-0`, com a justificativa de que "uma tabela
+larga estoura a página em vez de rolar" — a mesma família do `min-h-0` do
+`DialogBody`.
+
+**Medido, isso é falso.** O tamanho mínimo automático de um item de flex vale no
+**eixo principal**, e numa coluna o eixo principal é o vertical: `min-width:
+auto` já resolve para zero ali. Com e sem `min-w-0` no conteúdo, os mesmos
+400px.
+
+O defeito real está um nível acima: uma seção usada como item de uma **linha**
+de flex estoura para o próprio min-content — **5241px dentro de um pai de 400**
+—, e leva a rolagem interna junto. Com `min-w-0` na seção: 400px, e a região de
+dentro volta a rolar. O `min-w-0` mudou de lugar, e a peça sem trabalho foi
+apagada em vez de ganhar uma justificativa inventada.
+
+### A régua da seção é em cima, e a do cabeçalho continua embaixo
+
+`PageSection variant="ruled"` é `border-t pt-8` — é onde as 269 seções do
+catálogo já a punham. Um fio em cima diz "começa outro bloco"; um fio embaixo
+diz "este bloco tem um rodapé". `PageHeader variant="ruled"` segue **padrão**,
+porque um cabeçalho de página é a única fronteira da tela que não tem nada
+acima para marcá-la; `plain` é o opt-in, e é o que o `DocPage` usa, porque ali
+quem fecha o cabeçalho é o campo de import logo abaixo.
+
+### `Container`: `default` virou `md`, e os degraus viraram `cva`
+
+Pela mesma razão que esse nome saiu de `Button`, `Input`, `SelectTrigger` e
+`NativeSelect`: ele dizia *o padrão* em vez de dizer a medida. Saiu do tipo, e o
+compilador acusa quem o escrever — eram 3 chamadas, todas no catálogo.
+
+E os três componentes desta rodada saíam com **`—`** na coluna de variantes do
+`npm run ds:catalog`, como se não tivessem decisão nenhuma a tomar. A tabela
+`containerSizes` continua exportada ao lado do `cva` para as duas páginas que
+desenham a régua poderem iterá-la, e
+[`page-chrome-ladder.test.ts`](src/components/ui/page-chrome-ladder.test.ts)
+falha se as duas divergirem — o Tailwind varre o código como texto, então os
+literais têm que ficar no `cva`.
+
+O teste tranca também a asserção que pegou o `Item` na rodada 08: **nenhum par
+de degraus pode produzir a mesma string**.
+
+### O alvo do voltar cresce por pseudo-elemento
+
+36 é a medida do controle e 44 é a do dedo. Crescer de verdade mudaria a caixa
+que `--page-title-line` centraliza, então o alvo cresce com
+`pointer-coarse:after:-inset-1` — a mesma saída do × da `AnnouncementBar` e dos
+degraus do `Breadcrumb`. E a pergunta é o **apontador**, não a largura.
+
+O `PageHeaderBack` também era a segunda cópia de um controle que o app já tem:
+`MobileHeaderBack` em `app-header.tsx` renderiza `icon-lg` (36) com `-ml-1`, e
+este renderizava `icon-md` (32) com `-ml-2`. Ficou a medida do app. Ele ainda
+carregava um `group-active:bg-accent` sem `group` ancestral nenhum, e cravava o
+`aria-label`.
+
+### O `Container` descrevia um app genérico, e este não é ele
+
+A rodada anterior mexeu nele de raspão: renomeou `default` → `md` e transformou
+os degraus em `cva`. **Consertou o nome e deixou o número sem examinar** — o
+nome ficou certo apontando para uma largura que nenhuma tela pediu.
+
+**A calha lateral era o que tornava o componente inadotável.** A casca do app
+(`sidebar-app-shell.tsx:39`) já é dona dela — `px-4 … md:p-6` —, e uma tela que
+somasse a do `Container` a **dobrava**:
+
+| | sem `Container` | com o `Container` de antes |
+| --- | --- | --- |
+| 375px | 343px de conteúdo | **311px** (−9,3%) |
+| 1280px | 1232px | **960px** (56px de calha por lado) |
+
+Era palavra por palavra o defeito que a documentação dele descrevia — *"uma
+tela que soma o próprio recuo horizontal acaba com o dobro no telefone, que é
+justamente onde cada pixel de largura conta"* — enquanto ele o cometia. E é por
+isso que ele passou tanto tempo com zero consumidores: **das nove cascas de
+página escritas à mão no app, nenhuma declara calha horizontal.** A única que
+tenta escreve `px-1 sm:px-0`, quatro pixels que somem em 640.
+
+Hoje a calha é eixo, e é opt-in:
+
+| `gutter` | classes | quem pediu |
+| --- | --- | --- |
+| **`none`** | — | **9 de 9 cascas do app** |
+| `page` | `px-4 md:px-6` | a casca do catálogo |
+
+`page` fala a gramática que o app **renderiza** — um degrau, quebrando em 768 —
+e não a que este arquivo inventava, com dois degraus quebrando em 640 e 1024.
+Duas gramáticas para a mesma calha, e a do app é a que 100% das telas mostram.
+
+Medido depois: um `Container` com o padrão de hoje, dentro da casca do app, dá
+**343px** — exatamente o mesmo que não ter contêiner nenhum.
+
+### A escada foi recortada por contagem, e 1024 saiu
+
+Ela oferecia 672 / **1024 (o padrão)** / 1280 / none. Contado nas nove cascas
+reais: **576px em seis**, 448 em duas, 672 em uma — e **1024 em nenhuma, no
+repositório inteiro**. É a lição "padrão que ninguém escolhe não é padrão",
+reintroduzida um round depois de ela ter sido registrada.
+
+| `size` | largura | quem pediu |
+| --- | --- | --- |
+| `sm` | 448 | as duas cascas de erro |
+| **`md`** | **576** | **6 usos — o padrão** |
+| `lg` | 672 | o detalhe de cartão |
+| `xl` | 1280 | a casca do catálogo |
+| `full` | sem teto | quem já tem largura de fora |
+
+`max-w-5xl` **saiu**. Devolver um degrau no dia em que uma tela pedir é uma
+linha; mantê-lo era manter a ficção. O teste tranca que ele não volte pela
+porta dos fundos — a mesma família do `in-data-[variant=dialog]` que sobreviveu
+à remoção da variante do `Command` e passou a não casar com nada.
+
+### O primeiro consumidor de produto
+
+`account`, `settings`, `plans` e `members` declaravam **a mesma string** —
+`mx-auto w-full min-w-0 max-w-xl` — em quatro `layout.tsx` de dez linhas. Hoje
+são `<Container>`.
+
+Elas perderam junto o `min-w-0`, que **não fazia nada**: medido, 400px e a
+região de dentro rolando, com e sem. Num flex de **coluna** o tamanho mínimo
+automático vale no eixo vertical — a mesma medição que apagou o
+`PageSectionContent` na rodada 15. Quatro cópias de uma classe inerte, e outras
+quatro cascas que já a omitiam.
+
+### Dois defeitos meus da rodada anterior
+
+- **`Omit<VariantProps<typeof containerVariants>, "size">` era tipo morto.** Com
+  uma variante só, omiti-la deixa `{}` — verificado com sonda de tipo, `keyof`
+  resolve para `never`. Ele não acrescentava nem restringia nada no tipo das
+  props. É o equivalente em tipo da classe morta que esta base já documenta
+  três vezes.
+- **O padrão estava escrito duas vezes**, na desestruturação e em
+  `defaultVariants`. Hoje é uma, e `DEFAULT_CONTAINER_SIZE` existe só para o
+  `data-size` não o adivinhar — com o teste impedindo que os dois se separem.
+
+### O que não entrou, e a contagem que decide
+
+- **`asChild`** — zero demanda. As nove cascas são `<div>`, e o `<main>` da
+  tela já é o `SidebarInset`. Entra no dia em que uma tela pedir `<section>`.
+- **Área segura horizontal.** `env(safe-area-inset-left/right)` não aparece
+  **nenhuma vez** no repositório — só a vertical. É lacuna real para um PWA em
+  paisagem num telefone com entalhe, mas o dono da calha é a casca do app, e
+  somá-la aqui não consertaria tela nenhuma.
+
+### A única mudança visível: o catálogo passou de 32 para 24px de calha
+
+`ds-shell` foi de `size="lg"` para `size="xl" gutter="page"`, e com isso perdeu
+o terceiro degrau (`lg:px-8`) que só ele tinha. A alternativa era devolvê-lo por
+`className` nas duas chamadas — o que reintroduziria à mão exatamente o número
+que esta rodada tirou.
+
+Ficou sem. Vinte e quatro é a margem que o app inteiro usa no desktop, e uma
+página de documentação respirar na mesma medida do produto que ela documenta é
+resposta melhor que um degrau próprio.
+
+### O catálogo dizia ser atomic design, e 43% dele estava na camada errada
+
+A categoria de cada peça saía de **dois `Set` escritos à mão** no `registry.ts`,
+e o que não estivesse em nenhum dos dois caía em **"Organismos" por
+*fall-through* silencioso**. Medido: **32 dos 75 componentes na camada errada**.
+
+Foi assim que `Typography` — nove componentes de texto independentes, que não
+compõem nada — apareceu ao lado da `Sidebar`; e `Container`, uma `div` com
+largura, ao lado do `Dialog`. Na direção oposta, `Field`, `InputGroup`,
+`Select` e `SearchInput` se declaravam **átomos** importando outros componentes.
+
+O comentário que vivia no arquivo já previa a falha — *"com 80 itens, a
+repetição é onde a lista começa a mentir"* — e a saída que ele propunha (derivar
+do slug) **foi o que produziu a mentira**.
+
+Hoje é um mapa explícito, exaustivo por tipo: **um componente novo sem camada
+não compila**. E a regra é a canônica, escrita no topo do arquivo:
+
+| Camada | O teste |
+| --- | --- |
+| Fundações | é decisão em `globals.css`, não componente |
+| Átomos | não compõe componente do sistema, e é **um** elemento |
+| Moléculas | várias peças que só existem juntas, compondo no máximo átomos |
+| Organismos | compõe duas ou mais moléculas, ou compõe molécula **e** tem estado próprio |
+| Templates | o que estrutura a página, e não o que ela contém |
+| Padrões | não é componente |
+
+**`Templates` é o nível que faltava.** O modelo original tem cinco, e este
+catálogo tinha quatro mais duas de casa. `PageHeader` e `PageSection` dispõem
+conteúdo numa página — é a definição do nível. `Container` **não** foi com eles:
+pelo teste canônico ele é indivisível, e é átomo.
+
+[`taxonomy.test.ts`](src/app/designsystem/taxonomy.test.ts) tranca isso, e a
+asserção que vale é a **2** — *nenhum átomo compõe outro componente*. Ela teria
+pego os quatro. E pegou dois erros meus nesta mesma rodada: `sheet-drag-handle`
+(que consome o contexto do `Sheet`) e `kbd-shortcut` (que compõe o `Kbd`), os
+dois classificados como átomo por engano.
+
+**A marca "movido" é temporária.** Trinta e quatro entradas trocaram de lugar de
+uma vez, e quem tem o mapa antigo na cabeça procuraria `Table` em Organismos.
+Ela sai de `MOVED_FROM` no registry — a frase no índice, um ponto na lateral — e
+**desaparece quando aquele campo for apagado. A próxima rodada que tocar o
+registry apaga.** Duas marcas nasceram mentindo, apontando para a camada em que
+a peça já estava; a asserção 5 do teste é o que as pegou.
+
+### O `Container` absorveu "Espaçamento e largura" — no código
+
+Havia uma Fundação com esse nome cuja **fonte declarada era
+`src/components/ui/container.tsx`**. Ela documentava as duas coisas, e o
+componente entregava só uma: os três blocos dela eram o `Container`, e a tabela
+de props dela era o `size` dele.
+
+A fusão não foi de texto. O componente ganhou o eixo **`stack`**, que declara o
+ritmo do que ele contém — o que era escrito à mão em toda chamada:
+`flex flex-col gap-8` quatro vezes nas páginas, `flex gap-8` no casco do
+catálogo, `flex min-w-0 flex-1 flex-col gap-4` na casca do app.
+
+E entraram quatro tokens semânticos, cada um com consumidor contado:
+
+| Token | Valor | O que nomeia |
+| --- | --- | --- |
+| `--space-identity` | 0 | o par de identidade — 5 componentes já o aplicam |
+| `--space-inline` | 8px | dentro de um bloco |
+| `--space-block` | 16px | entre blocos — o `gap` do `PageSection` |
+| `--space-section` | 32px | entre seções — o `stack` do `Container` |
+
+**Eles não são a escala.** Redeclarar 4/8/12/16 seria copiar o Tailwind para
+dentro de casa; estes nomeiam as quatro distâncias que o sistema já decidiu. A
+razão de 2 para 1 entre `inline` e `block` é o que separa "mesmo assunto" de
+"outro assunto" — medido na rodada do `HoverCardBody`.
+
+E eles **são consumidos**: `PageSection` e `Container` leem os tokens em vez de
+cravar `gap-4`/`gap-8`. Token que ninguém lê nasce morto.
+
+### O verificador de tema escuro não distinguia cor de distância
+
+Ao entrar, os quatro `--space-*` apareceram no aviso *"declarados em `:root` e
+ausentes em `.dark`"* — junto de `--scroll-fade-h`, `--scroll-fade-x-h` e
+`--scroll-fade-floor`, que **já estavam lá como falso positivo**.
+
+A causa era uma lista de prefixos escrita à mão (`radius|z-|duration|ease|
+mobile-|text-`), com o mesmo defeito de toda lista escrita à mão: ela não previu
+os tokens que vieram depois. A decisão passou a ser **pelo valor** — função de
+cor ou hexadecimal precisam de par; medida não precisa. Um aviso com falso
+positivo conhecido é um aviso que as pessoas param de ler.
+
+Custou uma segunda medição: a primeira versão aceitava `var(` como sinal de cor,
+e acusou `--mobile-bottom-pad`, que é `calc(var(a) + var(b) + env(c))` — uma
+conta de distância. Só o **apelido puro** (`--x: var(--y)`) entra.
+
+### Três palavras para "não desenha nada"
+
+Medido: **`plain` em 5 componentes, `ghost` em 4, `bare` em 1** — um conceito,
+três palavras, dez arquivos. Ficou `plain`, que já era maioria.
+
+O `Toggle` tinha uma nota defendendo o nome `ghost`, e ela continua correta no
+que dizia: ele não se chama `tertiary` porque não tem escada de três degraus. Só
+que a nota defendia `ghost` contra `tertiary` — **não contra `plain`**.
+
+Junto saíram os `default` sobreviventes: `size="default"` do `Badge` e do
+`SidebarMenuButton`, e `variant="default"` do `Item`, do `ItemMedia` e do
+`SidebarMenuButton`. É o nome que já saiu de `Button`, `Input`,
+`SelectTrigger`, `NativeSelect` e `Container` por dizer *o padrão* em vez de
+dizer a medida.
+
+### O `Badge` misturava três eixos num nome só
+
+`variant` carregava **peso** (`primary`, `secondary`), **forma** (`outline`) e
+**tom** (`success`, `warning`, `income`, `expense`). Tom é o que `Alert`,
+`StatCard`, `Timeline`, `Progress`, `Separator` e `AnnouncementBar` chamam de
+`tone` — o `Badge` era o único a discordar, que é palavra por palavra a correção
+que a rodada do `Alert` fez quando **ele** era o único.
+
+Hoje são dois eixos: `variant` (`soft` | `outline`) e `tone` (sete cores). O
+cruzamento criou uma combinação que não existia — **contorno na cor do tom**;
+antes o `outline` só sabia ser cinza.
+
+**Foram 71 chamadas reescritas por codemod, e o compilador isolou as que
+sobraram.** Elas eram todas do mesmo tipo: ternários que misturavam os dois
+eixos, como `variant={bill.is_active ? "success" : "outline"}` — "ativa" é cor e
+"inativa" era forma. Um codemod não sabe disso; cada uma virou duas props
+explícitas. Mais quatro modelos a montante (`momentumTone`, `statusTone`, o
+delta do KPI e o da fatura) que carregavam o nome `variant` para um dado que
+sempre foi tom.
+
+### `KbdShortcut` existia sem página e sem entrada
+
+Ele estava em `src/components/ui/` desde a rodada da paleta, **usado pela busca
+do próprio catálogo**, e não aparecia nem no registry nem em `docs/`. É o
+invariante 8 — *"componente novo entra em três lugares na mesma mudança"* —
+violado pelo próprio design system. Ganhou os dois.
+
 ### Backlog de migração
 
 A rodada 01 entregou tokens, componentes, documentação e o auditor, sem migrar
@@ -2513,5 +2922,77 @@ E o que a revisão da barra deixou:
   Destino: os quatro passam a consumir a peça.
 - **A busca não existe na barra em nenhuma tela.** O catálogo agora mostra a
   forma e diz que o app não a tem; tomar a decisão é trabalho de produto.
+
+E o que a rodada do chrome de página deixou:
+
+- **Os três continuam sem consumidor no app**, e agora com os candidatos
+  contados: `wallets/page-client.tsx:243` escreve `font-heading text-3xl
+  font-bold tracking-tight` num `<h1>` à mão, e `credit-cards/page-client.tsx`
+  e `settings/credit-cards/page-client.tsx` escrevem `text-lg font-semibold
+  tracking-tight` em mais três — quatro `<h1>` de tela em três grafias, nenhuma
+  igual ao `PageHeaderTitle`. O consumidor de verdade do `PageSection` são os
+  **108 cabeçalhos de bloco** escritos à mão em 5 grafias (`text-base
+  font-semibold tracking-tight` ×18, mais `text-sm font-semibold`, `text-2xs
+  font-medium uppercase` e companhia).
+- **`MobileHeaderBack` em `app-header.tsx:69` é a terceira cópia do voltar.**
+  Ela ficou porque mexer no chrome do app é fora do escopo de uma rodada de
+  design system, mas agora `PageHeaderBack` tem a mesma medida dela — a troca é
+  de uma linha.
+- **`H2` de `typography.tsx` e `PageSectionTitle` descrevem a mesma coisa
+  diferente**: `text-2xl font-semibold` com `border-b` contra `text-base`
+  (agora `sm|md|lg`) sem fio. O `H2` é o cabeçalho de prosa e o outro é o de
+  tela, mas nada no sistema diz isso. Resolver é escolher um dono para
+  "cabeçalho de segundo nível".
+- **`Container` não tem eixo de calha.** `px-4 sm:px-6 lg:px-8` é fixo, e não há
+  divergência medida no app para justificar um eixo — a nota fica para o dia em
+  que houver.
+- **O índice do catálogo perdeu 16px** entre o título e a frase de abertura,
+  por aplicação do par de identidade. Foi a única mudança visível da migração;
+  as outras 89 páginas saíram idênticas, verificado por captura.
+
+E o que a rodada do `Container` deixou:
+
+- **As outras 5 cascas de página continuam à mão.** `invites/accept` (×2, sem o
+  `min-w-0` que as outras tinham), `credit-cards/[cardId]` (com um
+  `px-1 sm:px-0` a decidir — quatro pixels que somem em 640), e os dois shells
+  de erro (`not-found-shell`, `route-error-fallback`, os dois em `max-w-md`,
+  que é o degrau `sm`). São 5 substituições mecânicas.
+- **A área segura horizontal não existe no repositório.**
+  `env(safe-area-inset-left/right)` não aparece nenhuma vez; só a vertical. Num
+  telefone com entalhe em paisagem, o `px-4` da casca do app deixa o conteúdo
+  passar por baixo do entalhe. O dono do conserto é
+  `sidebar-app-shell.tsx:39`, não o `Container`.
+- **A casca do app declara `md:p-6` e o `Container` declara `md:px-6`.** São a
+  mesma calha horizontal, escrita em dois lugares. No dia em que a casca
+  consumir o `Container`, uma das duas some — e é a da casca, porque ela também
+  carrega o recuo vertical e a área segura.
+- **`Container` ainda não tem `asChild`.** Zero demanda hoje: as nove cascas são
+  `<div>`. A nota fica para quando uma tela pedir `<section>`.
+
+E o que a rodada da taxonomia deixou:
+
+- **A marca "movido" tem prazo.** São 34 entradas com `MOVED_FROM` no
+  `registry.ts`. **A próxima rodada que tocar aquele arquivo apaga o mapa
+  inteiro** — a marca existe para a transição, não para o registro; o registro é
+  esta seção.
+- **30 componentes seguem sem consumidor fora do catálogo**: `accordion`,
+  `breadcrumb`, `button-group`, `carousel`, `code`, `combobox`, `context-menu`,
+  `description-list`, `field`, `hover-card`, `input-otp`, `item`,
+  `kbd-shortcut`, `menubar`, `native-select`, `navigation-menu`, `page-header`,
+  `page-section`, `pagination`, `radio-group`, `resizable`, `scroll-area`,
+  `scroll-fade`, `search-input`, `slider`, `stepper`, `tabs`, `timeline`,
+  `toggle-group`, `toolbar`. Cada um pede a tela que o prove, e isso é trabalho
+  de produto — mas a contagem é a medida honesta de quanto do sistema ainda é
+  promessa.
+- **O vocabulário de superfície ainda tem 14 palavras.** Depois de unificar
+  `plain`, sobram `outline`, `solid`, `elevated`, `muted`, `soft`, `panel`,
+  `underline`, `dashed`, `card`, `flush`, `inset`, `contained`, `separated` e
+  `ruled` espalhadas pelos eixos `variant`. Algumas são genuinamente diferentes;
+  outras são a mesma coisa com dois nomes. É uma rodada própria, e a medida para
+  começar é cruzar cada palavra com o que ela desenha.
+- **Tipografia ficou de fora por decisão.** `typography` mudou de camada
+  (Organismo → Átomos), mas nem a página dele nem a Fundação `tipografia` foram
+  tocadas — e a sobreposição entre as duas é o mesmo formato que `container` e
+  `espacamento` tinham antes desta rodada.
 
 Reproduza a qualquer momento com `npm run ds:audit`.

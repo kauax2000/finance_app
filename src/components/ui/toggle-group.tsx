@@ -11,7 +11,7 @@ const ToggleGroupContext = React.createContext<
   VariantProps<typeof toggleVariants>
 >({
   size: "md",
-  variant: "ghost",
+  variant: "plain",
 })
 
 function ToggleGroup({

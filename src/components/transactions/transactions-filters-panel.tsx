@@ -346,7 +346,7 @@ export function TransactionsFiltersPanel({
                                 return (
                                     <Badge
                                         key={pm}
-                                        variant="success"
+                                        tone="success"
                                         className="inline-flex items-center gap-1.5 pr-1.5"
                                         title={label}
                                     >
@@ -654,7 +654,7 @@ export function TransactionsFiltersPanel({
                                 <div className="flex flex-wrap gap-1.5">
                                     {uncategorizedOnly ? (
                                         <Badge
-                                            variant="success"
+                                            tone="success"
                                             className="inline-flex items-center gap-1.5 pr-1.5"
                                             title="Sem categoria"
                                         >
@@ -683,7 +683,7 @@ export function TransactionsFiltersPanel({
                                         return (
                                             <Badge
                                                 key={cat.id}
-                                                variant="success"
+                                                tone="success"
                                                 className="inline-flex items-center gap-1.5 pr-1.5"
                                                 title={name}
                                             >

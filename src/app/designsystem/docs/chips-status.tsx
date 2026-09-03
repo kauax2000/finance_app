@@ -98,12 +98,12 @@ export default function ChipsStatusDoc() {
       <Group title="O mesmo estado como Badge">
         <Spec title="Quando o rótulo é só rótulo">
           <div className="flex flex-wrap gap-2">
-            <Badge variant="success">Pago</Badge>
-            <Badge variant="warning">Vence hoje</Badge>
-            <Badge variant="destructive">Atrasado</Badge>
-            <Badge variant="secondary">Pendente</Badge>
-            <Badge variant="income">Receita</Badge>
-            <Badge variant="expense">Despesa</Badge>
+            <Badge tone="success">Pago</Badge>
+            <Badge tone="warning">Vence hoje</Badge>
+            <Badge tone="destructive">Atrasado</Badge>
+            <Badge tone="neutral">Pendente</Badge>
+            <Badge tone="income">Receita</Badge>
+            <Badge tone="expense">Despesa</Badge>
           </div>
         </Spec>
       </Group>

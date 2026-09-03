@@ -104,7 +104,7 @@ function InvoiceFaturaHeaderStatus({
         return (
             <Badge
                 size="sm"
-                variant="outline"
+                variant="outline" tone="neutral"
                 className="shrink-0 tabular-nums"
                 title="Fatura futura em relação à atual"
                 aria-label="Status da fatura: futura"
@@ -117,7 +117,7 @@ function InvoiceFaturaHeaderStatus({
         return (
             <Badge
                 size="sm"
-                variant="success"
+                tone="success"
                 className="shrink-0 tabular-nums"
                 title="Fatura atual ainda em aberto"
                 aria-label="Status da fatura: aberta"
@@ -130,7 +130,7 @@ function InvoiceFaturaHeaderStatus({
     const unpaidBadge = (
         <Badge
             size="sm"
-            variant={unpaidPastDue ? "destructive" : "warning"}
+            tone={unpaidPastDue ? "destructive" : "warning"}
             className="shrink-0 tabular-nums"
             title={
                 unpaidPastDue
@@ -150,7 +150,7 @@ function InvoiceFaturaHeaderStatus({
     const paidBadge = (
         <Badge
             size="sm"
-            variant="success"
+            tone="success"
             className="shrink-0 tabular-nums"
             title="Você marcou esta fatura como paga"
             aria-label="Status da fatura: paga"
@@ -182,7 +182,7 @@ function InvoiceFaturaHeaderStatus({
                     >
                         <Badge
                             size="sm"
-                            variant="success"
+                            tone="success"
                             className="shrink-0 tabular-nums"
                             aria-hidden
                         >
@@ -224,7 +224,7 @@ function InvoiceFaturaHeaderStatus({
                 >
                     <Badge
                         size="sm"
-                        variant={unpaidPastDue ? "destructive" : "warning"}
+                        tone={unpaidPastDue ? "destructive" : "warning"}
                         className="shrink-0 tabular-nums"
                         aria-hidden
                     >
@@ -811,12 +811,12 @@ export function CreditCardInvoiceAnalyticsPanel({
                                         {committedVsPriorDelta ? (
                                             <Badge
                                                 size="sm"
-                                                variant={
+                                                tone={
                                                     committedVsPriorDelta.direction === "down"
                                                         ? "success"
                                                         : committedVsPriorDelta.direction === "up"
                                                           ? "expense"
-                                                          : "secondary"
+                                                          : "neutral"
                                                 }
                                                 className="gap-1 shrink-0 tabular-nums"
                                                 title={committedVsPriorDelta.label}
@@ -1163,7 +1163,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                 Perfil de gastos
                             </h3>
                             <Badge
-                                variant="secondary"
+                                tone="neutral"
                                 className="shrink-0 text-2xs font-semibold uppercase tracking-wide"
                             >
                                 {spendingProfileShortLabel(

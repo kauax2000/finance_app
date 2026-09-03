@@ -35,7 +35,7 @@ export default function PlansPage() {
                                             Gratuito
                                         </p>
                                         <Badge
-                                            variant="secondary"
+                                            tone="neutral"
                                             className={cn(
                                                 "shrink-0 px-1.5 py-0 text-2xs",
                                                 tagChipInfo,
@@ -77,7 +77,7 @@ export default function PlansPage() {
                             </p>
                             <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
                                 <Badge
-                                    variant="secondary"
+                                    tone="neutral"
                                     className={cn(
                                         "px-1.5 py-0 text-2xs font-semibold uppercase tracking-wide",
                                         tagChipWarning,

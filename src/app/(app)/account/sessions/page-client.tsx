@@ -222,7 +222,7 @@ export default function SessionsPage() {
                                                             </span>
                                                             {session.is_current ? (
                                                                 <Badge
-                                                                    variant="success"
+                                                                    tone="success"
                                                                     className="px-1.5 py-0 text-2xs"
                                                                 >
                                                                     Atual

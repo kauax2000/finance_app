@@ -106,7 +106,7 @@ export default function TableDoc() {
                 </ItemDescription>
               </ItemContent>
               <ItemActions>
-                <Badge size="xs" variant={l.status === "Prevista" ? "secondary" : "success"}>
+                <Badge size="xs" tone={l.status === "Prevista" ? "neutral" : "success"}>
                   {l.status}
                 </Badge>
                 <MoneyDisplay

@@ -4,6 +4,12 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 import { Code } from "@/components/ui/code"
+import {
+  PageSection,
+  PageSectionDescription,
+  PageSectionHeader,
+  PageSectionTitle,
+} from "@/components/ui/page-section"
 
 /** Um grupo nomeado de specs dentro de uma página de fundação. */
 export function Group({
@@ -24,33 +30,34 @@ export function Group({
   children: React.ReactNode
 }) {
   return (
-    // O mesmo cabeçalho de seção das páginas de componente: fio em cima, título
-    // em `font-heading` e a legenda grudada nele. As sete páginas de Fundações
-    // usam este grupo em vez de `DocSection`, e sem isso eram as únicas do
-    // catálogo em que as seções não tinham começo visível.
-    <section id={id} className="scroll-mt-24 border-t border-border pt-8">
-      <div className="mb-4 flex flex-col">
-        <h2 className="font-heading text-lg font-semibold tracking-tight text-foreground">
-          {title}
-        </h2>
+    // O mesmo cabeçalho de seção das páginas de componente — e agora
+    // literalmente o mesmo: as duas escreviam a string à mão, em dois arquivos.
+    // O que fica sendo do `Group` é só o `layout`, porque ele é sobre os filhos
+    // e não sobre a seção.
+    <PageSection
+      id={id}
+      variant="ruled"
+      size="lg"
+      className="scroll-mt-24"
+    >
+      <PageSectionHeader>
+        <PageSectionTitle>{title}</PageSectionTitle>
         {description ? (
-          <p className="text-sm leading-relaxed text-pretty text-muted-foreground">
-            {description}
-          </p>
+          <PageSectionDescription>{description}</PageSectionDescription>
         ) : null}
+      </PageSectionHeader>
+      <div
+        className={
+          layout === "flow"
+            ? "flex flex-col gap-6"
+            : layout === "grid"
+              ? "grid grid-cols-1 items-start gap-4 md:grid-cols-2 xl:grid-cols-3"
+              : "columns-[19rem] gap-4 [column-fill:_balance]"
+        }
+      >
+        {children}
       </div>
-      {layout === "flow" ? (
-        <div className="flex flex-col gap-6">{children}</div>
-      ) : layout === "grid" ? (
-        <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {children}
-        </div>
-      ) : (
-        <div className="columns-[19rem] gap-4 [column-fill:_balance]">
-          {children}
-        </div>
-      )}
-    </section>
+    </PageSection>
   )
 }
 

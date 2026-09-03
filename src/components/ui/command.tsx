@@ -41,7 +41,7 @@ import { Button } from "@/components/ui/button"
  * | solta numa página | **ninguém** — era o buraco |
  * | dentro de um `CommandDialog` | o `DialogContent` |
  *
- * `bare` é o padrão porque é o caso do `Combobox`, o único consumidor de
+ * `plain` é o padrão porque é o caso do `Combobox`, o único consumidor de
  * produto: ali uma segunda borda dentro do anel do popover desenharia duas
  * linhas a 1px de distância.
  *
@@ -87,12 +87,12 @@ const commandVariants = cva(
          * a paleta acerta o canto do popover (10px), o do diálogo (14px) e o
          * de qualquer superfície futura, sem saber de nenhum deles.
          */
-        bare: "[border-radius:inherit]",
+        plain: "[border-radius:inherit]",
         /** A própria moldura, para a paleta solta numa página. */
         panel: "rounded-lg border border-border shadow-xs",
       },
     },
-    defaultVariants: { variant: "bare" },
+    defaultVariants: { variant: "plain" },
   }
 )
 
@@ -121,7 +121,7 @@ function Command({
     /** Abrir com a primeira linha já selecionada. `false` = modo ocioso. */
     autoSelectFirst?: boolean
   }) {
-  const resolvida = variant ?? "bare"
+  const resolvida = variant ?? "plain"
   const ocioso = useCommandIdleSelection(!autoSelectFirst)
 
   return (

@@ -181,7 +181,7 @@ export default function DialogDoc() {
         title="Controle no cabeçalho"
         description="DialogHeaderRow põe um controle na linha do título sem que ele dispute a largura do texto: o título e a descrição ficam numa coluna que encolhe, o adorno numa que não. Serve ao selo de estado, ao botão de ajuda, ao fechar próprio de um cabeçalho fixo."
         code={`<DialogHeader>
-  <DialogHeaderRow endAdornment={<Badge variant="warning">Rascunho</Badge>}>
+  <DialogHeaderRow endAdornment={<Badge tone="warning">Rascunho</Badge>}>
     <DialogTitle>Assinatura mensal</DialogTitle>
     <DialogDescription>Ainda não foi cobrada.</DialogDescription>
   </DialogHeaderRow>
@@ -195,7 +195,7 @@ export default function DialogDoc() {
             <DialogHeader>
               <DialogHeaderRow
                 endAdornment={
-                  <Badge variant="warning" size="sm">
+                  <Badge tone="warning" size="sm">
                     Rascunho
                   </Badge>
                 }

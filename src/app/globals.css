@@ -251,6 +251,36 @@
   --skeleton: oklch(0.9 0 0);
   --shadow-xl-value: 0 24px 48px -12px oklch(0 0 0 / 0.14);
 
+  /* ─── O ritmo, nomeado ────────────────────────────────────────────────────
+
+     A escala de espaçamento deste app é a do Tailwind, herdada em silêncio: não
+     havia token nenhum, e nenhuma das 90 páginas do catálogo ensinava quando
+     usar 8, 16 ou 32. O resultado é o que se vê no repositório — o mesmo respiro
+     escrito com números diferentes em telas diferentes.
+
+     Estes quatro **não são a escala**. Redeclarar 4/8/12/16 seria copiar o
+     Tailwind para dentro de casa. Eles nomeiam as quatro **distâncias que este
+     sistema já decidiu**, cada uma com consumidor contado hoje:
+
+       identity  o par de identidade — nome sobre e-mail, rótulo sobre valor.
+                 Zero de propósito: quem separa é a entrelinha. Cinco
+                 componentes já o aplicam (ItemContent, StatCard, FieldContent,
+                 PageHeaderTitleRow, PageSectionHeader), e os cinco chegaram lá
+                 corrigindo o mesmo defeito.
+       inline    dentro de um bloco. É a metade de `block`, e a razão de 2 para
+                 1 entre as duas é o que separa "outro assunto" de "mesmo
+                 assunto" — medido na rodada do HoverCardBody.
+       block     entre blocos. É o `gap` do PageSection e o respiro das tiras.
+       section   entre seções de uma página. É o `gap-8` que as quatro chamadas
+                 de Container escreviam à mão.
+
+     Eles não têm par no tema escuro porque distância não muda com o tema — ao
+     contrário de cor e sombra, que têm. */
+  --space-identity: 0rem;
+  --space-inline: 0.5rem;
+  --space-block: 1rem;
+  --space-section: 2rem;
+
   --radius: 0.625rem;
   --sidebar: oklch(0.97 0 0);
   --sidebar-foreground: oklch(0.145 0 0);

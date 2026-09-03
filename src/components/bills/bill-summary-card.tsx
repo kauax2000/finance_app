@@ -109,7 +109,8 @@ export function BillSummaryCard({
                         </CardTitle>
 
                         <Badge
-                            variant={bill.is_active ? "success" : "outline"}
+                            variant={bill.is_active ? "soft" : "outline"}
+                            tone={bill.is_active ? "success" : "neutral"}
                             className="col-start-3 row-span-2 shrink-0 self-start"
                         >
                             {bill.is_active ? "Ativa" : "Inativa"}
@@ -155,7 +156,7 @@ export function BillSummaryCard({
                                     </span>
                                     {nextPill ? (
                                         <Badge
-                                            variant="secondary"
+                                            tone="neutral"
                                             className={cn(
                                                 "shrink-0 border-0 text-xs",
                                                 nextPill.className

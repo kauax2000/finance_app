@@ -70,7 +70,6 @@ export function WorkspaceSwitcher({
             <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                     size="lg"
-                    variant="default"
                     className="h-12 w-full min-w-0 rounded-lg data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
                     {loading ? (

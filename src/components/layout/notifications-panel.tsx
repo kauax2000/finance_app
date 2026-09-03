@@ -178,7 +178,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                                 </h2>
                                 {unreadCount > 0 ? (
                                     <Badge
-                                        variant="success"
+                                        tone="success"
                                         className="shrink-0 px-2 py-0.5 text-2xs font-semibold leading-none"
                                     >
                                         {unreadCount} nova{unreadCount > 1 ? "s" : ""}

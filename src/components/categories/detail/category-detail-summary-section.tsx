@@ -38,11 +38,11 @@ function pctShare(part: number, whole: number): string | null {
 
 type MomDirection = "up" | "down" | "flat"
 
-function momentumVariant(
+function momentumTone(
     isExpense: boolean,
     direction: MomDirection,
-): "success" | "destructive" | "outline" {
-    if (direction === "flat") return "outline"
+): "success" | "destructive" | "neutral" {
+    if (direction === "flat") return "neutral"
     if (isExpense) {
         return direction === "up" ? "destructive" : "success"
     }
@@ -69,7 +69,8 @@ type MomBadgeModel =
     | { show: false }
     | {
           show: true
-          variant: "success" | "destructive" | "outline"
+          /** Tom, e não forma: o modelo diz a cor do sinal. */
+          tone: "success" | "destructive" | "neutral"
           direction: MomDirection
           display: string
           ariaLabel: string
@@ -85,7 +86,7 @@ function buildMomBadgeModel(prev: number, monthTotal: number, isExpense: boolean
         const kind = isExpense ? "gasto" : "receita"
         return {
             show: true,
-            variant: "outline",
+            tone: "neutral",
             direction: "flat",
             display: "Sem base mês ant.",
             ariaLabel: `Sem valor de ${kind} no mês anterior para comparar; há valor no período atual.`,
@@ -98,7 +99,7 @@ function buildMomBadgeModel(prev: number, monthTotal: number, isExpense: boolean
         const direction: MomDirection = "down"
         return {
             show: true,
-            variant: momentumVariant(isExpense, direction),
+            tone: momentumTone(isExpense, direction),
             direction,
             display: formatSignedPct(pctRounded),
             ariaLabel: pctAriaLabel(isExpense, pctRounded, direction),
@@ -112,7 +113,7 @@ function buildMomBadgeModel(prev: number, monthTotal: number, isExpense: boolean
             monthTotal > prev ? "up" : monthTotal < prev ? "down" : "flat"
         return {
             show: true,
-            variant: momentumVariant(isExpense, direction),
+            tone: momentumTone(isExpense, direction),
             direction,
             display: formatSignedPct(pctRounded),
             ariaLabel: pctAriaLabel(isExpense, pctRounded, direction),
@@ -141,7 +142,7 @@ function MomBadge({ model }: { model: MomBadgeModel }) {
     if (model.isNovo) {
         return (
             <Badge
-                variant={model.variant}
+                tone={model.tone}
                 className="max-w-[min(100%,7.5rem)] shrink-0 gap-1 truncate px-2 py-0.5 text-2xs font-medium tabular-nums"
                 aria-label={model.ariaLabel}
                 title={model.ariaLabel}
@@ -159,7 +160,7 @@ function MomBadge({ model }: { model: MomBadgeModel }) {
     if (model.direction === "flat") {
         return (
             <Badge
-                variant={model.variant}
+                tone={model.tone}
                 className={momBadgeClassName}
                 aria-label={model.ariaLabel}
                 role="status"
@@ -175,7 +176,7 @@ function MomBadge({ model }: { model: MomBadgeModel }) {
 
     return (
         <Badge
-            variant={model.variant}
+            tone={model.tone}
             className={momBadgeClassName}
             aria-label={model.ariaLabel}
             role="status"

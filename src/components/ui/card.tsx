@@ -78,7 +78,7 @@ const cardVariants = cva(
          */
         muted: "border border-border/60 bg-muted text-foreground",
         /** Sem borda e sem preenchimento: só agrupa, onde a superfície já existe. */
-        ghost: "border border-transparent bg-transparent text-foreground",
+        plain: "border border-transparent bg-transparent text-foreground",
       },
       /**
        * Uma medida, dois destinos: `--card-px` é o recuo do **corpo** (cabeçalho,

@@ -35,7 +35,6 @@ import DrawerDoc from "./docs/drawer"
 import DropdownMenuDoc from "./docs/dropdown-menu"
 import EdgePanelDoc from "./docs/edge-panel"
 import EmptyStateDoc from "./docs/empty-state"
-import EspacamentoDoc from "./docs/espacamento"
 import FieldDoc from "./docs/field"
 import FormDoc from "./docs/form"
 import FormPickerPopoverDoc from "./docs/form-picker-popover"
@@ -49,6 +48,7 @@ import InputGroupDoc from "./docs/input-group"
 import InputOtpDoc from "./docs/input-otp"
 import ItemDoc from "./docs/item"
 import KbdDoc from "./docs/kbd"
+import KbdShortcutDoc from "./docs/kbd-shortcut"
 import LabelDoc from "./docs/label"
 import MarcaDoc from "./docs/marca"
 import MenubarDoc from "./docs/menubar"
@@ -127,7 +127,6 @@ export const DOCS: Record<string, ComponentType> = {
   "dropdown-menu": DropdownMenuDoc,
   "edge-panel": EdgePanelDoc,
   "empty-state": EmptyStateDoc,
-  "espacamento": EspacamentoDoc,
   "field": FieldDoc,
   "form": FormDoc,
   "form-picker-popover": FormPickerPopoverDoc,
@@ -141,6 +140,7 @@ export const DOCS: Record<string, ComponentType> = {
   "input-otp": InputOtpDoc,
   "item": ItemDoc,
   "kbd": KbdDoc,
+  "kbd-shortcut": KbdShortcutDoc,
   "label": LabelDoc,
   "marca": MarcaDoc,
   "menubar": MenubarDoc,

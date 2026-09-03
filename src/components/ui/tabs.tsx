@@ -105,7 +105,7 @@ import { useScrollFade } from "@/hooks/use-scroll-fade"
  */
 
 type TabsSize = "sm" | "md" | "lg" | "xl"
-type TabsVariant = "solid" | "underline" | "ghost"
+type TabsVariant = "solid" | "underline" | "plain"
 type TabsOrientation = "horizontal" | "vertical"
 
 /**
@@ -153,7 +153,7 @@ type TabsOrientation = "horizontal" | "vertical"
  *
  * - **`solid`** é um controle segmentado, e vive numa **linha de controles**.
  *   A bandeja tem de medir 32 para ficar rente ao `Button` e ao `Input` ao lado.
- * - **`underline` e `ghost`** são **abas de página**. Elas não dividem linha com
+ * - **`underline` e `plain`** são **abas de página**. Elas não dividem linha com
  *   controle nenhum; dividem a página com título e texto corrido.
  *
  * E `lg` não é só mais alto: é o degrau em que o rótulo **volta ao corpo de
@@ -223,24 +223,24 @@ export const ALTURA_CLASS = {
 } as const
 
 /**
- * Quem tem marcador viajante — e o `ghost` não tem, de propósito.
+ * Quem tem marcador viajante — e o `plain` não tem, de propósito.
  *
  * O marcador viaja **ao longo de alguma coisa**: a bandeja do `solid` e o fio
- * do `underline` são o trilho que dá sentido ao deslocamento. O `ghost` não
+ * do `underline` são o trilho que dá sentido ao deslocamento. O `plain` não
  * desenha nem bandeja nem fio, então ali o mesmo movimento não é um realce
  * correndo por um trilho, é um bloco preenchido deslizando sozinho sobre o
  * fundo — e ele é justamente a variante escolhida para uma fileira que **não**
  * deve chamar atenção, dentro de uma superfície que já tem moldura própria.
  * A variante mais silenciosa das três não pode ter o marcador mais barulhento.
  *
- * Sem marcador, o `ghost` cai no caminho que o componente já mantém para antes
+ * Sem marcador, o `plain` cai no caminho que o componente já mantém para antes
  * da hidratação: cada gatilho pinta o próprio realce. A tinta ainda troca com
  * `transition-colors`, que é uma mudança de cor e não um deslocamento.
  */
 const VARIANTE_VIAJA: Record<TabsVariant, boolean> = {
   solid: true,
   underline: true,
-  ghost: false,
+  plain: false,
 }
 
 /**
@@ -335,7 +335,7 @@ const tabsListFrameVariants = cva("flex", {
       underline:
         "border-border data-[orientation=horizontal]:border-b data-[orientation=vertical]:border-e",
       /** Nem bandeja nem fio: para dentro de uma superfície que já tem moldura. */
-      ghost: "",
+      plain: "",
     },
     /**
      * `w-fit` é o padrão histórico; esticar ou rolar exige largura de verdade —
@@ -388,7 +388,7 @@ const tabsListTrackVariants = cva(
         solid: "gap-0.5",
         underline:
           "gap-1 data-[orientation=horizontal]:pb-0 data-[orientation=vertical]:pe-0",
-        ghost: "gap-0.5",
+        plain: "gap-0.5",
       },
       orientation: {
         horizontal: "flex-row",
@@ -438,7 +438,7 @@ const tabsTriggerVariants = cva(
           "text-muted-foreground hover:text-foreground active:text-foreground",
           "data-[state=active]:text-foreground",
         ].join(" "),
-        ghost: [
+        plain: [
           "rounded-md border border-transparent px-2",
           "text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted active:text-foreground",
           "data-[state=active]:text-foreground",
@@ -504,7 +504,7 @@ const tabsTriggerFallbackVariants = cva("", {
         "data-[state=active]:data-[orientation=horizontal]:border-b-primary-accent",
         "data-[state=active]:data-[orientation=vertical]:border-e-primary-accent",
       ].join(" "),
-      ghost: "data-[state=active]:bg-muted",
+      plain: "data-[state=active]:bg-muted",
     },
   },
   defaultVariants: { variant: "solid" },
@@ -543,11 +543,11 @@ const tabsIndicatorVariants = cva(
           "border-primary-accent",
           "data-[orientation=horizontal]:border-b-2 data-[orientation=vertical]:border-e-2",
         ].join(" "),
-        // `ghost` existe no tipo porque a variante existe, e desenha o mesmo
+        // `plain` existe no tipo porque a variante existe, e desenha o mesmo
         // que o gatilho desenharia — mas ele nunca é montado: ver
         // `VARIANTE_VIAJA`. Deixá-lo aqui evita que um `variant` novo passe a
         // cair num `undefined` silencioso.
-        ghost: "rounded-md bg-muted",
+        plain: "rounded-md bg-muted",
       },
     },
     defaultVariants: { variant: "solid" },
@@ -629,7 +629,7 @@ function TabsList({
 
   useIsomorphicLayoutEffect(() => {
     const trilha = trilhaRef.current
-    // O `ghost` não mede nem observa nada: sem marcador, não há caixa a
+    // O `plain` não mede nem observa nada: sem marcador, não há caixa a
     // publicar, e os dois observadores seriam custo puro.
     if (!trilha || !viaja) return
 

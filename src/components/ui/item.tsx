@@ -29,7 +29,7 @@ const itemVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-transparent",
+        plain: "border-transparent",
         outline: "border-border",
         muted: "border-transparent bg-muted/50",
       },
@@ -52,7 +52,7 @@ const itemVariants = cva(
       },
     },
     defaultVariants: {
-      variant: "default",
+      variant: "plain",
       size: "md",
       interactive: false,
     },
@@ -149,7 +149,7 @@ function ItemSeparator({
 
 function Item({
   className,
-  variant = "default",
+  variant = "plain",
   size = "md",
   interactive = false,
   asChild = false,
@@ -174,7 +174,7 @@ const itemMediaVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-transparent",
+        plain: "bg-transparent",
         icon: "[&_svg:not([class*='size-'])]:size-4",
         // O raio acompanha a medida: `rounded-sm` cravado deixava um retângulo
         // de 40px com 2px de canto ao lado de um sistema que arredonda em 10.
@@ -183,14 +183,14 @@ const itemMediaVariants = cva(
       },
     },
     defaultVariants: {
-      variant: "default",
+      variant: "plain",
     },
   }
 )
 
 function ItemMedia({
   className,
-  variant = "default",
+  variant = "plain",
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof itemMediaVariants>) {
   return (

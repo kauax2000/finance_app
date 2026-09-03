@@ -31,7 +31,7 @@ const LARGURAS = [
 
 const CODIGO_FATURA = `<HoverCardContent padding="none" size="lg">
   <HoverCardHeader
-    endAdornment={<Badge variant="success" size="xs">Aberta</Badge>}
+    endAdornment={<Badge tone="success" size="xs">Aberta</Badge>}
   >
     <HoverCardTitle>Fatura de março</HoverCardTitle>
     <HoverCardDescription>Nubank · •••• 4821</HoverCardDescription>
@@ -186,7 +186,7 @@ export default function HoverCardDoc() {
           <HoverCardContent padding="none" size="lg">
             <HoverCardHeader
               endAdornment={
-                <Badge variant="success" size="xs">
+                <Badge tone="success" size="xs">
                   Aberta
                 </Badge>
               }

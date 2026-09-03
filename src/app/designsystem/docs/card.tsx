@@ -41,16 +41,16 @@ export default function CardDoc() {
       {/* Dois espécimes desta página têm chão próprio — este e o do cartão
           clicável —, e o motivo é o mesmo: a moldura do Preview é `bg-card`, e
           um cartão sobre a própria superfície não mostra superfície nenhuma.
-          `ghost` some, `elevated` não tem de onde se levantar e a elevação do
+          `plain` some, `elevated` não tem de onde se levantar e a elevação do
           cursor não tem onde aparecer. `bg-background` é o chão que o app
           realmente põe embaixo de um cartão. */}
       <DocSection
         title="Superfície"
-        description="variant decide a borda e o preenchimento — nunca o respiro. outline é o cartão do app: chapado sobre a página, como o resto do sistema preenche. elevated é o mesmo levantado, para o que flutua sobre um conteúdo atrás. muted rebaixa, e serve ao contêiner de segunda ordem que não deve disputar com o cartão ao lado. ghost não desenha nada: só agrupa, onde a superfície já é de outro (dentro de um Sheet, de um Dialog)."
+        description="variant decide a borda e o preenchimento — nunca o respiro. outline é o cartão do app: chapado sobre a página, como o resto do sistema preenche. elevated é o mesmo levantado, para o que flutua sobre um conteúdo atrás. muted rebaixa, e serve ao contêiner de segunda ordem que não deve disputar com o cartão ao lado. plain não desenha nada: só agrupa, onde a superfície já é de outro (dentro de um Sheet, de um Dialog)."
         code={`<Card>…</Card>                       {/* outline */}
 <Card variant="elevated">…</Card>
 <Card variant="muted">…</Card>
-<Card variant="ghost">…</Card>`}
+<Card variant="plain">…</Card>`}
         previewClassName="grid grid-cols-1 items-stretch gap-4 bg-background sm:grid-cols-2"
       >
         {(
@@ -58,7 +58,7 @@ export default function CardDoc() {
             ["outline", "Chapado sobre a página."],
             ["elevated", "O mesmo, levantado."],
             ["muted", "Contêiner de segunda ordem."],
-            ["ghost", "Só agrupa. Sem borda."],
+            ["plain", "Só agrupa. Sem borda."],
           ] as const
         ).map(([variant, hint]) => (
           <Card key={variant} variant={variant}>
@@ -111,7 +111,7 @@ export default function CardDoc() {
         code={`<Card padding="none">
   <CardToolbar>
     Fatura de março
-    <Badge variant="warning" size="xs">Aberta</Badge>
+    <Badge tone="warning" size="xs">Aberta</Badge>
   </CardToolbar>
   <CardContent className="divide-y divide-border">…</CardContent>
   <CardNote>
@@ -124,7 +124,7 @@ export default function CardDoc() {
         <Card padding="none" className="w-full max-w-sm">
           <CardToolbar>
             Fatura de março
-            <Badge variant="warning" size="xs">
+            <Badge tone="warning" size="xs">
               Aberta
             </Badge>
           </CardToolbar>
@@ -277,7 +277,7 @@ export default function CardDoc() {
                 CardDescription
               </CardDescription>
               <CardAction>
-                <Badge variant="secondary" size="xs" className="font-mono">
+                <Badge tone="neutral" size="xs" className="font-mono">
                   CardAction
                 </Badge>
               </CardAction>
@@ -288,7 +288,7 @@ export default function CardDoc() {
             </p>
           </div>
           <CardFooter className="justify-end">
-            <Badge variant="secondary" size="xs" className="font-mono">
+            <Badge tone="neutral" size="xs" className="font-mono">
               CardFooter
             </Badge>
           </CardFooter>
@@ -302,7 +302,7 @@ export default function CardDoc() {
         rows={[
           {
             prop: "variant",
-            type: '"outline" | "elevated" | "muted" | "ghost"',
+            type: '"outline" | "elevated" | "muted" | "plain"',
             default: '"outline"',
             description:
               "A borda e a superfície. Nunca o respiro — isso é padding, e os dois eixos são independentes.",
@@ -416,7 +416,7 @@ export default function CardDoc() {
         escreviam <code>gap-0 py-0</code> do lado assim mesmo, porque o nome não
         dizia o que ele fazia. Virou <code>padding=&quot;none&quot;</code>, e{" "}
         <code>size</code> saiu do tipo — o compilador acusa quem o escrever,
-        como já acontece com <code>variant=&quot;ghost&quot;</code> no{" "}
+        como já acontece com <code>variant=&quot;plain&quot;</code> no{" "}
         <code>Button</code>.
       </DocNote>
 

@@ -79,7 +79,7 @@ export default function ItemDoc() {
             <ItemContent>
               <ItemTitle>
                 Nubank
-                <Badge size="xs" variant="warning">
+                <Badge size="xs" tone="warning">
                   Vence em 3 dias
                 </Badge>
               </ItemTitle>
@@ -211,7 +211,7 @@ export default function ItemDoc() {
         rows={[
           {
             prop: "variant",
-            type: '"default" | "outline" | "muted"',
+            type: '"plain" | "outline" | "muted"',
             default: '"default"',
             description: "A superfície da linha.",
           },
@@ -249,7 +249,7 @@ export default function ItemDoc() {
           },
           {
             prop: "ItemMedia",
-            type: 'variant: "default" | "icon" | "image"',
+            type: 'variant: "plain" | "icon" | "image"',
             default: '"default"',
             description: "image acompanha a escada em medida e em raio.",
           },

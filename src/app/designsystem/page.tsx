@@ -4,7 +4,16 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { Code } from "@/components/ui/code"
 import {
+    PageHeader,
+    PageHeaderDescription,
+    PageHeaderEyebrow,
+    PageHeaderMeta,
+    PageHeaderTitle,
+    PageHeaderTitleRow,
+} from "@/components/ui/page-header"
+import {
     CATEGORY_ORDER,
+    movedFrom,
     REGISTRY,
     getEntry,
     groupedRegistry,
@@ -31,7 +40,8 @@ const CATEGORY_BLURB: Record<string, string> = {
     Fundações: "As decisões que todo o resto herda: cor, tipo, forma, movimento, camada.",
     Átomos: "Um controle, uma responsabilidade. Não compõem outros componentes.",
     Moléculas: "Alguns átomos resolvendo uma tarefa completa.",
-    Organismos: "Blocos grandes, com estado e layout próprios.",
+    Organismos: "Seções complexas da interface, com estado e layout próprios.",
+    Templates: "O que estrutura a página, e não o que ela contém.",
     Padrões: "Não são componentes: são as decisões que atravessam telas.",
 }
 
@@ -66,6 +76,28 @@ function entrada(step: number): React.CSSProperties {
 const ENTRADA_CLASS =
     "animate-in fade-in slide-in-from-bottom-2 fill-mode-both duration-500 ease-out"
 
+/**
+ * A marca temporária de quem mudou de camada na rodada 17.
+ *
+ * Ela existe porque 32 das 90 páginas trocaram de lugar de uma vez, e quem tem
+ * o mapa antigo na cabeça procuraria `Table` em Organismos e não acharia. Diz
+ * de onde veio, e não que é novidade — a página é a mesma.
+ *
+ * **É dado, não decoração**: sai de `MOVED_FROM` no registry, e desaparece
+ * sozinha quando aquele campo for apagado. Fica em `text-2xs` sem preenchimento
+ * porque um `Badge` aqui competiria com o nome que ele acompanha, 32 vezes numa
+ * lista de 90.
+ */
+function MovedMark({ slug }: { slug: string }) {
+    const de = movedFrom(slug)
+    if (!de) return null
+    return (
+        <span className="shrink-0 text-2xs font-medium tracking-wide whitespace-nowrap text-primary-accent/80 uppercase">
+            movido de {de}
+        </span>
+    )
+}
+
 export default function DesignSystemIndexPage() {
     const groups = groupedRegistry()
 
@@ -73,34 +105,43 @@ export default function DesignSystemIndexPage() {
         <div className="flex flex-col gap-14 pb-24">
             {/* O cabeçalho ocupa espaço de propósito: é o único lugar da página
                 sem densidade, e é ele que faz a lista abaixo ler como lista. */}
-            <header className={cn("flex flex-col", ENTRADA_CLASS)} style={entrada(0)}>
-                <p className="text-2xs font-medium tracking-[0.18em] text-muted-foreground uppercase">
-                    Finance App
-                </p>
-                <h1 className="page-title mt-3 font-heading text-3xl text-foreground sm:text-4xl">
-                    Design system
-                </h1>
-                <p className="mt-4 text-sm leading-relaxed text-pretty text-muted-foreground">
-                    Uma página por componente e por padrão, com o espécime vivo ao lado
-                    da regra. Os componentes vivem em{" "}
-                    <Code variant="inline">src/components/ui/</Code> e os tokens em{" "}
-                    <Code variant="inline">src/app/globals.css</Code>.
-                </p>
-                <dl className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border pt-4 text-sm">
-                    <div className="flex items-baseline gap-2">
-                        <dt className="text-muted-foreground">Páginas</dt>
-                        <dd className="nums font-medium text-foreground">
-                            {REGISTRY.length}
-                        </dd>
-                    </div>
-                    <div className="flex items-baseline gap-2">
-                        <dt className="text-muted-foreground">Categorias</dt>
-                        <dd className="nums font-medium text-foreground">
-                            {CATEGORY_ORDER.length}
-                        </dd>
-                    </div>
-                </dl>
-            </header>
+            {/* O `size="lg"` é o degrau que esta página já renderizava — 30/36px
+                —, e a faixa de fatos é o `dl` que estava escrito à mão aqui.
+                A sobrancelha se paga porque há um pai de verdade a nomear: o
+                produto de que este catálogo é o sistema. */}
+            <PageHeader
+                size="lg"
+                variant="plain"
+                className={ENTRADA_CLASS}
+                style={entrada(0)}
+            >
+                <PageHeaderTitleRow>
+                    <PageHeaderEyebrow>Finance App</PageHeaderEyebrow>
+                    <PageHeaderTitle>Design system</PageHeaderTitle>
+                    <PageHeaderDescription className="max-w-none">
+                        Uma página por componente e por padrão, com o espécime vivo ao
+                        lado da regra. Os componentes vivem em{" "}
+                        <Code variant="inline">src/components/ui/</Code> e os tokens em{" "}
+                        <Code variant="inline">src/app/globals.css</Code>.
+                    </PageHeaderDescription>
+                </PageHeaderTitleRow>
+                <PageHeaderMeta asChild>
+                    <dl>
+                        <div className="flex items-baseline gap-2">
+                            <dt className="text-muted-foreground">Páginas</dt>
+                            <dd className="nums font-medium text-foreground">
+                                {REGISTRY.length}
+                            </dd>
+                        </div>
+                        <div className="flex items-baseline gap-2">
+                            <dt className="text-muted-foreground">Categorias</dt>
+                            <dd className="nums font-medium text-foreground">
+                                {CATEGORY_ORDER.length}
+                            </dd>
+                        </div>
+                    </dl>
+                </PageHeaderMeta>
+            </PageHeader>
 
             {/* O único bloco com cartão. É o contraste com as listas de fio
                 abaixo que faz ele pesar — não uma cor mais forte. */}
@@ -267,8 +308,11 @@ export default function DesignSystemIndexPage() {
                                     )}
                                 >
                                     <span className="grid min-w-0 flex-1 grid-cols-1 items-baseline gap-x-6 leading-snug sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)]">
-                                        <span className="truncate text-sm font-medium text-foreground">
-                                            {item.name}
+                                        <span className="flex min-w-0 items-baseline gap-2">
+                                            <span className="truncate text-sm font-medium text-foreground">
+                                                {item.name}
+                                            </span>
+                                            <MovedMark slug={item.slug} />
                                         </span>
                                         {/* Uma linha, com reticências no que
                                             passar. Descrição que quebra faz a

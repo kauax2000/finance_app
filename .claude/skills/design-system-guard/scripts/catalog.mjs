@@ -249,12 +249,35 @@ function readTokens(cssPath) {
     ),
     semPar: Object.keys(dark).filter((k) => !(k in root)),
     soNoClaro: Object.keys(root).filter(
-      (k) =>
-        !(k in dark) &&
-        !/^--(radius|z-|duration|ease|mobile-|text-)/.test(k) &&
-        !k.endsWith("-surface")
+      (k) => !(k in dark) && precisaDePar(k, root[k])
     ),
   }
+}
+
+/**
+ * Um token só precisa de par no tema escuro se ele for **cor**.
+ *
+ * Antes isto era uma lista de prefixos — `radius|z-|duration|ease|mobile-|text-`
+ * —, e ela tinha o defeito que este design system já documenta em outros
+ * lugares: lista escrita à mão mente assim que alguém adiciona um token que ela
+ * não previu. Ela não previu `--scroll-fade-*` nem `--space-*`, e os dois
+ * apareciam no aviso como se fossem perder a cor no escuro. Distância, duração
+ * e camada não mudam com o tema; cor e sombra mudam.
+ *
+ * A decisão passou a ser **pelo valor**, que é o que de fato distingue os dois
+ * casos: função de cor ou hexadecimal precisam de par; medida não precisa.
+ *
+ * O apelido puro (`--x: var(--y)`) também entra, porque ele pode estar
+ * apontando para uma cor. Mas só o **puro**: `calc(var(a) + var(b) + env(c))` é
+ * uma conta de distância, e uma primeira versão desta função a acusou —
+ * `--mobile-bottom-pad` apareceu no relatório como se fosse perder a cor no
+ * escuro.
+ */
+function precisaDePar(nome, valor) {
+  if (nome.endsWith("-surface")) return false
+  const v = String(valor).trim().replace(/\s+/g, " ")
+  if (/^var\(--[a-z0-9-]+\)$/i.test(v)) return true
+  return /oklch|color-mix|rgba?\(|hsla?\(|#[0-9a-f]{3,8}\b/i.test(v)
 }
 
 // ---------------------------------------------------------------------------

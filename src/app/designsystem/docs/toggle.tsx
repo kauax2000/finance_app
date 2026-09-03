@@ -13,13 +13,13 @@ export default function ToggleDoc() {
 
       <DocSection
         title="Variantes"
-        description="ghost — o padrão — não tem cromo nenhum em repouso: nem borda, nem preenchimento, nem sombra. outline mostra a borda desde o repouso, para o toggle que aparece sozinho numa superfície sem outra pista de que ali se clica. Clique nos dois para ver o estado ligado."
+        description="plain — o padrão — não tem cromo nenhum em repouso: nem borda, nem preenchimento, nem sombra. outline mostra a borda desde o repouso, para o toggle que aparece sozinho numa superfície sem outra pista de que ali se clica. Clique nos dois para ver o estado ligado."
         code={`<Toggle>Ocultar</Toggle>
 <Toggle variant="outline">Ocultar</Toggle>`}
       >
         <Toggle aria-label="Negrito">
           <BoldIcon aria-hidden />
-          ghost
+          plain
         </Toggle>
         <Toggle variant="outline" aria-label="Negrito com contorno">
           <BoldIcon aria-hidden />
@@ -87,8 +87,8 @@ export default function ToggleDoc() {
         preenchimento.
       </DocNote>
 
-      <DocNote title="ghost aqui, tertiary lá">
-        No <code>Button</code> o nome <code>ghost</code>{" "}
+      <DocNote title="plain aqui, tertiary lá">
+        No <code>Button</code> o nome <code>plain</code>{" "}
         foi trocado por <code>tertiary</code>{" "}
         porque precisava dizer um degrau de uma escada de três pesos. O toggle
         não tem escada: tem duas peles, com e sem contorno. Aí o nome pode
@@ -99,7 +99,7 @@ export default function ToggleDoc() {
         rows={[
           { prop: "pressed", type: "boolean", description: "Estado controlado." },
           { prop: "defaultPressed", type: "boolean", description: "Estado inicial não controlado." },
-          { prop: "variant", type: '"ghost" | "outline"', default: '"ghost"', description: "Sem cromo nenhum em repouso, ou com contorno desde o repouso." },
+          { prop: "variant", type: '"plain" | "outline"', default: '"plain"', description: "Sem cromo nenhum em repouso, ou com contorno desde o repouso." },
           { prop: "size", type: '"sm" | "md" | "lg"', default: '"md"', description: "Altura: 28, 32 e 36." },
         ]}
       />

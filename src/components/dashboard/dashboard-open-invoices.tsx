@@ -70,12 +70,12 @@ function InvoiceRow({
                 ? "Ainda não aberta"
                 : "—"
     const ariaLabel = `Abrir cartão ${card.name}, final ${card.last_four}. ${statusLabel}. Total ${currencyFmt.format(committedTotal)}.`
-    const statusVariant =
+    const statusTone =
         snap?.status === "open"
             ? "success"
             : snap?.status === "not_open"
               ? "warning"
-              : "secondary"
+              : "neutral"
 
     return (
         <li className="list-none">
@@ -108,7 +108,7 @@ function InvoiceRow({
                                         {card.name}
                                     </p>
                                     <Badge
-                                        variant={statusVariant}
+                                        tone={statusTone}
                                         className="shrink-0 px-2 py-0.5 text-2xs font-medium whitespace-nowrap"
                                     >
                                         {statusLabel}

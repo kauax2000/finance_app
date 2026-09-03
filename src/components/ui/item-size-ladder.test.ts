@@ -21,7 +21,7 @@ const DEGRAUS = ["sm", "md", "lg"] as const
 
 /** Extrai `px-*` / `py-*` / `gap-*` da string de classes de um degrau. */
 function medidas(size: (typeof DEGRAUS)[number]) {
-  const classes = itemVariants({ size, variant: "default" })
+  const classes = itemVariants({ size, variant: "plain" })
   const pegar = (prefixo: string) =>
     classes
       .split(/\s+/)
@@ -32,18 +32,18 @@ function medidas(size: (typeof DEGRAUS)[number]) {
 
 describe("escada do Item", () => {
   it("1. tem exatamente os três degraus do sistema, e `md` é o padrão", () => {
-    const padrao = itemVariants({ variant: "default" })
-    expect(padrao).toBe(itemVariants({ size: "md", variant: "default" }))
+    const padrao = itemVariants({ variant: "plain" })
+    expect(padrao).toBe(itemVariants({ size: "md", variant: "plain" }))
 
     // `default` e `xs` saíram do tipo. Se voltarem, este teste não os pega —
     // quem pega é `tsc`. O que ele garante é que o padrão continua sendo `md`.
     for (const size of DEGRAUS) {
-      expect(itemVariants({ size, variant: "default" })).toBeTruthy()
+      expect(itemVariants({ size, variant: "plain" })).toBeTruthy()
     }
   })
 
   it("2. nenhum par de degraus produz a mesma string — foi o defeito", () => {
-    const strings = DEGRAUS.map((s) => itemVariants({ size: s, variant: "default" }))
+    const strings = DEGRAUS.map((s) => itemVariants({ size: s, variant: "plain" }))
     expect(new Set(strings).size).toBe(DEGRAUS.length)
   })
 
@@ -61,14 +61,14 @@ describe("escada do Item", () => {
 
   it("4. o `Item` não declara altura — uma linha de lista cresce com o conteúdo", () => {
     for (const size of DEGRAUS) {
-      const classes = itemVariants({ size, variant: "default" })
+      const classes = itemVariants({ size, variant: "plain" })
       expect(classes).not.toMatch(/(?:^|\s)h-\d/)
       expect(classes).not.toMatch(/(?:^|\s)h-\[/)
     }
   })
 
   it("5. `interactive` traz hover, o par de toque e o alvo de dedo", () => {
-    const ligado = itemVariants({ interactive: true, variant: "default" })
+    const ligado = itemVariants({ interactive: true, variant: "plain" })
     expect(ligado).toContain("hover:bg-muted")
     // O par `active:` é o que faz a resposta existir no telefone: o `hover:`
     // compila dentro de `@media (hover: hover)`.
@@ -76,7 +76,7 @@ describe("escada do Item", () => {
     expect(ligado).toContain("pointer-coarse:min-h-11")
     expect(ligado).toContain("focus-visible:ring-3")
 
-    const desligado = itemVariants({ interactive: false, variant: "default" })
+    const desligado = itemVariants({ interactive: false, variant: "plain" })
     expect(desligado).not.toContain("hover:bg-muted")
   })
 })

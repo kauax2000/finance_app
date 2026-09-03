@@ -124,12 +124,12 @@ export default function TabsDoc() {
       <DocSection
         title="Ghost — dentro de uma moldura que já existe"
         description="Nem bandeja nem fio: para dentro de um cartão ou de um diálogo que já tem contorno próprio. Também é abas de página, então também nasce lg."
-        code={`<TabsList variant="ghost">…</TabsList>  {/* size="lg" de fábrica */}`}
+        code={`<TabsList variant="plain">…</TabsList>  {/* size="lg" de fábrica */}`}
         previewClassName="flex-col flex-nowrap items-stretch gap-6 p-6"
       >
         <div className="flex flex-col gap-2">
           <Tabs defaultValue="jan">
-            <TabsList variant="ghost">
+            <TabsList variant="plain">
               <TabsTrigger value="jan">Janeiro</TabsTrigger>
               <TabsTrigger value="fev">Fevereiro</TabsTrigger>
               <TabsTrigger value="mar">Março</TabsTrigger>
@@ -141,10 +141,10 @@ export default function TabsDoc() {
         </div>
       </DocSection>
 
-      <DocNote title="ghost não viaja, e a razão é o trilho">
+      <DocNote title="plain não viaja, e a razão é o trilho">
         O marcador viaja <em>ao longo de alguma coisa</em>: a bandeja do{" "}
         <code>solid</code> e o fio do <code>underline</code> são o trilho que dá
-        sentido ao deslocamento. O <code>ghost</code> não desenha nem um nem
+        sentido ao deslocamento. O <code>plain</code> não desenha nem um nem
         outro, então ali o mesmo movimento deixa de ser um realce correndo por um
         trilho e vira um bloco preenchido deslizando sozinho sobre o fundo — na
         variante escolhida justamente para uma fileira que <strong>não</strong>{" "}
@@ -292,16 +292,16 @@ export default function TabsDoc() {
           {
             prop: "size",
             type: '"sm" | "md" | "lg" | "xl"',
-            default: '"md" em solid · "lg" em underline e ghost',
+            default: '"md" em solid · "lg" em underline e plain',
             description:
               "A altura da bandeja — 28, 32, 36, 40 —, que é a caixa que um layout posiciona. O gatilho deriva (bandeja − 4): 24, 28, 32, 36. Os oito números são degraus da escada. No ponteiro grosso a bandeja tem piso de 40.",
           },
           {
             prop: "variant",
-            type: '"solid" | "underline" | "ghost"',
+            type: '"solid" | "underline" | "plain"',
             default: '"solid"',
             description:
-              "O tipo de aba, e não só o que a moldura desenha: ele decide também o padrão de size e o de stretch. solid é controle segmentado; underline e ghost são abas de página.",
+              "O tipo de aba, e não só o que a moldura desenha: ele decide também o padrão de size e o de stretch. solid é controle segmentado; underline e plain são abas de página.",
           },
           {
             prop: "stretch",

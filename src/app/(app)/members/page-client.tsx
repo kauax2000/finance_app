@@ -755,7 +755,7 @@ export default function MembersPage() {
                                                             {name}
                                                         </span>
                                                         <Badge
-                                                            variant="secondary"
+                                                            tone="neutral"
                                                             className={cn(
                                                                 "shrink-0 px-1.5 py-0 text-2xs",
                                                                 isOwner ? tagChipInfo : tagChipSuccess

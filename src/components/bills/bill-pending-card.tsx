@@ -164,7 +164,7 @@ export function BillPendingCard({
                         </CardTitle>
 
                         <Badge
-                            variant="secondary"
+                            tone="neutral"
                             className={cn(
                                 "col-start-3 row-span-2 shrink-0 self-start border-0 text-xs",
                                 pill.className

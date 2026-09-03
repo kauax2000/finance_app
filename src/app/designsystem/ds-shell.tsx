@@ -18,7 +18,8 @@ import {
 } from "@/components/ui/dialog"
 import { AppThemeToggle } from "@/components/settings/app-theme-toggle"
 import { AppWordmark } from "@/components/layout/app-wordmark"
-import { CATEGORY_ORDER, REGISTRY } from "./registry"
+import { Container } from "@/components/ui/container"
+import { CATEGORY_ORDER, REGISTRY, movedFrom } from "./registry"
 import { DsSearch } from "./ds-search"
 
 /**
@@ -43,7 +44,7 @@ export function DsShell({ children }: { children: React.ReactNode }) {
         Pular para o conteúdo
       </a>
       <DsTopBar />
-      <div className="mx-auto flex w-full max-w-7xl gap-8 px-4 sm:px-6 lg:px-8">
+      <Container size="xl" gutter="page" className="flex gap-8">
         {/* `no-scrollbar` é o utilitário que `Sidebar` e `Command` já usam.
             O padding vertical fica no `nav`, e não aqui: padding no contêiner
             de rolagem não rola junto, e o primeiro item nasceria colado no
@@ -54,7 +55,7 @@ export function DsShell({ children }: { children: React.ReactNode }) {
         <main id="ds-conteudo" tabIndex={-1} className="min-w-0 flex-1 py-8">
           {children}
         </main>
-      </div>
+      </Container>
     </div>
   )
 }
@@ -97,7 +98,11 @@ function DsTopBar() {
           sobrava — e como a marca cresceu, "o que sobrava" deixou de ser
           simétrico: o campo ficou 38px à direita do centro da janela. Dois
           lados elásticos de peso igual centralizam de verdade. */}
-      <div className="mx-auto flex h-full w-full max-w-7xl items-center gap-2 px-4 sm:gap-3 sm:px-6 lg:px-8">
+      <Container
+        size="xl"
+        gutter="page"
+        className="flex h-full items-center gap-2 sm:gap-3"
+      >
         <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
         {/* `EdgePanel`, e não `Sheet`: isto é navegação, e navegação entra
             pelo lado em qualquer largura. O `Sheet` vira gaveta de baixo no
@@ -228,7 +233,7 @@ function DsTopBar() {
         <div className="hidden items-center justify-end gap-1 sm:gap-2 lg:flex lg:flex-1">
           <AppThemeToggle />
         </div>
-      </div>
+      </Container>
     </header>
   )
 }
@@ -378,6 +383,20 @@ function DsNav() {
                 ref={active ? revelarAtivo : undefined}
               >
                 {item.name}
+                {/* O ponto de "mudou de camada". Na lateral não cabe a frase —
+                    são 32 marcas numa coluna de 240px —, então fica o sinal, e
+                    quem quer o texto acha no índice. O `title` diz de onde
+                    veio, e o `sr-only` faz o leitor de tela dizer também. */}
+                {movedFrom(item.slug) ? (
+                  <span
+                    title={`Movido de ${movedFrom(item.slug)}`}
+                    className="ms-1.5 inline-block size-1.5 shrink-0 rounded-full bg-primary-accent/70 align-middle"
+                  >
+                    <span className="sr-only">
+                      movido de {movedFrom(item.slug)}
+                    </span>
+                  </span>
+                ) : null}
               </DsNavLink>
             )
           })}

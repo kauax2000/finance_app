@@ -59,7 +59,7 @@ export default function ToolbarDoc() {
     <Button variant="outline" className={toolbarControlClassName}>
       <AdjustmentsHorizontalIcon />
       Filtros
-      <Badge size="xs" variant="primary">2</Badge>
+      <Badge size="xs">2</Badge>
     </Button>
     <Button className={toolbarControlClassName}>
       <PlusIcon />
@@ -83,7 +83,7 @@ export default function ToolbarDoc() {
             <Button variant="outline" className={toolbarControlClassName}>
               <AdjustmentsHorizontalIcon aria-hidden />
               Filtros
-              <Badge size="xs" variant="primary">
+              <Badge size="xs">
                 2
               </Badge>
             </Button>

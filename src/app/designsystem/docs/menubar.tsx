@@ -27,7 +27,7 @@ const VARIANTES = [
     quando: "Sobre a página, sem moldura em volta — ela se sustenta sozinha.",
   },
   {
-    valor: "ghost",
+    valor: "plain",
     quando: "Dentro de um cabeçalho que já tem a própria borda.",
   },
   {
@@ -78,7 +78,7 @@ export default function MenubarDoc() {
       <DocSection
         title="Superfícies"
         code={`<Menubar variant="outline" />   // se sustenta sozinha
-<Menubar variant="ghost" />     // dentro de um cabeçalho
+<Menubar variant="plain" />     // dentro de um cabeçalho
 <Menubar variant="solid" />     // bandeja, como o Tabs`}
         previewClassName="items-start"
       >
@@ -216,7 +216,7 @@ export default function MenubarDoc() {
         rows={[
           {
             prop: "variant",
-            type: '"outline" | "ghost" | "solid"',
+            type: '"outline" | "plain" | "solid"',
             default: '"outline"',
             description:
               "A superfície da barra. Desce por contexto até o gatilho, porque o realce depende de sobre o que ele acende.",

@@ -243,7 +243,7 @@ export function RegisteredCreditCardFace({
             {showInactiveBadge && !card.is_active ? (
                 <div className="pointer-events-none absolute left-3 top-2.5 z-10 @3xs:left-3.5 @3xs:top-3">
                     <Badge
-                        variant="secondary"
+                        tone="neutral"
                         className="text-2xs @3xs:text-2xs @xs:text-xs"
                     >
                         Inativo

@@ -24,10 +24,11 @@ import { cn } from "@/lib/utils"
  * - **Sem `active:translate-y-px`.** O botão afunda porque foi pressionado e
  *   algo aconteceu. O toggle não é pressionado, ele passa a valer — e o
  *   deslocamento sugeria um retorno que não existe.
- * - **`ghost` pode se chamar `ghost` aqui.** No `Button` o nome foi trocado
- *   por `tertiary` porque precisava dizer um degrau de uma escada de três. O
- *   toggle não tem escada: tem duas peles, com e sem contorno, e aí o nome
- *   pode descrever o cromo em vez de uma posição que não existe.
+ * - **A pele sem contorno não se chama `tertiary`.** No `Button` o nome diz um
+ *   degrau de uma escada de três; o toggle não tem escada, tem duas peles, e o
+ *   nome descreve o cromo em vez de uma posição que não existe. Ela se chama
+ *   `plain`, que é a palavra do sistema para "não desenha nada" — medido,
+ *   `plain` estava em 5 componentes contra `plain` em 4 e `bare` em 1.
  */
 const toggleVariants = cva(
   cn(
@@ -64,7 +65,7 @@ const toggleVariants = cva(
   {
     variants: {
       variant: {
-        ghost: "",
+        plain: "",
         // A exceção, para o toggle que aparece sozinho numa superfície sem
         // nenhuma outra pista de que ali se clica. Sem o `shadow-xs` de antes:
         // sombra é o que levanta a peça da página, e estado não levanta.
@@ -81,7 +82,7 @@ const toggleVariants = cva(
       },
     },
     defaultVariants: {
-      variant: "ghost",
+      variant: "plain",
       size: "md",
     },
   }

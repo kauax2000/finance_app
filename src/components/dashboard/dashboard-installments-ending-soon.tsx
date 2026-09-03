@@ -96,7 +96,7 @@ function InstallmentPlanCompactRow({
                 </div>
             </div>
             <div className="mt-2 flex min-w-0 items-center gap-2">
-                <Badge variant="secondary" size="xs" className="tabular-nums">
+                <Badge tone="neutral" size="xs" className="tabular-nums">
                     {paidCount}/{plan.totalInstallments}
                 </Badge>
                 <Progress

@@ -77,7 +77,8 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                     </div>
                     <Badge
                         size="sm"
-                        variant={card.is_active ? "success" : "outline"}
+                        variant={card.is_active ? "soft" : "outline"}
+                        tone={card.is_active ? "success" : "neutral"}
                         className="shrink-0 self-start"
                     >
                         {card.is_active ? "Ativo" : "Inativo"}

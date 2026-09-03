@@ -222,7 +222,7 @@ export function BillDetailHistoryList({
                                         </div>
                                         <div className="flex flex-wrap items-center gap-2">
                                             <Badge
-                                                variant="secondary"
+                                                tone="neutral"
                                                 className={cn(
                                                     "border-0 text-2xs",
                                                     badge.className

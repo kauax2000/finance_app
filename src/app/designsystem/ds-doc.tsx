@@ -21,12 +21,28 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  PageHeader,
+  PageHeaderDescription,
+  PageHeaderTitle,
+  PageHeaderTitleRow,
+  pageEyebrowClassName,
+} from "@/components/ui/page-header"
+import {
+  PageSection,
+  PageSectionDescription,
+  PageSectionHeader,
+  PageSectionTitle,
+} from "@/components/ui/page-section"
 
 export type Category =
   | "Fundações"
   | "Átomos"
   | "Moléculas"
   | "Organismos"
+  // O nível que faltava para o modelo ficar completo: objetos de nível de
+  // página, que dispõem componentes num layout em vez de serem o conteúdo.
+  | "Templates"
   | "Padrões"
 
 export type DocNeighbor = { slug: string; name: string; category?: Category }
@@ -34,11 +50,12 @@ export type DocNeighbor = { slug: string; name: string; category?: Category }
 /**
  * A sobrancelha em versalete do catálogo.
  *
- * É a mesma medida do índice — `FINANCE APP` acima do título. Ela vive numa
- * constante porque a categoria no cabeçalho e o rótulo do "quando usar" têm que
- * ter o mesmo `tracking`; escrita à mão duas vezes, a segunda diverge.
+ * Ela era a mesma medida escrita **duas vezes** — aqui e no índice —, e agora é
+ * uma: a régua mora em `PageHeaderEyebrow`, que é onde ela é usada como peça, e
+ * o que resta aqui é o apelido local para os dois lugares deste arquivo que a
+ * usam sem ser cabeçalho de página (a categoria e o "quando usar").
  */
-const EYEBROW = "text-2xs font-medium tracking-[0.18em] uppercase"
+const EYEBROW = pageEyebrowClassName
 
 /**
  * `<code>` cru na prosa da documentação.
@@ -93,30 +110,39 @@ export function DocPage({
           que o título repete dois centímetros abaixo. A categoria não era um
           degrau de caminho: é a classificação da peça, e voltou para onde uma
           classificação mora, na borda direita da linha do título. */}
-      <header className="flex flex-col">
-        <div className="flex items-baseline justify-between gap-4">
-          <h1 className="page-title font-heading text-2xl text-foreground sm:text-3xl">
-            {name}
-          </h1>
-          <Link
-            href={`/designsystem#${slugifyCategory(category)}`}
-            className={cn(
-              EYEBROW,
-              "shrink-0 rounded-sm text-muted-foreground underline-offset-4",
-              "transition-colors duration-(--duration-fast) ease-(--ease-out)",
-              "hover:text-foreground hover:underline active:text-foreground active:underline",
-              "focus-visible:ring-3 focus-visible:ring-ring/70 focus-visible:outline-none"
-            )}
-          >
-            {category}
-          </Link>
-        </div>
-        {/* Nome sobre descrição é o mesmo dado em duas linhas: quem separa é a
-            entrelinha, não um `gap`. */}
-        <p className="text-sm leading-relaxed text-pretty text-muted-foreground">
-          {description}
-        </p>
-      </header>
+      {/* `PageHeader` de verdade, e não a cópia à mão que estava aqui. A
+          categoria é o `endAdornment` — a mesma peça, com o mesmo nome, que
+          `DialogHeaderRow` e `HoverCardHeader` já têm; ela alinha pela linha de
+          base do título, que é o que a prende à primeira linha quando o nome
+          quebra em duas. `plain` porque quem fecha este cabeçalho é o campo de
+          import logo abaixo, não uma régua. */}
+      <PageHeader variant="plain">
+        <PageHeaderTitleRow
+          endAdornment={
+            <Link
+              href={`/designsystem#${slugifyCategory(category)}`}
+              className={cn(
+                EYEBROW,
+                "rounded-sm text-muted-foreground underline-offset-4",
+                "transition-colors duration-(--duration-fast) ease-(--ease-out)",
+                "hover:text-foreground hover:underline active:text-foreground active:underline",
+                "focus-visible:ring-3 focus-visible:ring-ring/70 focus-visible:outline-none"
+              )}
+            >
+              {category}
+            </Link>
+          }
+        >
+          <PageHeaderTitle>{name}</PageHeaderTitle>
+          {/* Nome sobre descrição é o mesmo dado em duas linhas: quem separa é
+              a entrelinha, não um `gap` — e agora é o componente que garante
+              isso, em vez de cada cabeçalho lembrar. A coluna do catálogo já
+              tem a medida de leitura, então o teto de `max-w-2xl` sai. */}
+          <PageHeaderDescription className="max-w-none">
+            {description}
+          </PageHeaderDescription>
+        </PageHeaderTitleRow>
+      </PageHeader>
 
       <DocMeta importLine={importLine} source={source} />
 
@@ -332,29 +358,28 @@ export function DocSection({
   children: React.ReactNode
 }) {
   return (
-    <section
-      className={cn(
-        "flex scroll-mt-24 flex-col border-t border-border pt-8",
-        className
-      )}
+    // `size="lg"` porque é o corpo que estas 247 seções já renderizam, e
+    // `ruled` porque a régua de uma seção é **em cima**: ela diz que começa
+    // outro bloco. O `mt-4` que o espécime carregava saiu — o `gap` da seção é
+    // o mesmo 16, e ele vale também entre o título e o espécime quando não há
+    // descrição.
+    <PageSection
+      variant="ruled"
+      size="lg"
+      className={cn("scroll-mt-24", className)}
     >
-      <h2 className="font-heading text-lg font-semibold tracking-tight text-foreground">
-        {title}
-      </h2>
-      {description ? (
-        <p
-          className={cn(
-            "text-sm leading-relaxed text-pretty text-muted-foreground",
-            PROSE_CODE
-          )}
-        >
-          {description}
-        </p>
-      ) : null}
-      <Preview className="mt-4" code={code} previewClassName={previewClassName}>
+      <PageSectionHeader>
+        <PageSectionTitle>{title}</PageSectionTitle>
+        {description ? (
+          <PageSectionDescription className={PROSE_CODE}>
+            {description}
+          </PageSectionDescription>
+        ) : null}
+      </PageSectionHeader>
+      <Preview code={code} previewClassName={previewClassName}>
         {children}
       </Preview>
-    </section>
+    </PageSection>
   )
 }
 
@@ -523,14 +548,14 @@ export function PropsTable({
   rows: PropRow[]
 }) {
   return (
-    <section className="flex flex-col border-t border-border pt-8">
-      <h2 className="font-heading text-lg font-semibold tracking-tight text-foreground">
-        {title}
-      </h2>
+    <PageSection variant="ruled" size="lg">
+      <PageSectionHeader>
+        <PageSectionTitle>{title}</PageSectionTitle>
+      </PageSectionHeader>
       {/* `Table` já traz o próprio contêiner de rolagem horizontal; esta camada
           é a moldura, e o `overflow-hidden` é o que faz o tingido do cabeçalho
           respeitar os cantos arredondados. */}
-      <div className="mt-4 overflow-hidden rounded-xl border border-border bg-card">
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
         <Table>
           <TableHeader>
             {/* O hover de linha vem do componente `Table` e é certo lá: uma
@@ -571,7 +596,7 @@ export function PropsTable({
           </TableBody>
         </Table>
       </div>
-    </section>
+    </PageSection>
   )
 }
 

@@ -59,7 +59,7 @@ function Chip({
 }) {
     return (
         <Badge
-            variant="success"
+            tone="success"
             className={cn(
                 "inline-flex max-w-[9.5rem] shrink-0 items-center gap-1.5 pr-1.5 sm:max-w-[11rem]",
                 className

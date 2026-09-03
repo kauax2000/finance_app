@@ -418,7 +418,7 @@ React.useEffect(() => {
       </DocNote>
 
       <DocNote title="Duas variantes, e a pergunta é quem desenha a moldura">
-        <code>bare</code> não desenha nada — nem borda, nem canto: ele{" "}
+        <code>plain</code> não desenha nada — nem borda, nem canto: ele{" "}
         <strong>herda o raio de quem o contém</strong>. Dentro de um{" "}
         <code>Popover</code> ele fica com os 10px do popover; dentro de um{" "}
         <code>CommandDialog</code>, com os 14px do diálogo. <code>panel</code> é
@@ -453,10 +453,10 @@ React.useEffect(() => {
         rows={[
           {
             prop: "variant",
-            type: '"bare" | "panel"',
-            default: '"bare"',
+            type: '"plain" | "panel"',
+            default: '"plain"',
             description:
-              "bare não desenha moldura e herda o canto de quem o contém; panel traz borda e sombra próprias, para a paleta solta numa página.",
+              "plain não desenha moldura e herda o canto de quem o contém; panel traz borda e sombra próprias, para a paleta solta numa página.",
           },
           {
             prop: "autoSelectFirst",

@@ -204,7 +204,7 @@ export function WorkspacePickerMenuBody({
                                     )}
                                     <span className={labelClass}>{w?.name ?? "Convite"}</span>
                                     <Badge
-                                        variant="secondary"
+                                        tone="neutral"
                                         className="shrink-0 px-1.5 py-0 text-2xs"
                                     >
                                         Convite

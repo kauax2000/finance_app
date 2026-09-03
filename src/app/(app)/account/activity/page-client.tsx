@@ -330,7 +330,7 @@ export default function ActivityPage() {
                                                             </span>
                                                             {activity.status === "failed" ? (
                                                                 <Badge
-                                                                    variant="destructive"
+                                                                    tone="destructive"
                                                                     className="shrink-0 px-1.5 py-0 text-2xs"
                                                                 >
                                                                     Falha

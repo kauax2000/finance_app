@@ -72,7 +72,7 @@ const MENUBAR_POPPER =
  */
 
 type MenubarSize = "sm" | "md" | "lg"
-type MenubarVariant = "outline" | "ghost" | "solid"
+type MenubarVariant = "outline" | "plain" | "solid"
 
 /**
  * O tamanho e a superfície descem pelo contexto porque duas peças precisam
@@ -90,7 +90,7 @@ const menubarVariants = cva("flex w-fit items-center gap-0.5 rounded-lg p-0.5", 
       /** A barra que se sustenta sozinha, sobre a página. */
       outline: "border border-border bg-background",
       /** Dentro de um cabeçalho que já tem a própria moldura. */
-      ghost: "border border-transparent bg-transparent",
+      plain: "border border-transparent bg-transparent",
       /**
        * Bandeja preenchida, da mesma **tinta** que a do `TabsList` — e não da
        * mesma medida. Aqui o recuo é `p-0.5` mais borda; lá é `p-1`, porque é
@@ -127,7 +127,7 @@ const menubarTriggerVariants = cva(
       variant: {
         outline:
           "hover:bg-muted active:bg-muted aria-expanded:bg-muted aria-expanded:text-foreground",
-        ghost:
+        plain:
           "hover:bg-muted active:bg-muted aria-expanded:bg-muted aria-expanded:text-foreground",
         solid:
           "hover:bg-background/60 active:bg-background/60 aria-expanded:border-border/80 aria-expanded:bg-background aria-expanded:text-foreground aria-expanded:shadow-xs border border-transparent",
