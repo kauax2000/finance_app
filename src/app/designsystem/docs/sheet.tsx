@@ -5,6 +5,7 @@ import Link from "next/link"
 
 import {
   Alert,
+  AlertAction,
   AlertActions,
   AlertDescription,
   AlertTitle,
@@ -61,9 +62,9 @@ export default function SheetDoc() {
         ver a folha.
       </AlertDescription>
       <AlertActions>
-        <Button type="button" variant="tertiary" size="sm" asChild>
+        <AlertAction asChild>
           <Link href="/designsystem/drawer">Ver o Drawer</Link>
-        </Button>
+        </AlertAction>
       </AlertActions>
     </Alert>
   )

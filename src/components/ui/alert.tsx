@@ -1,6 +1,7 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 /**
@@ -37,7 +38,19 @@ const alertVariants = cva(
     // que a grade e o `svg` leem. Antes, mudar o corpo do ícone exigia lembrar
     // de mudar a largura da coluna no outro extremo da string.
     "has-[>svg]:grid-cols-[var(--alert-icon)_1fr]",
-    "[&>svg]:size-(--alert-icon) [&>svg]:shrink-0 [&>svg]:translate-y-0.5 [&>svg]:text-current",
+    // O raio é do **componente**, não da variante: `variant` decide a moldura
+    // (ter borda ou não), e canto não é moldura. Ele estava dentro dela, e o
+    // resultado era medível — `soft` saía 14px e `plain` 10px, dois alertas
+    // lado a lado com cantos diferentes. E ele também não desce com o `size`,
+    // pela mesma razão que o `data-[size=sm]:rounded-md` saiu do
+    // `NativeSelect`: raio diferente por degrau é desvio, e nenhum outro
+    // controle do sistema o faz.
+    "rounded-xl",
+    // O deslocamento do ícone **é por degrau**, e a conta é `(entrelinha −
+    // ícone) / 2`: no `md`, (20 − 16) / 2 = 2px; no `sm`, (16 − 14) / 2 = 1px.
+    // Ele vivia aqui cravado em 2px e servia só o `md` — medido, todo alerta
+    // `sm` saía com o ícone 1px abaixo do centro da primeira linha.
+    "[&>svg]:size-(--alert-icon) [&>svg]:shrink-0 [&>svg]:text-current",
   ],
   {
     variants: {
@@ -72,12 +85,12 @@ const alertVariants = cva(
        * uma só acrescenta um retângulo.
        */
       variant: {
-        soft: "rounded-xl border",
-        plain: "rounded-lg border-0",
+        soft: "border",
+        plain: "border-0",
       },
       size: {
-        sm: "px-3 py-2 text-xs [--alert-icon:--spacing(3.5)] has-[>svg]:gap-x-2",
-        md: "px-4 py-3 text-sm [--alert-icon:--spacing(4)] has-[>svg]:gap-x-3",
+        sm: "px-3 py-2 text-xs [--alert-icon:--spacing(3.5)] has-[>svg]:gap-x-2 [&>svg]:translate-y-px",
+        md: "px-4 py-3 text-sm [--alert-icon:--spacing(4)] has-[>svg]:gap-x-3 [&>svg]:translate-y-0.5",
       },
     },
     defaultVariants: {
@@ -171,18 +184,17 @@ function AlertDescription({ className, ...props }: React.ComponentProps<"div">) 
  * A linha de ação no pé do alerta.
  *
  * Ela existe porque a ação **herda a tinta do aviso**, e sem um lugar isso
- * vira paleta reimportada na tela: o dashboard escreve hoje
+ * vira paleta reimportada na tela: o dashboard escrevia
  * `border-destructive/40 bg-transparent text-destructive-muted-foreground
  * hover:bg-destructive/10` num `Button` dentro do `AlertDescription` — cinco
- * classes que só valem para um dos cinco tons, e um `hover:` sem `active:`.
+ * classes que só valiam para um dos cinco tons, e um `hover:` sem `active:`.
  *
- * Aqui a mesma pele sai de `currentColor`, então serve os cinco tons sem
- * nomear nenhum, e o par de toque vem junto. O botão de dentro é
- * `variant="tertiary"`: ele já não preenche nada, e o que se corrige é só o
- * `hover:bg-muted` dele, que poria uma mancha cinza sobre o tingido.
- *
- * A especificidade resolve o conflito sem `!`: `.acoes [data-slot=button]:hover`
- * é (0,3,0) contra os (0,2,0) de `.hover\:bg-muted:hover`.
+ * **Ela é só a linha.** Quem veste o botão é o `AlertAction`, logo abaixo — e
+ * essa divisão é a correção desta rodada. Antes, esta peça alcançava o botão
+ * por **seletor descendente** (`[&_[data-slot=button]]:` cinco vezes) e o
+ * JSDoc *pedia* que quem chamasse escrevesse `variant="tertiary"`. Pedir não é
+ * garantir, e "compensar geometria por seletor é sintoma de que falta uma
+ * peça" — a peça era o botão.
  */
 function AlertActions({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -191,9 +203,6 @@ function AlertActions({ className, ...props }: React.ComponentProps<"div">) {
       className={cn(
         "mt-3 flex flex-wrap items-center gap-2",
         "group-has-[>svg]/alert:col-start-2",
-        "[&_[data-slot=button]]:border-current/25 [&_[data-slot=button]]:bg-transparent [&_[data-slot=button]]:text-current",
-        "[&_[data-slot=button]:hover]:bg-current/10 [&_[data-slot=button]:hover]:text-current",
-        "[&_[data-slot=button]:active]:bg-current/10 [&_[data-slot=button]:active]:text-current",
         className
       )}
       {...props}
@@ -201,4 +210,55 @@ function AlertActions({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-export { Alert, AlertActions, AlertDescription, AlertTitle, alertVariants }
+/**
+ * A ação do alerta — um `Button` que não escolhe cor nenhuma.
+ *
+ * **Ele existe porque as seis chamadas escreviam a mesma string**:
+ * `type="button" variant="tertiary" size="sm"`, nas três demonstrações do
+ * catálogo, na página da folha e no dashboard. Quando o catálogo escreve a
+ * anatomia, falta uma peça — e aqui faltava a de baixo: `alert.tsx` importava
+ * **zero** componentes e se dizia molécula.
+ *
+ * **A pele sai de `currentColor`**, então a mesma linha serve os cinco tons sem
+ * nomear nenhum, e o par `active:` que o toque exige vem junto. `tertiary` é o
+ * degrau certo porque ele já não preenche nada; o que se corrige é o
+ * `hover:bg-muted` dele, que poria uma mancha cinza sobre o tingido.
+ *
+ * **O `dark:hover:` é obrigatório, e não redundante.** `&:hover` e
+ * `&:is(.dark *)` empatam em especificidade, e o `dark:` é emitido depois — sem
+ * esta linha, o `dark:hover:bg-muted/50` do `tertiary` venceria o realce tonal
+ * no tema escuro, calado e só num tema. É a armadilha que o `AppThemeToggle`
+ * já pagou uma vez.
+ *
+ * `asChild` continua valendo: uma das seis chamadas é um `<Link>` dentro do
+ * botão, e o tipo o carrega.
+ */
+function AlertAction({
+  className,
+  ...props
+}: React.ComponentProps<typeof Button>) {
+  return (
+    <Button
+      data-slot="alert-action"
+      type="button"
+      variant="tertiary"
+      size="sm"
+      className={cn(
+        "border-current/25 bg-transparent text-current",
+        "hover:bg-current/10 hover:text-current dark:hover:bg-current/10",
+        "active:bg-current/10 active:text-current",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export {
+  Alert,
+  AlertAction,
+  AlertActions,
+  AlertDescription,
+  AlertTitle,
+  alertVariants,
+}

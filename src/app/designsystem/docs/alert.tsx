@@ -10,11 +10,11 @@ import {
 
 import {
   Alert,
+  AlertAction,
   AlertActions,
   AlertDescription,
   AlertTitle,
 } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 export default function AlertDoc() {
@@ -140,10 +140,10 @@ export default function AlertDoc() {
   <AlertTitle>Não foi possível carregar as carteiras</AlertTitle>
   <AlertDescription>A conexão caiu no meio do carregamento.</AlertDescription>
   <AlertActions>
-    <Button type="button" variant="tertiary" size="sm">
+    <AlertAction>
       <ArrowPathIcon aria-hidden />
       Tentar novamente
-    </Button>
+    </AlertAction>
   </AlertActions>
 </Alert>`}
         previewClassName="flex-col items-stretch gap-3"
@@ -155,10 +155,10 @@ export default function AlertDoc() {
             A conexão caiu no meio do carregamento.
           </AlertDescription>
           <AlertActions>
-            <Button type="button" variant="tertiary" size="sm">
+            <AlertAction>
               <ArrowPathIcon aria-hidden />
               Tentar novamente
-            </Button>
+            </AlertAction>
           </AlertActions>
         </Alert>
         <Alert tone="warning">
@@ -168,12 +168,8 @@ export default function AlertDoc() {
             Faltam 9 dias para o mês virar.
           </AlertDescription>
           <AlertActions>
-            <Button type="button" variant="tertiary" size="sm">
-              Revisar orçamento
-            </Button>
-            <Button type="button" variant="tertiary" size="sm">
-              Ver gastos
-            </Button>
+            <AlertAction>Revisar orçamento</AlertAction>
+            <AlertAction>Ver gastos</AlertAction>
           </AlertActions>
         </Alert>
       </DocSection>
@@ -250,7 +246,13 @@ export default function AlertDoc() {
             prop: "AlertActions",
             type: "div",
             description:
-              "A saída, no pé e alinhada ao texto. Veste os botões de dentro com a tinta do tom, sem que eles declarem cor.",
+              "A linha da saída, no pé e alinhada ao texto. Só a linha — quem veste o botão é o AlertAction.",
+          },
+          {
+            prop: "AlertAction",
+            type: "Button",
+            description:
+              "A ação. É um Button tertiary size=\"sm\" que herda a tinta do tom por currentColor. Aceita asChild para virar link.",
           },
         ]}
       />
@@ -263,14 +265,23 @@ export default function AlertDoc() {
         secundária.
       </DocNote>
 
-      <DocNote title="A ação não declara cor">
-        Dentro de <code>AlertActions</code>, o botão é{" "}
-        <code>variant=&quot;tertiary&quot;</code> e nada mais. A borda, a tinta
+      <DocNote title="A ação não declara cor, e agora não precisa lembrar disso">
+        <code>AlertAction</code> é um <code>Button</code>{" "}
+        <code>tertiary</code> <code>size=&quot;sm&quot;</code>: a borda, a tinta
         e o realce saem de <code>currentColor</code>, que é a cor do próprio
-        alerta — então a mesma linha de código serve os cinco tons, e trocar o
-        tom do aviso troca o botão junto. Escrever{" "}
-        <code>border-destructive/40</code> ali é reimportar a paleta para dentro
-        da tela.
+        alerta — então a mesma linha serve os cinco tons, e trocar o tom do
+        aviso troca o botão junto. Escrever <code>border-destructive/40</code>
+        ali é reimportar a paleta para dentro da tela.
+        <br />
+        <br />
+        <strong>Ele é uma peça porque antes era um pedido.</strong>{" "}
+        <code>AlertActions</code> alcançava o botão por <em>seletor
+        descendente</em> — cinco regras <code>[&amp;_[data-slot=button]]:</code>{" "}
+        — e esta nota mandava quem chamasse escrever <code>tertiary</code> à
+        mão. As <strong>seis</strong> chamadas escreviam a mesma string, o que é
+        o sinal de sempre: quando o catálogo escreve a anatomia, falta uma peça.
+        E faltava a de baixo — <code>alert.tsx</code> importava{" "}
+        <strong>zero</strong> componentes e se dizia molécula.
       </DocNote>
 
       <DocNote title="Alert, AnnouncementBar e toast não se substituem">

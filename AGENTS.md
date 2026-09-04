@@ -409,17 +409,32 @@ tema.
   o padrão — e `plain` tingido sem borda, para dentro de formulário ou
   diálogo), e `size` é o **corpo** (`sm` | **`md`**), que encolhe texto, respiro
   e ícone juntos.
+- **O raio é do componente, e não da variante.** Ele morava dentro do `variant`
+  — `soft` trazia `rounded-xl` e `plain` trazia `rounded-lg` —, e o resultado
+  era medível: **14px contra 10px**, dois alertas lado a lado com cantos
+  diferentes. Canto não é moldura; o que o `variant` decide é ter borda ou não.
+  Ele também **não desce com o `size`**, pela mesma razão que o
+  `data-[size=sm]:rounded-md` saiu do `NativeSelect`: raio por degrau é desvio,
+  e nenhum outro controle do sistema o faz. Medido depois: **um raio só, 14px,
+  nos 13 alertas da página**.
+- **O deslocamento do ícone é por degrau, e a conta é `(entrelinha − ícone) / 2`.**
+  Ele vivia cravado em `translate-y-0.5` na base, o que é certo só no `md`
+  (20 − 16) / 2 = 2px. No `sm` a conta dá 1px, e **todo alerta `sm` saía com o
+  ícone 1px abaixo do centro da primeira linha** — pouco para nomear a olho,
+  suficiente para o olho notar que algo está torto. Medido depois: desalinho
+  **zero** nos dois degraus.
 - **O tom do `Alert` chega ao texto.** `AlertTitle` e `AlertDescription`
   herdam a tinta do tom — a descrição a 85% —, em vez de carimbar
   `text-foreground` e `text-muted-foreground` por cima. Cinza sobre superfície
   colorida passa na norma (5,1–5,7:1) mas lê como texto que caiu ali por
   acidente; a tinta tonal dá 6,9–10,8:1. O tom `default` é a única exceção, e é
   porque ali a superfície é neutra.
-- **A ação do `Alert` mora em `AlertActions`, e não declara cor.** O botão de
-  dentro é `variant="tertiary"` e nada mais: borda, tinta e realce saem de
-  `currentColor`, então a mesma linha serve os cinco tons e o par `active:` vem
-  junto. Escrever `border-destructive/40 hover:bg-destructive/10` num botão
-  dentro de um alerta é reimportar a paleta para dentro da tela.
+- **A ação do `Alert` é o `AlertAction`, e ele não declara cor.** É um `Button`
+  `tertiary` `size="sm"` cuja borda, tinta e realce saem de `currentColor`,
+  então a mesma peça serve os cinco tons e o par `active:` vem junto. Escrever
+  `border-destructive/40 hover:bg-destructive/10` num botão dentro de um alerta
+  é reimportar a paleta para dentro da tela. **`AlertActions` é só a linha** —
+  ver a rodada abaixo, e o `dark:hover:` que a peça carrega de propósito.
 - **`Dialog` tem dois eixos**: `size` é a largura (`sm` 384 | **`md` 448, o
   padrão** | `lg` 512 | `xl` 576) e `layout` é quem manda na altura — `auto` (o
   conteúdo, com o respiro no casco) ou **`fixed`** (a janela, com o corpo
@@ -3308,6 +3323,66 @@ em 44px nos dois tamanhos. Medido: **44 no desktop** (220px de largura, uma
 linha) e **61 no telefone** a 375px (143px de largura, rótulo em duas linhas),
 contra os 40 do trilho que ele substitui. O ganho de acessibilidade é real; o
 custo de altura no telefone é maior do que eu previ, e fica escrito.
+
+### A ação do alerta era um pedido, e virou peça — e a da barra também
+
+A pergunta foi se `Alert` e `AnnouncementBar` não deveriam ser átomos. Medido:
+`alert.tsx` importava **zero** componentes e as quatro peças eram quatro `<div>`
+— a posição exata em que o `Select` estava quando a rodada da taxonomia o
+devolveu a Átomos. `announcement-bar.tsx`, ao contrário, importa e renderiza um
+`Button` de verdade (o × de dispensar), e por isso é molécula com motivo.
+
+**A leitura melhor foi do dono, e ela inverte a conclusão**: o `Alert` não
+compõe nada porque *está errado*, não porque é átomo. A regra da rodada da
+composição é *"onde existe a peça de baixo, ela é obrigatória"* — e ela existia.
+
+**O sintoma estava escrito no código.** `AlertActions` alcançava o botão por
+**seletor descendente**, cinco regras `[&_[data-slot=button]]:`, e o JSDoc
+*pedia* que quem chamasse escrevesse `variant="tertiary"`. Pedir não é garantir,
+e este arquivo já registra que *"compensar geometria por seletor é sintoma de
+que falta uma peça"*. A contagem confirmou: **6 de 6 chamadas** escreviam a mesma
+string — `type="button" variant="tertiary" size="sm"` —, nas três demonstrações
+do catálogo, na página da folha e no dashboard.
+
+`AlertAction` é a peça. Com ela, `alert.tsx` passa a importar o átomo e a
+classificação de Molécula **deixa de ser herdada** — é a mesma inversão que o
+`Form` registrou: a resposta não era mudar a etiqueta, era fazer o componente ser
+o que o nome promete.
+
+**O ganho que não estava previsto é do `twMerge`.** Compondo o `Button`, o
+`dark:hover:bg-muted/50` do `tertiary` é **removido** da lista de classes —
+medido no DOM: sobram `hover:bg-current/10` e `dark:hover:bg-current/10`, e
+nenhum `dark:hover:bg-muted`. A versão por seletor tinha de **vencer** aquela
+classe por especificidade (0,3,0 contra 0,2,0), deixando a declaração perdedora
+no CSS. É a mesma lição que a régua de densidade da `Toolbar` já registra: por
+`className` quem decide é o `twMerge`, que remove o degrau conflitante.
+
+**E o `dark:hover:` é obrigatório na peça, não redundante.** `&:hover` e
+`&:is(.dark *)` empatam em especificidade e o `dark:` é emitido depois; sem essa
+linha, o realce cinza do `tertiary` venceria o tonal no tema escuro — calado, e
+só num tema. É a armadilha que o `AppThemeToggle` pagou uma vez.
+
+**A irmã veio na sequência, e trouxe um defeito de tema escuro.**
+`AnnouncementBarActions` tinha o mesmo desenho — quatro regras
+`[&_[data-slot=button]]:` e um JSDoc descrevendo um botão que ela não renderiza
+—, e virou `AnnouncementBarAction`: `Button` `tertiary` `size="xs"`, um degrau
+abaixo do alerta porque a barra atravessa o topo e não pode empurrar o conteúdo.
+
+**E medindo as classes apareceu o que o seletor escondia.** O × de dispensar
+carregava `hover:bg-current/15` **e** `dark:hover:bg-muted/50`, e a aritmética
+que este arquivo já registra decide: `.cls:hover:is(.dark *)` é **(0,3,0)**
+contra os **(0,2,0)** de `.cls:hover`. **Os 15% medidos com tanto cuidado nunca
+valeram no tema escuro** — o × ficava cinza, calado, e só num tema. O botão de
+ação estava um degrau pior: a classe tonal nem existia na lista dele, vinha do
+seletor descendente, que empata em (0,3,0) com o `dark:` e era decidido por
+ordem de emissão.
+
+Compondo os dois, o `twMerge` **remove** o `dark:hover:bg-muted/50` em vez de
+disputar com ele — medido no DOM: sobram `hover:bg-current/15` e
+`dark:hover:bg-current/15` no ×, `/10` nos dois na ação, e nenhum `bg-muted`.
+A assimetria de 15 contra 10 fica, e o motivo continua sendo **área**: um ícone
+de 12px numa caixa de 24 sem contorno tem um quarto da superfície de um botão de
+texto.
 
 ### Backlog de migração
 

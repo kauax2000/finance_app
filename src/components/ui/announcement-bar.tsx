@@ -146,7 +146,12 @@ function AnnouncementBar({
             // aparecendo — é ele que delimita os 24px e diz onde o alvo começa.
             // No hover o × passa a falar exatamente a língua do botão de ação
             // ao lado (preenchimento fraco + `current/25` de borda).
-            "hover:border-current/25 hover:bg-current/15",
+            // O `dark:hover:` não é redundante, e a falta dele era um defeito
+            // medido: `.cls:hover:is(.dark *)` é (0,3,0) contra os (0,2,0) de
+            // `.cls:hover`, então o `dark:hover:bg-muted/50` do `tertiary`
+            // vencia estes 15% **no tema escuro** — calado, e só num tema. É a
+            // mesma armadilha que o `AppThemeToggle` já pagou.
+            "hover:border-current/25 hover:bg-current/15 dark:hover:bg-current/15",
             "active:border-current/25 active:bg-current/15",
             // O alvo cresce por pseudo-elemento, e não por medida: aumentar a
             // caixa devolveria o salto de altura que esta rodada tirou. 10px de
@@ -182,13 +187,15 @@ function AnnouncementBarContent({
 }
 
 /**
- * As ações — "Você está offline — [Tentar de novo]", que é o caso canônico e
- * não tinha lugar.
+ * A fileira de ações, à direita do texto.
  *
- * O botão de dentro não declara cor: `tertiary` mais `currentColor` serve os
- * cinco tons com a mesma linha, e vem com o par `active:`. É a decisão que o
- * `AlertActions` já registra — escrever `border-warning/40
- * hover:bg-warning/10` aqui seria reimportar a paleta para dentro da tela.
+ * **Ela é só a fileira.** Quem veste o botão é o `AnnouncementBarAction` — e
+ * essa divisão é a correção desta rodada. Antes, esta peça alcançava o botão
+ * por **seletor descendente** (`[&_[data-slot=button]]:` quatro vezes) e o
+ * JSDoc *pedia* que quem chamasse escrevesse `variant="tertiary" size="xs"`.
+ * Pedir não é garantir, e o seletor ainda empatava em especificidade com o
+ * `dark:hover:` do `tertiary` — (0,3,0) contra (0,3,0) —, deixando o realce do
+ * tema escuro para a ordem de emissão decidir.
  */
 function AnnouncementBarActions({
   className,
@@ -197,16 +204,42 @@ function AnnouncementBarActions({
   return (
     <div
       data-slot="announcement-bar-actions"
+      className={cn("ms-auto flex shrink-0 items-center gap-1.5", className)}
+      {...props}
+    />
+  )
+}
+
+/**
+ * A ação da barra — um `Button` que não escolhe cor nenhuma.
+ *
+ * Irmão do `AlertAction`, e o degrau é **outro de propósito**: `xs` contra o
+ * `sm` do alerta, porque a barra é mais densa — ela atravessa o topo do app e
+ * não pode empurrar o conteúdo para baixo.
+ *
+ * O realce é `current/10`, e não `foreground/10`: os dois são quase iguais no
+ * escuro e visivelmente diferentes no claro, e o `AlertAction` — o precedente
+ * documentado — usa `current`. O `dark:hover:` é obrigatório pela mesma
+ * aritmética escrita no × acima.
+ *
+ * **E ele fica mais fraco que o ×, de propósito**: 10% aqui contra 15% lá. O ×
+ * é um ícone de 12px numa caixa de 24 sem contorno, e a mesma diferença de cor
+ * em um quarto da área lê como menos.
+ */
+function AnnouncementBarAction({
+  className,
+  ...props
+}: React.ComponentProps<typeof Button>) {
+  return (
+    <Button
+      data-slot="announcement-bar-action"
+      type="button"
+      variant="tertiary"
+      size="xs"
       className={cn(
-        "ms-auto flex shrink-0 items-center gap-1.5",
-        // O realce é `current/10`, e não `foreground/10`. Os dois são quase
-        // iguais no escuro e visivelmente diferentes no claro, e o
-        // `AlertActions` — o precedente documentado — usa `current`: "borda,
-        // tinta e realce saem de `currentColor`". A versão anterior desta
-        // linha divergia dele, e o toast herdaria a divergência ao copiar
-        // daqui.
-        "[&_[data-slot=button]]:border-current/25 [&_[data-slot=button]]:text-current",
-        "[&_[data-slot=button]]:hover:bg-current/10 [&_[data-slot=button]]:active:bg-current/10",
+        "border-current/25 bg-transparent text-current",
+        "hover:bg-current/10 hover:text-current dark:hover:bg-current/10",
+        "active:bg-current/10 active:text-current",
         className
       )}
       {...props}
@@ -216,6 +249,7 @@ function AnnouncementBarActions({
 
 export {
   AnnouncementBar,
+  AnnouncementBarAction,
   AnnouncementBarActions,
   AnnouncementBarContent,
   announcementBarVariants,

@@ -11,6 +11,7 @@ import {
 
 import {
   AnnouncementBar,
+  AnnouncementBarAction,
   AnnouncementBarActions,
   AnnouncementBarContent,
 } from "@/components/ui/announcement-bar"
@@ -60,7 +61,7 @@ export default function AnnouncementBarDoc() {
   <SignalSlashIcon aria-hidden />
   <AnnouncementBarContent>Você está offline.</AnnouncementBarContent>
   <AnnouncementBarActions>
-    <Button variant="tertiary" size="xs">Tentar de novo</Button>
+    <AnnouncementBarAction>Tentar de novo</AnnouncementBarAction>
   </AnnouncementBarActions>
 </AnnouncementBar>`}
         previewClassName="flex-col items-stretch gap-3 p-0"
@@ -71,10 +72,10 @@ export default function AnnouncementBarDoc() {
             Você está offline. Tentando reconectar…
           </AnnouncementBarContent>
           <AnnouncementBarActions>
-            <Button variant="tertiary" size="xs">
+            <AnnouncementBarAction>
               <ArrowPathIcon aria-hidden />
               Tentar de novo
-            </Button>
+            </AnnouncementBarAction>
           </AnnouncementBarActions>
         </AnnouncementBar>
         <DismissDemo />
@@ -212,7 +213,13 @@ export default function AnnouncementBarDoc() {
             prop: "AnnouncementBarActions",
             type: "ComponentProps<'div'>",
             description:
-              "As ações, na borda. O botão de dentro herda a tinta do tom e vem com o par active:.",
+              "A fileira, na borda. Só a fileira — quem veste o botão é o AnnouncementBarAction.",
+          },
+          {
+            prop: "AnnouncementBarAction",
+            type: "Button",
+            description:
+              "A ação. Button tertiary size=\"xs\" que herda a tinta do tom por currentColor. Irmão do AlertAction, um degrau mais baixo porque a barra é mais densa.",
           },
         ]}
       />

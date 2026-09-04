@@ -5,8 +5,13 @@ import dynamic from "next/dynamic"
 import { ExclamationTriangleIcon } from "@heroicons/react/16/solid"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
-import { Alert, AlertActions, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
+import {
+    Alert,
+    AlertAction,
+    AlertActions,
+    AlertDescription,
+    AlertTitle,
+} from "@/components/ui/alert"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { DashboardPageSkeleton } from "@/components/dashboard/dashboard-page-skeleton"
@@ -286,14 +291,9 @@ export default function DashboardPageClient() {
                 <AlertTitle>Não foi possível carregar as carteiras</AlertTitle>
                 <AlertDescription>{workspaceError}</AlertDescription>
                 <AlertActions>
-                    <Button
-                        type="button"
-                        variant="tertiary"
-                        size="sm"
-                        onClick={() => void refreshWorkspaces()}
-                    >
+                    <AlertAction onClick={() => void refreshWorkspaces()}>
                         Tentar novamente
-                    </Button>
+                    </AlertAction>
                 </AlertActions>
             </Alert>
         )

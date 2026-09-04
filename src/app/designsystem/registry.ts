@@ -125,7 +125,18 @@ const LAYER: Record<string, Layer> = {
   tooltip: "Átomos",
 
   // ── Moléculas: feitas de átomos, um grupo pequeno que lê como unidade ───
+  /** O aviso e a ação dele. Ele entrou aqui **sem argumento** e por um tempo
+   *  não tinha nenhum: importava zero componentes, e as quatro peças eram
+   *  quatro `<div>` — a posição em que o `Select` estava quando foi devolvido
+   *  a Átomos. O que faltava não era reclassificá-lo, era o `AlertAction`: a
+   *  linha de ação alcançava o `Button` por seletor descendente e *pedia* que
+   *  quem chamasse escrevesse `variant="tertiary"`. Compondo o átomo de fato,
+   *  a camada deixa de ser herdada. */
   alert: "Moléculas",
+  /** A faixa de estado global, e as peças dela. Ela sempre compôs o átomo — o
+   *  × de dispensar é um `Button` —, então esta camada nunca foi herdada; o que
+   *  faltava era a **ação** ser peça também, e não um seletor descendente
+   *  pedindo `variant="tertiary"` a quem chamasse. */
   "announcement-bar": "Moléculas",
   "button-group": "Moléculas",
   collapsible: "Moléculas",
