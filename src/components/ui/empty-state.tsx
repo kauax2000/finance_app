@@ -5,6 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { H4, Muted } from "@/components/ui/typography"
 
 /**
  * O que a tela diz quando não há nada nela.
@@ -122,15 +123,13 @@ function EmptyStateTitle({
   ...props
 }: React.ComponentProps<"p"> & { asChild?: boolean }) {
   const Comp = asChild ? Slot.Root : "p"
+  // O estilo é o do `H4` — família, peso, tracking — um degrau abaixo no corpo.
+  // O elemento continua sendo o `<p>` (ou o que `asChild` trouxer): o átomo dá
+  // o estilo e o filho dá o nível, e a sobrescrita fica no átomo.
   return (
-    <Comp
-      data-slot="empty-state-title"
-      className={cn(
-        "text-base font-semibold tracking-tight text-balance text-foreground",
-        className
-      )}
-      {...props}
-    />
+    <H4 asChild data-slot="empty-state-title" className={cn("text-base text-balance", className)}>
+      <Comp {...props} />
+    </H4>
   )
 }
 
@@ -139,12 +138,9 @@ function EmptyStateDescription({
   ...props
 }: React.ComponentProps<"p">) {
   return (
-    <p
+    <Muted
       data-slot="empty-state-description"
-      className={cn(
-        "max-w-sm text-sm text-pretty text-muted-foreground",
-        className
-      )}
+      className={cn("max-w-sm text-pretty", className)}
       {...props}
     />
   )

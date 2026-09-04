@@ -1,7 +1,11 @@
 "use client"
 
-import { CheckIcon, ChevronRightIcon, DocumentDuplicateIcon } from "@heroicons/react/16/solid"
-import { ChevronLeftIcon } from "@heroicons/react/24/outline"
+import {
+  CheckIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  DocumentDuplicateIcon,
+} from "@heroicons/react/16/solid"
 import * as React from "react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
@@ -265,10 +269,10 @@ function DocPagerLink({
 }) {
   const isNext = direction === "next"
   const Chevron = isNext ? ChevronRightIcon : ChevronLeftIcon
-  // A categoria do vizinho só aparece quando ela **muda**. Em 84 das 88 páginas
-  // ela seria a mesma da página atual — informação que não informa, ocupando
-  // uma linha inteira. Nas quatro fronteiras ela é exatamente o que interessa
-  // saber antes de avançar.
+  // A categoria do vizinho só aparece quando ela **muda**. Em quase todas as
+  // páginas ela seria a mesma da página atual — informação que não informa,
+  // ocupando uma linha inteira. Nas fronteiras entre categorias (cinco, com
+  // seis categorias) ela é exatamente o que interessa saber antes de avançar.
   const crossing = Boolean(entry.category && entry.category !== from)
   const chevron = (
     <Chevron
@@ -282,15 +286,30 @@ function DocPagerLink({
       )}
     />
   )
+  // O `Button` do sistema, e não a receita dele reescrita: a `className` caía de
+  // 23 para 14 tokens, e o que sobra são **duas** contra-classes, medidas.
   return (
-    <Link
-      href={`/designsystem/${entry.slug}`}
+    <Button
+      asChild
+      variant="tertiary"
+      size="md"
       className={cn(
-        "group inline-flex min-w-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5",
-        "text-sm font-medium text-muted-foreground",
+        // O `Button` declara `group/button`, que é **outra** classe:
+        // `group-hover:` compila para `:is(:where(.group):hover *)` e precisa da
+        // literal. As duas convivem — medido, o `twMerge` não colapsa uma na
+        // outra. Sem esta, as setas param de animar.
+        "group",
+        // Contra-classe 1. O `shrink-0` da base impediria o par de encolher
+        // dentro do `nav` (`justify-between`), e aí o `truncate` do nome **nunca
+        // dispara**: "Mobile Sheet Form Chrome" transborda em vez de reticenciar.
+        "shrink",
+        // Contra-classe 2. O `dark:hover:bg-muted/50` do `tertiary` **não** é
+        // derrubado por `hover:bg-accent` — variante diferente, e no escuro
+        // `&:is(.dark *)` vence por especificidade. Na mesma linha que o
+        // `hover:` porque a regra H do auditor exige o par no mesmo literal.
+        "hover:bg-accent active:bg-accent active:text-foreground dark:hover:bg-accent",
+        "min-w-0 px-2.5 text-muted-foreground",
         "transition-colors duration-(--duration-fast) ease-(--ease-out)",
-        "hover:bg-accent hover:text-foreground active:bg-accent active:text-foreground",
-        "focus-visible:ring-3 focus-visible:ring-ring/70 focus-visible:outline-none",
         // Em ponteiro grosso o alvo vai aos 44px que a própria página
         // /designsystem/mobile-toque exige. É a mesma cortesia da lateral.
         "pointer-coarse:min-h-11",
@@ -299,6 +318,7 @@ function DocPagerLink({
         isNext ? "-mr-2.5" : "-ml-2.5"
       )}
     >
+      <Link href={`/designsystem/${entry.slug}`}>
       {isNext ? null : chevron}
       <span className="truncate">
         <span className="sr-only">{isNext ? "Próximo: " : "Anterior: "}</span>
@@ -310,7 +330,8 @@ function DocPagerLink({
         </span>
       ) : null}
       {isNext ? chevron : null}
-    </Link>
+      </Link>
+    </Button>
   )
 }
 

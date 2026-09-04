@@ -24,8 +24,7 @@ import {
     type WorkspaceSubscription,
 } from "@/lib/supabase"
 import { Card, CardContent } from "@/components/ui/card"
-import { MoneyInput } from "@/components/ui/money-input"
-import { CustomForm } from "@/components/ui/form"
+import { CustomForm, FormInput } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -599,14 +598,10 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 />
             </div>
 
-            <div className="space-y-2">
-                <Label>Tipo</Label>
-                <TransactionFormTypeSegment
-                    value={type}
-                    onChange={setType}
-                    fullWidth
-                />
-            </div>
+            <TransactionFormTypeSegment
+                value={type}
+                onChange={setType}
+            />
 
             <CategoryAppearanceFields
                 color={color}
@@ -621,18 +616,13 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                         Limite de despesas para {dialogBudgetPeriod.period_start} a{" "}
                         {dialogBudgetPeriod.period_end}.
                     </p>
-                    <div className="space-y-2">
-                        <Label htmlFor="grid-category-budget-amount">
-                            Valor limite (R$)
-                        </Label>
-                        <MoneyInput
-                            id="grid-category-budget-amount"
-                            placeholder="Ex: 1.500,00"
-                            value={editBudgetAmount}
-                            
+                    <FormInput
+                        money
+                        label="Valor limite (R$)"
+                        placeholder="Ex: 1.500,00"
+                        value={editBudgetAmount}
                         onValueChange={setEditBudgetAmount}
-                        />
-                    </div>
+                    />
                     {dialogExistingBudget ? (
                         <Button
                             type="button"

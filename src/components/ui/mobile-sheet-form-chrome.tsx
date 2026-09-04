@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { XMarkIcon } from "@heroicons/react/20/solid"
+import { XMarkIcon } from "@heroicons/react/16/solid"
 import { cn } from "@/lib/utils"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
@@ -43,7 +43,7 @@ export function MobileSheetFormHeaderCloseButton({
                 aria-label="Fechar"
                 disabled={disabled}
             >
-                <XMarkIcon className="h-5 w-5" aria-hidden />
+                <XMarkIcon aria-hidden />
             </Button>
         </SheetClose>
     )

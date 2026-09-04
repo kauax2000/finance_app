@@ -25,8 +25,8 @@ import {
   InputGroupInput,
   InputGroupText,
 } from "@/components/ui/input-group"
-import { MoneyInput } from "@/components/ui/money-input"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Radio } from "@/components/ui/radio"
+import { RadioGroup } from "@/components/ui/radio-group"
 import { Switch } from "@/components/ui/switch"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
@@ -86,7 +86,7 @@ export default function FieldDoc() {
         code={`<Field>
   <FieldLabel>Valor</FieldLabel>
   <FieldControl>
-    <MoneyInput value={valor} onValueChange={setValor} />
+    <Input money value={valor} onValueChange={setValor} />
   </FieldControl>
   <FieldError>Informe um valor maior que zero.</FieldError>
 </Field>`}
@@ -95,7 +95,7 @@ export default function FieldDoc() {
         <Field className="w-full max-w-sm">
           <FieldLabel>Valor</FieldLabel>
           <FieldControl>
-            <MoneyInput value="0,00" onValueChange={() => {}} />
+            <Input money value="0,00" onValueChange={() => {}} />
           </FieldControl>
           <FieldError>Informe um valor maior que zero.</FieldError>
         </Field>
@@ -122,7 +122,7 @@ export default function FieldDoc() {
         <Field className="w-full max-w-sm">
           <FieldLabel>Valor</FieldLabel>
           <FieldControl>
-            <MoneyInput value="0,00" onValueChange={() => {}} />
+            <Input money value="0,00" onValueChange={() => {}} />
           </FieldControl>
           <FieldError
             errors={[
@@ -257,14 +257,14 @@ export default function FieldDoc() {
 
       <DocSection
         title="Escolha em cartão"
-        description="Um FieldLabel que envolve outro Field vira alvo inteiro: ganha contorno, cresce para a largura toda e acende quando a opção está marcada. O clique vale no cartão inteiro, não só no radio de 16px."
+        description="Um FieldLabel que envolve outro Field vira alvo inteiro: ganha contorno, cresce para a largura toda e acende quando a opção está marcada. O clique vale no cartão inteiro — e o ganho não é o alvo de toque, que o Radio já resolve com 44px: é a explicação caber junto da opção."
         code={`<FieldLabel htmlFor="mensal">
   <Field orientation="horizontal">
     <FieldContent>
       <FieldTitle>Mensal</FieldTitle>
       <FieldDescription>Cobrado todo dia 5.</FieldDescription>
     </FieldContent>
-    <RadioGroupItem value="mensal" id="mensal" />
+    <Radio value="mensal" id="mensal" />
   </Field>
 </FieldLabel>`}
         previewClassName="flex-col items-stretch"
@@ -280,7 +280,7 @@ export default function FieldDoc() {
                   <FieldTitle>{titulo}</FieldTitle>
                   <FieldDescription>{desc}</FieldDescription>
                 </FieldContent>
-                <RadioGroupItem value={value} id={`ds-field-plano-${value}`} />
+                <Radio value={value} id={`ds-field-plano-${value}`} />
               </Field>
             </FieldLabel>
           ))}
@@ -417,16 +417,17 @@ export default function FieldDoc() {
         apontou.
       </DocNote>
 
-      <DocNote title="Para dinheiro o componente é o MoneyInput">
+      <DocNote title="Para dinheiro o modo é <Input money>">
         O addon acima é exemplo de unidade, não de como se pede um valor em
-        reais. <code>MoneyInput</code> resolve máscara, teclado numérico e
-        conversão; um <code>InputGroup</code> com <code>R$</code> na frente
-        deixa isso tudo para a tela.
+        reais. <code>&lt;Input money&gt;</code> resolve máscara, teclado numérico
+        e conversão; um <code>InputGroup</code> com <code>R$</code> na frente
+        deixa isso tudo para a tela. A forma curta, com rótulo e erro já
+        ligados, é <code>&lt;FormInput money&gt;</code>.
       </DocNote>
 
       <DocNote title="Field não é o formulário">
         Quem cuida do envio e do comportamento do <kbd>Enter</kbd> é o{" "}
-        <code>CustomForm</code>. <code>Field</code> cuida de um campo. Os dois se
+        <code>Form</code>. <code>Field</code> cuida de um campo. Os dois se
         compõem, e o padrão inteiro está em{" "}
         <Link href="/designsystem/formularios" className="underline">
           Formulários e Enter

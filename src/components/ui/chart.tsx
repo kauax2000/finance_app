@@ -4,6 +4,7 @@ import * as React from "react"
 import { Legend, ResponsiveContainer, Tooltip } from "recharts"
 
 import { cn } from "@/lib/utils"
+import { numberBR } from "@/lib/formatters"
 
 const THEMES = { light: "", dark: ".dark" } as const
 
@@ -184,7 +185,7 @@ function ChartTooltipContent({
   return (
     <div
       className={cn(
-        "grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/80 bg-popover px-2.5 py-1.5 text-xs text-popover-foreground shadow-md",
+        "grid min-w-32 items-start gap-1.5 rounded-lg border border-border/80 bg-popover px-2.5 py-1.5 text-xs text-popover-foreground shadow-md",
         className
       )}
     >
@@ -213,7 +214,7 @@ function ChartTooltipContent({
                     !hideIndicator && (
                       <div
                         className={cn(
-                          "shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)",
+                          "shrink-0 rounded-xs border-(--color-border) bg-(--color-bg)",
                           {
                             "h-2.5 w-2.5": indicator === "dot",
                             "w-1": indicator === "line",
@@ -244,8 +245,8 @@ function ChartTooltipContent({
                       </span>
                     </div>
                     {item.value !== undefined ? (
-                      <span className="font-mono font-medium tabular-nums text-foreground">
-                        {item.value.toLocaleString()}
+                      <span className="nums font-mono font-medium text-foreground">
+                        {typeof item.value === "number" ? numberBR(item.value) : item.value}
                       </span>
                     ) : null}
                   </div>
@@ -306,7 +307,7 @@ function ChartLegendContent({
               <itemConfig.icon />
             ) : (
               <div
-                className="h-2 w-2 shrink-0 rounded-[2px]"
+                className="h-2 w-2 shrink-0 rounded-xs"
                 style={{
                   backgroundColor: item.color,
                 }}

@@ -5,6 +5,7 @@ import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { Button } from "@/components/ui/button"
+import { Caption, H1, Muted } from "@/components/ui/typography"
 import { cn } from "@/lib/utils"
 
 /**
@@ -119,13 +120,13 @@ function PageHeaderBreadcrumb({
  * se explicar está mal escrito.
  */
 const pageEyebrowClassName =
-  "text-2xs font-medium tracking-[0.18em] uppercase"
+  "text-2xs font-medium tracking-eyebrow uppercase"
 
 function PageHeaderEyebrow({ className, ...props }: React.ComponentProps<"p">) {
   return (
-    <p
+    <Caption
       data-slot="page-header-eyebrow"
-      className={cn(pageEyebrowClassName, "text-muted-foreground", className)}
+      className={cn(pageEyebrowClassName, className)}
       {...props}
     />
   )
@@ -210,18 +211,16 @@ function PageHeaderTitle({
   asChild = false,
   ...props
 }: React.ComponentProps<"h1"> & { asChild?: boolean }) {
-  const Comp = asChild ? Slot : "h1"
   return (
-    <Comp
+    <H1
+      asChild={asChild}
       data-slot="page-header-title"
       // Era `text-lg sm:text-xl` — 18/20px. Nenhuma tela tinha momento de
-      // display, e por isso a serifa não teria onde aparecer. O `page-title`
-      // traz a família de display, o peso, o tracking e a entrelinha; o corpo
-      // vem do degrau declarado pelo `PageHeader`.
-      className={cn(
-        "page-title text-(length:--page-title) text-foreground",
-        className
-      )}
+      // display, e por isso a serifa não teria onde aparecer. O `H1` traz a
+      // família de display, o peso, o tracking e a entrelinha; o corpo vem do
+      // degrau declarado pelo `PageHeader` — e `cn()` apaga o `text-3xl` do
+      // átomo, verificado.
+      className={cn("text-(length:--page-title)", className)}
       {...props}
     />
   )
@@ -232,16 +231,13 @@ function PageHeaderDescription({
   ...props
 }: React.ComponentProps<"p">) {
   return (
-    <p
+    <Muted
       data-slot="page-header-description"
       // `leading-relaxed` e `text-pretty` são as duas coisas que as descrições
       // do catálogo já traziam e esta não: sem elas a última linha do parágrafo
       // sai com uma palavra órfã, e o corpo fica apertado sob um título de
       // display.
-      className={cn(
-        "max-w-2xl text-sm leading-relaxed text-pretty text-muted-foreground",
-        className
-      )}
+      className={cn("max-w-2xl leading-relaxed text-pretty", className)}
       {...props}
     />
   )

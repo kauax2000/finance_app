@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Input, type InputBaseProps } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import {
   EdgePanel,
@@ -299,7 +299,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
       onClick={toggleSidebar}
       title="Toggle Sidebar"
       className={cn(
-        "absolute inset-y-0 z-(--z-sticky) hidden w-4 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:start-1/2 after:w-[2px] hover:after:bg-sidebar-border sm:flex ltr:-translate-x-1/2 rtl:-translate-x-1/2",
+        "absolute inset-y-0 z-(--z-sticky) hidden w-4 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:start-1/2 after:w-0.5 hover:after:bg-sidebar-border sm:flex ltr:-translate-x-1/2 rtl:-translate-x-1/2",
         "in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize",
         "[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize",
         "group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full hover:group-data-[collapsible=offcanvas]:bg-sidebar",
@@ -328,7 +328,7 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
 function SidebarInput({
   className,
   ...props
-}: React.ComponentProps<typeof Input>) {
+}: InputBaseProps & React.RefAttributes<HTMLInputElement>) {
   return (
     <Input
       data-slot="sidebar-input"
@@ -510,6 +510,22 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
   )
 }
 
+/**
+ * Por que isto não é `Button`, e é decisão.
+ *
+ * A regra da casa é que um componente não reimplementa o que a camada de baixo
+ * já dá — e um item de menu **é** um botão. Medido, vestir `Button
+ * variant="tertiary"` aqui exigiria sete contra-classes para desfazê-lo:
+ * `justify-start`, `font-normal`, `border-0`, `focus-visible:ring-sidebar-ring`,
+ * `dark:hover:bg-sidebar-accent`, os `aria-expanded:*` e o `translate-y`.
+ * Reimplementar ao contrário. Este `cva` é a régua de baixo **deste chrome**:
+ * ele tem paleta própria (`sidebar-accent`, `sidebar-ring`), geometria própria
+ * no modo ícone, e `SidebarMenuAction`/`SidebarMenuBadge` leem o `data-size` dele
+ * por `peer-data-[size=…]`. O arquivo já distingue: `SidebarTrigger`, que é
+ * ação na superfície do app, **é** `Button`. `SidebarMenuAction` e
+ * `SidebarGroupAction` têm 20px de caixa (o menor `Button` é 24); `SidebarRail`
+ * é uma alça com `tabIndex={-1}`, não um botão.
+ */
 const sidebarMenuButtonVariants = cva(
   "peer/menu-button group/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm ring-sidebar-ring outline-hidden transition-[width,height,padding] group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-open:hover:bg-sidebar-accent data-open:hover:text-sidebar-accent-foreground data-active:bg-sidebar-accent data-active:font-medium data-active:text-sidebar-accent-foreground [&_svg]:size-4 [&_svg]:shrink-0 [&>span:last-child]:truncate",
   {

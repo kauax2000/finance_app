@@ -19,7 +19,7 @@ import {
 import { AppThemeToggle } from "@/components/settings/app-theme-toggle"
 import { AppWordmark } from "@/components/layout/app-wordmark"
 import { Container } from "@/components/ui/container"
-import { CATEGORY_ORDER, REGISTRY, movedFrom } from "./registry"
+import { CATEGORY_ORDER, REGISTRY } from "./registry"
 import { DsSearch } from "./ds-search"
 
 /**
@@ -383,20 +383,6 @@ function DsNav() {
                 ref={active ? revelarAtivo : undefined}
               >
                 {item.name}
-                {/* O ponto de "mudou de camada". Na lateral não cabe a frase —
-                    são 32 marcas numa coluna de 240px —, então fica o sinal, e
-                    quem quer o texto acha no índice. O `title` diz de onde
-                    veio, e o `sr-only` faz o leitor de tela dizer também. */}
-                {movedFrom(item.slug) ? (
-                  <span
-                    title={`Movido de ${movedFrom(item.slug)}`}
-                    className="ms-1.5 inline-block size-1.5 shrink-0 rounded-full bg-primary-accent/70 align-middle"
-                  >
-                    <span className="sr-only">
-                      movido de {movedFrom(item.slug)}
-                    </span>
-                  </span>
-                ) : null}
               </DsNavLink>
             )
           })}
@@ -454,23 +440,44 @@ function DsNavLink({
   children: React.ReactNode
   ref?: React.Ref<HTMLAnchorElement>
 }) {
+  // O `Button` do sistema — e ele custa **sete** contra-classes, medidas: as
+  // quatro abaixo mais as três que neutralizam o hover do `tertiary` no estado
+  // ativo. É o mesmo número que fez o `sidebarMenuButtonVariants` ficar cru, e a
+  // decisão aqui foi a inversa, tomada com o número na mesa.
+  //
+  // `variant="secondary"` para o ativo está fora: `bg-accent` derruba
+  // `bg-secondary`, mas `hover:bg-secondary-hover` **sobrevive**, e o item ativo
+  // passaria a mudar de cor sob o cursor.
   return (
-    <Link
-      ref={ref}
-      href={href}
-      aria-current={active ? "page" : undefined}
+    <Button
+      asChild
+      variant="tertiary"
+      size="md"
       className={cn(
-        "truncate rounded-md px-2 py-1.5 text-sm transition-colors",
+        // Contra-classe 1 e 2. `justify-center` centraliza o rótulo; e
+        // `font-medium` da base apagaria a distinção do item ativo, cujo peso é
+        // metade do sinal.
+        "justify-start font-normal",
+        // Contra-classe 3. `inline-flex` não é *block container*, e
+        // `text-overflow` não se aplica a ele: o `truncate` desce para o filho.
+        "min-w-0",
+        "rounded-md px-2 text-sm transition-colors",
         // Em ponteiro grosso o link vai aos 44px que a página
         // /designsystem/mobile-toque exige. Um catálogo que reprova na própria
         // regra não é fonte de verdade de nada.
-        "pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:items-center",
+        "pointer-coarse:min-h-11",
         active
-          ? "bg-accent font-medium text-accent-foreground"
-          : "text-muted-foreground hover:bg-accent/60 hover:text-foreground active:bg-accent/60"
+          ? // Contra-classes 4 a 6: o `tertiary` acenderia `bg-muted` sobre o
+            // item já aceso.
+            "bg-accent font-medium text-accent-foreground hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent"
+          : // Contra-classe 7. O `dark:hover:bg-muted/50` do `tertiary` não é
+            // derrubado por `hover:bg-accent/60` — variante diferente.
+            "text-muted-foreground hover:bg-accent/60 hover:text-foreground active:bg-accent/60 dark:hover:bg-accent/60"
       )}
     >
-      {children}
-    </Link>
+      <Link ref={ref} href={href} aria-current={active ? "page" : undefined}>
+        <span className="truncate">{children}</span>
+      </Link>
+    </Button>
   )
 }

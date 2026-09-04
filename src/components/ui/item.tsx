@@ -3,6 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { Muted } from "@/components/ui/typography"
 import { Separator } from "@/components/ui/separator"
 
 /**
@@ -237,10 +238,10 @@ function ItemTitle({ className, ...props }: React.ComponentProps<"div">) {
 
 function ItemDescription({ className, ...props }: React.ComponentProps<"p">) {
   return (
-    <p
+    <Muted
       data-slot="item-description"
       className={cn(
-        "line-clamp-2 text-left text-sm leading-normal font-normal text-muted-foreground group-data-[size=sm]/item:text-xs [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary-accent [&>a:active]:text-primary-accent",
+        "line-clamp-2 text-left leading-normal font-normal group-data-[size=sm]/item:text-xs [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary-accent [&>a:active]:text-primary-accent",
         className
       )}
       {...props}

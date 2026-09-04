@@ -48,14 +48,13 @@ import InputGroupDoc from "./docs/input-group"
 import InputOtpDoc from "./docs/input-otp"
 import ItemDoc from "./docs/item"
 import KbdDoc from "./docs/kbd"
-import KbdShortcutDoc from "./docs/kbd-shortcut"
+import KbdGroupDoc from "./docs/kbd-group"
 import LabelDoc from "./docs/label"
 import MarcaDoc from "./docs/marca"
 import MenubarDoc from "./docs/menubar"
 import MobileSheetFormChromeDoc from "./docs/mobile-sheet-form-chrome"
 import MobileToqueDoc from "./docs/mobile-toque"
 import MoneyDisplayDoc from "./docs/money-display"
-import MoneyInputDoc from "./docs/money-input"
 import MovimentoDoc from "./docs/movimento"
 import NativeSelectDoc from "./docs/native-select"
 import NavigationMenuDoc from "./docs/navigation-menu"
@@ -64,6 +63,7 @@ import PageSectionDoc from "./docs/page-section"
 import PaginationDoc from "./docs/pagination"
 import PopoverDoc from "./docs/popover"
 import ProgressDoc from "./docs/progress"
+import RadioDoc from "./docs/radio"
 import RadioGroupDoc from "./docs/radio-group"
 import ResizableDoc from "./docs/resizable"
 import ScrollAreaDoc from "./docs/scroll-area"
@@ -85,7 +85,6 @@ import TableDoc from "./docs/table"
 import TabsDoc from "./docs/tabs"
 import TextareaDoc from "./docs/textarea"
 import TimelineDoc from "./docs/timeline"
-import TipografiaDoc from "./docs/tipografia"
 import ToggleDoc from "./docs/toggle"
 import ToggleGroupDoc from "./docs/toggle-group"
 import ToolbarDoc from "./docs/toolbar"
@@ -140,14 +139,13 @@ export const DOCS: Record<string, ComponentType> = {
   "input-otp": InputOtpDoc,
   "item": ItemDoc,
   "kbd": KbdDoc,
-  "kbd-shortcut": KbdShortcutDoc,
+  "kbd-group": KbdGroupDoc,
   "label": LabelDoc,
   "marca": MarcaDoc,
   "menubar": MenubarDoc,
   "mobile-sheet-form-chrome": MobileSheetFormChromeDoc,
   "mobile-toque": MobileToqueDoc,
   "money-display": MoneyDisplayDoc,
-  "money-input": MoneyInputDoc,
   "movimento": MovimentoDoc,
   "native-select": NativeSelectDoc,
   "navigation-menu": NavigationMenuDoc,
@@ -156,6 +154,7 @@ export const DOCS: Record<string, ComponentType> = {
   "pagination": PaginationDoc,
   "popover": PopoverDoc,
   "progress": ProgressDoc,
+  "radio": RadioDoc,
   "radio-group": RadioGroupDoc,
   "resizable": ResizableDoc,
   "scroll-area": ScrollAreaDoc,
@@ -177,7 +176,6 @@ export const DOCS: Record<string, ComponentType> = {
   "tabs": TabsDoc,
   "textarea": TextareaDoc,
   "timeline": TimelineDoc,
-  "tipografia": TipografiaDoc,
   "toggle": ToggleDoc,
   "toggle-group": ToggleGroupDoc,
   "toolbar": ToolbarDoc,

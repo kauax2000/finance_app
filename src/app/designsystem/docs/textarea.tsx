@@ -37,7 +37,7 @@ export default function TextareaDoc() {
       </DocSection>
 
       <DocNote title="Enter dentro de um Textarea quebra linha">
-        O <code>CustomForm</code> normaliza o Enter para o submit, mas abre exceção para textarea: dentro de uma observação, a tecla continua fazendo o que a pessoa espera.
+        O <code>Form</code> normaliza o Enter para o submit, mas abre exceção para textarea: dentro de uma observação, a tecla continua fazendo o que a pessoa espera.
       </DocNote>
     </>
   )

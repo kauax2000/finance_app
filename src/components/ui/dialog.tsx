@@ -6,6 +6,7 @@ import { Dialog as DialogPrimitive } from "radix-ui"
 import { XMarkIcon } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
+import { Muted } from "@/components/ui/typography"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
 import { Button } from "@/components/ui/button"
@@ -405,17 +406,22 @@ function DialogTitle({
 
 function DialogDescription({
   className,
+  children,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Description>) {
+  // A primitiva fica por fora: é ela que escreve o `id` do `aria-describedby`.
+  // O corpo e a tinta são do `Muted`.
   return (
-    <DialogPrimitive.Description
-      data-slot="dialog-description"
-      className={cn(
-        "min-w-0 text-sm text-pretty text-muted-foreground *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground *:[a]:active:text-foreground",
-        className
-      )}
-      {...props}
-    />
+    <DialogPrimitive.Description asChild data-slot="dialog-description" {...props}>
+      <Muted
+        className={cn(
+          "min-w-0 text-pretty *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground *:[a]:active:text-foreground",
+          className
+        )}
+      >
+        {children}
+      </Muted>
+    </DialogPrimitive.Description>
   )
 }
 

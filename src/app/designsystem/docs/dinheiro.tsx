@@ -56,9 +56,10 @@ export default function DinheiroDoc() {
               <code>aria-label</code>, exportação.
             </p>
             <p>
-              <strong className="text-foreground">MoneyInput</strong>{" "}
+              <strong className="text-foreground">&lt;Input money&gt;</strong>{" "}
               — quando o
-              app <em>recebe</em> o valor.
+              app <em>recebe</em> o valor. Com rótulo e erro ligados,{" "}
+              <strong className="text-foreground">&lt;FormInput money&gt;</strong>.
             </p>
           </Stack>
         </Spec>

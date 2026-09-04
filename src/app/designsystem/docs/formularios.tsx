@@ -2,8 +2,13 @@
 
 import * as React from "react"
 
-import { Button } from "@/components/ui/button"
-import { CustomForm, ENTER_DEFERRAL_RULES } from "@/components/ui/form"
+import {
+  ENTER_DEFERRAL_RULES,
+  Form,
+  FormActions,
+  FormCancel,
+  FormSubmit,
+} from "@/components/ui/form"
 import {
   Field,
   FieldControl,
@@ -16,7 +21,6 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Kbd } from "@/components/ui/kbd"
-import { MoneyInput } from "@/components/ui/money-input"
 import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
@@ -32,7 +36,7 @@ export default function FormulariosDoc() {
   return (
     <>
       <Usage>
-        Todo fluxo em que campos são salvos usa <code>CustomForm</code>, nunca um{" "}
+        Todo fluxo em que campos são salvos usa <code>Form</code>, nunca um{" "}
         <code>&lt;form&gt;</code> cru — ele normaliza o <Kbd>Enter</Kbd> para a
         ação principal, que no telefone é a diferença entre salvar e não
         conseguir. E todo campo é um <code>Field</code>: é ele que liga o rótulo,
@@ -42,7 +46,7 @@ export default function FormulariosDoc() {
       <DocSection
         title="Um formulário inteiro"
         description="Seção, linha de dois campos, erro e rodapé. Nenhum id escrito, nenhum htmlFor, nenhum aria-describedby — e um type=&quot;submit&quot; só."
-        code={`<CustomForm onSubmit={handleSubmit}>
+        code={`<Form onSubmit={handleSubmit}>
   <FieldSet>
     <FieldLegend variant="label">Lançamento</FieldLegend>
     <FieldGroup>
@@ -56,11 +60,11 @@ export default function FormulariosDoc() {
       </FieldRow>
     </FieldGroup>
   </FieldSet>
-  <div className="flex justify-end gap-2">
-    <Button type="button" variant="tertiary">Cancelar</Button>
-    <Button type="submit">Salvar</Button>
-  </div>
-</CustomForm>`}
+  <FormActions>
+    <FormCancel>Cancelar</FormCancel>
+    <FormSubmit>Salvar</FormSubmit>
+  </FormActions>
+</Form>`}
         previewClassName="items-stretch"
       >
         <FormDemo />
@@ -139,7 +143,8 @@ function FormDemo() {
   const erro = valor === "0,00" ? "Informe um valor maior que zero." : undefined
 
   return (
-    <CustomForm
+    <Form
+      layout="none"
       className="flex w-full max-w-sm flex-col gap-5"
       onSubmit={(e) => {
         e.preventDefault()
@@ -159,7 +164,7 @@ function FormDemo() {
             <Field>
               <FieldLabel>Valor</FieldLabel>
               <FieldControl>
-                <MoneyInput value={valor} onValueChange={setValor} />
+                <Input money value={valor} onValueChange={setValor} />
               </FieldControl>
               <FieldError>{erro}</FieldError>
             </Field>
@@ -172,18 +177,16 @@ function FormDemo() {
           </FieldRow>
         </FieldGroup>
       </FieldSet>
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-xs text-muted-foreground">
+      <FormActions align="between">
+        <span className="self-center text-xs text-muted-foreground">
           Salvos: <span className="nums">{enviado}</span>
         </span>
         <div className="flex gap-2">
-          <Button type="button" variant="tertiary">
-            Cancelar
-          </Button>
-          <Button type="submit">Salvar</Button>
+          <FormCancel>Cancelar</FormCancel>
+          <FormSubmit>Salvar</FormSubmit>
         </div>
-      </div>
-    </CustomForm>
+      </FormActions>
+    </Form>
   )
 }
 
@@ -191,7 +194,8 @@ function DeferDemo() {
   const [n, setN] = React.useState(0)
 
   return (
-    <CustomForm
+    <Form
+      layout="none"
       className="flex w-full max-w-sm flex-col gap-4"
       onSubmit={(e) => {
         e.preventDefault()
@@ -229,12 +233,12 @@ function DeferDemo() {
           </FieldControl>
         </Field>
       </FieldGroup>
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-xs text-muted-foreground">
+      <FormActions align="between">
+        <span className="self-center text-xs text-muted-foreground">
           Envios: <span className="nums">{n}</span>
         </span>
-        <Button type="submit">Salvar</Button>
-      </div>
-    </CustomForm>
+        <FormSubmit>Salvar</FormSubmit>
+      </FormActions>
+    </Form>
   )
 }

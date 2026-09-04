@@ -93,14 +93,14 @@ export default function DialogDoc() {
         title="Formulário"
         description="layout=&quot;fixed&quot;: a altura é teto, e o corpo rola entre um cabeçalho e um rodapé parados. É a forma mais comum do app — 13 das 25 chamadas —, e era escrita à mão em cinco classes no casco mais três em cada corpo rolável. DialogBody é essas três, e a do meio (min-h-0) é a que falha calada: sem ela um item de flex não encolhe abaixo do conteúdo, e o diálogo cresce até sair da tela em vez de rolar."
         code={`<DialogContent layout="fixed">
-  <CustomForm className="flex min-h-0 flex-1 flex-col">
+  <Form layout="none" className="flex min-h-0 flex-1 flex-col">
     <DialogHeader>
       <DialogTitle>Cadastro de cartão</DialogTitle>
       <DialogDescription>…</DialogDescription>
     </DialogHeader>
     <DialogBody>…</DialogBody>
     <DialogFooter>…</DialogFooter>
-  </CustomForm>
+  </Form>
 </DialogContent>`}
       >
         <Dialog>
@@ -299,7 +299,7 @@ export default function DialogDoc() {
         <code>asChild</code> com um{" "}
         <code>Button variant=&quot;tertiary&quot; type=&quot;button&quot;</code>{" "}
         dentro — sem o <code>type</code>, ele vira o alvo do Enter dentro de um{" "}
-        <code>CustomForm</code>.
+        <code>Form</code>.
       </DocNote>
 
       <DocNote title="O rodapé sangra por variável, não por número">

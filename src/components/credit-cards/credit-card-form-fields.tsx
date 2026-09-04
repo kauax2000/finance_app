@@ -10,7 +10,6 @@ import {
 } from "@/lib/credit-card-number"
 import { CREDIT_CARD_BILLING_FORM } from "@/lib/credit-card-billing-copy"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { MoneyInput } from "@/components/ui/money-input"
 import { Button } from "@/components/ui/button"
 import {
     Collapsible,
@@ -18,6 +17,7 @@ import {
     CollapsibleMarker,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import { FormInput } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -327,19 +327,15 @@ export function CreditCardFormFields({
                     </div>
                 </div>
             </div>
-            <div className="space-y-1.5">
-                <Label htmlFor={`${idPrefix}-limit`} className="text-xs">
-                    Limite (opcional)
-                </Label>
-                <MoneyInput
-                    id={`${idPrefix}-limit`}
-                    value={creditLimit}
-                    
-                    placeholder="0,00"
-                    className="text-sm"
+            <FormInput
+                money
+                fieldSize="sm"
+                label="Limite"
+                optional
+                value={creditLimit}
                 onValueChange={onCreditLimitChange}
-                            />
-            </div>
+                placeholder="0,00"
+            />
             <CreditCardBillingSection
                 idPrefix={idPrefix}
                 closingDay={closingDay}

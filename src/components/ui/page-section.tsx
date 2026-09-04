@@ -1,8 +1,8 @@
 import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
+import { H2, Muted } from "@/components/ui/typography"
 
 /**
  * O bloco que dá ritmo vertical a uma tela.
@@ -130,12 +130,14 @@ function PageSectionTitle({
   asChild = false,
   ...props
 }: React.ComponentProps<"h2"> & { asChild?: boolean }) {
-  const Comp = asChild ? Slot : "h2"
   return (
-    <Comp
+    <H2
+      asChild={asChild}
       data-slot="page-section-title"
+      // O `H2` dá família, peso e tracking; o corpo e a entrelinha vêm do degrau
+      // declarado pelo `PageSection`. É por isso que o `H2` não traz régua.
       className={cn(
-        "font-heading text-(length:--page-section-title) leading-(--page-section-title-line) font-semibold tracking-tight text-foreground",
+        "text-(length:--page-section-title) leading-(--page-section-title-line)",
         className
       )}
       {...props}
@@ -148,12 +150,9 @@ function PageSectionDescription({
   ...props
 }: React.ComponentProps<"p">) {
   return (
-    <p
+    <Muted
       data-slot="page-section-description"
-      className={cn(
-        "text-sm leading-relaxed text-pretty text-muted-foreground",
-        className
-      )}
+      className={cn("leading-relaxed text-pretty", className)}
       {...props}
     />
   )

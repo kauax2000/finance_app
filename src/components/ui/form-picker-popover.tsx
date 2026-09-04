@@ -8,6 +8,7 @@ import {
 } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
+import { Muted } from "@/components/ui/typography"
 import {
   fieldDisabledClassName,
   fieldFocusRingClassName,
@@ -358,46 +359,58 @@ function FormPickerPopoverEmpty({
   ...props
 }: React.ComponentProps<"p">) {
   return (
-    <p
+    <Muted
       data-slot="form-picker-popover-empty"
-      className={cn(
-        "px-3 py-6 text-center text-sm text-balance text-muted-foreground",
-        className
-      )}
+      className={cn("px-3 py-6 text-center text-balance", className)}
       {...props}
     />
   )
 }
 
 /**
- * Uma linha da lista.
+ * Uma linha da lista — o `Button` do sistema, e não um `<button>` cru.
  *
  * `min-h-11` são os 44px de alvo — este é um seletor de toque antes de ser
- * qualquer outra coisa. E o realce tem o par `active:`, porque no telefone
- * `hover:` não existe: as linhas escritas à mão nas telas acendiam no cursor e
- * não respondiam ao dedo, que é a regra **H** do auditor.
+ * qualquer outra coisa —, e por isso a altura não é um degrau da escada: o
+ * `data-size` sai, como no `CalendarDayButton`. O realce tem o par `active:`,
+ * porque no telefone `hover:` não existe: as linhas escritas à mão nas telas
+ * acendiam no cursor e não respondiam ao dedo, que é a regra **H** do auditor.
+ *
+ * **O conteúdo vai num `<span>` próprio, e isso é carga estrutural.** O `Button`
+ * embrulha texto cru para aplicar a maiúscula inicial do CTA — e um nome de
+ * categoria não é um CTA: "iFood" tem de sair "iFood". Com o `<span>` como
+ * único filho direto, nunca há texto cru para embrulhar, e a regra não alcança.
  */
 function FormPickerPopoverItem({
   className,
   selected = false,
+  children,
   ...props
 }: React.ComponentProps<"button"> & { selected?: boolean }) {
   return (
-    <button
-      data-slot="form-picker-popover-item"
+    <Button
       type="button"
+      variant="tertiary"
+      size="md"
+      data-slot="form-picker-popover-item"
+      data-size={undefined}
       aria-pressed={selected}
       data-selected={selected || undefined}
       className={cn(
-        "flex min-h-11 w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors outline-none",
-        "focus-visible:ring-3 focus-visible:ring-ring/70",
-        selected
-          ? "bg-muted font-medium text-foreground"
-          : "hover:bg-muted/60 active:bg-muted/60",
+        "h-auto min-h-11 w-full justify-start px-3 py-2 text-left font-normal whitespace-normal",
+        "hover:bg-muted/60 active:bg-muted/60",
+        selected && "bg-muted font-medium text-foreground",
         className
       )}
       {...props}
-    />
+    >
+      <span
+        data-slot="form-picker-popover-item-content"
+        className="flex min-w-0 flex-1 items-center gap-2"
+      >
+        {children}
+      </span>
+    </Button>
   )
 }
 

@@ -6,11 +6,22 @@
  * decisão estava escrita quatro vezes, em quatro arquivos, e nada garantia que
  * continuassem iguais.
  *
- * | | Input | SelectTrigger | InputGroup | ComboboxTrigger |
- * | --- | --- | --- | --- | --- |
- * | superfície | inline | inline | em `has-[…]` | **`Button variant="outline"`** |
- * | anel de foco | inline | inline | em `has-[…]` | do `Button` |
- * | `aria-invalid` | inline | inline | em `has-[…]` | do `Button` |
+ * Quem veste, hoje: `Input`, `Textarea`, `NativeSelect`, `SelectTrigger`,
+ * `ComboboxTrigger`, `DatePicker` e `FormPickerPopoverTrigger` — inline, no
+ * próprio controle —, e o `InputGroup`, que é uma **moldura** em volta de um
+ * controle e por isso lê os estados pelo que está dentro: são as variantes
+ * `fieldGroup*ClassName`, no fim do arquivo, com os mesmos tokens sob `has-`.
+ * `field-classes.test.ts` tranca que as duas grafias não se separem.
+ *
+ * O `InputOTPSlot` **não** veste, e é decisão: ele é uma célula de superfície
+ * segmentada — `border-y border-r`, canto só nas pontas, foco por
+ * `data-[active]` porque o `<input>` real é invisível por cima. Três de quatro
+ * declarações da régua seriam anuladas; vestir seria reimplementar ao contrário.
+ *
+ * (Quando isto nasceu, a tabela tinha quatro colunas — `Input`,
+ * `SelectTrigger`, `InputGroup` em `has-[…]` e `ComboboxTrigger` sobre
+ * `Button variant="outline"` — e é a essa quarta que o parágrafo abaixo se
+ * refere.)
  *
  * O `Combobox` era o que mais destoava, e não por descuido: ele era montado
  * sobre `Button variant="outline"`, que no tema claro é `border-border` +
@@ -96,6 +107,32 @@ export const fieldInvalidClassName = [
 export const fieldDisabledClassName = [
   "disabled:cursor-not-allowed disabled:bg-input-fill/50 disabled:opacity-50",
   "dark:disabled:bg-input-fill/80",
+].join(" ")
+
+/**
+ * As mesmas três réguas, para a **moldura** que acende pelo controle de dentro
+ * — o `InputGroup`. Ele não é o campo: é uma `div` em volta de um `<input>`, e
+ * o foco, o inválido e o desabilitado vivem no filho. Por isso cada token
+ * aparece aqui sob `has-…`, e **escrito por extenso**: montar a variante por
+ * `.replace()` em runtime seria classe que o Tailwind nunca vê — a armadilha que
+ * o AGENTS.md registra três vezes. A paridade com as constantes de cima é
+ * trancada em `field-classes.test.ts`, token a token.
+ *
+ * O foco é só o do controle (`data-slot="input-group-control"`), e não de
+ * qualquer descendente: um botão acoplado tem anel próprio, e dois anéis na
+ * mesma caixa é o defeito.
+ */
+export const fieldGroupFocusRingClassName =
+  "has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot=input-group-control]:focus-visible]:ring-3 has-[[data-slot=input-group-control]:focus-visible]:ring-ring/70"
+
+export const fieldGroupInvalidClassName = [
+  "has-aria-invalid:border-destructive has-aria-invalid:ring-3 has-aria-invalid:ring-destructive/20",
+  "dark:has-aria-invalid:border-destructive/50 dark:has-aria-invalid:ring-destructive/40",
+].join(" ")
+
+export const fieldGroupDisabledClassName = [
+  "has-disabled:cursor-not-allowed has-disabled:bg-input-fill/50 has-disabled:opacity-50",
+  "dark:has-disabled:bg-input-fill/80",
 ].join(" ")
 
 /**

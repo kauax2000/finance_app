@@ -142,7 +142,7 @@ export default function ButtonDoc() {
       </DocNote>
 
       <DocNote title="type=&quot;submit&quot; é só da ação principal">
-        Dentro de um <code>CustomForm</code>, o Enter aciona o <code>type=&quot;submit&quot;</code>. Cancelar, dispensar e alternar levam <code>type=&quot;button&quot;</code> — sem isso, cancelar vira o alvo do Enter e o formulário fecha em vez de salvar.
+        Dentro de um <code>Form</code>, o Enter aciona o <code>type=&quot;submit&quot;</code>. Cancelar, dispensar e alternar levam <code>type=&quot;button&quot;</code> — sem isso, cancelar vira o alvo do Enter e o formulário fecha em vez de salvar.
       </DocNote>
 
       <PropsTable

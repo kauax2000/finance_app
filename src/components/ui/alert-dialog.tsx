@@ -5,6 +5,7 @@ import { AlertDialog as AlertDialogPrimitive } from "radix-ui"
 import { type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
+import { Muted } from "@/components/ui/typography"
 import { Button } from "@/components/ui/button"
 import { dialogContentVariants } from "@/components/ui/dialog"
 
@@ -143,17 +144,24 @@ function AlertDialogTitle({
 
 function AlertDialogDescription({
   className,
+  children,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Description>) {
   return (
     <AlertDialogPrimitive.Description
+      asChild
       data-slot="alert-dialog-description"
-      className={cn(
-        "min-w-0 text-sm text-pretty text-muted-foreground *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground *:[a]:active:text-foreground",
-        className
-      )}
       {...props}
-    />
+    >
+      <Muted
+        className={cn(
+          "min-w-0 text-pretty *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground *:[a]:active:text-foreground",
+          className
+        )}
+      >
+        {children}
+      </Muted>
+    </AlertDialogPrimitive.Description>
   )
 }
 

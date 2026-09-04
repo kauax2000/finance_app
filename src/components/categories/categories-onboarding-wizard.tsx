@@ -6,8 +6,7 @@ import type { User } from "@supabase/supabase-js"
 import { supabase, type Category } from "@/lib/supabase"
 import { CardNote } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { MoneyInput } from "@/components/ui/money-input"
-import { CustomForm } from "@/components/ui/form"
+import { CustomForm, FormInput } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -532,7 +531,8 @@ export function CategoriesOnboardingWizard({
                             <Label htmlFor={`bud-${c.id}`} className="sr-only">
                                 Limite {c.name}
                             </Label>
-                            <MoneyInput
+                            <Input
+                                money
                                 id={`bud-${c.id}`}
                                 placeholder="0,00"
                                 title="Valor em reais (ex.: 1.500,00)"
@@ -597,15 +597,11 @@ export function CategoriesOnboardingWizard({
                                             disabled={crudBusy}
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label>Tipo</Label>
-                                        <TransactionFormTypeSegment
-                                            value={addType}
-                                            onChange={setAddType}
-                                            disabled={crudBusy}
-                                            fullWidth
-                                        />
-                                    </div>
+                                    <TransactionFormTypeSegment
+                                        value={addType}
+                                        onChange={setAddType}
+                                        disabled={crudBusy}
+                                    />
                                     <CategoryAppearanceFields
                                         color={addColor}
                                         onColorChange={setAddColor}
@@ -646,15 +642,11 @@ export function CategoriesOnboardingWizard({
                                         disabled={crudBusy}
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <Label>Tipo</Label>
-                                    <TransactionFormTypeSegment
-                                        value={addType}
-                                        onChange={setAddType}
-                                        disabled={crudBusy}
-                                        fullWidth
-                                    />
-                                </div>
+                                <TransactionFormTypeSegment
+                                    value={addType}
+                                    onChange={setAddType}
+                                    disabled={crudBusy}
+                                />
                                 <CategoryAppearanceFields
                                     color={addColor}
                                     onColorChange={setAddColor}
@@ -714,15 +706,11 @@ export function CategoriesOnboardingWizard({
                                                 disabled={crudBusy}
                                             />
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label>Tipo</Label>
-                                            <TransactionFormTypeSegment
-                                                value={editType}
-                                                onChange={setEditType}
-                                                disabled={crudBusy}
-                                                fullWidth
-                                            />
-                                        </div>
+                                        <TransactionFormTypeSegment
+                                            value={editType}
+                                            onChange={setEditType}
+                                            disabled={crudBusy}
+                                        />
                                         <CategoryAppearanceFields
                                             color={editColor}
                                             onColorChange={setEditColor}
@@ -730,25 +718,20 @@ export function CategoriesOnboardingWizard({
                                             onIconChange={setEditIcon}
                                         />
                                         {editType === "expense" ? (
-                                            <div className="space-y-2">
-                                                <Label htmlFor={`onb-edit-bud-${editCategoryId}`}>
-                                                    Limite no mês (R$)
-                                                </Label>
-                                                <MoneyInput
-                                                    id={`onb-edit-bud-${editCategoryId}`}
-                                                    placeholder="0,00"
-                                                    title="Valor em reais (ex.: 1.500,00)"
-                                                    value={amountByCategoryId[editCategoryId] ?? ""}
-                                                    onValueChange={(masked) =>
-                                                        setAmountByCategoryId((prev) => ({
-                                                            ...prev,
-                                                            [editCategoryId]: masked,
-                                                        }))
-                                                    }
-                                                    className="text-sm"
-                                                    disabled={crudBusy}
-                                                />
-                                            </div>
+                                            <FormInput
+                                                money
+                                                label="Limite no mês (R$)"
+                                                placeholder="0,00"
+                                                title="Valor em reais (ex.: 1.500,00)"
+                                                value={amountByCategoryId[editCategoryId] ?? ""}
+                                                onValueChange={(masked) =>
+                                                    setAmountByCategoryId((prev) => ({
+                                                        ...prev,
+                                                        [editCategoryId]: masked,
+                                                    }))
+                                                }
+                                                disabled={crudBusy}
+                                            />
                                         ) : null}
                                     </div>
                                 </div>
@@ -793,15 +776,11 @@ export function CategoriesOnboardingWizard({
                                             disabled={crudBusy}
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label>Tipo</Label>
-                                        <TransactionFormTypeSegment
-                                            value={editType}
-                                            onChange={setEditType}
-                                            disabled={crudBusy}
-                                            fullWidth
-                                        />
-                                    </div>
+                                    <TransactionFormTypeSegment
+                                        value={editType}
+                                        onChange={setEditType}
+                                        disabled={crudBusy}
+                                    />
                                     <CategoryAppearanceFields
                                         color={editColor}
                                         onColorChange={setEditColor}
@@ -809,25 +788,20 @@ export function CategoriesOnboardingWizard({
                                         onIconChange={setEditIcon}
                                     />
                                     {editType === "expense" ? (
-                                        <div className="space-y-2">
-                                            <Label htmlFor={`onb-edit-bud-${editCategoryId}`}>
-                                                Limite no mês (R$)
-                                            </Label>
-                                            <MoneyInput
-                                                id={`onb-edit-bud-${editCategoryId}`}
-                                                placeholder="0,00"
-                                                title="Valor em reais (ex.: 1.500,00)"
-                                                value={amountByCategoryId[editCategoryId] ?? ""}
-                                                onValueChange={(masked) =>
-                                                    setAmountByCategoryId((prev) => ({
-                                                        ...prev,
-                                                        [editCategoryId]: masked,
-                                                    }))
-                                                }
-                                                className="text-sm"
-                                                disabled={crudBusy}
-                                            />
-                                        </div>
+                                        <FormInput
+                                            money
+                                            label="Limite no mês (R$)"
+                                            placeholder="0,00"
+                                            title="Valor em reais (ex.: 1.500,00)"
+                                            value={amountByCategoryId[editCategoryId] ?? ""}
+                                            onValueChange={(masked) =>
+                                                setAmountByCategoryId((prev) => ({
+                                                    ...prev,
+                                                    [editCategoryId]: masked,
+                                                }))
+                                            }
+                                            disabled={crudBusy}
+                                        />
                                     ) : null}
                                 </div>
                                 <DialogFooter>
@@ -958,19 +932,15 @@ export function CategoriesOnboardingWizard({
                             setError(null)
                             setStep(1)
                         }}
-                        className="space-y-2"
                     >
-                        <Label htmlFor="income" className="text-xs">
-                            Estimativa mensal (R$)
-                        </Label>
-                        <MoneyInput
-                            id="income"
+                        <FormInput
+                            money
+                            fieldSize="sm"
+                            label="Estimativa mensal (R$)"
                             placeholder="Ex: 5.000 ou 5000"
                             value={monthlyIncome}
-                            
-                            className="text-sm"
-                        onValueChange={setMonthlyIncome}
-                            />
+                            onValueChange={setMonthlyIncome}
+                        />
                     </CustomForm>
                 ) : null}
 

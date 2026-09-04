@@ -12,8 +12,7 @@ import {
 import {
     TransactionFormTypeSegment,
 } from "@/components/transactions/transaction-type-segment"
-import { CustomForm } from "@/components/ui/form"
-import { MoneyInput } from "@/components/ui/money-input"
+import { CustomForm, FormInput } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -200,14 +199,10 @@ export function CategoryCreateDialog({
                 />
             </div>
 
-            <div className="space-y-2">
-                <Label>Tipo</Label>
-                <TransactionFormTypeSegment
-                    value={type}
-                    onChange={setType}
-                    fullWidth
-                />
-            </div>
+            <TransactionFormTypeSegment
+                value={type}
+                onChange={setType}
+            />
 
             <CategoryAppearanceFields
                 color={color}
@@ -222,16 +217,13 @@ export function CategoryCreateDialog({
                         Limite de despesas para {dialogBudgetPeriod.period_start} a{" "}
                         {dialogBudgetPeriod.period_end}.
                     </p>
-                    <div className="space-y-2">
-                        <Label htmlFor="global-cat-budget">Valor limite (R$)</Label>
-                        <MoneyInput
-                            id="global-cat-budget"
-                            placeholder="Ex: 1.500,00"
-                            value={editBudgetAmount}
-                            
+                    <FormInput
+                        money
+                        label="Valor limite (R$)"
+                        placeholder="Ex: 1.500,00"
+                        value={editBudgetAmount}
                         onValueChange={setEditBudgetAmount}
-                        />
-                    </div>
+                    />
                 </div>
             ) : null}
         </div>

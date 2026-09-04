@@ -5,7 +5,14 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  fieldGroupDisabledClassName,
+  fieldGroupFocusRingClassName,
+  fieldGroupInvalidClassName,
+  fieldSurfaceClassName,
+} from "@/lib/field-classes"
+import { Input, type InputBaseProps } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 
 /**
@@ -65,8 +72,17 @@ function InputGroup({
       data-slot="input-group"
       data-size={size}
       role="group"
+      // A moldura veste a superfície de campo direto (ela não tem `has-`), e
+      // os três estados vêm das variantes `Group` da mesma régua — era a "quarta
+      // ocorrência" do backlog, e já tinha divergido: faltava o
+      // `dark:…border-destructive/50` do inválido e o cursor do desabilitado.
       className={cn(
-        "group/input-group relative flex w-full min-w-0 items-center rounded-lg border border-input bg-input-fill/30 transition-colors outline-none has-disabled:bg-input-fill/50 has-disabled:opacity-50 has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot=input-group-control]:focus-visible]:ring-3 has-[[data-slot=input-group-control]:focus-visible]:ring-ring/70 has-[[data-slot][aria-invalid=true]]:border-destructive has-[[data-slot][aria-invalid=true]]:ring-3 has-[[data-slot][aria-invalid=true]]:ring-destructive/20 has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>textarea]:h-auto dark:has-disabled:bg-input-fill/80 dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40 has-[>[data-align=block-end]]:[&>input]:pt-3 has-[>[data-align=block-start]]:[&>input]:pb-3 has-[>[data-align=inline-end]]:[&>input]:pr-1.5 has-[>[data-align=inline-start]]:[&>input]:pl-1.5",
+        "group/input-group relative flex w-full min-w-0 items-center",
+        fieldSurfaceClassName,
+        fieldGroupFocusRingClassName,
+        fieldGroupInvalidClassName,
+        fieldGroupDisabledClassName,
+        "has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>textarea]:h-auto has-[>[data-align=block-end]]:[&>input]:pt-3 has-[>[data-align=block-start]]:[&>input]:pb-3 has-[>[data-align=inline-end]]:[&>input]:pr-1.5 has-[>[data-align=inline-start]]:[&>input]:pl-1.5",
         inputGroupSizes[size],
         className
       )}
@@ -83,7 +99,9 @@ const inputGroupAddonVariants = cva(
   // Sem `group-data-[disabled=true]/input-group:opacity-50`: nada nunca marcou
   // `data-disabled` no grupo, e o apagamento do estado desligado já vem do
   // `has-disabled:opacity-50` da moldura.
-  "flex h-auto cursor-text items-center justify-center gap-2 py-1.5 text-sm font-medium text-muted-foreground select-none [&>kbd]:rounded-[calc(var(--radius)-5px)] [&>svg:not([class*='size-'])]:size-4",
+  // O que o `Label` já dá — `flex items-center gap-2 text-sm font-medium
+  // select-none` — não se repete aqui. Fica o que é do addon.
+  "h-auto cursor-text justify-center py-1.5 text-muted-foreground [&>kbd]:rounded-[calc(var(--radius)-5px)] [&>svg:not([class*='size-'])]:size-4",
   {
     variants: {
       align: {
@@ -112,15 +130,16 @@ function InputGroupAddon({
   className,
   align = "inline-start",
   ...props
-}: React.ComponentProps<"label"> & VariantProps<typeof inputGroupAddonVariants>) {
+}: React.ComponentProps<typeof Label> & VariantProps<typeof inputGroupAddonVariants>) {
   const { controlId } = React.useContext(InputGroupContext)
 
   return (
-    <label
-      // Um `<label>`, e não um `<div>` com `onClick`. O comportamento sempre
-      // foi de rótulo — clicar foca o campo —, e num `<label htmlFor>` quem faz
-      // isso é o navegador: sem JavaScript, com o texto do addon nomeando o
-      // campo, e sem a linha que o auditor marcava como `<div onClick>`.
+    <Label
+      // O `Label` do sistema, e não um `<div>` com `onClick`. O comportamento
+      // sempre foi de rótulo — clicar foca o campo —, e num `<label htmlFor>`
+      // quem faz isso é o navegador: sem JavaScript, com o texto do addon
+      // nomeando o campo. Seis das oito classes do átomo já estavam escritas
+      // aqui à mão; o que ele acrescenta é o `leading-none`.
       //
       // Sem `role="group"`. O addon é o rótulo de um controle, não uma região:
       // um grupo sem nome acessível dentro de outro grupo só acrescenta uma
@@ -203,7 +222,7 @@ function InputGroupText({ className, ...props }: React.ComponentProps<"span">) {
 function InputGroupInput({
   className,
   ...props
-}: React.ComponentProps<typeof Input>) {
+}: InputBaseProps & React.RefAttributes<HTMLInputElement>) {
   const { size, controlId } = React.useContext(InputGroupContext)
 
   return (

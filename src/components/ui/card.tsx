@@ -3,6 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { Muted } from "@/components/ui/typography"
 
 /**
  * O casco do cartão.
@@ -204,12 +205,12 @@ function CardTitle({
 }
 
 function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
+  // `Muted` dá corpo e tinta; o elemento continua `div`, pela mesma razão do
+  // título — um cartão numa lista não despeja parágrafos na árvore.
   return (
-    <div
-      data-slot="card-description"
-      className={cn("text-sm text-pretty text-muted-foreground", className)}
-      {...props}
-    />
+    <Muted asChild data-slot="card-description" className={cn("text-pretty", className)}>
+      <div {...props} />
+    </Muted>
   )
 }
 

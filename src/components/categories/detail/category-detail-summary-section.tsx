@@ -1,8 +1,12 @@
 "use client"
 
 import type { ReactNode } from "react"
-import { InformationCircleIcon, MinusIcon } from "@heroicons/react/16/solid"
-import { ArrowTrendingDownIcon, ArrowTrendingUpIcon } from "@heroicons/react/24/outline"
+import {
+  ArrowTrendingDownIcon,
+  ArrowTrendingUpIcon,
+  InformationCircleIcon,
+  MinusIcon,
+} from "@heroicons/react/16/solid"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Category } from "@/lib/supabase"

@@ -6,7 +6,8 @@ import {
 } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
+import { Muted } from "@/components/ui/typography"
 
 /**
  * Navegação entre páginas de uma lista.
@@ -79,9 +80,9 @@ function PaginationStatus({
   ...props
 }: React.ComponentProps<"p">) {
   return (
-    <p
+    <Muted
       data-slot="pagination-status"
-      className={cn("nums text-sm text-muted-foreground", className)}
+      className={cn("nums", className)}
       {...props}
     />
   )
@@ -114,18 +115,18 @@ function PaginationLink({
   size = "icon-md",
   ...props
 }: PaginationLinkProps) {
+  // `Button asChild` sobre o `<a>`, e não `buttonVariants()` no `<a>`: a
+  // garantia é do componente — o `data-variant`, o embrulho do rótulo, o par
+  // `active:` que vier — e este arquivo era o último de `ui/` a vestir a classe
+  // por fora. O `font-medium` que se somava quando ativo saiu: já é a base.
   return (
-    <a
-      aria-current={isActive ? "page" : undefined}
+    <Button
+      asChild
       data-slot="pagination-link"
-      data-active={isActive ? "true" : undefined}
+      variant={isActive ? "secondary" : "tertiary"}
+      size={size}
       className={cn(
-        buttonVariants({
-          variant: isActive ? "secondary" : "tertiary",
-          size,
-        }),
         "nums",
-        isActive && "font-medium",
         // Alvo de dedo. Aqui não dá para usar o pseudo-elemento do Checkbox: os
         // links ficam lado a lado com 4px de intervalo, e áreas expandidas se
         // sobreporiam — a pessoa tocaria na página 3 mirando a 2. Então o
@@ -133,8 +134,13 @@ function PaginationLink({
         "pointer-coarse:min-h-11 pointer-coarse:min-w-11",
         className
       )}
-      {...props}
-    />
+    >
+      <a
+        aria-current={isActive ? "page" : undefined}
+        data-active={isActive ? "true" : undefined}
+        {...props}
+      />
+    </Button>
   )
 }
 
@@ -152,7 +158,6 @@ function PaginationEdge({
   ...props
 }: PaginationLinkProps & { disabled?: boolean }) {
   const classes = cn(
-    buttonVariants({ variant: "tertiary", size }),
     // Abaixo de `sm` o rótulo some e o controle fica quadrado, na medida dos
     // números ao lado. Antes ele saía **40×32**, com 10px de recuo à esquerda
     // e 12 à direita — medido: um retângulo torto numa fileira de quadrados.
@@ -163,20 +168,25 @@ function PaginationEdge({
 
   if (disabled) {
     return (
-      <span
-        data-slot="pagination-link"
-        aria-disabled="true"
+      <Button
+        asChild
+        variant="tertiary"
+        size={size}
         className={cn(classes, "pointer-events-none opacity-50")}
       >
-        {children}
-      </span>
+        <span data-slot="pagination-link" aria-disabled="true">
+          {children}
+        </span>
+      </Button>
     )
   }
 
   return (
-    <a data-slot="pagination-link" className={classes} {...props}>
-      {children}
-    </a>
+    <Button asChild variant="tertiary" size={size} className={classes}>
+      <a data-slot="pagination-link" {...props}>
+        {children}
+      </a>
+    </Button>
   )
 }
 

@@ -1,7 +1,12 @@
 "use client"
 
-import { MinusIcon } from "@heroicons/react/16/solid"
-import { ArrowTrendingDownIcon, ArrowTrendingUpIcon, CreditCardIcon, ScaleIcon } from "@heroicons/react/24/outline"
+import {
+  ArrowTrendingDownIcon,
+  ArrowTrendingUpIcon,
+  CreditCardIcon,
+  MinusIcon,
+  ScaleIcon,
+} from "@heroicons/react/16/solid"
 import type { HeroIcon } from "@/types/navigation"
 import type { ReactNode } from "react"
 

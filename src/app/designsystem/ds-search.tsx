@@ -21,7 +21,6 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Kbd } from "@/components/ui/kbd";
-import { KbdShortcut } from "@/components/ui/kbd-shortcut";
 import { CATEGORY_ORDER, REGISTRY } from "./registry";
 import { SEARCH_INDEX } from "./search-index";
 
@@ -119,7 +118,7 @@ export function DsSearch() {
           onValueChange={setQuery}
           // Os três tipos de coisa que o catálogo guarda, na ordem em que a
           // barra lateral os lista: token (Fundações), componente (Átomos,
-          // Moléculas, Organismos) e padrão (Padrões). "89 páginas" contava o
+          // Moléculas, Organismos, Templates) e padrão (Padrões). "89 páginas" contava o
           // continente e não o conteúdo — quem abre a busca não procura uma
           // página, procura o `Badge`, o `--z-popover` ou a regra de dinheiro.
           placeholder="Buscar componente, token ou padrão…"
@@ -235,7 +234,7 @@ function DsSearchTrigger({ onClick }: { onClick: () => void }) {
       {/* `aria-hidden` porque o atalho já é anunciado pelo
           `aria-keyshortcuts` do próprio botão — repetir a tecla no nome
           acessível diria a mesma coisa duas vezes. */}
-      <KbdShortcut keys="mod+k" aria-hidden className="ml-auto max-lg:hidden" />
+      <Kbd keys="mod+k" aria-hidden className="ml-auto max-lg:hidden" />
     </Button>
   );
 }

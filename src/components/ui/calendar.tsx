@@ -15,7 +15,7 @@ import {
   formatMonthShortPtBr,
   localYmdFromDate,
 } from "@/lib/transaction-date"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import {
   Select,
   SelectContent,
@@ -111,6 +111,95 @@ function Calendar({
 }) {
   const defaultClassNames = getDefaultClassNames()
 
+  // Um objeto novo a cada render faz o React remontar toda a subárvore — o foco
+  // caía depois de clicar "próximo mês" sempre que o pai re-renderizava. Os
+  // componentes de dentro não dependem de nada além da variante das setas.
+  const componentes = React.useMemo<
+    React.ComponentProps<typeof DayPicker>["components"]
+  >(
+    () => ({
+      Root: ({ className, rootRef, ...props }) => {
+        return (
+          <div
+            data-slot="calendar"
+            ref={rootRef}
+            className={cn(className)}
+            {...props}
+          />
+        )
+      },
+      Chevron: ({ className, orientation, ...props }) => {
+        if (orientation === "left") {
+          return (
+            <ChevronLeftIcon className={cn("size-4", className)} {...props} />
+          )
+        }
+
+        if (orientation === "right") {
+          return (
+            <ChevronRightIcon className={cn("size-4", className)} {...props} />
+          )
+        }
+
+        return (
+          <ChevronDownIcon className={cn("size-4", className)} {...props} />
+        )
+      },
+      DayButton: ({ ...props }) => <CalendarDayButton {...props} />,
+      Dropdown: ({ options, value, onChange, disabled, "aria-label": rotulo }) => (
+        <CalendarDropdown
+          options={options}
+          value={value}
+          onChange={onChange}
+          disabled={disabled}
+          aria-label={rotulo}
+        />
+      ),
+      WeekNumber: ({ children, ...props }) => {
+        return (
+          <td {...props}>
+            <div className="flex size-(--cell-size) items-center justify-center text-center">
+              {children}
+            </div>
+          </td>
+        )
+      },
+      // As setas de mês são o `Button` do sistema. O `react-day-picker` entrega
+      // `type`, `className` (a classe da biblioteca), `tabIndex`,
+      // `aria-disabled`, `aria-label`, `onClick` e o `Chevron` como filho — e
+      // **não** entrega `disabled`, por isso o `aria-disabled:opacity-50`
+      // continua necessário. Sem `ref`: não há o que devolver. `data-size` sai
+      // porque `size-(--cell-size)` anula o degrau, e um atributo que não
+      // corresponde à caixa é pior que atributo nenhum.
+      PreviousMonthButton: ({ className, ...props }) => (
+        <Button
+          variant={buttonVariant}
+          size="icon-md"
+          data-size={undefined}
+          className={cn(
+            "size-(--cell-size) p-0 select-none aria-disabled:opacity-50",
+            className
+          )}
+          {...props}
+        />
+      ),
+      NextMonthButton: ({ className, ...props }) => (
+        <Button
+          variant={buttonVariant}
+          size="icon-md"
+          data-size={undefined}
+          className={cn(
+            "size-(--cell-size) p-0 select-none aria-disabled:opacity-50",
+            className
+          )}
+          {...props}
+        />
+      ),
+      ...components,
+    }),
+    [buttonVariant, components]
+  )
+
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
@@ -155,16 +244,10 @@ function Calendar({
           "pointer-events-none absolute inset-x-0 top-0 flex w-full items-center justify-between gap-1 [&>button]:pointer-events-auto",
           defaultClassNames.nav
         ),
-        button_previous: cn(
-          buttonVariants({ variant: buttonVariant }),
-          "size-(--cell-size) p-0 select-none aria-disabled:opacity-50",
-          defaultClassNames.button_previous
-        ),
-        button_next: cn(
-          buttonVariants({ variant: buttonVariant }),
-          "size-(--cell-size) p-0 select-none aria-disabled:opacity-50",
-          defaultClassNames.button_next
-        ),
+        // Só a classe da biblioteca: o seletor `rtl:**:[.rdp-button_previous>svg]`
+        // depende dela. A cromagem é do `Button`, em `components` abaixo.
+        button_previous: defaultClassNames.button_previous,
+        button_next: defaultClassNames.button_next,
         month_caption: cn(
           "flex h-(--cell-size) w-full items-center justify-center px-(--cell-size)",
           defaultClassNames.month_caption
@@ -242,55 +325,7 @@ function Calendar({
         hidden: cn("invisible", defaultClassNames.hidden),
         ...classNames,
       }}
-      components={{
-        Root: ({ className, rootRef, ...props }) => {
-          return (
-            <div
-              data-slot="calendar"
-              ref={rootRef}
-              className={cn(className)}
-              {...props}
-            />
-          )
-        },
-        Chevron: ({ className, orientation, ...props }) => {
-          if (orientation === "left") {
-            return (
-              <ChevronLeftIcon className={cn("size-4", className)} {...props} />
-            )
-          }
-
-          if (orientation === "right") {
-            return (
-              <ChevronRightIcon className={cn("size-4", className)} {...props} />
-            )
-          }
-
-          return (
-            <ChevronDownIcon className={cn("size-4", className)} {...props} />
-          )
-        },
-        DayButton: ({ ...props }) => <CalendarDayButton {...props} />,
-        Dropdown: ({ options, value, onChange, disabled, "aria-label": rotulo }) => (
-          <CalendarDropdown
-            options={options}
-            value={value}
-            onChange={onChange}
-            disabled={disabled}
-            aria-label={rotulo}
-          />
-        ),
-        WeekNumber: ({ children, ...props }) => {
-          return (
-            <td {...props}>
-              <div className="flex size-(--cell-size) items-center justify-center text-center">
-                {children}
-              </div>
-            </td>
-          )
-        },
-        ...components,
-      }}
+      components={componentes}
       {...props}
     />
   )

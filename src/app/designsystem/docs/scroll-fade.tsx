@@ -34,12 +34,13 @@ export default function ScrollFadeDoc() {
 
       <DocSection
         title="Horizontal"
+        description="São 24 filtros, e não uma dúzia: com 12 o conteúdo media 881px dentro de um preview de 908, e a demonstração saía chapada em qualquer tela de desktop — o defeito silencioso de uma região que só transborda no telefone."
         code={`<ScrollFade axis="x">…</ScrollFade>`}
         previewClassName="items-stretch"
       >
         <ScrollFade axis="x" className="w-full rounded-lg border border-border">
           <div className="flex gap-2 p-3">
-            {Array.from({ length: 12 }, (_, i) => (
+            {Array.from({ length: 24 }, (_, i) => (
               <span
                 key={i}
                 className="shrink-0 rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground"

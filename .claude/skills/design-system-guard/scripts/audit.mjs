@@ -123,7 +123,52 @@ function heroiconSetForSize(n) {
   return "16"
 }
 
-const SKIP_DIRS = new Set(["node_modules", ".next", ".git", "designsystem"])
+/**
+ * O que não é código deste projeto.
+ *
+ * As três são dependência, build e histórico: nada ali foi escrito aqui.
+ *
+ * **`designsystem` estava nesta lista, e saiu.** Ela é a única pasta do
+ * repositório cujo trabalho **é** escrever errado: mostra o literal que o token
+ * substituiu, o `hover:` sem par que a regra proíbe, a peça que documenta. Ela
+ * estava aqui porque medi-la dava 195 achados e 151 eram a regra A, o que
+ * enterrava o relatório do app — mas calar por pasta é caro: foi assim que
+ * quatro pares de ícone de conjunto errado viveram no catálogo sem ninguém ver,
+ * inclusive as duas setas do paginador, uma de `24/outline` e a outra de
+ * `16/solid`, lado a lado no mesmo `size-4`.
+ *
+ * O corte agora é por **regra**, não por pasta — ver `isCatalog`. Uma pasta
+ * calada não é uma pasta conforme; é uma pasta que ninguém olhou.
+ */
+const SKIP_DIRS = new Set(["node_modules", ".next", ".git"])
+
+/**
+ * Onde o Heroicons não tem o conjunto que a régua pede.
+ *
+ * `app-theme-toggle` faz um crossfade `outline` ↔ `solid` a 16px, e **não
+ * existe `16/outline`** — os conjuntos micro e mini são só sólidos. É a mesma
+ * classe de lacuna do círculo do `Spinner`, e a saída é a mesma: nomear.
+ */
+const HEROICON_SET_EXCEPTIONS = ["app-theme-toggle"]
+
+/**
+ * Onde fio **mais** tinta não é uma tira mal desenhada, e sim a emenda entre
+ * duas superfícies.
+ *
+ * A regra J existe porque uma tira — barra de cartão, cabeçalho de popover,
+ * rodapé de diálogo — **não desenha**: ela é a mesma superfície do corpo, e o
+ * que a separa é o respiro. `PreviewCode` não é isso. Ele é a segunda
+ * superfície do sistema de dois preenchimentos que o próprio `ds-doc.tsx`
+ * declara — `card` para conteúdo, `muted` para código —, e a emenda entre duas
+ * superfícies é justamente o que a lista de exclusões da J não nomeava.
+ *
+ * O número que decidiu, composto sobre `--card`: o fio dá **1,345:1** no claro e
+ * 1,320 no escuro; a tinta a 30% dá **1,053** e 1,052. **O fio faz 5,5× o
+ * trabalho da tinta** — e mesmo levando a tinta a 100% (1,192) ela não alcança.
+ * Tirar o fio de 88 caixas de espécime derrubaria a emenda para abaixo de
+ * qualquer limiar perceptual.
+ */
+const SECOND_SURFACE_FILES = ["ds-doc"]
 
 // ---------------------------------------------------------------------------
 // Varredura
@@ -132,7 +177,11 @@ const SKIP_DIRS = new Set(["node_modules", ".next", ".git", "designsystem"])
 function walk(target, acc = []) {
   const st = statSync(target)
   if (st.isFile()) {
-    if (/\.(tsx|ts)$/.test(target) && !/\.test\.tsx?$/.test(target)) acc.push(target)
+    if (!/\.(tsx|ts)$/.test(target) || /\.test\.tsx?$/.test(target)) return acc
+    // Arquivo gerado não tem autor a quem cobrar: o achado pertence à fonte, e
+    // consertá-lo aqui é apagado no próximo `npm run ds:docs-map`.
+    if (/^\/\/ GERADO POR/.test(readFileSync(target, "utf8").slice(0, 40))) return acc
+    acc.push(target)
     return acc
   }
   for (const entry of readdirSync(target)) {
@@ -142,7 +191,31 @@ function walk(target, acc = []) {
   return acc
 }
 
-/** Remove comentários e o conteúdo de blocos de string longos ao contar linhas. */
+/**
+ * Apaga comentários **preservando os índices** — troca cada caractere por
+ * espaço, para `lineOf` continuar acertando a linha.
+ *
+ * O que está comentado não é código. Sem isto, um `<select>` citado num JSDoc e
+ * um `hover:` explicado numa nota viram achado.
+ */
+function semComentarios(src) {
+  return src
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
+    .replace(/(^|[^:])\/\/[^\n]*/g, (m, p) => p + m.slice(p.length).replace(/./g, " "))
+}
+
+/**
+ * No catálogo, `` code={`…`} `` é o espécime: código **citado**, não escrito.
+ *
+ * A página que ensina "não escreva `hover:` sem `active:`" precisa mostrar o
+ * exemplo errado — e é o que `docs/mobile-toque.tsx` faz, com a versão certa na
+ * linha seguinte.
+ */
+function semEspecimes(src) {
+  return src.replace(/\bcode=\{`[\s\S]*?`\}/g, (m) => m.replace(/[^\n]/g, " "))
+}
+
+/** Conta a linha de um índice. */
 function lineOf(src, index) {
   let line = 1
   for (let i = 0; i < index; i++) if (src[i] === "\n") line++
@@ -154,7 +227,7 @@ function lineOf(src, index) {
 // ---------------------------------------------------------------------------
 
 function auditFile(absPath, project) {
-  const src = readFileSync(absPath, "utf8")
+  const bruto = readFileSync(absPath, "utf8")
   const rel = relative(project, absPath)
   const findings = []
   const add = (rule, index, message, snippet) =>
@@ -170,8 +243,31 @@ function auditFile(absPath, project) {
   const isUi =
     rel.startsWith(`src${sep}components${sep}ui${sep}`) ||
     rel.startsWith("src/components/ui/")
+
+  /**
+   * O catálogo. Ele **documenta** as regras, e para isso precisa violá-las: a
+   * página de camadas escreve `z-[1]` porque é a escala que ela ensina; a de
+   * tipografia cita `text-[10px]` porque foi o que os tokens substituíram; a de
+   * `Code` cita `text-green-600` como o exemplo que o auditor reprova; e cada
+   * peça dele nasce em `app/` de propósito, porque é demonstração e não tela.
+   *
+   * Por isso o corte é por regra: aqui calam **A** (as peças são demonstração),
+   * **D / D2 / D3** (o literal é o espécime), **H** (o exemplo errado é o
+   * ensino) e **I** (a página de dinheiro documenta formatação). Todas as
+   * outras valem — e foi assim que apareceram os quatro pares de ícone com o
+   * conjunto errado e o único achado de J do repositório.
+   */
+  const isCatalog =
+    rel.startsWith(`src${sep}app${sep}designsystem${sep}`) ||
+    rel.startsWith("src/app/designsystem/")
+
+  // O que está comentado não é código; e no catálogo, o `code={`…`}` é citação.
+  const src = isCatalog ? semEspecimes(semComentarios(bruto)) : semComentarios(bruto)
+
   const isRuntimeColor = RUNTIME_COLOR_FILES.some((f) => rel.includes(f))
   const isDrawnSvg = DRAWN_SVG_FILES.some((f) => rel.includes(f))
+  const isHeroiconException = HEROICON_SET_EXCEPTIONS.some((f) => rel.includes(f))
+  const isSecondSurface = SECOND_SURFACE_FILES.some((f) => rel.includes(f))
 
   // ── A. Componente nascendo dentro da tela ─────────────────────────────────
   // O caso central. Um componente definido em `app/` é invisível para todas as
@@ -185,7 +281,7 @@ function auditFile(absPath, project) {
       rel
     )
 
-  if (inApp && !isRouteConvention) {
+  if (inApp && !isCatalog && !isRouteConvention) {
     for (const m of src.matchAll(
       /^(?:export\s+)?(?:default\s+)?function\s+([A-Z]\w*)\s*\(/gm
     )) {
@@ -222,6 +318,7 @@ function auditFile(absPath, project) {
   }
 
   // ── D. Cor literal ────────────────────────────────────────────────────────
+  // (No catálogo, o hex **é** o espécime — ver `isCatalog`.)
   //
   // Numa **máscara** o valor não é cor: `mask-image` usa só o canal alfa, e o
   // preto é o estêncil convencional para "opaco". Uma rampa de máscara é uma
@@ -234,7 +331,7 @@ function auditFile(absPath, project) {
   const emMascara = (index) =>
     /mask/i.test(src.slice(Math.max(0, index - 900), index + 80))
 
-  if (!isRuntimeColor) {
+  if (!isRuntimeColor && !isCatalog) {
     for (const m of src.matchAll(/#[0-9a-fA-F]{3,8}\b/g)) {
       if (emMascara(m.index)) continue
       // Um hex dentro de um seletor de atributo é alvo, não escolha: o
@@ -252,7 +349,7 @@ function auditFile(absPath, project) {
   }
 
   // ── D3. Paleta padrão do Tailwind ─────────────────────────────────────────
-  if (!isRuntimeColor) {
+  if (!isRuntimeColor && !isCatalog) {
     for (const m of src.matchAll(COLOR_UTILITY)) {
       add("D3", m.index, `\`${m[0]}\` não acompanha o tema — use um token`, m[0])
     }
@@ -267,12 +364,20 @@ function auditFile(absPath, project) {
   }
 
   // ── D2. Valor arbitrário ──────────────────────────────────────────────────
-  for (const m of src.matchAll(
-    /\b(?:p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|gap|w|h|size|text|rounded|z|top|left|right|bottom|leading|tracking)-\[[^\]]+\]/g
-  )) {
+  // (Calada no catálogo: `docs/camadas.tsx` escreve `z-[1]` porque documenta a
+  //  escala, e `docs/typography.tsx` cita `text-[10px]` porque foi o que os dois
+  //  degraus de token substituíram.)
+  for (const m of isCatalog
+    ? []
+    : src.matchAll(
+        /\b(?:p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|gap|w|h|size|text|rounded|z|top|left|right|bottom|leading|tracking)-\[[^\]]+\]/g
+      )) {
     // Variáveis CSS e cálculos com env() são legítimos: a área segura e a
-    // largura do gatilho do Radix não têm token que os substitua.
-    if (/var\(|env\(|calc\(|--/.test(m[0])) continue
+    // largura do gatilho do Radix não têm token que os substitua. `inherit` e as
+    // cores de sistema (`Canvas`, `CanvasText`) também: não são medidas nem
+    // tinta do tema — o painel do `<select>` nativo segue o esquema do sistema
+    // operacional, e `rounded-[inherit]` herda o raio de quem contém.
+    if (/var\(|env\(|calc\(|--|\[inherit\]|\[Canvas(?:Text)?\]/.test(m[0])) continue
     add("D2", m.index, `valor arbitrário \`${m[0]}\``, m[0])
   }
 
@@ -316,7 +421,10 @@ function auditFile(absPath, project) {
       if (name) heroiconSet.set(name, m[2])
     }
   }
-  if (heroiconSet.size) {
+  // Um primitivo desenhado escolhe o glifo pela geometria, não pelo corpo: o
+  // `Spinner` gira o mesmo desenho de 16 a 32px, e nenhum conjunto cobre a
+  // faixa inteira. A lista já é `DRAWN_SVG_FILES`, pela mesma razão do `<svg>`.
+  if (heroiconSet.size && !isDrawnSvg && !isHeroiconException) {
     for (const m of src.matchAll(/<([A-Z][A-Za-z0-9]*)\b([^>]*)>/g)) {
       const declared = heroiconSet.get(m[1])
       if (!declared) continue
@@ -330,6 +438,91 @@ function auditFile(absPath, project) {
           `\`${m[1]}\` em \`size-${n}\` pede o conjunto \`${want}\`, e veio do \`${declared}\``,
           m[0]
         )
+      }
+    }
+  }
+
+  // ── G (indireção). Ícone passado como valor e renderizado no mesmo arquivo ─
+  //
+  // A régua diz que ícone passado como valor fica em `24/outline`, "já que quem
+  // renderiza é que decide o corpo". A cláusula que faltava: isso vale **quando
+  // quem renderiza não é quem declara**. Com a tabela e o `.map()` vizinhos de
+  // arquivo, e o corpo cravado no sítio, quem declara **é** quem renderiza.
+  //
+  // O bloco acima só enxerga `<NomeImportado …>`. Estes três escapavam:
+  //   const Chevron = isNext ? ChevronRightIcon : ChevronLeftIcon  ->  <Chevron>
+  //   { slug: "cores", Icon: SwatchIcon }                          ->  <Icon>
+  //   { label: "Carteiras", icon: WalletIcon }                     ->  <item.icon>
+  //
+  // Foi assim que as duas setas do paginador do catálogo — uma de `24/outline`,
+  // a outra de `16/solid`, no mesmo `size-4` — conviveram sem ninguém ver.
+  //
+  // Ela **erra para menos**: se qualquer sítio indireto tiver o corpo ilegível
+  // (`${…}` sem `size-`/`h-` literal), o arquivo inteiro se cala. É o que mantém
+  // `docs/iconografia.tsx`, que escolhe o conjunto por px, fora do relatório.
+  if (heroiconSet.size && !isDrawnSvg && !isHeroiconException) {
+    const faixasDeImport = [...bruto.matchAll(
+      /import\s*(?:type\s*)?\{[^}]+\}\s*from\s*["']@heroicons\/react\/(?:16|20|24)\/(?:solid|outline)["']/g
+    )].map((m) => [m.index, m.index + m[0].length])
+    const noImport = (i) => faixasDeImport.some(([a, b]) => i >= a && i < b)
+
+    // 1. Quais dos ícones grandes aparecem como **valor** (sem `<` na frente).
+    const comoValor = new Map()
+    for (const [nome, conjunto] of heroiconSet) {
+      if (conjunto === "16") continue
+      for (const m of src.matchAll(new RegExp(`\\b${nome}\\b`, "g"))) {
+        if (noImport(m.index)) continue
+        if (src[m.index - 1] === "<" || src[m.index - 1] === "/") continue
+        comoValor.set(nome, { conjunto, index: m.index })
+        break
+      }
+    }
+
+    if (comoValor.size) {
+      // 2. Consts de string locais, para ler `className={cn(glifo, …)}`.
+      const literais = new Map()
+      for (const m of src.matchAll(
+        /\b(?:const|let)\s+(\w+)\s*(?::[^=\n]+)?=\s*(?:cn\()?["'`]([^"'`]*)["'`]/g
+      )) literais.set(m[1], m[2])
+
+      // 3. Identificadores locais que carregam um ícone.
+      const apelidos = new Set()
+      for (const m of src.matchAll(
+        /\b(?:const|let)\s+([A-Z]\w*)\s*(?::[^=\n]+)?=[^;]{0,200}?\b[A-Z]\w*Icon\b/g
+      )) apelidos.add(m[1])
+      for (const m of src.matchAll(/\b(?:const|let)\s+([A-Z]\w*)\s*=\s*\w+\.[a-zA-Z]\w*/g))
+        apelidos.add(m[1])
+      for (const m of src.matchAll(/\b([Ii]con)\s*:\s*[A-Z]\w*Icon\b/g)) apelidos.add(m[1])
+      for (const m of src.matchAll(/\bicon\s*:\s*([A-Z]\w*)\s*[,}\n]/g)) apelidos.add(m[1])
+      if (/\{[^{}]{0,120}\bIcon\b[^{}]{0,120}\}/.test(src)) apelidos.add("Icon")
+
+      // 4. Os sítios de render indireto, e o conjunto que cada um pede.
+      const pedidos = new Set()
+      let opaco = false
+      for (const m of src.matchAll(/<([A-Z]\w*|\w+\.[a-zA-Z]\w*)\b([^>]*?)\/?>/g)) {
+        const tag = m[1]
+        if (heroiconSet.has(tag)) continue
+        if (!(apelidos.has(tag) || /^\w+\.(icon|Icon)$/.test(tag))) continue
+        let attrs = m[2]
+        for (const id of attrs.matchAll(/\b([a-z]\w*)\b/g))
+          if (literais.has(id[1])) attrs += " " + literais.get(id[1])
+        // `h-6 w-6` conta como corpo declarado.
+        const sz = attrs.match(/\b(?:size|h)-(\d+(?:\.\d+)?)\b/)
+        if (!sz && /\$\{/.test(attrs)) { opaco = true; continue }
+        pedidos.add(heroiconSetForSize(sz ? parseFloat(sz[1]) : 4))
+      }
+
+      if (!opaco && pedidos.size === 1) {
+        const quer = [...pedidos][0]
+        for (const [nome, v] of comoValor) {
+          if (v.conjunto === quer) continue
+          add(
+            "G",
+            v.index,
+            `\`${nome}\` vem do conjunto \`${v.conjunto}\` e é renderizado neste mesmo arquivo pedindo \`${quer}\``,
+            nome
+          )
+        }
       }
     }
   }
@@ -358,7 +551,7 @@ function auditFile(absPath, project) {
     const eMoldura = /(?:^|\s)(?:border|rounded-)/.test(
       classes.replace(/border-[bt]\b/g, "").replace(/border-(?:border|input)\S*/g, "")
     )
-    if (temFio && temTinta && !eMoldura) {
+    if (temFio && temTinta && !eMoldura && !isSecondSurface) {
       add(
         "J",
         m.index,
@@ -372,7 +565,13 @@ function auditFile(absPath, project) {
   // `hover:` compila para @media (hover: hover), e um telefone responde
   // `hover: none`. A resposta não é remover o hover: é somar `active:`.
   // Ver src/lib/tailwind-hover-policy.test.ts.
-  for (const m of src.matchAll(/className=\{?["'`]([^"'`]{0,2000})["'`]/g)) {
+  //
+  // Calada no catálogo: `docs/mobile-toque.tsx` mostra o exemplo **errado de
+  // propósito**, com a versão certa na linha seguinte — é a página que ensina
+  // esta regra.
+  for (const m of isCatalog
+    ? []
+    : src.matchAll(/className=\{?["'`]([^"'`]{0,2000})["'`]/g)) {
     const classes = m[1]
     const hasHover = /(?:^|\s)(?:group-)?hover:(?:bg|text|border|ring)-/.test(classes)
     const hasActive = /(?:^|\s)(?:group-)?active:/.test(classes)
@@ -387,7 +586,11 @@ function auditFile(absPath, project) {
   }
 
   // ── I. Formatação de dinheiro ou data fora dos helpers ────────────────────
-  for (const m of src.matchAll(/\bIntl\.(?:NumberFormat|DateTimeFormat)\b/g)) {
+  // (Calada no catálogo: `docs/dinheiro.tsx` e `docs/money-display.tsx`
+  //  documentam justamente a formatação.)
+  for (const m of isCatalog
+    ? []
+    : src.matchAll(/\bIntl\.(?:NumberFormat|DateTimeFormat)\b/g)) {
     add(
       "I",
       m.index,
@@ -395,7 +598,9 @@ function auditFile(absPath, project) {
       m[0]
     )
   }
-  for (const m of src.matchAll(/\.toLocaleDateString\s*\(|\.toLocaleString\s*\(/g)) {
+  for (const m of isCatalog
+    ? []
+    : src.matchAll(/\.toLocaleDateString\s*\(|\.toLocaleString\s*\(/g)) {
     add("I", m.index, "use `@/lib/transaction-date` ou `@/lib/formatters`", m[0])
   }
 

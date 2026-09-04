@@ -2,6 +2,7 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
+import { Caption, P } from "@/components/ui/typography"
 
 /**
  * Feed vertical de histórico: ponto, conector e conteúdo.
@@ -78,9 +79,9 @@ function TimelineItem({
 /** Título do evento e sua legenda: mesmo dado em duas linhas, sem `gap`. */
 function TimelineTitle({ className, ...props }: React.ComponentProps<"p">) {
   return (
-    <p
+    <P
       data-slot="timeline-title"
-      className={cn("text-sm font-medium text-foreground", className)}
+      className={cn("font-medium", className)}
       {...props}
     />
   )
@@ -91,22 +92,16 @@ function TimelineDescription({
   ...props
 }: React.ComponentProps<"p">) {
   return (
-    <p
-      data-slot="timeline-description"
-      className={cn("text-xs text-muted-foreground", className)}
-      {...props}
-    />
+    <Caption data-slot="timeline-description" className={className} {...props} />
   )
 }
 
 /** Carimbo de tempo. `nums` mantém a coluna de horários alinhada. */
 function TimelineTime({ className, ...props }: React.ComponentProps<"time">) {
   return (
-    <time
-      data-slot="timeline-time"
-      className={cn("nums text-2xs text-muted-foreground", className)}
-      {...props}
-    />
+    <Caption asChild data-slot="timeline-time" className={cn("nums text-2xs", className)}>
+      <time {...props} />
+    </Caption>
   )
 }
 

@@ -1,6 +1,7 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { Muted } from "@/components/ui/typography"
 import { scrollFadeViewportXClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
 
@@ -113,11 +114,9 @@ function TableCaption({
   ...props
 }: React.ComponentProps<"caption">) {
   return (
-    <caption
-      data-slot="table-caption"
-      className={cn("mt-4 text-sm text-muted-foreground", className)}
-      {...props}
-    />
+    <Muted asChild data-slot="table-caption" className={cn("mt-4", className)}>
+      <caption {...props} />
+    </Muted>
   )
 }
 

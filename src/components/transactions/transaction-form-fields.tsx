@@ -21,14 +21,12 @@ import {
 import {
     TransactionFormKindSegment,
     TransactionFormTypeSegment,
-    transactionSegmentContainerClassName,
-    transactionSegmentTabClassName,
     type TransactionFormKind,
 } from "@/components/transactions/transaction-type-segment"
 import { splitTotalAcrossInstallments } from "@/lib/installment-amounts"
 import { parseMoneyBrl } from "@/lib/money-brl"
 import { Button } from "@/components/ui/button"
-import { MoneyInput } from "@/components/ui/money-input"
+import { FormInput, FormRadioGroup } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { DatePicker } from "@/components/ui/date-picker"
@@ -404,38 +402,20 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
     return (
         <div className="space-y-4 py-1 pb-2">
             {showInstallmentEditScopePicker ? (
-                <div
-                    className={transactionSegmentContainerClassName}
-                    role="tablist"
-                    aria-label="O que editar"
-                >
-                    <Button
-                        type="button"
-                        role="tab"
-                        aria-selected={installmentEditScope === "slice"}
-                        size="sm"
-                        variant="tertiary"
-                        className={transactionSegmentTabClassName(
-                            installmentEditScope === "slice"
-                        )}
-                        onClick={() => setInstallmentEditScope("slice")}
-                    >
-                        Esta parcela
-                    </Button>
-                    <Button
-                        type="button"
-                        role="tab"
-                        aria-selected={installmentEditScope === "plan"}
-                        size="sm"
-                        variant="tertiary"
-                        className={transactionSegmentTabClassName(
-                            installmentEditScope === "plan"
-                        )}
-                        onClick={() => setInstallmentEditScope("plan")}
-                    >
-                        Plano da compra
-                    </Button>
-                </div>
+                <FormRadioGroup
+                    fieldSize="sm"
+                    label="O que editar"
+                    variant="card"
+                    orientation="horizontal"
+                    value={installmentEditScope}
+                    onValueChange={(next) =>
+                        setInstallmentEditScope(next as "slice" | "plan")
+                    }
+                    options={[
+                        { value: "slice", label: "Esta parcela" },
+                        { value: "plan", label: "Plano da compra" },
+                    ]}
+                />
             ) : null}
 
             {segmentMode === "edit" && hasInstallmentPlan ? null : segmentMode ===
@@ -457,82 +437,44 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
 
             {showInstallmentFields ? (
                 <>
-                    <div className="space-y-2">
-                        <Label className="text-xs">Como informar os valores?</Label>
-                        <div
-                            className={transactionSegmentContainerClassName}
-                            role="tablist"
-                            aria-label="Modo de valor da parcela"
-                        >
-                            <Button
-                                type="button"
-                                role="tab"
-                                aria-selected={
-                                    installmentValueMode === "total"
-                                }
-                                size="sm"
-                                variant="tertiary"
-                                className={transactionSegmentTabClassName(
-                                    installmentValueMode === "total"
-                                )}
-                                onClick={() =>
-                                    setInstallmentValueMode("total")
-                                }
-                            >
-                                Total e parcelas
-                            </Button>
-                            <Button
-                                type="button"
-                                role="tab"
-                                aria-selected={
-                                    installmentValueMode ===
-                                    "per_installment"
-                                }
-                                size="sm"
-                                variant="tertiary"
-                                className={transactionSegmentTabClassName(
-                                    installmentValueMode ===
-                                        "per_installment"
-                                )}
-                                onClick={() =>
-                                    setInstallmentValueMode(
-                                        "per_installment"
-                                    )
-                                }
-                            >
-                                Valor da parcela
-                            </Button>
-                        </div>
-                    </div>
+                    <FormRadioGroup
+                        fieldSize="sm"
+                        label="Como informar os valores?"
+                        variant="card"
+                        orientation="horizontal"
+                        value={installmentValueMode}
+                        onValueChange={(next) =>
+                            setInstallmentValueMode(
+                                next as "total" | "per_installment"
+                            )
+                        }
+                        options={[
+                            { value: "total", label: "Total e parcelas" },
+                            {
+                                value: "per_installment",
+                                label: "Valor da parcela",
+                            },
+                        ]}
+                    />
 
                     {installmentValueMode === "total" ? (
-                        <div className="space-y-1.5">
-                            <Label htmlFor="tx-inst-total" className="text-xs">
-                                Valor total (R$)
-                            </Label>
-                            <MoneyInput
-                                id="tx-inst-total"
-                                value={installmentTotal}
-                                
-                                placeholder="Ex: 1.200,00"
-                                className="text-sm"
+                        <FormInput
+                            money
+                            fieldSize="sm"
+                            label="Valor total (R$)"
+                            value={installmentTotal}
                             onValueChange={setInstallmentTotal}
-                            />
-                        </div>
+                            placeholder="Ex: 1.200,00"
+                        />
                     ) : (
-                        <div className="space-y-1.5">
-                            <Label htmlFor="tx-inst-per" className="text-xs">
-                                Valor de cada parcela (R$)
-                            </Label>
-                            <MoneyInput
-                                id="tx-inst-per"
-                                value={installmentPerAmount}
-                                
-                                placeholder="Ex: 100,00"
-                                className="text-sm"
+                        <FormInput
+                            money
+                            fieldSize="sm"
+                            label="Valor de cada parcela (R$)"
+                            value={installmentPerAmount}
                             onValueChange={setInstallmentPerAmount}
-                            />
-                        </div>
+                            placeholder="Ex: 100,00"
+                        />
                     )}
 
                     <div className="space-y-1.5">
@@ -560,20 +502,15 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                     ) : null}
                 </>
             ) : (
-                <div className="space-y-1.5">
-                    <Label htmlFor="tx-amount" className="text-xs">
-                        Valor (R$)
-                    </Label>
-                    <MoneyInput
-                        id="tx-amount"
-                        value={amount}
-                        
-                        placeholder="Ex: 50,00 ou 1.500,00"
-                        className="text-sm"
-                        required={segmentMode === "edit" || formKind !== "installment"}
+                <FormInput
+                    money
+                    fieldSize="sm"
+                    label="Valor (R$)"
+                    value={amount}
                     onValueChange={setAmount}
-                        />
-                </div>
+                    placeholder="Ex: 50,00 ou 1.500,00"
+                    required={segmentMode === "edit" || formKind !== "installment"}
+                />
             )}
 
             <div className="space-y-1.5">

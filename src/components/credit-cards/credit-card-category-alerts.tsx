@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react"
 import { ExclamationTriangleIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { useAuth } from "@/components/providers"
 import { Button } from "@/components/ui/button"
-import { MoneyInput } from "@/components/ui/money-input"
 import { CustomForm } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -334,14 +333,13 @@ export function CreditCardCategoryAlerts({
                             Limite na fatura aberta
                         </Label>
                         <div className="w-full sm:col-start-2 sm:row-start-2">
-                            <MoneyInput
+                            <Input
+                                money
                                 id="cc-alert-th"
                                 placeholder="500,00"
                                 value={threshold}
+                                onValueChange={setThreshold}
                                 disabled={disabledFields}
-                                
-                                className="h-8"
-                            onValueChange={setThreshold}
                             />
                         </div>
                     </div>

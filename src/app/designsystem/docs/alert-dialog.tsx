@@ -138,7 +138,7 @@ export default function AlertDialogDoc() {
             type: '"button" | "submit"',
             default: '"button"',
             description:
-              "Explícito de fábrica, para o botão de um alerta dentro de um CustomForm não virar o alvo do Enter.",
+              "Explícito de fábrica, para o botão de um alerta dentro de um Form não virar o alvo do Enter.",
           },
         ]}
       />

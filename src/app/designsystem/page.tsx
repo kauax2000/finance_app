@@ -1,7 +1,13 @@
-import { ArrowRightIcon } from "@heroicons/react/16/solid"
-import { ArrowUturnLeftIcon, BanknotesIcon, CursorArrowRaysIcon, SwatchIcon } from "@heroicons/react/24/outline"
+import {
+  ArrowRightIcon,
+  ArrowUturnLeftIcon,
+  BanknotesIcon,
+  CursorArrowRaysIcon,
+  SwatchIcon,
+} from "@heroicons/react/16/solid"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 import { Code } from "@/components/ui/code"
 import {
     PageHeader,
@@ -13,7 +19,6 @@ import {
 } from "@/components/ui/page-header"
 import {
     CATEGORY_ORDER,
-    movedFrom,
     REGISTRY,
     getEntry,
     groupedRegistry,
@@ -38,9 +43,9 @@ const START_HERE = [
 
 const CATEGORY_BLURB: Record<string, string> = {
     Fundações: "As decisões que todo o resto herda: cor, tipo, forma, movimento, camada.",
-    Átomos: "Um controle, uma responsabilidade. Não compõem outros componentes.",
-    Moléculas: "Alguns átomos resolvendo uma tarefa completa.",
-    Organismos: "Seções complexas da interface, com estado e layout próprios.",
+    Átomos: "Indivisíveis: um controle, um elemento, uma casca. A anatomia interna não é composição.",
+    Moléculas: "Feitas de átomos: um grupo pequeno que resolve uma tarefa e lê como uma unidade.",
+    Organismos: "Feitos de moléculas: seções com faixas, grupos, submenus ou linhas próprias.",
     Templates: "O que estrutura a página, e não o que ela contém.",
     Padrões: "Não são componentes: são as decisões que atravessam telas.",
 }
@@ -75,28 +80,6 @@ function entrada(step: number): React.CSSProperties {
 
 const ENTRADA_CLASS =
     "animate-in fade-in slide-in-from-bottom-2 fill-mode-both duration-500 ease-out"
-
-/**
- * A marca temporária de quem mudou de camada na rodada 17.
- *
- * Ela existe porque 32 das 90 páginas trocaram de lugar de uma vez, e quem tem
- * o mapa antigo na cabeça procuraria `Table` em Organismos e não acharia. Diz
- * de onde veio, e não que é novidade — a página é a mesma.
- *
- * **É dado, não decoração**: sai de `MOVED_FROM` no registry, e desaparece
- * sozinha quando aquele campo for apagado. Fica em `text-2xs` sem preenchimento
- * porque um `Badge` aqui competiria com o nome que ele acompanha, 32 vezes numa
- * lista de 90.
- */
-function MovedMark({ slug }: { slug: string }) {
-    const de = movedFrom(slug)
-    if (!de) return null
-    return (
-        <span className="shrink-0 text-2xs font-medium tracking-wide whitespace-nowrap text-primary-accent/80 uppercase">
-            movido de {de}
-        </span>
-    )
-}
 
 export default function DesignSystemIndexPage() {
     const groups = groupedRegistry()
@@ -299,20 +282,33 @@ export default function DesignSystemIndexPage() {
                                 key={item.slug}
                                 className="border-b border-border/70 py-0.5"
                             >
-                                <Link
-                                    href={`/designsystem/${item.slug}`}
+                                {/* O `Button` do sistema, com **três**
+                                    contra-classes medidas: `h-auto` (o `h-8` do
+                                    degrau e o `min-h-10` convivem, e no telefone
+                                    a grade cai para uma coluna e transborda),
+                                    `font-normal` (a base engordaria as 88
+                                    descrições) e `bg-clip-border` (o
+                                    `bg-clip-padding` reabre a fresta de 1px que
+                                    o comentário acima diz ter fechado). */}
+                                <Button
+                                    asChild
+                                    variant="tertiary"
+                                    size="md"
                                     className={cn(
-                                        "group flex min-h-10 items-center gap-3 rounded-md px-2 py-2 transition-colors",
+                                        "group h-auto min-h-10 justify-start gap-3 rounded-md px-2 py-2 font-normal bg-clip-border transition-colors",
                                         "hover:bg-accent/50 active:bg-accent/50",
-                                        "focus-visible:ring-3 focus-visible:ring-ring/70 focus-visible:outline-none"
+                                        // `--accent` e `--muted` são a mesma cor
+                                        // no escuro hoje; a contra-classe fica
+                                        // para o dia em que divergirem.
+                                        "dark:hover:bg-accent/50"
                                     )}
                                 >
+                                <Link href={`/designsystem/${item.slug}`}>
                                     <span className="grid min-w-0 flex-1 grid-cols-1 items-baseline gap-x-6 leading-snug sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)]">
                                         <span className="flex min-w-0 items-baseline gap-2">
                                             <span className="truncate text-sm font-medium text-foreground">
                                                 {item.name}
                                             </span>
-                                            <MovedMark slug={item.slug} />
                                         </span>
                                         {/* Uma linha, com reticências no que
                                             passar. Descrição que quebra faz a
@@ -354,6 +350,7 @@ export default function DesignSystemIndexPage() {
                                         )}
                                     />
                                 </Link>
+                                </Button>
                             </li>
                         ))}
                     </ul>

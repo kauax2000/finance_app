@@ -1,6 +1,9 @@
 "use client"
 
+import * as React from "react"
+
 import { Button } from "@/components/ui/button"
+import { FormRadioGroup } from "@/components/ui/form"
 import { cn } from "@/lib/utils"
 
 export type TransactionFilterType = "all" | "income" | "expense"
@@ -37,90 +40,74 @@ const FORM_KIND_TABS: { value: TransactionFormKind; label: string }[] = [
     { value: "income", label: "Receita" },
 ]
 
-/** Create flow: despesa simples, compra parcelada, receita. */
+/**
+ * Create flow: despesa simples, compra parcelada, receita.
+ *
+ * **Ele era um `role="tablist"` dentro de um formulário**, com três `Button
+ * role="tab"` — o padrão ARIA de abas anunciado sem `tabpanel`, sem
+ * `aria-controls` e sem foco itinerante, para escolher o valor que vai ser
+ * gravado. Escolha única num formulário é rádio, e agora é.
+ *
+ * A chapa (`transactionSegmentContainerClassName`) fica no arquivo porque os
+ * **seis** trilhos que de fato são filtro ou aba de página ainda a importam.
+ */
 export function TransactionFormKindSegment({
     value,
     onChange,
     className,
+    label = "Tipo de lançamento",
 }: {
     value: TransactionFormKind
     onChange: (next: TransactionFormKind) => void
     className?: string
+    label?: React.ReactNode
 }) {
     return (
-        <div
-            className={cn(transactionSegmentContainerClassName, className)}
-            role="tablist"
-            aria-label="Tipo de lançamento"
-        >
-            {FORM_KIND_TABS.map((tab) => {
-                const selected = value === tab.value
-                return (
-                    <Button
-                        key={tab.value}
-                        type="button"
-                        role="tab"
-                        aria-selected={selected}
-                        size="sm"
-                        variant="tertiary"
-                        className={transactionSegmentTabClassName(selected)}
-                        onClick={() => onChange(tab.value)}
-                    >
-                        {tab.label}
-                    </Button>
-                )
-            })}
-        </div>
+        <FormRadioGroup
+            label={label}
+            fieldClassName={className}
+            variant="card"
+            orientation="horizontal"
+            value={value}
+            onValueChange={(next) => onChange(next as TransactionFormKind)}
+            options={FORM_KIND_TABS.map((t) => ({ value: t.value, label: t.label }))}
+        />
     )
 }
 
+/**
+ * O tipo — receita ou despesa — como **campo de formulário**.
+ *
+ * `fullWidth` saiu: dentro de um `Field` o `fieldVariants` já dá `*:w-full`, e
+ * o prop virava no-op. Prop que não faz nada é a classe morta desta base em
+ * forma de API — e removê-lo fez o compilador apontar os sete sítios que
+ * embrulhavam este componente num `<div className="space-y-2"><Label>Tipo</Label>`,
+ * com o rótulo solto que agora é o do próprio campo.
+ */
 export function TransactionFormTypeSegment({
     value,
     onChange,
     className,
     disabled = false,
-    /** Fill parent width at all breakpoints (e.g. dialogs); default matches toolbar chip width. */
-    fullWidth = false,
+    label = "Tipo",
 }: {
     value: "income" | "expense"
     onChange: (next: "income" | "expense") => void
     className?: string
     disabled?: boolean
-    fullWidth?: boolean
+    label?: React.ReactNode
 }) {
     return (
-        <div
-            className={cn(
-                fullWidth
-                    ? "flex h-9 w-full min-w-0 items-stretch rounded-lg bg-muted/60 p-0.5 ring-1 ring-border/60 md:h-8 dark:bg-muted/40"
-                    : transactionSegmentContainerClassName,
-                className,
-            )}
-            role="tablist"
-            aria-label="Tipo de lançamento"
-        >
-            {FORM_TYPE_TABS.map((tab) => {
-                const selected = value === tab.value
-                return (
-                    <Button
-                        key={tab.value}
-                        type="button"
-                        role="tab"
-                        aria-selected={selected}
-                        size="sm"
-                        variant="tertiary"
-                        className={cn(
-                            transactionSegmentTabClassName(selected),
-                            fullWidth && "md:min-w-0 md:flex-1",
-                        )}
-                        disabled={disabled}
-                        onClick={() => onChange(tab.value)}
-                    >
-                        {tab.label}
-                    </Button>
-                )
-            })}
-        </div>
+        <FormRadioGroup
+            label={label}
+            fieldClassName={className}
+            disabled={disabled}
+            variant="card"
+            orientation="horizontal"
+            value={value}
+            onValueChange={(next) => onChange(next as "income" | "expense")}
+            options={FORM_TYPE_TABS.map((t) => ({ value: t.value, label: t.label }))}
+        />
     )
 }
 

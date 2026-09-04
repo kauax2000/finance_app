@@ -271,7 +271,7 @@ export default function ComboboxDoc() {
 
       <DocNote title="O Enter já está resolvido">
         O campo de busca do cmdk renderiza <code>{'role="combobox"'}</code>, e o{" "}
-        <code>shouldDeferEnterToWidget</code> do <code>CustomForm</code> já trata
+        <code>shouldDeferEnterToWidget</code> do <code>Form</code> já trata
         esse papel. Não é preciso somar uma regra nova — o caso do{" "}
         <code>FormPickerPopover</code> foi diferente porque a busca dele é um{" "}
         <code>input</code> cru.

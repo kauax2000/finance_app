@@ -80,6 +80,18 @@ export function signedCurrencyBRL(
   return currencyBRL(value, { ...opts, signed: true })
 }
 
+/**
+ * Um número sem moeda, em pt-BR. Existe porque `value.toLocaleString()` sem
+ * locale formata na língua do **navegador** — o tooltip do gráfico saía
+ * "1,234.5" para quem usa o sistema em inglês.
+ */
+export function numberBR(
+  value: number,
+  options?: Intl.NumberFormatOptions
+): string {
+  return new Intl.NumberFormat(defaultLocale, options).format(value)
+}
+
 export function percentBR(
   value: number,
   opts: { locale?: string; maximumFractionDigits?: number } = {}

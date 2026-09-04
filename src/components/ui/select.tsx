@@ -12,6 +12,7 @@ import {
   fieldTriggerHoverClassName,
 } from "@/lib/field-classes"
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/16/solid"
+import { Caption } from "@/components/ui/typography"
 function Select({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Root>) {
@@ -124,14 +125,13 @@ function SelectContent({
 
 function SelectLabel({
   className,
+  children,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Label>) {
   return (
-    <SelectPrimitive.Label
-      data-slot="select-label"
-      className={cn("px-2 py-1 text-xs text-muted-foreground", className)}
-      {...props}
-    />
+    <SelectPrimitive.Label asChild data-slot="select-label" {...props}>
+      <Caption className={cn("px-2 py-1", className)}>{children}</Caption>
+    </SelectPrimitive.Label>
   )
 }
 

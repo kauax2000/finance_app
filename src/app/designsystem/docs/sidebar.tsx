@@ -1,7 +1,12 @@
 "use client"
 
-import { Cog6ToothIcon, Squares2X2Icon } from "@heroicons/react/16/solid"
-import { CreditCardIcon, ReceiptPercentIcon, WalletIcon } from "@heroicons/react/24/outline"
+import {
+  Cog6ToothIcon,
+  CreditCardIcon,
+  ReceiptPercentIcon,
+  Squares2X2Icon,
+  WalletIcon,
+} from "@heroicons/react/16/solid"
 import {
   Sidebar,
   SidebarContent,

@@ -5,6 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { HoverCard as HoverCardPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { Caption } from "@/components/ui/typography"
 
 /**
  * Uma prévia rica ao pousar o cursor — e ela é **sempre redundante**, porque no
@@ -264,9 +265,9 @@ function HoverCardDescription({
   ...props
 }: React.ComponentProps<"p">) {
   return (
-    <p
+    <Caption
       data-slot="hover-card-description"
-      className={cn("text-xs text-pretty text-muted-foreground", className)}
+      className={cn("text-pretty", className)}
       {...props}
     />
   )

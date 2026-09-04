@@ -277,6 +277,14 @@ function ComboboxField({ className, ...props }: React.ComponentProps<"div">) {
  * `role="listbox"`. Ele faltava, e sem ele o papel de combobox ficava
  * incompleto — o gatilho dizia "abro uma lista" sem dizer qual.
  */
+/**
+ * Um `<button role="combobox">` cru **de propósito**. A regra da casa manda usar
+ * o `Button` onde a peça é um botão — mas este gatilho é um **campo**: ele veste
+ * `field-classes`, a mesma régua do `Input` e do `SelectTrigger`, e é isso que
+ * o torna indistinguível de um select até abrir. `Button` daria contorno e
+ * preenchimento de ação, que é a superfície de que ele saiu (ver o cabeçalho de
+ * `field-classes.ts`). A peça de baixo de um campo é a régua de campo.
+ */
 function ComboboxTrigger({
   className,
   placeholder = "Selecionar…",

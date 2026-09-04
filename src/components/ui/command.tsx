@@ -6,6 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Command as CommandPrimitive } from "cmdk"
 
 import { cn } from "@/lib/utils"
+import { Caption, P } from "@/components/ui/typography"
 import {
   menuItemGeometryClassName,
   menuSeparatorClassName,
@@ -317,6 +318,9 @@ function CommandInput({
             nunca apagaria — indicador que está sempre ligado não indica nada.
             Numa paleta quem carrega o foco visível é a **linha selecionada**,
             que se move com as setas; o anel aqui competia com ela. */}
+        {/* Não veste `field-classes` de propósito: este campo imita o gatilho do
+            cabeçalho do catálogo que o abriu — `border-border`, sem anel de foco
+            — e não um campo de formulário. A decisão está registrada acima. */}
         <div className="flex h-8 w-full min-w-0 items-center gap-2 rounded-lg border border-border bg-input-fill/30 px-3">
         <MagnifyingGlassIcon
           aria-hidden
@@ -486,9 +490,9 @@ function CommandEmpty({
 /** A linha forte do vazio: o que não foi encontrado. */
 function CommandEmptyTitle({ className, ...props }: React.ComponentProps<"p">) {
   return (
-    <p
+    <P
       data-slot="command-empty-title"
-      className={cn("text-sm font-medium text-balance text-foreground", className)}
+      className={cn("font-medium text-balance", className)}
       {...props}
     />
   )
@@ -500,9 +504,9 @@ function CommandEmptyDescription({
   ...props
 }: React.ComponentProps<"p">) {
   return (
-    <p
+    <Caption
       data-slot="command-empty-description"
-      className={cn("max-w-xs text-xs text-balance text-muted-foreground", className)}
+      className={cn("max-w-xs text-balance", className)}
       {...props}
     />
   )

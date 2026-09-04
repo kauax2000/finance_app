@@ -5,6 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Popover as PopoverPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { Muted } from "@/components/ui/typography"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
 
@@ -264,10 +265,10 @@ function PopoverDescription({
   }, [setHasDescription])
 
   return (
-    <p
+    <Muted
       data-slot="popover-description"
       id={label?.descriptionId}
-      className={cn("text-pretty text-muted-foreground", className)}
+      className={cn("text-pretty", className)}
       {...props}
     />
   )

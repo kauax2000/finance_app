@@ -1,6 +1,7 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { Caption } from "@/components/ui/typography"
 
 /**
  * Pares termo/valor para telas de detalhe (a fatura, a assinatura, o cartão).
@@ -121,11 +122,9 @@ function DescriptionListItem({
 
 function DescriptionTerm({ className, ...props }: React.ComponentProps<"dt">) {
   return (
-    <dt
-      data-slot="description-term"
-      className={cn("text-xs text-muted-foreground", className)}
-      {...props}
-    />
+    <Caption asChild data-slot="description-term" className={className}>
+      <dt {...props} />
+    </Caption>
   )
 }
 

@@ -19,6 +19,10 @@ const MESES = [
   "Junho",
   "Julho",
   "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
 ]
 
 export default function TabsDoc() {
@@ -229,7 +233,7 @@ export default function TabsDoc() {
 
       <DocSection
         title="Excesso horizontal"
-        description="scrollable rola a fileira quando ela não cabe, dissolvendo nas pontas com a mesma primitiva da paleta de comandos e da tabela. Arraste a fileira abaixo para ver as bordas acenderem."
+        description="scrollable rola a fileira quando ela não cabe, dissolvendo nas pontas com a mesma primitiva da paleta de comandos e da tabela. Arraste a fileira abaixo para ver as bordas acenderem. A moldura tracejada é a largura de um telefone: doze meses medem ~690px e caberiam inteiros na largura desta página, então sem ela a demonstração não demonstra nada no desktop."
         code={`<TabsList scrollable>
   {MESES.map((mes) => (
     <TabsTrigger key={mes} value={mes}>{mes}</TabsTrigger>
@@ -237,21 +241,23 @@ export default function TabsDoc() {
 </TabsList>`}
         previewClassName="flex-col flex-nowrap items-stretch p-6"
       >
-        <Tabs defaultValue="Janeiro">
-          <TabsList scrollable>
-            {MESES.map((mes) => (
-              <TabsTrigger key={mes} value={mes}>
-                {mes}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          <TabsContent value="Janeiro">
-            <p className="text-sm text-muted-foreground">
-              Oito meses não cabem em 360px. Antes disso, a resposta escrita
-              aqui era “ou são três abas, ou a navegação é outra coisa”.
-            </p>
-          </TabsContent>
-        </Tabs>
+        <div className="w-full max-w-sm rounded-lg border border-dashed border-border p-3">
+          <Tabs defaultValue="Janeiro">
+            <TabsList scrollable>
+              {MESES.map((mes) => (
+                <TabsTrigger key={mes} value={mes}>
+                  {mes}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            <TabsContent value="Janeiro">
+              <p className="text-sm text-muted-foreground">
+                Doze meses não cabem em 384px. Antes disso, a resposta escrita
+                aqui era “ou são três abas, ou a navegação é outra coisa”.
+              </p>
+            </TabsContent>
+          </Tabs>
+        </div>
       </DocSection>
 
       <DocSection

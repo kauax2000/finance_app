@@ -22,7 +22,7 @@ import {
   CommandItemTitle,
   CommandLoading,
 } from "@/components/ui/command"
-import { Kbd, KbdGroup } from "@/components/ui/kbd"
+import { Kbd } from "@/components/ui/kbd"
 import { Spinner } from "@/components/ui/spinner"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
@@ -513,10 +513,11 @@ function CommandDialogDemo() {
     <>
       <Button variant="outline" onClick={() => setOpen(true)}>
         Buscar
-        <KbdGroup>
-          <Kbd>⌘</Kbd>
-          <Kbd>K</Kbd>
-        </KbdGroup>
+        {/* Um acorde é **uma** pastilha, e `keys` resolve a tecla por
+            plataforma: escrito como sequência, com o `⌘` literal, isto ensinava
+            dois passos e a tecla errada em Windows — enquanto o atalho acima
+            aceita `metaKey || ctrlKey`. */}
+        <Kbd keys="mod+k" />
       </Button>
       <CommandDialog open={open} onOpenChange={setOpen}>
         <CommandInput placeholder="Buscar tela, ação ou transação…" />

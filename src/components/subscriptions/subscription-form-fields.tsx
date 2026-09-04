@@ -8,8 +8,8 @@ import type {
     WorkspaceSubscription,
 } from "@/lib/supabase"
 import type { PaymentMethod } from "@/lib/payment-methods"
+import { FormInput } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { MoneyInput } from "@/components/ui/money-input"
 import { Label } from "@/components/ui/label"
 import {
     Select,
@@ -103,20 +103,15 @@ export function SubscriptionFormFields({
                 />
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                    <Label htmlFor="sub-form-amount" className="text-xs">
-                        Valor
-                    </Label>
-                    <MoneyInput
-                        id="sub-form-amount"
-                        value={amount}
-                        
-                        placeholder="0,00"
-                        className="text-sm"
-                        required
+                <FormInput
+                    money
+                    fieldSize="sm"
+                    label="Valor"
+                    value={amount}
                     onValueChange={setAmount}
-                            />
-                </div>
+                    placeholder="0,00"
+                    required
+                />
                 <div className="space-y-1.5">
                     <Label htmlFor="sub-form-billing" className="text-xs">
                         Periodicidade

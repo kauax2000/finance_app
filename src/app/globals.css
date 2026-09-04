@@ -92,6 +92,10 @@
   --shadow-md: var(--shadow-md-value);
   --shadow-lg: var(--shadow-lg-value);
   --shadow-xl: var(--shadow-xl-value);
+  /* O menor degrau: o quadradinho da legenda e o marcador do tooltip do gráfico.
+     Sem ele, `rounded-xs` caía no 0,125rem do tema padrão do Tailwind — um valor
+     que não vinha desta escada. */
+  --radius-xs: calc(var(--radius) * 0.2);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -107,6 +111,9 @@
      como text-[0.8rem] repetido em quatro lugares, entre text-xs e text-sm. */
   --text-control-sm: 0.8rem;
   --text-control-sm--line-height: calc(1.25 / 0.8);
+  /* O espaçamento da sobrancelha em versalete (PageHeaderEyebrow e o índice do
+     catálogo). Era `tracking-[0.18em]` escrito à mão nos dois lugares. */
+  --tracking-eyebrow: 0.18em;
 }
 
 /* `.light` repete o seletor da paleta clara para que uma subárvore possa voltar

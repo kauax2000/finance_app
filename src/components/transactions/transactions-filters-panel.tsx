@@ -11,7 +11,6 @@ import { TransactionsDatePresets } from "@/components/transactions/transactions-
 import type { TransactionsDatePresetKey } from "@/components/transactions/transactions-date-presets"
 import { TransactionsDateRangeForm } from "@/components/transactions/transactions-date-range-form"
 import { Badge } from "@/components/ui/badge"
-import { MoneyInput } from "@/components/ui/money-input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -739,13 +738,13 @@ export function TransactionsFiltersPanel({
                         >
                             Mínimo
                         </Label>
-                        <MoneyInput
+                        <Input
+                            money
                             id={`${fieldUid}-amt-min`}
                             placeholder="0,00"
                             value={amountMin}
-                            
-                        onValueChange={onAmountMinChange}
-                            />
+                            onValueChange={onAmountMinChange}
+                        />
                     </div>
                     <div className="space-y-2">
                         <Label
@@ -754,13 +753,13 @@ export function TransactionsFiltersPanel({
                         >
                             Máximo
                         </Label>
-                        <MoneyInput
+                        <Input
+                            money
                             id={`${fieldUid}-amt-max`}
                             placeholder="0,00"
                             value={amountMax}
-                            
-                        onValueChange={onAmountMaxChange}
-                            />
+                            onValueChange={onAmountMaxChange}
+                        />
                     </div>
                 </div>
             </FilterSection>

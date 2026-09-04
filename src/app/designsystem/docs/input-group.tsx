@@ -128,13 +128,19 @@ export default function InputGroupDoc() {
         </InputGroup>
       </DocSection>
 
-      <DocNote title="Para valor em reais, prefira MoneyInput">
+      <DocNote title="Para valor em reais, o modo é <Input money>">
         O prefixo &ldquo;R$&rdquo; acima é um exemplo de addon, não a forma de
-        pedir dinheiro neste app. <code>MoneyInput</code>{" "}
+        pedir dinheiro neste app. <code>&lt;Input money&gt;</code>{" "}
         resolve máscara,
         teclado e conversão; um <code>InputGroup</code>{" "}
         com R$ na frente deixa
         tudo isso para a tela.
+        <br />
+        <br />
+        E <code>InputGroupInput</code> é fixado no <strong>ramo base</strong> da
+        união (<code>InputBaseProps</code>), então <code>money</code> não passa
+        por aqui: a moldura existe para addon, e o campo de dinheiro se pede
+        direto.
       </DocNote>
     </>
   )

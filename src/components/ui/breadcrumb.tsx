@@ -5,6 +5,7 @@ import { Slot } from "radix-ui"
 import { ChevronRightIcon, EllipsisHorizontalIcon } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -310,8 +311,10 @@ function desembrulhar(item: React.ReactElement): React.ReactNode {
  * `BreadcrumbList` monta isto sozinha quando `maxItems` corta, então o
  * consumidor não escreve marcação nenhuma para ganhar o comportamento.
  *
- * O gatilho é um `<button>` de verdade: 24px de caixa visual, com o alvo de dedo
- * crescendo por pseudo-elemento na mesma conta do `BreadcrumbLink`.
+ * O gatilho é o `Button` do sistema, em `icon-xs` — 24px de caixa visual, com o
+ * alvo de dedo crescendo por pseudo-elemento na mesma conta do
+ * `BreadcrumbLink`. Antes era a primitiva do Radix vestida à mão, com o próprio
+ * anel de foco e a própria transição — e este arquivo não importava `Button`.
  */
 function BreadcrumbMenu({
   children,
@@ -332,20 +335,22 @@ function BreadcrumbMenu({
       {...props}
     >
       <DropdownMenu>
-        <DropdownMenuTrigger
-          aria-label={label}
-          className={cn(
-            "relative flex items-center justify-center rounded-sm text-muted-foreground transition-colors duration-(--duration-fast)",
-            "hover:text-foreground active:text-foreground",
-            "outline-none focus-visible:ring-3 focus-visible:ring-ring/70",
-            "aria-expanded:text-foreground",
-            "pointer-coarse:after:absolute pointer-coarse:after:-inset-x-1 pointer-coarse:after:-inset-y-3 pointer-coarse:after:content-['']"
-          )}
-        >
-          <EllipsisHorizontalIcon
-            aria-hidden
-            className={breadcrumbSizes[size].ellipsis}
-          />
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="tertiary"
+            size="icon-xs"
+            aria-label={label}
+            className={cn(
+              "relative rounded-sm text-muted-foreground",
+              "hover:text-foreground active:text-foreground aria-expanded:text-foreground",
+              "pointer-coarse:after:absolute pointer-coarse:after:-inset-x-1 pointer-coarse:after:-inset-y-3 pointer-coarse:after:content-['']"
+            )}
+          >
+            <EllipsisHorizontalIcon
+              aria-hidden
+              className={breadcrumbSizes[size].ellipsis}
+            />
+          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" size="sm">
           {itens.map((item, i) => (

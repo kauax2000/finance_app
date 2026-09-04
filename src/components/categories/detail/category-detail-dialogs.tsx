@@ -10,7 +10,6 @@ import {
   Sheet,
   SheetContent,
 } from "@/components/ui/sheet"
-import { MoneyInput } from "@/components/ui/money-input"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -23,7 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { CustomForm } from "@/components/ui/form"
+import { CustomForm, FormInput } from "@/components/ui/form"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -121,14 +120,10 @@ export function CategoryDetailDialogs({
                     required
                 />
             </div>
-            <div className="space-y-2">
-                <Label>Tipo</Label>
-                <TransactionFormTypeSegment
-                    value={editType}
-                    onChange={onEditTypeChange}
-                    fullWidth
-                />
-            </div>
+            <TransactionFormTypeSegment
+                value={editType}
+                onChange={onEditTypeChange}
+            />
             <CategoryAppearanceFields
                 color={editColor}
                 onColorChange={onEditColorChange}
@@ -140,16 +135,13 @@ export function CategoryDetailDialogs({
                     <p className="text-xs text-muted-foreground">
                         Limite de despesas para {periodStart} a {periodEnd}.
                     </p>
-                    <div className="space-y-2">
-                        <Label htmlFor="category-edit-budget-amount">Valor limite (R$)</Label>
-                        <MoneyInput
-                            id="category-edit-budget-amount"
-                            placeholder="Ex: 1.500,00"
-                            value={editBudgetAmount}
-                            
+                    <FormInput
+                        money
+                        label="Valor limite (R$)"
+                        placeholder="Ex: 1.500,00"
+                        value={editBudgetAmount}
                         onValueChange={onEditBudgetAmountChange}
-                        />
-                    </div>
+                    />
                     {budget ? (
                         <Button
                             type="button"

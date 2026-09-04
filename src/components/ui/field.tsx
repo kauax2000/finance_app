@@ -5,6 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
+import { Muted } from "@/components/ui/typography"
 import { Separator } from "@/components/ui/separator"
 
 /**
@@ -486,15 +487,24 @@ function FieldLabel({
       {...props}
     >
       {children}
-      {optional ? (
-        <span
-          data-slot="field-optional"
-          className="font-normal text-muted-foreground"
-        >
-          (opcional)
-        </span>
-      ) : null}
+      {optional ? <FieldOptionalMark /> : null}
     </Label>
+  )
+}
+
+/**
+ * A marca do campo dispensável.
+ *
+ * Ela existe como peça porque **dois** rotuladores a usam: o `FieldLabel`, que
+ * rotula um controle, e o `FieldTitle`, que rotula um grupo. Um grupo também
+ * pode ser dispensável, e a convenção deste app é invertida — marca-se o
+ * opcional, não o obrigatório.
+ */
+function FieldOptionalMark() {
+  return (
+    <span data-slot="field-optional" className="font-normal text-muted-foreground">
+      (opcional)
+    </span>
   )
 }
 
@@ -506,7 +516,12 @@ function FieldLabel({
  * e nenhum seletor conseguia distingui-los; os variantes de `orientation`
  * listam os dois agora.
  */
-function FieldTitle({ className, ...props }: React.ComponentProps<"div">) {
+function FieldTitle({
+  className,
+  optional,
+  children,
+  ...props
+}: React.ComponentProps<"div"> & { optional?: boolean }) {
   const size = useFieldSize()
   return (
     <div
@@ -517,7 +532,10 @@ function FieldTitle({ className, ...props }: React.ComponentProps<"div">) {
         className
       )}
       {...props}
-    />
+    >
+      {children}
+      {optional ? <FieldOptionalMark /> : null}
+    </div>
   )
 }
 
@@ -541,11 +559,12 @@ function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
   }, [setHasDescription])
 
   return (
-    <p
+    <Muted
       data-slot="field-description"
       id={field?.descriptionId}
+      // A escada do `Field` vence o `text-sm` do átomo por `cn()`, verificado.
       className={cn(
-        "text-left leading-normal font-normal text-muted-foreground group-has-data-horizontal/field:text-balance",
+        "text-left leading-normal font-normal group-has-data-horizontal/field:text-balance",
         "[&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary-accent",
         fieldTextScale[size].description,
         className

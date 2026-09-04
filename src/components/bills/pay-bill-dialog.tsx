@@ -14,7 +14,7 @@ import {
   Sheet,
   SheetContent,
 } from "@/components/ui/sheet"
-import { CustomForm } from "@/components/ui/form"
+import { CustomForm, FormInput } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -32,7 +32,6 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { MoneyInput } from "@/components/ui/money-input"
 import { toastError } from "@/lib/toast"
 import { supabase } from "@/lib/supabase"
 import { parseMoneyBrl } from "@/lib/money-brl"
@@ -207,15 +206,14 @@ export function PayBillDialog({
             {headerBlock}
 
             <div className="scrollbar-thin flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 sm:px-6">
-                <div className="grid gap-2">
-                    <Label htmlFor="pay-amt">Valor pago</Label>
-                    <MoneyInput mono
-                        id="pay-amt"
-                        value={amountStr}
-                        onValueChange={(v) => setAmountStr(v)}
-                        placeholder="R$ 0,00"
-                    />
-                </div>
+                <FormInput
+                    money
+                    mono
+                    label="Valor pago"
+                    value={amountStr}
+                    onValueChange={(v) => setAmountStr(v)}
+                    placeholder="R$ 0,00"
+                />
                 <div className="grid gap-2">
                     <Label>Data do pagamento</Label>
                     <DatePicker

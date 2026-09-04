@@ -6,7 +6,14 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Forms and Enter-to-submit
 
-- Use **`CustomForm`** from `@/components/ui/form` for any user-facing flow where fields are saved or confirmed with a primary action. It normalizes **Enter** to the primary **`Button type="submit"`** (and skips hijacking for textareas, native selects, contenteditable, Radix select triggers, and combobox/listbox roles).
+- Use **`Form`** from `@/components/ui/form` for any user-facing flow where fields are saved or confirmed with a primary action. It normalizes **Enter** to the primary **`Button type="submit"`** (and skips hijacking for textareas, native selects, contenteditable, Radix select triggers, and combobox/listbox roles).
+- **As peças são a forma curta**, e cada uma compõe um átomo: `FormInput` /
+  `FormTextarea` (sobre `Field` — rótulo, ajuda e erro já ligados),
+  `FormSubmit` (sobre `Button` + `Spinner` — `pending` desabilita, marca
+  `aria-busy` e troca o rótulo), `FormCancel` (`tertiary` + `type="button"`, a
+  tabela do rodapé embutida), `FormActions` (`inline` ou `sticky`, o rodapé de
+  folha) e `FormError` (o erro que não é de campo). **`CustomForm` é `Form`
+  com `layout="none"`** e continua válido — 54 chamadas em 29 arquivos.
 - Use **`type="submit"`** only for that primary action. Use **`type="button"`** for cancel, dismiss, toggles, and auxiliary actions.
 - Avoid raw **`<form>`** for submit flows unless there is a documented exception.
 - If you add a control that uses **Enter** for its own behavior (e.g. another Radix primitive), either mark it with a stable **`data-slot`** and extend `shouldDeferEnterToWidget` in `form.tsx`, or document the exception.
@@ -24,7 +31,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 O design system deste projeto tem três partes, e nenhuma delas se presume de
 memória:
 
-- **Componentes** em [`src/components/ui/`](src/components/ui) — 74 hoje.
+- **Componentes** em [`src/components/ui/`](src/components/ui) — 75 hoje.
 - **Tokens** em [`src/app/globals.css`](src/app/globals.css).
 - **Documentação viva** em `/designsystem`, com uma página por componente e por
   padrão. Sempre disponível em desenvolvimento; em produção, atrás de
@@ -34,8 +41,13 @@ memória:
   Moléculas → Organismos → **Templates** → Padrões. Ele é **exaustivo**: um
   componente novo sem camada não compila. A regra de cada nível está escrita no
   topo do arquivo, e [`taxonomy.test.ts`](src/app/designsystem/taxonomy.test.ts)
-  a tranca — em especial *nenhum átomo compõe outro componente*, que é a
-  asserção que faltava quando 43% do catálogo estava no lugar errado.
+  a tranca. **A régua é a hierarquia que cresce**: átomo é indivisível (anatomia
+  interna e especialização não contam), molécula é feita de átomos, organismo
+  é feito de moléculas — e quem contém organismo é organismo. O teste tranca a
+  parte mecânica (um átomo importa no máximo **um** componente de `ui/`, e ele
+  é átomo; uma molécula não importa organismo) e a **ordem alfabética pelo
+  nome dentro de cada categoria** — a posição no `REGISTRY` não carrega
+  decisão.
 
 **Antes de escrever uma tela, saiba o que já existe:**
 
@@ -108,11 +120,11 @@ push</span></Button>`). O catálogo não usa essa saída: ele escreve os rótulo
 minúscula e deixa a regra agir, porque uma página que demonstra o componente não
 pode mostrá-lo fazendo o contrário do que ele faz.
 
-**A garantia é do `Button`, não do `buttonVariants()`.** Nove arquivos aplicam
-as classes direto num `<a>` ou num primitivo do Radix; ali não há `span`, e a
-regra não alcança. Hoje todos esses rótulos já começam em maiúscula, então não
-há defeito visível — mas quem quiser a garantia de verdade nesses pontos troca
-`className={buttonVariants(...)}` por `<Button asChild>`.
+**A garantia é do `Button`, não do `buttonVariants()`.** `buttonVariants()`
+existe para o `Button`; quem precisa de um `<a>` ou de uma primitiva com cara de
+botão escreve `<Button asChild>`. Dentro de `ui/` não sobrou nenhum uso por fora
+— a rodada da composição tirou os dois últimos (`pagination`, `calendar`); no
+app resta `not-found-shell.tsx` (dois `<Link>`), que é migração mecânica.
 
 ### ButtonGroup cola; trilho segmentado é outra coisa
 
@@ -172,7 +184,9 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   dá 3,07:1. No tema claro
   os dois são a mesma cor; no escuro nenhum valor único atende os dois — 4,5:1
   contra a página exige subir a cor, e aí o texto branco sobre o preenchimento
-  reprova. Por isso **`text-primary` não existe**: use `text-primary-accent`. Além deles: `--identity-1..6` (+ `-surface`) para distinguir pessoas,
+  reprova. Por isso **`text-primary` é proibido** — compila, porque
+  `--color-primary` existe, e é justamente por isso que a regra é escrita: use
+  `text-primary-accent`. Além deles: `--identity-1..6` (+ `-surface`) para distinguir pessoas,
   `--skeleton`, `--input-fill`, `--overlay`, a rampa `--chart-1..5` mais
   `--chart-income` / `--chart-expense`, a escala `--z-*` e os tokens de movimento
   `--duration-*` / `--ease-*`. Prefira utilitários como `bg-success-muted`,
@@ -224,7 +238,11 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   usa o mini (`20/solid`); `size-4` e abaixo usam o micro (`16/solid`), o que
   inclui todo ícone sem classe de tamanho, porque o componente que o contém
   aplica `size-4`. Ícone passado como valor (mapa de ícone, config de navegação)
-  fica em `24/outline`, já que quem renderiza é que decide o corpo.
+  fica em `24/outline`, já que quem renderiza é que decide o corpo — **e isso
+  vale quando quem renderiza não é quem declara**. Com a tabela e o `.map()`
+  vizinhos de arquivo, e o corpo cravado no sítio, quem declara **é** quem
+  renderiza, e vale a régua do tamanho. A regra G do auditor passou a seguir
+  essa indireção, e foi assim que 14 pares errados apareceram de uma vez.
   `components.json` declara `heroicons`.
 - **Fonts**: [`src/app/layout.tsx`](src/app/layout.tsx) define `--font-sans`
   (Inter), `--font-display` (Ledger, só em `.page-title` e `.wordmark`),
@@ -277,7 +295,7 @@ tema.
   escrito à mão para fazer uma barra de topo.
 - **Typography**: [`H1`…`H4`, `Lead`, `P`, `Muted`, `Small`, `Caption`](src/components/ui/typography.tsx) instead of ad-hoc `text-3xl font-bold` / arbitrary `text-[10px]`.
 - **Empty states**: [`EmptyState`](src/components/ui/empty-state.tsx) (+ title / description / actions slots).
-- **Money**: [`MoneyDisplay`](src/components/ui/money-display.tsx) and [`MoneyInput`](src/components/ui/money-input.tsx); formatting helpers in [`src/lib/formatters.ts`](src/lib/formatters.ts) (`currencyBRL`, `signedCurrencyBRL`, `percentBR`).
+- **Money**: [`MoneyDisplay`](src/components/ui/money-display.tsx) e **`<Input money>`** ([`input.tsx`](src/components/ui/input.tsx)), com a forma curta `<FormInput money>`; formatting helpers in [`src/lib/formatters.ts`](src/lib/formatters.ts) (`currencyBRL`, `signedCurrencyBRL`, `percentBR`).
 - **Dates**: [`src/lib/transaction-date.ts`](src/lib/transaction-date.ts) — e.g. `formatDatePtBr`, `formatTransactionDmyPtBr`, `formatDateLongPtBr`, `formatRelativeDayPtBr`.
 - **Status chips / filters**: [`src/lib/tag-chip-classes.ts`](src/lib/tag-chip-classes.ts) — token-based classes only.
 - **Régua compartilhada em `lib/`**: além de
@@ -285,13 +303,15 @@ tema.
   [`menu-classes`](src/lib/menu-classes.ts) e
   [`scroll-fade-classes`](src/lib/scroll-fade-classes.ts), agora
   [`field-classes`](src/lib/field-classes.ts) — a superfície de campo que
-  `Input`, `SelectTrigger` e `ComboboxTrigger` vestem — e
+  `Input`, `Textarea`, `NativeSelect`, `SelectTrigger`, `ComboboxTrigger`,
+  `DatePicker`, `FormPickerPopoverTrigger` e, pelas variantes `Group`, o
+  `InputGroup` vestem — e
   [`command-filter`](src/lib/command-filter.ts) — a busca por substring sem
   acento, graduada, que a paleta do catálogo e o `Combobox` dividem. **Nada de
   `cva` nesses arquivos**: a regra A2 do auditor o reprova fora de
   `components/ui/`.
 - **Cor escolhida pela pessoa**: [`ColorTile`](src/components/ui/color-tile.tsx) para o ladrilho que carrega `categories.color`, `bills.color` ou a marca de um workspace. Se a cor vem do tema e não do banco, é o componente errado — use `bg-muted` ou um `Badge`. É o único lugar do app onde `white` e `black` crus são a resposta certa: o fundo é cor de runtime, e o que se apoia sobre ele — a tinta do ícone e o fio da borda — é material, não tema. Por isso ele está na lista de exceção do auditor — e nenhuma tela está. **O ladrilho é chapado**: o verniz que ele já teve (degradê branco, borda clara, sombra) saiu porque o resto do sistema preenche chapado. E a tinta não é branca por decreto — ela vira escura quando a cor gravada é clara demais para o branco alcançar 3:1.
-- **Alerts / tabs / forms**: [`Alert`](src/components/ui/alert.tsx), [`Tabs`](src/components/ui/tabs.tsx), [`Textarea`](src/components/ui/textarea.tsx), [`ScrollArea`](src/components/ui/scroll-area.tsx), [`Toggle` / `ToggleGroup`](src/components/ui/toggle.tsx), [`Slider`](src/components/ui/slider.tsx), [`RadioGroup`](src/components/ui/radio-group.tsx), [`Pagination`](src/components/ui/pagination.tsx), [`Collapsible`](src/components/ui/collapsible.tsx), [`Breadcrumb`](src/components/ui/breadcrumb.tsx), [`ChartContainer` + chart helpers](src/components/ui/chart.tsx) for Recharts.
+- **Alerts / tabs / forms**: [`Alert`](src/components/ui/alert.tsx), [`Tabs`](src/components/ui/tabs.tsx), [`Textarea`](src/components/ui/textarea.tsx), [`ScrollArea`](src/components/ui/scroll-area.tsx), [`Toggle` / `ToggleGroup`](src/components/ui/toggle.tsx), [`Slider`](src/components/ui/slider.tsx), [`Radio` / `RadioGroup`](src/components/ui/radio-group.tsx) (a forma curta é `FormRadioGroup`), [`Pagination`](src/components/ui/pagination.tsx), [`Collapsible`](src/components/ui/collapsible.tsx), [`Breadcrumb`](src/components/ui/breadcrumb.tsx), [`ChartContainer` + chart helpers](src/components/ui/chart.tsx) for Recharts.
 - **Campos**: [`Field`](src/components/ui/field.tsx) para rótulo + descrição + erro **já ligados — e agora ligados de verdade**: quem escreve `htmlFor`, `id`, `aria-describedby`, `aria-invalid` e `data-invalid` é o `FieldControl`, não a memória de quem escreve a tela. Esta linha afirmava o mesmo antes de o mecanismo existir; ver a rodada 11. [`FieldRow`](src/components/ui/field.tsx) para a linha de dois campos; [`InputGroup`](src/components/ui/input-group.tsx) para campo com ícone ou botão acoplado; [`Combobox`](src/components/ui/combobox.tsx) quando a lista passa de umas dez opções.
 - **Seletor ancorado num campo**:
   [`FormPickerPopover`](src/components/ui/form-picker-popover.tsx) e as suas
@@ -557,7 +577,7 @@ tema.
   em paisagem continua grosso, um desktop estreito continua fino.
 - **Rádio é ponto, caixa é tique.** Os dois menus usavam o mesmo `CheckIcon`
   nos dois indicadores, o que apaga a diferença entre "escolha uma" e "marque
-  quantas quiser". O ponto segue a decisão já tomada no `RadioGroup`: um
+  quantas quiser". O ponto segue a decisão já tomada no `Radio`: um
   círculo não precisa ser SVG, e o Heroicons não traz círculo puro.
 - **Variante empilhada é seletor de descendente.** `group-hover/x:group-data-[y]/x:`
   compila para uma **cadeia**, e quando as duas apontam para o mesmo elemento o
@@ -778,13 +798,19 @@ tema.
 - **O que continua tendo fio, e por quê.** Separador de **itens repetidos** —
   `TableRow`, `AccordionItem`, `SelectSeparator`, `ItemSeparator` —, porque ali
   o fio não divide superfície: é o que torna a lista varrível. **Moldura**
-  (`border` completo). E `PageHeader`, `H2`, `TableHeader` e `TableFooter`, que
-  ficaram fora do escopo por decisão.
+  (`border` completo). E `PageHeader`, `TableHeader` e `TableFooter`, que
+  ficaram fora do escopo por decisão — o `H2` estava nesta lista, e perdeu a
+  régua na rodada da composição.
 - **A regra `J` do auditor é o que impede tudo isso de voltar.** Ela acusa fio
   **mais** tinta na mesma classe de uma tira, ignorando moldura. Ela existe
   porque a lição já custou caro: quando o `border-t` saiu do `DialogFooter`, o
   app **não perdeu o fio** — 24 chamadas o repunham à mão, e a mudança do
-  componente nunca chegou à tela. Hoje ela está em **zero**.
+  componente nunca chegou à tela. Hoje ela está em **zero no app**, com uma
+  exceção nomeada no catálogo: o `PreviewCode` desenha fio **e** tinta porque ali
+  eles são a emenda entre **duas superfícies** (`card` para conteúdo, `muted`
+  para código), e não uma tira. O número que decidiu: o fio dá 1,345:1 contra o
+  cartão e a tinta dá 1,053 — **5,5× o trabalho**, e mesmo a 100% a tinta não
+  alcança.
 - **Quem recebeu a dissolução, e quem não.** `Command`, `ScrollFade`,
   `FormPickerPopover` (com as 3 telas migradas para as peças dele), `Sidebar`,
   `Table` (eixo X) e os viewports de `DropdownMenu` / `ContextMenu` / `Menubar`.
@@ -1736,7 +1762,9 @@ marcador de obrigatório: existem **zero** no app, e a convenção é **invertid
 
 ### O `CustomForm` está pronto, e as três lacunas eram de uma linha
 
-**38 consumidores, 2 `<form>` crus** — os dois dentro do próprio componente. A
+**38 consumidores, 2 `<form>` crus** — os dois dentro do próprio componente.
+*(Recontado na rodada em que ele virou molécula: **54 chamadas em 29 arquivos**,
+e **um** `<form>` cru, o do próprio componente.)* A
 mecânica do Enter está correta, inclusive a parte difícil: o `form.id` para o
 botão portalizado num `DialogFooter`, e a regra do
 `form-picker-popover-search`. Nada disso mudou, e o layout também não: os 38
@@ -2414,8 +2442,11 @@ e o que não estivesse em nenhum dos dois caía em **"Organismos" por
 
 Foi assim que `Typography` — nove componentes de texto independentes, que não
 compõem nada — apareceu ao lado da `Sidebar`; e `Container`, uma `div` com
-largura, ao lado do `Dialog`. Na direção oposta, `Field`, `InputGroup`,
-`Select` e `SearchInput` se declaravam **átomos** importando outros componentes.
+largura, ao lado do `Dialog`. Na direção oposta, `Field`, `InputGroup` e
+`SearchInput` se declaravam **átomos** importando outros componentes (2, 3 e 1).
+*(Esta frase listava `Select` também, e estava errada: `select.tsx` importava
+zero de `ui/`; ele saiu de Átomos pelos dez exports, e voltou na rodada da
+hierarquia.)*
 
 O comentário que vivia no arquivo já previa a falha — *"com 80 itens, a
 repetição é onde a lista começa a mentir"* — e a saída que ele propunha (derivar
@@ -2537,6 +2568,746 @@ Ele estava em `src/components/ui/` desde a rodada da paleta, **usado pela busca
 do próprio catálogo**, e não aparecia nem no registry nem em `docs/`. É o
 invariante 8 — *"componente novo entra em três lugares na mesma mudança"* —
 violado pelo próprio design system. Ganhou os dois.
+
+**E depois deixou de existir.** O `Kbd` absorveu o acorde em `keys`, e a página
+que esta rodada criou virou a do `KbdGroup`. A história fica porque o defeito
+que ela mede — o invariante 8 violado pelo próprio design system — não depende
+de o arquivo continuar existindo.
+
+### As duas páginas de texto eram uma, e a Fundação absorveu os nove componentes
+
+O catálogo tinha **duas páginas para texto**, e as duas declaravam o **mesmo
+`source`** — `src/components/ui/typography.tsx`. A Fundação `tipografia` e o
+Átomo `typography` importavam os mesmos nove componentes e os renderizavam com
+as **mesmas strings** (`<H1>Suas finanças</H1>`, `<H2>Este mês</H2>`,
+`<Muted>Parcelas futuras não entram neste total.</Muted>`), e cada uma tinha a
+própria cópia da `PropsTable title="Componentes"`, com as mesmas seis linhas.
+
+**As duas cópias já tinham divergido**, que é o que sempre acontece: a de
+`tipografia` tipava a linha "H1 … H4" como `ComponentProps<'h1'>` — afirmando
+que `H4` aceita props de `h1` — e as **seis** descrições eram diferentes nas
+duas. Não havia mecanismo que as reconciliasse.
+
+**A direção é a inversa da rodada 17, e o critério não é volume.** Lá o
+`Container` absorveu a Fundação "Espaçamento e largura", porque a Fundação
+**era** o componente e não sobrava nada depois de subtraí-lo. Aqui, subtraindo
+os nove componentes, sobram três famílias, oito degraus `--text-*`, `.nums`,
+`.page-title`, `.wordmark` e quatro notas — e **tipo é um dos cinco pilares que
+a própria régua das Fundações nomeia** (`registry.ts`: "os átomos abstratos:
+cor, tipo, forma, movimento, camada"). O critério é qual dos dois nomes é o
+assunto.
+
+**Nenhuma das duas estava na camada errada**, e é isso que tornava a confusão
+difícil de nomear: os nove componentes são átomos pelo teste do arquivo (nenhum
+compõe outro), e as famílias são Fundação pelo teste dela. O defeito não era a
+taxonomia — era duas páginas ensinarem a mesma coisa.
+
+**O slug é `typography` e o nome é "Tipografia", e a assimetria é forçada por
+mecanismo.** A asserção 1 do `taxonomy.test.ts` exige que todo `.tsx` de `ui/`
+tenha entrada com o slug do arquivo. É a primeira Fundação com slug em inglês, e
+é o preço de a taxonomia ser trancada por teste em vez de combinada. A posição
+no `REGISTRY` não carrega decisão: dentro de cada categoria a ordem é
+alfabética pelo nome, trancada pela asserção 7.
+
+**`entry()` não servia, e não por gosto.** `Layer = Exclude<Category,
+"Fundações" | "Padrões">`, então a chave não compila em `LAYER`; e sem a chave,
+`categoryForSlug` **lança** e derruba todas as rotas `/designsystem/*` no import
+do módulo. A entrada voltou a ser literal, como `marca` e `iconografia` — as
+outras duas Fundações que apontam para código.
+
+**O que não mudou, e por decisão.** Zero linhas em `src/components/ui/` e zero
+em `globals.css`. A sobreposição `H1`↔`PageHeaderTitle` e
+`H2`/`H3`↔`PageSectionTitle` continuou no código nesta rodada e passou a ser
+**documentada** — a rodada da composição, mais abaixo, a resolveu:
+duas notas dizem qual usar e por quê. Consertar significa escolher um dono por
+nível de título e apagar o perdedor, e isso é rodada própria — com o candidato
+já contado abaixo.
+
+**As medidas que a página passou a carregar**, e que não existiam em lugar
+nenhum do catálogo: `.page-title` é aplicada em **exatamente dois lugares**
+(`typography.tsx:10` e `page-header.tsx:222`); `.wordmark` como classe, em
+**um** (o espécime de Marca — o app escreve o nome com o SVG); `font-heading`
+aparece **32 vezes e nenhuma delas muda um pixel**, porque `--font-heading` é
+apelido de `--font-sans` — não é token morto, é o gancho para o dia em que os
+títulos deixarem de ser Inter, e trocar custa uma linha em vez de 32; e **2 dos
+9** componentes têm consumidor no app.
+
+**O teste não pegou nada, e é o achado de método.** Nenhuma das sete asserções
+quebrou com esta mudança: `taxonomy.test.ts` tranca a **taxonomia**, não a
+duplicação — duas páginas para o mesmo arquivo sempre foram legais. A que
+faltava entrou como a **6**: *nenhum arquivo de `ui/` é fonte de duas entradas
+fora de Padrões*. Verificado contra o commit anterior, ela falha lá
+(`["tipografia","typography"]`) e passa aqui. `Padrões` fica de fora porque
+`formularios`, `vazio-carregando` e `graficos` apontam de propósito para
+`form.tsx`, `empty-state.tsx` e `chart.tsx`: um Padrão é uma decisão que
+atravessa telas cuja casa por acaso é um componente.
+
+**O `MOVED_FROM` saiu inteiro**, cumprindo o prazo que a rodada 17 escreveu
+aqui. A marca de `typography` passaria a mentir num segundo eixo — diria "veio
+de Organismos" quando a peça agora vem de Átomos —, e a asserção 5 não pegava
+isso, porque ela só comparava com a camada atual. Foram seis remoções em quatro
+arquivos (`registry.ts`, `ds-shell.tsx`, `page.tsx`, `taxonomy.test.ts`), e com
+elas saíram as asserções 5 e 6 antigas.
+
+**A tabela de tamanhos estava quebrada, e ninguém tinha medido.** Ela veio
+literal da página antiga: três colunas, duas com largura fixa, dentro de uma
+célula de um terço do `Group layout="grid"`. Medido, sobravam **46px** para a
+coluna de uso, e "título de tela no desktop" saía em **seis linhas de uma
+palavra**. Hoje a tabela ocupa a linha inteira no `md` e dois terços no `xl`
+(218px de uso, uma linha), e abaixo de `sm` o uso desce para a própria linha em
+vez de espremer — 311px, uma linha, medido a 375px.
+
+**O que ficou de fora, e é dito em vez de silenciado.** As dez contagens
+escritas à mão nos comentários de `page.tsx` e `ds-shell.tsx` envelheceram de 90
+para 89 páginas — mas elas já divergiam entre si antes desta rodada (87, 88, 89
+e 90 para o mesmo número), então o defeito é *contagem à mão em comentário*, e
+corrigir dez números o reproduz. E não há redirect de `/designsystem/tipografia`:
+são zero links internos no repositório, e a rota é de desenvolvimento.
+
+### A taxonomia media o embrulho, e a régua passou a ser a hierarquia que cresce
+
+A rodada 17 tirou 32 componentes do lugar errado e deixou uma régua escrita:
+átomo é o que *"não compõe componente do sistema e é **um** elemento"*. Lida
+na prática — importa zero de `ui/`, exporta um —, ela media a **API do
+embrulho**, e não a peça. A medição que a derrubou:
+
+| | camada | exports | importa de `ui/` | primitivas Radix por dentro |
+| --- | --- | --- | --- | --- |
+| `Slider` | Átomo | 1 | 0 | **4** — root, track, range, thumb |
+| `Select` | Molécula | 10 | 0 | as mesmas peças, expostas |
+
+A diferença era só onde a composição mora — dentro do arquivo ou na API. Uma
+refatoração de assinatura (`<Select options={…} />`) mudaria a camada sem mudar
+um pixel. E a cláusula não distinguia nada: **21 dos 21 átomos importavam
+zero** — inclusive o `Input`, que importa exatamente o que o `select.tsx`
+importa (as réguas de `field-classes`, e nenhum componente). Do outro lado, **26
+das 38 moléculas também importavam zero**, então a definição *"grupos de
+átomos"* não descrevia dois terços delas.
+
+**A régua nova é a do modelo, nas palavras do dono**: *"os átomos são
+indivisíveis, as moléculas são feitas de átomos, os organismos são feitos de
+moléculas e os templates são feitos de organismos"*. Três cláusulas fecham as
+bordas: **anatomia interna não é composição** (trigger/content/item,
+track/thumb, `<option>`); **especializar um átomo sobre outro continua átomo**
+(os dois exemplos que ela teve — `KbdShortcut` sobre `Kbd`, `MoneyInput` sobre
+`Input` — foram **absorvidos como `prop`** pelas rodadas seguintes, e entre os
+átomos ela ficou com **zero** casos; segue valendo uma camada acima, em
+`StatCard` sobre `Card`); e
+**quem contém organismo é organismo** (`Breadcrumb` carrega um `DropdownMenu`).
+`Container` fica átomo — indivisível, uma `div` com largura —, por decisão.
+
+**22 mudaram de camada; 54 ficaram.**
+
+| sobem para Átomos | por quê |
+| --- | --- |
+| `select`, `native-select` | um controle; `NativeSelect` renderiza **um** `<select>` |
+| `radio-group` (hoje cindido: o átomo é o `radio`, e o grupo virou Molécula), `input-otp` | um campo, um valor |
+| `avatar`, `tooltip` | um objeto (imagem e fallback são estados); um rótulo que aparece |
+| `money-input`, `kbd-shortcut` (os dois hoje absorvidos como `prop` — `money` no `Input`, `keys` no `Kbd`) | especialização |
+
+| sobem para Organismos | por quê |
+| --- | --- |
+| `card`, `popover`, `hover-card`, `edge-panel` | superfície com **faixas** — a anatomia do `Dialog` |
+| `stat-card` | especializa o `Card` |
+| `dropdown-menu`, `context-menu`, `menubar`, `navigation-menu` | grupos, separadores, submenus |
+| `table`, `accordion`, `tabs`, `timeline`, `stepper` | a **unidade** é uma molécula (linha, `Collapsible`, gatilhos + painel) |
+| `chart`, `carousel`, `sonner` | contêiner + legenda + tooltip; trilho + setas; pilha de toasts |
+
+Contagens: **7 · 29 · 13 · 31 · 2 · 7**. Moléculas encolheu para 13 e são
+exatamente as que o Frost nomeia — rótulo + campo + erro, campo + botão,
+ícone + título + texto + ações, mídia + texto + ações.
+
+**O que o teste tranca, e o que não.** A asserção 2 relaxou para *"um átomo
+importa no máximo um componente de `ui/`, e ele é átomo"* — continua barrando
+`Field` (2), `InputGroup` (3) e `SearchInput` (molécula), e passa a aceitar a
+especialização. A 3 ganhou uma linha: molécula não importa organismo. A **7**
+entrou: dentro de cada categoria o `REGISTRY` está em ordem alfabética pelo
+`name` exibido (`sonner` é "Toast"), com `localeCompare("pt-BR")` fixo no teste
+porque o app não ordena em runtime. Ela reprovava nos seis grupos antes do
+reorder. O que o grafo **não** alcança — a anatomia de um `Select`, a diferença
+entre especializar e compor — é decisão, e mora nos comentários do `LAYER`.
+
+**Duas inversões da rodada 17, registradas como inversão e não apagadas.** Ela
+dizia que a asserção 2 tinha pego `kbd-shortcut` "classificado como átomo por
+engano"; ele volta a átomo, porque especializar o `Kbd` não é compor. *(E na
+rodada seguinte deixou de ser questão: o `Kbd` absorveu o acorde, e a
+especialização que era o exemplo virou a própria peça.)* E dizia
+que quem tem o mapa antigo "procuraria `Table` em Organismos"; ele volta para
+lá. A história fica; o que mudou foi a régua.
+
+**A ordem alfabética tem um custo, dito.** A primeira página do catálogo passa
+a ser **Camadas (z-index)**, e a ordem pedagógica das Fundações (cor → tipo →
+forma → movimento → camada) que a rodada da Tipografia acabou de registrar
+deixa de existir. O ponto de entrada sobrevive: "Comece aqui" resolve `cores`
+por `getEntry`, não por posição. E os comentários `// ── Átomos ──` do array
+estavam **desalinhados** — o bloco "Átomos" tinha doze moléculas, o
+"Organismos" não tinha organismo nenhum —, porque a categoria vem do `LAYER` e
+a posição no array era só a ordem em que cada `entry()` foi escrita.
+
+**O que não foi feito.** 22 páginas trocam de grupo sem marca de "movido" — o
+`MOVED_FROM` saiu nesta mesma série, e a busca cobre. As contagens à mão em
+comentários de `page.tsx` e `ds-shell.tsx` continuam sem caça, pela decisão
+anterior. E a asserção 2 tem um buraco semântico conhecido: um átomo que
+importa **um** átomo para compor, e não para especializar, passa — o teste
+tranca a mecânica, e a régua escrita tranca o resto.
+
+### Um componente não reimplementa a camada de baixo
+
+A pergunta "o `Form` não devia ser molécula, já que tem input e botão?" tinha
+uma resposta curta — o `CustomForm` é só o `<form>` com a política do Enter,
+nenhum input, nenhum botão — e uma consequência longa: **o design system
+reimplementava a si mesmo por dentro**, e o auditor não via, porque a regra C
+tem `if (!isUi)` de propósito (é onde os átomos nascem). Medido nos 76 arquivos:
+
+| O que | Quantos | Exemplo |
+| --- | --- | --- |
+| `<button>`/`<a>` crus onde `Button` existe | 8 | `pagination.tsx` — `<a className={buttonVariants(…)}>`, o anti-padrão que a rodada do `AlertDialog` documentou ter consertado |
+| tipografia à mão | 22 | `page-section.tsx` — `<h2 className="font-heading … font-semibold tracking-tight">`; **nenhum arquivo de `ui/` importava `typography.tsx`** |
+| superfície de campo copiada | 5 | `textarea.tsx` — `border border-input bg-input-fill/30` enquanto `Input` veste `field-classes` |
+| valores literais em átomos | 13 | `switch.tsx` — `h-[18.4px] w-[32px]` |
+| ícone do conjunto errado | 2 | `mobile-sheet-form-chrome.tsx` — renderizava 16px com o glifo de 20 |
+
+**A regra, decidida pelo dono**: cada camada compõe a de baixo — átomo usa
+fundação, molécula usa átomo, organismo usa molécula — lida como *"onde existe
+a peça de baixo, ela é obrigatória"*. Onde a estrutura é interna (um
+`DropdownMenu` é 15 primitivas Radix, não há molécula do sistema dentro dele)
+não há o que compor. **O teste que decide cada caso**: a peça de baixo é a
+peça de baixo quando dá pelo menos duas das declarações do componente e o que
+sobra é adição (`text-pretty`, `max-w-*`, `nums`); quando três de quatro são
+anuladas por `className`, vestir é reimplementar ao contrário, e fica cru com
+o motivo escrito. **27 mudaram, 49 são conformes.**
+
+**A tipografia virou a base que o sistema veste.** Os nove átomos ganharam
+`asChild` (o `Slot` do `Button`) e o `H2` perdeu a régua — `border-b
+border-border pb-2`, herança do shadcn, zero consumidores, e o `PageSectionTitle`
+é um `<h2>` **sem** régua: um átomo que o template precisa desfazer para vestir
+não é a peça de baixo. Dezessete arquivos passaram a importá-lo:
+`PageHeaderTitle` sobre `H1` e `PageSectionTitle` sobre `H2` trocam só o corpo
+por `className` (verificado: `cn("text-3xl text-(length:--page-title)")` devolve
+só a variável), `EmptyStateTitle` sobre `H4`, os títulos de vazio de `Command` e
+`Timeline` sobre `P`, e `Muted`/`Caption` em toda descrição, legenda e rótulo —
+`Card`, `Dialog`, `AlertDialog`, `Popover`, `HoverCard`, `Field`, `Item`,
+`Table`, `Select`, `DescriptionList`, `Pagination`, `FormPickerPopover`. Os
+títulos de superfície (`CardTitle`, `PopoverTitle`, `AlertTitle`, os dois
+`DialogTitle`) **ficaram**: `H4` daria tamanho, peso e tracking que os quatro
+anulam, e o `AlertTitle` ainda perderia a tinta do tom.
+
+**Dois fatos do `twMerge` que a medição corrigiu.** O primeiro estava previsto:
+tamanho contra tamanho e entrelinha contra entrelinha se resolvem, então não
+houve eixo novo. O segundo não: **`text-*` derruba `leading-*` quando vem
+depois**, porque o utilitário de tamanho também escreve `line-height` — e por
+isso a sobrancelha (`Caption` + `text-2xs`) e o `TimelineTime` saíram com
+**zero** delta, 16px como antes, em vez dos 15,1 que o plano previa. Os deltas
+reais, medidos: os títulos de vazio de `Command` e `Timeline` foram de 20 para
+**22,75px** de entrelinha (`P` traz `leading-relaxed`), e as legendas `text-xs`
+de 16 para **16,5** (`Caption` traz `leading-snug`). Regra escrita no arquivo:
+**com `asChild`, a sobrescrita vai no `className` do átomo, nunca no filho** —
+o `Slot` concatena sem `twMerge`.
+
+**`Button` onde havia botão cru.** `PaginationLink` e `PaginationEdge` viraram
+`<Button asChild><a/></Button>` (o `isActive && "font-medium"` saiu: já era a
+base); medido, 32×32 com a ativa `secondary`, o número embrulhado em
+`button-label` e `tabular-nums`. O `FormPickerPopoverItem` virou `Button
+variant="tertiary"` com `h-auto min-h-11` e **um `<span>` de conteúdo como único
+filho direto** — é o que impede a maiúscula inicial do CTA de alcançar "iFood"
+—, e sem `data-size`, porque 44 não é degrau. O gatilho do `BreadcrumbMenu`
+virou `Button icon-xs` (24×24, medido). As setas do `Calendar` deixaram
+`buttonVariants` nas `classNames` e viraram `components.PreviousMonthButton /
+NextMonthButton` renderizando `Button` — o `react-day-picker` entrega `type`,
+`className`, `tabIndex`, `aria-disabled`, `aria-label`, `onClick` e o `Chevron`
+como filho, e **não** entrega `disabled`, por isso o `aria-disabled:opacity-50`
+fica. Junto, o objeto `components` entrou num `useMemo`: eram arrows inline
+recriadas a cada render, e o React remontava a subárvore. Medido: depois de
+clicar "próximo mês", o foco continua na seta, **e é o mesmo nó**.
+
+**A superfície de campo tem uma régua, e agora sete a vestem.** `Textarea`,
+`NativeSelect` e `InputGroup` entraram. Medido contra o `Input`: borda, fundo e
+raio idênticos nos três. O `NativeSelect` perdeu os dois desvios que o backlog
+já nomeava (`data-[size=sm]:rounded-md` e o `dark:hover:` sem par), ganhou `lg`
+e `xl` pela `fieldTriggerSizeClassName`, e a rampa de 16px do telefone; a
+opacidade do desabilitado saiu da casca (se somaria à do controle) e foi para o
+chevron. O `InputGroup` é uma **moldura**, e lê os estados pelo controle de
+dentro — por isso entraram três variantes `fieldGroup*ClassName` escritas por
+extenso sob `has-…` (classe montada em runtime não existe), com
+`field-classes.test.ts` derrubando cada token da régua ao prefixo da moldura;
+ele já tinha divergido, faltava o `dark:…border-destructive/50`. O
+`InputGroupAddon` virou `Label`: seis das oito classes do átomo já estavam
+escritas à mão ali; o que ele acrescenta é `leading-none`, medido em 14px nos
+quatro alinhamentos, e ficou. O `InputOTPSlot` **não** veste — é célula de
+superfície segmentada, não campo — e a tabela do cabeçalho de `field-classes`
+diz isso.
+
+**Os literais.** `Switch` de `h-[18.4px] w-[32px]` para `h-4.5 w-8` (18×32
+medidos, polegar centrado com delta 0). O gráfico ganhou `rounded-xs` — e o
+token `--radius-xs: calc(var(--radius) * 0.2)` entrou em `globals.css`, porque
+sem ele `rounded-xs` caía no 0,125rem do tema padrão do Tailwind; medido, 2px.
+`item.value.toLocaleString()` era **sem locale** — formatava na língua do
+navegador — e virou `numberBR()` em `formatters.ts`. A sobrancelha ganhou
+`--tracking-eyebrow: 0.18em` (1,98px a 11px, medido). `w-[2px]` → `w-0.5`,
+`top-[60%]` → `top-3/5`, o `XMarkIcon` do chrome de folha para o conjunto 16
+(o `Button icon-sm` já força 16px). O auditor passou a aceitar `inherit` e as
+cores de sistema `Canvas`/`CanvasText`, e a pular o conjunto do Heroicons nos
+`DRAWN_SVG_FILES` (o `Spinner` gira o mesmo desenho de 16 a 32). **`ds:audit
+-- src/components/ui`: 16 → 0.**
+
+**As exceções, e por quê.** `sidebar`: vestir `Button tertiary` no
+`sidebarMenuButtonVariants` exigiria sete contra-classes (`justify-start`,
+`font-normal`, `border-0`, `focus-visible:ring-sidebar-ring`,
+`dark:hover:bg-sidebar-accent`, os `aria-expanded:*`, o `translate-y`) — o cva
+é a régua de baixo daquele chrome, e o arquivo já distingue: `SidebarTrigger`,
+que é ação, **é** `Button`; `MenuAction` tem 20px de caixa (o menor `Button` é
+24); `Rail` é alça com `tabIndex={-1}`. `ComboboxTrigger`: é campo, veste
+`field-classes`, e `Button` daria a superfície de que ele saiu. O campo da
+paleta (`command.tsx`): imita o gatilho do cabeçalho, decisão anterior. Os
+cinco estão escritos nos arquivos.
+
+**A taxonomia precisou de uma linha.** `select.tsx` (Átomo) passou a importar
+`typography` (Fundação), e a asserção 2 reprovaria. `camadaNoGrafo` trata
+`typography` como Átomo nas asserções 2 e 3: os nove são átomos pelo teste do
+arquivo; a **página** é a Fundação de tipo. Vestir a Fundação de tipo não é
+compor.
+
+**O que ficou de fora, com nome.** Um `SurfaceTitle` (ou
+`surfaceTitleClassName`) para os seis títulos `font-heading font-medium
+text-balance`. `Muted` sem a entrelinha de `P` — cinco call sites compensam com
+`leading-relaxed`/`leading-normal` à mão, e a doc diz que `Muted` "é o mesmo
+corpo de `P`". `Switch` e `SidebarMenuSubButton` ainda dizem `size="default"`.
+O `FieldLabel` de cartão de escolha escreve uma sexta grafia do anel. O
+`border-[1.5px]` do gráfico não tem token. O `Button tertiary` continua sem
+par `active:` — o item do seletor o traz por `className`, mais um consumidor
+pedindo o conserto no `Button`. E o **app** não foi tocado: os 51 primitivos
+crus das telas são a rodada seguinte, com a regra já escrita.
+
+### O `Form` virou molécula, e a inversão fica registrada
+
+A seção acima respondeu "o `Form` não devia ser molécula, já que tem input e
+botão?" com um fato: ele **não** tinha — era o `<form>` e a política do Enter,
+mais nada. A resposta certa não era manter a classificação; era **fazer o
+componente ser o que o nome promete**. A régua não mudou: um componente compõe a
+camada de baixo. O que mudou foi que agora há o que compor.
+
+**O que cada peça fecha, com a contagem que a pediu:**
+
+| Peça | Compõe | A contagem |
+| --- | --- | --- |
+| `FormInput` / `FormTextarea` | `Field` + `Input`/`Textarea` | **104 campos à mão** em 27 arquivos, 5 dialetos de espaçamento — e `Field` com **zero** consumidores fora do catálogo |
+| `FormSubmit` | `Button` + `Spinner` | **46 botões de enviar** escritos à mão; o *pending* em **76 strings**, com três grafias de reticência |
+| `FormCancel` | `Button` | **173 `variant="outline"`** contra a tabela do rodapé, que diz `tertiary` |
+| `FormActions variant="sticky"` | — | o `MobileSheetFormFooter` que faltava: **5 arquivos** derivavam a classe do rodapé à mão, com três `!important` |
+| `FormError` | `P` | **3 contratos de acessibilidade** para a mesma frase |
+
+**O `id`, e até onde o contexto chega.** `Form` gera um `id` com `useId` e o
+publica em contexto; `FormSubmit` escreve `form={id}` **sempre**. Dentro do
+`<form>` é inócuo — o `submitFrom` acha o botão na primeira busca. Fora dele é o
+que faz o Enter funcionar, e **contexto do React atravessa portal**: medido no
+catálogo, o Enter num campo do `DialogBody` aciona o botão do `DialogFooter`, com
+`form` e `id` iguais. O que ele **não** atravessa é *slot irmão*: quando outro
+componente renderiza o rodapé ao lado do formulário — o `footer=` do assistente
+de categorias —, não há contexto a herdar, e ali `form="um-id"` explícito
+continua sendo a resposta. As quatro constantes de string daquele arquivo ficam.
+
+**`role="alert"` e nada mais.** O papel já implica `aria-live="assertive"`, e um
+`aria-live="polite"` explícito **vence** o implícito — `role="alert"
+aria-live="polite"`, que o `login-form` escreve, é uma região polida chamada de
+alerta. Não é redundância, é contradição. E `FormError` não compõe `Alert`:
+seria molécula dentro de molécula, que a asserção 3 reprova — quem quer a caixa
+escreve `<Alert tone="destructive" variant="plain">` na tela.
+
+**Dois eixos de tamanho, e é de propósito.** `size` vai ao `Input` (a escada de
+altura); `fieldSize` é o degrau do andaime — rótulo, ajuda, erro — e herda do
+`FieldGroup`. `field.tsx` proíbe ancorar um no outro, porque um `Field` não sabe
+que controle carrega.
+
+**O que a mecânica exigiu, medido.** `FieldDescription` se registra **mesmo
+vazia**, então ela é renderizada condicionalmente — senão o `aria-describedby`
+apontaria para um parágrafo vazio; `FieldError` devolve `null` e desregistra, e
+pode ir incondicional. Em `FormSubmit`, `type` e `variant` vêm **antes** do
+espalhamento (uma exclusão pode pedir `destructive`) e `disabled`/`aria-busy`
+vêm **depois** (o estado de envio não pode ser sobrescrito). O `sticky` **não**
+traz área segura: ela é da superfície, e o casco da folha já a carrega — somar
+dobraria; e não desenha fio nem tinta, que é a regra J.
+
+**Um achado do navegador:** dentro de `<DialogClose asChild>`, o `data-slot` do
+`FormCancel` vira `dialog-close` — o `Slot` do Radix resolve o atributo a favor
+do pai. O que importa sobrevive (`variant="tertiary"`, `type="button"`), e o
+nome que fica é o certo: naquele rodapé, aquele botão **é** o fechar do diálogo.
+Quem escrever seletor para o cancelar de um diálogo procura `dialog-close`.
+
+**A página ganhou as cinco formas que o app tem**: empilhado (auth e
+configurações), em linha (busca), em diálogo (com o botão portalizado), em folha
+no telefone (cabeçalho fixo, corpo rolável, rodapé `sticky`) e com estado
+(`pending` ligado, `FormError` com causa real). A demonstração da folha passa
+`children` ao `MobileSheetFormStickyHeader` em vez de `title`: com `title` a peça
+renderiza um `DialogTitle`, que **lança** fora do contexto do `Dialog` — medido,
+e é como a página do chrome já fazia.
+
+**O que não migrou.** As 29 telas: `CustomForm` é alias e elas compilam sem
+mudar. Trocar o nome sem trocar os campos e os botões seria diff sem ganho — elas
+migram quando migrarem o conteúdo, e aí os 104 campos, os 46 botões e as 11
+telas que escrevem a área segura à mão saem juntos.
+
+### O `Kbd` absorveu o acorde, e o `KbdGroup` saiu para Moléculas
+
+Eram três peças em dois arquivos, e a pergunta "por que existem `kbd` e
+`kbd-shortcut`?" tinha uma resposta boa — uma tecla, um acorde e uma sequência
+são **gestos** diferentes — e uma consequência ruim: **duas entradas e duas
+páginas para um tópico só**, com duas `PropsTable` da mesma prop `keys` que já
+tinham divergido. Uma enumerava o que a prop aceita, a outra explicava o `mod`,
+e nenhuma continha a outra. É o defeito que a rodada da Tipografia pagou, na
+escala de um componente.
+
+**O `Kbd` ficou com as duas formas**: `<Kbd>Esc</Kbd>` é a tecla,
+`<Kbd keys="mod+k" />` é o acorde. O tipo é uma união — `children` e `keys` não
+convivem —, porque duas fontes para o mesmo conteúdo deixam uma em silêncio e
+quem escreveu não descobre qual. O `KbdShortcut` foi apagado sem alias: tinha
+**um** consumidor real, o gatilho da busca do catálogo.
+
+**A guarda que essa fusão exigiu, e o que ela protege.** O `KbdShortcut`
+devolvia `null` até montar, porque a escolha entre `⌘` e `Ctrl` depende do
+`navigator`. Subir isso para o `Kbd` sem condição faria **toda** tecla da tela
+esperar por uma plataforma que não muda nada — e a legenda do rodapé da paleta
+são quatro `Kbd` sem acorde (`↑ ↓ ↵ esc`), que pintariam em branco por um
+quadro. `useApplePlatform(ativo)` recebe `keys != null` e sai cedo. Medido no
+HTML do servidor da página do `Kbd`: **7 pastilhas**, exatamente as sete teclas
+soltas; os acordes não emitem nada e entram depois da hidratação.
+
+**O `KbdGroup` virou molécula, e o `keys` é o que torna isso verdade.** A
+decisão do dono foi "ele é a junção dos átomos" — e a medição mostrava o
+contrário: ele importava **zero** componentes, porque os `<Kbd>` vinham de quem
+chamava. Era mais uma das 26 de 38 moléculas que não compunham nada. Agora
+`<KbdGroup keys={["g","h"]} />` renderiza um `Kbd` por tecla, e o átomo é
+importado de fato. `children` continua para o que a tabela de nomes não escreve.
+
+**Um `"use client"` que não é pelo hook.** `kbd-group.tsx` não tem hook nenhum,
+e precisa da diretiva assim mesmo: `kbd.tsx` passou a ser módulo cliente, e
+**todo export de um módulo cliente vira *client reference*** quando um componente
+de servidor o importa — inclusive o que não é componente. Sem a diretiva, o
+`formatKey()` seria chamado no servidor e estouraria. Hoje nenhum consumidor é
+servidor, então é prevenção; e custa zero, porque o `Kbd` que ele renderiza já
+arrasta o limite.
+
+**Um defeito achado no caminho.** `docs/command.tsx` desenhava o `⌘K` dela como
+`<KbdGroup><Kbd>⌘</Kbd><Kbd>K</Kbd></KbdGroup>` — um acorde escrito como
+sequência, exatamente o que a nota "Acorde e sequência não são a mesma coisa"
+chama de errado e afirmava que **só** a página do `kbd` fazia. Ela mentia por
+omissão. E carregava um segundo defeito que a nota não cobre: o `⌘` era literal,
+então em Windows a demonstração ensinava a tecla errada — na página do
+componente que abre com aquele atalho, cujo `useEffect` aceita
+`metaKey || ctrlKey`.
+
+**A taxonomia: cinco asserções mudam de entrada, nenhuma muda de resultado.**
+Três coisas que isso expôs:
+
+- **A asserção 6 aponta para o mesmo lugar que a decisão do dono.** Manter o
+  `KbdGroup` dentro de `kbd.tsx` e dar página a ele produziria duas entradas com
+  o mesmo `source`, e ela reprovaria. Decisão e mecanismo concordaram.
+- **A asserção 2 não defende a classificação.** `kbd-group` com uma dep átomo
+  passaria como Átomo também; quem defende "Molécula" é só o comentário do
+  `LAYER` — que é o que o JSDoc dela já avisa.
+- **A asserção 1 é unidirecional** (arquivo → entrada). Uma entrada cujo `.tsx`
+  sumiu não é pega por nenhuma das sete; o que salva é `categoryForSlug`, que
+  **lança no import** e derruba `/designsystem/*`. Por isso `LAYER` e `REGISTRY`
+  mudam na mesma edição.
+
+Contagem viva das camadas: **7 · 27 · 15 · 31 · 2 · 7**. O número da seção da
+rodada 17 (`29 · 13`) já estava velho antes desta rodada — o `form` virou
+molécula no caminho —, e a decisão de não caçar contagem à mão continua valendo:
+o número datado fica onde está, e o vivo fica aqui.
+
+E uma nota honesta sobre a lista dos sem-consumidor: **`kbd` nunca esteve nela**,
+apesar de nenhum arquivo de produto o importar — porque `kbd-shortcut.tsx` o
+importava, e o medidor conta isso como "consumidor fora do catálogo". Depois
+desta rodada quem faz esse papel é `kbd-group.tsx`. É consumo **dentro do
+sistema**, e a medida por arquivo o esconde — do mesmo jeito que esconde os sete
+de nove exports de `typography` sem uso.
+
+### As duas setas do paginador, e a pasta que o auditor nunca olhou
+
+O dono selecionou a navegação "Anterior/Próximo" do catálogo e perguntou por que
+os ícones estavam diferentes. Estavam: a seta da esquerda vinha de
+`24/outline` (`stroke-width="1.5"`, `fill:none`) e a da direita de `16/solid`
+(`fill`), **no mesmo `size-4`**, decididas pela mesma linha —
+`const Chevron = isNext ? ChevronRightIcon : ChevronLeftIcon`.
+
+**Por que sobreviveu: o auditor era cego duas vezes.** `designsystem` estava no
+`SKIP_DIRS` **sem uma linha de justificativa**, numa lista que de resto só tinha
+`node_modules`, `.next` e `.git`. E mesmo apontado para a pasta ele não pegaria:
+a regra G resolve o conjunto pelo `import` e casa `<NomeImportado>` no JSX —
+**não seguia indireção**. Medido antes: rodando a pasta explicitamente, G
+devolvia 2 achados, os dois falsos positivos, e **nenhum dos reais**. Consertar
+uma das duas cegueiras não bastaria; foi preciso as duas.
+
+**O corte passou a ser por regra, não por pasta.** `isCatalog` — irmão do
+`isUi` — cala **A, D, D2, D3, H e I**, que são exatamente as seis que uma página
+de catálogo **precisa** violar para documentar: `docs/camadas.tsx` escreve
+`z-[1]` porque é a escala que ela ensina, `docs/typography.tsx` cita
+`text-[10px]` porque foi o que os tokens substituíram, `docs/code.tsx` cita
+`text-green-600` como o exemplo que o auditor reprova, e cada peça do catálogo
+nasce em `app/` de propósito, porque é demonstração e não tela. Todas as outras
+regras passaram a valer. **195 → 4**, e os 4 restantes são falsos positivos
+conhecidos.
+
+Duas limpezas entraram junto, e valem para o repositório inteiro: **arquivo
+gerado sai da varredura** (o que abre com `// GERADO POR` — eram 14 achados, todos
+de `search-index.ts`, texto de espécime concatenado pelo gerador), e
+**comentário não é código**. A segunda o arquivo já prometia e não cumpria: o
+JSDoc de `lineOf` dizia "remove comentários" e a função só contava linhas.
+
+**A regra G passou a seguir indireção**, nos três padrões reais — `const X =
+cond ? A : B`, `{ Icon: Foo }` e `{ icon: Foo }` + `<item.icon>`. Ela **erra para
+menos**: se qualquer sítio indireto tiver o corpo ilegível (`${…}` sem `size-`
+literal), o arquivo inteiro se cala — é o que mantém `docs/iconografia.tsx`, que
+escolhe o conjunto por px, fora do relatório.
+
+**Ela achou 14 pares errados, e 6 estavam fora do catálogo.** No catálogo:
+`ds-doc.tsx` (a seta), `page.tsx` (os 4 de "Comece aqui" — no mesmo cartão onde o
+`ArrowRightIcon` de 16/solid já estava certo, o mesmo desencontro do paginador) e
+`docs/sidebar.tsx` (3 de 24/outline misturados com 1 de 16/solid na mesma barra).
+No app, que nenhuma regra alcançava: `dashboard-kpi-cards.tsx` (4×, em `size-3` e
+`size-3.5`) e `category-detail-summary-section.tsx` (2×, em `size-3`). Os 14
+viraram `16/solid`.
+
+**Uma exceção nomeada, com o motivo:** `app-theme-toggle` faz um crossfade
+`outline` ↔ `solid` a 16px, e **o Heroicons não tem `16/outline`** — os conjuntos
+micro e mini são só sólidos. Mesma classe de lacuna do círculo do `Spinner`, e a
+saída é a mesma: `HEROICON_SET_EXCEPTIONS`.
+
+**As três receitas de botão viraram `Button asChild` — e duas delas contra a
+medição.** Eu apresentei o custo e o dono reafirmou; o número de cada uma ficou
+escrito no arquivo, que é como este projeto registra decisão tomada contra
+medida:
+
+| | contra-classes | o que elas desfazem |
+| --- | --- | --- |
+| `DocPagerLink` | **2** | `shrink` e `dark:hover:bg-accent`. `className` de 23 para 14 tokens — **vale** |
+| `DsNavLink` | **7** | `justify-start`, `font-normal`, `min-w-0` + `truncate` no filho, `dark:hover:`, e 3 para neutralizar o hover do `tertiary` no item ativo. É o mesmo 7 que fez o `sidebarMenuButtonVariants` ficar cru |
+| linha de sumário | **3** | `h-auto`, `font-normal`, `bg-clip-border`. `className` de 14 para 13 tokens |
+
+Três fatos do `twMerge` que a conversão obrigou a medir: **`shrink-0` não é
+derrubado por `min-w-0`** — sem a contra-classe `shrink` o par não encolhe no
+`justify-between` e o `truncate` **nunca dispara** (medido a 320px: com ela, as
+duas reticenciam e a página não rola na horizontal); **`dark:hover:bg-muted/50`
+não é derrubado por `hover:bg-accent`**, porque são variantes diferentes e no
+escuro `&:is(.dark *)` vence; e **`group` convive com `group/button`** — são
+classes distintas, e `group-hover:` compila para `:is(:where(.group):hover *)`,
+que precisa da literal. Sem essa terceira, as setas parariam de animar.
+
+**A regra J acendeu uma vez, e virou exceção nomeada.** Ver a nota dela acima: o
+`PreviewCode` não é uma tira, é a segunda superfície — e o fio faz 5,5× o
+trabalho da tinta, medido.
+
+**O que ficou fora, e é o próximo buraco.** As regras **H** e **J** só enxergam
+`className="literal"`: o regex não casa `className={cn(…)}`. Medido: **694 de
+5.753 sítios usam `cn()` — 12% de ponto cego**. É por isso que a H nunca viu o
+`DocPagerLink`, que tinha `hover:` e `active:` dentro de um `cn()`. E os 4 falsos
+positivos que sobram no catálogo têm duas causas: a heurística "sem classe de
+tamanho = `size-4`" da regra G não enxerga o pai (`ColorTile size="lg"` aplica
+`size-5`), e `description=`/`title=` ainda não são tratados como espécime.
+
+### O `MoneyInput` virou `<Input money>`, e o defeito estava nas chamadas
+
+A pergunta que abriu a rodada foi se o `MoneyInput` não devia ser Molécula, "já
+que é feito de input, rótulo e texto de ajuda". **Ele não era.** Medido: 80
+linhas, **um** import de `ui/` (o `Input`), um `<Input>` no `return`, e zero
+rótulo, zero ajuda, zero erro, zero prefixo "R$". O tipo era literalmente
+`Omit<ComponentProps<typeof Input>, "type"|"value"|"defaultValue"|"onChange">`.
+
+**Mas a intuição apontava para um defeito real, e ele estava um nível fora.** O
+rótulo, a ajuda e o erro que a pergunta imaginava dentro do componente estavam
+espalhados pelas **17 chamadas**, em 11 arquivos: `<Label htmlFor>` escrito à
+mão nas 17, três dialetos de espaçamento (`space-y-1.5`, `space-y-2`,
+`grid gap-2`), dois de rótulo, e **zero `aria-invalid`, zero
+`aria-describedby`** — um campo de dinheiro inválido não era anunciado por
+leitor de tela em lugar nenhum do app.
+
+**A resposta não foi reclassificar; foi fazer o componente ser o que o nome
+promete** — a mesma inversão que o `Form` registrou. Só que o nome que promete
+não era `MoneyInput`: era o `Input`. Ele absorveu o modo, como o `Kbd` absorveu
+o acorde em `keys`.
+
+**A união é discriminada, e os dois ramos declaram as mesmas chaves.** O ramo
+base fecha `onValueChange` e `mono` com `?: never`; o de dinheiro fecha `type`,
+`defaultValue` e `onChange`. É o idioma do `Kbd`, e a razão é mecânica: com as
+chaves presentes dos dois lados, um `const { onValueChange, ...rest }` compila em
+qualquer ramo e o `rest` não perde nada calado — com `Omit` puro, `onValueChange`
+sumiria do `rest` sem aviso. **E é o que dispensa o estreitamento dentro do
+componente**: `onValueChange` colapsa para `Fn | undefined`, então o corpo o
+chama com `?.()` e nunca pergunta em que ramo está. Um `<input>` só, com o ramo
+no corpo — dois componentes internos desmontariam o nó se `money` alternasse, e o
+campo perderia o foco.
+
+**O colapso do rest é real, e foi medido nos quatro consumidores de
+`ComponentProps<typeof Input>`.** `FormFieldOwnProps & ComponentProps<typeof
+Input>` é uma **interseção com a união aninhada**, e desestruturar o rest dela
+colapsa os ramos num objeto com `money?: boolean`, que não é atribuível a
+nenhum: `Type 'true' is not assignable to type 'false'`. Em `FormInput` a saída
+foi **distribuir a interseção à mão**, pondo a união no topo — e ela compilou de
+primeira, sem ternário de estreitamento e **sem nenhum cast**. `InputGroupInput`
+e `SidebarInput` foram **fixados no ramo base** (`InputBaseProps`): ali o
+colapso ainda comeria `onChange`, `type` e `defaultValue`, e não há dinheiro numa
+busca de lateral nem dentro de uma moldura de addon — o que a página do
+`InputGroup` já dizia. `SearchInput` e `FormPickerPopoverSearch` derivam do
+primeiro e ficaram limpos de graça.
+
+**`data-slot` virou `input`, com `data-money` ao lado.** `data-slot="money-input"`
+tinha **zero** consumidores — nada em `globals.css`, no auditor, em `lib/`, em
+teste, nem em `ENTER_DEFERRAL_RULES`. E `data-money` sobrevive quando o
+`FormInput` sobrescreve o `data-slot` com `form-input`, coisa que `money-input`
+não fazia: naquele componente o `data-slot` sempre foi nome de encaixe, não
+rótulo de tipo.
+
+**Doze das dezessete chamadas viraram `FormInput`; cinco ficaram cruas, e o
+motivo de cada uma está escrito no sítio.** Duas são estruturais —
+`credit-card-category-alerts` tem rótulo e controle como **células
+independentes** de um `grid` com `sm:contents`, e o `flex-col *:w-full` do
+`Field` as colapsaria; o orçamento por linha do `categories-onboarding-wizard`
+tem rótulo `sr-only` num controle de largura fixa (`w-[6.75rem] shrink-0`) numa
+fileira flex. As outras três são de aparência: os dois campos de valor do
+`transactions-filters-panel` têm rótulo `text-2xs text-muted-foreground`, e
+`fieldSize` só tem `sm` (`text-xs`) e `md` — eles são **2 de 9 rótulos irmãos**
+na mesma grafia, e migrar só os dois deixaria dois rótulos de outro corpo e
+outra cor no meio do painel. Migrar o painel inteiro é rodada própria.
+
+**Um conserto que veio junto, e não estava no plano.** Seis dos sítios
+escreviam `className="text-sm"` no campo de dinheiro. A superfície é
+`text-base md:text-sm`, e essa rampa existe para **impedir o zoom automático do
+iOS** em campo com fonte abaixo de 16px — o `text-sm` a anulava, e os seis
+campos davam zoom no telefone. Com a migração ele saiu: 16px no telefone, 14
+no desktop, que é o que o componente sempre prometeu.
+
+**O catálogo perdeu uma página** (89 → 88): a de dinheiro fundiu na do `Input`,
+com as três notas movidas literais e uma nova explicando por que virou modo. A
+demonstração passou a usar `<FormInput money>` — uma página que ensina o campo
+tem de mostrar a forma que a rodada impôs às telas. Mais cinco menções textuais
+em `field`, `input-group`, `slider`, `dinheiro` e `typography`.
+
+**E a cláusula "especializar continua átomo" ficou com zero casos.** Ela tinha
+dois exemplos, e os dois morreram pelo mesmo motivo: o especializador importava
+**um** componente e renderizava **um** elemento — era o átomo com outro nome,
+cobrando do catálogo uma segunda página. É o resultado que se devia esperar, e o
+comentário da asserção 2 passou a registrá-lo com a pergunta que sobra: **isto é
+um componente ou um modo?** A régua segue válida uma camada acima, onde a
+especialização é real (`StatCard` sobre `Card`).
+
+### O rádio não tinha átomo, e o `Form` já não era molécula
+
+A pergunta foi pôr o `RadioGroup` em Moléculas e criar um componente de rádio.
+Medido, o componente dava razão a ela: 49 linhas, **zero** imports de `ui/`, e o
+`RadioGroupItem` era **o círculo cru** — quem usava escrevia o `<div
+className="flex items-center gap-2">`, o `<Label htmlFor>` e o `id` à mão, uma
+vez por opção. As duas demonstrações do catálogo faziam isso, em duas grafias, e
+o catálogo escrever a anatomia é o sinal que esta casa já nomeia: **falta uma
+peça**. "Molécula feita de átomos" seria mentira enquanto o rótulo ficasse do
+lado de fora.
+
+**`Radio` é o átomo, e ele não renderiza sozinho.** O Radix **não exporta** rádio
+independente — só o `Item`, que chama `useRadioGroupContext` e lança fora do
+`Root`. É o primeiro átomo do sistema que exige contexto entre arquivos, e o
+custo foi aceito com o motivo escrito: reimplementar o `role="radio"`, o foco
+itinerante e o `<input>` espelho à mão para ganhar independência seria trocar uma
+primitiva testada por uma cópia pior. Contexto de primitiva não é composição —
+a mesma conta que faz o `Slider` átomo com quatro peças Radix por dentro.
+
+**Ele não especializa nada**, e por isso não reabre a cláusula que as duas
+rodadas anteriores fecharam: `KbdShortcut` e `MoneyInput` foram absorvidos porque
+eram *o átomo com outro nome*; aqui é o inverso — a unidade estava dentro e saiu.
+É o par `kbd` / `kbd-group` outra vez.
+
+**Duas correções de conteúdo, com número.** O ponto passou de `bg-primary` para
+`bg-current`, o que dá trabalho ao `text-primary-accent` do anel — que era
+**declaração morta**, porque nada lia a cor do texto. Medido contra a página: no
+claro os dois tokens dão 7,34:1 (ali são a mesma cor); no escuro `--primary` dá
+**3,64:1** e `--primary-accent` dá **6,78:1**. Nenhum reprova os 3:1 de traço
+não-textual, e é por isso que quem decide é a régua e não a norma: o ponto não
+carrega texto por cima, ele é marca sobre o fundo. E o `aria-invalid` ganhou
+`ring-3`: ele escrevia a **cor** do anel sem a largura dele, então o estado
+inválido trocava só a borda — a família do "Desfazer" do toast, que tinha
+`border-color` e nenhum `border-style`.
+
+**O `<label>` embrulha o rádio, e o cartão exige isso.** Não há `useId` nem
+`htmlFor`: a associação implícita resolve, e o controle rotulado é o `<button
+role="radio">`, que **é** elemento rotulável. O `variant="card"` não teria como
+funcionar de outro jeito — a caixa que acende é a mesma que precisa *conter* o
+rádio para ler o estado dele com `:has()`. E a `description` vive dentro do
+rótulo, entrando no **nome acessível** em vez de num `aria-describedby` que faria
+o leitor dizer o texto duas vezes.
+
+**`FormRadioGroup` precisou de um irmão do `FormField`, e o motivo é mecânico.**
+`RadioGroupPrimitive.Root` renderiza uma `<div role="radiogroup">`, e `<label
+for>` exige um elemento **rotulável** — o navegador ignora sem avisar. O
+`FormFieldGroup` rotula por `aria-labelledby` apontando para um `FieldTitle`, que
+é a peça que `field.tsx` já reservava para *"o que rotula um grupo, e não um
+controle"*. O `Field` fica **sem `role`**: um segundo `radiogroup` em volta
+poria um nó entre o grupo e os `role="radio"` dele, que é a regra que este
+arquivo já escreve para o `ButtonGroup` em volta de um `tablist`. O
+`FieldControl` continua servindo — a raiz é uma `div` de verdade, e os três
+atributos que ele injeta são os que um grupo quer.
+
+**Os 4 rádios vestidos de aba voltaram a ser rádio.** Eles anunciavam o padrão
+ARIA de abas com zero `tabpanel`, zero `aria-controls` e zero foco itinerante,
+para escolher o valor que ia ser gravado. O pior tinha `<Label>Como informar os
+valores?</Label>` **solto** — sem `htmlFor`, sem `aria-labelledby` — e o nome
+acessível vinha de um `aria-label` que dizia uma terceira coisa. Os
+`role="tablist"` do app foram de **10 para 6**, e os 6 que ficam são filtro ou
+aba de página, com a chapa (`transactionSegmentContainerClassName`) intacta
+porque 8 arquivos ainda a importam.
+
+**E `fullWidth` saiu do `TransactionFormTypeSegment` de propósito.** Dentro de um
+`Field` o `fieldVariants` já dá `*:w-full`, então o prop virava no-op — e prop
+que não faz nada é a classe morta desta base em forma de API. Removê-lo fez o
+compilador apontar os **7** sítios que embrulhavam o componente em `<div
+className="space-y-2"><Label>Tipo</Label>`: sete rótulos órfãos que deixaram de
+existir, e um oitavo sítio que não tinha rótulo nenhum e passou a ter.
+
+### O `Form` virou organismo, e o teste é que descobriu
+
+Nem eu nem o plano previram: `form.tsx` já importava `field` (Molécula) e passou
+a importar `radio-group`, que acabara de virar Molécula. **Duas moléculas**, e a
+asserção 3 reprovou.
+
+O achado é maior que o conserto. Pela régua escrita, organismo é quem *"compõe
+duas ou mais moléculas, ou compõe molécula **e** tem estado próprio"* — e o
+`Form` já satisfazia a segunda cláusula antes desta rodada: ele compunha `field`
+e tinha a política do Enter e o `id` em contexto. **Ele estava classificado
+errado, e o limiar mecânico da asserção 3 é que expôs.** É a terceira inversão
+que este arquivo registra para o mesmo componente: átomo → molécula quando ganhou
+as peças, molécula → organismo quando as peças passaram a ser moléculas.
+
+### Três lições de método, e as três são erros meus
+
+**Um agente reportou dois seletores mortos, e os dois estavam vivos.** A
+afirmação era que `has-data-checked:` em `field.tsx` nunca acendeu o cartão de
+escolha, e que o `Switch` não pintava pelo mesmo motivo. Medido no navegador: o
+cartão marcado sai com `oklab(0.66 … / 0.6)` na borda e `oklab(0.5 … / 0.1)` no
+fundo; o `Switch` marcado sai `oklch(0.5 0.125 166)`. O Radix de fato **não**
+emite `data-checked` — mas o variante do Tailwind 4.2.2 cobre
+`[data-state=checked]` também. A "correção" teria mexido em `ui/` sobre premissa
+falsa. **Relatório de agente não é medição.**
+
+**Li o DOM no mesmo tique do `.click()`, e "descobri" um defeito que não
+existia.** Quatro grupos pareceram não selecionar; com uma espera de quadro, os
+quatro selecionam. É a lição que este arquivo já registra três vezes, agora pela
+quarta — e desta vez o próprio dado denunciava o erro: a leitura seguinte já
+mostrava o estado trocado pelo clique anterior.
+
+**E gastei quatro medições acusando o teclado antes de testar o instrumento.**
+As setas não moviam o foco. Instalei um ouvinte de `keydown` e pressionei uma
+tecla: **zero eventos recebidos**. O painel do navegador não entrega teclas neste
+ambiente, com ele oculto ou à frente. A navegação por setas vem do
+`RovingFocusGroup` do Radix e **não foi verificada** — está dito assim, em vez de
+afirmada.
+
+**O que ficou medido, e o que não.** Verificados: os quatro grupos selecionam; o
+cartão acende nos dois estados; `role="radiogroup"` com `aria-labelledby`
+apontando para um `field-title` que existe, e `aria-describedby` para a
+descrição. **Não verificados**: as setas (acima) e as telas do app migradas, que
+exigem sessão autenticada.
+
+**Uma medida que a previsão errou.** O plano dizia que o cartão horizontal ficaria
+em 44px nos dois tamanhos. Medido: **44 no desktop** (220px de largura, uma
+linha) e **61 no telefone** a 375px (143px de largura, rótulo em duas linhas),
+contra os 40 do trilho que ele substitui. O ganho de acessibilidade é real; o
+custo de altura no telefone é maior do que eu previ, e fica escrito.
 
 ### Backlog de migração
 
@@ -2685,7 +3456,8 @@ E o que a rodada dos menus deixou:
 
 E o que a rodada do `Tabs` e do `Combobox` deixou:
 
-- **10 `role="tablist"` escritos à mão, em 7 arquivos, com 43 referências às
+- **10 `role="tablist"` escritos à mão, em 7 arquivos** (hoje **6**: os 4 de
+  formulário viraram `FormRadioGroup`), **com 43 referências às
   duas strings de `transaction-type-segment.tsx`** — uma pasta de *feature*
   fazendo o trabalho do design system, que é o invariante 1 no nível do sistema.
   Nenhum deles tem foco itinerante, setas, `aria-controls` ou `role="tabpanel"`:
@@ -2850,17 +3622,19 @@ E o que a rodada do campo, do formulário e da barra deixou:
   `workspace-appearance-form-fields.tsx` são o auditor apontando a mesma lacuna.
 - **A escada dos controles de campo está incompleta**, e é o que obriga os 15
   `h-9` / `className="text-sm"` escritos à mão nos três formulários maiores:
-  `Input` e `SelectTrigger` têm `sm md lg xl`; **`NativeSelect` só tem `sm md`**,
-  e **`MoneyInput` e `Textarea` não têm nenhum**. Um campo de valor não consegue
-  ter a mesma altura do campo de texto ao lado dele. Ficou fora porque é conserto
-  de três componentes que esta rodada não abriu.
+  `Input` e `SelectTrigger` têm `sm md lg xl`; **`NativeSelect` só tinha `sm md`**
+  (fechado na rodada da composição), **o campo de dinheiro não tinha nenhum** —
+  fechado na rodada do `<Input money>`, que o faz herdar a escada inteira —, e
+  **`Textarea` continua sem**. Ficou o `Textarea`, que é conserto de um
+  componente que aquela rodada não abriu.
 - **`NativeSelect` é a quinta cópia da superfície de campo** — escreve
   `rounded-lg border border-input bg-input-fill/30 … aria-invalid:…` inline em
   vez de consumir `field-classes`. O backlog já chamava `input-group.tsx:69` de
   "a quarta ocorrência". Junto vêm dois desvios só dele:
   `data-[size=sm]:rounded-md` (raio diferente num degrau, que nenhum outro
   controle faz) e `dark:hover:bg-input-fill/50`, um `hover:` sem par `active:` e
-  só no tema escuro.
+  só no tema escuro. *(Pago na rodada da composição: veste `field-classes`, os
+  dois desvios saíram, e ganhou `lg` e `xl`.)*
 - **6 barras de filtro à mão** (1.372 linhas) mais **6 clones em esqueleto** com
   as strings copiadas, mais `monthNavDense*` (4 constantes, ramo `false` morto),
   `transactionSegment*` e o booleano `dense` costurado por três componentes.
@@ -2886,7 +3660,8 @@ E o que a rodada do campo, do formulário e da barra deixou:
   `focus-visible:ring-2`, `ring-offset-background`). `NativeSelect` existe.
 - **`ChangePasswordDialog.tsx:32-36`** deriva à mão a classe do rodapé do
   diálogo **e** a da folha, com três `!important` brigando com as margens do
-  `DialogFooter`. E falta um `MobileSheetFormFooter`: o chrome cobre cabeçalho e
+  `DialogFooter`. *(O rodapé foi pago: é `FormActions variant="sticky"`.)* E
+  faltava um `MobileSheetFormFooter`: o chrome cobria cabeçalho e
   corpo, não o rodapé.
 - **4 `maxLength` silenciosos**, um deles em 120 caracteres, sem contador. Quatro
   é pouco para uma peça, mas truncar sem avisar é defeito.
@@ -2907,8 +3682,9 @@ E o que a revisão da barra deixou:
   conserto é grátis — e é ele que tira os 3 filtros de `role="tab"`. Sem isso,
   cada tela migrada precisaria do próprio guarda
   (`onValueChange={(v) => v && setX(v)}`): 6 grafias duplicadas.
-- **4 `role="tablist"` dentro de formulários**, um deles sob um `<Label>`.
-  Destino: `RadioGroup`. É o pior dos onze e não é assunto de barra.
+- ~~4 `role="tablist"` dentro de formulários~~ — **pagos** na rodada do `Radio`.
+  Restam os **6** que são filtro ou aba de página, e esses continuam sendo
+  trilho segmentado.
 - **`TransactionTypeSegment` é aba numa tela e filtro na outra.** Separar é
   pré-requisito de qualquer migração dos trilhos.
 - **A cromagem de seis telas mora numa pasta de *feature*.**
@@ -2942,7 +3718,8 @@ E o que a rodada do chrome de página deixou:
   diferente**: `text-2xl font-semibold` com `border-b` contra `text-base`
   (agora `sm|md|lg`) sem fio. O `H2` é o cabeçalho de prosa e o outro é o de
   tela, mas nada no sistema diz isso. Resolver é escolher um dono para
-  "cabeçalho de segundo nível".
+  "cabeçalho de segundo nível". *(Resolvido na rodada da composição:
+  `PageSectionTitle` **é** `H2` por `asChild`, e `H2` perdeu a régua.)*
 - **`Container` não tem eixo de calha.** `px-4 sm:px-6 lg:px-8` é fixo, e não há
   divergência medida no app para justificar um eixo — a nota fica para o dia em
   que houver.
@@ -2971,28 +3748,69 @@ E o que a rodada do `Container` deixou:
 
 E o que a rodada da taxonomia deixou:
 
-- **A marca "movido" tem prazo.** São 34 entradas com `MOVED_FROM` no
-  `registry.ts`. **A próxima rodada que tocar aquele arquivo apaga o mapa
-  inteiro** — a marca existe para a transição, não para o registro; o registro é
-  esta seção.
 - **30 componentes seguem sem consumidor fora do catálogo**: `accordion`,
   `breadcrumb`, `button-group`, `carousel`, `code`, `combobox`, `context-menu`,
   `description-list`, `field`, `hover-card`, `input-otp`, `item`,
-  `kbd-shortcut`, `menubar`, `native-select`, `navigation-menu`, `page-header`,
-  `page-section`, `pagination`, `radio-group`, `resizable`, `scroll-area`,
+  `kbd-group`, `menubar`, `native-select`, `navigation-menu`, `page-header`,
+  `page-section`, `pagination`, `resizable`, `scroll-area`,
   `scroll-fade`, `search-input`, `slider`, `stepper`, `tabs`, `timeline`,
   `toggle-group`, `toolbar`. Cada um pede a tela que o prove, e isso é trabalho
   de produto — mas a contagem é a medida honesta de quanto do sistema ainda é
-  promessa.
+  promessa. E ela é por **arquivo**, o que esconde: `typography` conta como
+  consumido, e são **2 dos 9** exports — `Muted` (9 usos) e `P` (6), em 6
+  arquivos. Os outros sete têm zero no app — mas seis dos nove passaram a ter
+  consumidor **dentro do sistema** na rodada da composição.
+E o que a rodada do `<Input money>` deixou:
+
+- **Os dois campos de valor do `transactions-filters-panel` continuam crus**, e
+  com eles os outros **7 rótulos `text-2xs text-muted-foreground`** do mesmo
+  painel. O que destrava é migrar o painel inteiro de uma vez — ou um degrau
+  `xs` em `fieldSize`, que hoje não existe e que 9 rótulos pediriam.
+- **`credit-card-category-alerts` é uma barra em `grid` com `sm:contents`**, e é
+  a única forma do app que o `Field` não veste. Redesenhá-la é o que a tira de
+  cru.
+- **O orçamento por linha do `categories-onboarding-wizard`** tem rótulo
+  `sr-only` num controle de 6,75rem. Um `FormInput` com rótulo invisível é a
+  peça que falta — ou a linha vira `Item`, que é onde ela deveria estar.
+- **`Textarea` continua sem escada de altura.** Era o par do campo de dinheiro
+  na frase do backlog; o dinheiro herdou a do `Input`, e ele ficou sozinho.
+- **A regra de auditor que mediria isto ainda não existe**: um campo montado à
+  mão (`<Label>` seguido de controle, sem `Field` em volta) é medível, e é o que
+  impediria as 17 de voltarem. Os números desta rodada — 12 migrados, 5 crus —
+  saíram de leitura, não do auditor, que reportou **os mesmos achados antes e
+  depois** nos 11 arquivos.
+
+E o que a rodada do `Radio` deixou:
+
+- **As setas do `radiogroup` não foram verificadas.** O painel do navegador não
+  entrega teclas neste ambiente — medido com um ouvinte de `keydown` que recebeu
+  zero eventos. Quem tiver teclado de verdade fecha isso em trinta segundos:
+  Tab entra no grupo, seta move o foco **e** seleciona.
+- **As 4 telas migradas não foram vistas logadas.** `transaction-form-fields` e
+  os 7 sítios do `TransactionFormTypeSegment` compilam e o `<div
+  className="space-y-2">` que saía carregava o respiro entre o campo de nome e o
+  de tipo — o `gap-2` do `Field` **deve** deixar neutro, e "deve" é previsão.
+- **No telefone o cartão horizontal mede 61px**, contra os 40 do trilho que ele
+  substituiu: a 375px o rótulo quebra em duas linhas. No desktop são 44 contra
+  32. Se isso incomodar, a saída é um degrau de corpo menor no item — e é
+  decisão de produto, não conserto.
+- **O app fala duas línguas de escolha até a próxima rodada.** Os 4 que migraram
+  são cartão com contorno de marca; os **6** que ficam (filtro e aba de página)
+  seguem com a pastilha levantada sobre bandeja. É temporário por construção,
+  mas é real.
+- **`ToggleGroup type="single"` continua desmarcando tudo** ao clicar no item
+  ativo, e emitindo `role="radio"` dentro de `role="group"`. Zero consumidores;
+  o conserto continua grátis, e é ele que destrava os 3 filtros que hoje são
+  `role="tab"`.
+- **O `Radio` nasce sem consumidor fora do `RadioGroup` e da página do `Field`.**
+  O caso que o justifica sozinho é o cartão com conteúdo próprio — uma opção que
+  carrega um valor em dinheiro, por exemplo.
+
 - **O vocabulário de superfície ainda tem 14 palavras.** Depois de unificar
   `plain`, sobram `outline`, `solid`, `elevated`, `muted`, `soft`, `panel`,
   `underline`, `dashed`, `card`, `flush`, `inset`, `contained`, `separated` e
   `ruled` espalhadas pelos eixos `variant`. Algumas são genuinamente diferentes;
   outras são a mesma coisa com dois nomes. É uma rodada própria, e a medida para
   começar é cruzar cada palavra com o que ela desenha.
-- **Tipografia ficou de fora por decisão.** `typography` mudou de camada
-  (Organismo → Átomos), mas nem a página dele nem a Fundação `tipografia` foram
-  tocadas — e a sobreposição entre as duas é o mesmo formato que `container` e
-  `espacamento` tinham antes desta rodada.
 
 Reproduza a qualquer momento com `npm run ds:audit`.
