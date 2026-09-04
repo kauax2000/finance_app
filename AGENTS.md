@@ -3384,6 +3384,200 @@ A assimetria de 15 contra 10 fica, e o motivo continua sendo **área**: um ícon
 de 12px numa caixa de 24 sem contorno tem um quarto da superfície de um botão de
 texto.
 
+### A costura era uma borda, e o auditor não tinha como ver
+
+`resizable.tsx` era o único arquivo de `src/components/ui/` fora de toda régua
+da casa — e passava **limpo** no `ds:audit`. Não por sorte: `isUi` desliga A2, C
+e C', e ele não tinha cor literal, valor arbitrário, `<svg>`, `hover:` sem par
+nem `Intl`. Uma pasta calada não é uma pasta conforme, e um arquivo aprovado
+também não.
+
+O defeito de fundo cabe numa frase: **a costura era indistinguível de uma
+borda.** Mesmo token, mesma espessura, mesma cor, nenhum estado — o desenho de
+um `Separator` parado, na única peça do app cujo trabalho inteiro é dizer que
+aquela linha se move. E a pega do `withHandle` era **também** `bg-border`: uma
+pastilha da cor exata do fio em que ela se apoia. Medido, **1,35 no claro e 1,33
+no escuro**, o mesmo número que o contorno de campo tem fora da 1.4.11.
+
+**A `react-resizable-panels` 4.12.3 publicava três mecanismos, e o arquivo lia
+zero.** `data-separator` vale `inactive | hover | active | focus | disabled`; a
+lib liga `keydown` em cada costura (setas, `Home`, `End`); e o duplo-clique
+devolve o painel ao `defaultSize`, ligado de fábrica. Nada disso aparecia na
+documentação, e uma afordância que existe e ninguém vê é igual a nenhuma.
+
+**A `className` do grupo era inteiramente inerte.** O `Group` declara `display`,
+`flex-direction`, `flex-wrap`, `overflow`, `height` e `width` por **estilo
+inline** — o `.d.ts` avisa que as quatro primeiras não podem ser sobrescritas —,
+e inline vence classe, então `flex h-full w-full` não fazia nada. Junto ia um
+`aria-[orientation=vertical]:flex-col` apontando para um atributo que o grupo
+**não emite**: o nó dele carrega `data-group`, `data-testid` e `id`, e mais
+nada. Consequência para quem escreve tela: **a caixa do grupo vem do pai**.
+
+Mais duas declarações que não desenhavam nada: `ring-offset-background` sem
+nenhuma classe de largura de offset — a família do "Desfazer" do toast, que
+tinha `border-color` e nenhum `border-style` —, e `rounded-lg` (10px) numa pega
+de 4px, que o navegador clampa para 2.
+
+E o `role="separator"` estava **sem nome acessível**. É a medição do `Popover`
+outra vez, e aqui era pior: o teclado funciona, então existia um controle
+operável e sem nome. Hoje o `aria-label` tem padrão em pt-BR, pela mesma razão
+que o `locale` do `Calendar` tem — verificado na árvore de acessibilidade, as
+oito costuras da página saem nomeadas.
+
+**A nota de toque da documentação estava factualmente errada.** Ela dizia que a
+alça tinha 4px e era "impossível com o dedo", descrevendo uma versão que não
+está instalada: desde a v4 a lib faz o próprio hit-testing, expandindo a
+`DOMRect` por `resizeTargetMinimumSize`, cujo padrão é `{ coarse: 20, fine: 10 }`
+e é escolhido por `isCoarsePointer()`. O `after:` de 4px não era o alvo de nada
+havia uma versão inteira. O que restava de verdadeiro é que **20 é menos que os
+44 do sistema**, e a prop que fecha isso nunca tinha sido plugada.
+
+**O realce é pintado fora do fluxo, e é a razão de o `after:` ter virado
+`before:`.** Engrossar a alça reflui os dois painéis a cada passagem do cursor;
+o acento é um `::before` absoluto de 2px sobre a costura, e só a **cor**
+transiciona. Medido: as larguras dos dois painéis idênticas até a terceira casa
+decimal com e sem cursor — `303,602 / 455,398` nas duas leituras. `::before` e
+não `::after` porque o `after` é o último filho e pintaria por cima da pega, o
+que exigiria um `z-index` só para desfazer.
+
+**Três eixos onde havia um booleano.** `variant` é `line | grip | plain`, e ele
+decide o que a costura desenha **em repouso** — nunca o que ela faz: as três
+acendem igual. `plain` existe para painéis que já têm moldura própria, onde um
+fio na calha seria a terceira borda em 8px. O catálogo saiu de `—` na coluna de
+variantes.
+
+**A orientação vem do contexto, e não do `aria-orientation`.** O `Separator`
+emite esse atributo **invertido** em relação ao grupo, e o arquivo antigo
+dependia da inversão sem registrá-la — a armadilha exata que faz a próxima
+pessoa "corrigir" para o lado errado. A geometria saiu para uma condicional
+sobre o contexto, como o `separator.tsx` já fazia, e com ela sumiram os sete
+seletores de atributo.
+
+**Um split é móvel de desktop.** Abaixo de 768px o grupo horizontal vira fluxo
+empilhado: os painéis soltam as proporções, e a costura perde o arraste, o papel
+e o foco, virando um fio estático `aria-hidden` — duas regiões empilhadas sem
+nada entre elas leem como um bloco só. É o par que o `Sheet` já faz entre painel
+e gaveta, com o mesmo hook e o mesmo número, e a mesma regra: **nenhuma tela
+escreve `isMobile`**. A documentação anterior empurrava esse layout para toda
+tela futura em prosa. O padrão é `orientation === "horizontal"`, na forma
+`stack ?? …` que o `Tabs` já usa — um grupo vertical num telefone já é uma
+coluna. Medido a 375px: **7 dos 8 grupos empilham**, e o único que não é o
+vertical, que mantém `role="separator"` e o foco.
+
+**A pega usa a tinta de arraste da folha e da gaveta, num alfa próprio, e a
+diferença é área.** A alça da gaveta é 48×6 numa superfície que a pessoa acabou
+de abrir; esta pega é 4×32 entre dois painéis de conteúdo — é a medição da
+`AnnouncementBar`, onde um ícone de 12px precisou de mais tinta que um botão de
+texto pelo mesmo motivo. Varridos os degraus sobre o fundo real, **70% é o
+primeiro que alcança 3:1 nos dois temas**: 3,16 no claro e 4,05 no escuro,
+contra 1,66 e 1,92 a 35%. O acento dá **3,01 nos dois temas** ao pousar e 7,66 /
+6,14 ao arrastar, e a costura em repouso fica em 1,35 / 1,33 — o fio quieto, de
+propósito. Ela não importa o `DRAWER_HANDLE_CLASS`: `drawer` é Organismo, e o
+orçamento de import deste Átomo vai todo para o `Button`.
+
+**O colapsar não pode morar na alça, e não é escolha de desenho.** A lib liga
+`pointerdown`, `dblclick`, `contextmenu` e `pointerup` **no documento, em fase
+de captura**, e decide por hit-testing de ponto. Um botão dentro da alça é
+impossível: a captura do documento dispara antes do handler dele, e
+`stopPropagation` de dentro não alcança um ancestral que já correu. Pior,
+qualquer controle a menos de **metade da região de arraste** (22px) tem o
+próprio clique engolido. Por isso são `useResizablePanel` + um
+`ResizableCollapseTrigger` que mora no cabeçalho do painel vizinho — e a
+demonstração do catálogo violou a própria regra na primeira escrita, com o
+gatilho a **8px** da costura.
+
+O primeiro conserto errou para o outro lado, e quem viu foi o dono: cravar 24px
+deixava o recuo esquerdo **3× maior que os outros três lados**, à vista. A folga
+é do **dedo**, não do cursor — a zona é `{ coarse: 44, fine: 10 }`, logo 22px no
+toque e **5 no mouse** —, e um grupo horizontal só chega a ponteiro grosso acima
+de 768px, porque abaixo disso ele empilha. Hoje é `p-2 pointer-coarse:ps-6`: 8px
+simétricos no mouse, 24 só onde o dedo precisa. É a mesma pergunta que o item de
+menu e o `Calendar` já fazem.
+
+**Proporção guardada e SSR não convivem sozinhos.** A lib passa **a mesma
+função** como `getSnapshot` e como `getServerSnapshot` do `useSyncExternalStore`,
+então na hidratação o cliente lê o `localStorage` e discorda do HTML que o
+servidor mandou — medido, um diff inteiro de `flexGrow` no console. Nenhuma
+guarda de `typeof window` pega isso: na hidratação o `window` existe. **E adiar
+sozinho não resolve**: com o `defaultLayout` chegando depois, o grupo o
+**ignora** — 25/75 guardado, 40/60 na tela —, porque ele é lido na montagem e só
+nela. A saída é o `groupKey`, que troca uma vez e remonta o grupo já com a
+proporção certa; ele fica **fora** de `groupProps` porque é `key` e não prop, e
+no espalhamento virava atributo desconhecido no DOM. Medido depois: zero erros
+de console e a proporção restaurando em 25/75.
+
+**O componente virou Átomo.** `Group`, `Panel` e `Separator` são a anatomia de
+uma coisa só — o argumento literal que devolveu o `Select` a Átomos. Ele era a
+única entrada do bloco de Moléculas **sem comentário justificando a camada**, e
+a justificativa que faltava era fraca: a régua diz "feita de átomos" e ele não
+compunha nenhum. A linha de import do registry também omitia `ResizableHandle`,
+então quem copiasse do catálogo não montava o exemplo que a página mostra logo
+abaixo.
+
+**Fora, de propósito:** um eixo `size` na alça (nenhuma contagem o pede — o
+precedente é a `Toolbar`) e um `variant` de moldura no grupo (a moldura que a
+doc escreve à mão é um caso só; volta quando forem dois).
+
+### O colapso ganhou movimento, e ele some no gesto
+
+Colapsar era um salto: 238 para 0 num quadro. `flex-grow` transiciona — é um
+`<number>`, e é ele que a lib escreve na **raiz** de cada painel —, mas ligar a
+transição sem condição estraga as duas outras formas de redimensionar: no
+arraste o painel passa a perseguir o cursor com 200ms de sobra, e no teclado
+cada seta vira uma interpolação que a repetição de tecla empilha.
+
+Os dois estados já vinham no `data-separator`, e o grupo lê os dois para zerar a
+duração. Medido: **0,2s em repouso, 0s arrastando, 0s no teclado**, e
+`transitionend` a 0,196s **nos dois painéis** — os dois transicionam juntos, que
+é o que faz a razão entre eles interpolar em vez de um saltar enquanto o outro
+desliza.
+
+**A régua mora no grupo, e não no painel**, porque a `className` do
+`ResizablePanel` cai num `div` **interno** — o `.d.ts` da lib diz isso com todas
+as letras. Quem carrega o `flex-grow` é a raiz, e ela só se alcança por seletor
+de filho a partir do único nó com `className` na mesma árvore.
+
+**E a duração desce por `--resizable-anim`**, não por um `transition-none`
+empilhado sobre a classe base: as duas escreveriam a mesma propriedade no mesmo
+elemento, e quem venceria seria a ordem de emissão do Tailwind e não o que se
+escreveu. Variável herda e não disputa — é o mecanismo de `--toolbar-control` e
+de `--disclosure-nudge`.
+
+O custo fica dito: animar `flex-grow` reflui o conteúdo dos painéis a cada
+quadro, e num painel com tabela longa isso é caro. É a razão de o movimento
+ficar restrito ao comando em vez de valer para toda mudança de tamanho.
+`prefers-reduced-motion` não precisou de regra própria — o bloco global encurta
+transições para 0,01ms.
+
+**Uma terceira lição de instrumento, na mesma família das duas abaixo.** Medindo
+se o texto vazava do painel durante o encolhimento, `range.getBoundingClientRect()`
+acusou 15px de sangria para cada lado. Não havia sangria nenhuma: aquele método
+devolve a **caixa de layout** do texto, e não a região pintada — o `div` interno
+da lib é `overflow: auto` e clipa (`scrollWidth` 57 contra `clientWidth` 42).
+Quem decidiu foi a captura de tela em câmera lenta, com a duração forçada a 8s.
+
+### Duas lições de método, e as duas são erros de instrumento
+
+**Coordenada de painel não é pixel de CSS, e o `hover` e o `left_click_drag` não
+usam a mesma escala.** Quatro tentativas de arrastar a costura "falharam" com o
+componente correto: o `pointerdown` caía a 260px do alvo. A sonda que resolveu
+foi ler `event.defaultPrevented` num ouvinte registrado **depois** do da lib, na
+mesma fase — ela chama `preventDefault()` exatamente quando acha região de
+acerto, então o booleano diz se o ponto acertou. Com a escala corrigida:
+`inactive → active → focus`, larguras 189,8/569,3 → 338,8/420,3, `aria-valuenow`
+de 25 para 44,6.
+
+**Medir alfa exige subir a partir do pai.** No tema claro a própria costura é
+opaca (`bg-border`), então o compositor que subia a árvore a partir dela
+devolvia **a costura como fundo** e reportava 2,67 onde o número é 3,16. É o
+parente da lição da `AnnouncementBar` — lá o erro era compor sobre preto, aqui é
+compor sobre o próprio elemento.
+
+E uma correção de registro: o painel do navegador **entregou teclas** nesta
+sessão, ao contrário da rodada do `Radio`, onde um ouvinte de `keydown` recebeu
+zero eventos. `Tab`, `shift+Tab` e as setas chegaram; foi assim que o
+`:focus-visible` e o `ring-3` foram verificados de verdade.
+
 ### Backlog de migração
 
 A rodada 01 entregou tokens, componentes, documentação e o auditor, sem migrar
@@ -3887,5 +4081,29 @@ E o que a rodada do `Radio` deixou:
   `ruled` espalhadas pelos eixos `variant`. Algumas são genuinamente diferentes;
   outras são a mesma coisa com dois nomes. É uma rodada própria, e a medida para
   começar é cruzar cada palavra com o que ela desenha.
+
+E o que a rodada do `resizable` deixou:
+
+- **Ele continua sem consumidor**, e agora com o candidato nomeado:
+  `/transactions` como lista mais detalhe no desktop. A proporção certa entre a
+  lista e o detalhe depende de a pessoa estar varrendo ou conferindo, que é
+  exatamente quando um split se paga — e, com o empilhamento embutido, a tela
+  não precisa escrever nada para o telefone.
+- **`resizeTargetMinimumSize` está em 44 no ponteiro grosso, e isso não foi
+  medido contra conteúdo real.** São 22px de cada lado da costura em que um
+  toque destinado ao painel vizinho é engolido pelo arraste. Na página do
+  catálogo os painéis estão vazios; a primeira tela com conteúdo colado à
+  costura é que vai dizer se o número desce.
+- **O anel de foco da costura é recortado pelo `overflow: hidden` do grupo**,
+  que a lib declara inline e não deixa sobrescrever. Ele corre a altura toda, e
+  o recorte fica nas pontas — verificado que existe, não julgado como defeito.
+  Se incomodar, a saída é o `inset-ring-3` do `disclosure-classes`.
+- **`useResizableLayout` custa uma remontagem por carregamento.** Quem não
+  quiser pagar guarda a proporção em cookie e a entrega pelo servidor, que é o
+  caminho que a própria documentação da lib sugere.
+- **A demonstração do modo empilhado não empilha no desktop**, porque
+  `useIsMobile` lê o viewport e não o contêiner. A página diz para estreitar a
+  janela. Uma *container query* resolveria, e mudaria a semântica de `stack`
+  para todo mundo — é decisão de outra rodada.
 
 Reproduza a qualquer momento com `npm run ds:audit`.

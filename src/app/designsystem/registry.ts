@@ -108,6 +108,13 @@ const LAYER: Record<string, Layer> = {
    *  Contexto de primitiva não é composição, pela mesma conta que faz o
    *  `Slider` átomo com quatro peças Radix por dentro. */
   radio: "Átomos",
+  /** Group, Panel e Separator são a anatomia de **uma** coisa — a mesma conta
+   *  que devolveu o `Select` a Átomos, e que faz o `Slider` átomo com quatro
+   *  peças Radix por dentro. Ele não compõe nenhum átomo: um painel
+   *  redimensionável não é um grupo de peças menores, é um controle de
+   *  proporção com regiões dentro. O `Button` do gatilho de colapso é o único
+   *  import de `ui/`, e a asserção 2 deixa exatamente um. */
+  resizable: "Átomos",
   /** Uma casca rolável, e uma máscara. */
   "scroll-area": "Átomos",
   "scroll-fade": "Átomos",
@@ -158,7 +165,6 @@ const LAYER: Record<string, Layer> = {
    *  rótulo continuar do lado de fora, escrito à mão por quem chama, como
    *  estava. */
   "radio-group": "Moléculas",
-  resizable: "Moléculas",
   /** Especializa o `InputGroup` — lupa e ×. Molécula sobre molécula. */
   "search-input": "Moléculas",
   "toggle-group": "Moléculas",
@@ -174,6 +180,19 @@ const LAYER: Record<string, Layer> = {
    *  poder mentir. É a mesma inversão que o próprio `form` já registra uma vez
    *  — de átomo para molécula, quando ganhou as peças. */
   form: "Organismos",
+  /** Lista cuja **unidade** é uma molécula, que é a segunda forma do nível.
+   *  E não por analogia: `AccordionItem` + `Trigger` + `Content` **é** um
+   *  `Collapsible`, que está em Moléculas — os dois arquivos importam a mesma
+   *  régua, `lib/disclosure-classes`.
+   *
+   *  Não é átomo, e a conta é direta: medido, uma raiz renderiza **3 itens, 3
+   *  gatilhos focáveis e 3 painéis**, cada um com o próprio `aria-expanded`.
+   *  "Um controle, um elemento, uma casca" não descreve isso.
+   *
+   *  E a cláusula de anatomia não o salva. Ela vale para o `Select`, cujo item
+   *  é uma **escolha entre valores** de um controle só; aqui cada item é uma
+   *  divulgação **operável sozinha e com estado próprio**. Item que é dado não
+   *  é item que tem estado. */
   accordion: "Organismos",
   "alert-dialog": "Organismos",
   /** Contém um `DropdownMenu` no miolo dobrado — quem contém organismo é
@@ -334,6 +353,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("native-select", "Native Select", "O select do sistema, sem JavaScript.", ui("native-select"), "NativeSelect"),
   entry("progress", "Progress", "Barra de progresso com tons de status.", ui("progress"), "Progress"),
   entry("radio", "Radio", "O anel e o ponto de uma escolha única. Vive dentro de um Radio Group.", ui("radio"), "Radio"),
+  entry("resizable", "Resizable", "Painéis cuja proporção a pessoa decide, com a costura que reage ao arraste.", ui("resizable"), "ResizablePanelGroup, ResizablePanel, ResizableHandle"),
   entry("scroll-area", "Scroll Area", "Área rolável com barra estilizada.", ui("scroll-area"), "ScrollArea, ScrollBar"),
   entry("scroll-fade", "Scroll Fade", "Área rolável que dissolve o conteúdo nas bordas.", ui("scroll-fade"), "ScrollFade"),
   entry("select", "Select", "Lista suspensa de opções predefinidas.", ui("select"), "Select, SelectTrigger, SelectItem"),
@@ -359,7 +379,6 @@ export const REGISTRY: RegistryEntry[] = [
   entry("kbd-group", "Kbd Group", "Teclas apertadas uma depois da outra, cada uma na própria pastilha.", ui("kbd-group"), "KbdGroup"),
   entry("pagination", "Pagination", "A posição numa lista longa, e os dois movimentos.", ui("pagination"), "Pagination, PaginationStatus, PaginationContent, PaginationLink"),
   entry("radio-group", "Radio Group", "Escolha única entre poucas opções visíveis — em linha ou em cartão.", ui("radio-group"), "RadioGroup, RadioGroupItem"),
-  entry("resizable", "Resizable", "Painéis redimensionáveis por uma alça.", ui("resizable"), "ResizablePanelGroup, ResizablePanel"),
   entry("search-input", "Search Input", "O campo de busca, com o × do navegador já suprimido.", ui("search-input"), "SearchInput"),
   entry("toggle-group", "Toggle Group", "Conjunto de toggles: seleção única ou múltipla.", ui("toggle-group"), "ToggleGroup, ToggleGroupItem"),
 
