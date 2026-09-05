@@ -17,7 +17,6 @@ import {
   SheetContent,
 } from "@/components/ui/sheet"
 import {
-    MobileSheetFormDragStrip,
     MobileSheetFormStickyHeader,
     mobileFormSheetContentClassName,
 } from "@/components/ui/mobile-sheet-form-chrome"
@@ -244,7 +243,6 @@ export function WorkspaceDeleteDialog({
                     fillMobileViewport
                     className={mobileFormSheetContentClassName}
                 >
-                    <MobileSheetFormDragStrip />
                     <MobileSheetFormStickyHeader
                         title="Excluir carteira"
                         description="Esta ação é permanente e não pode ser desfeita."

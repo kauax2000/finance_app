@@ -17,7 +17,6 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { SheetDragHandle } from "@/components/ui/sheet-drag-handle"
 import { mobileSheetChromeBelowHeaderClassName } from "@/components/ui/mobile-sheet-form-chrome"
 import { Button } from "@/components/ui/button"
 import {
@@ -92,7 +91,6 @@ export function CreditCardDetailSheet({
 
     const viewBody = (
         <div className="flex min-h-0 flex-1 flex-col gap-0">
-            {isMobile ? <SheetDragHandle /> : null}
             <DialogDescription className="sr-only">
                 Cartão {card.name}, final {card.last_four}.
             </DialogDescription>

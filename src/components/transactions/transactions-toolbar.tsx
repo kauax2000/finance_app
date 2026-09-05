@@ -25,7 +25,6 @@ import {
   DialogFooter,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { SheetDragHandle } from "@/components/ui/sheet-drag-handle"
 import { mobileSheetChromeBelowHeaderClassName } from "@/components/ui/mobile-sheet-form-chrome"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -323,7 +322,6 @@ export function TransactionsToolbar({
                                 ? "Origem, pagamento, categorias e mais."
                                 : "Período, origem, pagamento, categorias e mais."}
                         </DialogDescription>
-                        {isMobile ? <SheetDragHandle /> : null}
                         <div
                             className={cn(
                                 "flex shrink-0 items-center gap-2 border-b border-border px-4 py-3 sm:px-5",

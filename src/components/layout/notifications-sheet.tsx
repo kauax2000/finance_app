@@ -8,7 +8,6 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { SheetDragHandle } from "@/components/ui/sheet-drag-handle"
 import { useNotificationsUi } from "@/components/layout/notifications-ui-provider"
 import { NotificationsPanel } from "@/components/layout/notifications-panel"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -40,7 +39,6 @@ export function NotificationsSheet() {
                 <DialogDescription className="sr-only">
                     Alertas e avisos da carteira atual. Marque como lidas ou exclua.
                 </DialogDescription>
-                {isMobile ? <SheetDragHandle /> : null}
                 <NotificationsPanel isActive={isOpen} />
             </SheetContent>
         </Sheet>

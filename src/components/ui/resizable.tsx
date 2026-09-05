@@ -106,10 +106,13 @@ import { cn } from "@/lib/utils"
  * `Toolbar`, que não ganhou eixo nenhum e registrou isso como a leitura honesta
  * das contagens.
  *
- * **Não importa o `DRAWER_HANDLE_CLASS`.** A pega usa a mesma tinta de arraste
- * que a folha e a gaveta, num alfa próprio medido — ver a nota na peça —, e
- * escrita literal: o
- * `drawer` é Organismo, e a asserção 2 do `taxonomy.test.ts` deixa este arquivo
+ * **Não importa a régua do `DragHandle`.** A pega usa a mesma tinta de arraste
+ * que a folha e a gaveta, e no **mesmo** degrau: 70% — a rodada da alça varreu
+ * os degraus contra `--background` e chegou ao mesmo piso desta varredura, por
+ * caminho independente. Com isso cai o argumento que esta nota fazia, de que a
+ * área explicaria alças mais claras: área muda como a cor **lê**, não o que a
+ * 1.4.11 **exige**. A tinta é escrita literal aqui: o
+ * `drag-handle` é Átomo, mas a asserção 2 do `taxonomy.test.ts` deixa este arquivo
  * — Átomo — importar **um** componente de `ui/`, que tem de ser Átomo. O
  * orçamento inteiro vai para o `Button` do gatilho de colapso. Pela mesma
  * razão, o fio do modo empilhado é uma `div` e **não** um `<Separator>`.

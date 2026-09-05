@@ -7,7 +7,7 @@ import { Drawer as DrawerPrimitive } from "vaul"
 
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { DRAWER_HANDLE_CLASS } from "@/components/ui/drawer"
+import { DragHandle } from "@/components/ui/drag-handle"
 import {
   EdgePanelContent,
   EDGE_PANEL_OVERLAY_CLASS,
@@ -49,7 +49,8 @@ type SheetSurface = "sheet" | "drawer"
 
 const SheetSurfaceContext = React.createContext<SheetSurface>("sheet")
 
-/** Qual superfície está ativa. `SheetDragHandle` usa isto para não duplicar a alça. */
+/** Qual superfície está ativa — é o que faz gatilho, fechar, portal e véu
+ *  trocarem de primitiva sem quem chama saber. */
 export function useSheetSurface(): SheetSurface {
   return React.useContext(SheetSurfaceContext)
 }
@@ -182,13 +183,10 @@ function SheetContent({
           {...props}
         >
           {/* A alça é da superfície, não do conteúdo: é o que se agarra para
-              arrastá-la, como a borda e a sombra são dela. E aqui ela **é** o
-              gesto — o vaul a usa como área de arraste, ao contrário da `div`
-              decorativa que o app desenhava antes. */}
-          <DrawerPrimitive.Handle
-            data-slot="sheet-drag-handle"
-            className={DRAWER_HANDLE_CLASS}
-          />
+              arrastá-la, como a borda e a sombra são dela. Uma tela nunca a
+              escreve — 31 chamadas que faziam isso saíram na rodada em que ela
+              virou peça. */}
+          <DragHandle />
           {children}
         </DrawerPrimitive.Content>
       </DrawerPrimitive.Portal>

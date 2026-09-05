@@ -19,7 +19,6 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import {
-    MobileSheetFormDragStrip,
     MobileSheetFormStickyHeader,
     mobileFormSheetContentClassName,
 } from "@/components/ui/mobile-sheet-form-chrome"
@@ -202,7 +201,6 @@ export function PayBillDialog({
             onSubmit={(ev) => void handleSubmit(ev)}
             className="flex min-h-0 flex-1 flex-col"
         >
-            {isMobile ? <MobileSheetFormDragStrip /> : null}
             {headerBlock}
 
             <div className="scrollbar-thin flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 sm:px-6">

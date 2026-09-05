@@ -150,12 +150,16 @@ export default function DrawerDoc() {
         Até esta revisão a alça daqui era uma <code>div</code> decorativa: sem{" "}
         <code>data-vaul-handle</code>, sem área de toque, sem arraste. Ela
         desenhava a promessa que a documentação descrevia — exatamente o defeito
-        que a rodada do <code>Sheet</code> tirou de 37 telas. Agora é{" "}
-        <code>DrawerPrimitive.Handle</code>: ela <em>é</em> a área de arraste,
-        recebe os 44px de alvo que o <code>vaul</code> injeta em volta, e o
-        clique nela fecha. Por isso <code>showHandle</code> só se desliga junto
-        com <code>dismissible={"{false}"}</code> — sem gesto e com alça, a
-        promessa volta.
+        que a rodada do <code>Sheet</code> tirou de 37 telas. Agora é o{" "}
+        <Link href="/designsystem/drag-handle" className="underline">
+          DragHandle
+        </Link>
+        , que <em>é</em> a área de arraste e recebe os 44px de alvo. O que ela{" "}
+        <strong>não</strong> faz é fechar no clique: o <code>vaul</code> só
+        fecha ali quando <code>dismissible</code> é falso. Por isso{" "}
+        <code>showHandle</code> só se desliga junto com{" "}
+        <code>dismissible={"{false}"}</code> — sem gesto e com alça, a promessa
+        volta.
       </DocNote>
 
       <DocNote title="Só o eixo vertical">

@@ -527,13 +527,13 @@ tema.
   largura. `direction` aceita só `bottom` e `top`: o `[data-vaul-handle]` do
   `vaul` declara `touch-action: pan-y`, então a alça só arrasta na vertical, e
   uma gaveta lateral teria a alça de enfeite outra vez. Borda lateral é
-  `EdgePanel`. A alça é uma constante só (`DRAWER_HANDLE_CLASS`), que a folha
-  importa — o `!` nas três marcações é o que troca o cinza literal e as medidas
-  que o `vaul` injeta numa folha de estilo própria.
+  `EdgePanel`. A alça é uma peça só — o [`DragHandle`](src/components/ui/drag-handle.tsx) —,
+  que a folha e a gaveta compõem, e todo `!` dela é o que troca o cinza literal
+  e as medidas que o `vaul` injeta numa folha de estilo própria.
 - **A alça é da superfície.** No telefone o `vaul` a desenha e ela **é** a área
   de arraste; no desktop não há alça, porque a folha lateral não se arrasta.
-  `SheetDragHandle` não renderiza mais nada — ele sobrevive só porque 16 telas
-  ainda o escrevem, e apagá-lo delas é limpeza mecânica pendente.
+  Uma tela nunca a escreve — as **31 chamadas em 27 arquivos** que faziam isso
+  saíram na rodada 34, junto com o `MobileSheetFormDragStrip`.
 - **A folha não injeta o ×, e não existe `showCloseButton` nela.** O botão é
   uma peça: `DialogCloseButton`, composta como último filho do `SheetContent`.
   Ele saía de fábrica e **16 das 36 chamadas o desligavam**, porque um ×
@@ -3026,7 +3026,7 @@ Três coisas que isso expôs:
   **lança no import** e derruba `/designsystem/*`. Por isso `LAYER` e `REGISTRY`
   mudam na mesma edição.
 
-Contagem viva das camadas: **7 · 27 · 15 · 31 · 2 · 7**. O número da seção da
+Contagem viva das camadas: **7 · 28 · 15 · 30 · 2 · 7**. O número da seção da
 rodada 17 (`29 · 13`) já estava velho antes desta rodada — o `form` virou
 molécula no caminho —, e a decisão de não caçar contagem à mão continua valendo:
 o número datado fica onde está, e o vivo fica aqui.
@@ -3474,8 +3474,10 @@ texto pelo mesmo motivo. Varridos os degraus sobre o fundo real, **70% é o
 primeiro que alcança 3:1 nos dois temas**: 3,16 no claro e 4,05 no escuro,
 contra 1,66 e 1,92 a 35%. O acento dá **3,01 nos dois temas** ao pousar e 7,66 /
 6,14 ao arrastar, e a costura em repouso fica em 1,35 / 1,33 — o fio quieto, de
-propósito. Ela não importa o `DRAWER_HANDLE_CLASS`: `drawer` é Organismo, e o
-orçamento de import deste Átomo vai todo para o `Button`.
+propósito. Ela não importa a régua do `DragHandle` — a tinta é escrita literal
+aqui —, e a rodada 34 mediu o outro lado: a alça, com 2,25× a área desta pega,
+reprova no **mesmo** degrau. Área muda como a cor lê, não o que a 1.4.11 exige,
+e os dois arraste do sistema estão em 70%.
 
 **O colapsar não pode morar na alça, e não é escolha de desenho.** A lib liga
 `pointerdown`, `dblclick`, `contextmenu` e `pointerup` **no documento, em fase
@@ -4122,8 +4124,9 @@ transbordo em 50, recuo em 16px e **cinco folhas de estilo o tempo todo**.
 - **O botão "Salvar" estava colado na borda de baixo.** `FormActions
   variant="sticky"` não traz `pb` de propósito — o recuo é da superfície. Na
   moldura à mão ninguém o fornecia: `padding-bottom: 0`, medido. Agora 24px.
-- **`MobileSheetFormDragStrip` desenhava o vazio.** Ele devolve
-  `SheetDragHandle`, que **retorna `null` sempre**. Saiu das duas demos.
+- **`MobileSheetFormDragStrip` desenhava o vazio.** Ele devolvia um componente
+  que **retornava `null` sempre**. Saiu das duas demos — e da base inteira, na
+  rodada 34.
 - **O `code` divergia da demo em seis pontos**, e um era armadilha: ele mostrava
   `<MobileSheetFormStickyHeader title="…" />`, e `title` renderiza um
   `DialogTitle` que **lança fora de um `Sheet`**. Hoje o `code` mostra o casco
@@ -4407,6 +4410,149 @@ sem isso o clamp rodaria uma vez só, com largura zero. Medido a 700px de janela
 nada para fora em nenhum dos três painéis abertos, com o mais largo deslocado
 **22,8px** do centro do gatilho.
 
+### Rodada 34 — a alça era um `null` com 31 chamadas
+
+`sheet-drag-handle.tsx` era, no fonte inteiro, `useSheetSurface(); return null` —
+uma chamada de hook cujo valor era descartado, na frente de um `return null`. A
+rodada do `Sheet` esvaziou o componente com razão (ele desenhava a promessa do
+arraste sem entregá-la) e parou ali. O que ficou tinha cinco defeitos, e os cinco
+foram medidos antes de qualquer edição.
+
+**A alça de verdade estava escrita duas vezes, e as cópias já divergiam.**
+`sheet.tsx` e `drawer.tsx` escreviam o mesmo `DrawerPrimitive.Handle` mais uma
+constante importada de um para o outro, com **dois `data-slot` para o mesmo
+elemento** — `sheet-drag-handle` contra `drawer-handle`. Régua compartilhada
+morando dentro de um componente é a forma que produziu `menu-classes`,
+`field-classes` e `disclosure-classes`; a diferença é que aqui não é só classe —
+é elemento, classe e slot —, e nesta casa isso é **peça**.
+
+**E o número do backlog estava errado.** Este arquivo dizia "16 telas ainda o
+escrevem", em três lugares. Eram **31 sítios em 27 arquivos** (11
+`<SheetDragHandle>` mais 20 `<MobileSheetFormDragStrip>`, que era um embrulho de
+uma linha em volta do mesmo `null`), com **11 guardas `{isMobile ? … : null}`**
+escolhendo entre dois nadas.
+
+#### A tinta reprovava, e o repositório já tinha o número na mesa
+
+`bg-muted-foreground/35` **por cima da `opacity: .7`** que o vaul declara —
+ninguém a desfazia, então o alfa efetivo era **24,5%**, e não 35. Medido contra
+`--background`, composto sobre o fundo real: **1,41:1 no claro e 1,46 no
+escuro**, contra os 3:1 que a 1.4.11 pede de um componente não-textual. O `/35`
+sozinho já daria só 1,64 e 1,85 — números que a rodada do `resizable` **tinha
+escrito**, ao rejeitar aquele degrau para a pega dela.
+
+Varridos os degraus, **70% é o primeiro que passa nos dois temas: 3,06 e 4,24**.
+É exatamente o degrau a que a pega chegou, por varredura independente e contra
+outra superfície — então a tinta de arraste deste sistema tem **um número só**. E
+isso derruba o argumento que ficava lá, de que a área explicaria alças mais
+claras: a alça tem **2,25× a superfície** da pega e reprova no mesmo degrau. Área
+muda como a cor **lê**; não muda o que a norma **exige**. O par de cursor e toque
+vai a 90% — **4,61 e 6,36** —, e é um par, porque `hover:` compila dentro de
+`@media (hover: hover)` e a superfície que esta peça serve só existe no dedo.
+
+#### O achado que vale mais que o conserto: não é especificidade, é camada
+
+O JSDoc anterior explicava o `!` dizendo que a folha do vaul "entra depois e
+empata em especificidade". **A explicação estava errada**, e a rodada só
+descobriu porque um conserto falhou.
+
+A regra nova de área de acerto era emitida (verificada na folha), o `matchMedia`
+casava, o seletor tinha (0,2,0) contra os (0,1,0) do vaul — e a altura computada
+não mudava. A causa: **as utilities do Tailwind v4 vivem em `@layer utilities` e
+a folha do vaul é sem camada**, e a cascata resolve a camada **antes** da
+especificidade, dando a declaração normal sem camada como vencedora sempre. Quem
+inverte isso é `!important`: entre declarações importantes a ordem das camadas se
+inverte.
+
+Ou seja: contra uma biblioteca que injeta CSS sem camada, **especificidade não
+compra nada** — só `!`. Vale para qualquer dependência que faça isso, e é por isso
+que a asserção 1 do teste é uma tabela das propriedades que o vaul declara.
+
+Foi assim que se soube que `rounded-full` estava **sem** `!` e perdia calado:
+medido no navegador, o `border-radius` computado da alça era **16px**, o do vaul.
+Três classes venciam, a quarta não, e nada apontava a diferença.
+
+#### O alvo, e um bug do vaul que fica documentado em vez de escondido
+
+O vaul quis encolher a área de acerto no ponteiro fino e **errou o seletor**:
+`@media (pointer:fine){[data-vaul-handle-hitarea]:{…}}`, com um `:` sobrando
+depois do seletor de atributo. A regra é inválida e nunca vale, então os 44px
+persistiam no mouse — medido, `document.elementFromPoint` no topo do cabeçalho
+devolvia **HITAREA**, com **9px** em que o clique era do arraste.
+
+`pointer-fine:` faz o que a biblioteca pretendia, com um número em vez de `100%`:
+**20px**, o dobro dos 10 que o `resizable` reserva para o mouse, e que cabem
+inteiros na caixa de margem da alça (6 + 2×10 = 26). Medido depois: **48×20 no
+ponteiro fino, com 3px de folga** até o cabeçalho, e **48×44 no grosso**, com os
+9px de volta — que ali são corretos, porque não há controle naquela faixa e o
+dedo agradece. É por isso que o `my-2.5` da alça é carga estrutural.
+
+#### Duas afirmações falsas, e uma página que demonstrava nada
+
+`drawer.tsx` dizia "o clique nela fecha". O `handleCycleSnapPoints` do vaul só
+chama `closeDrawer()` quando `dismissible` é **falso** (`if (!dismissible)`), e
+sem `snapPoints` não há o que ciclar — em nenhuma gaveta deste app o clique
+fecha. Ela se arrasta, e isso agora está escrito.
+
+E a página do catálogo ensinava um componente que desenha: o `Usage` afirmava
+"é a convenção de iOS e Android que diz isto se arrasta", uma `DocNote` atribuía
+ao componente um `aria-hidden` que ele não emitia, e a preview renderizava
+`<SheetDragHandle />` dentro de um card — **desenhando o vazio**, um
+`rounded-t-2xl` de 0px sobre um `border-t`. Ela tinha até uma **exceção nominal**
+em `ds-phone.test.ts` para poder continuar assim; a exceção saiu junto, e a
+asserção 3 daquele teste ficou mais estrita.
+
+A página nova demonstra o gesto em **gavetas de verdade**, arrastáveis na própria
+página (o precedente é `docs/drawer.tsx`), e uma delas desenha o contorno da área
+de acerto por seletor local, para o invisível aparecer.
+
+#### A camada mudou porque a implementação mudou
+
+Ela era **Organismo**, justificada por "consome o contexto do `Sheet`". Parou de
+consumir quando voltou a desenhar, e virou **Átomo**: indivisível, um elemento,
+zero imports de `ui/`. O `<span data-vaul-handle-hitarea>` é anatomia interna do
+vaul, não composição — a mesma régua que faz o `Slider` átomo com quatro
+primitivas Radix por dentro. É a terceira vez que este arquivo registra a
+etiqueta seguindo a implementação, e não o contrário.
+
+**Sem eixo, e a contagem é a razão:** uma geometria, duas superfícies, nenhuma
+tela pedindo outra. O `ds:catalog` sai `—` na coluna de variantes, e isso é
+sinal para olhar, não mandato para inventar — foi olhando que os cinco defeitos
+acima apareceram. O que existe é o `showHandle` do `DrawerContent`, e ele é da
+superfície porque a pergunta que responde ("esta gaveta se arrasta?") é dela.
+
+#### Três lições de instrumento, e uma delas é um erro meu
+
+**`git checkout` como desfazer reverte o arquivo inteiro.** Ao testar se o teste
+novo pegava o defeito, acrescentei uma linha a `bills-toolbar.tsx` e a desfiz com
+`git checkout` — que devolveu o arquivo ao `HEAD` e **apagou a migração que eu já
+tinha feito nele**. Só apareceu porque a varredura seguinte contou as
+referências. Desfazer edição de teste com `git` num arquivo já editado é apagar
+trabalho; a varredura de confirmação é o que salva.
+
+**Ponteiro não persiste entre chamadas do harness.** Medir `:hover` numa chamada
+separada da que move o cursor devolve `false` — e quase produziu a conclusão de
+que o realce não funcionava. Com o `hover` e a leitura na **mesma** chamada, o
+alfa sai em 0,858 no meio da transição de 150ms, e assenta em 0,902.
+
+**E a medição contradizendo o mecanismo é sinal de que o mecanismo está mal
+entendido, não de que a medição está errada.** Foi o caso das camadas de cascata:
+o instinto foi desconfiar da sonda, e desta vez a sonda estava certa.
+
+#### O que não foi feito, com o motivo
+
+- **O `isMobile && "pt-1"` de `transactions-toolbar.tsx` ficou.** O plano previa
+  removê-lo, alegando que ele compensava uma margem fora do fluxo. **A alegação
+  era falsa**: a alça é irmã daquela caixa e a margem de 10px é real. Removê-lo
+  mudaria o espaçamento daquela folha sem número que peça.
+- **O caminho do `Sheet` no telefone não foi visto aberto.** A página do catálogo
+  esconde os espécimes abaixo de 768px por decisão própria, e as telas do app
+  exigem sessão. O que prova a composição é o `tsc`, a asserção 4 do teste (zero
+  `DrawerPrimitive.Handle` fora da peça) e as gavetas reais da página nova, que
+  exercitam o mesmo `<DragHandle />`.
+- **`Drawer` continua sem consumidor no app.** A gaveta chega às telas por dentro
+  do `Sheet`, e isto não mudou.
+
 ### Backlog de migração
 
 A rodada 01 entregou tokens, componentes, documentação e o auditor, sem migrar
@@ -4613,7 +4759,8 @@ E o que a rodada da divulgação e da prévia deixou:
   **zero** usos do `Accordion` hoje; o único consumidor de qualquer um dos três
   é o `Collapsible`, em duas telas.
 - **`SheetDragHandle` e companhia continuam onde estavam.** Nada nesta rodada
-  tocou a limpeza mecânica pendente das outras.
+  tocou a limpeza mecânica pendente das outras. *(Paga na rodada 34: as 31
+  chamadas saíram e o componente virou o `DragHandle`.)*
 
 **A `AnnouncementBar` passou pela mesma régua, e quase toda ela já estava
 certa.** Medida a cor resolvida dos cinco tons, `info`, `success`, `warning` e

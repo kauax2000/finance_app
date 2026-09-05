@@ -2,7 +2,6 @@
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
-    MobileSheetFormDragStrip,
     MobileSheetFormStickyHeader,
     mobileFormSheetContentClassName,
 } from "@/components/ui/mobile-sheet-form-chrome"
@@ -167,7 +166,6 @@ export function CategoryDetailDialogs({
                         fillMobileViewport
                         className={mobileFormSheetContentClassName}
                     >
-                        <MobileSheetFormDragStrip />
                         <MobileSheetFormStickyHeader
                             title="Editar categoria"
                             description={editDescription}

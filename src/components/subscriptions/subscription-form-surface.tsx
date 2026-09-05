@@ -14,7 +14,6 @@ import {
   SheetClose,
 } from "@/components/ui/sheet"
 import {
-    MobileSheetFormDragStrip,
     MobileSheetFormStickyHeader,
 } from "@/components/ui/mobile-sheet-form-chrome"
 import {
@@ -115,7 +114,6 @@ export function SubscriptionFormSurface({
     if (variant === "dialog-mobile") {
         return (
             <>
-                <MobileSheetFormDragStrip />
                 <MobileSheetFormStickyHeader
                     title={formTitle}
                     description={formDescription}

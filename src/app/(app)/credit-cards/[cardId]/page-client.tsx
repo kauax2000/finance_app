@@ -62,7 +62,6 @@ import {
   SheetContent,
 } from "@/components/ui/sheet"
 import {
-    MobileSheetFormDragStrip,
     MobileSheetFormHeaderCloseButton,
     MobileSheetFormStickyHeader,
     mobileFormSheetContentClassName,
@@ -769,7 +768,6 @@ export default function CreditCardDetailPageClient() {
                 fillMobileViewport
                 className={mobileFormSheetContentClassName}
             >
-                <MobileSheetFormDragStrip />
                 <MobileSheetFormStickyHeader
                     title="Editar cartão"
                     endAdornment={

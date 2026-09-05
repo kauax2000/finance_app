@@ -30,7 +30,6 @@ import {
   SheetContent,
 } from "@/components/ui/sheet"
 import {
-    MobileSheetFormDragStrip,
     MobileSheetFormStickyHeader,
     mobileFormSheetContentClassName,
 } from "@/components/ui/mobile-sheet-form-chrome"
@@ -242,7 +241,6 @@ export function CategoryCreateDialog({
                     fillMobileViewport
                     className={mobileFormSheetContentClassName}
                 >
-                    <MobileSheetFormDragStrip />
                     <MobileSheetFormStickyHeader
                         title="Nova categoria"
                         description={description}

@@ -16,7 +16,6 @@ import {
   SheetContent,
 } from "@/components/ui/sheet"
 import {
-    MobileSheetFormDragStrip,
     MobileSheetFormHeaderCloseButton,
     MobileSheetFormStickyHeader,
     mobileFormSheetContentClassName,
@@ -343,7 +342,6 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                     fillMobileViewport
                     className={mobileFormSheetContentClassName}
                 >
-                    <MobileSheetFormDragStrip />
                     <MobileSheetFormStickyHeader
                         title="Alterar senha"
                         endAdornment={

@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+
 import { Form, FormActions, FormSubmit } from "@/components/ui/form"
 import {
   MobileSheetFormBody,
@@ -138,11 +140,16 @@ export default function MobileSheetFormChromeDoc() {
         borda.
       </DocNote>
 
-      <DocNote title="A alça saiu, porque ela não desenha nada">
-        <code>MobileSheetFormDragStrip</code> devolve <code>SheetDragHandle</code>,
-        que <strong>retorna <code>null</code> sempre</strong>: no telefone a alça
-        é da gaveta, ligada ao gesto, e no desktop a folha não se arrasta. Ela
-        estava nas duas demonstrações do catálogo desenhando o vazio.
+      <DocNote title="A alça não é peça da moldura">
+        <code>MobileSheetFormDragStrip</code> deixou de existir: ele era um
+        embrulho de uma linha em volta de um componente que retornava{" "}
+        <code>null</code>, escrito por 20 telas. Quem desenha a alça é a
+        superfície — o <code>SheetContent</code> compõe o{" "}
+        <Link href="/designsystem/drag-handle" className="underline">
+          DragHandle
+        </Link>{" "}
+        sozinho quando é gaveta, e no desktop não há alça porque a folha não se
+        arrasta.
       </DocNote>
 
       <PropsTable
@@ -153,7 +160,6 @@ export default function MobileSheetFormChromeDoc() {
           { prop: "MobileSheetFormBody", type: "ComponentProps<'div'>", description: "O corpo rolável, com a dissolução na borda e overscroll-contain." },
           { prop: "MobileSheetFormHeaderCloseButton", type: "{ disabled?: boolean }", description: "O fechar, para o endAdornment." },
           { prop: "mobileSheetChromeBelowHeaderClassName", type: "string", description: "A folga entre o cabeçalho e o corpo." },
-          { prop: "MobileSheetFormDragStrip", type: "—", description: "É o SheetDragHandle, que retorna null: a alça vem da gaveta. Sobrevive porque 16 telas o escrevem." },
         ]}
       />
     </>

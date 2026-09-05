@@ -17,7 +17,6 @@ import {
   SheetContent,
 } from "@/components/ui/sheet"
 import {
-    MobileSheetFormDragStrip,
     MobileSheetFormStickyHeader,
     mobileFormSheetContentClassName,
 } from "@/components/ui/mobile-sheet-form-chrome"
@@ -385,7 +384,6 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
 
     const shellMobile = (
         <>
-            <MobileSheetFormDragStrip />
             {stickyHeader}
             {success ? (
                 <>

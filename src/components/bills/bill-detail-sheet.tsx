@@ -12,7 +12,6 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { SheetDragHandle } from "@/components/ui/sheet-drag-handle"
 import { mobileSheetChromeBelowHeaderClassName } from "@/components/ui/mobile-sheet-form-chrome"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -167,7 +166,6 @@ export function BillDetailSheet({
                     isMobile && "rounded-t-2xl pt-0 sm:max-w-full"
                 )}
             >
-                {isMobile ? <SheetDragHandle /> : null}
                 <DialogDescription className="sr-only">
                     {bill ? `Conta ${bill.name}. Detalhes e histórico de parcelas.` : "Carregando conta."}
                 </DialogDescription>

@@ -19,7 +19,6 @@ import {
   SheetContent,
 } from "@/components/ui/sheet"
 import {
-    MobileSheetFormDragStrip,
     MobileSheetFormStickyHeader,
     mobileFormSheetContentClassName,
 } from "@/components/ui/mobile-sheet-form-chrome"
@@ -137,7 +136,6 @@ export function CategoryBudgetDialog({
                     fillMobileViewport
                     className={mobileFormSheetContentClassName}
                 >
-                    <MobileSheetFormDragStrip />
                     <MobileSheetFormStickyHeader
                         title={`Orçamento — ${category.name}`}
                         description={`Limite de despesas para ${period_start} a ${period_end}.`}

@@ -12,7 +12,6 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { SheetDragHandle } from "@/components/ui/sheet-drag-handle"
 import { mobileSheetChromeBelowHeaderClassName } from "@/components/ui/mobile-sheet-form-chrome"
 import { formatDatePtBr, formatTransactionDayPtBr, formatTransactionDmyPtBr } from "@/lib/transaction-date"
 import { cn } from "@/lib/utils"
@@ -329,7 +328,6 @@ export function DashboardPaymentEventPreviewSheet({
                     )}
                 >
                     <div className="flex min-h-0 flex-1 flex-col gap-0">
-                        {isMobile ? <SheetDragHandle /> : null}
                         <DialogDescription className="sr-only">
                             Detalhes da compra parcelada prevista.
                         </DialogDescription>
@@ -663,7 +661,6 @@ export function DashboardPaymentEventPreviewSheet({
             >
                 {preview ? (
                     <div className="flex min-h-0 flex-1 flex-col gap-0">
-                        {isMobile ? <SheetDragHandle /> : null}
 
                         <DialogDescription className="sr-only">
                             Detalhes do evento previsto no calendário de

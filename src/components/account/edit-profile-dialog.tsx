@@ -16,7 +16,6 @@ import {
   SheetContent,
 } from "@/components/ui/sheet"
 import {
-    MobileSheetFormDragStrip,
     MobileSheetFormHeaderCloseButton,
     MobileSheetFormStickyHeader,
     mobileFormSheetContentClassName,
@@ -452,7 +451,6 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                     fillMobileViewport
                     className={mobileFormSheetContentClassName}
                 >
-                    <MobileSheetFormDragStrip />
                     <MobileSheetFormStickyHeader
                         title="Editar perfil"
                         description="Atualize suas informações pessoais"

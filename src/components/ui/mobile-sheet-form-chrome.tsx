@@ -13,19 +13,10 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { SheetDragHandle } from "@/components/ui/sheet-drag-handle"
 
 /** Pass to `SheetContent` (`side="bottom"`, `fillMobileViewport`) for form layouts. */
 export const mobileFormSheetContentClassName =
     "flex w-full flex-col gap-0 overflow-hidden rounded-t-2xl px-0 pt-0 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]"
-
-/**
- * Bottom-sheet chrome for mobile forms: matches sticky header strip used in
- * transaction detail sheet / transaction-form-surface detail-sheet variant.
- */
-export function MobileSheetFormDragStrip() {
-    return <SheetDragHandle />
-}
 
 /** Close control for `MobileSheetFormStickyHeader` (`endAdornment`). The sheet no longer injects a floating ×, so this is the only one. */
 export function MobileSheetFormHeaderCloseButton({

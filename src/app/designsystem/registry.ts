@@ -89,6 +89,12 @@ const LAYER: Record<string, Layer> = {
   "color-tile": "Átomos",
   /** Uma `div` com largura e calha. Indivisível — átomo por decisão do dono. */
   container: "Átomos",
+  /** Uma barra e o alvo de acerto dela. O `<span data-vaul-handle-hitarea>` que
+   *  o vaul injeta é anatomia interna, e não composição — a mesma régua que faz
+   *  o `Slider` átomo com quatro primitivas Radix por dentro. Era Organismo
+   *  enquanto consumia o contexto do `Sheet` para devolver `null`; parou de
+   *  consumir quando voltou a desenhar. */
+  "drag-handle": "Átomos",
   input: "Átomos",
   "input-otp": "Átomos",
   /** Uma tecla, ou o acorde inteiro numa pastilha só. As partes do acorde são
@@ -219,9 +225,6 @@ const LAYER: Record<string, Layer> = {
   "navigation-menu": "Organismos",
   popover: "Organismos",
   sheet: "Organismos",
-  /** Renderiza `null`, mas consome o contexto do `Sheet` — é uma peça do
-   *  organismo, e não um componente por conta própria. */
-  "sheet-drag-handle": "Organismos",
   sidebar: "Organismos",
   /** Especializa o `Card`; especializar mantém o degrau. */
   "stat-card": "Organismos",
@@ -345,6 +348,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("code", "Code", "Identificador literal dentro do texto.", ui("code"), "Code"),
   entry("color-tile", "Color Tile", "O ladrilho que carrega uma cor escolhida pela pessoa.", ui("color-tile"), "ColorTile"),
   entry("container", "Container", "Espaçamento e largura: até onde o conteúdo cresce, a calha e o ritmo dos blocos.", ui("container"), "Container, containerSizes, containerGutters, containerStacks"),
+  entry("drag-handle", "Drag Handle", "A alça que se agarra para arrastar a gaveta — e o alvo do gesto.", ui("drag-handle"), "DragHandle"),
   entry("input", "Input", "Campo de uma linha — e, no modo money, o campo de dinheiro.", ui("input"), "Input"),
   entry("input-otp", "Input OTP", "Entrada de código de verificação.", ui("input-otp"), "InputOTP, InputOTPSlot"),
   entry("kbd", "Kbd", "Uma tecla, ou o acorde inteiro numa pastilha só.", ui("kbd"), "Kbd"),
@@ -406,7 +410,6 @@ export const REGISTRY: RegistryEntry[] = [
   entry("navigation-menu", "Navigation Menu", "A fileira de um cabeçalho público, em três superfícies, com painel e marcador.", ui("navigation-menu"), "NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent, NavigationMenuPanel, NavigationMenuSectionLabel, NavigationMenuLink, NavigationMenuLinkTitle, NavigationMenuLinkDescription"),
   entry("popover", "Popover", "Camada flutuante ancorada a um gatilho.", ui("popover"), "Popover, PopoverContent, PopoverTrigger"),
   entry("sheet", "Sheet", "Folha no desktop, gaveta no telefone — uma API só.", ui("sheet"), "Sheet, SheetContent, SheetTrigger, SheetClose"),
-  entry("sheet-drag-handle", "Sheet Drag Handle", "A alça que diz que a folha se arrasta.", ui("sheet-drag-handle"), "SheetDragHandle"),
   entry("sidebar", "Sidebar", "A navegação lateral, com grupos e estado recolhido.", ui("sidebar"), "Sidebar, SidebarMenu, SidebarProvider"),
   entry("stat-card", "Stat Card", "Um número que importa, com sua variação.", ui("stat-card"), "StatCard, StatCardLabel, StatCardValue, StatCardDelta"),
   entry("stepper", "Stepper", "Progresso por etapas de um fluxo, na horizontal ou na vertical.", ui("stepper"), "Stepper, StepperItem"),

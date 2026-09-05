@@ -20,7 +20,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { SheetDragHandle } from "@/components/ui/sheet-drag-handle"
 import { mobileSheetChromeBelowHeaderClassName } from "@/components/ui/mobile-sheet-form-chrome"
 import {
     transactionSegmentContainerClassName,
@@ -313,7 +312,6 @@ export function BillsToolbar({
                     fillMobileViewport
                     className="flex w-full flex-col rounded-t-2xl px-4 pt-0 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]"
                 >
-                    <SheetDragHandle />
                     <DialogHeader
                         className={cn(
                             "shrink-0 px-0 pt-1 pb-3 text-left",

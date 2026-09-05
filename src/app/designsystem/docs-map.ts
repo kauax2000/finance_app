@@ -31,6 +31,7 @@ import DatePickerDoc from "./docs/date-picker"
 import DescriptionListDoc from "./docs/description-list"
 import DialogDoc from "./docs/dialog"
 import DinheiroDoc from "./docs/dinheiro"
+import DragHandleDoc from "./docs/drag-handle"
 import DrawerDoc from "./docs/drawer"
 import DropdownMenuDoc from "./docs/dropdown-menu"
 import EdgePanelDoc from "./docs/edge-panel"
@@ -72,7 +73,6 @@ import SearchInputDoc from "./docs/search-input"
 import SelectDoc from "./docs/select"
 import SeparatorDoc from "./docs/separator"
 import SheetDoc from "./docs/sheet"
-import SheetDragHandleDoc from "./docs/sheet-drag-handle"
 import SidebarDoc from "./docs/sidebar"
 import SkeletonDoc from "./docs/skeleton"
 import SliderDoc from "./docs/slider"
@@ -122,6 +122,7 @@ export const DOCS: Record<string, ComponentType> = {
   "description-list": DescriptionListDoc,
   "dialog": DialogDoc,
   "dinheiro": DinheiroDoc,
+  "drag-handle": DragHandleDoc,
   "drawer": DrawerDoc,
   "dropdown-menu": DropdownMenuDoc,
   "edge-panel": EdgePanelDoc,
@@ -163,7 +164,6 @@ export const DOCS: Record<string, ComponentType> = {
   "select": SelectDoc,
   "separator": SeparatorDoc,
   "sheet": SheetDoc,
-  "sheet-drag-handle": SheetDragHandleDoc,
   "sidebar": SidebarDoc,
   "skeleton": SkeletonDoc,
   "slider": SliderDoc,

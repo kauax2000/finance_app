@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dialog"
 
 import {
-    MobileSheetFormDragStrip,
     MobileSheetFormStickyHeader,
 } from "@/components/ui/mobile-sheet-form-chrome"
 import {
@@ -76,7 +75,6 @@ export function BillFormSurface({
                 onSubmit={handleSubmit}
                 className="flex min-h-0 flex-1 flex-col"
             >
-                <MobileSheetFormDragStrip />
                 <MobileSheetFormStickyHeader
                     title={formTitle}
                     description={formDescription}

@@ -44,13 +44,11 @@ describe("moldura de telefone do catálogo", () => {
   })
 
   it("3. nenhuma página do catálogo volta a desenhar a moldura à mão", () => {
-    // `docs/sheet-drag-handle.tsx` também escreve `rounded-t-2xl`, e fica: ali
-    // é a alça sobre um bloco, sem altura e sem telefone.
+    // A exceção nominal que vivia aqui era `docs/sheet-drag-handle.tsx`, e ela
+    // saiu com a página: a do `drag-handle` demonstra o gesto em gavetas de
+    // verdade, então não tem moldura à mão para isentar.
     const aMao = PAGINAS.filter(
-      (p) =>
-        p.texto.includes("rounded-t-2xl") &&
-        p.texto.includes("bg-card") &&
-        p.nome !== "sheet-drag-handle.tsx"
+      (p) => p.texto.includes("rounded-t-2xl") && p.texto.includes("bg-card")
     )
     expect(aMao.map((p) => p.nome)).toEqual([])
 

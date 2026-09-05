@@ -21,7 +21,6 @@ import {
     SheetContent,
 } from "@/components/ui/sheet"
 import {
-    MobileSheetFormDragStrip,
     MobileSheetFormStickyHeader,
     mobileFormSheetContentClassName,
 } from "@/components/ui/mobile-sheet-form-chrome"
@@ -285,7 +284,6 @@ export function WorkspaceInviteDialog({
                         fillMobileViewport
                         className={mobileFormSheetContentClassName}
                     >
-                        <MobileSheetFormDragStrip />
                         <MobileSheetFormStickyHeader
                             title="Novo membro"
                             description="Convide por e-mail ou gere um link de convite para esta carteira."

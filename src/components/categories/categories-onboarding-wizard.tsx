@@ -23,7 +23,6 @@ import {
   SheetContent,
 } from "@/components/ui/sheet"
 import {
-    MobileSheetFormDragStrip,
     MobileSheetFormStickyHeader,
     mobileFormSheetContentClassName,
 } from "@/components/ui/mobile-sheet-form-chrome"
@@ -574,7 +573,6 @@ export function CategoriesOnboardingWizard({
                         fillMobileViewport
                         className={mobileFormSheetContentClassName}
                     >
-                        <MobileSheetFormDragStrip />
                         <MobileSheetFormStickyHeader
                             title="Nova categoria"
                             description="Defina nome, tipo, cor e ícone. Orçamentos ficam no passo seguinte para despesas."
@@ -682,7 +680,6 @@ export function CategoriesOnboardingWizard({
                         fillMobileViewport
                         className={mobileFormSheetContentClassName}
                     >
-                        <MobileSheetFormDragStrip />
                         <MobileSheetFormStickyHeader
                             title="Editar categoria"
                             description="Ajuste nome, tipo, cor e ícone. Para despesas, defina também o limite deste mês."

@@ -52,7 +52,6 @@ import {
   SheetContent,
 } from "@/components/ui/sheet"
 import {
-    MobileSheetFormDragStrip,
     MobileSheetFormStickyHeader,
     mobileFormSheetContentClassName,
 } from "@/components/ui/mobile-sheet-form-chrome"
@@ -669,7 +668,6 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                             "sm:mx-auto sm:max-w-lg",
                         )}
                     >
-                        <MobileSheetFormDragStrip />
                         <MobileSheetFormStickyHeader
                             title={sheetTitle}
                             description={sheetDescription}

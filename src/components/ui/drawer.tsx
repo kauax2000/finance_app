@@ -5,6 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Drawer as DrawerPrimitive } from "vaul"
 
 import { cn } from "@/lib/utils"
+import { DragHandle } from "@/components/ui/drag-handle"
 import { EDGE_PANEL_OVERLAY_CLASS } from "@/components/ui/edge-panel"
 
 /**
@@ -31,8 +32,10 @@ import { EDGE_PANEL_OVERLAY_CLASS } from "@/components/ui/edge-panel"
  * exatamente o defeito que a rodada do `Sheet` tirou de 37 telas: a alça era
  * uma `div` decorativa — sem `data-vaul-handle`, sem área de toque, sem gesto.
  * Ela **desenhava a promessa do arraste** enquanto a física ficava só na
- * documentação. Agora a alça é `DrawerPrimitive.Handle`: ela é a área de
- * arraste, tem os 44px de alvo que o vaul injeta, e o clique nela fecha.
+ * documentação. Agora a alça é o `DragHandle`, que é o `Handle` do vaul: ela é
+ * a área de arraste e tem os 44px de alvo. O que **não** faz é fechar no
+ * clique — o vaul só fecha ali quando `dismissible` é falso, e está medido e
+ * escrito em `drag-handle.tsx`.
  *
  * Junto vieram as decisões que o `Sheet` já tinha tomado e esta não seguia:
  * `--z-sheet` em vez de `--z-modal` (duas gavetas em camadas diferentes),
@@ -60,19 +63,6 @@ import { EDGE_PANEL_OVERLAY_CLASS } from "@/components/ui/edge-panel"
  * de enfeite outra vez. Painel preso a uma borda lateral é `EdgePanel`, que não
  * promete gesto nenhum.
  */
-
-/**
- * A alça, e por que ela leva `!`.
- *
- * O `vaul` injeta `[data-vaul-handle]` numa folha de estilo própria, com
- * `background` num cinza literal (`e2e2e4`), `height: 5px` e `width: 32px` —
- * valores que não conhecem tema nem a escala daqui. As três
- * marcações com `!` são o que troca esse hex por token e a medida por uma que
- * casa com o resto do app. É a exceção que se paga: o alvo é a folha do vaul,
- * não uma classe deste projeto.
- */
-const DRAWER_HANDLE_CLASS =
-  "mx-auto my-2.5 !h-1.5 !w-12 shrink-0 rounded-full !bg-muted-foreground/35"
 
 const drawerContentVariants = cva(
   [
@@ -253,15 +243,7 @@ function DrawerContent({
         {...props}
       >
         {showHandle ? (
-          <DrawerPrimitive.Handle
-            data-slot="drawer-handle"
-            className={cn(
-              DRAWER_HANDLE_CLASS,
-              // Na gaveta de cima a alça é a borda de baixo — a que o dedo
-              // puxa. Sem isto ela nasceria do lado que encosta na tela.
-              "group-data-[vaul-drawer-direction=top]/dialog-content:order-last"
-            )}
-          />
+          <DragHandle />
         ) : null}
         {children}
       </DrawerPrimitive.Content>
@@ -276,6 +258,5 @@ export {
   DrawerOverlay,
   DrawerPortal,
   DrawerTrigger,
-  DRAWER_HANDLE_CLASS,
   drawerContentVariants,
 }

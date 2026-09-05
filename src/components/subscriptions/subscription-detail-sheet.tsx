@@ -14,7 +14,6 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { SheetDragHandle } from "@/components/ui/sheet-drag-handle"
 import { Spinner } from "@/components/ui/spinner"
 import { mobileSheetChromeBelowHeaderClassName } from "@/components/ui/mobile-sheet-form-chrome"
 import { Button } from "@/components/ui/button"
@@ -305,7 +304,6 @@ export function SubscriptionDetailSheet({
 
     const viewBody = (
         <div className="flex min-h-0 flex-1 flex-col gap-0">
-            {isMobile ? <SheetDragHandle /> : null}
             <DialogDescription className="sr-only">
                 Assinatura {s.name}. Valor {currencyFmt.format(Number(s.amount))}.
                 Próxima cobrança {formatDatePtBr(nextCharge)}.
@@ -616,7 +614,6 @@ export function SubscriptionDetailSheet({
             >
                 {detailMode === "edit" ? (
                     <div className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden">
-                        {isMobile ? <SheetDragHandle /> : null}
                         <SubscriptionFormSurface
                             variant="detail-sheet"
                             handleSubmit={handleSubmit}
