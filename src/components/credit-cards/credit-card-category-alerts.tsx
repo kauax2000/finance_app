@@ -306,11 +306,9 @@ export function CreditCardCategoryAlerts({
                                     <SelectValue placeholder="Escolha uma categoria" />
                                 </SelectTrigger>
                                 <SelectContent
-                                    position="popper"
                                     align="start"
                                     className="z-(--z-toast) min-w-[var(--radix-select-trigger-width)] max-h-72 p-1"
                                     sideOffset={6}
-                                    collisionPadding={12}
                                 >
                                     {categoryOptions.map((o) => (
                                         <SelectItem

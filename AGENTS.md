@@ -4153,6 +4153,260 @@ escapam do telefone; e `env(safe-area-inset-bottom)` vale zero, porque não há
 aparelho — os 24px que se vê são a base, sem os 34 do iPhone. Nenhuma das duas
 demonstrações depende dos três, e quem depender precisa saber antes.
 
+### Rodada 32 — o Navigation Menu falava a gramática de outra biblioteca
+
+`navigation-menu.tsx` era o shadcn quase intacto, e trazia os **três sinais** que
+as rodadas do `resizable` e do `carousel` já nomearam, os três ao mesmo tempo:
+zero consumidores fora do catálogo, **`—`** na coluna de variantes do
+`ds:catalog`, e **"Nenhum achado" no `ds:audit`**. Uma pasta calada não é uma
+pasta conforme, e um arquivo aprovado também não — as regras que o silenciam
+(`A2`, `C`, `C'` sob `isUi`) não olham para nada do que estava errado aqui.
+
+**Metade das declarações era de outra biblioteca.** `data-popup-open:` é
+vocabulário do **Base UI**; o Radix escreve `data-state="open"`. Ele aparecia
+**quatro vezes** — três no gatilho, uma no chevron —, sempre emparelhado com a
+versão que de fato casa, o que tornava o defeito invisível: a interface
+funcionava, e metade do CSS emitido não casava com elemento nenhum.
+
+**E o anel de foco era apagado justo onde o teclado é o caminho.** O conteúdo
+trazia `**:data-[slot=navigation-menu-link]:focus:ring-0` mais
+`focus:outline-none` — um seletor de descendente que removia o anel de **todo**
+link dentro do painel. Com o mouse ninguém nota, porque o foco nunca entra ali;
+com o `Tab`, a pessoa percorria a lista sem saber em que linha estava.
+
+#### `data-open:` tem especificidade zero, e o realce de aberto perdia para o cursor
+
+O achado que decidiu o desenho. No Tailwind 4.2.2, `data-open:` compila para
+`:where([data-open]:not([data-open=false])), :where([data-state=open])` —
+**medido no CSS emitido**. Isso é **0,1,0** contra os **0,2,0** de `hover:`, no
+mesmo elemento.
+
+O arquivo antigo escondia a consequência escrevendo `data-open:hover:` ao lado
+de cada `data-open:`, ou seja compensando por duplicação. Com um `variant`
+`solid` — em que aberto é `bg-background` e o realce é `bg-background/60` — a
+compensação não bastaria: passar o cursor sobre um gatilho **aberto** o
+derrubaria para 60%, apagando o realce exatamente quando a pessoa aponta para
+ele.
+
+O gatilho passou a usar **`aria-expanded:`**, que é seletor de atributo de
+verdade (0,2,0) — a mesma saída que o `Menubar` já usava, e o Radix carimba o
+atributo (verificado em `node_modules`). Pela mesma aritmética, o realce de rota
+atual do link é **`aria-[current=page]:`** e não `data-active:`: o Radix escreve
+os dois atributos juntos quando o link recebe `active`, e só um deles pontua.
+`data-open:` fica onde não há disputa — nas animações da superfície.
+
+#### O marcador já viajava; faltava uma classe
+
+O `Indicator` do Radix se posiciona sozinho a partir de `offsetLeft`/`offsetWidth`
+do gatilho ativo, com `ResizeObserver` próprio, e já entende a vertical: **o
+mecanismo que a rodada do `Tabs` construiu à mão já estava pago aqui.** O que
+faltava era a transição — sem ela, um marcador só pisca de um gatilho para o
+outro, que é o mesmo nada que três marcadores acendendo e apagando.
+
+Medido depois, com o menu aberto: `transform, width, height @ 0.2s /
+cubic-bezier(0.16, 1, 0.3, 1)` — `--duration-base` e `--ease-out` —, e a caixa
+do marcador em **102px contra 102px** de gatilho. Ele deixou de ser peça que o
+consumidor lembra de escrever e virou eixo: a fileira o monta quando
+`indicator !== "none"`.
+
+**A seta é a ponta do painel, e o defeito antigo não era contraste.** Eu enquadrei
+errado na primeira passagem, e a medição me corrigiu: reportei "1,35:1 contra a
+página" como o problema, copiando o número que o `resizable` mediu para uma
+costura. Mas a seta **não deve** se destacar da página — ela é o bico de um
+balão. O número certo é contra o **painel**: o quadrado `bg-border` antigo dava
+**1,23:1** ali (pouco para ler como peça, suficiente para ler como emenda) e
+ainda lançava um `shadow-md` próprio sobre a sombra que o painel já tem. Hoje é
+`bg-popover` com o mesmo `ring-foreground/10`: **1,00**, nenhuma diferença, que é
+o número certo para um bico. Quem quer um sinal alto de qual gatilho está aberto
+usa `indicator="underline"` — **6,78:1** contra a página.
+
+O recorte tem **2px a mais que a calha**, e isso é estrutural: a base do bico
+passa por baixo do painel (que vive em `--z-popover`, acima da fileira) em vez de
+encostar nele. Sem isso o `ring` do painel desenharia um fio reto atravessando a
+base do bico, e as duas peças voltariam a ler como duas. Medido: sobreposição de
+**2,0px**, bico visível de **5,7px**, calha de 8.
+
+#### A escada, e a quinta porta do mesmo defeito
+
+O gatilho era `h-8` cravado — um número sem nome, que nenhuma tela podia pedir
+diferente. Entrou a escada da casa: **28 · 32 · 36**, os mesmos nomes e números
+do `Button`, do `Input`, do `Tabs` e do `Menubar`, com `pointer-coarse` levando a
+40. A fileira **não declara altura**: ela cresce em volta.
+
+É a quinta porta — `Menubar` entregou 24, `Tabs` entregou 27, `Item` teve dois
+degraus com a mesma string, `Calendar` entregou 28 onde dizia 36. Medido nos três
+degraus: **28/28, 32/32, 36/36**, com a fileira em 34/38/42 (gatilho + 2×2 de
+recuo + 2×1 de borda).
+
+**E o link do topo veste a régua do gatilho.** Numa fileira real "Preços" é um
+link e "Produto" é um gatilho com painel, e os dois têm de medir igual. Ele
+compõe `navigationMenuTriggerVariants` em vez de repetir a escada, então não têm
+como divergir no dia em que um degrau mudar — medido, `toplink === trigger` nos
+três degraus. Dentro do painel a conta é outra, e ali o link volta a ser linha de
+menu.
+
+#### A superfície estava escrita quatro vezes, e uma delas divergia
+
+`rounded-lg bg-popover text-popover-foreground shadow-md ring-1
+ring-foreground/10` aparecia em `menu-classes`, em `popover.tsx`, em `select.tsx`
+e — **duas vezes dentro do mesmo arquivo** — aqui, com `shadow` no lugar de
+`shadow-md`. Saiu **`menuPanelSurfaceClassName`** em
+[`lib/menu-classes`](src/lib/menu-classes.ts), e o `menuSurfaceClassName` passou
+a compô-la: **a saída dos três menus é byte a byte a mesma**, é extração e não
+mudança.
+
+O `navigation-menu` **não** veste a casca inteira, e é decisão: ela traz
+`min-w-36`, `flex-col` e as animações por `data-[side=…]`, que aqui não existem.
+Vestir para desfazer três quartos por `className` é reimplementar ao contrário.
+
+#### As peças que a tela escrevia à mão
+
+O consumidor escrevia `<ul className="grid w-64 gap-1 p-2">` e **re-estilizava
+cada link por dentro** com `block rounded-md p-2 hover:bg-accent`, uma receita
+que discordava da do componente em quatro declarações — e quem escrevia isso era
+a página deste catálogo. Catálogo escrevendo a anatomia é o sinal de que falta
+peça, e o precedente é `FormPickerPopoverEmpty`, `HoverCardBody` e o `actions` do
+`PageSectionHeader`.
+
+- **`NavigationMenuPanel`** (`columns: 1 | 2 | 3`) — a grade, o recuo, **o teto e
+  a rolagem**. Medido: 274px numa coluna, 570 em duas, dissolução `on` com 126px
+  de transbordo.
+- **`NavigationMenuLink variant="card"`** mais `LinkTitle` / `LinkDescription` —
+  ícone, título e uma linha do que aquilo é. Ele existe sobretudo para **trancar
+  o par de identidade**: `gap-y-0`, medido em **0px** entre título e descrição.
+  É a quinta vez que esta base persegue o mesmo defeito (`ItemContent`,
+  `StatCard`, `FieldContent`, `PageHeaderTitleRow`) e a primeira em que o
+  componente o torna impossível de escrever errado.
+- **`NavigationMenuSectionLabel`** — `menuLabelClassName` mais `col-span-full`.
+
+**O teto mora no painel, e não no viewport.** O Radix expõe **duas** variáveis
+aqui — `--radix-navigation-menu-viewport-height` e `-width` — e nenhuma
+`available-height`. Mas ele calcula a primeira a partir do `offsetHeight` do
+conteúdo: capar o **conteúdo** devolve a altura já capada, e o viewport anima
+para o número certo sem `max-h` nenhum. De brinde, isso satisfaz de graça a
+invariante 2 do `scroll-fade` — **o elemento mascarado não desenha nada** —,
+porque quem desenha raio, fio e sombra é o viewport.
+
+#### Mais o que estava morto, e o que entrou junto
+
+O `justify-center` do wrapper do viewport era **inerte** (caixa absoluta sem
+largura já encolhe até o conteúdo), e o `cn()` dele tinha **um argumento só** e
+descartava `className`. Alinhar exige mexer na âncora, e é o que `align` faz — a
+tabela é **JavaScript e não seletor**, porque `in-*` compila com `:where()` e o
+override da vertical empataria com o `left-1/2` do alinhamento, decidido por
+ordem de emissão. Entrou também `orientation="vertical"`, que o Radix já
+suportava e o arquivo ignorava por completo (`top-full` e `h-1.5` cravados na
+horizontal), mais o par `active:` em tudo que tinha `hover:`, o
+`pointer-coarse:min-h-11` no link do painel, o chevron na régua (`size-4` em vez
+de `size-3` com `top-px` de calço), `gap-1.5` no lugar do `{" "}` literal, e a
+transição enumerada no lugar de `transition-all`.
+
+**Três exports saíram, e os três tinham zero chamadores.**
+`navigationMenuTriggerStyle` era um `cva` **sem nenhuma variante** — uma string
+só, com um nome que prometia eixos; é a mesma constante disfarçada que
+`defaultControlVariant` era antes de sair na 29b. `NavigationMenuIndicator` e
+`NavigationMenuViewport` passaram a ser montados pela raiz, como a alça é da
+superfície e não de quem abre a gaveta.
+
+#### Três lições de método, e as três são erros de instrumento
+
+**Li a caixa no mesmo quadro da montagem, e "descobri" dois defeitos que não
+existiam.** O viewport apareceu 0×0 e o marcador apareceu ausente logo depois de
+um `hover` — e a conclusão foi que a abertura por cursor estava quebrada.
+Relendo depois de o layout assentar: viewport **288×112** com as duas variáveis
+do Radix escritas, marcador presente com `width: 102px`. É a quinta vez que esta
+base registra que **medição de layout se lê depois de um quadro**, e a primeira
+em que ela quase produziu um conserto para um bug inexistente.
+
+**Coordenada de painel não é pixel de CSS.** Com o viewport emulado em 1440×900,
+o quadro de coordenadas do `computer` era **800×553** — hovers no ponto certo do
+DOM caíam a centenas de pixels do alvo, e o menu que abria não era o que eu
+estava medindo. A saída é hover por `ref`, nunca por coordenada calculada a
+partir do `getBoundingClientRect`.
+
+**Evento sintético não abre um Radix.** `dispatchEvent(new PointerEvent(...))`
+sobre o gatilho não abriu nada — a mesma lição do calendário, com o sinal
+invertido: lá o instrumento escondeu o defeito, aqui ele fabricou um.
+
+#### O que não foi feito, e é dito em vez de silenciado
+
+- **Não há teste de escada** (`navigation-menu-ladder.test.ts`). Foi decisão do
+  dono nesta rodada. O que ele trancaria: os degraus serem degraus, nenhum par
+  produzir a mesma string, a fileira não declarar altura, zero `data-popup-open`
+  no fonte, nenhum `focus:ring-0` apagando anel, e a duração vir de token.
+- **`defaultValue` com `viewport` não pinta na primeira montagem.** O Radix mede
+  o conteúdo por `ResizeObserver` e, no caminho de `defaultValue`, a medida não
+  chega antes da primeira pintura — o painel sai dentro de um viewport de altura
+  zero. As três demonstrações que precisam nascer abertas usam
+  `viewport={false}`, onde o conteúdo **é** a superfície e não há medida a
+  esperar. Não foi investigado a fundo, e não foi contornado no componente.
+- **`NavigationMenuSub` continua sem embrulho.** Zero contagem.
+- **O app continua sem consumidor**, e isso segue correto: a navegação do produto
+  é a `Sidebar` mais a ilha, e o lugar deste componente é a superfície pública
+  que o produto ainda não tem. O que mudou é que, no dia em que ela existir, não
+  vai precisar inventar a fileira, o painel, o marcador nem o cartão.
+
+#### Rodada 32b — o painel não seguia o gatilho, e a seta nunca saiu do lugar
+
+Relatado pelo dono, olhando a página: *"toda vez que eu clico no segundo
+gatilho, ele abre como se fosse do primeiro"*. Eram **dois** defeitos, da mesma
+família, e o segundo só apareceu porque o primeiro foi medido.
+
+**O painel ancorava na fileira, não no gatilho.** Com viewport há *um* painel
+para a fileira inteira, e o Radix não o desloca — ele nasce onde a casca o
+ancorar. Ancorado na fileira, abrir o segundo gatilho punha o painel exatamente
+onde o primeiro o pusera. Com `indicator="arrow"` ficava pior: a seta sobre o
+gatilho certo e o painel em outro lugar, as duas peças apontando para direções
+diferentes.
+
+Entrou **`align="trigger"`**, e ele é o padrão: um `ResizeObserver` na raiz e nos
+gatilhos mais um `MutationObserver` em `data-state` — o mecanismo do marcador do
+`Tabs` — medem o gatilho aberto e publicam o **centro** dele em
+`--navigation-menu-anchor-cx`. Medido depois, nos dois gatilhos: **54,1 e 54,1**,
+depois **152,8 e 152,8**, desalinho zero.
+
+**A leitura é por `getBoundingClientRect` e não por `offsetLeft`, e é decisão.**
+O `Tabs` faz o contrário, e o comentário dele explica por quê: a trilha dele
+rola, e coordenada de tela escorregaria a cada pixel rolado. Esta raiz não rola
+por dentro, e aqui `offsetLeft` é que seria errado — pelo motivo do parágrafo
+seguinte.
+
+**E a seta nunca tinha saído do lugar.** O `Indicator` do Radix se posiciona com
+`translateX(activeTrigger.offsetLeft)`, e `offsetLeft` é medido contra o
+**`offsetParent`**. Enquanto o `NavigationMenuItem` era `relative` — herança do
+arquivo antigo, que a rodada 32 preservou sem questionar —, esse ancestral era o
+próprio `<li>`, e **`offsetLeft` valia 0 para todo gatilho**.
+
+Medido com o segundo gatilho aberto: seta em **45,5**, gatilho em **152,8** —
+**107,3px** de desalinho, e a largura travada em 102, a do primeiro. **O
+primeiro gatilho acertava por acidente**, porque ali zero é o valor certo, e é
+exatamente isso que fez o defeito atravessar a inspeção inteira da rodada 32: eu
+medi `translateX(0px)` com `width: 102px` no primeiro gatilho, vi a largura
+bater, e declarei o marcador correto. **Uma peça que se move só se verifica em
+duas posições.**
+
+O conserto é tirar `relative` do item (e da fileira, que eu tinha acrescentado):
+o `offsetParent` volta a ser o `<div style="position:relative">` que o Radix põe
+em volta da fileira, que é o mesmo bloco contentor do marcador **e** do painel —
+um posicionamento só para as três peças. Medido depois: desalinho **0,1** e
+**0,3** (o arredondamento inteiro do `offsetLeft`), com a largura da seta
+acompanhando o gatilho, **102 e 91**.
+
+Como o item deixou de ser `relative`, o modo `viewport={false}` passou a usar a
+mesma variável medida — antes ele ancorava no `<li>`, o que dava o resultado
+certo por outro caminho. Hoje os dois modos falam a mesma âncora.
+
+**E a âncora corre num trilho.** Centrar no gatilho tem um custo que a medição
+mostrou: um painel de 600px preso a um gatilho de 91 abre **259px para fora da
+raiz**, e num cabeçalho real isso é metade do painel fora da tela. O `medir()`
+limita o centro à janela com a mesma folga de 8px do `collisionPadding` do
+`Popover`; quando o painel é mais largo que a janela inteira o trilho se inverte,
+e aí a conta é descartada em vez de espremer. O painel entra no `ResizeObserver`
+na primeira vez que aparece — o Radix o dimensiona **depois** de montá-lo, então
+sem isso o clamp rodaria uma vez só, com largura zero. Medido a 700px de janela:
+nada para fora em nenhum dos três painéis abertos, com o mais largo deslocado
+**22,8px** do centro do gatilho.
+
 ### Backlog de migração
 
 A rodada 01 entregou tokens, componentes, documentação e o auditor, sem migrar
@@ -4756,5 +5010,29 @@ E o que a rodada do gráfico deixou — as sete telas que não migraram, contada
   `aspect`, e **1 `accessibilityLayer={false}`**.
 - **`credit-cards-history-chart` repete a rampa** com `BAR_COLORS[idx % 5]`:
   seis cartões dão duas barras da mesma cor.
+
+E o que a rodada do `NavigationMenu` deixou:
+
+- **Ele continua sem tela**, e o candidato tem nome: a superfície pública
+  (landing, preços, institucional) que o produto ainda não tem. As peças estão
+  medidas para o dia em que ela existir.
+- **Sem teste de escada.** Foi decisão desta rodada, e o que ele trancaria está
+  escrito acima. É o único componente com cinco eixos e nenhuma asserção — e a
+  32b mostrou o preço: o `relative` do item zerava o `offsetLeft` de todo
+  gatilho, e nenhuma asserção olhava para isso. O que pegaria é uma que proíba
+  `relative` no item e na fileira, com o motivo escrito.
+- **`defaultValue` com `viewport` nasce dentro de um viewport de altura zero** —
+  o Radix mede o conteúdo por `ResizeObserver` e a medida não chega à primeira
+  pintura. Contornado nas demonstrações com `viewport={false}`; não investigado
+  no componente.
+- **`NavigationMenuSub` segue sem embrulho** (zero contagem), e o `Menubar`
+  continua a única fileira de menus com submenu.
+- **A regra H do auditor não alcança `cva()`.** Ela varre `className="…"`, e
+  todo `hover:` deste componente mora dentro de um `cva` — foi por isso que o
+  arquivo antigo saía "conforme" com `hover:` sem par de toque em duas peças. É
+  o mesmo ponto cego que as rodadas 08 e 11 registraram, e continua aberto.
+- **`popover.tsx` e `select.tsx` ainda escrevem a superfície à mão.** O
+  `menuPanelSurfaceClassName` existe agora; são duas substituições mecânicas, e
+  ficaram de fora porque a rodada não abriu aqueles arquivos.
 
 Reproduza a qualquer momento com `npm run ds:audit`.

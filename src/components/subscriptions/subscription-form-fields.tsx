@@ -130,11 +130,9 @@ export function SubscriptionFormFields({
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent
-                            position="popper"
                             align="start"
                             className="z-(--z-toast) min-w-[var(--radix-select-trigger-width)] p-1"
                             sideOffset={6}
-                            collisionPadding={12}
                         >
                             {SUBSCRIPTION_BILLING_OPTIONS.map((o) => (
                                 <SelectItem
@@ -203,11 +201,9 @@ export function SubscriptionFormFields({
                         <SelectValue placeholder="Não informado" />
                     </SelectTrigger>
                     <SelectContent
-                        position="popper"
                         align="start"
                         className="z-(--z-toast) min-w-[var(--radix-select-trigger-width)] p-1"
                         sideOffset={6}
-                        collisionPadding={12}
                     >
                         <SelectItem
                             value={SUBSCRIPTION_PAYMENT_NONE}
@@ -264,11 +260,9 @@ export function SubscriptionFormFields({
                                 <SelectValue placeholder="Selecione o cartão" />
                             </SelectTrigger>
                             <SelectContent
-                                position="popper"
                                 align="start"
                                 className="z-(--z-toast) min-w-[var(--radix-select-trigger-width)] p-1"
                                 sideOffset={6}
-                                collisionPadding={12}
                             >
                                 <SelectItem
                                     value="__pick__"

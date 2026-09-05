@@ -689,7 +689,6 @@ export function DashboardPaymentsCalendar({
                                     side="bottom"
                                     align="center"
                                     sideOffset={6}
-                                    collisionPadding={12}
                                     className="w-[min(calc(100vw-2rem),18rem)] max-w-[min(calc(100vw-2rem),18rem)] p-2"
                                     aria-describedby={undefined}
                                 >

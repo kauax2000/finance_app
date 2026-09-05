@@ -5,6 +5,7 @@ import { CheckIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
 import { ContextMenu as ContextMenuPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
 import {
@@ -109,12 +110,14 @@ function ContextMenuRadioGroup({
 function ContextMenuContent({
   className,
   children,
+  collisionPadding = ANCHORED_COLLISION_PADDING,
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Content>) {
   return (
     <ContextMenuPrimitive.Portal>
       <ContextMenuPrimitive.Content
         data-slot="context-menu-content"
+        collisionPadding={collisionPadding}
         className={cn(menuSurfaceClassName, CONTEXT_POPPER, className)}
         {...props}
       >
@@ -174,11 +177,13 @@ function ContextMenuSubTrigger({
 function ContextMenuSubContent({
   className,
   children,
+  collisionPadding = ANCHORED_COLLISION_PADDING,
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.SubContent>) {
   return (
     <ContextMenuPrimitive.SubContent
       data-slot="context-menu-sub-content"
+      collisionPadding={collisionPadding}
       className={cn(menuSubSurfaceClassName, CONTEXT_POPPER, className)}
       {...props}
     >

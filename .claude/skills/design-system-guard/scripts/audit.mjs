@@ -604,6 +604,41 @@ function auditFile(absPath, project) {
     add("I", m.index, "use `@/lib/transaction-date` ou `@/lib/formatters`", m[0])
   }
 
+  // ── K. Geometria de colisão decidida pela tela ────────────────────────────
+  //
+  // **Toda superfície ancorada num gatilho cabe inteira na janela**: centra
+  // quando cabe, desloca para dentro quando não cabe, e encolhe quando é maior
+  // que o espaço. A folga da borda é decisão do **sistema** — ela mora em
+  // `src/lib/anchored-surface.ts`, e cada `Content` a lê como default.
+  //
+  // A regra existe porque a decisão estava escrita em **cinco grafias**: `8`
+  // no `Popover` e no `HoverCard`, `12` e `16` espalhados por 12 chamadas de
+  // tela, um objeto `{top:16,bottom:16,left:12,right:12}` no
+  // `FormPickerPopover`, e — em `quick-actions.tsx` — **`undefined`**, que
+  // anulava o default do componente e devolvia a folga a zero justamente no
+  // ramo que não era FAB. Sem guarda, a sexta grafia nasce na próxima tela.
+  //
+  // `position="popper"` entra na mesma regra porque era o mesmo sintoma: o
+  // padrão do `Select` era `item-aligned`, um modo em que o Radix **não faz
+  // colisão nenhuma**, e 9 das 36 chamadas escreviam o modo à mão para
+  // escapar dele — as mesmas 9 que cravavam a folga. Hoje `popper` é o padrão,
+  // e escrevê-lo é redundância.
+  //
+  // Calada em `components/ui/`, que é onde a régua é aplicada, e no catálogo,
+  // que documenta as props.
+  for (const m of isUi || isCatalog
+    ? []
+    : src.matchAll(/\bcollisionPadding=|\bposition="popper"/g)) {
+    add(
+      "K",
+      m.index,
+      m[0].startsWith("position")
+        ? "`position=\"popper\"` é o padrão do `Select` — a linha é redundante"
+        : "a folga da borda é do sistema — ver `lib/anchored-surface`",
+      m[0]
+    )
+  }
+
   return findings
 }
 
@@ -624,6 +659,7 @@ const RULE_LABEL = {
   H: "hover: sem par de toque",
   I: "formatação fora dos helpers",
   J: "faixa de superfície desenhada à mão",
+  K: "geometria de colisão decidida pela tela",
 }
 
 function render(findings) {

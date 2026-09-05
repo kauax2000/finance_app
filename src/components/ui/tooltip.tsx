@@ -4,6 +4,7 @@ import * as React from "react"
 import { Tooltip as TooltipPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 
 function TooltipProvider({
   delayDuration = 0,
@@ -62,6 +63,7 @@ function TooltipTrigger({
 function TooltipContent({
   className,
   sideOffset = 6,
+  collisionPadding = ANCHORED_COLLISION_PADDING,
   children,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Content>) {
@@ -70,8 +72,13 @@ function TooltipContent({
       <TooltipPrimitive.Content
         data-slot="tooltip-content"
         sideOffset={sideOffset}
+        collisionPadding={collisionPadding}
         className={cn(
+          // `max-w-xs` é o teto de leitura; o `available-width` é o teto da
+          // janela, e o menor dos dois vence. Sem o segundo, uma dica de 320px
+          // sangra num telefone de 320 — deslocar não resolve o que não cabe.
           "z-(--z-popover) w-fit max-w-xs origin-(--radix-tooltip-content-transform-origin)",
+          "max-h-(--radix-tooltip-content-available-height) max-w-(--radix-tooltip-content-available-width) overflow-y-auto overscroll-contain",
           "rounded-md border border-border bg-popover px-3 py-1.5 shadow-md",
           "text-sm font-medium text-balance text-popover-foreground",
           // Entra deslizando do lado do gatilho, o que dá direção ao movimento

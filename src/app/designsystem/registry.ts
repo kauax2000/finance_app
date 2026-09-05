@@ -403,7 +403,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("hover-card", "Hover Card", "Prévia ao pousar o cursor, com seta e a superfície do popover. Nunca no telefone.", ui("hover-card"), "HoverCard, HoverCardTrigger, HoverCardContent, HoverCardArrow"),
   entry("menubar", "Menubar", "Fileira de menus percorrida com a seta, em três superfícies.", ui("menubar"), "Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem, MenubarCheckboxItem, MenubarRadioItem, MenubarSub"),
   entry("mobile-sheet-form-chrome", "Mobile Sheet Form Chrome", "O cabeçalho fixo e o corpo rolável de um formulário em folha.", ui("mobile-sheet-form-chrome"), "MobileSheetFormStickyHeader, MobileSheetFormBody, mobileFormSheetContentClassName"),
-  entry("navigation-menu", "Navigation Menu", "Navegação com painéis suspensos.", ui("navigation-menu"), "NavigationMenu, NavigationMenuItem"),
+  entry("navigation-menu", "Navigation Menu", "A fileira de um cabeçalho público, em três superfícies, com painel e marcador.", ui("navigation-menu"), "NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent, NavigationMenuPanel, NavigationMenuSectionLabel, NavigationMenuLink, NavigationMenuLinkTitle, NavigationMenuLinkDescription"),
   entry("popover", "Popover", "Camada flutuante ancorada a um gatilho.", ui("popover"), "Popover, PopoverContent, PopoverTrigger"),
   entry("sheet", "Sheet", "Folha no desktop, gaveta no telefone — uma API só.", ui("sheet"), "Sheet, SheetContent, SheetTrigger, SheetClose"),
   entry("sheet-drag-handle", "Sheet Drag Handle", "A alça que diz que a folha se arrasta.", ui("sheet-drag-handle"), "SheetDragHandle"),

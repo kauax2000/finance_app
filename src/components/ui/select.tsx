@@ -4,6 +4,7 @@ import * as React from "react"
 import { Select as SelectPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import {
   fieldDisabledClassName,
   fieldFocusRingClassName,
@@ -78,8 +79,9 @@ function SelectTrigger({
 function SelectContent({
   className,
   children,
-  position = "item-aligned",
+  position = "popper",
   align = "center",
+  collisionPadding = ANCHORED_COLLISION_PADDING,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
   return (
@@ -89,13 +91,14 @@ function SelectContent({
         data-align-trigger={position === "item-aligned"}
         className={cn(
           /** Above Sheet overlay/content (`z-(--z-sheet)`); below Toaster (`z-(--z-toast)`). */
-          "relative z-(--z-popover) max-h-(--radix-select-content-available-height) min-w-36 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-(--duration-instant) data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "relative z-(--z-popover) max-h-(--radix-select-content-available-height) max-w-(--radix-select-content-available-width) min-w-36 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-(--duration-instant) data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           position === "popper" &&
             "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
           className,
         )}
         position={position}
         align={align}
+        collisionPadding={collisionPadding}
         {...props}
       >
         <SelectScrollUpButton />
@@ -111,8 +114,28 @@ function SelectContent({
             // de largura fixa sobravam dezenas de pixels vazios à direita, e o
             // separador parava no meio do painel.
             "w-full p-1",
-            "data-[position=popper]:h-(--radix-select-trigger-height) data-[position=popper]:w-full data-[position=popper]:min-w-(--radix-select-trigger-width)",
-            position === "popper" && ""
+            // **Sem a classe de altura sobre `--radix-select-trigger-height`.**
+            // (Escrita assim, sem a sintaxe de utilitário, de propósito: o
+            // Tailwind varre **o arquivo inteiro**, comentário incluído, e citar
+            // a classe por extenso aqui a faz voltar para a folha de estilo —
+            // verificado, ela continuava emitida depois de sair do JSX.)
+            //
+            // Ela vinha do shadcn e declarava como altura do viewport a altura
+            // do **gatilho** — a
+            // família do "envelope que declara como altura a medida que ele
+            // próprio produz", que o `AccordionContent` já pagou. Ela nunca
+            // aparecia porque o padrão era `item-aligned`; com `popper` como
+            // padrão, ela passa a valer em toda tela. Medido antes de sair:
+            // painel aberto com **36px** de altura — `height: 36px` no viewport
+            // e `scrollHeight` 36, contra um gatilho de 36. O painel inteiro
+            // espremido na caixa do gatilho.
+            //
+            // `min-w` fica: o painel nunca é mais estreito que o gatilho. Ele
+            // vence o `max-w-…-available-width` da casca quando os dois se
+            // cruzam (`min` sempre ganha em CSS), e isso só acontece com um
+            // gatilho mais largo que a janela menos a folga — caso em que a
+            // tela já tem problema maior.
+            "data-[position=popper]:w-full data-[position=popper]:min-w-(--radix-select-trigger-width)"
           )}
         >
           {children}

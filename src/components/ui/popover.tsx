@@ -5,6 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Popover as PopoverPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import { Muted } from "@/components/ui/typography"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
@@ -77,7 +78,7 @@ const popoverContentVariants = cva(
   [
     /** Above Sheet overlay/content (`z-(--z-sheet)`); below Toaster (`z-(--z-toast)`). */
     "z-(--z-popover) flex w-72 origin-(--radix-popover-content-transform-origin) flex-col rounded-lg bg-popover text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-hidden",
-    "max-h-(--radix-popover-content-available-height) overflow-y-auto overscroll-contain",
+    "max-h-(--radix-popover-content-available-height) max-w-(--radix-popover-content-available-width) overflow-y-auto overscroll-contain",
     // Quem declara um corpo rolável **cede a rolagem da casca**. Sem isto o
     // popover e o `PopoverBody` rolariam os dois, um dentro do outro. Quem não
     // declara continua exatamente como antes.
@@ -103,7 +104,7 @@ function PopoverContent({
   className,
   align = "center",
   sideOffset = 4,
-  collisionPadding = 8,
+  collisionPadding = ANCHORED_COLLISION_PADDING,
   padding,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content> &

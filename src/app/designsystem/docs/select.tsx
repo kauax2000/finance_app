@@ -210,6 +210,35 @@ export default function SelectDoc() {
         </Select>
       </DocSection>
 
+      <DocNote title="Ele abre abaixo do gatilho, e antes ignorava a borda da tela">
+        O padrão do Radix é <code>position=&quot;item-aligned&quot;</code>: o
+        painel sobrepõe o gatilho, alinhando o item já escolhido sobre ele. É
+        bonito e <strong>não faz colisão nenhuma</strong> — naquele modo{" "}
+        <code>collisionPadding</code>, <code>avoidCollisions</code>,{" "}
+        <code>side</code> e <code>sideOffset</code> simplesmente não existem, e o
+        painel sai da tela sem nada o impedir.
+        <br />
+        O app já tinha votado contra: <strong>9 das 36</strong> chamadas de{" "}
+        <code>SelectContent</code> escreviam <code>position=&quot;popper&quot;</code>{" "}
+        à mão — e eram <em>as mesmas nove</em> que cravavam um{" "}
+        <code>collisionPadding</code> próprio. Duas props escritas duas vezes,
+        nove vezes, para conseguir o que o padrão devia dar. Hoje{" "}
+        <code>popper</code> é o padrão e as dezoito linhas saíram.
+      </DocNote>
+
+      <DocNote title="A altura do viewport era a altura do gatilho">
+        O modo <code>popper</code> trazia do shadcn uma classe que declarava como
+        altura do viewport a medida do <strong>gatilho</strong> — a família do
+        &quot;envelope que declara como altura a medida que ele próprio
+        produz&quot;, que o <code>AccordionContent</code> já pagou. Ela nunca
+        aparecia porque o padrão era o outro modo; com a troca, ela passaria a
+        valer em toda tela.
+        <br />
+        Medido antes de sair: o painel abria com <strong>36px</strong> — a caixa
+        do gatilho —, com <code>scrollHeight</code> 36. Depois:{" "}
+        <strong>92px</strong> para três opções.
+      </DocNote>
+
       <DocNote title="O Enter não é do formulário aqui">
         Sobre um gatilho de Select o Enter abre e escolhe, em vez de enviar. O <code>shouldDeferEnterToWidget</code> reconhece isso pelo <code>data-slot=&quot;select-trigger&quot;</code>.
       </DocNote>

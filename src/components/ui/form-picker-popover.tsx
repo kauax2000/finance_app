@@ -89,18 +89,6 @@ export const formPickerListScrollClassName =
   "min-h-0 flex-1 touch-pan-y overflow-y-auto overflow-x-hidden overscroll-contain px-2 py-1 [-webkit-overflow-scrolling:touch]"
 
 /**
- * A folga até a borda da janela. Maior que o padrão do `PopoverContent` porque
- * este popover tem a largura do campo — ou seja, é largo, e encostar na borda
- * numa tela estreita é o caso comum, não o extremo.
- */
-const formPickerCollisionPadding = {
-  top: 16,
-  bottom: 16,
-  left: 12,
-  right: 12,
-} as const
-
-/**
  * A raiz — e ela é quem sabe do telefone.
  *
  * `modal` no telefone tranca a rolagem do documento enquanto o seletor está
@@ -207,8 +195,6 @@ function FormPickerPopoverContent({
       side="bottom"
       align="start"
       sideOffset={6}
-      collisionPadding={formPickerCollisionPadding}
-      sticky="partial"
       // Abrir não rouba o foco: num seletor ancorado a um campo, isso fecharia
       // o teclado do telefone e faria a folha inteira saltar. **Fechar** devolve
       // o foco ao gatilho, que é o padrão do Radix e o que o teclado precisa.

@@ -43,6 +43,24 @@
 const MENU_TOUCH_TARGET = "pointer-coarse:min-h-11"
 
 /**
+ * **A superfície, e só ela** — raio, tinta, sombra e fio, sem geometria, sem
+ * camada e sem animação.
+ *
+ * Ela existe porque essa receita estava escrita **quatro vezes** no
+ * repositório: aqui, no `popover.tsx`, no `select.tsx` e — duas vezes dentro
+ * do mesmo arquivo — no `navigation-menu.tsx`, que ainda por cima divergia,
+ * com `shadow` no lugar do `shadow-md` dos outros três.
+ *
+ * O `menuSurfaceClassName` abaixo passou a compô-la, então **a saída dos três
+ * menus é byte a byte a mesma**: isto é extração, não mudança. E quem quer só
+ * a superfície — um painel que não é menu, sem `data-[side=…]`, sem
+ * `min-w-36`, sem `flex-col` — veste esta em vez de vestir a casca inteira
+ * para desfazer três quartos dela por `className`.
+ */
+export const menuPanelSurfaceClassName =
+  "rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10"
+
+/**
  * A casca — tudo menos o teto de altura e a origem da transformação.
  *
  * Aqueles dois ficam de fora por uma razão mecânica, e ela custou uma medição
@@ -60,7 +78,7 @@ const MENU_TOUCH_TARGET = "pointer-coarse:min-h-11"
 export const menuSurfaceClassName = [
   /** Acima do véu da Sheet (`z-(--z-sheet)`); abaixo do Toaster (`z-(--z-toast)`). */
   "z-(--z-popover) flex min-w-36 flex-col overflow-hidden",
-  "rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10",
+  menuPanelSurfaceClassName,
   "duration-(--duration-instant)",
   "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
   "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",

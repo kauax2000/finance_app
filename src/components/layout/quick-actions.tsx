@@ -215,7 +215,6 @@ export function QuickActionButton({ variant = "sidebar" }: QuickActionButtonProp
             <DropdownMenuContent
                 align={isFab ? "end" : "start"}
                 side={isFab ? "top" : "right"}
-                collisionPadding={isFab ? 16 : undefined}
                 className={
                     isFab
                         ? MOBILE_GLASS_FAB_MENU_CONTENT_CLASSNAME

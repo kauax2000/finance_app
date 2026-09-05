@@ -6,6 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
 import {
@@ -159,6 +160,7 @@ function DropdownMenuContent({
   header,
   footer,
   sideOffset = 4,
+  collisionPadding = ANCHORED_COLLISION_PADDING,
   variant,
   size,
   ...props
@@ -188,6 +190,7 @@ function DropdownMenuContent({
         data-slot="dropdown-menu-content"
         data-variant={variant}
         sideOffset={sideOffset}
+        collisionPadding={collisionPadding}
         className={cn(
           dropdownMenuContentVariants({ variant, size }),
           className
@@ -338,11 +341,13 @@ function DropdownMenuSubTrigger({
 function DropdownMenuSubContent({
   className,
   children,
+  collisionPadding = ANCHORED_COLLISION_PADDING,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.SubContent>) {
   return (
     <DropdownMenuPrimitive.SubContent
       data-slot="dropdown-menu-sub-content"
+      collisionPadding={collisionPadding}
       className={cn(menuSubSurfaceClassName, DROPDOWN_POPPER, className)}
       {...props}
     >

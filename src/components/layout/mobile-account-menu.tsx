@@ -183,7 +183,6 @@ export function MobileAccountMenu({ children }: MobileAccountMenuProps) {
                     side="top"
                     align="center"
                     sideOffset={12}
-                    collisionPadding={16}
                     className={cn(
                         MOBILE_GLASS_ACCOUNT_MENU_CONTENT_CLASSNAME,
                         "max-h-[min(72dvh,29rem)]"

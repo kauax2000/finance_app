@@ -136,13 +136,22 @@ export default function PopoverDoc() {
         rótulo visível leva o par em <code>className=&quot;sr-only&quot;</code>.
       </DocNote>
 
-      <DocNote title="O teto e a folga de colisão vêm de fábrica">
-        <code>max-h-(--radix-popover-content-available-height)</code> e{" "}
-        <code>collisionPadding</code> deixaram de ser trabalho de quem chama: um
-        popover alto saía da tela, e um popover perto da borda encostava nela. A
-        variável já era calculada pelo Radix — só o{" "}
-        <code>FormPickerPopoverContent</code> a lia, e não é um caso especial
-        dele.
+      <DocNote title="Ele cabe inteiro na janela, e são três cláusulas">
+        <strong>Centra no gatilho quando cabe</strong>; quando não cabe,{" "}
+        <strong>desloca para dentro</strong> com a folga do sistema; e quando é{" "}
+        <strong>maior que o espaço</strong>, encolhe — os dois tetos{" "}
+        <code>max-h-…-available-height</code> e{" "}
+        <code>max-w-…-available-width</code>. A terceira é a que sempre falta, e
+        sem ela as outras duas não fecham: deslocar não torna visível o que não
+        cabe. Antes desta régua o teto de largura existia em{" "}
+        <strong>3 arquivos de 11</strong>.
+        <br />
+        Medido numa janela de <strong>280px</strong>: este popover, que é{" "}
+        <code>w-72</code> (288), abre com <strong>264</strong> — a janela menos
+        a folga dos dois lados — em <code>left: 8</code>, cabendo inteiro. A
+        folga mora em <code>lib/anchored-surface</code> e a regra{" "}
+        <strong>K</strong> do <code>ds:audit</code> impede que uma tela decida a
+        dela.
       </DocNote>
 
       <DocNote title="Para seletor ancorado num campo, use FormPickerPopover">
@@ -176,9 +185,9 @@ export default function PopoverDoc() {
           {
             prop: "collisionPadding",
             type: "number | Padding",
-            default: "8",
+            default: "ANCHORED_COLLISION_PADDING (8)",
             description:
-              "Folga mínima até a borda da janela. Suba para um popover largo em tela estreita.",
+              "A folga até a borda da janela, vinda de lib/anchored-surface — a mesma para toda superfície ancorada do sistema. Não a suba na tela: a regra K do auditor reprova, e o teto de largura já resolve o popover largo em tela estreita.",
           },
         ]}
       />

@@ -6,6 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Menubar as MenubarPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
 import {
@@ -211,6 +212,7 @@ function MenubarContent({
   align = "start",
   alignOffset = -4,
   sideOffset = 8,
+  collisionPadding = ANCHORED_COLLISION_PADDING,
   ...props
 }: React.ComponentProps<typeof MenubarPrimitive.Content>) {
   return (
@@ -220,6 +222,7 @@ function MenubarContent({
         align={align}
         alignOffset={alignOffset}
         sideOffset={sideOffset}
+        collisionPadding={collisionPadding}
         className={cn(menuSurfaceClassName, MENUBAR_POPPER, className)}
         {...props}
       >
@@ -381,11 +384,13 @@ function MenubarSubTrigger({
 function MenubarSubContent({
   className,
   children,
+  collisionPadding = ANCHORED_COLLISION_PADDING,
   ...props
 }: React.ComponentProps<typeof MenubarPrimitive.SubContent>) {
   return (
     <MenubarPrimitive.SubContent
       data-slot="menubar-sub-content"
+      collisionPadding={collisionPadding}
       className={cn(menuSubSurfaceClassName, MENUBAR_POPPER, className)}
       {...props}
     >

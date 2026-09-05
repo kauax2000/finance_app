@@ -248,9 +248,9 @@ export default function HoverCardDoc() {
           {
             prop: "collisionPadding",
             type: "number",
-            default: "8",
+            default: "ANCHORED_COLLISION_PADDING (8)",
             description:
-              "A folga da borda da janela. De fábrica, como no PopoverContent.",
+              "A folga da borda da janela, vinda de lib/anchored-surface — a mesma de toda superfície ancorada. O cartão também encolhe pelo max-w-…-available-width quando a janela é mais estreita que o size escolhido.",
           },
         ]}
       />

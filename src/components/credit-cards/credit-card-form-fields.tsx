@@ -110,11 +110,9 @@ function CreditCardBillingSection({
                             />
                         </SelectTrigger>
                         <SelectContent
-                            position="popper"
                             align="start"
                             className="z-(--z-toast) min-w-[var(--radix-select-trigger-width)] p-1"
                             sideOffset={6}
-                            collisionPadding={12}
                         >
                             {DAY_OPTIONS.map((d) => (
                                 <SelectItem
@@ -146,11 +144,9 @@ function CreditCardBillingSection({
                             />
                         </SelectTrigger>
                         <SelectContent
-                            position="popper"
                             align="start"
                             className="z-(--z-toast) min-w-[var(--radix-select-trigger-width)] p-1"
                             sideOffset={6}
-                            collisionPadding={12}
                         >
                             {DAY_OPTIONS.map((d) => (
                                 <SelectItem

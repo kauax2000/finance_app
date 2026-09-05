@@ -803,9 +803,7 @@ export function TransactionsFiltersPanel({
                                 <SelectValue placeholder="Qualquer" />
                             </SelectTrigger>
                             <SelectContent
-                                position="popper"
                                 sideOffset={8}
-                                collisionPadding={16}
                                 className="max-h-72 z-(--z-sheet) p-1"
                             >
                                 <SelectItem value="__any__">Qualquer plano</SelectItem>
@@ -840,9 +838,7 @@ export function TransactionsFiltersPanel({
                                 <SelectValue placeholder="Qualquer" />
                             </SelectTrigger>
                             <SelectContent
-                                position="popper"
                                 sideOffset={8}
-                                collisionPadding={16}
                                 className="max-h-72 z-(--z-sheet) p-1"
                             >
                                 <SelectItem value="__any__">

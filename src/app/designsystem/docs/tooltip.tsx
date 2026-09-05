@@ -136,8 +136,29 @@ export default function TooltipDoc() {
             default: '"center"',
             description: "Alinhamento ao longo do lado escolhido.",
           },
+          {
+            prop: "collisionPadding",
+            type: "number | Padding",
+            default: "ANCHORED_COLLISION_PADDING (8)",
+            description:
+              "A folga até a borda da janela, vinda de lib/anchored-surface. Ele nasceu sem nenhuma — encostava na borda — e sem teto de tamanho: max-w-xs são 320px, exatamente a largura de um telefone pequeno.",
+          },
         ]}
       />
+
+      <DocNote title="Ele encolhe antes de encostar">
+        <code>max-w-xs</code> é o teto de <em>leitura</em> — 320px, a medida em
+        que uma frase ainda se lê de um golpe. O teto da{" "}
+        <em>janela</em> é <code>max-w-(--radix-tooltip-content-available-width)</code>,
+        e o menor dos dois vence. Sem o segundo, uma dica de 320px sangrava num
+        telefone de 320: deslocar não resolve o que não cabe.
+        <br />
+        Ele é uma das quatro superfícies que abriam com{" "}
+        <code>collisionPadding</code> <strong>zero</strong> — o default do Radix —
+        junto de <code>DropdownMenu</code>, <code>ContextMenu</code> e{" "}
+        <code>Menubar</code>. Hoje as sete leem a mesma folga de{" "}
+        <code>lib/anchored-surface</code>.
+      </DocNote>
     </>
   )
 }
