@@ -339,7 +339,9 @@ tema.
 - **`Badge`**: use semantic `variant` + `size` (`xs` | `sm` | `default`); avoid duplicating chip classes outside `tag-chip-classes` / Badge.
 - **`Button` — a hierarquia é uma escada, e ela desce em peso visual**:
   `primary` preenche de verde, `secondary` preenche de cinza, `tertiary` não
-  preenche nada. Uma tela tem um `primary` só. Fora da escada, de propósito:
+  preenche nada. **`tertiary` acende no cursor e no toque** — o par
+  `active:` entrou na origem na rodada 29b, porque `hover:` compila dentro de
+  `@media (hover: hover)` e sem ele o degrau ficava inerte no dedo. Uma tela tem um `primary` só. Fora da escada, de propósito:
   `outline` é a exceção para quando o controle precisa de contorno próprio e
   nenhum degrau serve, `destructive` é o que não tem volta, `link` é ação que se
   comporta como texto. **Não existe `variant="default"` nem `variant="ghost"`**
@@ -3578,6 +3580,276 @@ sessão, ao contrário da rodada do `Radio`, onde um ouvinte de `keydown` recebe
 zero eventos. `Tab`, `shift+Tab` e as setas chegaram; foi assim que o
 `:focus-visible` e o `ring-3` foram verificados de verdade.
 
+### Rodada 29 — o carrossel pedia a sala emprestada
+
+`carousel.tsx` era o shadcn intacto, com zero consumidores, passando **limpo** no
+`ds:audit` e saindo com **`—`** na coluna de variantes do `ds:catalog` — os dois
+sinais que a rodada do `resizable` nomeou.
+
+**As setas moravam fora da caixa.** `-left-12` e `-right-12` são 48px **para
+fora** da região: o componente não se dimensionava, ele exigia que o pai lhe
+cedesse sala. Medido na página do catálogo, num contêiner de 958px — recorte de
+297 a 1255, seta anterior de **289 a 317**, seguinte de **1235 a 1263**, 8px
+fora de cada lado; `scrollWidth` do pai **966 contra 958** de `clientWidth`, ou
+seja o carrossel dava ao contêiner uma barra de rolagem horizontal fantasma; e
+`elementsFromPoint` a 90% da largura da seta seguinte devolvia uma `div`, **não
+o botão**. Um pedaço da seta não era clicável.
+
+Hoje `controls` é eixo: `inside` (o padrão) pousa a seta sobre a borda do
+viewport, e **`outside` reserva a própria calha** — `px-12` na raiz, seta em
+`left-0`, mesma distância visual de antes. Nenhuma coordenada é negativa em
+nenhum modo, e a asserção 4 do teste é o que impede a volta. Medido depois:
+**zero** setas fora da raiz nos 15 carrosséis da página, e **zero** de transbordo
+horizontal, contra os 8px de antes.
+
+**A documentação afirmava um comportamento que o código nunca teve.** A página
+dizia que *"as setas não existem no telefone"*; medido a 375px, `display: flex`
+nas duas, **28×28**, sobre o conteúdo. Mesmo achado da rodada do `resizable`. E
+a conclusão inverteu: sumir com elas **violaria a WCAG 2.5.7**, que exige
+alternativa sem arraste. Elas ficam, e crescem no toque.
+
+**A lib publicava treze mecanismos e o arquivo lia quatro.** `scrollProgress`,
+`scrollSnapList`, `selectedScrollSnap`, `scrollTo`, `slidesInView` e os eventos
+`scroll`, `settle`, `slidesInView`, `slideFocus`, `slidesChanged` estavam todos
+lá; o arquivo lia `canScrollPrev/Next` e `select`/`reInit`. Daí saíram
+`CarouselDots` (`dot | bar`) e `CarouselStatus`.
+
+**Dois papéis sem nome**, a medição que o `Popover` e o `resizable` já pagaram:
+`role="region"` sem `aria-label` (medido, `hasAccessibleName: false`) e cada item
+`role="group" aria-roledescription="slide"` **sem rótulo** — quatro grupos
+anônimos. A posição passou a vir do **contêiner**, como na `BreadcrumbList` e no
+`Stepper`. Mais três defeitos reais: o teclado tratava só as setas horizontais
+inclusive na vertical, a limpeza não desinscrevia `reInit`, e o
+`orientation || (opts?.axis === "y" …)` era inalcançável.
+
+#### Seis coisas que só apareceram medindo
+
+- **A seta se centra no viewport, e não na raiz.** `top-1/2` parece a resposta e
+  não é: a raiz também carrega os pontos e a contagem. Medido, com um
+  `CarouselDots` no telefone — raiz 131, viewport 75, seta **28px abaixo** do
+  centro e com a borda de baixo **fora** do trilho. A âncora virou
+  `--carousel-control-y`, com `50%` declarado no `cva` para não haver salto
+  antes da medição.
+- **E `offsetTop`, não metade da altura.** O bloco que contém um absoluto é a
+  **caixa de padding** da raiz — desconta a borda, **não** o recuo. Com o `p-3`
+  de `card` e `inset`, a seta saía **11px acima** do centro. `offsetTop` é medido
+  a partir dessa mesma caixa; é a escolha que o marcador do `Tabs` registra.
+  Medido depois: desalinho **≤1px** nas 14 setas da página.
+- **O alvo de dedo por pseudo-elemento não dá 44 — dá 42.** Pela mesma razão: a
+  base é a caixa de padding, então um `icon-sm` de 28 com 1px de borda entra na
+  conta como **26**, e `-inset-2` fecha em 42. Medido, `::after` reportava
+  `42px`. O degrau daqui é `2.5` (26 + 20 = **46**, e 44 é piso). **As três
+  ocorrências que a casa já tinha carregam o mesmo desconto e afirmam 44 nos
+  comentários** — `PageHeaderBack`, o × da `AnnouncementBar` e os degraus do
+  `Breadcrumb`, todos 42. Está no backlog.
+- **O ponto apagado reprovava a 1.4.11.** `bg-foreground/25` dava **1,78 no claro
+  e 2,22 no escuro**. Varridos os degraus contra o fundo real, **45% é o primeiro
+  que passa nos dois** — 3,15 e 4,36. O ativo é `--primary-accent`: 7,66 e 6,14.
+- **A seta desabilitada tapava o conteúdo.** Em `inside` ela pousa sobre o
+  trilho, e no início a seta anterior ficava por cima do **primeiro item**, que é
+  o único inteiro na tela — medido, cobrindo o "R$" de um valor. Ela passou a ser
+  `disabled:invisible`, e **só em `inside`**: em `outside` há calha reservada, e
+  um botão sumindo faria a moldura piscar a cada ponta.
+- **O trilho vertical precisa de `h-full`, e isso é carga estrutural.** O embla
+  mede o **contêiner**, não o viewport: com a altura só no viewport o trilho
+  crescia até o conteúdo — medido, viewport **160** contra trilho **362** —, o
+  embla concluía que tudo cabia e **desabilitava as duas setas** com o conteúdo
+  transbordando calado. Com `h-full`, `basis-1/2` também volta a significar
+  metade do que se vê.
+
+**A dissolução reusa a rampa e traz motor próprio.** `useScrollFade` **não pode**
+dirigi-la: o embla translada o trilho, e medido o viewport fica com
+`scrollLeft: 0` enquanto o `scrollWidth` é 1476 contra 730 de `clientWidth` — o
+hook reportaria início 0 e fim 746 para sempre, e a ponta esquerda nunca
+acenderia. A rampa continua sendo `scroll-fade-x`; só o motor é daqui,
+publicando `--scroll-fade-start/end` a partir de `api.scrollProgress()`. As
+invariantes valem: a máscara vai no viewport, que não desenha nada, e quem pinta
+é a raiz — as setas são **irmãs** do viewport, então a máscara não as alcança.
+
+**O `variant` de superfície entrou contra a contagem.** Nenhuma tela pede uma
+superfície para o carrossel, e a régua da casa é que eixo sem contagem é ficção —
+o precedente é a `Toolbar`. Ele existe por decisão explícita do dono, tomada com
+esse custo na mesa, e fica registrado assim em vez de ser apresentado como se a
+medida o tivesse pedido. `card` e `inset` **forçam `controls="inside"`**, com a
+precedência que `scrollable` usa sobre `stretch` no `Tabs`, e **nenhuma das duas
+declara `overflow-hidden`** — ela cortaria o anel de foco de 3px das setas.
+
+**Sem autoplay, e é decisão.** Nenhum plugin do embla está instalado; todos são
+dependência nova. E num app de finanças conteúdo que se move sozinho enquanto a
+pessoa lê um valor é hostil, e exigiria pausa no cursor, no foco e em
+`prefers-reduced-motion` para não virar defeito de acessibilidade.
+
+**Duas armadilhas conhecidas cobraram de novo, e uma pegou a sonda.** Varrer os
+degraus de alfa com `` `bg-foreground/${p}` `` devolveu razão **1 em todos** —
+nenhuma daquelas classes existe na folha, porque o Tailwind varre o código como
+texto. É a mesma medição que a rodada 16 registra, e desta vez o instrumento é
+que estava errado; a sonda passou a usar `color-mix` inline. E medir alfa exige
+**compor sobre o fundo real**: a primeira tentativa leu `oklch`/`oklab` com uma
+regex de `rgb()` e reportou 1,55 e 1,00 onde os números são 7,66 e 1,78. Quem
+converte é o navegador — um pixel num `canvas`.
+
+**E a página do catálogo contradizia a própria nota.** A demonstração de
+`variant="card"` renderizava `Card` dentro de `Card`, três centímetros acima da
+nota que diz que cartão dentro de cartão é sempre errado. Quem mudou foi a
+demonstração, não a nota.
+
+### Rodada 29b — a seta viajava, e ancorar em variável foi o que a fez viajar
+
+A rodada 29 pôs as setas dentro da caixa e ancorou-as no centro do trilho por
+`--carousel-control-y`. A geometria ficou certa — desalinho ≤1px nas 14 setas — e
+nasceu um defeito de **movimento**, que medir posição não pega. O relato foi *"o
+travel da seta está muito alto; eu clico e ela desce lá embaixo"*.
+
+**Duas causas somadas.** `top` passou a sair de uma variável escrita por JS, e a
+base do `Button` declara `transition-all`: toda remedição virava **animação** da
+seta atravessando o cartão. Prova direta — trocando a variável, a seta ainda
+estava na origem um quadro depois e só assentava 300ms adiante. E o `cva` declara
+`50%` como palpite pré-medição, mas `top: 50%` resolve contra a **raiz**, que
+inclui pontos e contagem: medido, raiz **111px** dá 55 contra os **37,5** do
+centro do trilho — **17,5px** percorridos animadamente na primeira pintura.
+
+São **dois consertos independentes**, e nenhum sozinho fecha o caso: o **layout
+effect** mata a viagem da primeira pintura (o cliente nunca pinta o palpite), e
+`transition-colors` mata a das remedições posteriores, que efeito nenhum alcança.
+`transition-colors` e `transition-all` são o mesmo grupo no `twMerge`, então a
+classe do controle **substitui** a da base em vez de disputar — o mecanismo da
+régua de densidade da `Toolbar`. Medido depois: **12 quadros consecutivos com um
+valor só**, contra 420→462 antes.
+
+**A seta perdeu o fundo e o círculo, e isso é convergência.** `tertiary` nos dois
+modos, `rounded-lg` pelo próprio `Button`. Das três famílias de seta da casa, o
+`Calendar` e a `Pagination` já eram assim; esta era **a única `rounded-full` do
+repositório e a única com fundo em repouso**. Com um peso só,
+`defaultControlVariant` deixou de existir — uma função que escolhe entre dois
+pesos, com um peso, é constante disfarçada —, e `controls` voltou a decidir só a
+posição. Medido depois: **um raio só (10px) e um fundo só (transparente)** nas 14
+setas.
+
+**`fade` virou padrão**, e as duas mudanças se sustentam: sem preenchimento o
+glifo pousa direto sobre o conteúdo, e a rampa é o chão dele. Medido, o glifo sem
+fundo dá **18,97 sobre a página e 17,18 sobre o cartão** no escuro, 18,97 e 19,8
+no claro — o `foreground` é contraste máximo por definição, então tirar a
+pastilha não custou legibilidade. Dissolução ligada em **15 de 15** carrosséis.
+
+**O par `active:` entrou na origem, e o backlog contava menos do que havia.** A
+regra é mecânica: `hover:` compila dentro de `@media (hover: hover)`, e está
+verificado no CSS emitido — `.hover\:bg-muted` sai **dentro** da media query e
+`.active\:bg-muted` **fora** dela. O `AGENTS.md` registrava o defeito só no
+`tertiary`; medindo as cinco variantes que pintam fundo, **quatro** estavam
+inertes ao toque. Foi consertado o `tertiary` (o que a seta veste, e o que estava
+autorizado), e as outras três ficaram numa lista explícita em
+`button-touch-response.test.ts` — que **falha se a lista crescer**, em vez de o
+teste ser afrouxado para caber no estado atual.
+
+#### O nudge de press roubava a centragem, e a colisão era de propriedade
+
+Restava um terceiro movimento, e ele não era o mesmo defeito: ao **apertar**, a
+seta caía 15px. No Tailwind v4 `translate` é propriedade independente, e
+`-translate-y-1/2` e o `active:translate-y-px` da base do `Button` escrevem a
+**mesma** custom property. Verificado no CSS emitido:
+
+```
+.-translate-y-1\/2      { --tw-translate-y: calc(calc(1 / 2 * 100%) * -1) }
+.active\:translate-y-px { &:active { --tw-translate-y: 1px } }
+```
+
+`.classe:active` é (0,2,0) contra os (0,1,0) da centragem, e vence sempre: no
+press a seta ia de **−14px para +1px**, perdendo a centragem inteira. **Um nudge
+de press por `translate` é estruturalmente incompatível com centragem por
+`translate`** — vale para qualquer controle absoluto centrado assim, não só para
+este.
+
+A saída **não é remover o afundamento** — a primeira tentativa fez isso, e o
+resultado foi um botão sem resposta de clique. É somar os dois na **mesma
+declaração**: `active:translate-y-[calc(-50%_+_1px)]`. O `-50%` é a centragem, o
+`1px` é o mesmo degrau do `Button`, e eles compõem em vez de um apagar o outro.
+
+A entrega é pelo **`twMerge`, e não por especificidade**: mesma família de
+utilitário sob o mesmo variante, então a classe do controle **remove**
+`active:translate-y-px` da lista em vez de disputar com ela por ordem de
+emissão — verificado no DOM, a da base não está mais lá. Na vertical a centragem
+é em X, o nudge em Y não colide, e ele fica cru.
+
+**E a transição precisou ser enumerada, não escolhida entre dois atalhos.**
+`transition-all` traz `top` junto, e é ele que faz a seta viajar a cada
+remedição; `transition-colors` não alcança `translate`, e mata o press. A lista é
+`[color,background-color,border-color,translate]` — o mesmo idioma de
+`transition-[rotate,translate,color]` em `disclosure-classes`. **A âncora medida
+salta; o press desliza.**
+
+Medido com press real mantido, amostrando por quadro: repouso **24**, durante
+`:active` **25**, e 24 de volta ao soltar — **1px**, contra os 15 de antes.
+
+#### A dissolução vertical dissolvia os lados
+
+O viewport carregava `scroll-fade-x` **cravado**, em qualquer orientação. Num
+carrossel vertical isso dissolvia as bordas **laterais** — que não se movem —
+enquanto o conteúdo entrava e saía por cima e por baixo, nítido. Achado pelo
+dono, olhando a demonstração.
+
+O que torna esse defeito difícil de ver por medição: as duas utilities leem as
+**mesmas** `--scroll-fade-start/end`, e o motor já calculava o eixo certo
+(`scrollHeight - clientHeight` na vertical). Então `data-scroll-fade` ligava, a
+máscara existia, as variáveis se moviam ao arrastar — tudo o que uma sonda
+costuma perguntar respondia "certo". A única diferença é o eixo do gradiente, e
+isso só o olho pega. Mudou uma linha; o driver não precisou de nada.
+
+**E o teste que devia pegar tinha o mesmo ponto cego.** Ele casava a string
+literal da chamada, com o nome da constante horizontal dentro — passava por
+acidente, e teria quebrado em qualquer refatoração inocente. Foi reescrito para
+olhar o que importa (as classes proibidas no nó mascarado, e a escolha do eixo
+ser condicional), e **verificado reintroduzindo o defeito**: reprova.
+
+Fica a régua: *asserção que casa a forma da chamada não testa o comportamento —
+ela testa a digitação.*
+
+#### A calha do `outside` era um número herdado, e ela descolava a seta
+
+Fechado o movimento, sobrou o espaçamento. `outside` declarava `px-12` (48),
+medida que veio do `-left-12` do shadcn e que eu preservei por fidelidade à
+distância antiga — argumentando, na própria rodada 29, que a distância visual era
+"a mesma de antes". Preservar o número certo pelo motivo errado: aquele 48 nunca
+foi decidido, era o que o shadcn tinha.
+
+Medido: botão de 0 a 28, conteúdo começando em 48 — **20px de fundo puro** entre
+os dois. E como a dissolução mora na borda do viewport, ela nascia *depois* desse
+vão: a seta lia como solta, e não como parte da tira que ela controla. Em
+`inside` o mesmo par se sobrepõe, e é por isso que aquele modo sempre pareceu
+melhor.
+
+A calha passou a ser **a seta mais um respiro**: 36 = 28 do botão + 8, que é
+`--space-inline`, a distância que esta casa usa *dentro* de um bloco — e a seta e
+o trilho são o mesmo bloco. Medido depois: vão de **8px, simétrico nos dois
+lados**, com a dissolução encostando na seta.
+
+De brinde, o modo ficou menos caro no telefone: a calha total caiu de 96 para 72,
+de **32,8% para 24,6%** da largura útil. Continua caro, e continua sendo a razão
+de `inside` ser o padrão.
+
+#### Três leituras erradas do instrumento, e as três são erros meus
+
+A primeira "reprodução" mediu `scrollY` caindo 155 → 137 num quadro, com a seta
+descendo 18px na tela — número que batia com o sintoma relatado. **Era a minha
+ferramenta.** O registrador mostrou o `scroll` em `t=150632` e o `pointerdown` em
+`t=150644`: a página rolou **12ms antes de o clique começar**, porque clicar por
+referência rola o alvo para a vista primeiro.
+
+É a parente da lição do calendário — *evento sintético pula o hit-testing* — com
+o sinal invertido: ali o instrumento **escondeu** o defeito, aqui ele o
+**produziu**. A confirmação real veio de `transitionProperty` e da prova de
+animação, que não dependem de clique nenhum. **Corolário para quem vier medir
+esta peça: leia a posição da seta relativa à raiz, nunca absoluta na tela.**
+
+Mais duas, no mesmo dia. **Medir `:active` no `pointerdown` lê o início da
+transição, não o fim** — com o press animado, o valor computado ali ainda é o de
+repouso, e eu quase concluí que o afundamento não existia. Press se mede
+**mantido**, amostrando por quadro. E **um regex sobre o CSS emitido precisa
+escapar como o Tailwind escapa**: procurando `translate-y-\[calc(` eu li "regra
+não emitida" sobre uma regra que estava lá, porque o nome real é
+`.active\:translate-y-\[calc\(-50\%_\+_1px\)\]` — com `\%` e `\+`. Duas
+vezes seguidas o instrumento inventou o defeito; a régua é sempre a mesma:
+**quando a medição contraria o mecanismo, desconfie da medição primeiro.**
+
 ### Backlog de migração
 
 A rodada 01 entregou tokens, componentes, documentação e o auditor, sem migrar
@@ -3857,9 +4129,13 @@ E o que a rodada do campo de data e dos dois cartões deixou:
 - **`StatCardDelta`, `StatCardIcon`, `StatCardValueSkeleton` e o `size` do
   `Calendar` nascem sem tela.** As duas telas de `StatCard` usam rótulo e valor e
   mais nada.
-- **`Button variant="tertiary"` não tem par `active:`** — achado colateral desta
-  rodada, e vale para o app inteiro: todo botão terciário fica sem resposta ao
-  toque. É conserto do `Button`, e ficou fora do escopo de propósito.
+- ~~**`Button variant="tertiary"` não tem par `active:`**~~ — **pago na rodada
+  29b**, na origem. E a contagem estava errada para menos: medindo as cinco
+  variantes que pintam fundo, **quatro** ficavam inertes ao toque, não uma.
+  `primary`, `secondary`, `outline` e `destructive` continuam pendentes, e
+  agora com mecanismo: a lista vive em
+  [`button-touch-response.test.ts`](src/components/ui/button-touch-response.test.ts),
+  que **falha se ela crescer**.
 
 E o que a rodada da trilha, da paginação e das duas listas deixou:
 
@@ -4105,5 +4381,47 @@ E o que a rodada do `resizable` deixou:
   `useIsMobile` lê o viewport e não o contêiner. A página diz para estreitar a
   janela. Uma *container query* resolveria, e mudaria a semântica de `stack`
   para todo mundo — é decisão de outra rodada.
+
+E o que a rodada do `carousel` deixou (com o que a **29b** já fechou marcado):
+
+- **A seta não viaja mais, e o padrão mudou de aparência.** `tertiary` sem fundo,
+  `rounded-lg`, `fade` ligado por padrão. Quem tinha o mapa antigo na cabeça
+  procura uma pastilha preenchida e circular; ela não existe mais.
+- **Três variantes do `Button` seguem inertes ao toque** — `primary`,
+  `secondary`, `outline` e `destructive` — com a lista trancada por teste. É
+  conserto de uma linha em cada, e vale para o app inteiro.
+
+- **Os três alvos de dedo por pseudo-elemento da casa medem 42, e dizem 44.**
+  `PageHeaderBack` (36), o × da `AnnouncementBar` (24) e os degraus do
+  `Breadcrumb` (20) — os três somam o `inset` à caixa de **borda** na conta do
+  comentário, quando o bloco que contém um absoluto é a caixa de **padding**, e
+  os três controles têm 1px de borda. Medido no `::after` do carrossel antes do
+  conserto: `42px`. É uma linha em cada um (subir um degrau de `inset`), e o
+  número certo no comentário — mas mexe em três componentes com consumidor, e
+  por isso não entrou aqui.
+- **O carrossel continua sem tela**, e agora com os candidatos contados:
+  `dashboard-kpi-cards.tsx:139` (`grid grid-cols-2 gap-2 lg:grid-cols-4` — quatro
+  KPIs que viram 2×2 no telefone) e `credit-cards/page-client.tsx:337`
+  (`grid grid-cols-1 gap-3 md:grid-cols-2`). Nos dois o carrossel só se paga
+  **abaixo de 768px**; acima, a grade mostra tudo de uma vez e é melhor.
+- **Autoplay é dependência nova.** `embla-carousel-autoplay` não está instalado,
+  como nenhum outro plugin. Se um dia entrar, entra com pausa no cursor, no foco
+  e em `prefers-reduced-motion` — e a pergunta anterior é se um app de finanças
+  deve mover conteúdo sozinho.
+- **`gap` não aparece no `ds:catalog`.** O script lê o **primeiro** `variants:`
+  do fonte, e as classes de calha vivem numa tabela literal fora do `cva` —
+  elas vão para o trilho e para o item, não para a raiz. Os outros três eixos
+  aparecem. Ou o catálogo passa a ler mais de uma fonte de eixos, ou o eixo
+  continua documentado só na `PropsTable`.
+- **`slidesInView` e `slideFocus` seguem sem leitor**, e o custo disso é medido:
+  o último item da demonstração fica em `x: 1472` com o viewport terminando em
+  **1083** — inteiramente fora de vista —, e um botão injetado dentro dele
+  **recebe foco**, sem `inert` e sem `aria-hidden`. É o defeito de
+  acessibilidade clássico de carrossel: quem navega por `Tab` entra em conteúdo
+  que não está na tela. `slidesInView` é exatamente o mecanismo que resolve, com
+  `inert` no que saiu. Ficou de fora porque `inert` muda o comportamento de foco
+  de toda tela que use a peça, e merece a própria medição — as demonstrações de
+  hoje não têm conteúdo focável dentro dos itens, então o defeito não é
+  alcançável pelo catálogo.
 
 Reproduza a qualquer momento com `npm run ds:audit`.

@@ -34,8 +34,19 @@ const buttonVariants = cva(
         // que alternam entre `secondary` e `outline` saltavam 2px ao selecionar.
         secondary:
           "bg-clip-border bg-secondary text-secondary-foreground hover:bg-secondary-hover aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+        // O par `active:` não é redundante com o `hover:`: `hover:` compila
+        // dentro de `@media (hover: hover)`, então sem ele **o terciário não
+        // devolvia nada ao toque** — em nenhuma das telas que o usam. Era um
+        // item de backlog nomeado, e o conserto mora aqui e não em cada
+        // chamada, que é onde `Toggle`, `Tabs`, `Menubar`, `Item` e `Calendar`
+        // já o escreviam à mão.
+        //
+        // O `dark:active:` vem junto pela aritmética de sempre: `&:active` e
+        // `&:is(.dark *)` empatam em especificidade e o `dark:` é emitido
+        // depois, então sem o par o realce escuro venceria o de toque — calado,
+        // e só num tema.
         tertiary:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
+          "hover:bg-muted hover:text-foreground active:bg-muted active:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 dark:active:bg-muted/50",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input-fill/30 dark:hover:bg-input-fill/50",
         destructive:

@@ -388,7 +388,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("breadcrumb", "Breadcrumb", "A trilha até a tela atual, que dobra o miolo em vez de quebrar linha.", ui("breadcrumb"), "Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbMenu"),
   entry("calendar", "Calendar", "A grade de um mês, com a célula na escada.", ui("calendar"), "Calendar, CalendarDayButton"),
   entry("card", "Card", "Cartão de conteúdo e painel — a superfície, o ritmo e as três tiras.", ui("card"), "Card, CardToolbar, CardContent, CardNote"),
-  entry("carousel", "Carousel", "Itens que deslizam horizontalmente.", ui("carousel"), "Carousel, CarouselItem"),
+  entry("carousel", "Carousel", "Itens que deslizam — superfície, controles dentro da caixa, calha e indicador.", ui("carousel"), "Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext, CarouselDots"),
   entry("chart", "Chart", "Gráficos Recharts ligados aos tokens do tema.", ui("chart"), "ChartContainer, ChartTooltip"),
   entry("combobox", "Combobox", "Select com busca, uma ou várias escolhas.", ui("combobox"), "Combobox, ComboboxField, ComboboxTrigger, ComboboxValue, ComboboxClear, ComboboxContent, ComboboxInput, ComboboxList, ComboboxEmpty, ComboboxGroup, ComboboxItem, ComboboxLoading"),
   entry("command", "Command", "Paleta de comandos com busca.", ui("command"), "Command, CommandInput, CommandItem"),
