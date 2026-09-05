@@ -290,7 +290,7 @@ export default function CoresDoc() {
       <Group
         layout="flow"
         title="Gráficos"
-        description="Cinco matizes a cerca de 60° de distância, todos medidos em 3:1 ou mais contra a superfície do cartão. A claridade varia junto com o matiz para as séries não dependerem só de cor."
+        description="Cinco séries que só se identificam, todas medidas em 3:1 ou mais contra a superfície do cartão. O que as separa é matiz e claridade juntos — matiz sozinho não separava, e a rampa reprovava por isso."
       >
         <SpecimenPanel>
           <Ramp
@@ -332,6 +332,23 @@ export default function CoresDoc() {
         <code>info</code> e <code>warning</code>. Numa pizza de gastos, a fatia
         azul lia como &ldquo;informação&rdquo; e a vermelha como
         &ldquo;erro&rdquo; sem significar isso.
+      </DocNote>
+
+      <DocNote title="E depois ela dizia &ldquo;~60°&rdquo; sem ser verdade">
+        A régua acima só mede contraste contra o fundo, e a rampa passava nela
+        com folga enquanto reprovava no que importa numa rosca:{" "}
+        <strong>a distância entre duas séries</strong>. Medidos, os intervalos
+        entre os matizes ordenados eram <strong>111 · 39 · 57 · 68 · 85</strong>{" "}
+        — <code>--chart-1</code> e <code>--chart-2</code> estavam a 39°, e por
+        um validador de paleta (ΔE em OKLab ×100, todos os pares) a separação
+        para protanopia entre <code>--chart-4</code> e <code>--chart-1</code>{" "}
+        era <strong>4,9</strong>, contra um piso de 8. Depois do re-passo:{" "}
+        <strong>8,8</strong> protanopia e <strong>16,8</strong> para visão
+        normal, sem nenhum dos cinco perder os 3:1. A história inteira está em{" "}
+        <a href="/designsystem/graficos" className="underline underline-offset-2">
+          Gráficos
+        </a>
+        .
       </DocNote>
 
       <Group

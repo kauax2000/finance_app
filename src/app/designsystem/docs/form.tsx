@@ -28,11 +28,11 @@ import { Kbd } from "@/components/ui/kbd"
 import { Label } from "@/components/ui/label"
 import {
   MobileSheetFormBody,
-  MobileSheetFormDragStrip,
   MobileSheetFormStickyHeader,
 } from "@/components/ui/mobile-sheet-form-chrome"
 import { Switch } from "@/components/ui/switch"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { PhoneFrame, PhoneFrameSheet } from "../ds-phone"
 
 export default function FormDoc() {
   return (
@@ -130,16 +130,21 @@ export default function FormDoc() {
       <DocSection
         title="Em folha no telefone"
         description="Cabeçalho fixo, corpo rolável e FormActions variant='sticky' — o rodapé que o chrome de folha não tinha, e que cinco arquivos do app derivavam à mão com três !important."
-        code={`<MobileSheetFormStickyHeader title="Nova transação" />
-<Form layout="none" className="flex min-h-0 flex-1 flex-col">
-  <MobileSheetFormBody className="flex flex-col gap-4 pb-4">
-    <FormInput label="Descrição" />
-  </MobileSheetFormBody>
-  <FormActions variant="sticky">
-    <FormSubmit className="w-full">Salvar</FormSubmit>
-  </FormActions>
-</Form>`}
-        previewClassName="items-stretch"
+        code={`<SheetContent side="bottom" fillMobileViewport className={mobileFormSheetContentClassName}>
+  <MobileSheetFormStickyHeader
+    title="Nova transação"
+    endAdornment={<MobileSheetFormHeaderCloseButton />}
+  />
+  <Form layout="none" className="flex min-h-0 flex-1 flex-col">
+    <MobileSheetFormBody className="flex flex-col gap-4 pb-4">
+      <FormInput label="Descrição" />
+    </MobileSheetFormBody>
+    <FormActions variant="sticky">
+      <FormSubmit className="w-full">Salvar</FormSubmit>
+    </FormActions>
+  </Form>
+</SheetContent>`}
+        previewClassName="justify-center"
       >
         <EmFolhaDemo />
       </DocSection>
@@ -425,39 +430,60 @@ function EmDialogoDemo() {
 
 function EmFolhaDemo() {
   const [salvos, setSalvos] = React.useState(0)
+  const [valor, setValor] = React.useState("")
 
   return (
-    <div className="flex h-80 w-full max-w-sm flex-col overflow-hidden rounded-t-2xl border border-border bg-card">
-      <MobileSheetFormDragStrip />
-      {/* `children` em vez de `title`: com `title` a peça renderiza um
-          `DialogTitle`, que exige o contexto do `Dialog` — e esta demonstração
-          é a casca da folha fora de uma folha. É como a página do chrome faz. */}
-      <MobileSheetFormStickyHeader>
-        <p className="font-heading text-base leading-tight font-medium">
-          Nova transação
-        </p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Salvos: <span className="nums">{salvos}</span>
-        </p>
-      </MobileSheetFormStickyHeader>
-      <Form
-        layout="none"
-        className="flex min-h-0 flex-1 flex-col"
-        onSubmit={(e) => {
-          e.preventDefault()
-          setSalvos((v) => v + 1)
-        }}
-      >
-        <MobileSheetFormBody className="flex flex-col gap-4 pb-4">
-          <FormInput label="Descrição" placeholder="Mercado" />
-          <FormInput label="Valor" placeholder="R$ 0,00" />
-          <FormInput label="Categoria" placeholder="Alimentação" optional />
-        </MobileSheetFormBody>
-        <FormActions variant="sticky">
-          <FormSubmit className="w-full">Salvar</FormSubmit>
-        </FormActions>
-      </Form>
-    </div>
+    <PhoneFrame title="Prévia da folha de nova transação num telefone">
+      <PhoneFrameSheet>
+        {/* `children` em vez de `title`: com `title` a peça renderiza um
+            `DialogTitle`, que exige o contexto do `Dialog` — e esta
+            demonstração é a casca da folha fora de uma folha. Numa tela de
+            verdade é `title` que se usa, e é ele que dá o nome acessível. */}
+        <MobileSheetFormStickyHeader>
+          <p className="font-heading text-base leading-tight font-medium">
+            Nova transação
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Salvos: <span className="nums">{salvos}</span>
+          </p>
+        </MobileSheetFormStickyHeader>
+        <Form
+          layout="none"
+          className="flex min-h-0 flex-1 flex-col"
+          onSubmit={(e) => {
+            e.preventDefault()
+            setSalvos((v) => v + 1)
+          }}
+        >
+          <MobileSheetFormBody className="flex flex-col gap-4 pb-4">
+            <FormInput label="Descrição" placeholder="Mercado" />
+            <FormInput
+              money
+              label="Valor"
+              value={valor}
+              onValueChange={setValor}
+            />
+            <FormInput label="Data" placeholder="05/09/2026" />
+            <FormInput label="Categoria" placeholder="Alimentação" optional />
+            <FormInput label="Conta" placeholder="Nubank" />
+            <FormInput label="Etiquetas" placeholder="mensal, casa" optional />
+            {/* Sete campos, e não três. Um formulário curto não precisaria de
+                cabeçalho fixo nem de rodapé fixo — o padrão que esta seção
+                documenta só existe porque o corpo não cabe. Com três, ele
+                transbordava 17px, menos que os 44 da rampa de dissolução. */}
+            <FormTextarea
+              label="Observação"
+              placeholder="Compra do mês"
+              optional
+              rows={4}
+            />
+          </MobileSheetFormBody>
+          <FormActions variant="sticky">
+            <FormSubmit className="w-full">Salvar</FormSubmit>
+          </FormActions>
+        </Form>
+      </PhoneFrameSheet>
+    </PhoneFrame>
   )
 }
 

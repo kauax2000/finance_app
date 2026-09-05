@@ -3850,6 +3850,309 @@ não emitida" sobre uma regra que estava lá, porque o nome real é
 vezes seguidas o instrumento inventou o defeito; a régua é sempre a mesma:
 **quando a medição contraria o mecanismo, desconfie da medição primeiro.**
 
+### Rodada 30 — o gráfico prometia um sistema e entregava encanamento de cor
+
+`chart.tsx` era o fork do shadcn quase intacto: 363 linhas que faziam **uma**
+coisa — ler `config` e emitir `--color-<chave>` num `<style>` escopado por
+`[data-chart]`. O resultado é medível: **1 consumidor em 8**. Sete telas
+escreviam tudo à mão — 4 tooltips (a mesma casca `rounded-lg border-border/80
+bg-popover`, quatro vezes), 3 legendas, 4 `Intl.NumberFormat` redeclarados com
+`currencyBRL` ao lado, 4 `tickFormatter` compactos inline e **nenhum** chamando
+`currencyCompactBRL`, que é a regra que `/designsystem/graficos` manda seguir.
+
+A raiz do abandono cabia numa linha: o tooltip formatava com `numberBR`, então
+**uma série em reais saía `8.432`, sem `R$`**. Quem precisava de dinheiro não
+tinha como pedir. É a inversão que `Form`, `MoneyInput` e `Alert` já
+registraram — a resposta não é reclassificar, é fazer o componente ser o que o
+nome promete.
+
+**Duas camadas.** A anatomia (`ChartContainer`, `ChartGrid`, `ChartXAxis`,
+`ChartYAxis`, `ChartTooltip`, `ChartLegend`, `ChartReferenceLine`) é a régua e
+continua livre — quem monta um `ComposedChart` compõe ela. As cinco formas
+(`ChartArea`, `ChartLine`, `ChartBars`, `ChartDonut`, `ChartSparkline`) são a
+forma curta sobre a anatomia, como `FormInput` é sobre `Field` + `Input`, e
+**elas cobram `label`**: a forma curta pode cobrar o nome acessível, a
+composição livre não pode. Mais `ChartEmpty` / `ChartSkeleton` / `ChartError`
+(nenhum dos oito gráficos tinha estado vazio) e `ChartDataTable`, a alternativa
+não-visual que não existia em lugar nenhum do app.
+
+#### A rampa reprovava, e o comentário dela afirmava o contrário
+
+`globals.css` dizia "cinco matizes a ~60° de distância". Medidos, os intervalos
+entre os matizes ordenados eram **111 · 39 · 57 · 68 · 85** — `--chart-1` e
+`--chart-2` estavam a 39°. Por um validador de paleta (ΔE em OKLab ×100, todos
+os pares), a rampa antiga reprovava duas vezes em cada tema:
+
+| | claro | escuro |
+| --- | --- | --- |
+| CVD, todos os pares | **4,9** protanopia (`chart-4 ↔ chart-1`), piso 8 | **2,8** deuteranopia |
+| visão normal | **14,6** (`chart-2 ↔ chart-1`), piso 15 | **11,9** |
+
+Numa rosca de cinco fatias, quem não separa vermelho de verde via a série 1 e a
+4 **como a mesma cor**. E o diagnóstico estava errado junto com o número: matiz
+sozinho nunca separou esta rampa — quem separa é matiz **e** claridade, e é por
+isso que o re-passo move as duas. Depois: **8,8 protanopia · 16,8 visão normal**
+no claro, com os cinco mantendo ≥3:1 contra `--card`.
+
+**No escuro, a faixa de claridade perde para a separação, e é decisão.** A
+faixa que o validador pede (L 0,48–0,67) e a separação CVD brigam sobre
+superfície escura: comprimir a claridade tira justamente o canal que separa
+magenta de ciano para quem não distingue vermelho de verde. Três candidatos
+dentro da faixa foram medidos e os três reprovam em CVD (**4,6 · 3,1 · 2,3**).
+A rampa escura fica acima da faixa e passa no resto — 10,6 CVD · 17,1 visão
+normal · ≥3:1 —, como o `--input` fora da 1.4.11. A faixa é heurística sobre uma
+superfície de referência; a separação é um leitor que não consegue ler o
+gráfico.
+
+**Não entrou `--chart-6.`** Uma sexta série não é um matiz novo: ela vira
+"Outros", e quem agrega é quem tem os dados. O que o componente garante é não
+mentir — `chartSeriesColor` devolve `--muted-foreground` do sexto em diante, em
+vez de repetir `--chart-1` como o `BAR_COLORS[idx % 5]` de
+`credit-cards-history-chart` faz hoje.
+
+#### O anel de foco estava apagado, e apagá-lo custava o teclado
+
+A versão anterior escrevia `outline-hidden` em `.recharts-layer`,
+`.recharts-sector` e `.recharts-surface`. O que isso apagava era o foco de
+teclado que o `accessibilityLayer` do Recharts desenha — e a versão instalada é
+a **3.8.0**, onde ele vem ligado de fábrica; `bill-history-analytics.tsx:148`
+chegava a passar `accessibilityLayer={false}`, o único do repositório.
+
+**Duas armadilhas, as duas medidas com `Tab` de verdade.** `outline-none` e
+`outline-2` escrevem **propriedades diferentes** (`outline-style` e
+`outline-width`): com a supressão em `:focus` e o anel em `:focus-visible`, os
+dois seletores empatam em (0,2,0), as duas declarações valem, e o anel saía com
+largura 2px e estilo `none` — invisível. Por isso a supressão é a base **sem
+pseudo** e o anel é `:focus-visible`, que vence sempre, com `outline-solid`
+escrito. E **foco por script não liga `:focus-visible`**: verificar isto com
+`element.focus()` reporta "sem anel" numa implementação correta. Medido depois,
+com `Tab`: `solid 2px oklch(0.72 0.13 166)`, offset 2, e o cursor de teclado
+abrindo o tooltip.
+
+#### Quatro medidas que só apareceram no navegador
+
+- **O miolo da rosca saía 118px à direita do centro do anel.** Ele era irmão do
+  `ChartContainer` dentro de um envelope `relative`, e `inset-0` mede o
+  envelope — que estica na coluna enquanto o container tem 176px. Ele passou a
+  ser o `overlay` do próprio container, que é **a caixa que tem tamanho**.
+  Medido depois: 0 e 0.
+- **A escada de corpo do miolo mentia de dois jeitos.** Por não conhecer a
+  caixa (`R$ 3.510,00` cabe folgado numa rosca de 300px e transborda numa de
+  176) e por supor que o texto quebra: o `Intl` separa `R$` do número com
+  espaço **inseparável**, então `text-balance` e `max-width` não faziam nada —
+  145px de texto numa linha só dentro de um furo de 109. Hoje é conta:
+  `88 / n` por cento da caixa, em `style` e não em classe, porque classe
+  montada em tempo de execução não existe.
+- **O eixo Y comia o cifrão no telefone.** `width={56}` servia no desktop; a
+  375px, `R$ 22 mil` e `R$ 5,5 mil` saíam `$ 22 mil` e `$ 5,5 mil`. Hoje é
+  `width="auto"`, que o Recharts 3 calcula a partir dos rótulos. Medido: zero
+  rótulos cortados e zero rolagem horizontal.
+- **`nameKey` estava servindo de chave do React na legenda.** Ela diz *em que
+  campo do payload está o nome*, então as cinco fatias saíam com
+  `key="nome"` — React reclamando de chave duplicada, e a identidade dos itens
+  perdida entre renders. São duas chaves, e confundi-las é bug.
+
+#### O medidor tinha geometria de rosca, e as duas coisas que isso quebrava
+
+Ele nasceu como um `Pie` de meio arco com o anel e a caixa da rosca, e as duas
+heranças cobraram:
+
+- **O arco era grosso demais para o número.** Com o raio interno da rosca (62%
+  do máximo), a corda interna **na altura do topo do texto** media 42px — e
+  `76%` já ocupava 43. Ele encostava no arco desde o primeiro dia, e `100%`
+  invadiria. Um medidor é convencionalmente um arco fino: o miolo dele é o
+  número, não uma reserva. Com a espessura própria e o raio a 130% do máximo
+  (o Recharts aceita acima de 100), a corda vai a **103px**: `76%` fica com 30
+  de folga por lado, `100%` com 22, e `1.284%` ainda cabe.
+- **A caixa era quase metade vazia, e era isso que afastava a legenda.** O
+  Recharts centraliza o círculo inteiro, então um meio-arco num quadrado
+  deixava **68px mortos embaixo** — não era um `gap` grande, era vazio dentro
+  do SVG. `cy` a 86% e proporção `standard` por padrão encostam o arco na base:
+  o vão até a legenda caiu de 68 para **25px, o mesmo das outras duas formas**,
+  medido lado a lado.
+
+O rótulo deixou de se apoiar no centro da caixa e passou a se apoiar na origem
+do arco, por `bottom` em porcentagem — que resolve contra a **altura**, e é o
+que faz a âncora não depender da proporção. Quem chama escreve
+`<ChartDonutCenter value="76%" />` sem saber disso: a variante é do
+`ChartDonut`, então é ele que injeta `align="gauge"` por clone, como o `Button`
+e o `Stepper` já fazem com `asChild`.
+
+#### E o anel saía 102px fora do centro da própria legenda
+
+O envelope da rosca era `flex w-fit flex-col`, e o alinhamento padrão de uma
+coluna flex é `stretch`. Como o `ChartContainer` tem largura própria, ele não
+esticava — encostava na esquerda de uma caixa cuja largura quem definia era a
+legenda: medido, 208px de anel num envelope de 412. O medidor escondia o
+defeito, porque a legenda de dois itens é mais estreita que o anel. `items-center`
+resolve, e o `w-fit` fica: ele é `fit-content`, que respeita o espaço
+disponível, então a legenda continua quebrando em duas linhas a 375px em vez de
+esticar o envelope — trocá-lo por `w-full` teria consertado o centro e
+estourado o telefone.
+
+#### A página prometia "sem animação de entrada", e o Recharts animava
+
+A nota de fechamento do catálogo dizia que num app de finanças um valor que se
+move enquanto a pessoa o lê é hostil. O componente não fazia isso: o Recharts
+anima de fábrica, e **não olha `prefers-reduced-motion`**. É a classe de defeito
+que esta base já achou várias vezes — a documentação afirmando o que o código
+não faz.
+
+E ela tinha um sintoma que eu tinha classificado como "o Recharts renderiza
+tarde": medido na carga da página, 77 barras, 5 áreas e 6 linhas desenhavam, e
+**os setores das roscas eram zero** até a pessoa rolar até elas — porque a
+animação do `Pie` só começa quando o setor entra em cena. Um gráfico que não
+existe até ser olhado não é uma transição, é uma ausência. Com
+`isAnimationActive={CHART_ANIMATION}` nas sete marcas: 12 setores presentes sem
+rolagem nenhuma.
+
+#### Duas decisões de forma, e o que o eixo comprime
+
+**A ponta da barra arredonda e a base não** (`[4, 4, 0, 0]`, nunca `radius={4}`):
+arredondar os quatro cantos levanta a barra da linha do zero, que é onde um
+gráfico de barras diz a magnitude. **Os 2px entre segmentos empilhados e entre
+fatias são pintados**, com `stroke` em `var(--chart-surface)` — a variável que o
+container declara e todo mundo herda; com `transparent` o vão mostraria o
+segmento de trás. **A legenda liga sozinha na segunda série e some na primeira**
+(`legend ?? series.length >= 2`): com uma série o título já a nomeia.
+
+**O eixo comprime e o tooltip não.** `format="currency"` escreve
+`R$ 1.234.567,00` no tooltip e `R$ 1,23 mi` no eixo, porque um rótulo de eixo
+precisa caber numa calha e um tooltip precisa dizer o centavo. E `compact` larga
+os centavos abaixo de mil — sem isso a base do eixo saía `R$ 0,00`. Nenhum dos
+dois caminhos tem `Intl` neste arquivo: os sete formatos resolvem em
+`lib/formatters` e `lib/transaction-date`, e a regra **I** do auditor tranca.
+
+#### Duas lições de método, e as duas são erros meus
+
+**A minha sonda de medição inventou uma constante 20% errada.** Ao calcular o
+avanço da fonte mono, clonei o `<span>` para fora do contexto de *container
+query*: ali `cqw` é inválido, a sonda mediu a fonte herdada e reportou 0,75em
+onde o valor é 0,6. O número da rosca encolheu à vista antes de eu desconfiar
+do instrumento. Quando a medida contraria o mecanismo, o instrumento é o
+primeiro suspeito — é a terceira vez que esta base registra isso.
+
+**Asserção que casa o texto do fonte testa o comentário, não o código.** Duas
+asserções do teste novo reprovaram na primeira execução porque o cabeçalho do
+componente cita de propósito o que ele deixou de fazer (`outline-hidden`,
+`Intl.NumberFormat`). O teste passou a ler o fonte **sem comentários**, que é o
+conserto que o auditor já tinha feito em `lineOf`. E ele foi verificado
+reintroduzindo os defeitos: com `outline-hidden` de volta e `% 5` no resolvedor
+de cor, as asserções 3 e 5 reprovam.
+
+### Rodada 31 — a demo dizia "no telefone" e renderizava o desktop
+
+A seção "Em folha no telefone" enquadrava o chrome de folha numa `<div>` de
+384px e o chamava de telefone. **Nenhuma medida de telefone estava ativa.** Os
+componentes usam breakpoints de *viewport* (`sm:`, `md:`), não container
+queries, e o viewport do catálogo é o da janela — a 1443px, as seis declarações
+do chrome resolviam todas no ramo desktop:
+
+| | telefone | o que a demo renderizava |
+| --- | --- | --- |
+| corpo, recuo lateral | `px-4` = 16px | **20px** (`sm:px-5`) |
+| cabeçalho, topo | `pt-2` = 8px | **12px** (`md:pt-3`) |
+| rodapé | `flex-col-reverse` | **`row` + `justify-end`** |
+
+Era por isso que o botão saía `justify-end` **e** `w-full` ao mesmo tempo —
+duas coisas que nunca acontecem juntas num telefone.
+
+**A saída é um `<iframe>` de 375px**, em `src/app/designsystem/ds-phone.tsx`.
+Ele tem viewport próprio, então `@media (min-width: 40rem)` volta a significar
+o que diz. Medido depois, com as mesmas classes dentro e fora: **16px, 8px e
+`column-reverse`** — os três no ramo certo. Não é `scale()`: escalar daria a
+aparência de um telefone com o viewport do desktop, que é o defeito que a peça
+existe para não repetir.
+
+A peça mora no catálogo e não em `ui/` — lá cobraria entrada no `registry`,
+página própria e o `taxonomy.test.ts`, para um primitivo que só a documentação
+usa. É o argumento que o `ds-doc.tsx` escreve sobre si, e o nome segue o `ds-*`
+dos vizinhos.
+
+#### A mecânica, e as três coisas que precisaram ser medidas
+
+O CSS do app é **um único `<link>`** mais três `<style>` do dev do Next; os
+quatro nós são clonados para o `<head>` do iframe, com um `<base>` antes deles
+porque um `about:blank` não tem URL de base e um `url(...)` relativo de
+`@font-face` não resolveria. A classe do `<html>` é copiada inteira: ela carrega
+as três variáveis de fonte **e** o tema — verificado, a fonte resolve
+`Inter, "Inter Fallback"` lá dentro. E `createPortal` mantém **uma árvore React
+só**, então contexto, estado e HMR atravessam.
+
+**O tema é espelhado por `MutationObserver`, e não por `useTheme()`**:
+`resolvedTheme` é `undefined` até o `next-themes` montar, e o que interessa é a
+string inteira do `className`. O observador do `<head>` é o que mantém o HMR
+vivo lá dentro — sem ele o iframe congela no CSS de quando montou, justo na
+peça que existe para se iterar cromagem de telefone.
+
+#### Três erros meus, os três consertados por medição
+
+**A tela vazia com véu era ficção, e ela custou o contraste.** A primeira versão
+reservava 96px acima da folha "para deixar ver a tela atrás". Medido: a folha
+`bg-background` sobre o fundo velado dava **1,04:1** no tema escuro —
+invisível, um retângulo preto. A causa é que `fillMobileViewport` é
+`h-(--sheet-drawer-h)`, ou seja `calc(100dvh - max(0.5rem, env(safe-area-inset-top)))`:
+**a folha de formulário do app ocupa quase o viewport inteiro**, e oito
+arquivos a abrem assim. O véu tem 8px, não 96. Com a folha preenchendo a tela,
+o contraste que importa é contra o `Preview`, e não contra o que está atrás.
+
+**Sem aresta, o telefone não lê como objeto.** A tela é `bg-background` dentro
+de um `Preview` `bg-card`: medido, **1,1:1** no escuro. Eu tinha escrito "sem
+borda, porque cartão dentro de cartão é errado" — e estava certo sobre o
+cartão e errado sobre a aresta. Entrou `ring-1 ring-border`: é a borda do
+aparelho, e é `ring` e não `border` porque box-shadow não entra no recorte,
+então o raio continua aparando a folha por dentro.
+
+**Eu copiei a área segura em vez de vestir a régua.** A folha escrevia
+`pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]` à mão — a segunda cópia da
+mesma string. Ela veste `mobileFormSheetContentClassName`, que é o casco que um
+`SheetContent` real usa, e é dali que vêm os 24px.
+
+**E eu refazia o `<head>` do iframe inteiro a cada mutação.** O `next-themes`
+roda com `disableTransitionOnChange`, que injeta e remove uma `<style>` a
+**cada troca de tema** — então trocar o tema derrubava todo o CSS do iframe por
+um quadro. O sintoma não foi cosmético: sem estilo o conteúdo colapsa, o
+`useScrollFade` mede a folha sem transbordo, e a dissolução ficava **`off` com
+50px de rolagem**. A sincronia passou a ser incremental, com um mapa de nó de
+origem para clone. Medido através da troca, a 150ms e depois: `fade` em `on`,
+transbordo em 50, recuo em 16px e **cinco folhas de estilo o tempo todo**.
+
+#### E os seis defeitos que a mesma demo carregava
+
+- **O botão "Salvar" estava colado na borda de baixo.** `FormActions
+  variant="sticky"` não traz `pb` de propósito — o recuo é da superfície. Na
+  moldura à mão ninguém o fornecia: `padding-bottom: 0`, medido. Agora 24px.
+- **`MobileSheetFormDragStrip` desenhava o vazio.** Ele devolve
+  `SheetDragHandle`, que **retorna `null` sempre**. Saiu das duas demos.
+- **O `code` divergia da demo em seis pontos**, e um era armadilha: ele mostrava
+  `<MobileSheetFormStickyHeader title="…" />`, e `title` renderiza um
+  `DialogTitle` que **lança fora de um `Sheet`**. Hoje o `code` mostra o casco
+  inteiro, com o `SheetContent`.
+- **A folha era `bg-card`, e a real é `bg-background` com `border-t`**
+  (`edge-panel.tsx:31,50`). Ela usava `bg-card` porque o `Preview` também é, e
+  ali `bg-background` não se separava de nada.
+- **A página do chrome desenhava o corpo à mão** — `min-h-0 flex-1
+  overflow-y-auto px-4`, a string exata que `MobileSheetFormBody` existe para
+  eliminar. Sem ela não havia dissolução nem `overscroll-contain`: rolar a
+  folha até o fim rolava a página atrás. Medido depois: `overscroll: contain`.
+- **As duas páginas ensinavam o oposto uma da outra sobre o mesmo rodapé.** A do
+  chrome desenhava `border-t`; a do `Form` afirmava a regra J. Hoje as duas são
+  `FormActions variant="sticky"`, e o fio é `0px`.
+
+**A demo do `Form` passou de três campos para sete.** Não é enfeite: um
+formulário curto não precisaria de cabeçalho fixo nem de rodapé fixo — o padrão
+que a seção documenta só existe porque o corpo não cabe. Com três, ele
+transbordava **17px**, menos que os 44 da rampa de dissolução, e não havia o
+que demonstrar. Hoje rola 126 na página do chrome, com `data-scroll-fade="on"`.
+
+#### O que a moldura não conserta, e está escrito na página
+
+Ela troca o viewport do **CSS**, e nada mais. `useIsMobile` lê o `matchMedia`
+da janela de fora; os portais do Radix vão para o `body` do documento pai e
+escapam do telefone; e `env(safe-area-inset-bottom)` vale zero, porque não há
+aparelho — os 24px que se vê são a base, sem os 34 do iPhone. Nenhuma das duas
+demonstrações depende dos três, e quem depender precisa saber antes.
+
 ### Backlog de migração
 
 A rodada 01 entregou tokens, componentes, documentação e o auditor, sem migrar
@@ -4423,5 +4726,35 @@ E o que a rodada do `carousel` deixou (com o que a **29b** já fechou marcado):
   de toda tela que use a peça, e merece a própria medição — as demonstrações de
   hoje não têm conteúdo focável dentro dos itens, então o defeito não é
   alcançável pelo catálogo.
+
+E o que a rodada do gráfico deixou — as sete telas que não migraram, contadas:
+
+- **4 tooltips escritas à mão**, todas repetindo `min-w-[10rem] rounded-lg
+  border-border/80 bg-popover px-3 py-2 text-xs shadow-md`
+  (`dashboard-cashflow-chart`, `dashboard-expense-categories`,
+  `credit-cards-history-chart`, `credit-card-invoice-category-spend-section`).
+  Destino: `ChartTooltipContent format="currency"`.
+- **2 telas usam o `<Tooltip>` cru do Recharts**, que renderiza **sem tema
+  nenhum** (`dashboard-installments-projection`, `category-detail-trends`).
+- **3 legendas à mão**, com `LegendStrip` sendo a mesma peça em 2 arquivos.
+  Destino: `ChartLegendContent`, e a de `dashboard-expense-categories` é
+  `interactive`.
+- **4 `new Intl.NumberFormat(… "BRL")` redeclarados** nos gráficos (10 no resto
+  do app) e **4 `tickFormatter` compactos inline**, nenhum chamando
+  `currencyCompactBRL`. Destino: `format` no eixo e no tooltip.
+- **2 `chartReady` + `ResizeObserver`** duplicados (30 linhas cada), **2 escadas
+  de corpo do centro da rosca** e **2 cópias de `alpha(color, pct)`**.
+- **Cores fora do sistema**: `#1f6a59` em
+  `dashboard-installments-projection.tsx:27` sob o comentário falso *"Bar fill
+  cannot use var() in SVG"* — a página `/graficos` agora aponta para o arquivo
+  certo, porque o que ela nomeava (`dashboard-cashflow-chart`) já foi
+  consertado; dois `oklch()` literais e **sem par no escuro** em
+  `credit-card-invoice-analytics-panel.tsx:256`; e cinco `oklch()` crus como
+  `FALLBACK_FILLS` em `dashboard-expense-categories.tsx:31`, para o mesmo
+  trabalho que o arquivo vizinho faz com `var(--chart-N)`.
+- **3 alturas em pixel** (`height={300}` ×2, `240`, `200`) contra o eixo
+  `aspect`, e **1 `accessibilityLayer={false}`**.
+- **`credit-cards-history-chart` repete a rampa** com `BAR_COLORS[idx % 5]`:
+  seis cartões dão duas barras da mesma cor.
 
 Reproduza a qualquer momento com `npm run ds:audit`.

@@ -218,14 +218,32 @@
   /* Rampa categórica. Antes ela era literalmente as cores de status
      (success, destructive, primary, info, warning): uma série azul lia como
      "info" e uma vermelha como "erro", mesmo sendo só duas categorias de gasto.
-     Agora são cinco matizes a ~60° de distância, todos medidos em 3:1 ou mais
-     contra `--card` (WCAG 1.4.11 para objeto gráfico). A claridade varia junto
-     com o matiz para as séries não dependerem só de cor. */
+
+     Este comentário dizia "cinco matizes a ~60° de distância", e era falso.
+     Medidos, os intervalos entre os matizes ordenados eram 111 · 39 · 57 · 68
+     · 85 — `--chart-1` e `--chart-2` estavam a 39°. Passada por um validador
+     de paleta (ΔE em OKLab ×100, todos os pares), a rampa antiga reprovava
+     duas vezes: 4,9 de separação para protanopia entre `--chart-4` e
+     `--chart-1`, contra um piso de 8; e 14,6 para visão normal entre
+     `--chart-2` e `--chart-1`, contra um piso de 15. Numa rosca de cinco
+     fatias, quem não separa vermelho de verde via a série 1 e a 4 como a
+     mesma cor.
+
+     O diagnóstico também estava errado, e não só o número: matiz sozinho
+     nunca separou esta rampa. Quem separa é matiz **e** claridade, e é por
+     isso que o re-passo move as duas — `--chart-2` e `--chart-4` sobem de
+     claridade sem trocar de família. Depois: 8,8 protanopia · 16,8 visão
+     normal · ≥3:1 contra `--card` nos cinco (WCAG 1.4.11 para objeto
+     gráfico).
+
+     Uma sexta série não é um matiz novo: ela vira "Outros", em
+     `--muted-foreground`. Esticar a rampa é o que produz duas fatias
+     parecidas. */
   --chart-1: oklch(0.45 0.13 166);
-  --chart-2: oklch(0.58 0.11 205);
-  --chart-3: oklch(0.48 0.16 262);
-  --chart-4: oklch(0.55 0.12 55);
-  --chart-5: oklch(0.47 0.17 330);
+  --chart-2: oklch(0.6 0.12 205);
+  --chart-3: oklch(0.48 0.16 275);
+  --chart-4: oklch(0.62 0.13 60);
+  --chart-5: oklch(0.5 0.19 340);
   /* Onde verde/vermelho é semântica de dinheiro e não escolha estética
      (fluxo de caixa, faturas), a série usa estes e não a rampa acima. */
   --chart-income: var(--income);
@@ -438,11 +456,21 @@
   --shadow-sm-value: 0 1px 2px 0 oklch(0 0 0 / 0.45), 0 1px 1px 0 oklch(0 0 0 / 0.35);
   --shadow-md-value: 0 4px 8px -2px oklch(0 0 0 / 0.55), 0 2px 4px -2px oklch(0 0 0 / 0.4);
   --shadow-lg-value: 0 12px 24px -6px oklch(0 0 0 / 0.6), 0 6px 12px -4px oklch(0 0 0 / 0.45);
+  /* O escuro é escolhido, não é o claro invertido — e aqui ele carrega a única
+     reprovação consciente da rampa. A faixa de claridade do validador
+     (L 0,48–0,67) e a separação CVD brigam sobre superfície escura: comprimir
+     a claridade tira justamente o canal que separa magenta de ciano para quem
+     não distingue vermelho de verde. Três candidatos dentro da faixa foram
+     medidos, e os três reprovam em CVD (4,6 · 3,1 · 2,3). Estes ficam acima da
+     faixa e passam no resto: 10,6 CVD · 17,1 visão normal · ≥3:1 contra
+     `--card`. A separação vence a faixa, porque a faixa é heurística sobre uma
+     superfície de referência e a separação é um leitor que não consegue ler o
+     gráfico. */
   --chart-1: oklch(0.72 0.14 166);
-  --chart-2: oklch(0.8 0.11 205);
-  --chart-3: oklch(0.7 0.16 262);
-  --chart-4: oklch(0.8 0.13 80);
-  --chart-5: oklch(0.72 0.17 330);
+  --chart-2: oklch(0.56 0.1 220);
+  --chart-3: oklch(0.63 0.18 280);
+  --chart-4: oklch(0.88 0.15 85);
+  --chart-5: oklch(0.8 0.16 340);
   --chart-income: var(--income);
   --chart-expense: var(--expense);
   /* No escuro os tons de identidade sobem de claridade para ler sobre o card, e
