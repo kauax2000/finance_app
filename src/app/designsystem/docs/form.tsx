@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/mobile-sheet-form-chrome"
 import { Switch } from "@/components/ui/switch"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
-import { PhoneFrame, PhoneFrameSheet } from "../ds-phone"
+import { PhoneFrame, PhoneFrameSheet } from "../ds-frame"
 
 export default function FormDoc() {
   return (

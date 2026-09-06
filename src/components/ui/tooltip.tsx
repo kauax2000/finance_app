@@ -4,6 +4,7 @@ import * as React from "react"
 import { Tooltip as TooltipPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { useViewportWindow } from "@/hooks/use-mobile"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 
 function TooltipProvider({
@@ -19,10 +20,34 @@ function TooltipProvider({
   )
 }
 
+/**
+ * A raiz — e ela **não** segura a dica enquanto o ponteiro caminha até lá.
+ *
+ * O Radix mantém o conteúdo aberto enquanto o ponteiro se move dentro de um
+ * polígono de graça entre o gatilho e a caixa, para dar tempo de alcançá-la.
+ * Isso serve a conteúdo que se aponta; uma dica não é isso — ela é um rótulo,
+ * e quem tem conteúdo alcançável neste sistema é o `HoverCard`.
+ *
+ * O preço estava medido no trilho recolhido da `Sidebar`: os ícones ficam a
+ * 36px um do outro e a dica abre à direita, então o polígono de graça cobre os
+ * vizinhos. Passando por "Início" e indo até "Carteiras", a dica continuava
+ * escrita **"Início"** e o `aria-describedby` continuava no primeiro botão — a
+ * dica travava e a do item sob o cursor nunca abria.
+ *
+ * Continua sendo prop: quem tiver um caso de dica alcançável passa
+ * `disableHoverableContent={false}` e assume o polígono.
+ */
 function Tooltip({
+  disableHoverableContent = true,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Root>) {
-  return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+  return (
+    <TooltipPrimitive.Root
+      data-slot="tooltip"
+      disableHoverableContent={disableHoverableContent}
+      {...props}
+    />
+  )
 }
 
 function TooltipTrigger({
@@ -67,8 +92,12 @@ function TooltipContent({
   children,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Content>) {
+  // O portal vai para o `body` da janela ativa. Fora da moldura do catálogo o
+  // contexto é `null` e o Radix usa o próprio documento — o app não muda.
+  const janela = useViewportWindow()
+
   return (
-    <TooltipPrimitive.Portal>
+    <TooltipPrimitive.Portal container={janela?.document.body}>
       <TooltipPrimitive.Content
         data-slot="tooltip-content"
         sideOffset={sideOffset}

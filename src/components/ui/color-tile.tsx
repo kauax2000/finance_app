@@ -26,9 +26,15 @@ import { cn } from "@/lib/utils"
 const colorTileVariants = cva(
   [
     "flex shrink-0 items-center justify-center overflow-hidden",
-    // O véu tem as mesmas proporções de `--identity-N-surface`: 12% da cor
-    // sobre o cartão no claro, 18% no escuro. Opaco e não alpha — dois
-    // ladrilhos vizinhos não devem se atravessar.
+    // O véu é 12% da cor sobre o cartão no claro e 18% no escuro. Opaco e não
+    // alpha — dois ladrilhos vizinhos não devem se atravessar.
+    //
+    // Ele **já teve** as mesmas proporções de `--identity-N-surface`, e deixou
+    // de ter quando o par de identidade passou a inverter no tema claro. A
+    // divergência é correta, e o motivo é a régua deste arquivo: o ladrilho
+    // carrega uma cor **de runtime**, escolhida pela pessoa e vinda do banco,
+    // e ele não pode virar uma pastilha preenchida numa cor que ninguém
+    // calibrou. O avatar carrega uma das seis identidades do sistema.
     "bg-[color-mix(in_srgb,var(--tile-color)_12%,var(--card))]",
     "dark:bg-[color-mix(in_srgb,var(--tile-color)_18%,var(--card))]",
     // A tinta vem da cor da pessoa com a **claridade trocada** pela do sistema:

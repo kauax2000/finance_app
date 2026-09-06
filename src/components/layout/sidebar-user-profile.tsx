@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useAuth } from "@/components/providers"
 import {
     SidebarMenu,
+    SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { UserMenu } from "@/components/layout/user-menu"
@@ -60,7 +61,13 @@ export function SidebarUserProfile() {
         <SidebarMenu>
             <SidebarMenuItem>
                 <UserMenu>
-                    <button className="w-full flex items-center gap-2 overflow-hidden rounded-md p-2 text-left ring-sidebar-ring outline-hidden transition-[width,height,padding] group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-0! hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 h-12 text-sm">
+                    {/* Era um `<button>` cru com o `cva` do `SidebarMenuButton`
+                        copiado à mão — e a cópia **já tinha divergido**: ela
+                        escrevia `group-data-[collapsible=icon]:p-0!`, que é a
+                        regra do degrau `lg`, sobre a geometria do degrau
+                        padrão. Compor o degrau certo entrega a mesma caixa sem
+                        a segunda régua. */}
+                    <SidebarMenuButton size="lg">
                         {/* Era markup desenhado à mão: uma caixa recortada com
                             a foto crua dentro. O `Avatar` do design system faz
                             o mesmo recorte, entra em fade quando a foto chega e
@@ -83,7 +90,7 @@ export function SidebarUserProfile() {
                             <span className="truncate text-xs text-muted-foreground">{userEmail}</span>
                         </div>
                         <EllipsisVerticalIcon className="ml-auto size-4 text-muted-foreground group-data-[collapsible=icon]:hidden" />
-                    </button>
+                    </SidebarMenuButton>
                 </UserMenu>
             </SidebarMenuItem>
         </SidebarMenu>

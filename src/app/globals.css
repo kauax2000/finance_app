@@ -18,8 +18,6 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
   --color-chart-5: var(--chart-5);
@@ -249,23 +247,36 @@
   --chart-income: var(--income);
   --chart-expense: var(--expense);
   /* Tons de identidade — distinguem uma pessoa de outra e nada mais. Seis
-     matizes a 60° de distância, todos com croma 0.09: abaixo do menor croma de
-     status (primary, 0.118), então um avatar nunca é confundido com um estado.
-     Cada tom vem com a superfície opaca correspondente, porque alpha só funciona
-     enquanto nada passa por baixo — em avatares sobrepostos um vazava pelo outro.
-     `in srgb` reproduz exatamente a conta que o browser faria com 12%. */
-  --identity-1: oklch(0.42 0.09 20);
-  --identity-2: oklch(0.42 0.09 80);
-  --identity-3: oklch(0.42 0.09 140);
-  --identity-4: oklch(0.42 0.09 200);
-  --identity-5: oklch(0.42 0.09 260);
-  --identity-6: oklch(0.42 0.09 320);
-  --identity-1-surface: color-mix(in srgb, var(--identity-1) 12%, var(--card));
-  --identity-2-surface: color-mix(in srgb, var(--identity-2) 12%, var(--card));
-  --identity-3-surface: color-mix(in srgb, var(--identity-3) 12%, var(--card));
-  --identity-4-surface: color-mix(in srgb, var(--identity-4) 12%, var(--card));
-  --identity-5-surface: color-mix(in srgb, var(--identity-5) 12%, var(--card));
-  --identity-6-surface: color-mix(in srgb, var(--identity-6) 12%, var(--card));
+     matizes a 60° de distância, todos com croma abaixo do menor croma de status
+     (primary, 0.118), então um avatar nunca é confundido com um estado.
+     Superfície **opaca** e não alpha: alpha só funciona enquanto nada passa por
+     baixo, e em avatares sobrepostos um vazava pelo outro.
+
+     **O par é invertido entre os temas, e isso saiu de medição.** No escuro a
+     pastilha é escura tingida com a tinta clara — 1,65 contra a placa
+     flutuante, visível. No claro a mesma receita (12% da cor misturada no
+     `--card`) dava `[230,235,229]`, e **1,10** contra a mesma placa: a pastilha
+     sumia e sobrava a letra escura flutuando sozinha, sem chip.
+
+     A causa é que a receita foi calibrada contra `--card` (255) e a placa
+     flutuante é 244 — ela perde metade da separação num fundo que não é o
+     cartão. Em vez de empurrar a mistura até um cinza sujo, o claro inverte: a
+     **superfície é a cor** e a **tinta é clara**, que é como um avatar
+     preenchido se comporta em toda interface clara. `--identity-N` é a tinta e
+     `--identity-N-surface` é a pastilha nos dois temas — os nomes descrevem o
+     papel, e é o papel que se inverte, não o nome. */
+  --identity-1: oklch(0.99 0.012 20);
+  --identity-2: oklch(0.99 0.012 80);
+  --identity-3: oklch(0.99 0.012 140);
+  --identity-4: oklch(0.99 0.012 200);
+  --identity-5: oklch(0.99 0.012 260);
+  --identity-6: oklch(0.99 0.012 320);
+  --identity-1-surface: oklch(0.52 0.11 20);
+  --identity-2-surface: oklch(0.52 0.11 80);
+  --identity-3-surface: oklch(0.52 0.11 140);
+  --identity-4-surface: oklch(0.52 0.11 200);
+  --identity-5-surface: oklch(0.52 0.11 260);
+  --identity-6-surface: oklch(0.52 0.11 320);
   /* Osso de skeleton: `muted` some em telas de baixo gamut, então é um degrau
      abaixo dele, no mesmo matiz.
 
@@ -309,8 +320,6 @@
   --radius: 0.625rem;
   --sidebar: oklch(0.97 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.42 0.12 166);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
   /* Era `oklch(0.97)` — **o mesmo valor de `--sidebar`**. A página ativa do
      menu pintava um fundo idêntico ao da lateral: razão 1,00, e o único sinal
      que sobrava era o `font-medium`. No escuro os dois sempre foram 0,205 e
@@ -327,6 +336,81 @@
   --sidebar-accent-foreground: oklch(0.145 0 0);
   --sidebar-border: oklch(0.9 0 0);
   --sidebar-ring: oklch(0.348 0.118 166);
+  /**
+   * A aresta da placa flutuante — o que faz o `Sidebar variant="floating"` ler
+   * como vidro em vez de retângulo pintado.
+   *
+   * São duas porque **uma placa de vidro não tem borda, tem aresta**: ela pega
+   * luz em cima e escurece embaixo. Um fio de 1px igual nos quatro lados é uma
+   * borda, e é o que a barra tinha.
+   *
+   * E o par existe pela mesma razão que `--secondary-hover`: **um valor único
+   * não serve os dois temas**, porque a direção que lê se inverte. Varrido sobre
+   * `--sidebar`, branco a 20% dá 1,87 no escuro e **1,02** no claro; preto a 20%
+   * dá 1,60 no claro e **1,04** no escuro. Sobre uma placa quase branca a luz
+   * não aparece; sobre uma placa escura a sombra não aparece.
+   *
+   * Aqui, no claro, quem carrega é a **sombra**, e a inversão de gramática é a
+   * física e não uma escolha: sobre uma página `oklch(0.985)` não há para onde
+   * clarear. O que estava errado era a **magnitude**, não a direção — ele
+   * chegou a 40%, que compõe para rgb 150 e dá razão **2,84** contra a página:
+   * um traço duro, não a aresta de uma placa de vidro. A 12% ele compõe para
+   * 220 e dá **1,32**, praticamente o peso da própria `--sidebar-border` do
+   * sistema (1,29). O tema claro desta peça é quieto de propósito.
+   */
+  --glass-rim: oklch(0 0 0 / 18%);
+  --glass-rim-shade: oklch(0 0 0 / 5%);
+  /* **O extremo aceso do bisel, e no claro ele é branco puro.** Sem isso o aro
+     nunca passava acima da placa e a peça saía contornada em vez de acesa. O
+     par é o que lê: 205 na sombra do canto inferior-direito contra 255 no
+     realce do superior-esquerdo — 50 unidades de amplitude num tema em que cada
+     lado, sozinho, mal se separa da placa. */
+  --glass-rim-far: oklch(1 0 0 / 100%);
+  /* **O mesmo eixo do escuro, girado 180°** — 345° é 165° pela outra ponta.
+     A geometria é idêntica e a polaridade se inverte: no escuro o pico do aro
+     é luz e mora no canto superior-esquerdo; aqui ele é sombra, e sombra de uma
+     placa iluminada de cima-à-esquerda mora no canto **oposto**. Com 345° o 0%
+     do gradiente cai no canto inferior-direito, e o vestígio de 45% chega quase
+     nulo ao superior-esquerdo, que é onde a aresta se dissolve na página.
+
+     O resultado é um bisel: a placa lê como acesa por cima e à esquerda, com o
+     peso caindo para baixo e à direita — a mesma direção do escuro, dita com o
+     único material que o tema claro tem. */
+  --glass-rim-angle: 345deg;
+  /* A lâmina esfumaçada. **Ela não puxa para o preto neste tema**, e a razão é
+     medida: o claro é inteiramente acromático (croma 0 em `--background`,
+     `--card`, `--muted`, `--border`, `--sidebar`) e a página é `oklch(0.985)` —
+     o branco de verdade mora no `--card`. Preto com alfa aqui introduziria um
+     cinza que o tema não tem em lugar nenhum, e transformaria a navegação numa
+     coluna cinza.
+
+     **E ela sobe, não afunda.** Esta é a inversão de polaridade que o escuro
+     pede quando traduzido: lá a lâmina se afasta da página **para baixo** (rgb
+     2 contra 10, razão 1,049); aqui ela se afasta **para cima** — rgb 255
+     contra 250, razão 1,044. É a *mesma distância da página*, no único sentido
+     que este tema tem. Uma versão anterior a punha em 244, abaixo da página, e
+     isso fazia a navegação recuar num tema em que ela deve avançar.
+
+     Ela é o branco de verdade — o mesmo `oklch(1 0 0)` do `--card` —, então a
+     barra flutuante lê como um cartão, que é como este sistema já apresenta
+     superfície elevada no claro. */
+  /* **Ela cede três unidades ao realce, e continua acima da página.** Em branco
+     puro a placa ficava em 255 — o teto —, e um realce precisa de espaço acima
+     do corpo. A 0.99 ela dá rgb **252** contra uma página de 250: ainda mais
+     clara que ela, que é a regra deste tema, e agora com onde o bisel acender. */
+  --glass-tint: oklch(0.99 0 0 / 92%);
+  /* As nuvens, e aqui elas **não têm como registrar**. Não é timidez: a página
+     é rgb **250 de 255** e a lâmina já a levou a 255, então não sobra nenhuma
+     unidade acima dela. Um realce precisa de espaço *acima* do corpo, e o corpo
+     não pode descer — descer é justamente o que este tema não deve fazer.
+
+     Isto não é limitação do desenho, é do **tom da página**. Quem quiser luz de
+     verdade no claro precisa baixar `--background` (de `oklch(0.985)` para algo
+     como `0.96`), e isso é decisão de sistema: atinge toda tela.
+
+     Declaradas assim mesmo para a receita ser uma só nos dois temas, e não um
+     `dark:` dentro do componente. Quem carrega a placa aqui é o bisel do aro. */
+  --glass-cloud: oklch(1 0 0 / 100%);
   /* Escala de empilhamento.
 
      A rodada 01 nomeou os números, mas nomeou os números errados: a escala dizia
@@ -492,12 +576,70 @@
 
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.5 0.125 166);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.72 0.13 166);
+  /* Aqui a direção se inverte: quem carrega é a **luz do topo**. Ele chegou a
+     cair para 18% numa tentativa de "contraluz não tem especular" — e isso
+     estava errado: o brilho da borda é o que faz a peça ler como **vidro**, e
+     é independente de onde a luz do corpo está. Ver o par no `:root`, onde ele
+     é sombra e não luz. */
+  --glass-rim: oklch(1 0 0 / 34%);
+  --glass-rim-shade: oklch(1 0 0 / 10%);
+  /* O vestígio da base. Vale o que o `color-mix(--glass-rim 45%, transparent)`
+     valia — 45% de 34% são 15,3% —, então este lado não se mexeu ao o extremo
+     virar token. Aqui os dois extremos são da mesma natureza (luz), e é por
+     isso que derivar funcionava; no claro não são. */
+  --glass-rim-far: oklch(1 0 0 / 15%);
+  /* **O eixo do aro se inclina para a esquerda**, e isso reverte a rodada 37,
+     que o tinha tirado de 158° para pôr em 180° argumentando que "numa coluna
+     alta e estreita a luz que convence vem de cima, reta".
+
+     O que mudou entre lá e aqui é a peça: lá a placa era uma superfície
+     iluminada de frente, com uma rampa vertical no corpo, e um aro diagonal
+     brigava com ela. Hoje o corpo é preto plano e a única luz mora num canto —
+     não há eixo vertical com que concordar, e o aro reto passou a ser a única
+     coisa simétrica numa peça que não é.
+
+     A 165° o eixo tomba 15° da vertical. Na caixa real (240×424) a projeção
+     horizontal é **13% do comprimento do gradiente**, então na aresta de cima a
+     esquerda fica no pico (0%) e a direita já chega perto do vale (16%): o
+     brilho se concentra no canto superior-esquerdo em vez de correr a largura
+     toda. É um token e não um número na receita porque ele vale **só no
+     escuro** — ver o par no `:root`. */
+  --glass-rim-angle: 165deg;
+  /* A lâmina esfumaçada, e aqui o chão do tema **é** o preto. Sobre a página
+     `oklch(0.145)` (rgb 10) ela compõe para rgb ~5, e a separação de corpo cai
+     de 1,22 para ~1,03 — o teto do que "mais escuro que esta página" permite é
+     1,06, com preto puro. Isso é aceito de propósito: numa lâmina de contraluz
+     quem define a peça é o vazamento nas bordas, e não o corpo. O corpo é o
+     que fica **preto** para a luz ter contra o que aparecer.
+
+     **Ela esteve em 55%, e isso lia como cinza — mas não por ser clara.** A
+     55% ela dá rgb 5, e a página atrás é rgb 10: 5 contra 10 é imperceptível,
+     então a placa herdava a leitura de "cinza escuro" do próprio fundo.
+     Verificado empiricamente, com amostras de valor conhecido sobrepostas à
+     placa: **0, 3, 5 e 8 somem dentro dela**, e só a partir de 12 se distingue.
+
+     A 82% ela vai a **rgb 2** — o mais escuro possível sem ser preto. O limite
+     é duro: preto puro daria 0, e a razão contra a página vai de 1,03 para
+     1,05 num teto absoluto de 1,06. Não há mais para onde ir. */
+  --glass-tint: oklch(0 0 0 / 82%);
+  /* A nuvem de luz **atrás** da lâmina. Ela é lida através de 82% de preto,
+     então o alfa é alto e o resultado na tela é baixo: 48% de branco sobre a
+     página dá rgb 128, e a lâmina por cima o leva a **23** contra um corpo de
+     2. É a atenuação que faz a luz ler como estando atrás.
+
+     **O alfa dela sobe junto quando a lâmina escurece**, e não é ajuste fino:
+     a lâmina está *em cima*, então escurecê-la apaga a nuvem na mesma
+     proporção. Os dois números andam juntos — 55/17 e 82/48 rendem o mesmo
+     pico de 23.
+
+     Neutra, e não a cor da marca: ela chegou a ser o matiz da barra a 14% —
+     media bem (ΔE 43 do `--income`) e ainda assim tingia a navegação de verde,
+     num app em que verde significa "entrou dinheiro". */
+  --glass-cloud: oklch(1 0 0 / 48%);
   --mobile-glass-bg: oklch(0.205 0 0 / 45%);
   --mobile-glass-border: oklch(1 0 0 / 5%);
 }
@@ -964,6 +1106,210 @@
  * inclinação máxima, e descontinuidade de derivada contra superfície lisa é o
  * que o olho mais detecta — banda de Mach, numa linha que atravessa a caixa
  * inteira. Vê-se o começo do fade, não um fade. */
+/**
+ * Esconde a barra de rolagem, mantendo a rolagem.
+ *
+ * Ela era escrita em **quatro** superfícies — `SidebarContent`, o `CommandList`
+ * da paleta e as duas navegações do catálogo — e **não estava definida em lugar
+ * nenhum**: nem aqui, nem no `tw-animate-css`. As quatro achavam que escondiam
+ * a barra e nenhuma escondia. O `tabs.tsx` chegou a escrever
+ * `[scrollbar-width:none] [&::-webkit-scrollbar]:hidden` por extenso enquanto
+ * isto não se decidia.
+ *
+ * Onde ela vale, quem indica que há mais conteúdo é a **dissolução** da borda
+ * (`scroll-fade-*`), que é a decisão deste sistema — e é por isso que as quatro
+ * a pediam. Fora dessas, a barra do sistema fica.
+ */
+/**
+ * A superfície de vidro do sistema. Nasceu na placa flutuante da barra lateral
+ * e saiu de lá quando ganhou o segundo caso — a régua é `lib/glass-classes.ts`,
+ * e o `Glass` de `components/ui/glass.tsx` é a conveniência que a veste.
+ *
+ * ## Existem dois vidros nesta casa, e eles não são intercambiáveis
+ *
+ * Este é o **pintado**: ele não borra nada, porque a premissa é que **não há
+ * conteúdo atrás**. O outro é `.mobile-glass-surface`, com `backdrop-filter`
+ * de verdade, e a premissa dele é a oposta. A régua de escolha:
+ *
+ * - **há algo passando por baixo** (uma folha sobre a página, uma ilha sobre a
+ *   lista) → `.mobile-glass-surface`. Ela borra o que existe, e traz o
+ *   `prefers-reduced-transparency` que um blur de verdade obriga.
+ * - **não há** (um painel que reserva a própria calha, um controle sobre cor
+ *   chapada) → esta. Borrar cor chapada não desenha nada, e a luz é pintada
+ *   justamente porque não há nada para revelar.
+ *
+ * ## A frente é preta, e as luzes estão atrás dela
+ *
+ * O modelo é o de uma **nuvem por trás de uma lâmina preta**: a frente é
+ * escura e chapada, como o cabeçalho do app, e o que existe são focos de luz
+ * difusos que a atravessam atenuados.
+ *
+ * **A ordem das camadas é o mecanismo, e não um detalhe.** A lâmina é pintada
+ * *por cima* das nuvens, então elas chegam ao olho filtradas por 55% de preto:
+ * 22% de branco sobre a página dá rgb 64, e a lâmina o leva a ~29 contra um
+ * corpo de 4,5. Pintadas por cima, as mesmas nuvens dariam 64 — e leriam como
+ * manchas **na** placa em vez de luz **atrás** dela. Alfa alto, resultado
+ * baixo: é a atenuação que constrói o "atrás".
+ *
+ * ## Nuvem, e não rampa
+ *
+ * Houve uma versão com uma queda vertical de altura inteira — um radial de
+ * `105%` cobrindo a placa toda, chegando a **rgb 62** no topo. Ela lia como
+ * degradê de fundo dos anos 2000: forte demais, branca demais, e com o eixo
+ * óbvio. O que substitui é **um par de focos nos cantos opostos da diagonal**,
+ * cada um com o centro fora da área visível, de modo que só um quarto da elipse
+ * entra. Houve uma versão com três (o terceiro no meio da borda direita), e ele
+ * saiu porque a luz do meio disputava com a lista de links.
+ *
+ * ## O aro é o vidro, e ele é independente da luz do corpo
+ *
+ * O brilho da borda chegou a cair de 34% para 18%, sob o argumento de que
+ * "contraluz não tem especular". **Estava errado**: o aro não descreve de onde
+ * vem a luz do corpo — ele é a aresta da lâmina pegando luz, e é o que faz a
+ * peça ler como vidro em vez de retângulo escuro. Voltou aos 34%.
+ *
+ * **E o eixo dele é um token, porque hoje ele difere por tema**: 165° no escuro
+ * e 180° no claro. A inclinação concentra o brilho no canto superior-esquerdo
+ * em vez de espalhá-lo pela largura toda, e ela só faz sentido onde há brilho
+ * para concentrar. Ver `--glass-rim-angle`.
+ *
+ * ## Sem `backdrop-filter`, e por duas razões
+ *
+ * `floating` reserva a própria calha no fluxo, então nada passa por baixo da
+ * placa — verificado com `elementsFromPoint`: a pilha sob ela é transparente
+ * até a página. Borrar cor chapada não desenha nada, e isso segue verdadeiro
+ * com a lâmina translúcida: o que ela compõe por baixo continua sendo cor
+ * chapada. As nuvens são pintadas justamente porque não há nada atrás para
+ * borrar.
+ *
+ * ## Duas camadas de clip, e nenhuma máscara
+ *
+ * `background-clip: padding-box` para o corpo e `border-box` para o aro, com a
+ * borda transparente. O raio sobrevive, e **nenhuma máscara entra** — a
+ * armadilha registrada neste projeto (`mask-image: none` num composite apaga o
+ * elemento; a ordem de emissão das duas propriedades de composite não se
+ * controla pelo Tailwind) fica de fora por construção.
+ */
+@utility glass {
+  border: 1px solid transparent;
+  background:
+    /* -1. o realce de estado, e ele é o mais de cima de todos.
+     *
+     * Ele existe porque **`hover:bg-*` não funciona sobre vidro**, e o defeito é
+     * calado: essas classes declaram só `background-color`, então o shorthand
+     * não as apaga — elas passam a pintar *atrás* das quatro camadas de
+     * gradiente, e com a lâmina a 82% o realce simplesmente não aparece.
+     *
+     * Sendo branco neutro e não o tom, **uma variável serve os sete tons e os
+     * dois temas**: é o mesmo idioma do `bg-current/N` que a barra lateral usa,
+     * onde a tinta vira de direção sozinha. Aqui ela é sempre luz, porque
+     * realce sobre vidro é o material pegando mais luz. */
+    linear-gradient(var(--glass-sheen, transparent) 0%, var(--glass-sheen, transparent) 100%)
+      padding-box,
+    /* 0. o tom — vidro colorido, e `transparent` por padrão.
+     *
+     * Ele é a **primeira** camada, ou seja a de cima: se ficasse abaixo da
+     * lâmina, os 82% de preto o atenuariam para quase nada, que é exatamente o
+     * que faz as nuvens lerem como estando atrás. O tom não está atrás — ele é
+     * a cor do próprio material.
+     *
+     * Quem não pede tom não paga nada: `transparent` não pinta e não custa
+     * camada. E quem pede o declara como **variável**, não como classe de
+     * fundo — uma `bg-*` ao lado seria apagada pelo shorthand, que é a
+     * armadilha nº 1 da régua. */
+    linear-gradient(var(--glass-tone, transparent) 0%, var(--glass-tone, transparent) 100%)
+      padding-box,
+    /* 1. a lâmina preta — a frente, e por isso a de cima */
+    linear-gradient(
+        var(--glass-tint) 0%,
+        var(--glass-tint) 100%
+      )
+      padding-box,
+    /* 2. as nuvens, atrás dela: duas, nos cantos opostos da diagonal.
+     *
+     * Com o centro **no canto** só um quarto da elipse fica dentro da placa, e é
+     * isso que as faz ler como fontes que estão atrás e fora — em vez de focos
+     * pousados sobre a superfície.
+     *
+     * **A pegada sai do aro, medida na caixa real (240×424).** Ele corre em 165°
+     * e chega ao vale em 16% de um eixo de 471,7px, ou seja 75,5px: a zona clara
+     * dele cobre **a largura toda do topo** (o canto superior-direito ainda está
+     * a 13,2%) e desce **78,1px — 18,4% da altura** pela borda esquerda. Daí
+     * `100% 18%`, e o par é o reflexo por ponto: `0% 0%` e `100% 100%`.
+     *
+     * O que não dá para espelhar é a inclinação: **`radial-gradient` não rotaciona
+     * os eixos da elipse** em CSS. O que se iguala é a pegada; o tombo de 15°
+     * fica só no aro, e é ele que carrega a direção da peça.
+     *
+     * **As duas têm o mesmo alfa, e isso é decisão tomada contra a régua
+     * anterior.** O foco do topo foi removido uma vez, com o argumento de que o
+     * topo da barra é onde vivem o seletor de workspace e o primeiro grupo de
+     * links — *luz vai onde não há conteúdo*. Ele voltou por decisão do dono,
+     * depois de medido que aro e nuvem já tinham **a mesma luz total** (razão
+     * 0,9) e diferiam só em distribuição: fio de 1px com pico 94 contra massa de
+     * 14.188px² com pico 23. Uma massa difusa lê como fonte; um fio lê como
+     * aresta, e era essa diferença de tipo que fazia a base parecer mais forte.
+     * O custo aceito é que o topo da placa deixa de ser preto plano. */
+    radial-gradient(
+        var(--glass-cloud-rx, 100%) var(--glass-cloud-ry, 18%) at 0% 0%,
+        var(--glass-cloud),
+        transparent
+      )
+      padding-box,
+    radial-gradient(
+        var(--glass-cloud-rx, 100%) var(--glass-cloud-ry, 18%) at 100% 100%,
+        var(--glass-cloud),
+        transparent
+      )
+      padding-box,
+    /* 3. o aro: o brilho que faz a peça ler como vidro.
+     *
+     * **Os dois extremos são tokens independentes, e não um derivado do outro.**
+     * O `100%` já foi `color-mix(--glass-rim 45%, transparent)` — um vestígio do
+     * pico, sob a lógica de que a base não tem luz própria, tem menos da mesma.
+     * Isso vale enquanto os dois extremos são da mesma natureza, e no tema claro
+     * eles não são: ali o pico é **sombra** e o outro extremo precisa ser
+     * **luz**. Derivado, o claro saía com os quatro cantos abaixo da placa —
+     * 210, 232, 232 e 235 contra 255 —, o que é um contorno e não um bisel.
+     *
+     * No escuro `--glass-rim-far` vale o mesmo que o derivado valia (15% ≈ 45%
+     * de 34%), então nada mudou daquele lado. */
+    linear-gradient(
+        var(--glass-rim-angle),
+        var(--glass-rim) 0%,
+        var(--glass-rim-shade) 16%,
+        var(--glass-rim-shade) 80%,
+        var(--glass-rim-far) 100%
+      )
+      border-box;
+}
+
+/**
+ * O vidro numa caixa pequena — um controle, não um painel.
+ *
+ * **Porcentagem escala; percepção não.** A nuvem do painel é `100% 18%`, e numa
+ * placa de 424px isso são 76px de luz difusa. Num controle de 32px são **5,7px**,
+ * que lê como aresta dura e não como nuvem — a fração óptica é a mesma e o
+ * resultado não é. Daí o preset existir: ele não corrige a proporção, corrige a
+ * **medida absoluta**.
+ *
+ * Ele sobrescreve **só a variável**, e nunca a propriedade. `@utility glass` lê
+ * `var(--glass-cloud-ry, 18%)` e não declara a variável em lugar nenhum; se as
+ * duas utilities escrevessem `background`, quem venceria seria a ordem de
+ * emissão do Tailwind e não o que se escreveu. Variável herda e não disputa — é
+ * o mecanismo de `--toolbar-control` e `--sidebar-inset-rule`.
+ */
+@utility glass-control {
+  --glass-cloud-ry: 70%;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @utility scroll-fade-y {
   --scroll-fade-top-h: calc(
     var(--scroll-fade-band-h, 0px) +

@@ -3,7 +3,7 @@ import { readdirSync } from "node:fs"
 
 import { describe, expect, it } from "vitest"
 
-import { PHONE_FRAME_WIDTH } from "./ds-phone"
+import { PHONE_FRAME_WIDTH } from "./ds-frame"
 
 /**
  * A moldura de telefone, trancada.
@@ -16,7 +16,7 @@ import { PHONE_FRAME_WIDTH } from "./ds-phone"
  * vez de empilhado. O botão saía `justify-end` **e** `w-full` ao mesmo tempo.
  */
 
-const FONTE = readFileSync(new URL("./ds-phone.tsx", import.meta.url), "utf8")
+const FONTE = readFileSync(new URL("./ds-frame.tsx", import.meta.url), "utf8")
 
 /** O mesmo fonte sem comentários — eles citam de propósito o que ela conserta. */
 const CODIGO = FONTE.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "")

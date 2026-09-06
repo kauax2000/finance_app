@@ -154,12 +154,7 @@ export default function CoresDoc() {
         <TokenGrid label="Sidebar">
           <TokenTile name="Sidebar" token="--sidebar" onToken="--sidebar-foreground" />
           <TokenTile
-            name="Item ativo"
-            token="--sidebar-primary"
-            onToken="--sidebar-primary-foreground"
-          />
-          <TokenTile
-            name="Item em hover"
+            name="Item ativo e em hover"
             token="--sidebar-accent"
             onToken="--sidebar-accent-foreground"
           />
@@ -354,7 +349,7 @@ export default function CoresDoc() {
       <Group
         layout="flow"
         title="Identidade"
-        description="Distinguem uma pessoa da outra e nada mais. Seis matizes a 60° de distância, todos com croma 0,09 — abaixo do menor croma de status."
+        description="Distinguem uma pessoa da outra e nada mais. Seis matizes a 60° de distância, com croma abaixo do menor croma de status. O par é invertido entre os temas: no escuro a pastilha é escura tingida com a tinta clara; no claro ela é preenchida com a cor e a tinta é quase branca."
       >
         <SpecimenPanel>
           <IdentityDiscs
@@ -368,20 +363,19 @@ export default function CoresDoc() {
               { surface: "--identity-6-surface", onToken: "--identity-6", initials: "VP" },
             ]}
           />
-          <Ramp
-            label="Os matizes"
-            tokens={[
-              { token: "--identity-1", name: "1" },
-              { token: "--identity-2", name: "2" },
-              { token: "--identity-3", name: "3" },
-              { token: "--identity-4", name: "4" },
-              { token: "--identity-5", name: "5" },
-              { token: "--identity-6", name: "6" },
-            ]}
-          />
+          {/* Havia aqui uma rampa "Os matizes" apontando para `--identity-1..6`, e
+              ela **deixou de ter significado** quando o par passou a inverter no
+              tema claro: ali aquele token é a tinta quase branca, e a rampa saía
+              como seis barras brancas.
+
+              O custo está dito em vez de escondido: **não existe mais um token
+              único que seja "o matiz" nos dois temas** — no escuro ele é
+              `--identity-N`, no claro é `--identity-N-surface`. Um espécime que
+              só funciona num tema é pior que espécime nenhum, e os discos acima
+              já mostram as seis identidades como elas de fato renderizam. */}
         </SpecimenPanel>
 
-        <TokenGrid label="Superfícies opacas" meta="12% no claro, 18% no escuro">
+        <TokenGrid label="Superfícies opacas" meta="a cor no claro, 18% dela no escuro">
           <TokenTile name="Identidade 1" token="--identity-1-surface" onToken="--identity-1" sample="AC" />
           <TokenTile name="Identidade 2" token="--identity-2-surface" onToken="--identity-2" sample="BM" />
           <TokenTile name="Identidade 3" token="--identity-3-surface" onToken="--identity-3" sample="KL" />

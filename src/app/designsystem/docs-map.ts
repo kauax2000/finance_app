@@ -41,6 +41,11 @@ import FormDoc from "./docs/form"
 import FormPickerPopoverDoc from "./docs/form-picker-popover"
 import FormaElevacaoDoc from "./docs/forma-elevacao"
 import FormulariosDoc from "./docs/formularios"
+import GlassDoc from "./docs/glass"
+import GlassAvatarDoc from "./docs/glass-avatar"
+import GlassBadgeDoc from "./docs/glass-badge"
+import GlassButtonDoc from "./docs/glass-button"
+import GlassCheckboxDoc from "./docs/glass-checkbox"
 import GraficosDoc from "./docs/graficos"
 import HoverCardDoc from "./docs/hover-card"
 import IconografiaDoc from "./docs/iconografia"
@@ -132,6 +137,11 @@ export const DOCS: Record<string, ComponentType> = {
   "form-picker-popover": FormPickerPopoverDoc,
   "forma-elevacao": FormaElevacaoDoc,
   "formularios": FormulariosDoc,
+  "glass": GlassDoc,
+  "glass-avatar": GlassAvatarDoc,
+  "glass-badge": GlassBadgeDoc,
+  "glass-button": GlassButtonDoc,
+  "glass-checkbox": GlassCheckboxDoc,
   "graficos": GraficosDoc,
   "hover-card": HoverCardDoc,
   "iconografia": IconografiaDoc,

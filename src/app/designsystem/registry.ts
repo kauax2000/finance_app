@@ -95,6 +95,25 @@ const LAYER: Record<string, Layer> = {
    *  enquanto consumia o contexto do `Sheet` para devolver `null`; parou de
    *  consumir quando voltou a desenhar. */
   "drag-handle": "Átomos",
+  /** Uma superfície e a luz dela. Importa zero componentes e renderiza um
+   *  elemento — o mesmo caso do `scroll-fade`, que também é uma casca mais uma
+   *  camada de composição. As quatro camadas de `background` são anatomia
+   *  interna, não peças que alguém compõe de fora. */
+  glass: "Átomos",
+  /** As quatro versões de vidro especializam um átomo cada — `Button`, `Badge`,
+   *  `Avatar`, `Checkbox` — e continuam átomos pela régua da casa. O que as
+   *  separa de um `<Glass asChild><Base/></Glass>` é a **tradução de cor**: o
+   *  vidro apaga o `background-color`, então elas movem o tom para
+   *  `--glass-tone` em vez de o perderem.
+   *
+   *  A tensão fica dita: `MoneyInput` e `KbdShortcut` eram especializações de
+   *  um componente só e foram absorvidas como `prop`. Estas quatro ficam do
+   *  lado certo enquanto a tradução for anatomia; no dia em que virarem só uma
+   *  classe a mais, a pergunta certa é "componente ou modo?". */
+  "glass-avatar": "Átomos",
+  "glass-badge": "Átomos",
+  "glass-button": "Átomos",
+  "glass-checkbox": "Átomos",
   input: "Átomos",
   "input-otp": "Átomos",
   /** Uma tecla, ou o acorde inteiro numa pastilha só. As partes do acorde são
@@ -225,6 +244,8 @@ const LAYER: Record<string, Layer> = {
   "navigation-menu": "Organismos",
   popover: "Organismos",
   sheet: "Organismos",
+  /** Faixas, grupos, submenus e um estado próprio que atravessa a tela — e ela
+   *  contém organismos (o painel de borda no telefone). */
   sidebar: "Organismos",
   /** Especializa o `Card`; especializar mantém o degrau. */
   "stat-card": "Organismos",
@@ -349,6 +370,11 @@ export const REGISTRY: RegistryEntry[] = [
   entry("color-tile", "Color Tile", "O ladrilho que carrega uma cor escolhida pela pessoa.", ui("color-tile"), "ColorTile"),
   entry("container", "Container", "Espaçamento e largura: até onde o conteúdo cresce, a calha e o ritmo dos blocos.", ui("container"), "Container, containerSizes, containerGutters, containerStacks"),
   entry("drag-handle", "Drag Handle", "A alça que se agarra para arrastar a gaveta — e o alvo do gesto.", ui("drag-handle"), "DragHandle"),
+  entry("glass", "Glass", "A superfície de vidro do sistema — vestível por qualquer peça.", ui("glass"), "Glass"),
+  entry("glass-avatar", "Glass Avatar", "O avatar de vidro — a identidade vira o tom da lâmina.", ui("glass-avatar"), "GlassAvatar"),
+  entry("glass-badge", "Glass Badge", "A pastilha de vidro, nos sete tons do sistema.", ui("glass-badge"), "GlassBadge"),
+  entry("glass-button", "Glass Button", "O botão de vidro — a hierarquia vira tom, e não preenchimento.", ui("glass-button"), "GlassButton"),
+  entry("glass-checkbox", "Glass Checkbox", "A caixa de marcar de vidro, e o que sobra dela a 16px.", ui("glass-checkbox"), "GlassCheckbox"),
   entry("input", "Input", "Campo de uma linha — e, no modo money, o campo de dinheiro.", ui("input"), "Input"),
   entry("input-otp", "Input OTP", "Entrada de código de verificação.", ui("input-otp"), "InputOTP, InputOTPSlot"),
   entry("kbd", "Kbd", "Uma tecla, ou o acorde inteiro numa pastilha só.", ui("kbd"), "Kbd"),
@@ -410,7 +436,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("navigation-menu", "Navigation Menu", "A fileira de um cabeçalho público, em três superfícies, com painel e marcador.", ui("navigation-menu"), "NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent, NavigationMenuPanel, NavigationMenuSectionLabel, NavigationMenuLink, NavigationMenuLinkTitle, NavigationMenuLinkDescription"),
   entry("popover", "Popover", "Camada flutuante ancorada a um gatilho.", ui("popover"), "Popover, PopoverContent, PopoverTrigger"),
   entry("sheet", "Sheet", "Folha no desktop, gaveta no telefone — uma API só.", ui("sheet"), "Sheet, SheetContent, SheetTrigger, SheetClose"),
-  entry("sidebar", "Sidebar", "A navegação lateral, com grupos e estado recolhido.", ui("sidebar"), "Sidebar, SidebarMenu, SidebarProvider"),
+  entry("sidebar", "Sidebar", "A navegação lateral: recolhível, redimensionável, e um painel de borda no telefone.", ui("sidebar"), "Sidebar, SidebarProvider, SidebarInset, SidebarTrigger, SidebarRail, SidebarContent, SidebarGroup, SidebarMenu, SidebarMenuButton, useSidebar"),
   entry("stat-card", "Stat Card", "Um número que importa, com sua variação.", ui("stat-card"), "StatCard, StatCardLabel, StatCardValue, StatCardDelta"),
   entry("stepper", "Stepper", "Progresso por etapas de um fluxo, na horizontal ou na vertical.", ui("stepper"), "Stepper, StepperItem"),
   entry("table", "Table", "Tabela de dados, e o que ela vira no telefone.", ui("table"), "Table, TableRow, TableCell"),

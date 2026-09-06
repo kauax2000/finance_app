@@ -13,7 +13,29 @@ function shouldRegisterSw(): boolean {
 
 export function SwRegister() {
     useEffect(() => {
-        if (!shouldRegisterSw()) return
+        if (!shouldRegisterSw()) {
+            // **Não registrar não é o mesmo que não estar registrado.**
+            //
+            // `shouldRegisterSw()` decide se o app *instala* um service worker.
+            // Um que já esteja instalado — de um `next build` local, ou de
+            // quando `NEXT_PUBLIC_PWA_ENABLED` esteve ligado — **continua
+            // controlando a página**, servindo o casco do precache. Em
+            // desenvolvimento isso torna toda mudança invisível, e a falha é
+            // silenciosa: a rota responde 200, o HTML do servidor está certo, e
+            // a tela mostra o catálogo de ontem.
+            //
+            // Foi assim que quatro componentes novos "não apareceram" com tudo
+            // no lugar. O ramo passa a se auto-curar em vez de só sair.
+            if ("serviceWorker" in navigator) {
+                void navigator.serviceWorker
+                    .getRegistrations()
+                    .then((registros) => {
+                        for (const registro of registros) void registro.unregister()
+                    })
+                    .catch(() => {})
+            }
+            return
+        }
 
         let refreshing = false
         let registration: ServiceWorkerRegistration | null = null

@@ -44,7 +44,7 @@ export function AppSidebar() {
                     <QuickActionButton variant="sidebar" />
                 </SidebarGroup>
                 <SidebarGroup className="mt-2">
-                    <SidebarMenu className="gap-2">
+                    <SidebarMenu>
                         {MAIN_NAVIGATION.map((item) => {
                             const Icon = item.icon
                             const tooltip = item.beta
@@ -102,7 +102,7 @@ export function AppSidebar() {
                     </SidebarMenu>
                 </SidebarGroup>
                 <SidebarGroup className="mt-auto pb-2">
-                    <SidebarMenu className="gap-2">
+                    <SidebarMenu>
                         <SidebarMenuItem>
                             <SidebarMenuButton
                                 asChild

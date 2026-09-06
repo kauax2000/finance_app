@@ -22,7 +22,11 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 const headerBaseClassName =
-    "w-full min-w-0 shrink-0 border-b border-border max-md:fixed max-md:inset-x-0 max-md:top-0 max-md:z-(--z-header) max-md:pt-[env(safe-area-inset-top,0px)] md:sticky md:top-0 md:z-10 transition-[background-color] duration-200"
+    // O fio é da variante da barra, e não desta tela: no `floating` a placa
+    // não tem `border-r` para ele encostar, e ele ficaria pendurado a 8px de
+    // nada. O `SidebarInset` publica a largura; o `1px` é o padrão de quem
+    // renderiza fora de um.
+    "w-full min-w-0 shrink-0 border-b border-b-[length:var(--sidebar-inset-rule,1px)] border-border max-md:fixed max-md:inset-x-0 max-md:top-0 max-md:z-(--z-header) max-md:pt-[env(safe-area-inset-top,0px)] md:sticky md:top-0 md:z-10 transition-[background-color] duration-200"
 
 const headerRowClassName =
     "flex h-16 max-md:h-14 w-full min-w-0 items-center gap-0 transition-[height] ease-linear md:group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"

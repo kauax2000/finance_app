@@ -4,10 +4,11 @@ import * as React from "react"
 import { createPortal } from "react-dom"
 
 import { mobileFormSheetContentClassName } from "@/components/ui/mobile-sheet-form-chrome"
+import { ViewportWindowProvider } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 
 /**
- * # A moldura de telefone do catálogo
+ * # A moldura de viewport do catálogo
  *
  * ## Por que ela é um `<iframe>`
  *
@@ -33,14 +34,27 @@ import { cn } from "@/lib/utils"
  * pixel de CSS, que é exatamente o defeito que esta peça existe para não
  * repetir.
  *
- * ## O que ela não conserta
+ * ## Ela deixou de ser só de telefone
  *
- * Ela troca o viewport do **CSS**, e nada mais. `useIsMobile` lê
- * `window.matchMedia` da janela de fora; os portais do Radix (`Dialog`,
- * `Popover`, `Select`) vão para o `document.body` do pai e escapam do
- * telefone; e `env(safe-area-inset-bottom)` vale zero aqui, porque não há
- * aparelho. As duas demonstrações que ela serve não dependem de nenhum dos
- * três — quem depender precisa saber disso antes.
+ * `ViewportFrame` é a primitiva, e `PhoneFrame` virou um preset dela de
+ * 375×667. A largura fluida (`width="fluid"`) dá a moldura de desktop que a
+ * `Sidebar` precisa: dentro dela `position: fixed` é fixo **na moldura**, e o
+ * palco do catálogo — medido em **810px** — está acima do `md` (768), então é o
+ * ramo de desktop que aparece, com os 16rem da barra ocupando 31,6% dele.
+ *
+ * ## Duas das três limitações fecharam
+ *
+ * Ela dizia trocar "o viewport do **CSS**, e nada mais". Hoje:
+ *
+ * - **`useIsMobile` lê a janela de dentro**, pelo `ViewportWindowProvider` que
+ *   embrulha o portal. Sem isso, todo componente que bifurca em JS pela largura
+ *   — `Sidebar`, `Sheet`, `Toolbar` — renderizava o ramo errado aqui dentro.
+ * - **Os portais do `EdgePanel` caem dentro da moldura**, porque ele lê a mesma
+ *   janela e entrega `container` ao `Portal` do Radix. É o que torna o ramo de
+ *   telefone da `Sidebar` demonstrável.
+ *
+ * A que fica: **`env(safe-area-inset-*)` vale zero**, porque não há aparelho —
+ * o recuo que se vê é a base, sem os 34px do iPhone.
  *
  * ## Ela mora aqui, e não em `components/ui/`
  *
@@ -158,17 +172,29 @@ function espelharRaiz(alvo: Document) {
   alvo.documentElement.setAttribute("style", raiz.getAttribute("style") ?? "")
 }
 
-function PhoneFrame({
-  height = PHONE_FRAME_HEIGHT,
-  title = "Prévia numa tela de telefone",
+type ViewportFrameProps = Omit<React.ComponentProps<"div">, "title" | "width"> & {
+  /**
+   * `"fluid"` toma a largura de quem contém — é a moldura de desktop, e o palco
+   * do catálogo mede 810px, acima do `md`. Um número é largura fixa em pixels
+   * de CSS.
+   */
+  width?: number | "fluid"
+  height: number
+  /** O nome acessível do iframe. Sem ele, o leitor anuncia só "frame". */
+  title: string
+  /** Classes da tela, dentro do documento da moldura. */
+  screenClassName?: string
+}
+
+function ViewportFrame({
+  width = "fluid",
+  height,
+  title,
   className,
+  screenClassName,
   children,
   ...props
-}: Omit<React.ComponentProps<"div">, "title"> & {
-  height?: number
-  /** O nome acessível do iframe. Sem ele, o leitor anuncia só "frame". */
-  title?: string
-}) {
+}: ViewportFrameProps) {
   const [documento, setDocumento] = React.useState<Document | null>(null)
   const [vestido, setVestido] = React.useState(false)
 
@@ -212,7 +238,7 @@ function PhoneFrame({
 
   return (
     <div
-      data-slot="phone-frame"
+      data-slot="viewport-frame"
       // O `ring` é a aresta do aparelho, e ele entrou por medição: a tela é
       // `bg-background` dentro de um `Preview` `bg-card`, e no tema escuro isso
       // dá **1,1:1** — sem aresta, o telefone não lê como objeto, lê como um
@@ -223,10 +249,11 @@ function PhoneFrame({
       // sem sombra externa. O `Preview` já é a superfície com moldura, e cartão
       // dentro de cartão é sempre errado.
       className={cn(
-        "shrink-0 overflow-hidden rounded-3xl ring-1 ring-border",
+        "overflow-hidden ring-1 ring-border",
+        width === "fluid" ? "w-full" : "shrink-0",
         className
       )}
-      style={{ width: PHONE_FRAME_WIDTH, height }}
+      style={{ width: width === "fluid" ? undefined : width, height }}
       {...props}
     >
       <iframe
@@ -239,16 +266,45 @@ function PhoneFrame({
       />
       {documento
         ? createPortal(
-            <div
-              data-slot="phone-frame-screen"
-              className={cn(PHONE_FRAME_SCREEN, PHONE_FRAME_INSET)}
-            >
-              {children}
-            </div>,
+            // O provedor é o que faz `useIsMobile` e os portais do `EdgePanel`
+            // enxergarem **esta** janela, e não a de fora.
+            <ViewportWindowProvider window={documento.defaultView}>
+              <div
+                data-slot="viewport-frame-screen"
+                className={cn("relative flex size-full flex-col", screenClassName)}
+              >
+                {children}
+              </div>
+            </ViewportWindowProvider>,
             documento.body
           )
         : null}
     </div>
+  )
+}
+
+/**
+ * O preset de telefone: 375×667, cantos de aparelho e a tela ancorada na base,
+ * que é onde uma folha inferior encosta.
+ */
+function PhoneFrame({
+  height = PHONE_FRAME_HEIGHT,
+  title = "Prévia numa tela de telefone",
+  className,
+  ...props
+}: Omit<ViewportFrameProps, "width" | "height" | "title"> & {
+  height?: number
+  title?: string
+}) {
+  return (
+    <ViewportFrame
+      width={PHONE_FRAME_WIDTH}
+      height={height}
+      title={title}
+      className={cn("rounded-3xl", className)}
+      screenClassName={cn(PHONE_FRAME_SCREEN, PHONE_FRAME_INSET)}
+      {...props}
+    />
   )
 }
 
@@ -294,4 +350,4 @@ function PhoneFrameSheet({
   )
 }
 
-export { PhoneFrame, PhoneFrameSheet }
+export { PhoneFrame, PhoneFrameSheet, ViewportFrame }

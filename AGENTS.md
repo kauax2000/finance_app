@@ -2888,7 +2888,8 @@ compor.
 `surfaceTitleClassName`) para os seis títulos `font-heading font-medium
 text-balance`. `Muted` sem a entrelinha de `P` — cinco call sites compensam com
 `leading-relaxed`/`leading-normal` à mão, e a doc diz que `Muted` "é o mesmo
-corpo de `P`". `Switch` e `SidebarMenuSubButton` ainda dizem `size="default"`.
+corpo de `P`". `Switch` ainda diz `size="default"` — o `SidebarMenuSubButton`
+foi o último de `ui/` a perdê-lo, na rodada 35.
 O `FieldLabel` de cartão de escolha escreve uma sexta grafia do anel. O
 `border-[1.5px]` do gráfico não tem token. O `Button tertiary` continua sem
 par `active:` — o item do seletor o traz por `className`, mais um consumidor
@@ -4553,6 +4554,1230 @@ o instinto foi desconfiar da sonda, e desta vez a sonda estava certa.
 - **`Drawer` continua sem consumidor no app.** A gaveta chega às telas por dentro
   do `Sheet`, e isto não mudou.
 
+### Rodada 35 — a barra prometia redimensionar, falava inglês, e o badge caía uma linha
+
+A `Sidebar` é a navegação primária do produto — 763 linhas, 24 exports, montada
+sob todas as rotas autenticadas — e chegou nesta rodada com os **três silêncios**
+ao mesmo tempo: `ds:audit` dizendo "Nenhum achado", `ds:catalog` mostrando eixos,
+e **zero testes** num arquivo com escada de tamanho. Os três eram sinal para
+olhar, e nenhum era certificado.
+
+#### O defeito que estava em produção, e visível
+
+`SidebarMenuAction` e `SidebarMenuBadge` liam
+`peer-data-[size=default]/menu-button:top-1.5`. O `cva` do botão foi renomeado
+para `md | sm | lg` numa rodada anterior, e os dois seletores ficaram apontando
+para um degrau que ele **não emite mais**. Nenhuma regra casava, o badge é
+`absolute` sem `top` de base, e ele caía para a posição estática.
+
+Medido antes, na própria página do catálogo: **`top: 32px`** — exatamente a
+altura do botão —, centro **26px** fora do centro da linha, e **20px de
+transbordo** para fora do item, ou seja o badge inteiro renderizando **sobre a
+linha seguinte**. Na demonstração, o "42" de Transações aparecia ao lado de
+Carteiras e o "3" de Cartões ao lado de Conta. Depois: `top: 6px`, desalinho
+**zero**, e 6px de folga dentro do item.
+
+É a família "sobreviveu à remoção" que esta base já registrou quatro vezes — e a
+primeira em que ela custou pixel numa tela de produto.
+
+#### O trilho prometia redimensionar, e a quarta mentira da mesma família
+
+`SidebarRail` declarava `cursor-w-resize` / `cursor-e-resize` e desenhava um fio
+de 2px que acende no cursor — a gramática inteira de uma costura de arraste —
+enquanto o `onClick` só alternava, com `tabIndex={-1}` e um `title="Toggle
+Sidebar"` em inglês ao lado de um `aria-label` em português.
+
+Depois do `SheetDragHandle`, da alça do `Drawer` e da do `vaul`, é a quarta
+ocorrência; e é a pior, porque **quem mentia era o cursor do sistema
+operacional**, que é a promessa mais forte que uma interface consegue fazer.
+Hoje ele alterna e diz que alterna. Quem redimensiona é o átomo.
+
+#### A camada de acessibilidade nunca tinha sido traduzida
+
+No ramo do telefone, o nome acessível do menu era `<DialogTitle>Sidebar</DialogTitle>`
+— a palavra inglesa — e a descrição era `Displays the mobile sidebar`, uma frase
+de desenvolvedor lida por leitor de tela. É exatamente o achado do `Calendar`
+("a grade parecia traduzida e a camada de acessibilidade nunca esteve"), agora
+na navegação primária. Verificado no navegador depois: o painel abre com o nome
+**"Navegação"**.
+
+#### O catálogo reportava os eixos do botão como se fossem os da barra
+
+O `ds:catalog` lê o **primeiro** `cva` do arquivo, e o único era
+`sidebarMenuButtonVariants`. Resultado: a linha da `sidebar` mostrava
+`variant: plain | outline` e `size: md | sm | lg`, enquanto `side`, `variant` e
+`collapsible` — os eixos que alguém de fato escolhe — não apareciam em lugar
+nenhum. É o defeito que o `Item` já registrou com `itemGroupVariants`.
+
+`sidebarVariants` entrou **antes**, e não é cerimônia: `variant` decidia a
+geometria por ternário em dois lugares, e decisão escrita duas vezes diverge —
+foi assim que `floating` ficou com `rounded-lg` e `inset` com `rounded-xl`, dois
+raios para a mesma ideia de cartão solto. Medido depois: o catálogo reporta
+`side · variant · collapsible`.
+
+#### A moldura de telefone virou moldura de viewport, e duas limitações fecharam
+
+`ds-phone.tsx` virou **`ds-frame.tsx`**: `ViewportFrame` é a primitiva,
+`PhoneFrame` um preset de 375×667. O nome antigo passaria a mentir num arquivo
+que hospeda uma moldura de desktop.
+
+A página nunca tinha mostrado a barra ligada. Para caber no palco ela
+neutralizava três coisas — `collapsible="none"` (um *early return* que devolve
+uma `div` comum, e não o caminho do app), `min-h-0` e `w-full` — e o que sobrava
+era uma lista de links. Dentro da moldura, medido: viewport de **778px**,
+`position: fixed` **relativo ao iframe**, `md` casando, e a barra com os seus
+**256px = 32,9%** — a proporção que uma navegação tem numa janela estreita de
+laptop.
+
+E as duas limitações que a moldura declarava desde a rodada 31 fecharam, porque
+sem elas esta peça não é demonstrável:
+
+- **`useIsMobile` lê a janela da moldura.** Um contexto opcional em
+  `use-mobile.tsx`, com `null` por padrão e *fallback* para o `window` real — o
+  app não muda. Sem ele, na moldura de 375 a barra tomaria o ramo de desktop
+  enquanto o CSS a esconde com `md:`, e não renderizaria **nada**.
+- **O portal do `EdgePanel` cai dentro da moldura**, porque ele lê a mesma
+  janela e entrega `container` ao `Portal` do Radix — sem prop nova. Medido: o
+  painel do telefone abre com 288px (76,8% dos 375) **dentro** do iframe, e não
+  vaza para o pai.
+
+A terceira fica: `env(safe-area-inset-*)` vale zero, porque não há aparelho.
+
+E o `⌘B` passou a escutar `ownerDocument.defaultView` em vez de `window` — dentro
+de um iframe, `window` é o de fora, e a tecla digitada lá dentro nunca chegaria.
+
+#### O redimensionar é o átomo, e a `react-resizable-panels` mede em pixel
+
+A régua da casa é que um componente não reimplementa a camada de baixo. O
+arraste já existia medido no `Resizable` (Átomo, rodada 28), e `Sidebar` é
+Organismo — compor um átomo é livre.
+
+**O encaixe é melhor do que eu previa.** A v4.12.3 lê número como **pixel** e
+string como porcentagem, e é isso que torna o modo possível: um trilho de
+navegação **não pode** variar de largura com a janela, porque ícone, rótulo e
+badge têm medida fixa. Com o modo pixel, os `collapsible` viram configuração do
+átomo — o modo ícone é literalmente `collapsedSize={48}`, e o offcanvas é zero.
+
+`SidebarProvider resizable` troca a linha de flex por um `ResizablePanelGroup`,
+a barra vira o primeiro painel, a costura vira o `ResizableHandle` e o
+`SidebarInset` vira o segundo. Medido: `flex-grow` 32,905 para a barra e 67,095
+para o conteúdo, `role="separator"` na costura, e um arraste de 82px levando a
+barra de **255,7 para 337,7px** — os 82, exatos.
+
+**É opt-in, e o produto não liga.** O `PanelGroup` declara `display`,
+`flex-direction`, `overflow` e as medidas por estilo **inline** — o `.d.ts` avisa
+que as quatro não se sobrescrevem —, e `useResizableLayout` custa uma remontagem
+por carregamento, que é justamente o que o cookie da barra existe para evitar. O
+padrão continua sendo o trilho `fixed` com a folga no fluxo.
+
+#### Tokens mortos, uma classe que não existia, e uma cópia que já divergira
+
+- **`--sidebar-primary` e `--sidebar-primary-foreground`** estavam definidos nos
+  dois temas, expostos no `@theme` e com **zero** usos. Saíram.
+- **`no-scrollbar` era escrita em quatro superfícies e não estava definida em
+  lugar nenhum** — nem aqui, nem no `tw-animate-css`. As quatro achavam que
+  escondiam a barra e nenhuma escondia; o `tabs.tsx` chegou a escrever
+  `[scrollbar-width:none]` por extenso enquanto isso não se decidia. Agora é
+  `@utility`, e medido: `scrollbar-width: none` nas três superfícies da página,
+  contra `auto` antes. Onde ela vale, quem indica que há mais conteúdo é a
+  dissolução da borda — que é a decisão deste sistema, e a razão de as quatro a
+  pedirem.
+- **`sidebar-user-profile.tsx` copiava o `cva` do botão à mão**, e a cópia já
+  tinha divergido: `group-data-[collapsible=icon]:p-0!`, que é a regra do degrau
+  `lg`, sobre a geometria do degrau padrão. Hoje ela compõe
+  `SidebarMenuButton size="lg"`.
+- **`sidebar-logo.tsx` foi apagado** — zero consumidores, e o `AppSidebar` usa o
+  `WorkspaceSwitcher`.
+- **`setOpen` gravava o cookie mesmo em modo controlado**, sobrescrevendo pelas
+  costas a preferência de quem controla.
+
+#### A página, e o que ela passou a ensinar
+
+Reescrita, com quatro molduras: a tela de desktop com colapso pelos três
+caminhos; um seletor dos três eixos sobre uma moldura só, porque **combinar** é o
+que uma tabela de variantes não mostra; a barra redimensionável; e o telefone com
+o painel de borda abrindo dentro do iframe. Mais os tipos de item — badge, ação
+no cursor, submenu sobre `Collapsible`, esqueleto, busca, separador — e a escada
+do botão, esses dois num palco comum e **em `collapsible="none"`**, porque
+demonstrar conteúdo não precisa de moldura e demonstrar comportamento precisa.
+A página passou de 9 exports documentados para os 24, com três `PropsTable`.
+
+#### A lista se encostava, e a navegação do produto desfazia isso à mão
+
+`SidebarMenu` declarava **`gap-0`** — as linhas coladas —, e isso não era
+decisão: era o padrão do shadcn. A prova é que a navegação do produto o desfazia
+escrevendo `className="gap-2"` nos **dois** menus que têm mais de um item; os
+outros três do app carregam um item só, onde o `gap` não decide nada. **2 de 2**,
+unânime. Padrão que ninguém escolhe não é padrão — é a régua que o `Container`
+já aplicou ao devolver `md` como padrão de largura.
+
+**Mas o degrau não é o que a tela pedia.** A primeira versão levou os 8px do
+`app-sidebar` para o componente, e o dono olhou e mandou diminuir — com razão: o
+realce de um item é a **caixa inteira da linha**, 32px de altura com canto
+arredondado, e a 8px de folga as linhas começam a ler como cartões soltos. Uma
+navegação é uma lista. Ficaram **4px**, que é o suficiente para dois realces
+vizinhos não se tocarem, que era o problema real do `gap-0`.
+
+A hierarquia continua dita, e não pelo respiro: medidos depois, o grupo separa
+o conteúdo em **16** (o `p-2` de cada lado), **quatro vezes** o item; e o
+submenu fica nos mesmos 4, porque quem diz o aninhamento ali é o recuo e o fio à
+esquerda — um segundo sinal seria redundante. As duas compensações à mão saíram
+de `app-sidebar.tsx`, e a asserção 11 do teste falha se alguma tela reescrever o
+ritmo de novo.
+
+A lição de leitura: **a contagem diz que o padrão estava errado, não qual é o
+certo.** Duas telas escreverem `gap-2` provou que `gap-0` não era decisão; o
+número final saiu de olhar o realce, que nenhuma contagem mostra.
+
+#### Recolhida, os avatares não estavam no meio
+
+Apontado pelo dono, selecionando os dois botões `size="lg"` — o seletor de
+workspace no topo e a conta no rodapé. Medido no modo ícone: caixa de 32, filho
+de 24, **0 de folga à esquerda e 8 à direita** — 4px fora do centro, numa coluna
+em que todo o resto está no meio.
+
+A causa não é o alinhamento: é que **a centragem era acidente do recuo**. A
+conta é `(32 − filho) / 2`, e o degrau padrão calha de acertá-la — ícone de 16,
+`p-2!`, 8 de cada lado. O `lg` carrega um avatar de 24 e escrevia `p-0!`, porque
+com 8 ele não caberia. Ninguém fez a conta para o outro filho.
+
+**E `justify-center` não conserta — piorou, medido.** Em modo ícone o rótulo
+continua no fluxo (o que o esconde é o `overflow-hidden`, não `display`), então
+a linha de flex **transborda** a caixa de 32; e centrar uma linha que transborda
+empurra o conteúdo para fora nos dois lados. Os degraus que estavam certos foram
+de 0 para **−4**. Com o rótulo ocupando espaço, o recuo é a única alavanca que
+centra.
+
+`p-1!` no `lg` fecha a conta: 4 + 24 + 4. Medido depois: **desalinho zero nos
+oito botões**, nos dois degraus. A asserção 12 tranca a tabela e proíbe as duas
+saídas erradas — o `p-0!` e o `justify-center`.
+
+#### A dica do modo ícone era montada sempre, e descrevia o botão com o próprio rótulo
+
+`SidebarMenuButton` passava `hidden={state !== "collapsed" || isMobile}` ao
+`TooltipContent`. **`hidden` esconde pixel, e mais nada**: o Radix continua
+abrindo a dica, contando os atrasos e — o que importa — ligando o
+`aria-describedby` do botão a ela.
+
+Medido com a barra **expandida**, que é o estado padrão do app: passar o cursor
+em "Início" montava uma dica invisível escrita "Início", e o botão saía
+`aria-describedby` apontando para ela. Quem usa leitor de tela ouvia o rótulo e
+depois a descrição, idênticos, **em cada item do menu**. A dica existe para
+quando o rótulo *não* está na tela; ela estava lá justamente quando ele está.
+
+O conserto é não montar: a guarda foi para o retorno curto, ao lado da que já
+existia para `!tooltip`. Medido depois — expandida: **nada monta, e
+`aria-describedby` é `null`**; recolhida: dica presente, à direita, `sideOffset`
+de 6 e desalinho vertical **zero**.
+
+E o `TooltipContent` passou a portalizar para a janela ativa, como o
+`EdgePanel` — sem isso a dica saía da moldura do catálogo e era desenhada sobre
+a página. É a terceira peça a ler o contexto de viewport, e as três pelo mesmo
+motivo.
+
+#### E a dica travava entre um ícone e o vizinho — o polígono de graça
+
+Relatado pelo dono: *"o tooltip fica um tempão ali e eu não consigo mover para
+outro e fazer o tooltip aparecer."* Não era atraso — o `delayDuration` do
+provedor já é **0**.
+
+É a **área de graça** do Radix: ele mantém o conteúdo aberto enquanto o ponteiro
+se move dentro de um polígono entre o gatilho e a caixa, para dar tempo de
+alcançá-la. Isso serve a conteúdo que se aponta. **Uma dica não é isso** — ela é
+um rótulo, e quem tem conteúdo alcançável neste sistema é o `HoverCard`.
+
+No trilho recolhido o custo é estrutural: os ícones ficam a **36px** um do outro
+e a dica abre à direita, então o polígono cobre os vizinhos. Medido — passando
+por "Início" e indo até "Carteiras", a dica continuava escrita **"Início"** e o
+`aria-describedby` continuava no **primeiro** botão. Depois de
+`disableHoverableContent` na raiz do `Tooltip`: a dica é a do botão sob o
+cursor, uma só aberta, e o `aria-describedby` acompanha.
+
+Continua sendo prop, para quem tiver um caso de dica alcançável — mas o padrão
+passou a ser o que a definição do componente já dizia.
+
+#### O espécime ganhou cor, e a peça óbvia era a errada
+
+O workspace e a conta da demonstração eram dois `<div>` desenhados à mão em
+`bg-sidebar-accent` — cinza, iguais entre si, e anatomia escrita pelo catálogo,
+que é o sinal de que falta peça. Viraram `Avatar size="xs"` (os mesmos 24px, então
+a centragem acima continua valendo) com a ficha `--identity-*`: ladrilho de canto
+para o espaço, círculo para a pessoa.
+
+**`ColorTile` seria a escolha óbvia e é a errada**, e a régua deste arquivo é que
+diz por quê: ele carrega a cor que a pessoa escolheu e que veio do banco. Aqui a
+cor vem do tema, e o caso é o da ficha de identidade.
+
+E a primeira versão usou `identityToneFor`, que é o que o app usa — **as duas
+sementes caíram no mesmo tom**, medido: `oklch(0.78 0.09 320)` nos dois. O hash
+distribui, não garante distinção entre duas strings quaisquer; numa demonstração
+o assunto é justamente que duas identidades leiam como diferentes, então os
+índices são explícitos. Medido depois: matiz 140 e 20, com a tinta a **6,37 e
+6,07** no escuro e **6,73 e 7,33** no claro.
+
+#### Uma lição de instrumento, e ela é um erro meu
+
+Ao verificar o painel do telefone, a sonda procurou
+`[data-slot=edge-panel-content]` e voltou vazia três vezes seguidas — o que me
+levou a suspeitar de delegação de eventos do React através de portal para outro
+documento, que é uma hipótese cara e plausível. **Era a sonda.** O ramo mobile
+da `Sidebar` passa `data-slot="sidebar"` ao `EdgePanelContent`, sobrescrevendo o
+slot do componente de baixo: o painel estava lá o tempo todo, com véu, título e
+botão de fechar. O que resolveu foi parar de procurar um seletor e **listar
+todos os `data-slot` antes e depois do clique**.
+
+A régua: **num sistema onde o consumidor pode carimbar o próprio `data-slot`,
+uma sonda que procura o slot do componente de baixo mede a chamada, não o
+resultado.** É a parente da lição do `resizable` ("coordenada de painel não é
+pixel de CSS") e do carrossel ("classe montada em runtime não existe na folha").
+
+#### O que não foi feito, com o motivo
+
+- **`AppSidebar` não adota `resizable` nem `variant="inset"`.** As duas são
+  decisão de produto. Fica o registro de que o `peer-data-[variant=inset]:*` do
+  `SidebarInset` é **código inalcançável** hoje: a casca usa a variante padrão.
+- **O `md:z-10` cru do `AppHeader` fica.** A barra entrou na escala
+  (`--z-sticky`), e o cabeçalho é `layout/`, fora do que esta rodada abriu. Hoje
+  os dois não se sobrepõem; no dia em que se sobrepuserem, quem ganha é a barra.
+- **`Dialog` e `Popover` não leem a janela da moldura** — só o `EdgePanel`, que é
+  o que a `Sidebar` usa. Os outros entram quando uma página precisar.
+- **A casca do app não foi vista logada.** As telas exigem sessão; o que prova a
+  migração é o `tsc`, os 371 testes e as quatro molduras da página. Os dois
+  seletores mortos e o `p-0!` da cópia **mudam pixel** na navegação de produção,
+  e é o único lugar da rodada onde isso acontece.
+
+### Rodada 36 — vidro não tem borda; tem aresta
+
+Pedido: *"deixe as bordas do floating sidebar com efeito de glass"*. Duas
+medições mudaram o que a frase podia significar, e uma delas corrigiu um número
+que eu tinha apresentado errado.
+
+**Não há nada atrás da placa para borrar.** Medido com `elementsFromPoint` no
+meio do painel: a pilha sob ele é `sidebar` (transparente) → `sidebar-wrapper`
+(transparente) → a tela → `body`. O `floating` reserva a folga no fluxo, então o
+conteúdo **não passa por baixo**. Um `backdrop-blur` ali borraria cor chapada e
+não desenharia nada — a lei que a paleta de comandos escreveu e que nunca tinha
+saído da narrativa dela. Vidro aqui não podia ser borrão.
+
+**E o defeito não era o que eu disse.** Afirmei que o anel dava "1,32 no escuro
+e 1,01 no claro"; o 1,01 era um **branco hipotético** no claro, não o token. O
+anel real é `--sidebar-border`, que já vira de direção sozinho por tema
+(`oklch(1 0 0 / 10%)` no escuro, `oklch(0.9)` opaco no claro), e mede **1,32 e
+1,23** — consistente e deliberado.
+
+O defeito é de material: **o anel é uniforme**. Um fio de 1px igual nos quatro
+lados é uma **borda**. Vidro não tem borda; tem **aresta**, e ela varia ao redor
+da placa — pega luz em cima e escurece embaixo. É isso que separa uma placa de
+vidro de um retângulo pintado.
+
+#### O par de tokens, e por que ele é par
+
+Varrido sobre `--sidebar`: branco a 20% dá **1,87** no escuro e **1,02** no
+claro; preto a 20% dá **1,60** no claro e **1,04** no escuro. Sobre uma placa
+quase branca a luz não aparece; sobre uma placa escura a sombra não aparece. É a
+mesma aritmética que obrigou `--secondary-hover` a existir.
+
+`--sidebar-rim` e `--sidebar-rim-shade`, nos dois temas. Em cada um **exatamente
+um dos dois carrega**, e o outro fica no zero perceptual — o que é a física, e
+não desperdício: o topo de uma placa branca não tem como pegar luz visível.
+Medido depois: **1,76 pelo topo no escuro, 1,69 pela base no claro** — peso
+equivalente —, com 1,06 e 1,03 do lado que não lê. Os dois são declarados para a
+geometria ser a mesma nos dois temas, em vez de um `dark:` dentro do componente.
+
+**O anel fica, e é exceção consciente.** A página de elevação enuncia que "a
+sombra não se acumula com a borda", e aqui elas se acumulam. O número que força:
+a placa e a página estão a **1,04** uma da outra no tema claro — praticamente a
+mesma cor —, e uma sombra de `0 1px 2px` a 6% não define uma placa de 240px. Sem
+o anel ela deixa de existir como objeto.
+
+#### O fio do cabeçalho nascia no ar
+
+Apontado pelo dono. Medido com `floating` ligado: a placa termina em **x=248** e
+o fio do cabeçalho vai de **x=256 a 778** — uma régua de 522px que começa a 8px
+de nada. Em `variant="sidebar"` ela encosta no `border-r` da barra (folga
+medida: **1px**) e as duas leem como uma cromagem só; o `floating` tira esse
+`border-r` e o fio fica pendurado.
+
+A regra que resolve já estava escrita para as tiras de superfície: elas não têm
+fio nem tinta, e quem marca o limite é o respiro — mais a dissolução onde há
+rolagem, que no `AppHeader` é o vidro que ele acende ao rolar.
+
+**O mecanismo é variável publicada, e não seletor de grupo.**
+`--sidebar-inset-rule` nasce no `SidebarInset`, que é **peer** da barra — a mesma
+relação que a variante `inset` já usa —, e vale `1px` por padrão e `0px` sob
+`floating`. Quem desenha o cabeçalho lê `var(--sidebar-inset-rule,1px)`. É o
+mecanismo de `--dialog-px`, `--dialog-bleed` e `--toolbar-control`, e a razão é a
+de sempre: `in-*` e `group-*` compilam com `:where()`, que não soma
+especificidade; variável herda e não disputa. A alternativa —
+`[&>header]:border-b-0` no `SidebarInset` — seria compensar geometria por
+seletor, que esta casa nomeia como sintoma de peça faltando.
+
+Medido nas três variantes: fio de **1px** em `sidebar` e `inset`, **0px** em
+`floating`. O `inset` mantém o dele com razão: ali o cabeçalho vive *dentro* do
+cartão, que tem canto próprio, e o fio não sobra para lugar nenhum.
+
+#### O que eu olhei e decidi não mexer
+
+- **O desalinho de topo de 8px** entre a placa (`y=8`) e o cabeçalho (`y=0`).
+  Dar a mesma margem ao conteúdo é literalmente o que a variante `inset` faz, e
+  faria as duas colapsarem numa só. No `floating` **só a barra flutua**.
+- **O `SidebarRail` na calha de 8px** — continua sendo o alvo de alternar e não
+  colide com nada.
+- **A calha esquerda do cabeçalho.** São duas colunas diferentes; forçá-las a
+  concordar amarraria o recuo do conteúdo ao da barra.
+
+#### O que a rodada achou e não consertou
+
+- **O sistema já tem um vidro inteiro, e ele não está documentado.**
+  `.mobile-glass-surface` em `globals.css`, com tokens `--mobile-glass-*` nos
+  dois temas, `blur(24px) saturate(1.5)`, três consumidores no telefone e — o
+  único do repositório — um fallback de `prefers-reduced-transparency`. Zero
+  linhas aqui e zero páginas no catálogo.
+- **`--mobile-glass-border` é branco nos dois temas** (10% claro, 5% escuro).
+  Pela varredura acima, branco sobre superfície clara é invisível; é candidato a
+  declaração morta no tema claro, e merece a própria medição.
+- **`registered-credit-card-face.tsx` mantém as quatro camadas de vidro** que o
+  `ColorTile` documentadamente removeu de si — borda clara, anel, sombra e blur,
+  mais um degradê e um `shadow-inner`. É a contradição mais visível do
+  vocabulário de vidro do repositório.
+- **Duas sintaxes de suporte a blur** (`supports-backdrop-filter:` nos três
+  overlays contra `supports-[backdrop-filter]:` no `app-header`) e **duas de
+  anel interno** (`inset-ring-3` contra `ring-1 ring-inset`, em quatro arquivos).
+
+#### Uma lição de instrumento
+
+A asserção da aresta cortava o fonte entre `const miolo` e `if (resizable)` — e
+falhou devolvendo **string vazia**, porque `if (resizable)` também aparece no
+`SidebarProvider`, que vem antes no arquivo. Um `indexOf` solto pegava aquele. O
+detalhe que importa: a fatia vazia **passava** na primeira asserção do bloco e só
+caía na segunda. **Corte por `indexOf` sem posição inicial é uma asserção que
+pode acertar por vazio.**
+
+### Rodada 37 — reflexo é gradiente, e a luz vem de cima
+
+A rodada 36 trocou a borda uniforme da placa flutuante por duas arestas internas
+de alfa **constante**. Media bem — 1,76 no escuro, 1,69 no claro — e, ao lado de
+três referências de vidro, ainda lia como borda: **num reflexo o brilho varia ao
+longo do perímetro**.
+
+O vocabulário já existia aqui, num arquivo só. `registered-credit-card-face.tsx`
+tem florão de canto, brilho diagonal em `soft-light` e dois aros em gradiente com
+`maskComposite` — oito camadas. É o arquivo que este documento chama de *"o único
+vidro fora do sistema"*; com a ilha do telefone eram **três vidros e nenhum
+vocabulário comum**. Esta rodada não inventou o quarto: promoveu a `@utility`.
+
+#### Duas camadas de fundo, e nenhuma máscara
+
+`background-clip: padding-box` para a superfície e `border-box` para o aro, com a
+borda transparente. Verificado: o raio de 14px sobrevive e **nenhuma máscara
+entra** — a armadilha registrada aqui (`mask-image: none` num composite apaga o
+elemento; a ordem de emissão de `mask-composite` e `-webkit-mask-composite` não
+se controla pelo Tailwind) fica de fora por construção. A face do cartão usa a
+versão com máscara e consegue porque escreve inline, em objeto de estilo.
+
+#### A luz é vertical, e isso levou três tentativas
+
+O aro nasceu em **158°**, um eixo diagonal, com o pico no canto superior-esquerdo.
+Fisicamente defensável e errado aqui: numa coluna alta e estreita a luz que
+convence vem de **cima**, reta. Em `180deg` o topo pega o pico, os dois lados
+pegam o vale no mesmo ponto do gradiente, e a base recebe o vestígio.
+
+Antes disso, uma versão pior: com o **mesmo** token em 0% e 100%, a projeção na
+caixa real (240×424) dava **19% no topo e 19% na base** — variava, e tinha dois
+picos. Luz vem de uma direção só. O canto oposto virou
+`color-mix(… 45%, transparent)` em vez de um sexto token, porque ele não tem luz
+própria: tem menos da mesma.
+
+Os números finais:
+
+| | aro no topo | aro nos lados | queda de luz |
+| --- | --- | --- | --- |
+| escuro | **2,36** | 1,27 | **1,13** |
+| claro | **2,24** | 1,25 | 1,09 |
+
+#### Três camadas, e não quatro
+
+Houve um **brilho diagonal** em `soft-light`, atravessando a placa. Ele saiu ao
+ver: numa superfície de navegação a faixa cruza a lista de links e compete com
+ela. Vidro aqui é aro mais volume, e não cenografia. Com ele saiu o
+`background-blend-mode`, que existia só para essa camada.
+
+#### O florão perdeu a cor, e a medição não bastou para decidir
+
+Ele nasceu no matiz da barra a 14%, e eu tinha levantado a ressalva de que
+**verde neste app significa "entrou dinheiro"**. A medição parecia liberar:
+`--income` é hue 152, o florão composto ficava a **ΔE 43** dele e clareava o
+painel 2,7×; não são cores confundíveis.
+
+**E ainda assim estava errado.** ΔE mede confusão entre duas amostras lado a
+lado; não mede que uma navegação esverdeada compete com o significado que a cor
+carrega na interface inteira. Hoje o florão é **branco a 7%** — leva o canto de
+`rgb(28,28,28)` a `rgb(44,44,44)`, 1,57×, com R=G=B. **No tema claro ele não
+existe** (`transparent`), pela mesma física do aro: sobre `oklch(0.97)` não há
+para onde clarear, e um florão escuro é mancha, não florão.
+
+#### Um critério meu que a primeira medida não passou
+
+O anel uniforme saiu, e o plano dizia que o vale do aro precisava segurar os
+lados. Medido no claro: **1,16**, contra os **1,23** do anel — regressão pequena
+e real. O vale subiu de 5% para 10% e bateu 1,25. Foi o **critério escrito no
+plano** que pegou isso, e não a captura.
+
+#### A régua que sobrou
+
+**Contraste diz se aparece; não diz se convence** — e nesta rodada isso apareceu
+quatro vezes. No florão verde (ΔE bom, leitura errada), no eixo do aro (158°
+defensável, 180° certo), na faixa diagonal (bonita isolada, ruidosa sobre uma
+lista) e numa reversão inteira que precisou ser desfeita: a rodada chegou a
+voltar ao estado da 36 antes de o ponto certo aparecer, **entre** os dois.
+Nenhuma dessas quatro saiu de um número. Todas saíram de olhar.
+
+### Rodada 38 — o realce pintava cor fixa sobre uma superfície que virou degradê
+
+A rodada 37 deu volume à placa: a superfície corre de `oklch(0.242)` no topo a
+`oklch(0.192)` na base. **O realce dos itens não acompanhou** — ele continuou
+pintando `--sidebar-accent`, um valor opaco. Um retângulo de cor fixa em cima
+de um degradê faz duas coisas erradas de uma vez: apaga o degradê dentro do
+próprio realce, e muda de força conforme a altura do item.
+
+E a geometria agrava. O botão do workspace fica a **8%** da altura do painel e
+o da conta a **92%** — os dois extremos da rampa —, e a assimetria **inverte**
+entre os temas:
+
+| | workspace (8%) | conta (92%) |
+| --- | --- | --- |
+| hover opaco, escuro | **1,09** | 1,21 |
+| hover opaco, claro | 1,20 | **1,11** |
+
+O pior caso é justamente o que o dono apontou: **1,09 no escuro**, porque o
+workspace fica onde a superfície é mais clara e o opaco quase empata com ela.
+
+**A tinta certa já existia neste sistema, e não é `white/N`:** é
+`bg-current/N`, que `AlertAction` e `AnnouncementBarAction` usam para "ação
+dentro de superfície tingida, quando o componente não sabe o tom". Dentro do
+painel `currentColor` é `--sidebar-foreground` — quase-branco no escuro,
+quase-preto no claro. **A tinta vira de direção sozinha, sem token novo e sem
+par `dark:`.** Medido: `[250,250,250]` no escuro contra `[10,10,10]` no claro.
+
+Os três estados eram **o mesmo** `--sidebar-accent`, com só o `font-medium`
+separando o ativo. Viraram escada:
+
+| Estado | Tinta | escuro | claro |
+| --- | --- | --- | --- |
+| hover | `bg-current/6` | 1,18 | 1,14 |
+| pressionado | `bg-current/9` | 1,30 | 1,21 |
+| ativo | `bg-current/12` | 1,43 | 1,30 |
+
+**O critério de aceite não era o valor absoluto, era a constância.** Variação
+entre os dois extremos do painel: **0,040 no escuro e 0,003 no claro**, contra
+os 0,12 do opaco. E os degraus se distinguem entre si por 0,116 / 0,134 no
+escuro e 0,077 / 0,085 no claro.
+
+**O escopo é `floating`, por decisão do dono**, e a dívida fica: o mesmo
+`SidebarMenuButton` passa a ter duas gramáticas de realce conforme a variante.
+O argumento sistêmico para unificar — a régua do `Accordion`, *"um realce não
+pode depender de uma informação que o componente não tem"* — continua de pé.
+
+**Um acoplamento que fica escrito porque quebra calado:**
+`hover:text-sidebar-accent-foreground` mexeria em `currentColor`, e portanto na
+própria tinta. Verificado que nos dois temas `--sidebar-accent-foreground`
+**iguala** `--sidebar-foreground`, então a tinta não se move. No dia em que um
+dos dois mudar, a escada muda junto sem ninguém pedir.
+
+#### O degradê: mesma amplitude, distribuição eased
+
+"Mais suave" aqui não era menos delta — o dono acabara de pedir mais volume. A
+rampa era linear de duas paradas: 32→20 de canal em 424px, um passo a cada
+~35px, que é onde a banda de Mach aparece. Ela passou a ter cinco paradas
+derivadas em `color-mix`, sem token novo, com as pontas achatadas e a mudança
+no meio. Medido no computado: `0,242 → 0,237 → 0,217 → 0,197 → 0,192`, ou seja
+**0,005 / 0,020 / 0,020 / 0,005** por quarto, contra os 0,0125 uniformes de uma
+rampa linear. É o mesmo raciocínio que a dissolução do `Command` registrou —
+*"uma ease-out sai do chapado com inclinação máxima, e descontinuidade de
+derivada contra superfície lisa é o que o olho mais detecta"*.
+
+#### O aro: mais alto e mais curto
+
+Brilho polido é especular, não lavado. O pico subiu de 26% para **34%** e a
+queda ao vale encurtou de 42% para **16%** do eixo — medido no computado:
+`0,34 (0%) → 0,08 (16%) → 0,08 (80%) → 0,153 (100%)`, uma razão de **4,25×**
+entre pico e vale. O vestígio da base continua sendo `color-mix(… 45%,
+transparent)`, e não o token puro: com o mesmo valor nas duas pontas o aro
+saía com **dois picos**, que é a costura da rodada 37.
+
+#### Três defeitos achados no caminho
+
+- **`SidebarMenuSkeleton` sorteava a largura com `Math.random()`** dentro de um
+  `useState`. É o original do shadcn, e produzia **dez erros de hidratação numa
+  página só** — o único erro de console de `/designsystem/sidebar`. A largura
+  passou a sair de um hash do `useId`, que é estável entre servidor e cliente
+  por contrato do React. Medido depois: duas requisições ao servidor devolvem
+  `62%` e `80%`, o DOM do cliente devolve os mesmos dois, e eles continuam
+  diferentes entre si — a variedade existia para a pilha não ler como tabela, e
+  ela ficou.
+- **A variante `outline` acendia a sombra só no cursor.** Ela tem
+  `hover:shadow-[0_0_0_1px_var(--sidebar-accent)]` e nenhum par `active:`; o
+  fundo estava coberto pela base do `cva`, o anel não. Quarto lugar do mesmo
+  defeito nesta rodada.
+- **`SidebarGroupAction` e `SidebarMenuAction` não tinham par nenhum.** Sete
+  `hover:bg-sidebar-accent` contra dois `active:` no arquivo. Isto **é conserto,
+  não desenho**: vale em todas as variantes, e é o único ponto da rodada que
+  muda pixel em produção.
+
+#### O ladrilho morto da página de Cores
+
+Ela desenhava `<TokenTile token="--sidebar-primary">`, e esse token **não existe
+mais** — eu o removi na rodada 35 por ter zero usos e não conferi quem o
+referenciava. Regressão minha. **E ele já mentia antes disso:** nenhum
+componente jamais usou `--sidebar-primary`; quem marca o item ativo sempre foi
+`--sidebar-accent`, que é o ladrilho ao lado. A página mostrava dois ladrilhos
+para dois estados e um deles apontava para o vazio. Ele saiu, e o vizinho passou
+a dizer o que faz.
+
+#### As duas asserções novas, e por que a 20 precisou existir
+
+**20 — nenhum realce acende no cursor e fica inerte no dedo.** A regra **H** do
+auditor varre `className="…"` e não alcança este arquivo, onde tudo mora em
+`cva()` e `cn()`. É o ponto cego que o `AGENTS.md` já registra três vezes, e foi
+ele que deixou a `outline` passar. A asserção varre cada string de classe e
+exige o par por família (`bg` e `shadow`).
+
+**21 — sob `floating` o realce é alfa, e não token.** Os três degraus existem,
+são diferentes entre si, sobem em ordem, nenhum é `--sidebar-accent`, e todos
+são escopados na variante que tem degradê.
+
+As duas foram verificadas reintroduzindo o defeito: sem o `active:shadow-` a 20
+reprova nomeando a string; com um degrau de volta a `bg-sidebar-accent` a 21
+reprova. `SIDEBAR_GLASS_STATES` deixou de ser um array com `.join(" ")` e virou
+uma literal única — não por gosto: a asserção 20 checa **por string de classe**,
+e três literais separadas fariam cada degrau parecer um `hover:` órfão.
+
+#### Duas lições de instrumento, e as duas são erros meus
+
+**Meu regex de split quebrou dentro dos parênteses.** Separando as camadas do
+`background-image` com `/,(?![^()]*\))/`, as vírgulas de dentro de `color-mix()`
+e `radial-gradient()` caíram como separadores, e a "camada 1" virou um fragmento
+do florão — reportando zero paradas numa rampa que tinha cinco. Quem separa
+camadas de CSS é um contador de parênteses, nunca um regex.
+
+**E li `oklch(0.985 0 0)` como se fosse rgb.** `getComputedStyle(...).color`
+devolve a função autorada, e o meu `match(/[\d.]+/g)` transformou o quase-branco
+num vermelho quase-preto — a escada inteira saiu com contraste 1,01. **Quem
+converte cor é o navegador**, e a sonda passou a pintar num `<canvas>` de 1px e
+ler o pixel. É a mesma correção que a rodada 29 já tinha feito para o mesmo
+erro, com a mesma regex.
+
+**E a escada não foi medida com cursor, de propósito.** O quadro de coordenadas
+do painel era 800×612 contra um viewport CSS de 1132×396 — a armadilha que a
+rodada 32 registra —, e a moldura de 440px não cabia na janela. O contraste de
+um alfa sobre um degradê conhecido é conta, não observação: composição inline
+sobre o fundo verdadeiro, que é o que o `AGENTS.md` já prescreve.
+
+### Rodada 39 — nuvem atrás de uma frente preta
+
+O pedido foi que a luz parecesse vir **de trás**, com a referência sendo o
+cabeçalho do app — *"transparente, e só parece transparente quando há algo
+passando atrás"* — e a lâmina puxando mais para o preto.
+
+**A referência é subtrativa, e a placa era aditiva.** O cabeçalho é
+`md:bg-background/60 md:backdrop-blur` (`app-header.tsx:110`): ele não pinta
+nada, ele **deixa passar menos**. A placa fazia o contrário:
+
+| | página | placa (topo → base) |
+| --- | --- | --- |
+| escuro | `oklch(0.145)` = rgb 10 | `0.242 → 0.192` = rgb **32 → 20** |
+| claro | `oklch(0.985)` = rgb 250 | `0.978 → 0.948` = rgb 248 → 238 |
+
+No escuro ela era **mais clara que a página em toda a extensão**. Isso é o
+desenho de uma superfície levantada e iluminada de frente.
+
+#### A primeira tentativa estava errada, e fica registrada
+
+Eu troquei a rampa por um **radial de altura inteira** vindo de cima, chegando a
+**rgb 62** no topo, e baixei o aro de 34% para 18% argumentando que "contraluz
+não tem especular". As duas decisões foram reprovadas na tela, e as duas por
+bons motivos:
+
+- **A queda de altura inteira é uma lavagem.** Forte demais, branca demais, com
+  o eixo à vista — lê como degradê de fundo dos anos 2000. Trocar linear por
+  radial não resolve nada se o radial cobre a placa toda: o que importa não é a
+  família da curva, é a **escala**. Luz que ocupa a peça inteira é fundo, não é
+  luz.
+- **O brilho da borda não descreve de onde vem a luz do corpo.** Ele é a aresta
+  da lâmina pegando luz, e é o que faz a peça ler como **vidro** em vez de
+  retângulo escuro. Baixá-lo por coerência com uma teoria sobre o corpo foi
+  aplicar um raciocínio ao componente errado.
+
+#### O modelo certo: nuvem atrás, frente preta
+
+A frente é escura e chapada, como o cabeçalho, e o que existe são **focos de luz
+difusos atrás dela**.
+
+**A ordem das camadas é o mecanismo, e não um detalhe.** A lâmina é pintada *por
+cima* das nuvens, então elas chegam ao olho filtradas por 55% de preto: 30% de
+branco sobre a página dá rgb 84, e a lâmina o leva a **37** contra um corpo de
+**5**. Pintadas por cima, as mesmas nuvens dariam 84 e leriam como manchas **na**
+placa. **Alfa alto, resultado baixo: é a atenuação que constrói o "atrás".**
+
+Medido na placa inteira, no escuro:
+
+| | valor |
+| --- | --- |
+| corpo (mínimo · médio · máximo) | **2 · 4 · 23** |
+| página | 10 |
+| picos das duas nuvens | 23 (canto superior-esquerdo) · 23 (inferior-direito) |
+| razão corpo↔página | 1,049 — de um teto absoluto de **1,061** |
+
+#### "Meio cinza" não era a lâmina; era a página
+
+O corpo esteve em 55% de preto, o que dá **rgb 5**, e ainda assim lia como
+cinza. A causa não é a lâmina ser clara: **a página atrás é rgb 10**, e 5 contra
+10 é imperceptível — a placa herdava a leitura de "cinza escuro" do próprio
+fundo.
+
+Isso foi verificado **empiricamente e não por conta**, porque a aritmética já
+dizia rgb 5 e contradizia o que se via. Amostras de valor conhecido sobrepostas
+à placa: a 55%, **0, 3, 5 e 8 somem dentro dela** e só a partir de 12 se
+distingue; a 82%, **0 e 2 somem** e 5, 8 e 12 aparecem visivelmente mais claras.
+A inversão de quem some é a medida.
+
+A 82% o corpo vai a **rgb 2** — o mais escuro possível sem ser preto —, e o
+limite é duro: preto puro daria 0, com a razão contra a página indo de 1,03 para
+1,05 num teto de **1,061**. Não há mais para onde ir, e é exatamente por isso
+que a peça é definida pelo aro e pela nuvem, e não pelo corpo.
+
+**E o alfa da nuvem sobe junto, que não é ajuste fino.** A lâmina está *em
+cima*, então escurecê-la apaga a nuvem na mesma proporção: 17% de branco atrás
+de 55% de preto e 48% atrás de 82% rendem **o mesmo pico de 23**, medido. Os dois
+números andam juntos, e quem mexer num sem o outro apaga a luz sem perceber.
+
+O corpo é **mais escuro que a página na média**, que é o "puxando para o preto"
+do pedido, e a luz é local em vez de ser um banho.
+
+**São dois focos, nos cantos opostos da diagonal.** O centro de cada um fica
+**no canto**, então só um quarto da elipse entra na placa, e é isso que os faz
+ler como fontes que estão atrás *e fora* em vez de focos pousados sobre a
+superfície. O teste proíbe centro em `50%`, porque um foco no eixo voltaria a
+desenhar a rampa.
+
+#### O foco do topo saiu e voltou, e a medição é que reenquadrou a pergunta
+
+Ele foi removido com a régua *luz vai onde não há conteúdo* — o topo da barra é
+onde vivem o seletor de workspace e o primeiro grupo de links. Com um foco só, a
+base passou a ler como mais forte que o topo, e a pergunta virou "qual dos dois
+igualar".
+
+**A medição mostrou que elas já eram iguais em luz, e diferiam em tipo:**
+
+| | pico | área | luz total |
+| --- | --- | --- | --- |
+| aro, canto superior-esquerdo | **94** | 1.324px² | 35,7 |
+| nuvem, canto inferior-direito | 23 | **14.188px²** | 31,6 |
+
+Razão de luz **0,9**; razão de área **10,7×**. O aro concentra a luz num fio de
+1px; a nuvem espalha a mesma luz por dez vezes a área com um quarto do pico. Uma
+massa difusa lê como **fonte**, um fio lê como **aresta** — e era essa diferença
+de categoria, não de intensidade, que fazia a base parecer mais pesada.
+
+Com isso na mesa, a decisão do dono foi **dar massa ao topo também**, e o custo
+foi aceito explicitamente: o topo da placa deixa de ser preto plano (o corpo vai
+de médio 2 para médio 4, com 23 nos dois cantos), e a luz volta a dividir espaço
+com o seletor de workspace. Fica registrado como decisão tomada contra a régua,
+não como a régua tendo mudado.
+
+**Um ganho que não estava previsto:** a variação do realce ao longo do painel
+voltou a **0** nos dois estados. Os dois botões medidos ficam em posições
+espelhadas (7,8% e 92,2% da altura) e as nuvens são reflexo por ponto, então a
+placa sob cada um mede exatamente o mesmo — 9.
+
+**A pegada dele é o espelho por ponto da do aro**, e os dois números saem de
+medir a caixa real (240×424), não de estimativa. O aro corre em 165° e chega ao
+vale em 16% de um eixo de **471,7px**, ou seja 75,5px — com isso a zona clara
+dele cobre **a largura toda do topo** (o canto superior-direito ainda está a
+13,2%, dentro do vale) e desce **78,1px, 18,4% da altura**, pela borda esquerda.
+Refletido pelo centro: a largura toda de baixo, subindo 18,4% pela borda direita.
+Daí `100% 18%`, medido depois em **240×76px** contra os 240×78 do aro.
+
+**O que não dá para espelhar é a inclinação.** `radial-gradient` **não rotaciona
+os eixos da elipse** em CSS — não há sintaxe para isso. O que se iguala é a
+pegada; o tombo de 15° fica só no aro, e é ele que carrega a direção da peça.
+
+**Ele foi a três e a dois antes de ser um, e os dois cortes têm a mesma razão.**
+A versão de três tinha um foco no meio da borda direita, e ele disputava com a
+lista de links. A de dois era um par na diagonal, e o do canto superior-esquerdo
+disputava com o seletor de workspace e o primeiro grupo de links. A régua que
+sobra é **luz vai onde não há conteúdo** — a mesma que tirou a faixa diagonal na
+rodada 37 —, e o canto inferior-direito é o único vão real da placa.
+
+A cada corte o corpo ficou mais preto: máximo **36** com três focos, **33** com
+dois, e agora **23** apenas no canto, com o resto plano em 5 contra uma página
+de 10.
+
+**E o alfa voltou para o token.** Enquanto eram duas, a de baixo era derivada em
+`color-mix(… 55%)` para o par ler como principal + eco. Com uma só, essa conta
+seria uma derivação cujo motivo não existe mais — a família "sobreviveu à
+remoção" que este projeto já pagou cinco vezes. Ela foi dobrada no valor do
+token (30% → 17%), e a troca é **neutra na tela**: medido, o pico continua em
+23.
+
+**Alargar produz névoa, não nuvem.** A primeira versão dos focos tinha raios de
+`58%`/`66%` e virava uma neblina uniforme sem forma. Apertar o raio e subir o
+alfa (22% → 30%) é o que dá contorno a cada um — e é o oposto de alargar a
+lavagem, apesar de o alfa subir.
+
+#### A lâmina puxa para o chão do **próprio tema**, e não para o preto
+
+A leitura ingênua de "puxando mais para o preto" — preto com alfa nos dois temas
+— introduziria no claro um cinza que ele **não tem em lugar nenhum**. Medido: o
+tema claro é inteiramente acromático (croma 0 em `--background`, `--card`,
+`--muted`, `--border`, `--sidebar`) e a página é `oklch(0.985)`, com o branco de
+verdade morando no `--card` e no `--popover`.
+
+A regra: **a lâmina afunda um passo além da página, na direção do chão daquele
+tema.** No escuro esse chão é o preto; no claro é a família neutra própria dele.
+É a mecânica de `--secondary-hover`, que puxa a base na direção do próprio
+contato em vez de usar um alfa único para os dois.
+
+#### O eixo do aro voltou a se inclinar, e isso reverte a rodada 37
+
+Ela tirou o aro de **158°** e o pôs em **180°**, com o argumento — registrado
+aqui — de que *"numa coluna alta e estreita a luz que convence vem de cima,
+reta"*. Hoje ele está em **165° no escuro**, e a reversão é legítima porque **a
+peça mudou**, não o gosto.
+
+Na rodada 37 o corpo era uma superfície iluminada de frente, com uma **rampa
+vertical** descendo a placa inteira. Um aro diagonal brigava com esse eixo, e
+tirá-lo foi certo. Hoje o corpo é preto plano e a única luz mora num canto: não
+há eixo vertical com que concordar, e o aro reto passou a ser a única coisa
+simétrica numa peça que não é.
+
+**A conta na caixa real** (240×424): a 165° o eixo tomba 15° da vertical, e a
+projeção horizontal é **13,2% do comprimento do gradiente**. Como o vale do aro
+começa em 16%, na aresta de cima a esquerda fica no **pico (0%)** e a direita já
+chega a 13,2% — quase no vale. O brilho se concentra no canto superior-esquerdo
+em vez de correr a largura toda.
+
+**E o ângulo é um token, porque vale só no escuro.** `--sidebar-rim-angle` é
+165° no `.dark` e 180° no `:root` — inclinar concentra brilho, e no tema claro
+não há brilho para concentrar (o aro ali é sombra, a 12%). É o mecanismo de
+`--toolbar-control` e `--command-list-max-h`: variável herda e não disputa, e um
+número na receita não teria como diferir por tema sem um `dark:` dentro do
+componente.
+
+As duas asserções que trancavam o eixo reto mudaram junto, e é o tipo de coisa
+que precisa ser dita: **elas codificavam a decisão da rodada 37, não uma
+invariante do sistema.** Hoje a 19 exige que o eixo venha de token (nenhum
+`deg` literal na receita), que o claro seja 180 e que o escuro tombe sem virar
+diagonal de 45°; e o guarda da 22 contra a lavagem deixou de contar `180deg` e
+passou a exigir que **um único** gradiente carregue eixo, e que ele feche em
+`border-box` — ou seja, que a direção viva no fio de 1px e não no corpo.
+
+#### O claro passou a ser a mesma especificação do escuro, com a polaridade virada
+
+O pedido foi *"use as mesmas especificações do dark no light, porém tentando
+deixá-lo mais claro"*, com dois pontos: **a barra não pode ficar mais escura** e
+o brilho tem de ser maior.
+
+**Copiar as cores não é traduzir; copiar a estrutura é.** O que o escuro faz:
+
+| | escuro | claro, traduzido |
+| --- | --- | --- |
+| lâmina | preto 82% → rgb **2**, razão 1,049 da página | branco 92% → rgb **255**, razão **1,040** |
+| direção | afasta-se da página **para baixo** | afasta-se **para cima** |
+| eixo do aro | 165° | **345°** — o mesmo eixo, girado 180° |
+| pico do aro | luz, no canto superior-esquerdo | sombra, no canto **oposto** |
+
+A mesma distância da página, no único sentido que cada tema tem. A versão
+anterior punha a lâmina em 244, **abaixo** da página, e isso fazia a navegação
+recuar num tema em que ela deve avançar. Hoje ela é o branco de verdade — o
+mesmo `oklch(1 0 0)` do `--card` —, então a barra flutuante lê como cartão, que
+é como este sistema já apresenta superfície elevada no claro.
+
+**O eixo é um só, e o teste tranca isso.** 345° é 165° pela outra ponta: a
+geometria é idêntica e só a polaridade inverte, porque sombra de uma placa acesa
+por cima-à-esquerda mora no canto oposto ao brilho. A asserção deixou de fixar
+`180` no claro e passou a exigir `claro === (escuro + 180) % 360` — com dois
+valores soltos, os dois biséis podiam apontar para direções diferentes sem
+ninguém perceber. Medido: sombra de **1,51** no canto inferior-direito,
+dissolvendo para 1,22 no superior-esquerdo.
+
+**E o "shine maior" tem um teto que não é do desenho.** A página clara é rgb
+**250 de 255**, e a lâmina já a levou a 255: não sobra **nenhuma** unidade acima
+do corpo. Um realce precisa de espaço acima, e o corpo não pode descer — descer
+é justamente o que este tema não deve fazer. As nuvens ficam declaradas em
+branco opaco e não registram, e isso está escrito no token com a saída: **quem
+quiser luz de verdade no claro precisa baixar `--background`** (de `oklch(0.985)`
+para algo como `0.96`), o que é decisão de sistema porque atinge toda tela.
+
+#### O tema claro é quieto, e o erro nele era de magnitude
+
+A gramática se inverte — no escuro o aro é brilho branco, no claro é sombra —, e
+isso é a física que as rodadas 36 e 37 já mediram: sobre uma página quase branca
+não há para onde clarear. **O que estava errado não era a direção, era a
+magnitude.** O aro claro estava em 40% de preto, que compõe para rgb 150 contra
+uma página de 250 e dá razão **2,84**: um traço duro, não a aresta de uma placa
+de vidro — e lia como "luz escura" ao lado do brilho do tema escuro.
+
+| | antes | depois | referência |
+| --- | --- | --- | --- |
+| aro claro | 40% → rgb 150 → **2,84** | 12% → rgb 220 → **1,32** | `--sidebar-border` = 1,29 |
+| corpo claro | 242, razão 1,075 | 244, razão **1,05** | — |
+
+Ele agora tem praticamente o peso da própria borda do sistema, que é o que uma
+placa deve ter num tema em que ela não pode brilhar.
+
+**E as nuvens não registram no claro — por aritmética, não por timidez.** A
+página é rgb **250 de 255**: existem cinco unidades entre ela e o branco puro, e
+a lâmina por cima consome parte disso. Medido com a nuvem em branco **opaco**, o
+teto é ~2 unidades. "Luzes brancas atrás" é um efeito que só o tema escuro
+comporta, e ele fica declarado do mesmo jeito para a receita ser uma só — quem
+define a placa no claro é o corpo (1,05) com o aro (1,32).
+
+#### O par de identidade sumia no claro, e agora ele inverte
+
+Os avatares do workspace e da conta, medidos sobre a placa flutuante:
+
+| | superfície | tinta sobre superfície | **superfície sobre a placa** |
+| --- | --- | --- | --- |
+| escuro | `[46,55,45]` | 6,37 | **1,65** |
+| claro, antes | `[230,235,229]` | 6,73 | **1,10** |
+| claro, depois | `[68,120,56]` | 5,14 | **4,79** |
+
+No claro a pastilha **sumia**: sobrava a letra escura flutuando sozinha, sem
+chip. A causa é que `--identity-N-surface` era `color-mix(… 12%, var(--card))`,
+calibrado contra `--card` (255) — sobre a placa flutuante (244) ele perde metade
+da separação.
+
+**A saída foi inverter o par no tema claro**: a superfície passa a ser a cor e a
+tinta passa a ser quase branca, que é como um avatar preenchido se comporta em
+toda interface clara. O escuro fica como estava. `--identity-N` é a tinta e
+`--identity-N-surface` é a pastilha **nos dois temas** — os nomes já descreviam
+o papel, e é o papel que se inverte, não o nome.
+
+A alternativa era só empurrar a mistura (12% → ~28%), e ela foi medida: dá
+**1,28** contra a placa. Melhor que 1,10 e ainda tímido, além de caminhar para
+um cinza sujo.
+
+**E a inversão tem um custo, que fica dito.** Não existe mais um token único que
+seja "o matiz" nos dois temas: no escuro ele é `--identity-N`, no claro é
+`--identity-N-surface`. A página de Cores tinha uma rampa **"Os matizes"**
+apontando para o primeiro, e ela passou a sair como **seis barras brancas** no
+claro. Um espécime que só funciona num tema é pior que espécime nenhum, então
+ela saiu — os discos acima dela já mostram as seis identidades como elas de fato
+renderizam.
+
+**O `ColorTile` divergiu de propósito.** O comentário dele afirmava ter "as
+mesmas proporções de `--identity-N-surface`", e isso deixou de ser verdade. A
+divergência é correta pela régua que o próprio arquivo escreve: o ladrilho
+carrega uma cor **de runtime**, escolhida pela pessoa e vinda do banco, e não
+pode virar uma pastilha preenchida numa cor que ninguém calibrou. O avatar
+carrega uma das seis identidades do sistema.
+
+Blast radius: **9 arquivos de produção**, todos avatar. Verificado antes de
+mexer que `text-identity-N` nunca aparece fora do par com
+`bg-identity-N-surface`, e que `--identity-N` só é referenciado no `@theme` e na
+própria mistura — o que torna a troca de papéis segura.
+
+#### A escada de realce voltou sozinha para dentro do critério
+
+`bg-current/6·9·12` não mudou. O que mudou foi a superfície: com a lavagem, a
+placa ia de rgb 47 a rgb 7 e a variação do realce ao longo do painel era
+**0,09 / 0,12 / 0,15** — fora do teto de 0,05 que a rodada 38 fixou. Com o corpo
+uniforme e a luz **nos cantos**, ela é **0** — os botões vivem no eixo central,
+e nuvem de canto não o alcança. No claro também é 0.
+
+O ponto fraco continua sendo medido de duas formas, porque uma engana:
+
+| | placa | razão WCAG | salto de luminância |
+| --- | --- | --- | --- |
+| workspace | 5 | 1,102 | **4,84×** |
+| conta | 5 | 1,102 | **4,84×** |
+
+**Perto do preto a razão WCAG comprime**, porque o `+0,05` do denominador
+domina. O defeito que a rodada 38 consertou era 1,09 com salto de **1,4×** —
+quase invisível. Aqui 1,10 é um salto de 4,84×.
+
+#### Duas lições de instrumento, e as duas são erros meus
+
+**O preâmbulo de geometria de um radial não é uma parada de cor.**
+`radial-gradient(140% 105% at 50% -8%, …)` termina o primeiro token em `-8%`, e
+o regex `/([\d.]+)%\s*$/` casou nele — a sonda tratou a geometria como "uma cor
+na posição 8%", e **o radial contribuía zero em todas as medições**. O sintoma
+foi uma queda de 30 pontos de canal num quarto de painel que a captura não
+mostrava; a captura estava certa e a sonda não.
+
+**E uma camada `border-box` não pinta o corpo.** Medindo a placa em 2D, eu
+compus o aro — 34% de branco — sobre a área inteira, e o corpo saiu com mínimo
+15 onde ele é 5. Quem diz qual camada é qual é `background-clip`, que o
+computado publica por camada e que a sonda ignorava.
+
+São a terceira e a quarta leitura errada desta série pelo mesmo motivo — antes
+foram as vírgulas dentro de `color-mix()` e o `oklch()` lido como `rgb()`. A
+regra que as quatro desenham: **um regex não parseia CSS.** Quem separa camadas
+é um contador de parênteses, quem converte cor é o navegador, quem diz onde uma
+camada pinta é o `background-clip`, e um preâmbulo de função precisa ser
+reconhecido antes de qualquer coisa ser lida como valor.
+
+E o que salva é sempre a mesma coisa: **um ponto de controle previsível** — a
+sonda calcula a placa onde as camadas de luz são transparentes e compara com
+lâmina-sobre-página, que se computa sem gradiente nenhum.
+
+#### As duas asserções
+
+**18 ganhou um piso, e ele nasceu invertido.** A primeira versão desta rodada
+escreveu um **teto** de 20% no aro, codificando a inferência errada de que
+contraluz não tem especular. Hoje é um **piso de 28%**: sem o brilho a peça vira
+um retângulo escuro.
+
+**22 tranca o modelo:** no escuro a lâmina é preto com alfa, no claro a
+claridade dela é > 0,8 (o guarda é o valor, não a ausência do literal); as
+nuvens são brancas nos dois; **a lâmina é declarada antes delas**, que é o que
+as põe atrás; há pelo menos dois focos e **nenhum com centro em 50%**; existe um
+único gradiente com ângulo e ele é o aro, no `border-box`; e os quatro tokens de
+desenhos anteriores — `--sidebar-surface-top`, `-bottom`, `--sidebar-bloom`,
+`--sidebar-backlight` — não voltaram pela porta dos fundos.
+
+Verificadas reintroduzindo três defeitos: o aro sem brilho, a lâmina indo para
+baixo das nuvens, e a lavagem vertical de volta.
+
+`variant="sidebar"` e `variant="inset"` seguem em `oklch(0.205)` chapado, sem
+gradiente — a `@utility` é escopada em `floating`, que **nenhuma tela do app
+usa**, então esta rodada não muda pixel em produção.
+
+### Rodada 40 — o vidro sai da barra
+
+As rodadas 36 a 39 construíram uma superfície de vidro **dentro** da barra
+lateral: a receita numa `@utility sidebar-glass`, cinco tokens `--sidebar-*`, e a
+geometria calibrada contra uma caixa de 240×424. Ela virou peça.
+
+**O achado que enquadrou a rodada: já existiam dois vidros, e nenhum sabia do
+outro.**
+
+| | `.mobile-glass-surface` | o pintado (agora `glass`) |
+| --- | --- | --- |
+| técnica | `backdrop-filter: blur(24px) saturate(1.5)` | pintado, sem blur |
+| premissa | **há** conteúdo passando por baixo | **não há** nada atrás |
+| fallback | `prefers-reduced-transparency` — o único do repo | não se aplica |
+| consumidores | 4, todos no telefone | 1 |
+
+A régua de escolha passou a estar escrita nos dois lugares, e é pela premissa:
+borrar cor chapada não desenha nada, e pintar luz onde há conteúdo real atrás
+seria inventar o que já existe. A fusão fica no backlog.
+
+#### Três camadas, e o componente é a de cima
+
+É o modelo que o `scroll-fade` registra — *"ele é conveniência, não a
+primitiva"*:
+
+| Camada | Onde | Dona de |
+| --- | --- | --- |
+| CSS | `@utility glass` + `glass-control` | a matemática das quatro camadas e o contrato de variáveis |
+| Gramática | [`lib/glass-classes.ts`](src/lib/glass-classes.ts) | as composições nomeadas e as três armadilhas |
+| Componente | [`ui/glass.tsx`](src/components/ui/glass.tsx) | `asChild` para vestir uma peça, ou uma casca quando ninguém é dono dela |
+
+Sem hook: ao contrário do `scroll-fade`, o vidro não mede nada em runtime.
+
+**Os cinco tokens foram renomeados** de `--sidebar-*` para `--glass-*`. Manter os
+dois nomes seria a mesma *"duas receitas para a mesma borda"* que a rodada 36
+removeu. Custo: 14 referências em `sidebar-ladder.test.ts`, nas asserções 18, 19
+e 22.
+
+**A extração é renomeação, e foi medida como tal.** Depois: corpo **2**, pico da
+nuvem **23**, pico do aro **94**, ângulo **165deg**, quatro gradientes — os
+mesmos números de antes, na mesma caixa de 240×424.
+
+#### As três armadilhas de vestir vidro numa peça existente
+
+As três foram medidas, e as três estão escritas na régua porque quem vestir a
+peça vai bater nelas:
+
+1. **O shorthand `background` apaga o `background-color`.** Medido: o
+   `bg-sidebar` que continuava na string do miolo resolve `rgba(0,0,0,0)` sob a
+   utility. Vestir vidro **substitui** o preenchimento; não soma.
+2. **`border: 1px solid transparent` toma a borda**, porque o aro é pintado no
+   `border-box`. Com `box-sizing: border-box` a caixa não cresce — o conteúdo
+   encolhe 2px, e num controle com filho absoluto calibrado isso desloca 1px.
+3. **O raio é herdado, e é isso que torna a peça portátil.** A utility não
+   declara `border-radius`. Medido nos espécimes: 14px num `rounded-xl` e o
+   valor de `rounded-full` num controle, sem eixo nenhum.
+
+#### O eixo `size`, e a única razão de ele existir
+
+**Porcentagem escala; percepção não.** A nuvem é `100% 18%` — numa placa de
+424px são 76px de luz difusa, e num controle de 32px são **5,7px**, que lê como
+aresta dura. A fração óptica é idêntica e o resultado não é.
+
+O preset move **só a variável**, e nunca a propriedade: `glass` lê
+`var(--glass-cloud-ry, 18%)` e não a declara em lugar nenhum; `glass-control`
+declara. Duas utilities escrevendo `background` seriam decididas por ordem de
+emissão do Tailwind e não pelo que se escreveu.
+
+#### `asChild` só funciona se o filho repassar props, e o defeito é calado
+
+O `Slot` entrega `className`; quem a aplica no elemento certo é o filho. Um
+componente que aceita só `children` recebe a classe e a descarta — **nada
+quebra, a peça simplesmente sai sem vidro**. Aconteceu na primeira escrita da
+página do catálogo: quatro espécimes declarados, três com vidro, e a sonda que
+contou `[data-slot=glass]` foi o que pegou.
+
+Verificado que o `AppThemeToggle` repassa nos dois ramos, então
+`<Glass asChild><AppThemeToggle /></Glass>` funciona. E o `data-slot` do filho
+**vence** o da peça — dentro do `Glass` o toggle continua se anunciando como
+`app-theme-toggle`, que é o nome certo: ali aquilo é um toggle que por acaso está
+de vidro.
+
+#### Dois erros meus, os dois pegos pela verificação seguinte
+
+**Escrevi a classe montada em runtime.** `` `group-data-[variant=floating]:${glassSurfaceClassName}` ``
+— o Tailwind varre o código como **texto**, e um nome interpolado nunca chega ao
+CSS. É a regra que este arquivo já registra três vezes, e ela pegou a mesma
+pessoa que a escreveu, pela quarta. A classe é literal, e a asserção 10 do teste
+novo tranca que a régua não interpole.
+
+**Deixei um export morto com um consumidor inventado.** `GLASS_SURFACES` era um
+mapa `{ panel, control }` com um comentário dizendo que o catálogo iterava a
+régua com ele — e o catálogo não iterava. Ele saiu; o eixo mora no `cva` de
+`glass.tsx`, que é onde `cva` pode morar (a regra A2 do auditor o reprova fora
+de `components/ui/`), e é o que faz o `ds:catalog` reportar
+`size: panel | control` em vez de `—`.
+
+#### O tema claro não tinha lado aceso, e isso era o defeito
+
+Relatado como *"o glass no light mode não está com shiny"*, e a medição nomeou a
+causa: **os quatro cantos do aro saíam abaixo da placa** — 210, 232, 232 e 235
+contra 255. Um contorno, não um bisel.
+
+A raiz é que o extremo `100%` do aro era **derivado do pico**:
+`color-mix(--glass-rim 45%, transparent)`. Isso vale enquanto os dois extremos
+são da mesma natureza — e no escuro são, os dois são luz. **No claro não são**:
+ali o pico é sombra, e derivado o outro extremo só podia ser uma sombra mais
+fraca. Não havia como o aro passar acima da placa.
+
+`--glass-rim-far` virou token próprio, e a lâmina clara cedeu três unidades:
+
+| | antes | depois |
+| --- | --- | --- |
+| lâmina | 255 (o teto) | **252** — ainda acima da página, em 250 |
+| canto superior-esquerdo | 235, abaixo da placa | **255, acima dela** |
+| canto inferior-direito | 210 | 205 |
+| amplitude do bisel | 25 | **50** |
+| realce ↔ sombra | — | **1,591** |
+
+**O realce sozinho é fraco (1,027 contra a placa), e não é ele que lê — é o
+par.** Num tema em que a página é rgb 250 de 255, cada lado do bisel mal se
+separa da placa; o que o olho usa é a amplitude entre eles.
+
+No escuro nada mudou: `oklch(1 0 0 / 15%)` reproduz os 45% de 34% que o derivado
+valia, e a medição depois devolveu corpo **2**, aro **94**, vestígio **47**.
+
+**A lição de forma:** derivar um extremo do outro é correto quando os dois são a
+mesma coisa em intensidades diferentes, e vira armadilha quando eles trocam de
+natureza entre temas. É a mesma família do `--secondary-hover` — um valor único
+não serve os dois lados quando a direção que lê se inverte.
+
+#### A peça é Átomo, e a página é o inventário
+
+`glass.tsx` importa zero componentes de `ui/` e renderiza um elemento — o mesmo
+caso do `scroll-fade`. As quatro camadas de `background` são anatomia interna,
+não peças que alguém compõe de fora.
+
+`/designsystem/glass` é onde o histórico desta série virou documentação: a ordem
+das camadas e por que ela é o mecanismo, a inversão de polaridade entre os temas
+com as duas razões (1,049 e 1,040), o eixo do aro girado 180°, a pegada das
+nuvens espelhada da do aro, as três armadilhas, e **as versões rejeitadas** — a
+lavagem de altura inteira, o aro sem brilho, os três focos, a placa clara em 244.
+
+### Rodada 41 — as versões de vidro, e o que a cor custa
+
+Quatro peças novas — `GlassButton`, `GlassBadge`, `GlassAvatar`,
+`GlassCheckbox` —, cada uma em arquivo próprio.
+
+**O que as define não é a superfície, é a tradução de cor.** O vidro apaga o
+`background-color` de quem o veste (armadilha nº 1 da régua), e isso colide com
+o eixo de cor dos quatro: um botão `primary` perderia o verde, um badge perderia
+os sete tons, um checkbox marcado ficaria igual ao desmarcado. A saída é o tom
+migrar para **`--glass-tone`**, uma camada nova acima da lâmina.
+
+É o mecanismo do `ColorTile`, que já deriva superfície e tinta de uma cor com
+percentual por tema — não foi preciso inventar nada. E a cor vem dos pares
+`-muted` que já existem: `bg-{tom}-muted` com `text-{tom}-muted-foreground` é o
+que o `Badge soft` usa, e o par já é calibrado nos dois temas.
+
+#### O achado que obrigou uma segunda camada: `hover:bg-*` falha calado sobre vidro
+
+As classes de estado declaram **só `background-color`**, então o shorthand da
+utility **não as apaga** — elas passam a pintar *atrás* das quatro camadas de
+gradiente, e com a lâmina a 82% o realce simplesmente não aparece. Nada quebra,
+nada avisa.
+
+Daí `--glass-sheen`, a camada mais de cima. Ela é **branca neutra e não o tom**,
+e é isso que faz **uma** variável servir os sete tons e os dois temas: realce
+sobre vidro é o material pegando mais luz, não mudando de cor. As `hover:bg-*`
+das bases são anuladas com `hover:bg-transparent` — escrito como classe para o
+`twMerge` **remover**, e não para disputar por ordem de emissão.
+
+#### As quatro, e o que cada uma custou
+
+| | o problema | a saída |
+| --- | --- | --- |
+| **Button** | a hierarquia é preenchimento | vira tom; texto **5,24 a 13,14** nos dois temas |
+| **Badge** | 14–22px de altura | a nuvem não cabe; **quem carrega é o aro** |
+| **Avatar** | o vidro não tinha onde morar | a identidade vira tom, o fallback fica transparente |
+| **Checkbox** | 16px, e o marcado pinta em três propriedades | tom + contorno; o vidro quase não lê |
+
+**Um botão de vidro `primary` não é um botão verde.** É uma lâmina verde
+translúcida com tinta verde — escura no claro, clara no escuro; mais perto de um
+`Badge soft` que de um `Button primary`. Isso é consequência e não escolha:
+sobre lâmina translúcida não há preenchimento para o texto branco parear. **Vidro
+é um peso próprio**, e uma tela continua tendo um `primary` só.
+
+**O `Avatar` era o caso sem saída, e os dois caminhos óbvios falham.** Medido: a
+raiz não pinta fundo nenhum e o `AvatarFallback` é `h-full w-full` **opaco**.
+Vidro na raiz fica escondido; vidro no fallback apaga a identidade. O terceiro
+caminho — superfície de identidade translúcida — está **rejeitado por escrito**
+no sistema, porque avatares empilhados mostrariam o de baixo. A tradução resolve,
+e a objeção não se aplica **porque a peça é separada**: o `GlassAvatar` é opt-in
+e o `Avatar` segue opaco. Custo medido: a foto encolhe 2px, que é onde o aro mora.
+
+**O `Checkbox` é a que menos se paga, e o número está na página.** A nuvem do
+preset `control` dá 11px numa caixa de 16, e a zona clara do aro, 3px. Medido:
+`placaVsPagina` **1,02** na desmarcada — o vidro em si quase não existe nessa
+escala, e quem torna o estado legível é o contorno (7,34 contra a página) com o
+tique (10,63 sobre a lâmina).
+
+#### A tensão da forma fica registrada
+
+Cada uma importa **um** componente de `ui/` e renderiza **um** elemento — a
+mesma estrutura de `MoneyInput` e `KbdShortcut`, que este projeto **absorveu
+como `prop`** por serem *o átomo com outro nome, cobrando do catálogo uma
+segunda página*. O que as mantém do lado certo é a tradução de cor, que é
+anatomia. **A asserção 13 tranca exatamente isso**: se alguma virar só
+`<Glass asChild><Base /></Glass>`, o teste reprova — e a pergunta certa volta a
+ser "componente ou modo?".
+
+São **Átomos** pela régua ("especializar um átomo continua átomo"), e o
+`ds:catalog` reporta `—` na coluna de variantes das quatro: o eixo delas é
+`tone`, que é `prop` e não `cva`.
+
+#### Três erros meus, e os três pegos pelos próprios testes
+
+**A asserção 10 pegou um helper que eu escrevi.** Pus em `glass-classes.ts` um
+`tomEm(cor, claro, escuro)` que montava a string por interpolação, com um
+comentário dizendo que era "só documentação da forma". O teste reprovou, e com
+razão: um helper desses é um convite a alguém usá-lo, e aí as classes somem do
+CSS sem nada quebrar. **Quinta vez** que este projeto paga essa medição.
+
+**A asserção 13 testou o comentário, não o código** — na primeira escrita. Com a
+tradução removida do `GlassButton` ela **passava**, porque o doc-comment da peça
+cita `--glass-tone` por extenso. É a mesma lição que a rodada 40 já tinha
+registrado, uma rodada depois.
+
+**E medi o tema claro em estado misto.** Trocar a classe do `<html>` à mão não
+segura: o `next-themes` reverte, e a leitura saiu com a página já clara e os
+tokens do botão ainda escuros — texto a **1,17**, que eu quase reportei como
+reprovação. Fixando o tema no `localStorage` e recarregando: **5,24 a 11,04**.
+Tema se troca pelo mecanismo do app, nunca pela classe.
+
 ### Backlog de migração
 
 A rodada 01 entregou tokens, componentes, documentação e o auditor, sem migrar
@@ -4734,7 +5959,7 @@ E o que a rodada do `Tabs` e do `Combobox` deixou:
   casava quando `ComboboxInput` renderizava um `InputGroup` — e hoje o
   `CommandInput` desenha a própria casca. O outro **fica**: **`no-scrollbar` é
   usada em quatro arquivos (`ds-shell` ×2, `command.tsx`, `sidebar.tsx`) e não
-  está definida em lugar nenhum** — nem em `globals.css`, nem em `tw-animate-css`.
+  estava definida em lugar nenhum** *(paga na rodada 35: virou `@utility`)* — nem em `globals.css`, nem em `tw-animate-css`.
   Defini-la faria quatro superfícies não relacionadas passarem a esconder a barra
   de rolagem em Windows e Linux, o que é mudança de comportamento fora do escopo
   de uma rodada de componente. O `Tabs` escreve
@@ -5181,5 +6406,22 @@ E o que a rodada do `NavigationMenu` deixou:
 - **`popover.tsx` e `select.tsx` ainda escrevem a superfície à mão.** O
   `menuPanelSurfaceClassName` existe agora; são duas substituições mecânicas, e
   ficaram de fora porque a rodada não abriu aqueles arquivos.
+
+E o que a rodada 40 deixou, ao extrair o vidro:
+
+- **Os dois vidros da casa continuam separados.** `.mobile-glass-surface` (blur
+  real, 4 consumidores no telefone, com o único `prefers-reduced-transparency` do
+  repositório) e a `@utility glass` (pintado, 1 consumidor) resolvem premissas
+  opostas e por isso não se fundem sozinhos — mas os dois desenham "vidro", com
+  dois vocabulários de token. Unificar é decidir se a premissa vira **eixo**
+  (`blur` | `painted`) ou se os dois nomes ficam.
+- **`registered-credit-card-face.tsx` segue fora dos dois.** Oito camadas com
+  `mix-blend-mode` e `mask-composite` — as duas técnicas que `glass.test.ts` e
+  `scroll-fade-classes.ts` proíbem no resto da casa. É o arquivo que mais
+  ganharia com a fusão, e o mais caro de tocar.
+- **O `Glass` nasce com o degrau `control` sem consumidor de produto.** O toggle
+  de tema foi verificado como vestível (`<Glass asChild>` funciona, o `className`
+  é repassado nos dois ramos) e **não** foi migrado — decisão do dono. O
+  catálogo o demonstra em espécime.
 
 Reproduza a qualquer momento com `npm run ds:audit`.

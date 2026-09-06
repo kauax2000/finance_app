@@ -5,6 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Dialog as EdgePanelPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { useViewportWindow } from "@/hooks/use-mobile"
 
 /**
  * Um painel preso a uma borda — **em qualquer largura de tela**.
@@ -108,8 +109,15 @@ function EdgePanelContent({
   ...props
 }: React.ComponentProps<typeof EdgePanelPrimitive.Content> &
   VariantProps<typeof edgePanelContentVariants>) {
+  const janela = useViewportWindow()
+
   return (
-    <EdgePanelPrimitive.Portal>
+    // O portal vai para o `body` da **janela ativa**. Fora da moldura do
+    // catálogo o contexto é `null` e o Radix usa o `document` dele mesmo — o
+    // app não muda. Dentro dela, é isto que impede o painel de escapar do
+    // iframe e cobrir a página inteira, que era a segunda limitação declarada
+    // da moldura.
+    <EdgePanelPrimitive.Portal container={janela?.document.body}>
       <EdgePanelOverlay />
       <EdgePanelPrimitive.Content
         // Antes de `{...props}`: quem embrulha este painel — o `Sheet` no
