@@ -360,6 +360,51 @@
    */
   --glass-rim: oklch(0 0 0 / 18%);
   --glass-rim-shade: oklch(0 0 0 / 5%);
+  /* **A cor do elemento, e quanto dela entra no aro e nas nuvens.**
+   *
+   * **`--glass-ink` não é declarada aqui, e isso é o mecanismo.** Cada camada
+   * a lê com o **próprio neutro como fallback** — `var(--glass-ink,
+   * var(--glass-rim))` —, então sem tinta a mistura é o neutro consigo mesmo,
+   * que é o neutro em **qualquer** quantidade. O no-op deixa de depender de a
+   * quantidade ser 0% e passa a ser estrutural.
+   *
+   * Uma versão anterior declarava `--glass-ink: oklch(1 0 0)` aqui, e o
+   * `ds:catalog` a acusou com razão: é uma cor sem par no `.dark`. Silenciar o
+   * aviso teria custado uma linha redundante; tirar o token custou nada e
+   * deixou a garantia mais forte. Medido nos dois temas: as 14 cores da receita
+   * saem idênticas às de antes, então a barra lateral flutuante e a primitiva
+   * `Glass` não mudam um pixel.
+   *
+   * **A tinta é opaca, então ela sobe o alfa junto com o matiz, e isso é
+   * escolha.** Houve uma versão que prendia o alfa ao do neutro
+   * (`oklch(from … l c h / var(--glass-rim-a))`), para mover só o matiz. Ela é
+   * a mais defensável no papel — tingir vidro não deveria engrossá-lo — e foi
+   * medida: o aro composto ia de `94,94,94` para no máximo `94,84,94`, um
+   * espalhamento de **10 unidades** num traço de 1px. Perto do imperceptível.
+   *
+   * A causa é estrutural e vale ficar escrita: as nuvens são pintadas **atrás**
+   * da lâmina, que é 82% preta, então elas chegam ao olho com ~18% da força —
+   * quem pode carregar cor é o aro, e ele tem 1px. Com o alfa livre a cor
+   * aparece de verdade, ao preço de a aresta ficar mais presente. A dose está
+   * em `--glass-ink-amount`, e é ela que decide o quanto disso se paga. */
+  --glass-ink-amount: 0%;
+  /* **O croma compra cor de graça; a quantidade custa alfa.**
+   *
+   * O alfa da mistura depende só da quantidade — `p × 1 + (1−p) × 0,341` —, e o
+   * matiz depende do croma da tinta. Medido no aro composto, com o alfa parado
+   * em 0,471: `--identity-N` cru (croma 0,09) dá espalhamento **16,5**; a mesma
+   * quantidade com o croma em 4× dá **56,7**. Três vezes e meia a cor, pelo
+   * mesmo preço.
+   *
+   * Ele multiplica em vez de fixar um alvo porque **0 × 4 continua 0**: o
+   * fallback de cada camada é o próprio neutro, que é croma 0, e é isso que
+   * mantém o no-op. Fixar `oklch(from … l 0.2 h)` tingiria o vidro sem cor.
+   *
+   * Acima do gamute o navegador limita, e o limite é o resultado desejado: a
+   * versão mais saturada daquele matiz naquela claridade. É o que faz um tom já
+   * vivo (`--destructive`, croma 0,245) e um discreto (`--identity-N`, 0,09)
+   * chegarem ao aro com a mesma presença. */
+  --glass-ink-boost: 4;
   /* **O extremo aceso do bisel, e no claro ele é branco puro.** Sem isso o aro
      nunca passava acima da placa e a peça saía contornada em vez de acesa. O
      par é o que lê: 205 na sombra do canto inferior-direito contra 255 no
@@ -1252,13 +1297,23 @@
      * O custo aceito é que o topo da placa deixa de ser preto plano. */
     radial-gradient(
         var(--glass-cloud-rx, 100%) var(--glass-cloud-ry, 18%) at 0% 0%,
-        var(--glass-cloud),
+        color-mix(
+          in oklab,
+          oklch(from var(--glass-ink, var(--glass-cloud)) l calc(c * var(--glass-ink-boost)) h)
+            var(--glass-ink-amount),
+          var(--glass-cloud)
+        ),
         transparent
       )
       padding-box,
     radial-gradient(
         var(--glass-cloud-rx, 100%) var(--glass-cloud-ry, 18%) at 100% 100%,
-        var(--glass-cloud),
+        color-mix(
+          in oklab,
+          oklch(from var(--glass-ink, var(--glass-cloud)) l calc(c * var(--glass-ink-boost)) h)
+            var(--glass-ink-amount),
+          var(--glass-cloud)
+        ),
         transparent
       )
       padding-box,
@@ -1276,10 +1331,22 @@
      * de 34%), então nada mudou daquele lado. */
     linear-gradient(
         var(--glass-rim-angle),
-        var(--glass-rim) 0%,
+        color-mix(
+            in oklab,
+            oklch(from var(--glass-ink, var(--glass-rim)) l calc(c * var(--glass-ink-boost)) h)
+              var(--glass-ink-amount),
+            var(--glass-rim)
+          )
+          0%,
         var(--glass-rim-shade) 16%,
         var(--glass-rim-shade) 80%,
-        var(--glass-rim-far) 100%
+        color-mix(
+            in oklab,
+            oklch(from var(--glass-ink, var(--glass-rim-far)) l calc(c * var(--glass-ink-boost)) h)
+              var(--glass-ink-amount),
+            var(--glass-rim-far)
+          )
+          100%
       )
       border-box;
 }

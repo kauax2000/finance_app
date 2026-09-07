@@ -22,7 +22,9 @@ const badgeVariants = cva(
        * ser cinza.
        */
       variant: {
-        soft: "border-transparent",
+        // Vazio: a base já declara `border border-transparent`, então o valor
+        // que morava aqui era a mesma classe escrita duas vezes.
+        soft: "",
         outline: "bg-transparent",
       },
       /**

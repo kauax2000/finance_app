@@ -5778,6 +5778,615 @@ tokens do botão ainda escuros — texto a **1,17**, que eu quase reportei como
 reprovação. Fixando o tema no `localStorage` e recarregando: **5,24 a 11,04**.
 Tema se troca pelo mecanismo do app, nunca pela classe.
 
+### Rodada 42 — a primeira cor de runtime
+
+As quatro peças de vidro da rodada 41 traduzem **token**: o tom de cada uma é
+uma linha de `GLASS_TONES` ou de `GLASS_IDENTITY_TONES`, escrita por extenso na
+régua. O `ColorTile` é o próximo caso e o primeiro em que **a cor vem do banco**
+— `categories.color`, `bills.color`, a marca de um workspace —, então não há
+tabela que a preveja. `GlassColorTile` lê a `--tile-color` que o próprio
+`ColorTile` já publica no `style`.
+
+A forma é a da `GlassCheckbox` — duas classes **literais** com `--glass-tone`
+dentro —, e o motivo é o mesmo de sempre: o Tailwind varre o código como texto,
+e um percentual interpolado num `color-mix` nunca chegaria ao CSS.
+
+#### As três camadas do ladrilho se comportam de três jeitos
+
+O `ColorTile` deriva véu, tinta e fio da mesma variável. Sob o vidro:
+
+| camada | o que acontece | o que se escreve |
+| --- | --- | --- |
+| véu (`bg-[color-mix…]`) | o shorthand `background` da utility o apagaria calado | `bg-transparent dark:bg-transparent` |
+| tinta (`oklch(from … 0.42 c h)`) | **atravessa intacta** | nada |
+| fio (`ring-1` na cor) | vira a segunda aresta ao lado do aro | `ring-0 ring-transparent dark:ring-transparent` |
+
+**A tinta atravessar é o que faz a peça ser um embrulho de 20 linhas em vez de
+uma reescrita.** Ela fixa a claridade e deixa só matiz e croma virem da pessoa;
+a lâmina clara é quase branca (rgb 252 sobre o cartão) e a escura quase preta
+(rgb 4), então 0,42 e 0,78 continuam do lado certo dos dois.
+
+**O fio custa três classes, e a contagem foi medida no `twMerge`.** `ring-0`
+derruba só a **largura**: sem `ring-transparent dark:ring-transparent`, as duas
+classes de **cor** ficam na lista sem pintar nada — a classe morta que este
+projeto caça. Verificado no DOM depois: `background-color` transparente, `border`
+1px transparente (onde o aro mora) e `box-shadow` com as cinco entradas em
+largura zero.
+
+E ele sai por **doutrina**, não por gosto: a régua diz que **o tom não tinge o
+aro** — um aro colorido faz a peça ler como plástico pintado — e um `ring`
+colorido ao lado do aro é a segunda receita para a mesma borda, que a rodada 36
+removeu da barra.
+
+#### Os dois percentuais, e o critério que os escolheu
+
+O véu chapado é 12% no claro e 18% no escuro, **opaco sobre `--card`**. Aqui o
+tom é translúcido sobre a lâmina, e a lâmina escura (`oklch(0 0 0 / 82%)`) é bem
+mais escura que o cartão — com um percentual só, o ladrilho sairia mais apagado
+num tema que no outro.
+
+Varredura com os **dez presets** de `CATEGORY_COLORS` mais os três extremos da
+paleta livre, compondo tom sobre lâmina sobre cartão num `canvas` de 1px. O que
+se minimiza **não é o contraste**, é o **desvio contra o véu do ladrilho
+chapado** — os dois precisam ler como a mesma família:
+
+| | escolhido | desvio médio | tinta, pior caso |
+| --- | --- | --- | --- |
+| claro | **10%** | 0,011 (12% dá 0,033) | 6,48 — chapado 6,55 |
+| escuro | **26%** | 0,086 (18% dá 0,146) | 4,78 — chapado 5,09 |
+
+Os dois ficam bem acima dos 3:1 da WCAG 1.4.11, que é a norma de que este
+componente já saiu reprovando em 4 dos 10 presets. No escuro o teto é a tinta:
+35% ainda dá 3,33 e **40% reprova, com 2,78**.
+
+**E um caso o vidro conserta.** Um `#111827` quase preto no tema escuro dá
+**1,00** contra o cartão no ladrilho chapado — véu perfeitamente invisível, e só
+o fio o salvava. Sob vidro ele dá 1,12, porque a lâmina afunda a base antes de o
+tom entrar. É a única das treze cores em que as duas superfícies discordam a
+favor desta.
+
+#### O que a asserção 13 passou a exigir
+
+Ela ganhou o quinto nome e uma cláusula própria: o fonte do `GlassColorTile`
+precisa conter `bg-transparent dark:bg-transparent` **e** `ring-0
+ring-transparent dark:ring-transparent`. Nenhum dos dois quebra nada visível de
+imediato — o véu morto e o fio duplo são exatamente o perfil de defeito calado
+que aquele arquivo existe para pegar.
+
+#### Isto não é o verniz que o ladrilho perdeu
+
+A página do `ColorTile` registra que ele **já teve** degradê branco na diagonal,
+borda clara, sombra e um `backdrop-blur`, e que os quatro saíram porque *o resto
+do sistema preenche chapado*. O argumento continua válido, e é ele que mantém o
+`ColorTile` como o padrão.
+
+O que mudou não foi o gosto: **o sistema passou a ter uma receita de vidro só**,
+medida e trancada por teste. Aquilo eram quatro camadas escritas à mão num
+arquivo; isto é a mesma `@utility glass` que a barra flutuante e as outras
+quatro peças vestem.
+
+#### O que não foi feito, com o motivo
+
+- **Nenhuma das 8 chamadas do app migrou**, por decisão. Zero pixel alterado em
+  produção, como as outras quatro peças de vidro nasceram. O candidato mais
+  honesto é `category-detail-hero.tsx`, que tem dois ladrilhos `sm` no topo de
+  uma tela e nenhuma lista em volta para desalinhar.
+- **A regra G acusa a página**, e é o falso positivo já nomeado: a heurística
+  "sem classe de tamanho = `size-4`" não enxerga que `size="lg"` aplica
+  `size-5`. A página do `ColorTile` carrega os mesmos dois achados, e o par
+  `20/solid` a 20px está certo.
+- **Sem eixo novo.** `size` e `color` passam direto, e o raio é herdado — a
+  utility não declara `border-radius`, que é o que torna a peça portátil. O
+  `ds:catalog` reporta `—` na coluna de variantes, como nas outras quatro.
+
+
+### Rodada 43 — o vidro vira modo, e a rodada 41 se inverte
+
+A 41 criou quatro peças de vidro e a 42 acrescentou a quinta. A pergunta que as
+julgava estava escrita no `registry.ts` desde o primeiro dia: *"no dia em que
+virarem só uma classe a mais, a pergunta certa é «componente ou modo?»"*. A
+resposta chegou — **as cinco viraram o eixo `glass` dos próprios átomos**, e os
+cinco arquivos, as cinco entradas e as cinco páginas saíram.
+
+É a terceira absorção desta base, pelo mesmo motivo das duas anteriores
+(`MoneyInput` → `<Input money>`, `KbdShortcut` → `<Kbd keys>`): **um
+especializador que importa um componente e renderiza um elemento é o átomo com
+outro nome**, cobrando do catálogo uma segunda página.
+
+**A régua que sobra**, e que é a correção da tese da 41: o que decide
+"componente ou modo?" **não é haver tradução de cor** — a 41 argumentou que a
+tradução era anatomia, e ela é. É a tradução **precisar de uma peça para
+existir**. Aqui ela cabia num eixo.
+
+#### E como eixo ela ficou melhor — três defeitos que a forma antiga escondia
+
+Não é arrumação. Um embrulho empilha classes por fora e conta com o `twMerge`
+para apagar o que a base emitiu; isso funciona quando a base emite uma utility
+**conflitante**, e falha calado quando não emite.
+
+- **O `GlassBadge` deixava uma classe morta viva.** Ele renderizava um `Badge`
+  com o `variant` padrão, cuja linha de `compoundVariants` traz
+  `bg-primary-muted text-primary-muted-foreground hover:bg-primary-muted/80`, e
+  anulava **só o `hover:`**. O `bg-primary-muted` continuava na lista e perdia
+  calado para o shorthand `background` da utility — a armadilha 1 da régua,
+  dentro da peça de vidro. Medido no DOM depois: as classes de um
+  `<Badge glass>` são a base, a superfície, o degrau, o tom e a tinta, e mais
+  nada.
+- **O `GlassButton` podia ser quebrado por quem o chamasse.** O
+  `variant="tertiary"` vinha escrito **antes** do espalhamento, então um
+  `variant="primary"` do consumidor desfazia a tradução sem aviso. Hoje
+  `variant?: never` fecha a porta no tipo.
+- **O `GlassAvatar` prometia o que não entregava.** O JSDoc dizia que `seed` era
+  *"o mesmo argumento de `identityToneFor`"*, e não era: aquela função recebe
+  duas **strings** e faz hash, enquanto ali era um `number` com módulo. As duas
+  não davam a mesma cor para a mesma pessoa. O prop virou `identity`, e o nome
+  passou a dizer o que ele é — o índice de `IDENTITY_TONES`.
+
+#### A régua da absorção: o que o vidro apagaria não é anulado, é não escrito
+
+O eixo entra no `cva` como variante booleana, e **o que a superfície de vidro
+precisaria desfazer passa a ser condicional a ele**. Medido no DOM das quatro
+páginas:
+
+| | como fica condicional | neutralizadores |
+| --- | --- | --- |
+| `Badge` | as 14 linhas de tom ganham `glass: false`; 7 novas com `glass: true` | **0** |
+| `ColorTile` | véu e fio saem da base do `cva` para o ramo `glass: false` | **0** |
+| `Checkbox` | os dois ramos são exclusivos (não há `cva` no arquivo) | **0** |
+| `Avatar` | contexto, para o `AvatarFallback` | **0** |
+| `Button` | eixo `tone` novo + compostos sob `glass: true` | **7** |
+
+**O `Button` é a exceção, e o motivo é honesto**: por dentro o modo apoia-se em
+`tertiary`, que é base de verdade, e o realce cinza dele precisa sair para o
+`--glass-sheen` entrar. Sete classes, removidas da lista pelo `twMerge` e não
+disputadas por ordem de emissão.
+
+**O `Avatar` precisou de contexto, e não de seletor.** A superfície opaca mora
+no `AvatarFallback`, não na raiz, e um `in-data-glass:bg-transparent` compila
+com `:where()` — que **não soma especificidade** — e perderia para o `bg-muted`
+declarado no próprio elemento. É a armadilha que o `DescriptionList` já pagou. O
+mecanismo é o do `Field`/`FieldControl`, e sai de graça porque o `Avatar` já é
+módulo cliente.
+
+#### A união colapsa nos wrappers, e o `FormInput` já tinha escrito isso
+
+Fechar `variant` no ramo de vidro do `Button` torna as props uma união
+discriminada — e **11 wrappers de `ui/` quebraram de uma vez**
+(`AlertAction`, `AlertDialogAction`, `AnnouncementBarAction`, `DialogClose`, o
+gatilho do `Combobox`, a seta do `Carousel`, o `SidebarTrigger` e outros), todos
+com a mesma mensagem: `Type '"tertiary"' is not assignable to type 'undefined'`.
+
+A causa está escrita em `form.tsx` desde a rodada do dinheiro: desestruturar o
+rest de uma **interseção com união aninhada** colapsa os ramos num objeto
+atribuível a nenhum. A saída é a de lá — **fixar o wrapper num ramo**, como
+`InputGroupInput` e `SidebarInput` fazem com `InputBaseProps`. Os 11 passaram a
+usar `ButtonSolidProps`, e nenhum deles quer vidro.
+
+#### Duas limpezas que apareceram no caminho
+
+- **`soft: "border-transparent"` no `Badge` era a mesma classe duas vezes** — a
+  base do `cva` já declara `border border-transparent`. E ela vazava para o
+  modo de vidro, porque `defaultVariants` aplica `soft` sempre que `variant`
+  chega `undefined`, o que no ramo de vidro é sempre.
+- **O `aria-expanded:bg-muted` do `tertiary` sobrevivia no botão de vidro**, e é
+  exatamente a dead class que esta rodada tirou do `Badge`: num gatilho de menu
+  aberto ele pintaria atrás das camadas e morreria calado. Medido depois: zero
+  `bg-muted` nos sete botões de vidro da página.
+- **A `PropsTable` do `Badge` documentava o eixo antigo** — `variant` com os sete
+  tons dentro e um `size="default"` que já tinha saído do tipo. Estava assim
+  desde a rodada que separou `variant` de `tone`.
+
+#### O catálogo, e o que o teste passou a trancar
+
+Cinco páginas saíram e o conteúdo delas dobrou nas páginas-base, que é o
+precedente de `dinheiro` → `input` e `tipografia` → `typography`. **95 → 90
+páginas.** O gerador lê o diretório `docs/` e não o registry, então
+`npm run ds:docs-map` resolve os dois arquivos gerados sozinho — e como o índice
+de busca é extraído do fonte das páginas, a prosa movida continua encontrável.
+
+A asserção 13 lia `glass-${nome}.tsx` por string montada: com os arquivos
+apagados ela **lançava ENOENT** em vez de reprovar. Reescrita contra os cinco
+átomos, ela exige a tradução, que o eixo seja eixo (a palavra como prop, não só
+a classe), e — a cláusula que importa — **que não sobre neutralizador onde o
+eixo o dispensa**. Ela distingue o neutralizador da superfície legítima pelo
+prefixo: um `bg-transparent` cru é o que o `outline` do `Badge` declara; um com
+variante (`hover:`, `data-[state=checked]:`) ou com par `dark:` só existe para
+desfazer o que outra regra emitiu. Mais um guarda de que **nenhum
+`glass-*.tsx` além de `glass.tsx`** volta para `ui/`.
+
+Verificada reintroduzindo três defeitos: um `hover:bg-transparent` no `Badge`,
+a tradução removida do `ColorTile`, e uma peça separada recriada. Os três
+reprovam.
+
+**E o `taxonomy.test.ts` melhorou sozinho.** As cinco peças eram exatamente os
+casos-limite da asserção 2 — "um átomo importa no máximo um átomo" —, e sem elas
+a cláusula volta a ter **zero** casos entre os átomos, que é o que o comentário
+dela já dizia que se devia esperar. Os "dois exemplos mortos" que ele nomeava
+passaram a ser sete.
+
+#### O que não foi feito
+
+- **Nenhuma tela de produto mudou**, porque nenhuma usava as cinco peças —
+  verificado por grep antes de começar. O modo continua opt-in, e o `ColorTile`
+  chapado segue sendo o que as oito chamadas do app renderizam.
+- **As rotas antigas dão 404**, e isso só se descobre em runtime: entry sem
+  página cai em `notFound()` sem `tsc` nem teste acusarem, apesar de o
+  comentário em `[slug]/page.tsx` prometer erro de build. Conferido à mão.
+  Chave órfã em `LAYER` também não é coberta por teste nenhum — as duas
+  lacunas ficam registradas.
+- **As seções 41 e 42 ficam como estão.** Este projeto registra inversão; não
+  reescreve o passado.
+
+
+### Rodada 44 — o vidro puxa a cor da peça, e o "plástico" era o alfa
+
+O aro e as nuvens eram brancos em toda peça, qualquer que fosse a cor dela. A
+régua proibia mudar isso: *"o tom não tinge o aro nem as nuvens — um aro verde
+faria a peça ler como plástico pintado"*.
+
+**A objeção estava certa sobre a mistura ingênua e errada sobre o tingimento.**
+Medido, misturando verde num aro de `oklch(1 0 0 / 34%)`:
+
+| a 45% | cor | alfa |
+| --- | --- | --- |
+| mistura crua | 83,159,131 | **0,635** |
+| com o alfa preso | 147,193,173 | **0,341** |
+
+Misturar uma tinta **opaca** sobe o alfa junto com o matiz — a 45% a aresta fica
+86% mais presente. **É isso que lê como plástico: não a cor, a peça ficar mais
+pesada.** A régua nova: *tingir vidro é mover matiz; mover o alfa é engrossar o
+vidro.*
+
+#### E a versão "correta" foi medida, e reprovou
+
+Prender o alfa (`oklch(from var(--glass-ink) l c h / var(--glass-rim-a))`) é a
+resposta defensável no papel, e foi implementada primeiro. Medida, ela quase não
+entrega: o aro composto sobre a página ia de `94,94,94` para no máximo
+`94,84,94` — **10 unidades** de espalhamento, num traço de 1px, mesmo forçando
+claridade 1 e triplicando o croma. Num painel de 180×240 as quatro doses eram
+indistinguíveis a olho.
+
+A causa é estrutural, e ficou escrita: **as nuvens são pintadas atrás da
+lâmina**, que é 82% preta, então elas chegam ao olho com ~18% da força — é a
+atenuação que a rodada 39 criou de propósito para elas lerem como luz *por
+trás*. Quem pode carregar cor é o aro, e ele tem 1px.
+
+Com o alfa livre a 20%: espalhamento **16,5** e alfa 0,471.
+
+#### E 16,5 ainda era pouco — o que faltava era croma, não dose
+
+Duas vezes seguidas a leitura foi "as bordas continuam brancas", e o número dava
+razão a ela: `--identity-N` tem croma **0,09**, e 20% de uma cor quase cinza
+misturados em branco continuam brancos.
+
+A varredura separou as duas alavancas, e elas não custam a mesma coisa:
+
+| | alfa | espalhamento |
+| --- | --- | --- |
+| croma 1×, 20% | 0,471 | 16,5 |
+| croma **4×**, 20% | **0,471** | **56,7** |
+| croma 1×, 55% | 0,702 | ~48 |
+
+**O alfa depende só da quantidade** (`p × 1 + (1−p) × 0,341`); **o matiz depende
+só do croma**. Subir o croma dá 3,4× a cor **de graça** — a aresta não fica mais
+presente —, enquanto chegar ao mesmo lugar pela dose custaria alfa 0,702, ou
+seja o dobro da presença do neutro.
+
+Daí `--glass-ink-boost: 4`, aplicado **na receita** e não nas peças. Ele
+multiplica em vez de fixar um alvo porque **0 × 4 continua 0**: o fallback de
+cada camada é o próprio neutro, que é croma 0, e é isso que mantém o no-op
+intacto. Fixar `oklch(from … l 0.2 h)` tingiria o vidro sem cor.
+
+Acima do gamute o navegador limita, e o limite é o resultado desejado: a versão
+mais saturada daquele matiz naquela claridade. É o que faz um tom já vivo
+(`--destructive`, croma 0,245) e um discreto (`--identity-N`, 0,09) chegarem ao
+aro com a mesma presença.
+
+Medido depois, no escuro: alfa **constante em 0,471** nas seis identidades,
+espalhamento médio **56,8**, e os picos do aro em `125,90,91` (rosa),
+`125,105,48` (âmbar), `84,122,76` (verde), `15,125,125` (ciano), `82,111,125`
+(azul), `125,95,125` (violeta). No claro os dois extremos do bisel tingem, com
+espalhamento de 50 a 98.
+
+#### E o corpo continuava preto — o tom era translúcido sobre uma lâmina preta
+
+A leitura seguinte foi outra: *"por que o fundo das versões glass está em preto e
+o das outras em cinza?"*. Medido, procedente — o avatar de vidro saía **20% mais
+escuro** que o opaco da mesma identidade:
+
+| identidade | opaco | vidro | queda |
+| --- | --- | --- | --- |
+| verde | `46,55,45` | `37,44,36` | −9,7 |
+| ciano | `38,55,56` | `30,44,45` | −10,0 |
+| rosa | `61,48,48` | `49,38,38` | −10,7 |
+
+A causa: o tom era **80% opaco** (75%/65% nos semânticos) e fica *acima* da
+lâmina, que compõe para **rgb 2** sobre a página. Os 20% que atravessavam eram
+preto puro. **A mesma pessoa lia com duas cores conforme o material.**
+
+**Clarear a lâmina não resolvia**, e a medição descartou a saída óbvia: de 82%
+para 20% de preto o corpo só ia de 41,2 para 42,4, porque a página atrás já é
+`rgb 10`. A alavanca era o alfa do tom — 88% dá 45,3, 92% dá 47,6, e **100% dá
+51,3, que é exatamente o opaco**.
+
+Com o tom opaco, o corpo das duas versões é **idêntico nas seis identidades**,
+medido no elemento renderizado. Só o material muda; a cor nunca.
+
+**O que se perde é a translucidez do corpo, e ela não valia nada**: o que
+deixava passar era a lâmina preta. E isto expôs um fato que reenquadra a rodada
+inteira — **numa peça com tom as nuvens já chegavam a 3,6%**. Os "pontos de luz"
+vivem no vidro *sem* cor, como a barra lateral; numa peça tingida, quem faz o
+material é o aro, sozinho.
+
+De brinde, o par `dark:` do tom sumiu das treze entradas: `-muted` e `-surface`
+já são cientes de tema, e sem o `color-mix` sobra uma declaração só.
+
+**O `ColorTile` é a exceção, e o motivo é que ali o percentual não é alfa.** Nas
+outras a fonte é um token já na cor certa; nele a fonte é o **hex cru do banco**,
+e os 12%/18% são a receita que vira véu. O tom dele passou a ser literalmente o
+véu do chapado, opaco — um `100%` pintaria a cor cheia, que é o desenho que
+reprovava em 4 dos 10 presets.
+
+#### E a caixa do catálogo era mais escura que o resto dele
+
+A última leitura foi sobre o **fundo do preview**, não sobre a peça: as oito
+seções de vidro que escrevi passavam `previewClassName="bg-background p-6"`, ou
+seja `rgb 10` dentro de uma moldura que é `bg-card`, `rgb 23`. Ao lado de
+qualquer outra seção da mesma página aquilo lia como um buraco preto.
+
+Duas coisas na correção. O `p-6` era **redundante** — já é o padrão do
+`Preview` —, então a linha inteira só acrescentava o fundo; e o `bg-background`
+tinha vindo por herança das páginas de vidro apagadas na rodada 43, sem motivo
+próprio. Removidos — os oito, mais os **três** da página do
+`Glass` —, as caixas medem `23,23,23`, a mesma superfície das outras.
+
+**Sobra uma exceção, e ela tem motivo próprio:** `docs/card.tsx`, onde cartão
+dentro de cartão não desenha fronteira nenhuma. A página do `Glass` chegou a ser
+defendida com o argumento de que o consumidor do degrau `panel` é a placa
+flutuante, que mora sobre a página — mas o palco do catálogo não é a tela do
+app, e uma superfície escura demonstra melhor sobre o cartão, onde a lâmina
+(`rgb 4`) tem mais distância do fundo do que teria sobre a página (`rgb 10`).
+
+#### E o `Badge` perdeu o modo
+
+Decisão do dono, no fim da rodada: **o `Badge` não tem mais `glass`**. Saíram o
+eixo do `cva`, as sete linhas de `compoundVariants`, a união que fechava
+`variant`, o `data-glass` e as duas seções do catálogo. As catorze linhas de tom
+voltaram a não ter porta (`{ glass: false, variant: … }` → `{ variant: … }`), e
+`BadgeProps` voltou a ser a interface simples.
+
+Ficam **quatro** peças com o modo — `Button`, `Avatar`, `Checkbox`, `ColorTile`
+—, e `GLASS_TONES` / `GLASS_TONE_INKS` continuam vivos porque o `Button` os usa.
+
+Duas coisas **não** saíram junto, e é de propósito. O `soft: ""` do `cva`
+continua vazio: ele era a mesma classe que a base já declara, e essa razão não
+tinha nada a ver com vidro — só a segunda metade do comentário (o vazamento
+para o ramo de vidro) deixou de existir. E a `PropsTable` da página segue
+corrigida: ela documentava o eixo `variant` antigo, com os sete tons dentro e um
+`size="default"` que já tinha saído do tipo.
+
+**A lição de método:** eu tratei "quanto de cor" como um eixo só e ofereci doses.
+São dois eixos com preços diferentes, e a pergunta certa — *o que custa alfa e o
+que não custa?* — só apareceu depois de a terceira leitura a olho continuar
+dizendo branco. **Quando a percepção discorda do número duas vezes, o errado é o
+modelo, não o olho.**
+
+**E fica registrado um erro meu de método.** A amostra em que baseei a pergunta
+sobre intensidade tinha o alfa em **0,471**, não 0,341 — era a mistura crua. Ou
+seja: apresentei uma opção descrevendo um resultado que a regra que eu propunha
+no mesmo texto tornava inalcançável. A medição pegou; a pergunta teve de ser
+refeita com os números certos. **Amostra usada para escolher uma dose tem de
+sair da mesma fórmula que vai ser implementada.**
+
+#### O no-op é estrutural, e isso custou duas tentativas
+
+`--glass-ink` **não é declarada em tema nenhum**. Cada camada a lê com o próprio
+neutro como fallback — `var(--glass-ink, var(--glass-rim))` —, então sem tinta a
+mistura é o neutro consigo mesmo, que é o neutro em **qualquer** quantidade.
+
+A primeira versão declarava `--glass-ink: oklch(1 0 0)` no `:root` e apoiava o
+no-op em croma 0 mais `--glass-ink-amount: 0%`. Funcionava, e o `ds:catalog`
+acusou com razão: **uma cor sem par no `.dark`**. Silenciar teria custado uma
+linha redundante; tirar o token custou nada e deixou a garantia mais forte — de
+"o padrão é uma cor que não tinge" para "sem tinta não há mistura".
+
+**A prova é a barra lateral**, o único consumidor de produto da utility e o que
+não tem cor de elemento. Extraídas as 14 cores da receita e comparadas **uma a
+uma como cor** (não como string — `oklab(1 0 0 / 0.34)` e `oklch(1 0 0 / 0.34)`
+são a mesma cor em notações diferentes, e essa comparação me enganou uma vez
+hoje): **idênticas nos dois temas**, antes e depois.
+
+#### Por que `--glass-ink` e não `--glass-tone`
+
+São coisas diferentes: o **tom** é uma camada com alfa próprio que pinta o
+**corpo**; a **tinta** é só um matiz de onde o aro e as nuvens puxam. Manter as
+duas separadas é o que deixa a asserção **12** — *o aro e as nuvens não leem
+`--glass-tone`* — continuar verdadeira **e** continuar certa. A separação entre
+corpo e material não mudou; o que mudou foi o material passar a ter cor.
+
+#### As fontes de matiz, e o tom que não precisou de exceção
+
+| peça | fonte | nota |
+| --- | --- | --- |
+| `Badge` / `Button` | `var(--{tom})` | **um valor, sem `dark:`** — o matiz é idêntico nos dois temas (166, 152, 78, 27) |
+| `Avatar` | `-surface` no claro, `--identity-N` no escuro | é o par que inverte, e o saturado é o outro em cada tema |
+| `ColorTile` | `var(--tile-color)` | a cor crua do banco |
+| `Checkbox` | `var(--primary)`, só marcado | uma caixa vazia é vidro sem cor |
+
+**`neutral` não precisou de exceção**: `--muted` é croma **0** nos dois temas, e
+misturar cinza num branco não move matiz nenhum. Ele sai neutro por construção,
+e não por um `if`.
+
+**E o tema claro saiu melhor do que a previsão.** Eu esperava que tingir o aro
+lá — onde ele é **sombra**, não luz — o lavasse. Medido, o contrário: a fonte
+ali é o `-surface`, que no claro é o saturado **escuro**, então a sombra
+escurece e ganha cor (contraste de 1,53 para ~2,03 contra o cartão), e o lado
+aceso vai de branco puro a um branco tingido visível. O bisel das peças
+coloridas fica mais presente no claro — consequência do alfa livre, e dita em
+vez de descoberta depois.
+
+#### O escopo, e o que ficou de fora
+
+Tingem: os **dois extremos do aro** e as **duas nuvens**. Não tingem:
+
+- **`--glass-rim-shade`**, o vale do bisel — a 5% e 10% de alfa não carrega
+  matiz que se enxergue.
+- **`--glass-sheen`**, o realce de cursor — realce é a cor da **fonte de luz**,
+  não do material.
+
+A asserção **15** tranca as duas listas, para a decisão ficar escrita em vez de
+combinada.
+
+#### Um guarda que passava por sorte
+
+A asserção **11** proibia `color-mix` tocando `--glass-rim`, com
+`not.toMatch(/color-mix[^)]*--glass-rim/)` sobre a receita. Com o tingimento ela
+continuou **verde** — e não por estar certa: o `[^)]*` não atravessa o `)` de
+`var(--glass-ink)`. O que ela quer proibir é **derivar um extremo do bisel do
+outro na declaração do token**, que é onde o defeito da rodada 40 morava; ela
+passou a olhar os blocos de tema, e verificada reintroduzindo a derivação,
+reprova.
+
+
+### Rodada 45 — o vidro do botão vira acabamento, e não paleta
+
+O modo de vidro do `Button` nasceu como **peso próprio**: fechava `variant`,
+abria um eixo `tone` de sete cores e pintava com os pares `-muted`. A leitura do
+dono foi direta — *"as cores estão diferentes, a forma de aplicá-las está
+diferente, e deixou o botão mais apagado"* —, e a medição no escuro deu razão:
+
+| | corpo | tinta | contraste |
+| --- | --- | --- | --- |
+| `variant="primary"` | `0,121,82` | branco `250,250,250` | 5,22 |
+| `glass tone="primary"` | `0,47,32` | verde pálido `179,229,206` | 10,52 |
+
+**2,6× mais escuro** no canal principal, com a tinta trocada. A página do
+catálogo documentava isso como decisão — *"um botão de vidro primary não é um
+botão verde"* —, e essa nota cai.
+
+**A régua nova: o vidro é acabamento sobre a cor da peça, e não uma paleta
+paralela.** O corpo vai para `--glass-tone` com a cor do próprio variant, opaco;
+a tinta e o anel de foco do variant sobrevivem; o vidro acrescenta aresta, halo
+e aro aceso.
+
+Medido depois, corpo do vidro contra corpo do chapado:
+
+| | escuro | claro |
+| --- | --- | --- |
+| `primary` | Δ **0** (`0,121,82`) | Δ **0** (`0,96,61`) |
+| `secondary` | Δ **0** | Δ **0** |
+| `destructive` | Δ1 | Δ2,4 |
+
+E o contraste do texto volta ao do botão padrão: **5,22** no `primary` escuro,
+7,34 no claro — contra os 10,52 de antes, que eram texto pálido sobre corpo
+escuro.
+
+#### Não foi preciso forçar `tertiary`, e é o que salva a tinta
+
+A versão anterior cravava `variantEfetivo = "tertiary"` por dentro e reconstruía
+tudo por `tone`. Mantendo o **variant real**, o que precisa sair é só o que a
+`@utility` apagaria de qualquer jeito, e em três famílias:
+
+- **o preenchimento**, que o shorthand `background` apaga calado (armadilha 1);
+- **a borda**, porque a utility declara `border: 1px solid transparent` e é ali
+  que o aro mora;
+- **o recorte**, e este é o sorrateiro: o `secondary` traz `bg-clip-border`, e
+  `background-clip` é uma propriedade **só** — ela sobrescreveria o recorte das
+  **cinco camadas** de uma vez, levando as de `padding-box` para fora da borda.
+
+O que **não** sai é a tinta nem o `focus-visible:ring-destructive/20`. É isso
+que faz "as mesmas cores" ser verdade em vez de aproximação.
+
+#### O `destructive` é a exceção, e ela foi medida
+
+Ele é o único dos três que **não preenche**: o botão padrão é um véu
+(`bg-destructive/10` no claro, `/20` no escuro). Como `--glass-tone` tem de ser
+opaco — senão a lâmina quase preta atravessa, que é o defeito da rodada 44 —,
+foi preciso achar o opaco equivalente:
+
+| candidato | Δ contra o véu |
+| --- | --- |
+| `color-mix(--destructive 20%, --card)` | **0** sobre a página, **1** sobre o cartão |
+| `--destructive-muted` | **21** |
+
+O óbvio errava por 21. A referência é `--card` porque é onde um botão mora, e
+**é a única das três que não acompanha o fundo** — o preço de o tom ser opaco,
+dito em vez de descoberto.
+
+#### O glow: halo por fora, aro aceso por dentro
+
+Nada no repositório se chamava glow, e **nenhum `box-shadow` do sistema tinha
+cor semântica** — os cinco `--shadow-*` são preto puro nos dois temas. O idioma
+mais próximo era o `slider.tsx`, com `hover:ring-4 ring-primary-accent/15`.
+
+- **Halo**: `shadow-[0_0_16px_-4px_var(--glass-glow)]`, com `--glass-glow`
+  declarado por variant. **Verificado que ele não come o anel de foco**: medido,
+  `shadow-md ring-1` emite as duas na mesma cadeia, porque no Tailwind v4
+  `--tw-shadow` e `--tw-ring-shadow` são variáveis distintas somadas em
+  `box-shadow`.
+- **Aro aceso**: `--glass-ink-amount` sobe de 20% para **45%** na linha do
+  variant. É variável, então não custou uma linha na `@utility`.
+
+**`secondary` não tinge, e está certo** — `--secondary` é croma 0 nos dois
+temas, e multiplicar zero pelo `--glass-ink-boost` continua zero. Sai neutro por
+construção, e não por exceção.
+
+#### A limpeza que a mudança obrigou
+
+Com o `Button` fora do eixo de sete tons — e o `Badge` já sem o modo —,
+`GLASS_TONES`, `GLASS_TONE_INKS` e o tipo `GlassTone` ficaram com **zero
+consumidores**. Os três saíram de `glass-classes.ts`, e no lugar ficou a nota
+que explica por quê. `glassInteractiveClassName` fica: o `Checkbox` o usa.
+
+#### E o modo saiu do `Button`
+
+Vista na tela, a peça foi reprovada pelo dono — *"ficou péssimo"* —, e o modo
+foi **removido inteiro**. Saíram o eixo do `cva`, as três linhas de
+`compoundVariants`, a união de props, o `data-glass` e a seção do catálogo com
+as duas notas.
+
+**A união levou junto uma dívida que ela mesma tinha criado.** Fechar `variant`
+no ramo de vidro obrigou 11 wrappers de `ui/` a se fixarem em
+`ButtonSolidProps`, porque desestruturar o rest de uma interseção com união
+aninhada colapsa os ramos. Sem a união, os 11 voltaram a
+`React.ComponentProps<typeof Button>` — que é o que tinham antes, e é mais
+simples.
+
+Ficam **três** peças com o modo: `Avatar`, `Checkbox` e `ColorTile`.
+`glassInteractiveClassName` sobrevive com um consumidor só, o `Checkbox`.
+
+**O que esta rodada deixa de saldo, mesmo tendo sido revertida na peça:** os
+números que explicam por que a versão anterior estava errada (2,6× mais escura,
+tinta pálida), a medição do `destructive` (o `-muted` erra por Δ21 contra o véu
+que o botão pinta), e o fato de que `background-clip` é uma propriedade só —
+ela sobrescreveria o recorte das cinco camadas de uma vez. Os três continuam
+valendo para qualquer peça que venha a vestir vidro.
+
+#### E o `Checkbox` saiu junto
+
+Removido logo depois, pela mesma decisão. Saíram o prop, os dois ramos do
+ternário e a seção do catálogo com as duas notas — a caixa voltou a ser a lista
+de classes chapada que era antes.
+
+**Com ele foi-se o último consumidor de `glassInteractiveClassName`**, que
+publicava `--glass-sheen` no `hover` e no `active`. O export saiu; **a camada
+fica na `@utility`**, lida com fallback `transparent`. Ela é ponto de contrato e
+não código morto: hoje não há produtor, e a primeira peça de vidro **clicável**
+volta a precisar dela.
+
+Sobram **duas** peças com o modo — `Avatar` e `ColorTile` —, e as duas têm em
+comum não serem clicáveis. É o resumo honesto de onde o vidro se paga neste
+sistema: superfícies de **identidade**, não controles.
+
+#### Uma lição de instrumento, e é a terceira desta série
+
+Ao conferir o halo, a sonda cortava `boxShadow` em 80 caracteres e devolvia
+`rgba(0, 0, 0, 0) 0px 0px 0px 0px` três vezes — e eu quase reportei que o glow
+não estava aplicando. **As entradas zeradas são o começo da cadeia composta do
+Tailwind**; a camada real era a última. Truncar um valor composto esconde
+justamente a parte que interessa.
+
+
 ### Backlog de migração
 
 A rodada 01 entregou tokens, componentes, documentação e o auditor, sem migrar

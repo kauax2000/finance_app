@@ -13,6 +13,7 @@ import {
   ReceiptPercentIcon as ReceiptMiniIcon,
 } from "@heroicons/react/20/solid"
 import { ColorTile } from "@/components/ui/color-tile"
+import { Muted } from "@/components/ui/typography"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 const SIZES = ["sm", "md", "lg"] as const
@@ -175,6 +176,107 @@ export default function ColorTileDoc() {
         ladrilho do mesmo tamanho, lado a lado numa lista, tenham o mesmo canto.
       </DocNote>
 
+      <DocSection
+        title="Em vidro"
+        description="A cor da pessoa vira o tom da lâmina em vez do véu. É a primeira tradução de uma cor de runtime do sistema: as outras leem um token de uma tabela, e aqui o tom lê a --tile-color que o style publica."
+        code={`<ColorTile glass color={category.color}>
+  <CakeIcon aria-hidden />
+</ColorTile>`}
+      >
+        {CATEGORIAS.map(({ cor, icone: Icone, nome }) => (
+          <ColorTile key={nome} glass color={cor}>
+            <Icone aria-hidden />
+          </ColorTile>
+        ))}
+      </DocSection>
+
+      <DocSection
+        title="Ao lado do chapado"
+        description="O de cima é véu opaco sobre o cartão; o de baixo é lâmina. A diferença de material aparece na aresta — e o fio colorido do chapado dá lugar ao aro."
+        code={`<ColorTile color="#10B981" />
+<ColorTile glass color="#10B981" />`}
+      >
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            {CATEGORIAS.map(({ cor, icone: Icone, nome }) => (
+              <ColorTile key={nome} color={cor}>
+                <Icone aria-hidden />
+              </ColorTile>
+            ))}
+            <Muted className="text-2xs">chapado</Muted>
+          </div>
+          <div className="flex items-center gap-3">
+            {CATEGORIAS.map(({ cor, icone: Icone, nome }) => (
+              <ColorTile key={nome} glass color={cor}>
+                <Icone aria-hidden />
+              </ColorTile>
+            ))}
+            <Muted className="text-2xs">vidro</Muted>
+          </div>
+        </div>
+      </DocSection>
+
+      <DocNote title="O tom do vidro é o véu do chapado, e por isso os dois corpos são iguais">
+        Nas outras peças de vidro a fonte do tom é um token{" "}
+        <code>-muted</code>{" "}
+        já na cor certa, e o percentual era só transparência. Aqui não:{" "}
+        <strong>o percentual é diluição</strong>{" "}
+        — a fonte é o hex cru do banco, e são os 12% / 18% que transformam uma
+        cor saturada num véu. É o que faz esta peça ser a exceção quando o tom
+        passou a ser opaco.
+        <br />
+        <br />
+        Por isso o tom de vidro é <strong>literalmente o véu do chapado</strong>:{" "}
+        <code>color-mix(in srgb, var(--tile-color) 12%, var(--card))</code>{" "}
+        no claro, 18% no escuro. Medido nos dez presets e nos três extremos, o
+        corpo das duas versões sai <strong>idêntico</strong> — inclusive o
+        branco (<code>65,65,65</code>) e o quase preto (<code>22,23,26</code>).
+        <br />
+        <br />
+        Um <code>100%</code>{" "}
+        aqui pintaria a cor cheia, que é o desenho de que este componente saiu:
+        ele reprovava em <strong>4 dos 10 presets</strong>{" "}
+        nos 3:1 da WCAG 1.4.11.
+      </DocNote>
+
+      <DocNote title="O véu e o fio não são anulados: eles não são escritos">
+        As três camadas do ladrilho se comportam de três jeitos sob a lâmina. O{" "}
+        <strong>véu</strong> seria apagado calado pelo shorthand{" "}
+        <code>background</code> da utility. A <strong>tinta</strong>{" "}
+        atravessa intacta — <code>oklch(from … 0.42 c h)</code>{" "}
+        fixa a claridade, e a lâmina clara é quase branca e a escura quase
+        preta, então os dois números continuam do lado certo. O{" "}
+        <strong>fio</strong>{" "}
+        vira a segunda aresta ao lado do aro, e a régua diz que{" "}
+        <strong>o tom não tinge o aro</strong>: um aro colorido faz a peça ler
+        como plástico pintado.
+        <br />
+        <br />
+        Isto já foi um embrulho, e ali as duas camadas precisavam ser desfeitas
+        por fora — <code>bg-transparent</code> mais{" "}
+        <strong>três</strong> classes para o fio, porque{" "}
+        <code>ring-0</code>{" "}
+        derruba só a largura e sem <code>ring-transparent</code>{" "}
+        as duas classes de <em>cor</em>{" "}
+        ficavam na lista sem pintar nada. Como eixo, o ramo chapado não é
+        emitido e o total de neutralizadores é <strong>zero</strong>.
+      </DocNote>
+
+      <DocNote title="Isto não é o verniz que o ladrilho perdeu">
+        A nota acima registra que ele já teve degradê branco na diagonal, borda
+        clara, sombra e um <code>backdrop-blur</code>{" "}
+        — e que os quatro saíram porque{" "}
+        <em>o resto do sistema preenche chapado</em>. O argumento continua
+        válido, e é ele que mantém o modo chapado como padrão.
+        <br />
+        <br />
+        O que mudou não foi o gosto:{" "}
+        <strong>o sistema passou a ter uma receita de vidro só</strong>, medida
+        e trancada por teste. Aquilo eram quatro camadas escritas à mão num
+        arquivo; isto é a mesma <code>@utility glass</code>{" "}
+        que a barra flutuante veste.
+      </DocNote>
+
       <PropsTable
         rows={[
           {
@@ -189,6 +291,13 @@ export default function ColorTileDoc() {
             type: '"sm" | "md" | "lg"',
             default: '"md"',
             description: "32px, 36px e 44px.",
+          },
+          {
+            prop: "glass",
+            type: "boolean",
+            default: "false",
+            description:
+              "A lâmina de vidro no lugar do véu. A cor vira --glass-tone; a tinta não muda, e o fio sai.",
           },
         ]}
       />

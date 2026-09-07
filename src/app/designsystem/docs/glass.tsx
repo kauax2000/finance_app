@@ -78,7 +78,6 @@ export default function GlassDoc() {
             <DocSection
                 title="A superfície"
                 description="O degrau `panel`, que é o padrão. A lâmina é o corpo; as duas nuvens moram nos cantos superior-esquerdo e inferior-direito; o aro corre na diagonal entre eles."
-                previewClassName="bg-background p-6"
                 code={`<Glass className="w-60 rounded-xl shadow-sm">
   …
 </Glass>`}
@@ -91,7 +90,6 @@ export default function GlassDoc() {
             <DocSection
                 title="Numa caixa pequena"
                 description="O degrau `control`. Porcentagem escala e percepção não: a nuvem de `panel` vira 5,7px de luz num controle de 32px, e isso lê como aresta dura em vez de nuvem."
-                previewClassName="bg-background p-6"
                 code={`<Glass size="control" className="h-8 w-18 rounded-full" />`}
             >
                 <div className="flex items-center gap-8">
@@ -109,7 +107,6 @@ export default function GlassDoc() {
             <DocSection
                 title="Vestindo uma peça que já existe"
                 description="Com `asChild` nenhum nó é criado — o `Slot` mescla as classes no filho. É a forma de dar vidro a um controle sem tocar na `className` dele."
-                previewClassName="bg-background p-6"
                 code={`<Glass asChild size="control">
   <AppThemeToggle />
 </Glass>`}

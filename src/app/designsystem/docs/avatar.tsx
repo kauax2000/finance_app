@@ -1,9 +1,14 @@
 "use client"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Muted } from "@/components/ui/typography"
+import { IDENTITY_TONES } from "@/lib/avatar"
+import { cn } from "@/lib/utils"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 const SIZES = ["xs", "sm", "md", "lg", "xl"] as const
+
+const PESSOAS = ["AC", "BM", "KL", "RS", "TF", "VP"]
 
 export default function AvatarDoc() {
   return (
@@ -117,6 +122,95 @@ export default function AvatarDoc() {
         de baixo através do de cima.
       </DocNote>
 
+      <DocSection
+        title="Em vidro"
+        description="A identidade da pessoa vira o tom da lâmina, e o fallback deixa de pintar superfície própria."
+        code={`<Avatar glass identity={2}>
+  <AvatarFallback>KL</AvatarFallback>
+</Avatar>`}
+      >
+        <div className="flex flex-wrap items-center gap-3">
+          {PESSOAS.map((iniciais, i) => (
+            <Avatar key={iniciais} glass identity={i}>
+              <AvatarFallback>{iniciais}</AvatarFallback>
+            </Avatar>
+          ))}
+        </div>
+      </DocSection>
+
+      <DocSection
+        title="Ao lado do avatar opaco"
+        description="O de cima é superfície opaca; o de baixo é lâmina. A diferença de material aparece na aresta."
+        code={`<Avatar><AvatarFallback className={cn(tom.surface, tom.ink)}>KL</AvatarFallback></Avatar>
+<Avatar glass identity={2}><AvatarFallback>KL</AvatarFallback></Avatar>`}
+      >
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            {PESSOAS.map((iniciais, i) => (
+              <Avatar key={iniciais}>
+                <AvatarFallback
+                  className={cn(IDENTITY_TONES[i].surface, IDENTITY_TONES[i].ink)}
+                >
+                  {iniciais}
+                </AvatarFallback>
+              </Avatar>
+            ))}
+            <Muted className="text-2xs">opaco</Muted>
+          </div>
+          <div className="flex items-center gap-3">
+            {PESSOAS.map((iniciais, i) => (
+              <Avatar key={iniciais} glass identity={i}>
+                <AvatarFallback>{iniciais}</AvatarFallback>
+              </Avatar>
+            ))}
+            <Muted className="text-2xs">vidro</Muted>
+          </div>
+        </div>
+      </DocSection>
+
+      <DocNote title="O vidro não tinha onde morar, e os dois caminhos óbvios falham">
+        Medido: a raiz do <code>Avatar</code>{" "}
+        <strong>não pinta fundo nenhum</strong>, e o{" "}
+        <code>AvatarFallback</code> é <code>h-full w-full</code>{" "}
+        com superfície <strong>opaca</strong>.
+        <br />
+        <br />
+        Vidro na <strong>raiz</strong> fica escondido atrás do fallback. Vidro
+        no <strong>fallback</strong> apaga a identidade. E o terceiro caminho —
+        tornar <code>--identity-N-surface</code> translúcido — está{" "}
+        <strong>rejeitado por escrito</strong>{" "}
+        no sistema: avatares empilhados mostrariam o de baixo.
+        <br />
+        <br />
+        A saída é a tradução: a lâmina fica na raiz, o tom vem da identidade, e
+        o fallback deixa de escrever superfície. E a objeção do empilhamento não
+        se aplica, porque <strong>é um modo</strong>{" "}
+        — quem escreve <code>glass</code>{" "}
+        aceita a translucidez, e o avatar sem ele segue opaco.
+      </DocNote>
+
+      <DocNote title="O fallback não anula nada — ele deixa de escrever">
+        A superfície opaca mora no <code>AvatarFallback</code>, não na raiz, e
+        desligá-la por seletor não funcionaria: um{" "}
+        <code>in-data-glass:bg-transparent</code> compila com{" "}
+        <code>:where()</code>, que{" "}
+        <strong>não soma especificidade</strong>, e perderia para o{" "}
+        <code>bg-muted</code>{" "}
+        declarado no próprio elemento. Quem desce o modo é{" "}
+        <strong>contexto</strong>{" "}
+        — o mecanismo do <code>Field</code>, e ele sai de graça porque o{" "}
+        <code>Avatar</code> já é módulo cliente.
+      </DocNote>
+
+      <DocNote title="A foto encolhe 2px, e o preço é a aresta">
+        O vidro traz <code>border: 1px solid transparent</code>, que é onde o
+        aro mora. Com <code>box-sizing: border-box</code>{" "}
+        a caixa externa não cresce — <strong>o conteúdo encolhe 2px</strong>.
+        Num avatar <code>sm</code> de 32px, são 30px de imagem. Numa peça
+        circular com foto isso é visível, e por isso está dito em vez de
+        descoberto depois.
+      </DocNote>
+
       <PropsTable
         rows={[
           {
@@ -130,6 +224,20 @@ export default function AvatarDoc() {
             type: '"circle" | "rounded"',
             default: '"circle"',
             description: "Retrato redondo ou quadrado de canto arredondado.",
+          },
+          {
+            prop: "glass",
+            type: "boolean",
+            default: "false",
+            description:
+              "A lâmina de vidro. A identidade vira o tom, e o fallback deixa de pintar superfície.",
+          },
+          {
+            prop: "identity",
+            type: "number",
+            default: "0",
+            description:
+              "Qual das seis identidades, no modo de vidro — o índice de IDENTITY_TONES, não a semente de identityToneFor.",
           },
         ]}
       />

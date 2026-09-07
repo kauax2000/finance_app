@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs"
+import { readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 
@@ -177,7 +177,17 @@ describe("a superfície de vidro", () => {
         // Com o token próprio: 205 na sombra contra **255** no realce, e a placa
         // cedeu para 252 para o realce ter onde existir. Amplitude 50, contra 25.
         expect(RECEITA).toContain("var(--glass-rim-far)")
-        expect(RECEITA_CODIGO).not.toMatch(/color-mix[^)]*--glass-rim/)
+
+        // A proibição é **derivar um extremo do outro na declaração do token**,
+        // que é onde o defeito morava. Ela ficava escrita contra a receita
+        // (`RECEITA_CODIGO.not.toMatch(/color-mix[^)]*--glass-rim/)`) e passou a
+        // valer nada quando a receita ganhou o `color-mix` do tingimento: o
+        // `[^)]*` não atravessa o `)` de `var(--glass-ink)`, então ela seguia
+        // verde por acidente. Agora ela olha os blocos de tema.
+        for (const tema of [CLARO, ESCURO]) {
+            const decl = tema.match(/--glass-rim-far:\s*([^;]+);/)?.[1] ?? ""
+            expect(decl).not.toContain("--glass-rim")
+        }
 
         const alvo = (bloco: string, token: string) =>
             bloco.match(new RegExp(`${token}:\\s*oklch\\(([\\d.]+)`))?.[1]
@@ -225,44 +235,135 @@ describe("a superfície de vidro", () => {
         expect(nuvens).not.toContain("--glass-tone")
     })
 
-    it("13. as quatro peças traduzem cor, e não são só o átomo com uma classe", () => {
-        // É a asserção que as separa de `<Glass asChild><Base /></Glass>`, que
-        // compila e sai **sem cor nenhuma** porque o shorthand apaga o
-        // `background-color`.
+    it("13. os dois átomos traduzem cor, e o eixo é eixo — não embrulho mudado de lugar", () => {
+        // Houve cinco peças separadas — `GlassButton`, `GlassBadge`,
+        // `GlassAvatar`, `GlassCheckbox`, `GlassColorTile` —, cada uma
+        // importando **um** átomo e renderizando **um** elemento. Foram
+        // absorvidas como o eixo `glass`, pela terceira vez que este projeto faz
+        // isso: `MoneyInput` virou `<Input money>` e `KbdShortcut` virou
+        // `<Kbd keys>`.
         //
-        // Ela existe porque este projeto já absorveu duas especializações que
-        // eram o átomo com outro nome — `MoneyInput` virou `<Input money>` e
-        // `KbdShortcut` virou `<Kbd keys>`. A pergunta é sempre "componente ou
-        // modo?", e a resposta aqui é componente **enquanto** houver tradução.
-        // **Sem comentários.** Os doc-comments destas peças explicam a tradução
-        // e citam `--glass-tone` por extenso; varrer o texto cru testaria o
-        // comentário e não o código. Verificado: com a tradução removida do
-        // `GlassButton`, a versão que lia o texto cru **passava**.
-        const peca = (nome: string) =>
-            readFileSync(join(process.cwd(), `src/components/ui/glass-${nome}.tsx`), "utf8")
+        // A régua que sobrou: o que decide "componente ou modo?" **não é haver
+        // tradução** — é a tradução precisar de uma peça para existir.
+        //
+        // **Sem comentários.** Os doc-comments destes arquivos explicam a
+        // tradução e citam `--glass-tone` por extenso; varrer o texto cru
+        // testaria o comentário e não o código. Verificado: com a tradução
+        // removida do `Button`, a versão que lia o texto cru **passava**.
+        const base = (nome: string) =>
+            readFileSync(join(process.cwd(), `src/components/ui/${nome}.tsx`), "utf8")
                 .replace(/\/\*[\s\S]*?\*\//g, " ")
                 .replace(/(^|[^:])\/\/.*$/gm, "$1")
 
-        // O que se exige é a **tradução**, não a forma dela. Três compõem uma
-        // tabela da régua; a `GlassCheckbox` escreve o tom inline, porque ele
-        // vive sob `data-[state=checked]:` e um prefixo montado em tempo de
-        // execução não chegaria ao CSS — a regra da casa.
-        for (const nome of ["button", "badge", "avatar", "checkbox"]) {
-            expect(peca(nome)).toMatch(/GLASS_TONES|GLASS_IDENTITY_TONES|--glass-tone/)
-        }
-        // E a identidade não entra na tabela semântica: identidade distingue
-        // pessoas, tom significa estado, e a régua separa as duas famílias.
-        expect(peca("avatar")).toContain("GLASS_IDENTITY_TONES")
-        expect(peca("avatar")).not.toContain("GLASS_TONES")
+        const ATOMOS = ["avatar", "color-tile"]
 
-        // E nenhuma delas pode manter uma `bg-*` de estado viva: sobre vidro ela
-        // pinta **atrás** das camadas e o realce morre calado.
-        for (const nome of ["button", "badge", "checkbox"]) {
-            const fonte = peca(nome).replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/.*$/gm, "$1")
-            for (const [, classe] of fonte.matchAll(/"([^"]*(?:hover|active|data-\[state=checked\]):bg-[^"]*)"/g)) {
-                expect(classe).toMatch(/:bg-transparent/)
-            }
+        // 1. A tradução existe, em qualquer das três formas: tabela semântica,
+        //    tabela de identidade, ou `--glass-tone` literal (o `Checkbox`, sob
+        //    `data-[state=checked]:`, e o `ColorTile`, cuja cor é de runtime e
+        //    por isso não cabe em tabela nenhuma).
+        for (const nome of ATOMOS) {
+            expect(base(nome)).toMatch(/GLASS_TONES|GLASS_IDENTITY_TONES|--glass-tone/)
         }
+
+        // 2. O eixo é eixo: a palavra aparece como prop/variante, e não só como
+        //    a classe da utility. Sem isto, "vestir vidro" voltaria a ser algo
+        //    que só quem chama sabe fazer.
+        for (const nome of ATOMOS) {
+            expect(base(nome)).toMatch(/\bglass\??:/)
+        }
+
+        // 3. A identidade não entra na tabela semântica: identidade distingue
+        //    pessoas, tom significa estado, e a régua separa as duas famílias.
+        expect(base("avatar")).toContain("GLASS_IDENTITY_TONES")
+        expect(base("avatar")).not.toContain("GLASS_TONES")
+
+        // 4. **A asserção que prova que a absorção é eixo.** Onde o eixo
+        //    dispensa o neutralizador, ele não pode existir: nestes quatro, a
+        //    superfície que o vidro apagaria simplesmente não é escrita no ramo
+        //    de vidro. Como embrulho, os quatro empilhavam `bg-transparent` — e
+        //    o `Badge` deixava o `bg-primary-muted` da linha `soft` **vivo na
+        //    lista**, perdendo calado para o shorthand `background`.
+        //
+        //    O `Button` fica de fora, e o motivo é escrito: ali o `tertiary` é
+        //    base de verdade, e os seis neutralizadores dele são reais.
+        //
+        //    O que se proíbe é o **neutralizador**, e não a palavra: um
+        //    `bg-transparent` cru é superfície legítima — é o que o `outline` do
+        //    `Badge` declara. Neutralizador é o que vem com prefixo de variante
+        //    (`hover:`, `data-[state=checked]:`) ou com par `dark:`, porque
+        //    ele existe para desfazer uma classe que outra regra emitiu. E
+        //    `ring-0` só aparece para anular um anel.
+        for (const nome of ATOMOS) {
+            expect(base(nome)).not.toMatch(/[:\]]bg-transparent|dark:bg-transparent|ring-0\b/)
+        }
+
+        // 5. E a peça separada não volta pela porta dos fundos. `glass.tsx` é a
+        //    superfície; qualquer outro `glass-*.tsx` em `ui/` é a forma que
+        //    esta rodada enterrou.
+        const sobrando = readdirSync(join(process.cwd(), "src/components/ui"))
+            .filter((f) => f.startsWith("glass-") && f.endsWith(".tsx"))
+        expect(sobrando).toEqual([])
+    })
+
+    it("14. o tingimento é opt-in, e o padrão é idêntico ao vidro sem cor", () => {
+        // A cor do elemento entra por `--glass-ink`, e **não** por
+        // `--glass-tone`: o tom é uma camada com alfa próprio que pinta o
+        // corpo, a tinta é só um matiz de onde o aro e as nuvens puxam. Manter
+        // as duas separadas é o que deixa a asserção 12 continuar verdadeira.
+        //
+        // O padrão precisa ser um no-op **exato**, porque a barra lateral
+        // flutuante veste a utility sem declarar cor nenhuma. Duas coisas o
+        // garantem, e as duas se checam aqui.
+        expect(CLARO).toMatch(/--glass-ink-amount:\s*0%/)
+
+        // **E o no-op é estrutural, não uma consequência da quantidade.** Cada
+        // camada lê a tinta com o **próprio neutro como fallback**, então sem
+        // tinta a mistura é o neutro consigo mesmo — o neutro em qualquer
+        // quantidade. `--glass-ink` não é declarada em tema nenhum: fosse, seria
+        // uma cor sem par no `.dark`, e o `ds:catalog` a acusaria com razão.
+        expect(CLARO).not.toMatch(/^\s*--glass-ink:/m)
+        expect(ESCURO).not.toMatch(/^\s*--glass-ink:/m)
+        for (const neutro of ["--glass-rim", "--glass-rim-far", "--glass-cloud"]) {
+            expect(RECEITA_CODIGO).toContain(`var(--glass-ink, var(${neutro}))`)
+        }
+    })
+
+    it("15. tinge o aro e as nuvens, e nada além deles", () => {
+        // O escopo é decisão, e fica trancado em vez de combinado.
+        //
+        // **Dentro:** os dois extremos do aro e as duas nuvens. **Fora:** o
+        // vale do bisel (`--glass-rim-shade`), que a 5% e 10% de alfa não
+        // carrega matiz que se enxergue, e o realce de cursor
+        // (`--glass-sheen`), que é a cor da **fonte de luz** e não do material.
+        const camada = (de: string, ate?: string) => {
+            const i = RECEITA_CODIGO.indexOf(de)
+            const f = ate ? RECEITA_CODIGO.indexOf(ate) : RECEITA_CODIGO.length
+            return RECEITA_CODIGO.slice(i, f)
+        }
+        const nuvens = camada("radial-gradient", "var(--glass-rim-angle)")
+        const aro = camada("var(--glass-rim-angle)")
+
+        // `var\(--glass-ink[,)]` e não `var\(--glass-ink\)`: a tinta é lida com
+        // o próprio neutro como fallback, então a forma tem vírgula.
+        const tintas = (b: string) => (b.match(/var\(--glass-ink[,)]/g) ?? []).length
+
+        for (const bloco of [nuvens, aro]) {
+            expect(tintas(bloco)).toBeGreaterThan(0)
+            expect(bloco).toContain("var(--glass-ink-amount)")
+        }
+
+        // As duas nuvens tingem, não só uma.
+        expect(tintas(nuvens)).toBe(2)
+        // Os dois extremos do aro tingem — o pico e o `100%`.
+        expect(tintas(aro)).toBe(2)
+
+        // E o vale não: ele aparece duas vezes no aro, sempre cru.
+        for (const trecho of aro.split("var(--glass-rim-shade)").slice(1)) {
+            expect(trecho.trimStart().startsWith("color-mix")).toBe(false)
+        }
+        // O realce de estado nunca vê a tinta.
+        const realce = camada("var(--glass-sheen", "var(--glass-tone")
+        expect(realce).not.toContain("--glass-ink")
     })
 
     it("10. a régua não monta nome de classe em tempo de execução", () => {

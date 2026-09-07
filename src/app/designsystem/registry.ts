@@ -100,20 +100,18 @@ const LAYER: Record<string, Layer> = {
    *  camada de composição. As quatro camadas de `background` são anatomia
    *  interna, não peças que alguém compõe de fora. */
   glass: "Átomos",
-  /** As quatro versões de vidro especializam um átomo cada — `Button`, `Badge`,
-   *  `Avatar`, `Checkbox` — e continuam átomos pela régua da casa. O que as
-   *  separa de um `<Glass asChild><Base/></Glass>` é a **tradução de cor**: o
-   *  vidro apaga o `background-color`, então elas movem o tom para
-   *  `--glass-tone` em vez de o perderem.
+  /** **O vidro é modo, e não peça.** Houve cinco entradas aqui —
+   *  `glass-button`, `glass-badge`, `glass-avatar`, `glass-checkbox` e
+   *  `glass-color-tile` —, cada uma importando **um** átomo e renderizando
+   *  **um** elemento. O comentário que morava neste lugar já previa a rodada
+   *  que as absorveria: *"no dia em que virarem só uma classe a mais, a
+   *  pergunta certa é «componente ou modo?»"*. A previsão se cumpriu, e hoje o
+   *  eixo `glass` mora nos próprios átomos.
    *
-   *  A tensão fica dita: `MoneyInput` e `KbdShortcut` eram especializações de
-   *  um componente só e foram absorvidas como `prop`. Estas quatro ficam do
-   *  lado certo enquanto a tradução for anatomia; no dia em que virarem só uma
-   *  classe a mais, a pergunta certa é "componente ou modo?". */
-  "glass-avatar": "Átomos",
-  "glass-badge": "Átomos",
-  "glass-button": "Átomos",
-  "glass-checkbox": "Átomos",
+   *  A régua que sobra, e que vale para a próxima especialização: o que decide
+   *  "componente ou modo?" **não é haver tradução** — é a tradução precisar de
+   *  uma peça para existir. Aqui ela cabia num eixo, e coube melhor: como
+   *  eixo, a superfície que o vidro apagaria simplesmente não é emitida. */
   input: "Átomos",
   "input-otp": "Átomos",
   /** Uma tecla, ou o acorde inteiro numa pastilha só. As partes do acorde são
@@ -371,10 +369,6 @@ export const REGISTRY: RegistryEntry[] = [
   entry("container", "Container", "Espaçamento e largura: até onde o conteúdo cresce, a calha e o ritmo dos blocos.", ui("container"), "Container, containerSizes, containerGutters, containerStacks"),
   entry("drag-handle", "Drag Handle", "A alça que se agarra para arrastar a gaveta — e o alvo do gesto.", ui("drag-handle"), "DragHandle"),
   entry("glass", "Glass", "A superfície de vidro do sistema — vestível por qualquer peça.", ui("glass"), "Glass"),
-  entry("glass-avatar", "Glass Avatar", "O avatar de vidro — a identidade vira o tom da lâmina.", ui("glass-avatar"), "GlassAvatar"),
-  entry("glass-badge", "Glass Badge", "A pastilha de vidro, nos sete tons do sistema.", ui("glass-badge"), "GlassBadge"),
-  entry("glass-button", "Glass Button", "O botão de vidro — a hierarquia vira tom, e não preenchimento.", ui("glass-button"), "GlassButton"),
-  entry("glass-checkbox", "Glass Checkbox", "A caixa de marcar de vidro, e o que sobra dela a 16px.", ui("glass-checkbox"), "GlassCheckbox"),
   entry("input", "Input", "Campo de uma linha — e, no modo money, o campo de dinheiro.", ui("input"), "Input"),
   entry("input-otp", "Input OTP", "Entrada de código de verificação.", ui("input-otp"), "InputOTP, InputOTPSlot"),
   entry("kbd", "Kbd", "Uma tecla, ou o acorde inteiro numa pastilha só.", ui("kbd"), "Kbd"),

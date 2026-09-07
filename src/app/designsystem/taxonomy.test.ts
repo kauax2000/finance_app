@@ -87,9 +87,12 @@ describe("taxonomia", () => {
    * só a parte mecânica: um átomo que importa um único átomo para o compor, e
    * não para o especializar, passa aqui e é decisão de quem classifica.
    *
-   * *(Os dois exemplos que a cláusula tinha morreram, e pelo mesmo motivo.
+   * *(Os exemplos que a cláusula tinha morreram, e todos pelo mesmo motivo.
    * `KbdShortcut` foi absorvido pelo `Kbd` como `keys`; `MoneyInput` foi
-   * absorvido pelo `Input` como `money`. Nos dois casos o especializador
+   * absorvido pelo `Input` como `money`; e as **cinco peças de vidro** —
+   * `GlassButton`, `GlassBadge`, `GlassAvatar`, `GlassCheckbox`,
+   * `GlassColorTile` — viraram o eixo `glass` dos próprios átomos. São sete.
+   * Em todos os casos o especializador
    * importava **um** componente e renderizava **um** elemento — era o átomo com
    * outro nome, cobrando do catálogo uma segunda página. Entre os átomos a
    * cláusula ficou com **zero** casos, e é o resultado que se devia esperar:

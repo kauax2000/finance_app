@@ -4,6 +4,11 @@ import * as React from "react"
 import { Avatar as AvatarPrimitive } from "radix-ui"
 import { cva, type VariantProps } from "class-variance-authority"
 
+import { IDENTITY_TONES } from "@/lib/avatar"
+import {
+  GLASS_IDENTITY_TONES,
+  glassControlSurfaceClassName,
+} from "@/lib/glass-classes"
 import { cn } from "@/lib/utils"
 
 /**
@@ -69,21 +74,73 @@ const avatarVariants = cva(
   }
 )
 
+/**
+ * O modo de vidro desce pelo **contexto**, e não por seletor.
+ *
+ * A superfície opaca que o vidro precisa desligar (`bg-muted`) mora no
+ * `AvatarFallback`, não na raiz. Um `in-data-glass:bg-transparent` no fallback
+ * compilaria com `:where()`, que **não soma especificidade**, e perderia para o
+ * `bg-muted` declarado no próprio elemento — a armadilha que este projeto já
+ * pagou no `DescriptionList`. Contexto não disputa: o fallback simplesmente
+ * não escreve a classe.
+ *
+ * É o mecanismo do `Field` / `FieldControl`, e ele sai de graça porque o
+ * `Avatar` já é módulo cliente.
+ */
+const AvatarGlassContext = React.createContext<{ ink: string } | null>(null)
+
 function Avatar({
   className,
   size,
   shape,
+  glass,
+  identity = 0,
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Root> &
-  VariantProps<typeof avatarVariants>) {
-  return (
+  VariantProps<typeof avatarVariants> & {
+    /** A superfície: preenchimento opaco, ou a lâmina de vidro do sistema. */
+    glass?: boolean
+    /**
+     * Qual das seis identidades, no modo de vidro — o **índice** de
+     * `IDENTITY_TONES`, e não a semente de `identityToneFor`.
+     *
+     * O nome anterior era `seed`, e o JSDoc dizia ser "o mesmo argumento de
+     * `identityToneFor`". Não era: aquela função recebe duas **strings** e faz
+     * hash; aqui é um número com módulo. As duas não davam a mesma cor para a
+     * mesma pessoa. Quem tem a cor gravada resolve o tom antes e passa o índice.
+     */
+    identity?: number
+  }) {
+  // Módulo duplo para aceitar índice negativo.
+  const i =
+    (((identity % IDENTITY_TONES.length) + IDENTITY_TONES.length) %
+      IDENTITY_TONES.length) |
+    0
+
+  const raiz = (
     <AvatarPrimitive.Root
       data-slot="avatar"
       data-size={size ?? "md"}
       data-shape={shape ?? "circle"}
-      className={cn(avatarVariants({ size, shape }), className)}
+      data-glass={glass || undefined}
+      data-identity={glass ? i : undefined}
+      className={cn(
+        avatarVariants({ size, shape }),
+        // A raiz não pinta fundo nenhum, então aqui não há o que anular: a
+        // lâmina e o tom apenas se somam.
+        glass && [glassControlSurfaceClassName, GLASS_IDENTITY_TONES[i]],
+        className
+      )}
       {...props}
     />
+  )
+
+  if (!glass) return raiz
+
+  return (
+    <AvatarGlassContext.Provider value={{ ink: IDENTITY_TONES[i].ink }}>
+      {raiz}
+    </AvatarGlassContext.Provider>
   )
 }
 
@@ -137,17 +194,24 @@ AvatarImage.displayName = "AvatarImage"
 const AvatarFallback = React.forwardRef<
   HTMLSpanElement,
   React.ComponentProps<typeof AvatarPrimitive.Fallback>
->(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Fallback
-    ref={ref}
-    data-slot="avatar-fallback"
-    className={cn(
-      "flex h-full w-full items-center justify-center bg-muted font-medium text-foreground",
-      className
-    )}
-    {...props}
-  />
-))
+>(({ className, ...props }, ref) => {
+  const vidro = React.useContext(AvatarGlassContext)
+  return (
+    <AvatarPrimitive.Fallback
+      ref={ref}
+      data-slot="avatar-fallback"
+      className={cn(
+        "flex h-full w-full items-center justify-center font-medium",
+        // Sob vidro a superfície é a lâmina da raiz, e a tinta é a da
+        // identidade. As duas classes opacas não são escritas — não há
+        // `bg-transparent` a empilhar por cima.
+        vidro ? vidro.ink : "bg-muted text-foreground",
+        className
+      )}
+      {...props}
+    />
+  )
+})
 AvatarFallback.displayName = "AvatarFallback"
 
 export { Avatar, AvatarFallback, AvatarImage, avatarVariants }

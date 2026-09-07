@@ -121,16 +121,23 @@ export default function BadgeDoc() {
         rows={[
           {
             prop: "variant",
-            type: '"primary" | "secondary" | "success" | "warning" | "destructive" | "income" | "expense" | "outline"',
+            type: '"soft" | "outline"',
+            default: '"soft"',
+            description:
+              "A forma: preenche a tinta suave do tom, ou desenha o contorno na cor dele. Fechado no modo de vidro.",
+          },
+          {
+            prop: "tone",
+            type: '"primary" | "neutral" | "success" | "warning" | "destructive" | "income" | "expense"',
             default: '"primary"',
-            description: "O estado que o rótulo comunica.",
+            description: "A cor — o estado que o rótulo comunica.",
           },
           {
             prop: "size",
-            type: '"xs" | "sm" | "default"',
-            default: '"default"',
+            type: '"xs" | "sm" | "md"',
+            default: '"md"',
             description:
-              "Altura: xs 14, sm 18, default 22. xs é para contagem dentro de outro controle.",
+              "Altura: xs 14, sm 18, md 22. xs é para contagem dentro de outro controle.",
           },
         ]}
       />
