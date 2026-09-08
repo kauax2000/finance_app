@@ -4,6 +4,7 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { HoverCard as HoverCardPrimitive } from "radix-ui"
 
+import { menuPanelSurfaceClassName } from "@/lib/menu-classes"
 import { cn } from "@/lib/utils"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import { Caption } from "@/components/ui/typography"
@@ -58,7 +59,8 @@ const hoverCardContentVariants = cva(
   [
     /** Acima do véu da Sheet (`z-(--z-sheet)`); abaixo do Toaster (`z-(--z-toast)`). */
     "z-(--z-popover) flex flex-col origin-(--radix-hover-card-content-transform-origin)",
-    "rounded-lg bg-popover text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-hidden",
+    menuPanelSurfaceClassName,
+    "text-sm outline-hidden",
     "max-h-(--radix-hover-card-content-available-height) max-w-(--radix-hover-card-content-available-width) overflow-y-auto overscroll-contain",
     "duration-(--duration-instant) data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
   ],

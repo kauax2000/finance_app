@@ -91,8 +91,11 @@ function DsTopBar() {
     setNavAberta(false)
   }, [pathname])
 
+  // Opaco de base e translúcido só onde o borrão existe: sem
+  // `backdrop-filter`, os 60% deixariam o conteúdo passar por trás do título.
+  // O material — raio e vibrância — mora na `@utility glass-surface`.
   return (
-    <header className="sticky top-0 z-(--z-sticky) h-14 border-b border-border bg-background/85 backdrop-blur">
+    <header className="sticky top-0 z-(--z-sticky) h-14 border-b border-border bg-background/95 glass-surface supports-backdrop-filter:bg-background/60 reduced-transparency:bg-background">
       {/* Esquerda e direita são as duas `flex-1`, e a busca no meio não encolhe.
           Com a busca sendo a única flexível, ela centralizava no espaço que
           sobrava — e como a marca cresceu, "o que sobrava" deixou de ser

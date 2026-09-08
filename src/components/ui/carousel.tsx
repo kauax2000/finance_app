@@ -97,6 +97,28 @@ import { cn } from "@/lib/utils"
  * `scrollWidth` é 1476 contra `clientWidth` 730. O hook lê `scrollLeft` e
  * reportaria início 0 e fim 746 para sempre — a ponta esquerda nunca acenderia.
  *
+ * ## A zona é o triplo da do sistema, e a razão é o que o item carrega
+ *
+ * `--scroll-fade-x-h` vale 2rem, calibrado para **glifo** — uma trilha de abas,
+ * uma célula de tabela, onde a rampa só precisa apagar letra. Aqui o item é um
+ * `Card` **com borda**, e um fio de 1px é o que mais resiste: ele corre a
+ * altura toda e não tem contrafundo que o dissolva. Medido, o alfa desse fio a
+ * 15px da ponta:
+ *
+ * | zona | alfa do fio |
+ * | --- | --- |
+ * | 2rem (o sistema) | **31%** — legível, e é o "fade fraco" que se vê |
+ * | 4rem | 13% |
+ * | **6rem** | **9,5%** |
+ *
+ * E o **último** pixel nunca chega a zero: `--scroll-fade-floor` é 0,06 de
+ * propósito, para a ponta dizer que há mais e não que acabou. Baixá-lo foi
+ * medido ao vivo e é indistinguível — 6% de uma borda de 1px dá ~1 unidade de
+ * RGB. Quem decide aqui é a **largura** da zona, não o piso.
+ *
+ * É **variável e não propriedade**: ela herda para a rampa sem disputar com
+ * nada, e os outros consumidores da dissolução horizontal não se mexem.
+ *
  * A rampa continua sendo a do sistema (`scroll-fade-x`, de `globals.css`); só
  * o motor é daqui, publicando `--scroll-fade-start/end` a partir de
  * `api.scrollProgress()`. As invariantes de `scroll-fade-classes` valem: a
@@ -681,6 +703,8 @@ function CarouselContent({
       // nada — invariante 2 de `scroll-fade-classes`.
       className={cn(
         "overflow-hidden",
+        // O triplo da zona do sistema — ver o cabeçalho.
+        fade && "[--scroll-fade-x-h:--spacing(24)]",
         // A rampa segue o eixo. Cravar a horizontal aqui foi um defeito real:
         // um carrossel vertical saía dissolvendo as bordas **laterais**,
         // enquanto o conteúdo entrava e saía por cima e por baixo. As duas

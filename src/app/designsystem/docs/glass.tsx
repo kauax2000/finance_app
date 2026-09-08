@@ -9,7 +9,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { Muted, Small } from "@/components/ui/typography"
+import { Caption, Muted, Small } from "@/components/ui/typography"
 
 import { cn } from "@/lib/utils"
 
@@ -28,6 +28,63 @@ function LinhasDeMenu() {
                     {rotulo}
                 </div>
             ))}
+        </div>
+    )
+}
+
+/**
+ * O palco do modo material: conteúdo com **detalhe** por baixo da placa.
+ *
+ * Cor chapada não serve para julgar borrão — borrar uma cor uniforme devolve a
+ * mesma cor. O que revela um material é textura: tipografia miúda e blocos de
+ * cor com aresta.
+ */
+function ConteudoAtras() {
+    return (
+        <div aria-hidden className="absolute inset-0 overflow-hidden rounded-lg">
+            <div className="flex flex-col gap-1.5 p-3">
+                {[
+                    ["#16a34a", "Mercado", "R$ 224,40"],
+                    ["#e11d48", "Farmácia", "R$ 87,90"],
+                    ["#2563eb", "Transporte", "R$ 42,10"],
+                    ["#d97706", "Assinatura", "R$ 19,90"],
+                    ["#7c3aed", "Restaurante", "R$ 156,00"],
+                    ["#0891b2", "Mercado", "R$ 311,25"],
+                ].map(([cor, nome, valor]) => (
+                    <div key={nome + valor} className="flex items-center gap-2">
+                        <span
+                            className="size-6 shrink-0 rounded-md"
+                            style={{ background: cor }}
+                        />
+                        <span className="text-xs">{nome}</span>
+                        <span className="nums ms-auto text-xs text-muted-foreground">
+                            {valor}
+                        </span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
+}
+
+/** Uma placa de material sobre o palco, para os degraus ficarem lado a lado. */
+function PalcoDeMaterial({
+    material,
+    rotulo,
+}: {
+    material: React.ComponentProps<typeof Glass>["material"]
+    rotulo: string
+}) {
+    return (
+        <div className="flex flex-col gap-2">
+            <Caption>{rotulo}</Caption>
+            <div className="relative h-40 w-full overflow-hidden rounded-lg border border-border">
+                <ConteudoAtras />
+                <Glass
+                    material={material}
+                    className="absolute inset-x-6 inset-y-8 rounded-xl"
+                />
+            </div>
         </div>
     )
 }
@@ -115,6 +172,36 @@ export default function GlassDoc() {
                     <PastilhaDeControle />
                 </Glass>
             </DocSection>
+
+            <DocSection
+                title="Os três degraus do material"
+                description="Com `material` a peça deixa de pintar a luz e passa a borrar o que está atrás. O que separa os degraus é a opacidade da lâmina, nunca o raio — um material mais fino mostra mais do que passa por baixo, como no iOS. Ao lado, o pintado, que não tem borrão nenhum."
+                code={`<Glass material="thin" />
+<Glass material="regular" />
+<Glass material="thick" />`}
+                previewClassName="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 items-stretch"
+            >
+                <PalcoDeMaterial material={undefined} rotulo="sem material — o pintado" />
+                <PalcoDeMaterial material="thin" rotulo="thin" />
+                <PalcoDeMaterial material="regular" rotulo="regular" />
+                <PalcoDeMaterial material="thick" rotulo="thick" />
+            </DocSection>
+
+            <DocNote title="O modo tem premissa, e ligá-lo no lugar errado piora a peça">
+                O pintado parte de que <strong>não há conteúdo atrás</strong> — ele
+                desenha a luz porque não há o que revelar. O material parte do
+                oposto. Numa superfície que reserva a própria calha, como a placa
+                flutuante da barra, o borrão não tem o que borrar{" "}
+                <strong>e</strong> a lâmina abriu à toa: a peça fica pior do que
+                seria sem o modo.
+                <br />
+                <br />
+                As nuvens <strong>saem</strong> no material, e isso é o argumento e
+                não uma economia. Elas simulam luz atrás de uma placa que não tem
+                nada atrás; com conteúdo real e borrado ali, o simulacro disputa
+                com a coisa. Quem mantém a peça lendo como vidro é o aro — a mesma
+                conclusão a que a rodada do tingimento chegou por outro caminho.
+            </DocNote>
 
             <DocNote title="A ordem das camadas é o mecanismo, e não um detalhe">
                 A lâmina é pintada <strong>por cima</strong> das nuvens, e é a
@@ -342,6 +429,13 @@ export default function GlassDoc() {
                             "A medida da caixa. Existe porque a nuvem de `panel` vira 5,7px de luz num controle de 32px — a proporção é a mesma e a percepção não.",
                     },
                     {
+                        prop: "material",
+                        type: '"thin" | "regular" | "thick"',
+                        default: "—",
+                        description:
+                            "Liga o borrão de verdade. Ausência é o pintado. Os degraus diferem na opacidade da lâmina, nunca no raio.",
+                    },
+                    {
                         prop: "asChild",
                         type: "boolean",
                         default: "false",
@@ -388,6 +482,55 @@ export default function GlassDoc() {
                         type: "ângulo",
                         description:
                             "O eixo. 165° no escuro e 345° no claro — o mesmo eixo pela outra ponta.",
+                    },
+                    {
+                        prop: "--glass-material-thin / -regular / -thick",
+                        type: "cor com alfa",
+                        default: "—",
+                        description:
+                            "A lâmina de cada degrau do modo material. Escuro 40 / 55 / 70%; claro 60 / 72 / 84%. Quem muda é a opacidade — o raio é um só.",
+                    },
+                    {
+                        prop: "--glass-tone",
+                        type: "cor",
+                        default: "transparent",
+                        description:
+                            "O vidro colorido, acima da lâmina. Contrato lido com fallback: quem não pede não paga camada.",
+                    },
+                    {
+                        prop: "--glass-ink / -amount / -boost",
+                        type: "cor / % / número",
+                        default: "— / 0% / 4",
+                        description:
+                            "A cor que o aro e as nuvens puxam. Sem tinta a mistura é o neutro consigo mesmo — o no-op é estrutural.",
+                    },
+                    {
+                        prop: "--glass-rim-far",
+                        type: "cor com alfa",
+                        default: "—",
+                        description:
+                            "O outro extremo do bisel, e token próprio: no claro o pico é sombra e este lado precisa ser luz.",
+                    },
+                    {
+                        prop: "--glass-sheen",
+                        type: "cor",
+                        default: "transparent",
+                        description:
+                            "O realce de estado, a camada mais de cima. Hoje sem produtor — ponto de contrato para a primeira peça de vidro clicável.",
+                    },
+                    {
+                        prop: "--glass-rim-image / --glass-sheen-image",
+                        type: "imagem",
+                        default: "o linear do aro / o chapado do realce",
+                        description:
+                            "O aro e o realce como contrato. glass-round os troca por um cônico e um especular — num círculo as pontas do linear caem nos cantos, que ali não existem.",
+                    },
+                    {
+                        prop: "--glass-spec",
+                        type: "%",
+                        default: "14%",
+                        description:
+                            "O pico do especular do preset redondo. 14 e não 20 por robustez: no ponto onde a letra encontra o reflexo ele vale 16,7% disso.",
                     },
                     {
                         prop: "--glass-cloud-rx / -ry",

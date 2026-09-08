@@ -47,7 +47,7 @@ export default function CommandDoc() {
 </Command>`}
         previewClassName="items-stretch"
       >
-        <Command variant="panel" className="w-full max-w-md">
+        <Command variant="panel" autoSelectFirst={false} className="w-full max-w-md">
           <CommandInput placeholder="Buscar tela, ação ou transação…" />
           <CommandList>
             <CommandEmpty>Nada encontrado.</CommandEmpty>
@@ -107,7 +107,7 @@ React.useEffect(() => {
   <CommandShortcut>⌘N</CommandShortcut>
 </CommandItem>`}
       >
-        <Command variant="panel" className="max-w-sm">
+        <Command variant="panel" autoSelectFirst={false} className="max-w-sm">
           <CommandList>
             <CommandGroup heading="Ações">
               {[
@@ -222,7 +222,7 @@ React.useEffect(() => {
   </CommandFooter>
 </Command>`}
       >
-        <Command variant="panel" className="max-w-sm">
+        <Command variant="panel" autoSelectFirst={false} className="max-w-sm">
           <CommandInput placeholder="Buscar…" />
           <CommandList>
             <CommandGroup heading="Ir para">

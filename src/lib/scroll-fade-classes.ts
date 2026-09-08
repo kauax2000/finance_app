@@ -28,6 +28,12 @@
  * 3. **Um gradiente por elemento.** Nunca `mask-composite`: a spec define
  *    `mask-image: none` como camada preta transparente, então `none` num
  *    `intersect` dá alfa zero e apaga o elemento.
+ * 5. **O borrão é irmão do rolável — nunca ele, nunca filho dele.** Um
+ *    `backdrop-filter` no elemento mascarado é recortado pela própria rampa:
+ *    forte onde a máscara é opaca, ausente justo na ponta. Invertido. Filho
+ *    herdaria o mesmo recorte. A casca hospeda os dois, e é por isso que o
+ *    `useScrollFade` tem a opção `shell` — irmão não lê custom property de
+ *    irmão.
  * 4. **Todo `-` binário dentro de um `calc()` arbitrário se escreve `_-_`.** Não
  *    é "espaço quebra": o Tailwind normaliza o espaçamento em torno de `+`, `*` e
  *    `/`, mas não pode fazer isso com `-` — seria indistinguível de `--var` e de
@@ -84,3 +90,49 @@ export const scrollFadeBleedClassName = [
   "-mt-(--scroll-fade-band-h) pt-[calc(var(--scroll-fade-band-h)+--spacing(1))]",
   "-mb-(--scroll-fade-foot-h) pb-[calc(var(--scroll-fade-foot-h)+--spacing(1))]",
 ].join(" ")
+
+/**
+ * As camadas do borrão progressivo, no eixo vertical. Vão na **casca**, como
+ * irmãs do rolável — ver a invariante 5.
+ *
+ * São três por ponta, e o índice de cada uma desce por
+ * `style={{ "--scroll-fade-blur-i": i }}`, nunca por classe: **classe montada
+ * em tempo de execução não chega ao CSS**, porque o Tailwind varre o código
+ * como texto. É a mesma razão pela qual `menu-classes` não carrega o
+ * `max-h-(--radix-*-content-available-height)`.
+ *
+ * A geometria, os quatro guardas e a rampa moram na `@utility scroll-fade-blur-y`
+ * de `globals.css`, escolhidas por `data-edge="start" | "end"`. Aqui fica só o
+ * nome.
+ *
+ * **O canto é herdado, e só o que encosta.** A camada preenche o padding box da
+ * casca; de canto reto ela avança sobre a curva e pinta por cima do fio da
+ * borda, com o borrão vazando para fora do arredondamento. Ela herda o raio nos
+ * **dois** cantos da própria ponta — herdar os quatro arredondaria a aresta de
+ * dentro, que corre no meio da caixa e não tem canto nenhum a acompanhar.
+ */
+export const scrollFadeBlurClassName = "scroll-fade-blur-y"
+
+/** O mesmo, no eixo horizontal. */
+export const scrollFadeBlurXClassName = "scroll-fade-blur-x"
+
+/**
+ * O material do iOS, aplicado **junto** com a camada de borrão: ele é um preset
+ * de variáveis (raio, vibrância), e não uma segunda utility.
+ *
+ * Ele **substitui** a dissolução em vez de somar — o conteúdo passa por baixo
+ * nítido, e quem o esconde é o borrão. Quem desliga a máscara é o
+ * `data-scroll-fade-mode="material"` no rolável.
+ *
+ * A tinta nasce `transparent`, e é de propósito: `--mobile-glass-bg` segue
+ * superfícies diferentes em cada tema, e uma faixa de borda vive sobre qualquer
+ * uma. Quem sabe sobre o que está escreve `--scroll-fade-blur-tint`.
+ */
+export const scrollFadeMaterialClassName = "scroll-fade-material"
+
+/**
+ * Quantas camadas cada ponta empilha. Três é a contagem que dá gradiente de
+ * borrão em vez de crossfade — com uma, o raio é constante e só a opacidade
+ * varia.
+ */
+export const SCROLL_FADE_BLUR_LAYERS = [1, 2, 3] as const

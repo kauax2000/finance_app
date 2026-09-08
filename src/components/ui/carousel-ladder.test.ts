@@ -244,7 +244,14 @@ describe("escada e caixa do Carousel", () => {
     // sai com os quatro cantos apagados e os lados opacos. A asserção olha as
     // classes literais do nó, e não a forma da chamada: casar a string exata do
     // `cn()` fazia o teste passar por acidente e quebrar a cada refatoração.
-    const bloco = fonte.split('data-slot="carousel-content"')[0].slice(-900)
+    // **A fatia é o `cn()` do viewport, e não os últimos N caracteres.** Ela era
+    // `.slice(-900)`, e 900 é um número mágico: bastou o viewport ganhar uma
+    // classe com um comentário de uma linha para o `overflow-hidden` sair da
+    // janela por **7 caracteres** e a asserção reprovar código correto. O corte
+    // pelo `className={cn(` é o bloco de verdade — mais estrito, e não mais
+    // frouxo.
+    const antes = fonte.split('data-slot="carousel-content"')[0]!
+    const bloco = antes.slice(antes.lastIndexOf("className={cn("))
     for (const proibida of ["bg-", "ring-", "rounded-", "shadow-", "border-"]) {
       expect(
         new RegExp(`"[^"]*\\b${proibida}`).test(bloco),

@@ -7,6 +7,15 @@ type UseScrollFadeOptions = {
   axis?: "y" | "x"
   /** Desliga uma das pontas sem tocar no gradiente: a variável dela fica em zero. */
   sides?: "both" | "start" | "end"
+  /**
+   * Espelha as duas variáveis e o `data-scroll-fade` na **casca** (o pai do
+   * rolável), para irmãos poderem lê-los — as camadas de borrão são irmãs, e
+   * custom property não atravessa para o lado.
+   *
+   * Opt-in de propósito: sem isto o hook escreve num nó só, e nenhuma casca do
+   * Radix ou do cmdk recebe mutação de atributo que não pediu.
+   */
+  shell?: boolean
 }
 
 /**
@@ -54,12 +63,16 @@ type UseScrollFadeOptions = {
 export function useScrollFade({
   axis = "y",
   sides = "both",
+  shell = false,
 }: UseScrollFadeOptions = {}) {
   return React.useCallback(
     (el: HTMLElement | null) => {
       if (!el) return
 
       const vertical = axis === "y"
+      // A casca é o pai. Nulo quando o rolável é a raiz de quem chama, e aí o
+      // espelho simplesmente não acontece — não há irmão para ler.
+      const casca = shell ? el.parentElement : null
       let rolagemMax = 0
       let ultimoInicio = -1
       let ultimoFim = -1
@@ -68,6 +81,7 @@ export function useScrollFade({
         const passo = Math.round(valor / 4) * 4
         if (passo === anterior) return anterior
         el.style.setProperty(nome, `${passo}px`)
+        casca?.style.setProperty(nome, `${passo}px`)
         return passo
       }
 
@@ -88,7 +102,9 @@ export function useScrollFade({
           ? el.scrollHeight - el.clientHeight
           : el.scrollWidth - el.clientWidth
         // 1px de folga: medidas fracionárias nunca fecham a conta exatamente.
-        el.dataset.scrollFade = rolagemMax > 1 ? "on" : "off"
+        const ligado = rolagemMax > 1 ? "on" : "off"
+        el.dataset.scrollFade = ligado
+        if (casca) casca.dataset.scrollFade = ligado
         pintar()
       }
       medir()
@@ -118,8 +134,13 @@ export function useScrollFade({
         ro.disconnect()
         mo.disconnect()
         el.removeEventListener("scroll", pintar)
+        if (casca) {
+          casca.style.removeProperty("--scroll-fade-start")
+          casca.style.removeProperty("--scroll-fade-end")
+          delete casca.dataset.scrollFade
+        }
       }
     },
-    [axis, sides]
+    [axis, sides, shell]
   )
 }

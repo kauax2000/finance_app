@@ -56,9 +56,44 @@ const MENU_TOUCH_TARGET = "pointer-coarse:min-h-11"
  * a superfície — um painel que não é menu, sem `data-[side=…]`, sem
  * `min-w-36`, sem `flex-col` — veste esta em vez de vestir a casca inteira
  * para desfazer três quartos dela por `className`.
+ *
+ * ## O material é o do cabeçalho, e o alfa difere por tema
+ *
+ * Uma superfície flutuante tem **conteúdo passando por baixo**, então ela é o
+ * lado do `backdrop-filter` da régua dos dois vidros — e o material é o da
+ * `@utility glass-surface`, o mesmo do cabeçalho: 24px de borrão e
+ * `saturate(1.5)`, com o guarda de `prefers-reduced-transparency` embutido.
+ * Uma segunda receita de borrão aqui seria a quarta na casa.
+ *
+ * **O alfa não é um só, e quem decide é o contraste.** O texto que aperta não é
+ * o do item — `--popover-foreground` fica folgado em qualquer alfa — e sim o
+ * `--muted-foreground`, dos rótulos de grupo e dos atalhos. Medido contra as
+ * superfícies que de fato **preenchem área** atrás de um menu (página, card,
+ * muted, secondary e o botão `primary`, o único preenchimento colorido cheio
+ * do sistema):
+ *
+ * | | escuro | claro |
+ * | --- | --- | --- |
+ * | 60% | **4,64 — passa** | 3,00 — reprova |
+ * | 85% | — | **4,72 — passa** |
+ *
+ * No claro o `--popover` é **branco** e o pior fundo é o verde escuro do
+ * `primary`: um branco a 60% sobre ele vira cinza-esverdeado e o texto
+ * secundário morre. É o mesmo teto que o material da borda já registrou — no
+ * tema claro o vidro quase não se paga: sobre a página o contraste é o mesmo em
+ * qualquer alfa (5,91 a 6,01), e o que a translucidez custa só aparece sobre
+ * cor cheia.
+ *
+ * Daí a base ser 85% (que serve o claro **e** é o fallback de quem não tem
+ * `backdrop-filter`) e o escuro abrir para 60% só onde o borrão existe.
  */
-export const menuPanelSurfaceClassName =
-  "rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10"
+export const menuPanelSurfaceClassName = [
+  "rounded-lg text-popover-foreground shadow-md ring-1 ring-foreground/10",
+  "bg-popover/85 glass-surface",
+  "supports-backdrop-filter:dark:bg-popover/60",
+  /** A cor sólida é de quem veste — a utility é dona de uma propriedade só. */
+  "reduced-transparency:bg-popover",
+].join(" ")
 
 /**
  * A casca — tudo menos o teto de altura e a origem da transformação.

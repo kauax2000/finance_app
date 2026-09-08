@@ -202,6 +202,48 @@ export default function AvatarDoc() {
         <code>Avatar</code> já é módulo cliente.
       </DocNote>
 
+      <DocNote title="O aro nunca acendeu num círculo, e a causa é geométrica">
+        O aro do vidro é um gradiente <strong>linear</strong>, calibrado numa
+        placa de 240×424. Numa caixa de 40×40 o eixo dele mede{" "}
+        <strong>49px</strong>: as duas pontas — onde moram o pico e o extremo
+        aceso — caem nos <strong>cantos</strong> do quadrado, e num círculo os
+        cantos não existem.
+        <br />
+        <br />
+        Medido, amostrando 720 pontos do perímetro: <strong>0%</strong> via o
+        pico de 34%, <strong>0%</strong> via o extremo aceso, e{" "}
+        <strong>57,5%</strong> via só o vale de 10%. O avatar de vidro tinha uma
+        borda cinza quase uniforme, e era isso que o fazia ler como disco
+        chapado.
+        <br />
+        <br />
+        Com <code>shape=&quot;circle&quot;</code> ele veste{" "}
+        <code>glass-round</code>, que troca o aro por um{" "}
+        <code>conic-gradient</code> — cada ponto do perímetro mapeia para um
+        ângulo, então não há canto a perder. Depois: <strong>14%</strong> no pico
+        e 8,5% no vale. Em <code>shape=&quot;rounded&quot;</code> os cantos
+        existem, e ali o linear continua certo.
+      </DocNote>
+
+      <DocNote title="Quatro das seis camadas não pintavam nada">
+        O tom é a camada de cima, e ele era <strong>opaco</strong>: a lâmina e as
+        duas nuvens ficavam por baixo dele e não chegavam à tela. Sobrava um
+        disco de cor sólida mais um fio.
+        <br />
+        <br />
+        As nuvens simulam luz <em>atrás</em> de uma placa; num disco de 40px não
+        há atrás, e o que faz ler como vidro é reflexo <strong>na</strong>{" "}
+        superfície. Por isso o conserto não foi trazê-las de volta — foi acender
+        um especular em <code>--glass-sheen-image</code>, a única camada acima do
+        tom.
+        <br />
+        <br />O corpo abre <strong>8%</strong> no escuro e <strong>2%</strong> no
+        claro, e a diferença saiu do contraste: ali a lâmina é branca e clareia o
+        corpo, então a 92% dois tons caíam abaixo dos 4,5:1. Onde a letra de fato
+        encontra o especular, os seis medem <strong>5,93 a 6,34</strong> no
+        escuro e <strong>4,61 a 5,14</strong> no claro.
+      </DocNote>
+
       <DocNote title="A foto encolhe 2px, e o preço é a aresta">
         O vidro traz <code>border: 1px solid transparent</code>, que é onde o
         aro mora. Com <code>box-sizing: border-box</code>{" "}

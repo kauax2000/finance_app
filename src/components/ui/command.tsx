@@ -10,6 +10,7 @@ import { Caption, P } from "@/components/ui/typography"
 import {
   menuItemGeometryClassName,
   menuSeparatorClassName,
+  menuPanelSurfaceClassName,
 } from "@/lib/menu-classes"
 import {
   scrollFadeBandsClassName,
@@ -17,6 +18,7 @@ import {
   scrollFadeViewportClassName,
 } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
+import { ScrollFadeBlurLayers } from "@/components/ui/scroll-fade"
 import { useCommandIdleSelection } from "@/hooks/use-command-idle-selection"
 import {
   Dialog,
@@ -51,7 +53,15 @@ import { Button } from "@/components/ui/button"
  */
 const commandVariants = cva(
   [
-    "flex size-full flex-col overflow-hidden bg-popover/85 text-popover-foreground backdrop-blur",
+    menuPanelSurfaceClassName,
+    // A paleta tinha a **quarta** receita de vidro da casa — `bg-popover/85`
+    // com `backdrop-blur` de 8px, contra os 24 e o `saturate(1.5)` do material.
+    // O raio e a sombra saem: a casca de quem a hospeda é que os decide.
+    // `relative` é carga estrutural: as camadas de borrão das duas pontas são
+    // **irmãs** do rolável e absolutas, e sem bloco de contenção aqui elas
+    // resolveriam contra um ancestral qualquer. O `overflow-hidden` ao lado é o
+    // que as apara no canto da casca.
+    "relative flex size-full flex-col overflow-hidden rounded-none shadow-none ring-0",
     "[--command-list-max-h:--spacing(72)]",
     // A casca só publica as duas medidas estruturais, porque só ela enxerga as
     // faixas como **irmãs** do rolável. Todo o resto da dissolução — âncoras,
@@ -116,6 +126,7 @@ function Command({
   className,
   variant,
   autoSelectFirst = true,
+  children,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive> &
   VariantProps<typeof commandVariants> & {
@@ -145,7 +156,27 @@ function Command({
         props.onInput?.(event)
         ocioso.onInput?.(event)
       }}
-    />
+    >
+      {children}
+
+      {/* O material do iOS nas duas pontas — e ele **soma** à rampa em vez de
+          substituí-la, que é o contrário do que o `edge="material"` do
+          `ScrollFade` faz. Aqui a máscara é carga estrutural: as três faixas
+          desta paleta não pintam nada, então é ela quem esconde o conteúdo sob
+          o campo de busca. Sem ela o texto apareceria atrás do input.
+
+          O que vem do material é o **borrão**: `scroll-fade-material` é preset
+          de variável, e move só o raio (7px × índice) e a vibrância (1,5) — os
+          mesmos números de `.mobile-glass-surface`, para a casa ter uma
+          vibrância só.
+
+          A geometria sai de graça: a camada é ancorada em
+          `--scroll-fade-band-h` / `--scroll-fade-foot-h`, que esta casca já
+          publica, e a altura é a mesma zona que a rampa dissolve. Em ordem
+          crescente de índice — a de extensão maior por baixo, cada uma borrando
+          o que a de baixo compôs. */}
+      <ScrollFadeBlurLayers />
+    </CommandPrimitive>
   )
 }
 
@@ -202,7 +233,14 @@ function CommandDialog({
           "[--command-dialog-h:min(60dvh,24rem)]",
           "[--command-dialog-top:calc(50%-var(--command-dialog-h)/2)]",
           "top-(--command-dialog-top) translate-y-0 max-h-(--command-dialog-h)",
+          // O casco é transparente porque quem pinta é o `Command` de dentro,
+          // a `bg-popover/85` — dois 85% empilhados dariam 97,75%, que é o
+          // bloco aceso que este arquivo já registra. Os dois neutralizadores
+          // sob variante são obrigatórios: o `twMerge` derruba a `bg-*` base
+          // do casco, e **não** as que vivem sob `supports-` e sob
+          // `reduced-transparency:`.
           "overflow-hidden border-0 bg-transparent p-0",
+          "supports-backdrop-filter:dark:bg-transparent reduced-transparency:bg-transparent",
           className
         )}
         showCloseButton={showCloseButton}
@@ -410,7 +448,10 @@ function CommandList({
 
   return (
     <CommandPrimitive.List
-      ref={useScrollFade()}
+      // `shell` porque as camadas de borrão são **irmãs** desta lista, e irmão
+      // não lê custom property de irmão. Com ele as duas variáveis também vão
+      // para a casca, de onde descem por herança para os dois lados.
+      ref={useScrollFade({ shell: true })}
       data-slot="command-list"
       data-medido={medido || undefined}
       className={cn(

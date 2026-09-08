@@ -274,6 +274,33 @@ export default function DialogDoc() {
         ]}
       />
 
+      <DocNote title="A placa é de vidro, e o véu é o teto dela">
+        Ela veste o material do cabeçalho pela mesma receita das 11 superfícies
+        flutuantes — <code>bg-background/85</code>{" "}
+        de base, que serve o tema claro <strong>e</strong> é o fallback de quem
+        não tem <code>backdrop-filter</code>, abrindo para 60% só no escuro e só
+        onde o borrão existe.
+        <br />
+        <br />
+        <strong>
+          O que o borrão vê aqui não é a página: é o <code>--overlay</code>.
+        </strong>{" "}
+        Um popover borra conteúdo real; entre esta placa e a tela há um véu de
+        60% de preto, e borrar cor chapada não desenha nada. Medido, com a placa
+        a 60% no escuro: delta <strong>0</strong>{" "}
+        sobre um card, 2 sobre a página, e <strong>15</strong>{" "}
+        sobre o preenchimento de um botão <code>primary</code>. No tema escuro o
+        vidro só aparece quando há cor cheia atrás — e o teto não é o material, é
+        o véu.
+        <br />
+        <br />
+        No claro ele se paga: a placa desce de 250 para <strong>236</strong>{" "}
+        sobre um card, com o <code>--muted-foreground</code>{" "}
+        em 5,09 e 4,38 no pior fundo real, acima dos 4,5 da norma. Foi por isso
+        que o alfa aberto ficou escopado no escuro: a 60% no claro o mesmo texto
+        cai a <strong>4,09</strong>, e reprova.
+      </DocNote>
+
       <DocNote title="O × não reserva lugar — o cabeçalho reserva por ele">
         O botão de fechar é <code>absolute</code>, então nada no cabeçalho sabe
         que ele existe: sem ajuda, um título longo ou o{" "}

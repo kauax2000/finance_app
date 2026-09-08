@@ -6,9 +6,11 @@ import { Dialog as DialogPrimitive } from "radix-ui"
 import { XMarkIcon } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
+import { modalSurfaceClassName } from "@/lib/modal-classes"
 import { Muted } from "@/components/ui/typography"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
+import { ScrollFadeBlurLayers } from "@/components/ui/scroll-fade"
 import { Button } from "@/components/ui/button"
 
 /**
@@ -95,12 +97,37 @@ function DialogOverlay({
  * E **`size`** deixou de ser um `sm:max-w-*` escrito na tela: o padrão é `md`,
  * que é o que 17 das 19 chamadas explícitas pediam e o que o `AlertDialog` já
  * usava. Os dois gêmeos passam a medir igual.
+ *
+ * ## A placa é de vidro, e o véu é o teto dela
+ *
+ * Ela veste o material do cabeçalho pela mesma receita das 11 superfícies
+ * flutuantes — `bg-background/85` de base (que serve o claro **e** é o
+ * fallback de quem não tem `backdrop-filter`), abrindo para 60% só no escuro e
+ * só onde o borrão existe.
+ *
+ * **O que o borrão vê aqui não é a página: é o `--overlay`.** Um popover borra
+ * conteúdo real; entre esta placa e o conteúdo há um véu de 60% de preto, e
+ * borrar cor chapada não desenha nada. Medido, com a placa a 60% no escuro:
+ * delta **0** sobre um card, 2 sobre a página, e **15** sobre o preenchimento
+ * de um botão `primary`. Ou seja: no tema escuro o vidro só aparece quando há
+ * cor cheia atrás, e o teto não é o material — é o véu.
+ *
+ * No claro ele se paga: a placa desce de 250 para **236** sobre um card, com o
+ * `--muted-foreground` em 5,09 e 4,38 no pior fundo real (o `primary`), acima
+ * dos 4,5 da norma. Foi por isso que o alfa aberto ficou escopado no escuro:
+ * a 60% no claro o mesmo texto cai a **4,09**, e reprova.
+ *
+ * Quem quiser o efeito visível no escuro mexe no `--overlay`, e não aqui.
  */
 const dialogContentVariants = cva(
   [
     "group/dialog-content fixed top-1/2 left-1/2 z-(--z-modal)",
     "w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2",
-    "rounded-xl bg-background text-sm shadow-lg ring-1 ring-foreground/10 outline-none",
+    "rounded-xl text-sm shadow-lg ring-1 ring-foreground/10 outline-none",
+    // A placa é o material da casa, e o alfa é o mesmo par das superfícies
+    // flutuantes — a receita fica igual em todo overlay do sistema. Ver o
+    // bloco do doc-comment acima para o que o véu limita.
+    modalSurfaceClassName,
     "duration-(--duration-slow) ease-out",
     "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95",
     "data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
@@ -301,8 +328,13 @@ function DialogCloseButton({
  */
 function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <div
-      ref={useScrollFade()}
+    // A casca do borrão: ela hospeda o rolável e as camadas como **irmãos**, e
+    // é `relative` porque sem bloco de contenção o absoluto resolve contra um
+    // ancestral qualquer. O `className` de quem chama continua indo para o
+    // rolável — as chamadas passam recuo e ritmo de conteúdo, não layout.
+    <div className="relative flex min-h-0 flex-1 flex-col">
+      <div
+      ref={useScrollFade({ shell: true })}
       data-slot="dialog-body"
       className={cn(
         "min-h-0 flex-1 overflow-y-auto overscroll-contain px-(--dialog-px) py-4",
@@ -321,6 +353,8 @@ function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
       )}
       {...props}
     />
+      <ScrollFadeBlurLayers />
+    </div>
   )
 }
 

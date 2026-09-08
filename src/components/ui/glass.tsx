@@ -6,6 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 import {
+    GLASS_MATERIALS,
     glassControlSurfaceClassName,
     glassSurfaceClassName,
 } from "@/lib/glass-classes"
@@ -21,6 +22,8 @@ const glassVariants = cva("", {
             panel: glassSurfaceClassName,
             control: glassControlSurfaceClassName,
         },
+        /** Ausência é o pintado. Os três degraus são o material do iOS. */
+        material: GLASS_MATERIALS,
     },
     defaultVariants: { size: "panel" },
 })
@@ -51,15 +54,25 @@ const glassVariants = cva("", {
  * conteúdo em 2px; e o raio é **herdado**, que é justamente o que torna a peça
  * portátil entre um `rounded-full` e um `rounded-xl`.
  *
- * ## Sem eixo de intensidade
+ * ## `material` é um eixo de premissa, e não de gosto
  *
- * Zero contagem. Quem precisar de um vidro mais forte ou mais fraco sobrescreve
- * os cinco tokens no próprio elemento — eles são variáveis, e variável herda.
- * Um eixo sem caso medido é ficção, e este projeto já removeu dois.
+ * Sem ele a peça é o vidro **pintado**: luz desenhada, porque a premissa é que
+ * não há conteúdo atrás. Com ele é o material do iOS — borrão de verdade,
+ * vibrância, e a lâmina aberta para o que está atrás aparecer.
+ *
+ * **Ligá-lo onde nada passa por baixo deixa a peça pior**: o borrão não tem o
+ * que borrar e a lâmina abriu à toa. A régua está em `lib/glass-classes.ts`,
+ * como a quarta armadilha.
+ *
+ * Os três degraus vêm do iOS e diferem na **opacidade da lâmina**, nunca no
+ * raio — um material mais fino mostra mais do que está atrás. A escada nasceu
+ * sem caso medido, por decisão do dono, e isso fica dito: a régua desta casa é
+ * que eixo sem contagem é ficção, e ela já removeu dois.
  */
 function Glass({
     className,
     size = "panel",
+    material,
     asChild = false,
     ...props
 }: React.ComponentProps<"div"> &
@@ -72,7 +85,8 @@ function Glass({
         <Comp
             data-slot="glass"
             data-size={size}
-            className={cn(glassVariants({ size }), className)}
+            data-material={material}
+            className={cn(glassVariants({ size, material }), className)}
             {...props}
         />
     )

@@ -15,11 +15,51 @@ import { describe, expect, it } from "vitest"
 
 const CSS = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
 
-/** Só o corpo da receita, sem o preset e sem o vizinho. */
+/**
+ * Só o corpo da receita.
+ *
+ * O corte ia até `@utility glass-control` e **engolia o doc-comment inteiro do
+ * vizinho** — 17 linhas de prosa que a asserção 7 varria como se fossem código.
+ * Hoje ele para no próximo doc-comment de topo; os comentários internos da
+ * receita são indentados, então `\n/**` não casa com nenhum deles.
+ */
 const RECEITA = CSS.slice(
     CSS.indexOf("@utility glass {"),
-    CSS.indexOf("@utility glass-control")
+    CSS.indexOf("\n/**", CSS.indexOf("@utility glass {"))
 )
+
+/**
+ * Os blocos de tema **de verdade**.
+ *
+ * `CLARO` e `ESCURO` são fatias abertas — a segunda vai de `.dark {` até o fim
+ * do arquivo e engole todas as `@utility`. Serve para procurar a declaração de
+ * um token, não para provar que ele **não** é declarado num tema: o preset
+ * redondo publica `--glass-rim-image`, e a busca aberta o encontraria ali.
+ */
+const bloco = (abre: string) => {
+    const i = CSS.indexOf(abre)
+    return CSS.slice(i, CSS.indexOf("\n}", i))
+}
+const TEMA_CLARO = bloco(":root {")
+const TEMA_ESCURO = bloco(".dark {")
+
+/** O preset da peça redonda. */
+const REDONDO = CSS.slice(
+    CSS.indexOf("@utility glass-round {"),
+    CSS.indexOf("@utility glass-material {")
+).replace(/\/\*[\s\S]*?\*\//g, " ")
+
+/** A superfície das peças que flutuam — menus, seletor, popover, prévia. */
+const SUPERFICIE_FLUTUANTE = readFileSync(
+    join(process.cwd(), "src/lib/menu-classes.ts"),
+    "utf8"
+).replace(/\/\*[\s\S]*?\*\//g, " ")
+
+/** O modo material, e os dois degraus fora do meio. */
+const MATERIAL = CSS.slice(
+    CSS.indexOf("@utility glass-material {"),
+    CSS.indexOf("@utility no-scrollbar")
+).replace(/\/\*[\s\S]*?\*\//g, " ")
 
 /**
  * A receita **sem comentários**.
@@ -120,17 +160,346 @@ describe("a superfície de vidro", () => {
         expect(RECEITA).not.toMatch(/border-radius|rounded-/)
     })
 
-    it("7. sem máscara, sem blur, sem blend", () => {
+    it("7. a receita base nunca borra; o material sempre", () => {
         // `mask-image: none` num composite apaga o elemento, e a ordem de
         // emissão das duas propriedades de composite não se controla pelo
         // Tailwind — daí `padding-box`/`border-box`, que não precisa de máscara.
-        // O blur fica de fora porque a premissa desta receita é que **não há
-        // conteúdo atrás**: borrar cor chapada não desenha nada.
         expect(RECEITA).toContain("padding-box")
         expect(RECEITA).toContain("border-box")
         expect(RECEITA).not.toMatch(/mask-composite|-webkit-mask|mask-image/)
-        expect(RECEITA).not.toMatch(/backdrop-filter|backdrop-blur/)
         expect(RECEITA).not.toMatch(/soft-light|background-blend-mode/)
+
+        // **A varredura é no código, não no texto cru.** Esta asserção lia
+        // `RECEITA` com os comentários dentro: um comentário que apenas
+        // *mencionasse* `backdrop-filter` já a reprovava, sem mudança nenhuma
+        // de código. É a lição que a rodada do gráfico registrou.
+        expect(RECEITA_CODIGO).not.toMatch(/backdrop-filter|backdrop-blur/)
+
+        // E o outro lado da régua: o modo material borra, e é o que ele é.
+        expect(MATERIAL).toMatch(/backdrop-filter:\s*blur\(/)
+        expect(MATERIAL).toMatch(/-webkit-backdrop-filter:\s*blur\(/)
+        expect(MATERIAL).not.toMatch(/mask-composite|-webkit-mask|mask-image/)
+        expect(MATERIAL).not.toMatch(/soft-light|background-blend-mode/)
+    })
+
+    it("20. o aro e o realce são contrato, e sem produtor nada muda", () => {
+        // As duas camadas viraram `var(--x, <o valor de hoje>)`. O fallback é o
+        // que garante que o painel e o `ColorTile` não se mexem — medido no
+        // navegador: as duas superfícies saem byte a byte iguais às de antes.
+        expect(RECEITA_CODIGO).toContain("var(\n        --glass-rim-image,")
+        expect(RECEITA_CODIGO).toContain("var(\n        --glass-sheen-image,")
+
+        // O fallback do aro continua sendo o linear com o eixo por token…
+        const aro = RECEITA_CODIGO.slice(RECEITA_CODIGO.indexOf("--glass-rim-image"))
+        expect(aro).toContain("linear-gradient(")
+        expect(aro).toContain("var(--glass-rim-angle)")
+        // …e o do realce, o chapado que ninguém produz hoje.
+        const realce = RECEITA_CODIGO.slice(
+            RECEITA_CODIGO.indexOf("--glass-sheen-image"),
+            RECEITA_CODIGO.indexOf("--glass-tone")
+        )
+        expect(realce).toContain("var(--glass-sheen, transparent)")
+
+        // Nenhum tema declara as duas: sem produtor, o fallback é o resultado.
+        for (const tema of [TEMA_CLARO, TEMA_ESCURO]) {
+            expect(tema).not.toMatch(/--glass-rim-image:/)
+            expect(tema).not.toMatch(/--glass-sheen-image:/)
+        }
+    })
+
+    it("21. o redondo é preset de imagem, e o cônico só existe nele", () => {
+        // Mesmo guarda do `glass-control`: preset move a variável, nunca a
+        // propriedade. Duas utilities escrevendo `background` seriam decididas
+        // pela ordem de emissão do Tailwind.
+        expect(REDONDO).not.toMatch(/^\s*background:/m)
+        expect(REDONDO).toContain("--glass-rim-image:")
+        expect(REDONDO).toContain("--glass-sheen-image:")
+
+        // **O cônico não pode vazar para o `glass-control`.** Ele serve o
+        // `ColorTile`, que é `rounded-md`: um bisel polar num quadrado
+        // arredondado põe as transições nos cantos errados.
+        // Cortada no **próprio** fechamento: entre `glass-control` e
+        // `no-scrollbar` moram o `glass-round` e o `glass-material`, e uma
+        // fatia até o vizinho seguinte engoliria os dois.
+        const controle = CSS.slice(
+            CSS.indexOf("@utility glass-control {"),
+            CSS.indexOf("\n}", CSS.indexOf("@utility glass-control {"))
+        )
+        expect(controle).not.toContain("conic-gradient")
+        expect(RECEITA_CODIGO).not.toContain("conic-gradient")
+        expect(REDONDO).toContain("conic-gradient")
+    })
+
+    it("22. o bisel polar cobre o perímetro, e o pico não cai fora dele", () => {
+        // O defeito que este preset existe para consertar: num círculo, as
+        // pontas do gradiente **linear** caem nos cantos da caixa — medido, 0%
+        // do perímetro via o pico e 57,5% via só o vale. Num cônico cada ponto
+        // do perímetro mapeia para um ângulo, então não há canto a perder — mas
+        // só se as paradas forem angulares e fecharem o ciclo.
+        const conico = REDONDO.slice(REDONDO.indexOf("conic-gradient"))
+        // O `from -45deg` é a **origem**, não uma parada — sem tirá-lo, o 45
+        // entra na lista e a checagem de ciclo lê o número errado.
+        const semOrigem = conico.slice(conico.indexOf("deg,") + 4)
+        const paradas = [...semOrigem.matchAll(/(\d+)deg\s*[,)]/g)].map((m) => Number(m[1]))
+        expect(paradas.length).toBeGreaterThanOrEqual(5)
+
+        // Nenhuma parada em porcentagem: num cônico isso mede o **raio**, não o
+        // arco, e o bisel deixaria de acompanhar a borda.
+        const corpo = conico.slice(conico.indexOf("("), conico.indexOf("\n  );"))
+        expect(corpo).not.toMatch(/\d+%\s*[,)]/)
+
+        // O ciclo fecha: a primeira e a última parada valem o mesmo tom, senão
+        // sobra uma emenda dura no ponto onde 360° encontra 0°.
+        expect(paradas[0]).toBe(0)
+        expect(paradas[paradas.length - 1]).toBe(360)
+        expect(conico).toContain("from -45deg")
+
+        // E o preset precisa **chegar** na peça redonda. Sem isto, tirar
+        // `glass-round` da régua devolve o avatar ao aro linear — o defeito que
+        // esta rodada conserta — e nenhuma outra asserção percebe.
+        const regua = readFileSync(
+            join(process.cwd(), "src/lib/glass-classes.ts"),
+            "utf8"
+        ).replace(/\/\*[\s\S]*?\*\//g, " ")
+        expect(regua).toMatch(/glassRoundSurfaceClassName\s*=\s*"[^"]*\bglass-round\b/)
+
+        // O `Avatar` o veste **por forma**: num `shape="rounded"` os cantos
+        // existem e o aro linear continua certo.
+        const avatar = readFileSync(
+            join(process.cwd(), "src/components/ui/avatar.tsx"),
+            "utf8"
+        ).replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/.*$/gm, "$1")
+        expect(avatar).toContain("glassRoundSurfaceClassName")
+        expect(avatar).toMatch(/=== "circle"/)
+    })
+
+    it("23. a superfície flutuante veste o material da casa, e não escreve o próprio", () => {
+        const i = SUPERFICIE_FLUTUANTE.indexOf("menuPanelSurfaceClassName")
+        expect(i).toBeGreaterThan(-1)
+        const receita = SUPERFICIE_FLUTUANTE.slice(
+            i,
+            SUPERFICIE_FLUTUANTE.indexOf("].join(", i)
+        )
+
+        // Uma superfície flutuante tem conteúdo passando por baixo — é o lado do
+        // `backdrop-filter` da régua dos dois vidros. E o material é o da casa:
+        // uma segunda receita de borrão aqui seria a quarta.
+        expect(receita).toContain("glass-surface")
+        // Ancorado na **classe de borrão**, e não na string solta: o variante
+        // `supports-backdrop-filter:` contém `backdrop-filter` de propósito, e
+        // uma varredura ingênua acusa a própria receita.
+        expect(receita).not.toMatch(/\bbackdrop-blur/)
+
+        // Um blur de verdade obriga o guarda, e a cor sólida é de quem veste.
+        expect(receita).toContain("reduced-transparency:bg-popover")
+    })
+
+    it("24. o alfa abre no escuro e fecha no claro, e o número é o contraste", () => {
+        const receita = SUPERFICIE_FLUTUANTE.slice(
+            SUPERFICIE_FLUTUANTE.indexOf("menuPanelSurfaceClassName"),
+            SUPERFICIE_FLUTUANTE.indexOf("].join(")
+        )
+        const base = Number(receita.match(/(?<!dark:)bg-popover\/(\d+)/)?.[1])
+        const escuro = Number(
+            receita.match(/supports-backdrop-filter:dark:bg-popover\/(\d+)/)?.[1]
+        )
+        expect(base, "o alfa base precisa existir").toBeGreaterThan(0)
+        expect(escuro, "o alfa do escuro precisa existir").toBeGreaterThan(0)
+
+        // **O escuro abre mais.** No claro o `--popover` é branco e o pior fundo
+        // é o verde do `primary`: um branco a 60% sobre ele vira cinza-esverdeado
+        // e o `--muted-foreground` cai a 3,00 — a 85% ele volta a 4,72. No escuro
+        // 60% já dá 4,64. Medido contra o que **preenche área** atrás de um menu.
+        expect(escuro).toBeLessThan(base)
+
+        // E o escuro só abre onde o borrão existe: sem `backdrop-filter`, uma
+        // superfície translúcida é pior que uma opaca.
+        expect(receita).toContain("supports-backdrop-filter:dark:")
+    })
+
+    it("25. a receita é uma só — as cópias à mão não voltam", () => {
+        // Ela esteve escrita em **cinco** lugares: a régua e cópias em `Select`,
+        // `Popover`, `HoverCard` e `Tooltip`, com o doc da régua afirmando ter
+        // extraído as quatro. A do `Tooltip` ainda divergia — `rounded-md` e
+        // `border` contra o `rounded-lg` e o `ring` de todas as outras. Agora os
+        // cinco a importam.
+        const COPIAS = [
+            "select",
+            "popover",
+            "hover-card",
+            "command",
+            "tooltip",
+        ] as const
+        for (const nome of COPIAS) {
+            const src = readFileSync(
+                join(process.cwd(), `src/components/ui/${nome}.tsx`),
+                "utf8"
+            ).replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/.*$/gm, "$1")
+
+            expect(src, `${nome} precisa vestir a régua`).toContain(
+                "menuPanelSurfaceClassName"
+            )
+            // A marca da cópia: a superfície escrita à mão ao lado da régua.
+            expect(src, `${nome} tem cópia da superfície`).not.toMatch(
+                /rounded-lg[^"]*bg-popover[^"]*ring-foreground\/10/
+            )
+            // E ninguém escreve borrão próprio — a paleta tinha o dela.
+            expect(src, `${nome} escreve borrão próprio`).not.toMatch(
+                /\bbackdrop-blur/
+            )
+        }
+
+        // O `Select` repintava a superfície nos dois botões de rolagem: com a
+        // casca translúcida, um `bg-popover` opaco ali vira uma faixa sólida no
+        // topo e na base do menu.
+        const select = readFileSync(
+            join(process.cwd(), "src/components/ui/select.tsx"),
+            "utf8"
+        ).replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/.*$/gm, "$1")
+        expect(select).not.toMatch(/justify-center bg-popover/)
+    })
+
+    it("26. as cinco superfícies modais vestem a régua, e a paleta a desfaz", () => {
+        const semComentarios = (caminho: string) =>
+            readFileSync(join(process.cwd(), caminho), "utf8")
+                .replace(/\/\*[\s\S]*?\*\//g, " ")
+                .replace(/(^|[^:])\/\/.*$/gm, "$1")
+
+        const regua = semComentarios("src/lib/modal-classes.ts")
+
+        // O material é o da casa. Uma segunda receita de borrão aqui seria a
+        // sexta grafia do repositório.
+        expect(regua).toContain("glass-surface")
+        // Ancorado na classe: o variante `supports-backdrop-filter:` carrega a
+        // string `backdrop-filter` de propósito.
+        expect(regua).not.toMatch(/\bbackdrop-blur/)
+        // Um borrão de verdade obriga o guarda, e a cor sólida é de quem veste.
+        expect(regua).toContain("reduced-transparency:bg-background")
+
+        // O alfa é o par das superfícies flutuantes: a base serve o claro **e**
+        // é o fallback de quem não tem `backdrop-filter`; o escuro abre, e só
+        // onde o borrão existe — a 60% no claro o `--muted-foreground` cai a
+        // 2,58 sobre o pior fundo real, e reprova.
+        const base = Number(regua.match(/(?<!dark:)bg-background\/(\d+)/)?.[1])
+        const escuro = Number(
+            regua.match(/supports-backdrop-filter:dark:bg-background\/(\d+)/)?.[1]
+        )
+        expect(base).toBeGreaterThan(0)
+        expect(escuro).toBeGreaterThan(0)
+        expect(escuro).toBeLessThan(base)
+
+        // **As quatro superfícies a vestem, e nenhuma reescreve a placa.** Elas
+        // pintavam `bg-background` cru cada uma no próprio arquivo; somar o
+        // vidro sem extrair produziria a quarta cópia da receita, que é a
+        // trajetória que levou a superfície flutuante a cinco.
+        //
+        // O `Sheet` aparece uma vez só porque no desktop ele delega ao
+        // `EdgePanelContent` — quem escreve placa ali é o ramo gaveta.
+        for (const nome of [
+            "dialog",
+            "edge-panel",
+            "sheet",
+            "drawer",
+        ] as const) {
+            const src = semComentarios(`src/components/ui/${nome}.tsx`)
+            expect(src, `${nome} precisa vestir a régua`).toContain(
+                "modalSurfaceClassName"
+            )
+            // A marca da cópia: o token opaco ao lado da cromagem da placa.
+            expect(src, `${nome} tem cópia da superfície`).not.toMatch(
+                /\bbg-background text-sm shadow-lg/
+            )
+            // E nenhuma peça interna repinta por cima da placa translúcida —
+            // é o defeito que os `ScrollButton` do `Select` tiveram.
+            expect(src, `${nome} repinta a placa por dentro`).not.toMatch(
+                /"[^"]*\bbg-background(?![-/])/
+            )
+        }
+
+        // **O casco do `CommandDialog` precisa dos dois neutralizadores sob
+        // variante.** Ele é transparente porque quem pinta é o `Command` de
+        // dentro; o `twMerge` derruba a `bg-*` base e **não** as que vivem sob
+        // `supports-` e sob `reduced-transparency:`. Sem eles a paleta sairia
+        // com duas superfícies empilhadas no escuro.
+        const paleta = semComentarios("src/components/ui/command.tsx")
+        expect(paleta).toContain("supports-backdrop-filter:dark:bg-transparent")
+        expect(paleta).toContain("reduced-transparency:bg-transparent")
+    })
+
+    it("16. o material é preset de variável, e nunca uma segunda propriedade", () => {
+        // A `glass` escreve `background`; o material escreve `backdrop-filter`.
+        // Propriedades diferentes não disputam — é o que torna a composição
+        // `glass glass-material` segura, e é o mecanismo do `glass-control`.
+        expect(MATERIAL).not.toMatch(/^\s*background:/m)
+        expect(MATERIAL).not.toMatch(/^\s*background-color:/m)
+
+        // **Só a utility do meio declara `--glass-tint`.** Os degraus movem uma
+        // variável intermediária; se cada um escrevesse a lâmina direto, quem
+        // venceria seria a ordem de emissão do Tailwind — e os guardas abaixo,
+        // que moram na regra do meio, perderiam para o degrau.
+        const meio = MATERIAL.slice(0, MATERIAL.indexOf("@utility glass-material-"))
+        const degraus = MATERIAL.slice(MATERIAL.indexOf("@utility glass-material-"))
+        expect(meio).toContain("--glass-tint: var(--glass-material-step,")
+        expect(degraus).not.toMatch(/--glass-tint:/)
+        expect(degraus.match(/--glass-material-step:/g) ?? []).toHaveLength(2)
+    })
+
+    it("17. um raio e uma vibrância para a casa", () => {
+        // O material do vidro e o da superfície leem as **mesmas** variáveis.
+        // Dois números escritos em dois lugares divergem no dia em que um mudar.
+        for (const tok of ["--glass-surface-blur", "--glass-surface-sat"]) {
+            expect(MATERIAL, tok).toContain(`var(${tok}`)
+        }
+        const superficie = CSS.slice(CSS.indexOf("@utility glass-surface {"))
+        const daCasa = superficie.match(/--glass-surface-sat,\s*([\d.]+)/)?.[1]
+        const meu = MATERIAL.match(/--glass-surface-sat,\s*([\d.]+)/)?.[1]
+        expect(daCasa).toBeDefined()
+        expect(meu).toBe(daCasa)
+    })
+
+    it("18. os dois guardas devolvem o pintado", () => {
+        // Sem borrão, uma lâmina aberta é só uma superfície fraca. `inherit`
+        // numa custom property devolve o valor computado do pai — o token do
+        // tema, que é exatamente o pintado.
+        for (const guarda of [
+            /@media \(prefers-reduced-transparency: reduce\)/,
+            /@supports not \(backdrop-filter: blur\(1px\)\)/,
+        ]) {
+            const i = MATERIAL.search(guarda)
+            expect(i, String(guarda)).toBeGreaterThan(-1)
+            const bloco = MATERIAL.slice(i, MATERIAL.indexOf("}", i))
+            expect(bloco, String(guarda)).toContain("--glass-tint: inherit")
+            expect(bloco, String(guarda)).toContain("--glass-cloud: inherit")
+        }
+        // E o de transparência reduzida tira o borrão junto.
+        const reduce = MATERIAL.slice(MATERIAL.search(/prefers-reduced-transparency/))
+        expect(reduce.slice(0, reduce.indexOf("}"))).toContain("backdrop-filter: none")
+    })
+
+    it("19. os três degraus existem, se distinguem, e as nuvens saem", () => {
+        const alfa = (bloco: string, nome: string) =>
+            Number(
+                bloco.match(
+                    new RegExp(`--glass-material-${nome}:\\s*oklch\\([^)]*?/\\s*([\\d.]+)%`)
+                )?.[1]
+            )
+        for (const tema of [CLARO, ESCURO]) {
+            const [fino, medio, grosso] = ["thin", "regular", "thick"].map((n) =>
+                alfa(tema, n)
+            )
+            expect(fino).toBeGreaterThan(0)
+            // Mais fino deixa passar mais: a lâmina abre.
+            expect(fino).toBeLessThan(medio)
+            expect(medio).toBeLessThan(grosso)
+            // E nenhum chega ao pintado, senão o degrau não seria material.
+            const pintado = Number(
+                tema.match(/--glass-tint:\s*oklch\([^)]*?\/\s*([\d.]+)%/)?.[1]
+            )
+            expect(grosso).toBeLessThan(pintado)
+        }
+        // As nuvens simulam luz atrás de uma placa sem nada atrás; com conteúdo
+        // real e borrado ali, o simulacro disputa com a coisa.
+        expect(MATERIAL).toContain("--glass-cloud: transparent")
     })
 
     it("8. o preset de controle move a variável, e nunca a propriedade", () => {

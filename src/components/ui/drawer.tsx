@@ -5,6 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Drawer as DrawerPrimitive } from "vaul"
 
 import { cn } from "@/lib/utils"
+import { modalSurfaceClassName } from "@/lib/modal-classes"
 import { DragHandle } from "@/components/ui/drag-handle"
 import { EDGE_PANEL_OVERLAY_CLASS } from "@/components/ui/edge-panel"
 
@@ -69,7 +70,8 @@ const drawerContentVariants = cva(
     // `group/dialog-content` é o que a cromagem do `Dialog` procura — é por
     // este nome que `DialogHeader` sabe que está num layout `fixed`.
     "group/dialog-content fixed inset-x-0 z-(--z-sheet)",
-    "flex flex-col bg-background text-sm shadow-lg",
+    "flex flex-col text-sm shadow-lg",
+    modalSurfaceClassName,
     "focus:outline-none",
     // O contrato que a cromagem do `Dialog` lê — o mesmo que `EdgePanelContent`
     // declara, palavra por palavra, para o cabeçalho e o rodapé medirem igual

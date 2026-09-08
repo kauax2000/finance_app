@@ -6387,6 +6387,1286 @@ Tailwind**; a camada real era a última. Truncar um valor composto esconde
 justamente a parte que interessa.
 
 
+### Rodada 46 — o borrão não cabe no elemento mascarado
+
+O pedido foi uma versão do `ScrollFade` que, além do fade, borrasse levemente a
+borda — vidro. **Ela não cabe no nó que já existe, e não é questão de gosto.** A
+invariante 2 diz que o rolável não desenha nada, e um `backdrop-filter` nele
+seria recortado **pela própria rampa**: forte onde a máscara é opaca, ausente
+justo na ponta. Exatamente ao contrário do que se quer, e filho dele herdaria o
+mesmo recorte.
+
+As camadas são **irmãs** do rolável, e a casca hospeda as duas coisas.
+
+**E a escolha do mecanismo já estava escrita.** A régua dos dois vidros, em
+`globals.css`: *há algo passando por baixo* → `backdrop-filter`; *não há* → a
+`@utility glass`, que é luz pintada porque borrar cor chapada não desenha nada.
+Numa borda de rolagem há conteúdo passando por baixo — é o lado do
+`backdrop-filter`, e com ele veio o `prefers-reduced-transparency` que um blur
+de verdade obriga. É o segundo consumidor dele no repositório.
+
+#### Irmão não lê custom property de irmão
+
+O `useScrollFade` escreve `--scroll-fade-start` / `--scroll-fade-end` **no
+próprio rolável**, com `el.style.setProperty`. Custom property herda para
+descendente, nunca para o lado — as camadas não enxergariam nada.
+
+A casca é o host certo, e já era: é ela que publica `--scroll-fade-band-h` /
+`--scroll-fade-foot-h`, justamente por ser *"o único elemento que enxerga as
+faixas como irmãs do rolável"*. Publicando ali, as duas variáveis descem por
+herança para o rolável **e** para as camadas, e o recuo das faixas fixas sai de
+graça. Medido: `--scroll-fade-start: 152px` e `--scroll-fade-end: 252px`,
+idênticos nos dois nós.
+
+A opção `shell` é **opt-in**, e é o que mantém os **13 consumidores** de hoje
+sem uma linha de diferença — nenhuma casca do Radix ou do cmdk recebe mutação de
+atributo que não pediu.
+
+#### Uma camada é crossfade; três são um gradiente
+
+Com uma só, o raio é **constante** e só a opacidade varia — nítido dissolvendo
+em borrado, não borrão que cresce. São três, e cada uma borra o que a de baixo
+já compôs, então a variância soma. O índice faz duas coisas ao mesmo tempo:
+multiplica o raio **e** encurta a extensão para `100% / i`, então a que mais
+borra é a que menos avança para dentro. Medido: `blur(2px)`, `blur(4px)`,
+`blur(6px)`, ~7px de raio efetivo na ponta.
+
+A rampa de cada camada leva degrau intermediário pela razão da rampa principal:
+queda linear sai do chapado com inclinação máxima, e descontinuidade de derivada
+contra superfície lisa é banda de Mach — aqui, numa linha que atravessa a caixa
+inteira.
+
+#### O que foi medido
+
+| | resultado |
+| --- | --- |
+| altura da faixa, rolando 0 → 20 → 201 → fim | **0 · 20 · 44 · 0** — cresce no mesmo passo da dissolução, e não existe nos extremos |
+| eixo X | **32px**, que é `--scroll-fade-x-h`, e não os 44 do Y |
+| `data-scroll-fade="off"` | `display: none` — nenhuma camada de composição parada |
+| o clique | `elementFromPoint` na camada devolve **o conteúdo**, não ela |
+| guardas no CSS emitido | os quatro, **duas vezes** (uma por eixo) |
+| `mask-composite` no CSS emitido | **0** — a invariante 3 de pé |
+| popover assentado | `transform: none`, e a camada com `blur(8px)` na geometria certa |
+
+**O risco que a inspeção fechou:** um ancestral com `transform` / `opacity` /
+`will-change` troca a raiz de backdrop, e é o que o Radix faz ao abrir. Medido,
+o popover **assentado** não tem transform nenhum — a exposição fica restrita aos
+~150ms da animação de abertura.
+
+#### `sem eixo de intensidade`, e o que mais não entrou
+
+Quem quiser mais ou menos vidro sobrescreve `--scroll-fade-blur-r` no próprio
+elemento: variável herda, e eixo sem caso medido é ficção — este projeto já
+removeu dois. **Nenhum dos 13 consumidores migrou**, por decisão: a utility fica
+disponível para `Command`, `Sidebar`, `Table` e os menus, e ligá-la em qualquer
+um é decisão de produto. **Zero pixel alterado em produção.**
+
+#### O `scroll-fade` ganhou o teste que nunca teve
+
+As quatro invariantes dele só eram cobradas de raspão por
+`carousel-ladder.test.ts`, contra **um** consumidor.
+[`scroll-fade.test.ts`](src/components/ui/scroll-fade.test.ts) tranca as nove:
+o borrão irmão e nunca o próprio, um gradiente por elemento, o empilhamento, os
+quatro guardas, o clique, a faixa não poder divergir da que dissolve, a régua
+não montar classe em runtime, o espelho ser opt-in e limpar o que escreveu — e
+a **invariante 2 aplicada ao próprio componente**, que era a lacuna antiga.
+
+Quatro delas foram verificadas **reintroduzindo o defeito**, e as quatro
+reprovam.
+
+#### Rodada 46b — o material do iOS, e o `blur` booleano durou uma hora
+
+A pergunta foi se aquilo parecia iOS. **O mecanismo era; a aparência não** — e a
+medição nomeou as quatro lacunas: raio de 7px contra os ~24 de lá, `saturate`
+nenhum, tinta nenhuma, e — a que decide — o conteúdo **dissolvendo até 6% de
+alfa** enquanto um material do iOS borra e não apaga.
+
+O dono escolheu o material de verdade. Ele **contraria a regra que enterrou o
+`ScrollFade` de gradiente pintado** (*dissolver, e não pintar um véu*), a
+contradição foi apresentada antes, e ele reafirmou.
+
+**O eixo passou a ser `edge`, e os três valores não são graus do mesmo efeito.**
+`fade` é só a máscara, `blur` soma borrão a ela, e `material` **substitui**: ali
+`--scroll-fade-mask` sai e o conteúdo passa por baixo nítido. O `blur` booleano
+que a rodada anterior entregou durou uma hora e tinha **zero consumidores** —
+trocá-lo custou nada, e um booleano nunca ia expressar "substitui" ao lado de
+"soma".
+
+#### A tinta é `transparent` de fábrica, e o número é que decidiu
+
+O caminho óbvio era herdar `--mobile-glass-bg`, que é o material do telefone.
+Medido, ele **não serve**:
+
+| | `--mobile-glass-bg` | o que ele iguala |
+| --- | --- | --- |
+| claro | `oklch(0.985 / 55%)` | **`--background`** (0.985) |
+| escuro | `oklch(0.205 / 45%)` | **`--card`** (0.205) — a página é 0.145 |
+
+Ele segue **superfícies diferentes em cada tema**, porque é calibrado para uma
+folha sobre a página. Uma faixa de borda vive sobre card, popover, página ou
+`muted` — herdá-lo seria cravar a cor de novo, que é literalmente o defeito que
+matou a versão pintada (`from-card` dentro de um popover pintava faixa clara).
+
+A tinta nasce `transparent` e é opt-in por `--scroll-fade-blur-tint`. É o
+mecanismo do `--glass-tone`, que também nasce transparente e por isso é no-op.
+
+**O que foi herdado são o raio e a vibrância:** `saturate(1.5)` é o número de
+`.mobile-glass-surface`, para a casa ter **uma** vibrância — e o teste falha se
+os dois divergirem. As três camadas somam para ~26px efetivos contra os 24 de
+lá. Não é um terceiro vidro: é a mesma receita, numa faixa em vez de numa
+superfície.
+
+#### Preset de variável, e nunca uma segunda propriedade
+
+`scroll-fade-material` declara **duas variáveis e mais nada**. A tinta e a
+vibrância entraram nas camadas como no-op (`transparent` e `1`), então o modo
+`blur` não mudou um pixel. É o precedente do `glass-control`: *sobrescrever a
+variável, nunca a propriedade* — duas utilities escrevendo `backdrop-filter`
+seriam decididas pela ordem de emissão do Tailwind, e não pelo que se escreveu.
+
+**A máscara sai por uma regra que empata em especificidade e vem depois.**
+`&[data-scroll-fade-mode="material"]` fica logo abaixo de `&[data-scroll-fade="on"]`
+dentro da mesma utility; as duas são (0,2,0) e ali quem decide é a ordem. A
+folga de rolagem **fica** — medido, 48px nos três modos —, senão um
+`scrollIntoView` depositaria o item ativo debaixo da faixa.
+
+#### O que foi medido
+
+| | resultado |
+| --- | --- |
+| `fade` | máscara **rampa**, 0 camadas |
+| `blur` | máscara **rampa**, 6 camadas |
+| `material` | máscara **nenhuma**, 6 camadas, `blur(7/14/21px) saturate(1.5)` |
+| folga de rolagem | **48px nos três** |
+| os dois temas | o conteúdo sob o material continua legível; sob `fade` e `blur`, não |
+
+**A lição de instrumento:** as três primeiras capturas do material pareciam
+"pouco borradas", e não estavam — o painel entregava 800px para um viewport de
+1443, e o downscale de 0,55 apaga justamente o detalhe que se está medindo.
+Com `resize_window` a 800 e captura 1:1, a diferença entre os três modos fica
+óbvia. **Captura escalada não serve para julgar nitidez.**
+
+#### Rodada 46c — a camada era um retângulo reto dentro de uma casca curva
+
+Relatado pelo dono, com o canto superior-direito circulado na captura: *"as
+bordas dos fades estão quebrando"*. Medido: a casca tem **raio 10px e
+`overflow: visible`**, e cada camada de borrão é `border-radius: 0` preenchendo
+o padding box inteiro (`top: 1`, `left: 1`, largura 290,7 contra 292,7 da
+casca — os 2px das bordas).
+
+**A camada é filha, então ela pinta depois da borda da casca.** De canto reto
+ela avança sobre a curva, cobre o fio nos quatro cantos, e — o que se vê — o
+`backdrop-filter` espalha o conteúdo de dentro para fora do arredondamento. O
+sintoma some no modo `fade`, que não tem camada nenhuma, e é mais forte no
+`material`, que não tem máscara para atenuá-lo.
+
+**O conserto é a camada herdar o raio, e não a casca recortar.** `overflow-hidden`
+na casca seria exato e resolveria só o componente: o eixo escolhido na 46 foi
+*utility + régua para qualquer casca*, e uma utility que depende de o consumidor
+lembrar de recortar não serve. Herdando, ela é auto-contida.
+
+**E só os dois cantos que encostam.** `border-radius: inherit` arredondaria os
+quatro, e a aresta de dentro da faixa corre no **meio** da caixa — ali não há
+canto a acompanhar. Por ponta:
+
+| eixo | ponta `start` | ponta `end` |
+| --- | --- | --- |
+| Y | os dois de **cima** | os dois de **baixo** |
+| X | os dois do lado de **início** | os dois do lado de **fim** |
+
+Medido depois: `10px 10px 0 0` e `0 0 10px 10px` no eixo Y; `10px 0 0 10px` e
+`0 10px 10px 0` no X.
+
+**O que sobra, e é dito:** herdar dá o raio do *border box* aplicado ao *padding
+box*, ou seja **1px de sobra** onde a casca tem borda — o raio interno correto
+seria `10 − 1`. Não há como ler a borda do pai em CSS, e a 1px o resto é o
+borrão passando de leve sobre o fio em vez de um canto reto inteiro. Quem
+precisar de exatidão põe `overflow-hidden` na própria casca.
+
+A asserção 10 tranca as duas metades — que os cantos da ponta herdem, que os
+outros **não** herdem, e que ninguém use o atalho `border-radius`. Verificada
+reintroduzindo três defeitos: o canto reto (o relatado), os quatro cantos de
+uma vez, e o eixo X pegando o lado errado. Os três reprovam.
+
+#### Rodada 46d — o material vira superfície, e o cabeçalho do catálogo veste
+
+Pedido: *"aplique esse mesmo estilo no header para que o fundo fique mais
+glass"*, com o esclarecimento de que **não é o fade** — é o material como fundo.
+
+Medido, o cabeçalho tinha três lacunas contra a receita da casa:
+
+| | cabeçalho do catálogo | `.mobile-glass-surface` |
+| --- | --- | --- |
+| raio | **`blur(8px)`** | `blur(24px)` |
+| vibrância | **nenhuma** | `saturate(1.5)` |
+| tinta | `bg-background/85` | 45%/55% |
+
+Mais uma quarta, que só aparece lendo: ele tinha `backdrop-filter` **sem o
+`prefers-reduced-transparency`** que o próprio `globals.css` diz que um blur de
+verdade obriga.
+
+**Escrever os números no `className` seria a terceira cópia da mesma receita**,
+e a casa já reclama de ter dois vidros. Em vez disso o mecanismo saiu para uma
+`@utility glass-surface`, e `.mobile-glass-surface` passou a **consumi-la** com
+`@apply` em vez de repeti-la — extração, não mudança. Medido antes e depois na
+folha do telefone: `blur(24px) saturate(1.5)`, `oklch(0.205 0 0 / 0.45)`,
+borda `oklch(1 0 0 / 0.05)` — **idênticos**.
+
+**Ela declara o material e nunca a cor.** A tinta depende da superfície, e
+cravá-la aqui é o defeito que enterrou o `ScrollFade` pintado. Quem veste traz
+o próprio `bg-*`; os dois números são variáveis, pelo mecanismo do
+`glass-control`.
+
+**O par opaco/translúcido é de quem veste, e não da utility.**
+`bg-background/95 supports-backdrop-filter:bg-background/60` — sem borrão, os
+60% deixariam o conteúdo passar por trás do título. É o que `app-header.tsx` já
+escrevia, e agora as duas cascas concordam.
+
+Medido depois, nos dois temas: `blur(24px) saturate(1.5)`, fundo a 60%, e o
+guarda de transparência reduzida emitido **duas vezes** no CSS — uma pela
+utility, outra pela folha que a herda.
+
+**A asserção 9 media a coisa certa por acidente, e isso só apareceu agora.** Ela
+lia a vibrância a partir de `indexOf(".mobile-glass-surface")` — e a **primeira**
+ocorrência dessa string no arquivo é um comentário, quarenta linhas acima do
+bloco. Com a receita extraída, o número que ela achava passou a vir da utility
+nova; ela continuou verde sem estar certa. Hoje lê da `@utility glass-surface`
+e tranca que a folha **herde** em vez de declarar os próprios números.
+Verificada reintroduzindo os dois defeitos: a vibrância divergindo e a folha
+repetindo a receita. Os dois reprovam.
+
+É a segunda vez que este arquivo registra a mesma família: *corte por `indexOf`
+sem posição inicial é uma asserção que pode acertar por vazio* — e agora também
+**por comentário**.
+
+#### Três lições de instrumento, e as três são erros meus
+
+**`requestAnimationFrame` não dispara com o painel oculto.** Um `await` de dois
+quadros dentro da sonda pendurou a chamada por 45s, e o diagnóstico natural
+seria "a página travou". A leitura de layout continua tendo de ser um quadro
+depois da mutação — mas o quadro tem de vir de **outra chamada**, e não de um
+`await` dentro da mesma.
+
+**A minha varredura do CSSOM reportou zero guardas** enquanto o `getComputedStyle`
+já tinha mostrado `display: none` funcionando. Ela descia para os filhos de cada
+regra **antes** de testar o texto do pai, e com CSS aninhado os guardas moram
+lá. É a quarta vez que este arquivo registra a mesma régua: **quando a medição
+contraria o mecanismo, desconfie da medição primeiro.**
+
+**E um efeito sutil e correto é indistinguível de um quebrado.** A 2px o
+`backdrop-filter` computava certo e a captura não provava nada. O que resolveu
+foi **amplificar o token** para 8px: aí o borrão fica inegável, e só então baixá-lo
+de volta. Verificar "leve" exige medir o mesmo mecanismo em intensidade alta.
+
+### Rodada 47 — o vidro ganha o modo material, e um guarda meu tinha caído
+
+O pedido foi o vidro no estilo iOS, como o `scroll-fade`. É o item que a 46d
+deixou escrito: *"unificar é decidir se a premissa vira eixo ou se os dois nomes
+ficam."* Decisões do dono: **eixo**, **escada de espessura** — contra a minha
+recomendação de um material só, e fica registrado que ela nasce sem caso
+medido — e **zero pixel em produção**.
+
+#### O item zero: uma regressão minha, achada pela exploração
+
+A 46d fez `.mobile-glass-surface` consumir a `@utility glass-surface` com
+`@apply`. Medido no CSSOM, o emitido era:
+
+```css
+.mobile-glass-surface {
+  backdrop-filter: …;
+  @media (prefers-reduced-transparency: reduce) { background-color: …; }
+  background-color: var(--mobile-glass-bg);   /* ← depois, e vence */
+}
+```
+
+**O `@apply` insere as declarações no lugar da diretiva**, então o guarda ficava
+*antes* das cores e a declaração literal seguinte vencia: sob `reduce` a folha
+ficava **translúcida sem blur** — o pior dos dois estados, e o que a própria doc
+da utility diz que não pode acontecer. Ela está viva em toda tela do telefone.
+
+**A asserção que escrevi provou a forma e não o resultado.** Ela exigia `@apply
+glass-surface` e a ausência de números repetidos, e passava com o guarda
+perdendo. Família da 29b: *asserção que casa a forma da chamada testa a
+digitação.*
+
+**O conserto não foi mover a linha.** Uma utility não pode ser dona de
+`background-color` se quem a veste também é: contra `@apply` ela perde por
+ordem de inserção, e contra classes utilitárias perde por ordem de emissão do
+Tailwind. Hoje ela é dona de **uma** propriedade — `backdrop-filter` —, e a cor
+sólida do guarda voltou para quem veste, escrevível por um
+`@custom-variant reduced-transparency` novo. O cabeçalho do catálogo diz as
+duas cores no mesmo lugar: `bg-background/95`,
+`supports-backdrop-filter:bg-background/60` e `reduced-transparency:bg-background`.
+
+#### Não dava para "só acrescentar blur"
+
+A lâmina é quase opaca de propósito — 82% no escuro, que compõe para **rgb 2**
+sobre a página. Um `backdrop-filter` atrás dela é invisível, que é o defeito que
+a rodada 44 mediu quando o tom opaco a tapava. **O modo abre a lâmina, e é essa
+abertura que é o material.**
+
+**E as nuvens saem.** Elas existem para simular luz atrás de uma placa que não
+tem nada atrás; com conteúdo real e borrado ali, o simulacro disputa com a
+coisa. É a mesma conclusão a que a rodada 44 chegou por outro caminho — *"numa
+peça com tom as nuvens já chegavam a 3,6%: quem faz o material é o aro"*. O aro
+fica, e medido ele não se move: **34% nos quatro** espécimes.
+
+#### A mecânica: só uma utility declara a lâmina
+
+Os degraus movem `--glass-material-step`, uma intermediária; **nenhum deles
+toca `--glass-tint`**. Se cada um a escrevesse direto, quem venceria seria a
+ordem de emissão do Tailwind — e os dois guardas, que moram na regra do meio,
+perderiam para o degrau. É o mecanismo do `glass-control`.
+
+Os guardas restauram com **`inherit`**, que numa custom property devolve o valor
+computado do pai — o token do tema, que é exatamente o pintado. Sem alias e sem
+token novo.
+
+A intermediária chegou a se chamar `--glass-material-tint`, ao lado de
+`--glass-material-thin`: uma letra de diferença entre duas variáveis vizinhas é
+um erro de leitura esperando acontecer, e ela virou `-step`.
+
+#### O que foi medido, e o número que decide a régua de uso
+
+Contraste do texto do sistema sobre a placa, composto sobre o fundo real:
+
+| | alfa (escuro) | pior caso | sobre a página |
+| --- | --- | --- | --- |
+| pintado | 82% | 13,03 | 19,90 |
+| `thick` | 70% | 8,16 | 19,76 |
+| `regular` | 55% | **4,56** | 19,58 |
+| `thin` | 40% | **2,73** | 19,41 |
+
+**`thin` reprova os 4,5:1 sobre conteúdo claro, e isso não é conserto — é o que
+um material fino é.** Fechá-lo até passar exigiria ~54%, praticamente o
+`regular`, e a escada colapsaria. A régua que sai daí: **onde há texto sobre o
+material, o piso é `regular`**; `thin` é para superfície sem texto crítico ou
+sobre conteúdo escuro. É por isso que o iOS tem os degraus.
+
+**No claro os três passam** (6,79 · 9,70 · 13,31), e a assimetria tem causa: lá
+a lâmina é branca e o texto é escuro, então abrir a lâmina sobre conteúdo escuro
+ainda deixa a superfície clara. No escuro os dois vão em direções opostas.
+
+E o teto do claro que a rodada 40 mediu continua valendo: sobre a página os
+quatro degraus compõem **251/252 contra 250** — indistinguíveis. Eles se separam
+sobre **conteúdo**, que é onde o modo material vive.
+
+#### A asserção 7 tinha duas armadilhas, e as duas eram minhas
+
+Ela varria `RECEITA` — o texto **cru, com comentários** —, então um comentário
+que apenas *mencionasse* `backdrop-filter` já a reprovava, sem mudança nenhuma
+de código. Passava só porque a seção que fala disso está acima da linha
+`@utility glass {`. E a fatia ia até `@utility glass-control`, **engolindo o
+doc-comment inteiro do vizinho** — 17 linhas de prosa varridas como se fossem
+código.
+
+Hoje ela varre `RECEITA_CODIGO`, o corte para no próximo doc-comment de topo, e
+ela diz as duas metades: **a receita base nunca borra; o material sempre**.
+
+Quatro asserções novas (16 a 19), e **seis sabotagens verificadas**. Duas delas
+acharam buracos no próprio teste antes de passarem: a 17 aceitava quem cravasse
+o raio no `backdrop-filter` e deixasse o par `-webkit-` com a variável — ela
+passou a exigir **duas** ocorrências —, e depois acusou a si mesma, porque a
+condição `@supports not (backdrop-filter: blur(1px))` carrega de propósito a
+string que a asserção proíbe. A condição sai antes da varredura.
+
+**A régua de método que sobra:** uma asserção que varre um bloco de CSS precisa
+saber onde o bloco acaba **e** que a condição de um `@supports` não é código.
+
+#### O que não entrou
+
+Nenhum consumidor. O modo é opt-in, e `Avatar` / `ColorTile` seguem pintados —
+os dois são superfícies de identidade sem nada atrás, que é a premissa do
+pintado. **Zero pixel alterado em produção**, verificado por `git diff`.
+
+### Rodada 48 — o avatar de vidro era um disco chapado, e as duas causas eram da receita
+
+O pedido foi o `<Avatar glass>` no estilo iOS. Ampliado 6×, ele era um disco
+fosco quase indistinguível do opaco ao lado. **Nenhuma das duas causas estava no
+`avatar.tsx`.**
+
+#### 1. Quatro das seis camadas não pintavam nada
+
+O tom é a **camada 0** — acima da lâmina e das nuvens — e a rodada 44 o tornou
+**opaco** por uma razão medida (translúcido, o avatar saía 20% mais escuro que o
+opaco da mesma identidade). Ela anotou o efeito colateral pela metade: *"as
+nuvens já chegavam a 3,6%"*. Com alfa 1 elas chegam a **zero**.
+
+| camada | no avatar |
+| --- | --- |
+| −1 realce | `transparent`, sem produtor |
+| 0 **tom** | **opaco — cobre tudo abaixo** |
+| 1 lâmina · 2–3 nuvens | invisíveis |
+| 4 aro | 1px |
+
+#### 2. O pico do aro caía fora do círculo
+
+O aro é `linear-gradient(165deg, …)`, calibrado numa placa de 240×424. Numa
+caixa de 40×40 o eixo dele mede **49px**: as duas pontas — o pico e o extremo
+aceso — caem nos **cantos** do quadrado, e num círculo os cantos não existem.
+
+Amostrando 720 pontos do perímetro: **0%** via o pico de 34%, **0%** via o
+extremo aceso, **57,5%** via só o vale de 10%. **O avatar de vidro nunca teve
+brilho** — tinha uma borda cinza quase uniforme.
+
+#### O conserto: duas camadas viram contrato, e um preset por forma
+
+O aro e o realce passaram a ser `var(--glass-rim-image | --glass-sheen-image,
+<o valor de hoje>)`. Provado que é extração e não mudança: o painel e o
+`ColorTile` saem **byte a byte iguais** — hash `5347fc9d` e `387df95d`, 581
+caracteres, antes e depois.
+
+`@utility glass-round` troca o aro por um **`conic-gradient`**: num cônico cada
+ponto do perímetro mapeia para um ângulo, e não há canto a perder. Medido
+depois: **14%** do perímetro no pico contra os 0% de antes, e o vale de 57,5%
+para 8,5%.
+
+**Ele não entra no `glass-control`**, e o motivo é o `ColorTile`: aquele preset
+serve as duas peças pequenas, e o ladrilho é `rounded-md` — um bisel polar num
+quadrado arredondado põe as transições nos cantos errados. O `Avatar` o veste
+por **forma**, e em `shape="rounded"` o linear continua certo.
+
+O especular entra por `--glass-sheen-image`, a camada mais de cima — **a única
+que sobrevive a um tom opaco**. Ela estava sem produtor desde que `Button` e
+`Checkbox` perderam o modo de vidro, e era exatamente o encaixe que faltava.
+
+#### Os números, e o que cada um decidiu
+
+| | escuro | claro |
+| --- | --- | --- |
+| abertura do tom | **92%** | **98%** |
+| contraste onde há letra | 5,93 – 6,34 | 4,61 – 5,14 |
+| desvio contra o opaco | 4,5 | 4,9 |
+
+**A abertura é diferente por tema porque a lâmina troca de polaridade.** No
+escuro ela é preta e o corpo afunda; no claro é branca e ele **sobe**, empurrando
+as iniciais para o piso — a 92% dois tons reprovavam (4,48 e **4,37**), e 98% é a
+abertura máxima que passa. No claro ela quase não se paga, e isso fica dito.
+
+#### A medição do especular quase produziu o conserto errado
+
+A sonda acusou o reflexo derrubando o contraste para **3,36** em todos os seis
+tons. O número estava certo e a **pergunta** estava errada: ele media a letra sob
+o **pico** do reflexo, e o pico fica a 16% da altura enquanto a letra começa a
+37%. No centro da caixa o gradiente já resolveu para `transparent`; no ponto onde
+a letra de fato está ele vale **16,7%** do pico.
+
+O especular ficou em **14%** e não em 20 por robustez — a geometria é estável nos
+cinco degraus (topo da letra a 37,4% no `md` e 38,4% no `xl`, porque caixa e
+fonte escalam juntas), mas uma inicial só ou uma fonte maior aproximam o texto
+do pico.
+
+#### Um erro meu de instrumento, e ele invalidou uma rodada de medições
+
+A sonda de cor pintava `#000` **antes** da cor, então todo alfa lido voltava
+**1** e a lâmina branca do tema claro era medida já composta sobre preto. Ela
+reportou `alfa: 1` para um tom que o CSS declarava a 97% — a contradição entre a
+medição e o mecanismo é que denunciou.
+
+Com ela corrigida (`clearRect` e nada de preto), as conclusões do tema claro
+mudaram e a abertura teve de ser remedida do zero. **Quatro erros de instrumento
+nesta série, todos meus, e a régua é sempre a mesma:** quando a medição contraria
+o mecanismo, o instrumento é o primeiro suspeito.
+
+#### Três asserções novas, e a sexta sabotagem achou um buraco
+
+As 20, 21 e 22 trancam: as duas camadas serem contrato com fallback e nenhum tema
+as declarar; o preset ser de imagem e o cônico **não** vazar para o
+`glass-control`; e as paradas serem angulares e fecharem o ciclo — um `%` num
+cônico mede o **raio**, não o arco, e o bisel deixaria de acompanhar a borda.
+
+As três falharam na primeira escrita, e as três por erro do instrumento:
+`ESCURO` vai de `.dark {` até o **fim do arquivo** e engolia as utilities; a
+fatia do `glass-control` atravessava o `glass-round`, que mora entre ele e o
+vizinho seguinte; e o regex das paradas capturava o `45` de `from -45deg`.
+
+E a sabotagem que **passou** achou o buraco real: nada garantia que o preset
+chegasse à peça. Tirar `glass-round` da régua devolvia o avatar ao aro linear em
+silêncio. Hoje a 22 exige que a régua o contenha e que o `Avatar` o vista por
+forma.
+
+#### Zero pixel em produção
+
+Os dois consumidores reais — `sidebar-user-profile.tsx` e
+`members/page-client.tsx` — passam só `size`, `shape` e `className`. Nenhum usa
+`glass`, e o modo segue sem consumidor de produto.
+
+### Rodada 49 — o vidro volta ao botão primário, e o número explica a reprovação
+
+O pedido foi trazer o vidro do iOS ao `Button variant="primary"` **sem tirar a
+cor primary**. Isto reabre a rodada 45, em que este mesmo botão ganhou vidro,
+foi visto na tela e reprovado — *"ficou péssimo"*.
+
+**A medição desta rodada explica por quê, e o número é duro:**
+
+| | |
+| --- | --- |
+| contraste do rótulo hoje (branco sobre o verde), escuro | **5,22** |
+| margem até o piso de 4,5 | **0,72** |
+| véu branco a 8% sobre o corpo | **4,49 — reprova** |
+| os 14% que o `glass-round` usa | **4,01 — reprova** |
+
+**Um botão preenchido com texto branco quase não tem margem para brilho
+branco.** A versão de quatro rodadas atrás punha o brilho no corpo inteiro:
+ou reprovava o contraste, ou era fraca demais para se ver. Não havia saída —
+o vocabulário que a permite (`--glass-sheen-image` e `--glass-rim-image` como
+contrato) só nasceu nas rodadas 47 e 48.
+
+#### A faixa livre é o que torna isto possível
+
+Medida a caixa do glifo nos cinco degraus, o texto **nunca começa antes de 32%**
+da altura:
+
+| degrau | altura | topo do glifo | livre |
+| --- | --- | --- | --- |
+| `xs` | 24 | **32,0%** | 7,7px |
+| `md` | 32 | 34,2% | 11,0px |
+| `xl` | 40 | 37,4% | 15,0px |
+
+O gloss se esvai em **28%** e não alcança o rótulo em degrau nenhum — medido, o
+alfa dele na altura do glifo é **0%**. Fora da caixa do texto o alfa deixa de ser
+refém do contraste, e é isso que permite um brilho que se vê.
+
+Medido depois: **5,22 com e sem vidro** no escuro e **7,34** nos dois no claro.
+O contraste do rótulo não se mexeu um centésimo.
+
+#### A cor é de quem veste, e o preset não a conhece
+
+`--glass-fill-tone` é publicado pelo **compound do variant**, não pelo preset.
+Cravar `var(--primary)` na utility faria toda peça de vidro ser verde — e o
+shorthand `background` da receita já apaga o `bg-*` do consumidor, que é a
+armadilha nº 1 da régua. Medido: o tom resolve para `oklch(0.5 0.125 166)`, que
+é o `--primary` byte a byte.
+
+#### O estado move variável, e é isso que conserta o defeito calado
+
+**`hover:bg-*` morre sob vidro.** Ele declara só `background-color`, e o
+shorthand o apaga — foi assim que o `hover:bg-primary/90` do variant sumiu na
+primeira versão. Aqui o par move `--glass-gloss` (16% → 24% no cursor, 8% no
+toque), e o botão **acende** ao apontar em vez de escurecer, que é o
+comportamento do iOS.
+
+**De brinde, o botão de vidro responde ao toque.** Verificado no CSS emitido: o
+`hover:` compila dentro de `@media (hover: hover)` e o `active:` **fora** dela.
+O `primary` sem vidro segue na lista de inertes do
+`button-touch-response.test.ts` — o de vidro não está.
+
+#### Sem união de props, e é o que evita a dívida da 45
+
+O vidro **soma** à cor do variant em vez de substituí-la, então `variant` não é
+fechado e não há união discriminada. A rodada 45 fechou, e 11 wrappers de `ui/`
+quebraram de uma vez — desestruturar o rest de uma interseção com união aninhada
+colapsa os ramos. Nenhum wrapper se mexe aqui.
+
+**E os 70 botões primários de produção não mudam**: o eixo é opt-in, e a
+asserção 26 tranca a string do variant literal — se ela ganhar um caractere, o
+teste cai.
+
+#### O corte largo cobrou pela terceira vez
+
+A asserção 8 fatiava de `@utility glass-control` até `@utility no-scrollbar`, e
+entre os dois moram hoje **três** presets. O comentário do `glass-fill` cita o
+shorthand `background` por extenso, e ela acusou a **prosa**. É o mesmo defeito
+que a 7 tinha (varrer texto cru) e que a 21 já havia consertado no próprio corte.
+Hoje ela corta no fechamento da utility e remove comentários.
+
+**A régua que sobra:** uma fatia de CSS que termina no *vizinho seguinte*
+envelhece toda vez que alguém escreve uma utility no meio. Ela precisa terminar
+no próprio `}`.
+
+#### O que não entrou
+
+`secondary` e `destructive` seguem sem vidro: cada preenchido tem margem de
+contraste própria, e o `destructive` é um **véu** no tema claro em vez de um
+preenchimento. Cada um entra quando for medido. E nenhuma tela adota o modo —
+**zero pixel em produção**.
+
+### Rodada 50 — o vidro do botão, segunda passagem: a luz sai do corpo
+
+A 49 foi vista e reprovada — *"ficou muito feio"*. A direção que veio junto era
+precisa: **sem degradê dentro**, luz **só na borda**, a borda **interna**, e na
+**própria cor primary**, mais clara ou mais escura.
+
+O que a 49 tinha de errado não era o mecanismo — era o desenho: gloss branco no
+terço superior mais um bisel branco/preto. Ficaram de pé o eixo opt-in, o
+compound do primary, a cor em `--glass-tone` (verde byte a byte), o estado por
+variável e a asserção 26 que tranca os 70 botões de produção. Saíram inteiros o
+gloss e o bisel.
+
+#### A aresta é a própria cor, e o deslocamento saiu de medição
+
+Varrido o `--primary` por *relative color* (`oklch(from … calc(l + ΔL) c h)`),
+compondo sobre o fundo real:
+
+| ΔL | escuro: vs corpo / vs página | claro: vs corpo / vs página |
+| --- | --- | --- |
+| −0.12 | 1,64 / 2,21 | 1,60 / 11,77 |
+| **+0.12** | **1,58 / 5,76** | **1,63 / 4,51** |
+| +0.20 | 2,16 / 7,87 | 2,24 / 3,27 |
+
+**+0.12**: a aresta se separa do corpo em ~1,6 nos dois temas — o peso dos aros
+da casa (1,29 a 1,76) — e no claro ainda dá 4,51 contra a página branca, ou seja
+continua parte do botão. A +0.20 cai para 3,27 e começa a se soltar como halo.
+
+**Clarear nos dois temas, contra a polaridade da casa.** A régua do `glass`
+inverte o aro por tema (luz no escuro, sombra no claro), e −0.12 mede igual
+(1,60). Mas o pedido é *shiny*, e uma aresta mais escura lê como recesso — afunda
+o botão em vez de acendê-lo. Fica dito que o recesso mede igual e que quem
+decidiu foi a tela.
+
+**O aro do `glass` já era a borda interna.** `border: 1px solid transparent`
+pintado no `border-box` é exatamente o anel que o pedido descreve — nada de
+`inset-ring` nem `box-shadow`, e o `focus-visible:ring-3` da base não é tocado.
+
+#### O preset não conhece a cor, só a desloca
+
+`--glass-tone` e `--glass-rim-image` derivam de `--glass-fill-tone` por relative
+color, que o `ColorTile` já usa. O estado move `--glass-fill-shift` (−0.03 no
+cursor, −0.05 no toque) — escurece como o `bg-primary/90` do primário sem vidro,
+sem nunca escrever `bg-*`, que morre calado sob o shorthand.
+
+Medido depois: corpo idêntico ao `--primary`; rótulo em **5,22 / 7,34** com e
+sem vidro; sheen e nuvens em `transparent`; três tons de estado distintos
+(121 → 112 → 106 no canal verde).
+
+#### Uma sonda minha acusou o aro transparente — e era o regex
+
+A leitura do aro voltou `[0,0,0,0]`. O CSS estava certo: o regex
+`oklch\([^)]*\)` parava no primeiro `)` — o de `var(--glass-fill-tone, …)` — e
+recortava uma cor inválida. O computado de uma custom property é o texto **não
+substituído**, então o `var()` ainda estava lá. A leitura certa é dar a um
+**filho** do botão `background-color` com a mesma expressão e ler o resultado: o
+navegador resolve com as variáveis herdadas. *Um regex não parseia CSS* — quinta
+ocorrência nesta série.
+
+#### As asserções 23–25 mudaram de assunto
+
+A 23 passou a proibir `--glass-sheen-image` no preset (o gloss não volta pela
+porta dos fundos); a 24 exige que o aro derive da cor da peça, com deslocamento
+**positivo e ≤ 0.16** e uniforme (duas paradas, 0% e 100% — um gradiente de
+direção seria o degradê que saiu); a 25 troca `--glass-gloss` por
+`--glass-fill-shift`. Quatro sabotagens, quatro reprovações — incluindo a aresta
+escurecida e a forte demais.
+
+**Zero pixel em produção**, e nenhuma tela adota o modo.
+
+#### Rodada 50b — o anel estava na borda errada, e o botão inteiro lia mais claro
+
+Relatado com o botão original selecionado: *"a cor do glass está mais clara do
+que o button original"*. O corpo era idêntico — medido, `[0,121,82]` nos dois —
+e ainda assim ele tinha razão.
+
+A 50 pintou o anel claro **no aro**, que é o `border-box`: a borda **externa** de
+1px. A silhueta inteira do botão ficava um pixel mais clara, e o olho não separa
+"o contorno clareou" de "o botão clareou". A frase da 50 — *"o aro do `glass` já
+era a borda interna, nada de `inset-ring`"* — estava **errada**: o aro é a borda
+externa. "Borda interna" é um pixel para dentro dela.
+
+**Conserto:** o aro volta a ser o próprio tom (silhueta byte a byte igual à do
+botão sem vidro — medido, borda `[0,121,82]` nos dois), e o anel claro vai para
+dentro por `inset-ring-1 inset-ring-(--glass-fill-edge-color)`. A cor é
+publicada pela utility como variável e **não** como `box-shadow`: os dois vivem
+na mesma propriedade, e só o utilitário do Tailwind compõe com o
+`focus-visible:ring-3` da base — verificado no emitido, `--tw-inset-ring-shadow`
+e `--tw-ring-shadow` são entradas distintas da cadeia.
+
+A asserção 24 passou a exigir que o aro seja `var(--glass-tone)` sem
+deslocamento, que o deslocamento viva em `--glass-fill-edge-color`, e que o
+botão o vista por `inset-ring`. Três sabotagens — o anel de volta à borda
+externa, o botão sem anel, o anel escurecido — reprovam.
+
+**A lição:** "interno" e "externo" numa borda de 1px são um pixel de diferença e
+uma leitura inteira de diferença. Eu medi o corpo e declarei igual; o que
+mudava era a **silhueta**, e silhueta se mede na borda, não no centro.
+
+#### Rodada 50c — o vidro sai do botão, pela segunda vez
+
+Removido inteiro por decisão do dono. Saíram o eixo `glass` do `cva`, o
+compound do primary, a prop, o `data-glass`, a `@utility glass-fill`,
+`glassFillSurfaceClassName`, as quatro asserções (23–26) e a seção do catálogo
+com as duas notas. **`git diff` de `button.tsx` está vazio** — o arquivo voltou
+byte a byte ao que era antes da 49.
+
+Foram **três desenhos em três rodadas**, e os três reprovados na tela: gloss
+branco no corpo (49), anel claro na borda externa (50), anel um pixel para
+dentro (50b). Nenhum caiu por número — os números fechavam nos três.
+
+**O que a medição deixa registrado, e é o que a próxima tentativa herda:**
+
+- um botão preenchido com rótulo branco tem **0,72** de margem sobre o piso de
+  4,5, então brilho branco no corpo reprova a partir de **8%**;
+- a luz cabe na faixa acima da linha do texto, que nunca começa antes de **32%**
+  da altura nos cinco degraus;
+- a aresta na própria cor a **+0.12** de L mede ~1,6 contra o corpo nos dois
+  temas — o peso dos aros da casa;
+- pintá-la na borda **externa** deixa a silhueta 1px mais clara, e isso se lê
+  como o botão inteiro mais claro. *Silhueta se mede na borda, não no centro.*
+
+É a **segunda** vez que o vidro sai deste botão — a primeira foi na 45, quando
+ele era peso próprio com eixo de sete tons. As duas terminaram na tela.
+
+**O que fica de saldo para o resto do sistema:** a `@utility glass-fill` era o
+único consumidor de `--glass-sheen-image` como produtor, e ela sai; a camada
+volta a ser contrato sem produtor, como era. `glass-round` e `glass-material`
+não são tocados, e `Avatar` e `ColorTile` seguem com o modo.
+
+### Rodada 51 — as superfícies flutuantes ganham o material do cabeçalho
+
+O pedido foi o dropdown do `Select` com o fundo do cabeçalho — borrão de
+verdade — mas na cor **cinza** (`--popover`) e não no preto da página. Decidido
+junto: vale para **todas** as superfícies flutuantes, e a paleta se alinha.
+
+#### O risco técnico morreu na medição
+
+O `SelectContent` é posicionado por um wrapper com `transform` **permanente** e
+`will-change: transform`, e carrega `translate-*` estáticos no próprio nó. Pela
+spec, `transform` cria um *backdrop root* e o borrão não veria a página.
+
+**Medido, funciona.** Com `blur(16px)` injetado e uma grade de quadrados
+coloridos atrás, os de dentro do dropdown saem borrados e os de fora nítidos. A
+teoria dizia que não; a tela disse que sim. **Quando as duas discordam sobre o
+que se vê, quem decide é a tela.**
+
+#### O alfa é diferente por tema, e o número é o contraste
+
+O texto que aperta não é o do item (`--popover-foreground`, folgado em qualquer
+alfa) e sim o **`--muted-foreground`**, dos rótulos de grupo e atalhos. Composto
+sobre o que de fato **preenche área** atrás de um menu:
+
+| | escuro | claro |
+| --- | --- | --- |
+| pior fundo | `primary` | `primary` |
+| 60% | **4,64 — passa** | 3,00 — reprova |
+| 85% | — | **4,72 — passa** |
+
+No claro o `--popover` é **branco** e o pior fundo é o verde escuro do
+`primary`: um branco a 60% sobre ele vira cinza-esverdeado e o texto secundário
+morre. Daí a base ser 85% — que serve o claro **e** é o fallback de quem não tem
+`backdrop-filter` — e o escuro abrir para 60% só sob `supports-backdrop-filter:`.
+
+Repete o teto que a 47 já mediu: **no claro o vidro quase não se paga.** Sobre a
+página o contraste é o mesmo em qualquer alfa (5,91 a 6,01); o que a
+translucidez custa só aparece sobre cor cheia.
+
+#### Dois erros meus de sonda, e os dois inflavam o pior caso
+
+Incluí `--foreground` e `--destructive` no conjunto de fundos. O primeiro é cor
+de **texto** — glifos finos sob blur de 24px se diluem, não formam bloco; o
+segundo é um **véu** no tema claro (`bg-destructive/10`), nunca um
+preenchimento. Com eles, nenhum alfa até 95% passava.
+
+**A régua: o pior caso de um fundo é o que preenche área, não o que tem a cor
+mais forte.**
+
+#### A receita estava em quatro lugares, e agora é uma
+
+O doc de `menu-classes` afirmava ter extraído as quatro cópias — e três tinham
+ficado: `Select`, `Popover` e `HoverCard` carregavam a string à mão. A paleta
+tinha uma **quarta receita de vidro** (`bg-popover/85` com `backdrop-blur` de
+8px, contra os 24 e o `saturate(1.5)` do material). Os quatro passaram a vestir
+`menuPanelSurfaceClassName`, que alcança **11 superfícies**.
+
+**Os dois `ScrollButton` do `Select` repintavam `bg-popover` opaco.** Com a
+casca translúcida eles viravam duas faixas sólidas no topo e na base — o tipo de
+defeito que só aparece com o menu rolando. Foram a transparente.
+
+#### O primeiro teste sobre `menu-classes`
+
+Não havia nenhum. As asserções 23–25 trancam: a régua veste `glass-surface` e
+não escreve borrão próprio; o guarda de transparência reduzida existe; o escuro
+abre mais que o claro e só sob `supports-`; e as quatro cópias não voltam — nem
+a superfície à mão, nem o repinte nos botões de rolagem. Cinco sabotagens, cinco
+reprovações.
+
+**Uma armadilha de regex, a sétima desta série:** proibir `/backdrop-filter/` na
+régua acusa a **própria receita**, porque o variante `supports-backdrop-filter:`
+contém a string. A asserção ancora em `\bbackdrop-blur`, que é a classe.
+
+#### O vidro é invisível sobre um card, e o número explica
+
+Visto na tela, o dropdown continuava lendo como opaco. **O CSS estava certo** —
+medido: `blur(24px) saturate(1.5)` e fundo em `oklab(0.205 0 0 / 0.6)`. O que
+falta não é o material.
+
+`--popover` e `--card` são **exatamente a mesma cor** nos dois temas
+(`oklch(0.205)` no escuro). Um popover translúcido sobre um card é
+aritmeticamente idêntico a um opaco:
+
+| o que está atrás | delta RGB com o vidro |
+| --- | --- |
+| **card** | **0** |
+| página | 5 |
+| muted | 6 |
+| algo colorido | 79 |
+
+As superfícies do app vivem entre rgb 10 e 38 — misturar duas delas devolve
+deltas de 0 a 6. É a mesma lei que a `@utility glass` já escreve: **borrar cor
+chapada não desenha nada.** O vidro aparece quando há conteúdo com contraste por
+baixo, e some quando não há.
+
+O dono viu o diagnóstico e decidiu **não mexer**: as saídas eram uma aresta
+luminosa (independente do fundo, como o avatar e o botão usam) ou separar
+`--popover` de `--card`, que é decisão de sistema. Fica registrado para quem
+vier — o defeito não é o material, é a distância entre as superfícies.
+
+#### O que muda em produção
+
+Diferente das rodadas de vidro anteriores, **esta não é zero-pixel**: 11
+superfícies mudam de aparência, e `DropdownMenu`, `Popover` e `Select` estão em
+telas do app. Foi pedido.
+
+**E o `app-header` fica como a única superfície de vidro fora da receita** — 8px
+de borrão cru, só quando rolado, na outra grafia de `supports-` e sem guarda de
+transparência reduzida.
+
+#### Rodada 51b — o tooltip era a quinta cópia, e ela divergia
+
+A rodada 51 disse que a receita estava escrita em **quatro** lugares. Eram
+cinco: o `Tooltip` também a escrevia por extenso, e era o único que **divergia
+da régua** em vez de repeti-la:
+
+| | a régua | o tooltip |
+| --- | --- | --- |
+| raio | `rounded-lg` (10px) | `rounded-md` (8px) |
+| moldura | `ring-1 ring-foreground/10` | `border border-border` |
+
+Ele já falava a língua certa — `--popover`, o conserto da rodada em que a
+superfície dele era emprestada da `Sidebar` — e por isso passou por conforme.
+**Falar a língua não é vestir a régua**, e a cópia divergente é exatamente a que
+o teste da 51 existia para pegar: ela só não entrou na lista.
+
+Vestindo `menuPanelSurfaceClassName` ele ganha o material do cabeçalho, e as
+duas divergências caem junto. **Isso é mudança visível e deliberada**, dita em
+vez de passada de contrabando dentro do pedido de vidro.
+
+**O alfa da régua serviu sem revisão, e o motivo é a tinta.** Os 60%/85% foram
+calibrados contra o `--muted-foreground` dos rótulos de grupo, que é o texto que
+mais aperta numa superfície de menu; o tooltip é inteiro `--popover-foreground`,
+a tinta cheia. Medido sobre o pior fundo real (o preenchimento do `primary`):
+**11,5 no escuro e 15,54 no claro**.
+
+Verificado com a grade de quadrados atrás: `backdrop-filter: blur(24px)
+saturate(1.5)` computado, `oklab(0.205 0 0 / 0.6)` no escuro e
+`oklab(1 0 0 / 0.85)` no claro, raio 10, borda 0 — e o xadrez dissolvido dentro
+da caixa enquanto continua nítido em volta.
+
+A asserção 25 do `glass.test.ts` passou a iterar **cinco** arquivos, e foi
+sabotada: com a cópia de volta, ela reprova nomeando o tooltip.
+
+#### Rodada 51c — o vidro chega ao diálogo, e o véu é o teto dele
+
+O pedido foi o material do cabeçalho nos diálogos. A primeira leitura foi que
+quem devia borrar era o **véu** — e ela foi recusada pelo dono, com a frase que
+define o escopo: *"eu não queria que mexesse no que está atrás do dialog, e sim
+no dialog"*. O `--overlay` fica como estava, e a placa é que veste.
+
+**A placa recebe a mesma receita das 11 superfícies flutuantes** —
+`bg-background/85 glass-surface`, abrindo para 60% sob
+`supports-backdrop-filter:dark:` e caindo para o opaco sob
+`reduced-transparency:`. Uma receita só na casa, e o `AlertDialog` vem junto
+porque mede pelo `dialogContentVariants`.
+
+**E o teto está medido, porque ele não é o material.** Entre a placa e o
+conteúdo há um véu de 60% de preto, e borrar cor chapada não desenha nada — a
+lei que a rodada 51 já tinha escrito para o dropdown sobre um card, aqui
+agravada, porque o véu **destrói** o contraste que o borrão precisaria ver:
+
+| atrás | placa a 60%, escuro | delta vs. opaco |
+| --- | --- | --- |
+| card | 10 | **0** |
+| página | 8 | 2 |
+| muted | 12 | 2 |
+| botão `primary` | 6,25,19 | **15** |
+
+No tema escuro o vidro só aparece quando há **cor cheia** atrás. Verificado na
+tela com uma grade de quadrados coloridos entre o conteúdo e o véu: o xadrez sai
+dissolvido dentro da caixa e continua legível fora dela.
+
+**No claro ele se paga, e é lá que o alfa aperta.** A placa desce de 250 para
+**236** sobre um card, com o `--muted-foreground` em 5,09 — e 4,38 sobre o pior
+fundo real, o preenchimento do `primary`. É por isso que o alfa aberto ficou
+escopado no escuro: a 60% no claro o mesmo texto cai a **4,09** e reprova.
+Medido depois: `blur(24px) saturate(1.5)` nos dois temas, com
+`oklab(0.145 0 0 / 0.6)` no escuro e `oklab(0.985 0 0 / 0.85)` no claro.
+
+#### O casco da paleta precisou de dois neutralizadores, e o `twMerge` explica
+
+`CommandDialog` passa `bg-transparent` ao `DialogContent` de propósito — quem
+pinta é o `Command` de dentro, e dois 85% empilhados dariam 97,75%, que é o
+bloco aceso que este arquivo já registra. **O `twMerge` derruba a `bg-*` base e
+não as que vivem sob variante**: sem `supports-backdrop-filter:dark:bg-transparent`
+e `reduced-transparency:bg-transparent`, a paleta sairia com duas superfícies
+empilhadas no tema escuro. Medido depois: casco em `rgba(0,0,0,0)` e o `Command`
+em `oklab(0.205 0 0 / 0.6)` — uma superfície só.
+
+#### O que não muda, e por quê
+
+O véu segue em `blur(4px)` sem `saturate` e **sem o guarda de transparência
+reduzida** — a sexta grafia de vidro do repositório, escrita à mão em três
+arquivos (`dialog.tsx`, `alert-dialog.tsx` e o `EDGE_PANEL_OVERLAY_CLASS`, que
+serve `Sheet`, `Drawer` e o painel da `Sidebar`). Foi decisão explícita não
+tocá-lo. Fica no backlog, com o número que o justifica: **é ele que limita o
+efeito no tema escuro**, e quem quiser o vidro visível ali mexe no `--overlay`,
+não na placa.
+
+E `Sheet`, `Drawer` e `EdgePanel` ficaram com placa opaca **nesta rodada** —
+a rodada 53 os vestiu, junto com a extração da receita para `lib/`.
+
+#### Um erro meu que quase custou uma rodada inteira
+
+Ao desfazer a primeira direção, rodei **`git checkout` no arquivo de teste** —
+e ele **não** estava limpo: as rodadas 46 a 51 tinham +335 linhas ali sem
+commit. Dez asserções (16 a 25), a reescrita da 7 e três constantes de fatia
+foram apagadas de uma vez.
+
+É literalmente a lição que a rodada 34 registrou — *desfazer edição de teste com
+`git` num arquivo já editado é apagar trabalho* —, e eu andei direto nela um mês
+depois de escrevê-la. **A régua ganha um corolário: antes de `git checkout`,
+`git diff --stat` no arquivo.** Um `M` no `git status` do início da sessão não
+diz de quem é a modificação.
+
+A recuperação foi pelo **transcrito da sessão**: os `python3 - <<'PY'` que
+escreveram cada asserção estão lá, e replayá-los na ordem contra o arquivo do
+`HEAD` reconstruiu os 25 testes. Restam ~21 linhas de prosa de comentário que
+não bateram exatamente com o estado anterior; o comportamento é idêntico e está
+provado pela suíte e pelas sabotagens.
+
+**E o mesmo dia teve o parente do defeito:** um corte `s[:i] + novo + s[j:]`
+entre duas âncoras `indexOf`, supondo que a numeração das asserções seguia a
+ordem do arquivo. Não seguia — a 10 mora no fim —, e a fatia comeu dez blocos
+que viviam no meio. **Fatia entre duas âncoras apaga o que estiver entre elas**,
+e a forma segura é ancorar no fechamento do bloco que se quer suceder.
+
+### Rodada 52 — a zona do carrossel é o triplo, porque o item tem borda
+
+Relatado com o print anotado: *"o fade está fraco — aparece a borda do lado
+direito desse segundo card"*. Antes de mexer, a conferência que a rodada
+anterior transformou em régua: `carousel.tsx` estava byte a byte no `HEAD` e o
+`git diff` do `globals.css` **não toca a rampa** — só acrescenta o modo material
+e as utilities de borrão. Nada tinha regredido; o que existia era o número.
+
+**`--scroll-fade-x-h` vale 2rem, e ele foi calibrado para glifo.** Uma trilha de
+abas, uma célula de tabela: ali a rampa só precisa apagar letra. Um `Card` tem
+**borda**, e um fio de 1px é o que mais resiste — ele corre a altura toda e não
+tem contrafundo que o dissolva. Medido o alfa desse fio a 15px da ponta:
+
+| zona | alfa do fio |
+| --- | --- |
+| 2rem (o sistema) | **31%** — legível, e é o "fade fraco" |
+| 4rem | 13% |
+| **6rem** (o carrossel) | **9,5%** |
+
+**O piso não é a alavanca, e isso foi medido ao vivo.** `--scroll-fade-floor` é
+0,06 de propósito, para a ponta dizer que há mais e não que acabou. Baixá-lo a
+zero num A/B na página é **indistinguível**: 6% de uma borda de 1px dá ~1
+unidade de RGB. Quem decide é a **largura** da zona.
+
+E é variável e não propriedade: ela herda para a rampa sem disputar com nada, e
+os outros consumidores da dissolução horizontal ficam nos 2rem.
+
+#### A asserção reprovou código correto por sete caracteres
+
+A 10 do `carousel-ladder.test.ts` — *quem carrega a máscara não desenha nada* —
+fatiava os últimos **900** caracteres antes do `data-slot="carousel-content"`.
+Bastou o viewport ganhar uma classe com um comentário de uma linha para o
+`overflow-hidden` sair da janela por **7 caracteres** e o teste cair.
+
+Novecentos é um número mágico. O corte passou a ser pelo `className={cn(`, que é
+o bloco de verdade — **mais estrito, e não mais frouxo**, e não envelhece a cada
+linha que alguém escreve ali. Sabotada: com um `bg-card rounded-lg` no viewport,
+reprova. É parente da lição que o `glass.test.ts` já registra duas vezes: *corte
+por âncora larga é asserção que erra sozinha.*
+
+#### Duas tentativas que a tela reprovou, e ficam registradas
+
+**O material do iOS no carrossel** (`edge="material"`: máscara fora, borrão de
+7/14/21px no lugar) foi implementado e reprovado a olho. O que ele deixou
+medido, para quem tentar de novo:
+
+- **O viewport não é bloco de contenção.** As camadas absolutas escapavam para a
+  raiz — 111px de altura contra os 75 do viewport, cobrindo os pontos —, e um
+  absoluto cujo bloco de contenção está acima **não** é recortado pelo
+  `overflow-hidden` de quem está no meio. Sem `relative` no viewport, não há
+  material no carrossel.
+- **Ali a camada pode ser filha do rolável**, ao contrário do `ScrollFade`. A
+  invariante existe por causa da máscara; em `material` não há máscara, e ser
+  filha resolve a herança das variáveis — irmão não lê custom property de irmão.
+- **A raiz não serve de casca**: ela carrega as setas, os pontos e a contagem.
+
+### Rodada 52b — a página do `Command` abria no meio, e quem rolava era o cmdk
+
+Relatado como *"por que essa página vem por padrão no meio?"*. Medido ao entrar
+em `/designsystem/command`: `scrollY` **1754** numa janela de 998.
+
+**Não é a coluna da esquerda.** Ela já rola só o próprio contêiner — o
+`revelarAtivo` de `ds-shell.tsx` escreve `scrollTo` no elemento e o comentário
+dele registra por quê: *"`scrollIntoView` rola todos os ancestrais roláveis, e
+levaria a janela junto"*.
+
+**É o cmdk, e pelo mesmo mecanismo.** Ele marca a primeira linha assim que os
+itens se registram e chama `scrollIntoView({block:"nearest"})` nela
+(`node_modules/cmdk/dist/index.mjs`), e isso rola **todos** os ancestrais —
+inclusive o documento. A página monta **cinco** `Command` inline; três ficavam
+com item selecionado, e o último estava em `topoNaPagina: 2528`:
+
+| item selecionado | topo na página |
+| --- | --- |
+| Carteiras (Inline) | 565 |
+| Nova transação | 1210 |
+| **Carteiras (As três faixas)** | **2528** — o que puxou |
+
+**O componente não tem defeito nos usos reais**, e é por isso que o conserto é
+no catálogo: a paleta vive num `CommandDialog` (que já liga
+`autoSelectFirst={false}`) e o `Combobox` num popover — nos dois a página não
+rola por baixo. O catálogo é o **único** lugar que monta `Command` inline no
+fluxo da página, e cinco vezes.
+
+As três demos com itens passaram a `autoSelectFirst={false}` — o prop que o
+próprio componente já expõe e que aquela página documenta. Medido depois:
+`scrollY` **0**, zero itens selecionados, os cinco `Command` intactos.
+
+**E `value` controlado não seria saída**: o `ne()` do cmdk roda a cada mudança
+de seleção, não só no registro. Verificado no fonte antes de escolher o
+caminho — a alternativa que eu tinha oferecido estava errada.
+
+### Rodada 52c — o véu clareia no escuro, e é o que faz o vidro dos modais existir
+
+As rodadas 51c e 51d puseram o material na placa do `Dialog` e deixaram o
+diagnóstico escrito: **o teto não é o material, é o véu.** Um `backdrop-filter`
+atrás de 60% de preto borra cor chapada, e borrar cor chapada não desenha nada.
+Com a paleta a pergunta voltou — *"mude o fundo desse Command para o
+transparente com blur"* —, e ela **já estava** com a receita desde a rodada 51.
+O que faltava era o que ela tinha para mostrar.
+
+`--overlay` do `.dark` vai de `oklch(0 0 0 / 0.6)` para **`/ 0.4`**. Medido:
+
+| | 0.6 | **0.4** |
+| --- | --- | --- |
+| estrutura card↔página (o que o borrão mostra) | 9 | **14** |
+| estrutura primary↔card | 47 | **70** |
+| paleta sobre o `primary` | 14,33,27 | **14,43,33** |
+| placa do diálogo vs. card velado | 1,006 | **1,026** |
+| texto fraco na paleta | 6,49 | **5,86** |
+
+**Clarear não custou separação — melhorou.** Varridos os alfas, a placa de um
+diálogo contra o fundo velado mede 1,01 a 1,08 em **toda** a faixa: o véu nunca
+separou um diálogo no escuro, e quem separa é o `shadow-lg` com o `ring-1
+ring-foreground/10`. E o texto secundário da paleta continua em 5,86, acima dos
+4,5 da norma.
+
+**No claro ele não desce, e isso é medido, não simetria.** Ali o véu **é** a
+única coisa que separa uma placa branca de uma página branca: 0.4 dá 2,60 contra
+o card velado, 0.3 dá 1,94 e 0.2 dá 1,51. E clarear não compraria estrutura,
+porque as superfícies do tema claro já são todas quase-brancas — não é o véu que
+as achata. Os dois temas passam a dizer 0.4 por caminhos opostos.
+
+**O que muda em produção:** todo modal do app. O conteúdo atrás passa a ler como
+forma borrada em vez de mingau preto, que era o ponto do pedido — e é a primeira
+coisa que se nota ao abrir um diálogo.
+
+**E o véu segue em `blur(4px)` sem `saturate` e sem guarda de transparência
+reduzida**, escrito à mão em três arquivos (`dialog.tsx`, `alert-dialog.tsx` e o
+`EDGE_PANEL_OVERLAY_CLASS`, que serve `Sheet`, `Drawer` e o painel da
+`Sidebar`). Continua sendo a única superfície de vidro do repositório fora da
+receita, junto do `app-header`. Fica no backlog.
+
+### Rodada 52d — o material do iOS nas duas pontas da paleta, somado à rampa
+
+O pedido foi o efeito do iOS no topo e no fim do `Command`. A rodada 46b já
+tinha construído as peças — `scroll-fade-blur-y` e o preset
+`scroll-fade-material` —, e a paleta era um consumidor natural que ficou de
+fora.
+
+**Mas aqui o material `soma`, e não substitui**, ao contrário do que o
+`edge="material"` do `ScrollFade` faz. A razão é estrutural e já estava
+escrita: **as três faixas desta paleta não pintam nada**, então é a rampa quem
+esconde o conteúdo sob o campo de busca. Desligar `--scroll-fade-mask` — que é
+o que o modo material faz — deixaria o texto aparecer atrás do input. O que
+entra do material é só o **borrão**: `scroll-fade-material` é preset de
+variável e move o raio (7px × índice) e a vibrância (1,5), os mesmos números de
+`.mobile-glass-surface`.
+
+Três coisas que a composição exigiu, e as três são mecânicas:
+
+- **`useScrollFade({ shell: true })`.** As camadas são **irmãs** da lista, e
+  irmão não lê custom property de irmão. Com `shell` as duas variáveis também
+  vão para a casca, de onde descem por herança para os dois lados. Medido:
+  `--scroll-fade-start: 140px` na casca **e** na lista.
+- **`relative` na casca.** Sem bloco de contenção o absoluto resolve contra um
+  ancestral qualquer — é o defeito que o `Carousel` mediu nesta mesma série
+  (111px de camada contra 75 de viewport, cobrindo os pontos).
+- **A geometria saiu de graça.** A camada é ancorada em `--scroll-fade-band-h`
+  / `--scroll-fade-foot-h`, que esta casca já publicava desde a rodada das três
+  faixas, e a altura é a mesma zona que a rampa dissolve. Medido com a lista
+  rolada em 140: **44px nas duas pontas**, `blur(7/14/21px) saturate(1.5)`, e a
+  máscara da lista intacta.
+
+A asserção **14** de `scroll-fade.test.ts` tranca as cinco: o borrão entra, a
+máscara **não** sai (`data-scroll-fade-mode` proibido no arquivo), a camada é
+declarada entre a casca e a lista (irmã, nunca filha do mascarado), o `shell` e
+o `relative`. Sabotada duas vezes — tirando o `shell` e ligando o modo material.
+
+**Uma nota de instrumento:** o `CommandDialog` fecha entre chamadas do harness,
+então a verificação visual foi feita numa demo inline com o teto forçado a
+200px. A instrumentada — alturas, raio, vibrância, máscara — vale para os dois,
+porque o nó é o mesmo.
+
+### Rodada 52e — a camada cobria depois da faixa, e a rampa cobria atrás dela
+
+A rodada 52d entregou o material nas duas pontas da paleta e deixou uma costura
+que o dono circulou: o conteúdo atrás do campo de busca aparecia **fantasma e
+nítido**, com o borrão começando só abaixo dele.
+
+**Medido, com a lista rolada:**
+
+| | posição relativa à casca |
+| --- | --- |
+| campo de busca | 1 → **49** |
+| camada de borrão, antes | **49** → 77 |
+| camada de borrão, agora | **1** → 77 |
+
+**A causa é que rampa e camada tinham geometrias opostas para a mesma
+variável.** A rampa **soma** a faixa na origem — `--scroll-fade-top-h` é
+`band-h + clamp(…)` — e por isso a região atrás do campo já sai dissolvida no
+piso. A camada **subtraía**: `top: var(--scroll-fade-band-h)` deslocava a caixa
+para depois da faixa. Mesma variável, semânticas opostas, e o preço estava na
+tela: a 6% de alfa o texto ainda lê (canal 29 contra 15, ~1,3:1), então o olho
+via um fantasma legível colado a um borrão, com uma aresta entre os dois.
+
+Hoje as quatro pontas ancoram em `0` e **somam** a faixa à medida — a mesma
+conta da rampa. O comentário do CSS que dizia *"o borrão começa **depois** dela,
+como a rampa"* saiu: **a rampa nunca começou depois da faixa.**
+
+**A faixa não é borrada**, e isso foi verificado por hit-testing e não por
+leitura de `z-index`: `elementFromPoint` no centro do campo devolve o `input`.
+Ele é `relative z-10` e a camada é `absolute` sem `z-index`.
+
+**E é no-op para quem não tem faixa.** `scrollFadeBandsClassName` declara as
+duas em `0px`, então `calc(0px + clamp(…))` é a geometria de sempre. Medido no
+`ScrollFade`: camada de 44px na mesma posição de antes. `Carousel` idem.
+
+#### O efeito colateral, com os números
+
+`--scroll-fade-blur-e` é `calc(100% / i)` — relativo à caixa da própria camada.
+Com a caixa crescendo em `band-h`, a extensão de cada índice cresce junto:
+
+| índice | raio | antes | agora |
+| --- | --- | --- | --- |
+| 1 | 7px | 44px | 92px |
+| 2 | 14px | 22px | 46px |
+| 3 | 21px | 15px | **31px** |
+
+O borrão mais forte passa a viver **atrás da faixa**, e a zona da rampa recebe
+os dois mais leves — que é o material do iOS lido certo: o pico do desfoque
+encostado no cabeçalho, caindo para dentro do conteúdo. Se um dia ficar forte
+demais ali, a manopla é prender a extensão à zona
+(`calc((100% - var(--scroll-fade-band-h,0px)) / i)`) em vez de à caixa.
+
+#### A asserção passou sozinha, e isso era o defeito dela
+
+A **6** — *"a faixa do borrão não pode divergir da faixa que dissolve"* — era
+por substring: exigia que `var(--scroll-fade-band-h, 0px)` **aparecesse**, não
+**onde**. Ela passava com a camada deslocada e passava com ela somada; ou seja,
+não provava nada. Terceira vez que este projeto registra a mesma lição —
+*asserção que casa a forma do texto testa a digitação*.
+
+Hoje ela exige a estrutura, nas quatro pontas dos dois eixos: âncora em `0`,
+proibição explícita de ancorar na faixa, e a medida como
+`calc(var(--faixa, 0px) + clamp(…))` — com o fallback `, 0px`, que é o que
+mantém o no-op. Sabotada de três jeitos (âncora de volta, soma numa ponta só,
+fallback removido), e os três reprovam.
+
+### Rodada 53 — o vidro chega às três de borda, e a receita sai para `lib/`
+
+Pedido: dar às superfícies de borda o material que o `Dialog` ganhou na 51c.
+**E o argumento que eu tinha dado contra a gaveta estava errado** — eu disse que
+sobraria pouca coisa para borrar porque ela ocupa quase a tela. O borrão não vê
+o que sobra **à volta** dela; vê a página que está **atrás**, e essa está
+inteira ali.
+
+Medido, com o véu já em 40% (placa a 60% no escuro, 85% no claro):
+
+| atrás da placa | escuro | claro a 85% |
+| --- | --- | --- |
+| página | 3 | 24 |
+| muted | 9 | 28 |
+| botão `primary` | **30** | 56 |
+
+É ~2× o que o `Dialog` consegue nos mesmos fundos (0 · 2 · 2 · 15), porque a
+placa aqui é `--background` — mais escura que o fundo velado, então o composto
+anda na direção do conteúdo em vez de empatar.
+
+**A receita saiu para [`lib/modal-classes`](src/lib/modal-classes.ts).** Somando
+as três, ela ficaria escrita em quatro arquivos — a trajetória que levou a
+superfície flutuante a cinco cópias antes da 51. As cinco peças modais vestem
+`modalSurfaceClassName`, e para o `Dialog` isso é **extração**: o computado sai
+byte a byte igual.
+
+#### A alça da gaveta reprovava, e o defeito era do método antigo
+
+`!bg-muted-foreground/70` é tinta com alfa, então ela se compõe sobre o fundo da
+gaveta — e os **3,06 (claro) / 4,24 (escuro)** que a justificavam foram medidos
+contra `--background` **opaco**. Com a placa de vidro:
+
+| | placa opaca | placa de vidro |
+| --- | --- | --- |
+| escuro | 4,24 | 4,22 |
+| **claro** | 3,06 | **2,85 — reprova** |
+
+A folga sempre foi de 0,06 sobre o piso de 3:1, e o vidro a consumiu. Varridos
+os degraus, **75% é o primeiro que passa: 3,12 e 4,73**. O `resizable` fica em
+70 e está certo — a pega dele vive entre dois painéis **opacos**. A régua que
+sobra: **alfa medido contra um fundo não sobrevive à troca do fundo.**
+
+#### O arrasto foi medido, e não custou
+
+A gaveta é a única das três que se arrasta, e um `backdrop-filter` sobre 85dvh
+sendo transformado a cada quadro era o risco declarado. Dirigindo o `transform`
+num laço de `requestAnimationFrame` (evento sintético não dirige o vaul), com a
+gaveta forçada a **848px (85dvh)**:
+
+| | mediana | p95 | quadros > 16,7ms |
+| --- | --- | --- | --- |
+| com `backdrop-filter` | **13,3ms** | 13,9 | 0 |
+| sem | **13,3ms** | 13,9 | 0 |
+
+Idênticos. **A ressalva fica dita: isto é a máquina de desenvolvimento, não um
+aparelho.** O que a medição descarta é um custo grosseiro; ela não prova o
+telefone.
+
+#### Os fades internos viraram o material do iOS, e a camada virou peça
+
+`DialogBody` e `MobileSheetFormBody` ganharam o borrão das duas pontas, com a
+rampa **mantida** — mesma decisão da paleta: sem a máscara o conteúdo passaria
+nítido pela borda. Os dois eram um elemento só, e passaram a ser casca
+`relative` + rolável, que é a forma do `ScrollFade`; o `className` de quem chama
+continua indo para o rolável, porque as chamadas passam ritmo de conteúdo e não
+layout.
+
+Com isso o bloco de JSX das camadas estaria em **três** lugares, e virou
+`ScrollFadeBlurLayers`, exportado de `scroll-fade.tsx`. Ela nasce `material`,
+que é o raio e a vibrância do iOS, e carrega no doc as três exigências
+mecânicas: irmã do rolável, casca `relative`, e `shell: true` no hook.
+
+#### O que ficou de fora, com o motivo
+
+**Oito telas pintam uma tira opaca dentro da folha** — `border-t border-border
+bg-background` em 14 sítios, e os gêmeos `dialogFooterClass` já estão hoje
+opacos sobre a placa translúcida do `Dialog`. É o defeito dos `ScrollButton` do
+`Select`, na escala do app.
+
+**Tirar a tinta agora seria pior**: esses arquivos escrevem o corpo rolável à
+mão e **não têm fade** — verificado, zero `DialogBody` / `scrollFade` neles —,
+então o conteúdo correria por baixo dos botões sem nada que o escondesse. O
+conserto é a migração que o backlog já nomeia (os 32 corpos à mão viram
+`DialogBody`), e ela agora compra o material do iOS de brinde. Fica anotado
+abaixo.
+
+**E o `bg-clip-padding` do `edge-panel` fica sob suspeita.** Ele é herança do
+shadcn, sem decisão registrada; com placa opaca era inerte, e com placa
+translúcida ele recorta o fundo no *padding box* e pode reabrir a fresta de 1px
+que o catálogo descreve. Não foi medido nesta rodada.
+
 ### Backlog de migração
 
 A rodada 01 entregou tokens, componentes, documentação e o auditor, sem migrar
@@ -7018,12 +8298,33 @@ E o que a rodada do `NavigationMenu` deixou:
 
 E o que a rodada 40 deixou, ao extrair o vidro:
 
-- **Os dois vidros da casa continuam separados.** `.mobile-glass-surface` (blur
-  real, 4 consumidores no telefone, com o único `prefers-reduced-transparency` do
-  repositório) e a `@utility glass` (pintado, 1 consumidor) resolvem premissas
-  opostas e por isso não se fundem sozinhos — mas os dois desenham "vidro", com
-  dois vocabulários de token. Unificar é decidir se a premissa vira **eixo**
-  (`blur` | `painted`) ou se os dois nomes ficam.
+- **Os dois vidros viraram um, com dois modos** (rodada 47): a `@utility glass`
+  ganhou `glass-material`, e a premissa passou a ser eixo em vez de nome. O que
+  sobra é adoção — **nenhum consumidor usa o modo**, e o candidato honesto é uma
+  superfície com conteúdo rolando por baixo, que o pintado nunca serviu.
+- **`app-header.tsx` ainda escreve o material à mão**, em `blur(8px)` sem
+  vibrância, sem vestir `glass-surface` e sem o `reduced-transparency:` que o
+  cabeçalho do catálogo passou a ter. Depois da rodada 51 ele é a **única**
+  superfície de vidro do repositório fora da receita — as outras 11 e a folha do
+  telefone já a vestem.
+- **`thin` reprova o contraste de texto sobre conteúdo claro no escuro** (2,73
+  contra os 4,5 da norma). É a natureza de um material fino e está documentado,
+  mas não há guarda mecânico: uma tela pode pôr texto ali sem nada avisar.
+- **O `ColorTile` de vidro ainda tem as quatro camadas apagadas.** A rodada 48
+  consertou a causa para peças **redondas**; o ladrilho é `rounded-md`, então ele
+  fica com o aro linear (onde os cantos existem e ele está certo) mas continua
+  com lâmina e nuvens cobertas pelo tom. O que falta ali é decidir se ele também
+  ganha um especular.
+- **O `Button` não tem vidro, e não é por falta de tentativa** — três desenhos,
+  três reprovações na tela (rodadas 49, 50, 50b), mais a da 45. Os números que
+  qualquer nova tentativa herda estão na lápide de `lib/glass-classes.ts`. Se
+  voltar, a régua é a mesma das duas peças que ficaram: `Avatar` e `ColorTile`
+  não são clicáveis e não carregam texto sobre a superfície — o botão faz as
+  duas coisas, e é aí que a margem some.
+- **O especular não sobrevive a uma foto.** `AvatarImage` é `h-full w-full
+  object-cover` e cobre as camadas de fundo inteiras: num avatar com foto sobra
+  só o aro, que é `border-box`. Se o reflexo tiver de valer sobre a foto, ele
+  precisa sair do `background` e virar pseudo-elemento.
 - **`registered-credit-card-face.tsx` segue fora dos dois.** Oito camadas com
   `mix-blend-mode` e `mask-composite` — as duas técnicas que `glass.test.ts` e
   `scroll-fade-classes.ts` proíbem no resto da casa. É o arquivo que mais
@@ -7032,5 +8333,29 @@ E o que a rodada 40 deixou, ao extrair o vidro:
   de tema foi verificado como vestível (`<Glass asChild>` funciona, o `className`
   é repassado nos dois ramos) e **não** foi migrado — decisão do dono. O
   catálogo o demonstra em espécime.
+
+E o que a rodada 53 deixou, ao dar vidro às superfícies de borda:
+
+- **8 telas pintam uma tira opaca dentro da folha** — `border-t border-border
+  bg-background` em 14 sítios (`workspace-delete-dialog`,
+  `workspace-appearance-edit-dialog`, `ChangePasswordDialog`,
+  `DeleteAccountDialog`, `project-form-dialog`, `edit-profile-dialog`,
+  `bill-detail-sheet`, `transactions-toolbar`), mais os gêmeos
+  `dialogFooterClass`, que **já estão hoje opacos** sobre a placa translúcida do
+  `Dialog`. É o defeito dos `ScrollButton` do `Select` na escala do app.
+  **Tirar a tinta sozinha piora**: esses arquivos escrevem o corpo rolável à mão
+  e não têm fade — verificado, zero `DialogBody` / `scrollFade` neles —, então o
+  conteúdo correria por baixo dos botões. O conserto é a migração dos 32 corpos
+  à mão para `DialogBody`, que agora traz a rampa **e** o material do iOS; a
+  tinta sai junto, e a regra J deixa de acender ali.
+- **O `bg-clip-padding` do `edge-panel.tsx:32` nunca foi decidido.** É herança do
+  shadcn (rastreado até o commit de baseline), sem comentário e sem registro.
+  Com placa opaca era inerte; com placa translúcida ele recorta o fundo no
+  *padding box* e pode reabrir a fresta de 1px que `designsystem/page.tsx`
+  descreve. Merece uma medição própria.
+- **O custo do vidro na gaveta não foi medido num aparelho.** Na máquina de
+  desenvolvimento o arrasto sai idêntico com e sem o filtro (mediana 13,3ms, p95
+  13,9, zero quadros perdidos, a 848px de altura). Isso descarta um custo
+  grosseiro, não prova o telefone.
 
 Reproduza a qualquer momento com `npm run ds:audit`.

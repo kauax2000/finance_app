@@ -8,6 +8,7 @@ import { IDENTITY_TONES } from "@/lib/avatar"
 import {
   GLASS_IDENTITY_TONES,
   glassControlSurfaceClassName,
+  glassRoundSurfaceClassName,
 } from "@/lib/glass-classes"
 import { cn } from "@/lib/utils"
 
@@ -128,7 +129,17 @@ function Avatar({
         avatarVariants({ size, shape }),
         // A raiz não pinta fundo nenhum, então aqui não há o que anular: a
         // lâmina e o tom apenas se somam.
-        glass && [glassControlSurfaceClassName, GLASS_IDENTITY_TONES[i]],
+        // O aro do vidro é um gradiente linear, e num círculo as pontas dele
+        // caem nos cantos da caixa — que ali não existem. Medido, **0% do
+        // perímetro** via o pico. `glass-round` troca o aro por um cônico e
+        // acende o especular; num `shape="rounded"` os cantos existem e o
+        // linear continua certo.
+        glass && [
+          (shape ?? "circle") === "circle"
+            ? glassRoundSurfaceClassName
+            : glassControlSurfaceClassName,
+          GLASS_IDENTITY_TONES[i],
+        ],
         className
       )}
       {...props}

@@ -165,6 +165,16 @@ export default function AlertDialogDoc() {
         em volta.
       </DocNote>
 
+      <DocNote title="A superfície é a do Dialog, e ela é de vidro">
+        Ele não desenha placa própria: veste{" "}
+        <code>dialogContentVariants</code>, e com ela veio o material do
+        cabeçalho — <code>blur(24px) saturate(1.5)</code>{" "}
+        com o guarda de transparência reduzida. A página do{" "}
+        <code>Dialog</code>{" "}
+        explica o teto: o que o borrão vê é o véu, e não a tela, então no tema
+        escuro o vidro só registra quando há cor cheia atrás.
+      </DocNote>
+
       <DocNote title="AlertDialog ou Dialog?">
         AlertDialog interrompe: ele não fecha clicando fora, e o foco vai para a
         opção mais segura. Use-o só quando a resposta importa. Para uma tarefa —

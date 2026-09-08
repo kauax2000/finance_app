@@ -5,6 +5,7 @@ import { XMarkIcon } from "@heroicons/react/16/solid"
 import { cn } from "@/lib/utils"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
+import { ScrollFadeBlurLayers } from "@/components/ui/scroll-fade"
 import { Button } from "@/components/ui/button"
 import {
   SheetClose,
@@ -67,16 +68,19 @@ export function MobileSheetFormBody({
     ...props
 }: React.ComponentProps<"div">) {
     return (
-        <div
-            ref={useScrollFade()}
-            data-slot="mobile-sheet-form-body"
-            className={cn(
-                "min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 sm:px-5",
-                scrollFadeViewportClassName,
-                className,
-            )}
-            {...props}
-        />
+        <div className="relative flex min-h-0 flex-1 flex-col">
+            <div
+                ref={useScrollFade({ shell: true })}
+                data-slot="mobile-sheet-form-body"
+                className={cn(
+                    "min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 sm:px-5",
+                    scrollFadeViewportClassName,
+                    className,
+                )}
+                {...props}
+            />
+            <ScrollFadeBlurLayers />
+        </div>
     )
 }
 

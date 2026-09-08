@@ -5,6 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Dialog as EdgePanelPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { modalSurfaceClassName } from "@/lib/modal-classes"
 import { useViewportWindow } from "@/hooks/use-mobile"
 
 /**
@@ -29,7 +30,11 @@ import { useViewportWindow } from "@/hooks/use-mobile"
 const edgePanelContentVariants = cva(
   [
     "group/dialog-content fixed z-(--z-sheet) flex flex-col gap-4",
-    "bg-background bg-clip-padding text-sm shadow-lg",
+    // `bg-clip-padding` fica: `glass-surface` é dona de **uma** propriedade
+    // (`backdrop-filter`) e não escreve `background-clip`, ao contrário da
+    // `@utility glass`. Não há disputa.
+    "bg-clip-padding text-sm shadow-lg",
+    modalSurfaceClassName,
     "duration-(--duration-slow) ease-in-out transition-colors will-change-transform",
     "motion-reduce:will-change-auto motion-reduce:data-open:animate-none motion-reduce:data-closed:animate-none",
     "data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",

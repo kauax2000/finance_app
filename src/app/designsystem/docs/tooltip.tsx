@@ -115,6 +115,32 @@ export default function TooltipDoc() {
         e do <code>DropdownMenu</code>.
       </DocNote>
 
+      <DocNote title="E ele era a quinta cópia dela, escrita à mão">
+        Falar a língua certa não é vestir a régua. Ele escrevia a casca por
+        extenso e divergia em duas medidas:{" "}
+        <code>rounded-md</code> (8px) contra os 10 de toda superfície flutuante
+        do sistema, e <code>border border-border</code>{" "}
+        contra o <code>ring-1 ring-foreground/10</code> que{" "}
+        <code>Select</code>, <code>Popover</code>, <code>HoverCard</code>,{" "}
+        <code>Command</code>{" "}
+        e os três menus usam. Hoje ele veste{" "}
+        <code>menuPanelSurfaceClassName</code>, e com ela vem o material do
+        cabeçalho — <code>blur(24px) saturate(1.5)</code>{" "}
+        com o guarda de <code>prefers-reduced-transparency</code>{" "}
+        embutido. As duas divergências caíram junto, e isso é mudança visível.
+      </DocNote>
+
+      <DocNote title="O alfa da régua serve sem revisão, e é por causa da tinta">
+        Os 85% do tema claro e os 60% do escuro foram calibrados contra o texto
+        que mais aperta numa superfície de menu, o{" "}
+        <code>--muted-foreground</code>{" "}
+        dos rótulos de grupo. Aqui o corpo inteiro é{" "}
+        <code>--popover-foreground</code>, que é a tinta cheia: medido sobre o
+        pior fundo real — o preenchimento do botão{" "}
+        <code>primary</code> —, <strong>11,5 no escuro e 15,54 no claro</strong>,
+        contra os 4,5 da norma.
+      </DocNote>
+
       <PropsTable
         title="Props do TooltipContent"
         rows={[

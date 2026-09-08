@@ -6,6 +6,7 @@ import { Dialog as SheetPrimitive } from "radix-ui"
 import { Drawer as DrawerPrimitive } from "vaul"
 
 import { cn } from "@/lib/utils"
+import { modalSurfaceClassName } from "@/lib/modal-classes"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { DragHandle } from "@/components/ui/drag-handle"
 import {
@@ -165,7 +166,8 @@ function SheetContent({
           data-layout="fixed"
           className={cn(
             "group/dialog-content fixed inset-x-0 bottom-0 z-(--z-sheet)",
-            "flex flex-col rounded-t-2xl border-t bg-background text-sm shadow-lg",
+            "flex flex-col rounded-t-2xl border-t text-sm shadow-lg",
+            modalSurfaceClassName,
             // O mesmo contrato do painel, escrito lá.
             "[--dialog-px:--spacing(4)] [--dialog-bleed:0px]",
             "[--dialog-close:0px] has-[>[data-slot=dialog-close-button]]:[--dialog-close:--spacing(11)]",

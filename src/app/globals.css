@@ -4,6 +4,14 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Transparência reduzida, escrevível numa classe.
+   Um blur de verdade obriga este guarda, e **a cor tem de ser de quem veste**:
+   uma utility que declarasse `background-color` para garanti-la disputaria com
+   o `bg-*` do consumidor — duas classes, mesma propriedade, decididas pela
+   ordem de emissão do Tailwind. Com a variante, a superfície diz a própria cor
+   sólida no mesmo lugar em que diz a translúcida. */
+@custom-variant reduced-transparency (@media (prefers-reduced-transparency: reduce));
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -208,6 +216,12 @@
   --expense-foreground: var(--destructive-foreground);
   --expense-muted: oklch(0.93 0.055 27);
   --expense-muted-foreground: oklch(0.4 0.22 27);
+  /* O véu do modal. Aqui o alfa **não** desce, e é medido: no claro ele é a
+     única coisa que separa uma placa branca de uma página branca — a 0.4 dá
+     2,60 de contraste contra o card velado, a 0.3 dá 1,94 e a 0.2 dá 1,51. E
+     clarear não compraria estrutura para o borrão mostrar, porque as
+     superfícies deste tema já são todas quase-brancas. Clarear é movimento do
+     tema escuro; ver o par no `.dark`. */
   --overlay: oklch(0.145 0 0 / 0.4);
   --shadow-xs-value: 0 1px 1px 0 oklch(0 0 0 / 0.04);
   --shadow-sm-value: 0 1px 2px 0 oklch(0 0 0 / 0.06), 0 1px 1px 0 oklch(0 0 0 / 0.04);
@@ -444,6 +458,18 @@
      do corpo. A 0.99 ela dá rgb **252** contra uma página de 250: ainda mais
      clara que ela, que é a regra deste tema, e agora com onde o bisel acender. */
   --glass-tint: oklch(0.99 0 0 / 92%);
+  /* **A lâmina dos três degraus do modo material.** Ela é a mesma cor da de
+     cima, aberta: no material o que preenche a placa é o conteúdo borrado, e a
+     lâmina passa a ser só o véu por cima dele. Quanto mais aberta, mais do que
+     está atrás aparece — é assim que o iOS separa `thin` de `thick`, e é por
+     isso que o **raio é constante** nos três: quem muda é a opacidade.
+
+     Aqui os três são apertados contra o escuro, e o motivo é o teto do tema: a
+     página é rgb 250 de 255, então abrir a lâmina no claro revela pouco antes
+     de a placa deixar de se separar da página. Ver a nota no `.dark`. */
+  --glass-material-thin: oklch(0.99 0 0 / 60%);
+  --glass-material-regular: oklch(0.99 0 0 / 72%);
+  --glass-material-thick: oklch(0.99 0 0 / 84%);
   /* As nuvens, e aqui elas **não têm como registrar**. Não é timidez: a página
      é rgb **250 de 255** e a lâmina já a levou a 255, então não sobra nenhuma
      unidade acima dela. Um realce precisa de espaço *acima* do corpo, e o corpo
@@ -513,6 +539,18 @@
   --scroll-fade-x-h: 2rem;
   --scroll-fade-floor: 0.06;
 
+  /* O raio base do blur progressivo das bordas (`scroll-fade-blur-*`). As
+     camadas o multiplicam pelo próprio índice — 1×, 2×, 3× —, e como cada uma
+     borra o que a de baixo já compôs, a variância soma: medido, a ponta vê
+     `blur(2px)` + `blur(4px)` + `blur(6px)`, ou ~7px de raio efetivo.
+
+     É medida e não cor, então não pede par em `.dark`.
+
+     Quem quiser mais ou menos vidro sobrescreve isto no próprio elemento, em
+     vez de pedir um eixo de intensidade: variável herda, e eixo sem caso medido
+     é ficção. */
+  --scroll-fade-blur-r: 2px;
+
   /* Mobile shell: fixed header (h-14 = 3.5rem) + safe-area (see SidebarAppShell, MobileBottomNav) */
   --mobile-header-offset: calc(3.5rem + env(safe-area-inset-top, 0px));
   /* Floating island nav (see MobileNavIsland) */
@@ -580,7 +618,14 @@
   --expense-foreground: var(--destructive-foreground);
   --expense-muted: oklch(0.28 0.11 27);
   --expense-muted-foreground: oklch(0.82 0.13 27);
-  --overlay: oklch(0 0 0 / 0.6);
+  /* Aqui ele clareia, e custa zero. Varridos os alfas, a placa de um diálogo
+     (`oklch(0.145)`) contra o card velado mede 1,01 a 1,08 em **toda** a faixa
+     — o véu nunca separou um diálogo no escuro, e quem separa é o `shadow-lg`
+     com o `ring-1 ring-foreground/10`. O que 0.6 → 0.4 compra é estrutura para
+     o material das superfícies de cima mostrar: card↔página de 9 para 14,
+     primary↔card de 47 para 70. Sem isso, o vidro do `Dialog` e o da paleta
+     borram um preto chapado e leem como bloco. */
+  --overlay: oklch(0 0 0 / 0.4);
   --shadow-xs-value: 0 1px 1px 0 oklch(0 0 0 / 0.35);
   --shadow-sm-value: 0 1px 2px 0 oklch(0 0 0 / 0.45), 0 1px 1px 0 oklch(0 0 0 / 0.35);
   --shadow-md-value: 0 4px 8px -2px oklch(0 0 0 / 0.55), 0 2px 4px -2px oklch(0 0 0 / 0.4);
@@ -671,6 +716,13 @@
      é duro: preto puro daria 0, e a razão contra a página vai de 1,03 para
      1,05 num teto absoluto de 1,06. Não há mais para onde ir. */
   --glass-tint: oklch(0 0 0 / 82%);
+  /* Os três degraus, e aqui eles têm curso: a página é rgb 10, então cada
+     ponto de abertura mostra mais do conteúdo borrado sem a placa perder o
+     corpo. `thick` fica perto do pintado (82%) de propósito — ele é o degrau
+     para quando há conteúdo atrás mas ele não deve competir. */
+  --glass-material-thin: oklch(0 0 0 / 40%);
+  --glass-material-regular: oklch(0 0 0 / 55%);
+  --glass-material-thick: oklch(0 0 0 / 70%);
   /* A nuvem de luz **atrás** da lâmina. Ela é lida através de 82% de preto,
      então o alfa é alto e o resultado na tela é baixo: 48% de branco sobre a
      página dá rgb 128, e a lâmina por cima o leva a **23** contra um corpo de
@@ -1249,7 +1301,13 @@
      * dois temas**: é o mesmo idioma do `bg-current/N` que a barra lateral usa,
      * onde a tinta vira de direção sozinha. Aqui ela é sempre luz, porque
      * realce sobre vidro é o material pegando mais luz. */
-    linear-gradient(var(--glass-sheen, transparent) 0%, var(--glass-sheen, transparent) 100%)
+    var(
+        --glass-sheen-image,
+        linear-gradient(
+          var(--glass-sheen, transparent) 0%,
+          var(--glass-sheen, transparent) 100%
+        )
+      )
       padding-box,
     /* 0. o tom — vidro colorido, e `transparent` por padrão.
      *
@@ -1329,24 +1387,27 @@
      *
      * No escuro `--glass-rim-far` vale o mesmo que o derivado valia (15% ≈ 45%
      * de 34%), então nada mudou daquele lado. */
-    linear-gradient(
-        var(--glass-rim-angle),
-        color-mix(
-            in oklab,
-            oklch(from var(--glass-ink, var(--glass-rim)) l calc(c * var(--glass-ink-boost)) h)
-              var(--glass-ink-amount),
-            var(--glass-rim)
-          )
-          0%,
-        var(--glass-rim-shade) 16%,
-        var(--glass-rim-shade) 80%,
-        color-mix(
-            in oklab,
-            oklch(from var(--glass-ink, var(--glass-rim-far)) l calc(c * var(--glass-ink-boost)) h)
-              var(--glass-ink-amount),
-            var(--glass-rim-far)
-          )
-          100%
+    var(
+        --glass-rim-image,
+        linear-gradient(
+          var(--glass-rim-angle),
+          color-mix(
+              in oklab,
+              oklch(from var(--glass-ink, var(--glass-rim)) l calc(c * var(--glass-ink-boost)) h)
+                var(--glass-ink-amount),
+              var(--glass-rim)
+            )
+            0%,
+          var(--glass-rim-shade) 16%,
+          var(--glass-rim-shade) 80%,
+          color-mix(
+              in oklab,
+              oklch(from var(--glass-ink, var(--glass-rim-far)) l calc(c * var(--glass-ink-boost)) h)
+                var(--glass-ink-amount),
+              var(--glass-rim-far)
+            )
+            100%
+        )
       )
       border-box;
 }
@@ -1368,6 +1429,176 @@
  */
 @utility glass-control {
   --glass-cloud-ry: 70%;
+}
+
+/**
+ * O vidro com **borrão de verdade** — o material do iOS, e o outro lado da
+ * régua que a `@utility glass` escreve.
+ *
+ * A receita pintada parte de que **não há conteúdo atrás**: ela desenha a luz
+ * porque não há o que revelar. Este modo parte do oposto, e por isso **ele tem
+ * premissa**: ligá-lo onde nada passa por baixo — a placa flutuante, que
+ * reserva a própria calha — não desenha nada e ainda abre a lâmina, deixando a
+ * peça pior do que o pintado.
+ *
+ * ## Ele não acrescenta blur: recalibra a peça
+ *
+ * A lâmina é quase opaca de propósito — 82% no escuro, que compõe para **rgb
+ * 2** sobre a página. Um `backdrop-filter` atrás dela seria invisível, que é o
+ * defeito que a rodada 44 mediu quando o tom opaco a tapava. O modo abre a
+ * lâmina, e é essa abertura que **é** o material.
+ *
+ * ## As nuvens saem, e isso é o argumento e não uma economia
+ *
+ * Elas existem para simular luz atrás de uma placa que não tem nada atrás. Com
+ * conteúdo real e borrado ali, o simulacro disputa com a coisa. É a mesma
+ * conclusão que a rodada 44 já tinha alcançado por outro caminho — *"numa peça
+ * com tom as nuvens já chegavam a 3,6%: elas vivem no vidro sem cor, e quem faz
+ * o material é o aro"*.
+ *
+ * **O aro fica, e ele é o que mantém a peça lendo como vidro.** Ele não
+ * descreve a luz do corpo; é a aresta da lâmina pegando luz, e foi por isso que
+ * ele já sobreviveu a uma tentativa de removê-lo.
+ *
+ * ## Um raio, três tintas
+ *
+ * O raio e a vibrância são lidos das **mesmas** variáveis da
+ * `@utility glass-surface`, para a casa ter um material só. O que separa os
+ * degraus é a opacidade da lâmina — é como o iOS os separa, e mantém o degrau
+ * sendo uma decisão de véu em vez de um segundo eixo de raio.
+ *
+ * **Só esta utility declara `--glass-tint`.** Os degraus movem
+ * `--glass-material-step`, uma variável intermediária, e é isso que faz os
+ * guardas abaixo vencerem sempre: eles moram na mesma regra que a declaração.
+ * Dois presets escrevendo a mesma variável seriam decididos pela ordem de
+ * emissão do Tailwind — a armadilha que o `glass-control` evita.
+ *
+ * ## Os dois guardas devolvem o pintado
+ *
+ * Sem borrão, uma lâmina aberta é só uma superfície fraca. Os dois restauram a
+ * lâmina e as nuvens com `inherit`, que numa custom property devolve o valor
+ * computado do pai — ou seja, o token do tema, que é exatamente o pintado.
+ */
+/**
+ * O vidro numa peça **redonda** — e ele conserta um defeito que só existia ali.
+ *
+ * ## O pico do aro caía fora do círculo
+ *
+ * O aro é um gradiente **linear**, e numa caixa de 40×40 o eixo dele mede
+ * **49px**: as duas pontas — onde moram o pico e o extremo aceso — caem nos
+ * **cantos** do quadrado. Num círculo os cantos não existem.
+ *
+ * Medido, amostrando 720 pontos do perímetro de um avatar: **0%** via o pico de
+ * 34%, **0%** via o extremo aceso, e **57,5%** via só o vale de 10%. O avatar de
+ * vidro nunca teve brilho — ele tinha uma borda cinza quase uniforme.
+ *
+ * A forma que resolve é a que acompanha o **perímetro**: um `conic-gradient`.
+ * Ele acende o arco superior-esquerdo, cai para o vale nos lados e deixa o
+ * vestígio na base oposta — o mesmo desenho do bisel linear, dito em coordenada
+ * polar. O tingimento é o mesmo, com as mesmas duas doses de `--glass-ink`.
+ *
+ * ## E um especular, porque as nuvens não sobrevivem ao tom
+ *
+ * Numa peça com tom **opaco** a lâmina e as duas nuvens ficam por baixo dele e
+ * **não pintam nada** — quatro das seis camadas mortas. As nuvens simulam luz
+ * atrás de uma placa; num disco de 40px não há atrás, e o que faz ler como vidro
+ * é reflexo **na** superfície.
+ *
+ * O especular entra pela camada `--glass-sheen-image`, que é a **mais de cima**
+ * — acima do tom, e por isso ele sobrevive. Ela estava sem produtor desde que
+ * `Button` e `Checkbox` perderam o modo de vidro, e é exatamente o encaixe de
+ * que ela precisava.
+ *
+ * ## Ele não entra no `glass-control`, e o motivo é o `ColorTile`
+ *
+ * Aquele preset serve as duas peças pequenas, e o ladrilho é `rounded-md`. Um
+ * bisel cônico num quadrado arredondado desenha as transições nos cantos
+ * errados — o pico cairia no meio de uma aresta reta. Este preset é opt-in por
+ * **forma**, e o `Avatar` o veste só quando `shape="circle"`.
+ */
+@utility glass-round {
+  /* O bisel em coordenada polar. `from -45deg` põe o 0° do gradiente no canto
+     superior-esquerdo, que é onde o linear do painel concentra a luz — a
+     direção da peça não muda, só a forma de descrevê-la. */
+  --glass-rim-image: conic-gradient(
+    from -45deg,
+    color-mix(
+        in oklab,
+        oklch(from var(--glass-ink, var(--glass-rim)) l calc(c * var(--glass-ink-boost)) h)
+          var(--glass-ink-amount),
+        var(--glass-rim)
+      )
+      0deg,
+    var(--glass-rim-shade) 100deg,
+    color-mix(
+        in oklab,
+        oklch(from var(--glass-ink, var(--glass-rim-far)) l calc(c * var(--glass-ink-boost)) h)
+          var(--glass-ink-amount),
+        var(--glass-rim-far)
+      )
+      180deg,
+    var(--glass-rim-shade) 260deg,
+    color-mix(
+        in oklab,
+        oklch(from var(--glass-ink, var(--glass-rim)) l calc(c * var(--glass-ink-boost)) h)
+          var(--glass-ink-amount),
+        var(--glass-rim)
+      )
+      360deg
+  );
+
+  /* O reflexo. Fora do centro e pequeno: um especular no meio da peça leria
+     como a peça inteira acesa, que é o defeito que a rampa de altura inteira do
+     painel já custou uma rodada.
+
+     **Os 14% saem do contraste das iniciais, e a conta que importa não é a
+     óbvia.** Medido: no centro da caixa o gradiente já resolveu para
+     `transparent` (o pico está a 16% da altura, e a letra começa a 37%), então
+     no ponto onde a letra de fato está o especular vale **16,7%** do pico —
+     contraste 5,93 no pior dos seis tons. Medir a letra sob o **pico** dá 4,08
+     e é um cenário que não existe: ali não há texto.
+
+     Ele fica em 14 e não em 20 por robustez, não por aquele número: a geometria
+     é estável nos cinco degraus — caixa e corpo do texto escalam juntos, e o
+     topo da letra fica em 37,4% no `md` e 38,4% no `xl` —, mas uma inicial só,
+     ou um `className` que suba a fonte, aproximam o texto do pico. */
+  --glass-sheen-image: radial-gradient(
+    var(--glass-spec-rx, 62%) var(--glass-spec-ry, 46%) at 30% 16%,
+    oklch(1 0 0 / var(--glass-spec, 14%)),
+    transparent 68%
+  );
+}
+
+@utility glass-material {
+  backdrop-filter: blur(var(--glass-surface-blur, 24px))
+    saturate(var(--glass-surface-sat, 1.5));
+  -webkit-backdrop-filter: blur(var(--glass-surface-blur, 24px))
+    saturate(var(--glass-surface-sat, 1.5));
+
+  --glass-tint: var(--glass-material-step, var(--glass-material-regular));
+  --glass-cloud: transparent;
+
+  @media (prefers-reduced-transparency: reduce) {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    --glass-tint: inherit;
+    --glass-cloud: inherit;
+  }
+
+  @supports not (backdrop-filter: blur(1px)) {
+    --glass-tint: inherit;
+    --glass-cloud: inherit;
+  }
+}
+
+/* Os dois degraus fora do meio. Eles movem **só a variável intermediária** —
+   ver a nota acima sobre por que nenhum deles toca `--glass-tint`. */
+@utility glass-material-thin {
+  --glass-material-step: var(--glass-material-thin);
+}
+
+@utility glass-material-thick {
+  --glass-material-step: var(--glass-material-thick);
 }
 
 @utility no-scrollbar {
@@ -1432,6 +1663,15 @@
     --scroll-fade-mask: var(--scroll-fade-ramp);
   }
 
+  /* No material o conteúdo **não dissolve**: ele passa por baixo da faixa,
+     nítido, e quem o esconde é o borrão. A regra vem depois da de cima de
+     propósito — as duas empatam em especificidade, e aqui quem decide é a
+     ordem. A folga de rolagem fica: um `scrollIntoView` não pode depositar o
+     item ativo debaixo do material. */
+  &[data-scroll-fade-mode="material"] {
+    --scroll-fade-mask: none;
+  }
+
   /* Em alto contraste a máscara não é neutralizada por ninguém, e o conteúdo
      ficaria no piso sem superfície que compensasse. */
   @media (forced-colors: active) {
@@ -1486,10 +1726,313 @@
     --scroll-fade-mask: var(--scroll-fade-ramp-x);
   }
 
+  /* No material o conteúdo **não dissolve**: ele passa por baixo da faixa,
+     nítido, e quem o esconde é o borrão. A regra vem depois da de cima de
+     propósito — as duas empatam em especificidade, e aqui quem decide é a
+     ordem. A folga de rolagem fica: um `scrollIntoView` não pode depositar o
+     item ativo debaixo do material. */
+  &[data-scroll-fade-mode="material"] {
+    --scroll-fade-mask: none;
+  }
+
   @media (forced-colors: active) {
     mask-image: none;
     -webkit-mask-image: none;
   }
+}
+
+/* ── O borrão progressivo da mesma zona ────────────────────────────────────
+ *
+ * A dissolução acima é **alfa**; isto é **vidro**. As duas se somam na mesma
+ * faixa: o conteúdo apaga e borra ao se aproximar da borda.
+ *
+ * ## Por que não é o mesmo elemento
+ *
+ * A invariante 2 diz que o rolável não desenha nada, e um `backdrop-filter`
+ * nele seria **recortado pela própria rampa**: forte onde a máscara é opaca,
+ * ausente justo na ponta. Exatamente ao contrário do que se quer. Por isso a
+ * camada é **irmã** do rolável, e é a casca que hospeda as duas.
+ *
+ * E é irmã, não filha: filha herdaria a máscara do pai pelo recorte, com o
+ * mesmo resultado invertido.
+ *
+ * ## Por que `backdrop-filter`, e não o `glass` pintado
+ *
+ * A régua está escrita acima, na `@utility glass`: **há algo passando por
+ * baixo** → borrão de verdade; **não há** → luz pintada. Numa borda de rolagem
+ * há conteúdo passando por baixo — é o lado do `backdrop-filter`, e com ele vem
+ * o `prefers-reduced-transparency` que um blur de verdade obriga.
+ *
+ * ## Empilhadas, e a ordem é o mecanismo
+ *
+ * Uma camada só daria **raio constante** com opacidade variável — um
+ * crossfade entre nítido e borrado, não um gradiente de borrão. Aqui são três,
+ * e cada uma borra o que a de baixo já compôs: a variância soma, e o raio
+ * efetivo cresce em direção à borda sozinho.
+ *
+ * O índice chega por `--scroll-fade-blur-i` (1, 2, 3) e faz duas coisas ao
+ * mesmo tempo: multiplica o raio e **encurta a extensão** para `100% / i`. A
+ * camada mais borrada é a que menos avança para dentro. Elas entram no DOM em
+ * ordem crescente, para a de extensão maior ficar por baixo.
+ *
+ * A rampa de cada uma tem degrau intermediário pela razão da rampa principal:
+ * uma queda linear sai do chapado com inclinação máxima, e descontinuidade de
+ * derivada contra superfície lisa é banda de Mach — aqui, numa linha que
+ * atravessa a caixa inteira. Com três rampas suaves sobrepostas, o que o olho
+ * recebe já é a soma delas.
+ *
+ * ## Um gradiente por elemento, aqui também
+ *
+ * Cada camada tem **uma** máscara. Nunca `mask-composite`: a spec define
+ * `mask-image: none` como camada preta transparente, então `none` num
+ * `intersect` dá alfa zero e apaga o elemento.
+ *
+ * ## Os quatro guardas, e o que cada um evita
+ *
+ * Sem rolagem, em alto contraste, com transparência reduzida ou sem suporte a
+ * `backdrop-filter`, a camada **sai do DOM pintado** em vez de ficar como um
+ * retângulo inerte pagando composição. */
+@utility scroll-fade-blur-y {
+  position: absolute;
+  inset-inline: 0;
+  pointer-events: none;
+
+  /* A extensão desta camada dentro da faixa. `i` = 1 cobre a faixa inteira,
+     3 cobre um terço — e é a que mais borra. */
+  --scroll-fade-blur-e: calc(100% / var(--scroll-fade-blur-i, 1));
+  --scroll-fade-blur-mask: linear-gradient(
+    var(--scroll-fade-blur-dir, to bottom),
+    #000 0%,
+    rgb(0 0 0 / 0.85) calc(var(--scroll-fade-blur-e) * 0.34),
+    rgb(0 0 0 / 0.45) calc(var(--scroll-fade-blur-e) * 0.62),
+    rgb(0 0 0 / 0.15) calc(var(--scroll-fade-blur-e) * 0.84),
+    transparent var(--scroll-fade-blur-e)
+  );
+
+  /* A tinta e a vibrância são **no-op por padrão** — `transparent` e `1` —, e é
+     isso que deixa `scroll-fade-material` ser um preset de variáveis em vez de
+     uma segunda utility escrevendo as mesmas propriedades. O precedente é o
+     `glass-control`: sobrescrever a variável, nunca a propriedade. */
+  background-color: var(--scroll-fade-blur-tint, transparent);
+  backdrop-filter: blur(
+      calc(var(--scroll-fade-blur-r) * var(--scroll-fade-blur-i, 1))
+    )
+    saturate(var(--scroll-fade-blur-sat, 1));
+  -webkit-backdrop-filter: blur(
+      calc(var(--scroll-fade-blur-r) * var(--scroll-fade-blur-i, 1))
+    )
+    saturate(var(--scroll-fade-blur-sat, 1));
+  mask-image: var(--scroll-fade-blur-mask);
+  -webkit-mask-image: var(--scroll-fade-blur-mask);
+
+  /* **A camada cobre a faixa fixa, e não começa depois dela.** Ela já começou:
+     o `top: var(--scroll-fade-band-h)` deslocava a caixa, enquanto a rampa
+     ao lado **soma** a mesma variável na origem (`--scroll-fade-top-h`). As
+     duas geometrias discordavam, e o preço estava na tela — medido na paleta,
+     com o campo de busca em 1→49 e a camada em 49→77: os 48px atrás do campo
+     ficavam dissolvidos a 6% e **nítidos**, e a 6% de alfa o texto ainda lê
+     (canal 29 contra 15, ~1,3:1). O olho via um fantasma legível colado a um
+     borrão, com uma aresta horizontal entre os dois.
+
+     Somando a faixa à medida, o borrão continua atrás do cabeçalho e do rodapé
+     e o pico dele encosta neles — que é o material do iOS. A faixa em si não
+     borra: ela é `relative z-10` e pinta por cima (verificado por
+     `elementFromPoint`, não por leitura de `z-index`).
+
+     Sem faixa os `var(…, 0px)` caem no fallback e `calc(0px + clamp(…))` é
+     idêntico ao de antes — `ScrollFade` e `Carousel` não se mexem. E a zona
+     continua viva: ela cresce no mesmo passo da dissolução. */
+  &[data-edge="start"] {
+    top: 0;
+    height: calc(
+      var(--scroll-fade-band-h, 0px) +
+        clamp(0px, var(--scroll-fade-start, 0px), var(--scroll-fade-h))
+    );
+    --scroll-fade-blur-dir: to bottom;
+    /* Só os dois cantos que encostam nos da casca. Herdar os quatro
+       arredondaria a aresta de dentro, que corre no meio da caixa. */
+    border-start-start-radius: inherit;
+    border-start-end-radius: inherit;
+  }
+  &[data-edge="end"] {
+    bottom: 0;
+    height: calc(
+      var(--scroll-fade-foot-h, 0px) +
+        clamp(0px, var(--scroll-fade-end, 0px), var(--scroll-fade-h))
+    );
+    --scroll-fade-blur-dir: to top;
+    border-end-start-radius: inherit;
+    border-end-end-radius: inherit;
+  }
+
+  [data-scroll-fade="off"] > & {
+    display: none;
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    display: none;
+  }
+
+  @media (forced-colors: active) {
+    display: none;
+  }
+
+  @supports not (backdrop-filter: blur(1px)) {
+    display: none;
+  }
+}
+
+/* O mesmo, no eixo horizontal — a distância é `--scroll-fade-x-h`, pela mesma
+   razão da rampa: uma célula de tabela mede ~100px. */
+@utility scroll-fade-blur-x {
+  position: absolute;
+  inset-block: 0;
+  pointer-events: none;
+
+  --scroll-fade-blur-e: calc(100% / var(--scroll-fade-blur-i, 1));
+  --scroll-fade-blur-mask: linear-gradient(
+    var(--scroll-fade-blur-dir, to right),
+    #000 0%,
+    rgb(0 0 0 / 0.85) calc(var(--scroll-fade-blur-e) * 0.34),
+    rgb(0 0 0 / 0.45) calc(var(--scroll-fade-blur-e) * 0.62),
+    rgb(0 0 0 / 0.15) calc(var(--scroll-fade-blur-e) * 0.84),
+    transparent var(--scroll-fade-blur-e)
+  );
+
+  /* A tinta e a vibrância são **no-op por padrão** — `transparent` e `1` —, e é
+     isso que deixa `scroll-fade-material` ser um preset de variáveis em vez de
+     uma segunda utility escrevendo as mesmas propriedades. O precedente é o
+     `glass-control`: sobrescrever a variável, nunca a propriedade. */
+  background-color: var(--scroll-fade-blur-tint, transparent);
+  backdrop-filter: blur(
+      calc(var(--scroll-fade-blur-r) * var(--scroll-fade-blur-i, 1))
+    )
+    saturate(var(--scroll-fade-blur-sat, 1));
+  -webkit-backdrop-filter: blur(
+      calc(var(--scroll-fade-blur-r) * var(--scroll-fade-blur-i, 1))
+    )
+    saturate(var(--scroll-fade-blur-sat, 1));
+  mask-image: var(--scroll-fade-blur-mask);
+  -webkit-mask-image: var(--scroll-fade-blur-mask);
+
+  &[data-edge="start"] {
+    inset-inline-start: 0;
+    width: calc(
+      var(--scroll-fade-band-h, 0px) +
+        clamp(0px, var(--scroll-fade-start, 0px), var(--scroll-fade-x-h))
+    );
+    --scroll-fade-blur-dir: to right;
+    border-start-start-radius: inherit;
+    border-end-start-radius: inherit;
+  }
+  &[data-edge="end"] {
+    inset-inline-end: 0;
+    width: calc(
+      var(--scroll-fade-foot-h, 0px) +
+        clamp(0px, var(--scroll-fade-end, 0px), var(--scroll-fade-x-h))
+    );
+    --scroll-fade-blur-dir: to left;
+    border-start-end-radius: inherit;
+    border-end-end-radius: inherit;
+  }
+
+  [data-scroll-fade="off"] > & {
+    display: none;
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    display: none;
+  }
+
+  @media (forced-colors: active) {
+    display: none;
+  }
+
+  @supports not (backdrop-filter: blur(1px)) {
+    display: none;
+  }
+}
+
+/**
+ * O material do iOS numa **superfície inteira** — o par da faixa de borda
+ * abaixo, e a receita que `.mobile-glass-surface` já rodava sozinha.
+ *
+ * **Ela declara o material e nunca a cor.** Quem veste traz o próprio `bg-*`,
+ * porque a tinta depende da superfície: o cabeçalho do catálogo é
+ * `--background`, uma folha é outra coisa. Cravar a cor aqui é o defeito que
+ * enterrou o `ScrollFade` pintado.
+ *
+ * Os dois números são os de `.mobile-glass-surface`, para a casa ter **uma**
+ * vibrância e **um** raio de material. Eles são variáveis para uma superfície
+ * poder discordar sem reescrever a propriedade — é o mecanismo do
+ * `glass-control`.
+ *
+ * ## Ela tira o borrão, e a cor sólida é de quem veste
+ *
+ * Um blur de verdade **obriga** o `prefers-reduced-transparency`, e ali não
+ * basta tirar o borrão: sem ele a superfície fica translúcida sobre o conteúdo
+ * que passa, que é pior que opaca.
+ *
+ * **Mas a cor não pode morar aqui.** Uma versão anterior declarava
+ * `background-color` dentro do guarda, e ela perdia calado em `@apply`: a
+ * diretiva insere as declarações no lugar dela, então o guarda ficava *antes*
+ * das cores do consumidor e a declaração literal seguinte vencia — a folha do
+ * telefone ficou translúcida **sem** blur, que é o pior dos dois estados.
+ * Contra classes utilitárias o resultado é o mesmo por outro caminho: duas
+ * classes escrevendo `background-color` são decididas pela ordem de emissão do
+ * Tailwind, e não pelo que se escreveu.
+ *
+ * Quem veste diz as duas cores no mesmo lugar, com o variante
+ * `reduced-transparency:` ao lado do `supports-backdrop-filter:`. Esta utility
+ * é dona de **uma** propriedade — `backdrop-filter` —, e é por isso que ela não
+ * disputa com nada.
+ */
+@utility glass-surface {
+  backdrop-filter: blur(var(--glass-surface-blur, 24px))
+    saturate(var(--glass-surface-sat, 1.5));
+  -webkit-backdrop-filter: blur(var(--glass-surface-blur, 24px))
+    saturate(var(--glass-surface-sat, 1.5));
+
+  @media (prefers-reduced-transparency: reduce) {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/**
+ * O material do iOS, na borda que rola.
+ *
+ * **Ele não soma ao fade: substitui.** Nos outros modos a rampa apaga o
+ * conteúdo até 6% de alfa; aqui ele passa por baixo **nítido**, e quem o
+ * esconde é o borrão — que é a diferença que separa um material de um véu. Por
+ * isso ele desliga `--scroll-fade-mask`.
+ *
+ * Isto contraria a regra que enterrou o `ScrollFade` de gradiente pintado
+ * (*dissolver, e não pintar um véu por cima*), e a contradição é consciente: o
+ * defeito daquela versão era **cor cravada** — `from-card` dentro de um popover
+ * pintava uma faixa clara. Aqui a faixa não pinta cor nenhuma por padrão.
+ *
+ * ## A tinta é `transparent` de fábrica, e isso é o conserto daquele bug
+ *
+ * `--mobile-glass-bg` existe e **não serve**: medido, ele segue superfícies
+ * diferentes em cada tema — `--background` no claro (0.985) e `--card` no
+ * escuro (0.205, contra uma página de 0.145). Ele é calibrado para uma folha
+ * sobre a página, e uma faixa de borda vive sobre qualquer superfície: card,
+ * popover, página, `muted`. Herdá-lo seria cravar a cor de novo.
+ *
+ * Quem **sabe** sobre o que está escreve `--scroll-fade-blur-tint` no próprio
+ * elemento. É o mecanismo do `--glass-tone`, que também nasce transparente.
+ *
+ * ## O raio e a vibrância são os do outro vidro da casa
+ *
+ * `saturate(1.5)` é o número de `.mobile-glass-surface`, para a casa ter **uma**
+ * vibrância. O raio é 7px na base: com as três camadas em 1×/2×/3×, a variância
+ * soma para ~26px efetivos, que é a vizinhança dos 24px de lá. Não é um terceiro
+ * vidro — é a mesma receita, numa faixa em vez de numa superfície.
+ */
+@utility scroll-fade-material {
+  --scroll-fade-blur-r: 7px;
+  --scroll-fade-blur-sat: 1.5;
 }
 
 /**
@@ -1497,18 +2040,19 @@
  * fixed height from small top gap + safe-area to bottom; overrides Tailwind `h-auto`.
  */
 @layer utilities {
+  /* O material vem da `@utility glass-surface`; aqui fica só a tinta da folha.
+     Os dois números eram escritos aqui e lá — uma receita só, agora.
+     A cor sólida do guarda é dela, e o bloco fica **fora** da regra: dentro,
+     o `@apply` o poria antes das cores e a declaração seguinte venceria. */
   .mobile-glass-surface {
+    @apply glass-surface;
     background-color: var(--mobile-glass-bg);
     border-color: var(--mobile-glass-border);
-    backdrop-filter: blur(24px) saturate(1.5);
-    -webkit-backdrop-filter: blur(24px) saturate(1.5);
   }
 
   @media (prefers-reduced-transparency: reduce) {
     .mobile-glass-surface {
       background-color: var(--background);
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
     }
   }
 

@@ -210,6 +210,29 @@ export default function SelectDoc() {
         </Select>
       </DocSection>
 
+      <DocNote title="A superfície flutua, então ela é vidro de verdade">
+        O dropdown tem <strong>conteúdo passando por baixo</strong>, e a régua da
+        casa diz que aí o certo é <code>backdrop-filter</code> — não luz pintada.
+        Ele veste a mesma <code>glass-surface</code> do cabeçalho: 24px de borrão
+        e <code>saturate(1.5)</code>, com o guarda de{" "}
+        <code>prefers-reduced-transparency</code> embutido.
+        <br />
+        <br />
+        <strong>O alfa não é um só, e quem decide é o contraste.</strong> O texto
+        que aperta não é o do item — folgado em qualquer alfa — e sim o{" "}
+        <code>--muted-foreground</code> dos rótulos de grupo. Medido contra o que
+        de fato <em>preenche área</em> atrás de um menu, o pior fundo é o botão{" "}
+        <code>primary</code>: no escuro 60% dá <strong>4,64</strong>; no claro,
+        onde o popover é branco e o primary é verde escuro, 60% cai para{" "}
+        <strong>3,00</strong> e só a <strong>85%</strong> volta a 4,72.
+        <br />
+        <br />
+        É o mesmo teto que o material da borda já registrou: no tema claro o
+        vidro quase não se paga. Sobre a página o contraste é o mesmo em qualquer
+        alfa (5,91 a 6,01) — o que a translucidez custa só aparece sobre cor
+        cheia, e é lá que ela cede.
+      </DocNote>
+
       <DocNote title="Ele abre abaixo do gatilho, e antes ignorava a borda da tela">
         O padrão do Radix é <code>position=&quot;item-aligned&quot;</code>: o
         painel sobrepõe o gatilho, alinhando o item já escolhido sobre ele. É

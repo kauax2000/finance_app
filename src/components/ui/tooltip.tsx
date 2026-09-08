@@ -6,6 +6,7 @@ import { Tooltip as TooltipPrimitive } from "radix-ui"
 import { cn } from "@/lib/utils"
 import { useViewportWindow } from "@/hooks/use-mobile"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
+import { menuPanelSurfaceClassName } from "@/lib/menu-classes"
 
 function TooltipProvider({
   delayDuration = 0,
@@ -108,8 +109,8 @@ function TooltipContent({
           // sangra num telefone de 320 — deslocar não resolve o que não cabe.
           "z-(--z-popover) w-fit max-w-xs origin-(--radix-tooltip-content-transform-origin)",
           "max-h-(--radix-tooltip-content-available-height) max-w-(--radix-tooltip-content-available-width) overflow-y-auto overscroll-contain",
-          "rounded-md border border-border bg-popover px-3 py-1.5 shadow-md",
-          "text-sm font-medium text-balance text-popover-foreground",
+          menuPanelSurfaceClassName,
+          "px-3 py-1.5 text-sm font-medium text-balance",
           // Entra deslizando do lado do gatilho, o que dá direção ao movimento
           // em vez de fazer a caixa surgir do nada.
           "data-[side=bottom]:slide-in-from-top-1 data-[side=left]:slide-in-from-right-1 data-[side=right]:slide-in-from-left-1 data-[side=top]:slide-in-from-bottom-1",

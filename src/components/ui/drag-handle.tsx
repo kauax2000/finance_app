@@ -61,10 +61,28 @@ import { cn } from "@/lib/utils"
  * a WCAG 1.4.11 pede de um componente não-textual. O `/35` sozinho já daria só
  * 1,64 e 1,85; a `opacity` levava o número abaixo de um e meio.
  *
- * Varridos os degraus, **70% é o primeiro que passa nos dois temas**: **3,06 no
- * claro e 4,24 no escuro**. É exatamente o degrau a que a pega do `resizable`
- * chegou, por varredura independente e contra outra superfície — então a tinta
- * de arraste deste sistema tem um número só, e ele vale para as duas peças.
+ * Varridos os degraus, 70% era o primeiro que passava nos dois temas: **3,06 no
+ * claro e 4,24 no escuro**. Era o degrau a que a pega do `resizable` chegou por
+ * varredura independente, e por isso a tinta de arraste tinha um número só.
+ *
+ * ## E 70% deixou de bastar quando a placa virou vidro
+ *
+ * **Aqueles números foram medidos contra `--background` opaco.** Esta tinta tem
+ * alfa, então o que se vê é ela composta sobre o fundo da gaveta — e a gaveta
+ * passou a ser translúcida sobre o véu do modal. No claro a placa desce de 250
+ * para **236**, e uma tinta escura sobre fundo mais escuro **perde**:
+ *
+ * | | placa opaca | placa de vidro |
+ * | --- | --- | --- |
+ * | escuro | 4,24 | 4,22 |
+ * | **claro** | 3,06 | **2,85 — reprova** |
+ *
+ * A folga sempre foi de 0,06 sobre o piso de 3:1, e o vidro a consumiu.
+ * Varridos os degraus de novo, **75% é o primeiro que passa: 3,12 no claro e
+ * 4,73 no escuro**. O `resizable` fica em 70 e é correto — a pega dele vive
+ * entre dois painéis **opacos**, e o número dela foi medido contra o fundo que
+ * ela de fato tem. **Alfa medido contra um fundo não sobrevive à troca do
+ * fundo.**
  *
  * Isso corrige, de passagem, o argumento que ficou escrito lá: área muda como a
  * cor **lê**, não o que a norma **exige**. A alça tem 2,25× a superfície da
@@ -99,7 +117,7 @@ const dragHandleClassName = cn(
   "!mx-auto my-2.5 shrink-0",
   "!h-1.5 !w-12 !rounded-full",
   // A tinta. `!opacity-100` é o que tira o fator 0,7 de cima do alfa.
-  "!opacity-100 !bg-muted-foreground/70",
+  "!opacity-100 !bg-muted-foreground/75",
   "hover:!bg-muted-foreground/90 active:!bg-muted-foreground/90",
   "transition-colors duration-(--duration-fast) ease-(--ease-out)",
   // O alvo de acerto no mouse — o que o vaul quis fazer e o seletor dele não faz.
