@@ -142,11 +142,19 @@ describe("taxonomia", () => {
     for (const c of usadas) expect(CATEGORY_ORDER).toContain(c)
   })
 
+  /**
+   * `table-panel` entrou nesta rodada — o primeiro Template que não é casco
+   * de página. A régua continua a mesma: ele compõe `Card`, `Table` e (no
+   * uso real) `Pagination` — dois ou mais organismos, dispostos num layout —,
+   * que é a definição de Frost que o comentário do `LAYER` já cita: "os
+   * templates são feitos de organismos".
+   */
   it("5. Templates é o nível de página, e não uma terceira gaveta", () => {
     const templates = REGISTRY.filter((e) => e.category === "Templates")
     expect(templates.map((e) => e.slug).sort()).toEqual([
       "page-header",
       "page-section",
+      "table-panel",
     ])
   })
 

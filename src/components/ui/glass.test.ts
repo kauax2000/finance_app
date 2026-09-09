@@ -547,7 +547,7 @@ describe("a superfície de vidro", () => {
         expect(nuvens).not.toContain("--glass-tone")
     })
 
-    it("13. os dois átomos traduzem cor, e o eixo é eixo — não embrulho mudado de lugar", () => {
+    it("13. quem tem o modo traduz cor, e o eixo é eixo — não embrulho mudado de lugar", () => {
         // Houve cinco peças separadas — `GlassButton`, `GlassBadge`,
         // `GlassAvatar`, `GlassCheckbox`, `GlassColorTile` —, cada uma
         // importando **um** átomo e renderizando **um** elemento. Foram
@@ -567,20 +567,30 @@ describe("a superfície de vidro", () => {
                 .replace(/\/\*[\s\S]*?\*\//g, " ")
                 .replace(/(^|[^:])\/\/.*$/gm, "$1")
 
-        const ATOMOS = ["avatar", "color-tile"]
+        /**
+         * **Não são só átomos**, e por isso o nome mudou: `tabs` é Organismo,
+         * e entrou na rodada 68 — o marcador dele é o *thumb* que viaja, a
+         * peça de vidro de um controle segmentado.
+         *
+         * O que os três têm em comum não é a camada, é a régua: **nenhum deles
+         * é clicável**. No `Tabs` quem recebe o clique é o gatilho; o marcador
+         * é superfície, e fica atrás dele. É a mesma linha que manteve `Avatar`
+         * e `ColorTile` depois de o `Button` reprovar quatro vezes na tela.
+         */
+        const COM_MODO = ["avatar", "color-tile", "tabs"]
 
         // 1. A tradução existe, em qualquer das três formas: tabela semântica,
         //    tabela de identidade, ou `--glass-tone` literal (o `Checkbox`, sob
         //    `data-[state=checked]:`, e o `ColorTile`, cuja cor é de runtime e
         //    por isso não cabe em tabela nenhuma).
-        for (const nome of ATOMOS) {
+        for (const nome of COM_MODO) {
             expect(base(nome)).toMatch(/GLASS_TONES|GLASS_IDENTITY_TONES|--glass-tone/)
         }
 
         // 2. O eixo é eixo: a palavra aparece como prop/variante, e não só como
         //    a classe da utility. Sem isto, "vestir vidro" voltaria a ser algo
         //    que só quem chama sabe fazer.
-        for (const nome of ATOMOS) {
+        for (const nome of COM_MODO) {
             expect(base(nome)).toMatch(/\bglass\??:/)
         }
 
@@ -605,7 +615,7 @@ describe("a superfície de vidro", () => {
         //    (`hover:`, `data-[state=checked]:`) ou com par `dark:`, porque
         //    ele existe para desfazer uma classe que outra regra emitiu. E
         //    `ring-0` só aparece para anular um anel.
-        for (const nome of ATOMOS) {
+        for (const nome of COM_MODO) {
             expect(base(nome)).not.toMatch(/[:\]]bg-transparent|dark:bg-transparent|ring-0\b/)
         }
 

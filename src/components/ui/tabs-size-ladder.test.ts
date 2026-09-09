@@ -276,3 +276,129 @@ describe("a escada do Tabs — `size` nomeia a bandeja", () => {
     expect(fonte).toContain("const TABS_TRACK_PADDING = 2")
   })
 })
+
+/**
+ * O modo de vidro do marcador.
+ *
+ * Ele é o *thumb* que viaja, e a decisão que este bloco tranca é **onde** o
+ * vidro entra: na peça que se move, e nunca na bandeja. A bandeja foi medida
+ * numa fileira idêntica a esta — o `Menubar solid`, rodada 59 —, e a 60% no
+ * escuro ela cai de rgb 38 para 27 e deixa de ler como bandeja.
+ *
+ * A garantia que faz a troca ser segura é aritmética, e é a asserção 2: o corpo
+ * do marcador de vidro é o **mesmo** do chapado, porque `--glass-tone` é
+ * `--background` opaco. O que entra é o aro. Nenhum contraste se move.
+ */
+describe("o vidro do marcador do Tabs", () => {
+  const FONTE = readFileSync(join(import.meta.dirname, "tabs.tsx"), "utf8")
+
+  it("1. o ramo de vidro veste a régua e não escreve o que ela apagaria", () => {
+    const vidro = tabsIndicatorVariants({ variant: "solid", glass: true })
+
+    // A régua, e não a classe montada à mão: `glass-classes` é onde as strings
+    // moram, porque o Tailwind varre o código como texto.
+    expect(vidro).toContain("glass")
+    expect(vidro).toContain("glass-control")
+    expect(vidro).toContain("[--glass-tone:var(--background)]")
+
+    // **A asserção que prova que é eixo, e não embrulho.** A superfície que o
+    // shorthand `background` da utility apagaria simplesmente não é escrita —
+    // nada de `bg-background` vivo na lista, nada de `bg-transparent` para
+    // desfazê-lo. É a mesma régua da asserção 13 de `glass.test.ts`.
+    expect(vidro).not.toContain("bg-background")
+    expect(vidro).not.toContain("border-border/80")
+    expect(vidro).not.toMatch(/[:\]]bg-transparent|dark:bg-transparent|ring-0\b/)
+  })
+
+  it("2. o ramo chapado não se moveu — é o marcador de sempre", () => {
+    const chapado = tabsIndicatorVariants({ variant: "solid" })
+    expect(chapado).toBe(tabsIndicatorVariants({ variant: "solid", glass: false }))
+
+    for (const classe of [
+      "rounded-md",
+      "border",
+      "border-border/80",
+      "bg-background",
+      "shadow-xs",
+    ]) {
+      expect(chapado).toContain(classe)
+    }
+    expect(chapado).not.toContain("glass")
+  })
+
+  it("3. `glass` é no-op fora de `solid`", () => {
+    // No `underline` o marcador é um fio de 2px, sem corpo onde um aro more; o
+    // `plain` nunca é montado. O prop não pode vazar para nenhum dos dois — e
+    // quem o barra de verdade é a resolução no `TabsList`, checada abaixo.
+    for (const variant of ["underline", "plain"] as const) {
+      expect(tabsIndicatorVariants({ variant, glass: true })).toBe(
+        tabsIndicatorVariants({ variant, glass: false })
+      )
+    }
+    expect(FONTE).toContain('const vidro = glass && variant === "solid"')
+  })
+
+  it("4. o realce tem o par de toque e vira de direção com o tema", () => {
+    const trilha = tabsListTrackVariants({ variant: "solid", glass: true })
+
+    /**
+     * Por token, e não por regex sobre a string inteira: o seletor tem
+     * colchetes **aninhados** (`has-[[data-slot=…][data-state=…]:hover]`), e um
+     * `[^\]]*` para no primeiro `]` — reprovou código correto na primeira
+     * escrita deste teste. Separar os tokens também deixa a conta explícita.
+     */
+    const realces = trilha.split(/\s+/).filter((c) => c.includes("--glass-sheen"))
+    const claros = realces.filter((c) => !c.startsWith("dark:"))
+    const escuros = realces.filter((c) => c.startsWith("dark:"))
+
+    expect(claros).toHaveLength(2)
+    expect(escuros).toHaveLength(2)
+
+    // O par `:active` não é simetria: um `:hover` dentro de um seletor
+    // arbitrário não ganha o `@media (hover: hover)` da variante do Tailwind,
+    // mas também não existe no dedo. Sem ele o controle fica inerte no
+    // telefone — a regra H, que o auditor não alcança dentro de um `cva`.
+    for (const grupo of [claros, escuros]) {
+      expect(grupo.some((c) => c.includes(":hover]"))).toBe(true)
+      expect(grupo.some((c) => c.includes(":active]"))).toBe(true)
+    }
+
+    // E o realce vira de direção com o tema: a lâmina clara é 92% branca,
+    // então um realce branco ali não desenha nada. Ele puxa na direção do
+    // contato — escurece no claro, clareia no escuro. Os `_` são exigência do
+    // Tailwind dentro de classe arbitrária, não cosmética.
+    for (const c of claros) expect(c).toContain("oklch(0_0_0")
+    for (const c of escuros) expect(c).toContain("oklch(1_0_0")
+
+    // Quem acende é o gatilho **ativo**, e não qualquer um: um realce que
+    // seguisse o cursor por abas inativas pintaria o marcador que está noutro
+    // lugar.
+    for (const c of realces) {
+      expect(c).toContain("[data-slot=tabs-trigger][data-state=active]")
+    }
+
+    // A variável mora na trilha porque o marcador é filho dela. Publicá-la no
+    // gatilho não funcionaria: custom property não atravessa para irmão.
+    expect(tabsListTrackVariants({ variant: "solid", glass: false })).not.toContain(
+      "--glass-sheen"
+    )
+  })
+
+  it("5. o marcador de vidro continua obedecendo a régua do marcador", () => {
+    const vidro = tabsIndicatorVariants({ variant: "solid", glass: true })
+
+    // A caixa continua vindo das quatro variáveis publicadas pela trilha.
+    for (const eixo of ["x", "y", "w", "h"]) {
+      expect(vidro).toContain(`--tabs-indicator-${eixo}`)
+    }
+    // Sem camada negativa: ela o mandaria para trás da moldura, que pinta
+    // `bg-muted` e não cria contexto de empilhamento.
+    expect(vidro).not.toMatch(/-z-\d/)
+    // Duração e curva de token, como no chapado.
+    expect(vidro).toContain("duration-(--duration-base)")
+    expect(vidro).toContain("ease-(--ease-out)")
+    expect(vidro).not.toMatch(/\bduration-\d/)
+    // O raio é herdado do próprio marcador: a utility não declara nenhum.
+    expect(vidro).toContain("rounded-md")
+  })
+})

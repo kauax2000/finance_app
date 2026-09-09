@@ -8302,6 +8302,290 @@ Duas asserções novas, e as **sete** sabotagens reprovam: o padrão do eixo vir
 largura, a barra voltando a ser gaveta, o painel deixando de seguir o `side`, o
 `fillMobileViewport` de volta, e a classe que escondia o ×.
 
+### Rodada 67 — o `Table` ganha eixos, e o painel de tabela vira Template
+
+`table.tsx` era o shadcn quase intacto: zero `cva`, `—` na coluna de variantes
+do `ds:catalog`, uma página sem `PropsTable`. Medido nos 9 consumidores do
+app: 7 painéis escreviam a mesma moldura à mão em quatro grafias de
+arredondar canto (`Card gap-0 overflow-hidden … py-0 shadow-none ring-0` +
+`CardContent relative flex flex-col p-0`), 3 folhas de detalhe (parcelas,
+faturas, eventos de pagamento) escreviam
+`mt-3 overflow-x-auto rounded-lg border border-border/50 bg-background/40`
+byte a byte, 5 arquivos escreviam `h-11 px-4 py-0` no cabeçalho e 3 escreviam
+`h-8 px-2`, 4 painéis tingiam e grudavam o cabeçalho à mão, e 6 telas
+escreviam `<td colSpan className="h-10 px-2 text-center …">` para o estado
+vazio. **Zero** usos de `TableFooter`.
+
+**`Table` ganhou dois eixos**, num `cva` no topo do arquivo — `variant`
+(`plain`, o padrão, sem moldura; `outline`, que monta a própria caixa,
+`data-slot="table-frame"`, **fora** do viewport que a dissolução mascara,
+porque a invariante 2 proíbe pintar o nó que carrega `scroll-fade-x`) e
+`size` (`sm`/`md`/`lg`, medidos contra as densidades acima — `lg` usa o
+mesmo `px` de 16 que `--card-strip-px`, e é por isso que `TablePanel` herda
+`lg`). As variáveis (`--table-px`, `--table-py`, `--table-head-h`,
+`--table-head-fs`) vão na `<table>` e descem por herança CSS até `<th>`/`<td>`.
+
+**`TableHeader`** ganhou `variant` (`plain`/`muted`, a tinta que 4 painéis já
+escreviam), `labels` (`text`/`caps` — a régua versalete, caixa alta e
+`tracking-wider`, que 3 mini-tabelas de folha já escreviam à mão, e que o
+comentário de `command.tsx` afirmava — erradamente, até esta rodada — já ser
+a régua desta tabela) e `sticky` (gruda no topo; como o viewport rola nos
+dois eixos, só cola com um teto — `viewportClassName="max-h-*"` no `Table`
+pai, verificado no navegador: o `<thead>` fica no mesmo `y` antes e depois de
+rolar 200px). O fio **e** a tinta continuam na mesma tira — decisão
+registrada, a mesma isenção que `PageHeader` e `TableFooter` já tinham.
+
+**`TableRow`** teve o hover **desligado por padrão**. Ele vinha sempre ligado,
+e `PropsTable` já desligava por `className` com o comentário certo: "nada
+acontece ao clicar — a linha acender é promessa falsa". `interactive` é
+agora opt-in; `data-state="selected"` fica sempre, porque é estado e não
+resposta ao cursor. `variant="group"` é a faixa de mês que
+`transactions-table.tsx` pinta à mão (`bg-muted/30` + célula versalete em
+`colSpan`), formalizada.
+
+**`TableHead`/`TableCell`** ganharam `numeric` (`text-right` + `.nums`, a
+régua de [Dinheiro](/designsystem/dinheiro) que todo painel escrevia como
+`tabular-nums` à mão) e `selection` (a coluna de checkbox, `w-10 px-2
+md:w-11 md:px-3`). Medido: `align-middle` sozinho deixa o `Checkbox`
+(`size-4`) **2px acima** do centro da célula — o nudge do shadcn original era
+real, e voltou, escopado à coluna via `[&_[role=checkbox]]:translate-y-0.5`
+em vez de um heurístico `:has([role=checkbox])` solto. `TableHead` também
+ganhou `sort`/`onSort`: presente, troca o rótulo por um `Button
+variant="tertiary" size="xs"` com a seta (Heroicons 16/solid) e escreve
+`aria-sort` no próprio `<th>`.
+
+**`TableBody`** deixou de soltar o fio da última linha sempre.
+`ds-doc.tsx`'s `PropsTable` já registrava o defeito no próprio comentário:
+"o `Table` remove o fio da última linha, o que é certo quando existe borda
+externa fechando embaixo e errado quando não existe — a última linha se
+dissolvia na página". Hoje o fio só sai quando `variant="outline"` — lido de
+um `TableFramedContext` que `Table` publica, não por seletor CSS de
+ancestral (a rota mais simples, e a que evita a armadilha de especificidade
+que `in-*`/`:where()` já custou caro nesta base outras vezes).
+
+**`TableEmpty`** é peça nova — a linha "sem resultados" que 6 telas
+escreviam à mão. Aceita texto (vira `Muted`) ou um `EmptyState variant="plain"`
+inteiro.
+
+### `TablePanel`, o primeiro Template que não é casco de página
+
+`Card padding="none" variant="outline"` publicando `lg` em
+`TableSizeContext` — nenhuma tela dentro dele escreve `size`.
+`TablePanelToolbar` é `CardToolbar` com o nome do painel;
+`TablePanelFooter` é `CardNote` com o ritmo responsivo
+(`flex-col … sm:flex-row sm:justify-between`) que 5 arquivos escreviam à mão
+com o arredondamento repetido porque a moldura não existia. **Sem eixo de
+superfície**: as 7 chamadas do app são a mesma variante do `Card`, sem uma
+segunda evidência — eixo sem contagem é ficção, a régua que este sistema já
+aplicou ao cortar outros dois.
+
+Ele entra em **Templates**, e não em Organismos: compõe `Card`, `Table` e
+(no uso real) `Pagination` — dois ou mais organismos, dispostos num layout —,
+que é a definição de Frost que o comentário do `LAYER` já cita ("os
+templates são feitos de organismos"). A asserção 5 do `taxonomy.test.ts`,
+que trancava Templates em `["page-header", "page-section"]`, passou a
+`["page-header", "page-section", "table-panel"]`.
+
+### O teste novo, e as sabotagens que ele pegou
+
+[`table-ladder.test.ts`](src/components/ui/table-ladder.test.ts) tranca a
+escada (nenhum par de degraus produz a mesma string, as medidas sobem de
+verdade, nada montado em tempo de execução), a invariante 2 (o
+`table-viewport` não desenha `bg-`/`border-`/`rounded-`/`shadow-`), a moldura
+como nó próprio, o par hover/active de `interactive`, a regra J em
+`TableHeader`, e que `table-panel.tsx` não escreve `role="toolbar"`
+(`toolbar.tsx` já documenta por que — o app escreve esse papel à mão em 4
+lugares sem foco itinerante, e `Toolbar` se recusa a repetir).
+
+Três sabotagens, três reprovações: `bg-card` no viewport (invariante 2),
+`hover:` sem o par `active:` na linha interativa, e fio+tinta juntos numa
+string sem seletor de proteção (regra J) — a primeira tentativa de sabotar a
+regra J usou `[&_tr]:border-b bg-muted/50`, que **não** deveria disparar (o
+prefixo de seletor já protege, igual ao código real) e de fato não disparou;
+a segunda, com `"border-b bg-muted/50"` solto, disparou. A primeira versão do
+teste também caiu na própria armadilha que esta base já nomeou duas vezes —
+"comentário não é código": os `it()` liam o arquivo cru, e a prosa dos
+comentários (que cita `bg-`, `border` e `role="toolbar"` para explicar o que
+evitar) derrubava os testes sozinha. Corrigido com um `semComentarios()`
+antes de cada busca estrutural.
+
+### O que mudou em produção: nada
+
+**Zero telas migraram**, por decisão. O único pixel que teria mudado em
+qualquer consumidor real é o hover das 3 mini-tabelas de folha — e elas
+continuam com a moldura escrita à mão, então nem isso. `ds-doc.tsx`'s
+`PropsTable` foi o único consumidor real editado: a moldura `bg-card` ficou
+(segunda superfície nomeada), e os dois neutralizadores de hover viraram
+`TableHeader variant="muted"` mais a ausência de `interactive` — nada a
+desligar, porque não há mais nada ligado por padrão.
+
+### O que ficou para depois, com o número
+
+- **7 painéis** (`transactions-table.tsx`, `subscriptions/page-client.tsx`, o
+  dashboard de recentes, o embutido de categoria, e 3 esqueletos) continuam
+  escrevendo a moldura à mão em quatro grafias. Migram para `TablePanel`.
+- **3 folhas** (`transaction-detail-sheet.tsx`,
+  `subscription-detail-sheet.tsx`, `dashboard-payment-event-preview-sheet.tsx`)
+  continuam com `mt-3 overflow-x-auto rounded-lg border border-border/50
+  bg-background/40` byte a byte. Migram para `Table variant="outline" size="sm"`.
+- **4 `role="toolbar"`** de seleção em massa (`transactions-table.tsx:264,320`,
+  `subscriptions/page-client.tsx:545,608`) continuam sem foco itinerante.
+- **`credit-card-detail-skeleton.tsx`** promete uma tabela
+  (`min-w-[640px] … md:min-w-[700px]`) que a tela real não renderiza —
+  `credit-card-detail-view.tsx` não importa nenhum primitivo de `Table`.
+- **O `sticky` dos 4 painéis tingidos** nunca foi medido em produção: hoje o
+  viewport deles não tem teto de altura, então `sticky` (que agora existe
+  como prop) não colaria se ligado como está. Fica para quem migrar.
+
+### Rodada 68 — o marcador do `Tabs` vira a peça de vidro
+
+O pedido foi o efeito de vidro do iOS no `Tabs`. As duas primeiras respostas
+óbvias já estavam medidas e reprovadas, e a saída foi uma terceira.
+
+**O material (`backdrop-filter`) está descartado por premissa, não por gosto.**
+`Tabs` tem **zero** consumidores no app; os 10 trilhos reais são
+`role="tablist"` à mão, e **nenhum** é `sticky` ou `fixed` — não há conteúdo
+passando por baixo de uma fileira de abas. Borrar cor chapada não desenha nada.
+
+**E a bandeja com vidro já tinha sido medida, numa fileira idêntica a esta.** A
+rodada 59 recusou o material no `Menubar solid` com o número e com o nome:
+*"medida a 60% no escuro ela cai de rgb **38 para 27** sobre a página —
+enfraquece, deixa de ler como bandeja e divergiria da `TabsList solid`, com quem
+é idêntica hoje."*
+
+Sobra o vidro **pintado**, e a peça certa é a que se move: o marcador. É o que um
+controle segmentado do iOS de fato faz — o *thumb* é o vidro —, e é o único
+encaixe que não quebra nada.
+
+#### Por que o marcador cabe onde a bandeja não cabia
+
+| | marcador | bandeja |
+| --- | --- | --- |
+| borda para o aro morar | **já tem** (`border-border/80`) | não tem — o aro custaria 2px do conteúdo |
+| a conta, em `md` | caixa inalterada | 32 − 2 − 4 = **26 para um gatilho de 28** |
+| raio | já tem `rounded-md`, e a utility não declara nenhum | idem |
+| margem de contraste do texto | **18,97** | — |
+| clicável? | **não** — quem recebe o clique é o gatilho | — |
+
+A última linha é a régua que sobrou de quatro reprovações no `Button`: *"`Avatar`
+e `ColorTile` não são clicáveis e não carregam texto sobre a superfície — o botão
+faz as duas coisas, e é aí que a margem some."* Lá o rótulo branco sobre o verde
+tinha **0,72** de folga sobre o piso de 4,5, e qualquer brilho branco a partir de
+8% reprovava. Aqui a folga é a distância inteira entre `--background` e
+`--foreground`.
+
+#### O corpo não se move, e isso é construção e não sorte
+
+`--glass-tone` é **`--background` opaco** — exatamente a cor que o marcador
+chapado já pintava. Medido nos dois temas, o corpo do marcador de vidro contra o
+do chapado:
+
+| | corpo | delta |
+| --- | --- | --- |
+| escuro | rgb 10 | — |
+| claro | rgb 250 | **[0, 0, 0]** |
+
+O que entra é a **aresta**, e é ela sozinha que faz o material — a conclusão que
+a rodada 44 já tinha alcançado por outro caminho ("numa peça com tom as nuvens
+já chegavam a 3,6%"). Medido o aro contra o corpo:
+
+| | pico | vale | vestígio |
+| --- | --- | --- | --- |
+| escuro (165°) | **3,01** | 1,26 | 1,48 |
+| claro (345°) | **1,52** | 1,12 | 1,04 |
+
+O pico escuro compõe para rgb **93**, praticamente o mesmo **94** que a placa
+flutuante da barra lateral mede: o aro desenha aqui com a força que desenha lá.
+O claro é mais fraco, e é o teto já registrado — sobre uma página de 250 o vidro
+quase não se paga.
+
+#### O realce voltou a ter produtor, depois de 23 rodadas
+
+`--glass-sheen` é a camada mais de cima da receita, e está sem produtor desde a
+rodada 45, com a nota de que *"a primeira peça de vidro **clicável** volta a
+precisar dela"*. O marcador não é clicável, mas o gatilho que ele cobre é — e é
+essa a peça.
+
+**Quem publica é a trilha, e não o gatilho.** Custom property não atravessa para
+irmão: o marcador é irmão do gatilho e filho da trilha, então a variável é dela,
+lida por `:has()`. É a mesma razão pela qual o `useScrollFade` tem a opção
+`shell`.
+
+**O par `:active` é obrigatório, e não é simetria.** Um `:hover` dentro de um
+seletor arbitrário não ganha o `@media (hover: hover)` que a variante do Tailwind
+traz — mas também não existe no dedo. Sem ele o controle fica inerte no telefone,
+que é a regra H; e o auditor não a alcança dentro de um `cva`.
+
+**E o realce vira de direção com o tema**, pela régua do `--secondary-hover`: a
+lâmina clara é 92% branca, e um realce branco ali não desenha nada. Ele puxa
+sempre na direção do contato — preto no claro, branco no escuro.
+
+Medido com ponteiro real: sobre a aba **ativa**, `--glass-sheen` vira
+`oklch(1 0 0 / 7%)` e a camada de topo passa a pintar; sobre uma aba **inativa**,
+ela continua `transparent`. O guarda importa — um realce que seguisse o cursor
+por abas inativas acenderia o marcador que está noutro lugar.
+
+#### O que foi verificado, e como
+
+- **O marcador viaja, medido em duas posições.** `x: 68 → 144`, `w: 75 → 57`, com
+  desalinho de **0,49** e **−0,38** px. Uma posição só não prova nada: foi
+  exatamente assim que o defeito da rodada 32b atravessou uma inspeção inteira,
+  porque o primeiro gatilho acerta por acidente quando o valor certo é zero.
+- **A 375px**: bandeja 40, gatilho 36 — a geometria de ponteiro grosso intacta,
+  com o vidro sobrevivendo (tom opaco, `--glass-cloud-ry: 70%` do preset
+  `glass-control`).
+- **Na tela, ampliado**: o chapado tem contorno uniforme; o de vidro tem a aresta
+  com gradiente, clara no alto-esquerdo e escurecendo na diagonal. É a diferença
+  entre um retângulo com borda e uma peça de vidro.
+
+#### O eixo entra sem neutralizador, e é isso que o torna eixo
+
+A superfície do `solid` saiu do `variant` e virou `compoundVariants` — a forma do
+`ColorTile`. O ramo de vidro **não escreve** o que a utility apagaria, em vez de
+escrever e desfazer: um `bg-background` que sobrevivesse ao lado morreria calado
+sob o shorthand `background`, e um `bg-transparent` para consertá-lo é
+exatamente o que a asserção 13 de `glass.test.ts` proíbe.
+
+`ATOMOS` virou `COM_MODO` e ganhou `tabs`. O nome antigo passaria a mentir — o
+`Tabs` é Organismo —, e o que os três têm em comum não é a camada: é não serem
+clicáveis.
+
+#### Os testes, e as três sabotagens
+
+`tabs-size-ladder.test.ts` ganhou cinco asserções, e as 22 antigas passaram **sem
+edição** — a prova de que o ramo chapado não se moveu. Sabotadas três, todas
+reprovando na asserção certa: `bg-background` de volta no ramo de vidro; o realce
+sem o par `:active`; e o `glass` vazando para o `underline`.
+
+Uma lição de instrumento, e é erro meu: a primeira escrita da asserção do realce
+usava regex com **espaço literal** (`oklch(1 0 0`) e com `[^\]]*`. Dentro de uma
+classe arbitrária o Tailwind exige `_` no lugar do espaço, e o seletor tem
+colchetes **aninhados** — o regex parava no primeiro `]`. Ela reprovava código
+correto duas vezes seguidas. A versão que ficou separa os tokens e classifica,
+em vez de casar a string inteira.
+
+#### Zero pixel em produção, e um conserto documental
+
+O modo é opt-in e `Tabs` não tem consumidor no app. Nada muda em produção, e no
+catálogo só entra a seção nova.
+
+De passagem: a `DocSection` intitulada **"Ghost"** demonstrava
+`variant="plain"` — a API nunca teve `ghost`, que é palavra que só sobreviveu na
+prosa. O título passou a dizer o nome que o código usa.
+
+#### O que fica para depois
+
+- **Os 10 `role="tablist"` à mão** e as duas strings de
+  `transaction-type-segment.tsx` continuam onde estão. A migração é o backlog já
+  escrito, e não esta rodada.
+- **O eixo nasce sem consumidor de produto**, e isso é dito em vez de escondido.
+  A régua desta casa é que eixo sem contagem é ficção; aqui ele existe porque o
+  dono o pediu com o custo na mesa, como o `variant` de superfície do carrossel e
+  a escada de espessura do material.
+- **`npm run ds:catalog` não mostra o `glass`**: o script lê só o **primeiro**
+  `variants:` do arquivo, que é o da moldura. Quem documenta o prop é a
+  `PropsTable`.
+
 ### Backlog de migração
 
 A rodada 01 entregou tokens, componentes, documentação e o auditor, sem migrar

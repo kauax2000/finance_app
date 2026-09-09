@@ -5,6 +5,7 @@ import { cva } from "class-variance-authority"
 import { Tabs as TabsPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { glassControlSurfaceClassName } from "@/lib/glass-classes"
 import {
   scrollFadeViewportClassName,
   scrollFadeViewportXClassName,
@@ -395,8 +396,41 @@ const tabsListTrackVariants = cva(
         vertical: "flex-col items-stretch",
       },
       fill: { true: "w-full", false: "" },
+      /**
+       * O realce de estado do marcador de vidro, e ele é publicado **aqui**.
+       *
+       * Custom property não atravessa para irmão: quem acende é o gatilho
+       * ativo, e o marcador é irmão dele. A trilha é o pai dos dois, então é
+       * dela a variável — o `:has()` pergunta pelo gatilho e o marcador lê por
+       * herança. É a mesma razão pela qual o `useScrollFade` tem a opção
+       * `shell`.
+       *
+       * **O par `:active` é obrigatório, e não é simetria.** Um `:hover`
+       * dentro de um seletor arbitrário não ganha o `@media (hover: hover)`
+       * que a variante `hover:` do Tailwind traz — mas também não existe no
+       * dedo. Sem o par, o controle fica inerte no telefone, que é a regra H.
+       *
+       * E o realce vira de direção com o tema, pela régua do
+       * `--secondary-hover`: a lâmina clara é 92% branca, e um realce branco
+       * ali não desenha nada. Ele puxa sempre na direção do contato — escurece
+       * no claro, clareia no escuro.
+       */
+      glass: {
+        true: [
+          "has-[[data-slot=tabs-trigger][data-state=active]:hover]:[--glass-sheen:oklch(0_0_0_/_5%)]",
+          "has-[[data-slot=tabs-trigger][data-state=active]:active]:[--glass-sheen:oklch(0_0_0_/_9%)]",
+          "dark:has-[[data-slot=tabs-trigger][data-state=active]:hover]:[--glass-sheen:oklch(1_0_0_/_7%)]",
+          "dark:has-[[data-slot=tabs-trigger][data-state=active]:active]:[--glass-sheen:oklch(1_0_0_/_12%)]",
+        ].join(" "),
+        false: "",
+      },
     },
-    defaultVariants: { variant: "solid", orientation: "horizontal", fill: false },
+    defaultVariants: {
+      variant: "solid",
+      orientation: "horizontal",
+      fill: false,
+      glass: false,
+    },
   }
 )
 
@@ -537,8 +571,14 @@ const tabsIndicatorVariants = cva(
   ],
   {
     variants: {
+      // A superfície do `solid` não mora aqui: ela é composta abaixo, um ramo
+      // para cada valor de `glass`. É a forma do `ColorTile`, e a razão é a
+      // asserção 13 de `glass.test.ts` — **onde o eixo dispensa o
+      // neutralizador, ele não pode existir**. Deixar `bg-background` na base
+      // e apagá-lo com `bg-transparent` no ramo de vidro seria escrever a
+      // classe que morre calada sob o shorthand `background` da utility.
       variant: {
-        solid: "rounded-md border border-border/80 bg-background shadow-xs",
+        solid: "rounded-md",
         underline: [
           "border-primary-accent",
           "data-[orientation=horizontal]:border-b-2 data-[orientation=vertical]:border-e-2",
@@ -549,8 +589,39 @@ const tabsIndicatorVariants = cva(
         // cair num `undefined` silencioso.
         plain: "rounded-md bg-muted",
       },
+      glass: { true: "", false: "" },
     },
-    defaultVariants: { variant: "solid" },
+    compoundVariants: [
+      { variant: "solid", glass: false, class: "border border-border/80 bg-background shadow-xs" },
+      /**
+       * O marcador de vidro.
+       *
+       * **O corpo é idêntico ao chapado, por construção**: `--glass-tone` é
+       * `--background` opaco, que é exatamente o que o ramo de cima pinta. O
+       * que entra é o **aro** — e é ele, sozinho, que faz o material, como a
+       * rodada 44 mediu ("numa peça com tom as nuvens já chegavam a 3,6%").
+       * Nada de contraste se move: o rótulo ativo continua sobre a mesma cor.
+       *
+       * A borda também já estava aqui (`border-border/80` no ramo chapado), e
+       * é isso que faz a armadilha nº 2 da régua não morder: o aro é pintado
+       * no `border-box`, e a peça já reservava 1px para ele. Numa bandeja
+       * `h-8` a mesma troca custaria 2px do conteúdo — 26 para um gatilho de
+       * 28 —, e a escada está trancada por cinco asserções.
+       *
+       * `glass-control` porque a peça é pequena: ele encolhe a pegada das
+       * nuvens, e move **só a variável**, nunca uma propriedade.
+       */
+      {
+        variant: "solid",
+        glass: true,
+        class: [
+          glassControlSurfaceClassName,
+          "shadow-xs",
+          "[--glass-tone:var(--background)]",
+        ].join(" "),
+      },
+    ],
+    defaultVariants: { variant: "solid", glass: false },
   }
 )
 
@@ -560,6 +631,7 @@ function TabsList({
   variant = "solid",
   stretch,
   scrollable = false,
+  glass = false,
   children,
   ...props
 }: Omit<React.ComponentProps<typeof TabsPrimitive.List>, "children"> & {
@@ -567,6 +639,24 @@ function TabsList({
   variant?: TabsVariant
   /** Abas de largura igual, dividindo a linha. Padrão: só em `solid`. */
   stretch?: boolean
+  /**
+   * O marcador vira a peça de vidro do sistema — o *thumb* que viaja, que é o
+   * que um controle segmentado do iOS faz.
+   *
+   * **Só a peça que se move, e nunca a bandeja.** A bandeja com vidro foi
+   * medida numa fileira idêntica a esta (o `Menubar solid`, rodada 59): abrir
+   * a lâmina a 60% no escuro a leva de rgb 38 para 27, e ela deixa de ler como
+   * bandeja. O marcador é o oposto — o corpo dele não se move (o tom é o mesmo
+   * `--background` que ele já pintava) e o que entra é a aresta.
+   *
+   * E é o **pintado**, não o material do iOS (`backdrop-filter`): nenhum
+   * trilho deste app é fixo, então não há nada passando por baixo, e borrar
+   * cor chapada não desenha nada. É a régua de premissa dos dois vidros.
+   *
+   * Opt-in, e sem efeito fora de `solid`: no `underline` o marcador é um fio
+   * de 2px, sem corpo onde um aro more; no `plain` ele nem é montado.
+   */
+  glass?: boolean
   /**
    * A fileira rola quando não cabe, dissolvendo nas pontas.
    *
@@ -592,6 +682,13 @@ function TabsList({
   const resolvedSize = size ?? defaultTabsSize(variant)
   const doesStretch = scrollable ? false : (stretch ?? variant === "solid")
   const axis = orientation === "vertical" ? "y" : "x"
+
+  /**
+   * A precedência é explícita pela mesma razão que a de `scrollable`: um prop
+   * que não faz nada precisa dizer onde não faz. `glass` desenha o marcador, e
+   * só o `solid` tem um marcador com corpo.
+   */
+  const vidro = glass && variant === "solid"
 
   /**
    * A classe do fade é escolhida entre duas constantes literais, nunca montada.
@@ -711,6 +808,7 @@ function TabsList({
               variant,
               orientation,
               fill: doesStretch || scrollable,
+              glass: vidro,
             }),
             scrollable && [
               fadeClassName,
@@ -734,7 +832,8 @@ function TabsList({
               aria-hidden
               data-slot="tabs-indicator"
               data-orientation={orientation}
-              className={tabsIndicatorVariants({ variant })}
+              data-glass={vidro ? "" : undefined}
+              className={tabsIndicatorVariants({ variant, glass: vidro })}
             />
           ) : null}
           {children}

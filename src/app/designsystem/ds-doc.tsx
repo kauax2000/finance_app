@@ -575,16 +575,18 @@ export function PropsTable({
       </PageSectionHeader>
       {/* `Table` já traz o próprio contêiner de rolagem horizontal; esta camada
           é a moldura, e o `overflow-hidden` é o que faz o tingido do cabeçalho
-          respeitar os cantos arredondados. */}
+          respeitar os cantos arredondados. Não é `variant="outline"`: aquela
+          moldura não pinta fundo, e esta precisa do mesmo `bg-card` do
+          espécime — ds-doc é a segunda superfície nomeada que o auditor já
+          isenta. */}
       <div className="overflow-hidden rounded-xl border border-border bg-card">
         <Table>
-          <TableHeader>
-            {/* O hover de linha vem do componente `Table` e é certo lá: uma
-                tabela de dados costuma ter linha selecionável. Aqui é tabela de
-                referência, e nada acontece ao clicar — a linha acender ao passar
-                o cursor é promessa falsa. `cn` resolve o conflito e a classe de
-                cá vence. */}
-            <TableRow className="bg-muted/40 hover:bg-muted/40 active:bg-muted/40">
+          {/* O hover de linha é opt-in agora (`interactive`), então não há
+              mais nada a neutralizar aqui: uma tabela de referência sem
+              `interactive` já não acende ao passar o cursor — nada acontece
+              ao clicar, e a linha acender era promessa falsa. */}
+          <TableHeader variant="muted">
+            <TableRow>
               <TableHead className="w-3/12">Prop</TableHead>
               <TableHead className="w-4/12">Tipo</TableHead>
               <TableHead className="w-2/12">Padrão</TableHead>
@@ -593,10 +595,7 @@ export function PropsTable({
           </TableHeader>
           <TableBody>
             {rows.map((r) => (
-              <TableRow
-                key={r.prop}
-                className="hover:bg-transparent active:bg-transparent"
-              >
+              <TableRow key={r.prop}>
                 <TableCell className="font-mono text-xs break-words text-foreground">
                   {r.prop}
                 </TableCell>

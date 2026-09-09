@@ -591,9 +591,10 @@ function CommandGroup({
         // **O cabeçalho deixou de ser um item apagado.** Ele era `text-xs
         // font-medium` — o mesmo peso das linhas, um degrau menor e mais
         // claro, que é a receita de "linha desabilitada" e não de rótulo.
-        // Caixa alta com `tracking-wider` é a mesma régua que o cabeçalho da
-        // `Table` já usa neste projeto: nenhum item jamais se parece com isso,
-        // então o olho separa os grupos antes de ler as palavras.
+        // Caixa alta com `tracking-wider` é a régua `labels="caps"` do
+        // `TableHead` — a mesma que 3 mini-tabelas de folha já escreviam à
+        // mão: nenhum item jamais se parece com isso, então o olho separa os
+        // grupos antes de ler as palavras.
         // **O respiro do cabeçalho é assimétrico, e é o que o faz pertencer à
         // lista abaixo dele.** Com `py-1` nos dois lados ele ficava equidistante
         // dos dois grupos e lia como mais uma linha apagada — o que ficou óbvio

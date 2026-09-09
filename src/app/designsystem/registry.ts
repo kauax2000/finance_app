@@ -257,6 +257,14 @@ const LAYER: Record<string, Layer> = {
   // ── Templates: o que estrutura a página ─────────────────────────────────
   "page-header": "Templates",
   "page-section": "Templates",
+  /**
+   * `TablePanel` compõe `Card`, `Table` e (no uso real) `Pagination` — dois ou
+   * mais organismos, dispostos num layout de página. É a definição do
+   * modelo de Frost que a régua acima cita: "os templates são feitos de
+   * organismos". Ele não mostra conteúdo nenhum por si — dispõe onde a barra,
+   * a tabela e o rodapé de paginação vão.
+   */
+  "table-panel": "Templates",
 }
 
 function categoryForSlug(slug: string): Category {
@@ -429,7 +437,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("sidebar", "Sidebar", "A navegação lateral: recolhível, redimensionável, e um painel de borda no telefone.", ui("sidebar"), "Sidebar, SidebarProvider, SidebarInset, SidebarTrigger, SidebarRail, SidebarContent, SidebarGroup, SidebarMenu, SidebarMenuButton, useSidebar"),
   entry("stat-card", "Stat Card", "Um número que importa, com sua variação.", ui("stat-card"), "StatCard, StatCardLabel, StatCardValue, StatCardDelta"),
   entry("stepper", "Stepper", "Progresso por etapas de um fluxo, na horizontal ou na vertical.", ui("stepper"), "Stepper, StepperItem"),
-  entry("table", "Table", "Tabela de dados, e o que ela vira no telefone.", ui("table"), "Table, TableRow, TableCell"),
+  entry("table", "Table", "Tabela de dados, e o que ela vira no telefone.", ui("table"), "Table, TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, TableEmpty, TableCaption"),
   entry("tabs", "Tabs", "Alterna entre painéis do mesmo nível, em três superfícies.", ui("tabs"), "Tabs, TabsList, TabsTrigger, TabsContent"),
   entry("timeline", "Timeline", "Feed vertical de histórico.", ui("timeline"), "Timeline, TimelineItem"),
   entry("sonner", "Toast", "Confirmação passageira, fora do fluxo.", ui("sonner"), 'import { toastSuccess, toastUndo } from "@/lib/toast"'),
@@ -438,6 +446,7 @@ export const REGISTRY: RegistryEntry[] = [
   // ── Templates ───────────────────────────────────────────────────────────
   entry("page-header", "Page Header", "O topo de uma tela: trilha, título, fatos e a ação principal.", ui("page-header"), "PageHeader, PageHeaderTitleRow, PageHeaderTitle, PageHeaderDescription, PageHeaderEyebrow, PageHeaderMeta, PageHeaderActions"),
   entry("page-section", "Page Section", "O bloco que dá ritmo vertical a uma tela, com título e ação.", ui("page-section"), "PageSection, PageSectionHeader, PageSectionTitle, PageSectionDescription"),
+  entry("table-panel", "Table Panel", "A tabela como o app a mostra: moldura, barra de ações e rodapé de paginação.", ui("table-panel"), "TablePanel, TablePanelToolbar, TablePanelFooter"),
 
   // ── Padrões ─────────────────────────────────────────────────────────────
   {

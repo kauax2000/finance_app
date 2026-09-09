@@ -99,6 +99,58 @@ export default function TabsDoc() {
       </DocNote>
 
       <DocSection
+        title="O marcador de vidro"
+        description="glass troca a superfície do marcador pelo vidro do sistema — o thumb que viaja, que é o que um controle segmentado do iOS faz. Só em solid: no underline o marcador é um fio de 2px, sem corpo onde um aro more, e no plain ele nem é montado."
+        code={`<TabsList glass stretch={false}>…</TabsList>`}
+        previewClassName="flex-col flex-nowrap items-stretch gap-6 p-6"
+      >
+        {(
+          [
+            [false, "chapado — o padrão"],
+            [true, "glass"],
+          ] as const
+        ).map(([vidro, rotulo]) => (
+          <div key={rotulo} className="flex flex-col gap-2">
+            <span className="font-mono text-xs text-muted-foreground">
+              {rotulo}
+            </span>
+            <Tabs defaultValue="fev">
+              <TabsList glass={vidro} stretch={false}>
+                <TabsTrigger value="jan">Janeiro</TabsTrigger>
+                <TabsTrigger value="fev">Fevereiro</TabsTrigger>
+                <TabsTrigger value="mar">Março</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+        ))}
+      </DocSection>
+
+      <DocNote title="O corpo é o mesmo; o que entra é o aro">
+        O tom do marcador de vidro é <code>--background</code> <strong>opaco</strong>
+        — exatamente a cor que o marcador chapado já pintava. Por construção,
+        então, nada de contraste se move: o rótulo ativo continua sobre a mesma
+        superfície. O que entra é a <strong>aresta</strong>, e é ela sozinha que
+        faz o material — numa peça com tom as nuvens já chegam a 3,6%.
+        <br />
+        <br />
+        A borda também já estava lá (<code>border-border/80</code> no chapado), e
+        é isso que faz a armadilha da régua não morder: o aro é pintado no{" "}
+        <code>border-box</code>, e a peça já reservava 1px para ele. Numa bandeja{" "}
+        <code>h-8</code> a mesma troca custaria 2px do conteúdo — 26 para um
+        gatilho de 28.
+      </DocNote>
+
+      <DocNote title="É o vidro pintado, e não o material do iOS">
+        <code>backdrop-filter</code> sobre cor chapada não desenha nada, e
+        nenhum trilho deste app é fixo — não há conteúdo passando por baixo de
+        uma fileira de abas. É a régua de premissa que separa os dois vidros da
+        casa. E a <strong>bandeja</strong> com material já foi medida numa
+        fileira idêntica a esta: a 60% no escuro ela cai de rgb 38 para 27, e
+        deixa de ler como bandeja. Por isso o vidro entra na peça que se move, e
+        nunca na que a contém.
+      </DocNote>
+
+      <DocSection
         title="Underline — as abas de página"
         description="Um fio sob a fileira, e o marcador pousa nele. Aqui não há bandeja para caber em linha de controle nenhuma: são abas que dividem a página com título e texto corrido, então o padrão é lg — o degrau em que o rótulo volta aos 14px."
         code={`<TabsList variant="underline">…</TabsList>  {/* size="lg" de fábrica */}`}
@@ -126,7 +178,7 @@ export default function TabsDoc() {
       </DocNote>
 
       <DocSection
-        title="Ghost — dentro de uma moldura que já existe"
+        title="Plain — dentro de uma moldura que já existe"
         description="Nem bandeja nem fio: para dentro de um cartão ou de um diálogo que já tem contorno próprio. Também é abas de página, então também nasce lg."
         code={`<TabsList variant="plain">…</TabsList>  {/* size="lg" de fábrica */}`}
         previewClassName="flex-col flex-nowrap items-stretch gap-6 p-6"
@@ -315,6 +367,13 @@ export default function TabsDoc() {
             default: "variant === solid",
             description:
               "Abas de largura igual dividindo a linha. Desligado, o alvo de toque cresce para 44px.",
+          },
+          {
+            prop: "glass",
+            type: "boolean",
+            default: "false",
+            description:
+              "O marcador vira a peça de vidro do sistema. Sem efeito fora de solid.",
           },
           {
             prop: "scrollable",
