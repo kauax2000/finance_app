@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 import { modalSurfaceClassName } from "@/lib/modal-classes"
 import { DragHandle } from "@/components/ui/drag-handle"
 import { EDGE_PANEL_OVERLAY_CLASS } from "@/components/ui/edge-panel"
+import { useViewportModal, useViewportWindow } from "@/hooks/use-mobile"
 
 /**
  * A gaveta — **em qualquer largura de tela**.
@@ -172,6 +173,10 @@ function Drawer({
       // O motivo é o mesmo que o `Sheet` documenta: é `repositionInputs` que
       // impede a superfície de encolher quando o teclado do iOS sobe.
       repositionInputs={repositionInputs}
+      // Dentro da moldura do catálogo ela deixa de ser modal — senão o
+      // `RemoveScroll` do Radix trava a rolagem da **página de fora**. Antes de
+      // `{...props}`, para quem chama continuar mandando. Ver `useViewportModal`.
+      modal={useViewportModal()}
       {...props}
     />
   )
@@ -183,10 +188,20 @@ function DrawerTrigger({
   return <DrawerPrimitive.Trigger data-slot="drawer-trigger" {...props} />
 }
 
+/**
+ * O portal vai para o `body` da **janela ativa**, como o do `EdgePanel`.
+ *
+ * Fora da moldura de viewport do catálogo o contexto é `null` e o vaul usa o
+ * próprio documento — o app não muda. Dentro dela, é isto que impede a gaveta
+ * de escapar do `<iframe>` e cobrir a página inteira: a moldura já faz o
+ * `useIsMobile` ler a janela de dentro, então uma folha a 375px toma o ramo
+ * gaveta ali, e sem o `container` ela era portalizada para fora.
+ */
 function DrawerPortal({
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Portal>) {
-  return <DrawerPrimitive.Portal {...props} />
+  const janela = useViewportWindow()
+  return <DrawerPrimitive.Portal container={janela?.document.body} {...props} />
 }
 
 function DrawerClose({

@@ -54,7 +54,6 @@ import KbdGroupDoc from "./docs/kbd-group"
 import LabelDoc from "./docs/label"
 import MarcaDoc from "./docs/marca"
 import MenubarDoc from "./docs/menubar"
-import MobileSheetFormChromeDoc from "./docs/mobile-sheet-form-chrome"
 import MobileToqueDoc from "./docs/mobile-toque"
 import MoneyDisplayDoc from "./docs/money-display"
 import MovimentoDoc from "./docs/movimento"
@@ -146,7 +145,6 @@ export const DOCS: Record<string, ComponentType> = {
   "label": LabelDoc,
   "marca": MarcaDoc,
   "menubar": MenubarDoc,
-  "mobile-sheet-form-chrome": MobileSheetFormChromeDoc,
   "mobile-toque": MobileToqueDoc,
   "money-display": MoneyDisplayDoc,
   "movimento": MovimentoDoc,

@@ -6,20 +6,17 @@ import { supabase } from "@/lib/supabase"
 import { createActivity } from "@/lib/activity"
 import {
   Dialog,
+  DialogCloseButton,
   DialogContent,
   DialogFooter,
   DialogHeader,
+  DialogHeaderRow,
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
   Sheet,
   SheetContent,
 } from "@/components/ui/sheet"
-import {
-    MobileSheetFormHeaderCloseButton,
-    MobileSheetFormStickyHeader,
-    mobileFormSheetContentClassName,
-} from "@/components/ui/mobile-sheet-form-chrome"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
@@ -340,14 +337,12 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                 <SheetContent
                     side="bottom"
                     fillMobileViewport
-                    className={mobileFormSheetContentClassName}
                 >
-                    <MobileSheetFormStickyHeader
-                        title="Alterar senha"
-                        endAdornment={
-                            <MobileSheetFormHeaderCloseButton disabled={loading} />
-                        }
-                    />
+                    <DialogHeader>
+                        <DialogHeaderRow endAdornment={<DialogCloseButton placement="inline" disabled={loading} />}>
+                            <DialogTitle>Alterar senha</DialogTitle>
+                        </DialogHeaderRow>
+                    </DialogHeader>
                     {passwordForm}
                 </SheetContent>
             </Sheet>

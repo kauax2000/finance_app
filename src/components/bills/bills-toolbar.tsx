@@ -20,7 +20,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { mobileSheetChromeBelowHeaderClassName } from "@/components/ui/mobile-sheet-form-chrome"
 import {
     transactionSegmentContainerClassName,
     transactionSegmentTabClassName,
@@ -315,7 +314,7 @@ export function BillsToolbar({
                     <DialogHeader
                         className={cn(
                             "shrink-0 px-0 pt-1 pb-3 text-left",
-                            mobileSheetChromeBelowHeaderClassName,
+                            "mb-3",
                         )}
                     >
                         <DialogTitle>Filtros e ordenação</DialogTitle>

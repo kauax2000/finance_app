@@ -42,6 +42,49 @@ const TAMANHOS = [
   { valor: "lg", gatilho: "36" },
 ] as const
 
+/**
+ * O único espécime em que o material da fileira aparece.
+ *
+ * `backdrop-filter` sobre cor chapada não desenha nada, e o `Preview` é um
+ * cartão liso: nas outras seções a fileira `outline` sai idêntica à opaca. Aqui
+ * ela gruda no topo de um rolável e o texto passa por baixo — que é a forma do
+ * cabeçalho fixo, e a única em que há o que borrar.
+ *
+ * O `sticky` é da demonstração, e não um eixo do componente: quem gruda a barra
+ * é o contêiner. O `sticky` da `Toolbar` já foi reprovado por contagem zero, e
+ * o `Menubar` não tem consumidor nenhum no app.
+ */
+function FileiraSobreConteudo() {
+  return (
+    <div className="h-64 overflow-y-auto p-6">
+      <Menubar className="sticky top-0">
+        <MenubarMenu>
+          <MenubarTrigger>Arquivo</MenubarTrigger>
+          <MenubarContent>
+            <MenubarItem>Exportar CSV</MenubarItem>
+            <MenubarItem>Importar extrato</MenubarItem>
+          </MenubarContent>
+        </MenubarMenu>
+        <MenubarMenu>
+          <MenubarTrigger>Exibir</MenubarTrigger>
+          <MenubarContent>
+            <MenubarItem>Ocultar valores</MenubarItem>
+          </MenubarContent>
+        </MenubarMenu>
+      </Menubar>
+      <div className="mt-4 flex flex-col gap-3 text-sm text-muted-foreground">
+        {Array.from({ length: 10 }, (_, i) => (
+          <p key={i}>
+            Mercado · Transporte · Restaurantes · Assinaturas · Saúde ·
+            Educação · Lazer · Casa — linha {i + 1} de um extrato qualquer, só
+            para haver o que passar por baixo da fileira.
+          </p>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function MenubarDoc() {
   return (
     <>
@@ -110,6 +153,18 @@ export default function MenubarDoc() {
             </div>
           ))}
         </div>
+      </DocSection>
+
+      <DocSection
+        title="Sobre conteúdo que rola"
+        description="A fileira outline veste a régua de barra — a mesma receita do cabeçalho deste catálogo: --background opaco de base, abrindo a 60% onde o backdrop-filter existe. Role a região: o texto passa borrado por baixo dela. É o único espécime da página em que o material aparece, porque sobre um cartão liso não há o que borrar."
+        code={`<div className="h-64 overflow-y-auto">
+  <Menubar className="sticky top-0">…</Menubar>
+  {/* o conteúdo passa por baixo */}
+</div>`}
+        previewClassName="block p-0"
+      >
+        <FileiraSobreConteudo />
       </DocSection>
 
       <DocSection
@@ -190,6 +245,24 @@ export default function MenubarDoc() {
         era <code>h-8</code> com 3px de recuo e uma borda, e o que
         sobrava para o gatilho eram <strong>24px</strong> — o degrau{" "}
         <code>xs</code>, que o projeto reserva para dentro de outro controle.
+      </DocNote>
+
+      <DocNote title="A fileira é vidro, e só a que se sustenta sozinha">
+        A <code>outline</code> veste <code>barSurfaceClassName</code>, a régua
+        de barra da casa — a mesma do cabeçalho deste catálogo:{" "}
+        <code>--background</code> a 95% de base, abrindo a 60% onde o{" "}
+        <code>backdrop-filter</code> existe, <strong>nos dois temas</strong>, com
+        o guarda de <code>prefers-reduced-transparency</code>. Não é a régua do
+        painel: aquela é <code>--popover</code> e só abre no escuro.
+        <br />
+        <br />
+        As outras duas ficam opacas, e cada uma por um motivo medido.{" "}
+        <code>solid</code> é bandeja: a 60% no escuro ela cai de rgb 38 para{" "}
+        <strong>27</strong> sobre a página, enfraquece e deixa de ler como
+        bandeja — e divergiria da <code>TabsList solid</code>, com quem é
+        idêntica hoje. <code>plain</code> vive dentro de um cabeçalho que{" "}
+        <em>já é</em> o vidro, e uma segunda placa sobre a primeira empilha
+        borrão sem desenhar nada.
       </DocNote>
 
       <DocNote title="Na bandeja, o realce sobe em vez de tingir">

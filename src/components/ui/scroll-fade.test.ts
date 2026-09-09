@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs"
+import { readdirSync, readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 
 import {
@@ -73,15 +73,9 @@ describe("a dissolução das bordas", () => {
     expect(COMPONENTE).toContain('data-slot="scroll-fade-blur"')
     for (const [nome, caminho, ancoraDoRolavel] of [
       ["scroll-fade", "src/components/ui/scroll-fade.tsx", "ref={ref}"],
-      // Na paleta o rolável é **outro componente**, e o que a casca declara é
-      // `{children}`. A ordem que importa é a do DOM, e é essa que a âncora lê.
-      ["command", "src/components/ui/command.tsx", "{children}"],
-      ["dialog", "src/components/ui/dialog.tsx", 'data-slot="dialog-body"'],
-      [
-        "mobile-sheet-form-chrome",
-        "src/components/ui/mobile-sheet-form-chrome.tsx",
-        'data-slot="mobile-sheet-form-body"',
-      ],
+      // O diálogo e a folha saíram desta lista na rodada 57, e a paleta na 58:
+      // nenhum deles monta mais as camadas — a asserção 16 é quem tranca isso,
+      // e a 17 tranca o que ficou no lugar (só a máscara).
     ] as const) {
       const src = readFileSync(caminho, "utf8")
       const rolavel = src.indexOf(ancoraDoRolavel)
@@ -349,42 +343,138 @@ describe("a dissolução das bordas", () => {
     expect(HOOK).toContain('casca.style.removeProperty("--scroll-fade-end")')
     expect(HOOK).toContain("delete casca.dataset.scrollFade")
     expect(HOOK).toContain("[axis, sides, shell]")
+    // A medição de faixa que a rodada 56 pôs aqui saiu com ela: sem consumidor,
+    // era código morto — e um hook que mede layout por conta própria é o tipo
+    // de peça que se esquece de tirar.
+    expect(HOOK).not.toContain("bands")
+    expect(HOOK).not.toContain("offsetParent")
   })
 
-  it("14. a paleta soma o material à rampa, e não o substitui", () => {
-    const paleta = readFileSync(
-      "src/components/ui/command.tsx",
-      "utf8"
-    )
-    const codigo = paleta
-      .replace(/\/\*[\s\S]*?\*\//g, " ")
-      .replace(/(^|[^:])\/\/.*$/gm, "$1")
-
-    // O borrão do iOS entra nas duas pontas, pela peça compartilhada — ela
-    // já nasce `material`, que é o raio e a vibrância do iOS.
-    expect(codigo).toContain("<ScrollFadeBlurLayers")
-
-    // …**mas a máscara fica.** As três faixas desta paleta não pintam nada,
-    // então é a rampa quem esconde o conteúdo sob o campo de busca. Trocar para
-    // o modo `material` — que desliga `--scroll-fade-mask` — faria o texto
-    // aparecer atrás do input.
+  it("14. a paleta é só máscara — as camadas de borrão saíram", () => {
+    const codigo = semComentarios(readFileSync("src/components/ui/command.tsx", "utf8"))
+    // Ela foi a última a ter o borrão nas pontas. Dentro de um casco que já
+    // borra a 24px, três `backdrop-filter` aninhados por ponta re-borravam a
+    // placa e a aresta de cada um saía como uma linha de tom atravessando a
+    // lista — três em cima, duas embaixo, "como se a resolução fosse baixa".
+    expect(codigo).not.toContain("ScrollFadeBlurLayers")
+    expect(codigo).not.toContain("scroll-fade-material")
+    // Sem camada irmã não há o que espelhar na casca.
+    expect(codigo).not.toMatch(/shell:\s*true/)
+    // …**e a máscara fica.** As três faixas desta paleta não pintam nada,
+    // então é a rampa quem esconde o conteúdo sob o campo de busca.
+    expect(codigo).toContain("scrollFadeViewportClassName")
     expect(codigo).not.toContain("data-scroll-fade-mode")
+  })
 
-    // A camada é **irmã** do rolável: ela mora na casca, depois de `children`,
-    // e não dentro do `CommandList`. Um `backdrop-filter` no nó mascarado sai
-    // recortado pela própria rampa.
-    const casca = codigo.indexOf("data-slot=\"command\"")
-    const lista = codigo.indexOf("data-slot=\"command-list\"")
-    const camada = codigo.indexOf("<ScrollFadeBlurLayers")
-    expect(camada).toBeGreaterThan(casca)
-    expect(camada).toBeLessThan(lista)
+  it("15. nenhuma utility de borrão declara sobra", () => {
+    // A rodada 55 deu à camada uma **sobra** de 44px para fora do rolável,
+    // apostando que a aresta cairia em fundo chapado. Ela não resolveu e
+    // piorou: o trecho era borrão cheio, então a área afetada dobrou e virou um
+    // slab — "muito grande e blocado", com a linha ainda visível. A aresta não
+    // era o problema; a ausência de faixa era.
+    for (const [eixo, camada] of CAMADAS) {
+      expect(camada, `${eixo} ainda tem a sobra`).not.toContain(
+        "--scroll-fade-blur-over"
+      )
+      expect(camada, `${eixo} ainda tem a variável local da sobra`).not.toContain(
+        "--scroll-fade-blur-o"
+      )
+    }
+    expect(REGUA, "a régua ainda exporta a sobra").not.toContain(
+      "scrollFadeChromeOverhangClassName"
+    )
+  })
 
-    // E irmão não lê custom property de irmão: sem `shell`, as duas variáveis
-    // ficariam só na lista e a camada nasceria com altura zero para sempre.
-    expect(codigo).toMatch(/useScrollFade\(\{\s*shell:\s*true\s*\}\)/)
+  it("16. nenhuma peça de ui/ monta as camadas de borrão", () => {
+    // A camada é um `backdrop-filter`, e a borda de um `backdrop-filter` é
+    // dura: sem faixa a aresta cai no meio da superfície; com faixa medida, a
+    // máscara leva o conteúdo ao piso e o borrão fica sem o que borrar; dentro
+    // de um casco que já borra, cada aresta vira uma linha de tom. Medido no
+    // diálogo, na folha e por fim na paleta. A peça fica em `scroll-fade.tsx`
+    // para o `edge="blur|material"` de quem não tem casca própria — e só lá.
+    const montam = readdirSync("src/components/ui")
+      .filter((f) => f.endsWith(".tsx") && f !== "scroll-fade.tsx")
+      .filter((f) =>
+        semComentarios(readFileSync(`src/components/ui/${f}`, "utf8")).includes(
+          "ScrollFadeBlurLayers"
+        )
+      )
+    expect(montam, "ninguém fora do ScrollFade monta camadas de borrão").toEqual([])
+  })
 
-    // Sem bloco de contenção na casca, o absoluto resolve contra um ancestral
-    // qualquer — foi o defeito medido no `Carousel`.
-    expect(codigo).toMatch(/"relative flex size-full flex-col/)
+  it("17. diálogo e folha estão em modo sem faixa — só a máscara", () => {
+    // O que o dono pediu depois de três reprovações: o fade mínimo de todo
+    // componente da casa, na própria borda do rolável, e nada somado a ele. Sem
+    // faixa medida, sem sangramento, sem modo material, sem casca em volta —
+    // o corpo é só o rolável, e o `useScrollFade()` não espelha nada porque não
+    // há irmão para ler.
+    const semImports = (t: string) =>
+      t.replace(/import\s*\{[\s\S]*?\}\s*from\s*"[^"]*"/g, "")
+    for (const nome of ["dialog"] as const) {
+      const src = semImports(
+        semComentarios(readFileSync(`src/components/ui/${nome}.tsx`, "utf8"))
+      )
+      expect(src, `${nome} sangra`).not.toContain("scrollFadeBleedClassName")
+      expect(src, `${nome} mede faixa`).not.toMatch(/bands:\s*true/)
+      expect(src, `${nome} desliga a máscara`).not.toContain("data-scroll-fade-mode")
+      expect(src, `${nome} espelha sem irmão`).not.toMatch(/useScrollFade\(\{\s*shell/)
+      expect(src, `${nome} perdeu a máscara`).toContain("scrollFadeViewportClassName")
+      // E o piso é zero: a borda do rolável é a emenda com a tira, que não
+      // pinta nada. A 0,06 o texto que a atravessa é recortado em seco a 6–15%
+      // — uma linha nítida sob o título, medida. Por variável, no próprio nó:
+      // herda e não disputa, e os 0,06 da casa ficam para a paleta.
+      expect(src, `${nome} recorta a emenda`).toContain("[--scroll-fade-floor:0]")
+    }
+  })
+
+  it("17b. as três tiras não pintam nada, nem fio", () => {
+    // Elas chegaram a pintar um degradê `from-popover` → transparente para "a
+    // cor cheia encostar na dissolução". Sobre a placa translúcida (`--popover`
+    // a 60%) o opaco do topo é **mais claro** que ela, e saía como banda atrás
+    // da alça da gaveta — medido. Cor com alfa não tem cor cheia pintável sem
+    // empilhar; e a tira não precisa: o corpo é irmão dela e se mascara sozinho,
+    // então o fundo da tira já é a placa. Sem fio também — regra **J**.
+    const semImports = (t: string) =>
+      t.replace(/import\s*\{[\s\S]*?\}\s*from\s*"[^"]*"/g, "")
+    const dialog = semImports(semComentarios(readFileSync("src/components/ui/dialog.tsx", "utf8")))
+    const form = semComentarios(readFileSync("src/components/ui/form.tsx", "utf8"))
+
+    // Cortes ancorados no **fim** do próprio bloco, nunca no vizinho seguinte:
+    // `DialogHeaderRow` vem *antes* de `DialogHeader` no arquivo, e o valor de
+    // `sticky` mora na mesma linha — família do "corte por indexOf que acerta
+    // por vazio".
+    const fatia = (src: string, de: string, ate: string) => {
+      const i = src.indexOf(de)
+      const f = src.indexOf(ate, i + de.length)
+      return i === -1 || f === -1 ? "" : src.slice(i, f)
+    }
+    const funcao = (src: string, nome: string) =>
+      fatia(src, `function ${nome}(`, "\nfunction ")
+    for (const [nome, trecho] of [
+      ["DialogHeader", funcao(dialog, "DialogHeader")],
+      ["DialogFooter", funcao(dialog, "DialogFooter")],
+      ["FormActions sticky", fatia(form, "sticky:", '",')],
+    ] as const) {
+      expect(trecho.length, `${nome}: não achei a tira`).toBeGreaterThan(0)
+      expect(trecho, `${nome}: tinta sobre a placa translúcida`).not.toMatch(/\bbg-(?:linear|radial|conic|popover|background|card|muted)\b|\bfrom-/)
+      expect(trecho, `${nome}: fio mais tinta é a regra J`).not.toMatch(/\bborder-[tb]\b/)
+    }
+  })
+
+  it("18. a gaveta portaliza para a janela ativa, como o painel de borda", () => {
+    // Sem `container` o portal do `vaul` escapa do `<iframe>` da moldura do
+    // catálogo e cobre a página inteira — a moldura já faz o `useIsMobile` ler
+    // a janela de dentro, então é o ramo gaveta que renderiza ali. Fora da
+    // moldura o contexto é `null` e o vaul usa o próprio documento.
+    for (const [nome, arquivo] of [
+      ["sheet", "src/components/ui/sheet.tsx"],
+      ["drawer", "src/components/ui/drawer.tsx"],
+    ] as const) {
+      const src = semComentarios(readFileSync(arquivo, "utf8"))
+      expect(src, `${nome} não lê a janela ativa`).toContain("useViewportWindow")
+      expect(src, `${nome} portaliza sem container`).toMatch(
+        /DrawerPrimitive\.Portal\s+container=\{janela\?\.document\.body\}/
+      )
+    }
   })
 })

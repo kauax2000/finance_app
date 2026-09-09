@@ -245,8 +245,8 @@ React.useEffect(() => {
       </DocSection>
 
       <DocNote title="A superfície é uma só, e o que separa as faixas é a dissolução">
-        A cor é declarada <strong>uma vez</strong>, na casca —{" "}
-        <code>bg-popover/85</code> com <code>backdrop-blur</code>. Houve uma
+        A cor é declarada <strong>uma vez</strong>, na casca — a placa da régua
+        flutuante, <code>--popover</code> com o material do iOS. Houve uma
         versão com vidro só nas pontas (<code>bg-background/85</code>, o do{" "}
         <code>&lt;header&gt;</code>) e ela ficava{" "}
         <strong>mais escura que o meio</strong>: <code>oklch(0.145)</code> nas
@@ -261,10 +261,11 @@ React.useEffect(() => {
         busca passou a ser também.
         <br />
         <br />
-        Tirar dela só o fio não bastava, e o motivo é aritmético: ela repintava{" "}
-        <code>bg-popover/85</code> sobre um casco que já é{" "}
-        <code>bg-popover/85</code>, e dois 85% empilhados dão{" "}
-        <strong>97,75%</strong>. No tema escuro <code>--popover</code> é mais
+        Tirar dela só o fio não bastava, e o motivo era aritmético: ela
+        repintava a placa (<code>bg-popover/85</code>) sobre um casco que já a
+        tinha, e dois 85% empilhados dão <strong>97,75%</strong>. É a mesma
+        aritmética que tirou a placa do <code>Command</code> hospedado — tinta
+        sobre a casca é uma segunda superfície. No tema escuro <code>--popover</code> é mais
         claro que a página, então a faixa era um retângulo <em>mais claro</em>{" "}
         com uma aresta na base — o mesmo bloco aceso que o rodapé já tinha
         registrado ao tentar pintar um gradiente. O <code>backdrop-blur</code>{" "}
@@ -330,13 +331,13 @@ React.useEffect(() => {
         por acidente, e ninguém a tinha registrado.
       </DocNote>
 
-      <DocNote title="O recuo é da lista, e o vidro precisa de algo atrás">
+      <DocNote title="O recuo é da lista, e quem pinta é a casca">
         O recuo saiu da casca e foi para o <code>CommandList</code>, que é onde
         há linhas — e com isso o <code>-mx-1</code> do separador volta a sangrar
-        exatamente ele. Já o vidro impôs a sua própria condição:{" "}
-        <code>backdrop-filter</code> sobre uma cor opaca não desenha nada, então
-        o casco do <code>CommandDialog</code> ficou transparente para o borrão
-        alcançar a página.
+        exatamente ele. E a placa é da <strong>casca</strong>: o{" "}
+        <code>CommandDialog</code> veste a placa modal e o <code>Command</code>{" "}
+        de dentro é transparente, para haver <strong>uma</strong> superfície. Só
+        a variante <code>panel</code>, solta numa página, pinta a própria.
       </DocNote>
 
       <DocNote title="O campo é o mesmo do cabeçalho do catálogo">

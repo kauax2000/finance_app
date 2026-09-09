@@ -12,7 +12,6 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { mobileSheetChromeBelowHeaderClassName } from "@/components/ui/mobile-sheet-form-chrome"
 import { formatDatePtBr, formatTransactionDayPtBr, formatTransactionDmyPtBr } from "@/lib/transaction-date"
 import { cn } from "@/lib/utils"
 import {
@@ -336,7 +335,7 @@ export function DashboardPaymentEventPreviewSheet({
                         <div
                             className={cn(
                                 "shrink-0 border-b border-border",
-                                mobileSheetChromeBelowHeaderClassName,
+                                "mb-3",
                             )}
                         >
                             <div
@@ -671,7 +670,7 @@ export function DashboardPaymentEventPreviewSheet({
                         <div
                             className={cn(
                                 "shrink-0 border-b border-border",
-                                mobileSheetChromeBelowHeaderClassName,
+                                "mb-3",
                             )}
                         >
                             <div

@@ -307,7 +307,11 @@ tema.
   `DatePicker`, `FormPickerPopoverTrigger` e, pelas variantes `Group`, o
   `InputGroup` vestem — e
   [`command-filter`](src/lib/command-filter.ts) — a busca por substring sem
-  acento, graduada, que a paleta do catálogo e o `Combobox` dividem. **Nada de
+  acento, graduada, que a paleta do catálogo e o `Combobox` dividem — e
+  [`bar-classes`](src/lib/bar-classes.ts), a superfície de **barra**: a
+  terceira régua de vidro da casa, ao lado de `menu-classes` (a flutuante) e
+  `modal-classes` (a modal). Só a veste quem tem conteúdo passando por baixo —
+  o cabeçalho fixo do catálogo e a fileira `outline` do `Menubar`. **Nada de
   `cva` nesses arquivos**: a regra A2 do auditor o reprova fora de
   `components/ui/`.
 - **Cor escolhida pela pessoa**: [`ColorTile`](src/components/ui/color-tile.tsx) para o ladrilho que carrega `categories.color`, `bills.color` ou a marca de um workspace. Se a cor vem do tema e não do banco, é o componente errado — use `bg-muted` ou um `Badge`. É o único lugar do app onde `white` e `black` crus são a resposta certa: o fundo é cor de runtime, e o que se apoia sobre ele — a tinta do ícone e o fio da borda — é material, não tema. Por isso ele está na lista de exceção do auditor — e nenhuma tela está. **O ladrilho é chapado**: o verniz que ele já teve (degradê branco, borda clara, sombra) saiu porque o resto do sistema preenche chapado. E a tinta não é branca por decreto — ela vira escura quando a cor gravada é clara demais para o branco alcançar 3:1.
@@ -539,7 +543,9 @@ tema.
   Ele saía de fábrica e **16 das 36 chamadas o desligavam**, porque um ×
   flutuante passa por cima do conteúdo e some atrás de um cabeçalho fixo assim
   que a pessoa rola — dentro de um cabeçalho, o lugar dele é o `endAdornment` de
-  um `DialogHeaderRow` (ou o `MobileSheetFormHeaderCloseButton`). A reserva de
+  um `DialogHeaderRow`, e ali ele vai com **`placement="inline"`**: o eixo
+  nasceu na rodada 60, quando o `MobileSheetFormHeaderCloseButton` (que existia
+  só para isso) foi absorvido junto com o resto do chrome de folha. A reserva de
   espaço no título vem de **haver** um ×, detectada por
   `has-[>[data-slot=dialog-close-button]]`, não de um prop. O `DialogContent`
   mantém o `showCloseButton`: lá a conta se inverte (só 6 de 25 o desligam),
@@ -672,9 +678,11 @@ tema.
   quem chama: "nenhuma categoria encontrada" é busca sem resultado, "nenhum
   cartão cadastrado" é ausência de dado.
 - **O `Menubar` tem `variant` e `size`, e o `size` mede o gatilho.** `variant`
-  é a superfície da fileira (`outline` se sustenta sozinha, `ghost` entra num
-  cabeçalho que já tem moldura, `solid` é bandeja da mesma **tinta** que a do
-  `TabsList`, e não da mesma medida — `p-0.5` mais borda contra `p-1`, porque o
+  é a superfície da fileira (`outline` se sustenta sozinha **e é a única de
+  vidro** — ela veste `barSurfaceClassName`, a mesma receita do cabeçalho fixo;
+  `plain` entra num cabeçalho que já tem moldura, e fica transparente porque
+  quem tem o vidro ali é o cabeçalho; `solid` é bandeja da mesma **tinta** que a
+  do `TabsList`, e não da mesma medida — `p-0.5` mais borda contra `p-1`, porque o
   `p-1` do `Tabs` é o que mantém um anel de 3px dentro de uma trilha que rola, e
   uma barra de menus nunca rola) e desce
   por contexto até o gatilho, porque o realce depende de sobre o que ele
@@ -7667,6 +7675,131 @@ shadcn, sem decisão registrada; com placa opaca era inerte, e com placa
 translúcida ele recorta o fundo no *padding box* e pode reabrir a fresta de 1px
 que o catálogo descreve. Não foi medido nesta rodada.
 
+### Rodada 59 — o material do iOS chega à fileira do `Menubar`
+
+Metade do pedido já estava feita e a outra metade nunca esteve. Medido na página
+do catálogo: o `MenubarContent` veste `menuSurfaceClassName` e sai com
+`blur(24px) saturate(1.5)` sobre `oklab(0.205 0 0 / 0.6)` desde a rodada 51; a
+**fileira** saía com `backdrop-filter: none` nas oito barras da página, com a
+tinta escrita à mão no `cva`. O painel era vidro e a barra que o abre era chapa.
+
+**A receita não é nova — ela estava escrita à mão no cabeçalho do catálogo.**
+`bg-background/95 glass-surface supports-backdrop-filter:bg-background/60
+reduced-transparency:bg-background` saiu para
+[`lib/bar-classes`](src/lib/bar-classes.ts), e o `ds-shell` passou a vesti-la.
+É extração e não mudança, e isso foi provado em vez de suposto: o `className`
+do `<header>` sai **byte a byte igual** (`h.className === a string de antes`,
+verificado no navegador), com o mesmo `blur(24px) saturate(1.5)` e o mesmo
+`oklab(0.145 0 0 / 0.6)`.
+
+**Ela é a terceira régua, e diverge das outras duas em três pontos, cada um com
+motivo:**
+
+| | flutuante | modal | **barra** |
+| --- | --- | --- | --- |
+| token | `--popover` | `--background` | `--background` |
+| base | 85% | 85% | **95%** |
+| abre em | `dark:` a 60% | `dark:` a 40% | **nos dois temas**, a 60% |
+
+`--background` e não `--popover` porque no escuro `--popover` e `--card` são a
+mesma cor (`oklch(0.205)`): uma barra `--popover` pousada num cartão sumiria —
+quem define uma barra é o contraste contra a superfície em que ela pousa. 95 de
+base porque sem `backdrop-filter` os 60% deixariam o conteúdo passar por trás do
+rótulo. E sem `dark:` porque uma barra tem conteúdo real por baixo nos dois
+temas, ainda que no claro o efeito seja quase nulo (250 sobre 255 dá Δ2).
+
+**Só a `outline`, e as outras duas ficam com o número escrito.** `solid` é
+bandeja: medida a 60% no escuro ela cai de rgb **38 para 27** sobre a página —
+enfraquece, deixa de ler como bandeja e divergiria da `TabsList solid`, com quem
+é idêntica hoje. `plain` mora dentro de um cabeçalho que **já é** o vidro, e uma
+segunda placa sobre a primeira empilha borrão sem desenhar nada. Na `outline`,
+sobre o cartão, o composto vai de rgb 10 para 15, com o texto em 18,36 e o
+secundário em 7,42 — folgado.
+
+**A demonstração é parte do conserto, não enfeite.** `backdrop-filter` sobre cor
+chapada não desenha nada, e as oito fileiras da página pousam num `Preview`
+liso: ali o material sai idêntico ao opaco, e a mudança seria inverificável. A
+seção nova gruda a fileira no topo de um rolável e passa texto por baixo — a
+forma do cabeçalho fixo, e a única em que há o que borrar. **O `sticky` é da
+demonstração, e não um eixo**: o da `Toolbar` já foi reprovado por contagem
+zero, e o `Menubar` tem zero consumidores.
+
+**Zero pixel em produção**, pelo mesmo motivo: o componente só existe no
+catálogo. Quem de fato renderiza a receita em tela é o cabeçalho do catálogo — e
+ele não mudou, porque a extração é byte a byte.
+
+A asserção **27** de `glass.test.ts` tranca as duas metades: a régua (material,
+os dois alfas com o de baixo menor, o guarda, o token certo, e **sem** `dark:` —
+é o que a separa da 23) e a fileira (a `outline` veste, `barSurfaceClassName`
+aparece **uma vez só** no `cva`, `solid` continua `bg-muted`, `plain` continua
+transparente, e o cabeçalho não volta a escrever a cópia). Dez sabotagens, dez
+reprovações.
+
+Uma correção de deriva veio junto: este arquivo dizia que o eixo do `Menubar`
+era `outline | ghost | solid`. O código diz `plain` desde a rodada que unificou
+as três palavras para "não desenha nada", e o bullet nunca foi corrigido.
+
+### Rodada 60 — o quarto chrome morre, e a área segura volta a ser da superfície
+
+O pedido foi apagar o `MobileSheetFormChrome`. Ele **não** estava sem uso: 26
+telas de produto o importavam. Posto o número, a direção veio em três
+respostas — *"migrar quem usa para drawer"*, *"folha no desktop e gaveta no
+telefone, e isso é regra de todo o app"*, *"o que for dialog mantém dialog por
+enquanto"* —, e juntas elas desenharam uma rodada menor do que parecia.
+
+**A regra já estava implementada, e é o `Sheet`.** Medido em `sheet.tsx`: ele
+monta `DrawerPrimitive.Root` do `vaul` abaixo de 768px e o painel de borda
+acima, propagando a escolha por contexto. As telas que escrevem `<Sheet>` **já
+renderizavam a gaveta no telefone** — não havia o que migrar na camada de
+superfície, e nenhuma virou `<Drawer>`. O trabalho real era o do pedido
+original: matar o quarto chrome.
+
+**Três medições mudaram o desenho.** `MobileSheetFormBody` tinha **zero**
+consumidores de produto (as 26 telas escrevem o corpo à mão, 38 ocorrências);
+`FormActions variant="sticky"` também; e `mobileFormSheetContentClassName` era
+quase todo inerte — `w-full`, `rounded-t-2xl`, `flex flex-col` e `gap-0` o
+`SheetContent` já dava, e `px-0 pt-0` não anulava nada. O que sobrava de real
+eram **duas** coisas: `overflow-hidden` e a **área segura**.
+
+Essa era o nó. O `DrawerContent` carregava a área segura e o ramo gaveta do
+`SheetContent` **não** — era por isso que a classe existia, e por isso 19
+folhas a tinham e 7 não, com o botão de salvar sob a barra de gestos do iPhone
+nessas 7. As duas foram para a superfície, com os 24px preservados:
+`pb-(--sheet-drawer-safe)` e a fórmula do `env()` na variável.
+
+**A cromagem passou a ser uma só.** `MobileSheetFormStickyHeader` virou
+`DialogHeader` (+ `DialogHeaderRow` quando há adorno), o corpo virou
+`DialogBody`, e `mobileSheetChromeBelowHeaderClassName` — que era a string
+`"mb-3"` com nome de sistema — virou o literal onde ele de fato era usado, uma
+margem num divisor. É a regra que este arquivo já escrevia ("a cromagem da
+folha vem do `Dialog`"), e o chrome era o quarto, anterior a ela.
+
+**O × ganhou lugar em vez de peça.** `DialogCloseButton` passou a ter
+`placement`: `floating` (o padrão, o canto da superfície) e `inline` (dentro do
+cabeçalho). Ele absorveu o `MobileSheetFormHeaderCloseButton` (5 chamadas) e as
+4 que montavam `Close` + `Button` + ícone à mão — inclusive uma que renderizava
+um glifo do conjunto 20 em 16px, que o auditor acusava.
+
+**Os deltas de métrica, ditos:** a cromagem do `Dialog` não tem a mesma medida
+do chrome — **+8px acima do título** (`pt-4` contra `pt-2`), **−8px abaixo do
+cabeçalho** (`pb-4` contra `pb-3` + `mb-3`) e **−4px de recuo lateral acima de
+640px** (o `sm:px-5` do chrome não existe no `--dialog-px`). É o preço de a
+folha usar o cabeçalho do sistema, e é ajustável numa linha, porque
+`--dialog-px` é variável.
+
+**Verificação, e o seu limite.** `tsc` limpo, 441 testes, auditor sem achado
+novo, catálogo de 90 para **89** páginas. No navegador, o espécime da página do
+`Form`: casco com `padding-bottom: 24px` e `overflow: hidden`, cabeçalho em
+16/16/16, o × com `position: static` e `margin-right: -4px`, corpo dissolvendo
+nas duas pontas. **Nenhuma das 26 telas de produto foi vista logada** — o que
+prova a migração é o compilador, a suíte e esse espécime, e está dito.
+
+O que ficou de fora, com o número: os **38** corpos roláveis à mão não viraram
+`DialogBody` (eles não passavam pelo chrome, e trocá-los acrescentaria a
+dissolução em 19 telas que hoje não a têm), o `FormActions variant="sticky"`
+segue sem consumidor, e as 16 telas que mostram `Dialog` no desktop ficaram
+como estão, por decisão explícita.
+
 ### Backlog de migração
 
 A rodada 01 entregou tokens, componentes, documentação e o auditor, sem migrar
@@ -7738,15 +7871,14 @@ depende de coincidência não é mecanismo.
 
 E o que a rodada do `Drawer` e do `Popover` deixou:
 
-- **11 telas escrevem a área segura do rodapé à mão** —
-  `pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]` em quatro medidas
-  diferentes (1,5rem, 1rem, 0,625rem, 0,5rem), em `mobile-sheet-form-chrome`,
-  `notifications-sheet`, `mobile-account-menu`, `mobile-nav-island`,
-  `install-pwa-sheet` e nos formulários de transação, fatura, conta e
-  assinatura. A área segura é **da superfície**, e o `DrawerContent` já a
-  carrega; a folha ainda não, e por isso as 11 não foram tocadas — somar lá
-  dobraria o recuo em todas. Destino: mover para o `SheetContent` e apagar as
-  11 numa mudança só.
+- ~~**11 telas escrevem a área segura do rodapé à mão**~~ — **pago na rodada
+  60**, do lado que importava: o ramo gaveta do `SheetContent` passou a
+  declarar `pb-(--sheet-drawer-safe)`, e a classe que 19 telas importavam do
+  chrome de folha para receber o `env()` deixou de existir junto com ele. O que
+  fica são as superfícies que **não** são folha e escrevem o próprio recuo —
+  `mobile-account-menu`, `mobile-nav-island`, `install-pwa-sheet` e
+  `notifications-sheet` —, e um caso solto: `bills-toolbar.tsx`, que reescrevia
+  a classe inteira à mão em vez de importá-la.
 - **`DialogHeaderRow` ainda separa título e descrição com `space-y-1`.** É o
   mesmo par de identidade que saiu do `PopoverHeader` nesta rodada. Um
   `gap-0.5` a menos, e o par volta a ler como uma coisa só.
@@ -8306,7 +8438,10 @@ E o que a rodada 40 deixou, ao extrair o vidro:
   vibrância, sem vestir `glass-surface` e sem o `reduced-transparency:` que o
   cabeçalho do catálogo passou a ter. Depois da rodada 51 ele é a **única**
   superfície de vidro do repositório fora da receita — as outras 11 e a folha do
-  telefone já a vestem.
+  telefone já a vestem. **E agora o destino tem nome**: `barSurfaceClassName`,
+  em `lib/bar-classes` (rodada 59), que é exatamente a receita que ele tenta
+  escrever. Ele ficou de fora por decisão: é `layout/`, tem consumidores reais,
+  e o vidro dele só existe rolado — é medição própria.
 - **`thin` reprova o contraste de texto sobre conteúdo claro no escuro** (2,73
   contra os 4,5 da norma). É a natureza de um material fino e está documentado,
   mas não há guarda mecânico: uma tela pode pôr texto ali sem nada avisar.

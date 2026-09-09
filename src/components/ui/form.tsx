@@ -505,6 +505,9 @@ const formActionsVariants = cva("flex flex-col-reverse gap-2", {
   variants: {
     variant: {
       inline: "sm:flex-row",
+      // Sem fio e sem tinta: o rodapé é irmão do `MobileSheetFormBody`, que se
+      // mascara sozinho, então o fundo dele já é a placa da folha. Um degradê
+      // aqui (houve) vira banda sobre a placa translúcida — ver `DialogHeader`.
       sticky: "shrink-0 px-4 pt-3 sm:flex-row sm:px-5",
     },
     align: {

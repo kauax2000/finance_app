@@ -12,7 +12,6 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { mobileSheetChromeBelowHeaderClassName } from "@/components/ui/mobile-sheet-form-chrome"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { MoneyDisplay } from "@/components/ui/money-display"
@@ -173,7 +172,7 @@ export function BillDetailSheet({
                 <div
                     className={cn(
                         "shrink-0 border-b border-border/60 bg-muted/25",
-                        mobileSheetChromeBelowHeaderClassName,
+                        "mb-3",
                     )}
                 >
                     <div

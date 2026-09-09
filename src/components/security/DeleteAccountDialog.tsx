@@ -16,10 +16,6 @@ import {
   Sheet,
   SheetContent,
 } from "@/components/ui/sheet"
-import {
-    MobileSheetFormStickyHeader,
-    mobileFormSheetContentClassName,
-} from "@/components/ui/mobile-sheet-form-chrome"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { CustomForm } from "@/components/ui/form"
@@ -133,30 +129,30 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
           : "Digite seu email e senha para confirmar a exclusão."
 
     const stickyHeader = (
-        <MobileSheetFormStickyHeader>
+        <DialogHeader>
             <>
-                <DialogTitle
-                    className={cn(
-                        "flex items-center gap-2 font-heading text-base font-medium leading-tight",
-                        success
-                            ? undefined
-                            : step === "warning"
-                              ? "text-destructive"
-                              : undefined,
-                    )}
-                >
-                    {success ? (
-                        <CheckCircleIcon className="h-5 w-5 shrink-0 text-success" aria-hidden />
-                    ) : (
-                        <TrashMiniIcon className="h-5 w-5 shrink-0" aria-hidden />
-                    )}
-                    {title}
-                </DialogTitle>
-                <DialogDescription className="mt-1 text-sm text-muted-foreground">
-                    {description}
-                </DialogDescription>
+            <DialogTitle
+            className={cn(
+            "flex items-center gap-2 font-heading text-base font-medium leading-tight",
+            success
+            ? undefined
+            : step === "warning"
+            ? "text-destructive"
+            : undefined,
+            )}
+            >
+            {success ? (
+            <CheckCircleIcon className="h-5 w-5 shrink-0 text-success" aria-hidden />
+            ) : (
+            <TrashMiniIcon className="h-5 w-5 shrink-0" aria-hidden />
+            )}
+            {title}
+            </DialogTitle>
+            <DialogDescription className="mt-1 text-sm text-muted-foreground">
+            {description}
+            </DialogDescription>
             </>
-        </MobileSheetFormStickyHeader>
+        </DialogHeader>
     )
 
     const scrollPadding = cn("min-h-0 flex-1 overflow-y-auto py-4", isMobile ? "px-4" : "px-6")
@@ -407,7 +403,6 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                 <SheetContent
                     side="bottom"
                     fillMobileViewport
-                    className={mobileFormSheetContentClassName}
                 >
                     {shellMobile}
                 <DialogCloseButton />

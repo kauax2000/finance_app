@@ -15,7 +15,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Spinner } from "@/components/ui/spinner"
-import { mobileSheetChromeBelowHeaderClassName } from "@/components/ui/mobile-sheet-form-chrome"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -311,7 +310,7 @@ export function SubscriptionDetailSheet({
             <div
                 className={cn(
                     "shrink-0 border-b border-border",
-                    mobileSheetChromeBelowHeaderClassName,
+                    "mb-3",
                 )}
             >
                 <div

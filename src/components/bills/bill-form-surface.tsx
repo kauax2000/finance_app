@@ -11,9 +11,6 @@ import {
 } from "@/components/ui/dialog"
 
 import {
-    MobileSheetFormStickyHeader,
-} from "@/components/ui/mobile-sheet-form-chrome"
-import {
     BillFormFields,
     type BillFormFieldsProps,
 } from "@/components/bills/bill-form-fields"
@@ -75,10 +72,10 @@ export function BillFormSurface({
                 onSubmit={handleSubmit}
                 className="flex min-h-0 flex-1 flex-col"
             >
-                <MobileSheetFormStickyHeader
-                    title={formTitle}
-                    description={formDescription}
-                />
+                <DialogHeader>
+                    <DialogTitle>{formTitle}</DialogTitle>
+                    <DialogDescription>{formDescription}</DialogDescription>
+                </DialogHeader>
                 <div className={scrollClass}>
                     <BillFormFields {...fieldsProps} />
                 </div>

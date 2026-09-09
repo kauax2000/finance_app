@@ -10,7 +10,6 @@ import { modalSurfaceClassName } from "@/lib/modal-classes"
 import { Muted } from "@/components/ui/typography"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
-import { ScrollFadeBlurLayers } from "@/components/ui/scroll-fade"
 import { Button } from "@/components/ui/button"
 
 /**
@@ -98,26 +97,25 @@ function DialogOverlay({
  * que é o que 17 das 19 chamadas explícitas pediam e o que o `AlertDialog` já
  * usava. Os dois gêmeos passam a medir igual.
  *
- * ## A placa é de vidro, e o véu é o teto dela
+ * ## A placa é `--background` de vidro, e o véu é quem mais borra
  *
- * Ela veste o material do cabeçalho pela mesma receita das 11 superfícies
- * flutuantes — `bg-background/85` de base (que serve o claro **e** é o
- * fallback de quem não tem `backdrop-filter`), abrindo para 60% só no escuro e
- * só onde o borrão existe.
+ * Ela veste `modalSurfaceClassName`: `--background` a 85%, 40% no escuro onde o
+ * borrão existe, com o material do iOS — mais aberta que a flutuante (60%),
+ * porque a 60% sobre a página ela lia como fosca. Uma rodada a levou a `--popover` para
+ * igualar o DatePicker, e a tela reprovou: a 60% sobre a página velada o
+ * `--popover` compõe acima de tudo que está atrás e a placa lê como opaca. O
+ * `--background` afunda no véu, e é o borrão que a distingue (ver
+ * `lib/modal-classes`).
  *
- * **O que o borrão vê aqui não é a página: é o `--overlay`.** Um popover borra
- * conteúdo real; entre esta placa e o conteúdo há um véu de 60% de preto, e
- * borrar cor chapada não desenha nada. Medido, com a placa a 60% no escuro:
- * delta **0** sobre um card, 2 sobre a página, e **15** sobre o preenchimento
- * de um botão `primary`. Ou seja: no tema escuro o vidro só aparece quando há
- * cor cheia atrás, e o teto não é o material — é o véu.
+ * O `backdrop-filter` renderiza aqui, e o que ele vê é o `--overlay` a 40% mais
+ * a página: medido, delta 0 sobre um card, 2 sobre a página, 15 sobre um botão
+ * `primary`. Só cor cheia atrás faz o vidro aparecer; quem quiser o efeito mais
+ * visível mexe no véu (rodada 52c), e não aqui.
  *
- * No claro ele se paga: a placa desce de 250 para **236** sobre um card, com o
- * `--muted-foreground` em 5,09 e 4,38 no pior fundo real (o `primary`), acima
- * dos 4,5 da norma. Foi por isso que o alfa aberto ficou escopado no escuro:
- * a 60% no claro o mesmo texto cai a **4,09**, e reprova.
- *
- * Quem quiser o efeito visível no escuro mexe no `--overlay`, e não aqui.
+ * Houve uma rodada em que a placa ficou opaca por uma medição errada — capturas
+ * cedo demais e uma comparação viciada concluíram que o borrão não renderizava
+ * nos poppers. Refeita limpa, a medição disse o contrário; a história está em
+ * `lib/menu-classes`.
  */
 const dialogContentVariants = cva(
   [
@@ -264,6 +262,14 @@ function DialogHeader({
         // 131px da borda direita: um eixo que não é o de nada. Um cabeçalho
         // de diálogo é o mesmo cabeçalho nas duas larguras.
         "flex w-full min-w-0 shrink-0 flex-col gap-2 text-left",
+        // **Sem tinta, e o motivo é medido.** A tira chegou a pintar um degradê
+        // (`from-popover` → transparente) para "a cor cheia encostar na
+        // dissolução". Sobre a placa translúcida isso é impossível: a placa é
+        // translúcida a 60% sobre o véu, e um token opaco no topo da tira é
+        // **mais claro** que ela — a faixa aparecia como banda na gaveta.
+        // Cor com alfa não tem "cor cheia" pintável sem empilhar. E a tira não
+        // precisa de tinta: o corpo é irmão dela e se mascara sozinho, então o
+        // fundo da tira **já é** a placa. Sem fio também — regra **J**.
         "group-data-[layout=fixed]/dialog-content:px-(--dialog-px)",
         "group-data-[layout=fixed]/dialog-content:pt-(--dialog-px)",
         "group-data-[layout=fixed]/dialog-content:pb-4",
@@ -286,16 +292,37 @@ function DialogHeader({
  * a pessoa rola. Por isso o `SheetContent` deixou de injetar, e quem quer o
  * botão o compõe.
  *
- * Funciona nos dois porque é a mesma primitiva do Radix. A posição flutuante
- * vem de fábrica por ser o caso comum; dentro de um cabeçalho fixo, passe
- * `className="static"` — ou use o `MobileSheetFormHeaderCloseButton`, que já
- * resolve o par com a alça da gaveta.
+ * Funciona nos dois porque é a mesma primitiva do Radix.
+ *
+ * **`placement` é onde ele pousa**, e o eixo nasceu de contagem: `floating` é o
+ * canto da superfície, o caso comum e o padrão; `inline` é dentro do cabeçalho,
+ * no `endAdornment` de um `DialogHeaderRow`. Numa folha de formulário o
+ * flutuante desaparece atrás do cabeçalho fixo assim que a pessoa rola, e por
+ * isso 9 telas montavam o botão à mão ali — 5 pelo
+ * `MobileSheetFormHeaderCloseButton`, que existia só para isso, e 4 escrevendo
+ * `Close` + `Button` + ícone por extenso. Com o eixo, a peça é uma só.
+ *
+ * O `-me-1` de `inline` é o recuo negativo que aquele componente trazia, na
+ * forma lógica: a caixa do botão é mais larga que o glifo, e sem ele o × fica
+ * visualmente afastado da borda do cabeçalho.
  */
+const dialogCloseButtonVariants = cva("", {
+  variants: {
+    placement: {
+      floating: "absolute top-3 right-3",
+      inline: "-me-1",
+    },
+  },
+  defaultVariants: { placement: "floating" },
+})
+
 function DialogCloseButton({
   className,
   label = "Fechar",
+  placement,
   ...props
-}: React.ComponentProps<typeof Button> & { label?: string }) {
+}: React.ComponentProps<typeof Button> &
+  VariantProps<typeof dialogCloseButtonVariants> & { label?: string }) {
   return (
     <DialogPrimitive.Close asChild>
       <Button
@@ -303,7 +330,7 @@ function DialogCloseButton({
         type="button"
         variant="tertiary"
         size="icon-sm"
-        className={cn("absolute top-3 right-3", className)}
+        className={cn(dialogCloseButtonVariants({ placement }), className)}
         {...props}
       >
         <XMarkIcon />
@@ -328,33 +355,37 @@ function DialogCloseButton({
  */
 function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    // A casca do borrão: ela hospeda o rolável e as camadas como **irmãos**, e
-    // é `relative` porque sem bloco de contenção o absoluto resolve contra um
-    // ancestral qualquer. O `className` de quem chama continua indo para o
-    // rolável — as chamadas passam recuo e ritmo de conteúdo, não layout.
-    <div className="relative flex min-h-0 flex-1 flex-col">
-      <div
-      ref={useScrollFade({ shell: true })}
+    <div
+      ref={useScrollFade()}
       data-slot="dialog-body"
       className={cn(
         "min-h-0 flex-1 overflow-y-auto overscroll-contain px-(--dialog-px) py-4",
-        // A dissolução das duas bordas, **no lugar dos dois fios**. É o modo
-        // sem faixa: o cabeçalho e o rodapé têm altura variável — título com
-        // ou sem descrição, botões que empilham no telefone —, e medi-los
-        // exigiria um observador escrevendo a altura do JS, com flash na
-        // primeira pintura. Aqui o conteúdo dissolve na borda do próprio
-        // corpo, e as duas faixas ficam onde estão.
+        // A dissolução das duas bordas, **no lugar dos dois fios** — e nada
+        // mais: sem faixa, sem sangramento, sem camada de borrão. É o modo sem
+        // faixa: o cabeçalho e o rodapé têm altura variável (título com ou sem
+        // descrição, botões que empilham no telefone), e o conteúdo dissolve na
+        // borda do próprio corpo, nos 44px de todo componente da casa.
         //
-        // Ele também traz a folga de rolagem, e ela é bem-vinda num formulário:
-        // um campo que ganha foco perto da borda para 48px dentro, fora da
-        // zona, em vez de encostar nela.
+        // **O piso aqui é zero, e não os 0,06 da casa.** A borda do corpo é a
+        // emenda com a tira, e a tira não pinta nada (sobre a placa translúcida,
+        // tinta vira banda). Com piso 0,06 o texto que atravessa a borda sai a
+        // 6–15% e é **recortado em seco** ali — uma linha nítida logo abaixo do
+        // título, medida. A zero o recorte cai em alfa zero e não existe. Os
+        // 0,06 servem à paleta, onde a ponta precisa dizer "há mais" sob um
+        // campo; aqui quem diz isso é a dissolução, e a emenda tem de sumir.
+        //
+        // Três rodadas tentaram somar o borrão do iOS aqui (sobra, faixa
+        // medida, faixa + material) e as três viraram um retângulo de tom —
+        // ver a invariante 6 em `lib/scroll-fade-classes`.
+        //
+        // Ele também traz a folga de rolagem, bem-vinda num formulário: um
+        // campo que ganha foco perto da borda para 48px dentro, fora da zona.
         scrollFadeViewportClassName,
+        "[--scroll-fade-floor:0]",
         className
       )}
       {...props}
     />
-      <ScrollFadeBlurLayers />
-    </div>
   )
 }
 
@@ -393,6 +424,7 @@ function DialogFooter({
         // explicar por que o `bg-muted/50` saiu daqui: o peso dos botões e o
         // recuo já dizem que ali começa outra coisa.
         "flex shrink-0 flex-col-reverse gap-2 rounded-b-xl",
+        // O par do cabeçalho: sem tinta, pelo mesmo motivo escrito lá.
         "-mx-(--dialog-bleed) -mb-(--dialog-bleed)",
         "px-(--dialog-px) py-4 sm:flex-row sm:justify-end",
         className

@@ -6,6 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Menubar as MenubarPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { barSurfaceClassName } from "@/lib/bar-classes"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
@@ -88,15 +89,36 @@ const MenubarContext = React.createContext<{
 const menubarVariants = cva("flex w-fit items-center gap-0.5 rounded-lg p-0.5", {
   variants: {
     variant: {
-      /** A barra que se sustenta sozinha, sobre a página. */
-      outline: "border border-border bg-background",
-      /** Dentro de um cabeçalho que já tem a própria moldura. */
+      /**
+       * A barra que se sustenta sozinha, sobre a página — e a única com o
+       * material do iOS.
+       *
+       * Ela veste a régua de barra (`lib/bar-classes`), a mesma do cabeçalho
+       * fixo: `--background` opaco de base, abrindo a 60% só onde o borrão
+       * existe. O painel que ela abre já era vidro; a fileira era tinta
+       * chapada, e era essa diferença que se via.
+       *
+       * **O borrão só desenha onde há o que borrar.** Sobre um cartão liso ela
+       * sai igual à opaca — o material aparece quando o conteúdo passa por
+       * baixo, que é a fileira no topo de uma região que rola.
+       */
+      outline: `border border-border ${barSurfaceClassName}`,
+      /**
+       * Dentro de um cabeçalho que já tem a própria moldura — e por isso ela
+       * **não** ganha material: o cabeçalho é que tem o vidro, e uma segunda
+       * superfície de vidro sobre a primeira empilha borrão sem desenhar nada.
+       */
       plain: "border border-transparent bg-transparent",
       /**
        * Bandeja preenchida, da mesma **tinta** que a do `TabsList` — e não da
        * mesma medida. Aqui o recuo é `p-0.5` mais borda; lá é `p-1`, porque é
        * o que mantém um anel de 3px dentro de uma trilha que rola. Uma barra de
        * menus não rola.
+       *
+       * **E ela também fica opaca**, medido: translúcida a 60% no escuro a
+       * bandeja cai de rgb 38 para 27 sobre a página — enfraquece e deixa de
+       * ler como bandeja —, e divergiria da `TabsList solid`, com quem ela é
+       * idêntica hoje. Bandeja é preenchimento; barra é chrome.
        */
       solid: "border border-transparent bg-muted",
     },

@@ -8,10 +8,12 @@ import {
   Dialog,
   DialogBody,
   DialogClose,
+  DialogCloseButton,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogHeaderRow,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
@@ -26,13 +28,10 @@ import {
 } from "@/components/ui/form"
 import { Kbd } from "@/components/ui/kbd"
 import { Label } from "@/components/ui/label"
-import {
-  MobileSheetFormBody,
-  MobileSheetFormStickyHeader,
-} from "@/components/ui/mobile-sheet-form-chrome"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Switch } from "@/components/ui/switch"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
-import { PhoneFrame, PhoneFrameSheet } from "../ds-frame"
+import { PhoneFrame } from "../ds-frame"
 
 export default function FormDoc() {
   return (
@@ -129,31 +128,51 @@ export default function FormDoc() {
 
       <DocSection
         title="Em folha no telefone"
-        description="Cabeçalho fixo, corpo rolável e FormActions variant='sticky' — o rodapé que o chrome de folha não tinha, e que cinco arquivos do app derivavam à mão com três !important."
-        code={`<SheetContent side="bottom" fillMobileViewport className={mobileFormSheetContentClassName}>
-  <MobileSheetFormStickyHeader
-    title="Nova transação"
-    endAdornment={<MobileSheetFormHeaderCloseButton />}
-  />
-  <Form layout="none" className="flex min-h-0 flex-1 flex-col">
-    <MobileSheetFormBody className="flex flex-col gap-4 pb-4">
-      <FormInput label="Descrição" />
-    </MobileSheetFormBody>
-    <FormActions variant="sticky">
-      <FormSubmit className="w-full">Salvar</FormSubmit>
-    </FormActions>
-  </Form>
-</SheetContent>`}
+        description="Cabeçalho fixo, corpo rolável e FormActions variant='sticky' — o rodapé que o chrome de folha não tinha, e que cinco arquivos do app derivavam à mão com três !important. A folha é de verdade: dentro da moldura de 375px o Sheet toma o ramo gaveta sozinho, então o que se abre aqui é o mesmo vaul da produção, com alça e arraste."
+        code={`<Sheet>
+  <SheetTrigger asChild><Button>Nova transação</Button></SheetTrigger>
+  <SheetContent side="bottom" fillMobileViewport>
+    <DialogHeader>
+      <DialogHeaderRow endAdornment={<DialogCloseButton placement="inline" />}>
+        <DialogTitle>Nova transação</DialogTitle>
+      </DialogHeaderRow>
+    </DialogHeader>
+    <Form layout="none" className="flex min-h-0 flex-1 flex-col">
+      <DialogBody>…</DialogBody>
+      <FormActions variant="sticky">
+        <FormSubmit className="w-full">salvar</FormSubmit>
+      </FormActions>
+    </Form>
+  </SheetContent>
+</Sheet>`}
         previewClassName="justify-center"
       >
         <EmFolhaDemo />
       </DocSection>
 
-      <DocNote title="O rodapé fixo não desenha fio nem tinta">
-        É a regra <strong>J</strong>: quem marca a fronteira é o conteúdo
-        dissolvendo na borda do <code>MobileSheetFormBody</code> logo acima. E ele
-        não traz área segura — ela é da <strong>superfície</strong>, e o casco da
-        folha já a carrega; somar aqui dobraria o recuo.
+      <DocNote title="O rodapé fixo não desenha fio — nem tinta">
+        Quem marca a fronteira é o conteúdo dissolvendo na borda do{" "}
+        <code>DialogBody</code> logo acima, nos mesmos 44px de todo
+        componente da casa. A tira não pinta nada: ela é irmã do corpo, que se
+        mascara sozinho, então o fundo dela <strong>já é</strong> a placa da
+        folha. Ela chegou a pintar um degradê — cor cheia na ponta de fora,
+        transparente encostando no fade — e isso saía como uma{" "}
+        <strong>banda</strong>: a placa é <code>--popover</code> a 60%, e um{" "}
+        <code>--popover</code> opaco no topo da tira é mais claro que ela. Cor
+        com alfa não tem cor cheia pintável sem empilhar. E ele não traz área
+        segura — ela é da <strong>superfície</strong>, e o casco da folha já a
+        carrega.
+      </DocNote>
+
+      <DocNote title="Sem o borrão do iOS, e é medido">
+        Três rodadas tentaram somar as camadas de borrão a estas tiras — com
+        sobra, com faixa medida, com faixa e modo material — e as três viraram um
+        retângulo de tom no meio da folha. A causa é a mesma nas três: a camada é
+        um <code>backdrop-filter</code>, e ou a aresta dela cai exposta contra a
+        tira transparente, ou a máscara já levou o conteúdo ao piso e o borrão
+        fica sem o que borrar. Onde a tira tem altura desconhecida, a resposta é a
+        máscara sozinha. A paleta de comandos, com faixa escrita à
+        mão e conteúdo denso, é quem fica com o borrão.
       </DocNote>
 
       <DocSection
@@ -288,7 +307,7 @@ export default function FormDoc() {
             prop: "FormActions variant",
             type: '"inline" | "sticky"',
             description:
-              "inline é a fileira comum; sticky é o rodapé fixo de uma folha, sem fio, sem tinta e sem área segura.",
+              "inline é a fileira comum; sticky é o rodapé fixo de uma folha: sem fio, sem tinta (o fundo já é a placa), e sem área segura.",
           },
           {
             prop: "FormActions align",
@@ -433,56 +452,71 @@ function EmFolhaDemo() {
   const [valor, setValor] = React.useState("")
 
   return (
-    <PhoneFrame title="Prévia da folha de nova transação num telefone">
-      <PhoneFrameSheet>
-        {/* `children` em vez de `title`: com `title` a peça renderiza um
-            `DialogTitle`, que exige o contexto do `Dialog` — e esta
-            demonstração é a casca da folha fora de uma folha. Numa tela de
-            verdade é `title` que se usa, e é ele que dá o nome acessível. */}
-        <MobileSheetFormStickyHeader>
-          <p className="font-heading text-base leading-tight font-medium">
+    <PhoneFrame title="Folha de nova transação num telefone">
+      {/* A folha é real, e é o que a tela do app monta. Dentro da moldura o
+          `useIsMobile` lê a janela de dentro, então a 375px o `Sheet` toma o
+          ramo gaveta — o que abre aqui é o `vaul`, com alça, arraste e véu.
+          Ela só pôde deixar de ser maquete quando o ramo gaveta passou a
+          portalizar para o `body` da janela ativa: sem isso a folha escapava
+          do `<iframe>` e cobria a página do catálogo. */}
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="outline" className="m-auto">
             Nova transação
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Salvos: <span className="nums">{salvos}</span>
-          </p>
-        </MobileSheetFormStickyHeader>
-        <Form
-          layout="none"
-          className="flex min-h-0 flex-1 flex-col"
-          onSubmit={(e) => {
-            e.preventDefault()
-            setSalvos((v) => v + 1)
-          }}
-        >
-          <MobileSheetFormBody className="flex flex-col gap-4 pb-4">
-            <FormInput label="Descrição" placeholder="Mercado" />
-            <FormInput
-              money
-              label="Valor"
-              value={valor}
-              onValueChange={setValor}
-            />
-            <FormInput label="Data" placeholder="05/09/2026" />
-            <FormInput label="Categoria" placeholder="Alimentação" optional />
-            <FormInput label="Conta" placeholder="Nubank" />
-            <FormInput label="Etiquetas" placeholder="mensal, casa" optional />
-            {/* Sete campos, e não três. Um formulário curto não precisaria de
-                cabeçalho fixo nem de rodapé fixo — o padrão que esta seção
-                documenta só existe porque o corpo não cabe. Com três, ele
-                transbordava 17px, menos que os 44 da rampa de dissolução. */}
-            <FormTextarea
-              label="Observação"
-              placeholder="Compra do mês"
-              optional
-              rows={4}
-            />
-          </MobileSheetFormBody>
-          <FormActions variant="sticky">
-            <FormSubmit className="w-full">Salvar</FormSubmit>
-          </FormActions>
-        </Form>
-      </PhoneFrameSheet>
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="bottom" fillMobileViewport>
+          {/* A cromagem é a do `Dialog`, nas duas superfícies — é o que a casa
+              já dizia da folha ("não existem `SheetHeader`/`SheetFooter`") e o
+              que o chrome de folha contradizia. O `DialogTitle` acha o contexto
+              aqui porque as três superfícies são a mesma primitiva do Radix. */}
+          <DialogHeader>
+            <DialogHeaderRow
+              endAdornment={<DialogCloseButton placement="inline" />}
+            >
+              <DialogTitle>Nova transação</DialogTitle>
+              <DialogDescription>
+                Salvos: <span className="nums">{salvos}</span>
+              </DialogDescription>
+            </DialogHeaderRow>
+          </DialogHeader>
+          <Form
+            layout="none"
+            className="flex min-h-0 flex-1 flex-col"
+            onSubmit={(e) => {
+              e.preventDefault()
+              setSalvos((v) => v + 1)
+            }}
+          >
+            <DialogBody className="flex flex-col gap-4 pb-4">
+              <FormInput label="Descrição" placeholder="Mercado" />
+              <FormInput
+                money
+                label="Valor"
+                value={valor}
+                onValueChange={setValor}
+              />
+              <FormInput label="Data" placeholder="05/09/2026" />
+              <FormInput label="Categoria" placeholder="Alimentação" optional />
+              <FormInput label="Conta" placeholder="Nubank" />
+              <FormInput label="Etiquetas" placeholder="mensal, casa" optional />
+              {/* Sete campos, e não três. Um formulário curto não precisaria de
+                  cabeçalho fixo nem de rodapé fixo — o padrão que esta seção
+                  documenta só existe porque o corpo não cabe. Com três, ele
+                  transbordava 17px, menos que os 44 da rampa de dissolução. */}
+              <FormTextarea
+                label="Observação"
+                placeholder="Compra do mês"
+                optional
+                rows={4}
+              />
+            </DialogBody>
+            <FormActions variant="sticky">
+              <FormSubmit className="w-full">Salvar</FormSubmit>
+            </FormActions>
+          </Form>
+        </SheetContent>
+      </Sheet>
     </PhoneFrame>
   )
 }

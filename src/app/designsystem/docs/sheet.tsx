@@ -182,6 +182,13 @@ export default function SheetDoc() {
               "De onde ela entra — no desktop. Laterais tomam a altura e param em 384px; topo e base tomam a largura. No telefone é ignorado: ali é sempre gaveta de baixo.",
           },
           {
+            prop: "variant",
+            type: '"flush" | "floating"',
+            default: '"flush"',
+            description:
+              "Se ela encosta na tela ou flutua sobre ela — no desktop, onde a folha é um painel de borda. No telefone é ignorado, pelo mesmo motivo que side é: ali a superfície é a gaveta do vaul.",
+          },
+          {
             prop: "fillMobileViewport",
             type: "boolean",
             default: "false",

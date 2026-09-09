@@ -1,26 +1,22 @@
 "use client"
 
-import { XMarkIcon } from "@heroicons/react/20/solid"
 import { useState } from "react"
 import { useWorkspace } from "@/components/workspace-provider"
 import { WorkspaceAppearanceFormFields } from "@/components/workspace/workspace-appearance-form-fields"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
+  DialogCloseButton,
   DialogContent,
   DialogFooter,
   DialogHeader,
+  DialogHeaderRow,
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
   Sheet,
-  SheetClose,
   SheetContent,
 } from "@/components/ui/sheet"
-import {
-    MobileSheetFormStickyHeader,
-    mobileFormSheetContentClassName,
-} from "@/components/ui/mobile-sheet-form-chrome"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { CustomForm } from "@/components/ui/form"
 import { cn } from "@/lib/utils"
@@ -37,22 +33,6 @@ const dialogFooterClass =
 const sheetFooterMobileClass =
     "mt-0 shrink-0 flex-col gap-2 border-t border-border bg-background px-4 py-4"
 
-function sheetHeaderCloseControl(submitting: boolean) {
-    return (
-        <SheetClose asChild>
-            <Button
-                type="button"
-                variant="tertiary"
-                size="icon-sm"
-                className="shrink-0 -mr-1"
-                aria-label="Fechar"
-                disabled={submitting}
-            >
-                <XMarkIcon className="h-5 w-5" aria-hidden />
-            </Button>
-        </SheetClose>
-    )
-}
 
 export function ProjectFormDialog({
     open,
@@ -154,12 +134,12 @@ export function ProjectFormDialog({
                 <SheetContent
                     side="bottom"
                     fillMobileViewport
-                    className={mobileFormSheetContentClassName}
                 >
-                    <MobileSheetFormStickyHeader
-                        title="Nova carteira"
-                        endAdornment={sheetHeaderCloseControl(submitting)}
-                    />
+                    <DialogHeader>
+                        <DialogHeaderRow endAdornment={<DialogCloseButton placement="inline" disabled={submitting} />}>
+                            <DialogTitle>Nova carteira</DialogTitle>
+                        </DialogHeaderRow>
+                    </DialogHeader>
                     {innerForm}
                 </SheetContent>
             </Sheet>

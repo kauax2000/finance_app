@@ -5,21 +5,18 @@ import { useEffect, useRef, useState } from "react"
 import { useAuth } from "@/components/providers"
 import {
   Dialog,
+  DialogCloseButton,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogHeaderRow,
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
   Sheet,
   SheetContent,
 } from "@/components/ui/sheet"
-import {
-    MobileSheetFormHeaderCloseButton,
-    MobileSheetFormStickyHeader,
-    mobileFormSheetContentClassName,
-} from "@/components/ui/mobile-sheet-form-chrome"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { CustomForm } from "@/components/ui/form"
 import { Spinner } from "@/components/ui/spinner"
@@ -449,15 +446,13 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                 <SheetContent
                     side="bottom"
                     fillMobileViewport
-                    className={mobileFormSheetContentClassName}
                 >
-                    <MobileSheetFormStickyHeader
-                        title="Editar perfil"
-                        description="Atualize suas informações pessoais"
-                        endAdornment={
-                            <MobileSheetFormHeaderCloseButton disabled={saving} />
-                        }
-                    />
+                    <DialogHeader>
+                        <DialogHeaderRow endAdornment={<DialogCloseButton placement="inline" disabled={saving} />}>
+                            <DialogTitle>Editar perfil</DialogTitle>
+                            <DialogDescription>Atualize suas informações pessoais</DialogDescription>
+                        </DialogHeaderRow>
+                    </DialogHeader>
                     {profileForm}
                 </SheetContent>
             </Sheet>

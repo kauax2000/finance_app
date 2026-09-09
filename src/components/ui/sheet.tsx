@@ -7,7 +7,11 @@ import { Drawer as DrawerPrimitive } from "vaul"
 
 import { cn } from "@/lib/utils"
 import { modalSurfaceClassName } from "@/lib/modal-classes"
-import { useIsMobile } from "@/hooks/use-mobile"
+import {
+  useIsMobile,
+  useViewportModal,
+  useViewportWindow,
+} from "@/hooks/use-mobile"
 import { DragHandle } from "@/components/ui/drag-handle"
 import {
   EdgePanelContent,
@@ -62,6 +66,10 @@ function Sheet({
 }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   const isMobile = useIsMobile()
   const surface: SheetSurface = isMobile ? "drawer" : "sheet"
+  // Dentro da moldura do catálogo ela deixa de ser modal — senão o
+  // `RemoveScroll` do Radix trava a rolagem da **página de fora**. Antes de
+  // `{...props}`, para quem chama continuar mandando. Ver `useViewportModal`.
+  const modal = useViewportModal()
 
   return (
     <SheetSurfaceContext.Provider value={surface}>
@@ -69,11 +77,16 @@ function Sheet({
         // `repositionInputs` é o motivo de o `fillMobileViewport` ter existido:
         // é ele que impede a superfície de encolher quando o teclado do iOS
         // sobe. O vaul faz isso de fábrica; o CSS anterior tentava fazer à mão.
-        <DrawerPrimitive.Root direction="bottom" repositionInputs {...props}>
+        <DrawerPrimitive.Root
+          direction="bottom"
+          repositionInputs
+          modal={modal}
+          {...props}
+        >
           {children}
         </DrawerPrimitive.Root>
       ) : (
-        <SheetPrimitive.Root data-slot="sheet" {...props}>
+        <SheetPrimitive.Root data-slot="sheet" modal={modal} {...props}>
           {children}
         </SheetPrimitive.Root>
       )}
@@ -136,6 +149,7 @@ function SheetContent({
   className,
   children,
   side = "right",
+  variant,
   fillMobileViewport = false,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> &
@@ -151,10 +165,16 @@ function SheetContent({
     fillMobileViewport?: boolean
   }) {
   const surface = useSheetSurface()
+  // O portal do ramo gaveta vai para o `body` da **janela ativa**, como o do
+  // `EdgePanel` que o ramo desktop usa. Fora da moldura do catálogo o contexto
+  // é `null` e o vaul usa o próprio documento — o app não muda. Dentro dela é o
+  // que impede a folha de escapar do `<iframe>`: a moldura faz o `useIsMobile`
+  // ler a janela de dentro, então a 375px o ramo gaveta é o que renderiza ali.
+  const janela = useViewportWindow()
 
   if (surface === "drawer") {
     return (
-      <DrawerPrimitive.Portal>
+      <DrawerPrimitive.Portal container={janela?.document.body}>
         <DrawerPrimitive.Overlay
           data-slot="sheet-overlay"
           className={EDGE_PANEL_OVERLAY_CLASS}
@@ -166,7 +186,19 @@ function SheetContent({
           data-layout="fixed"
           className={cn(
             "group/dialog-content fixed inset-x-0 bottom-0 z-(--z-sheet)",
-            "flex flex-col rounded-t-2xl border-t text-sm shadow-lg",
+            "flex flex-col overflow-hidden rounded-t-2xl border-t text-sm shadow-lg",
+            // **A área segura é da superfície**, e ela só chegou aqui na rodada
+            // 60. Até lá quem a dava era uma classe que as telas importavam
+            // (`mobileFormSheetContentClassName`), e por isso 19 folhas a
+            // tinham e 7 não — as que não tinham punham o botão de salvar sob a
+            // barra de gestos do iPhone. O `DrawerContent` já fazia certo; esta
+            // é a mesma conta, com os 24px que a classe trazia preservados.
+            //
+            // Variável, e não número, pelo mesmo motivo do `Drawer`: uma folha
+            // que precise de outro respiro sobrescreve sem reescrever a fórmula
+            // do `env()`.
+            "pb-(--sheet-drawer-safe)",
+            "[--sheet-drawer-safe:calc(--spacing(6)+env(safe-area-inset-bottom,0px))]",
             modalSurfaceClassName,
             // O mesmo contrato do painel, escrito lá.
             "[--dialog-px:--spacing(4)] [--dialog-bleed:0px]",
@@ -197,9 +229,16 @@ function SheetContent({
 
   // No desktop a folha **é** um painel de borda — e é o mesmo componente que a
   // navegação usa, para a moldura, a animação e o véu existirem uma vez só.
+  //
+  // `variant` é destruturado acima e **não** chega ao ramo gaveta, pelo mesmo
+  // motivo que `side` não chega: ali a superfície é o `vaul`, e a prop não vale.
+  // Sem destruturar ele cairia em `{...props}` e seria espalhado como atributo
+  // desconhecido no DOM — o tipo do `SheetContent` herda o eixo sozinho, via
+  // `VariantProps<typeof edgePanelContentVariants>`.
   return (
     <EdgePanelContent
       side={side}
+      variant={variant}
       data-slot="sheet-content"
       data-surface="sheet"
       className={className}

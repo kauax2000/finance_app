@@ -470,7 +470,7 @@ export default function SidebarDoc() {
 
       <DocSection
         title="No telefone"
-        description="Abaixo de 768px ela deixa de ser trilho e vira um painel de borda, com véu e foco preso. Não é uma folha de baixo: navegação entra pelo lado em qualquer largura — uma gaveta com alça de arraste para listar seis links seria a promessa errada."
+        description="Abaixo de 768px ela deixa de ser trilho e vira um painel de borda — com véu e foco preso na tela de verdade; aqui dentro da moldura não, e a nota abaixo diz por quê. Não é uma folha de baixo: navegação entra pelo lado em qualquer largura — uma gaveta com alça de arraste para listar seis links seria a promessa errada."
         code={`// Nada muda na chamada. A superfície se escolhe dentro do componente.
 <Sidebar collapsible="offcanvas">…</Sidebar>`}
         previewClassName="justify-center p-4"
@@ -478,7 +478,7 @@ export default function SidebarDoc() {
         <DemoTelefone />
       </DocSection>
 
-      <DocNote title="O painel abre dentro da moldura, e isso custou duas correções">
+      <DocNote title="O painel abre dentro da moldura, e isso custou três correções">
         Um portal do Radix vai para o <code>document.body</code>, e o React da
         moldura roda na janela de fora — sem conserto, o painel escaparia do
         telefone e cobriria esta página. E <code>useIsMobile</code> lia{" "}
@@ -486,6 +486,17 @@ export default function SidebarDoc() {
         desktop enquanto o CSS a escondia com <code>md:</code>: não renderizaria
         nada. As duas eram limitações declaradas da moldura desde que ela
         nasceu, e fecharam aqui.
+        <br />
+        <br />
+        A terceira é a mesma janela pelo outro lado:{" "}
+        <strong>aqui dentro o painel não é modal</strong>. O Radix monta um{" "}
+        <code>RemoveScroll</code> dentro do <code>DialogOverlay</code> sempre que{" "}
+        <code>modal</code>, e ele trava o <code>document</code> de fora — medido,{" "}
+        <code>data-scroll-locked</code> no <code>body</code> desta página e o{" "}
+        <code>wheel</code> saindo <code>defaultPrevented</code>: abrir o painel
+        de um espécime congelava a página inteira. O custo é o véu, que some
+        junto — é ele quem trava a rolagem, e por isso o <code>Overlay</code> do
+        Radix devolve <code>null</code> fora do modo modal.
       </DocNote>
 
       <DocSection

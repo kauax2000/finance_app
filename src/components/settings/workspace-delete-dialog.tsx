@@ -16,10 +16,6 @@ import {
   Sheet,
   SheetContent,
 } from "@/components/ui/sheet"
-import {
-    MobileSheetFormStickyHeader,
-    mobileFormSheetContentClassName,
-} from "@/components/ui/mobile-sheet-form-chrome"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
@@ -241,12 +237,13 @@ export function WorkspaceDeleteDialog({
                 <SheetContent
                     side="bottom"
                     fillMobileViewport
-                    className={mobileFormSheetContentClassName}
                 >
-                    <MobileSheetFormStickyHeader
-                        title="Excluir carteira"
-                        description="Esta ação é permanente e não pode ser desfeita."
-                    />
+                    <DialogHeader>
+                        <DialogTitle>Excluir carteira</DialogTitle>
+                        <DialogDescription>
+                            Esta ação é permanente e não pode ser desfeita.
+                        </DialogDescription>
+                    </DialogHeader>
                     <div className="flex min-h-0 flex-1 flex-col">{scrollBody}</div>
                     {footerActions}
                 <DialogCloseButton />

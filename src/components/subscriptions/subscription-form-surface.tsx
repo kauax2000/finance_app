@@ -1,42 +1,21 @@
 "use client"
 
-import { XMarkIcon } from "@heroicons/react/20/solid"
 import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
+  DialogCloseButton,
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogHeaderRow,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  SheetClose,
-} from "@/components/ui/sheet"
-import {
-    MobileSheetFormStickyHeader,
-} from "@/components/ui/mobile-sheet-form-chrome"
 import {
     SubscriptionFormFields,
     type SubscriptionFormFieldsProps,
 } from "@/components/subscriptions/subscription-form-fields"
 
-function sheetHeaderCloseControl(saving: boolean) {
-    return (
-        <SheetClose asChild>
-            <Button
-                type="button"
-                variant="tertiary"
-                size="icon-sm"
-                className="shrink-0 -mr-1"
-                aria-label="Fechar"
-                disabled={saving}
-            >
-                <XMarkIcon className="h-5 w-5" aria-hidden />
-            </Button>
-        </SheetClose>
-    )
-}
 
 export type SubscriptionFormSurfaceVariant =
     | "dialog-desktop"
@@ -114,10 +93,10 @@ export function SubscriptionFormSurface({
     if (variant === "dialog-mobile") {
         return (
             <>
-                <MobileSheetFormStickyHeader
-                    title={formTitle}
-                    description={formDescription}
-                />
+                <DialogHeader>
+                    <DialogTitle>{formTitle}</DialogTitle>
+                    <DialogDescription>{formDescription}</DialogDescription>
+                </DialogHeader>
                 <CustomForm
                     onSubmit={handleSubmit}
                     className="flex min-h-0 flex-1 flex-col"
@@ -141,11 +120,12 @@ export function SubscriptionFormSurface({
                 onSubmit={handleSubmit}
                 className="flex min-h-0 flex-1 flex-col"
             >
-                <MobileSheetFormStickyHeader
-                    title={formTitle}
-                    description={formDescription}
-                    endAdornment={sheetHeaderCloseControl(saving)}
-                />
+                <DialogHeader>
+                    <DialogHeaderRow endAdornment={<DialogCloseButton placement="inline" disabled={saving} />}>
+                        <DialogTitle>{formTitle}</DialogTitle>
+                        <DialogDescription>{formDescription}</DialogDescription>
+                    </DialogHeaderRow>
+                </DialogHeader>
                 <div className={fieldsScrollClass}>
                     <SubscriptionFormFields {...fieldsProps} />
                 </div>

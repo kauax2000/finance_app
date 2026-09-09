@@ -50,6 +50,12 @@ const REDONDO = CSS.slice(
 ).replace(/\/\*[\s\S]*?\*\//g, " ")
 
 /** A superfície das peças que flutuam — menus, seletor, popover, prévia. */
+/** Lê um arquivo do repositório sem comentários — o corte que a 26 já usava. */
+const semComentariosDe = (caminho: string) =>
+    readFileSync(join(process.cwd(), caminho), "utf8")
+        .replace(/\/\*[\s\S]*?\*\//g, " ")
+        .replace(/(^|[^:])\/\/.*$/gm, "$1")
+
 const SUPERFICIE_FLUTUANTE = readFileSync(
     join(process.cwd(), "src/lib/menu-classes.ts"),
     "utf8"
@@ -273,157 +279,94 @@ describe("a superfície de vidro", () => {
         expect(avatar).toMatch(/=== "circle"/)
     })
 
-    it("23. a superfície flutuante veste o material da casa, e não escreve o próprio", () => {
-        const i = SUPERFICIE_FLUTUANTE.indexOf("menuPanelSurfaceClassName")
-        expect(i).toBeGreaterThan(-1)
-        const receita = SUPERFICIE_FLUTUANTE.slice(
-            i,
-            SUPERFICIE_FLUTUANTE.indexOf("].join(", i)
-        )
-
-        // Uma superfície flutuante tem conteúdo passando por baixo — é o lado do
-        // `backdrop-filter` da régua dos dois vidros. E o material é o da casa:
-        // uma segunda receita de borrão aqui seria a quarta.
-        expect(receita).toContain("glass-surface")
-        // Ancorado na **classe de borrão**, e não na string solta: o variante
-        // `supports-backdrop-filter:` contém `backdrop-filter` de propósito, e
-        // uma varredura ingênua acusa a própria receita.
-        expect(receita).not.toMatch(/\bbackdrop-blur/)
-
-        // Um blur de verdade obriga o guarda, e a cor sólida é de quem veste.
-        expect(receita).toContain("reduced-transparency:bg-popover")
+    it("23. as duas réguas vestem o mesmo material do iOS, cada uma no seu token", () => {
+        // Uma superfície elevada tem conteúdo passando por baixo — é o lado do
+        // `backdrop-filter` da régua dos dois vidros, e o material é o do
+        // cabeçalho. **Os tokens são dois, e a tela decidiu**: a modal chegou a
+        // ser `--popover` para igualar o DatePicker, e a 60% sobre a página
+        // velada ela compôs acima de tudo atrás e leu como opaca. `--background`
+        // afunda no véu, e é o borrão que a distingue.
+        for (const [nome, regua, ancora, token] of [
+            ["flutuante", SUPERFICIE_FLUTUANTE, "menuPanelSurfaceClassName", "popover"],
+            ["modal", semComentariosDe("src/lib/modal-classes.ts"), "modalSurfaceClassName", "background"],
+        ] as const) {
+            const i = regua.indexOf(ancora)
+            expect(i, `${nome}: régua não achada`).toBeGreaterThan(-1)
+            const receita = regua.slice(i, regua.indexOf("].join(", i))
+            expect(receita, `${nome}: sem material`).toContain("glass-surface")
+            // Ancorado na classe de borrão: o variante `supports-backdrop-filter:`
+            // contém a string `backdrop-filter` de propósito.
+            expect(receita, `${nome}: borrão próprio`).not.toMatch(/\bbackdrop-blur/)
+            expect(receita, `${nome}: sem guarda`).toContain(`reduced-transparency:bg-${token}`)
+            expect(receita, `${nome}: token errado`).not.toMatch(new RegExp(`bg-${token === "popover" ? "background" : "popover"}`))
+            // O escuro abre mais, e só onde o borrão existe.
+            const base = Number(receita.match(new RegExp(`(?<!dark:)bg-${token}/(\\d+)`))?.[1])
+            const escuro = Number(receita.match(new RegExp(`supports-backdrop-filter:dark:bg-${token}/(\\d+)`))?.[1])
+            expect(base, `${nome}: alfa base`).toBeGreaterThan(0)
+            expect(escuro, `${nome}: alfa do escuro`).toBeGreaterThan(0)
+            expect(escuro).toBeLessThan(base)
+        }
     })
 
-    it("24. o alfa abre no escuro e fecha no claro, e o número é o contraste", () => {
-        const receita = SUPERFICIE_FLUTUANTE.slice(
-            SUPERFICIE_FLUTUANTE.indexOf("menuPanelSurfaceClassName"),
-            SUPERFICIE_FLUTUANTE.indexOf("].join(")
-        )
-        const base = Number(receita.match(/(?<!dark:)bg-popover\/(\d+)/)?.[1])
-        const escuro = Number(
-            receita.match(/supports-backdrop-filter:dark:bg-popover\/(\d+)/)?.[1]
-        )
-        expect(base, "o alfa base precisa existir").toBeGreaterThan(0)
-        expect(escuro, "o alfa do escuro precisa existir").toBeGreaterThan(0)
-
-        // **O escuro abre mais.** No claro o `--popover` é branco e o pior fundo
-        // é o verde do `primary`: um branco a 60% sobre ele vira cinza-esverdeado
-        // e o `--muted-foreground` cai a 3,00 — a 85% ele volta a 4,72. No escuro
-        // 60% já dá 4,64. Medido contra o que **preenche área** atrás de um menu.
-        expect(escuro).toBeLessThan(base)
-
-        // E o escuro só abre onde o borrão existe: sem `backdrop-filter`, uma
-        // superfície translúcida é pior que uma opaca.
-        expect(receita).toContain("supports-backdrop-filter:dark:")
+    it("24. uma placa por superfície — o Command hospedado não pinta", () => {
+        // Duas placas a 60% empilhadas dão 84%: o Combobox (popover + `Command`)
+        // saía mais claro que o DatePicker (o mesmo popover, uma placa). Era o
+        // que lia como "fundo quebrado" — o tom, não o material. Quem hospeda
+        // pinta; o `Command` só pinta na variante `panel`, solto numa página.
+        const paleta = semComentariosDe("src/components/ui/command.tsx")
+        const cva = paleta.slice(paleta.indexOf("const commandVariants"), paleta.indexOf("defaultVariants", paleta.indexOf("const commandVariants")))
+        const base = cva.slice(0, cva.indexOf("variants:"))
+        expect(base, "a base do Command pinta").not.toContain("menuPanelSurfaceClassName")
+        expect(base, "a base do Command tem tinta").not.toMatch(/\bbg-popover/)
+        expect(cva, "a variante panel perdeu a placa").toMatch(/panel:\s*menuPanelSurfaceClassName/)
+        // E o casco do `CommandDialog` pinta — sem neutralizador nenhum. (O
+        // `bg-transparent` do campo de busca, mais abaixo, é outro elemento.)
+        const dialogo = paleta.slice(paleta.indexOf("function CommandDialog"), paleta.indexOf("function CommandInput"))
+        expect(dialogo.length, "bloco do CommandDialog não achado").toBeGreaterThan(0)
+        expect(dialogo).not.toMatch(/\bbg-transparent\b/)
+        // E pinta o tom do popover, nos três estados da régua — a paleta é uma
+        // superfície de comandos, não um diálogo.
+        expect(dialogo).toContain("bg-popover/85 supports-backdrop-filter:dark:bg-popover/60 reduced-transparency:bg-popover")
+        expect(paleta).not.toContain("supports-backdrop-filter:dark:bg-transparent")
+        expect(paleta).not.toContain("reduced-transparency:bg-transparent")
     })
 
     it("25. a receita é uma só — as cópias à mão não voltam", () => {
         // Ela esteve escrita em **cinco** lugares: a régua e cópias em `Select`,
         // `Popover`, `HoverCard` e `Tooltip`, com o doc da régua afirmando ter
         // extraído as quatro. A do `Tooltip` ainda divergia — `rounded-md` e
-        // `border` contra o `rounded-lg` e o `ring` de todas as outras. Agora os
-        // cinco a importam.
-        const COPIAS = [
-            "select",
-            "popover",
-            "hover-card",
-            "command",
-            "tooltip",
-        ] as const
-        for (const nome of COPIAS) {
-            const src = readFileSync(
-                join(process.cwd(), `src/components/ui/${nome}.tsx`),
-                "utf8"
-            ).replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/.*$/gm, "$1")
-
-            expect(src, `${nome} precisa vestir a régua`).toContain(
-                "menuPanelSurfaceClassName"
-            )
-            // A marca da cópia: a superfície escrita à mão ao lado da régua.
+        // `border` contra o `rounded-lg` e o `ring` de todas as outras.
+        for (const nome of ["select", "popover", "hover-card", "command", "tooltip"] as const) {
+            const src = semComentariosDe(`src/components/ui/${nome}.tsx`)
+            expect(src, `${nome} precisa vestir a régua`).toContain("menuPanelSurfaceClassName")
             expect(src, `${nome} tem cópia da superfície`).not.toMatch(
                 /rounded-lg[^"]*bg-popover[^"]*ring-foreground\/10/
             )
-            // E ninguém escreve borrão próprio — a paleta tinha o dela.
-            expect(src, `${nome} escreve borrão próprio`).not.toMatch(
-                /\bbackdrop-blur/
-            )
+            expect(src, `${nome} escreve borrão próprio`).not.toMatch(/\bbackdrop-blur/)
         }
-
         // O `Select` repintava a superfície nos dois botões de rolagem: com a
-        // casca translúcida, um `bg-popover` opaco ali vira uma faixa sólida no
-        // topo e na base do menu.
-        const select = readFileSync(
-            join(process.cwd(), "src/components/ui/select.tsx"),
-            "utf8"
-        ).replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/.*$/gm, "$1")
-        expect(select).not.toMatch(/justify-center bg-popover/)
+        // casca translúcida, um `bg-popover` opaco ali vira uma faixa sólida.
+        expect(semComentariosDe("src/components/ui/select.tsx")).not.toMatch(/justify-center bg-popover/)
     })
 
-    it("26. as cinco superfícies modais vestem a régua, e a paleta a desfaz", () => {
-        const semComentarios = (caminho: string) =>
-            readFileSync(join(process.cwd(), caminho), "utf8")
-                .replace(/\/\*[\s\S]*?\*\//g, " ")
-                .replace(/(^|[^:])\/\/.*$/gm, "$1")
-
-        const regua = semComentarios("src/lib/modal-classes.ts")
-
-        // O material é o da casa. Uma segunda receita de borrão aqui seria a
-        // sexta grafia do repositório.
-        expect(regua).toContain("glass-surface")
-        // Ancorado na classe: o variante `supports-backdrop-filter:` carrega a
-        // string `backdrop-filter` de propósito.
-        expect(regua).not.toMatch(/\bbackdrop-blur/)
-        // Um borrão de verdade obriga o guarda, e a cor sólida é de quem veste.
-        expect(regua).toContain("reduced-transparency:bg-background")
-
-        // O alfa é o par das superfícies flutuantes: a base serve o claro **e**
-        // é o fallback de quem não tem `backdrop-filter`; o escuro abre, e só
-        // onde o borrão existe — a 60% no claro o `--muted-foreground` cai a
-        // 2,58 sobre o pior fundo real, e reprova.
-        const base = Number(regua.match(/(?<!dark:)bg-background\/(\d+)/)?.[1])
-        const escuro = Number(
-            regua.match(/supports-backdrop-filter:dark:bg-background\/(\d+)/)?.[1]
-        )
-        expect(base).toBeGreaterThan(0)
-        expect(escuro).toBeGreaterThan(0)
-        expect(escuro).toBeLessThan(base)
-
-        // **As quatro superfícies a vestem, e nenhuma reescreve a placa.** Elas
-        // pintavam `bg-background` cru cada uma no próprio arquivo; somar o
-        // vidro sem extrair produziria a quarta cópia da receita, que é a
-        // trajetória que levou a superfície flutuante a cinco.
-        //
+    it("26. as quatro superfícies modais vestem a régua, e nada repinta por dentro", () => {
         // O `Sheet` aparece uma vez só porque no desktop ele delega ao
         // `EdgePanelContent` — quem escreve placa ali é o ramo gaveta.
-        for (const nome of [
-            "dialog",
-            "edge-panel",
-            "sheet",
-            "drawer",
-        ] as const) {
-            const src = semComentarios(`src/components/ui/${nome}.tsx`)
-            expect(src, `${nome} precisa vestir a régua`).toContain(
-                "modalSurfaceClassName"
-            )
-            // A marca da cópia: o token opaco ao lado da cromagem da placa.
-            expect(src, `${nome} tem cópia da superfície`).not.toMatch(
-                /\bbg-background text-sm shadow-lg/
-            )
-            // E nenhuma peça interna repinta por cima da placa translúcida —
-            // é o defeito que os `ScrollButton` do `Select` tiveram.
-            expect(src, `${nome} repinta a placa por dentro`).not.toMatch(
-                /"[^"]*\bbg-background(?![-/])/
-            )
+        for (const nome of ["dialog", "edge-panel", "sheet", "drawer"] as const) {
+            const src = semComentariosDe(`src/components/ui/${nome}.tsx`)
+            expect(src, `${nome} precisa vestir a régua`).toContain("modalSurfaceClassName")
+            // A marca da cópia, nos dois tokens que a placa já teve.
+            expect(src, `${nome} tem cópia da superfície`).not.toMatch(/\bbg-(?:background|popover) text-sm shadow-lg/)
+            // Nenhuma peça interna repinta por cima da placa translúcida — é o
+            // defeito que os `ScrollButton` do `Select` tiveram, e que as tiras
+            // repetiram com um degradê `from-popover`: cor com alfa não tem cor
+            // cheia pintável, e o opaco saía como banda (17b em `scroll-fade`).
+            expect(src, `${nome} repinta a placa por dentro`).not.toMatch(/"[^"]*\bbg-(?:background|popover)(?![-/])/)
+            expect(src, `${nome} pinta degradê sobre a placa`).not.toMatch(/\bfrom-(?:background|popover)\b/)
         }
-
-        // **O casco do `CommandDialog` precisa dos dois neutralizadores sob
-        // variante.** Ele é transparente porque quem pinta é o `Command` de
-        // dentro; o `twMerge` derruba a `bg-*` base e **não** as que vivem sob
-        // `supports-` e sob `reduced-transparency:`. Sem eles a paleta sairia
-        // com duas superfícies empilhadas no escuro.
-        const paleta = semComentarios("src/components/ui/command.tsx")
-        expect(paleta).toContain("supports-backdrop-filter:dark:bg-transparent")
-        expect(paleta).toContain("reduced-transparency:bg-transparent")
+        for (const arquivo of ["src/components/ui/form.tsx"]) {
+            expect(semComentariosDe(arquivo), `${arquivo}: degradê sobre a placa`).not.toMatch(/\bfrom-(?:background|popover)\b/)
+        }
     })
 
     it("16. o material é preset de variável, e nunca uma segunda propriedade", () => {
@@ -751,5 +694,98 @@ describe("a superfície de vidro", () => {
             "utf8"
         )
         expect(sidebar).toContain('"group-data-[variant=floating]:glass"')
+    })
+
+    it("27. a barra é a terceira régua, e na fileira só a que se sustenta sozinha", () => {
+        // As três superfícies de vidro da casa divergem de propósito: a
+        // flutuante é `--popover` e abre só no escuro, a modal é `--background`
+        // a 40%, e a barra é `--background` a 60% **nos dois temas** — porque
+        // uma barra tem conteúdo real passando por baixo em qualquer tema. Por
+        // isso ela não cabe na asserção 23, que exige o `dark:`.
+        const barra = semComentariosDe("src/lib/bar-classes.ts")
+        const i = barra.indexOf("barSurfaceClassName")
+        const receita = barra.slice(i, barra.indexOf("].join(", i))
+
+        expect(receita, "sem material").toContain("glass-surface")
+        // Ancorado na classe: o variante `supports-backdrop-filter:` contém a
+        // string `backdrop-filter` de propósito.
+        expect(receita, "borrão próprio").not.toMatch(/\bbackdrop-blur/)
+        expect(receita, "sem guarda").toContain("reduced-transparency:bg-background")
+        expect(receita, "token errado").not.toMatch(/bg-popover/)
+
+        // Opaca de base, aberta só onde o borrão existe. A lookbehind é
+        // necessária: sem ela `supports-backdrop-filter:bg-background/60`
+        // casaria como se fosse a base.
+        const base = Number(receita.match(/(?<!:)bg-background\/(\d+)/)?.[1])
+        const aberta = Number(
+            receita.match(/supports-backdrop-filter:bg-background\/(\d+)/)?.[1]
+        )
+        expect(base, "alfa base").toBeGreaterThan(0)
+        expect(aberta, "alfa aberto").toBeGreaterThan(0)
+        expect(aberta).toBeLessThan(base)
+        expect(receita, "a barra não é de tema").not.toMatch(
+            /supports-backdrop-filter:dark:/
+        )
+
+        // Os dois consumidores: a extração só é real com dois, e é o que
+        // impede a cópia à mão do cabeçalho de voltar.
+        const shell = semComentariosDe("src/app/designsystem/ds-shell.tsx")
+        const menubar = semComentariosDe("src/components/ui/menubar.tsx")
+        expect(shell, "o cabeçalho não veste a régua").toContain("barSurfaceClassName")
+        expect(shell, "a cópia do cabeçalho voltou").not.toContain(
+            "bg-background/95 glass-surface"
+        )
+        expect(menubar, "a fileira não veste a régua").toContain("barSurfaceClassName")
+        expect(menubar, "a fileira escreve borrão próprio").not.toMatch(/\bbackdrop-blur/)
+
+        // Uma variante só. `solid` a 60% cai de rgb 38 para 27 sobre a página e
+        // deixa de ler como bandeja; `plain` mora dentro de um cabeçalho que já
+        // tem o vidro.
+        const cva = menubar.slice(
+            menubar.indexOf("const menubarVariants"),
+            menubar.indexOf("const menubarTriggerVariants")
+        )
+        expect(cva.length, "o cva da fileira não foi achado").toBeGreaterThan(0)
+        expect(cva, "a outline perdeu a régua").toMatch(
+            /outline:\s*`[^`]*\$\{barSurfaceClassName\}/
+        )
+        expect(
+            cva.match(/barSurfaceClassName/g) ?? [],
+            "mais de uma variante veste a régua"
+        ).toHaveLength(1)
+        expect(cva, "solid perdeu a bandeja").toMatch(/solid:\s*"[^"]*bg-muted/)
+        expect(cva, "plain deixou de ser transparente").toMatch(
+            /plain:\s*"[^"]*bg-transparent/
+        )
+    })
+
+    it("28. a folha carrega a própria área segura, e o quarto chrome não volta", () => {
+        // A área segura é **da superfície**. Até a rodada 60 quem a dava era uma
+        // classe que as telas importavam do chrome de folha, e por isso 19
+        // folhas a tinham e 7 não — as que não tinham punham o botão de salvar
+        // sob a barra de gestos do iPhone. O `DrawerContent` já fazia certo; o
+        // ramo gaveta do `SheetContent` passou a fazer também.
+        const folha = semComentariosDe("src/components/ui/sheet.tsx")
+        const gaveta = folha.slice(
+            folha.indexOf('data-surface="drawer"'),
+            folha.indexOf("{...props}", folha.indexOf('data-surface="drawer"'))
+        )
+        expect(gaveta.length, "o ramo gaveta não foi achado").toBeGreaterThan(0)
+        expect(gaveta, "a folha não dá área segura").toContain(
+            "pb-(--sheet-drawer-safe)"
+        )
+        // `[^)]*` não serve: o `)` de `--spacing(6)` vem antes do `env(`.
+        expect(gaveta, "a fórmula do env() não está aqui").toMatch(
+            /--sheet-drawer-safe:calc\([\s\S]*?env\(safe-area-inset-bottom/
+        )
+
+        // E o chrome não volta: quem o substituiu é a cromagem do `Dialog`, que
+        // é a regra da casa ("a cromagem da folha vem do `Dialog`") — ele era o
+        // quarto, e anterior a ela.
+        const arquivos = readdirSync("src/components/ui")
+        expect(
+            arquivos.filter((f) => f.startsWith("mobile-sheet-form-chrome")),
+            "o quarto chrome voltou"
+        ).toEqual([])
     })
 })

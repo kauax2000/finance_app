@@ -18,10 +18,6 @@ import { CustomForm, FormInput } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import {
-    MobileSheetFormStickyHeader,
-    mobileFormSheetContentClassName,
-} from "@/components/ui/mobile-sheet-form-chrome"
 import { DatePicker } from "@/components/ui/date-picker"
 import {
     Select,
@@ -118,15 +114,15 @@ export function PayBillDialog({
     }, [input])
 
     const headerBlock = isMobile ? (
-        <MobileSheetFormStickyHeader
-            title={title}
-            description={
+        <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+            <DialogDescription>{
                 <>
                     Informe o valor real pago. Será criada uma despesa e, se aplicável,
                     a fatura do cartão ficará marcada como paga.
                 </>
-            }
-        />
+            }</DialogDescription>
+        </DialogHeader>
     ) : (
         <DialogHeader className="flex shrink-0 flex-col gap-1 px-6 pt-6 pb-3 text-left sm:px-6">
             <DialogTitle className="text-lg">{title}</DialogTitle>
@@ -342,7 +338,6 @@ export function PayBillDialog({
                 <SheetContent
                     side="bottom"
                     fillMobileViewport
-                    className={mobileFormSheetContentClassName}
                 >
                     {formInner}
                 <DialogCloseButton />

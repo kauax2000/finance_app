@@ -6,7 +6,7 @@ import { Dialog as EdgePanelPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 import { modalSurfaceClassName } from "@/lib/modal-classes"
-import { useViewportWindow } from "@/hooks/use-mobile"
+import { useViewportModal, useViewportWindow } from "@/hooks/use-mobile"
 
 /**
  * Um painel preso a uma borda — **em qualquer largura de tela**.
@@ -48,17 +48,96 @@ const edgePanelContentVariants = cva(
   ],
   {
     variants: {
+      /**
+       * De qual borda ele entra.
+       *
+       * **A posição sai de três variáveis, e não de números.** O eixo `variant`
+       * mexe na posição de cada lado, e quatro lados × duas variantes seriam
+       * oito `compoundVariants`. Com a calha em variável, `side` escreve a
+       * posição **uma vez** e ela resolve em 0 no encostado e em 8px no
+       * flutuante — o mecanismo de `--dialog-bleed`, `--drawer-inset` e
+       * `--sidebar-inset-rule`: variável herda e não disputa.
+       *
+       * **E nenhuma delas é declarada aqui nem em `flush`.** Cada uso a lê com
+       * o próprio `0px` como fallback, que é o mecanismo de `--glass-ink`: sem
+       * declaração não há disputa, e `flush` é no-op por **construção**. Um
+       * `[--edge-panel-gap:0px]` na base empataria em especificidade com o do
+       * `floating`, e quem venceria seria a ordem de emissão do Tailwind.
+       *
+       * **`h-full` saiu de `left` e `right`, e a remoção é o conserto.** O
+       * bloco contentor de um `fixed` é o viewport, então `height: 100%` e o
+       * par `top: 0` / `bottom: 0` resolvem no mesmo número — ele era
+       * redundante. Sob `floating` ele deixa de ser: com `top: 8px` e altura
+       * definida, o painel mede a tela inteira começando 8px abaixo e
+       * **transborda 8px na base**, com o canto de baixo fora da tela.
+       */
       side: {
-        top: "inset-x-0 top-0 h-auto border-b data-open:slide-in-from-top-12 data-closed:slide-out-to-top-12",
+        top: "inset-x-[var(--edge-panel-gap,0px)] top-[var(--edge-panel-gap-block-start,0px)] h-auto data-open:slide-in-from-top-12 data-closed:slide-out-to-top-12",
         right:
-          "inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm data-open:slide-in-from-right-12 data-closed:slide-out-to-right-12",
+          "top-[var(--edge-panel-gap-block-start,0px)] right-[var(--edge-panel-gap,0px)] bottom-[var(--edge-panel-gap-block-end,0px)] w-3/4 sm:max-w-sm data-open:slide-in-from-right-12 data-closed:slide-out-to-right-12",
         bottom:
-          "inset-x-0 bottom-0 h-auto border-t ease-(--ease-emphasized) data-open:slide-in-from-bottom-12 data-closed:slide-out-to-bottom-12",
-        left: "inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm data-open:slide-in-from-left-12 data-closed:slide-out-to-left-12",
+          "inset-x-[var(--edge-panel-gap,0px)] bottom-[var(--edge-panel-gap-block-end,0px)] h-auto ease-(--ease-emphasized) data-open:slide-in-from-bottom-12 data-closed:slide-out-to-bottom-12",
+        left: "top-[var(--edge-panel-gap-block-start,0px)] left-[var(--edge-panel-gap,0px)] bottom-[var(--edge-panel-gap-block-end,0px)] w-3/4 sm:max-w-sm data-open:slide-in-from-left-12 data-closed:slide-out-to-left-12",
+      },
+      /**
+       * Se ele encosta na tela ou flutua sobre ela.
+       *
+       * `flush` cola nas três bordas e desenha só o gume que fica para dentro —
+       * é a navegação, e o padrão. `floating` abre uma calha de 8px, arredonda
+       * os quatro cantos e fecha a borda em volta, com a página aparecendo por
+       * baixo. É a mesma ideia que a `Sidebar` chama de `floating` no desktop —
+       * e que o `Drawer` ainda chama de `inset`, que é o vocabulário a
+       * convergir numa rodada própria.
+       *
+       * **O material não muda, e é decisão medida.** A tentação é vestir a
+       * `@utility glass` como a placa da `Sidebar` faz. Ali é certo porque
+       * aquela placa **reserva a própria calha no fluxo** — nada passa por trás
+       * dela, borrar cor chapada não desenha nada, e a luz é pintada. Aqui é o
+       * contrário: o painel é modal, há o `--overlay` a 40% e a página inteira
+       * atrás. O flutuante tem **mais** conteúdo por baixo que o encostado, não
+       * menos — e `modalSurfaceClassName`, que já está na base, é o material
+       * borrado de 24px com `saturate(1.5)`. Nenhuma linha de vidro aqui.
+       *
+       * **As duas verticais somam a área segura.** Uma calha medida a partir do
+       * viewport põe o canto de baixo atrás do indicador de home num iPhone, e
+       * o telefone é onde vive o consumidor principal deste componente. A
+       * horizontal fica de fora de propósito: `env(safe-area-inset-left/right)`
+       * não aparece **nenhuma vez** no repositório, e o dono dessa lacuna é a
+       * casca do app — fechá-la só aqui seria a segunda gramática para a mesma
+       * coisa.
+       *
+       * O `max()` lê `var(--edge-panel-gap)` em vez de chamar `--spacing()`
+       * dentro dele: é a forma que `sheet.tsx` já usa (`max(0.5rem,env(…))`).
+       */
+      variant: {
+        flush: "",
+        floating: [
+          "rounded-xl border",
+          "[--edge-panel-gap:--spacing(2)]",
+          "[--edge-panel-gap-block-start:max(var(--edge-panel-gap),env(safe-area-inset-top,0px))]",
+          "[--edge-panel-gap-block-end:max(var(--edge-panel-gap),env(safe-area-inset-bottom,0px))]",
+        ].join(" "),
       },
     },
+    /**
+     * O gume do encostado, e ele é composto por necessidade.
+     *
+     * `floating` desenha as quatro bordas e `flush` desenha **uma**, que muda
+     * com o lado. Empilhar `border` sobre `border-l` e contar com o `twMerge`
+     * funciona por acidente: os dois grupos conflitam, mas quem vence depende
+     * da ordem em que o `cva` emite `side` e `variant` — e decisão por ordem de
+     * emissão não é decisão. É a forma que o `drawer.tsx` já usa para as bordas
+     * que dependem da direção.
+     */
+    compoundVariants: [
+      { variant: "flush", side: "top", class: "border-b" },
+      { variant: "flush", side: "right", class: "border-l" },
+      { variant: "flush", side: "bottom", class: "border-t" },
+      { variant: "flush", side: "left", class: "border-r" },
+    ],
     defaultVariants: {
       side: "right",
+      variant: "flush",
     },
   }
 )
@@ -73,7 +152,16 @@ const EDGE_PANEL_OVERLAY_CLASS =
 function EdgePanel({
   ...props
 }: React.ComponentProps<typeof EdgePanelPrimitive.Root>) {
-  return <EdgePanelPrimitive.Root data-slot="edge-panel" {...props} />
+  // Dentro da moldura do catálogo ele deixa de ser modal — senão o
+  // `RemoveScroll` do Radix trava a rolagem da **página de fora**. Antes de
+  // `{...props}`, para quem chama continuar mandando. Ver `useViewportModal`.
+  return (
+    <EdgePanelPrimitive.Root
+      data-slot="edge-panel"
+      modal={useViewportModal()}
+      {...props}
+    />
+  )
 }
 
 function EdgePanelTrigger({
@@ -111,6 +199,7 @@ function EdgePanelContent({
   className,
   children,
   side = "right",
+  variant = "flush",
   ...props
 }: React.ComponentProps<typeof EdgePanelPrimitive.Content> &
   VariantProps<typeof edgePanelContentVariants>) {
@@ -130,8 +219,9 @@ function EdgePanelContent({
         data-slot="edge-panel-content"
         data-surface="panel"
         data-side={side}
+        data-variant={variant}
         data-layout="fixed"
-        className={cn(edgePanelContentVariants({ side }), className)}
+        className={cn(edgePanelContentVariants({ side, variant }), className)}
         {...props}
       >
         {children}

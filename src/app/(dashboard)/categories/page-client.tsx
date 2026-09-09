@@ -51,10 +51,6 @@ import {
   Sheet,
   SheetContent,
 } from "@/components/ui/sheet"
-import {
-    MobileSheetFormStickyHeader,
-    mobileFormSheetContentClassName,
-} from "@/components/ui/mobile-sheet-form-chrome"
 import { PlusIcon } from "@heroicons/react/16/solid"
 import { ChartPieIcon } from "@heroicons/react/24/outline"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
@@ -664,14 +660,13 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                         side="bottom"
                         fillMobileViewport
                         className={cn(
-                            mobileFormSheetContentClassName,
                             "sm:mx-auto sm:max-w-lg",
                         )}
                     >
-                        <MobileSheetFormStickyHeader
-                            title={sheetTitle}
-                            description={sheetDescription}
-                        />
+                        <DialogHeader>
+                            <DialogTitle>{sheetTitle}</DialogTitle>
+                            <DialogDescription>{sheetDescription}</DialogDescription>
+                        </DialogHeader>
                         <CustomForm
                             onSubmit={handleSubmit}
                             className="flex min-h-0 flex-1 flex-col"

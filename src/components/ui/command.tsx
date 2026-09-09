@@ -18,7 +18,6 @@ import {
   scrollFadeViewportClassName,
 } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
-import { ScrollFadeBlurLayers } from "@/components/ui/scroll-fade"
 import { useCommandIdleSelection } from "@/hooks/use-command-idle-selection"
 import {
   Dialog,
@@ -53,15 +52,18 @@ import { Button } from "@/components/ui/button"
  */
 const commandVariants = cva(
   [
-    menuPanelSurfaceClassName,
-    // A paleta tinha a **quarta** receita de vidro da casa — `bg-popover/85`
-    // com `backdrop-blur` de 8px, contra os 24 e o `saturate(1.5)` do material.
-    // O raio e a sombra saem: a casca de quem a hospeda é que os decide.
+    // **O `Command` hospedado não pinta — quem pinta é a casca.** Ele já vestiu
+    // a placa da régua por dentro; num `Popover` (Combobox, FormPicker) isso
+    // eram **duas** placas a 60% empilhadas, 84% no escuro, e o Combobox saía
+    // visivelmente mais claro que o DatePicker — o mesmo popover com uma placa
+    // só. É a regra "uma placa por superfície" de `lib/menu-classes`. Só a
+    // variante `panel`, a paleta solta numa página, pinta a própria.
+    //
     // `relative` é carga estrutural: as camadas de borrão das duas pontas são
     // **irmãs** do rolável e absolutas, e sem bloco de contenção aqui elas
     // resolveriam contra um ancestral qualquer. O `overflow-hidden` ao lado é o
     // que as apara no canto da casca.
-    "relative flex size-full flex-col overflow-hidden rounded-none shadow-none ring-0",
+    "relative flex size-full flex-col overflow-hidden text-popover-foreground",
     "[--command-list-max-h:--spacing(72)]",
     // A casca só publica as duas medidas estruturais, porque só ela enxerga as
     // faixas como **irmãs** do rolável. Todo o resto da dissolução — âncoras,
@@ -99,8 +101,9 @@ const commandVariants = cva(
          * de qualquer superfície futura, sem saber de nenhum deles.
          */
         plain: "[border-radius:inherit]",
-        /** A própria moldura, para a paleta solta numa página. */
-        panel: "rounded-lg border border-border shadow-xs",
+        /** A própria moldura, para a paleta solta numa página — é a placa da
+         *  régua, inteira, porque aqui ninguém a hospeda. */
+        panel: menuPanelSurfaceClassName,
       },
     },
     defaultVariants: { variant: "plain" },
@@ -159,23 +162,14 @@ function Command({
     >
       {children}
 
-      {/* O material do iOS nas duas pontas — e ele **soma** à rampa em vez de
-          substituí-la, que é o contrário do que o `edge="material"` do
-          `ScrollFade` faz. Aqui a máscara é carga estrutural: as três faixas
-          desta paleta não pintam nada, então é ela quem esconde o conteúdo sob
-          o campo de busca. Sem ela o texto apareceria atrás do input.
-
-          O que vem do material é o **borrão**: `scroll-fade-material` é preset
-          de variável, e move só o raio (7px × índice) e a vibrância (1,5) — os
-          mesmos números de `.mobile-glass-surface`, para a casa ter uma
-          vibrância só.
-
-          A geometria sai de graça: a camada é ancorada em
-          `--scroll-fade-band-h` / `--scroll-fade-foot-h`, que esta casca já
-          publica, e a altura é a mesma zona que a rampa dissolve. Em ordem
-          crescente de índice — a de extensão maior por baixo, cada uma borrando
-          o que a de baixo compôs. */}
-      <ScrollFadeBlurLayers />
+      {/* Sem camadas de borrão. Elas moraram aqui — três `backdrop-filter`
+          empilhados por ponta, somados à rampa — e eram a última paleta da casa
+          com o borrão nas pontas depois de o diálogo e a folha o terem tirado.
+          Dentro de um casco que já borra a 24px, cada camada aninhada
+          re-borrava a placa e a aresta de cada uma saía como uma **linha de
+          tom** atravessando a lista: três linhas em cima, duas embaixo, "como
+          se a resolução fosse baixa". A máscara sozinha faz o trabalho, como
+          em todo rolável da casa. */}
     </CommandPrimitive>
   )
 }
@@ -233,14 +227,16 @@ function CommandDialog({
           "[--command-dialog-h:min(60dvh,24rem)]",
           "[--command-dialog-top:calc(50%-var(--command-dialog-h)/2)]",
           "top-(--command-dialog-top) translate-y-0 max-h-(--command-dialog-h)",
-          // O casco é transparente porque quem pinta é o `Command` de dentro,
-          // a `bg-popover/85` — dois 85% empilhados dariam 97,75%, que é o
-          // bloco aceso que este arquivo já registra. Os dois neutralizadores
-          // sob variante são obrigatórios: o `twMerge` derruba a `bg-*` base
-          // do casco, e **não** as que vivem sob `supports-` e sob
-          // `reduced-transparency:`.
-          "overflow-hidden border-0 bg-transparent p-0",
-          "supports-backdrop-filter:dark:bg-transparent reduced-transparency:bg-transparent",
+          // O casco **pinta**, e pinta o tom do popover: a paleta é uma
+          // superfície de comandos, não um diálogo, e o `--background` da régua
+          // modal a deixaria mais escura que os menus. As três classes trocam
+          // só o token — o `twMerge` derruba as da régua uma a uma, variante a
+          // variante. O `Command` de dentro é transparente (variante `plain`),
+          // então há uma placa só. Ele já foi o contrário — casco neutralizado,
+          // `Command` pintando —, com neutralizadores sob variante; era um
+          // remendo para a placa dupla, e a placa dupla saiu.
+          "overflow-hidden border-0 p-0",
+          "bg-popover/85 supports-backdrop-filter:dark:bg-popover/60 reduced-transparency:bg-popover",
           className
         )}
         showCloseButton={showCloseButton}
@@ -311,12 +307,14 @@ function CommandDialog({
  * a paleta vem de clicar naquele campo; encontrar outro desenho do outro lado
  * do gesto quebra a continuidade.
  *
- * ## O vidro é o do cabeçalho, e ele precisa de algo atrás
+ * ## A superfície é uma só, e é a da casca
  *
- * `bg-background/85` com `backdrop-blur`, igual ao `<header>` do catálogo.
- * Vidro só desenha quando há o que borrar: por isso o casco do `CommandDialog`
- * ficou transparente e a lista carrega a superfície. Sem isso o efeito seria
- * decoração — um `backdrop-filter` sobre uma cor opaca não faz nada.
+ * O casco do `CommandDialog` veste a placa modal da régua — o mesmo `--popover`
+ * translúcido com o material do iOS que o popover veste — e o `Command` de
+ * dentro não pinta. É a regra "uma placa por superfície" de `lib/menu-classes`,
+ * que nasceu de medir o Combobox mais claro que o DatePicker por causa de duas
+ * placas empilhadas. O que fica desta seção é a lição de forma: **uma
+ * superfície só**, declarada num lugar, para o tom não divergir entre as faixas.
  */
 function CommandInput({
   className,
@@ -339,11 +337,11 @@ function CommandInput({
       // razão: quem marca o limite é o conteúdo sumindo, não uma superfície
       // cobrindo. A primeira tentativa tirou só o fio e manteve o vidro, e o
       // resultado continuava lendo como duas faixas — porque **era**: a faixa
-      // repintava `bg-popover/85` sobre um casco que já é `bg-popover/85`, e
+      // repintava a placa (`bg-popover/85`) sobre um casco que já a tinha, e
       // dois 85% empilhados dão 97,75%. No tema escuro `--popover` é mais claro
       // que a página, então a faixa era um retângulo **mais claro** com uma
-      // aresta na base. É exatamente o defeito que o rodapé já registrava:
-      // superfície cheia sobre superfície a 85% lê como bloco aceso. O
+      // aresta na base. É a mesma aritmética que tirou a placa do `Command`
+      // hospedado: tinta sobre a casca é uma segunda superfície. O
       // `backdrop-blur` saiu junto, senão a borda do borrão desenharia a mesma
       // linha sozinha.
       //
@@ -448,10 +446,7 @@ function CommandList({
 
   return (
     <CommandPrimitive.List
-      // `shell` porque as camadas de borrão são **irmãs** desta lista, e irmão
-      // não lê custom property de irmão. Com ele as duas variáveis também vão
-      // para a casca, de onde descem por herança para os dois lados.
-      ref={useScrollFade({ shell: true })}
+      ref={useScrollFade()}
       data-slot="command-list"
       data-medido={medido || undefined}
       className={cn(

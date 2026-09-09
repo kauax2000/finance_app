@@ -215,22 +215,18 @@ export default function SelectDoc() {
         casa diz que aí o certo é <code>backdrop-filter</code> — não luz pintada.
         Ele veste a mesma <code>glass-surface</code> do cabeçalho: 24px de borrão
         e <code>saturate(1.5)</code>, com o guarda de{" "}
-        <code>prefers-reduced-transparency</code> embutido.
+        <code>prefers-reduced-transparency</code>. O alfa é calibrado pelo{" "}
+        <code>--muted-foreground</code> sobre o pior fundo real: 60% no escuro,
+        85% no claro.
         <br />
         <br />
-        <strong>O alfa não é um só, e quem decide é o contraste.</strong> O texto
-        que aperta não é o do item — folgado em qualquer alfa — e sim o{" "}
-        <code>--muted-foreground</code> dos rótulos de grupo. Medido contra o que
-        de fato <em>preenche área</em> atrás de um menu, o pior fundo é o botão{" "}
-        <code>primary</code>: no escuro 60% dá <strong>4,64</strong>; no claro,
-        onde o popover é branco e o primary é verde escuro, 60% cai para{" "}
-        <strong>3,00</strong> e só a <strong>85%</strong> volta a 4,72.
-        <br />
-        <br />
-        É o mesmo teto que o material da borda já registrou: no tema claro o
-        vidro quase não se paga. Sobre a página o contraste é o mesmo em qualquer
-        alfa (5,91 a 6,01) — o que a translucidez custa só aparece sobre cor
-        cheia, e é lá que ela cede.
+        <strong>Uma placa por superfície.</strong> O Combobox chegou a empilhar
+        duas — o popover e o <code>Command</code> de dentro, 84% no escuro — e
+        saía visivelmente mais claro que o DatePicker, que é o mesmo popover com
+        uma placa. Quem hospeda pinta; o <code>Command</code> hospedado é
+        transparente. O material nunca foi o problema: uma rodada concluiu que
+        o borrão &quot;não renderizava dentro de popper&quot; a partir de
+        capturas cedo demais, e a medição refeita disse o contrário.
       </DocNote>
 
       <DocNote title="Ele abre abaixo do gatilho, e antes ignorava a borda da tela">

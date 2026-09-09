@@ -17,10 +17,6 @@ import {
   Sheet,
   SheetContent,
 } from "@/components/ui/sheet"
-import {
-    MobileSheetFormStickyHeader,
-    mobileFormSheetContentClassName,
-} from "@/components/ui/mobile-sheet-form-chrome"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { CustomForm } from "@/components/ui/form"
@@ -160,12 +156,11 @@ export function WorkspaceAppearanceEditDialog({
                 <SheetContent
                     side="bottom"
                     fillMobileViewport
-                    className={mobileFormSheetContentClassName}
                 >
-                    <MobileSheetFormStickyHeader
-                        title="Editar carteira"
-                        description="Altere nome, ícone e cor de destaque da carteira."
-                    />
+                    <DialogHeader>
+                        <DialogTitle>Editar carteira</DialogTitle>
+                        <DialogDescription>Altere nome, ícone e cor de destaque da carteira.</DialogDescription>
+                    </DialogHeader>
                     {innerForm}
                 <DialogCloseButton />
                 </SheetContent>

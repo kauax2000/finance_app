@@ -34,6 +34,28 @@
  *    herdaria o mesmo recorte. A casca hospeda os dois, e é por isso que o
  *    `useScrollFade` tem a opção `shell` — irmão não lê custom property de
  *    irmão.
+ * 6. **A camada de borrão exige faixa — e, com faixa, não convive com a
+ *    máscara.** Ela é um `backdrop-filter`, e a borda de um `backdrop-filter`
+ *    é dura. Em modo *sem faixa* o conteúdo é cortado na borda do rolável e a
+ *    camada acaba ali, contra uma tira transparente — nada esconde a aresta, e
+ *    ela lê como um retângulo no meio da superfície. Em modo *com faixa* a
+ *    rampa leva o conteúdo ao piso de 6% e o borrão fica **sem o que borrar**:
+ *    sobra o deslocamento de tom da própria camada sobre a placa translúcida,
+ *    que é o mesmo retângulo por outro caminho. Medido três vezes, na folha e
+ *    no diálogo, em três configurações (sobra, faixa medida, faixa + material).
+ *
+ *    | | faixa | camadas |
+ *    | --- | --- | --- |
+ *    | `Command` | escrita à mão, conteúdo denso | monta — e funciona |
+ *    | `DialogBody` | tiras de altura desconhecida | **não monta**: só a máscara |
+ *    | `MobileSheetFormBody` | idem | **não monta**: só a máscara |
+ *
+ *    Onde a tira é transparente e cresce com o conteúdo, a resposta é a máscara
+ *    sozinha — o `scroll-fade-y` de 44px na própria borda, como em todo
+ *    componente da casa — mais um **degradê no fundo da tira**, cor cheia na
+ *    ponta de fora e transparente encostando no fade, para os dois se juntarem
+ *    sem emenda. Se o borrão voltar a essas superfícies, é outro desenho: tira
+ *    com tinta e conteúdo passando por baixo sem rampa.
  * 4. **Todo `-` binário dentro de um `calc()` arbitrário se escreve `_-_`.** Não
  *    é "espaço quebra": o Tailwind normaliza o espaçamento em torno de `+`, `*` e
  *    `/`, mas não pode fazer isso com `-` — seria indistinguível de `--var` e de

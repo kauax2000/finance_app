@@ -1,11 +1,10 @@
 "use client"
 
-import { XMarkIcon } from "@heroicons/react/20/solid"
 import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
-  DialogClose,
+  DialogCloseButton,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -13,31 +12,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
-  SheetClose,
-} from "@/components/ui/sheet"
-import {
-    MobileSheetFormStickyHeader,
-} from "@/components/ui/mobile-sheet-form-chrome"
-import {
     TransactionFormFields,
     type TransactionFormFieldsProps,
 } from "@/components/transactions/transaction-form-fields"
 
-function sheetHeaderCloseControl() {
-    return (
-        <SheetClose asChild>
-            <Button
-                type="button"
-                variant="tertiary"
-                size="icon-sm"
-                className="shrink-0 -mr-1"
-                aria-label="Fechar"
-            >
-                <XMarkIcon className="h-5 w-5" aria-hidden />
-            </Button>
-        </SheetClose>
-    )
-}
 
 export type TransactionFormSurfaceVariant =
     | "dialog-desktop"
@@ -102,10 +80,11 @@ export function TransactionFormSurface({
     if (variant === "dialog-mobile") {
         return (
             <>
-                <MobileSheetFormStickyHeader
-                    title={formTitle}
-                    endAdornment={sheetHeaderCloseControl()}
-                />
+                <DialogHeader>
+                    <DialogHeaderRow endAdornment={<DialogCloseButton placement="inline" />}>
+                        <DialogTitle>{formTitle}</DialogTitle>
+                    </DialogHeaderRow>
+                </DialogHeader>
                 <DialogDescription className="sr-only">
                     {formDescription}
                 </DialogDescription>
@@ -132,10 +111,11 @@ export function TransactionFormSurface({
                 onSubmit={handleSubmit}
                 className="flex min-h-0 flex-1 flex-col"
             >
-                <MobileSheetFormStickyHeader
-                    title={formTitle}
-                    endAdornment={sheetHeaderCloseControl()}
-                />
+                <DialogHeader>
+                    <DialogHeaderRow endAdornment={<DialogCloseButton placement="inline" />}>
+                        <DialogTitle>{formTitle}</DialogTitle>
+                    </DialogHeaderRow>
+                </DialogHeader>
                 <DialogDescription className="sr-only">
                     {formDescription}
                 </DialogDescription>
@@ -159,17 +139,10 @@ export function TransactionFormSurface({
             <DialogHeader className="shrink-0 px-6 pt-6 pb-3">
                 <DialogHeaderRow
                     endAdornment={
-                        <DialogClose asChild>
-                            <Button
-                                type="button"
-                                variant="tertiary"
-                                size="icon-sm"
-                                className="-mr-1 -mt-0.5"
-                                aria-label="Fechar"
-                            >
-                                <XMarkIcon className="h-5 w-5" aria-hidden />
-                            </Button>
-                        </DialogClose>
+                        <DialogCloseButton
+                            placement="inline"
+                            className="-mt-0.5"
+                        />
                     }
                 >
                     <DialogTitle>{formTitle}</DialogTitle>

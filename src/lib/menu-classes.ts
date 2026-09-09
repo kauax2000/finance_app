@@ -57,35 +57,30 @@ const MENU_TOUCH_TARGET = "pointer-coarse:min-h-11"
  * `min-w-36`, sem `flex-col` — veste esta em vez de vestir a casca inteira
  * para desfazer três quartos dela por `className`.
  *
- * ## O material é o do cabeçalho, e o alfa difere por tema
+ * ## O material é o do iOS, e a placa é **uma** por superfície
  *
- * Uma superfície flutuante tem **conteúdo passando por baixo**, então ela é o
- * lado do `backdrop-filter` da régua dos dois vidros — e o material é o da
- * `@utility glass-surface`, o mesmo do cabeçalho: 24px de borrão e
- * `saturate(1.5)`, com o guarda de `prefers-reduced-transparency` embutido.
- * Uma segunda receita de borrão aqui seria a quarta na casa.
+ * Uma superfície flutuante tem conteúdo passando por baixo, então ela é o lado
+ * do `backdrop-filter` da régua dos dois vidros: `--popover` a 85% (a base, que
+ * serve o claro e é o fallback sem `backdrop-filter`), abrindo a 60% no escuro
+ * onde o borrão existe, com `glass-surface` — 24px e `saturate(1.5)`, os mesmos
+ * do cabeçalho — e o guarda de `prefers-reduced-transparency`. O alfa foi
+ * calibrado pelo `--muted-foreground` sobre o pior fundo real (rodada 51).
  *
- * **O alfa não é um só, e quem decide é o contraste.** O texto que aperta não é
- * o do item — `--popover-foreground` fica folgado em qualquer alfa — e sim o
- * `--muted-foreground`, dos rótulos de grupo e dos atalhos. Medido contra as
- * superfícies que de fato **preenchem área** atrás de um menu (página, card,
- * muted, secondary e o botão `primary`, o único preenchimento colorido cheio
- * do sistema):
+ * **A regra que entrou depois: uma placa só.** Duas superfícies aninhadas com
+ * esta receita — o `Popover` e um `Command` dentro dele — somavam 84% no escuro
+ * e saíam **mais claras** que o `DatePicker`, que é o mesmo popover com uma
+ * placa. Era o que lia como "fundo quebrado": não o material, o **tom**. Quem
+ * hospeda pinta; o `Command` hospedado é transparente (ver `command.tsx`).
  *
- * | | escuro | claro |
- * | --- | --- | --- |
- * | 60% | **4,64 — passa** | 3,00 — reprova |
- * | 85% | — | **4,72 — passa** |
- *
- * No claro o `--popover` é **branco** e o pior fundo é o verde escuro do
- * `primary`: um branco a 60% sobre ele vira cinza-esverdeado e o texto
- * secundário morre. É o mesmo teto que o material da borda já registrou — no
- * tema claro o vidro quase não se paga: sobre a página o contraste é o mesmo em
- * qualquer alfa (5,91 a 6,01), e o que a translucidez custa só aparece sobre
- * cor cheia.
- *
- * Daí a base ser 85% (que serve o claro **e** é o fallback de quem não tem
- * `backdrop-filter`) e o escuro abrir para 60% só onde o borrão existe.
+ * **E uma lição de instrumento, registrada porque quase custou a receita.** Uma
+ * rodada concluiu que "o borrão não renderiza dentro de popper" e deixou tudo
+ * opaco. A conclusão veio de capturas tiradas 0,6s depois do clique e de uma
+ * comparação com/sem filtro em que **o filtro aninhado do `Command` ainda
+ * estava lá**. Refeito limpo — receita original, sem CSS injetado, 1,5s de
+ * espera — o texto da página fica escondido atrás do popover: o borrão
+ * renderiza. `transform` e `will-change` no wrapper do Radix não o bloqueiam
+ * (testados um a um). Quando a medição contraria o mecanismo, o instrumento é
+ * o primeiro suspeito — e aqui era.
  */
 export const menuPanelSurfaceClassName = [
   "rounded-lg text-popover-foreground shadow-md ring-1 ring-foreground/10",

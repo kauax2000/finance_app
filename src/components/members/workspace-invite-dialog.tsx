@@ -20,10 +20,6 @@ import {
     Sheet,
     SheetContent,
 } from "@/components/ui/sheet"
-import {
-    MobileSheetFormStickyHeader,
-    mobileFormSheetContentClassName,
-} from "@/components/ui/mobile-sheet-form-chrome"
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
     Tooltip,
@@ -282,12 +278,11 @@ export function WorkspaceInviteDialog({
                     <SheetContent
                         side="bottom"
                         fillMobileViewport
-                        className={mobileFormSheetContentClassName}
                     >
-                        <MobileSheetFormStickyHeader
-                            title="Novo membro"
-                            description="Convide por e-mail ou gere um link de convite para esta carteira."
-                        />
+                        <DialogHeader>
+                            <DialogTitle>Novo membro</DialogTitle>
+                            <DialogDescription>Convide por e-mail ou gere um link de convite para esta carteira.</DialogDescription>
+                        </DialogHeader>
                         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
                             <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-2">
                                 {!canManageMembers ? (

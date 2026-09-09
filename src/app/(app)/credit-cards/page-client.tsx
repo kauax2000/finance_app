@@ -29,21 +29,18 @@ import {
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
+  DialogCloseButton,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogHeaderRow,
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
   Sheet,
   SheetContent,
 } from "@/components/ui/sheet"
-import {
-    MobileSheetFormHeaderCloseButton,
-    MobileSheetFormStickyHeader,
-    mobileFormSheetContentClassName,
-} from "@/components/ui/mobile-sheet-form-chrome"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { CreditCardFormFields } from "@/components/credit-cards/credit-card-form-fields"
 import { parseExpiryFields } from "@/components/credit-cards/credit-card-form-shared"
@@ -365,14 +362,12 @@ export default function CreditCardsPageClient() {
                     <SheetContent
                         side="bottom"
                         fillMobileViewport
-                        className={mobileFormSheetContentClassName}
                     >
-                        <MobileSheetFormStickyHeader
-                            title="Cadastro de cartão"
-                            endAdornment={
-                                <MobileSheetFormHeaderCloseButton disabled={saving} />
-                            }
-                        />
+                        <DialogHeader>
+                            <DialogHeaderRow endAdornment={<DialogCloseButton placement="inline" disabled={saving} />}>
+                                <DialogTitle>Cadastro de cartão</DialogTitle>
+                            </DialogHeaderRow>
+                        </DialogHeader>
                         <CustomForm
                             onSubmit={handleCreate}
                             className="flex min-h-0 flex-1 flex-col"

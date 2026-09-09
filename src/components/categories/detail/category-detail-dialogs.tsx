@@ -2,10 +2,6 @@
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
-    MobileSheetFormStickyHeader,
-    mobileFormSheetContentClassName,
-} from "@/components/ui/mobile-sheet-form-chrome"
-import {
   Sheet,
   SheetContent,
 } from "@/components/ui/sheet"
@@ -164,12 +160,11 @@ export function CategoryDetailDialogs({
                     <SheetContent
                         side="bottom"
                         fillMobileViewport
-                        className={mobileFormSheetContentClassName}
                     >
-                        <MobileSheetFormStickyHeader
-                            title="Editar categoria"
-                            description={editDescription}
-                        />
+                        <DialogHeader>
+                            <DialogTitle>Editar categoria</DialogTitle>
+                            <DialogDescription>{editDescription}</DialogDescription>
+                        </DialogHeader>
                         <CustomForm
                             onSubmit={onEditSubmit}
                             className="flex min-h-0 flex-1 flex-col"

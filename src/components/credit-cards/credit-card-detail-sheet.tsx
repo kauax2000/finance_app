@@ -17,7 +17,6 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { mobileSheetChromeBelowHeaderClassName } from "@/components/ui/mobile-sheet-form-chrome"
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
@@ -97,7 +96,7 @@ export function CreditCardDetailSheet({
             <div
                 className={cn(
                     "flex shrink-0 items-center gap-2 border-b border-border px-4 py-3 sm:px-5",
-                    mobileSheetChromeBelowHeaderClassName,
+                    "mb-3",
                     isMobile && "pt-1",
                 )}
             >

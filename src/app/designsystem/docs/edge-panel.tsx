@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+
 import { Button } from "@/components/ui/button"
 import {
   DialogCloseButton,
@@ -52,6 +54,42 @@ export default function EdgePanelDoc() {
         ))}
       </DocSection>
 
+      <DocSection
+        title="Encostado e flutuante"
+        description="flush cola nas três bordas e desenha só o gume que fica para dentro — é a navegação, e o padrão. floating abre uma calha de 8px, arredonda os quatro cantos e fecha a borda em volta, com a página aparecendo por baixo."
+        code={`<EdgePanelContent side="left" variant="floating">…</EdgePanelContent>`}
+        previewClassName="items-start"
+      >
+        <div className="flex flex-wrap gap-2">
+          {(
+            [
+              { lado: "left", v: "flush", rotulo: "left · flush (padrão)" },
+              { lado: "left", v: "floating", rotulo: "left · floating" },
+              { lado: "bottom", v: "flush", rotulo: "bottom · flush" },
+              { lado: "bottom", v: "floating", rotulo: "bottom · floating" },
+            ] as const
+          ).map((c) => (
+            <EdgePanel key={c.rotulo}>
+              <EdgePanelTrigger asChild>
+                <Button variant="outline" size="sm">
+                  {c.rotulo}
+                </Button>
+              </EdgePanelTrigger>
+              <EdgePanelContent side={c.lado} variant={c.v}>
+                <DialogHeader>
+                  <DialogTitle>{c.rotulo}</DialogTitle>
+                  <DialogDescription>
+                    O <code>flush</code> encosta na tela; o{" "}
+                    <code>floating</code> deixa a página aparecer em volta.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogCloseButton />
+              </EdgePanelContent>
+            </EdgePanel>
+          ))}
+        </div>
+      </DocSection>
+
       <PropsTable
         rows={[
           {
@@ -60,6 +98,13 @@ export default function EdgePanelDoc() {
             default: '"right"',
             description:
               "De onde ele entra — e vale em toda largura, ao contrário do Sheet, onde a prop é ignorada no telefone.",
+          },
+          {
+            prop: "variant",
+            type: '"flush" | "floating"',
+            default: '"flush"',
+            description:
+              "flush encosta na tela, com o gume do próprio lado; floating abre uma calha de 8px, arredonda os quatro cantos e fecha a borda em volta.",
           },
         ]}
       />
@@ -74,6 +119,31 @@ export default function EdgePanelDoc() {
         para ter um painel, ela herdou a regra do outro e virou gaveta de baixo
         — com alça de arraste e canto arredondado no topo, para listar seis
         links.
+      </DocNote>
+
+      <DocNote title="Por que o material não muda entre as duas">
+        A tentação é vestir a <code>@utility glass</code> no{" "}
+        <code>floating</code>, como a placa flutuante da{" "}
+        <Link href="/designsystem/sidebar">Sidebar</Link> faz. Ali é certo por um
+        motivo que <strong>não vale aqui</strong>: aquela placa reserva a própria
+        calha no fluxo, então nada passa por trás dela — borrar cor chapada não
+        desenha nada, e a luz é <em>pintada</em>. Este painel é modal: há o véu a
+        40% e a página inteira atrás. O flutuante tem <strong>mais</strong>{" "}
+        conteúdo por baixo que o encostado, não menos, e o material borrado que a{" "}
+        <Link href="/designsystem/dialog">placa modal</Link> já traz — 24px com{" "}
+        <code>saturate(1.5)</code> — é a resposta certa nos dois. O eixo mexe em
+        geometria, e em nada mais.
+      </DocNote>
+
+      <DocNote title="A calha conta a área segura — nas verticais">
+        Oito pixels medidos a partir do <em>viewport</em> põem o canto de baixo
+        do painel atrás do indicador de home num iPhone, e o telefone é onde vive
+        o consumidor principal deste componente. As duas bordas verticais leem{" "}
+        <code>max(calha, env(safe-area-inset-…))</code>. A horizontal fica de
+        fora de propósito: <code>safe-area-inset-left/right</code> não aparece
+        nenhuma vez no repositório — é lacuna conhecida do app inteiro, cujo dono
+        é a casca, e fechá-la só aqui seria a segunda gramática para a mesma
+        coisa.
       </DocNote>
 
       <DocNote title="A cromagem é a mesma dos outros">

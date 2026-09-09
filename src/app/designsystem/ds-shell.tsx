@@ -5,6 +5,7 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { barSurfaceClassName } from "@/lib/bar-classes"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -91,11 +92,17 @@ function DsTopBar() {
     setNavAberta(false)
   }, [pathname])
 
-  // Opaco de base e translúcido só onde o borrão existe: sem
-  // `backdrop-filter`, os 60% deixariam o conteúdo passar por trás do título.
-  // O material — raio e vibrância — mora na `@utility glass-surface`.
+  // A superfície é a régua de barra, e ela mora em `lib/bar-classes`: opaca de
+  // base e translúcida só onde o borrão existe — sem `backdrop-filter`, os 60%
+  // deixariam o conteúdo passar por trás do título. Ela estava escrita à mão
+  // aqui até a fileira do `Menubar` precisar da mesma receita.
   return (
-    <header className="sticky top-0 z-(--z-sticky) h-14 border-b border-border bg-background/95 glass-surface supports-backdrop-filter:bg-background/60 reduced-transparency:bg-background">
+    <header
+      className={cn(
+        "sticky top-0 z-(--z-sticky) h-14 border-b border-border",
+        barSurfaceClassName
+      )}
+    >
       {/* Esquerda e direita são as duas `flex-1`, e a busca no meio não encolhe.
           Com a busca sendo a única flexível, ela centralizava no espaço que
           sobrava — e como a marca cresceu, "o que sobrava" deixou de ser

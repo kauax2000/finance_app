@@ -25,7 +25,6 @@ import {
   DialogFooter,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { mobileSheetChromeBelowHeaderClassName } from "@/components/ui/mobile-sheet-form-chrome"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 
@@ -325,7 +324,7 @@ export function TransactionsToolbar({
                         <div
                             className={cn(
                                 "flex shrink-0 items-center gap-2 border-b border-border px-4 py-3 sm:px-5",
-                                mobileSheetChromeBelowHeaderClassName,
+                                "mb-3",
                                 isMobile && "pt-1"
                             )}
                         >

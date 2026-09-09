@@ -29,10 +29,6 @@ import {
   Sheet,
   SheetContent,
 } from "@/components/ui/sheet"
-import {
-    MobileSheetFormStickyHeader,
-    mobileFormSheetContentClassName,
-} from "@/components/ui/mobile-sheet-form-chrome"
 import { supabase } from "@/lib/supabase"
 import { upsertCategoryBudget } from "@/lib/category-budget-ops"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
@@ -236,15 +232,11 @@ export function CategoryCreateDialog({
     if (isMobile) {
         return (
             <Sheet open={open} onOpenChange={onSheetOpenChange}>
-                <SheetContent
-                    side="bottom"
-                    fillMobileViewport
-                    className={mobileFormSheetContentClassName}
-                >
-                    <MobileSheetFormStickyHeader
-                        title="Nova categoria"
-                        description={description}
-                    />
+                <SheetContent side="bottom" fillMobileViewport>
+                    <DialogHeader>
+                        <DialogTitle>Nova categoria</DialogTitle>
+                        <DialogDescription>{description}</DialogDescription>
+                    </DialogHeader>
                     <CustomForm
                         onSubmit={handleSubmit}
                         className="flex min-h-0 flex-1 flex-col"

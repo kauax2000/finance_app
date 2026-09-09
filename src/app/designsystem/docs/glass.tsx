@@ -130,6 +130,14 @@ export default function GlassDoc() {
                 <code>backdrop-filter</code> de verdade e o{" "}
                 <code>prefers-reduced-transparency</code> que um blur obriga.
                 Borrar cor chapada não desenha nada.
+                <br />
+                <br />
+                <strong>E toda superfície elevada é uma placa só.</strong> Um{" "}
+                <code>Command</code> dentro de um popover chegou a empilhar duas
+                placas translúcidas — 84% no escuro — e saía mais claro que o
+                DatePicker. Quem hospeda pinta; o hospedado não. Menus, popovers e
+                selects vestem <code>--popover</code>; os modais, <code>--background</code>
+                — o mesmo material, e o token que cada escala pede.
             </Usage>
 
             <DocSection

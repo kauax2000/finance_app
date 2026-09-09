@@ -274,31 +274,22 @@ export default function DialogDoc() {
         ]}
       />
 
-      <DocNote title="A placa é de vidro, e o véu é o teto dela">
-        Ela veste o material do cabeçalho pela mesma receita das 11 superfícies
-        flutuantes — <code>bg-background/85</code>{" "}
-        de base, que serve o tema claro <strong>e</strong> é o fallback de quem
-        não tem <code>backdrop-filter</code>, abrindo para 60% só no escuro e só
-        onde o borrão existe.
+      <DocNote title="A placa é --background de vidro, e a tela é que decidiu">
+        Ela veste <code>modalSurfaceClassName</code>: <code>--background</code>{" "}
+        a 85%, <strong>40%</strong> no escuro onde o borrão existe — mais aberta que
+        a flutuante (60%), porque a 60% sobre a página ela lia como fosca. Uma
+        rodada a levou a <code>--popover</code> para igualar o DatePicker, e o
+        resultado leu como <strong>opaco</strong>: a 60% sobre a página velada o{" "}
+        <code>--popover</code> compõe acima de tudo que está atrás, e nada
+        atravessa. O <code>--background</code> afunda no véu, e é o borrão que a
+        distingue — para um modal, que cobre a página inteira, é este o tom que
+        lê como material.
         <br />
         <br />
-        <strong>
-          O que o borrão vê aqui não é a página: é o <code>--overlay</code>.
-        </strong>{" "}
-        Um popover borra conteúdo real; entre esta placa e a tela há um véu de
-        60% de preto, e borrar cor chapada não desenha nada. Medido, com a placa
-        a 60% no escuro: delta <strong>0</strong>{" "}
-        sobre um card, 2 sobre a página, e <strong>15</strong>{" "}
-        sobre o preenchimento de um botão <code>primary</code>. No tema escuro o
-        vidro só aparece quando há cor cheia atrás — e o teto não é o material, é
-        o véu.
-        <br />
-        <br />
-        No claro ele se paga: a placa desce de 250 para <strong>236</strong>{" "}
-        sobre um card, com o <code>--muted-foreground</code>{" "}
-        em 5,09 e 4,38 no pior fundo real, acima dos 4,5 da norma. Foi por isso
-        que o alfa aberto ficou escopado no escuro: a 60% no claro o mesmo texto
-        cai a <strong>4,09</strong>, e reprova.
+        <strong>O que o borrão vê aqui é o véu</strong>, a 40%, mais a página:
+        medido, delta 0 sobre um card, 2 sobre a página, 15 sobre um botão{" "}
+        <code>primary</code>. Quem quiser o efeito mais visível mexe no véu, e
+        não na placa.
       </DocNote>
 
       <DocNote title="O × não reserva lugar — o cabeçalho reserva por ele">

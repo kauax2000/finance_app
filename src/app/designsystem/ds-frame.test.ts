@@ -52,21 +52,28 @@ describe("moldura de telefone do catálogo", () => {
     )
     expect(aMao.map((p) => p.nome)).toEqual([])
 
-    // E as duas que a usam, usam.
-    for (const nome of ["form.tsx", "mobile-sheet-form-chrome.tsx"]) {
+    // E a que a usa, usa. Eram duas até a rodada 60, quando a página do chrome
+    // de folha foi apagada junto com o componente.
+    for (const nome of ["form.tsx"]) {
       const p = PAGINAS.find((x) => x.nome === nome)!
       expect(p.texto, nome).toContain("PhoneFrame")
       expect(p.texto, nome).not.toContain("h-80")
     }
   })
 
-  it("4. a folha veste o casco real, e não uma cópia da área segura", () => {
-    expect(CODIGO).toContain("mobileFormSheetContentClassName")
-    // A string da área segura mora numa peça só. Copiá-la aqui seria a segunda.
+  it("4. a moldura não copia a área segura — quem a dá é a superfície", () => {
+    // Ela já teve uma maquete de folha (`PhoneFrameSheet`) que vestia uma
+    // classe importada só para não copiar o `env()`. A maquete saiu na rodada
+    // 60 junto com o chrome de folha, e a demonstração passou a abrir um
+    // `Sheet` de verdade — a área segura mora no `SheetContent`, e a moldura
+    // não tem o que copiar.
     expect(CODIGO).not.toContain("safe-area-inset-bottom")
-    // E `h-full`, não `max-h-full`: `fillMobileViewport` é altura fixa, e é o
-    // que faz o corpo rolar em vez de a folha crescer até caber.
-    expect(CODIGO).toContain('"relative h-full"')
+    expect(CODIGO).not.toContain("PhoneFrameSheet")
+    const form = PAGINAS.find((p) => p.nome === "form.tsx")!.texto
+    expect(form, "a demonstração precisa de uma folha de verdade").toContain(
+      "<SheetContent"
+    )
+    expect(form, "e ela é a gaveta alta").toContain("fillMobileViewport")
   })
 
   it("5. o iframe tem nome, e o documento dele não rola", () => {
@@ -110,5 +117,61 @@ describe("moldura de telefone do catálogo", () => {
     expect(CODIGO).toContain("ring-1 ring-border")
     expect(CODIGO).not.toMatch(/className=\{cn\("shrink-0[^"]*bg-card/)
     expect(CODIGO).not.toContain("shadow-")
+  })
+
+  it("10. o que portaliza para a moldura não é modal dentro dela", () => {
+    // O Radix monta um `RemoveScroll` dentro do `DialogOverlay` sempre que
+    // `modal`, e o `react-remove-scroll` trava o `document` **global** — o da
+    // página de fora —, porque o React roda na janela de fora ainda que o DOM
+    // viva no `<iframe>`. Medido com a folha do `Form` aberta:
+    // `data-scroll-locked` no `<body>` do catálogo, `overflow` `hidden` e um
+    // `wheel` na página saindo `defaultPrevented`; com ela fechada, nada disso.
+    // Quem lê a janela ativa é quem portaliza para lá, e são estes três.
+    const UI = new URL("../../components/ui/", import.meta.url)
+    // A raiz, e não o arquivo: `{...props}` aparece em toda peça, e um
+    // `indexOf` solto acharia o da peça seguinte — a asserção passaria com o
+    // padrão escrito **depois** do espalhamento. Verificado sabotando.
+    for (const [arquivo, raiz] of [
+      ["sheet.tsx", "Sheet"],
+      ["drawer.tsx", "Drawer"],
+      ["edge-panel.tsx", "EdgePanel"],
+    ] as const) {
+      const src = readFileSync(new URL(arquivo, UI), "utf8").replace(
+        /\/\/.*$/gm,
+        ""
+      )
+      expect(src, `${arquivo}: não lê a modalidade da janela`).toContain(
+        "useViewportModal"
+      )
+      const i = src.indexOf(`function ${raiz}(`)
+      const bloco = src.slice(i, src.indexOf("\nfunction ", i + 1))
+      expect(bloco.length, `${arquivo}: raiz não achada`).toBeGreaterThan(0)
+      // Antes do espalhamento: é padrão, não imposição — quem chama manda.
+      // Aos pares, porque o `Sheet` tem **duas** raízes (gaveta e painel): com
+      // um índice só, mover o `modal` de uma delas passava batido — o `modal`
+      // da outra ainda vinha antes do primeiro espalhamento. Sabotado nas duas.
+      const posicoes = (re: RegExp) =>
+        [...bloco.matchAll(re)].map((m) => m.index!)
+      const modais = posicoes(/modal=\{(modal|useViewportModal\(\))\}/g)
+      const espalhamentos = posicoes(/\{\.\.\.props\}/g)
+      expect(
+        modais.length,
+        `${arquivo}: o padrão não chega a toda raiz`
+      ).toBe(espalhamentos.length)
+      for (const [n, espalhamento] of espalhamentos.entries()) {
+        expect(
+          espalhamento,
+          `${arquivo}: raiz ${n + 1} espalha antes do padrão`
+        ).toBeGreaterThan(modais[n])
+      }
+    }
+    // E ele é `undefined` fora da moldura: o app não muda uma linha.
+    const hook = readFileSync(
+      new URL("../../hooks/use-mobile.tsx", import.meta.url),
+      "utf8"
+    )
+    expect(hook).toMatch(
+      /useViewportModal[\s\S]*?useViewportWindow\(\)\s*\?\s*false\s*:\s*undefined/
+    )
   })
 })

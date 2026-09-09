@@ -22,10 +22,6 @@ import {
   Sheet,
   SheetContent,
 } from "@/components/ui/sheet"
-import {
-    MobileSheetFormStickyHeader,
-    mobileFormSheetContentClassName,
-} from "@/components/ui/mobile-sheet-form-chrome"
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
     CATEGORY_COLORS,
@@ -571,12 +567,11 @@ export function CategoriesOnboardingWizard({
                     <SheetContent
                         side="bottom"
                         fillMobileViewport
-                        className={mobileFormSheetContentClassName}
                     >
-                        <MobileSheetFormStickyHeader
-                            title="Nova categoria"
-                            description="Defina nome, tipo, cor e ícone. Orçamentos ficam no passo seguinte para despesas."
-                        />
+                        <DialogHeader>
+                            <DialogTitle>Nova categoria</DialogTitle>
+                            <DialogDescription>Defina nome, tipo, cor e ícone. Orçamentos ficam no passo seguinte para despesas.</DialogDescription>
+                        </DialogHeader>
                         <CustomForm
                             id={ADD_CATEGORY_FORM_ID}
                             className="flex min-h-0 flex-1 flex-col"
@@ -678,12 +673,11 @@ export function CategoriesOnboardingWizard({
                     <SheetContent
                         side="bottom"
                         fillMobileViewport
-                        className={mobileFormSheetContentClassName}
                     >
-                        <MobileSheetFormStickyHeader
-                            title="Editar categoria"
-                            description="Ajuste nome, tipo, cor e ícone. Para despesas, defina também o limite deste mês."
-                        />
+                        <DialogHeader>
+                            <DialogTitle>Editar categoria</DialogTitle>
+                            <DialogDescription>Ajuste nome, tipo, cor e ícone. Para despesas, defina também o limite deste mês.</DialogDescription>
+                        </DialogHeader>
                         {editCategoryId ? (
                             <CustomForm
                                 id={EDIT_CATEGORY_FORM_ID}

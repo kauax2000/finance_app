@@ -3,7 +3,6 @@
 import * as React from "react"
 import { createPortal } from "react-dom"
 
-import { mobileFormSheetContentClassName } from "@/components/ui/mobile-sheet-form-chrome"
 import { ViewportWindowProvider } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 
@@ -53,8 +52,20 @@ import { cn } from "@/lib/utils"
  *   janela e entrega `container` ao `Portal` do Radix. É o que torna o ramo de
  *   telefone da `Sidebar` demonstrável.
  *
- * A que fica: **`env(safe-area-inset-*)` vale zero**, porque não há aparelho —
- * o recuo que se vê é a base, sem os 34px do iPhone.
+ * **E o que abre aqui dentro não é modal para a página de fora.** `Sheet`,
+ * `Drawer` e `EdgePanel` leem `useViewportModal()` e nascem `modal={false}`
+ * aqui: o Radix monta um `RemoveScroll` dentro do `DialogOverlay` sempre que
+ * `modal`, e o `react-remove-scroll` trava o `document` **global** — o desta
+ * página —, porque o React roda na janela de fora ainda que o DOM viva no
+ * `<iframe>`. Medido com a folha do `Form` aberta: `data-scroll-locked` no
+ * `<body>` do catálogo, `overflow` `hidden`, e um `wheel` sobre o `<h1>`
+ * saindo `defaultPrevented`; a página inteira congelava porque um espécime de
+ * 375px abriu uma gaveta.
+ *
+ * As que ficam: **`env(safe-area-inset-*)` vale zero**, porque não há aparelho
+ * — o recuo que se vê é a base, sem os 34px do iPhone —, e **o véu não aparece
+ * aqui dentro**, porque tanto o `Overlay` do vaul quanto o do Radix devolvem
+ * `null` fora do modo modal: é lá que o `RemoveScroll` mora.
  *
  * ## Ela mora aqui, e não em `components/ui/`
  *
@@ -308,46 +319,5 @@ function PhoneFrame({
   )
 }
 
-/**
- * A folha subindo da base da tela.
- *
- * **Ela é `bg-background` com `border-t`, e não `bg-card`** — é o que
- * `EdgePanel` de fato pinta (`edge-panel.tsx:31,50`). As duas demonstrações
- * usavam `bg-card` porque o `Preview` também é `bg-card`, e ali uma folha
- * `bg-background` não se separava de nada. Dentro do telefone ela se separa do
- * `Preview`, não do que está atrás dela — e o que está atrás é uma faixa de
- * 8px, porque a folha preenche a tela.
- */
-function PhoneFrameSheet({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<"div">) {
-  return (
-    <>
-      <div aria-hidden className="absolute inset-0 bg-overlay" />
-      <div
-        data-slot="phone-frame-sheet"
-        className={cn(
-          // O mesmo casco que um `SheetContent` real veste. É dele que vem o
-          // recuo de baixo — a moldura à mão não o tinha, e o botão de salvar
-          // ficava colado na borda: `padding-bottom: 0`, medido. Copiar a
-          // string aqui seria a segunda cópia da área segura.
-          mobileFormSheetContentClassName,
-          // O que o `EdgePanel` acrescenta, e que ali vem da superfície.
-          "border-t border-border bg-background",
-          // `h-full`, e não `max-h-full`: `fillMobileViewport` é altura fixa
-          // (`h-(--sheet-drawer-h)`), não teto. É o que faz o corpo rolar de
-          // forma determinística em vez de depender do tanto de conteúdo.
-          "relative h-full",
-          className
-        )}
-        {...props}
-      >
-        {children}
-      </div>
-    </>
-  )
-}
 
-export { PhoneFrame, PhoneFrameSheet, ViewportFrame }
+export { PhoneFrame, ViewportFrame }

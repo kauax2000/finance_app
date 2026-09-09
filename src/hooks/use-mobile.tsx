@@ -39,6 +39,35 @@ function useViewportWindow() {
   return React.useContext(ViewportWindowContext)
 }
 
+/**
+ * O `modal` de uma superfície que abre **dentro da moldura do catálogo**.
+ *
+ * Fora dela devolve `undefined`, e cada primitiva fica com o próprio padrão
+ * (`true`): o app não muda uma linha.
+ *
+ * Dentro dela devolve `false`, e a razão é medida. O Radix monta um
+ * `RemoveScroll` dentro do `DialogOverlay` **sempre que `modal`** — e o
+ * `react-remove-scroll` trava o `document` **global**, o da página de fora,
+ * porque o React roda na janela de fora ainda que o DOM viva no `<iframe>`.
+ * Medido com a folha do `Form` aberta: `data-scroll-locked` no `<body>` do
+ * catálogo, `overflow` computado `hidden`, e um `wheel` sobre o `<h1>` da
+ * página saindo `defaultPrevented`. Com ela fechada, nenhum dos três. A página
+ * inteira congelava porque um espécime de 375px abriu uma gaveta — e ela não é
+ * modal para a página de fora, que é exatamente o que este `false` diz.
+ *
+ * **O custo é o véu**, e ele é da biblioteca: o `Overlay` do vaul devolve
+ * `null` quando não é modal (com o motivo escrito no fonte dele — *"o overlay é
+ * quem trava a rolagem"*), e o do Radix idem. Dentro da moldura a superfície
+ * abre sem véu; é a terceira limitação declarada dela, ao lado do `env()` de
+ * área segura.
+ *
+ * Ele não vale para `Dialog` nem `Popover`, que não leem a janela ativa — quem
+ * o lê é quem portaliza para a moldura: `Sheet`, `Drawer` e `EdgePanel`.
+ */
+function useViewportModal(): boolean | undefined {
+  return useViewportWindow() ? false : undefined
+}
+
 export function useIsMobile() {
   const janela = useViewportWindow()
 
@@ -68,4 +97,9 @@ export function useIsMobile() {
   )
 }
 
-export { MOBILE_BREAKPOINT, ViewportWindowProvider, useViewportWindow }
+export {
+  MOBILE_BREAKPOINT,
+  ViewportWindowProvider,
+  useViewportModal,
+  useViewportWindow,
+}

@@ -18,10 +18,6 @@ import {
   Sheet,
   SheetContent,
 } from "@/components/ui/sheet"
-import {
-    MobileSheetFormStickyHeader,
-    mobileFormSheetContentClassName,
-} from "@/components/ui/mobile-sheet-form-chrome"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { periodBoundsFromYearMonth } from "@/lib/budget-month"
 import { upsertCategoryBudget, deleteCategoryBudgetById } from "@/lib/category-budget-ops"
@@ -134,12 +130,11 @@ export function CategoryBudgetDialog({
                 <SheetContent
                     side="bottom"
                     fillMobileViewport
-                    className={mobileFormSheetContentClassName}
                 >
-                    <MobileSheetFormStickyHeader
-                        title={`Orçamento — ${category.name}`}
-                        description={`Limite de despesas para ${period_start} a ${period_end}.`}
-                    />
+                    <DialogHeader>
+                        <DialogTitle>{`Orçamento — ${category.name}`}</DialogTitle>
+                        <DialogDescription>{`Limite de despesas para ${period_start} a ${period_end}.`}</DialogDescription>
+                    </DialogHeader>
                     <CustomForm onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
                         <div className="min-h-0 flex-1 overflow-y-auto px-4">{fieldsBlock}</div>
                         <DialogFooter className="mt-0 shrink-0 flex-col gap-2 px-4 pt-4">
