@@ -3,10 +3,10 @@ import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 
 /**
- * A régua do painel de borda, trancada.
+ * A régua da folha, trancada.
  *
- * O arquivo não tinha teste nenhum até o eixo `floating` entrar — o único que o
- * tocava era `glass.test.ts`, que só verifica que ele veste a placa modal.
+ * Ela nasceu como a régua do `EdgePanel`, que era um componente à parte; a
+ * rodada 64 dissolveu aquele arquivo aqui, e o teste veio junto com o `cva`.
  *
  * Cada asserção aqui nomeia o defeito que a produziu, e as sete foram
  * verificadas **reintroduzindo** esse defeito. É o procedimento que
@@ -23,13 +23,12 @@ const ler = (nome: string) =>
 const semComentarios = (src: string) =>
   src.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/.*$/gm, "$1")
 
-const CODIGO = semComentarios(ler("edge-panel"))
-const SHEET = semComentarios(ler("sheet"))
+const CODIGO = semComentarios(ler("sheet"))
 
 /** Só o `cva` — o único do arquivo, então o `ds:catalog` lê este. */
 const CVA = CODIGO.slice(
-  CODIGO.indexOf("const edgePanelContentVariants"),
-  CODIGO.indexOf("const EDGE_PANEL_OVERLAY_CLASS")
+  CODIGO.indexOf("const sheetContentVariants"),
+  CODIGO.indexOf("const SHEET_OVERLAY_CLASS")
 )
 
 const fatia = (abre: string, fecha: string) =>
@@ -41,7 +40,7 @@ const COMPOSTAS = fatia("compoundVariants", "defaultVariants")
 
 const LADOS = ["top", "right", "bottom", "left"] as const
 
-describe("régua do EdgePanel", () => {
+describe("régua do Sheet", () => {
   it("1. `h-full` não aparece no eixo side", () => {
     // Ele era redundante em `flush` — o bloco contentor de um `fixed` é o
     // viewport, então `height: 100%` e o par `top: 0`/`bottom: 0` resolvem no
@@ -52,8 +51,8 @@ describe("régua do EdgePanel", () => {
     // E a altura das laterais vem do par de âncoras, não de uma medida.
     for (const lado of ["right", "left"] as const) {
       const l = EIXO_SIDE.slice(EIXO_SIDE.indexOf(`${lado}:`))
-      expect(l, lado).toContain("--edge-panel-gap-block-start")
-      expect(l, lado).toContain("--edge-panel-gap-block-end")
+      expect(l, lado).toContain("--sheet-gap-block-start")
+      expect(l, lado).toContain("--sheet-gap-block-end")
     }
   })
 
@@ -71,7 +70,7 @@ describe("régua do EdgePanel", () => {
     // ordem de emissão do Tailwind. Sem declaração não há disputa, e `flush` é
     // no-op por construção: é o mecanismo de `--glass-ink`.
     const declaracoes = (t: string) => [
-      ...t.matchAll(/\[--edge-panel-gap[a-z-]*:/g),
+      ...t.matchAll(/\[--sheet-gap[a-z-]*:/g),
     ].length
     expect(declaracoes(EIXO_VARIANT)).toBe(3)
     expect(declaracoes(CVA) - declaracoes(EIXO_VARIANT)).toBe(0)
@@ -81,11 +80,11 @@ describe("régua do EdgePanel", () => {
       EIXO_VARIANT.indexOf("flush:"),
       EIXO_VARIANT.indexOf("floating:")
     )
-    expect(flush).not.toContain("--edge-panel-gap")
+    expect(flush).not.toContain("--sheet-gap")
 
     // Todo uso lê com o próprio `0px`. Sem o fallback, `flush` sairia com
     // `top: ` vazio e a declaração inteira cairia.
-    const usos = [...EIXO_SIDE.matchAll(/var\(--edge-panel-gap[a-z-]*[^)]*\)/g)]
+    const usos = [...EIXO_SIDE.matchAll(/var\(--sheet-gap[a-z-]*[^)]*\)/g)]
     expect(usos.length).toBeGreaterThan(0)
     for (const [uso] of usos) expect(uso, uso).toMatch(/,0px\)$/)
   })
@@ -145,33 +144,70 @@ describe("régua do EdgePanel", () => {
     expect(semPar).toEqual([])
   })
 
-  it("7. o Sheet repassa o eixo no desktop e não o deixa vazar para a gaveta", () => {
+  it("7. o eixo vale no ramo painel e não vaza para a gaveta", () => {
     // O tipo do `SheetContent` herda o eixo sozinho, por
-    // `VariantProps<typeof edgePanelContentVariants>`. Sem destruturar,
-    // `variant` cai em `{...props}` e é espalhado no `DrawerPrimitive.Content`
-    // do ramo telefone — atributo desconhecido no DOM, com aviso do React.
+    // `VariantProps<typeof sheetContentVariants>`. Sem destruturar, `side` e
+    // `variant` caem em `{...props}` e são espalhados no
+    // `DrawerPrimitive.Content` do ramo telefone — atributo desconhecido no
+    // DOM, com aviso do React.
     // Os cortes são ancorados a partir do início de `SheetContent`: um
     // `indexOf` solto acha o `useSheetSurface()` do `SheetOverlay`, que vem
     // antes no arquivo, e a fatia sai **vazia** — uma asserção que acerta por
     // vazio. Este teste caiu nisso na primeira escrita.
-    const inicio = SHEET.indexOf("function SheetContent(")
+    const inicio = CODIGO.indexOf("function SheetContent(")
     expect(inicio).toBeGreaterThan(-1)
-    const assinatura = SHEET.slice(
+    const assinatura = CODIGO.slice(
       inicio,
-      SHEET.indexOf("const surface = useSheetSurface()", inicio)
+      CODIGO.indexOf("const surface = useSheetSurface()", inicio)
     )
     expect(assinatura.length).toBeGreaterThan(0)
     expect(assinatura).toMatch(/^\s*variant,\s*$/m)
+    expect(assinatura).toMatch(/^\s*side = "right",\s*$/m)
 
-    const gaveta = SHEET.slice(
-      SHEET.indexOf('if (surface === "drawer")', inicio),
-      SHEET.indexOf("<EdgePanelContent", inicio)
+    const painel = CODIGO.indexOf("<SheetPrimitive.Portal", inicio)
+    expect(painel).toBeGreaterThan(-1)
+    const gaveta = CODIGO.slice(
+      CODIGO.indexOf('if (surface === "drawer")', inicio),
+      painel
     )
     expect(gaveta.length).toBeGreaterThan(0)
     expect(gaveta).not.toContain("variant")
+    // `side` na gaveta é o literal `data-side="bottom"`, e nunca a prop.
+    expect(gaveta).not.toMatch(/side=\{side\}/)
 
-    const desktop = SHEET.slice(SHEET.indexOf("<EdgePanelContent", inicio))
-    expect(desktop).toContain("variant={variant}")
+    const desktop = CODIGO.slice(painel)
+    expect(desktop).toContain("sheetContentVariants({ side, variant })")
+  })
+
+  it("9. a superfície é eixo, e `auto` continua sendo o padrão de todo mundo", () => {
+    // O pedido da rodada 66 foi *a navegação vira painel no telefone, e a regra
+    // das outras folhas não muda*. As duas metades são trancadas aqui: o eixo
+    // existe, e o padrão dele é `auto` — se ele virar `panel`, as ~40 folhas do
+    // app param de virar gaveta de uma vez, calado.
+    const modo = CODIGO.slice(
+      CODIGO.indexOf("type SheetSurfaceMode"),
+      CODIGO.indexOf("const SheetSurfaceContext")
+    )
+    expect(modo).toContain('"auto" | "panel"')
+    // Nada de forçar a gaveta: uma superfície que é gaveta em toda largura já
+    // tem arquivo, e é o `Drawer`.
+    expect(modo).not.toContain('"drawer"')
+
+    const raiz = CODIGO.slice(
+      CODIGO.indexOf("function Sheet("),
+      CODIGO.indexOf("function SheetTrigger(")
+    )
+    expect(raiz.length).toBeGreaterThan(0)
+    expect(raiz).toMatch(/surface:\s*modo = "auto"/)
+    // `auto` é o que deriva; `panel` fixa. A derivação continua vindo da
+    // largura, e não de um `if` na tela.
+    expect(raiz).toContain('isMobile && modo === "auto" ? "drawer" : "panel"')
+    expect(raiz).toContain("useIsMobile()")
+
+    // O valor do painel deixou de se chamar `sheet` — circular dentro de um
+    // componente chamado `Sheet`, e impossível de usar como valor de prop.
+    expect(CODIGO).not.toMatch(/surface === "sheet"|data-surface="sheet"/)
+    expect(CODIGO).toContain('data-surface="panel"')
   })
 
   it("8. o cva é único no arquivo — o ds:catalog lê os dois eixos", () => {

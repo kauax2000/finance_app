@@ -76,7 +76,9 @@ export default function SheetDoc() {
         superfície se escolhe aqui dentro: acima de 768px é um painel que desliza
         de uma borda; abaixo, é uma gaveta de verdade (<code>vaul</code>), que
         acompanha o dedo e fecha pelo gesto. Quem chama escreve{" "}
-        <code>&lt;Sheet&gt;</code> nos dois casos. <strong>Este arquivo é só a
+        <code>&lt;Sheet&gt;</code> nos dois casos — salvo quem pede{" "}
+        <code>surface=&quot;panel&quot;</code>, o eixo que fixa o painel em
+        qualquer largura e que só a navegação usa. <strong>Este arquivo é só a
         superfície</strong> — título, cabeçalho, corpo e rodapé vêm do{" "}
         <code>Dialog</code>.
       </Usage>
@@ -118,6 +120,46 @@ export default function SheetDoc() {
             </SheetContent>
           </Sheet>
         ))}
+      </DocSection>
+
+      <DocSection
+        title="Encostado e flutuante"
+        description="flush cola nas três bordas e desenha só o gume que fica para dentro — é o padrão. floating abre uma calha de 8px, arredonda os quatro cantos e fecha a borda em volta, com a página aparecendo por baixo. O eixo vale no desktop: no telefone a superfície é a gaveta, e ela tem geometria própria."
+        code={`<SheetContent side="left" variant="floating">…</SheetContent>`}
+        previewClassName="items-start"
+      >
+        {isMobile ? (
+          avisoDeGaveta
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {(
+              [
+                { lado: "left", v: "flush", rotulo: "left · flush (padrão)" },
+                { lado: "left", v: "floating", rotulo: "left · floating" },
+                { lado: "bottom", v: "flush", rotulo: "bottom · flush" },
+                { lado: "bottom", v: "floating", rotulo: "bottom · floating" },
+              ] as const
+            ).map((c) => (
+              <Sheet key={c.rotulo}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    {c.rotulo}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side={c.lado} variant={c.v}>
+                  <DialogHeader>
+                    <DialogTitle>{c.rotulo}</DialogTitle>
+                    <DialogDescription>
+                      O <code>flush</code> encosta na tela; o{" "}
+                      <code>floating</code> deixa a página aparecer em volta.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogCloseButton />
+                </SheetContent>
+              </Sheet>
+            ))}
+          </div>
+        )}
       </DocSection>
 
       <DocSection
@@ -170,6 +212,19 @@ export default function SheetDoc() {
         </Sheet>
         )}
       </DocSection>
+
+      <PropsTable
+        title="Props · Sheet"
+        rows={[
+          {
+            prop: "surface",
+            type: '"auto" | "panel"',
+            default: '"auto"',
+            description:
+              "auto é a regra da casa: painel acima de 768px, gaveta abaixo. panel fixa o painel em qualquer largura, e existe para navegação presa a uma borda — um menu entra pelo lado, não sobe do rodapé com alça. Não há como forçar a gaveta: para isso existe o Drawer.",
+          },
+        ]}
+      />
 
       <PropsTable
         title="Props · SheetContent"
@@ -242,6 +297,54 @@ export default function SheetDoc() {
         do polegar. No desktop vira linha, com a saída à esquerda e a ação à
         direita. <strong>Não escreva <code>flex-col</code> aqui</strong> — ele
         anula essa inversão e devolve o cancelar para cima.
+      </DocNote>
+
+      <DocNote title="Já foram dois componentes, e voltaram a ser um">
+        Houve um <code>EdgePanel</code>: a mesma moldura, mas presa a uma borda{" "}
+        <em>em qualquer largura</em>. Ele nasceu de um defeito real — a{" "}
+        <Link href="/designsystem/sidebar">Sidebar</Link> pegava a folha
+        emprestada e abria no telefone como gaveta de baixo, com alça de arraste
+        e canto arredondado, para listar seis links. A regra de então era que
+        conteúdo vira gaveta e navegação continua painel.
+        <br />
+        A decisão foi <strong>invertida</strong>: no telefone a superfície do
+        app é <strong>uma só</strong>, inclusive para navegação. Sem um
+        consumidor que precisasse do painel em toda largura, o componente
+        separado era uma segunda API para a mesma moldura — o{" "}
+        <code>cva</code>, o véu e a animação já viviam lá e eram usados por aqui.
+        Ele dissolveu neste arquivo com os dois eixos intactos.
+        <br />
+        <strong>E depois veio a meia-volta.</strong> A navegação voltou a ser
+        painel no telefone — mas o <code>EdgePanel</code> não voltou:{" "}
+        <em>o comportamento dele voltou como eixo</em>. É{" "}
+        <code>surface=&quot;panel&quot;</code>, uma prop, e a moldura continua
+        sendo uma só. O argumento da dissolução nunca foi que o painel em toda
+        largura fosse errado; era que ninguém o pedia. Hoje um consumidor pede —
+        e um consumidor pede uma prop, não um arquivo.
+      </DocNote>
+
+      <DocNote title="Por que o material não muda entre encostado e flutuante">
+        A tentação é vestir a <code>@utility glass</code> no{" "}
+        <code>floating</code>, como a placa flutuante da{" "}
+        <Link href="/designsystem/sidebar">Sidebar</Link> faz. Ali é certo por um
+        motivo que <strong>não vale aqui</strong>: aquela placa reserva a própria
+        calha no fluxo, então nada passa por trás dela — borrar cor chapada não
+        desenha nada, e a luz é <em>pintada</em>. A folha é modal: há o véu a 40%
+        e a página inteira atrás. O flutuante tem <strong>mais</strong> conteúdo
+        por baixo que o encostado, não menos, e o material borrado que a{" "}
+        <Link href="/designsystem/dialog">placa modal</Link> já traz — 24px com{" "}
+        <code>saturate(1.5)</code> — é a resposta certa nos dois. O eixo mexe em
+        geometria, e em nada mais.
+      </DocNote>
+
+      <DocNote title="A calha conta a área segura — nas verticais">
+        Oito pixels medidos a partir do <em>viewport</em> põem o canto de baixo
+        do painel atrás do indicador de home num iPhone. As duas bordas
+        verticais leem <code>max(calha, env(safe-area-inset-…))</code>. A
+        horizontal fica de fora de propósito:{" "}
+        <code>safe-area-inset-left/right</code> não aparece nenhuma vez no
+        repositório — é lacuna conhecida do app inteiro, cujo dono é a casca, e
+        fechá-la só aqui seria a segunda gramática para a mesma coisa.
       </DocNote>
 
       <DocNote title="Por que a folha vira gaveta">

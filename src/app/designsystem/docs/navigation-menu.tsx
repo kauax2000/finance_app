@@ -47,14 +47,10 @@ const DEGRAUS = [
 
 const MARCADORES = [
   {
-    valor: "arrow",
-    dica: "A ponta do painel. Padrão quando há viewport — é o que liga o painel ao gatilho que o abriu.",
-  },
-  {
     valor: "underline",
     dica: "Um traço de acento sob o gatilho aberto, a mesma língua do Tabs underline.",
   },
-  { valor: "none", dica: "Nada. Padrão sem viewport, onde o painel já encosta no item." },
+  { valor: "none", dica: "Nada — o padrão. Quem marca o gatilho aberto é o realce que ele já tem." },
 ] as const
 
 const CONTAS = [
@@ -146,6 +142,107 @@ export default function NavigationMenuDoc() {
         <code>{'className="block rounded-md p-2 hover:bg-accent"'}</code>, uma
         receita que discordava da do componente em quatro declarações. Catálogo
         escrevendo a anatomia é o sinal desta casa de que falta peça.
+      </DocNote>
+
+      <DocSection
+        title="A troca é um morph"
+        description="Passe de Finanças para Tudo: o painel muda de forma em 200ms com a curva da casa enquanto o conteúdo velho sai e o novo entra com um drift de 16px. É o Radix medindo o conteúdo ativo mais uma transition de largura e altura no viewport — nenhum JavaScript nosso. Esta demo existe porque a de Padrão tem os dois painéis em 224×96, e um morph entre iguais não tem o que mostrar."
+        code={`<NavigationMenu>
+  <NavigationMenuList>
+    <NavigationMenuItem>
+      <NavigationMenuTrigger>Finanças</NavigationMenuTrigger>
+      <NavigationMenuContent>
+        <NavigationMenuPanel>…</NavigationMenuPanel>
+      </NavigationMenuContent>
+    </NavigationMenuItem>
+    <NavigationMenuItem>
+      <NavigationMenuTrigger>Tudo</NavigationMenuTrigger>
+      <NavigationMenuContent>
+        <NavigationMenuPanel columns={2}>…</NavigationMenuPanel>
+      </NavigationMenuContent>
+    </NavigationMenuItem>
+  </NavigationMenuList>
+</NavigationMenu>`}
+        previewClassName="items-start p-6 pb-80"
+      >
+        <NavigationMenu>
+          <NavigationMenuList>
+            <NavigationMenuItem>
+              <NavigationMenuTrigger>Finanças</NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <NavigationMenuPanel>
+                  {CONTAS.map((item) => (
+                    <NavigationMenuLink key={item.nome} asChild>
+                      <Link href="#">{item.nome}</Link>
+                    </NavigationMenuLink>
+                  ))}
+                </NavigationMenuPanel>
+              </NavigationMenuContent>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NavigationMenuTrigger>Tudo</NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <NavigationMenuPanel columns={2}>
+                  <NavigationMenuSectionLabel>Contas</NavigationMenuSectionLabel>
+                  {CONTAS.map(({ nome, texto, Icone }) => (
+                    <NavigationMenuLink key={nome} variant="card" asChild>
+                      <Link href="#">
+                        <Icone />
+                        <NavigationMenuLinkTitle>{nome}</NavigationMenuLinkTitle>
+                        <NavigationMenuLinkDescription>
+                          {texto}
+                        </NavigationMenuLinkDescription>
+                      </Link>
+                    </NavigationMenuLink>
+                  ))}
+                  <NavigationMenuSectionLabel>Análise</NavigationMenuSectionLabel>
+                  {ANALISE.map(({ nome, texto, Icone }) => (
+                    <NavigationMenuLink key={nome} variant="card" asChild>
+                      <Link href="#">
+                        <Icone />
+                        <NavigationMenuLinkTitle>{nome}</NavigationMenuLinkTitle>
+                        <NavigationMenuLinkDescription>
+                          {texto}
+                        </NavigationMenuLinkDescription>
+                      </Link>
+                    </NavigationMenuLink>
+                  ))}
+                </NavigationMenuPanel>
+              </NavigationMenuContent>
+            </NavigationMenuItem>
+          </NavigationMenuList>
+        </NavigationMenu>
+      </DocSection>
+
+      <DocNote title="A curva da casa não chegava ao painel, e a troca era um whoosh">
+        Medido antes, com o menu aberto: <code>animation: enter 0.1s ease</code>{" "}
+        — cem milissegundos com a curva <em>do navegador</em>. O{" "}
+        <code>animate-in</code> do tw-animate-css lê <code>--tw-ease</code>, e
+        quem a escreve é a classe <code>ease-*</code>; sem ela no viewport,{" "}
+        <code>--tw-ease</code> estava <strong>vazio</strong> e o{" "}
+        <code>--ease-out</code> do projeto nunca alcançava esta superfície. A
+        forma da entrada não mudou — fade, 8px de subida e <code>zoom-95</code>{" "}
+        são a língua de toda superfície ancorada da casa —, mudou o tempo (
+        <code>--duration-base</code>) e a curva. A saída é só fade, em{" "}
+        <code>--duration-instant</code>: um menu que fecha ao tirar o cursor não
+        pode demorar 200ms.
+        <br />
+        Na troca, o conteúdo novo nascia a <strong>208px</strong> do lugar (
+        <code>slide-in-from-right-52</code>, herança do shadcn) e atravessava o
+        painel em 100ms. Hoje são <strong>16px</strong>: o suficiente para dizer
+        de que lado veio, não para viajar. E o drift segue a{" "}
+        <code>orientation</code> — num menu vertical os painéis trocam de cima
+        para baixo, e o deslize era horizontal.
+        <br />
+        <strong>O morph já existia, escondido num defeito.</strong> O viewport
+        tinha <code>duration-(--duration-instant)</code> sem nenhum{" "}
+        <code>transition-*</code>, e isso deixa{" "}
+        <code>transition-property: all</code>: largura e altura transicionavam,
+        a 100ms, com <code>ease</code> — tremor, não trajeto. Agora é{" "}
+        <code>transition-[width,height]</code> explícito, em 200ms com a curva.
+        Na primeira abertura as variáveis do Radix nascem indefinidas, a altura
+        computa <code>auto</code>, e <code>auto → px</code> não interpola: o
+        painel não cresce do zero.
       </DocNote>
 
       <DocSection
@@ -303,35 +400,27 @@ export default function NavigationMenuDoc() {
         ))}
       </DocSection>
 
-      <DocNote title="A seta é a ponta do painel, e o defeito antigo não era contraste">
-        O que havia antes era um quadrado <code>bg-border</code> com{" "}
-        <code>shadow-md</code> próprio — uma cor diferente da superfície que ele
-        encabeçava, e uma segunda sombra sobre a que o painel já lança. Medido no
-        tema escuro, ele dava <strong>1,23:1 contra o painel</strong>: pouco para
-        ler como peça, suficiente para ler como <em>emenda</em>.
+      <DocNote title="O bico saiu, e o que o derrubou não foi o contraste">
+        Havia um terceiro marcador — <code>arrow</code>, um{" "}
+        <code>{"<span>"}</code> de 8px rotacionado 45° na calha entre a fileira e
+        o painel —, e ele estava <em>certo pelos números</em>:{" "}
+        <code>bg-popover</code> com o mesmo <code>ring-foreground/10</code> do
+        painel dava <strong>1,00 contra ele</strong>, que é o valor exato de uma
+        ponta de balão. Era isso o problema. <strong>1,10 contra a página</strong>{" "}
+        é uma peça que ocupa a calha e não diz nada que a posição do painel já
+        não diga, e o que liga os dois é a âncora, não um desenho.
         <br />
-        Agora é <code>bg-popover</code> com o mesmo{" "}
-        <code>ring-foreground/10</code> — <strong>1,00 contra o painel</strong>,
-        nenhuma diferença, que é o número certo para um bico. Ele{" "}
-        <em>não</em> se destaca da página (1,10), e não deveria: quem o torna
-        visível é o fio e a sombra que o painel já tem. Se o que você quer é um
-        sinal alto de qual gatilho está aberto, o marcador é o{" "}
-        <code>underline</code> — <strong>6,78:1</strong> contra a página.
-        <br />O recorte tem <strong>2px a mais que a calha</strong>: a base do
-        bico passa por baixo do painel em vez de encostar nele. Sem isso o{" "}
-        <code>ring</code> do painel desenharia um fio reto atravessando a base do
-        bico, e as duas peças voltariam a ler como duas.
-      </DocNote>
-
-      <DocNote title="O padrão do marcador sai do outro eixo">
-        <code>defaultNavigationMenuIndicator(viewport)</code> devolve{" "}
-        <code>arrow</code> com viewport e <code>none</code> sem, e a razão é
-        geométrica: com viewport há <strong>um</strong> painel compartilhado,
-        longe do gatilho que o abriu, e a seta é o que liga os dois; sem
-        viewport o painel nasce embaixo do próprio item, encostado nele, e a seta
-        repetiria o que a posição já diz. É a forma de{" "}
-        <code>defaultTabsSize(variant)</code> — derivar em vez de cravar, e
-        deixar a derivação exportada para ser inspecionável.
+        Sai com ele a derivação que o ligava sozinho —{" "}
+        <code>defaultNavigationMenuIndicator(viewport)</code>. Sem o{" "}
+        <code>arrow</code> ela devolvia <code>none</code> nos dois ramos: uma
+        função que escolhe entre dois valores, com um valor, é constante
+        disfarçada. É o julgamento que a rodada 29b já fez com{" "}
+        <code>defaultControlVariant</code>, e o padrão passou a ser{" "}
+        <code>none</code> cravado.
+        <br />
+        Quem quer um sinal alto de qual gatilho está aberto usa{" "}
+        <code>underline</code> — <strong>6,78:1</strong> contra a página, seis
+        vezes o que o bico jamais deu.
       </DocNote>
 
       <DocSection
@@ -537,9 +626,10 @@ export default function NavigationMenuDoc() {
         <em>fileira</em> — que é o que <code>start</code>, <code>center</code> e{" "}
         <code>end</code> fazem —, abrir o <strong>segundo</strong> gatilho punha o
         painel no mesmo lugar em que o primeiro o pusera, e a leitura era a de um
-        menu que abriu o painel errado. Com <code>indicator=&quot;arrow&quot;</code> ficava
-        pior: a seta sobre o gatilho certo e o painel em outro lugar, as duas
-        peças apontando para direções diferentes.
+        menu que abriu o painel errado. Enquanto existiu o bico, ficava pior: a
+        ponta sobre o gatilho certo e o corpo do painel em outro lugar, as duas
+        peças apontando para direções diferentes. Ele saiu, e com ele o sinal
+        visual que denunciava o desalinho — hoje isso só se vê medindo.
         <br />
         <code>align=&quot;trigger&quot;</code> mede o gatilho aberto e publica o{" "}
         <strong>centro</strong> dele em <code>--navigation-menu-anchor-cx</code>.
@@ -583,7 +673,7 @@ export default function NavigationMenuDoc() {
         <code>{'<div style="position:relative">'}</code> que o Radix põe em volta
         da fileira — o mesmo bloco contentor do marcador e do painel. Medido
         depois: desalinho <strong>0,1</strong> e <strong>0,3</strong> (o
-        arredondamento inteiro do <code>offsetLeft</code>), com a largura da seta
+        arredondamento inteiro do <code>offsetLeft</code>), com a largura do marcador
         acompanhando o gatilho, 102 e 91.
       </DocNote>
 
@@ -705,10 +795,10 @@ export default function NavigationMenuDoc() {
           },
           {
             prop: "indicator",
-            type: '"none" | "arrow" | "underline"',
-            default: "arrow com viewport, none sem",
+            type: '"none" | "underline"',
+            default: '"none"',
             description:
-              "O que marca o gatilho aberto. Ele é montado pela fileira, e não escrito por quem chama. O padrão sai de defaultNavigationMenuIndicator(viewport), que é exportado.",
+              "O que marca o gatilho aberto. Ele é montado pela fileira, e não escrito por quem chama. O padrão é none: o realce do próprio gatilho basta, e underline é o opt-in para quando o painel precisa de um sinal alto.",
           },
           {
             prop: "align",

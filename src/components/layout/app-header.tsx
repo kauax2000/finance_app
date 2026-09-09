@@ -29,7 +29,10 @@ const headerBaseClassName =
     "w-full min-w-0 shrink-0 border-b border-b-[length:var(--sidebar-inset-rule,1px)] border-border max-md:fixed max-md:inset-x-0 max-md:top-0 max-md:z-(--z-header) max-md:pt-[env(safe-area-inset-top,0px)] md:sticky md:top-0 md:z-10 transition-[background-color] duration-200"
 
 const headerRowClassName =
-    "flex h-16 max-md:h-14 w-full min-w-0 items-center gap-0 transition-[height] ease-linear md:group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"
+    // A duração e a curva são as da barra: ele encolhe **porque** ela
+    // recolheu, e duas curvas diferentes no mesmo gesto leem como duas
+    // animações que por acaso começaram juntas.
+    "flex h-16 max-md:h-14 w-full min-w-0 items-center gap-0 transition-[height] duration-(--duration-slow) ease-(--ease-emphasized) md:group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"
 
 function defaultMobileTitle(
     pathname: string,

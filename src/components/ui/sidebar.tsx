@@ -18,10 +18,7 @@ import { useScrollFade } from "@/hooks/use-scroll-fade"
 import { Button } from "@/components/ui/button"
 import { Input, type InputBaseProps } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import {
-  EdgePanel,
-  EdgePanelContent,
-} from "@/components/ui/edge-panel"
+import { Sheet, SheetContent } from "@/components/ui/sheet"
 import {
   DialogCloseButton,
   DialogDescription,
@@ -36,10 +33,15 @@ import {
 } from "@/components/ui/tooltip"
 import { SIDEBAR_STATE_COOKIE_NAME } from "@/lib/sidebar-state-cookie"
 
+/** Quarta cópia no repositório: `tabs`, `navigation-menu` e `carousel` a declaram igual. */
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect
+
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = "16rem"
-const SIDEBAR_WIDTH_MOBILE = "18rem"
 const SIDEBAR_WIDTH_ICON = "3rem"
+/** A largura do painel no telefone. Ali a barra não é trilho nem tela cheia. */
+const SIDEBAR_WIDTH_MOBILE = "18rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 /**
  * Os limites do arraste, em **pixel**.
@@ -242,7 +244,7 @@ function SidebarProvider({
     return (
       <SidebarContext.Provider value={contextValue}>
         {/* `stack={false}`: o átomo empilha grupos horizontais no telefone, e
-            aqui isso é errado — abaixo de `md` a navegação é um `EdgePanel`, e
+            aqui isso é errado — abaixo de `md` a navegação é uma gaveta, e
             não um painel empilhado sob o conteúdo. */}
         <ResizablePanelGroup ref={raiz} stack={false} {...casca}>
           {children}
@@ -293,23 +295,42 @@ function Sidebar({
 
   if (isMobile) {
     return (
-      // `EdgePanel`, e não `Sheet`: navegação entra pelo lado em qualquer
-      // largura. O `Sheet` vira gaveta de baixo no telefone — certo para um
-      // formulário, errado para um menu, que ficaria com alça de arraste e
-      // canto arredondado no topo para listar seis links.
-      <EdgePanel open={openMobile} onOpenChange={setOpenMobile} {...props}>
-        <EdgePanelContent
+      // `surface="panel"`: **navegação entra pelo lado em qualquer largura.**
+      // É o único lugar do app que fixa a superfície — toda outra folha segue
+      // a regra `auto` e vira gaveta no telefone.
+      //
+      // A rodada 64 tinha decidido o contrário, e a 66 desfez para este
+      // consumidor. O que não voltou é o `EdgePanel`: o comportamento dele é
+      // uma prop, e a moldura continua sendo uma só.
+      //
+      // `side` vai junto — uma `Sidebar side="right"` abre pela direita também
+      // no telefone. E **`fillMobileViewport` não vai**: ele é a altura da
+      // gaveta, e no painel a altura sai do par `top`/`bottom` do `cva`.
+      //
+      // **`p-0` continua fora**, e a razão é a da rodada 64: a base do casco não
+      // declara recuo, então ele era no-op no painel — e no dia em que esta
+      // barra voltar a ser gaveta, o `twMerge` o faria derrubar a área segura.
+      <Sheet
+        surface="panel"
+        open={openMobile}
+        onOpenChange={setOpenMobile}
+        {...props}
+      >
+        <SheetContent
+          side={side}
           dir={dir}
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+          // **Sem `[&>button]:hidden`.** A classe vinha do shadcn, de quando o
+          // `SheetContent` injetava o próprio ×; desde a rodada 60 ele não
+          // injeta, e ela só escondia o nosso — medido, `display: none`. Na
+          // gaveta passava (fecha-se arrastando); num painel não há arraste, e
+          // o × é a única afordância visível de fechar.
+          className="w-(--sidebar-width) bg-sidebar text-sidebar-foreground"
           style={
-            {
-              "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
-            } as React.CSSProperties
+            { "--sidebar-width": SIDEBAR_WIDTH_MOBILE } as React.CSSProperties
           }
-          side={side}
         >
           <DialogHeader className="sr-only">
             {/* O nome que o leitor de tela anuncia ao abrir o menu. Ele era a
@@ -321,10 +342,10 @@ function Sidebar({
               Seções do app e as ações da conta.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex h-full w-full flex-col">{children}</div>
+          <div className="flex min-h-0 w-full flex-1 flex-col">{children}</div>
         <DialogCloseButton />
-        </EdgePanelContent>
-      </EdgePanel>
+        </SheetContent>
+      </Sheet>
     )
   }
 
@@ -349,8 +370,26 @@ function Sidebar({
         // tempo de execução não chega ao CSS. É a mesma razão por que os três
         // menus escrevem por extenso a classe que carrega o nome da primitiva
         // em vez de a herdarem da superfície compartilhada.
-        "group-data-[variant=floating]:rounded-xl group-data-[variant=floating]:shadow-sm",
-        "group-data-[variant=floating]:glass"
+        // Raio 18 (`--radius-2xl`), o das placas modais — e não os 14 do
+        // `rounded-xl`, que era o raio de cartão de conteúdo. A elevação sobe
+        // de `sm` para `lg` pelo motivo que a rodada 36 registrou: placa e
+        // página estão a 1,04 uma da outra no tema claro, e uma sombra de 6%
+        // não define nada ali.
+        "group-data-[variant=floating]:rounded-2xl group-data-[variant=floating]:shadow-lg",
+        "group-data-[variant=floating]:glass",
+        // ── O reflexo, em repouso ──────────────────────────────────────────
+        // `--glass-sheen` é a camada mais de cima da `@utility glass`, e ela
+        // nunca tinha tido produtor. Ela chegou a acender **sob o cursor**, e o
+        // defeito era de alvo: a superfície é do tamanho da coluna, então
+        // apontar para *um item* acendia a barra inteira. A decisão foi levar o
+        // valor do hover ao **repouso** — a placa fica permanentemente no tom
+        // que só tinha ao ser apontada, e não reage a nada. Quem responde ao
+        // cursor é o item.
+        //
+        // Só no tema escuro, por medida: no claro a lâmina resolve em 252 de
+        // 255, e a rodada 40 mediu que não sobra unidade acima do corpo.
+        // Estático, então sem `@property` — não há o que interpolar.
+        "dark:group-data-[variant=floating]:[--glass-sheen:oklch(1_0_0_/_4%)]"
       )}
     >
       {children}
@@ -405,7 +444,16 @@ function Sidebar({
 
   return (
     <div
-      className="group peer hidden text-sidebar-foreground md:block"
+      // **`order-last` é o que faz `side` mandar no layout.** A folga que
+      // reserva o lugar do trilho `fixed` mora aqui dentro, e sem isto ela
+      // ficava sempre à esquerda: medido a 926px com `side="right"`, o trilho
+      // ia para `l670 r926` e a folga continuava em `l0 r256` — 256px vazios de
+      // um lado e a placa cobrindo **240px do conteúdo** do outro.
+      //
+      // A ordem no **DOM** não muda, e é isso que mantém os `peer-*` do
+      // `SidebarInset` válidos: quem inverte é a ordem visual do flex. O
+      // caminho redimensionável já reordenava por JSX; agora os dois invertem.
+      className="group peer hidden text-sidebar-foreground md:block data-[side=right]:order-last"
       data-state={state}
       data-collapsible={state === "collapsed" ? collapsible : ""}
       data-variant={variant}
@@ -416,9 +464,8 @@ function Sidebar({
       <div
         data-slot="sidebar-gap"
         className={cn(
-          "relative w-(--sidebar-width) bg-transparent transition-[width] duration-(--duration-base) ease-linear",
+          "relative w-(--sidebar-width) bg-transparent transition-[width] duration-(--duration-slow) ease-(--ease-emphasized)",
           "group-data-[collapsible=offcanvas]:w-0",
-          "group-data-[side=right]:rotate-180",
           variant === "floating" || variant === "inset"
             ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
             : "group-data-[collapsible=icon]:w-(--sidebar-width-icon)"
@@ -428,7 +475,7 @@ function Sidebar({
         data-slot="sidebar-container"
         data-side={side}
         className={cn(
-          "fixed inset-y-0 z-(--z-sticky) hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-(--duration-base) ease-linear data-[side=left]:left-0 data-[side=left]:group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)] data-[side=right]:right-0 data-[side=right]:group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)] md:flex",
+          "fixed inset-y-0 z-(--z-sticky) hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-(--duration-slow) ease-(--ease-emphasized) data-[side=left]:left-0 data-[side=left]:group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)] data-[side=right]:right-0 data-[side=right]:group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)] md:flex",
           variant === "floating" || variant === "inset"
             ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
             : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
@@ -495,7 +542,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
       tabIndex={-1}
       onClick={toggleSidebar}
       className={cn(
-        "absolute inset-y-0 z-10 hidden w-4 cursor-pointer transition-[background-color,translate] ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:start-1/2 after:w-0.5 after:transition-colors hover:after:bg-sidebar-border active:after:bg-sidebar-border sm:flex ltr:-translate-x-1/2 rtl:-translate-x-1/2",
+        "absolute inset-y-0 z-10 hidden w-4 cursor-pointer transition-[background-color,translate] duration-(--duration-slow) ease-(--ease-emphasized) group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:start-1/2 after:w-0.5 after:transition-colors hover:after:bg-sidebar-border active:after:bg-sidebar-border sm:flex ltr:-translate-x-1/2 rtl:-translate-x-1/2",
         "group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full hover:group-data-[collapsible=offcanvas]:bg-sidebar active:group-data-[collapsible=offcanvas]:bg-sidebar",
         "[[data-side=left][data-collapsible=offcanvas]_&]:-right-2",
         "[[data-side=right][data-collapsible=offcanvas]_&]:-left-2",
@@ -556,7 +603,13 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
     <main
       data-slot="sidebar-inset"
       className={cn(
-        "relative flex min-w-0 w-full flex-1 flex-col bg-background md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2",
+        // A margem de `inset` é espelhada: o lado que encosta na barra é o que
+        // perde o respiro, e ele depende do `side`. Antes só existia a versão
+        // da esquerda, então com a barra à direita o conteúdo saía com 8px de
+        // um lado e zero do outro — medido, `m:0px/8px` com a placa à direita.
+        "relative flex min-w-0 w-full flex-1 flex-col bg-background md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm",
+        "md:peer-data-[variant=inset]:peer-data-[side=left]:ml-0 md:peer-data-[variant=inset]:peer-data-[side=right]:mr-0",
+        "md:peer-data-[variant=inset]:peer-data-[state=collapsed]:peer-data-[side=left]:ml-2 md:peer-data-[variant=inset]:peer-data-[state=collapsed]:peer-data-[side=right]:mr-2",
         SIDEBAR_INSET_RULE,
         className
       )}
@@ -686,7 +739,7 @@ function SidebarGroupLabel({
       data-slot="sidebar-group-label"
       data-sidebar="group-label"
       className={cn(
-        "flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70 ring-sidebar-ring outline-hidden transition-[margin,opacity] duration-(--duration-base) ease-linear group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0 focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
+        "flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70 ring-sidebar-ring outline-hidden transition-[margin,opacity] duration-(--duration-slow) ease-(--ease-emphasized) group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0 focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
         className
       )}
       {...props}
@@ -749,14 +802,150 @@ function SidebarGroupContent({
  * fica nos mesmos 4: com o trilho dizendo o aninhamento, um segundo sinal seria
  * redundante.
  */
-function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
+/**
+ * Se a pílula já mediu — e portanto se o botão ativo cede a ele o preenchimento.
+ *
+ * É contexto e não seletor pela razão de sempre nesta base: `in-*` e `group-*`
+ * compilam com `:where()`, e perderiam para a classe do próprio botão.
+ */
+const SidebarMarkerContext = React.createContext(false)
+
+/**
+ * A caixa de um elemento **relativa a um ancestral**, somando a cadeia de
+ * `offsetParent`.
+ *
+ * Não é `getBoundingClientRect`: o `SidebarContent` rola, e uma caixa em
+ * coordenada de viewport faria o marcador escorregar para fora do item a cada
+ * pixel rolado. Em coordenada de conteúdo ele acompanha a rolagem de graça,
+ * porque é filho do mesmo elemento que rola. É a decisão que o marcador do
+ * `Tabs` registra.
+ *
+ * **E a soma é a cadeia inteira, não um `offsetTop` só.** O `<li>` do menu é
+ * `relative`, então ele — e não a trilha — é o `offsetParent` do botão: lido
+ * direto, `offsetLeft` valeria zero para todos, que é exatamente o defeito que
+ * o `NavigationMenu` mediu na rodada 32b, onde o primeiro item acertava por
+ * acidente. Devolver `null` quando a cadeia não chega ao alvo é o que mantém o
+ * marcador fora de um submenu que viva noutra subárvore.
+ */
+function caixaRelativa(alvo: HTMLElement, ate: HTMLElement) {
+  let x = 0
+  let y = 0
+  let no: HTMLElement | null = alvo
+  while (no && no !== ate) {
+    x += no.offsetLeft
+    y += no.offsetTop
+    no = no.offsetParent as HTMLElement | null
+  }
+  return no === ate ? { x, y, w: alvo.offsetWidth, h: alvo.offsetHeight } : null
+}
+
+function SidebarMenu({ className, children, ...props }: React.ComponentProps<"ul">) {
+  const trilhaRef = React.useRef<HTMLUListElement | null>(null)
+  const [medido, setMedido] = React.useState(false)
+
+  /**
+   * A medição da pílula viajante — o mecanismo do marcador do `Tabs`: um
+   * `ResizeObserver` na trilha e nos botões, e um `MutationObserver` em
+   * `data-active`. Nada de laço por quadro.
+   *
+   * Ela só roda sob `floating`, e a variante é lida do DOM em vez de descer
+   * por um segundo contexto: ela já está publicada em `data-variant` pela raiz
+   * da barra, que é a mesma fonte que os `group-data-[variant=floating]:` leem.
+   */
+  useIsomorphicLayoutEffect(() => {
+    const trilha = trilhaRef.current
+    if (!trilha) return
+    const raiz = trilha.closest<HTMLElement>('[data-slot="sidebar"]')
+
+    const medir = () => {
+      // A variante é lida **a cada medição**, e não uma vez na montagem: ela
+      // pode trocar em runtime (o seletor de eixos do catálogo faz isso), e um
+      // retorno cedo aqui deixaria o marcador desligado para sempre — medido,
+      // era o que acontecia ao ir de `sidebar` para `floating`.
+      const ativo =
+        raiz?.dataset.variant === "floating"
+          ? trilha.querySelector<HTMLElement>(
+              '[data-slot="sidebar-menu-button"][data-active="true"]'
+            )
+          : null
+      const caixa = ativo && caixaRelativa(ativo, trilha)
+      if (!caixa) {
+        setMedido(false)
+        return
+      }
+      trilha.style.setProperty("--sidebar-marker-x", `${caixa.x}px`)
+      trilha.style.setProperty("--sidebar-marker-y", `${caixa.y}px`)
+      trilha.style.setProperty("--sidebar-marker-w", `${caixa.w}px`)
+      trilha.style.setProperty("--sidebar-marker-h", `${caixa.h}px`)
+      setMedido(true)
+    }
+
+    medir()
+
+    const ro = new ResizeObserver(medir)
+    ro.observe(trilha)
+    for (const botao of trilha.querySelectorAll('[data-slot="sidebar-menu-button"]')) {
+      ro.observe(botao)
+    }
+
+    const mo = new MutationObserver(medir)
+    mo.observe(trilha, {
+      attributes: true,
+      attributeFilter: ["data-active"],
+      subtree: true,
+      childList: true,
+    })
+
+    // A variante mora na **raiz da barra**, fora da subárvore da trilha — um
+    // observador só, na trilha, nunca a veria mudar.
+    const moRaiz = raiz ? new MutationObserver(medir) : null
+    moRaiz?.observe(raiz!, { attributes: true, attributeFilter: ["data-variant"] })
+
+    return () => {
+      ro.disconnect()
+      mo.disconnect()
+      moRaiz?.disconnect()
+    }
+  }, [])
+
   return (
-    <ul
-      data-slot="sidebar-menu"
-      data-sidebar="menu"
-      className={cn("flex w-full min-w-0 flex-col gap-1", className)}
-      {...props}
-    />
+    <SidebarMarkerContext.Provider value={medido}>
+      <ul
+        ref={trilhaRef}
+        data-slot="sidebar-menu"
+        data-sidebar="menu"
+        // `relative` é o que dá à cadeia de `offsetParent` um alvo, e a trilha
+        // não declara altura nenhuma: ela cresce com os itens.
+        className={cn("relative flex w-full min-w-0 flex-col gap-1", className)}
+        {...props}
+      >
+        {/*
+          A pílula. `<li>` e não `<div>`: filho direto de `<ul>` só pode ser
+          item, e `aria-hidden` a tira da árvore de acessibilidade — quem
+          anuncia o item ativo é o `data-active` do botão.
+
+          **Ela é o primeiro filho, e é isso que a põe atrás — sem `z-index`.**
+          O `<li>` do menu é `relative`, então marcador e itens são todos
+          posicionados com `z-index: auto`, e aí quem decide a pintura é a ordem
+          no documento. Um `-z-10` faria o oposto do que parece: `relative` com
+          `z-index: auto` **não** cria contexto de empilhamento, então o
+          marcador escaparia para trás da própria placa da barra.
+        */}
+        {medido ? (
+          <li
+            aria-hidden
+            data-slot="sidebar-marker"
+            className={cn(
+              "pointer-events-none absolute top-0 left-0 rounded-md bg-current/12",
+              "translate-x-(--sidebar-marker-x) translate-y-(--sidebar-marker-y)",
+              "w-(--sidebar-marker-w) h-(--sidebar-marker-h)",
+              "transition-[translate,width,height] duration-(--duration-base) ease-(--ease-out)"
+            )}
+          />
+        ) : null}
+        {children}
+      </ul>
+    </SidebarMarkerContext.Provider>
   )
 }
 
@@ -805,16 +994,60 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
  * então **a tinta vira de direção sozinha**, sem token novo e sem par `dark:`.
  * E ela deixa o degradê passar por baixo, que é o ponto.
  *
- * **Três degraus, onde antes havia um.** `hover:`, `active:` e `data-active:`
- * usavam todos o mesmo token, e o que separava o ativo era só o `font-medium`.
+ * **Três degraus:** 6% no cursor, 9% no toque e 12% no ativo — e o do ativo
+ * mora no marcador que viaja, não aqui. O repouso é transparente: o item em
+ * repouso é a própria placa.
  *
  * **Uma armadilha, verificada:** `hover:text-sidebar-accent-foreground` mexe em
  * `currentColor`, e portanto na própria tinta. Nos dois temas
  * `--sidebar-accent-foreground` é **igual** a `--sidebar-foreground`, então ela
  * não se move — mas isto quebra calado no dia em que um dos dois mudar.
+ *
+ * O par `active:` existe pela regra **H**: `hover:` compila dentro de
+ * `@media (hover: hover)`, então sem ele o toque cairia no realce **da base** —
+ * que é o token opaco, e não este alfa.
  */
 const SIDEBAR_GLASS_STATES =
-  "group-data-[variant=floating]:hover:bg-current/6 group-data-[variant=floating]:active:bg-current/9 group-data-[variant=floating]:data-active:bg-current/12"
+  "group-data-[variant=floating]:hover:bg-current/6 group-data-[variant=floating]:active:bg-current/9"
+
+/**
+ * O terceiro degrau, e ele é **o fallback do marcador**.
+ *
+ * Sob `floating` quem pinta o item ativo é a pílula que viaja
+ * (`SidebarMenuMarker`), e ela só existe depois da primeira medição — antes
+ * disso não há caixa a publicar. No HTML do servidor, e em qualquer render sem
+ * JavaScript, é esta classe que mantém o item ativo pintado; assim que o
+ * marcador mede, a trilha desliga o fallback pelo contexto, e não por seletor:
+ * `in-*` e `group-*` compilam com `:where()`, que não soma especificidade e
+ * perde para a classe base no mesmo elemento.
+ *
+ * O alfa é o mesmo do marcador (12), então a troca não pisca.
+ */
+const SIDEBAR_GLASS_ACTIVE =
+  "group-data-[variant=floating]:data-active:bg-current/12"
+
+/**
+ * E o que o botão veste **quando o marcador existe**: nada.
+ *
+ * Ele não pode só deixar de declarar o alfa. A base do `cva` traz
+ * `data-active:bg-sidebar-accent` — o token **opaco** —, e ela não é escopada
+ * por variante: sem esta classe, o item ativo sob `floating` voltava a pintar
+ * um retângulo `oklch(0.269 0 0)` **por baixo** da pílula. Medido, e foi
+ * introduzido nesta mesma rodada ao mover o alfa para o marcador.
+ *
+ * `twMerge` não resolve sozinho: a base está sob `data-active:` e o alfa sob
+ * `group-data-[variant=floating]:data-active:` — variantes diferentes, então
+ * as duas sobrevivem à mesclagem e as duas pintam.
+ *
+ * **E o ativo não ganha um segundo sinal.** O ícone chegou a tingir de
+ * `--primary-accent` — 7,11:1 no escuro e 7,46 no claro contra a placa, números
+ * que passam com folga —, e foi reprovado na tela: numa coluna de navegação o
+ * verde da marca puxa o olho para um item que a pílula já marcou, e o mesmo
+ * verde significa "entrou dinheiro" no resto do app. Quem diz qual é o item
+ * ativo é a pílula, mais o `font-medium` que a base já traz.
+ */
+const SIDEBAR_GLASS_MARKER =
+  "group-data-[variant=floating]:data-active:bg-transparent"
 
 /**
  * Recolhida, quem centra o ícone é o **recuo**, e ele é por degrau.
@@ -875,6 +1108,7 @@ function SidebarMenuButton({
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const Comp = asChild ? Slot.Root : "button"
   const { isMobile, state } = useSidebar()
+  const temMarcador = React.useContext(SidebarMarkerContext)
 
   const button = (
     <Comp
@@ -885,6 +1119,10 @@ function SidebarMenuButton({
       className={cn(
         sidebarMenuButtonVariants({ variant, size }),
         SIDEBAR_GLASS_STATES,
+        // Sem marcador medido, o botão pinta o próprio ativo. Com ele, cede —
+        // e ceder é **apagar**, não é deixar de declarar: a base pinta o token
+        // opaco e ela não conhece a variante.
+        temMarcador ? SIDEBAR_GLASS_MARKER : SIDEBAR_GLASS_ACTIVE,
         className
       )}
       {...props}

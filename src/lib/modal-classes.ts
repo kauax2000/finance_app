@@ -2,7 +2,7 @@
  * A superfície das peças modais — uma só, para as cinco, **e a mesma da
  * superfície flutuante**.
  *
- * `Dialog`, `AlertDialog`, `EdgePanel`, `Sheet` e `Drawer` pintam a mesma
+ * `Dialog`, `AlertDialog`, `Sheet` e `Drawer` pintam a mesma
  * placa. Ela já esteve escrita no `cva` do `dialog.tsx` mais `bg-background`
  * cru nos outros três arquivos, e extrair é o precedente de
  * [`menuPanelSurfaceClassName`](./menu-classes.ts): classe compartilhada é

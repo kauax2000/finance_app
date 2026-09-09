@@ -48,12 +48,12 @@ import { cn } from "@/lib/utils"
  * - **`useIsMobile` lê a janela de dentro**, pelo `ViewportWindowProvider` que
  *   embrulha o portal. Sem isso, todo componente que bifurca em JS pela largura
  *   — `Sidebar`, `Sheet`, `Toolbar` — renderizava o ramo errado aqui dentro.
- * - **Os portais do `EdgePanel` caem dentro da moldura**, porque ele lê a mesma
+ * - **Os portais do `Sheet` caem dentro da moldura**, porque ele lê a mesma
  *   janela e entrega `container` ao `Portal` do Radix. É o que torna o ramo de
  *   telefone da `Sidebar` demonstrável.
  *
  * **E o que abre aqui dentro não é modal para a página de fora.** `Sheet`,
- * `Drawer` e `EdgePanel` leem `useViewportModal()` e nascem `modal={false}`
+ * `Sheet` e `Drawer` leem `useViewportModal()` e nascem `modal={false}`
  * aqui: o Radix monta um `RemoveScroll` dentro do `DialogOverlay` sempre que
  * `modal`, e o `react-remove-scroll` trava o `document` **global** — o desta
  * página —, porque o React roda na janela de fora ainda que o DOM viva no
@@ -277,7 +277,7 @@ function ViewportFrame({
       />
       {documento
         ? createPortal(
-            // O provedor é o que faz `useIsMobile` e os portais do `EdgePanel`
+            // O provedor é o que faz `useIsMobile` e os portais do `Sheet`
             // enxergarem **esta** janela, e não a de fora.
             <ViewportWindowProvider window={documento.defaultView}>
               <div

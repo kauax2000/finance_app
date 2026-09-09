@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import * as React from "react"
 import {
   Cog6ToothIcon,
@@ -374,8 +375,9 @@ export default function SidebarDoc() {
         cookie, então a escolha sobrevive ao recarregamento e não pisca no
         primeiro quadro — isso vem do servidor, por{" "}
         <code>defaultSidebarOpenFromCookie</code>, e não do componente. Abaixo
-        de <code>md</code> ela vira um painel de borda: navegação entra pelo
-        lado em qualquer largura, e não de baixo como uma folha.
+        de <code>md</code> ela vira um painel que entra pela lateral — e é a{" "}
+        <strong>única</strong> superfície do app que faz isso: toda outra folha
+        vira gaveta ali.
       </Usage>
 
       <DocSection
@@ -424,6 +426,76 @@ export default function SidebarDoc() {
         <DemoEixos />
       </DocSection>
 
+      <DocNote title="O `side` não reordenava, e o layout ficava partido">
+        Medido a 926px, antes: com <code>side=&quot;right&quot;</code> o trilho{" "}
+        <code>fixed</code> ia para a direita (<code>l670 r926</code>) e a folga
+        que reserva o lugar dele **ficava onde estava** (<code>l0 r256</code>) —{" "}
+        <strong>256px vazios</strong> de um lado e a placa cobrindo{" "}
+        <strong>240px do conteúdo</strong> do outro. Nada no wrapper reordenava
+        pelo eixo. E o <code>inset</code> agravava: a margem que o conteúdo perde
+        do lado da barra só existia para a esquerda.
+        <br />
+        Hoje a raiz da barra leva <code>data-[side=right]:order-last</code>. A
+        ordem no <strong>DOM</strong> não muda — é ela que mantém válidos os{" "}
+        <code>peer-*</code> do <code>SidebarInset</code> —, e quem inverte é a
+        ordem visual do flex. As margens de <code>inset</code> passaram a ser
+        espelhadas. Medido depois, nas três variantes: sobreposição{" "}
+        <strong>zero</strong>, e o cabeçalho começando em <code>x=0</code> com a
+        barra à direita.
+      </DocNote>
+
+      <DocNote title="A placa fala iOS onde ela pode — e o borrão não é onde">
+        A tentação é vestir o material borrado de 24px que as folhas usam. Aqui
+        ele não desenha nada, e o motivo é geométrico: o <code>floating</code>{" "}
+        <strong>reserva a própria calha no fluxo</strong>, então nada passa por
+        trás da placa — medido com <code>elementsFromPoint</code>, sob ela há só
+        nós transparentes e o <code>body</code>. Borrar cor chapada é o que a
+        paleta de comandos já tinha registrado como no-op.
+        <br />
+        O que a aproxima do iOS é o resto: o gesto de recolher move a folga, o
+        trilho, o rótulo de grupo e a altura do cabeçalho na{" "}
+        <strong>mesma</strong> curva — <code>--ease-emphasized</code>, a das
+        folhas —, onde antes eram quatro nós em <code>ease-linear</code>; o item
+        ativo virou uma <strong>pílula que viaja</strong> em vez de um fundo que
+        acende e apaga; e o raio subiu para 18 com a elevação em{" "}
+        <code>shadow-lg</code>.
+        <br />
+        <strong>O reflexo da placa é repouso, não estado.</strong> Ele chegou a
+        acender sob o cursor, e o defeito era de alvo: a superfície é do tamanho
+        da coluna, então apontar para <em>um item</em> acendia a barra{" "}
+        <strong>inteira</strong>. O valor do hover foi para o repouso — a placa
+        fica no tom que só tinha ao ser apontada, e não reage a nada. Quem
+        responde ao cursor é o item. Só no escuro, porque no claro a lâmina já
+        resolve em 251 de 255 e não sobra unidade acima do corpo.
+      </DocNote>
+
+      <DocNote title="A pílula soma a cadeia de offsetParent, e não lê a tela">
+        O mecanismo é o do marcador do{" "}
+        <Link href="/designsystem/tabs">Tabs</Link>: um{" "}
+        <code>ResizeObserver</code> na trilha e nos botões, um{" "}
+        <code>MutationObserver</code> em <code>data-active</code>, e nenhum laço
+        por quadro. A leitura é em <strong>coordenada de conteúdo</strong>, nunca{" "}
+        <code>getBoundingClientRect</code>: o <code>SidebarContent</code> rola, e
+        uma caixa de viewport faria a pílula escorregar para fora do item a cada
+        pixel rolado.
+        <br />
+        <strong>E a soma é a cadeia inteira.</strong> O <code>{"<li>"}</code> do
+        menu é <code>relative</code>, então ele — e não a trilha — é o{" "}
+        <code>offsetParent</code> do botão: lido direto, <code>offsetLeft</code>{" "}
+        valeria zero para todos, e o primeiro item acertaria por acidente. É o
+        defeito que o <Link href="/designsystem/navigation-menu">
+          NavigationMenu
+        </Link>{" "}
+        mediu, e a razão de esta pílula ter sido verificada no{" "}
+        <strong>quarto</strong> item: desalinho zero nos quatro eixos.
+        <br />
+        Sem JavaScript ela não monta, e o item ativo continua pintado pela classe
+        do botão — no mesmo alfa, para a troca não piscar. Quando ela monta, o
+        botão <strong>apaga</strong> o próprio fundo em vez de só deixar de
+        declará-lo: a base do <code>cva</code> pinta o token opaco e não conhece
+        a variante.
+      </DocNote>
+
       <DocNote title="`inset` não desenha nada sozinho">
         Ela e <code>floating</code> têm a <strong>mesma</strong> geometria — o
         recuo e a largura do modo ícone são idênticos. O que muda é{" "}
@@ -470,7 +542,7 @@ export default function SidebarDoc() {
 
       <DocSection
         title="No telefone"
-        description="Abaixo de 768px ela deixa de ser trilho e vira um painel de borda — com véu e foco preso na tela de verdade; aqui dentro da moldura não, e a nota abaixo diz por quê. Não é uma folha de baixo: navegação entra pelo lado em qualquer largura — uma gaveta com alça de arraste para listar seis links seria a promessa errada."
+        description="Abaixo de 768px ela deixa de ser trilho e vira um painel que entra pela lateral, com véu e foco preso na tela; aqui dentro da moldura o véu não aparece, e a nota abaixo diz por quê. Ela é a única folha do app que fixa a superfície — quem faz isso é surface=&quot;panel&quot;, e o motivo é que um menu entra pelo lado: ele não sobe do rodapé com alça de arraste para listar seis links. Isto já foi gaveta, entre as rodadas 64 e 66."
         code={`// Nada muda na chamada. A superfície se escolhe dentro do componente.
 <Sidebar collapsible="offcanvas">…</Sidebar>`}
         previewClassName="justify-center p-4"

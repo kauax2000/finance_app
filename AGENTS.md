@@ -474,14 +474,23 @@ tema.
   -mb-4` anterior pressupunha um `p-4` que a forma dominante do app não usa, e
   era por isso que sete telas o anulavam com `mx-0`. (O fio do cabeçalho também
   sangrava por ela; ele deixou de existir — ver a dissolução, mais abaixo.)
-- **Duas coisas se chamavam `Sheet`, e elas respondem diferente ao telefone.**
-  **Conteúdo** — formulário, detalhe, filtros — é `Sheet`, e vira gaveta.
-  **Navegação presa a uma borda** é [`EdgePanel`](src/components/ui/edge-panel.tsx),
-  e continua painel lateral em qualquer largura: menu entra pelo lado, não sobe
-  do rodapé. A `Sidebar` usa `EdgePanel` — enquanto ela pegava o `Sheet`
-  emprestado, herdou a regra do outro e abriu como gaveta de baixo, com alça de
-  arraste, para listar seis links. O `Sheet` reusa o `EdgePanel` no desktop, então
-  a moldura, a animação e o véu existem uma vez só.
+- **Superfície ancorada é uma só, e é o `Sheet`** — conteúdo e navegação,
+  formulário e menu. Ele tem `side` (de qual borda entra) e `variant`
+  (`flush` encostado, `floating` com calha de 8px), e **no telefone tudo vira
+  gaveta — menos quem pede `surface="panel"`**. Esse eixo fixa o painel em
+  qualquer largura, o padrão `auto` é a regra de todas as ~40 folhas do app, e o
+  **único** consumidor é a navegação: um menu entra pelo lado, não sobe do
+  rodapé com alça para listar seis links. Não há como forçar a gaveta — para
+  isso existe o `Drawer`. Na `Sidebar`, `side` reordena o layout de verdade
+  desde a rodada 65
+  — `order-last` no visual, com a ordem do DOM intacta para os `peer-*` —, e o
+  `floating` é a placa de vidro **pintado**: sem borrão, porque ela reserva a
+  própria calha e não há o que borrar atrás. Isto **inverte** a rodada que criou o `EdgePanel`: ela separou os
+  dois porque a `Sidebar`, pegando a folha emprestada, abria como gaveta de
+  baixo com alça de arraste para listar seis links, e a regra passou a ser que
+  navegação continua painel em qualquer largura. A rodada 64 aceitou a gaveta de
+  volta e dissolveu o componente — sem consumidor que precisasse do painel em
+  toda largura, ele era uma segunda API para a mesma moldura.
 - **Folha é coisa de desktop; no telefone ela é gaveta.** `Sheet` escolhe a
   superfície sozinho: acima de 768px é o painel do Radix deslizando de uma
   borda; abaixo, é uma gaveta do `vaul`, com arraste de verdade. **Não escreva
@@ -530,8 +539,8 @@ tema.
   o título contra a decisão de que o cabeçalho é alinhado à esquerda em toda
   largura. `direction` aceita só `bottom` e `top`: o `[data-vaul-handle]` do
   `vaul` declara `touch-action: pan-y`, então a alça só arrasta na vertical, e
-  uma gaveta lateral teria a alça de enfeite outra vez. Borda lateral é
-  `EdgePanel`. A alça é uma peça só — o [`DragHandle`](src/components/ui/drag-handle.tsx) —,
+  uma gaveta lateral teria a alça de enfeite outra vez. Borda lateral é o ramo
+  desktop do `Sheet`. A alça é uma peça só — o [`DragHandle`](src/components/ui/drag-handle.tsx) —,
   que a folha e a gaveta compõem, e todo `!` dela é o que troca o cinza literal
   e as medidas que o `vaul` injeta numa folha de estilo própria.
 - **A alça é da superfície.** No telefone o `vaul` a desenha e ela **é** a área
@@ -7799,6 +7808,499 @@ O que ficou de fora, com o número: os **38** corpos roláveis à mão não vira
 dissolução em 19 telas que hoje não a têm), o `FormActions variant="sticky"`
 segue sem consumidor, e as 16 telas que mostram `Dialog` no desktop ficaram
 como estão, por decisão explícita.
+
+### Rodada 61 — o bico do `NavigationMenu` sai, e ele estava certo pelos números
+
+O pedido foi remover a "perna" do dropdown: o `indicator="arrow"`, um `<span>`
+de 8px rotacionado 45° na calha entre a fileira e o painel, ligado **sozinho**
+sempre que havia viewport.
+
+**Ele não caiu por contraste, e é isso que torna a decisão registrável.** A
+rodada 32 mediu e acertou: `bg-popover` com o mesmo `ring-foreground/10` do
+painel dá **1,00 contra ele**, que é o valor exato de uma ponta de balão, e o
+recorte de 2px a mais que a calha existe para o `ring` do painel não desenhar um
+fio atravessando a base do bico. Os números continuam certos. O que a rodada 32
+não perguntou é se a peça se paga: **1,10 contra a página** é um objeto que
+ocupa a calha e não diz nada que a posição do painel já não diga — e quem liga o
+painel ao gatilho é a âncora (`align="trigger"`), não um desenho. Vista na tela,
+foi reprovada.
+
+Custo zero de migração: o componente tem **zero consumidores no app**, e o
+`mt-2` da folga é do viewport, não do bico. Medido depois, o painel continua a
+**8px** exatos da fileira.
+
+**A derivação saiu junto, e não por arrumação.**
+`defaultNavigationMenuIndicator(viewport)` existia para escolher entre `arrow` e
+`none`; sem o `arrow` ela devolve `none` nos dois ramos, ou seja uma função que
+escolhe entre dois valores, com um valor. É a **constante disfarçada** que a
+rodada 29b já enterrou em `defaultControlVariant`. O padrão passou a ser `none`
+cravado, e `indicator` ficou `"none" | "underline"` — quem quer sinal alto de
+qual gatilho está aberto usa o traço, que dá **6,78:1** contra a página.
+
+**O `group/navigation-menu-indicator` foi embora com ele**: o único leitor
+daquele `group` era o `<span>` do bico, e um `group` sem leitor é a família
+"sobreviveu à remoção" que esta base já pagou cinco vezes.
+
+**O teste é o `tsc`, e ele já existe.** Com `arrow` fora do tipo, qualquer sobra
+deixa de compilar — foi assim que a linha 271 do catálogo apareceu. Não entrou
+`navigation-menu-ladder.test.ts`: a ausência dele é decisão registrada da rodada
+32, e uma asserção que varresse a string `arrow` no fonte testaria a digitação, e
+não o comportamento.
+
+#### O que esta rodada tornou invisível, e por isso está escrito no componente
+
+O bico era o **sinal visual mais alto** de que `align="trigger"` funcionava. Foi
+um marcador desalinhado que denunciou o defeito da 32b — o `relative` no item
+zerando o `offsetLeft` de todo gatilho, com o primeiro acertando por acidente
+porque ali zero é o valor certo. Sem ele, esse defeito voltaria calado.
+
+Por isso a verificação ficou escrita no doc-comment do `align`, e foi feita nas
+**duas** posições:
+
+| gatilho | `--navigation-menu-anchor-cx` | centro do gatilho | centro do painel |
+| --- | --- | --- | --- |
+| Finanças | 54,14 | 54,14 | 54,14 |
+| Análise | **152,84** | **152,84** | 152,83 |
+
+Desalinho **−0,01px** no segundo, que é o único que prova alguma coisa. *Uma
+peça que se move só se verifica em duas posições.*
+
+E o `underline` continua viajando: com Finanças aberto ele mede 101,7 contra um
+gatilho de 102,3; com Análise, **91,0 contra 91,1**, deslocado para 509,5 contra
+509,8. Ele acompanha e redimensiona.
+
+#### Duas lições de instrumento, e as duas já estavam escritas aqui
+
+**O ponteiro não persiste entre chamadas do harness** — a rodada 34 registrou
+isso, e eu andei nela de novo: medir o marcador numa chamada separada da que
+move o cursor devolveu `aberto: null`, e por um momento pareceu que o `underline`
+não montava. Hover e medição têm de ir no mesmo lote.
+
+**E coordenada de painel não é pixel de CSS.** O quadro era 800×553 contra um
+viewport de 1443 — a armadilha da rodada 32. Três hovers por `ref` caíram todos
+no mesmo menu errado antes de a escala aparecer; o que resolveu foi rolar o alvo
+para o centro, tirar uma captura e usar as coordenadas **dela**.
+
+### Rodada 62 — o painel abria com a curva do navegador, e a troca era um whoosh
+
+O pedido foi uma animação melhor para os dropdowns do `NavigationMenu` — ao
+aparecer e ao trocar de um gatilho para outro. Medido no catálogo com o menu
+aberto, antes de mexer:
+
+| | antes |
+| --- | --- |
+| abrir | `animation: enter 0.1s ease` + `zoom-95` |
+| trocar | o conteúdo novo nascia a **208px** (`slide-in-from-right-52`) e atravessava em 100ms |
+| morph | `transition: all 0.1s ease` |
+
+**A curva da casa nunca chegava a esta superfície.** O `animate-in` do
+tw-animate-css é `enter var(--tw-duration, .15s) var(--tw-ease, ease)`, e quem
+escreve `--tw-ease` é a classe `ease-*` do Tailwind — o viewport não tinha
+nenhuma, e `--tw-ease` estava **vazio**. Medido no chevron do mesmo componente,
+que tem `ease-(--ease-out)`: `cubic-bezier(0.16, 1, 0.3, 1)`. Dois nós do mesmo
+arquivo, um com a curva do projeto e outro com a do navegador.
+
+**E o morph já existia, escondido num defeito.** O viewport tinha
+`duration-(--duration-instant)` sem nenhum `transition-*`, e um `duration-*`
+sozinho deixa `transition-property: all` — largura e altura transicionavam, a
+100ms, com `ease`. Tremor, não trajeto. É uma armadilha geral: **`duration-*`
+sem `transition-*` transiciona tudo a essa duração**, calado.
+
+#### O que mudou, e a forma que não mudou
+
+A decisão foi delegada ("a mais bonita e que combina com o design system"), e a
+resposta veio da contagem: a **forma** da abertura é a de toda superfície
+ancorada da casa — fade, 8px de subida e `zoom-95` —, e um desdobrar (a altura
+crescendo da fileira) seria o único mecanismo do tipo no app, com `@keyframes`
+em `globals.css`. A forma ficou; mudaram o tempo e a curva:
+
+- **abrir**: `--duration-base` com `ease-(--ease-out)` — e o `ease-*` é o que
+  faz `--tw-ease` chegar ao `animate-in`;
+- **fechar**: só fade, em `--duration-instant`. Saída não se move, e um menu
+  que fecha ao tirar o cursor não pode demorar 200ms;
+- **morph**: `transition-[width,height]` explícito, base, curva da casa. O
+  Radix já escreve a caixa do conteúdo ativo nas duas variáveis; a `transition`
+  é o que transforma o salto em trajeto;
+- **trocar**: o drift caiu de 208 para **16px** (`-4`) e passou a seguir a
+  `orientation` — num menu vertical os painéis trocam de cima para baixo, e o
+  deslize era horizontal.
+
+**A primeira abertura não cresce do zero, e isso é mecanismo e não sorte.** As
+variáveis do Radix nascem indefinidas (`size: null`), a altura computa `auto`,
+e `auto → px` não interpola. Na troca é `px → px`, e aí interpola.
+
+#### Medido depois
+
+| | resultado |
+| --- | --- |
+| abrir | `enter 0.2s cubic-bezier(0.16, 1, 0.3, 1)`; `transition: width, height 0.2s` na mesma curva; `--tw-ease` preenchido |
+| trocar (Finanças → Tudo) | conteúdo novo nasce em **x16**; viewport 224 → 450 → 542 → 577 → 592 → **600** em 184ms; o que sai vai a −16 e some aos ~200ms |
+| trocar (Tudo → Finanças) | 600×296 → 464 → 373 → … → 224×96 — o morph nos dois sentidos |
+| vertical | conteúdo novo nasce em **y16**, o velho vai a y−13 — eixo certo |
+| fechar (Escape) | `exit 0.1s`, `--tw-exit-scale: 1`, translate 0; opacidade 0,02 aos 85ms; desmontado aos 205ms |
+
+**A demo "Padrão" tinha os dois painéis em 224×96** — um morph entre iguais não
+tem o que mostrar. Entrou "A troca é um morph": Finanças (uma coluna, 224) contra
+Tudo (`columns={2}` com cartões, 600×296).
+
+#### Duas lições de instrumento
+
+**Ponteiro parado não gera `pointerenter`.** Depois de um `navigate`, o hover na
+mesma coordenada em que o cursor já estava não abriu nada — o Radix precisa de
+movimento. Afastar antes resolve. É a parente da lição "o ponteiro não persiste
+entre chamadas" da rodada 34.
+
+**E afastar o cursor dentro de um lote não fecha o menu** — nem antes nem depois
+da mudança —, enquanto entre chamadas ele fecha sozinho. É o ponteiro do painel,
+não o componente; fechar para medir a saída é `Escape`, que o `DismissableLayer`
+trata na hora.
+
+### Rodada 63 — a mesma animação no `Popover`, e a saída dele nunca tinha rodado
+
+O pedido foi levar ao `Popover` a animação da rodada 62. Duas das quatro peças
+de lá não têm equivalente aqui — não há viewport compartilhado, então não há
+morph, e não há troca de painel —, e o que se transportava era a entrada e a
+saída. **A saída não existia.**
+
+#### O que a medição achou
+
+A entrada tinha o defeito idêntico: `animation: enter 0.1s ease`, com
+`--tw-ease` **vazio**, e `transition-property: all` com `0.1s` — o mesmo
+`transition: all` implícito que um `duration-*` sem `transition-*` deixa.
+
+A saída era pior que curta: **ela não rodava**. Um `MutationObserver` lendo
+`getComputedStyle` de forma síncrona no instante do `data-state="closed"`
+devolveu **vazio** em `animationName`, `animationDuration` e `opacity` — e
+estilo computado vazio é o que se obtém de um nó **já destacado do documento**.
+Nenhum `animationstart` de `exit` disparava. As três classes `data-closed:*`
+eram código morto desde sempre.
+
+#### A causa, isolada por comparação
+
+O `Portal` do Radix é `<Presence>` em volta de um `PortalPrimitive asChild`, e
+o `Presence` decide se espera a animação lendo `getComputedStyle` do **ref do
+filho** (`getAnimationName(styles)`, com `styles?.animationName || "none"`).
+
+Havia um `PopoverLabelContext.Provider` **entre o Portal e o Content**. O `Slot`
+do `asChild` tenta pôr o ref num context provider — que não é elemento —, o ref
+se perde, a leitura devolve `"none"`, e o Radix manda `UNMOUNT` no mesmo commit
+em que escreve `data-state="closed"`.
+
+**Não é da portalização, e foi o `DropdownMenu` que provou.** Ele é portalizado
+igual e tem `Portal → Content` direto: medido, `state=closed name=exit @17ms`,
+`animationstart exit @18ms`, nó ainda no DOM. Um par onde só um lado falha é o
+que transforma suspeita em causa.
+
+Uma previsão testável fechou o caso: se o `Slot` estava largando as props no
+Provider, então o `data-slot="popover-portal"` do arquivo também não existia.
+Medido com um popover aberto: `[data-slot=popover-portal]` **não casava nada**.
+Ele saiu junto.
+
+#### O conserto, e o que ele custou
+
+O Provider foi para **fora** do Portal — o contexto continua alcançando o título
+e a descrição, porque ele está acima na árvore do React e contexto atravessa
+portal. Verificado: `aria-labelledby` e `aria-describedby` apontam para
+elementos que existem, com o nome acessível certo.
+
+| | antes | depois |
+| --- | --- | --- |
+| entrada | `enter 0.1s ease` | `enter 0.2s cubic-bezier(0.16, 1, 0.3, 1)` |
+| `--tw-ease` | **vazio** | preenchido |
+| transição | `all 0.1s` | `0s` |
+| saída | não rodava | `animationstart exit @21ms`, `animationend @116ms`, desmonta limpo |
+
+**`animation-duration-*` e não `duration-*`.** O segundo escreve
+`transition-duration` junto, e numa superfície que só anima isso é o
+`transition: all` de novo. A rodada 62 resolveu o mesmo problema no
+`NavigationMenu` declarando `transition-[width,height]`, porque lá havia um
+morph a declarar; aqui não há transição nenhuma a querer, e o utilitário que
+mexe só na animação é o certo. Medido: `--tw-animation-duration: 200ms` e
+`transition-duration: 0s`.
+
+**Isto não é zero-pixel.** `PopoverContent` está em **7 telas de produção**
+(`transactions-filters-panel`, `transaction-form-fields`,
+`transactions-active-filters-chips`, `categories-toolbar`,
+`subscription-form-pickers`, `dashboard-payments-calendar`,
+`mobile-account-menu`) e é vestido por `Combobox`, `DatePicker` e
+`FormPickerPopover`. Onde o popover sumia, ele agora esmaece em 100ms.
+Verificado no `Combobox`, o consumidor mais complexo: `enter 0.2s` na curva da
+casa, 8 itens, 224px, e a saída rodando.
+
+**O `HoverCard` ficou de fora, e por dois motivos.** Ele tem `Portal → Content`
+direto, então a saída dele sempre funcionou; e ele abre **por cursor**, que é
+exatamente o caso que a nota do `--duration-instant` em `globals.css` protege.
+`DropdownMenu`, `Select`, `Menubar`, `ContextMenu` e `Tooltip` seguem com
+`--tw-ease` vazio — a curva da casa não chega a nenhum deles, e é a mesma
+correção de uma linha. Fica no backlog.
+
+#### Duas lições de instrumento, e as duas são erros meus
+
+**Medir uma saída com `sleep` entre o `Escape` e a leitura não mede nada.** A
+latência do harness entre as duas ações já passa dos 100ms da animação, e a
+primeira leitura disse "desmontou aos 20ms" sobre algo que eu não tinha como
+observar. O que serve é **instalar o ouvinte antes** e ler o registro depois —
+e foi o registro que mostrou os três eventos na ordem certa.
+
+**E a sonda procurou o `data-slot` do componente de baixo.** O `ComboboxContent`
+carimba `combobox-content` por cima do `popover-content`, e a busca voltou vazia
+com o componente funcionando. É literalmente a lição que a rodada 35 registrou
+com estas palavras — *uma sonda que procura o slot do componente de baixo mede a
+chamada, não o resultado* —, e eu andei nela um arquivo depois de escrevê-la.
+
+### Rodada 64 — o `EdgePanel` dissolve no `Sheet`, e a inversão fica escrita
+
+Pedido: juntar os dois, e a navegação também virar gaveta no telefone. **Isto
+reverte uma decisão registrada**, e a ressalva foi apresentada antes: o
+`EdgePanel` nasceu para consertar exatamente isto — a `Sidebar` pegava a folha
+emprestada e abria como gaveta de baixo, com alça de arraste e canto
+arredondado no topo, para listar seis links. A decisão nova é que **a superfície
+do telefone é uma só**, e ela vale para navegação também.
+
+**O que sustentava a separação deixou de existir.** O `EdgePanel` tinha três
+consumidores, e num deles ele já *era* o `Sheet`: o ramo desktop do
+`SheetContent` renderizava `EdgePanelContent`, e o `SheetContent` já expunha os
+dois eixos por `VariantProps<typeof edgePanelContentVariants>`. Os outros dois
+— a `Sidebar` e a navegação do catálogo — são justamente os que passaram a ser
+gaveta. Sem ninguém que precisasse do painel em toda largura, o arquivo era uma
+segunda API para a mesma moldura.
+
+O `cva` mudou de casa e de nome (`sheetContentVariants`, com `--edge-panel-gap*`
+→ `--sheet-gap*`) sem mudar por dentro: os dois eixos, as quatro
+`compoundVariants` do gume e a área segura das verticais vieram inteiros. O véu
+virou `SHEET_OVERLAY_CLASS`, e o `Drawer` o importa daqui. **Sem alias**: três
+consumidores, todos migrados na mesma mudança, e alias seria a porta dos fundos
+que o `tsc` existe para fechar.
+
+#### O `p-0` que teria matado a área segura
+
+A chamada da `Sidebar` passava `p-0` ao painel. Ali era **no-op** — a base do
+`cva` não declara recuo nenhum. Na gaveta ele deixa de ser: o `twMerge` o faria
+derrubar o `pb-(--sheet-drawer-safe)`, e o rodapé de conta cairia sob o
+indicador de home do iPhone. É a mesma família do `mobileFormSheetContentClassName`
+da rodada 60 — uma classe que não fazia nada num ramo e fazia estrago no outro.
+Medido depois, na moldura de 375px: rodapé terminando a **24px** da base da
+gaveta.
+
+Saiu junto o `SIDEBAR_WIDTH_MOBILE` (18rem), que ficou órfão: no telefone a
+gaveta é a largura da tela.
+
+**E eu introduzi o mesmo defeito no catálogo, com outra classe.** A navegação
+dele passava `w-72`, que no painel é a largura certa e na gaveta briga com o
+`inset-x-0`: com `left`, `right` e `width` declarados, a largura vence e a
+gaveta sairia com 288px ancorada à esquerda. Virou `md:w-72` — o mesmo 768 de
+`useIsMobile`, então a largura só existe onde existe o painel.
+
+#### Medido depois
+
+| | resultado |
+| --- | --- |
+| `flush left` (desktop) | `l0 t0 w384`, raio 0, **só** `border-right` — o gume de dentro |
+| `floating bottom` | 8px nos quatro lados, raio 14px, as quatro bordas, `blur(24px) saturate(1.5)` |
+| `Sidebar` a 375px | gaveta do `vaul` **dentro do iframe**, `data-surface="drawer"`, alça com `data-vaul-handle-hitarea`, raio `18px 18px 0 0`, `padding-bottom` 24px, nome acessível **"Navegação"** |
+| catálogo a 375px | gaveta de largura 375, 89 links rolando no `div` de dentro, × a 13px do topo |
+| catálogo a 800px | painel `l0 t0 w288 h812`, `border-right`, raio 0, **sem alça** |
+
+A cromagem do `Dialog` atravessa a gaveta como sempre atravessou — o
+`DialogHeader sr-only` da `Sidebar` continua nomeando o painel, porque `vaul` e
+Radix são a mesma primitiva.
+
+#### O que o teste ganhou de graça
+
+`edge-panel.test.ts` virou `sheet.test.ts`. A asserção **8** — *o `cva` é único
+no arquivo, e o `ds:catalog` lê este* — era verdadeira num arquivo que só tinha
+aquele `cva`; agora ela vale sobre o `sheet.tsx`, e com isso o catálogo **passou
+a reportar os eixos da folha**: `side · variant` onde antes saía `—`. A asserção
+**7** foi reescrita: já não há delegação a verificar, e o que ela tranca é que
+`side` e `variant` são destruturados, não chegam ao ramo gaveta, e chegam ao
+`sheetContentVariants({ side, variant })` do ramo painel.
+
+Sai a linha `edge-panel` da lista de portais em `ds-frame.test.ts` e da lista de
+superfícies modais em `glass.test.ts` (que passa de quatro nomes para três).
+
+#### Uma lição de instrumento, e é um erro meu
+
+**A guarda que eu escrevi contra sobras reprovou o registro que eu queria
+manter.** O script assertava que a string `EdgePanel` não sobrasse no
+`sheet.tsx` — e o doc-comment novo diz, de propósito, *"Ele nasceu `EdgePanel`"*.
+A guarda passou a ignorar comentário, como os testes da casa já fazem com
+`semComentarios`. Numa base que registra inversão em vez de apagar o passado,
+uma varredura de sobra **tem** que distinguir código de prosa.
+
+### Rodada 65 — o `side` não reordenava, e a placa flutuante passou a falar iOS
+
+Dois pedidos: o `variant="floating"` da `Sidebar` parecer mais com os efeitos
+iOS que o app já usa, e consertar o `side`, que "quebra o layout". Os dois foram
+medidos no seletor de três eixos do catálogo, a 926px.
+
+#### O bug é do `right`, e o `left` só parecia certo porque zero é o valor dele
+
+Com `side="right"` o trilho `fixed` ia para `l670 r926` — e a folga que reserva
+o lugar dele **ficava onde estava**, em `l0 r256`. Resultado: **256px vazios** à
+esquerda e a placa cobrindo **240px do conteúdo** à direita (255 em `sidebar`).
+Nada no wrapper reordenava pelo eixo. O `inset` agravava: a margem que o
+conteúdo perde do lado da barra existia **só para a esquerda**, e com a barra à
+direita ele saía `m:0px/8px`.
+
+O conserto é `data-[side=right]:order-last` na raiz. **A ordem no DOM não muda**,
+e é ela que mantém válidos os `peer-*` do `SidebarInset`; quem inverte é a ordem
+visual do flex. As margens de `inset` viraram par espelhado. Saiu junto o
+`group-data-[side=right]:rotate-180` da folga — herança do shadcn sobre uma
+`div` vazia e transparente, inerte desde sempre.
+
+Medido depois, nas três variantes: sobreposição **zero**, e o cabeçalho
+começando em `x=0` com a barra à direita.
+
+#### O vidro fica pintado, e o que mudou foi tudo em volta
+
+A rodada 36 mediu que o `floating` **reserva a própria calha no fluxo** — nada
+passa por trás dele, borrar cor chapada não desenha nada, e a asserção 15 tranca
+`backdrop-filter` fora do arquivo. Isso não mudou, e foi reafirmado com o motivo
+na mesa. O que separava a placa da língua iOS do app era o resto:
+
+| | antes | depois |
+| --- | --- | --- |
+| curva do recolher | `ease-linear` em **quatro** nós | `--ease-emphasized`, 300ms, nos quatro |
+| item ativo | fundo que acende e apaga | pílula que **viaja** |
+| raio | 14 (`rounded-xl`) | **18** (`rounded-2xl`), o das placas modais |
+| elevação | `shadow-sm` | `shadow-lg` — `oklch(0 0 0 / 0.6)` no escuro, `/ 0.1` no claro |
+
+Os quatro nós da curva são a folga, o trilho, o rótulo de grupo e **a altura do
+cabeçalho** (`app-header.tsx`, a única linha tocada fora de `ui/`): ele encolhe
+*porque* a barra recolheu, e duas curvas no mesmo gesto leem como duas animações
+que por acaso começaram juntas.
+
+**O reflexo da placa virou repouso.** O `--glass-sheen` é a camada mais de cima
+do vidro e nunca tinha tido produtor; a primeira versão o acendia **sob o
+cursor**, e o defeito era de alvo, não de medida: a superfície é do tamanho da
+coluna, então apontar para **um item** acendia a barra **inteira**. A decisão do
+dono foi levar o valor do hover ao repouso — a placa fica permanentemente no tom
+que só tinha ao ser apontada, e não reage a nada. Estático, então o `@property`
+que eu tinha registrado para o interpolar saiu: sem transição, é peso morto. Só
+no escuro, pelo teto que a rodada 40 mediu no claro. **Quem responde ao cursor é
+o item**, e a escada de três alfas dele ficou intacta — depois de eu tê-la
+mexido duas vezes por ler o pedido como se fosse sobre os itens, e não sobre a
+placa.
+
+O item ativo **não** ganhou um segundo sinal. O ícone chegou a tingir de
+`--primary-accent` — medido em **7,11:1** no escuro e **7,46:1** no claro contra
+a placa, números que passam com folga — e foi reprovado na tela: numa coluna de
+navegação o verde puxa o olho para um item que a pílula já marcou, e o mesmo
+verde significa "entrou dinheiro" no resto do app. Quem marca o ativo é a pílula
+mais o `font-medium`. **Contraste diz se aparece; não diz se convence** — é a
+régua que a rodada 37 escreveu, e ela decidiu de novo aqui.
+
+#### A pílula, e a armadilha do `offsetParent`
+
+É o mecanismo do marcador do `Tabs`: `ResizeObserver` na trilha e nos botões,
+`MutationObserver` em `data-active`, zero laço por quadro, leitura em coordenada
+de **conteúdo** — o `SidebarContent` rola, e uma caixa de viewport faria a pílula
+escorregar a cada pixel.
+
+**Mas a leitura não pode ser um `offsetTop` só.** O `<li>` do menu é `relative`,
+então ele — e não a trilha — é o `offsetParent` do botão: lido direto,
+`offsetLeft` valeria zero para todos, e o primeiro item acertaria por acidente.
+É exatamente o defeito da rodada 32b, e a razão de `caixaRelativa` somar a
+cadeia inteira e devolver `null` quando ela não chega ao alvo. Verificado no
+**quarto** item: desalinho zero nos quatro eixos.
+
+#### Três defeitos que eu mesmo introduzi, e como cada um apareceu
+
+**A variante era lida uma vez, na montagem.** O efeito tinha deps `[]` e um
+retorno cedo se `data-variant !== "floating"`; indo de `sidebar` para `floating`
+no seletor, o marcador ficava desligado para sempre. E o `MutationObserver`
+vigiava a **subárvore da trilha**, enquanto `data-variant` mora num **ancestral**
+— ele nunca a veria mudar. Hoje a variante é lida a cada medição, e a raiz tem
+observador próprio.
+
+**Ceder o fundo é apagá-lo, não deixar de declará-lo.** Ao mover o alfa do ativo
+para o marcador, o botão caiu na classe **base** do `cva` —
+`data-active:bg-sidebar-accent`, o token **opaco**, que não é escopado por
+variante. Medido: `oklch(0.269 0 0)` pintando um retângulo por baixo da pílula.
+`twMerge` não resolve, porque as duas moram sob variantes diferentes e as duas
+sobrevivem à mesclagem.
+
+**O `-z-10` do marcador teria feito o oposto do que parece.** `relative` com
+`z-index: auto` **não** cria contexto de empilhamento, então o marcador escaparia
+para trás da própria placa. Quem o põe atrás dos itens é a ordem no documento:
+ele é o primeiro filho, e todos são posicionados com `z-index: auto`.
+
+#### Duas lições de instrumento, e as duas são erros meus
+
+**Li a transição e chamei de atraso.** O marcador parecia estar sempre um passo
+atrás — item 1 mostrando a posição do item 0. As variáveis na trilha estavam
+**sempre certas**; o que eu media era o `translate` a meio caminho dos 200ms.
+Com a troca numa chamada do harness e a leitura na seguinte, em repouso:
+desalinho zero. *Valor em transição não é valor final* — é a parente da lição do
+press da rodada 29b.
+
+**E truncar um valor composto esconde a parte que interessa.** Cortei
+`boxShadow` em 60 caracteres e reportei que a sombra era transparente; as
+entradas zeradas são o começo da cadeia do Tailwind, e a camada real era a
+última. A rodada 45 registrou isto com estas palavras, e eu andei nela de novo.
+
+Fica anotado que `useIsomorphicLayoutEffect` está agora em **quatro** cópias
+(`tabs`, `navigation-menu`, `carousel`, `sidebar`) — o arquivo seguiu o padrão
+local do vizinho, e extrair alcançaria três arquivos fora do escopo.
+
+### Rodada 66 — a navegação volta a ser painel no telefone, e só ela
+
+Pedido: no telefone a barra sai como folha lateral esquerda, **sem mexer na
+regra** de que toda outra folha vira gaveta.
+
+Isto é uma **meia-volta na rodada 64**, e o argumento dela continua de pé. Ela
+dissolveu o `EdgePanel` no `Sheet` dizendo que, *sem um consumidor que
+precisasse do painel em toda largura, o componente separado era uma segunda API
+para a mesma moldura*. O que mudou não foi o argumento: foi que o consumidor
+voltou — e um consumidor pede **uma prop**, não um arquivo. O `EdgePanel` não
+volta; o comportamento dele volta como eixo.
+
+Medido antes, na moldura de 375px: a navegação abria `data-surface="drawer"`,
+`data-side="bottom"`, `l0 t8 w375 h659`, com `[data-vaul-handle]`.
+
+#### O eixo, e o que ele não faz
+
+`Sheet` ganhou `surface: "auto" | "panel"`, padrão **`auto`** — a regra de hoje,
+e o que mantém as ~40 folhas do app inalteradas. `panel` fixa o painel em
+qualquer largura. **Não existe forçar a gaveta**: uma superfície que é gaveta em
+toda largura já tem nome e arquivo, e é o `Drawer`.
+
+O valor interno do painel se chamava `"sheet"` — circular dentro de um
+componente chamado `Sheet`, e impossível de usar como valor de prop. Virou
+`"panel"`, no tipo e no `data-surface`. A troca é contida: `useSheetSurface` é
+exportado e tem **zero** consumidores fora do arquivo, e o único leitor de
+`data-surface` no repositório testa **existência**, não valor
+(`ds-shell.tsx:331`). O `tsc` achou a única sobra — um `surface === "sheet"` no
+`SheetOverlay`.
+
+#### O × estava escondido, e num painel isso deixa de passar
+
+`[&>button]:hidden` na chamada da `Sidebar` é herança do shadcn, de quando o
+`SheetContent` injetava o próprio ×. Desde a rodada 60 ele não injeta, então a
+classe só escondia **o nosso** — medido, `display: none`. Na gaveta passava:
+fecha-se arrastando ou tocando o véu. **Num painel não há arraste**, e o × passa
+a ser a única afordância visível de fechar. Saiu.
+
+Saiu junto o `fillMobileViewport`, que é a altura **da gaveta** — no painel ela
+vem do par `top`/`bottom` do `cva`, e passá-lo seria prop inerte. E voltou o
+`SIDEBAR_WIDTH_MOBILE` (18rem), que a 64 tinha removido porque "no telefone a
+gaveta é a tela".
+
+#### Medido depois
+
+| | resultado |
+| --- | --- |
+| navegação a 375px | `panel` / `left`, `l0 t0 w288 h667` — altura cheia, **zero** alça, × em `display: flex`, nome "Navegação" |
+| **folha comum a 375px** | segue `drawer`: `l0 t8 w375 h659`, alça presente, raio `18px 18px 0 0` |
+| desktop a 926px | as três variantes com sobreposição **zero**, `inset · right` em `m:8px/0px` — a rodada 65 não regrediu |
+
+A segunda linha é o guarda do pedido, e é a que prova que a regra global não
+mudou.
+
+Duas asserções novas, e as **sete** sabotagens reprovam: o padrão do eixo virando
+`panel`, o eixo passando a aceitar `"drawer"`, a derivação deixando de olhar a
+largura, a barra voltando a ser gaveta, o painel deixando de seguir o `side`, o
+`fillMobileViewport` de volta, e a classe que escondia o ×.
 
 ### Backlog de migração
 

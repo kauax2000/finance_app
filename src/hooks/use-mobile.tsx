@@ -62,7 +62,7 @@ function useViewportWindow() {
  * área segura.
  *
  * Ele não vale para `Dialog` nem `Popover`, que não leem a janela ativa — quem
- * o lê é quem portaliza para a moldura: `Sheet`, `Drawer` e `EdgePanel`.
+ * o lê é quem portaliza para a moldura: `Sheet` e `Drawer`.
  */
 function useViewportModal(): boolean | undefined {
   return useViewportWindow() ? false : undefined

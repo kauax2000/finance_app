@@ -350,9 +350,9 @@ describe("a superfície de vidro", () => {
     })
 
     it("26. as quatro superfícies modais vestem a régua, e nada repinta por dentro", () => {
-        // O `Sheet` aparece uma vez só porque no desktop ele delega ao
-        // `EdgePanelContent` — quem escreve placa ali é o ramo gaveta.
-        for (const nome of ["dialog", "edge-panel", "sheet", "drawer"] as const) {
+        // O `Sheet` traz os dois ramos no mesmo arquivo desde a rodada 64: a
+        // placa do painel mora no `cva` e a da gaveta no ramo do `vaul`.
+        for (const nome of ["dialog", "sheet", "drawer"] as const) {
             const src = semComentariosDe(`src/components/ui/${nome}.tsx`)
             expect(src, `${nome} precisa vestir a régua`).toContain("modalSurfaceClassName")
             // A marca da cópia, nos dois tokens que a placa já teve.

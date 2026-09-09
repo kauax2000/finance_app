@@ -7,7 +7,7 @@ import { Drawer as DrawerPrimitive } from "vaul"
 import { cn } from "@/lib/utils"
 import { modalSurfaceClassName } from "@/lib/modal-classes"
 import { DragHandle } from "@/components/ui/drag-handle"
-import { EDGE_PANEL_OVERLAY_CLASS } from "@/components/ui/edge-panel"
+import { SHEET_OVERLAY_CLASS } from "@/components/ui/sheet"
 import { useViewportModal, useViewportWindow } from "@/hooks/use-mobile"
 
 /**
@@ -20,12 +20,12 @@ import { useViewportModal, useViewportWindow } from "@/hooks/use-mobile"
  * | | Onde encosta | Responde ao dedo | Muda com a largura |
  * | --- | --- | --- | --- |
  * | `Dialog` | no meio | não | só na largura da caixa |
- * | `EdgePanel` | numa borda | não | não |
  * | **`Drawer`** | **no topo ou no rodapé** | **sim** | **não** |
  * | `Sheet` | borda no desktop, rodapé no telefone | no telefone | **sim** |
  *
- * `Sheet` é a que **troca de superfície**: painel acima de 768px, gaveta
- * abaixo. `Drawer` é gaveta sempre — é o que se usa quando o gesto é a
+ * `Sheet` é a que **troca de superfície**: painel de borda acima de 768px,
+ * gaveta abaixo — e isso vale para tudo, inclusive a navegação. `Drawer` é
+ * gaveta sempre, em qualquer largura: é o que se usa quando o gesto é a
  * afordância, e não uma consequência de a tela ser estreita.
  *
  * ## O que esta versão corrigiu
@@ -62,8 +62,8 @@ import { useViewportModal, useViewportWindow } from "@/hooks/use-mobile"
  * `direction` aceita `bottom` e `top`, e não `left` / `right`. Não é
  * simplificação: o `[data-vaul-handle]` do vaul declara `touch-action: pan-y`,
  * ou seja, a alça **só arrasta na vertical**. Uma gaveta lateral teria a alça
- * de enfeite outra vez. Painel preso a uma borda lateral é `EdgePanel`, que não
- * promete gesto nenhum.
+ * de enfeite outra vez. Painel preso a uma borda lateral é o ramo desktop do
+ * `Sheet`, que não promete gesto nenhum.
  */
 
 const drawerContentVariants = cva(
@@ -74,7 +74,7 @@ const drawerContentVariants = cva(
     "flex flex-col text-sm shadow-lg",
     modalSurfaceClassName,
     "focus:outline-none",
-    // O contrato que a cromagem do `Dialog` lê — o mesmo que `EdgePanelContent`
+    // O contrato que a cromagem do `Dialog` lê — o mesmo que `SheetContent`
     // declara, palavra por palavra, para o cabeçalho e o rodapé medirem igual
     // na folha, no painel e aqui.
     "[--dialog-px:--spacing(4)]",
@@ -189,7 +189,7 @@ function DrawerTrigger({
 }
 
 /**
- * O portal vai para o `body` da **janela ativa**, como o do `EdgePanel`.
+ * O portal vai para o `body` da **janela ativa**, como o do `Sheet`.
  *
  * Fora da moldura de viewport do catálogo o contexto é `null` e o vaul usa o
  * próprio documento — o app não muda. Dentro dela, é isto que impede a gaveta
@@ -212,7 +212,7 @@ function DrawerClose({
 
 /**
  * O véu — o mesmo do painel e o mesmo da folha, escrito uma vez em
- * `edge-panel.tsx`. Sem a duração fixa que o painel acrescenta: aqui o véu
+ * `sheet.tsx`. Sem a duração fixa que o painel acrescenta: aqui o véu
  * acompanha o dedo, e um keyframe brigaria com o arraste.
  */
 function DrawerOverlay({
@@ -222,7 +222,7 @@ function DrawerOverlay({
   return (
     <DrawerPrimitive.Overlay
       data-slot="drawer-overlay"
-      className={cn(EDGE_PANEL_OVERLAY_CLASS, className)}
+      className={cn(SHEET_OVERLAY_CLASS, className)}
       {...props}
     />
   )

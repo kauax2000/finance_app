@@ -167,9 +167,9 @@ export default function DrawerDoc() {
         é simplificação: o <code>[data-vaul-handle]</code> do <code>vaul</code>{" "}
         declara <code>touch-action: pan-y</code> — a alça só arrasta na
         vertical, e uma gaveta lateral teria a alça de enfeite outra vez. Painel
-        preso a uma borda lateral é o{" "}
-        <Link href="/designsystem/edge-panel">EdgePanel</Link>, que não promete
-        gesto nenhum.
+        preso a uma borda lateral é o ramo desktop do{" "}
+        <Link href="/designsystem/sheet">Sheet</Link>, que não promete gesto
+        nenhum.
       </DocNote>
 
       <DocNote title="Drawer ou Sheet?">

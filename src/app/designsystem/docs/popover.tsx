@@ -154,6 +154,57 @@ export default function PopoverDoc() {
         dela.
       </DocNote>
 
+      <DocNote title="A saída nunca tinha rodado, e o culpado era um Provider no meio do caminho">
+        O casco declarava <code>data-closed:animate-out</code>,{" "}
+        <code>fade-out-0</code> e <code>zoom-out-95</code> desde sempre, e as
+        três eram <strong>código morto</strong>: o popover não esmaecia, ele
+        sumia. Medido com um <code>MutationObserver</code> lendo{" "}
+        <code>getComputedStyle</code> de forma síncrona no instante do{" "}
+        <code>data-state=&quot;closed&quot;</code>, o retorno vinha{" "}
+        <strong>vazio</strong> — e estilo computado vazio é o que se obtém de um
+        nó <em>já destacado do documento</em>. Nenhum{" "}
+        <code>animationstart</code> de <code>exit</code> chegava a disparar.
+        <br />
+        O <code>Portal</code> do Radix é um <code>Presence</code> em volta de um{" "}
+        <code>PortalPrimitive asChild</code>, e o <code>Presence</code> decide se
+        espera a animação lendo o estilo do <strong>ref do filho</strong>. Havia
+        um <code>PopoverLabelContext.Provider</code> entre o Portal e o Content:
+        o <code>Slot</code> do <code>asChild</code> tentava pôr o ref num context
+        provider, que não é elemento, o ref se perdia,{" "}
+        <code>getAnimationName(undefined)</code> devolvia <code>&quot;none&quot;</code>{" "}
+        e o Radix desmontava no mesmo commit. O <code>DropdownMenu</code>, que
+        tem <code>Portal → Content</code> direto, sempre animou — foi a
+        comparação entre os dois que isolou a causa.
+        <br />O Provider passou para <strong>fora</strong> do Portal. O contexto
+        continua chegando ao título e à descrição, porque ele está acima na
+        árvore do React e contexto atravessa portal. Medido depois:{" "}
+        <code>animationstart exit @21ms</code>,{" "}
+        <code>animationend exit @116ms</code>, e o nó desmontando limpo.
+      </DocNote>
+
+      <DocNote title="A curva da casa não chegava aqui, e duration-* transicionava tudo">
+        A entrada abria com <code>animation: enter 0.1s ease</code> — a curva{" "}
+        <em>do navegador</em>. O <code>animate-in</code> lê{" "}
+        <code>--tw-ease</code>, e quem a escreve é a classe <code>ease-*</code>;
+        sem ela, medido, <code>--tw-ease</code> saía <strong>vazio</strong>. É o
+        mesmo defeito que o <code>NavigationMenu</code> tinha, e a correção é a
+        mesma: <code>ease-(--ease-out)</code>, em{" "}
+        <code>--duration-base</code>. A forma não mudou — fade, 8px do lado de
+        onde veio e <code>zoom-95</code> são a língua de toda superfície ancorada
+        da casa.
+        <br />
+        <strong>E a duração passou a ser da animação, não da transição.</strong>{" "}
+        <code>duration-*</code> escreve <code>transition-duration</code> junto, e
+        sem nenhum <code>transition-property</code> isso deixa{" "}
+        <code>transition: all</code> — medido aqui, <code>all 0.1s</code>: toda
+        propriedade do popover transicionava, calada. Numa superfície que só
+        anima, o utilitário certo é <code>animation-duration-*</code>, que não
+        toca a transição. Medido depois: <code>transition-duration: 0s</code>.
+        <br />A saída é mais curta que a entrada e não se move — só fade, em{" "}
+        <code>--duration-instant</code>. Um popover que se fecha some; recuar
+        seria pedir atenção para o que está saindo de cena.
+      </DocNote>
+
       <DocNote title="Para seletor ancorado num campo, use FormPickerPopover">
         Um popover que sai de um campo precisa de largura igual à do gatilho,
         folga de colisão maior e não roubar o foco.{" "}

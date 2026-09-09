@@ -369,7 +369,7 @@ describe("régua da Sidebar", () => {
     expect(semPar).toEqual([])
   })
 
-  it("21. sob `floating` o realce é alfa, e não token", () => {
+  it("21. sob `floating` o realce é alfa, e nunca o token opaco", () => {
     // A superfície virou degradê na rodada 37, e um retângulo **opaco** em
     // cima dela apaga o degradê dentro do próprio realce — e muda de força
     // conforme a altura do item. Medido antes: o mesmo hover dava 1,09 no
@@ -381,24 +381,208 @@ describe("régua da Sidebar", () => {
     // `--sidebar-foreground`, quase-branca no escuro e quase-preta no claro —
     // vira de direção sozinha, sem par `dark:`. É a mesma escolha que o
     // `AlertAction` e o `AnnouncementBarAction` já registram.
-    const escada = CODIGO.match(/const SIDEBAR_GLASS_STATES =\s*"([^"]+)"/)?.[1]
-    expect(escada).toBeTruthy()
+    //
+    // *(Rodada 65: o degrau do **ativo** mudou de casa — ele mora no marcador
+    // que viaja, e a classe do botão é o fallback de antes da primeira
+    // medição. O cursor e o toque continuam aqui.)*
+    const partes = Object.fromEntries(
+      ["SIDEBAR_GLASS_STATES", "SIDEBAR_GLASS_ACTIVE", "SIDEBAR_GLASS_MARKER"].map(
+        (nome) => [
+          nome,
+          CODIGO.match(new RegExp(`const ${nome} =\\s*"([^"]+)"`))?.[1],
+        ]
+      )
+    ) as Record<string, string | undefined>
 
-    const alfas = [...escada!.matchAll(/bg-current\/(\d+)/g)].map((m) => Number(m[1]))
+    for (const [nome, valor] of Object.entries(partes)) {
+      expect(valor, `${nome} não achada`).toBeTruthy()
+      // Nada sob `floating` volta ao token opaco, e nada escapa do escopo.
+      expect(valor, nome).not.toMatch(/sidebar-accent/)
+      expect(
+        valor!.split(" ").every((c) => c.startsWith("group-data-[variant=floating]:")),
+        nome
+      ).toBe(true)
+    }
+
+    // Os três degraus, distintos e em ordem — cursor e toque no botão, o do
+    // ativo no marcador. O repouso do item é transparente: em repouso ele é a
+    // própria placa.
+    const marcador = CODIGO.slice(CODIGO.indexOf('data-slot="sidebar-marker"'))
+    const alfaDoMarcador = Number(marcador.match(/bg-current\/(\d+)/)?.[1])
+    const alfas = [
+      ...[...partes.SIDEBAR_GLASS_STATES!.matchAll(/bg-current\/(\d+)/g)].map((m) =>
+        Number(m[1])
+      ),
+      alfaDoMarcador,
+    ]
     expect(alfas).toHaveLength(3)
     expect(new Set(alfas).size).toBe(3)
     expect([...alfas].sort((a, b) => a - b)).toEqual(alfas)
 
-    // Os três degraus são cursor, dedo e ativo — nesta ordem de peso.
-    expect(escada).toMatch(/:hover:bg-current\//)
-    expect(escada).toMatch(/:active:bg-current\//)
-    expect(escada).toMatch(/:data-active:bg-current\//)
+    // E nenhum degrau sem estado no nome: o repouso do item é a placa.
+    expect(partes.SIDEBAR_GLASS_STATES).not.toMatch(
+      /group-data-\[variant=floating\]:bg-current\//
+    )
+    expect(partes.SIDEBAR_GLASS_STATES).toMatch(/:hover:bg-current\//)
+    expect(partes.SIDEBAR_GLASS_STATES).toMatch(/:active:bg-current\//)
+    expect(partes.SIDEBAR_GLASS_ACTIVE).toMatch(/:data-active:bg-current\//)
+    // O fallback repete o alfa do marcador: a troca não pode piscar.
+    expect(Number(partes.SIDEBAR_GLASS_ACTIVE!.match(/bg-current\/(\d+)/)?.[1])).toBe(
+      alfaDoMarcador
+    )
 
-    // E nenhum deles volta a ser o token opaco.
-    expect(escada).not.toMatch(/sidebar-accent/)
-    // A escada só vale na variante que tem degradê.
-    expect(escada!.split(" ").every((c) => c.startsWith("group-data-[variant=floating]:"))).toBe(true)
     expect(CODIGO).toContain("SIDEBAR_GLASS_STATES,")
+    expect(CODIGO).toContain(
+      "temMarcador ? SIDEBAR_GLASS_MARKER : SIDEBAR_GLASS_ACTIVE"
+    )
+    // **Ceder é apagar**, e não deixar de declarar: a base do `cva` pinta
+    // `data-active:bg-sidebar-accent` e não conhece a variante.
+    expect(partes.SIDEBAR_GLASS_MARKER).toBe(
+      "group-data-[variant=floating]:data-active:bg-transparent"
+    )
+  })
+
+  it("22b. o reflexo da placa é repouso, e não estado", () => {
+    // Ele chegou a acender **sob o cursor**, e o defeito era de alvo: a placa é
+    // do tamanho da coluna, e apontar para *um item* acendia a barra inteira.
+    // A decisão foi levar o valor do hover ao repouso: o `--glass-sheen` é
+    // produzido pela placa sem variante de estado nenhuma.
+    const miolo = CODIGO.slice(
+      CODIGO.indexOf("const miolo = ("),
+      CODIGO.indexOf("if (resizable) {", CODIGO.indexOf("const miolo = ("))
+    )
+    expect(miolo.length).toBeGreaterThan(0)
+    expect(miolo).not.toMatch(/hover:|active:/)
+    const producao = miolo.match(/"[^"]*--glass-sheen[^"]*"/g) ?? []
+    expect(producao).toHaveLength(1)
+    // Só no escuro (no claro a lâmina já está no teto), e sob `floating`.
+    expect(producao[0]).toMatch(/dark:group-data-\[variant=floating\]:\[--glass-sheen:/)
+    // Estático não interpola nada, então nenhum `@property` o registra —
+    // sem transição, o registro seria peso morto.
+    const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
+    expect(css).not.toMatch(/@property\s+--glass-sheen/)
+    expect(miolo).not.toContain("transition-[--glass-sheen]")
+  })
+
+  it("26. no telefone a navegação é painel, e é a única folha que fixa isso", () => {
+    // Medido antes da rodada 66, na moldura de 375px: `data-surface="drawer"`,
+    // `data-side="bottom"`, com `[data-vaul-handle]`. Um menu de seis links
+    // subindo do rodapé com alça de arraste é o defeito que o `EdgePanel`
+    // existiu para consertar — e o comportamento voltou como prop, não como
+    // arquivo.
+    const mobile = CODIGO.slice(
+      CODIGO.indexOf("if (isMobile) {"),
+      CODIGO.indexOf("const miolo = (")
+    )
+    expect(mobile.length).toBeGreaterThan(0)
+    expect(mobile).toContain('surface="panel"')
+    // O painel segue o eixo da barra: `side="right"` abre pela direita também
+    // no telefone.
+    expect(mobile).toMatch(/side=\{side\}/)
+    // `fillMobileViewport` é a altura **da gaveta**. No painel ela sai do par
+    // `top`/`bottom` do `cva`, e passá-lo seria prop inerte.
+    expect(mobile).not.toContain("fillMobileViewport")
+    // A classe do shadcn que escondia o nosso × — medido, `display: none`. Na
+    // gaveta passava (fecha-se arrastando); num painel não há arraste.
+    expect(mobile).not.toContain("[&>button]:hidden")
+    expect(mobile).toContain("dialog-close-button".replace("dialog-close-button", "DialogCloseButton"))
+  })
+
+  it("23. o `side` manda no layout, e as margens de `inset` são espelhadas", () => {
+    // Medido a 926px antes do conserto: com `side="right"` o trilho ia para
+    // `l670 r926` e a folga continuava em `l0 r256` — 256px vazios de um lado
+    // e a placa cobrindo **240px do conteúdo** do outro. A ordem no DOM não
+    // muda (os `peer-*` do `SidebarInset` dependem dela); quem inverte é o flex.
+    expect(CODIGO).toContain("data-[side=right]:order-last")
+    // O `rotate-180` da folga era herança do shadcn sobre uma `div` vazia e
+    // transparente — inerte, e saiu junto.
+    expect(CODIGO).not.toContain("group-data-[side=right]:rotate-180")
+
+    const inset = CODIGO.slice(
+      CODIGO.indexOf("function SidebarInset("),
+      CODIGO.indexOf("function SidebarInput(")
+    )
+    expect(inset.length).toBeGreaterThan(0)
+    for (const classe of [
+      "peer-data-[side=left]:ml-0",
+      "peer-data-[side=right]:mr-0",
+      "peer-data-[state=collapsed]:peer-data-[side=left]:ml-2",
+      "peer-data-[state=collapsed]:peer-data-[side=right]:mr-2",
+    ]) {
+      expect(inset, classe).toContain(classe)
+    }
+    // E nenhuma margem lateral sem o lado dito — era assim que só a esquerda
+    // existia.
+    for (const [todo] of inset.matchAll(
+      /peer-data-\[variant=inset\]:m[lr]-\d/g
+    )) {
+      expect(todo, `${todo} sem side`).toBeUndefined()
+    }
+  })
+
+  it("24. a barra e o cabeçalho falam a mesma curva", () => {
+    // `ease-linear` é o movimento de quem não escolheu curva. O gesto de
+    // recolher move a folga, o trilho, o rótulo de grupo e a altura do
+    // cabeçalho — quatro nós, e duas curvas leem como duas animações que por
+    // acaso começaram juntas. A curva é a das folhas.
+    const cabecalho = readFileSync(
+      join(process.cwd(), "src/components/layout/app-header.tsx"),
+      "utf8"
+    )
+    for (const [nome, fonte] of [
+      ["sidebar", CODIGO],
+      ["app-header", cabecalho],
+    ] as const) {
+      expect(fonte, `${nome} tem ease-linear`).not.toContain("ease-linear")
+    }
+    for (const alvo of [
+      "transition-[width]",
+      "transition-[left,right,width]",
+      "transition-[margin,opacity]",
+    ]) {
+      const i = CODIGO.indexOf(alvo)
+      expect(i, alvo).toBeGreaterThan(-1)
+      expect(CODIGO.slice(i, i + 130), alvo).toContain("ease-(--ease-emphasized)")
+    }
+    expect(cabecalho).toMatch(
+      /transition-\[height\][^"]*ease-\(--ease-emphasized\)/
+    )
+  })
+
+  it("25. o marcador soma a cadeia de offsetParent, e não lê a caixa da tela", () => {
+    // O `<li>` do menu é `relative`, então ele — e não a trilha — é o
+    // `offsetParent` do botão: lido direto, `offsetLeft` valeria zero para
+    // todos, e o primeiro item acertaria por acidente. É o defeito que o
+    // `NavigationMenu` mediu na rodada 32b.
+    const fn = CODIGO.slice(
+      CODIGO.indexOf("function caixaRelativa("),
+      CODIGO.indexOf("function SidebarMenu(")
+    )
+    expect(fn.length).toBeGreaterThan(0)
+    expect(fn).toContain("offsetParent")
+    expect(fn).toMatch(/x \+= no\.offsetLeft/)
+    expect(fn).toMatch(/y \+= no\.offsetTop/)
+
+    const menu = CODIGO.slice(
+      CODIGO.indexOf("function SidebarMenu("),
+      CODIGO.indexOf("function SidebarMenuItem(")
+    )
+    // Coordenada de conteúdo, nunca de viewport: o `SidebarContent` rola.
+    expect(menu).not.toContain("getBoundingClientRect")
+    // Nada de laço por quadro — dois observadores, como no `Tabs`.
+    expect(menu).not.toContain("requestAnimationFrame")
+    expect(menu).toContain("ResizeObserver")
+    expect(menu).toContain("MutationObserver")
+    // A trilha não declara altura: ela cresce com os itens.
+    expect(menu).toMatch(/"relative flex w-full min-w-0 flex-col gap-1"/)
+    // O marcador é um nó só, e vem **antes** dos itens: `relative` com
+    // `z-index: auto` não cria contexto de empilhamento, então um `-z-*` o
+    // mandaria para trás da própria placa. Quem o põe atrás é a ordem.
+    expect([...menu.matchAll(/data-slot="sidebar-marker"/g)]).toHaveLength(1)
+    expect(menu).not.toMatch(/sidebar-marker[\s\S]{0,500}?-z-\d/)
+    expect(menu.indexOf('data-slot="sidebar-marker"')).toBeLessThan(
+      menu.lastIndexOf("{children}")
+    )
   })
 
   it("11. nenhuma tela reescreve o ritmo da lista", () => {

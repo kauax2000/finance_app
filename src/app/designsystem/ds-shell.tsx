@@ -9,10 +9,10 @@ import { barSurfaceClassName } from "@/lib/bar-classes"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import {
-  EdgePanel,
-  EdgePanelContent,
-  EdgePanelTrigger,
-} from "@/components/ui/edge-panel"
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 import {
   DialogCloseButton,
   DialogTitle,
@@ -82,7 +82,7 @@ function DsTopBar() {
    *
    * O painel é controlado só por isso: `DsNav` é o **mesmo** componente na
    * coluna fixa do desktop e aqui dentro, então envolver os links num
-   * `EdgePanelClose` — que é o idioma do Radix — lançaria no desktop, onde não
+   * `SheetClose` — que é o idioma do Radix — lançaria no desktop, onde não
    * existe painel para fechar.
    *
    * Fechar pela **rota**, e não pelo clique, cobre também quem chega pela
@@ -114,12 +114,12 @@ function DsTopBar() {
         className="flex h-full items-center gap-2 sm:gap-3"
       >
         <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
-        {/* `EdgePanel`, e não `Sheet`: isto é navegação, e navegação entra
-            pelo lado em qualquer largura. O `Sheet` vira gaveta de baixo no
-            telefone — certo para um formulário, errado para uma lista de 89
-            links, que abriria com alça de arraste e canto arredondado. */}
-        <EdgePanel open={navAberta} onOpenChange={setNavAberta}>
-          <EdgePanelTrigger asChild>
+        {/* `Sheet`: painel de borda a partir de 768px, gaveta abaixo — e é
+            gaveta também para navegação, que é a inversão da rodada 64. O
+            gatilho é `lg:hidden`, então entre 768 e 1024px o que abre é o
+            painel da esquerda, e `side` vale ali. */}
+        <Sheet open={navAberta} onOpenChange={setNavAberta}>
+          <SheetTrigger asChild>
             <Button
               variant="tertiary"
               // Mesmo degrau do gatilho de busca ao lado: os dois são ícone na
@@ -130,8 +130,8 @@ function DsTopBar() {
             >
               <Bars3Icon aria-hidden />
             </Button>
-          </EdgePanelTrigger>
-          {/* A rolagem é do `div` de dentro, não do `EdgePanelContent`.
+          </SheetTrigger>
+          {/* A rolagem é do `div` de dentro, não do `SheetContent`.
               Com `overflow-y-auto` na própria folha, o botão de fechar — que é
               `absolute` dentro dela — rolava junto e sumia depois de uns
               poucos itens, numa lista de 88.
@@ -145,9 +145,15 @@ function DsTopBar() {
 
               O `pr-14` é o território: 56px reservados à direita, para o título
               não correr por baixo do botão. */}
-          <EdgePanelContent
+          <SheetContent
             side="left"
-            className="w-72 gap-0 overflow-hidden p-0"
+            fillMobileViewport
+            // `md:w-72` e não `w-72`: o ramo gaveta é `inset-x-0`, e uma
+            // largura ali venceria o `right: 0` — a gaveta sairia com 288px
+            // ancorada à esquerda em vez de ocupar a tela. O `md` é o mesmo
+            // 768 de `useIsMobile`, então a largura só existe onde existe o
+            // painel.
+            className="gap-0 overflow-hidden md:w-72"
             // O efeito acima cobre toda navegação, menos uma: clicar no link da
             // página em que já se está não muda a rota, e o painel ficaria
             // aberto sobre a página que ele acabou de dizer que é a atual.
@@ -180,8 +186,8 @@ function DsTopBar() {
               <DsNav />
             </div>
           <DialogCloseButton />
-          </EdgePanelContent>
-        </EdgePanel>
+          </SheetContent>
+        </Sheet>
 
         {/* A marca identifica o produto, o fio separa, e a sigla identifica a
             seção — três peças que não competem porque nenhuma repete a outra.

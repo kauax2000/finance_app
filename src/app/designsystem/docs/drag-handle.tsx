@@ -198,9 +198,10 @@ export default function DragHandleDoc() {
         <code>touch-action: pan-y</code>: a alça só arrasta para cima e para
         baixo. É a razão de o <code>Drawer</code> aceitar apenas{" "}
         <code>bottom</code> e <code>top</code> — uma gaveta lateral teria a alça
-        de enfeite outra vez. Painel preso a uma borda lateral é o{" "}
-        <Link href="/designsystem/edge-panel" className="underline">
-          EdgePanel
+        de enfeite outra vez. Painel preso a uma borda lateral é o ramo desktop
+        do{" "}
+        <Link href="/designsystem/sheet" className="underline">
+          Sheet
         </Link>
         , que não promete gesto nenhum.
       </DocNote>

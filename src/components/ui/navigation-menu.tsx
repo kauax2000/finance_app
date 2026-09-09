@@ -67,27 +67,9 @@ import { useScrollFade } from "@/hooks/use-scroll-fade"
 
 type NavigationMenuVariant = "plain" | "outline" | "solid"
 type NavigationMenuSize = "sm" | "md" | "lg"
-type NavigationMenuIndicator = "none" | "arrow" | "underline"
+type NavigationMenuIndicator = "none" | "underline"
 type NavigationMenuAlign = "trigger" | "start" | "center" | "end"
 type NavigationMenuOrientation = "horizontal" | "vertical"
-
-/**
- * O padrão do marcador sai do outro eixo, e não de uma preferência.
- *
- * Com viewport há **um** painel compartilhado, longe do gatilho que o abriu: a
- * seta é o que liga os dois, e sem ela o painel aparece órfão no meio da linha.
- * Sem viewport o painel nasce embaixo do próprio item, encostado nele — a seta
- * repetiria uma informação que a geometria já dá.
- *
- * O precedente é `defaultTabsSize(variant)` e o `stretch ?? variant === "solid"`
- * do mesmo arquivo: derivar é melhor que cravar, e a derivação fica exportada
- * para ser inspecionável em vez de enterrada numa expressão.
- */
-export function defaultNavigationMenuIndicator(
-  viewport: boolean
-): NavigationMenuIndicator {
-  return viewport ? "arrow" : "none"
-}
 
 const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect
@@ -113,7 +95,7 @@ const NavigationMenuContext = React.createContext<{
 }>({
   size: "md",
   variant: "plain",
-  indicator: "arrow",
+  indicator: "none",
   align: "center",
   orientation: "horizontal",
   viewport: true,
@@ -215,7 +197,7 @@ const navigationMenuListVariants = cva(
  */
 const navigationMenuIndicatorVariants = cva(
   [
-    "group/navigation-menu-indicator pointer-events-none",
+    "pointer-events-none",
     "transition-[transform,width,height] duration-(--duration-base) ease-(--ease-out)",
     "data-[state=visible]:animate-in data-[state=visible]:fade-in data-[state=hidden]:animate-out data-[state=hidden]:fade-out",
   ],
@@ -223,11 +205,6 @@ const navigationMenuIndicatorVariants = cva(
     variants: {
       indicator: {
         none: "hidden",
-        arrow: [
-          "flex overflow-hidden",
-          "data-[orientation=horizontal]:top-full data-[orientation=horizontal]:h-2.5 data-[orientation=horizontal]:items-start data-[orientation=horizontal]:justify-center",
-          "data-[orientation=vertical]:left-full data-[orientation=vertical]:w-2.5 data-[orientation=vertical]:items-center data-[orientation=vertical]:justify-start",
-        ].join(" "),
         underline: [
           "rounded-full bg-primary-accent",
           "data-[orientation=horizontal]:top-full data-[orientation=horizontal]:h-0.5",
@@ -235,7 +212,7 @@ const navigationMenuIndicatorVariants = cva(
         ].join(" "),
       },
     },
-    defaultVariants: { indicator: "arrow" },
+    defaultVariants: { indicator: "none" },
   }
 )
 
@@ -247,14 +224,23 @@ const navigationMenuIndicatorVariants = cva(
  * Com viewport ele é só a lâmina que desliza dentro de uma superfície que já
  * existe. Sem viewport ele **é** a superfície, e veste
  * `menuPanelSurfaceClassName` em vez de reescrever a receita.
+ *
+ * **A troca é um crossfade com drift, e o drift era um whoosh.** O Radix marca
+ * `data-motion` só quando se vai de um item a outro — `from-end`/`from-start`
+ * no que entra, `to-start`/`to-end` no que sai — e mantém os dois montados até
+ * a saída acabar; como os dois são `md:absolute`, eles se sobrepõem e o olho vê
+ * um substituir o outro. O deslize vinha do shadcn em `-52`: **208px** em 100ms
+ * com a curva do navegador, o conteúdo atravessando o painel inteiro. Hoje são
+ * **16px** (`-4`) em `--duration-base` com `--ease-out` — o suficiente para
+ * dizer a direção, não para viajar — e o eixo segue a `orientation`: num menu
+ * vertical os painéis trocam de cima para baixo, e um drift horizontal ali era
+ * mentira.
  */
 const navigationMenuContentVariants = cva(
   [
     "w-full",
     "data-[motion^=from-]:animate-in data-[motion^=from-]:fade-in data-[motion^=to-]:animate-out data-[motion^=to-]:fade-out",
-    "data-[motion=from-end]:slide-in-from-right-52 data-[motion=from-start]:slide-in-from-left-52",
-    "data-[motion=to-end]:slide-out-to-right-52 data-[motion=to-start]:slide-out-to-left-52",
-    "duration-(--duration-instant)",
+    "duration-(--duration-base) ease-(--ease-out)",
   ],
   {
     variants: {
@@ -263,8 +249,15 @@ const navigationMenuContentVariants = cva(
         false: [
           "absolute top-full z-(--z-popover) mt-2 overflow-hidden md:w-auto",
           menuPanelSurfaceClassName,
-          "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-open:slide-in-from-top-2",
+          "data-closed:animate-out data-closed:fade-out-0 data-closed:duration-(--duration-instant)",
         ].join(" "),
+      },
+      orientation: {
+        horizontal:
+          "data-[motion=from-end]:slide-in-from-right-4 data-[motion=from-start]:slide-in-from-left-4 data-[motion=to-end]:slide-out-to-right-4 data-[motion=to-start]:slide-out-to-left-4",
+        vertical:
+          "data-[motion=from-end]:slide-in-from-bottom-4 data-[motion=from-start]:slide-in-from-top-4 data-[motion=to-end]:slide-out-to-bottom-4 data-[motion=to-start]:slide-out-to-top-4",
       },
       align: { trigger: "", start: "", center: "", end: "" },
     },
@@ -281,7 +274,7 @@ const navigationMenuContentVariants = cva(
       { viewport: false, align: "center", class: "left-1/2 -translate-x-1/2" },
       { viewport: false, align: "end", class: "right-0" },
     ],
-    defaultVariants: { viewport: true, align: "trigger" },
+    defaultVariants: { viewport: true, orientation: "horizontal", align: "trigger" },
   }
 )
 
@@ -438,14 +431,17 @@ const navigationMenuLinkVariants = cva(
  * ele nasce onde a casca o ancorar. Ancorado na fileira — que é o que
  * `start`/`center`/`end` fazem —, abrir o **segundo** gatilho põe o painel no
  * mesmo lugar em que o primeiro o pusera, e a leitura é a de um menu que abriu
- * o painel errado. Pior com `indicator="arrow"`: a seta fica sobre o gatilho
- * certo e o painel fica em outro lugar, então as duas peças apontam para
- * direções diferentes.
+ * o painel errado.
  *
  * `align="trigger"` — o padrão — mede o gatilho aberto e publica o **centro**
- * dele em `--navigation-menu-anchor-cx` / `-cy`; o painel centra ali. A seta
- * passa a cair no meio da borda de cima do painel, que é o único lugar em que
- * um bico de balão faz sentido.
+ * dele em `--navigation-menu-anchor-cx` / `-cy`; o painel centra ali.
+ *
+ * **Isto passou a ser invisível a olho, e quem mexer aqui precisa saber.**
+ * Enquanto havia um bico, um painel ancorado errado saía com a ponta sobre um
+ * gatilho e o corpo sob outro — foi assim que o defeito do `offsetLeft` apareceu.
+ * Sem ele, o padrão é `none` e nada denuncia o desalinho: verifique medindo
+ * `--navigation-menu-anchor-cx` contra o centro de **cada** gatilho, e nunca só
+ * do primeiro, para quem zero é o valor certo por acidente.
  *
  * O mecanismo é o do marcador do `Tabs`: `ResizeObserver` na raiz e nos
  * gatilhos, `MutationObserver` em `data-state` — nada de laço por quadro. A
@@ -466,7 +462,7 @@ function NavigationMenu({
   size = "md",
   align = "trigger",
   orientation = "horizontal",
-  indicator,
+  indicator = "none",
   viewport = true,
   ...props
 }: Omit<
@@ -608,7 +604,7 @@ function NavigationMenu({
       orientation,
       viewport,
       anchored: anchored && segueGatilho,
-      indicator: indicator ?? defaultNavigationMenuIndicator(viewport),
+      indicator,
     }),
     [size, variant, align, orientation, viewport, indicator, anchored, segueGatilho]
   )
@@ -668,9 +664,9 @@ function NavigationMenuList({
  * e `offsetLeft` é medido contra o **`offsetParent`** — o ancestral posicionado
  * mais próximo. Com `relative` aqui, esse ancestral passa a ser o próprio
  * `<li>`, e `offsetLeft` vale **0 para todo gatilho**: o marcador nunca sai do
- * lugar. Medido, com o segundo gatilho aberto: seta em 45,5 e gatilho em 152,8,
- * **107,3px** de desalinho — e o primeiro gatilho acertava por acidente, porque
- * ali zero é o valor certo.
+ * lugar. Medido, com o segundo gatilho aberto: marcador em 45,5 e gatilho em
+ * 152,8, **107,3px** de desalinho — e o primeiro gatilho acertava por
+ * acidente, porque ali zero é o valor certo.
  *
  * Sem ele, o `offsetParent` volta a ser o `<div style="position:relative">` que
  * o Radix põe em volta da fileira, que é o mesmo bloco contentor do marcador e
@@ -712,26 +708,24 @@ function NavigationMenuTrigger({
 }
 
 /**
- * A seta é a **ponta do painel**, e não um objeto que aponta para ele.
+ * O marcador **não desenha nada dentro de si**, e por isso não tem filho.
  *
- * O que havia antes era um quadrado `bg-border` com `shadow-md` próprio: uma
- * cor diferente da superfície que ele encabeçava, e uma segunda sombra em cima
- * da que o painel já lança. Medido no tema escuro, ele dava **1,23:1 contra o
- * painel** — pouco para ler como peça, suficiente para ler como emenda.
+ * Ele já teve: um bico de balão, um `<span>` de 8px rotacionado 45° na calha
+ * entre a fileira e o painel. Ele era correto pelos números — `bg-popover` com
+ * o mesmo `ring-foreground/10` do painel dava **1,00 contra ele**, que é o
+ * valor certo para uma ponta —, e era isso o problema: **1,10 contra a página**
+ * é uma peça que ocupa a calha e não diz nada que a posição do painel já não
+ * diga. Ele saiu, e com ele a derivação que o ligava sozinho quando havia
+ * viewport.
  *
- * Agora é `bg-popover` com o mesmo `ring-foreground/10`: **1,00 contra o
- * painel**, ou seja nenhuma diferença, que é o número certo para um bico. Ele
- * não se destaca da página (1,10) e não deveria — quem o torna visível é o fio
- * e a sombra que o painel já tem, exatamente como num balão de fala.
- *
- * O recorte tem **2px a mais que a calha** de propósito: a base do bico passa
- * por baixo do painel (que vive em `--z-popover`, acima da fileira) em vez de
- * encostar nele. Sem isso, o `ring` do painel desenharia um fio reto
- * atravessando a base do bico, e as duas peças voltariam a ler como duas.
+ * O que sobrou é o que pinta a si mesmo. `underline` é um traço de acento sob o
+ * gatilho aberto — **6,78:1** contra a página, o sinal alto que o bico nunca
+ * foi —, e é opt-in. O padrão é `none`, e aí quem marca o gatilho aberto é o
+ * realce que ele já tem.
  */
 function NavigationMenuIndicator({
   className,
-  indicator = "arrow",
+  indicator = "none",
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Indicator> & {
   indicator?: NavigationMenuIndicator
@@ -741,17 +735,7 @@ function NavigationMenuIndicator({
       data-slot="navigation-menu-indicator"
       className={cn(navigationMenuIndicatorVariants({ indicator }), className)}
       {...props}
-    >
-      {indicator === "arrow" ? (
-        <span
-          className={cn(
-            "relative size-2 rotate-45 rounded-tl-xs bg-popover ring-1 ring-foreground/10",
-            "group-data-[orientation=horizontal]/navigation-menu-indicator:top-1",
-            "group-data-[orientation=vertical]/navigation-menu-indicator:left-1"
-          )}
-        />
-      ) : null}
-    </NavigationMenuPrimitive.Indicator>
+    />
   )
 }
 
@@ -815,10 +799,27 @@ function NavigationMenuViewport({
         data-slot="navigation-menu-viewport"
         className={cn(
           "relative h-(--radix-navigation-menu-viewport-height) w-full overflow-hidden",
-          vertical ? "ms-2 origin-left" : "mt-2 origin-top",
+          vertical
+            ? "ms-2 origin-left data-open:slide-in-from-left-2"
+            : "mt-2 origin-top data-open:slide-in-from-top-2",
           menuPanelSurfaceClassName,
-          "duration-(--duration-instant) md:w-(--radix-navigation-menu-viewport-width)",
-          "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          // O morph. O Radix já escreve a caixa do conteúdo ativo nas duas
+          // variáveis; uma `transition` de largura e altura é o que transforma
+          // o salto entre painéis em trajeto. **Explícito**, porque um
+          // `duration-*` sem `transition-*` deixa `transition-property: all` —
+          // era o que havia, e a 100ms lia como tremor. Na primeira abertura as
+          // variáveis nascem indefinidas (`auto`), e `auto → px` não interpola:
+          // o painel não cresce do zero.
+          "transition-[width,height] duration-(--duration-base) ease-(--ease-out) md:w-(--radix-navigation-menu-viewport-width)",
+          // A forma é a das superfícies ancoradas (fade + 8px + zoom-95); o que
+          // muda é o tempo e a curva. `duration-*` alimenta `--tw-duration` e
+          // `ease-*` alimenta `--tw-ease`, que é o que o `animate-in` lê — sem
+          // o `ease-(--ease-out)` aqui a curva da casa nunca chegava a este
+          // painel, medido: `animation-timing-function: ease`.
+          "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95",
+          // A saída não se move e é mais curta: um menu que fecha ao tirar o
+          // cursor não pode demorar 200ms para sumir.
+          "data-closed:animate-out data-closed:fade-out-0 data-closed:duration-(--duration-instant)",
           className
         )}
         {...props}
@@ -831,7 +832,8 @@ function NavigationMenuContent({
   className,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Content>) {
-  const { viewport, align, anchored } = React.useContext(NavigationMenuContext)
+  const { viewport, align, orientation, anchored } =
+    React.useContext(NavigationMenuContext)
   // Mesma queda do viewport: sem medida, `left: var(--x)` cairia em `auto`.
   const ancora = align === "trigger" && !anchored ? "center" : align
 
@@ -839,7 +841,7 @@ function NavigationMenuContent({
     <NavigationMenuPrimitive.Content
       data-slot="navigation-menu-content"
       className={cn(
-        navigationMenuContentVariants({ viewport, align: ancora }),
+        navigationMenuContentVariants({ viewport, orientation, align: ancora }),
         className
       )}
       {...props}

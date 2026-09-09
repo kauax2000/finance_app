@@ -134,7 +134,6 @@ describe("moldura de telefone do catálogo", () => {
     for (const [arquivo, raiz] of [
       ["sheet.tsx", "Sheet"],
       ["drawer.tsx", "Drawer"],
-      ["edge-panel.tsx", "EdgePanel"],
     ] as const) {
       const src = readFileSync(new URL(arquivo, UI), "utf8").replace(
         /\/\/.*$/gm,

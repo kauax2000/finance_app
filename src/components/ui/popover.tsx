@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-import { Popover as PopoverPrimitive } from "radix-ui"
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { Popover as PopoverPrimitive } from "radix-ui";
 
-import { menuPanelSurfaceClassName } from "@/lib/menu-classes"
-import { cn } from "@/lib/utils"
-import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
-import { Muted } from "@/components/ui/typography"
-import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
-import { useScrollFade } from "@/hooks/use-scroll-fade"
+import { menuPanelSurfaceClassName } from "@/lib/menu-classes";
+import { cn } from "@/lib/utils";
+import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface";
+import { Muted } from "@/components/ui/typography";
+import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes";
+import { useScrollFade } from "@/hooks/use-scroll-fade";
 
 /**
  * Um popover é um `role="dialog"` — e ele precisa de nome.
@@ -36,31 +36,31 @@ import { useScrollFade } from "@/hooks/use-scroll-fade"
  * chamador são espalhados depois.
  */
 type PopoverLabelContextValue = {
-  titleId: string
-  descriptionId: string
-  setHasTitle: (present: boolean) => void
-  setHasDescription: (present: boolean) => void
-}
+  titleId: string;
+  descriptionId: string;
+  setHasTitle: (present: boolean) => void;
+  setHasDescription: (present: boolean) => void;
+};
 
 const PopoverLabelContext =
-  React.createContext<PopoverLabelContextValue | null>(null)
+  React.createContext<PopoverLabelContextValue | null>(null);
 
 function Popover({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Root>) {
-  return <PopoverPrimitive.Root data-slot="popover" {...props} />
+  return <PopoverPrimitive.Root data-slot="popover" {...props} />;
 }
 
 function PopoverTrigger({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Trigger>) {
-  return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />
+  return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />;
 }
 
 function PopoverClose({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Close>) {
-  return <PopoverPrimitive.Close data-slot="popover-close" {...props} />
+  return <PopoverPrimitive.Close data-slot="popover-close" {...props} />;
 }
 
 /**
@@ -85,7 +85,24 @@ const popoverContentVariants = cva(
     // popover e o `PopoverBody` rolariam os dois, um dentro do outro. Quem não
     // declara continua exatamente como antes.
     "has-[[data-slot=popover-body]]:overflow-hidden",
-    "duration-(--duration-instant) data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+    // A entrada é a do sistema — fade, 8px do lado de onde veio e `zoom-95` —,
+    // e o que faltava era a curva chegar até aqui. `animate-in` do
+    // tw-animate-css é `enter var(--tw-animation-duration, …) var(--tw-ease,
+    // ease)`, e quem escreve `--tw-ease` é a classe `ease-*`: sem ela,
+    // medido, `--tw-ease` saía **vazio** e o popover abria com o `ease` do
+    // navegador. É o mesmo defeito que o `NavigationMenu` tinha.
+    //
+    // `animation-duration-*` e não `duration-*`: o segundo escreve
+    // `transition-duration` junto, e sem nenhum `transition-property` isso
+    // deixa `transition: all` — medido aqui, `all 0.1s`. Numa superfície que
+    // só anima e não transiciona, o utilitário certo é o que mexe só na
+    // animação.
+    "animation-duration-(--duration-base) ease-(--ease-out)",
+    "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+    "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95",
+    // A saída não se move e é mais curta: um popover que se fecha some, não
+    // recua. O `zoom-out-95` saiu junto com o resto do movimento.
+    "data-closed:animate-out data-closed:fade-out-0 data-closed:animation-duration-(--duration-instant)",
   ],
   {
     variants: {
@@ -94,13 +111,14 @@ const popoverContentVariants = cva(
         // não recua duas vezes. Em `none` ela vira dona do próprio — e os 12/8
         // são exatamente o que as seis faixas escritas à mão pelo app já
         // escreviam (`px-3 py-2`).
-        default: "gap-2.5 p-2.5 [--popover-strip-px:0px] [--popover-strip-py:0px]",
+        default:
+          "gap-2.5 p-2.5 [--popover-strip-px:0px] [--popover-strip-py:0px]",
         none: "gap-0 p-0 [--popover-strip-px:--spacing(3)] [--popover-strip-py:--spacing(2)]",
       },
     },
     defaultVariants: { padding: "default" },
-  }
-)
+  },
+);
 
 function PopoverContent({
   className,
@@ -111,9 +129,9 @@ function PopoverContent({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content> &
   VariantProps<typeof popoverContentVariants>) {
-  const reactId = React.useId()
-  const [hasTitle, setHasTitle] = React.useState(false)
-  const [hasDescription, setHasDescription] = React.useState(false)
+  const reactId = React.useId();
+  const [hasTitle, setHasTitle] = React.useState(false);
+  const [hasDescription, setHasDescription] = React.useState(false);
 
   const label = React.useMemo<PopoverLabelContextValue>(
     () => ({
@@ -122,12 +140,31 @@ function PopoverContent({
       setHasTitle,
       setHasDescription,
     }),
-    [reactId]
-  )
+    [reactId],
+  );
 
   return (
-    <PopoverPrimitive.Portal data-slot="popover-portal">
-      <PopoverLabelContext.Provider value={label}>
+    // **O Provider fica por fora do Portal, e isso é o que faz a saída
+    // existir.** O `Portal` do Radix é `<Presence>` em volta de um
+    // `PortalPrimitive asChild`, e o `Presence` decide se espera a animação
+    // lendo `getComputedStyle` do **ref do filho**. Com o Provider no meio, o
+    // `Slot` do `asChild` tenta pôr o ref num context provider — que não é
+    // elemento —, o ref se perde, `getAnimationName(undefined)` devolve
+    // `"none"` e o Radix desmonta **no mesmo commit** em que escreve
+    // `data-state="closed"`. Medido: no instante do `state=closed` o
+    // `getComputedStyle` do conteúdo já vinha **vazio**, ou seja o nó estava
+    // destacado, e nenhum `animationstart` de `exit` chegava a disparar — as
+    // três classes `data-closed:*` eram código morto desde sempre. O
+    // `DropdownMenu`, que tem `Portal → Content` direto, sempre animou.
+    //
+    // O contexto continua alcançando o título e a descrição: ele está acima do
+    // Portal na árvore do React, e contexto atravessa portal.
+    //
+    // Saiu junto o `data-slot="popover-portal"`, que também não existia: as
+    // props iam para o mesmo `Slot` e morriam no Provider. Verificado no DOM
+    // com um popover aberto — `[data-slot=popover-portal]` não casava nada.
+    <PopoverLabelContext.Provider value={label}>
+      <PopoverPrimitive.Portal>
         <PopoverPrimitive.Content
           data-slot="popover-content"
           align={align}
@@ -142,15 +179,15 @@ function PopoverContent({
           className={cn(popoverContentVariants({ padding }), className)}
           {...props}
         />
-      </PopoverLabelContext.Provider>
-    </PopoverPrimitive.Portal>
-  )
+      </PopoverPrimitive.Portal>
+    </PopoverLabelContext.Provider>
+  );
 }
 
 function PopoverAnchor({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Anchor>) {
-  return <PopoverPrimitive.Anchor data-slot="popover-anchor" {...props} />
+  return <PopoverPrimitive.Anchor data-slot="popover-anchor" {...props} />;
 }
 
 /**
@@ -182,11 +219,11 @@ function PopoverHeader({ className, ...props }: React.ComponentProps<"div">) {
       className={cn(
         "relative z-10 flex shrink-0 flex-col text-sm",
         "px-(--popover-strip-px) py-(--popover-strip-py)",
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 /**
@@ -212,11 +249,11 @@ function PopoverBody({ className, ...props }: React.ComponentProps<"div">) {
         "min-h-0 flex-1 overflow-y-auto overscroll-contain",
         "px-(--popover-strip-px)",
         scrollFadeViewportClassName,
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 /** A faixa de pé — espelho do cabeçalho, e sem fio pela mesma razão. */
@@ -227,22 +264,22 @@ function PopoverFooter({ className, ...props }: React.ComponentProps<"div">) {
       className={cn(
         "relative z-10 flex shrink-0 flex-wrap items-center gap-2",
         "px-(--popover-strip-px) py-(--popover-strip-py)",
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 function PopoverTitle({ className, ...props }: React.ComponentProps<"h2">) {
-  const label = React.useContext(PopoverLabelContext)
-  const setHasTitle = label?.setHasTitle
+  const label = React.useContext(PopoverLabelContext);
+  const setHasTitle = label?.setHasTitle;
 
   React.useEffect(() => {
-    if (!setHasTitle) return
-    setHasTitle(true)
-    return () => setHasTitle(false)
-  }, [setHasTitle])
+    if (!setHasTitle) return;
+    setHasTitle(true);
+    return () => setHasTitle(false);
+  }, [setHasTitle]);
 
   return (
     <h2
@@ -251,21 +288,21 @@ function PopoverTitle({ className, ...props }: React.ComponentProps<"h2">) {
       className={cn("font-heading font-medium text-balance", className)}
       {...props}
     />
-  )
+  );
 }
 
 function PopoverDescription({
   className,
   ...props
 }: React.ComponentProps<"p">) {
-  const label = React.useContext(PopoverLabelContext)
-  const setHasDescription = label?.setHasDescription
+  const label = React.useContext(PopoverLabelContext);
+  const setHasDescription = label?.setHasDescription;
 
   React.useEffect(() => {
-    if (!setHasDescription) return
-    setHasDescription(true)
-    return () => setHasDescription(false)
-  }, [setHasDescription])
+    if (!setHasDescription) return;
+    setHasDescription(true);
+    return () => setHasDescription(false);
+  }, [setHasDescription]);
 
   return (
     <Muted
@@ -274,7 +311,7 @@ function PopoverDescription({
       className={cn("text-pretty", className)}
       {...props}
     />
-  )
+  );
 }
 
 export {
@@ -289,4 +326,4 @@ export {
   PopoverHeader,
   PopoverTitle,
   PopoverTrigger,
-}
+};

@@ -34,7 +34,6 @@ import DinheiroDoc from "./docs/dinheiro"
 import DragHandleDoc from "./docs/drag-handle"
 import DrawerDoc from "./docs/drawer"
 import DropdownMenuDoc from "./docs/dropdown-menu"
-import EdgePanelDoc from "./docs/edge-panel"
 import EmptyStateDoc from "./docs/empty-state"
 import FieldDoc from "./docs/field"
 import FormDoc from "./docs/form"
@@ -125,7 +124,6 @@ export const DOCS: Record<string, ComponentType> = {
   "drag-handle": DragHandleDoc,
   "drawer": DrawerDoc,
   "dropdown-menu": DropdownMenuDoc,
-  "edge-panel": EdgePanelDoc,
   "empty-state": EmptyStateDoc,
   "field": FieldDoc,
   "form": FormDoc,
