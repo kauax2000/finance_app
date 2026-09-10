@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { DocNote, Usage } from "../ds-doc"
 import {
   Group,
@@ -340,9 +341,9 @@ export default function CoresDoc() {
         era <strong>4,9</strong>, contra um piso de 8. Depois do re-passo:{" "}
         <strong>8,8</strong> protanopia e <strong>16,8</strong> para visão
         normal, sem nenhum dos cinco perder os 3:1. A história inteira está em{" "}
-        <a href="/designsystem/graficos" className="underline underline-offset-2">
+        <Link href="/designsystem/graficos" className="underline underline-offset-2">
           Gráficos
-        </a>
+        </Link>
         .
       </DocNote>
 

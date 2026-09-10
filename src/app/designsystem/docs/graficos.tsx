@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import {
   ChartBars,
   ChartDonut,
@@ -52,9 +53,9 @@ export default function GraficosDoc() {
         <code>--chart-income</code> e <code>--chart-expense</code>; quando são
         só categorias, a rampa <code>--chart-1</code> a <code>--chart-5</code>.
         Como o gráfico é montado é assunto de{" "}
-        <a href="/designsystem/chart" className="underline underline-offset-2">
+        <Link href="/designsystem/chart" className="underline underline-offset-2">
           Chart
-        </a>
+        </Link>
         ; aqui ficam as decisões que atravessam telas.
       </Usage>
 

@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import * as React from "react"
 import { Bar, ComposedChart, Line } from "recharts"
 import {
@@ -133,9 +134,9 @@ export default function ChartDoc() {
         sobre a anatomia, como <code>FormInput</code> é sobre <code>Field</code> +{" "}
         <code>Input</code>. Um número sozinho não é gráfico: é{" "}
         <code>StatCard</code>. Qual paleta a série usa é decisão de{" "}
-        <a href="/designsystem/graficos" className="underline underline-offset-2">
+        <Link href="/designsystem/graficos" className="underline underline-offset-2">
           Gráficos
-        </a>
+        </Link>
         , não deste componente.
       </Usage>
 
@@ -234,12 +235,12 @@ export default function ChartDoc() {
         title="Barras"
         description={
           <>
-            A magnitude por categoria. <code>layout="horizontal"</code> é o
+            A magnitude por categoria. <code>layout=&quot;horizontal&quot;</code> é o
             ranking com nome comprido — e ele declara o eixo de categoria por
             quem chama, que é a armadilha do Recharts que a página de{" "}
-            <a href="/designsystem/graficos" className="underline underline-offset-2">
+            <Link href="/designsystem/graficos" className="underline underline-offset-2">
               Gráficos
-            </a>{" "}
+            </Link>{" "}
             já documentava. <code>stacked</code> empilha e liga a linha de total
             no tooltip.
           </>
@@ -279,7 +280,7 @@ export default function ChartDoc() {
         <code>radius={`{[4, 4, 0, 0]}`}</code>, nunca{" "}
         <code>radius={`{4}`}</code>. Arredondar os quatro cantos levanta a barra
         da linha do zero — e a base é justamente onde um gráfico de barras diz a
-        magnitude. No <code>layout="horizontal"</code> o raio gira junto:{" "}
+        magnitude. No <code>layout=&quot;horizontal&quot;</code> o raio gira junto:{" "}
         <code>{`[0, 4, 4, 0]`}</code>. Empilhado, só o segmento de cima
         arredonda.
       </DocNote>
@@ -504,7 +505,7 @@ export default function ChartDoc() {
       </DocSection>
 
       <DocNote title="O eixo comprime e o tooltip não">
-        <code>format="currency"</code> escreve <code>R$ 1.234.567,00</code> no
+        <code>format=&quot;currency&quot;</code> escreve <code>R$ 1.234.567,00</code> no
         tooltip e <code>R$ 1,23 mi</code> no eixo — o eixo deriva{" "}
         <code>compact</code> sozinho. São medidas diferentes de propósito: um
         rótulo de eixo precisa caber numa coluna de ~56px, e um tooltip precisa

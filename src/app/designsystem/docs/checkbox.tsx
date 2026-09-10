@@ -43,7 +43,7 @@ export default function CheckboxDoc() {
         contorno do marcado. Ele é o cabeçalho de uma lista em que{" "}
         <strong>parte</strong>{" "}
         dos itens está marcada — quem o desenha como um marcado mais claro está
-        dizendo "meio ligado", que não é o que ele significa.
+        dizendo &ldquo;meio ligado&rdquo;, que não é o que ele significa.
         <br />
         <br />
         Ele não sai de <code>defaultChecked</code>: é um valor de{" "}
