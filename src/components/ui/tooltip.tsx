@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
 import { Tooltip as TooltipPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
@@ -58,6 +59,22 @@ function TooltipTrigger({
 }
 
 /**
+ * `size` é o corpo da dica. `md` é o de sempre — 14px, a leitura de uma frase.
+ * `sm` desce a 12px e aperta o recuo, para rotular um ícone numa fileira densa:
+ * na coluna de ações da `Table` uma caixa de 14px com 12 de recuo saía maior
+ * que o botão de 28 que ela nomeia.
+ */
+const tooltipContentVariants = cva("font-medium text-balance", {
+  variants: {
+    size: {
+      sm: "px-2 py-1 text-xs",
+      md: "px-3 py-1.5 text-sm",
+    },
+  },
+  defaultVariants: { size: "md" },
+})
+
+/**
  * A caixa flutuante do tooltip.
  *
  * Era uma linha de novecentos caracteres com quatro coisas erradas dentro.
@@ -90,9 +107,11 @@ function TooltipContent({
   className,
   sideOffset = 6,
   collisionPadding = ANCHORED_COLLISION_PADDING,
+  size,
   children,
   ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Content>) {
+}: React.ComponentProps<typeof TooltipPrimitive.Content> &
+  VariantProps<typeof tooltipContentVariants>) {
   // O portal vai para o `body` da janela ativa. Fora da moldura do catálogo o
   // contexto é `null` e o Radix usa o próprio documento — o app não muda.
   const janela = useViewportWindow()
@@ -101,6 +120,7 @@ function TooltipContent({
     <TooltipPrimitive.Portal container={janela?.document.body}>
       <TooltipPrimitive.Content
         data-slot="tooltip-content"
+        data-size={size ?? "md"}
         sideOffset={sideOffset}
         collisionPadding={collisionPadding}
         className={cn(
@@ -110,7 +130,7 @@ function TooltipContent({
           "z-(--z-popover) w-fit max-w-xs origin-(--radix-tooltip-content-transform-origin)",
           "max-h-(--radix-tooltip-content-available-height) max-w-(--radix-tooltip-content-available-width) overflow-y-auto overscroll-contain",
           menuPanelSurfaceClassName,
-          "px-3 py-1.5 text-sm font-medium text-balance",
+          tooltipContentVariants({ size }),
           // Entra deslizando do lado do gatilho, o que dá direção ao movimento
           // em vez de fazer a caixa surgir do nada.
           "data-[side=bottom]:slide-in-from-top-1 data-[side=left]:slide-in-from-right-1 data-[side=right]:slide-in-from-left-1 data-[side=top]:slide-in-from-bottom-1",

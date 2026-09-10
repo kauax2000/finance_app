@@ -98,6 +98,14 @@ export const scrollFadeViewportClassName = "scroll-fade-y"
 export const scrollFadeViewportXClassName = "scroll-fade-x"
 
 /**
+ * O véu da borda de baixo, para o rolável que carrega vidro — a exceção
+ * pintada da dissolução. Vai num nó **irmão** do rolável, dentro de uma casca
+ * `relative` que recebe as variáveis (`useScrollFade` com `shell`). Ver
+ * `@utility scroll-fade-veil-y`.
+ */
+export const scrollFadeVeilClassName = "scroll-fade-veil-y"
+
+/**
  * O sangramento sob as faixas: o conteúdo sobe para trás delas e devolve o mesmo
  * tanto em recuo, então ele **passa por baixo** em vez de parar numa borda. É o
  * que dá à rampa o que dissolver.

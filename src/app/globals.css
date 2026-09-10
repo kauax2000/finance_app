@@ -1741,6 +1741,57 @@
   }
 }
 
+/* O véu da borda de baixo — a **exceção pintada** da dissolução, para o rolável
+   que carrega vidro (o cabeçalho fixo da `Table`). Medido no Chromium: um
+   `backdrop-filter` dentro de um elemento mascarado não borra, e a máscara num
+   `<tbody>` não é redesenhada ao mudar — uma máscara 100% transparente deixava
+   as linhas visíveis. Então o rolável não se mascara, e a borda de baixo é um
+   véu irmão na cor da superfície, por cima das linhas e por baixo do rodapé.
+   Sobre superfície lisa, véu de 94% e máscara de 6% dão **a mesma cor**, com a
+   mesma curva: por isso a cor é uma variável (`--scroll-fade-surface`, o card
+   por padrão) — pintar a cor errada é o defeito que a paleta de comandos já
+   registrou. Lê as variáveis do rolável pela casca (`useScrollFade` com
+   `shell`), e some quando não há o que rolar. */
+@utility scroll-fade-veil-y {
+  --scroll-fade-veil-z: clamp(0px, var(--scroll-fade-end, 0px), var(--scroll-fade-h));
+  --scroll-fade-veil-c: var(--scroll-fade-surface, var(--color-card));
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: calc(var(--scroll-fade-foot-h, 0px) + var(--scroll-fade-veil-z));
+  pointer-events: none;
+  /* **A rampa atravessa o topo da faixa**, e não termina nele: começa na zona
+     acima dela e só chega ao piso a 3/4 da faixa. Terminando no topo, ela
+     desenhava uma borda — pedido do dono, que aceitou o conteúdo um pouco mais
+     visível no começo da faixa em troca de uma transição sem marca. A curva é
+     *smootherstep* (6t⁵ − 15t⁴ + 10t³): derivada zero nas duas pontas, então
+     não há degrau nem onde o véu começa nem onde ele assenta. */
+  --scroll-fade-veil-l: calc(var(--scroll-fade-veil-z) + var(--scroll-fade-foot-h, 0px) * 0.75);
+  --scroll-fade-veil-p: calc((1 - var(--scroll-fade-floor)) * 100%);
+  background-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    color-mix(in srgb, var(--scroll-fade-veil-c) calc(var(--scroll-fade-veil-p) * 0.009), transparent) calc(var(--scroll-fade-veil-l) * 0.1),
+    color-mix(in srgb, var(--scroll-fade-veil-c) calc(var(--scroll-fade-veil-p) * 0.058), transparent) calc(var(--scroll-fade-veil-l) * 0.2),
+    color-mix(in srgb, var(--scroll-fade-veil-c) calc(var(--scroll-fade-veil-p) * 0.163), transparent) calc(var(--scroll-fade-veil-l) * 0.3),
+    color-mix(in srgb, var(--scroll-fade-veil-c) calc(var(--scroll-fade-veil-p) * 0.317), transparent) calc(var(--scroll-fade-veil-l) * 0.4),
+    color-mix(in srgb, var(--scroll-fade-veil-c) calc(var(--scroll-fade-veil-p) * 0.5), transparent) calc(var(--scroll-fade-veil-l) * 0.5),
+    color-mix(in srgb, var(--scroll-fade-veil-c) calc(var(--scroll-fade-veil-p) * 0.683), transparent) calc(var(--scroll-fade-veil-l) * 0.6),
+    color-mix(in srgb, var(--scroll-fade-veil-c) calc(var(--scroll-fade-veil-p) * 0.837), transparent) calc(var(--scroll-fade-veil-l) * 0.7),
+    color-mix(in srgb, var(--scroll-fade-veil-c) calc(var(--scroll-fade-veil-p) * 0.942), transparent) calc(var(--scroll-fade-veil-l) * 0.8),
+    color-mix(in srgb, var(--scroll-fade-veil-c) calc(var(--scroll-fade-veil-p) * 0.991), transparent) calc(var(--scroll-fade-veil-l) * 0.9),
+    color-mix(in srgb, var(--scroll-fade-veil-c) var(--scroll-fade-veil-p), transparent) var(--scroll-fade-veil-l)
+  );
+
+  [data-scroll-fade="off"] > & {
+    display: none;
+  }
+
+  @media (forced-colors: active) {
+    display: none;
+  }
+}
+
 /* ── O borrão progressivo da mesma zona ────────────────────────────────────
  *
  * A dissolução acima é **alfa**; isto é **vidro**. As duas se somam na mesma

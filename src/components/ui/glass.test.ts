@@ -572,12 +572,17 @@ describe("a superfície de vidro", () => {
          * e entrou na rodada 68 — o marcador dele é o *thumb* que viaja, a
          * peça de vidro de um controle segmentado.
          *
-         * O que os três têm em comum não é a camada, é a régua: **nenhum deles
-         * é clicável**. No `Tabs` quem recebe o clique é o gatilho; o marcador
+         * A `timeline` entrou na rodada 70: o marcador é superfície de
+         * histórico, e o eixo é da **lista** — como `marker` é sobrescrevível
+         * por item, um eixo por item deixaria escrever a trilha com um poço de
+         * vidro ao lado de um avatar chapado.
+         *
+         * O que os quatro têm em comum não é a camada, é a régua: **nenhum
+         * deles é clicável**. No `Tabs` quem recebe o clique é o gatilho; o marcador
          * é superfície, e fica atrás dele. É a mesma linha que manteve `Avatar`
          * e `ColorTile` depois de o `Button` reprovar quatro vezes na tela.
          */
-        const COM_MODO = ["avatar", "color-tile", "tabs"]
+        const COM_MODO = ["avatar", "color-tile", "tabs", "timeline"]
 
         // 1. A tradução existe, em qualquer das três formas: tabela semântica,
         //    tabela de identidade, ou `--glass-tone` literal (o `Checkbox`, sob

@@ -1,6 +1,6 @@
 "use client"
 
-import { InformationCircleIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { InformationCircleIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import {
   Tooltip,
@@ -64,6 +64,23 @@ export default function TooltipDoc() {
               </Button>
             </TooltipTrigger>
             <TooltipContent side={side}>Sai por {side}</TooltipContent>
+          </Tooltip>
+        ))}
+      </DocSection>
+
+      <DocSection
+        title="Tamanho"
+        description="md é o padrão, com o corpo de 14px de uma frase. sm desce a 12px e aperta o recuo, para rotular um ícone numa fileira densa — é o que a coluna de ações da Table monta sozinha, a partir do aria-label de cada botão."
+        code={`<TooltipContent size="sm">Editar Mercado</TooltipContent>`}
+      >
+        {(["sm", "md"] as const).map((size) => (
+          <Tooltip key={size}>
+            <TooltipTrigger asChild>
+              <Button variant="tertiary" size="icon-sm" aria-label={`Editar Mercado (${size})`}>
+                <PencilIcon aria-hidden />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent size={size}>Editar Mercado</TooltipContent>
           </Tooltip>
         ))}
       </DocSection>
@@ -144,6 +161,13 @@ export default function TooltipDoc() {
       <PropsTable
         title="Props do TooltipContent"
         rows={[
+          {
+            prop: "size",
+            type: '"sm" | "md"',
+            default: '"md"',
+            description:
+              "O corpo: md é 14px, a leitura de uma frase; sm é 12px com recuo menor, para rotular um ícone numa fileira densa.",
+          },
           {
             prop: "side",
             type: '"top" | "right" | "bottom" | "left"',

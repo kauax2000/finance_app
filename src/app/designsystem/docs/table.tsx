@@ -238,7 +238,7 @@ export default function TableDoc() {
 
       <DocSection
         title="Cabeçalho fixo"
-        description="sticky gruda o cabeçalho no topo do viewport. Como o viewport rola nos dois eixos (overflow-x-auto promove overflow-y a auto), ele só cola de verdade com um teto — viewportClassName='max-h-*' no Table pai."
+        description="sticky gruda o cabeçalho no topo do viewport. Como o viewport rola nos dois eixos (overflow-x-auto promove overflow-y a auto), ele só cola de verdade com um teto — viewportClassName='max-h-*' no Table pai. Com fade='bottom' ele é vidro: as linhas passam por trás borradas; com fade='sides', opaco."
         code={`<Table variant="outline" viewportClassName="max-h-40">
   <TableHeader variant="muted" sticky>…</TableHeader>
   <TableBody>…</TableBody>
@@ -303,23 +303,26 @@ export default function TableDoc() {
 
       <DocSection
         title="Linha interativa"
-        description="interactive é opt-in. O hover ligado sempre foi uma promessa falsa em toda tabela de referência — nada acontece ao clicar. Sem ele, só o fio e o estado selecionado, que é estado e não resposta ao cursor."
-        code={`<TableRow interactive onClick={…}>…</TableRow>
+        description="interactive é opt-in. O hover ligado sempre foi uma promessa falsa em toda tabela de referência — nada acontece ao clicar. Sem ele, só o fio e o estado selecionado, que é estado e não resposta ao cursor. A célula primary é o nome da linha: sublinha junto do realce, e só numa linha interativa — a de baixo tem primary e não acende."
+        code={`<TableRow interactive onClick={…}>
+  <TableCell primary>Mercado</TableCell>
+  <TableCell numeric>…</TableCell>
+</TableRow>
 <TableRow data-state="selected">…</TableRow>`}
         previewClassName="items-stretch"
       >
         <Table variant="outline">
           <TableBody>
             <TableRow interactive>
-              <TableCell>Passe o cursor aqui</TableCell>
+              <TableCell primary>Passe o cursor aqui</TableCell>
               <TableCell numeric className="text-muted-foreground">interactive</TableCell>
             </TableRow>
             <TableRow interactive data-state="selected">
-              <TableCell>Esta está selecionada</TableCell>
+              <TableCell primary>Esta está selecionada</TableCell>
               <TableCell numeric className="text-muted-foreground">selected</TableCell>
             </TableRow>
             <TableRow>
-              <TableCell>Esta não responde ao cursor</TableCell>
+              <TableCell primary>Esta não responde ao cursor</TableCell>
               <TableCell numeric className="text-muted-foreground">— (padrão)</TableCell>
             </TableRow>
           </TableBody>
@@ -412,7 +415,7 @@ export default function TableDoc() {
       >
         <ItemGroup className="w-full">
           {LINHAS.map((l) => (
-            <Item key={l.desc} variant="outline" className="mb-2">
+            <Item key={l.desc} variant="outline">
               <ItemContent>
                 <ItemTitle>{l.desc}</ItemTitle>
                 <ItemDescription>
@@ -423,7 +426,7 @@ export default function TableDoc() {
                 <Badge size="xs" tone={l.status === "Prevista" ? "neutral" : "success"}>
                   {l.status}
                 </Badge>
-                <MoneyDisplay value={l.valor} tone={l.valor < 0 ? "expense" : "income"} />
+                <MoneyDisplay value={l.valor} signed tone={l.valor < 0 ? "expense" : "income"} />
               </ItemActions>
             </Item>
           ))}
@@ -473,6 +476,13 @@ export default function TableDoc() {
             type: "string",
             description: "Teto de altura do viewport — o que um TableHeader sticky exige para colar.",
           },
+          {
+            prop: "fade",
+            type: '"sides" | "bottom"',
+            default: '"sides"',
+            description:
+              "A borda que dissolve. bottom é para o corpo com teto de altura: as linhas passam por trás do rodapé do TablePanel e dissolvem, como no Command, e substitui a lateral (um gradiente por elemento).",
+          },
         ]}
       />
 
@@ -495,13 +505,20 @@ export default function TableDoc() {
             prop: "TableHeader.sticky",
             type: "boolean",
             default: "false",
-            description: "Gruda no topo do viewport — precisa de viewportClassName com um teto.",
+            description: "Gruda no topo do viewport — precisa de viewportClassName com um teto. Vidro sob fade='bottom' (as linhas passam por trás borradas); opaco sob fade='sides'.",
           },
           {
             prop: "TableRow.interactive",
             type: "boolean",
             default: "false",
             description: "Liga hover/active e o anel de foco. Sem ele, a linha não responde ao cursor.",
+          },
+          {
+            prop: "TableCell.primary",
+            type: "boolean",
+            default: "false",
+            description:
+              "O nome da linha. Numa linha interactive sublinha junto do bg-muted/30 — o traço fica no nome, nunca no valor. Sem interactive, não acende.",
           },
           {
             prop: "TableRow.variant",
@@ -526,6 +543,13 @@ export default function TableDoc() {
             type: "boolean",
             default: "false",
             description: "Reserva a largura da coluna de checkbox.",
+          },
+          {
+            prop: "actions",
+            type: "boolean",
+            default: "false",
+            description:
+              "A última coluna: encolhe até os botões, alinha à direita e monta a fileira. O recuo horizontal é o do degrau; o vertical sai, para o botão não esticar a linha. No cabeçalho o rótulo é só do leitor de tela (sr-only, padrão “Ações”; children troca). Cada botão com aria-label ganha um tooltip sm com o mesmo texto, e todos ganham o realce bg-current/10 — o do tertiary sumia sobre a linha acesa. A ação com variant=\"destructive\" fica neutra em repouso e vira o botão destructive no cursor e no toque.",
           },
           {
             prop: "TableHead.sort",

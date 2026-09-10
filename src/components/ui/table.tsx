@@ -8,8 +8,12 @@ import {
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Muted } from "@/components/ui/typography"
-import { scrollFadeViewportXClassName } from "@/lib/scroll-fade-classes"
+import {
+  scrollFadeVeilClassName,
+  scrollFadeViewportXClassName,
+} from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
 
 /**
@@ -78,6 +82,14 @@ const TableSizeContext = React.createContext<TableSize | undefined>(undefined)
 const TableFramedContext = React.createContext(false)
 
 /**
+ * O modo de dissolução do viewport, para as peças de dentro. Em `bottom` o
+ * viewport não se mascara — a borda de baixo é um véu irmão —, e o
+ * `TableHeader` fixo pode ser vidro: `backdrop-filter` dentro de um elemento
+ * mascarado não borra (medido).
+ */
+const TableFadeContext = React.createContext<"sides" | "bottom">("sides")
+
+/**
  * `text` é rótulo comum (`font-medium`); `caps` é a régua versalete — caixa
  * alta, `tracking-wider`, sempre `text-2xs` — que 3 mini-tabelas de folha já
  * escreviam à mão na coluna de ações, e que o comentário de `command.tsx`
@@ -92,21 +104,49 @@ function Table({
   variant,
   size,
   viewportClassName,
+  fade = "sides",
   ...props
 }: React.ComponentProps<"table"> &
   VariantProps<typeof tableVariants> & {
     /** Teto de altura do viewport — o que um `TableHeader sticky` exige para colar. */
     viewportClassName?: string
+    /**
+     * A borda que dissolve. `sides` (o padrão) é a horizontal: há mais coluna.
+     * `bottom` é para o corpo com teto de altura — as linhas passam por trás do
+     * rodapé, que não pinta nada, e se dissolvem ali, como a lista do
+     * `Command`. Ele **substitui** a lateral: é um gradiente por elemento, e o
+     * hook escreve as mesmas variáveis nos dois eixos. A rolagem horizontal
+     * continua, com a barra.
+     *
+     * Só a ponta de baixo, porque o cabeçalho `sticky` mora dentro deste mesmo
+     * viewport e sairia dissolvido.
+     *
+     * **As linhas passam por trás do rodapé**, como a lista passa por trás da
+     * legenda do `Command`: o `TablePanelFooter` mede a própria altura e a
+     * publica no painel (`--table-panel-foot-h`), e o viewport a usa como faixa
+     * de baixo — sangra por baixo dela e devolve o mesmo tanto em recuo, para a
+     * última linha terminar acima do rodapé. O piso é o da casa, 0,06: sob o
+     * rodapé as linhas ficam como um fantasma, que é o fundo que o dono pediu.
+     * Fora de um `TablePanel` a faixa vale zero e nada sangra.
+     *
+     * A zona acima do rodapé é **32px**, e não os 44 da casa. Ela já foi 16
+     * — o dono pediu o fade mais baixo duas vezes —, e com a rampa passando a
+     * atravessar o rodapé (ela só assenta a 3/4 dele) a transição ficou suave
+     * o bastante para voltar a subir: 32 mais 3/4 de 44 dão ~65px de rampa.
+     */
+    fade?: "sides" | "bottom"
   }) {
   const tamanhoDoContexto = React.useContext(TableSizeContext)
   const resolvedSize = size ?? tamanhoDoContexto ?? "md"
   const resolvedVariant = variant ?? "plain"
   const framed = resolvedVariant === "outline"
+  const fundo = fade === "bottom"
 
   const nucleo = (
     <div
-      ref={useScrollFade({ axis: "x" })}
+      ref={useScrollFade(fundo ? { axis: "y", sides: "end", shell: true } : { axis: "x" })}
       data-slot="table-viewport"
+      data-fade={fade}
       className={cn(
         "relative w-full overflow-x-auto",
         "overscroll-x-contain [-webkit-overflow-scrolling:touch]",
@@ -125,7 +165,7 @@ function Table({
         // A distância aqui é `--scroll-fade-x-h` (32) e não os 44 do eixo
         // vertical: uma célula mede ~100px, e 44 dissolveria quase metade de
         // uma coluna.
-        scrollFadeViewportXClassName,
+        fundo ? "pb-(--scroll-fade-foot-h) [scroll-padding-block-end:calc(var(--scroll-fade-foot-h)+var(--scroll-fade-h)+0.25rem)]" : scrollFadeViewportXClassName,
         viewportClassName
       )}
     >
@@ -142,19 +182,41 @@ function Table({
     </div>
   )
 
+  // Em `fade="bottom"` a borda de baixo é um **véu irmão**, e não máscara: o
+  // viewport que carrega um cabeçalho de vidro não pode se mascarar. A casca é
+  // `relative` para o véu se ancorar nela, recebe as variáveis do hook
+  // (`shell`), e é ela que sangra por baixo do rodapé do painel.
+  const corpo = fundo ? (
+    <div
+      data-slot="table-fade-shell"
+      className="relative -mb-(--scroll-fade-foot-h) [--scroll-fade-h:--spacing(8)] [--scroll-fade-foot-h:var(--table-panel-foot-h,0px)]"
+    >
+      {nucleo}
+      <div aria-hidden data-slot="table-fade-veil" className={scrollFadeVeilClassName} />
+    </div>
+  ) : (
+    nucleo
+  )
+
   return (
+    <TableFadeContext.Provider value={fade}>
     <TableFramedContext.Provider value={framed}>
       {framed ? (
         <div
           data-slot="table-frame"
-          className="overflow-hidden rounded-lg border border-border"
+          // `clip-path` além do `overflow-hidden`: o borrão do cabeçalho fixo
+          // vira camada própria, e no Chrome acelerado ela escapa do recorte
+          // arredondado de um `overflow`. O `clip-path` recorta em qualquer
+          // motor, no mesmo raio.
+          className="overflow-hidden rounded-lg border border-border [clip-path:inset(0_round_var(--radius-lg))]"
         >
-          {nucleo}
+          {corpo}
         </div>
       ) : (
-        nucleo
+        corpo
       )}
     </TableFramedContext.Provider>
+    </TableFadeContext.Provider>
   )
 }
 
@@ -184,6 +246,9 @@ function TableHeader({
   labels?: TableHeaderLabels
   sticky?: boolean
 }) {
+  // Vidro só onde o viewport não se mascara — ver `TableFadeContext`.
+  const fade = React.useContext(TableFadeContext)
+  const vidro = sticky && fade === "bottom"
   return (
     <TableHeaderLabelsContext.Provider value={labels}>
       <thead
@@ -198,9 +263,51 @@ function TableHeader({
           // herdada pelo `<th>` de dentro, porque `uppercase`/`tracking-wider`
           // não são variáveis e descem por contexto React (ver `TableHead`).
           labels === "caps" && "[--table-head-fs:var(--text-2xs)]",
-          // Sticky exige tinta opaca: a 50% o conteúdo rolando por baixo
-          // vazaria através do cabeçalho parado.
-          sticky && "sticky top-0 z-(--z-raised) bg-card",
+          // Sticky exige tinta opaca **ou** vidro: a 50% sem borrão, o conteúdo
+          // rolando por baixo vazaria nítido através do cabeçalho parado.
+          sticky && "sticky top-0 z-(--z-raised)",
+          // **O divisor gruda junto, e por isso não é borda.** Com
+          // `border-collapse` (o padrão do preflight) o fio entre o cabeçalho e
+          // o corpo pertence à grade da tabela, e não à célula `sticky`: o
+          // cabeçalho ficava parado e o fio subia com a primeira linha. Aqui ele
+          // é uma sombra interna de 1px em cada `<th>` — parte da célula, então
+          // viaja com ela —, e a borda da linha sai para não sobrar um segundo
+          // fio rolando com o corpo.
+          sticky &&
+            "[&_tr]:border-b-0 [&_th]:shadow-[inset_0_-1px_0_var(--color-border)]",
+          sticky && variant !== "muted" && "bg-card",
+          // **Opaco e tingido.** `sticky` vencia o `muted` com `bg-card`, e o
+          // cabeçalho fixo perdia o tom — num `TablePanel`, cujo cabeçalho é
+          // `muted`, a versão rolável saía diferente da parada. A mistura é a
+          // composição que o navegador faria de `muted/50` sobre o card, e é em
+          // `srgb` porque é nesse espaço que alfa se compõe: em `oklab` sairia
+          // outra cor, e as duas versões deixariam de bater.
+          //
+          // O card é a superfície em que um cabeçalho fixo mora (o painel). Não
+          // é `bg-muted/50`, como as telas escrevem à mão: translúcido num
+          // elemento `sticky`, ele deixa as linhas passarem por baixo.
+          sticky &&
+            variant === "muted" &&
+            "bg-[color-mix(in_srgb,var(--color-muted)_50%,var(--color-card))]",
+          // **Sob `fade="bottom"` o cabeçalho fixo é vidro**, na receita do
+          // cabeçalho do catálogo (`barSurfaceClassName`) com a tinta desta
+          // superfície: as linhas passam por trás dele borradas. **A tinta
+          // deixa passar 20%, e não os 40% do catálogo**, e o número é
+          // contraste: com o texto claro de uma linha cobrindo 35% da área
+          // atrás do rótulo, os 12px de `--muted-foreground` caíam a 3,64 no
+          // escuro com 50% passando; com 20%, 5,23 no escuro e 4,72 no claro.
+          // A cor é `muted` a 62,5% sobre o card, com alfa 80% — sobre o card
+          // isso compõe exatamente a mistura opaca acima, então em repouso
+          // nada muda de cor. Ela só existe sob `supports-backdrop-filter:`: sem borrão,
+          // fica a versão opaca. Com `fade="sides"` o viewport se mascara e
+          // mataria o borrão, e ali o cabeçalho segue opaco.
+          vidro && "glass-surface",
+          vidro &&
+            variant !== "muted" &&
+            "supports-backdrop-filter:bg-card/80 reduced-transparency:bg-card",
+          vidro &&
+            variant === "muted" &&
+            "supports-backdrop-filter:bg-[color-mix(in_srgb,color-mix(in_srgb,var(--color-muted)_62.5%,var(--color-card))_80%,transparent)] reduced-transparency:bg-[color-mix(in_srgb,var(--color-muted)_50%,var(--color-card))]",
           !sticky && variant === "muted" && "bg-muted/50",
           className
         )}
@@ -280,7 +387,7 @@ function TableRow({
       className={cn(
         "border-b border-border transition-colors data-[state=selected]:bg-muted",
         interactive &&
-          "cursor-pointer hover:bg-muted/50 active:bg-muted/50 focus-visible:inset-ring-3 focus-visible:ring-ring/70 focus-visible:outline-none",
+          "cursor-pointer hover:bg-muted/30 active:bg-muted/30 focus-visible:inset-ring-3 focus-visible:ring-ring/70 focus-visible:outline-none group/table-row",
         variant === "group" &&
           "border-border/80 bg-muted/30 hover:bg-muted/30 [&>td]:h-auto [&>td]:py-1.5 [&>td]:text-2xs [&>td]:font-semibold [&>td]:tracking-wider [&>td]:text-muted-foreground [&>td]:uppercase",
         className
@@ -289,6 +396,21 @@ function TableRow({
     />
   )
 }
+
+/**
+ * O nome da linha — a célula que diz **o que** a linha é ("Mercado"). Numa linha
+ * `interactive` ela sublinha junto do realce de fundo, e é a mesma régua do
+ * rótulo do `Accordion` (`disclosureLabelClassName`): o traço mora no nome e
+ * nunca na linha, porque `text-decoration` desce para todo descendente em linha
+ * e um valor em dinheiro sublinhado lê como rasura.
+ *
+ * **Só acende sob `interactive`**, e não por condição aqui: o `group/table-row`
+ * só existe no ramo interativo do `TableRow`, então numa linha que não responde
+ * ao cursor o `group-hover` não tem ancestral a casar. O par `group-active` vem
+ * porque `hover:` compila dentro de `@media (hover: hover)`.
+ */
+const TABLE_PRIMARY_CELL_CLASS =
+  "underline-offset-4 decoration-from-font group-hover/table-row:underline group-active/table-row:underline"
 
 const TABLE_NUMERIC_HEAD_CLASS = "text-right"
 const TABLE_NUMERIC_CELL_CLASS = "text-right nums whitespace-nowrap"
@@ -300,18 +422,56 @@ const TABLE_SELECTION_CLASS =
   "w-10 px-2 md:w-11 md:px-3 [&_[role=checkbox]]:translate-y-0.5"
 
 /**
+ * A coluna de ações — a última, o espelho de `selection`.
+ *
+ * **Encolhe até o conteúdo** (`w-px` com `whitespace-nowrap`: numa tabela,
+ * largura mínima vira a largura do que a célula carrega) e alinha à direita,
+ * rente à borda do painel. O recuo horizontal continua sendo o do degrau
+ * (`--table-px`) — ao contrário da seleção, que crava `px-2` e ignora a
+ * densidade.
+ *
+ * **O recuo vertical sai, de propósito.** O botão (28) é mais alto que a linha
+ * de texto (20), e com o recuo do degrau a linha que tem ações cresceria de 44
+ * para 52 — que é a altura das duas telas reais, que escrevem esta coluna à
+ * mão. Com `py-0` o botão se centra na linha que as outras células já definem.
+ *
+ * **A célula monta a fileira** — o `<div className="flex … gap-1">` que as duas
+ * telas escrevem à mão, e que o catálogo teria de escrever de novo. Os botões
+ * crescem a 44 em ponteiro grosso, e nada aqui depende de `hover`: esconder
+ * ações até o cursor passar não existe no dedo.
+ *
+ * **O cabeçalho não mostra rótulo.** Os ícones de cada linha já dizem o que
+ * fazem, e um "Ações" em cima de dois lápis e duas lixeiras é texto que ninguém
+ * lê. O nome fica para o leitor de tela, em `sr-only` — um `<th>` vazio é
+ * anunciado como coluna sem nome. `children` troca o texto padrão.
+ *
+ * **Cada botão com `aria-label` ganha um tooltip `sm` com o mesmo texto**, e a
+ * célula o monta sozinha: as ações desta coluna são sempre botões só de ícone,
+ * e o nome que o leitor de tela já ouve é o que o olho precisa ler. O alvo de
+ * dedo se ancora em `button`, e não em `data-slot=button`: o `Button` espalha
+ * as props depois do próprio `data-slot`, então o `TooltipTrigger asChild` o
+ * troca por `tooltip-trigger`, e o seletor antigo deixaria de casar calado.
+ */
+const TABLE_ACTIONS_HEAD_CLASS = "w-px whitespace-nowrap text-right"
+const TABLE_ACTIONS_CELL_CLASS = "w-px py-0 whitespace-nowrap"
+const TABLE_ACTIONS_ROW_CLASS =
+  "flex items-center justify-end gap-1 [&>button]:pointer-coarse:size-11"
+
+/**
  * `numeric` alinha à direita e liga `.nums` — sem isso a coluna dança a cada
  * dígito e some justamente a vantagem da tabela (a régua de
  * [Dinheiro](/designsystem/dinheiro)). `selection` reserva a coluna do
  * checkbox — medido, `align-middle` sozinho deixa o `Checkbox` (`size-4`) 2px
  * acima do centro da célula, e a classe soma o nudge que corrige isso.
  * `sort`/`onSort` trocam o rótulo por um botão com a seta; o
- * `aria-sort` vai no próprio `<th>`, não no botão.
+ * `aria-sort` vai no próprio `<th>`, não no botão. `actions` é a última
+ * coluna — ver `TABLE_ACTIONS_HEAD_CLASS`.
  */
 function TableHead({
   className,
   numeric,
   selection,
+  actions,
   sort,
   onSort,
   children,
@@ -319,6 +479,7 @@ function TableHead({
 }: React.ComponentProps<"th"> & {
   numeric?: boolean
   selection?: boolean
+  actions?: boolean
   sort?: "asc" | "desc" | "none"
   onSort?: () => void
 }) {
@@ -341,6 +502,7 @@ function TableHead({
         labels === "caps" ? "font-semibold tracking-wider uppercase" : "font-medium",
         numeric && TABLE_NUMERIC_HEAD_CLASS,
         selection && TABLE_SELECTION_CLASS,
+        actions && TABLE_ACTIONS_HEAD_CLASS,
         className
       )}
       {...props}
@@ -367,6 +529,8 @@ function TableHead({
             <ChevronUpDownIcon aria-hidden className="text-muted-foreground/60" />
           )}
         </Button>
+      ) : actions ? (
+        <span className="sr-only">{children ?? "Ações"}</span>
       ) : (
         children
       )}
@@ -374,14 +538,69 @@ function TableHead({
   )
 }
 
+/**
+ * O realce dos botões de ação, que a célula acrescenta a cada um. O botão pousa
+ * **sobre a linha já acesa** (`bg-muted/30`), e o hover do `tertiary` —
+ * `bg-muted/50` no escuro — dava **1,06** contra ela: 32 contra 27 de brilho,
+ * medido, e invisível. `bg-current/10` dá 1,32 no escuro e 1,25 no claro — o
+ * degrau do `AlertAction`. Ele nasceu em `/15`, o do × da `AnnouncementBar`
+ * (1,54 e 1,39), e o dono o desceu dois degraus, passando por `/12` (1,40 e
+ * 1,32): o realce não pode disputar com a linha acesa em volta dele.
+ *
+ * Entra por `className`, e não por seletor na fileira, para o `twMerge`
+ * **remover** o `hover:bg-muted` e o `dark:hover:bg-muted/50` do `tertiary` em
+ * vez de disputar com eles. O par `dark:` é obrigatório: `.x:hover:is(.dark *)`
+ * pesa (0,3,0) e venceria um `hover:` sozinho no tema escuro.
+ */
+const TABLE_ACTION_HOVER_CLASS =
+  "hover:bg-current/10 active:bg-current/10 dark:hover:bg-current/10 dark:active:bg-current/10"
+
+/**
+ * A ação destrutiva da coluna: **neutra em repouso, o botão `destructive` no
+ * cursor e no toque.** Quem escreve `variant="destructive"` numa ação declara
+ * a intenção, e a célula a troca por `tertiary` com este realce. Em repouso a
+ * lixeira não pode ser vermelha — repetida em toda linha, ao lado de valores
+ * de saída em vermelho, ela é a mistura que o invariante 3 proíbe
+ * (`destructive` não é `expense`); o vermelho chega na hora da decisão.
+ *
+ * O realce é a superfície de repouso do próprio `Button destructive`
+ * (`bg-destructive/10`, `/20` no escuro, com a tinta
+ * `destructive-muted-foreground`), então a lixeira apontada é, pixel a pixel,
+ * o botão destrutivo da casa. O par `dark:` pela razão de sempre.
+ */
+const TABLE_ACTION_DESTRUCTIVE_CLASS =
+  "hover:bg-destructive/10 hover:text-destructive-muted-foreground active:bg-destructive/10 active:text-destructive-muted-foreground dark:hover:bg-destructive/20 dark:active:bg-destructive/20"
+
+/**
+ * Os filhos da coluna de ações, com os fragmentos abertos. Quem escreve as ações
+ * num helper devolve `<>…</>`, e o `Children.map` veria **um** filho só, sem
+ * `aria-label` — nenhum botão ganharia tooltip, calado. Medido na demo do
+ * catálogo, que era exatamente assim: botão com `data-slot="button"` intacto e
+ * nenhuma dica no cursor.
+ */
+function acoesAbertas(nos: React.ReactNode): React.ReactNode[] {
+  return React.Children.toArray(nos).flatMap((no) =>
+    React.isValidElement<{ children?: React.ReactNode }>(no) &&
+    no.type === React.Fragment
+      ? acoesAbertas(no.props.children)
+      : [no]
+  )
+}
+
 function TableCell({
   className,
   numeric,
   selection,
+  actions,
+  primary,
+  children,
   ...props
 }: React.ComponentProps<"td"> & {
   numeric?: boolean
   selection?: boolean
+  actions?: boolean
+  /** O nome da linha: sublinha quando a linha `interactive` recebe o cursor. */
+  primary?: boolean
 }) {
   return (
     <td
@@ -390,10 +609,45 @@ function TableCell({
         "px-(--table-px) py-(--table-py) align-middle",
         numeric && TABLE_NUMERIC_CELL_CLASS,
         selection && TABLE_SELECTION_CLASS,
+        actions && TABLE_ACTIONS_CELL_CLASS,
+        primary && TABLE_PRIMARY_CELL_CLASS,
         className
       )}
       {...props}
-    />
+    >
+      {actions ? (
+        <div data-slot="table-actions" className={TABLE_ACTIONS_ROW_CLASS}>
+          {acoesAbertas(children).map((no, i) => {
+            if (
+              !React.isValidElement<{
+                "aria-label"?: unknown
+                className?: string
+                variant?: unknown
+              }>(no)
+            ) {
+              return <React.Fragment key={i}>{no}</React.Fragment>
+            }
+            const destrutiva = no.props.variant === "destructive"
+            const acao = React.cloneElement(no, {
+              ...(destrutiva ? { variant: "tertiary" } : {}),
+              className: cn(destrutiva ? TABLE_ACTION_DESTRUCTIVE_CLASS : TABLE_ACTION_HOVER_CLASS, no.props.className),
+            })
+            const rotulo = no.props["aria-label"]
+            if (typeof rotulo !== "string") {
+              return <React.Fragment key={i}>{acao}</React.Fragment>
+            }
+            return (
+              <Tooltip key={i}>
+                <TooltipTrigger asChild>{acao}</TooltipTrigger>
+                <TooltipContent size="sm">{rotulo}</TooltipContent>
+              </Tooltip>
+            )
+          })}
+        </div>
+      ) : (
+        children
+      )}
+    </td>
   )
 }
 

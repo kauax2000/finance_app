@@ -156,6 +156,30 @@ dois. Só a terceira linha se escreve — `variant="primary"`, para a confirmaç
 definitiva que não destrói nada. No `Dialog`, `DialogClose` é um passa-tudo e
 recebe `asChild` com um `Button variant="tertiary" type="button"` dentro.
 
+### Duas ações lado a lado: a segunda não preenche
+
+A tabela do rodapé de diálogo não é uma regra de diálogo — é a regra de **par
+de ações**, e ela vale onde quer que duas apareçam juntas: cabeçalho de página,
+barra, cartão, folha.
+
+| Papel | Variant |
+| --- | --- |
+| A ação que a tela veio propor | `primary` |
+| A que a acompanha | **`tertiary`** |
+
+**Dois preenchimentos lado a lado disputam.** O verde da marca e o cinza do
+`secondary` são os dois sólidos, e o olho tem de comparar as duas caixas para
+descobrir qual é a principal — que é a mesma medição que tirou os dois botões
+de contorno do rodapé. `tertiary` não preenche nada: a hierarquia se lê num
+relance, e o par para de competir.
+
+`secondary` continua certo **sozinho** — o botão único de uma folha, o
+"Entendi" de um aviso —, e continua certo quando o par é de **duas ações do
+mesmo peso**, que é outro caso e não tem `primary` nenhum.
+
+E o nome é `tertiary`: `variant="ghost"` saiu do tipo na rodada que nomeou a
+escada pelo degrau, e o compilador acusa quem o escrever.
+
 ### Par de identidade: sem gap
 
 Nome sobre e-mail, título sobre legenda, rótulo sobre valor — sempre que dois
@@ -364,9 +388,13 @@ tema.
   oferece todos os degraus (campo não desce a 24), mas nenhum usa um nome para
   uma altura diferente.
 - **`Button`** ainda tem a coluna `icon-*`, que espelha a de texto degrau a
-  degrau: `icon-xs` 24 … `icon-xl` 40. Botão de ícone ao lado de botão de texto
+  degrau: `icon-xs` 24 … `icon-xl` 40. **Espelha a caixa, não o tipo**: só
+  `xs` e `sm` da coluna de texto descem o `font-size`, e nenhum `icon-*` o
+  declara. Num botão de ícone isso é invisível; quem põe texto num `icon-*` —
+  hoje só a `Pagination` — declara o corpo junto (ver a rodada 71). Botão de ícone ao lado de botão de texto
   usa o par, não o vizinho. `xs` e `icon-xs` são para dentro de outro controle,
-  não para uma linha de formulário.
+  não para uma linha de formulário. A exceção nomeada é a `Pagination`, cujo padrão é `xs` por
+  decisão do dono, contra esta régua (rodada 72).
 - **Não existe `size="default"`** em `Button`, `Input`, `SelectTrigger` nem
   `NativeSelect`, e não existe `size="icon"` em `Button`. O nome `default` dizia
   *o padrão* e apontava para 36, que deixou de ser o padrão quando `md` assumiu.
@@ -8586,6 +8614,908 @@ prosa. O título passou a dizer o nome que o código usa.
   `variants:` do arquivo, que é o da moldura. Quem documenta o prop é a
   `PropsTable`.
 
+### Rodada 69 — a Timeline não sabia o que a lista sabe, e o ponto nunca esteve no centro
+
+`timeline.tsx` chegou com os três silêncios que esta base já nomeou: `ds:audit`
+respondendo **"Nenhum achado"**, o `ds:catalog` reportando variante, e nenhum
+teste de escada. Os três são sinal para olhar — `isUi` cala A2, C e C′, e a
+regra **H** não enxerga dentro de `cva`.
+
+**A premissa do docblock era falsa.** Ele dizia que a atividade do workspace e o
+histórico de fatura *"hoje desenham a linha à mão"*. Varrido `src/` inteiro:
+fora de `ui/` não existe **um** conector vertical — nem `w-px`, nem `border-l`
+de trilho, nem ponto com anel. As duas telas são listas `divide-y`, e sempre
+foram. É a família "a documentação afirma o que o código não faz", desta vez
+justificando a existência do componente — e explicando os zero consumidores.
+
+#### O ponto estava 4,4px acima do centro, e a conta já tinha nome
+
+`mt-0.5` mais metade de `size-2.5` põe o centro a **7px** do topo.
+`TimelineTitle` é `P`, que traz `leading-relaxed`, então a primeira linha mede
+**22,75px** e o centro dela está em 11,375.
+
+A conta é a que o `Alert` registrou — `(entrelinha − marcador) / 2` —, e ela dá
+6,375 onde o código cravava 2. O defeito é **o dobro** do que o `Stepper` chamou
+de "assinatura de desalinhamento sistemático". Medido depois: **desalinho 0,00**
+nos dois marcadores de ponto da página.
+
+**O `max(0px, …)` não é defensivo.** Quando o marcador é maior que uma linha —
+o poço de 32 contra uma caixa de 22,75 — a conta fica negativa, e obedecê-la
+puxaria o poço para fora do topo do bloco. Zerar ali é o que faz o poço alinhar
+pelo topo e o ponto pelo centro, **com uma fórmula só**. Medido: topo do poço a
+**0,00** do topo do conteúdo, nos três degraus.
+
+#### O anel não tinha trabalho, e pintava a cor errada
+
+`ring-4 ring-background` existe para furar um conector que passa **atrás** do
+ponto. Aqui ele nunca passou: o conector é irmão, e nasce abaixo. O anel só
+sobrepunha 4px do fio com `--background` — um entalhe em qualquer superfície
+`--card`. É a régua do `Accordion`: **um componente não sabe sobre que
+superfície está**, e não pode pintar a suposição. Medido depois: o fio sai
+`oklch(0.9 0 0)`, 1px, com `box-shadow: none`.
+
+#### O poço tingido é um movimento e dois defeitos
+
+`--income` é declarado como `var(--success)` e `--expense` como
+`var(--destructive)`: no ponto, que usa a cor cheia, os dois pares saem
+**idênticos** — é o colapso que o catálogo documentava. Na família `-muted` eles
+**divergem**, e o comentário do próprio `globals.css` chama essa família, com
+estas palavras, de *"chips, badges, **icon wells**"*.
+
+O marcador que faltava era exatamente um poço tingido, e é o desenho que
+`account/activity` já escreve à mão em `h-8 w-8` — que é o `md` daqui, âncora
+real e não escala inventada. Medido, no claro: poço de `income` `198,246,209`
+contra `228,248,232` do `success`; no ponto, byte a byte iguais. **Sete tons
+rendem cinco cores no ponto e sete no poço**, com a tinta entre **5,04 e 10,83**
+nos dois temas.
+
+O tom publica **três variáveis** e não pinta nada — cor cheia, superfície do
+poço, tinta de dentro —, e é a forma do marcador que escolhe qual usar. É o que
+evita 14 `compoundVariants` de tom × forma.
+
+#### A lista assume o que é dela, pela terceira vez nesta base
+
+`isLast` era prop de quem chamava — **e a página do catálogo afirmava o
+contrário**, dizendo que *"o conector é responsabilidade do item, não do
+consumidor"* três centímetros abaixo de uma demonstração que escrevia
+`isLast={i === EVENTOS.length - 1}`. Hoje a lista deriva do índice e injeta por
+clone, como `Stepper` e `BreadcrumbList`. O mesmo clone leva o `marker`: **uma
+trilha tem uma calha só**, e é ela que faz a faixa de data alinhar — medido,
+calha do evento e calha da faixa em **32 e 32**, com o rótulo a **0** de
+desalinho.
+
+#### Servidor, e é por isso que tudo desce por variável
+
+O arquivo **não tem `"use client"`**, e não é acidente: um feed de histórico é a
+coisa que mais quer ser renderizada no servidor com dado já buscado. Por isso o
+degrau, a orientação e a calha viajam em variável CSS. A primeira escrita usou
+`in-data-[orientation=…]`, e ele **compila com `:where()`** — que não soma
+especificidade e perderia para a classe base no mesmo elemento, que é o defeito
+do `DescriptionList`. Zero `in-*` no arquivo hoje, e o teste o tranca.
+
+#### Dois eixos entram sem contagem, e isso fica escrito
+
+`TimelineSeparator` (faixa de data) e `orientation="horizontal"` têm **contagem
+zero** — nenhuma das oito listas de eventos do app agrupa por data, e não há
+histórico deitado em tela nenhuma. Entram por decisão do dono, com o custo na
+mesa, e ficam registrados assim em vez de apresentados como resposta a uma
+medida. É o precedente do `variant` de superfície do `Carousel`.
+
+Na horizontal o último item é `flex-none` de saída, preventivamente: com todos
+esticando, o `Stepper` mediu *"~192px de vão morto"* e a trilha parando a 78% da
+largura. Medido aqui: **vão morto 0,0px** em 768.
+
+#### Três defeitos que eu mesmo introduzi, e como cada um apareceu
+
+**O comentário dizia "este é o primeiro `cva` de propósito" acima do `cva`
+errado.** O `ds:catalog` lê só o primeiro `variants:` de cada fonte — a lição do
+`Item` —, e eu escrevi a explicação e pus o de tom na frente. O catálogo saiu
+reportando `tone` e escondendo os três eixos da raiz. **Escrever a regra não é
+cumpri-la**, e agora a asserção 11 a tranca.
+
+**`text-(length:…)` derrubou o `leading-relaxed` do `P`.** O utilitário de
+tamanho escreve `line-height` junto, e posto depois ele vence — a armadilha que
+este arquivo registra na rodada da composição. A caixa saiu com **21px** onde a
+fórmula supunha 22,75, e o ponto caiu **0,88px** fora do centro com o código
+"certo". O conserto é fonte única: `--tl-lead` é publicada pelo degrau, e as
+duas pontas a leem — o título como `line-height`, a fórmula como entrelinha.
+Duas fontes divergem caladas; uma não tem como.
+
+**`isLast` e `marker` vazaram para o DOM da faixa.** A `Timeline` clona **todos**
+os filhos, e o separador não os desestruturava — `React does not recognize the
+\`isLast\` prop`, três vezes na mesma página.
+
+#### Uma lição de instrumento, e é a sexta desta série
+
+Medi o horizontal logo depois de um `location.reload()` e li **largura 0** com
+**−58,3px** de vão morto. Não havia defeito: o layout não tinha assentado. Na
+leitura seguinte, 768 e vão zero. *Medição de layout se lê depois de um
+quadro* — e depois de um recarregamento, depois que ele termina.
+
+E o parente dela: **o buffer do console sobrevive à navegação.** Depois do
+conserto do vazamento, `read_console_messages` continuava devolvendo os três
+avisos antigos. Quem prova é o DOM — zero atributos vazados em
+`[data-slot="timeline"] > *` —, nunca o histórico do console.
+
+#### O que foi considerado e não entra
+
+**Rótulo `sr-only` de tom**, como o `ESTADO_EM_PALAVRAS` do `Stepper`. Lá os
+estados são um conjunto fechado com significado fixo; aqui `tone` é um papel de
+cor escolhido por quem chama, e o título costuma carregar o sentido — o anúncio
+sairia *"Fatura paga, deu certo"*. Fica registrado como rejeitado, com o motivo.
+
+#### O teste, e as onze sabotagens
+
+[`timeline-ladder.test.ts`](src/components/ui/timeline-ladder.test.ts) tem 11
+asserções, e **cada uma foi verificada reintroduzindo o defeito** — as onze
+reprovam. Ele lê o fonte **sem comentários**, porque a prosa do arquivo cita de
+propósito o que o componente deixou de fazer, e uma varredura ingênua se
+acusaria sozinha.
+
+**Zero pixel em produção**: o componente segue sem consumidor, e `git diff` fora
+de `ui/`, `designsystem/` e `AGENTS.md` sai vazio.
+
+### Rodada 70 — o marcador veste vidro, e a uniformidade é mecânica
+
+O pedido foi uma versão de vidro dos ícones da `Timeline`, no estilo do
+`Avatar glass`. **O encaixe dispensou tabela nova**: a receita precisa de duas
+coisas de quem a veste, e a peça já publicava as duas.
+
+| a `@utility glass` quer | a `Timeline` já tinha |
+| --- | --- |
+| `--glass-tone` — o corpo, e **tem de ser opaco** | `--tl-well` (`--{tom}-muted`) |
+| `--glass-ink` — a fonte de matiz do aro e das nuvens | `--tl-ink` (`--{tom}-muted-foreground`) |
+
+Verificado: os oito tokens `-muted` são `oklch(l c h)` **sem alfa** nos dois
+temas, então a regra da rodada 44 — *"tom translúcido deixa a lâmina quase preta
+atravessar, e a peça sai 20% mais escura"* — é satisfeita sem adaptação. Não
+entrou `GLASS_TONES`, que é o que a régua manda: *"quem veste vidro declara
+`--glass-tone` e `--glass-ink` com a cor que já tem"*.
+
+E a forma também: o marcador é `rounded-full`, que é a premissa do
+`glass-round` — o preset que existe porque o aro linear põe o pico **nos cantos
+da caixa**, e num círculo eles não existem (0% do perímetro, medido no `Avatar`).
+
+#### A uniformidade não é combinada, é impossível de violar
+
+A primeira versão do plano escopava o vidro ao poço de ícone, e o dono a
+reprovou com a razão certa: **`marker` é sobrescrevível por item**, então uma
+lista `marker="icon" glass` com um item em `marker="avatar"` renderizaria um
+poço de vidro ao lado de um avatar chapado. Dois acabamentos na mesma trilha.
+
+Hoje o vidro alcança **toda forma que pinta superfície** — `dot`, `icon`,
+`avatar` —, e o eixo é da **raiz**. A diferença que importa está no clone:
+`marker` é preenchido com `??` (o item pode fugir da forma), e **`glass` é
+atribuído direto** (o item não pode fugir do acabamento). Não há como escrever
+a lista inconsistente. Medido no DOM da lista mista: ícone, avatar e ponto, os
+três com o aro cônico.
+
+#### A tinta foi medida contra a alternativa, e a régua escrita perdeu
+
+O candidato óbvio era `--tl-fill`, a cor cheia — a régua do vidro diz que a
+fonte de matiz é `--{tom}`, porque o matiz é idêntico nos dois temas e basta um
+valor sem par `dark:`. Só que a receita faz `oklch(from ink l calc(c * 4) h)`:
+ela toma o **`l`** da tinta também, e `--tl-fill` tem claridade fixa (~0,5), que
+não conversa com um aro cujos tokens invertem por tema (`oklch(0 0 0 / 18%)` no
+claro, `oklch(1 0 0 / 34%)` no escuro).
+
+Medido, o aro contra o corpo:
+
+| | `--tl-fill` | `--tl-ink` |
+| --- | --- | --- |
+| escuro (média) | 3,15 | **3,66** |
+| claro (média) | 1,77 | **2,07** |
+| pior caso (`default` escuro) | **2,60** | **3,48** |
+
+`--tl-ink` ganha nos dois temas, e o pior caso é o que decide: `default` é o tom
+mais usado e era exatamente onde o aro sumia. O par `dark:` que a régua queria
+evitar **não foi preciso** — o token já inverte sozinho, como
+`--identity-N-surface` faz no `Avatar`.
+
+**A lição de forma:** uma régua escrita para uma peça não é lei para a
+seguinte. `--{tom}` é a fonte certa quando a peça não tem um token que
+acompanha o tema; esta tinha.
+
+#### As duas previsões, confirmadas
+
+Com um tom **opaco** a lâmina e as duas nuvens ficam por baixo dele e não pintam
+nada — o que sobra é o corpo, o aro cônico e o especular. Daí duas previsões
+falsificáveis, e as duas passaram nos dois temas:
+
+1. **O corpo do marcador de vidro é byte a byte o do chapado** — `0,48,6` contra
+   `0,48,6` no `income`, e assim nos demais.
+2. **O contraste da tinta não se move** — 5,86 / 7,75 / 10,8, exatamente os
+   números da rodada 69.
+
+**Zero deslocamento**, que era o critério da armadilha nº 2 (`border: 1px solid
+transparent` encolhe o conteúdo em 2px): caixa e calha idênticas com e sem
+vidro — 10/10 e 32/32 —, e o ícone parado em 16.
+
+#### O avatar precisava de moldura, e o recuo é o que a cria
+
+Ele quase ficou de fora: `[&>*]:size-full` faz a foto cobrir a casca inteira, e
+o vidro ficaria invisível. Sob vidro a casca ganha `p-0.5`, e com
+`box-sizing: border-box` os 32 viram 26 de caixa de conteúdo — o `size-full`
+encolhe o filho para ela, e sobram **3px de bisel de vidro em volta da foto**.
+Medido: casca 32, borda 1, recuo 2, foto **26**.
+
+**E o bisel é o único sem tom, de propósito**: a cor daquele marcador é a
+identidade da pessoa, e ela mora dentro do avatar. Tingir a moldura por cima
+competiria com ela. Sem `--glass-tone` a lâmina e as nuvens voltam a pintar, e é
+isso que dá corpo de vidro à moldura em vez de deixá-la um recuo vazio.
+
+**Uma correção ao meu próprio plano:** ele previa tirar o `[&>*]:size-full` do
+ramo de vidro, alegando que era ele que escondia a casca. Estava errado — quem
+cria o bisel é o **recuo**, e sem o `size-full` um avatar de 32 ficaria dentro
+de uma casca de 26, recortado pelo `overflow-hidden`. A asserção 16 tranca os
+dois juntos.
+
+#### O ponto entrou, e o critério dele era a tela
+
+A 8–12px o aro cônico de 1px é ~10% do diâmetro, e nenhum número diz se aquilo
+lê como conta de vidro ou como sujeira. Ele entrou porque a uniformidade o
+exige, foi medido (aro contra corpo de 1,97 a 3,48) e visto ampliado. Se um dia
+reprovar na tela, **a saída não é excluí-lo em silêncio** — é tornar `glass`
+inválido com `marker="dot"` no tipo, para a uniformidade continuar mecânica.
+
+#### O teste, e as sete sabotagens
+
+Cinco asserções novas em
+[`timeline-ladder.test.ts`](src/components/ui/timeline-ladder.test.ts) — a
+uniformidade em todas as formas, a ausência de neutralizador, o tom saindo da
+própria peça, o clone sobrescrevendo em vez de preencher, e o bisel. Mais
+`"timeline"` em `COM_MODO` no `glass.test.ts`, o que submete o arquivo às três
+regras de lá.
+
+**Sete sabotagens, sete reprovações** — inclusive a que importa: o item voltando
+a poder sobrescrever o `glass`, que é o buraco que o pedido do dono fechou.
+
+**Zero pixel em produção**: o modo é opt-in, o padrão é chapado, e `git status`
+não mostra nada fora de `ui/`, `designsystem/` e este arquivo.
+
+#### Dois desalinhamentos que só a tela achou, e os dois eram meus
+
+O dono circulou o primeiro evento e riscou o último: **o marcador da última
+linha não estava no topo.** Medido, **23,44px** abaixo do centro do título,
+contra **0** nos outros três.
+
+A causa é um `justify-center` que **eu** pus na calha na rodada 69, para o ramo
+horizontal. O conector é `flex-1`: com ele não sobra espaço livre e
+`justify-content` não decide nada — por isso os três primeiros itens estavam
+certos e o defeito parecia não existir. **Sem** conector, no último item, o
+marcador sozinho se centrava na altura inteira da calha. Um `justify` que só
+age quando falta um irmão sobrescrevia a fórmula de `MARCADOR_OFFSET` pelas
+costas, e só na última linha de cada trilha.
+
+**A varredura do conserto achou o segundo**, que a anotação não pedia e que eu
+não teria visto olhando só o caso relatado: um **ponto sobrescrito dentro de
+uma trilha de poço** saía **6,38px acima** do centro.
+
+Ali a causa é conceitual, e vinha da rodada 70. `--tl-marker` fazia dois
+trabalhos: a largura da **calha** — que tem de ser uniforme, senão a faixa de
+data não tem com o que se alinhar — e a medida do **marcador**, que o
+deslocamento usa para centrar. As duas coincidem enquanto o item não foge da
+forma da lista; no item que foge, o ponto de 10px lia a medida de 32. Hoje cada
+forma republica `--tl-marker` com a própria medida no elemento do marcador, e a
+raiz segue publicando a dela para a calha.
+
+Medido depois, nos **41 marcadores** da página: desalinho de ponto **0**, topo
+de poço **0**, e a calha do ponto sobrescrito ainda em 32 — igual à da faixa de
+data.
+
+**A lição de método:** o primeiro defeito vivia numa linha só de cada lista, e
+a rodada 69 mediu *o primeiro item* de cada trilha. **Um defeito que depende da
+posição não se acha medindo uma posição** — é a mesma família do marcador do
+`NavigationMenu`, que acertava no primeiro gatilho porque ali o valor certo é
+zero. A varredura que fecha o assunto percorre todos os itens, e foi ela que
+entregou o segundo de graça.
+
+#### O texto da horizontal estava pendurado na trilha
+
+Terceiro alinhamento da série, e o dono selecionou o item para apontá-lo. Rente
+à esquerda, o centro da caixa de texto ficava a **161,4px** do centro do
+marcador — mais que os 127px que o `Stepper` mediu para o defeito idêntico.
+
+A receita é a de lá: caixa em `max-content` deslocada meia medida do marcador.
+Medido depois: **desalinho 0** nos três.
+
+**Mas a exceção de borda foi invertida, e é decisão do dono com o custo na
+mesa.** O `Stepper` deixa o **primeiro** rótulo rente à esquerda, porque
+centrá-lo o levaria 5px para fora da trilha. Aqui os três se centram: o texto do
+primeiro passa **6,62px** da borda esquerda da lista, e nenhum contêiner com
+respiro recorta — medido no catálogo, sobram 18,4px dos 25, com `recorta:
+false`. Uma trilha rente à borda cortaria ~7px, e isso está escrito na página.
+
+A **última** não precisava de exceção em nenhuma das duas leituras: centrada ela
+ultrapassa a borda direita em 0,8px, contra os 4px que a versão rente à esquerda
+já ultrapassava. Centrar melhorou os dois lados.
+
+#### A medida do marcador subiu para o item, e o motivo é parentesco
+
+`--tl-marker` fazia dois trabalhos, e o conserto anterior o resolveu só pela
+metade: declarada no **marcador**, a medida serve o deslocamento vertical e
+**não** serve a centragem horizontal, porque o conteúdo é **irmão** do marcador
+e custom property não atravessa para o lado.
+
+Hoje ela mora no `<li>` (`MEDIDA_DO_MARCADOR`), de onde desce para os dois. A
+calha não se mexe: `--tl-rail-w` é computada na raiz e herda já resolvida, então
+ela continua com a medida da lista — que é o que faz a faixa de data alinhar.
+
+**Duas substituições minhas falharam caladas nesta rodada.** Eu tinha targetado
+a forma de três linhas de um ternário que uma edição anterior já havia
+colapsado numa linha, e `str.replace` não avisa quando não acha. O sintoma foi
+o oposto do esperado — o alinhamento vertical *regrediu* — e quem achou foi a
+varredura, não o `tsc`: as classes simplesmente não estavam no `<li>`. **Toda
+substituição em lote leva `assert`**, e as que eu não assertei foram exatamente
+as que falharam.
+
+#### O trilho da `Toolbar` passou a demonstrar o vidro
+
+Os **três** trilhos da página da barra — mais os dois blocos de `code`, para a
+demonstração e o trecho não divergirem — viraram `<TabsList glass>`. É o
+primeiro consumidor do modo fora da própria página do `Tabs`, e ele confirma a
+previsão que a rodada 68 registrou, agora medida noutro componente:
+
+- **o corpo não se move.** `--glass-tone` resolve para `--background` byte a
+  byte nos dois temas (`250,250,250` no claro, `10,10,10` no escuro) — que é a
+  cor que o marcador chapado já pintava;
+- **a geometria não anda**: marcador colado ao gatilho ativo (`dx`/`dy` **0**,
+  o resto sub-pixel de métrica de texto) e o gatilho parado em **28**, com a
+  régua de densidade da barra intacta.
+
+O aro é **linear e não cônico**, e está certo: o marcador é `rounded-md`, e o
+`glass-round` é opt-in por forma — um bisel polar num retângulo arredondado
+põe o pico no meio de uma aresta reta. A prosa da página fala da **bandeja**, e
+o vidro não a toca: ele desenha só o marcador que viaja.
+
+#### Uma lição de instrumento
+
+Para julgar o ponto ampliado, montei uma sonda que **clonava só o `<span>` do
+marcador** para fora da lista. Ela saiu vazia nas colunas chapadas, e a causa é
+óbvia depois de vista: `--tl-dot`, `--tl-fill` e `--tl-well` são publicados pela
+**raiz** e pelo **item**, e um marcador arrancado dali não tem variável nenhuma
+para ler. Quem quiser ampliar uma peça deste sistema clona o contêiner que
+publica as variáveis, nunca o nó que as consome.
+
+### Rodada 71 — a paginação estava no corpo de um parágrafo
+
+O dono selecionou a fileira no rodapé do `TablePanel` e pediu o componente
+**menor e mais compacto**: os botões talvez estivessem certos, os números não.
+Medido antes: número, extremo e status em **14px** — o corpo do texto da página
+—, caixas em 32, e a reticência em **16px herdado** porque não declarava
+`text-*`. O rodapé de paginação real do app, escrito à mão em
+`transactions-table.tsx`, já rodava em 12px.
+
+**Encolher a caixa sozinha não resolveria, e a razão é do `Button`.** Os degraus
+`icon-*` nunca declaram `font-size`; só `xs` e `sm` da coluna de texto o fazem.
+A coluna de ícone espelha a de texto na **caixa**, não no **tipo** — e esta
+peça é a única do sistema que põe texto num `icon-*`. `icon-sm` sozinho daria um
+dígito de 14px numa caixa de 28. A frase deste arquivo que dizia o contrário foi
+corrigida junto.
+
+#### A escada, com o tipo descendo junto com a caixa
+
+| `size` | caixa | corpo | `gap` da raiz |
+| --- | --- | --- | --- |
+| **`sm`** (padrão) | 28 | 12,8px | 8 |
+| `md` | 32 | 12,8px | 12 |
+| `lg` | 36 | 14px | 16 |
+
+É a lição que o `Tabs` trancou: `sm` e `md` levam `text-control-sm`, `lg` volta
+ao corpo da página. **`md` não reproduz a geometria antiga, de propósito** — ela
+era caixa 32 com tipo 14, que é o defeito relatado; `md` mantém a caixa e desce
+o tipo. `xl` ficou fora pela régua da escada; o `xs` também ficou, e entrou na rodada 72 por decisão do dono. O `gap` de `lg` saiu 16 e
+não os 12 do plano: com 12, `md` e `lg` produziam a mesma string na raiz — o
+defeito do `Item` que a asserção 1 existe para barrar.
+
+Medido depois, nos dois temas: as quatro peças — número, extremo, reticência e
+status — no **mesmo corpo dentro de cada degrau**, e a caixa da reticência
+acompanhando (28/32/36). Os controles da demonstração "Padrão" foram de 384px
+(somando as peças medidas antes) para **334,9** — 13% mais estreitos. O status
+**manteve a cor**: `twMerge` só troca o tamanho porque `text-control-sm` está no
+grupo `font-size` em `utils.ts` — sem isso ele viraria cor e apagaria o
+`text-muted-foreground`, o bug que aquele arquivo registra.
+
+#### Uma fonte para o tamanho, e o custo dela
+
+O tamanho morava em quatro lugares que não se conheciam: o extremo em `md`, o
+número em `icon-md`, a reticência em **`size-8` cravado** e o quadrado do
+telefone em `max-sm:size-8`, escrito à mão *"na medida dos números ao lado"*.
+Hoje os quatro saem de `paginationSteps` e a raiz publica o degrau por
+contexto; `size` numa peça sobrescreve só ela.
+
+**Contexto, e não clone, e isso custou `"use client"`.** As peças são **netas**
+da raiz (`Pagination > Content > Item > Link`), e o `cloneElement` que a
+`Timeline` usa só alcança filho direto. O arquivo era componente de servidor.
+
+**O status do rodapé de tabela vive fora da raiz** — é irmão da `Pagination`, à
+esquerda —, e fora da raiz não há contexto. Ele nasce no mesmo padrão (`sm`) e
+aceita `size` próprio. Medido no `TablePanel`: fora da raiz, e em 12,8px.
+
+O `ds:catalog` saiu de **`—`** para `align · size`: não havia `cva` no arquivo.
+
+#### Duas afirmações falsas no catálogo, e uma delas é maior que a rodada
+
+A tabela de peças dizia que `isActive` **"preenche e engrossa"**. Não engrossa:
+o próprio componente registra que o `font-medium` extra do ativo saiu, porque
+já é a base.
+
+A outra: a nota *"No telefone, só anterior e próximo"* dizia que **a numeração
+some abaixo de `sm`**. Medido a 375px, **ela não some** — nenhuma peça esconde o
+número —, e no toque cada controle cresce a 44, então a fileira de sete peças
+**transborda** em quatro das cinco demonstrações. É anterior a esta rodada, e
+consertar é mudança de comportamento no telefone, fora do que foi pedido: a nota
+passou a dizer a verdade, e o conserto está no backlog.
+
+#### A lição de instrumento, e é minha
+
+A sabotagem 5 — o número usando o degrau vizinho — **passou**. Não era buraco
+do teste: o `replace` troca a primeira ocorrência, e a primeira ocorrência de
+`numero: "icon-sm"` no arquivo é o **tipo** `PaginationStep`, não a tabela. O
+vitest não checa tipo, então a mutação não mudou nada em runtime. Mirando a
+tabela, três asserções reprovaram (2, 4 e 5). **Uma sabotagem que passa é
+suspeita do instrumento antes de ser do teste** — e ela precisa mirar o valor
+que roda, não a declaração que o descreve.
+
+### Rodada 72 — a paginação ganha o `xs`, e ele vira o padrão
+
+O dono perguntou se o rodapé do `TablePanel` era a menor versão da
+`Pagination`. Era: `sm`, 28px com 12,8px. Explicado que o `xs` tinha ficado fora
+pela régua da escada — *"`xs` e `icon-xs` são para dentro de outro controle"* —,
+ele pediu uma versão ainda menor, e que ela fosse o **padrão**. É inversão da
+régua com o custo na mesa, registrada como decisão dele e nomeada na própria
+régua do `xs` como exceção.
+
+| `size` | caixa | corpo | `gap` da raiz |
+| --- | --- | --- | --- |
+| **`xs`** (padrão) | 24 | 12px | 6 |
+| `sm` | 28 | 12,8px | 8 |
+| `md` | 32 | 12,8px | 12 |
+| `lg` | 36 | 14px | 16 |
+
+**O `xs` não inventou nada**: o extremo é `Button size="xs"`, o número é o par
+`icon-xs`, e o corpo é o `text-xs` que o próprio `Button xs` usa — o mesmo 12px
+do rodapé real de `transactions-table.tsx`. `icon-xs` também não declara tipo (o
+buraco da rodada 71), e a tabela o declara por construção. `text-xs` é tamanho
+padrão do Tailwind, então o `twMerge` o reconhece sem tocar em `utils.ts`.
+
+Medido depois, nos dois temas:
+
+- **`xs`: 24px e 12px nas quatro peças** — número, extremo, reticência e status.
+- **Os três degraus antigos idênticos à rodada 71, ao décimo**: controles em
+  334,9 / 374,9 / 404,1.
+- **O rodapé do `TablePanel` foi de 206,9 para 188,7px**, e a demonstração
+  principal de 334,9 para **300,7** — 22% abaixo dos 384 de antes da rodada 71.
+  As duas estimativas do plano (~189 e ~301) acertaram.
+
+**O padrão mora em três lugares que precisam concordar**: o `size` da raiz, o
+`defaultVariants` e o **valor padrão do contexto**. O terceiro é o que ninguém
+lembraria: ele decide o status que vive **fora** da raiz — no rodapé do
+`TablePanel` ele é irmão da `Pagination` e não herda nada. Esquecido em `"sm"`,
+a fileira sairia em 12px e o status ao lado em 12,8, calado. Medido: status de
+fora da raiz em **12px**, com `text-muted-foreground` intacto nos dois temas.
+**Seis sabotagens, seis reprovações** — uma para cada um dos três lugares.
+
+Três textos passariam a mentir e foram corrigidos: o doc-comment da tabela, a
+frase da rodada 71 e a descrição da escada no catálogo diziam que o `xs` "fica
+fora pela régua".
+
+**O transbordo a 375px continua.** O `xs` só encolhe o mouse: no toque todo
+controle cresce a 44 de qualquer jeito. Foi decidido não mexer nisso nesta
+rodada, e o item segue no backlog.
+
+### Rodada 73 — o painel de tabela ganha ações por linha e rolagem com cabeçalho fixo
+
+Pedido: duas versões novas do `TablePanel` — **ações na última coluna** e
+**rolagem com cabeçalho fixo** —, e no telefone as duas usam o padrão "A mesma
+tabela no telefone": dois gêmeos trocados por CSS (`hidden md:block` /
+`md:hidden`), cada linha virando um `Item`. Nunca um hook de largura.
+
+Contado antes de desenhar: as **2 de 2** tabelas reais com coluna de ações
+(`transactions-table.tsx:802`, `subscriptions/page-client.tsx:924`) escrevem o
+par lápis + lixeira à mão, **sem `aria-label`** — quatro botões por linha sem
+nome acessível —, e com a lixeira em `text-destructive`, vermelha, repetida em
+toda linha **ao lado de valores de saída em vermelho**. É a mistura que o
+invariante 3 proíbe. A `Table` tinha `selection` para a primeira coluna e nada
+para a última.
+
+#### `actions`, o espelho de `selection`
+
+`TableHead actions` e `TableCell actions`: a coluna encolhe até o conteúdo
+(`w-px whitespace-nowrap`), alinha à direita, e a célula monta a fileira
+(`data-slot="table-actions"`, `flex justify-end gap-1`) que as duas telas
+escrevem à mão. O recuo **continua vindo de `--table-px`** — ao contrário da
+coluna de seleção, que crava o próprio e ignora a densidade. A célula é `py-0`,
+porque o botão já tem altura.
+
+Medido no desktop: linha de **45px com e sem ações** (a previsão do `py-0`),
+coluna de **92px** e **16px** de folga até a borda — o `--table-px` do `lg`.
+**O cabeçalho não mostra rótulo**, por decisão do dono: os ícones já dizem o
+que fazem, e o nome "Ações" fica em `sr-only`, porque um `<th>` vazio é
+anunciado como coluna sem nome. Botões de 28×28, cada um com o **objeto** no nome:
+`Editar Mercado`, `Excluir Mercado`. A lixeira é neutra: `250,250,250` contra os
+`255,100,103` de `--destructive`, nos dois temas. E o `stopPropagation` segura:
+clicar no botão registra "Editar Mercado"; clicar na célula ao lado, "Abrir
+Salário". No toque os botões crescem a 44, e nada na coluna depende de `hover`.
+
+#### O cabeçalho fixo perdia a tinta, e as telas o pintam translúcido
+
+`sticky` sobrescrevia o `muted` com `bg-card`: opaco, que é o certo, mas sem o
+tom — o painel rolável sairia com um cabeçalho diferente do painel padrão. As
+telas reais resolvem ao contrário, com `sticky … bg-muted/50`, e isso deixa as
+linhas passarem por baixo.
+
+Sob `sticky` + `muted` o fundo passou a ser a **composição opaca**:
+`color-mix(in srgb, muted 50%, card)`. `srgb` porque é nele que o navegador
+compõe alfa — e a previsão de que isso bate byte a byte com o cabeçalho parado
+foi medida: **31,31,31 no escuro e 245,245,245 no claro, idênticos, alfa 1**.
+A dedução sobre as telas também: reproduzido o `bg-muted/50` no catálogo, alfa
+**0,502**, com duas linhas visíveis por baixo ao rolar. Viewport de 288 e o
+`<thead>` parado depois de 200px de rolagem.
+
+#### O telefone, e a primeira versão quebrava de dois jeitos
+
+Os gêmeos são `ItemGroup variant="divided"` — **linhas, não cartões**, porque
+dentro do `TablePanel` um cartão com contorno seria cartão dentro de cartão —,
+com item `lg` (os 16px das tiras do painel). A versão rolável **não** tem teto
+no telefone: lá quem rola é a página, e rolagem aninhada no toque é pior que
+nenhuma.
+
+Medido a 375px, a primeira versão punha valor e botões do mesmo lado, e a mesma
+lista saía com **dois layouts**: "Mercado" e "Streaming" jogavam as ações para
+uma segunda linha, "Salário" não — e espremia o conteúdo a **48px**. Com
+botões, o valor passou a ter linha própria dentro do conteúdo. Depois: conteúdo
+em **149px e altura 90 nos três**, botões 44×44, página sem transbordo. Sem
+botões nada muda: o valor fica à direita.
+
+**E o rodapé da rolável transbordava**, pelo item de backlog da paginação: seis
+controles a 44 pediam 284px para 259 disponíveis. A demonstração caiu para duas
+páginas (1–12 de 24) e o rodapé cabe — **291 contra 291**. O componente não
+mudou; o defeito continua onde estava, no backlog.
+
+#### O teste, e a asserção que acusava o próprio código
+
+Cinco asserções novas em `table-ladder.test.ts` (10 a 14): a coluna encolhe,
+alinha e monta a fileira; nenhum `px-*` cravado; alvo de dedo e nada atrás do
+cursor; `sticky` + `muted` opaco em `srgb` e nunca translúcido; `sticky` sem
+`muted` segue `bg-card`. **Oito sabotagens, oito reprovações** — incluindo a
+mistura em `oklab`, que não bate com a composição.
+
+A 13 reprovou código correto na primeira escrita: procurando `bg-muted/50` ao
+lado de `sticky &&`, ela casava `!sticky &&`, que é justamente o ramo **não**
+fixo, onde o translúcido é certo. Hoje ela ancora com `(?<!!)`. É a família de
+sempre — *uma varredura de texto precisa saber o que a condição diz*.
+
+#### Duas lições de instrumento, e as duas já estavam escritas aqui
+
+**Li o estado do clique no mesmo passo do `.click()`**, e o registro parecia
+atrasado um clique. Lido na chamada seguinte, os dois casos acertam. Sexta vez.
+
+**E a métrica de quebra deu falso positivo.** Comparar topos acusava quebra num
+item `items-center` em que as ações só estavam centradas mais abaixo. O que diz
+se a linha quebrou é a **horizontal**: `ações.left < conteúdo.right − 1`.
+
+**Zero pixel em produção**: as duas colunas reais continuam à mão.
+
+#### O realce da linha desceu para `bg-muted/30`, com o custo na mesa
+
+Pedido do dono: um hover mais suave. Medido contra o card, `muted/50` dava
+**1,08 no escuro e 1,09 no claro**; `muted/30` dá **1,04 e 1,05** — o tom mais
+leve que o sistema já usa. Os dois custos foram apresentados antes: no escuro o
+realce fica a 4 unidades de brilho do card (27 contra 23), e ele é **o mesmo
+tom da faixa de mês** (`variant="group"`), então uma linha apontada passa a
+ler igual a um cabeçalho de grupo. O selecionado segue em `bg-muted` cheio.
+
+E o nome da linha passou a sublinhar junto: `TableCell primary`. É a régua do
+rótulo do `Accordion` — o traço mora **no nome**, nunca na linha, porque
+`text-decoration` desce para todo descendente e um valor sublinhado lê como
+rasura. Ele só acende sob `interactive` **por construção**: o `group/table-row`
+existe só no ramo interativo do `TableRow`, então numa linha de referência o
+`group-hover` não tem ancestral a casar. Com o realce de fundo tão leve no
+escuro, é o traço que carrega o sinal.
+
+**As ações ganharam tooltip, e a célula o monta sozinha.** Todo botão da coluna
+com `aria-label` sai embrulhado num `Tooltip` com o mesmo texto — as ações são
+sempre botões só de ícone, e o nome que o leitor de tela ouve é o que o olho
+precisa ler. O `Tooltip` não tinha degrau nenhum, e entrou `size` (`sm` 12px
+com recuo menor, `md` o de sempre): na coluna de ações a caixa de 14px saía
+maior que o botão de 28 que ela nomeia.
+
+**E o embrulho quebrava o alvo de dedo, calado.** O `Button` espalha as props
+depois do próprio `data-slot`, então o `TooltipTrigger asChild` o troca por
+`tooltip-trigger` — e a fileira dava 44px no toque por
+`[&>[data-slot=button]]`. Hoje o seletor é `[&>button]`, que ainda vence o
+`size-7` do botão em especificidade (0,1,1 contra 0,1,0). A asserção 16 tranca
+os dois.
+
+**E a primeira versão não embrulhava nada na demo.** O helper de ações do
+catálogo devolve `<>…</>`, e o `Children.map` via um filho só, sem
+`aria-label` — medido, tooltip nenhum e o botão ainda com
+`data-slot="button"`. A tela real de transações também passa as ações dentro de
+um condicional. A célula abre os fragmentos, recursivamente, antes de embrulhar.
+
+**O realce do botão sumia sobre a linha acesa.** O botão só recebe o cursor com
+a linha já em `bg-muted/30`, e o hover do `tertiary` — `bg-muted/50` no escuro —
+dava **1,06** contra ela (32 contra 27). A célula acrescenta
+`bg-current/15` a cada ação: **1,54 no escuro e 1,39 no claro**, o degrau do ×
+da `AnnouncementBar` pela mesma razão de área. Entra por `className`, para o
+`twMerge` remover o do `tertiary` em vez de disputar, e com o par `dark:`, que
+senão perderia para o `dark:hover` do botão. **Depois o dono o desceu dois
+degraus**, passando por `/12` (1,40 e 1,32) até `bg-current/10` — o do
+`AlertAction`: 1,32 no escuro e 1,25 no claro, ainda longe dos 1,06 que
+sumiam.
+
+**E a lixeira vira o botão destrutivo no cursor.** Quem escreve
+`variant="destructive"` numa ação da coluna declara a intenção, e a célula a
+troca por `tertiary` com o realce `TABLE_ACTION_DESTRUCTIVE_CLASS`: neutra em
+repouso — a regra do invariante 3 continua valendo em toda linha —, e no
+cursor e no toque a superfície de repouso do próprio `Button destructive`
+(`bg-destructive/10`, `/20` no escuro, tinta `destructive-muted-foreground`).
+O vermelho chega na hora da decisão. No gêmeo do telefone não há célula, e ali
+a lixeira fica `tertiary`. A asserção 21 tranca as seis classes, a ausência de
+vermelho em repouso e a troca de variante.
+
+**O divisor do cabeçalho fixo subia com a primeira linha.** Apontado pelo
+dono. Com `border-collapse` — o padrão do preflight — o fio entre o cabeçalho e
+o corpo pertence à **grade** da tabela, e não à célula `sticky`: o cabeçalho
+ficava parado e o fio rolava junto com o corpo. Sob `sticky` o fio passou a ser
+uma sombra interna de 1px em cada `<th>`, que é parte da célula e viaja com
+ela, e a borda da linha sai para não sobrar um segundo fio rolando. O cabeçalho
+parado segue com o `border-b` de sempre. A asserção 22 tranca isso.
+
+**E as páginas da paginação passaram a ter a mesma caixa.** Apontado pelo
+dono: a atual e as outras "estavam diferentes". Medido, em repouso elas
+diferiam em `background-color` — o estado — e em `background-clip`: o
+`secondary` pinta até a borda e o `tertiary` só até dentro dela, então o
+quadrado da atual saía com 24px e o realce das outras com 22. O
+`PaginationLink` fixa `bg-clip-border` nos dois, e o `twMerge` tira o
+`bg-clip-padding` da base. A asserção 8 de `pagination-ladder.test.ts` tranca.
+Os extremos ficaram de fora dessa primeira passagem, e o realce de
+"Anterior"/"Próxima" continuava 1px menor de cada lado que o das páginas —
+mesmo `tertiary`, outro recorte. Hoje `PaginationEdge` fixa o mesmo
+`bg-clip-border`, e a asserção 8 cobre os dois.
+
+**A última linha do painel não soma fio com a moldura.** Apontado pelo dono no
+painel sem rodapé: o divisor da última linha encostava na borda de baixo do
+`Card`, dois fios empilhados. O `TableBody` já tirava esse fio em
+`variant="outline"`, mas o painel usa tabela `plain` dentro de um `Card` com
+borda — a moldura que fecha embaixo era outra peça. O `TablePanel` tira o fio
+da última linha **menos quando o corpo rola na vertical**
+(`[data-fade=bottom][data-scroll-fade=on]`), onde ela passa por trás do rodapé
+como uma linha qualquer. A condição lê `data-fade` porque, no modo `sides`,
+`data-scroll-fade` responde à rolagem **horizontal**. A asserção 23 tranca.
+
+**E depois a condição passou a ser o rodapé, e não a rolagem.** Apontado pelo
+dono no painel "Padrão": ele tem rodapé e não rola, e a regra tirava o fio da
+última linha — ela colava no rodapé sem nada entre os dois. Hoje o fio sai
+**só quando o painel não tem rodapé**
+(`:not(:has(>[data-slot=table-panel-footer]))`). A rolagem deixou de importar:
+com rodapé o fio separa as linhas dele de qualquer jeito, e sem rodapé a
+última linha encosta na moldura também quando o corpo rola até o fim.
+
+**E o rodapé passou a medir uma linha.** Apontado pelo dono: ele saía 48px sob
+linhas de 44 (12 + 20 + 12 no `lg`, que é o degrau do painel) — o recuo das
+tiras (12) mais o botão `xs` da paginação (24). Com `py-2.5` fecha em 44, e a
+faixa que o rodapé publica para a dissolução acompanha sozinha, porque é medida.
+No toque o botão cresce a 44 e o rodapé junto; as linhas não. A asserção 24
+tranca.
+
+### Rodada 74 — o corpo rolável dissolve no rodapé do painel
+
+O dono selecionou o rodapé do painel rolável e pediu um fundo "fade", como o do
+Command. A leitura mudou o que isso quer dizer: **o rodapé do Command não tem
+fundo** — `CommandFooter` é "fade, e não vidro", e quem some é a lista. A
+decisão foi a mesma: as linhas dissolvem sob o rodapé, só onde há rolagem, e o
+rodapé continua sem pintura.
+
+**O precedente certo é o `DialogBody`**, e não o Command: corpo rolável
+dissolvendo para um rodapé parado, com `scroll-fade-y`, piso zero e **sem
+borrão** — três tentativas de borrão ali viraram retângulo de tom (invariante 6
+de `lib/scroll-fade-classes`).
+
+**A trava era o eixo.** O viewport da `Table` já carrega `scroll-fade-x`, é um
+gradiente por elemento, e o hook escreve as mesmas `--scroll-fade-start/end`
+nos dois eixos. `Table fade="bottom"` **troca** a dissolução lateral pela de
+baixo; a rolagem horizontal continua, com a barra. O padrão `sides` é o de
+sempre, byte a byte. Só a ponta de baixo dissolve (`sides: "end"`): o cabeçalho
+`sticky` mora dentro do mesmo viewport mascarado e sairia apagado.
+
+Medido no painel rolável, nos dois temas: no topo da rolagem a dissolução liga
+com `--scroll-fade-end` em 296 (zona limitada à rampa, que aqui é de **16px** e não os 44 da casa — o dono pediu o fade mais baixo, e 44 apagava quase uma linha inteira), a ponta de cima
+nunca é escrita, o cabeçalho fica colado em 0 e nítido, e o rodapé segue
+`transparent`; rolado até o fim, `--scroll-fade-end` vai a 0 e a última linha
+fica nítida. Os outros quatro viewports da página seguem com `scroll-fade-x`.
+A asserção 18 tranca um eixo só, a ponta única, o piso zero e a ausência de
+borrão — quatro sabotagens, quatro reprovações. **Zero pixel em produção**: é
+opt-in, e só a demo usa.
+
+#### E o fade desceu para trás do rodapé, que é o que o Command faz
+
+O dono pediu o fade mais baixo, duas vezes, e a segunda disse o alvo: "parecido
+com o Command". Medido lá, a lista **passa por baixo do rodapé** — sangra os
+36px da faixa (`-mb`/`pb`), o rodapé é `transparent`, e sob ele as linhas ficam
+no piso da casa, 0,06. O "fundo fade" que se vê no Command é esse fantasma, e
+não uma tinta. Aqui a rampa parava na borda de cima do rodapé, e abaixo dela
+não havia nada.
+
+A primeira descida só encurtou a zona de 44 para **28px** (e depois, a pedido, para **16px** — 28 ainda lia alto) — ela encosta no
+rodapé e 44 apagava quase uma linha inteira (~45px no `lg`). A segunda copiou
+a geometria: `TablePanelFooter` mede a própria altura com um `ResizeObserver` e
+a publica no painel (`--table-panel-foot-h`), e o viewport em `fade="bottom"` a
+usa como faixa de baixo e sangra por baixo dela. **O piso voltou a 0,06** — o
+zero era a razão do `DialogBody`, onde o texto era recortado na borda do corpo;
+aqui não há borda a recortar, porque o conteúdo continua sob o rodapé.
+
+**Medida, e não cravada**, porque o rodapé empilha no telefone e cresce no
+toque: uma faixa errada deixaria linha nítida sob o texto ou vão vazio. Medido
+no painel: rodapé de **48px**, viewport sangrando **48** por baixo dele, o
+rodapé `relative` pintando por cima e o clique em "Próxima" chegando ao rodapé
+(`elementFromPoint`); no fim da rolagem a última linha termina em 903 com o
+rodapé começando em 904. Fora de um `TablePanel` a faixa vale zero e nada
+sangra. A asserção 19 tranca a medida, a limpeza e o `relative` — três
+sabotagens, três reprovações.
+
+O custo fica dito: a roda do mouse sobre o rodapé rola a página, e não a
+tabela — o rodapé é irmão do viewport, não filho.
+
+### Rodada 75 — a barra do painel sai da moldura
+
+O dono selecionou o "3 transações" e pediu a parte "levemente destacada, acima
+da tabela e sem bordas" — e, ao escolher, disse o escopo: **a parte superior
+inteira, com as ações de excluir, fora da moldura**. Medido antes: a barra era
+transparente, sem fio, 12px cinza, 40px de altura, **dentro** da borda de 1px e
+raio 14 do painel.
+
+**O painel separa a barra sozinho.** `TablePanel` divide os filhos pelo tipo:
+as `TablePanelToolbar` saem acima da moldura, o resto fica dentro, na ordem em
+que vieram. Um envelope (`table-panel-group`, `gap` de `--space-inline`) segura
+os dois; `className` vai a ele, e o resto das props segue na moldura, que
+mantém `data-slot="table-panel"`, o `TableSizeContext` e a altura que o rodapé
+publica. Barra dentro de um fragmento não é reconhecida e fica dentro — dito no
+componente.
+
+**E a separação por tipo foi invertida, porque quebrava no HMR.** Apontado
+pelo dono: a barra "voltou para dentro da moldura". Medido: as quatro barras do
+catálogo estavam dentro, e numa navegação limpa saíam fora, no servidor e no
+cliente. A cada edição de `table-panel.tsx` o Fast Refresh troca a função
+`TablePanelToolbar`; a página segue criando o elemento com a antiga e o
+`TablePanel` novo compara com a nova — `c.type === TablePanelToolbar` deixa de
+bater, calado. É o mecanismo que o `DropdownMenu` já tinha rejeitado para
+`header`/`footer`. Hoje a barra é **prop** (`<TablePanel toolbar={…}>`),
+renderizada antes da moldura: não é procurada, então não depende de identidade,
+de fragmento nem de embrulho. Duas guardas impedem a volta: a
+`TablePanelToolbar` passada como **filho** avisa no console (um contexto diz
+que ela está dentro da moldura), e a asserção 26 reprova qualquer peça de
+`ui/` que compare `.type` com um componente — só `React.Fragment` é estável. A
+25 renderiza o painel de verdade (`react-dom/server`) e prova as três pontas.
+
+**O envelope declara as variáveis de tira**, e isso é carga estrutural:
+`--card-strip-px` e `--card-strip-py` moram no `Card`, e fora dele o recuo da
+barra cairia a zero calado.
+
+**O destaque é o tom do cabeçalho da tabela**, `bg-muted/50`, com `rounded-lg`
+e sem borda visível. Fora do `Card` ela deixa de ser **tira** — a regra de que
+tiras não pintam é sobre faixas de uma superfície — e vira uma barra própria;
+a regra J não acende, porque há tinta e nenhum fio. **O fio transparente nas
+laterais é carga estrutural**: a moldura tem 1px de borda, e sem ele o texto da
+barra cairia 1px à esquerda da coluna das células. Só nas laterais, para a
+altura seguir em 40 — com fio em volta ela iria a 42.
+
+Medido nos quatro painéis: barra **fora** da moldura com **8px** de vão, 40 de
+altura (48 com o botão "Excluir" da seleção), recuo 12/16, cantos de 10px,
+borda transparente, e o texto **na mesma coluna** do cabeçalho da tabela —
+desalinho 0. O fundo composto dá **1,075 no escuro** (30 sobre 23) e **1,09 no
+claro** (245 sobre 255): "levemente", como pedido. O rodapé segue publicando
+48px e a tabela rolável segue sangrando por baixo dele. A asserção 20 tranca a
+separação, a ordem, as variáveis e a ausência de fio — três sabotagens, três
+reprovações. **Zero pixel em produção**: `TablePanel` não tem consumidor de
+produto.
+
+**E o fundo saiu logo depois**, por pedido do dono: a barra ficou sem tinta,
+e com ela saiu o `rounded-lg`, que sem fundo nem borda não desenhava nada. O
+fio transparente das laterais fica, porque é ele que alinha o texto com a
+coluna das células. A asserção 20 passou a proibir `bg-` na barra.
+
+**E o recuo vertical saiu.** Fora da moldura quem separa a barra da tabela é o
+vão de 8px do envelope, e os 12px de cima e de baixo sobravam. A barra ficou
+`py-0` com `min-h-6` — a altura de um botão `xs` —, e com isso a contagem e a
+seleção com "Excluir" passaram a medir o mesmo: antes a barra ia de 40 a 48 ao
+marcar uma linha. O recuo horizontal ficou, porque é o que alinha o texto com
+as células. **Depois o "Excluir" passou a `sm`**, e a altura mínima acompanhou
+para `min-h-7` (28px): a regra é "a altura do botão de ação", e com o botão
+maior a barra voltaria a pular 4px ao marcar uma linha.
+
+### Rodada 76 — o cabeçalho fixo vira vidro, e a máscara desce para as linhas
+
+Pedido: com a tabela rolando, o corpo passa **por trás** do cabeçalho de
+rótulos, com o borrão do cabeçalho do catálogo. **Isto inverte a rodada 73**,
+que fez o `sticky` opaco "para as linhas não passarem por baixo".
+
+**O primeiro obstáculo era a própria dissolução, e só a medição o mostrou.**
+Testado com estilo inline, a 1:1:
+
+| Teste | Resultado |
+| --- | --- |
+| `blur(24px)` no `<thead>`, com a máscara do viewport | não borra — "Mercado" nítido atrás dos rótulos |
+| o mesmo em cada `<th>` | não borra |
+| `<div>` fixa, irmã da `<table>`, com a máscara | não borra |
+| `<thead>` com a máscara do viewport desligada | **borra** |
+| máscara no `<tbody>` + `<thead>` com borrão | **borra, e a linha sob o rodapé segue dissolvendo** |
+
+Neste Chromium, **qualquer `backdrop-filter` dentro de um elemento com
+`mask-image` deixa de borrar**, e `fade="bottom"` mascarava o próprio viewport.
+As peças de tabela não eram o problema.
+
+**A saída foi descer a máscara para o `<tbody>`**, que contém as linhas e não
+contém o cabeçalho. Entrou a `@utility scroll-fade-y-content`: ela vai no
+rolável, **não o mascara**, e só publica a rampa em
+`--scroll-fade-content-mask`, que o `TableBody` veste (`scrollFadeContentClassName`).
+As `var()` resolvem no rolável e o `100%` no conteúdo; com a sangria sob o
+rodapé, o topo dele fica em `100% − end` no referencial do `<tbody>`. É a mesma
+curva, com o mesmo piso e um gradiente só. A conta supõe que o corpo é a última
+caixa da tabela, e isso está escrito no `TableBody`.
+
+**A tinta é a do cabeçalho parado, e deixa passar 20%.** Sob `fade="bottom"`
+o `sticky` veste `glass-surface` com uma tinta translúcida só sob
+`supports-backdrop-filter:`. A primeira versão era `bg-muted/50`, e o contraste
+a reprovou: com o texto claro de uma linha cobrindo 35% da área atrás do
+rótulo, os 12px de `--muted-foreground` caíam a **3,64 no escuro e 3,67 no
+claro**. Varridos os alfas, **0,8 é o primeiro que passa nos dois: 5,23 e
+4,72** (0,6, o do cabeçalho do catálogo, dá 4,12 e 4,00). A cor é `muted` a
+62,5% sobre o card com alfa 80%, que sobre o card compõe exatamente a mistura
+opaca da rodada 73 — em repouso nada muda de cor. O `plain` usa `bg-card/80`. A base e o
+`reduced-transparency:` seguem opacos. **Com `fade="sides"` o cabeçalho fixo
+continua opaco**: ali o viewport se mascara e mataria o borrão, e uma tinta de
+50% sem borrão mostraria as linhas nítidas — o defeito da 73.
+
+As asserções 13, 14 e 18 foram reescritas, e a 27 tranca que o rolável de um
+cabeçalho de vidro não se mascara. **Não verificado: Safari/WebKit.** O borrão
+num `<thead>` fixo e a máscara num `<tbody>` foram medidos só no Chromium; se o
+WebKit anunciar o filtro sem borrar ali, a tinta de 50% mostraria as linhas
+nítidas.
+
+**Dois defeitos depois, apontados pelo dono.** *As linhas passavam por cima do
+fade do rodapé*: eram os **fios**, e não o texto. A rampa no `<tbody>` estava no
+lugar certo — medida, começando 18px acima do topo do rodapé e chegando ao piso
+nele —, mas com `border-collapse` quem pinta a borda da `<tr>` é a `<table>`, e a
+máscara do `<tbody>` não a alcança: o fio atravessava o rodapé com força cheia.
+Em `fade="bottom"` ele virou **sombra interna do `<td>`**, pintada com a célula
+e mascarada junto — o truque do fio do cabeçalho fixo. *As bordas do borrão
+vazavam da moldura*: borrão e máscara viram camadas próprias, e no Chrome
+acelerado elas escapam do recorte arredondado de um `overflow-hidden`. As duas
+molduras (`TablePanel` e a `outline` da `Table`) ganharam `clip-path` no raio
+que já desenham. **Honesto sobre o segundo**: com o cabeçalho pintado de
+vermelho, o vazamento não apareceu no painel do navegador daqui, com ou sem o
+conserto — o `clip-path` é a garantia para o motor acelerado, e a confirmação
+é da tela do dono.
+
+**E a máscara no `<tbody>` caiu, por medição.** O dono achou o fade do rodapé
+"estranho", e ele estava: um `<tbody>` com máscara **100% transparente**
+continuava mostrando todas as linhas. Neste Chromium a máscara de uma seção de
+tabela não é redesenhada quando muda — ela ficava presa ao primeiro desenho, que
+por acaso parecia certo na verificação, e não acompanhava a rolagem. Mascarar
+peça interna de tabela não é confiável, e a máscara saiu dali.
+
+**A borda de baixo virou véu, e é a exceção pintada da dissolução.** A área
+que rola não se mascara (o borrão do cabeçalho exige), e um nó irmão —
+`@utility scroll-fade-veil-y` — pinta a cor da superfície por cima das linhas e
+por baixo do rodapé, com a mesma curva e o mesmo piso da rampa. Sobre
+superfície lisa, véu de 94% e máscara de 6% dão **a mesma cor**, byte a byte;
+o que a paleta de comandos rejeitou foi pintar a cor **errada**, e aqui ela é
+variável (`--scroll-fade-surface`, o card por padrão). O véu lê a rolagem pela
+casca (`useScrollFade` com `shell`), e some quando não há o que rolar. Com ele
+cobrindo também os fios, a volta do fio como sombra da célula saiu — a linha
+voltou a 45px —, e a `scroll-fade-y-content` foi apagada.
+
+**E a rampa do véu deixou de terminar no topo do rodapé.** O dono achou que o
+fade "marcava muito", e aceitou o conteúdo mais visível no começo do rodapé em
+troca de uma transição sem marca. Eram 16px com uma curva que arrancava forte e
+assentava no piso exatamente na borda da faixa — uma linha. Hoje ela começa na
+mesma zona acima do rodapé e só chega ao piso a **3/4 da faixa** (~49px no
+painel), numa curva *smootherstep*, de derivada zero nas duas pontas. Depois,
+a pedido, a zona acima do rodapé subiu de 16 para **32px**
+(`--scroll-fade-h` na casca) — ~65px de rampa no total.
+
 ### Backlog de migração
 
 A rodada 01 entregou tokens, componentes, documentação e o auditor, sem migrar
@@ -9278,5 +10208,79 @@ E o que a rodada 53 deixou, ao dar vidro às superfícies de borda:
   desenvolvimento o arrasto sai idêntico com e sem o filtro (mediana 13,3ms, p95
   13,9, zero quadros perdidos, a 848px de altura). Isso descarta um custo
   grosseiro, não prova o telefone.
+
+E o que a rodada da `Timeline` deixou:
+
+- **Os dois candidatos, contados, e a anatomia de cada um.**
+  `account/activity/page-client.tsx:296` é o encaixe limpo — ícone em círculo
+  tingido (`h-8 w-8`, que é o poço `md`), sem dinheiro e sem controle na linha.
+  `bills/bill-detail-history-list.tsx:165` é o caro: `MoneyDisplay` na coluna
+  direita, chip de cinco estados **e botões `Pagar`/`Ignorar` dentro da linha**
+  — a `Timeline` não tem slot para os dois últimos, e abrir um é rodada própria.
+  Ele já tem o mapa de cor do ponto (`instanceDotClass`), que é um `tone` de
+  facto: `paid → success`, `overdue → destructive`, `today → warning`.
+- **`Stepper` e `Timeline` são a mesma anatomia, e os dois têm zero
+  consumidores.** Ponto, conector, rótulo, escada, orientação, e agora os dois
+  derivando o índice por clone. Vale medir se são um componente com dois modos
+  ou dois de verdade — é a pergunta *"componente ou modo?"* que esta base já
+  respondeu três vezes por absorção. O que os separa hoje é semântica
+  (progresso contra histórico) e o marcador numerado.
+- **Três das oito listas de eventos são `<Table>`** — `subscription-detail`,
+  `transaction-detail` e `dashboard-payment-event-preview`, com as duas últimas
+  quase cópia literal uma da outra. Elas **não** são candidatas a `Timeline`;
+  são candidatas a `TablePanel`.
+- **A faixa de data e a horizontal nascem sem tela**, e é dito na seção da
+  rodada. A primeira só se paga num feed longo — o candidato é a atividade do
+  workspace, que hoje mostra o dia em cada linha em vez de agrupar.
+- **O vidro da `Timeline` nasce sem consumidor**, como os outros três modos. Os
+  candidatos são os mesmos dois da rodada 69 — e a atividade do workspace é o
+  encaixe natural, porque o poço tingido que ela desenha à mão é literalmente a
+  peça que o modo veste.
+- **O ponto de vidro é a decisão que pode voltar.** Ele mede 1,97–3,48 de aro
+  contra corpo e está uniforme com o resto por construção; se reprovar na tela,
+  o conserto é `glass` inválido com `marker="dot"` **no tipo**, e não uma
+  exclusão silenciosa que reabriria o buraco da uniformidade.
+- **`--tl-icon` decide o corpo do glifo (14/16/20), e o conjunto é de quem
+  chama.** Pela regra G, `sm` e `md` pedem Heroicons `16/solid` e `lg` pede
+  `20/solid`. O auditor **não pega isso**: a heurística dele é "sem classe de
+  tamanho = `size-4`", e aqui o tamanho vem de variável. Está na `PropsTable`, e
+  é a única parte do contrato que depende de quem escreve lembrar.
+
+E o que a rodada da `Pagination` deixou:
+
+- **A numeração não some no telefone, e a nota do catálogo dizia que sumia.**
+  Medido a 375px: com os controles em 44 no toque, a fileira de sete peças
+  transborda em quatro das cinco demonstrações. O desenho documentado —
+  `max-sm:hidden` nos números, com o `PaginationStatus` orientando — é uma
+  linha, mas esconde também o indicador da página atual, e é decisão de
+  produto.
+- **O rodapé real do app continua à mão.** `transactions-table.tsx:849-905`
+  escreve `text-xs`, `tabular-nums` cru e dois `icon-lg` forçados a 32 por
+  `className`. Com o `xs` — o padrão desde a rodada 72 — a peça entrega
+  12px, o mesmo corpo que ele desenha à mão, e a migração ficou barata pela
+  primeira vez.
+- **`icon-*` segue sem tipo.** A frase do `Button` foi corrigida, mas o degrau
+  não: o próximo componente que puser texto num botão de ícone vai reencontrar
+  o buraco. Declarar o corpo na coluna `icon-*` é mudança no `Button`, que
+  alcança as ~30 chamadas de `icon-sm` do app, e merece a própria medição.
+
+E o que a rodada das ações por linha deixou:
+
+- **As duas colunas de ações reais** (`transactions-table.tsx:802`,
+  `subscriptions/page-client.tsx:924`) migram para `actions`, ganham
+  `aria-label` com o objeto e perdem o vermelho da lixeira. É mecânico, e é
+  pixel em produção.
+- **O cabeçalho fixo translúcido** das duas telas (`sticky top-0 z-10
+  bg-muted/50`) vira `TableHeader variant="muted" sticky` — hoje as linhas
+  passam por baixo dele, medido no catálogo.
+- **A coluna de seleção crava o próprio recuo** (`px-2 md:px-3`) e ignora a
+  densidade: sob `lg` as outras células têm 16px e ela não. `actions` já lê
+  `--table-px`; `selection` é a mesma troca.
+- **A coluna fixa à direita ficou fora.** A dissolução da borda direita
+  apagaria a própria coluna fixa. No telefone o problema some com o gêmeo; num
+  tablet ele volta, e merece a própria medição.
+- **"O valor desce quando há botões" mora na demonstração.** Se as telas
+  adotarem o gêmeo, é a primeira coisa que elas vão reescrever — e aí a linha
+  do telefone vira candidata a peça.
 
 Reproduza a qualquer momento com `npm run ds:audit`.

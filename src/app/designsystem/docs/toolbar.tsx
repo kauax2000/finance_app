@@ -48,7 +48,7 @@ export default function ToolbarDoc() {
         code={`<Toolbar>
   <ToolbarFilters>
     <Tabs defaultValue="todas">
-      <TabsList stretch={false}>
+      <TabsList glass stretch={false}>
         <TabsTrigger value="todas">Todas</TabsTrigger>
         <TabsTrigger value="despesas">Despesas</TabsTrigger>
         <TabsTrigger value="receitas">Receitas</TabsTrigger>
@@ -72,7 +72,7 @@ export default function ToolbarDoc() {
         <Toolbar className="w-full">
           <ToolbarFilters>
             <Tabs defaultValue="todas">
-              <TabsList stretch={false} aria-label="Filtrar por tipo">
+              <TabsList glass stretch={false} aria-label="Filtrar por tipo">
                 <TabsTrigger value="todas">Todas</TabsTrigger>
                 <TabsTrigger value="despesas">Despesas</TabsTrigger>
                 <TabsTrigger value="receitas">Receitas</TabsTrigger>
@@ -162,7 +162,7 @@ export default function ToolbarDoc() {
         <Toolbar className="w-full">
           <ToolbarRow>
             <Tabs defaultValue="ativas" className="min-w-0 flex-1 md:flex-none">
-              <TabsList stretch={false} aria-label="Status da assinatura">
+              <TabsList glass stretch={false} aria-label="Status da assinatura">
                 <TabsTrigger value="todas">Todas</TabsTrigger>
                 <TabsTrigger value="ativas">Ativas</TabsTrigger>
               </TabsList>
@@ -206,7 +206,7 @@ export default function ToolbarDoc() {
         code={`<Tabs defaultValue="contas">
   <Toolbar>
     <ToolbarFilters>
-      <TabsList stretch={false}>
+      <TabsList glass stretch={false}>
         <TabsTrigger value="contas">Contas</TabsTrigger>
         <TabsTrigger value="pendentes">Pendentes</TabsTrigger>
       </TabsList>
@@ -221,7 +221,7 @@ export default function ToolbarDoc() {
         <Tabs defaultValue="contas" className="w-full gap-3">
           <Toolbar>
             <ToolbarFilters>
-              <TabsList stretch={false} aria-label="Modo de visualização">
+              <TabsList glass stretch={false} aria-label="Modo de visualização">
                 <TabsTrigger value="contas">Contas</TabsTrigger>
                 <TabsTrigger value="pendentes">Pendentes</TabsTrigger>
               </TabsList>

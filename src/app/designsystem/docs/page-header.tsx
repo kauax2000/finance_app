@@ -41,7 +41,7 @@ export default function PageHeaderDoc() {
     <PageHeaderDescription>Tudo que entrou e saiu.</PageHeaderDescription>
   </PageHeaderTitleRow>
   <PageHeaderActions>
-    <Button variant="secondary">Exportar</Button>
+    <Button variant="tertiary">Exportar</Button>
     <Button><PlusIcon aria-hidden />Nova transação</Button>
   </PageHeaderActions>
 </PageHeader>`}
@@ -68,7 +68,7 @@ export default function PageHeaderDoc() {
             </PageHeaderDescription>
           </PageHeaderTitleRow>
           <PageHeaderActions>
-            <Button variant="secondary">Exportar</Button>
+            <Button variant="tertiary">Exportar</Button>
             <Button>
               <PlusIcon aria-hidden />
               Nova transação

@@ -439,7 +439,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("stepper", "Stepper", "Progresso por etapas de um fluxo, na horizontal ou na vertical.", ui("stepper"), "Stepper, StepperItem"),
   entry("table", "Table", "Tabela de dados, e o que ela vira no telefone.", ui("table"), "Table, TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, TableEmpty, TableCaption"),
   entry("tabs", "Tabs", "Alterna entre painéis do mesmo nível, em três superfícies.", ui("tabs"), "Tabs, TabsList, TabsTrigger, TabsContent"),
-  entry("timeline", "Timeline", "Feed vertical de histórico.", ui("timeline"), "Timeline, TimelineItem"),
+  entry("timeline", "Timeline", "Feed cronológico de eventos, em quatro marcadores e duas orientações.", ui("timeline"), "Timeline, TimelineItem, TimelineSeparator, TimelineTitle, TimelineDescription, TimelineTime"),
   entry("sonner", "Toast", "Confirmação passageira, fora do fluxo.", ui("sonner"), 'import { toastSuccess, toastUndo } from "@/lib/toast"'),
   entry("toolbar", "Toolbar", "A linha de filtros e ações acima de uma lista, e a densidade dela.", ui("toolbar"), "Toolbar, ToolbarRow, ToolbarFilters, ToolbarActions, ToolbarFilterIndicator"),
 
