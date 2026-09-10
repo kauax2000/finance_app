@@ -436,6 +436,9 @@ describe("escada do Table", () => {
     expect(util.match(/color-mix\(/g)?.length).toBeGreaterThanOrEqual(10)
     expect(util).toContain("var(--scroll-fade-surface, var(--color-card))")
     expect(util).toContain('[data-scroll-fade="off"] > &')
+    // E fecha opaco na borda de baixo: no piso a linha seguinte aparece a 6% e
+    // é cortada pela borda, e a moldura lê como se não tivesse borda embaixo.
+    expect(util).toMatch(/var\(--scroll-fade-veil-c\) 100%\s*\)/)
   })
 
   it("28. as molduras recortam com `clip-path`, e o fio da linha segue sendo borda", () => {
@@ -447,5 +450,16 @@ describe("escada do Table", () => {
     // célula — a volta que a máscara no `<tbody>` exigia saiu com ela.
     expect(CODE).not.toContain("[&>tr]:border-b-0")
     expect(PANEL_CODE).not.toContain("tr:last-child>td]:shadow-none")
+    // O `clip-path` recorta pelo raio de fora e não protege o arco da borda: o
+    // véu é um retângulo encostado nos cantos, e os de baixo leem o raio de
+    // dentro que a moldura publica (rodada 46c). Por variável, e não
+    // `inherit`: entre a moldura e o véu costuma haver um embrulho sem raio.
+    expect(CODE).toContain("[--scroll-fade-veil-r:calc(var(--radius-lg)_-_1px)]")
+    expect(PANEL_CODE).toContain('"[--scroll-fade-veil-r:calc(var(--radius-xl)_-_1px)]"')
+    const css = readFileSync("src/app/globals.css", "utf8")
+    const inicio = css.indexOf("@utility scroll-fade-veil-y {")
+    const util = semComentarios(css.slice(inicio, css.indexOf("\n}\n", inicio) + 2))
+    expect(util).toContain("border-bottom-left-radius: var(--scroll-fade-veil-r, 0px)")
+    expect(util).toContain("border-bottom-right-radius: var(--scroll-fade-veil-r, 0px)")
   })
 })

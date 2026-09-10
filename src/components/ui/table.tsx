@@ -188,6 +188,8 @@ function Table({
   // viewport que carrega um cabeçalho de vidro não pode se mascarar. A casca é
   // `relative` para o véu se ancorar nela, recebe as variáveis do hook
   // (`shell`), e é ela que sangra por baixo do rodapé do painel.
+  // Os cantos de baixo do véu leem `--scroll-fade-veil-r`, que a moldura
+  // publica — para ele nunca pintar por cima do arco da borda (rodada 46c).
   const corpo = fundo ? (
     <div
       data-slot="table-fade-shell"
@@ -210,7 +212,7 @@ function Table({
           // vira camada própria, e no Chrome acelerado ela escapa do recorte
           // arredondado de um `overflow`. O `clip-path` recorta em qualquer
           // motor, no mesmo raio.
-          className="overflow-hidden rounded-lg border border-border [clip-path:inset(0_round_var(--radius-lg))]"
+          className="overflow-hidden rounded-lg border border-border [clip-path:inset(0_round_var(--radius-lg))] [--scroll-fade-veil-r:calc(var(--radius-lg)_-_1px)]"
         >
           {corpo}
         </div>

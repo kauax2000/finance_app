@@ -1760,6 +1760,16 @@
   bottom: 0;
   height: calc(var(--scroll-fade-foot-h, 0px) + var(--scroll-fade-veil-z));
   pointer-events: none;
+  /* **Os cantos de baixo têm o raio de dentro da moldura.** O véu é um
+     retângulo pintado encostado nos dois cantos arredondados; se o recorte do
+     `overflow` da moldura escapa — medido no Chrome acelerado, com o borrão do
+     cabeçalho na mesma árvore —, o canto reto pinta a cor da superfície por
+     cima do arco da borda. É o defeito da rodada 46c, e aqui o raio chega por
+     variável, e não por `inherit`: entre a moldura e o véu costuma haver um
+     embrulho sem raio (o gêmeo `hidden md:block` do desktop). Quem desenha a
+     moldura publica o raio de dentro dela — o de fora menos a borda. */
+  border-bottom-left-radius: var(--scroll-fade-veil-r, 0px);
+  border-bottom-right-radius: var(--scroll-fade-veil-r, 0px);
   /* **A rampa atravessa o topo da faixa**, e não termina nele: começa na zona
      acima dela e só chega ao piso a 3/4 da faixa. Terminando no topo, ela
      desenhava uma borda — pedido do dono, que aceitou o conteúdo um pouco mais
@@ -1780,7 +1790,14 @@
     color-mix(in srgb, var(--scroll-fade-veil-c) calc(var(--scroll-fade-veil-p) * 0.837), transparent) calc(var(--scroll-fade-veil-l) * 0.7),
     color-mix(in srgb, var(--scroll-fade-veil-c) calc(var(--scroll-fade-veil-p) * 0.942), transparent) calc(var(--scroll-fade-veil-l) * 0.8),
     color-mix(in srgb, var(--scroll-fade-veil-c) calc(var(--scroll-fade-veil-p) * 0.991), transparent) calc(var(--scroll-fade-veil-l) * 0.9),
-    color-mix(in srgb, var(--scroll-fade-veil-c) var(--scroll-fade-veil-p), transparent) var(--scroll-fade-veil-l)
+    color-mix(in srgb, var(--scroll-fade-veil-c) var(--scroll-fade-veil-p), transparent) var(--scroll-fade-veil-l),
+    /* **E fecha opaco na borda de baixo.** No piso, a linha seguinte ainda
+       aparece a 6% e é cortada pela borda da moldura — conteúdo encostando no
+       último pixel lê como moldura sem borda. Os 10px de baixo (o recuo do
+       próprio rodapé) sobem do piso à superfície cheia: o fantasma fica atrás
+       do texto do rodapé, e a borda assenta sobre superfície limpa. */
+    color-mix(in srgb, var(--scroll-fade-veil-c) var(--scroll-fade-veil-p), transparent) calc(100% - 0.625rem),
+    var(--scroll-fade-veil-c) 100%
   );
 
   [data-scroll-fade="off"] > & {

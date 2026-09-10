@@ -9516,6 +9516,29 @@ painel), numa curva *smootherstep*, de derivada zero nas duas pontas. Depois,
 a pedido, a zona acima do rodapé subiu de 16 para **32px**
 (`--scroll-fade-h` na casca) — ~65px de rampa no total.
 
+**E os cantos do véu passaram a herdar o raio.** Apontado pelo dono: o fade do
+rodapé "sobre a borda de baixo da moldura". Aqui ele não se reproduziu — num
+A/B a 800px, com o card em meio pixel como no desktop, a borda sai igual com e
+sem o véu. Mas o véu é um retângulo encostado nos dois cantos arredondados, e
+só o recorte do `overflow` o impede de pintar sobre o arco da borda; o
+`clip-path` da moldura recorta pelo raio **de fora**, e não protege o arco. É o
+defeito da rodada 46c, e o conserto é o dela, com uma diferença medida: lá a
+camada herdava o raio, e aqui `inherit` voltou **0px** — entre a moldura e o
+véu há o embrulho do gêmeo de desktop (`hidden md:block`), sem raio. O raio
+chega por variável: a moldura publica o de dentro dela
+(`--scroll-fade-veil-r`, o de fora menos a borda) e o véu o lê nos dois cantos
+de baixo. A asserção 28 tranca.
+
+**E o que o dono via era outra coisa: o conteúdo encostando na borda.** A
+segunda captura mostrou a causa — no piso de 6% a linha seguinte ainda aparece
+atrás do rodapé e **é cortada pela borda de baixo**, e conteúdo que continua
+até o último pixel lê como moldura sem borda. O véu passou a fechar opaco nos
+10px de baixo (o recuo do próprio rodapé): o fantasma segue atrás do texto, e a
+borda assenta sobre superfície limpa. A asserção 27 tranca o fecho — e a
+primeira sabotagem dela **passou**, porque o meu `replace` não achou o trecho
+(havia um comentário no meio) e eu não o tinha assertado. Refeita com `assert`,
+ela reprova.
+
 ### Backlog de migração
 
 A rodada 01 entregou tokens, componentes, documentação e o auditor, sem migrar

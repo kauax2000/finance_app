@@ -93,7 +93,10 @@ function TablePanel({
             // vidro saíam da moldura. O `clip-path`
             // recorta em qualquer motor, no raio que o `Card` já desenha, e
             // ainda limita o que o borrão enxerga ao que está dentro dela.
-            "[clip-path:inset(0_round_var(--radius-xl))]"
+            "[clip-path:inset(0_round_var(--radius-xl))]",
+            // O raio de dentro da moldura, para o véu do rodapé não pintar
+            // sobre o arco da borda nos cantos de baixo.
+            "[--scroll-fade-veil-r:calc(var(--radius-xl)_-_1px)]"
           )}
           {...props}
         >
