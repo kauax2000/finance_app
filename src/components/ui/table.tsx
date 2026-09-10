@@ -464,7 +464,7 @@ const TABLE_ACTIONS_ROW_CLASS =
 /**
  * `numeric` alinha à direita e liga `.nums` — sem isso a coluna dança a cada
  * dígito e some justamente a vantagem da tabela (a régua de
- * [Dinheiro](/designsystem/dinheiro)). `selection` reserva a coluna do
+ * [Money Display](/designsystem/money-display)). `selection` reserva a coluna do
  * checkbox — medido, `align-middle` sozinho deixa o `Checkbox` (`size-4`) 2px
  * acima do centro da célula, e a classe soma o nudge que corrige isso.
  * `sort`/`onSort` trocam o rótulo por um botão com a seta; o

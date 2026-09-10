@@ -2,7 +2,13 @@
 
 import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import {
+    Badge,
+    tagChipDanger,
+    tagChipNeutral,
+    tagChipSuccess,
+    tagChipWarning,
+} from "@/components/ui/badge"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import {
     transactionSegmentContainerClassName,
@@ -12,12 +18,6 @@ import { paymentMethodLabel } from "@/lib/payment-methods"
 import type { BillInstance } from "@/lib/supabase"
 import { formatTransactionDmyPtBr } from "@/lib/transaction-date"
 import { cn } from "@/lib/utils"
-import {
-    tagChipDanger,
-    tagChipNeutral,
-    tagChipSuccess,
-    tagChipWarning,
-} from "@/lib/tag-chip-classes"
 
 export type BillHistoryTab = "pending" | "paid" | "skipped" | "all"
 

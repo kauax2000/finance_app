@@ -47,7 +47,6 @@ export type Category =
   // O nível que faltava para o modelo ficar completo: objetos de nível de
   // página, que dispõem componentes num layout em vez de serem o conteúdo.
   | "Templates"
-  | "Padrões"
 
 export type DocNeighbor = { slug: string; name: string; category?: Category }
 

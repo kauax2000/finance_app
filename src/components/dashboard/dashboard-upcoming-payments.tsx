@@ -14,7 +14,7 @@ import {
     tagChipInfo,
     tagChipNeutral,
     tagChipWarning,
-} from "@/lib/tag-chip-classes"
+} from "@/components/ui/badge"
 import { labelYearMonthPt } from "@/lib/budget-month"
 
 function chipFor(kind: PaymentEventKind) {

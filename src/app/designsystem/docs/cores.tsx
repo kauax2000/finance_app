@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import { DocNote, Usage } from "../ds-doc"
 import {
   Group,
@@ -340,11 +339,23 @@ export default function CoresDoc() {
         para protanopia entre <code>--chart-4</code> e <code>--chart-1</code>{" "}
         era <strong>4,9</strong>, contra um piso de 8. Depois do re-passo:{" "}
         <strong>8,8</strong> protanopia e <strong>16,8</strong> para visão
-        normal, sem nenhum dos cinco perder os 3:1. A história inteira está em{" "}
-        <Link href="/designsystem/graficos" className="underline underline-offset-2">
-          Gráficos
-        </Link>
-        .
+        normal, sem nenhum dos cinco perder os 3:1. Para visão normal a pior
+        dupla era <code>--chart-2</code> e <code>--chart-1</code>, com{" "}
+        <strong>14,6</strong> contra um piso de 15.
+        <br />
+        <br />O diagnóstico também estava errado, e não só o número: matiz
+        sozinho nunca separou esta rampa. Quem separa é matiz{" "}
+        <strong>e</strong> claridade.
+      </DocNote>
+
+      <DocNote title="No escuro, a faixa de claridade perde para a separação">
+        A faixa que o validador pede (L 0,48–0,67) e a separação CVD brigam
+        sobre superfície escura: comprimir a claridade tira justamente o canal
+        que separa magenta de ciano para quem não distingue vermelho de verde.
+        Três candidatos dentro da faixa foram medidos, e os três reprovam em CVD
+        (4,6 · 3,1 · 2,3). A rampa escura fica <strong>acima</strong> da faixa e
+        passa no resto — 10,6 CVD · 17,1 visão normal · ≥3:1 —, e isso é decisão
+        registrada, como o <code>--input</code> fora da 1.4.11.
       </DocNote>
 
       <Group

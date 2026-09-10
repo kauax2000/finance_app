@@ -30,14 +30,14 @@ import {
  *
  * O índice listava 87 cartões de peso idêntico, e um catálogo sem ponto de
  * entrada obriga cada pessoa a inventar o próprio. Estes quatro não são os mais
- * usados: são os que mudam o que alguém vai escrever nos outros 83 — três
- * padrões que atravessam telas e a página que governa todas as cores.
+ * usados: são os que mudam o que alguém vai escrever nos outros — o valor em
+ * reais, o formulário, o toque e a página que governa todas as cores.
  */
 const START_HERE = [
     { slug: "cores", Icon: SwatchIcon },
-    { slug: "dinheiro", Icon: BanknotesIcon },
-    // A própria glifa da tecla Enter, que é sobre o que a página fala.
-    { slug: "formularios", Icon: ArrowUturnLeftIcon },
+    { slug: "money-display", Icon: BanknotesIcon },
+    // A própria glifa da tecla Enter: o contrato dela mora no Form.
+    { slug: "form", Icon: ArrowUturnLeftIcon },
     { slug: "mobile-toque", Icon: CursorArrowRaysIcon },
 ]
 
@@ -47,7 +47,6 @@ const CATEGORY_BLURB: Record<string, string> = {
     Moléculas: "Feitas de átomos: um grupo pequeno que resolve uma tarefa e lê como uma unidade.",
     Organismos: "Feitos de moléculas: seções com faixas, grupos, submenus ou linhas próprias.",
     Templates: "O que estrutura a página, e não o que ela contém.",
-    Padrões: "Não são componentes: são as decisões que atravessam telas.",
 }
 
 /** `01`, `02` — a numeração do sumário, não a contagem de itens. */

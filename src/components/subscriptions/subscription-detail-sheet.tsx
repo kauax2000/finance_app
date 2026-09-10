@@ -44,7 +44,7 @@ import {
     tagChipSky,
     tagChipSuccess,
     tagChipWarning,
-} from "@/lib/tag-chip-classes"
+} from "@/components/ui/badge"
 import { formatDatePtBr } from "@/lib/transaction-date"
 
 const currencyFmt = new Intl.NumberFormat("pt-BR", {

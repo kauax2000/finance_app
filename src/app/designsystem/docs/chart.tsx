@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import * as React from "react"
 import { Bar, ComposedChart, Line } from "recharts"
 import {
@@ -31,8 +30,9 @@ import {
   chartSeriesColor,
   type ChartConfig,
 } from "@/components/ui/chart"
-import { currencyBRL } from "@/lib/formatters"
+import { currencyBRL, currencyCompactBRL } from "@/lib/formatters"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { Group, Spec, Stack } from "../ds-kit"
 
 const FLUXO = [
   { mes: "Out", entradas: 7900, saidas: 6400, saldo: 1500 },
@@ -133,12 +133,60 @@ export default function ChartDoc() {
         <code>ChartDonut</code>, <code>ChartSparkline</code> — são a forma curta
         sobre a anatomia, como <code>FormInput</code> é sobre <code>Field</code> +{" "}
         <code>Input</code>. Um número sozinho não é gráfico: é{" "}
-        <code>StatCard</code>. Qual paleta a série usa é decisão de{" "}
-        <Link href="/designsystem/graficos" className="underline underline-offset-2">
-          Gráficos
-        </Link>
-        , não deste componente.
+        <code>StatCard</code>. Qual paleta a série usa é a primeira decisão, e
+        vem logo abaixo.
       </Usage>
+
+      <DocSection
+        title="A cor da série: quando ela significa"
+        description="Duas paletas, e escolher entre elas é a decisão inteira. Fluxo de caixa: verde é entrada e vermelho é saída, e trocar por outra cor destruiria a leitura — a série usa --chart-income e --chart-expense."
+        code={`const config = {
+  entradas: { label: "Entradas", color: "var(--chart-income)" },
+  saidas: { label: "Saídas", color: "var(--chart-expense)" },
+} satisfies ChartConfig`}
+        previewClassName="items-stretch p-6"
+      >
+        <ChartBars
+          config={CONFIG_FLUXO}
+          data={FLUXO}
+          x="mes"
+          label="Entradas e saídas por mês"
+          className="h-56 w-full"
+          aspect="auto"
+        />
+      </DocSection>
+
+      <DocSection
+        title="A cor da série: quando ela só identifica"
+        description="Gasto por categoria: nenhuma delas é boa ou ruim. Aqui a rampa neutra --chart-1 a --chart-5 é o certo — com as cores de status, a categoria vermelha leria como problema. A ordem é fixa: a cor segue a entidade, nunca o ranking."
+        code={`// Sem \`color\` no config: as fatias caem na rampa, na ordem.
+const config = {
+  Mercado: { label: "Mercado" },
+  Transporte: { label: "Transporte" },
+} satisfies ChartConfig`}
+        previewClassName="flex-wrap items-start justify-center gap-8 p-6"
+      >
+        <ChartBars
+          layout="horizontal"
+          config={CONFIG_CATEGORIAS}
+          data={CATEGORIAS}
+          series={["valor"]}
+          x="nome"
+          label="Gasto por categoria"
+          legend={false}
+          className="h-56 w-80"
+          aspect="auto"
+        />
+        <ChartDonut
+          config={CONFIG_CATEGORIAS}
+          data={CATEGORIAS}
+          nameKey="nome"
+          dataKey="valor"
+          label="Composição do gasto por categoria"
+          className="h-44 w-44"
+          aspect="auto"
+        />
+      </DocSection>
 
       <DocSection
         title="Área"
@@ -237,11 +285,8 @@ export default function ChartDoc() {
           <>
             A magnitude por categoria. <code>layout=&quot;horizontal&quot;</code> é o
             ranking com nome comprido — e ele declara o eixo de categoria por
-            quem chama, que é a armadilha do Recharts que a página de{" "}
-            <Link href="/designsystem/graficos" className="underline underline-offset-2">
-              Gráficos
-            </Link>{" "}
-            já documentava. <code>stacked</code> empilha e liga a linha de total
+            quem chama, que é uma armadilha do Recharts.{" "}
+            <code>stacked</code> empilha e liga a linha de total
             no tooltip.
           </>
         }
@@ -791,6 +836,82 @@ export default function ChartDoc() {
         <code>BAR_COLORS[idx % 5]</code> faz hoje em{" "}
         <code>credit-cards-history-chart</code>. Quem tem seis categorias agrega
         a cauda em &ldquo;Outros&rdquo;: quem tem os dados é quem pode agregar.
+      </DocNote>
+
+      <Group title="Regras que atravessam telas" layout="grid">
+        <Spec title="O que sempre vale">
+          <Stack className="gap-2 text-xs text-muted-foreground">
+            <p>
+              <strong className="text-foreground">Rótulo do eixo em reais</strong>{" "}
+              usa <code>currencyCompactBRL</code>. Exemplo:{" "}
+              <span className="nums text-foreground">
+                {currencyCompactBRL(8432)}
+              </span>
+              . <code>ChartYAxis</code> faz isso de fábrica com{" "}
+              <code>format=&quot;compact&quot;</code>.
+            </p>
+            <p>
+              <strong className="text-foreground">Cor não é o único canal.</strong>{" "}
+              Rótulo, legenda ou padrão precisam distinguir as séries também: 8%
+              dos homens não separa verde de vermelho. Duas séries ou mais
+              sempre têm legenda; uma série nunca tem, porque ali o título já a
+              nomeia.
+            </p>
+            <p>
+              <strong className="text-foreground">O eixo Y começa em zero.</strong>{" "}
+              Cortar a base multiplica visualmente uma diferença de 3%.{" "}
+              <code>ChartYAxis</code> ancora em <code>[0, &quot;auto&quot;]</code>{" "}
+              por padrão; quem tem caso legítimo passa <code>domain</code> e
+              assume.
+            </p>
+          </Stack>
+        </Spec>
+
+        <Spec title="A forma sai do trabalho do dado">
+          <Stack className="gap-2 text-xs text-muted-foreground">
+            <p>
+              <strong className="text-foreground">Magnitude entre categorias</strong>{" "}
+              → barras. Nome comprido → <code>layout=&quot;horizontal&quot;</code>.
+            </p>
+            <p>
+              <strong className="text-foreground">Mudança ao longo do tempo</strong>{" "}
+              → linha; com volume por baixo, área.
+            </p>
+            <p>
+              <strong className="text-foreground">Composição de um total</strong>{" "}
+              → rosca, e só quando as fatias são poucas. Progresso contra um
+              teto → <code>variant=&quot;gauge&quot;</code>.
+            </p>
+            <p>
+              <strong className="text-foreground">Um número só</strong> não é
+              gráfico: é <code>StatCard</code>. Com tendência ao lado,{" "}
+              <code>ChartSparkline</code>.
+            </p>
+          </Stack>
+        </Spec>
+
+        <Spec title="Como as cores chegam ao Recharts">
+          <Stack className="gap-2 text-xs text-muted-foreground">
+            <p>
+              <code>ChartContainer</code> lê o <code>config</code> e emite{" "}
+              <code>--color-&lt;chave&gt;</code> no escopo do gráfico. A série
+              referencia <code>fill=&quot;var(--color-entradas)&quot;</code>.
+            </p>
+            <p>
+              É assim que o gráfico acompanha o tema sem nenhum{" "}
+              <code>useTheme</code>: a variável muda, o SVG repinta.
+            </p>
+          </Stack>
+        </Spec>
+      </Group>
+
+      <DocNote title="Atributo SVG aceita var(), sim">
+        <code>dashboard-installments-projection.tsx</code> afirma num comentário
+        que &ldquo;Bar fill cannot use var() in SVG&rdquo; e por isso fixa{" "}
+        <code>#1f6a59</code>. A premissa está errada: <code>fill</code> e{" "}
+        <code>stroke</code> resolvem <code>var()</code>, e é exatamente o que{" "}
+        <code>ChartContainer</code> explora. Com hex, o gráfico é a única parte
+        da tela que não acompanha o tema escuro.
       </DocNote>
 
       <DocNote title="O que ficou de fora, e por quê">

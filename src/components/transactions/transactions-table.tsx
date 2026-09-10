@@ -33,7 +33,7 @@ import {
     transactionIncomeTypeRowChip,
     transactionParceladaRowChip,
     transactionRowChipShell,
-} from "@/lib/tag-chip-classes"
+} from "@/components/ui/badge"
 import { paymentMethodLabel } from "@/lib/payment-methods"
 import {
     classifyTransactionInvoiceSlot,

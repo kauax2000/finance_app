@@ -2,7 +2,13 @@
 
 import { CreditCardIcon, EllipsisHorizontalIcon, ForwardIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { CreditCardIcon as CreditCardMiniIcon } from "@heroicons/react/20/solid"
-import { Badge } from "@/components/ui/badge"
+import {
+    Badge,
+    tagChipDanger,
+    tagChipInfo,
+    tagChipNeutral,
+    tagChipWarning,
+} from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
     Card,
@@ -26,12 +32,6 @@ import {
 } from "@/components/categories/category-appearance-fields"
 import { formatTransactionDmyPtBr } from "@/lib/transaction-date"
 import { cn } from "@/lib/utils"
-import {
-    tagChipDanger,
-    tagChipInfo,
-    tagChipNeutral,
-    tagChipWarning,
-} from "@/lib/tag-chip-classes"
 import { ColorTile } from "@/components/ui/color-tile"
 
 const EXPENSE_CATEGORY_FALLBACK_COLOR = "var(--expense)"

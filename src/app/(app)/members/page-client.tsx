@@ -23,7 +23,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Badge } from "@/components/ui/badge"
+import {
+    Badge,
+    tagChipInfo,
+    tagChipSuccess,
+} from "@/components/ui/badge"
 import {
     Dialog,
     DialogContent,
@@ -38,7 +42,6 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { tagChipInfo, tagChipSuccess } from "@/lib/tag-chip-classes"
 import { cn, getInitials } from "@/lib/utils"
 import { identityToneFor } from "@/lib/avatar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"

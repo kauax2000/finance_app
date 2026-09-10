@@ -98,10 +98,11 @@ reais, a casca do app em `src/components/layout/`, e todos os tokens lidos do
 escuro". Nunca presuma de memória o que existe.
 
 **2. Ler a página do componente.** `/designsystem/<slug>` tem a demonstração ao
-vivo, a tabela de props curada e as decisões que não cabem numa prop. As páginas
-de **Padrões** (`dinheiro`, `datas`, `formularios`, `mobile-toque`,
-`vazio-carregando`, `graficos`, `chips-status`) valem mais que qualquer página de
-componente: são as decisões que atravessam telas.
+vivo, a tabela de props curada e as decisões que não cabem numa prop. Não há
+páginas de "padrão": cada decisão que atravessa telas mora na página de quem a
+implementa — dinheiro em `money-display`, Enter em `form`, paleta de gráfico em
+`chart` e `cores`, chips em `badge`, datas em `typography`, toque e área segura
+em `mobile-toque` (Fundação).
 
 **3. Mapear a tela para o catálogo.** Antes de escrever JSX, percorra os
 elementos que a tela precisa e aponte cada um para um componente. Os que sobrarem

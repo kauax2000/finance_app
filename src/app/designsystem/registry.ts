@@ -18,7 +18,6 @@ export const CATEGORY_ORDER: Category[] = [
   "Moléculas",
   "Organismos",
   "Templates",
-  "Padrões",
 ]
 
 const ui = (name: string) => `@/components/ui/${name}`
@@ -60,18 +59,25 @@ const ui = (name: string) => `@/components/ui/${name}`
  * | `Moléculas` | feita de átomos | grupo pequeno de átomos que resolve uma tarefa e lê como uma unidade. Título + descrição é texto, não molécula. Lista cuja **unidade é um átomo** é molécula |
  * | `Organismos` | feita de moléculas | seção com estrutura própria — **faixas** (cabeçalho/corpo/rodapé), grupos, submenus, linhas. Superfície com faixas é organismo. Lista cuja **unidade é uma molécula** é organismo. **Quem contém organismo é organismo** |
  * | `Templates` | objetos de nível de página, que dispõem componentes num layout | o que estrutura a página, e não o que ela contém |
- * | `Padrões` | decisões que atravessam telas | não é componente |
  *
  * `Container` é **Átomo** e não Template: ele é indivisível — uma `div` com
  * largura —, e não dispõe nada. Quem dispõe é o `PageHeader` e o
  * `PageSection`, e por isso os dois são Templates.
+ *
+ * **Não existe uma sexta gaveta.** Havia `Padrões` — sete páginas que "não
+ * são componente" —, e medido, quase todo o conteúdo delas já estava nas
+ * páginas de camada, em cópias que divergiam. A decisão mora em quem a
+ * implementa: o dinheiro no `MoneyDisplay`, o Enter no `Form`, a paleta de
+ * gráfico no `Chart` e em Cores, os chips no `Badge`, as datas em Tipografia,
+ * o toque numa Fundação. Uma decisão sem dono é um componente ou um token
+ * faltando, e não uma página.
  *
  * O `taxonomy.test.ts` tranca a parte mecânica (o grafo de imports) e a ordem
  * alfabética dentro de cada categoria. A parte que o grafo não alcança — a
  * anatomia de um `Select`, a diferença entre especializar e compor — é decisão,
  * e mora nos comentários do mapa abaixo.
  */
-type Layer = Exclude<Category, "Fundações" | "Padrões">
+type Layer = Exclude<Category, "Fundações">
 
 /**
  * A camada de cada componente. Sem padrão: o tipo obriga a listar todos.
@@ -359,10 +365,21 @@ export const REGISTRY: RegistryEntry[] = [
     name: "Tipografia",
     category: "Fundações",
     description:
-      "Inter na interface, Ledger no display, Geist Mono no dinheiro — e os nove componentes de texto.",
+      "Inter na interface, Ledger no display, Geist Mono no dinheiro, os nove componentes de texto e as formas de escrever uma data.",
     source: "src/components/ui/typography.tsx",
     importLine:
       'import { H1, H2, H3, H4, Lead, P, Muted, Small, Caption } from "@/components/ui/typography"',
+  },
+  {
+    // Era um Padrão, e o conteúdo é token e política de variante — os
+    // `--mobile-*` da área segura e o `@custom-variant` de hover, todos em
+    // `globals.css`. É a definição de Fundação. O slug ficou porque quatro
+    // comentários de `ui/` apontam para ele.
+    slug: "mobile-toque",
+    name: "Toque e área segura",
+    category: "Fundações",
+    description: "O alvo de 44px, a política de hover e os tokens da área segura.",
+    source: "src/app/globals.css",
   },
 
   // ── Átomos ──────────────────────────────────────────────────────────────
@@ -447,60 +464,6 @@ export const REGISTRY: RegistryEntry[] = [
   entry("page-header", "Page Header", "O topo de uma tela: trilha, título, fatos e a ação principal.", ui("page-header"), "PageHeader, PageHeaderTitleRow, PageHeaderTitle, PageHeaderDescription, PageHeaderEyebrow, PageHeaderMeta, PageHeaderActions"),
   entry("page-section", "Page Section", "O bloco que dá ritmo vertical a uma tela, com título e ação.", ui("page-section"), "PageSection, PageSectionHeader, PageSectionTitle, PageSectionDescription"),
   entry("table-panel", "Table Panel", "A tabela como o app a mostra: moldura, barra de ações e rodapé de paginação.", ui("table-panel"), "TablePanel, TablePanelToolbar, TablePanelFooter"),
-
-  // ── Padrões ─────────────────────────────────────────────────────────────
-  {
-    slug: "chips-status",
-    name: "Chips de status",
-    category: "Padrões",
-    description: "O vocabulário de estados e a classe que corresponde a cada um.",
-    source: "src/lib/tag-chip-classes.ts",
-    importLine: 'import { tagChipSuccess, tagChipIncome } from "@/lib/tag-chip-classes"',
-  },
-  {
-    slug: "datas",
-    name: "Datas",
-    category: "Padrões",
-    description: "As formas de escrever uma data, e qual usar em cada lugar.",
-    source: "src/lib/transaction-date.ts",
-    importLine: 'import { formatDatePtBr, formatRelativeDayPtBr } from "@/lib/transaction-date"',
-  },
-  {
-    slug: "dinheiro",
-    name: "Dinheiro",
-    category: "Padrões",
-    description: "Como todo valor em reais é exibido, recebido e colorido.",
-    source: "src/lib/formatters.ts",
-    importLine: 'import { currencyBRL, signedCurrencyBRL, percentBR } from "@/lib/formatters"',
-  },
-  {
-    slug: "formularios",
-    name: "Formulários e Enter",
-    category: "Padrões",
-    description: "Por que todo formulário usa Form e o que o Enter faz em cada campo.",
-    source: "src/components/ui/form.tsx",
-  },
-  {
-    slug: "graficos",
-    name: "Gráficos",
-    category: "Padrões",
-    description: "Quando a série usa a rampa categórica e quando usa a cor do dinheiro.",
-    source: "src/components/ui/chart.tsx",
-  },
-  {
-    slug: "mobile-toque",
-    name: "Mobile e toque",
-    category: "Padrões",
-    description: "As duas portas do alvo de toque, a política de hover e a área segura.",
-    source: "src/lib/tailwind-hover-policy.test.ts",
-  },
-  {
-    slug: "vazio-carregando",
-    name: "Vazio e carregando",
-    category: "Padrões",
-    description: "O que a tela mostra antes do dado e quando não há dado.",
-    source: "src/components/ui/empty-state.tsx",
-  },
 ]
 
 export function getEntry(slug: string): RegistryEntry | undefined {

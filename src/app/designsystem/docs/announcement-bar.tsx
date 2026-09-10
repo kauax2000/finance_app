@@ -164,6 +164,13 @@ export default function AnnouncementBarDoc() {
         estado mudar, que é o que o <code>OfflineBanner</code> faz.
       </DocNote>
 
+      <DocNote title="Offline é um quinto estado, e este app tem">
+        Com fila de mutações local, existe &ldquo;salvo aqui, ainda não
+        sincronizado&rdquo;. Ele não é erro e não é sucesso, e a tela precisa
+        dizer isso — é o que o <code>offline-banner</code>, que é esta barra, e
+        o <code>sync-status-chip</code> fazem.
+      </DocNote>
+
       <PropsTable
         rows={[
           {

@@ -92,10 +92,6 @@ export default function MobileToqueDoc() {
         </Spec>
       </Group>
 
-      <DocNote title="Tabela vira cartão por CSS, nunca por hook">
-        Dois gêmeos e <code>hidden</code>. Um <code>useIsMobile</code> devolve <code>false</code> no servidor e no primeiro quadro, então a tela pisca. O hook só entra quando a troca é de <em>primitiva</em> — um Dialog que vira Sheet.
-      </DocNote>
-
       <DocNote title="Confira com a emulação de dispositivo ligada">
         Sem ela o navegador responde <code>pointer: fine</code>{" "}
         e metade destas

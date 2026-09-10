@@ -8,7 +8,7 @@ import {
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { tagChipSuccessMenuTrigger } from "@/lib/tag-chip-classes"
+import { tagChipSuccessMenuTrigger } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { TransactionsDateRangeForm } from "@/components/transactions/transactions-date-range-form"
 import {

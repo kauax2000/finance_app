@@ -20,8 +20,9 @@
  * respiro de um menu passa a mudar o do outro, que é o comportamento que a
  * tabela acima mostra não existir antes.
  *
- * Segue o precedente de [`tag-chip-classes`](./tag-chip-classes.ts): classe
- * compartilhada é `lib/`, não um componente vazio em `ui/`.
+ * Classe compartilhada entre componentes é `lib/`, não um componente vazio em
+ * `ui/`. (As classes de chip abriram esse precedente e moraram em `lib/` até a
+ * rodada 77 — mas elas tinham dono, o `Badge`, e foram para ele.)
  */
 
 /**

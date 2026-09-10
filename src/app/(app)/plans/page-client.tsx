@@ -3,9 +3,12 @@
 import { InformationCircleIcon, WrenchIcon } from "@heroicons/react/16/solid"
 import { SparklesIcon } from "@heroicons/react/20/solid"
 import { ReceiptPercentIcon, SparklesIcon as SparklesOutlineIcon } from "@heroicons/react/24/outline"
-import { Badge } from "@/components/ui/badge"
+import {
+    Badge,
+    tagChipInfo,
+    tagChipWarning,
+} from "@/components/ui/badge"
 import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
-import { tagChipInfo, tagChipWarning } from "@/lib/tag-chip-classes"
 import { cn } from "@/lib/utils"
 
 export default function PlansPage() {

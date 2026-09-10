@@ -437,8 +437,8 @@ export default function TableDoc() {
         Entrada e saída na mesma coluna: por isso o <code>signed</code>. Sem
         ele, quem não distingue verde de vermelho lê as duas linhas como
         idênticas — é o argumento de{" "}
-        <Link href="/designsystem/dinheiro" className="underline">
-          Dinheiro
+        <Link href="/designsystem/money-display" className="underline">
+          Money Display
         </Link>
         .
       </DocNote>

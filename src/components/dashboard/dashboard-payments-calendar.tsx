@@ -22,7 +22,7 @@ import {
     tagChipDanger,
     tagChipWarning,
     transactionRowChipShell,
-} from "@/lib/tag-chip-classes"
+} from "@/components/ui/badge"
 import { paymentEventHasMetaBadge } from "@/components/dashboard/payment-events"
 import type {
     PaymentEvent,

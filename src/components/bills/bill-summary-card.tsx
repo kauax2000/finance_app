@@ -1,6 +1,11 @@
 "use client"
 
-import { Badge } from "@/components/ui/badge"
+import {
+    Badge,
+    tagChipDanger,
+    tagChipNeutral,
+    tagChipWarning,
+} from "@/components/ui/badge"
 import {
     Card,
     CardContent,
@@ -17,11 +22,6 @@ import {
 import type { BillRowWithCategory } from "@/lib/queries/fetch-bills-page-bundle"
 import { formatTransactionDmyPtBr } from "@/lib/transaction-date"
 import { cn } from "@/lib/utils"
-import {
-    tagChipDanger,
-    tagChipNeutral,
-    tagChipWarning,
-} from "@/lib/tag-chip-classes"
 import { ColorTile } from "@/components/ui/color-tile"
 
 const EXPENSE_CATEGORY_FALLBACK_COLOR = "var(--expense)"

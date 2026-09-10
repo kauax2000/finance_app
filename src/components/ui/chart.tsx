@@ -67,7 +67,7 @@ import {
  * `rounded-lg border-border/80 bg-popover`, quatro vezes), 3 legendas,
  * 4 `Intl.NumberFormat` redeclarados com `currencyBRL` existindo ao lado, e
  * 4 `tickFormatter` compactos inline sem nenhum chamar `currencyCompactBRL` —
- * que é exatamente a regra que a página `/designsystem/graficos` manda seguir.
+ * que é exatamente a regra que a página `/designsystem/chart` manda seguir.
  *
  * A raiz do abandono era esta linha:
  *
@@ -791,7 +791,7 @@ function ChartXAxis({
 /**
  * O eixo de valor começa em zero, e isso é padrão e não conselho. Truncar a
  * base multiplica visualmente uma diferença de 3% — é a regra que
- * `/designsystem/graficos` escreve e que nenhum eixo do app aplicava sozinho.
+ * `/designsystem/chart` escreve e que nenhum eixo do app aplicava sozinho.
  * Quem tiver um caso legítimo (uma série que não cruza zero, num gráfico de
  * linha) passa `domain` e assume.
  */

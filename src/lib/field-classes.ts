@@ -57,7 +57,7 @@
  *
  * **Nada de `cva` aqui.** A regra A2 do auditor reprova essa fábrica de variantes fora de
  * `components/ui/`, e `src/lib/` está fora. Strings literais, como em
- * [`menu-classes`](./menu-classes.ts) e [`tag-chip-classes`](./tag-chip-classes.ts).
+ * [`menu-classes`](./menu-classes.ts) e [`scroll-fade-classes`](./scroll-fade-classes.ts).
  *
  * **A ordem de composição é carga estrutural.** `cn` é `twMerge(clsx(…))`, e o
  * projeto estende o grupo `font-size` com `text-2xs` e `text-control-sm`. O

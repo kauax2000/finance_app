@@ -13,7 +13,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import {
+    Badge,
+    tagChipDanger,
+    tagChipNeutral,
+    tagChipWarning,
+} from "@/components/ui/badge"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -41,11 +46,6 @@ import type { PayBillInput } from "@/lib/bills/pay-bill-flow"
 import { formatTransactionDmyPtBr } from "@/lib/transaction-date"
 import { localYmdFromDate } from "@/lib/transaction-date"
 import { cn } from "@/lib/utils"
-import {
-    tagChipDanger,
-    tagChipNeutral,
-    tagChipWarning,
-} from "@/lib/tag-chip-classes"
 import { ColorTile } from "@/components/ui/color-tile"
 
 const EXPENSE_CATEGORY_FALLBACK_COLOR = "var(--expense)"

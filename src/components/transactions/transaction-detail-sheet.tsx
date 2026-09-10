@@ -67,7 +67,7 @@ import {
     tagChipSuccess,
     tagChipWarning,
     transactionRowChipShell,
-} from "@/lib/tag-chip-classes"
+} from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
 const currencyFmt = new Intl.NumberFormat("pt-BR", {

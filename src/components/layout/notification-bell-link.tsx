@@ -7,7 +7,7 @@ import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { useNotificationsUi } from "@/components/layout/notifications-ui-provider"
 import { countUnreadNotifications } from "@/lib/notifications"
-import { tagChipUnreadCount } from "@/lib/tag-chip-classes"
+import { tagChipUnreadCount } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
 export function NotificationBellLink() {

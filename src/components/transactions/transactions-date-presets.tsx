@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Button } from "@/components/ui/button"
-import { tagChipFilterIdle, tagChipFilterSelected } from "@/lib/tag-chip-classes"
+import { tagChipFilterIdle, tagChipFilterSelected } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
 export type TransactionsDatePresetKey =

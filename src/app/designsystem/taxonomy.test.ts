@@ -167,16 +167,17 @@ describe("taxonomia", () => {
    * trancam a *taxonomia*, e duas páginas para o mesmo arquivo sempre foram
    * legais.
    *
-   * `Padrões` fica de fora, e não é escapatória: `formularios`,
-   * `vazio-carregando` e `graficos` apontam de propósito para `form.tsx`,
-   * `empty-state.tsx` e `chart.tsx`, porque um Padrão é uma decisão que
-   * atravessa telas cuja casa por acaso é um componente. Uma segunda página *de
-   * componente* para o mesmo arquivo é que é duplicação.
+   * Ela tinha uma exceção, `Padrões`, para `formularios`, `vazio-carregando` e
+   * `graficos` poderem apontar para `form.tsx`, `empty-state.tsx` e
+   * `chart.tsx` — decisões que atravessam telas "cuja casa por acaso é um
+   * componente". A casa não era por acaso: era o dono da decisão, e as
+   * páginas repetiam o que as dele já diziam. A categoria saiu na rodada 77, e
+   * a exceção com ela.
    */
-  it("6. nenhum arquivo de ui/ é fonte de duas entradas fora de Padrões", () => {
+  it("6. nenhum arquivo de ui/ é fonte de duas entradas", () => {
     const porFonte = new Map<string, string[]>()
     for (const e of REGISTRY) {
-      if (e.category === "Padrões" || !e.source?.startsWith(UI)) continue
+      if (!e.source?.startsWith(UI)) continue
       porFonte.set(e.source, [...(porFonte.get(e.source) ?? []), e.slug])
     }
     const duplicadas = [...porFonte].filter(([, slugs]) => slugs.length > 1)

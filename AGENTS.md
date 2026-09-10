@@ -38,7 +38,7 @@ memória:
   `NEXT_PUBLIC_DS_DOCS`.
 - **A taxonomia é atomic design canônico**, e mora no mapa `LAYER` de
   [`registry.ts`](src/app/designsystem/registry.ts): Fundações → Átomos →
-  Moléculas → Organismos → **Templates** → Padrões. Ele é **exaustivo**: um
+  Moléculas → Organismos → **Templates**. Ele é **exaustivo**: um
   componente novo sem camada não compila. A regra de cada nível está escrita no
   topo do arquivo, e [`taxonomy.test.ts`](src/app/designsystem/taxonomy.test.ts)
   a tranca. **A régua é a hierarquia que cresce**: átomo é indivisível (anatomia
@@ -61,9 +61,11 @@ baratos, não cansam e não erram diferente a cada vez. `ds:catalog` também avi
 quando um token existe em `:root` sem par em `.dark`, que é a origem mais comum
 de "isso some no tema escuro".
 
-As páginas de **Padrões** (`/designsystem/dinheiro`, `datas`, `formularios`,
-`mobile-toque`, `vazio-carregando`, `graficos`, `chips-status`) valem mais que
-qualquer página de componente: são as decisões que atravessam telas.
+Não há páginas de "padrão": toda decisão que atravessa telas mora na página de
+quem a implementa — o dinheiro em `/designsystem/money-display`, o Enter em
+`form`, a paleta de gráfico em `chart` e `cores`, os chips em `badge`, as datas
+em `typography`, o toque e a área segura em `mobile-toque` (Fundação). Ver a
+rodada 77.
 
 ### Invariantes
 
@@ -321,9 +323,8 @@ tema.
 - **Empty states**: [`EmptyState`](src/components/ui/empty-state.tsx) (+ title / description / actions slots).
 - **Money**: [`MoneyDisplay`](src/components/ui/money-display.tsx) e **`<Input money>`** ([`input.tsx`](src/components/ui/input.tsx)), com a forma curta `<FormInput money>`; formatting helpers in [`src/lib/formatters.ts`](src/lib/formatters.ts) (`currencyBRL`, `signedCurrencyBRL`, `percentBR`).
 - **Dates**: [`src/lib/transaction-date.ts`](src/lib/transaction-date.ts) — e.g. `formatDatePtBr`, `formatTransactionDmyPtBr`, `formatDateLongPtBr`, `formatRelativeDayPtBr`.
-- **Status chips / filters**: [`src/lib/tag-chip-classes.ts`](src/lib/tag-chip-classes.ts) — token-based classes only.
+- **Status chips / filters**: as constantes `tagChip*`, exportadas de [`badge.tsx`](src/components/ui/badge.tsx) — a mesma superfície que as tintas `soft` do `Badge` leem.
 - **Régua compartilhada em `lib/`**: além de
-  [`tag-chip-classes`](src/lib/tag-chip-classes.ts),
   [`menu-classes`](src/lib/menu-classes.ts) e
   [`scroll-fade-classes`](src/lib/scroll-fade-classes.ts), agora
   [`field-classes`](src/lib/field-classes.ts) — a superfície de campo que
@@ -364,7 +365,7 @@ tema.
 
 ### Component rules
 
-- **`Badge`**: use semantic `variant` + `size` (`xs` | `sm` | `default`); avoid duplicating chip classes outside `tag-chip-classes` / Badge.
+- **`Badge`**: `variant` (forma) + `tone` (cor) + `size` (`xs` | `sm` | `md`); as classes de chip moram no próprio `badge.tsx` e não se duplicam fora dele.
 - **`Button` — a hierarquia é uma escada, e ela desce em peso visual**:
   `primary` preenche de verde, `secondary` preenche de cinza, `tertiary` não
   preenche nada. **`tertiary` acende no cursor e no toque** — o par
@@ -9538,6 +9539,49 @@ borda assenta sobre superfície limpa. A asserção 27 tranca o fecho — e a
 primeira sabotagem dela **passou**, porque o meu `replace` não achou o trecho
 (havia um comentário no meio) e eu não o tinha assertado. Refeita com `assert`,
 ela reprova.
+
+### Rodada 77 — a sexta gaveta sai, e cada decisão volta para o dono
+
+O catálogo tinha **Padrões**: sete páginas que "não são componente", e a régua
+do `registry.ts` as descrevia assim mesmo — *decisões que atravessam telas*.
+Medido, quase todo o conteúdo delas **já estava** nas páginas de camada, e as
+cópias divergiam: as notas da rampa em `graficos` e em `cores`, os três vazios
+em `vazio-carregando` e em `empty-state`, o "hook que pisca" em `mobile-toque`
+e em `table`. A categoria não guardava decisão sem dono; guardava a segunda
+cópia dela.
+
+| Era | Foi para | Camada |
+| --- | --- | --- |
+| `dinheiro` | `money-display` — as funções de `lib/formatters`, a regra do sinal | Átomo |
+| `datas` | `typography` — os sete formatos, o fuso, o travessão | Fundação |
+| `chips-status` | `badge` — e o **código** também, abaixo | Átomo |
+| `formularios` | `form` — as regras do Enter, lidas da fonte | Organismo |
+| `graficos` | `chart` (a cor da série, as regras) e `cores` (a rampa medida) | Organismo + Fundação |
+| `vazio-carregando` | `empty-state` (os quatro estados) e `announcement-bar` (o offline) | Molécula |
+| `mobile-toque` | fica, como **Fundação** "Toque e área segura" | Fundação |
+
+`mobile-toque` não se dissolveu porque o conteúdo dele **é** Fundação: os
+`--mobile-*` da área segura e a política do `@custom-variant` moram em
+`globals.css`. O slug ficou — quatro comentários de `ui/` apontam para ele.
+
+**As classes de chip foram morar no `Badge`, e não só a página.**
+`lib/tag-chip-classes.ts` e as tintas `soft` do `Badge` eram duas cópias das
+mesmas sete strings, e já divergiam: o `Badge` não tinha o par `dark:hover:`.
+Hoje as constantes são exportadas de `badge.tsx` com os mesmos nomes, o `cva`
+as lê, e os 20 importadores mudaram só o caminho — zero pixel nas telas. A
+única mudança visível é a do próprio `Badge`: no tema escuro o hover dele passa
+a `/60`, como o dos chips sempre foi. Sem alias para o arquivo antigo, pelo
+precedente do `EdgePanel`.
+
+**A asserção 6 do `taxonomy.test.ts` perdeu a exceção.** Ela pulava Padrões
+para `form.tsx`, `chart.tsx` e `empty-state.tsx` terem duas páginas; hoje vale
+para todo arquivo de `ui/`. E o tipo `Category` sem a sexta chave é o que
+impede a volta: o `tsc` acusa quem a escrever.
+
+As URLs antigas dão 404, sem redirect — o precedente de `/tipografia`: rota de
+desenvolvimento e zero links internos. Ficam de fora o `text-[10px]` da pílula
+de linha (`transactionRowChipShell`), que não é degrau do `Badge` e mudaria
+pixel em cinco telas, e os apelidos `tagChipViolet`/`tagChipSky`.
 
 ### Backlog de migração
 

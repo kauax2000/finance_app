@@ -3,7 +3,7 @@ import {
     tagChipDanger,
     tagChipSuccess,
     tagChipWarning,
-} from "@/lib/tag-chip-classes"
+} from "@/components/ui/badge"
 
 const currencyFmt = new Intl.NumberFormat("pt-BR", {
     style: "currency",

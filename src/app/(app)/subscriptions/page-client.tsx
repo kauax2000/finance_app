@@ -57,7 +57,7 @@ import {
     updateSubscription,
 } from "@/lib/subscriptions/mutations"
 import { dispatchFinanceSubscriptionsMutated } from "@/lib/workspace-data-events"
-import { tagChipSuccess } from "@/lib/tag-chip-classes"
+import { tagChipSuccess } from "@/components/ui/badge"
 import {
     formatSubscriptionChargeDatePtBr,
     formatSubscriptionTxSummary,

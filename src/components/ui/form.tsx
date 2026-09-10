@@ -65,7 +65,7 @@ import { P } from "@/components/ui/typography"
 /**
  * Onde o Enter **não** é sequestrado, e por quê.
  *
- * Esta lista é a fonte: a página `/designsystem/formularios` a importa em vez
+ * Esta lista é a fonte: a página `/designsystem/form` a importa em vez
  * de redigitá-la. Ela era uma cópia à mão, e já tinha divergido — a página
  * mostrava 6 regras enquanto o código checava 7, e a que faltava era
  * justamente a do seletor ancorado, que é a lição mais geral do arquivo.
