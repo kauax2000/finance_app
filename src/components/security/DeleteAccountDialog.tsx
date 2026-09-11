@@ -232,7 +232,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
 
     const footerWarning = isMobile ? (
         <DialogFooter className={sheetFooterMobileClass}>
-            <Button type="button" variant="destructive" className="h-10 w-full" onClick={handleContinue}>
+            <Button type="button" variant="destructive" size="xl" className="w-full" onClick={handleContinue}>
                 Continuar
             </Button>
         </DialogFooter>
@@ -294,7 +294,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                     <Button
                         type="submit"
                         variant="destructive"
-                        className="h-10 w-full"
+                        size="xl" className="w-full"
                         disabled={loading || !emailsMatch || !password}
                     >
                         {loading ? (

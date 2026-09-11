@@ -200,7 +200,7 @@ export function LoginForm() {
                             </p>
                         ) : null}
                     </div>
-                    <Button type="submit" className="w-full hover:bg-primary/90" disabled={loading}>
+                    <Button type="submit" className="w-full" disabled={loading}>
                         {loading ? "Entrando..." : "Entrar"}
                     </Button>
                 </CustomForm>

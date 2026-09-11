@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { QuestionMarkCircleIcon } from "@heroicons/react/16/solid"
 import { ROUTES } from "@/config/navigation"
-import { buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import {
     EmptyState,
     EmptyStateActions,
@@ -25,18 +25,12 @@ export function NotFoundShell() {
                         volte ao painel.
                     </EmptyStateDescription>
                     <EmptyStateActions>
-                        <Link
-                            href={ROUTES.DASHBOARD}
-                            className={buttonVariants({ variant: "primary" })}
-                        >
-                            Ir para o painel
-                        </Link>
-                        <Link
-                            href="/"
-                            className={buttonVariants({ variant: "outline" })}
-                        >
-                            Página inicial
-                        </Link>
+                        <Button asChild>
+                            <Link href={ROUTES.DASHBOARD}>Ir para o painel</Link>
+                        </Button>
+                        <Button asChild variant="outline">
+                            <Link href="/">Página inicial</Link>
+                        </Button>
                     </EmptyStateActions>
                 </EmptyState>
                 <p

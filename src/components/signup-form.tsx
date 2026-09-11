@@ -412,7 +412,7 @@ export function SignupForm() {
                             </div>
                         )}
                     </div>
-                    <Button type="submit" className="w-full hover:bg-primary/90" disabled={loading}>
+                    <Button type="submit" className="w-full" disabled={loading}>
                         {loading ? "Criando conta..." : "Criar conta"}
                     </Button>
                 </CustomForm>

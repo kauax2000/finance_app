@@ -48,6 +48,8 @@
   --color-secondary-hover: var(--secondary-hover);
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-edge: var(--primary-edge);
   --color-primary-accent: var(--primary-accent);
   --color-primary-muted: var(--primary-muted);
   --color-primary-muted-foreground: var(--primary-muted-foreground);
@@ -136,6 +138,40 @@
   --popover-foreground: oklch(0.145 0 0);
   --primary: oklch(0.42 0.12 166);
   --primary-foreground: oklch(0.985 0 0);
+  /* ── O primário é uma tecla ──────────────────────────────────────────────
+
+     `--primary-hover` é opaco e **escurece nos dois temas**. O hover era
+     `bg-primary/90`, e um alfa único trocava de direção por tema — clareava no
+     claro (o rótulo caía de 7,31 para 5,81) e escurecia no escuro —, além de
+     mudar de força conforme a superfície embaixo. É o defeito que
+     `--secondary-hover` consertou, com uma diferença: o contato do primário é
+     o rótulo **branco** nos dois temas, e escurecer é o único sentido que sobe
+     o contraste dele. Clarear no escuro gastaria a margem de 0,72 que o rótulo
+     tem sobre os 4,5. Medido: rótulo 9,01 no claro e 6,21 no escuro, passo
+     contra a base 1,23 e 1,19. O custo, dito: no escuro o hover fica a 2,76
+     contra `--card`; quem identifica o controle nesse estado é o rótulo.
+
+     `--primary-edge` é o contorno e o plinto; `--primary-highlight` é o fio de
+     luz do topo, por dentro, acima da faixa do texto. A elevação é **escura**
+     — contorno e plinto mais escuros que o corpo, sombra preta —, e a única
+     luz tem 1px. As quatro tentativas de vidro deste botão acenderam o corpo
+     ou a borda, e a leitura foi "botão mais claro" (a lápide está em
+     `lib/glass-classes.ts`). Se o fio reproduzir isso, ele vira `transparent`
+     aqui e no `.dark`, e o resto segura a elevação sozinho.
+
+     Os dois `*-value` são a sombra inteira da tecla — as duas internas mais a
+     `--shadow-xs` de fora — num token só, lido por `shadow-(…)`. **Não por
+     `inset-shadow-(…)`**: ele prefixa `inset` no valor, e com o `inset` que o
+     token já traz a declaração vira `inset inset …`, inválida — e uma camada
+     inválida derruba a cadeia de `box-shadow` inteira, levando junto a sombra
+     de fora e o anel de foco. Medido: `box-shadow: none`. O `var()` resolve
+     onde é declarado, por isso os dois se repetem no `.dark`. */
+  --primary-hover: oklch(0.37 0.115 166);
+  --primary-edge: oklch(0.32 0.1 166);
+  --primary-highlight: oklch(1 0 0 / 18%);
+  --primary-shadow-value: inset 0 1px 0 0 var(--primary-highlight),
+    inset 0 -1px 0 0 var(--primary-edge), var(--shadow-xs-value);
+  --primary-shadow-pressed-value: inset 0 1px 2px 0 oklch(0 0 0 / 0.25);
   /* O mesmo verde em dois papéis que se contradizem no tema escuro: `--primary`
      preenche (precisa contrastar com texto claro por cima) e `--primary-accent`
      é texto (precisa contrastar com a página escura por baixo). No claro os
@@ -578,6 +614,12 @@
      e todo `Code` com `text-primary`. Agora mede 8,46:1 nas duas direções. */
   --primary: oklch(0.5 0.125 166);
   --primary-foreground: oklch(0.985 0 0);
+  --primary-hover: oklch(0.46 0.12 166);
+  --primary-edge: oklch(0.36 0.09 166);
+  --primary-highlight: oklch(1 0 0 / 22%);
+  --primary-shadow-value: inset 0 1px 0 0 var(--primary-highlight),
+    inset 0 -1px 0 0 var(--primary-edge), var(--shadow-xs-value);
+  --primary-shadow-pressed-value: inset 0 1px 2px 0 oklch(0 0 0 / 0.5);
   --primary-accent: oklch(0.66 0.13 166);
   --primary-muted: oklch(0.27 0.06 166);
   --primary-muted-foreground: oklch(0.88 0.06 166);

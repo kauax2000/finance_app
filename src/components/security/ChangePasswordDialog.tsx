@@ -305,7 +305,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
             {isMobile ? (
                 <DialogFooter className={sheetFooterMobileClass}>
                     {!success ? (
-                        <Button type="submit" disabled={loading} className="h-10 w-full">
+                        <Button type="submit" disabled={loading} size="xl" className="w-full">
                             {loading ? "Alterando..." : "Alterar senha"}
                         </Button>
                     ) : null}

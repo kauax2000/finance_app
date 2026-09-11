@@ -248,7 +248,7 @@ export function CategoryCreateDialog({
                             <Button
                                 type="submit"
                                 disabled={saving}
-                                className="h-10 w-full"
+                                size="xl" className="w-full"
                             >
                                 {saving ? "Salvando..." : "Salvar"}
                             </Button>

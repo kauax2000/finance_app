@@ -393,7 +393,7 @@ export function BillsToolbar({
                         </div>
                         <Button
                             type="button"
-                            className="h-10 w-full"
+                            size="xl" className="w-full"
                             onClick={() => setSheetOpen(false)}
                         >
                             Concluir

@@ -604,7 +604,7 @@ export function CategoriesOnboardingWizard({
                                 </div>
                             </div>
                             <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
-                                <Button type="submit" disabled={crudBusy} className="h-10 w-full">
+                                <Button type="submit" disabled={crudBusy} size="xl" className="w-full">
                                     {crudBusy ? "Salvando…" : "Criar"}
                                 </Button>
                             </DialogFooter>
@@ -727,7 +727,7 @@ export function CategoriesOnboardingWizard({
                                     </div>
                                 </div>
                                 <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
-                                    <Button type="submit" disabled={crudBusy} className="h-10 w-full">
+                                    <Button type="submit" disabled={crudBusy} size="xl" className="w-full">
                                         {crudBusy ? "Salvando…" : "Salvar"}
                                     </Button>
                                 </DialogFooter>

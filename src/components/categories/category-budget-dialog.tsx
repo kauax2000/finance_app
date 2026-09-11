@@ -152,7 +152,7 @@ export function CategoryBudgetDialog({
                             <Button
                                 type="submit"
                                 disabled={saving || removing}
-                                className="h-10 w-full"
+                                size="xl" className="w-full"
                             >
                                 {saving ? "Salvando…" : "Salvar"}
                             </Button>

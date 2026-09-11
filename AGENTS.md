@@ -200,6 +200,11 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   — invisível — e em direções trocadas, clareando no claro e afundando o botão
   na página no escuro. O token puxa a base na direção do próprio texto: escurece
   no claro (1,26:1), clareia no escuro (1,39:1). Sempre na direção do contato.
+  **`--primary-hover` segue a mesma regra e por isso escurece nos dois temas**:
+  o contato do primário é o rótulo branco, e escurecer é o único sentido que
+  sobe o contraste dele (9,01 no claro, 6,21 no escuro). Com ele vêm
+  `--primary-edge` e `--primary-highlight`, a aresta e a luz da tecla — ver a
+  rodada 78.
   `--primary` **preenche** (botão, checkbox, switch, faixa do slider) e é medido
   contra o texto que fica em cima; `--primary-accent` é **marca sobre o fundo**
   — texto, ícone, e todo traço fino: barra lateral de citação, contorno de chip
@@ -9583,6 +9588,108 @@ desenvolvimento e zero links internos. Ficam de fora o `text-[10px]` da pílula
 de linha (`transactionRowChipShell`), que não é degrau do `Badge` e mudaria
 pixel em cinco telas, e os apelidos `tagChipViolet`/`tagChipSky`.
 
+### Rodada 78 — o primário vira tecla
+
+Pedido: o `Button variant="primary"` acompanhar o resto do design system, na
+direção **elevado e elegante**, com uma referência de botão tátil — corpo
+chapado, contorno mais escuro, plinto grosso na base e um fio de luz fino no
+topo. Medido antes, ele era o peso mais atrasado da casa:
+
+| Defeito | Número |
+| --- | --- |
+| hover por alfa (`bg-primary/90`) trocava de direção por tema | clareava no claro (rótulo 7,31 → **5,81**), escurecia no escuro |
+| a força do hover dependia da superfície embaixo | 1,113 sobre `muted` contra 1,158 sobre a página, no escuro |
+| inerte ao toque | estava em `PENDENTES` |
+| sem `aria-expanded:` | os outros três pesos têm |
+| `transition-all` com a curva do navegador | `--tw-ease` vazio, o defeito das rodadas 62/63 |
+| `[a]:hover:bg-primary/90` | a mesma classe duas vezes |
+| enviando lia como desabilitado | o `FormSubmit` desabilita, e o primário ia a `opacity-50` |
+
+**O realce virou token, e escurece nos dois temas.** `--primary-hover` é
+opaco: rótulo em **9,01** no claro e **6,21** no escuro, passo contra a base
+1,23 e 1,19. É a regra do `--secondary-hover` — puxar na direção do contato —,
+e o contato do primário é o rótulo branco nos dois temas; clarear no escuro
+gastaria a margem de 0,72. O custo fica dito: no escuro o hover dá **2,76**
+contra `--card`, e quem identifica o controle nesse estado é o rótulo.
+
+**A tecla.** `--primary-edge` é o contorno e o plinto (1px de sombra interna
+na base, somado ao 1px de borda); `--primary-highlight` é o fio de luz de 1px
+no topo, por dentro. Medido: aresta contra corpo **1,53** no claro e **1,86**
+no escuro, fio de luz contra corpo 1,53 e 1,51. O plinto é interno, então a
+caixa mantém o degrau — 24/28/32/36/40, medidos — e segue alinhada ao `Input`.
+Ao apertar, o plinto, a luz e a sombra de fora somem e entra uma sombra interna
+no topo; enviando, a tecla fica afundada com **opacidade 1**.
+
+**Não é vidro, e a diferença é a direção da luz.** As quatro reprovações deste
+botão (a lápide em `lib/glass-classes.ts`) acenderam o corpo ou a borda, e a
+leitura foi "botão mais claro". Aqui a elevação é **escura** — aresta e plinto
+abaixo do corpo, sombra preta —, e a única luz é 1px acima da faixa do texto.
+Visto ampliado 3× nos dois temas, ele lê como tecla, e a chave de desligar a luz
+(`--primary-highlight: transparent`) não foi usada.
+
+**A armadilha que custou uma medição: `inset-shadow-(--x)` prefixa `inset`.**
+Com o `inset` que o token já traz, o emitido virou `inset inset …`, inválido —
+e uma camada inválida derruba a cadeia inteira de `box-shadow`: a sombra de
+fora e **o anel de foco** junto. Medido: `box-shadow: none`, com a classe no
+elemento e a regra na folha. A saída é um token só (`--primary-shadow-value`,
+as duas internas mais a `--shadow-xs-value`) lido por `shadow-(…)`, que não
+prefixa nada. Depois, com Tab de verdade: anel de 3px em `--ring` compondo com
+as três sombras da tecla.
+
+**E a leitura do anel no mesmo passo do Tab mentiu de novo.** A primeira veio
+com a borda ainda na cor da aresta e a cadeia a meio caminho — a transição de
+150ms estava rodando. Meio segundo depois, certa. É a lição de sempre: valor em
+transição não é valor final.
+
+**Enviando precisou de dois variantes juntos.** `aria-busy:` e `disabled:`
+empatam em especificidade, e quem decidiria seria a ordem de emissão; os estados
+de envio vão sob `aria-busy:disabled:`, que vence.
+
+**A transição da base passou a ser enumerada**, para todos os pesos:
+`[color,background-color,border-color,box-shadow,opacity,translate]` com
+`--duration-fast` e `--ease-out`. O carrossel passa a própria lista, e o
+`twMerge` a mantém.
+
+**As telas.** Os 5 `hover:bg-primary/90` dos formulários de autenticação
+saíram, e não era cosmético: o `twMerge` deixaria o `className` vencer, e esses
+botões seguiriam com o hover de alfa. **13** `className="h-10 w-full"` viraram
+`size="xl" className="w-full"`; os **4** que já traziam `size="sm"` ficaram,
+porque trocar mudaria o corpo do rótulo. `not-found-shell.tsx` trocou
+`buttonVariants()` num `<Link>` por `<Button asChild>`.
+
+**O `ButtonGroup` desliga o divisor no primário.** O filete `bg-current/20`
+existe para marcar a emenda de botões cheios sem borda visível; sobre o
+primário ele saía branco, por cima do fio escuro que o contorno em
+`--primary-edge` já desenha com a sobreposição de 1px — dois traços para a
+mesma emenda. `[&>[data-variant=primary]]:before:hidden` o tira dali, e a mesma
+linha vale para o `outline`, cuja borda também é a emenda. O `secondary`, que
+não tem borda, também perdeu o filete — recuado nas pontas, ele lia como risco
+no meio de um bloco — e ganhou uma emenda de cima a baixo como a do primário:
+os botões deixam de se sobrepor e ficam a 1px um do outro
+(`[&>[data-variant=secondary]:not(:first-child)]:ml-px`, que vence o `-ml-px`
+por especificidade). O vão é **transparente**, então mostra a superfície de trás
+sem o grupo precisar saber qual é.
+
+**Uma correção ao plano.** Ele contava o dia selecionado do `Calendar` entre os
+consumidores de `hover:bg-primary/90`; não era — as duas ocorrências que a
+varredura achou em `ui/` eram as duas classes da própria linha do `Button`.
+
+**O teste.**
+[`button-primary.test.ts`](src/components/ui/button-primary.test.ts) tem 8
+asserções — o realce sem alfa, zero cor literal, a tecla num token e nunca por
+`inset-shadow-`, o toque, o envio, a transição, os tokens nos dois temas com
+**aresta < hover < corpo** (a elevação é escura, por construção) e nenhuma tela
+remendando o hover. Oito sabotagens, oito reprovações. `primary` saiu de
+`PENDENTES` em `button-touch-response.test.ts`.
+
+**O que ficou de fora.** `secondary`, `outline` e `destructive` não viraram
+tecla, embora a referência mostre os três assim; o `destructive` é véu no tema
+claro e pede medição própria. O toque **mantido** não foi amostrado por quadro —
+o painel do navegador não segura o clique —, e o que o prova são as regras
+`:active` e `[aria-busy]:disabled` lidas no CSS emitido. O desvio de centragem
+do rótulo é de **0,5px** em todos os degraus (a borda do topo contra borda mais
+plinto na base), e ficou sem compensação.
+
 ### Backlog de migração
 
 A rodada 01 entregou tokens, componentes, documentação e o auditor, sem migrar
@@ -9865,7 +9972,8 @@ E o que a rodada do campo de data e dos dois cartões deixou:
 - ~~**`Button variant="tertiary"` não tem par `active:`**~~ — **pago na rodada
   29b**, na origem. E a contagem estava errada para menos: medindo as cinco
   variantes que pintam fundo, **quatro** ficavam inertes ao toque, não uma.
-  `primary`, `secondary`, `outline` e `destructive` continuam pendentes, e
+  `secondary`, `outline` e `destructive` continuam pendentes (o `primary` foi
+  pago na rodada 78), e
   agora com mecanismo: a lista vive em
   [`button-touch-response.test.ts`](src/components/ui/button-touch-response.test.ts),
   que **falha se ela crescer**.

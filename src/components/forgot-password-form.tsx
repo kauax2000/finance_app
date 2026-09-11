@@ -201,7 +201,7 @@ export function ForgotPasswordForm() {
                                 </p>
                             )}
                         </div>
-                        <Button type="submit" className="w-full hover:bg-primary/90" disabled={loading}>
+                        <Button type="submit" className="w-full" disabled={loading}>
                             {loading ? "Enviando..." : "Enviar token"}
                         </Button>
                     </CustomForm>
@@ -323,7 +323,7 @@ export function ForgotPasswordForm() {
                                 </p>
                             )}
                         </div>
-                        <Button type="submit" className="w-full hover:bg-primary/90" disabled={loading}>
+                        <Button type="submit" className="w-full" disabled={loading}>
                             {loading ? "Atualizando..." : "Atualizar Senha"}
                         </Button>
                         <Button

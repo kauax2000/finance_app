@@ -126,6 +126,10 @@ export default function CoresDoc() {
 
         <TokenGrid label="Marca e foco">
           <TokenTile name="Primary" token="--primary" onToken="--primary-foreground" />
+          {/* O realce e a aresta da tecla. O hover é opaco e escurece nos dois
+              temas — o rótulo em cima dele passa de 7,31 para 9,01 no claro. */}
+          <TokenTile name="Primary (hover)" token="--primary-hover" onToken="--primary-foreground" />
+          <TokenTile name="Primary (aresta)" token="--primary-edge" onToken="--primary-foreground" />
           {/* Dois papéis do mesmo verde. `--primary` preenche e por isso é
               medido contra o texto que fica em cima; `--primary-accent` é
               texto e por isso é medido contra o cartão que fica embaixo. No

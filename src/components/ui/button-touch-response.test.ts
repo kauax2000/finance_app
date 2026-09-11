@@ -71,7 +71,7 @@ describe("resposta ao toque do Button", () => {
    * impede que ela **cresça**: uma variante nova nasce com o par, ou o teste cai.
    * Cada nome sai daqui quando o conserto dele for autorizado.
    */
-  const PENDENTES = ["primary", "secondary", "outline", "destructive"] as const
+  const PENDENTES = ["secondary", "outline", "destructive"] as const
 
   it("2. quem já foi consertado pinta no toque o mesmo que pinta no cursor", () => {
     for (const variant of PESOS_QUE_PREENCHEM) {

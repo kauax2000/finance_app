@@ -400,7 +400,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
             {isMobile ? (
                 <DialogFooter className={sheetFooterMobileClass}>
                     {!successMessage && (
-                        <Button type="submit" disabled={saving} className="h-10 w-full">
+                        <Button type="submit" disabled={saving} size="xl" className="w-full">
                             {saving ? (
                                 <>
                                     <Spinner />

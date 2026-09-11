@@ -124,7 +124,7 @@ export function WorkspaceAppearanceEditDialog({
             </div>
             {isMobile ? (
                 <DialogFooter className={sheetFooterMobileClass}>
-                    <Button type="submit" disabled={submitting} className="h-10 w-full">
+                    <Button type="submit" disabled={submitting} size="xl" className="w-full">
                         {submitting ? "Salvando…" : "Salvar alterações"}
                     </Button>
                 </DialogFooter>

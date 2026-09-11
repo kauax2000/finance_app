@@ -5,7 +5,7 @@ import { Slot } from "radix-ui"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/70 active:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&>[data-slot=button-label]]:first-letter:uppercase [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow,opacity,translate] duration-(--duration-fast) ease-(--ease-out) outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/70 active:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&>[data-slot=button-label]]:first-letter:uppercase [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       // A hierarquia é uma escada, e ela desce em peso visual, não só em nome:
@@ -20,8 +20,23 @@ const buttonVariants = cva(
       // peso, e nenhuma tela do app chegou a usá-los. Estado de sucesso e de
       // atenção continua sendo trabalho do `Badge` e do `Alert`.
       variant: {
+        // O primário é uma tecla: corpo chapado, contorno e plinto mais escuros
+        // (`--primary-edge`), um fio de luz de 1px no topo e `shadow-xs` por
+        // fora. O plinto é sombra **interna**, então a caixa continua com a
+        // altura do degrau e alinhada ao `Input` do lado.
+        //
+        // Cursor e toque escurecem por token (`--primary-hover`), não por alfa:
+        // `bg-primary/90` clareava num tema e escurecia no outro. Ao apertar a
+        // tecla afunda — o plinto e a sombra somem e entra uma sombra interna
+        // no topo —, e enviando (`aria-busy`) ela fica afundada com opacidade
+        // cheia, para "salvando" não ler como "desabilitado". Os estados de
+        // envio vão sob `aria-busy:disabled:` porque `disabled:` e `aria-busy:`
+        // empatam em especificidade, e juntos vencem.
+        //
+        // Não é vidro, e não deve virar: a luz clara no corpo ou na borda foi
+        // reprovada quatro vezes (a lápide está em `lib/glass-classes.ts`).
         primary:
-          "border-primary bg-primary text-primary-foreground hover:border-primary/90 hover:bg-primary/90 [a]:hover:bg-primary/90",
+          "border-primary-edge bg-primary text-primary-foreground shadow-(--primary-shadow-value) hover:bg-primary-hover active:bg-primary-hover aria-expanded:bg-primary-hover active:shadow-(--primary-shadow-pressed-value) aria-busy:disabled:shadow-(--primary-shadow-pressed-value) aria-busy:disabled:opacity-100 disabled:shadow-none",
         // Sem borda visível — e sem o anel vazado que havia antes. O culpado
         // não era a borda transparente da base, era o `bg-clip-padding` que a
         // acompanha: ele recortava o preenchimento na caixa de padding, então o
