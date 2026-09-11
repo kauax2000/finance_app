@@ -310,6 +310,11 @@ tema.
 
 ### Required primitives for new screens
 
+- **A barra do topo da janela**: [`TopBar`](src/components/ui/top-bar.tsx) —
+  a do app e a do catálogo são ela. Não escreva `<header className="sticky …">`
+  nem `backdrop-blur` numa barra: `position`, `size`, `surface` e `gutter`
+  cobrem as duas contagens, e a altura já contém o fio e a área segura. Ver a
+  rodada 80.
 - **Page chrome**: [`PageHeader`](src/components/ui/page-header.tsx) +
   [`PageSection`](src/components/ui/page-section.tsx) +
   [`Container`](src/components/ui/container.tsx). Os três têm `size` (`sm` |
@@ -4888,7 +4893,9 @@ pixel de CSS") e do carrossel ("classe montada em runtime não existe na folha")
 - **`AppSidebar` não adota `resizable` nem `variant="inset"`.** As duas são
   decisão de produto. Fica o registro de que o `peer-data-[variant=inset]:*` do
   `SidebarInset` é **código inalcançável** hoje: a casca usa a variante padrão.
-- **O `md:z-10` cru do `AppHeader` fica.** A barra entrou na escala
+- ~~**O `md:z-10` cru do `AppHeader` fica.**~~ Pago na rodada 80: o `TopBar`
+  grudado mora em `--z-sticky`, e a barra lateral e o cabeçalho empatam em 20 —
+  decidido pela ordem no DOM, onde o cabeçalho vem depois. A barra entrou na escala
   (`--z-sticky`), e o cabeçalho é `layout/`, fora do que esta rodada abriu. Hoje
   os dois não se sobrepõem; no dia em que se sobrepuserem, quem ganha é a barra.
 - **`Dialog` e `Popover` não leem a janela da moldura** — só o `EdgePanel`, que é
@@ -9710,6 +9717,185 @@ os dois conjuntos de ícone passou a nomear o caminho inteiro
 `AppAppearanceSettings` saiu junto: um segundo controle de tema, com zero
 importadores, que o backlog já mandava remover. Fica **um** alternador no app.
 
+### Rodada 80 — a barra do topo vira peça: `TopBar`
+
+O design system tinha o topo **de dentro** da tela (`PageHeader`) e o de cada
+superfície (`DialogHeader`, `CardHeader`…), e não tinha a barra do topo da
+**janela**. Mapeado o repositório inteiro, ela existia escrita à mão **duas
+vezes**, e as duas já divergiam:
+
+| Onde | Desktop | Telefone | Altura | Superfície |
+| --- | --- | --- | --- | --- |
+| `AppHeader` (`layout/app-header.tsx`) | `md:sticky md:z-10` (cru) | `fixed z-(--z-header)` + área segura | 64 + fio · 48 recolhida · 56 + fio | opaca; vidro **à mão** só rolado e só no desktop |
+| `DsTopBar` (`designsystem/ds-shell.tsx`) | `sticky z-(--z-sticky)` | a mesma | 56 com o fio dentro | `barSurfaceClassName` |
+
+Mais nada no app é barra de topo: as quatro telas de entrada, o 404, o erro e
+o bootstrap mostram a marca acima do conteúdo, e a ilha do telefone é a barra
+de **baixo**. O `AppHeader` divergia em quatro pontos, todos medidos: borrão de
+8px sem `saturate` e sem guarda de transparência reduzida (a única superfície de
+vidro do repositório fora da receita); `md:z-10` cru; o fio **por fora** da
+altura, então o telefone media 57 + área segura contra os 56 + área segura de
+`--mobile-header-offset` — o conteúdo começava 1px debaixo da barra; e um
+`MobileHeaderBack` que era a segunda cópia do `PageHeaderBack`.
+
+**O nome é `TopBar`**, decisão do dono: `Header` sozinho disputaria a leitura
+com `PageHeader`, `DialogHeader`, `CardHeader` e `HoverCardHeader`, que são
+outra coisa. É **Template** — dispõe onde o voltar, o título e as ações vão, e
+não mostra conteúdo nenhum por si.
+
+**Quatro eixos, e cada um tem as duas barras como contagem.** `size` (`sm` 48 ·
+`md` 56 · **`sm` é o padrão: 48 no telefone e no desktop**, um tamanho só com a
+`Sidebar` aberta ou recolhida — decisão do dono, depois de o telefone passar
+por 56 e por 44; o degrau `auto` saiu, porque passaria a ser a mesma string do
+`sm`, e o `lg` 64 saiu por decisão do dono, sem consumidor);
+`position` (`static` · **`sticky`** · `fixed` · `auto`, que é `fixed` no
+telefone e `sticky` acima, a forma do app); `surface` (**`solid`** · `glass` ·
+`scroll`, que é `solid` até o conteúdo passar por baixo e `glass` depois);
+`gutter` (**`bar`** · `none`, para quem traz o próprio `Container`). As peças
+são `TopBarStart`, `TopBarTitle` (um `<h1>` truncado, com `asChild`),
+`TopBarContent` e `TopBarActions`. **Não há voltar novo**: é o
+`PageHeaderBack`, que já tinha a medida do app.
+
+**A altura é do `<header>`, com o fio e a área segura dentro.** O degrau
+publica `--top-bar-h`, `fixed` publica `--top-bar-safe`, e a caixa é a soma em
+`border-box` — o total no telefone **é** `--mobile-header-offset`, por
+construção, e a asserção 4 do teste compara o degrau `md` com o token.
+
+**`sticky` fica em `--z-sticky`, e não em `--z-header`.** A faixa de sem
+conexão é `fixed md:top-0` em `--z-banner` (30) e cobre a barra do desktop de
+propósito; a 40 a barra a esconderia. `fixed` é o telefone, onde a faixa desce
+para `top-(--mobile-header-offset)`, e ali a barra vai a 40.
+
+**`scroll` acende pelo primeiro ancestral que rola, e não pela janela.** É ele
+que faz o conteúdo passar por baixo de uma barra `sticky`. No app não há
+nenhum, e a resposta continua sendo a janela; dentro de uma região rolável —
+e é o caso de toda moldura do catálogo, cujo `<body>` é `overflow: hidden` — é a
+região. Escutar só a janela deixaria o modo indemonstrável. A escuta é em
+**captura** na janela, e o alvo é decidido a cada evento — a janela ou um
+ancestral da barra; uma lista rolando dentro da tela não acende nada. **A
+primeira versão resolvia o ancestral uma vez, na montagem, e falhou medida**:
+dentro da moldura o CSS chega depois do efeito, o `overflow` ainda lia
+`visible`, e a barra ficava escutando a janela para sempre — `data-scrolled`
+parado em `false` com 184px rolados. A escolha é entre
+duas strings inteiras do `cva` (`rolou ? "glass" : "solid"`), nunca uma classe
+montada.
+
+**As duas barras migraram.** O `DsTopBar` sai idêntico — 56, `z-20`,
+`blur(24px) saturate(1.5)`, medidos antes e depois. O `AppHeader` vira
+`<TopBar position="auto" surface="scroll">` com as duas árvores em
+`contents md:hidden` / `hidden md:contents`, para as peças continuarem filhas
+diretas da linha. **Isto muda pixel em produção**, e é dito: o vidro rolado
+passa de 8px para 24px com `saturate(1.5)` e ganha o guarda; **o telefone
+também acende ao rolar** (era sempre opaco); o desktop vai de `z-10` a `z-20`;
+no desktop a barra fica em **48 fixo** (era 64, e 48 só com a lateral
+recolhida); no telefone ela vai de 56 + fio para **48**, o mesmo do desktop, com o fio e a área segura dentro — e
+`--mobile-header-offset` (`globals.css`) e o recuo do toast no telefone
+(`sonner.tsx`, 48 + 16) descem junto; o título passa a `text-sm font-medium`,
+a receita da barra de exemplo da página da Sidebar, que agora é o `TopBar`; a transição do fundo passa de
+`duration-200` com a curva do navegador para a da barra lateral; e a seta de
+voltar do telefone alinha à calha de 16px (`-ms-2.5` no lugar de `-ml-1`).
+
+**O sino de notificações desceu para `icon-md` (32) e virou outline**, por
+decisão do dono: ele era `icon-lg` (36), fora do padrão da escada, e sólido ao
+lado do sol outline do `ThemeToggle`. Como não existe `16/outline`, é o
+`24/outline` a 16px — contra a regra G, e por isso a segunda exceção nomeada em
+`HEROICON_SET_EXCEPTIONS`, junto com a página do `TopBar`, que o reproduz. O
+sino fica 4px menor na barra do app, nos dois ramos. **E o divisor vertical
+entre o gatilho da barra lateral e o título saiu** — no app e na página —, para
+a barra ficar igual à de exemplo da página da Sidebar, que nunca o teve.
+
+**Todo botão da barra fica no degrau padrão, `md` (32)** — decisão do dono.
+Isso tocou quem mora nela: o `SidebarTrigger` (padrão de `icon-sm` para
+`icon-md`, e o único lugar dele é a barra), o `PageHeaderBack` (`icon-md` no `TopBar` e
+no `PageHeader`, sem prop de tamanho, com recuo `-ms-2` e alvo de toque
+`-inset-2` = 46), o seletor de carteira do telefone (`icon-xl` com `h-9`
+cravado para `icon-md`), o filtro de faturas e o `MonthNav` que as páginas
+publicam como `dateFilter` (prop `inBar`: 32 em qualquer largura, onde o
+`dense` dá 40 no telefone para casar com o trilho segmentado das barras de
+filtro). O gatilho da lateral e o voltar passaram a `-ml-2`/`-ms-2`, para o
+glifo alinhar com a calha de 16px.
+
+**O borrão só respeita o raio da própria barra.** Nas molduras do catálogo a
+barra de vidro rolada saía com os cantos de cima quadrados. O primeiro conserto
+— `clip-path` no raio da moldura — não resolveu, e a medição explicou: o
+`backdrop-filter` ignora o recorte de **todo** ancestral no Chromium
+(`overflow-hidden`, `clip-path` fora e dentro do iframe, máscara, `contain:
+paint`, os quatro testados), e só respeita o `border-radius` do elemento que
+borra. Hoje o `TopBar` arredonda os cantos de cima por `--top-bar-r` (0 por
+padrão), e a moldura publica o raio dela na tela. O `clip-path` saiu. É a
+mesma família da rodada 76, que só não apareceu naquele painel.
+
+**O gatilho da lateral tem ícone próprio.** O `SidebarTrigger` trocou o
+`Bars3Icon` por um desenho do dono — um painel com a coluna da esquerda
+separada —, em [`components/icons/sidebar-toggle-icon.tsx`](src/components/icons/sidebar-toggle-icon.tsx),
+na grade do `16/solid` e com `currentColor`. É o mesmo ícone para abrir e para
+fechar (passou antes por duas setas do Heroicons, uma por estado); quem diz o
+que o clique faz é o `aria-label` — "Recolher barra lateral" / "Abrir barra
+lateral", e no telefone quem decide é o painel (`openMobile`). **É a primeira
+exceção à regra G que não é marca nem movimento**, e ela está nomeada em
+`DRAWN_SVG_FILES`, restrita a esse arquivo.
+
+`sidebar-ladder` #17 e #24 e `glass` #27 passaram a ler `top-bar.tsx`, e a #27
+agora exige que as duas cascas vistam o `TopBar` sem escrever borrão.
+[`top-bar-ladder.test.ts`](src/components/ui/top-bar-ladder.test.ts) tranca
+os degraus, o `auto`, a altura contra o token, as camadas, o vidro, o fio e a
+curva.
+
+### Rodada 81 — o vidro vai para o polegar do alternador
+
+Pedido: uma versão de vidro do `ThemeToggle`, igual à do `Tabs`. O encaixe já
+estava escrito no cabeçalho do componente — ele e uma fileira `solid` são **a
+mesma anatomia**, uma bandeja com um polegar que desliza —, e o polegar já
+vestia as três classes do `tabs-indicator` (`bg-background`, `border-border/80`,
+`shadow-xs`).
+
+**A bandeja não entra, e o número é da rodada 59**: o `Menubar solid` já foi
+medido a 60% e cai de rgb **38 para 27** sobre a página, deixando de ler como
+bandeja. Quem veste é a peça que se move — e ela passa na régua que manteve
+`Avatar` e `ColorTile` depois de o `Button` reprovar quatro vezes: **o polegar
+não é clicável** (o clique é da raiz) e não carrega texto por cima.
+
+**`glass-round`, porque a peça é redonda.** O aro linear põe o pico nos *cantos*
+da caixa, e um círculo não os tem — medido no `Avatar`, 0% do perímetro via o
+pico contra 14% com o cônico.
+
+**O corpo não se move, e é construção e não sorte.** `--glass-tone` é
+`--background` opaco, que é o que o ramo chapado pinta. Medido nos dois temas,
+com os dois polegares lado a lado:
+
+| | tom do vidro | fundo do chapado | caixa | borda |
+| --- | --- | --- | --- | --- |
+| escuro | `oklch(0.145 0 0)` | `oklch(0.145 0 0)` | 34×28 | 1px |
+| claro | `oklch(0.985 0 0)` | `oklch(0.985 0 0)` | 34×28 | 1px |
+
+Zero deslocamento: a armadilha nº 2 da régua (`border: 1px solid transparent`
+encolhe o conteúdo em 2px) não morde porque a borda de 1px **já estava lá**. O
+que entra são as camadas — 6 gradientes contra 0 no chapado —, e o aro sozinho é
+que faz o material, como a rodada 44 mediu.
+
+**O realce voltou a ter produtor, e quem publica é a raiz.** `--glass-sheen`
+precisa **herdar** até o polegar, e é a mesma razão pela qual no `Tabs` quem
+publica é a trilha e não o gatilho. São os quatro degraus de lá — medidos no
+polegar, com ponteiro real: `oklch(1 0 0 / 7%)` no escuro e `oklch(0 0 0 / 5%)`
+no claro. O par `active:` é obrigatório e não é simetria: `hover:` compila
+dentro de `@media (hover: hover)` e não existe no dedo.
+
+**O eixo entra sem neutralizador**, em dois ramos exclusivos — um
+`bg-background` deixado na base morreria calado sob o shorthand `background`. O
+arquivo entrou em `COM_MODO` no `glass.test.ts`, e as duas sabotagens reprovam:
+um `dark:bg-transparent` no ramo de vidro e a tradução removida.
+
+**O primeiro consumidor é o catálogo.** Por decisão do dono, os dois
+alternadores do `ds-shell` — o do cabeçalho e o da folha de navegação —
+passaram a `<ThemeToggle glass />`. Medido no cabeçalho: `data-glass`, tom
+`oklch(0.145 0 0)` (o `--background`), 6 camadas de gradiente contra 0 no
+chapado da página, e a mesma caixa de 34×28 com 1px de borda. **Em produção
+nada muda**: `UserMenu` e `MobileAccountMenu` seguem chapados.
+
+**O que não foi verificado:** o aro não foi visto **ampliado** — o recorte de
+zoom não é suportado no painel do navegador deste ambiente. O que prova a
+superfície é o computado (as 6 camadas, o tom e o realce acima) e as asserções.
+
 ### Backlog de migração
 
 A rodada 01 entregou tokens, componentes, documentação e o auditor, sem migrar
@@ -10253,7 +10439,8 @@ E o que a rodada do `carousel` deixou (com o que a **29b** já fechou marcado):
   conserto de uma linha em cada, e vale para o app inteiro.
 
 - **Os três alvos de dedo por pseudo-elemento da casa medem 42, e dizem 44.**
-  `PageHeaderBack` (36), o × da `AnnouncementBar` (24) e os degraus do
+  `PageHeaderBack` (36, **pago**: hoje 32 com `-inset-2` = 46), o × da
+  `AnnouncementBar` (24) e os degraus do
   `Breadcrumb` (20) — os três somam o `inset` à caixa de **borda** na conta do
   comentário, quando o bloco que contém um absoluto é a caixa de **padding**, e
   os três controles têm 1px de borda. Medido no `::after` do carrossel antes do
@@ -10345,7 +10532,9 @@ E o que a rodada 40 deixou, ao extrair o vidro:
   ganhou `glass-material`, e a premissa passou a ser eixo em vez de nome. O que
   sobra é adoção — **nenhum consumidor usa o modo**, e o candidato honesto é uma
   superfície com conteúdo rolando por baixo, que o pintado nunca serviu.
-- **`app-header.tsx` ainda escreve o material à mão**, em `blur(8px)` sem
+- ~~**`app-header.tsx` ainda escreve o material à mão**~~ — **pago na rodada
+  80**: ele é o `TopBar`, que veste `barSurfaceClassName`. O registro antigo, em
+  `blur(8px)` sem
   vibrância, sem vestir `glass-surface` e sem o `reduced-transparency:` que o
   cabeçalho do catálogo passou a ter. Depois da rodada 51 ele é a **única**
   superfície de vidro do repositório fora da receita — as outras 11 e a folha do
@@ -10477,5 +10666,25 @@ E o que a rodada das ações por linha deixou:
 - **"O valor desce quando há botões" mora na demonstração.** Se as telas
   adotarem o gêmeo, é a primeira coisa que elas vão reescrever — e aí a linha
   do telefone vira candidata a peça.
+
+E o que a rodada do `TopBar` deixou:
+
+- **O título do desktop tem 5 grafias do mesmo `<h1>`** —
+  `truncate text-base font-medium leading-none` em `page-title.tsx` (2×),
+  `breadcrumb.tsx` (2×) e `dashboard-category-subroute-title.tsx`, que é quase
+  uma cópia do `AppBreadcrumbNav`. O `TopBarTitle` do telefone é
+  `font-semibold leading-tight`. As duas medidas continuam valendo, cada uma no
+  seu ramo; decidir uma é decisão de produto.
+- **Os 56px da barra ainda estão cravados em dois lugares fora dela**:
+  `sonner.tsx:63` (área segura + `4.5rem`) e o `top-14` /
+  `h-[calc(100dvh-3.5rem)]` da coluna do catálogo em `ds-shell.tsx`.
+- **A barra do app mora dentro do `<main>`** (o `SidebarInset`), então não é o
+  landmark `banner`. Tirá-la de lá é mudança de estrutura da casca.
+- **As quatro telas de entrada** repetem o mesmo invólucro (`flex min-h-svh
+  flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10` + a coluna
+  `max-w-sm` + a marca). A versão "Marca" do `TopBar` é a forma delas se um dia
+  precisarem de barra; hoje o que falta é um invólucro, não uma barra.
+- **O `Safari` não foi medido.** O vidro rolado e a escuta em captura foram
+  verificados no Chromium do painel.
 
 Reproduza a qualquer momento com `npm run ds:audit`.

@@ -12,7 +12,26 @@ import { useEffect, useState } from "react"
 import { useTheme } from "next-themes"
 import { Switch as SwitchPrimitive } from "radix-ui"
 import { Skeleton } from "@/components/ui/skeleton"
+import { glassRoundSurfaceClassName } from "@/lib/glass-classes"
 import { cn } from "@/lib/utils"
+
+/**
+ * O realce do vidro, publicado pela **raiz** no cursor e no toque.
+ *
+ * São os quatro degraus do `TabsList` (5%/9% no claro, 7%/12% no escuro), e a
+ * direção vira com o tema pela régua do `--secondary-hover`: o realce puxa
+ * sempre na direção do contato — escurece no claro, clareia no escuro.
+ *
+ * O par `active:` é obrigatório e não é simetria: `hover:` compila dentro de
+ * `@media (hover: hover)` e não existe no dedo. Sem ele o controle fica inerte
+ * no telefone, que é a regra H.
+ *
+ * Quem publica é a raiz porque `--glass-sheen` precisa **herdar** até o
+ * polegar, e custom property não atravessa para irmão — é a mesma razão pela
+ * qual, no `Tabs`, quem publica é a trilha e não o gatilho.
+ */
+const GLASS_SHEEN =
+    "hover:[--glass-sheen:oklch(0_0_0_/_5%)] active:[--glass-sheen:oklch(0_0_0_/_9%)] dark:hover:[--glass-sheen:oklch(1_0_0_/_7%)] dark:active:[--glass-sheen:oklch(1_0_0_/_12%)]"
 
 /**
  * Alternador de tema: um switch com as duas faces visíveis.
@@ -76,6 +95,18 @@ import { cn } from "@/lib/utils"
  * com o par `active:` que a regra H exige. O destino continua sendo anunciado
  * antes do clique, pelo mesmo meio que uma aba usa.
  *
+ * ## O vidro é do polegar, e o corpo não se move
+ *
+ * `glass` é opt-in, e a peça que veste é a que **desliza** — o mesmo encaixe do
+ * marcador do `Tabs`, e pelo mesmo motivo: o polegar não é clicável (quem recebe
+ * o clique é a raiz), não carrega texto por cima, e já tinha a borda de 1px em
+ * que o aro mora, então a caixa não anda.
+ *
+ * **O corpo é idêntico ao chapado, por construção**: `--glass-tone` é
+ * `--background` opaco, que é exatamente o que o ramo de cima pinta. O que entra
+ * é o **aro** — e é ele, sozinho, que faz o material, como a rodada 44 mediu.
+ * Nada de contraste se move.
+ *
  * **O que continua divergindo, de propósito.** O `rounded-full` das duas peças,
  * porque um alternador de tema lê como switch por convenção e um trilho
  * segmentado não. O recuo de 2px contra os 4px do `Tabs`, porque lá o gatilho é
@@ -90,9 +121,16 @@ import { cn } from "@/lib/utils"
  */
 export function ThemeToggle({
     className,
+    glass = false,
 }: {
     /** Classes para o contentor do switch. */
     className?: string
+    /**
+     * O polegar vira a peça de vidro. O corpo não se move — `--glass-tone` é
+     * `--background` opaco, que é exatamente o que o ramo chapado pinta —, e o
+     * que entra é o **aro**. Ver o cabeçalho.
+     */
+    glass?: boolean
 }) {
     const { theme, setTheme, resolvedTheme } = useTheme()
     const [mounted, setMounted] = useState(false)
@@ -142,8 +180,10 @@ export function ThemeToggle({
             aria-label="Tema claro"
             data-slot="theme-toggle"
             data-visual={visualIsLight ? "light" : "dark"}
+            data-glass={glass ? "" : undefined}
             className={cn(
                 "group/theme relative inline-flex h-8 w-18 shrink-0 items-center rounded-full bg-muted p-0.5 outline-none transition-colors",
+                glass && GLASS_SHEEN,
                 // O alvo de toque real: a pílula tem 32px de altura, e o
                 // pseudo-elemento a leva aos 44px que um dedo pede sem mexer no
                 // layout de quem a posiciona.
@@ -158,11 +198,28 @@ export function ThemeToggle({
             <SwitchPrimitive.Thumb
                 data-slot="theme-toggle-thumb"
                 className={cn(
-                    // As três classes de superfície são as do `tabs-indicator`
+                    "pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc(50%-0.125rem)] rounded-full shadow-xs",
+                    // A superfície é composta em **dois ramos exclusivos**, e
+                    // não numa base que o vidro desfaz: é a forma do
+                    // `tabs-indicator` e do `ColorTile`, e a razão é a asserção
+                    // 13 de `glass.test.ts` — onde o eixo dispensa o
+                    // neutralizador, ele não pode existir. Um `bg-background`
+                    // deixado na base morreria calado sob o shorthand
+                    // `background` da utility.
+                    //
+                    // No chapado, as três classes são as do `tabs-indicator`
                     // (`bg-background`, `border-border/80`, `shadow-xs`), e o
                     // escuro **não** as sobrescreve — ver o cabeçalho. Só a
                     // forma diverge, porque este é um switch.
-                    "pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc(50%-0.125rem)] rounded-full border border-border/80 bg-background shadow-xs",
+                    //
+                    // `glass-round` porque a peça é redonda: o aro linear põe o
+                    // pico nos **cantos** da caixa, e um círculo não os tem —
+                    // medido no `Avatar`, 0% do perímetro via o pico. A borda de
+                    // 1px que o vidro toma já estava aqui, então a caixa não
+                    // anda.
+                    glass
+                        ? `${glassRoundSurfaceClassName} [--glass-tone:var(--background)]`
+                        : "border border-border/80 bg-background",
                     "transform-gpu will-change-transform transition-transform duration-(--duration-slow) ease-(--ease-emphasized)",
                     "group-data-[visual=light]/theme:translate-x-full",
                 )}

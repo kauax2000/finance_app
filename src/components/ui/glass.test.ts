@@ -577,12 +577,23 @@ describe("a superfície de vidro", () => {
          * por item, um eixo por item deixaria escrever a trilha com um poço de
          * vidro ao lado de um avatar chapado.
          *
-         * O que os quatro têm em comum não é a camada, é a régua: **nenhum
-         * deles é clicável**. No `Tabs` quem recebe o clique é o gatilho; o marcador
-         * é superfície, e fica atrás dele. É a mesma linha que manteve `Avatar`
-         * e `ColorTile` depois de o `Button` reprovar quatro vezes na tela.
+         * O `theme-toggle` entrou pela mesma porta que o `Tabs`: ele e uma
+         * fileira `solid` são a mesma anatomia — uma bandeja com um polegar que
+         * desliza —, e o polegar já vestia as três classes do `tabs-indicator`.
+         *
+         * O que os cinco têm em comum não é a camada, é a régua: **nenhuma das
+         * peças de vidro é clicável**. No `Tabs` quem recebe o clique é o
+         * gatilho e no alternador é a raiz; o polegar é superfície, e fica atrás
+         * dela. É a mesma linha que manteve `Avatar` e `ColorTile` depois de o
+         * `Button` reprovar quatro vezes na tela.
          */
-        const COM_MODO = ["avatar", "color-tile", "tabs", "timeline"]
+        const COM_MODO = [
+            "avatar",
+            "color-tile",
+            "tabs",
+            "theme-toggle",
+            "timeline",
+        ]
 
         // 1. A tradução existe, em qualquer das três formas: tabela semântica,
         //    tabela de identidade, ou `--glass-tone` literal (o `Checkbox`, sob
@@ -744,12 +755,23 @@ describe("a superfície de vidro", () => {
 
         // Os dois consumidores: a extração só é real com dois, e é o que
         // impede a cópia à mão do cabeçalho de voltar.
-        const shell = semComentariosDe("src/app/designsystem/ds-shell.tsx")
+        // Desde a rodada 80 o cabeçalho é o `TopBar`, e as duas barras que o
+        // vestem — a do catálogo e a do app — não escrevem borrão próprio.
+        const topo = semComentariosDe("src/components/ui/top-bar.tsx")
         const menubar = semComentariosDe("src/components/ui/menubar.tsx")
-        expect(shell, "o cabeçalho não veste a régua").toContain("barSurfaceClassName")
-        expect(shell, "a cópia do cabeçalho voltou").not.toContain(
-            "bg-background/95 glass-surface"
-        )
+        expect(topo, "o cabeçalho não veste a régua").toContain("barSurfaceClassName")
+        expect(topo, "o cabeçalho escreve borrão próprio").not.toMatch(/\bbackdrop-blur/)
+        for (const casca of [
+            "src/app/designsystem/ds-shell.tsx",
+            "src/components/layout/app-header.tsx",
+        ]) {
+            const fonte = semComentariosDe(casca)
+            expect(fonte, `${casca} não veste o TopBar`).toContain("<TopBar")
+            expect(fonte, `${casca} escreve borrão próprio`).not.toMatch(/\bbackdrop-blur/)
+            expect(fonte, `a cópia da régua voltou em ${casca}`).not.toContain(
+                "bg-background/95 glass-surface"
+            )
+        }
         expect(menubar, "a fileira não veste a régua").toContain("barSurfaceClassName")
         expect(menubar, "a fileira escreve borrão próprio").not.toMatch(/\bbackdrop-blur/)
 

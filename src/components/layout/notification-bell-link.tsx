@@ -45,13 +45,15 @@ export function NotificationBellLink() {
         <Button
             type="button"
             variant="tertiary"
-            size="icon-lg"
+            size="icon-md"
             className="relative"
             aria-label="Notificações"
             aria-expanded={isOpen}
             onClick={() => toggle()}
         >
-            <BellIcon className="h-4 w-4" />
+            {/* `24/outline` a 16px, por decisão: não existe `16/outline`, e o
+                traço é o do sol do `ThemeToggle`. Exceção nomeada no auditor. */}
+            <BellIcon className="size-4" />
             {unreadCount > 0 ? (
                 <span
                     className={cn(

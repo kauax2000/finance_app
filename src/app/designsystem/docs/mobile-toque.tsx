@@ -5,7 +5,7 @@ import { DocNote, DocSection, Usage } from "../ds-doc"
 import { Group, Spec, Stack } from "../ds-kit"
 
 const SAFE_AREA = [
-  ["--mobile-header-offset", "3,5rem + safe-area topo", "quanto o conteúdo desce sob o cabeçalho fixo"],
+  ["--mobile-header-offset", "3rem + safe-area topo", "quanto o conteúdo desce sob o cabeçalho fixo"],
   ["--mobile-nav-island-height", "3,5rem", "a altura da ilha de navegação"],
   ["--mobile-nav-island-margin", "1rem", "a folga entre a ilha e a borda"],
   ["--mobile-bottom-pad", "ilha + folga + safe-area", "quanto o conteúdo precisa reservar embaixo"],

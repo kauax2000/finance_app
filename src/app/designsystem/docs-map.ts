@@ -85,6 +85,7 @@ import ToggleDoc from "./docs/toggle"
 import ToggleGroupDoc from "./docs/toggle-group"
 import ToolbarDoc from "./docs/toolbar"
 import TooltipDoc from "./docs/tooltip"
+import TopBarDoc from "./docs/top-bar"
 import TypographyDoc from "./docs/typography"
 
 export const DOCS: Record<string, ComponentType> = {
@@ -171,5 +172,6 @@ export const DOCS: Record<string, ComponentType> = {
   "toggle-group": ToggleGroupDoc,
   "toolbar": ToolbarDoc,
   "tooltip": TooltipDoc,
+  "top-bar": TopBarDoc,
   "typography": TypographyDoc,
 }

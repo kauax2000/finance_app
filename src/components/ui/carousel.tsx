@@ -319,10 +319,10 @@ const CONTROL_POSITION = {
  * Por isso o degrau é `2.5`: 26 + 2×10 = **46**, e 44 é piso, não teto. Os 2px
  * a mais não custam nada num controle sem vizinho.
  *
- * As três ocorrências que esta casa já tinha carregam o mesmo desconto e
- * afirmam 44 nos comentários: `PageHeaderBack` (36 → 42), o × da
- * `AnnouncementBar` (24 → 42) e os degraus do `Breadcrumb` (20 → 42). Fica no
- * backlog com o número; consertá-las é rodada delas.
+ * As três ocorrências que esta casa já tinha carregavam o mesmo desconto e
+ * afirmavam 44 nos comentários. O `PageHeaderBack` foi pago (32 com
+ * `-inset-2` → 46); o × da `AnnouncementBar` (24 → 42) e os degraus do
+ * `Breadcrumb` (20 → 42) ficam no backlog com o número.
  */
 const CONTROL_TOUCH_TARGET =
   "pointer-coarse:after:absolute pointer-coarse:after:-inset-2.5 pointer-coarse:after:content-['']"

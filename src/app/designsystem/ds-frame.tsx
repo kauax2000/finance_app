@@ -208,6 +208,21 @@ function ViewportFrame({
 }: ViewportFrameProps) {
   const [documento, setDocumento] = React.useState<Document | null>(null)
   const [vestido, setVestido] = React.useState(false)
+  const moldura = React.useRef<HTMLDivElement>(null)
+  const [raio, setRaio] = React.useState<string>()
+
+  // O raio da moldura desce para a tela como `--top-bar-r`. O borrão do
+  // `backdrop-filter` ignora o recorte de todo ancestral — `overflow-hidden`,
+  // `clip-path` aqui fora, máscara, e `clip-path` ou `contain: paint` lá
+  // dentro, os quatro medidos —, e só respeita o raio do próprio elemento: a
+  // barra de vidro do `TopBar` rolado saía com os cantos de cima quadrados.
+  // Lido do computado para servir o `rounded-lg` do desktop e o `rounded-3xl`
+  // do telefone sem ninguém repetir o número. Vai na tela, e não no `<html>`
+  // de dentro, porque `espelharRaiz` reescreve o `style` dele a cada troca de
+  // tema.
+  React.useEffect(() => {
+    if (moldura.current) setRaio(getComputedStyle(moldura.current).borderRadius)
+  }, [className])
 
   const montar = React.useCallback((iframe: HTMLIFrameElement | null) => {
     if (!iframe) return
@@ -249,6 +264,7 @@ function ViewportFrame({
 
   return (
     <div
+      ref={moldura}
       data-slot="viewport-frame"
       // O `ring` é a aresta do aparelho, e ele entrou por medição: a tela é
       // `bg-background` dentro de um `Preview` `bg-card`, e no tema escuro isso
@@ -283,6 +299,9 @@ function ViewportFrame({
               <div
                 data-slot="viewport-frame-screen"
                 className={cn("relative flex size-full flex-col", screenClassName)}
+                style={
+                  raio ? ({ "--top-bar-r": raio } as React.CSSProperties) : undefined
+                }
               >
                 {children}
               </div>

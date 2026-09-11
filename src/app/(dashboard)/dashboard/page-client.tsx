@@ -130,7 +130,7 @@ export default function DashboardPageClient() {
             <MonthNav
                 budgetMonthYm={d.calendarYm}
                 onBudgetMonthYmChange={d.setCalendarYm}
-                dense
+                inBar
             />
         ),
         [d.calendarYm, d.setCalendarYm],

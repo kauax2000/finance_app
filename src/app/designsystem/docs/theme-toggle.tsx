@@ -37,8 +37,22 @@ export default function ThemeToggleDoc() {
         </div>
       </DocSection>
 
+      <DocSection
+        title="Vidro"
+        description="O polegar vira a peça de vidro, como o marcador do Tabs. O corpo é o mesmo — o que entra é o aro —, e o realce chega no cursor e no toque."
+        code={`<ThemeToggle glass />`}
+      >
+        <ThemeToggle glass />
+      </DocSection>
+
       <PropsTable
         rows={[
+          {
+            prop: "glass",
+            type: "boolean",
+            description:
+              "O polegar veste a superfície de vidro (glass-round, porque é redondo). O corpo não muda: --glass-tone é --background opaco, a mesma cor que o polegar chapado pinta.",
+          },
           {
             prop: "className",
             type: "string",
@@ -47,6 +61,14 @@ export default function ThemeToggleDoc() {
           },
         ]}
       />
+
+      <DocNote title="Quem veste o vidro é o polegar, e não o trilho">
+        Uma bandeja de vidro já foi medida e reprovada no <code>Menubar</code>:
+        a 60% ela cai de 38 para 27 sobre a página e deixa de ler como bandeja.
+        O polegar é o encaixe — ele não é clicável (o clique é da raiz), não
+        carrega texto por cima, e a borda de 1px em que o aro mora já estava
+        lá, então a caixa não anda um pixel.
+      </DocNote>
 
       <DocNote title="Duas faces, e não um Switch nu">
         Num switch nu, &ldquo;marcado&rdquo; não diz se o escuro é o estado ou

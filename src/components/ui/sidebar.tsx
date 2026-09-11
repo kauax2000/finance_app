@@ -1,10 +1,10 @@
 "use client"
 
-import { Bars3Icon } from "@heroicons/react/16/solid"
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
+import { SidebarToggleIcon } from "@/components/icons/sidebar-toggle-icon"
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
   ResizableHandle,
@@ -494,7 +494,11 @@ function SidebarTrigger({
   onClick,
   ...props
 }: React.ComponentProps<typeof Button>) {
-  const { toggleSidebar } = useSidebar()
+  const { toggleSidebar, state, isMobile, openMobile } = useSidebar()
+  // O rótulo diz o que o clique vai fazer: recolher quando a barra está aberta,
+  // abrir quando está fechada. No telefone quem conta é o painel. O ícone é um
+  // só nos dois estados — o desenho próprio da barra lateral.
+  const aberta = isMobile ? openMobile : state === "expanded"
 
   return (
     <Button
@@ -502,8 +506,9 @@ function SidebarTrigger({
       data-slot="sidebar-trigger"
       type="button"
       variant="tertiary"
-      size="icon-sm"
-      aria-label="Alternar barra lateral"
+      // O degrau padrão: ele mora no `TopBar`, onde todo botão é `md`.
+      size="icon-md"
+      aria-label={aberta ? "Recolher barra lateral" : "Abrir barra lateral"}
       className={cn(className)}
       onClick={(event) => {
         onClick?.(event)
@@ -511,7 +516,7 @@ function SidebarTrigger({
       }}
       {...props}
     >
-      <Bars3Icon />
+      <SidebarToggleIcon />
     </Button>
   )
 }

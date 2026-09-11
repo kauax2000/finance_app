@@ -60,7 +60,8 @@ export function Toaster({ ...props }: ToasterProps) {
       className="toaster group z-(--z-toast)"
       offset="1rem"
       mobileOffset={{
-        top: "calc(env(safe-area-inset-top, 0px) + 4.5rem)",
+        // A barra do topo (48) mais 16 de respiro.
+        top: "calc(env(safe-area-inset-top, 0px) + 4rem)",
       }}
       icons={{
         success: <CheckCircleIcon aria-hidden />,

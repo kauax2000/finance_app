@@ -155,6 +155,7 @@ describe("taxonomia", () => {
       "page-header",
       "page-section",
       "table-panel",
+      "top-bar",
     ])
   })
 

@@ -61,8 +61,9 @@ const ui = (name: string) => `@/components/ui/${name}`
  * | `Templates` | objetos de nível de página, que dispõem componentes num layout | o que estrutura a página, e não o que ela contém |
  *
  * `Container` é **Átomo** e não Template: ele é indivisível — uma `div` com
- * largura —, e não dispõe nada. Quem dispõe é o `PageHeader` e o
- * `PageSection`, e por isso os dois são Templates.
+ * largura —, e não dispõe nada. Quem dispõe é o `PageHeader`, o
+ * `PageSection` e o `TopBar` — a barra do topo da janela —, e por isso são
+ * Templates.
  *
  * **Não existe uma sexta gaveta.** Havia `Padrões` — sete páginas que "não
  * são componente" —, e medido, quase todo o conteúdo delas já estava nas
@@ -276,6 +277,11 @@ const LAYER: Record<string, Layer> = {
    * a tabela e o rodapé de paginação vão.
    */
   "table-panel": "Templates",
+  /**
+   * A barra do topo da janela. Ela não mostra conteúdo nenhum por si — dispõe
+   * onde o voltar, o título e as ações vão, e fica parada enquanto a tela rola.
+   */
+  "top-bar": "Templates",
 }
 
 function categoryForSlug(slug: string): Category {
@@ -470,6 +476,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("page-header", "Page Header", "O topo de uma tela: trilha, título, fatos e a ação principal.", ui("page-header"), "PageHeader, PageHeaderTitleRow, PageHeaderTitle, PageHeaderDescription, PageHeaderEyebrow, PageHeaderMeta, PageHeaderActions"),
   entry("page-section", "Page Section", "O bloco que dá ritmo vertical a uma tela, com título e ação.", ui("page-section"), "PageSection, PageSectionHeader, PageSectionTitle, PageSectionDescription"),
   entry("table-panel", "Table Panel", "A tabela como o app a mostra: moldura, barra de ações e rodapé de paginação.", ui("table-panel"), "TablePanel, TablePanelToolbar, TablePanelFooter"),
+  entry("top-bar", "Top Bar", "A barra do topo da janela: voltar ou marca, título e ações — fixa no telefone, grudada no desktop.", ui("top-bar"), "TopBar, TopBarStart, TopBarTitle, TopBarContent, TopBarActions"),
 ]
 
 export function getEntry(slug: string): RegistryEntry | undefined {

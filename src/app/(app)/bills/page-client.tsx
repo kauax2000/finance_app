@@ -196,8 +196,8 @@ export default function BillsPageClient() {
             <Button
                 type="button"
                 variant="outline"
-                size="icon-lg"
-                className="relative size-9 shrink-0"
+                size="icon-md"
+                className="relative shrink-0"
                 disabled={!billsHasTableEarly}
                 onClick={() => setMobileFiltersSheetOpen(true)}
                 aria-label="Filtros e ordenação"

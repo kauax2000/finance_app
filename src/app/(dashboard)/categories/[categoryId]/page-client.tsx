@@ -102,7 +102,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             <MonthNav
                 budgetMonthYm={yearMonth}
                 onBudgetMonthYmChange={handleMonthChange}
-                dense
+                inBar
             />
         ),
         [yearMonth, handleMonthChange],

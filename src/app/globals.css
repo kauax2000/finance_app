@@ -587,8 +587,9 @@
      é ficção. */
   --scroll-fade-blur-r: 2px;
 
-  /* Mobile shell: fixed header (h-14 = 3.5rem) + safe-area (see SidebarAppShell, MobileBottomNav) */
-  --mobile-header-offset: calc(3.5rem + env(safe-area-inset-top, 0px));
+  /* Mobile shell: o TopBar fixo (48 = 3rem, o mesmo do desktop) + área segura.
+     Tem de ser a altura do degrau padrão do TopBar. */
+  --mobile-header-offset: calc(3rem + env(safe-area-inset-top, 0px));
   /* Floating island nav (see MobileNavIsland) */
   --mobile-glass-bg: oklch(0.985 0 0 / 55%);
   --mobile-glass-border: oklch(1 0 0 / 10%);

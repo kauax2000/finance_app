@@ -176,11 +176,11 @@ function PageHeaderTitleRow({
       {...props}
     >
       {back ? (
-        // O `-me-2` não é compensação de gosto: o `gap` é a distância mínima
-        // entre **caixas**, e a caixa do voltar é 10px mais larga que o glifo
-        // desse lado. Devolvendo 8 deles, a distância seta→título cai nos
+        // O `-me-1.5` não é compensação de gosto: o `gap` é a distância mínima
+        // entre **caixas**, e a caixa do voltar (32) é 8px mais larga que o
+        // glifo desse lado. Devolvendo 6 deles, a distância seta→título cai nos
         // mesmos 18px que o cabeçalho do app renderiza.
-        <span className="-me-2 flex h-(--page-title-line) shrink-0 items-center self-start">
+        <span className="-me-1.5 flex h-(--page-title-line) shrink-0 items-center self-start">
           <PageHeaderBack href={back} label={backLabel} />
         </span>
       ) : null}
@@ -292,14 +292,14 @@ function PageHeaderActions({
  * O voltar compacto.
  *
  * Ele era a segunda cópia de um controle que o app já tinha: `MobileHeaderBack`
- * em `app-header.tsx` renderiza `icon-lg` (36) com `-ml-1`, e este renderizava
- * `icon-md` (32) com `-ml-2`. Duas medidas e dois recuos para o mesmo botão.
- * Ficou a medida do app.
+ * em `app-header.tsx`. Desde a rodada 80 a cópia saiu — o voltar do `TopBar` no
+ * telefone é este —, e ele mede `icon-md` (32) nos dois lugares, o degrau
+ * padrão da escada. Já teve `icon-lg` (36) no cabeçalho de página e um `size`
+ * para escolher; com uma medida só, o prop saiu.
  *
- * O recuo é `-ms-2.5` porque o ícone tem 16 dentro de uma caixa de 36: 10px de
+ * O recuo é `-ms-2` porque o ícone tem 16 dentro de uma caixa de 32: 8px de
  * folga de cada lado. Puxando exatamente isso, **o ícone alinha com o texto** e
- * é a superfície de realce que avança para fora da margem — a mesma conta e o
- * mesmo número do par anterior/próximo do catálogo.
+ * é a superfície de realce que avança para fora da margem.
  *
  * O `group-active:bg-accent` que ele carregava não tinha `group` ancestral
  * nenhum, e o rótulo era cravado.
@@ -316,14 +316,14 @@ function PageHeaderBack({
   return (
     <Button
       variant="tertiary"
-      size="icon-lg"
+      size="icon-md"
       className={cn(
-        "-ms-2.5 relative shrink-0 active:bg-accent",
-        // 36 é a medida do controle, e 44 é a do dedo. O alvo cresce por
-        // pseudo-elemento porque crescer de verdade mudaria a caixa que
-        // `--page-title-line` centraliza — a mesma saída do × da
-        // `AnnouncementBar` e dos degraus do `Breadcrumb`.
-        "pointer-coarse:after:absolute pointer-coarse:after:-inset-1 pointer-coarse:after:content-['']",
+        "relative -ms-2 shrink-0 active:bg-accent",
+        // O alvo cresce por pseudo-elemento porque crescer de verdade mudaria a
+        // caixa que `--page-title-line` centraliza — a mesma saída do × da
+        // `AnnouncementBar` e dos degraus do `Breadcrumb`. A base do absoluto é
+        // a caixa de padding (a borda de 1px sai): 30 + 16 = 46.
+        "pointer-coarse:after:absolute pointer-coarse:after:-inset-2 pointer-coarse:after:content-['']",
         className
       )}
       asChild

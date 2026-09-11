@@ -99,6 +99,11 @@ const FOREIGN_ICON_PACKAGES =
  * A lista é curta de propósito. Se um arquivo novo quiser entrar aqui, a
  * pergunta é se ele desenha uma marca ou um movimento; qualquer outra coisa é
  * um ícone, e ícone vem do Heroicons.
+ *
+ * A única exceção a essa pergunta é `sidebar-toggle-icon`, por decisão do
+ * dono: o Heroicons não tem o pictograma de barra lateral, e o gatilho dela
+ * usa um desenho próprio na grade do `16/solid`. É um arquivo só, com um
+ * ícone só — o próximo ícone próprio pede a mesma decisão explícita.
  */
 const DRAWN_SVG_FILES = [
   "app-logo",
@@ -106,6 +111,7 @@ const DRAWN_SVG_FILES = [
   "credit-card-brand-logos",
   "registered-credit-card-face",
   "spinner",
+  "sidebar-toggle-icon",
 ]
 
 /**
@@ -148,8 +154,16 @@ const SKIP_DIRS = new Set(["node_modules", ".next", ".git"])
  * `theme-toggle` faz um crossfade `outline` ↔ `solid` a 16px, e **não
  * existe `16/outline`** — os conjuntos micro e mini são só sólidos. É a mesma
  * classe de lacuna do círculo do `Spinner`, e a saída é a mesma: nomear.
+ *
+ * O sino de notificações entrou na rodada 80, por decisão do dono: `24/outline`
+ * a 16px num botão `icon-md`, com o traço do sol do alternador ao lado dele. A
+ * página do `TopBar` o reproduz, e por isso vem junto.
  */
-const HEROICON_SET_EXCEPTIONS = ["components/ui/theme-toggle"]
+const HEROICON_SET_EXCEPTIONS = [
+  "components/ui/theme-toggle",
+  "components/layout/notification-bell-link",
+  "designsystem/docs/top-bar",
+]
 
 /**
  * Onde fio **mais** tinta não é uma tira mal desenhada, e sim a emenda entre

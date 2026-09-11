@@ -152,7 +152,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                     <MonthNav
                         budgetMonthYm={budgetMonthYm}
                         onBudgetMonthYmChange={handleBudgetMonthYmChange}
-                        dense
+                        inBar
                     />
                 ) : undefined,
         }),

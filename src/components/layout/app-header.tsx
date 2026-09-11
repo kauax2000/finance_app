@@ -1,11 +1,15 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import { ArrowLeftIcon } from "@heroicons/react/16/solid"
 import { NotificationBellLink } from "@/components/layout/notification-bell-link"
-import { Separator } from "@/components/ui/separator"
+import { PageHeaderBack } from "@/components/ui/page-header"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import {
+    TopBar,
+    TopBarActions,
+    TopBarContent,
+    TopBarStart,
+    TopBarTitle,
+} from "@/components/ui/top-bar"
 import {
     AppBreadcrumbNav,
     resolveAppSubPageMeta,
@@ -18,21 +22,6 @@ import {
     DASHBOARD_PAGE_TITLES,
     ROUTES,
 } from "@/config/navigation"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-
-const headerBaseClassName =
-    // O fio é da variante da barra, e não desta tela: no `floating` a placa
-    // não tem `border-r` para ele encostar, e ele ficaria pendurado a 8px de
-    // nada. O `SidebarInset` publica a largura; o `1px` é o padrão de quem
-    // renderiza fora de um.
-    "w-full min-w-0 shrink-0 border-b border-b-[length:var(--sidebar-inset-rule,1px)] border-border max-md:fixed max-md:inset-x-0 max-md:top-0 max-md:z-(--z-header) max-md:pt-[env(safe-area-inset-top,0px)] md:sticky md:top-0 md:z-10 transition-[background-color] duration-200"
-
-const headerRowClassName =
-    // A duração e a curva são as da barra: ele encolhe **porque** ela
-    // recolheu, e duas curvas diferentes no mesmo gesto leem como duas
-    // animações que por acaso começaram juntas.
-    "flex h-16 max-md:h-14 w-full min-w-0 items-center gap-0 transition-[height] duration-(--duration-slow) ease-(--ease-emphasized) md:group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"
 
 function defaultMobileTitle(
     pathname: string,
@@ -68,36 +57,22 @@ function defaultMobileBackHref(pathname: string): string | undefined {
     return undefined
 }
 
-function MobileHeaderBack({ href }: { href: string }) {
-    return (
-        <Button
-            variant="tertiary"
-            size="icon-lg"
-            className="-ml-1 size-9 shrink-0 active:bg-accent group-active:bg-accent"
-            asChild
-        >
-            <Link href={href} aria-label="Voltar">
-                <ArrowLeftIcon className="h-4 w-4" aria-hidden />
-            </Link>
-        </Button>
-    )
-}
-
 type AppHeaderProps = {
     pathname: string
     titleMode: "dashboard" | "app"
 }
 
+/**
+ * A barra do app é o `TopBar` na forma da casca: fixa no telefone com a área
+ * segura, grudada no desktop, 48 no telefone e no desktop — aberta ou
+ * recolhida a barra lateral —, e
+ * vidro depois que a tela rola.
+ *
+ * As duas árvores são `contents`: o que decide a linha é o `TopBar`, e as peças
+ * continuam filhas diretas dele nos dois ramos.
+ */
 export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
-    const [scrolled, setScrolled] = useState(false)
     const chromeSlot = usePageChromeState()
-
-    useEffect(() => {
-        const onScroll = () => setScrolled(window.scrollY > 0)
-        onScroll()
-        window.addEventListener("scroll", onScroll, { passive: true })
-        return () => window.removeEventListener("scroll", onScroll)
-    }, [])
 
     const mobileTitle =
         chromeSlot?.title ?? defaultMobileTitle(pathname, titleMode)
@@ -105,61 +80,37 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
         chromeSlot?.backHref ?? defaultMobileBackHref(pathname)
 
     return (
-        <header
-            className={cn(
-                headerBaseClassName,
-                "flex flex-col bg-background",
-                scrolled &&
-                    "md:bg-background/95 md:backdrop-blur md:supports-[backdrop-filter]:bg-background/60",
-            )}
-        >
-            <div
-                className={cn(
-                    headerRowClassName,
-                    "flex w-full min-w-0 items-center gap-0 px-4",
-                )}
-            >
-                {/* Mobile: carteira + voltar + título + notificações + filtro */}
-                <div className="flex min-w-0 flex-1 items-center gap-2 md:hidden">
+        <TopBar position="auto" surface="scroll">
+            <div className="contents md:hidden">
+                <TopBarStart>
                     {mobileBackHref ? (
-                        <MobileHeaderBack href={mobileBackHref} />
+                        <PageHeaderBack href={mobileBackHref} />
                     ) : (
                         <WorkspaceSwitcher appearance="header" />
                     )}
-                    <h1 className="min-w-0 flex-1 truncate text-base font-semibold leading-tight text-foreground">
-                        {mobileTitle}
-                    </h1>
-                    <div className="ml-auto flex shrink-0 items-center gap-1">
-                        {chromeSlot?.dateFilter ? (
-                            <div className="flex shrink-0 items-center">
-                                {chromeSlot.dateFilter}
-                            </div>
-                        ) : null}
-                        <NotificationBellLink />
-                    </div>
-                </div>
-
-                {/* Desktop chrome */}
-                <div className="hidden min-w-0 flex-1 items-center gap-2 md:flex">
-                    <div className="flex shrink-0 items-center gap-2">
-                        <SidebarTrigger className="-ml-1" />
-                        {/* O `h-7` finalmente vale: enquanto as medidas da
-                            base eram classes com variante, ele não vencia e a
-                            régua saía com os 16px do padrão. */}
-                        <Separator orientation="vertical" className="h-7" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                        {titleMode === "dashboard" ? (
-                            <DashboardPageTitle pathname={pathname} />
-                        ) : (
-                            <AppBreadcrumbNav pathname={pathname} />
-                        )}
-                    </div>
-                    <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-                        <NotificationBellLink />
-                    </div>
-                </div>
+                </TopBarStart>
+                <TopBarTitle>{mobileTitle}</TopBarTitle>
+                <TopBarActions>
+                    {chromeSlot?.dateFilter}
+                    <NotificationBellLink />
+                </TopBarActions>
             </div>
-        </header>
+
+            <div className="hidden md:contents">
+                <TopBarStart>
+                    <SidebarTrigger className="-ml-2" />
+                </TopBarStart>
+                <TopBarContent>
+                    {titleMode === "dashboard" ? (
+                        <DashboardPageTitle pathname={pathname} />
+                    ) : (
+                        <AppBreadcrumbNav pathname={pathname} />
+                    )}
+                </TopBarContent>
+                <TopBarActions>
+                    <NotificationBellLink />
+                </TopBarActions>
+            </div>
+        </TopBar>
     )
 }

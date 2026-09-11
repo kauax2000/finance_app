@@ -35,11 +35,11 @@ export function WorkspaceSwitcher({
                 <Button
                     type="button"
                     variant="tertiary"
-                    size="icon-xl"
+                    size="icon-md"
                     aria-haspopup="menu"
                     aria-label="Trocar carteira"
                     className={cn(
-                        "h-9 w-auto min-w-9 shrink-0 gap-1.5 px-1.5 font-normal",
+                        "w-auto min-w-8 shrink-0 gap-1.5 px-1 font-normal",
                         "hover:bg-accent/80 active:bg-accent group-active:bg-accent",
                     )}
                 >
