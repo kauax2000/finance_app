@@ -16,7 +16,7 @@ import { buttonVariants } from "./button"
  * `toggle.tsx`, `tabs.tsx`, `menubar.tsx`, `item.tsx` e `calendar.tsx`; o
  * conserto passou a morar na origem.
  *
- * E o par escuro entra junto pela aritmética que o `AppThemeToggle` já pagou:
+ * E o par escuro entra junto pela aritmética que o `ThemeToggle` já pagou:
  * `&:active` e `&:is(.dark *)` empatam em especificidade, e o `dark:` é emitido
  * depois — sem `dark:active:`, o realce de toque perderia para o de tema, calado
  * e só num tema.

@@ -150,7 +150,7 @@ function AnnouncementBar({
             // medido: `.cls:hover:is(.dark *)` é (0,3,0) contra os (0,2,0) de
             // `.cls:hover`, então o `dark:hover:bg-muted/50` do `tertiary`
             // vencia estes 15% **no tema escuro** — calado, e só num tema. É a
-            // mesma armadilha que o `AppThemeToggle` já pagou.
+            // mesma armadilha que o `ThemeToggle` já pagou.
             "hover:border-current/25 hover:bg-current/15 dark:hover:bg-current/15",
             "active:border-current/25 active:bg-current/15",
             // O alvo cresce por pseudo-elemento, e não por medida: aumentar a

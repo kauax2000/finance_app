@@ -32,7 +32,7 @@ import {
     MOBILE_GLASS_MENU_ROW_CLASSNAME,
     MOBILE_GLASS_MENU_SEPARATOR_CLASSNAME,
 } from "@/components/layout/mobile-glass-surface"
-import { AppThemeToggle } from "@/components/settings/app-theme-toggle"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { cn } from "@/lib/utils"
 
 export type MobileAccountMenuProps = {
@@ -203,7 +203,7 @@ export function MobileAccountMenu({ children }: MobileAccountMenuProps) {
                                 onPointerDown={(e) => e.stopPropagation()}
                             >
                                 <span className="text-sm text-foreground">Tema</span>
-                                <AppThemeToggle className="ml-auto shrink-0" />
+                                <ThemeToggle className="ml-auto shrink-0" />
                             </div>
                         </div>
 

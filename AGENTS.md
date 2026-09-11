@@ -356,6 +356,7 @@ tema.
   três faixas do `Card` e do `Dialog`. Escolha-o quando a lista é longa e pede
   busca; `Select` quando é curta, `Combobox` quando cabe numa palavra.
 - **Listas e detalhe**: [`Item`](src/components/ui/item.tsx) para linha de lista (e para o que a `Table` vira no telefone), [`DescriptionList`](src/components/ui/description-list.tsx) para pares termo/valor, [`Timeline`](src/components/ui/timeline.tsx) para histórico, [`Toolbar`](src/components/ui/toolbar.tsx) para a linha de filtros e ações.
+- **Tema**: [`ThemeToggle`](src/components/ui/theme-toggle.tsx) — o único alternador claro/escuro. Não escreva outro controle com `setTheme`.
 - **Carregando**: [`Skeleton`](src/components/ui/skeleton.tsx) para uma tela esperando dado; [`Spinner`](src/components/ui/spinner.tsx) só para ação curta sem fim conhecido.
 - **Borda de região rolável**: a dissolução é uma **primitiva do sistema**, não
   um efeito da paleta de comandos. Ela mora em três camadas — as `@utility`
@@ -9689,6 +9690,25 @@ o painel do navegador não segura o clique —, e o que o prova são as regras
 `:active` e `[aria-busy]:disabled` lidas no CSS emitido. O desvio de centragem
 do rótulo é de **0,5px** em todos os degraus (a borda do topo contra borda mais
 plinto na base), e ficou sem compensação.
+
+### Rodada 79 — o alternador de tema entra no design system
+
+O `AppThemeToggle` já era o controle certo — `Switch` do Radix com as duas
+faces, gate de montagem com `Skeleton`, deslize adiado dois quadros por causa do
+`disableTransitionOnChange` —, mas morava em `src/components/settings/`, fora do
+registry e sem página. O catálogo o usava no próprio topo e o citava em quatro
+notas sem nunca documentá-lo.
+
+Ele foi **promovido sem mudar um pixel**: `src/components/ui/theme-toggle.tsx`,
+export `ThemeToggle`, `data-slot="theme-toggle"`. Sem alias — são três
+consumidores (`user-menu`, `mobile-account-menu`, `ds-shell`), migrados na mesma
+mudança. Camada **Átomo**: um controle, com trilho, polegar e faces como anatomia
+do `Switch`, e o único import de `ui/` é o `Skeleton`. A exceção do auditor para
+os dois conjuntos de ícone passou a nomear o caminho inteiro
+(`components/ui/theme-toggle`), para a página de docs não herdá-la.
+
+`AppAppearanceSettings` saiu junto: um segundo controle de tema, com zero
+importadores, que o backlog já mandava remover. Fica **um** alternador no app.
 
 ### Backlog de migração
 

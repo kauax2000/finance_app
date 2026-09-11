@@ -227,7 +227,7 @@ function AlertActions({ className, ...props }: React.ComponentProps<"div">) {
  * **O `dark:hover:` é obrigatório, e não redundante.** `&:hover` e
  * `&:is(.dark *)` empatam em especificidade, e o `dark:` é emitido depois — sem
  * esta linha, o `dark:hover:bg-muted/50` do `tertiary` venceria o realce tonal
- * no tema escuro, calado e só num tema. É a armadilha que o `AppThemeToggle`
+ * no tema escuro, calado e só num tema. É a armadilha que o `ThemeToggle`
  * já pagou uma vez.
  *
  * `asChild` continua valendo: uma das seis chamadas é um `<Link>` dentro do

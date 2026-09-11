@@ -145,11 +145,11 @@ const SKIP_DIRS = new Set(["node_modules", ".next", ".git"])
 /**
  * Onde o Heroicons não tem o conjunto que a régua pede.
  *
- * `app-theme-toggle` faz um crossfade `outline` ↔ `solid` a 16px, e **não
+ * `theme-toggle` faz um crossfade `outline` ↔ `solid` a 16px, e **não
  * existe `16/outline`** — os conjuntos micro e mini são só sólidos. É a mesma
  * classe de lacuna do círculo do `Spinner`, e a saída é a mesma: nomear.
  */
-const HEROICON_SET_EXCEPTIONS = ["app-theme-toggle"]
+const HEROICON_SET_EXCEPTIONS = ["components/ui/theme-toggle"]
 
 /**
  * Onde fio **mais** tinta não é uma tira mal desenhada, e sim a emenda entre

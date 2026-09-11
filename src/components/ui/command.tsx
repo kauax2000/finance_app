@@ -425,7 +425,7 @@ function CommandInput({
  * a lista nasceria no teto e **deslizaria** até o tamanho certo toda vez que a
  * paleta abrisse. É o mesmo problema que o `Tabs` resolve com `indicatorReady`, e
  * a espera aqui são dois `requestAnimationFrame` encadeados — o padrão que o
- * `AppThemeToggle` já usa, e exatamente o tempo que a medida leva para chegar.
+ * `ThemeToggle` já usa, e exatamente o tempo que a medida leva para chegar.
  */
 function CommandList({
   className,

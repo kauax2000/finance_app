@@ -88,7 +88,7 @@ import { cn } from "@/lib/utils"
  * volta do `disableTransitionOnChange` do next-themes (ver os dois quadros
  * abaixo).
  */
-export function AppThemeToggle({
+export function ThemeToggle({
     className,
 }: {
     /** Classes para o contentor do switch. */
@@ -140,7 +140,7 @@ export function AppThemeToggle({
             checked={isLight}
             onCheckedChange={(next) => setTheme(next ? "light" : "dark")}
             aria-label="Tema claro"
-            data-slot="app-theme-toggle"
+            data-slot="theme-toggle"
             data-visual={visualIsLight ? "light" : "dark"}
             className={cn(
                 "group/theme relative inline-flex h-8 w-18 shrink-0 items-center rounded-full bg-muted p-0.5 outline-none transition-colors",
@@ -156,7 +156,7 @@ export function AppThemeToggle({
             onPointerDown={(e) => e.stopPropagation()}
         >
             <SwitchPrimitive.Thumb
-                data-slot="app-theme-toggle-thumb"
+                data-slot="theme-toggle-thumb"
                 className={cn(
                     // As três classes de superfície são as do `tabs-indicator`
                     // (`bg-background`, `border-border/80`, `shadow-xs`), e o

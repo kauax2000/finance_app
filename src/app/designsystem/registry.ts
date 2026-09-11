@@ -156,6 +156,11 @@ const LAYER: Record<string, Layer> = {
   spinner: "Átomos",
   switch: "Átomos",
   textarea: "Átomos",
+  /**
+   * Um controle. Trilho, polegar e as duas faces são anatomia de um `Switch`
+   * do Radix, e o único import de `ui/` é o `Skeleton` do gate de montagem.
+   */
+  "theme-toggle": "Átomos",
   toggle: "Átomos",
   /** Um rótulo que aparece. Carrega só texto. */
   tooltip: "Átomos",
@@ -410,6 +415,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("spinner", "Spinner", "Carregamento sem progresso conhecido.", ui("spinner"), "Spinner"),
   entry("switch", "Switch", "Alternância que vale no instante em que é tocada.", ui("switch"), "Switch"),
   entry("textarea", "Textarea", "Campo de texto multilinha que cresce com o conteúdo.", ui("textarea"), "Textarea"),
+  entry("theme-toggle", "Theme Toggle", "Alterna entre o tema claro e o escuro, com as duas faces à vista.", ui("theme-toggle"), "ThemeToggle"),
   entry("toggle", "Toggle", "Botão de dois estados.", ui("toggle"), "Toggle"),
   entry("tooltip", "Tooltip", "Dica curta ancorada a um gatilho.", ui("tooltip"), "Tooltip, TooltipTrigger, TooltipContent"),
 

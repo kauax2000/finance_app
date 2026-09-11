@@ -79,6 +79,7 @@ import TableDoc from "./docs/table"
 import TablePanelDoc from "./docs/table-panel"
 import TabsDoc from "./docs/tabs"
 import TextareaDoc from "./docs/textarea"
+import ThemeToggleDoc from "./docs/theme-toggle"
 import TimelineDoc from "./docs/timeline"
 import ToggleDoc from "./docs/toggle"
 import ToggleGroupDoc from "./docs/toggle-group"
@@ -164,6 +165,7 @@ export const DOCS: Record<string, ComponentType> = {
   "table-panel": TablePanelDoc,
   "tabs": TabsDoc,
   "textarea": TextareaDoc,
+  "theme-toggle": ThemeToggleDoc,
   "timeline": TimelineDoc,
   "toggle": ToggleDoc,
   "toggle-group": ToggleGroupDoc,

@@ -17,7 +17,7 @@ import {
   DialogCloseButton,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { AppThemeToggle } from "@/components/settings/app-theme-toggle"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { AppWordmark } from "@/components/layout/app-wordmark"
 import { Container } from "@/components/ui/container"
 import { CATEGORY_ORDER, REGISTRY } from "./registry"
@@ -29,7 +29,7 @@ import { DsSearch } from "./ds-search"
  *
  * O alternador existe aqui porque metade do valor deste site é conferir o tema
  * escuro, e sem ele cada verificação vira uma ida às configurações e uma volta.
- * Mas ele é o `AppThemeToggle` do produto, não um segundo controle: um catálogo
+ * Mas ele é o `ThemeToggle` do produto, não um segundo controle: um catálogo
  * de design system que inventa a própria versão de algo que o app já tem é a
  * primeira coisa a desmentir o que ele documenta.
  */
@@ -181,7 +181,7 @@ function DsTopBar() {
                   lista, separado dela por um fio. */}
               <div className="flex items-center justify-between gap-3 border-b border-border py-3">
                 <span className="text-sm text-muted-foreground">Tema</span>
-                <AppThemeToggle />
+                <ThemeToggle />
               </div>
               <DsNav />
             </div>
@@ -247,7 +247,7 @@ function DsTopBar() {
             existe a partir de `lg` — e é ele que faz o par elástico com a
             esquerda para a busca cair no centro exato. */}
         <div className="hidden items-center justify-end gap-1 sm:gap-2 lg:flex lg:flex-1">
-          <AppThemeToggle />
+          <ThemeToggle />
         </div>
       </Container>
     </header>
