@@ -767,6 +767,14 @@ function TabsList({
     }
   }, [viaja, variant, doesStretch, resolvedSize, orientation, scrollable])
 
+  // Memorizado: montado no JSX, o ref era uma função nova a cada render, e o
+  // React chamava o antigo com null e o novo com o nó — religando os
+  // observadores da dissolução em todo render.
+  const listRef = React.useMemo(
+    () => composeRefs(trilhaRef, scrollable ? scrollFadeRef : undefined),
+    [trilhaRef, scrollable, scrollFadeRef]
+  )
+
   return (
     <TabsListContext.Provider
       value={{ size: resolvedSize, variant, stretch: doesStretch, indicatorReady }}
@@ -797,10 +805,7 @@ function TabsList({
         )}
       >
         <TabsPrimitive.List
-          ref={composeRefs(
-            trilhaRef,
-            scrollable ? scrollFadeRef : undefined
-          )}
+          ref={listRef}
           data-slot="tabs-list"
           data-orientation={orientation}
           className={cn(
