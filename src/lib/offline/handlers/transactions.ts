@@ -6,6 +6,7 @@ import {
     isTransactionsPaymentColumnsUnsupportedError,
 } from "@/lib/supabase-errors"
 import type { OfflineMutation } from "@/lib/offline/types"
+import { deleteById, updateById } from "@/lib/offline/handlers/by-id"
 import type { TransactionPaymentMethod } from "@/lib/supabase"
 import { scheduleNotifyTransactionCreated } from "@/lib/transaction-notifications"
 
@@ -37,84 +38,31 @@ export async function syncTransactionMutation(
             return { ok: true }
         }
 
-        const id = String(payload.serverId ?? payload.id ?? "")
-        const { error } = await supabase.from("transactions").delete().eq("id", id)
-        if (error) {
-            return {
-                ok: false,
-                error: formatSupabasePostgrestError(error) ?? error.message,
-            }
-        }
-        return { ok: true }
+        return deleteById("transactions", mutation)
+    }
+
+    if (operation !== "insert") {
+        return updateById("transactions", mutation, (row, error) =>
+            isTransactionsPaymentColumnsUnsupportedError(error) ? stripPaymentColumns(row) : null
+        )
     }
 
     const row = { ...payload } as Record<string, unknown>
     const clientId = (row.client_id as string | undefined) ?? mutation.idempotencyKey
     row.client_id = clientId
 
-    if (operation === "insert") {
-        let { data: inserted, error } = await supabase.from("transactions").upsert(row, {
-            onConflict: "workspace_id,client_id",
-            ignoreDuplicates: false,
-        }).select("id, type, subscription_id, installment_plan_id").single()
-
-        if (error && isTransactionsPaymentColumnsUnsupportedError(error)) {
-            const retry = await supabase
-                .from("transactions")
-                .upsert(stripPaymentColumns(row), { onConflict: "workspace_id,client_id" })
-                .select("id, type, subscription_id, installment_plan_id")
-                .single()
-            inserted = retry.data
-            error = retry.error
-        }
-
-        if (error) {
-            return {
-                ok: false,
-                error: formatSupabasePostgrestError(error) ?? error.message,
-            }
-        }
-
-        if (
-            inserted?.id &&
-            inserted.type === "expense" &&
-            !inserted.subscription_id &&
-            !inserted.installment_plan_id
-        ) {
-            scheduleNotifyTransactionCreated(String(inserted.id))
-        }
-
-        // O lançamento feito offline também passa pelos alertas, como o online:
-        // sem isto, orçamento e limite de cartão estouravam calados.
-        if (inserted?.type === "expense") {
-            const dateIso = String(row.date ?? "")
-            void invokeEdgeJson("evaluate-budgets", {
-                body: { category_id: row.category_id ?? null, occurred_at: dateIso },
-            }).catch(() => {})
-            scheduleEvaluateCreditCardAlerts({
-                workspaceId: mutation.workspaceId,
-                type: "expense",
-                paymentMethod: (row.payment_method as TransactionPaymentMethod | null) ?? null,
-                paymentCreditCardId: (row.payment_credit_card_id as string | null) ?? null,
-                categoryId: (row.category_id as string | null) ?? null,
-                dateIso,
-            })
-        }
-
-        return { ok: true }
-    }
-
-    const serverId = String(payload.serverId ?? payload.id ?? "")
-    delete row.serverId
-    delete row.id
-
-    let { error } = await supabase.from("transactions").update(row).eq("id", serverId)
+    let { data: inserted, error } = await supabase.from("transactions").upsert(row, {
+        onConflict: "workspace_id,client_id",
+        ignoreDuplicates: false,
+    }).select("id, type, subscription_id, installment_plan_id").single()
 
     if (error && isTransactionsPaymentColumnsUnsupportedError(error)) {
         const retry = await supabase
             .from("transactions")
-            .update(stripPaymentColumns(row))
-            .eq("id", serverId)
+            .upsert(stripPaymentColumns(row), { onConflict: "workspace_id,client_id" })
+            .select("id, type, subscription_id, installment_plan_id")
+            .single()
+        inserted = retry.data
         error = retry.error
     }
 
@@ -123,6 +71,32 @@ export async function syncTransactionMutation(
             ok: false,
             error: formatSupabasePostgrestError(error) ?? error.message,
         }
+    }
+
+    if (
+        inserted?.id &&
+        inserted.type === "expense" &&
+        !inserted.subscription_id &&
+        !inserted.installment_plan_id
+    ) {
+        scheduleNotifyTransactionCreated(String(inserted.id))
+    }
+
+    // O lançamento feito offline também passa pelos alertas, como o online:
+    // sem isto, orçamento e limite de cartão estouravam calados.
+    if (inserted?.type === "expense") {
+        const dateIso = String(row.date ?? "")
+        void invokeEdgeJson("evaluate-budgets", {
+            body: { category_id: row.category_id ?? null, occurred_at: dateIso },
+        }).catch(() => {})
+        scheduleEvaluateCreditCardAlerts({
+            workspaceId: mutation.workspaceId,
+            type: "expense",
+            paymentMethod: (row.payment_method as TransactionPaymentMethod | null) ?? null,
+            paymentCreditCardId: (row.payment_credit_card_id as string | null) ?? null,
+            categoryId: (row.category_id as string | null) ?? null,
+            dateIso,
+        })
     }
 
     return { ok: true }
