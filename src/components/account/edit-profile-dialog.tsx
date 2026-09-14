@@ -41,7 +41,7 @@ type EditProfileDialogProps = {
 
 export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps) {
     const isMobile = useIsMobile()
-    const { user, profile, profileReady, updateProfile, updateEmail } = useAuth()
+    const { user, profile, profileReady, updateProfile, updateEmail, uploadAvatar } = useAuth()
 
     const [editName, setEditName] = useState("")
     const [editEmail, setEditEmail] = useState("")
@@ -53,6 +53,8 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
     const fileInputRef = useRef<HTMLInputElement>(null)
+    /** A imagem comprimida como arquivo: é ela que sobe para o Storage. */
+    const avatarFileRef = useRef<File | null>(null)
 
     const userName =
         user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuário"
@@ -122,6 +124,15 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                         const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7)
                         setAvatarPreview(compressedBase64)
                         setErrorMessage(null)
+                        canvas.toBlob(
+                            (blob) => {
+                                avatarFileRef.current = blob
+                                    ? new File([blob], "avatar.jpg", { type: "image/jpeg" })
+                                    : null
+                            },
+                            "image/jpeg",
+                            0.7,
+                        )
                     }
                 }
                 img.src = reader.result as string
@@ -132,6 +143,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
 
     const handleRemovePhoto = () => {
         setAvatarPreview(null)
+        avatarFileRef.current = null
         setRemoveCurrentPhoto(true)
         if (fileInputRef.current) {
             fileInputRef.current.value = ""
@@ -152,7 +164,25 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
             const isAddingNewPhoto = !!avatarPreview
 
             if (hasNameChanged || isRemovingPhoto || isAddingNewPhoto) {
-                const newAvatarUrl = isRemovingPhoto ? "" : (avatarPreview || undefined)
+                // A foto vai para o Storage e o perfil guarda só a URL. Antes o
+                // base64 ia para o user_metadata, e com ele para dentro de todo JWT.
+                let newAvatarUrl: string | undefined = isRemovingPhoto ? "" : undefined
+                if (isAddingNewPhoto) {
+                    const file = avatarFileRef.current
+                    if (!file) {
+                        setErrorMessage("A imagem ainda está sendo preparada. Tente de novo.")
+                        setSaving(false)
+                        return
+                    }
+                    const uploaded = await uploadAvatar(file)
+                    if (uploaded.error || !uploaded.avatarUrl) {
+                        setErrorMessage(uploaded.error ?? "Erro ao enviar a foto.")
+                        setSaving(false)
+                        return
+                    }
+                    // Mesmo nome de arquivo a cada troca: a versão fura o cache da imagem.
+                    newAvatarUrl = `${uploaded.avatarUrl}?v=${Date.now()}`
+                }
                 const { error: profileError } = await updateProfile({
                     full_name: editName,
                     avatar_url: newAvatarUrl,

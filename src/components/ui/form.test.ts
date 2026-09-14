@@ -98,9 +98,23 @@ describe("shouldDeferEnterToWidget", () => {
   })
 })
 
+describe("shouldDeferEnterToWidget — controles com Enter próprio", () => {
+  it("defere num botão focado: o Enter aciona o botão, não o Salvar", () => {
+    expect(shouldDeferEnterToWidget(cadeia({ tag: "button" }))).toBe(true)
+    expect(shouldDeferEnterToWidget(cadeia({ tag: "a" }))).toBe(true)
+  })
+
+  it("defere em rádio, checkbox e switch", () => {
+    for (const role of ["radio", "checkbox", "switch"]) {
+      expect(shouldDeferEnterToWidget(cadeia({ tag: "button", role }))).toBe(true)
+      expect(shouldDeferEnterToWidget(cadeia({ tag: "div", role }))).toBe(true)
+    }
+  })
+})
+
 describe("ENTER_DEFERRAL_RULES", () => {
-  it("tem as sete regras — a página mostrava seis", () => {
-    expect(ENTER_DEFERRAL_RULES).toHaveLength(7)
+  it("tem as oito regras — a página mostrava seis, e a do botão focado chegou depois", () => {
+    expect(ENTER_DEFERRAL_RULES).toHaveLength(8)
   })
 
   it("cada regra tem um porquê, e nenhum se repete sem motivo", () => {

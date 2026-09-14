@@ -359,38 +359,46 @@ function ChartContainer({
   )
 }
 
-const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
+/**
+ * O CSS das cores de série, montado a partir do `config`.
+ *
+ * Chave e cor entram num `<style>`: uma cor com `}` fechava a regra e injetava
+ * CSS arbitrário na página. Só passam chave de identificador e cor sem
+ * `;{}<>`, que cobre hex, `var(--x)`, `oklch()` e `rgb()`. Exportada para teste.
+ */
+const SAFE_CHART_KEY = /^[A-Za-z0-9_-]+$/
+const SAFE_CHART_COLOR = /^[#\w\s().,%/-]+$/
+
+export function chartStyleCss(id: string, config: ChartConfig): string | null {
   const entries = Object.entries(config).filter(
-    ([, cfg]) => "theme" in cfg || "color" in cfg
+    ([key, cfg]) => SAFE_CHART_KEY.test(key) && ("theme" in cfg || "color" in cfg)
   )
   if (!entries.length) return null
+  const safeId = id.replace(/[^A-Za-z0-9_:-]/g, "")
 
-  return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart="${id}"] {
-${entries
-  .map(([key, itemConfig]) => {
-    const color =
-      "theme" in itemConfig && itemConfig.theme
-        ? itemConfig.theme[theme as keyof typeof itemConfig.theme]
-        : "color" in itemConfig
-          ? itemConfig.color
-          : undefined
-    return color ? `  --color-${key}: ${color};` : null
-  })
-  .filter(Boolean)
-  .join("\n")}
+  return Object.entries(THEMES)
+    .map(([theme, prefix]) => {
+      const lines = entries
+        .map(([key, itemConfig]) => {
+          const color =
+            "theme" in itemConfig && itemConfig.theme
+              ? itemConfig.theme[theme as keyof typeof itemConfig.theme]
+              : "color" in itemConfig
+                ? itemConfig.color
+                : undefined
+          return color && SAFE_CHART_COLOR.test(color) ? `  --color-${key}: ${color};` : null
+        })
+        .filter(Boolean)
+        .join("\n")
+      return `\n${prefix} [data-chart="${safeId}"] {\n${lines}\n}\n`
+    })
+    .join("\n")
 }
-`
-          )
-          .join("\n"),
-      }}
-    />
-  )
+
+const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
+  const css = chartStyleCss(id, config)
+  if (!css) return null
+  return <style dangerouslySetInnerHTML={{ __html: css }} />
 }
 
 /* -------------------------------------------------------------------------
