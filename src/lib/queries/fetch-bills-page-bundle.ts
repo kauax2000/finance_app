@@ -1,3 +1,4 @@
+import { localYmdFromDate } from "@/lib/transaction-date"
 import {
     supabase,
     type Bill,
@@ -105,7 +106,8 @@ async function fetchBillsPageBundleLegacy(
 
     const ninetyDaysAgo = new Date()
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
-    const since = ninetyDaysAgo.toISOString().slice(0, 10)
+    // Data local: em UTC, depois das 21h o corte já pulava para o dia seguinte.
+    const since = localYmdFromDate(ninetyDaysAgo)
 
     const [pendingRes, paidRes] = await Promise.all([
         supabase
