@@ -1,6 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { internalError } from '../_shared/http.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
+import { inviteEmailLimitReached, recentInviteLogs } from '../_shared/invite-rate-limit.ts'
+import { sha256Hex } from '../_shared/token-hash.ts'
 import {
   buildInviteAcceptUrl,
   renderInviteHtml,
@@ -26,13 +28,6 @@ function json(status: number, payload: unknown): Response {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   })
-}
-
-async function sha256Hex(input: string): Promise<string> {
-  const data = new TextEncoder().encode(input)
-  const hash = await crypto.subtle.digest('SHA-256', data)
-  const bytes = Array.from(new Uint8Array(hash))
-  return bytes.map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
 Deno.serve(async (req: Request) => {
@@ -105,6 +100,17 @@ Deno.serve(async (req: Request) => {
     return json(400, { error: 'Invite has expired' })
   }
 
+  const appBase = resolvePublicAppBase(req)
+  if (!appBase) {
+    return json(500, { error: 'APP_BASE_URL não configurado.' })
+  }
+
+  const { data: logs, error: logsErr } = await recentInviteLogs(supabaseAdmin, caller.id)
+  if (logsErr) return json(500, { error: internalError('workspace-invites-resend', logsErr) })
+  if (inviteEmailLimitReached(logs ?? [], invitedEmail)) {
+    return json(429, { error: 'Too many invites' })
+  }
+
   // O token não fica salvo: reenviar gera um novo, e o link do e-mail anterior deixa de valer.
   const tokenRaw = crypto.randomUUID()
   const { error: rotateErr } = await supabaseAdmin
@@ -117,10 +123,6 @@ Deno.serve(async (req: Request) => {
   const ws = invite.workspace as { name?: string } | null
   const workspaceName = typeof ws?.name === 'string' ? ws.name : 'workspace'
 
-  const appBase = resolvePublicAppBase(req)
-  if (!appBase) {
-    return json(500, { error: 'APP_BASE_URL não configurado.' })
-  }
   const inviteUrl = buildInviteAcceptUrl(appBase, tokenRaw)
 
   try {
@@ -134,7 +136,8 @@ Deno.serve(async (req: Request) => {
       }),
     })
   } catch (error) {
-    return json(500, { error: error instanceof Error ? error.message : 'Email send failed' })
+    console.error('workspace-invites-resend: email', error)
+    return json(502, { error: 'Email send failed' })
   }
 
   await supabaseAdmin.from('user_activity_logs').insert({

@@ -1,6 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { internalError } from '../_shared/http.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
+import { inviteEmailLimitReached, recentInviteLogs } from '../_shared/invite-rate-limit.ts'
+import { sha256Hex } from '../_shared/token-hash.ts'
 import {
   buildInviteAcceptUrl,
   renderInviteHtml,
@@ -29,13 +31,6 @@ function json(status: number, payload: unknown): Response {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   })
-}
-
-async function sha256Hex(input: string): Promise<string> {
-  const data = new TextEncoder().encode(input)
-  const hash = await crypto.subtle.digest('SHA-256', data)
-  const bytes = Array.from(new Uint8Array(hash))
-  return bytes.map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
 Deno.serve(async (req: Request) => {
@@ -111,6 +106,19 @@ Deno.serve(async (req: Request) => {
     return json(400, { error: 'Personal workspaces cannot be shared' })
   }
 
+  const appBase = resolvePublicAppBase(req)
+  if (!appBase) {
+    return json(500, { error: 'APP_BASE_URL não configurado.' })
+  }
+
+  if (!isLink) {
+    const { data: logs, error: logsErr } = await recentInviteLogs(supabaseAdmin, caller.id)
+    if (logsErr) return json(500, { error: internalError('workspace-invites-create', logsErr) })
+    if (inviteEmailLimitReached(logs ?? [], invitedEmail)) {
+      return json(429, { error: 'Too many invites' })
+    }
+  }
+
   if (isLink) {
     const { error: revokeErr } = await supabaseAdmin
       .from('workspace_invites')
@@ -158,10 +166,6 @@ Deno.serve(async (req: Request) => {
 
   if (inviteErr) return json(500, { error: internalError('workspace-invites-create', inviteErr) })
 
-  const appBase = resolvePublicAppBase(req)
-  if (!appBase) {
-    return json(500, { error: 'APP_BASE_URL não configurado.' })
-  }
   const inviteUrl = buildInviteAcceptUrl(appBase, tokenRaw)
 
   if (!isLink) {
@@ -176,7 +180,10 @@ Deno.serve(async (req: Request) => {
         }),
       })
     } catch (error) {
-      return json(500, { error: error instanceof Error ? error.message : 'Email send failed' })
+      // Sem o e-mail o convite não chegou a ninguém: não deixa uma pendência órfã.
+      console.error('workspace-invites-create: email', error)
+      await supabaseAdmin.from('workspace_invites').update({ status: 'revoked' }).eq('id', invite.id)
+      return json(502, { error: 'Email send failed' })
     }
   }
 

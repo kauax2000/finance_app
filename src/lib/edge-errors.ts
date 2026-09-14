@@ -14,6 +14,8 @@ const EDGE_ERROR_PT: Record<string, string> = {
     "Invalid or expired token": "Sessão inválida ou expirada; faça login novamente.",
     "Session expired or invalidated": "Sessão encerrada; faça login novamente.",
     "Missing authorization header": "Sessão inválida ou expirada; faça login novamente.",
+    "Too many invites": "Muitos convites enviados nas últimas 24 horas. Tente de novo mais tarde.",
+    "Email send failed": "Não foi possível enviar o e-mail do convite. Tente de novo.",
 }
 
 /** Parses Edge Function handler JSON or Supabase gateway errors (e.g. Invalid JWT). */
