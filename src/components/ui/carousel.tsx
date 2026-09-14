@@ -7,6 +7,7 @@ import {
   ChevronUpIcon,
 } from "@heroicons/react/16/solid"
 import * as React from "react"
+import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import useEmblaCarousel, {
   type UseEmblaCarouselType,
 } from "embla-carousel-react"
@@ -443,8 +444,6 @@ function useCarousel() {
  * o palpite do `cva` e a seta salta dele para o valor medido. O `Tabs` tem o
  * mesmo, local, pelo mesmo motivo.
  */
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect
 
 /** Junta o ref do embla ao ref de medição. O `Tabs` tem o mesmo, local. */
 function composeRefs<T>(...refs: (React.Ref<T> | undefined)[]) {
@@ -505,6 +504,10 @@ function Carousel({
 
   const handleKeyDown = React.useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
+      // A escuta é em captura na região inteira: sem esta saída, a seta dentro
+      // de um campo num slide trocava de slide em vez de mover o cursor.
+      const alvo = event.target as HTMLElement
+      if (alvo.closest("input, textarea, select, [contenteditable=''], [contenteditable='true']")) return
       // A seta segue o eixo. Antes eram sempre as horizontais, inclusive num
       // carrossel vertical, onde a tecla certa não fazia nada.
       const anterior = orientation === "horizontal" ? "ArrowLeft" : "ArrowUp"

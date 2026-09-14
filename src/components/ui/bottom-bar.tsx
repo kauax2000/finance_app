@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import Link from "next/link"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
@@ -118,9 +119,6 @@ const bottomBarVariants = cva(
  */
 const BottomBarContext = React.createContext(false)
 
-/** Quinta cópia no repositório: `tabs`, `carousel`, `navigation-menu` e `sidebar` a declaram igual. */
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect
 
 /**
  * Se o marcador já mediu — e portanto se o item cede a ele o preenchimento.

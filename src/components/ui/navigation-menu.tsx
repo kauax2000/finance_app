@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import { ChevronDownIcon } from "@heroicons/react/16/solid"
 import { cva, type VariantProps } from "class-variance-authority"
 import { NavigationMenu as NavigationMenuPrimitive } from "radix-ui"
@@ -71,8 +72,6 @@ type NavigationMenuIndicator = "none" | "underline"
 type NavigationMenuAlign = "trigger" | "start" | "center" | "end"
 type NavigationMenuOrientation = "horizontal" | "vertical"
 
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect
 
 function composeRefs<T>(...refs: Array<React.Ref<T> | undefined>) {
   return (node: T | null) => {

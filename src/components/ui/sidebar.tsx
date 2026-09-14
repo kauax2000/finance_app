@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
@@ -33,9 +34,6 @@ import {
 } from "@/components/ui/tooltip"
 import { SIDEBAR_STATE_COOKIE_NAME } from "@/lib/sidebar-state-cookie"
 
-/** Quarta cópia no repositório: `tabs`, `navigation-menu` e `carousel` a declaram igual. */
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect
 
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = "16rem"

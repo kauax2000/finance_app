@@ -518,9 +518,12 @@ function useResizablePanel() {
     else handle?.collapse()
   }, [handle])
 
+  // Um objeto novo a cada render faria o painel receber props "diferentes" sempre.
+  const panelProps = React.useMemo(() => ({ panelRef: setHandle, onResize: sync }), [setHandle, sync])
+
   return {
     /** Espalhe no `ResizablePanel` que este hook governa. */
-    panelProps: { panelRef: setHandle, onResize: sync },
+    panelProps,
     isCollapsed,
     collapse,
     expand,

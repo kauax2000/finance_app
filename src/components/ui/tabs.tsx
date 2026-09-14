@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import { cva } from "class-variance-authority"
 import { Tabs as TabsPrimitive } from "radix-ui"
 
@@ -278,8 +279,6 @@ const TabsListContext = React.createContext<{
  * existe, e o React avisa; `useEffect` ali não muda nada, porque não há layout
  * para medir.
  */
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect
 
 /** Junta o ref do hook de dissolução com o ref local da medição. */
 function composeRefs<T>(...refs: Array<React.Ref<T> | undefined>) {
