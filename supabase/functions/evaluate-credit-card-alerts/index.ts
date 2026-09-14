@@ -9,6 +9,8 @@ import {
   isoPrefixYmd,
   openInvoiceWindow,
   type Ymd,
+  appTodayYmd,
+  compareYmd,
 } from '../_shared/credit-card-cycle.ts'
 
 const corsHeaders = {
@@ -175,7 +177,12 @@ Deno.serve(async (req: Request) => {
     return json(200, { ok: true, skipped: true, reason: 'bad_closing_day' })
   }
 
-  const openWin = openInvoiceWindow(refYmd, closingDay)
+  // A janela é a fatura aberta de hoje, e não a da data da compra: um
+  // lançamento retroativo calculava a fatura antiga e alertava sobre ela.
+  const openWin = openInvoiceWindow(appTodayYmd(), closingDay)
+  if (compareYmd(refYmd, openWin.start) < 0 || compareYmd(refYmd, openWin.end) > 0) {
+    return json(200, { ok: true, skipped: true, reason: 'outside_open_invoice' })
+  }
   const periodKey = formatYmd(openWin.end)
 
   const { data: txRows, error: txErr } = await supabaseAdmin
