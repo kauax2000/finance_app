@@ -1,7 +1,4 @@
-import {
-    buildCardCycleSnapshot,
-    estimatedDueDateForClose,
-} from "@/lib/credit-card-billing"
+import { buildCardCycleSnapshot } from "@/lib/credit-card-billing"
 import type {
     CreditCard,
     CreditCardInvoicePayment,
@@ -84,15 +81,17 @@ export function projectVirtualCreditCardBills(args: {
             { installmentPlans: plansForCard },
         )
 
-        const closeYmd = localYmdFromDate(snap.nextClose)
+        // A conta a pagar é a fatura que já fechou: é ela que vence. A aberta
+        // ainda recebe compras e não tem valor final.
+        if (snap.committedLastClosedTotal <= 0) continue
+        const closeYmd = localYmdFromDate(snap.lastClose)
         const cardPayments = byCard.get(card.id) ?? []
         const alreadyPaid = cardPayments.some(
             (p) => p.statement_close_date === closeYmd,
         )
         if (alreadyPaid) continue
 
-        const due = estimatedDueDateForClose(snap.nextClose, card.due_day)
-        const dueYmd = localYmdFromDate(due)
+        const dueYmd = localYmdFromDate(snap.estimatedDueLastClose)
 
         out.push({
             kind: "credit_card_invoice",
@@ -103,7 +102,7 @@ export function projectVirtualCreditCardBills(args: {
             last_four: card.last_four,
             due_date_ymd: dueYmd,
             statement_close_date_ymd: closeYmd,
-            amount_estimated: snap.committedOpenTotal,
+            amount_estimated: snap.committedLastClosedTotal,
             alreadyPaid: false,
         })
     }

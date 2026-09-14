@@ -146,7 +146,7 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                                 <p className="flex items-center justify-between gap-2">
                                     <span>
                                         <span className="font-medium text-foreground/80">
-                                            Próximo fechamento
+                                            Fatura aberta · fecha
                                         </span>{" "}
                                         {formatDatePtBr(snapshot.nextClose)}
                                     </span>
@@ -158,7 +158,7 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                                 </p>
                                 <p>
                                     <span className="font-medium text-foreground/80">
-                                        Vencimento estimado
+                                        Fatura fechada · vence
                                     </span>{" "}
                                     {formatDatePtBr(snapshot.estimatedDueLastClose)}
                                 </p>
