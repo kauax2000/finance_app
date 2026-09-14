@@ -17,8 +17,10 @@ export default function SliderDoc() {
         previewClassName="flex-col items-stretch"
       >
         <div className="flex w-full max-w-sm flex-col gap-2">
-          <Label htmlFor="ds-slider">Alertar ao atingir</Label>
-          <Slider id="ds-slider" defaultValue={[80]} max={100} step={5} />
+          {/* O `slider` é o punho, um <span>: <label for> não o rotula. O nome vai
+              por aria-labelledby, que o componente repassa ao punho. */}
+          <Label id="ds-slider-label">Alertar ao atingir</Label>
+          <Slider aria-labelledby="ds-slider-label" defaultValue={[80]} max={100} step={5} />
         </div>
       </DocSection>
 
