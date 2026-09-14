@@ -37,6 +37,7 @@ const ACTIVITY_TYPES = new Set([
 ])
 
 /** null window = always allow insert (no dedupe) */
+// Segurança nunca é deduplicada: duas trocas de senha num dia são dois eventos.
 const DEDUPE_WINDOW_MINUTES: Record<string, number | null> = {
   family_member_invited: 24 * 60,
   family_member_joined: 24 * 60,
@@ -44,10 +45,10 @@ const DEDUPE_WINDOW_MINUTES: Record<string, number | null> = {
   family_permission_changed: 60,
   family_role_changed: 60,
   profile_update: 60,
-  password_change: 24 * 60,
-  security_settings: 24 * 60,
-  device_added: 24 * 60,
-  device_removed: 24 * 60,
+  password_change: null,
+  security_settings: null,
+  device_added: null,
+  device_removed: null,
 }
 
 const STATUS_VALUES = new Set(['success', 'failed', 'pending'])

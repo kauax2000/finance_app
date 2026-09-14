@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { currencyBRL } from '../_shared/formatters.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import { deliverNotification } from '../_shared/deliver-notification.ts'
 import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
@@ -31,10 +32,6 @@ type Body = {
   payment_credit_card_id: string | null
   category_id: string | null
   occurred_at: string
-}
-
-function brl(n: number): string {
-  return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
 function pct(spend: number, limit: number): number {
@@ -306,21 +303,21 @@ Deno.serve(async (req: Request) => {
         hit: hit80,
         kind: 'cc_limit_warning',
         title: 'Cartão: perto do limite',
-        body: `O cartão ${cardLabel} está com cerca de ${p.toFixed(0)}% do limite usado nesta fatura aberta (${brl(spendTotal)} de ${brl(limitNum)}).`,
+        body: `O cartão ${cardLabel} está com cerca de ${p.toFixed(0)}% do limite usado nesta fatura aberta (${currencyBRL(spendTotal)} de ${currencyBRL(limitNum)}).`,
       },
       {
         key: '100',
         hit: hit100,
         kind: 'cc_limit_reached',
         title: 'Cartão: limite atingido',
-        body: `O cartão ${cardLabel} atingiu o limite nesta fatura aberta (${brl(spendTotal)} de ${brl(limitNum)}).`,
+        body: `O cartão ${cardLabel} atingiu o limite nesta fatura aberta (${currencyBRL(spendTotal)} de ${currencyBRL(limitNum)}).`,
       },
       {
         key: 'over',
         hit: hitOver,
         kind: 'cc_limit_exceeded',
         title: 'Cartão: limite ultrapassado',
-        body: `O cartão ${cardLabel} ultrapassou o limite nesta fatura aberta (${brl(spendTotal)} de ${brl(limitNum)}).`,
+        body: `O cartão ${cardLabel} ultrapassou o limite nesta fatura aberta (${currencyBRL(spendTotal)} de ${currencyBRL(limitNum)}).`,
       },
     ]
 
@@ -384,7 +381,7 @@ Deno.serve(async (req: Request) => {
 
     const catName = catKey ? (categoryNames.get(catKey) ?? 'Categoria') : 'Sem categoria'
     const title = 'Cartão: alerta por categoria'
-    const body = `No cartão ${cardLabel}, a categoria "${catName}" passou do valor definido (${brl(spendCat)} ≥ ${brl(threshold)}) na fatura aberta.`
+    const body = `No cartão ${cardLabel}, a categoria "${catName}" passou do valor definido (${currencyBRL(spendCat)} ≥ ${currencyBRL(threshold)}) na fatura aberta.`
 
     const delivered = await notifyMembers(`cat:${alert.id}:${periodKey}`, title, body, {
       kind: 'cc_category_limit_crossed',
