@@ -88,6 +88,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch {
             /* best effort */
         }
+        try {
+            // O runtime do service worker guarda GETs do Supabase; o precache do app fica.
+            if (typeof caches !== "undefined") {
+                const keys = await caches.keys()
+                await Promise.all(
+                    keys.filter((k) => !k.includes("precache")).map((k) => caches.delete(k)),
+                )
+            }
+        } catch {
+            /* best effort */
+        }
     }, [queryClient])
 
     const initializeUserData = useCallback(async () => {
@@ -301,20 +312,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ): Promise<{ error: string | null }> => {
         if (!user) return { error: "Usuário não autenticado" }
 
-        const { data: signInData, error: signInError } =
-            await supabase.auth.signInWithPassword({
-                email: user.email || "",
-                password: password,
-            })
-
-        if (signInError) {
-            return { error: "Senha incorreta" }
-        }
-
-        if (!signInData.session?.access_token) {
-            return { error: "Sessão inválida ou expirada; faça login novamente." }
-        }
-
+        // A senha é conferida na edge, que tem o limite de tentativas.
         try {
             await callDeleteUserAccount(password)
         } catch (e) {
