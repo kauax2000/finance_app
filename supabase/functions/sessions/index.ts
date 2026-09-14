@@ -129,7 +129,7 @@ Deno.serve(async (req: Request) => {
 
     if (method === 'POST') {
       const body = await req.json().catch(() => ({}))
-      const { action, session_id, except_session_id, user_agent, ip_address, device_id, device_fingerprint } = body
+      const { action, session_id, except_session_id, user_agent, device_id, device_fingerprint } = body
 
       if (action === 'revoke_session' && session_id) {
         const blocked = await guardCallerSession(supabaseAdmin, user.id, token, req)
@@ -202,7 +202,8 @@ Deno.serve(async (req: Request) => {
 
       const did = typeof device_id === 'string' && device_id.trim() ? device_id.trim() : null
       const dfp = typeof device_fingerprint === 'string' && device_fingerprint.trim() ? device_fingerprint.trim() : null
-      const resolvedIp = normalizeIp(ip_address) ?? normalizeIp(getClientIp(req))
+      // O IP vem da requisição, nunca do corpo: o corpo é de quem chama.
+      const resolvedIp = normalizeIp(getClientIp(req))
       const tokenHash = await sha256Hex(token)
       const authSessionId = jwtAuthSessionId(token)
 
@@ -352,38 +353,6 @@ Deno.serve(async (req: Request) => {
           reused: false,
         }),
         { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    if (method === 'DELETE') {
-      const blocked = await guardCallerSession(supabaseAdmin, user.id, token, req)
-      if (blocked) return blocked
-
-      const url = new URL(req.url)
-      const exceptSessionId = url.searchParams.get('except_session_id')
-
-      let query = supabaseAdmin
-        .from('user_sessions')
-        .update({ is_active: false })
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-
-      if (exceptSessionId) {
-        query = query.neq('id', exceptSessionId)
-      }
-
-      const { error } = await query
-
-      if (error) {
-        return new Response(
-          JSON.stringify({ error: error.message }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      }
-
-      return new Response(
-        JSON.stringify({ success: true }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 

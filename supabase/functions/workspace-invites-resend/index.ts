@@ -125,7 +125,7 @@ Deno.serve(async (req: Request) => {
   try {
     await sendEmailResend({
       to: invitedEmail,
-      subject: `Convite para o workspace ${workspaceName}`,
+      subject: `Convite para o workspace ${workspaceName.slice(0, 60)}`,
       html: renderInviteHtml({
         inviterName: caller.email ?? 'Alguém',
         workspaceName,

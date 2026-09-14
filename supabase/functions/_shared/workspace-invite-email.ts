@@ -45,6 +45,7 @@ export async function sendEmailResend(args: {
   const from = Deno.env.get('RESEND_FROM')?.trim() || RESEND_FROM_FALLBACK_TEST
 
   const res = await fetch('https://api.resend.com/emails', {
+    signal: AbortSignal.timeout(10_000),
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,

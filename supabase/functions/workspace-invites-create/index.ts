@@ -101,11 +101,14 @@ Deno.serve(async (req: Request) => {
 
   const { data: workspace, error: workspaceErr } = await supabaseAdmin
     .from('workspaces')
-    .select('id,name')
+    .select('id,name,type')
     .eq('id', workspaceId)
     .maybeSingle()
   if (workspaceErr) return json(500, { error: workspaceErr.message })
   if (!workspace) return json(404, { error: 'Workspace not found' })
+  if (workspace.type === 'personal') {
+    return json(400, { error: 'Personal workspaces cannot be shared' })
+  }
 
   if (isLink) {
     const { error: revokeErr } = await supabaseAdmin
@@ -164,7 +167,7 @@ Deno.serve(async (req: Request) => {
     try {
       await sendEmailResend({
         to: invitedEmail,
-        subject: `Convite para o workspace ${workspace.name}`,
+        subject: `Convite para o workspace ${String(workspace.name).slice(0, 60)}`,
         html: renderInviteHtml({
           inviterName: caller.email ?? 'Alguém',
           workspaceName: workspace.name,
