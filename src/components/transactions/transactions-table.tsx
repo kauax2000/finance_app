@@ -51,7 +51,7 @@ const EMPTY_INVOICE_PAID_KEYS: ReadonlySet<string> = new Set()
 function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
     if (!active) return null
     return (
-        <span className="ml-1 inline-flex text-2xs leading-none text-muted-foreground">
+        <span aria-hidden className="ml-1 inline-flex text-2xs leading-none text-muted-foreground">
             {dir === "asc" ? "▲" : "▼"}
         </span>
     )

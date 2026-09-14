@@ -118,7 +118,7 @@ function MobilePaymentsCalendarGrid({
                                 "flex min-h-10 w-full flex-col items-center justify-center rounded-md text-xs font-semibold tabular-nums transition-colors",
                                 !cell.inMonth && "opacity-40",
                                 isToday &&
-                                    "ring-2 ring-primary ring-offset-2 ring-offset-background",
+                                    "ring-2 ring-primary-accent ring-offset-2 ring-offset-background",
                                 hasEvents
                                     ? "hover:bg-muted/40"
                                     : "cursor-default hover:bg-transparent",
@@ -797,7 +797,7 @@ export function DashboardPaymentsCalendar({
                                                         !cell.inMonth &&
                                                             "opacity-40",
                                                         isToday &&
-                                                            "ring-2 ring-primary ring-offset-2 ring-offset-background",
+                                                            "ring-2 ring-primary-accent ring-offset-2 ring-offset-background",
                                                         list.length === 0 &&
                                                             "cursor-default hover:bg-card"
                                                     )}

@@ -49,6 +49,8 @@ export function TransactionsDateRangeForm({
 }) {
     const fromId = `${idPrefix}-from`
     const toId = `${idPrefix}-to`
+    // YYYY-MM-DD compara como texto. Um período ao contrário filtrava tudo fora.
+    const invertido = Boolean(draftFrom && draftTo && draftFrom > draftTo)
 
     return (
         <div className={cn("space-y-3", className)}>
@@ -90,6 +92,11 @@ export function TransactionsDateRangeForm({
                     />
                 </div>
             </div>
+            {invertido ? (
+                <p role="alert" className="text-xs text-destructive">
+                    A data inicial é depois da final.
+                </p>
+            ) : null}
             <div
                 className={cn(
                     "flex flex-wrap items-center justify-between gap-2",
@@ -122,6 +129,7 @@ export function TransactionsDateRangeForm({
                         type="button"
                         size="sm"
                         className="h-8 text-xs"
+                        disabled={invertido}
                         onClick={() => onApply()}
                     >
                         Aplicar

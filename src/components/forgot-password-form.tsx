@@ -1,5 +1,6 @@
 "use client"
 
+import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -56,8 +57,8 @@ export function ForgotPasswordForm() {
 
         if (!password) {
             errors.password = "Senha é obrigatória"
-        } else if (password.length < 6) {
-            errors.password = "A senha deve ter pelo menos 6 caracteres"
+        } else if (password.length < MIN_PASSWORD_LENGTH) {
+            errors.password = `A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres`
         }
 
         if (!confirmPassword) {

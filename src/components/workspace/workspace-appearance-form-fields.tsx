@@ -122,7 +122,7 @@ export function WorkspaceAppearanceFormFields({
                                     "flex size-11 items-center justify-center rounded-lg border text-foreground transition-colors",
                                     "hover:bg-accent hover:text-accent-foreground",
                                     selected
-                                        ? "border-primary bg-primary/10 ring-2 ring-primary ring-offset-2 ring-offset-background"
+                                        ? "border-primary bg-primary/10 ring-2 ring-primary-accent ring-offset-2 ring-offset-background"
                                         : "border-border bg-background"
                                 )}
                                 aria-pressed={selected}

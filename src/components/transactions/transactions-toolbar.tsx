@@ -355,7 +355,8 @@ export function TransactionsToolbar({
                         >
                             <Button
                                 type="button"
-                                variant="destructive"
+                                // Limpar filtros não apaga dado nenhum: vermelho aqui era alarme falso.
+                                variant="tertiary"
                                 size={isMobile ? "xl" : "lg"}
                                 className={isMobile ? "w-full" : undefined}
                                 onClick={() => {

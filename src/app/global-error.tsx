@@ -16,6 +16,9 @@ export default function GlobalError({
 
     return (
         <html lang="pt-BR" suppressHydrationWarning>
+            <head>
+                <title>Algo deu errado · Finance</title>
+            </head>
             <body
                 style={{
                     margin: 0,

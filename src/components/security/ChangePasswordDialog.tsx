@@ -1,5 +1,6 @@
 "use client"
 
+import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy"
 import { useState } from "react"
 import { useAuth } from "@/components/providers"
 import { supabase } from "@/lib/supabase"
@@ -46,7 +47,7 @@ interface PasswordRequirements {
 
 function checkPasswordRequirements(password: string): PasswordRequirements {
     return {
-        hasMinLength: password.length >= 8,
+        hasMinLength: password.length >= MIN_PASSWORD_LENGTH,
         hasLowercase: /[a-z]/.test(password),
         hasUppercase: /[A-Z]/.test(password),
         hasDigit: /\d/.test(password),

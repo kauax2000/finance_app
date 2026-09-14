@@ -1,5 +1,6 @@
 "use client"
 
+import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy"
 import { useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
@@ -30,7 +31,7 @@ interface PasswordRequirements {
 // Helper function to check all password requirements
 function checkPasswordRequirements(password: string): PasswordRequirements {
     return {
-        hasMinLength: password.length >= 8,
+        hasMinLength: password.length >= MIN_PASSWORD_LENGTH,
         hasLowercase: /[a-z]/.test(password),
         hasUppercase: /[A-Z]/.test(password),
         hasDigit: /\d/.test(password),
@@ -125,8 +126,8 @@ export function SignupForm() {
 
         if (!password) {
             errors.password = "Senha é obrigatória"
-        } else if (password.length < 8) {
-            errors.password = "A senha deve ter pelo menos 8 caracteres"
+        } else if (password.length < MIN_PASSWORD_LENGTH) {
+            errors.password = `A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres`
         } else if (!passwordRegex.test(password)) {
             errors.password = "Use letras maiúsculas, minúsculas, números e símbolos"
         }
