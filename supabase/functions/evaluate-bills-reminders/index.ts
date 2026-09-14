@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { internalError } from '../_shared/http.ts'
+import { FAN_OUT_CONCURRENCY, forEachLimit } from '../_shared/for-each-limit.ts'
 import { secretMatches } from '../_shared/timing-safe-equal.ts'
 import {
   deliverNotification,
@@ -185,7 +186,7 @@ Deno.serve(async (req: Request) => {
   let notified = 0
   const errors: Array<Record<string, unknown>> = []
 
-  for (const [workspaceId, events] of eventsByWorkspace) {
+  await forEachLimit(eventsByWorkspace, FAN_OUT_CONCURRENCY, async ([workspaceId, events]) => {
     try {
       const { data: memberRows, error: mErr } = await admin
         .from('workspace_members')
@@ -194,7 +195,7 @@ Deno.serve(async (req: Request) => {
       if (mErr) throw new Error(mErr.message)
 
       const memberIds = (memberRows ?? []).map((m: { user_id: string }) => m.user_id)
-      if (memberIds.length === 0) continue
+      if (memberIds.length === 0) return
 
       const prefsMap = await loadWorkspacePrefsMap(admin, workspaceId, memberIds)
 
@@ -263,7 +264,7 @@ Deno.serve(async (req: Request) => {
       console.error('evaluate-bills-reminders: workspace', workspaceId, msg)
       errors.push({ workspace_id: workspaceId, error: msg })
     }
-  }
+  })
 
   return json(200, {
     ok: true,
