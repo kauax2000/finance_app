@@ -266,7 +266,14 @@ export function BillFormFields({
                 <Label>Forma de pagamento preferida</Label>
                 <Select
                     value={paymentMethodOption}
-                    onValueChange={setPaymentMethodOption}
+                    onValueChange={(next) => {
+                        setPaymentMethodOption(next)
+                        // O seletor mostrava o primeiro cartão com o estado vazio, e a
+                        // conta era salva sem cartão. O primeiro cartão vai para o estado.
+                        if (next === "credit_card" && !paymentCreditCardId && creditCards[0]) {
+                            setPaymentCreditCardId(creditCards[0].id)
+                        }
+                    }}
                 >
                     <SelectTrigger
                         size="sm"
@@ -289,10 +296,7 @@ export function BillFormFields({
                 <div className="grid gap-2">
                     <Label>Cartão</Label>
                     <Select
-                        value={
-                            paymentCreditCardId ||
-                            (creditCards[0]?.id ?? "")
-                        }
+                        value={paymentCreditCardId}
                         onValueChange={setPaymentCreditCardId}
                     >
                         <SelectTrigger

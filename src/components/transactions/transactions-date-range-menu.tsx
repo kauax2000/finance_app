@@ -121,7 +121,6 @@ export function TransactionsDateRangeMenu({
                 align="end"
                 side="bottom"
                 className="flex max-h-[min(70vh,28rem)] w-[min(100vw-2rem,20rem)] flex-col gap-3 overflow-y-auto p-3"
-                onCloseAutoFocus={(e) => e.preventDefault()}
                 onInteractOutside={(e) => {
                     const el = e.target as HTMLElement
                     if (

@@ -137,7 +137,6 @@ function MonthNavArrowControls({
                     <PopoverContent
                         align="center"
                         className="w-auto p-0"
-                        onCloseAutoFocus={(e) => e.preventDefault()}
                     >
                         <BudgetMonthSelects
                             valueYm={budgetMonthYm}
@@ -306,7 +305,6 @@ export function MonthNav({
                         <PopoverContent
                             align="start"
                             className="w-auto p-0"
-                            onCloseAutoFocus={(e) => e.preventDefault()}
                         >
                             <BudgetMonthSelects
                                 valueYm={budgetMonthYm}

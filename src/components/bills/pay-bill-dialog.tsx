@@ -174,6 +174,9 @@ export function PayBillDialog({
 
             await onPaid()
             onOpenChange(false)
+        } catch (err) {
+            // Sem este catch, uma falha ao recarregar depois do pagamento escapava calada.
+            toastError(err instanceof Error ? err.message : "Não foi possível registrar o pagamento.")
         } finally {
             setSaving(false)
         }
