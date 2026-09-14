@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { useSidebar } from "@/components/ui/sidebar"
 import { ROUTES } from "@/config/navigation"
-import { MOBILE_FLOATING_ACTION_BUTTON_CLASSNAME } from "@/components/layout/mobile-fab-button-classes"
+import { bottomBarActionClassName } from "@/components/ui/bottom-bar"
 import {
     MOBILE_GLASS_FAB_MENU_CONTENT_CLASSNAME,
     MOBILE_GLASS_FAB_MENU_ITEM_CLASSNAME,
@@ -193,7 +193,7 @@ export function QuickActionButton({ variant = "sidebar" }: QuickActionButtonProp
                         size="icon-lg"
                         type="button"
                         className={cn(
-                            isFab && MOBILE_FLOATING_ACTION_BUTTON_CLASSNAME,
+                            isFab && bottomBarActionClassName,
                             !isFab &&
                                 "size-8 shrink-0 rounded-lg group-data-[collapsible=icon]:flex-none"
                         )}

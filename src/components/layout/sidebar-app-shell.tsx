@@ -36,7 +36,7 @@ export function SidebarAppShell({
                                 <AppSidebar />
                                 <SidebarInset>
                                     <AppHeader pathname={pathname} titleMode={titleMode} />
-                                    <div className="flex min-w-0 flex-1 flex-col gap-4 px-4 pb-[var(--mobile-bottom-pad)] pt-[calc(var(--mobile-header-offset)+1rem)] md:p-6 md:pb-6">
+                                    <div className="flex min-w-0 flex-1 flex-col gap-4 px-4 pb-(--bottom-bar-pad) pt-[calc(var(--mobile-header-offset)+1rem)] md:p-6 md:pb-6">
                                         {children}
                                     </div>
                                     <MobileBottomNav />

@@ -6,9 +6,8 @@ import { Group, Spec, Stack } from "../ds-kit"
 
 const SAFE_AREA = [
   ["--mobile-header-offset", "3rem + safe-area topo", "quanto o conteúdo desce sob o cabeçalho fixo"],
-  ["--mobile-nav-island-height", "3,5rem", "a altura da ilha de navegação"],
-  ["--mobile-nav-island-margin", "1rem", "a folga entre a ilha e a borda"],
-  ["--mobile-bottom-pad", "ilha + folga + safe-area", "quanto o conteúdo precisa reservar embaixo"],
+  ["--bottom-bar-margin", "1rem", "a folga entre a barra de baixo e a borda"],
+  ["--bottom-bar-pad", "barra + 2× folga + safe-area", "quanto o conteúdo precisa reservar embaixo"],
 ]
 
 export default function MobileToqueDoc() {

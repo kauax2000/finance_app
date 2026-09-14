@@ -315,6 +315,12 @@ tema.
   nem `backdrop-blur` numa barra: `position`, `size`, `surface` e `gutter`
   cobrem as duas contagens, e a altura já contém o fio e a área segura. Ver a
   rodada 80.
+- **A barra de baixo do telefone**: [`BottomBar`](src/components/ui/bottom-bar.tsx)
+  — a do app é ela. Não escreva `fixed bottom-0` nem uma grade de abas à mão:
+  as abas são `BottomBarTab` (com `iconActive` para o par sólido), o gatilho de
+  popover é `BottomBarSlot`, e a ação primária veste `bottomBarActionClassName`,
+  que lê a altura da barra e **não declara cor**. O realce viaja sozinho, e a
+  área segura mora dentro da caixa. Ver a rodada 82.
 - **Page chrome**: [`PageHeader`](src/components/ui/page-header.tsx) +
   [`PageSection`](src/components/ui/page-section.tsx) +
   [`Container`](src/components/ui/container.tsx). Os três têm `size` (`sm` |
@@ -9896,6 +9902,203 @@ nada muda**: `UserMenu` e `MobileAccountMenu` seguem chapados.
 zoom não é suportado no painel do navegador deste ambiente. O que prova a
 superfície é o computado (as 6 camadas, o tom e o realce acima) e as asserções.
 
+### Rodada 82 — a barra de baixo vira peça: `BottomBar`
+
+A barra do **topo** virou peça na rodada 80. A de **baixo** estava onde o
+`AppHeader` estava antes dela, e pior: **seis arquivos** em
+`src/components/layout/` — a casca, a aba, três funções de classe, o material e
+o quadrado do FAB —, com os três silêncios que esta casa trata como sinal para
+olhar: `ds:audit` reportando **um** achado no subsistema inteiro (a regra H não
+enxerga dentro de `cn()` nem de função, e era ali que tudo morava), nenhuma
+entrada no catálogo, e **zero testes**.
+
+Hoje é [`BottomBar`](src/components/ui/bottom-bar.tsx), **Template**, e o
+`MobileBottomNav` ficou só com a fiação — `useAuth`, `usePathname`, os quatro
+estados do slot da conta —, como o `AppHeader` faz com o `TopBar`. Saíram
+`mobile-nav-island.tsx`, `mobile-nav-tab.tsx`, `mobile-nav-tab-classes.ts` e
+`mobile-fab-button-classes.ts`, **sem alias**.
+
+#### As peças, e o que cada uma apagou
+
+| Peça | O que ela apaga |
+| --- | --- |
+| `BottomBar` | o `<nav>` fixo, `pointer-events-none` — a faixa invisível de largura total não pode engolir o toque na base da tela |
+| `BottomBarRow` | a linha que recebe os eventos |
+| `BottomBarTabs` | a pílula de vidro **e** o `grid-cols-4` cravado no consumidor — as colunas agora derivam de `Children.toArray(children).length` |
+| `BottomBarTab` | a aba e as três funções de classe |
+| `BottomBarSlot` | o `<button>` cru do slot da conta (o único achado do auditor) |
+| `bottomBarActionClassName` | a string de 56px com **seis `!important`** |
+
+Eixos: `labels` (56 → 64, padrão desligado) e `shape` (`island`, um valor só,
+de propósito: é ele que dá dono ao `--bottom-bar-margin`; `flush` entra no dia
+em que houver caso).
+
+#### O token de margem não tinha leitor
+
+`--mobile-nav-island-margin: 1rem` estava declarado, documentado na Fundação
+`mobile-toque` como "a folga entre a ilha e a borda", e **nenhum componente o
+lia**: a ilha escrevia `mx-4` nos lados e `0.5rem` embaixo, literais. E a reserva
+de conteúdo contava a margem **uma vez**, quando a barra tem folga em cima e
+embaixo.
+
+Os tokens viraram `--bottom-bar-margin` e `--bottom-bar-pad` (altura **+ 2×
+margem** + área segura), e a **altura deixou de ser token**: ela é o degrau do
+eixo `labels`, publicado em `--bottom-bar-h`, pela mecânica do `--top-bar-h`. Uma
+altura que depende de eixo não pode morar em `globals.css` — seriam duas
+declarações precisando concordar. Medido: margem **16 nos quatro lados**, contra
+8 embaixo antes.
+
+#### O FAB era um quadrado verde inerte
+
+Os seis `!important` (`hover:!bg-primary`, `hover:!border-primary` e os pares
+`dark:`) anulavam a tecla que o primário virou na rodada 78. A ação agora lê
+`--bottom-bar-h` — **56 não é degrau do `Button`**, que termina em 40 — e não
+declara cor nenhuma. Medido: aresta `oklch(0.36 0.09 166)`, plinto e fio de luz
+de volta, e o cursor escurecendo até `--primary-hover` (rgb 0,108,72). O
+`active:scale-95` saiu junto: a base já afunda, e dois afundamentos são um a
+mais.
+
+#### `motion` saiu, e era dependência inteira para um crossfade
+
+Verificado em `src/`, `e2e/` e `scripts/`: **um** consumidor, os 220ms de troca
+do slot da conta — arrastando `framer-motion` (3,2M) como transitiva. Hoje é a
+receita do `Avatar` e do `Popover`: a `key` remonta o nó e `animate-in` roda na
+entrada, com `animation-duration-*` (e não `duration-*`, que escreveria
+`transition-duration` morto). **A troca é só de entrada, e é decisão**: sem
+`AnimatePresence` o que sai teria de ficar na árvore um ciclo, e a troca acontece
+em carregamento e login — não é gesto que alguém acompanha.
+
+#### O vidro é o da folha, e não o da barra
+
+A pílula **não** veste `barSurfaceClassName` (`--background` a 95/60): aquela
+serve barra **rente** à borda. A ilha flutua com margem sobre a lista, e
+`--mobile-glass-bg` (55/45) é calibrado para uma folha sobre a página — a
+própria nota de `scroll-fade-material` o descreve assim ao rejeitá-lo para uma
+faixa de borda. Trocar deixaria a pílula quase opaca e mataria o que justifica o
+borrão.
+
+**E o anel fica — o plano mandava tirar, e a medição reverteu.** O argumento era
+"três separadores para a mesma emenda". Medido: `--mobile-glass-border` é
+**branco** e dá **1,007** contra a pílula no tema claro — branco no branco, não
+existe; ali quem desenha a aresta é o `ring-1 ring-border/20`. No escuro a conta
+se inverte (borda 1,117, anel 1,042). É a física do `--secondary-hover`: um valor
+único não serve os dois temas quando a direção que lê se inverte.
+
+#### A pílula e o realce são `rounded-full`, e isso é concentricidade de graça
+
+Com raio fixo seriam **28 por fora e 25 por dentro** (56 − 1 de borda − 2 de
+recuo) — dois números que param de concordar no dia em que o recuo mudar. Com
+`rounded-full` a conta é a própria definição da forma: medido 28/25 no padrão e
+32/29 com `labels`, sem ninguém recalcular. A ação é **redonda** junto: ao lado
+de uma pílula, um quadrado de cantos moles lê como a forma que não decidiu.
+
+#### A aba ativa preenche, e isso não é a regra G ao contrário
+
+`iconActive` troca o glifo pelo par sólido quando a aba é a página. É **prop e
+não derivação**: a peça não tem como saber o sólido de um ícone qualquer, e
+adivinhar por nome quebraria no build de produção, onde o nome da função é
+mangled. O mapa mora em `solidIconFor`, em `config/mobile-navigation.ts`, e é
+**chaveado pelo componente, não pela rota** — uma tabela por `href` seria uma
+segunda lista de rotas para sair de sincronia, e keyed pelo ícone ela serve as
+abas **e** o slot com uma consulta só (nove pares).
+
+A regra G existe porque 24, 20 e 16 são **redesenhos** para tamanhos diferentes;
+aqui a grade é 24 dos dois lados e muda só o preenchimento. O auditor concorda
+por construção — ele compara o número do conjunto, não o traço —, e não houve
+exceção nomeada. Medido: ativa ⇔ sólida em **12 de 12** abas.
+
+#### O realce viaja
+
+Cada item pintava o próprio fundo, e isso **teleporta**. Hoje é um marcador só,
+com o mecanismo do `Tabs` e da `Sidebar floating`: a pílula publica a caixa do
+item ativo em `--bottom-bar-marker-x/y/w/h`, e ele transiciona em
+`--duration-base` com `--ease-out` — a curva de objeto que viaja num trilho.
+
+**A tinta, e não o vidro do `Tabs`.** O precedente idêntico é a `Sidebar
+floating`, marcador dentro de placa de vidro. E o número decidiu: o
+`--glass-tone` do `Tabs` (`--background`) é rgb **10**, a pílula compõe em **16**
+e o realce de hoje em **44** — vestir aquela receita inverteria o realce de claro
+para escuro. **Sem esticão de lente**: o repositório tem zero vocabulário de mola,
+e `scaleX` está rejeitado por escrito em três lugares.
+
+Três coisas que a peça exigiu, e as três falhariam caladas:
+
+- **`offsetLeft` direto, e não a cadeia da `Sidebar`**: lá o `<li>` é `relative` e
+  vira o `offsetParent`; aqui a aba e o slot são filhos diretos da pílula.
+  `:scope > [data-active]` cobre os dois com um seletor só.
+- **Os itens não eram `relative`.** Elemento estático pinta antes de posicionado,
+  e o marcador cobriria o ícone. Medido: `elementFromPoint` no centro do ativo
+  devolve o ícone, nos dois temas. E **sem `-z-10`**, pela razão que a `Sidebar`
+  registra.
+- **Antes de medir, o próprio item pinta o realce**, no mesmo alfa, por contexto.
+  Aqui ceder **não** precisa apagar: na `Sidebar` a base do `cva` pintava o ativo
+  incondicionalmente; aqui a string é inteira da peça.
+
+Medido: trajeto de 2 a 140px com **oito amostras intermediárias**, quatro cliques
+alternados sem erro, o marcador na 4ª coluna com o slot, e acompanhando a altura
+com `labels` (58 = 58). O desalinho de ¼–½px é o arredondamento inteiro de
+`offset*` contra colunas fracionárias (66,75) — o mesmo do `Tabs`.
+
+#### O rótulo cabe dentro do realce, e não dentro do item
+
+Com `labels`, "Transações" vazava pela curva: a caixa tinha a largura do item
+(64,75px), mas o rótulo mora no arco de baixo, onde a pílula mede **~51px**. O
+`px-2` corta a caixa para dentro da corda e o `truncate` põe as reticências ali.
+Medido pela forma, com os quatro cantos da caixa de texto testados contra o
+contorno: 48,8px dentro de 64,8 com quatro abas, e **35,4 dentro de 51,4** num
+estresse de cinco colunas com "Contas a pagar". "Categorias" também trunca, de
+propósito: qualquer aba pode virar ativa.
+
+#### O catálogo seleciona em vez de navegar
+
+Os espécimes vivem num `PhoneFrame`, e `BottomBarTab` é `<Link>` — que é o certo
+no app. Clicar navegava a moldura e levava a demonstração embora. Cada palco tem
+estado próprio, e o `onClick` faz `preventDefault()` **mantendo o `href`**, que é
+o que o trecho de código ensina. **A peça não foi tocada** por isso.
+
+#### O que o navegador achou e os testes não
+
+- **`BottomBarTabs` contava os filhos e não os renderizava.** Destruturava
+  `children` para `Children.toArray` e fechava a `<div />`: a grade saía com as
+  quatro colunas certas e **vazia**, com o `tsc` e as catorze asserções passando
+  nos dois estados. Entrou a asserção 15.
+- **Uma asserção certificava algo falso.** `not.toMatch(/ring-1\s+ring-border/)`
+  passava porque o anel mora na constante importada, e ela lia o arquivo da peça
+  — media a chamada, e não o resultado. Saiu.
+- **O `curl` do SSR não provava nada**: os espécimes entram por um portal que só
+  existe no cliente, e vinham zero marcadores *e* zero abas. A prova veio de
+  `renderToStaticMarkup` num script: zero marcadores, e o fallback nos três itens.
+
+O teste de escada tem **19 asserções**, e cada uma que trata desta rodada foi
+verificada reintroduzindo o defeito. Duas foram consertadas por serem
+instrumento errado: a 12 proibia qualquer template literal, e os `setProperty` do
+marcador são valor de variável, não classe; a 19 cortava 600 caracteres e entrava
+no fallback, que carrega a classe de propósito.
+
+#### Lições de instrumento
+
+- **`\bease-out\b` casa dentro de `--ease-out`.** O `-` é fronteira de palavra; a
+  asserção acusava o próprio conserto até ganhar `(?<![-(])`.
+- **`oklab` e `oklch` são a mesma cor em notações diferentes** — e ler o cursor no
+  mesmo passo pegou o início da transição. As duas coisas juntas pareceram "o
+  hover não muda nada".
+- **Um `git stash push` num arquivo não rastreado não faz nada**, calado.
+- **Um servidor de desenvolvimento órfão** (13h35m no ar) segurava a porta 3000 e
+  impedia o harness de subir o seu.
+- **Um clique no slot não selecionou**, uma vez, e não reproduziu em cinco
+  seguintes. Registrado sem causa, porque os dados não a mostram.
+
+#### O que muda em produção
+
+Não é zero-pixel: a folga de baixo vai de 8 a 16px, o FAB ganha a tecla e fica
+redondo, a barra vira pílula, as abas respondem ao cursor e têm anel de foco, o
+ícone ativo preenche, o realce viaja, e as transições entram na escala. A troca
+de `--primary-foreground` para `--foreground` na tinta do ativo, que o plano
+listava como mudança, **não muda pixel**: no escuro as duas são rgb 250.
+
+**Nenhuma tela foi vista logada** — o app exige sessão. O que prova a migração é
+o `tsc`, a suíte, o auditor e os espécimes, que exercitam as mesmas peças.
+
 ### Backlog de migração
 
 A rodada 01 entregou tokens, componentes, documentação e o auditor, sem migrar
@@ -9972,9 +10175,10 @@ E o que a rodada do `Drawer` e do `Popover` deixou:
   declarar `pb-(--sheet-drawer-safe)`, e a classe que 19 telas importavam do
   chrome de folha para receber o `env()` deixou de existir junto com ele. O que
   fica são as superfícies que **não** são folha e escrevem o próprio recuo —
-  `mobile-account-menu`, `mobile-nav-island`, `install-pwa-sheet` e
-  `notifications-sheet` —, e um caso solto: `bills-toolbar.tsx`, que reescrevia
-  a classe inteira à mão em vez de importá-la.
+  `mobile-account-menu`, `install-pwa-sheet` e `notifications-sheet` —, e um
+  caso solto: `bills-toolbar.tsx`, que reescrevia a classe inteira à mão em vez
+  de importá-la. (A `mobile-nav-island` estava nesta lista e foi paga na rodada
+  82: a `BottomBar` soma `env(safe-area-inset-bottom)` dentro da própria caixa.)
 - **`DialogHeaderRow` ainda separa título e descrição com `space-y-1`.** É o
   mesmo par de identidade que saiu do `PopoverHeader` nesta rodada. Um
   `gap-0.5` a menos, e o par volta a ler como uma coisa só.
@@ -10686,5 +10890,32 @@ E o que a rodada do `TopBar` deixou:
   precisarem de barra; hoje o que falta é um invólucro, não uma barra.
 - **O `Safari` não foi medido.** O vidro rolado e a escuta em captura foram
   verificados no Chromium do painel.
+
+E o que a rodada da `BottomBar` deixou:
+
+- **Não verificado logado**: a barra real do app, o empate do `Dialog` com a
+  barra em `--z-modal` (50, decisão registrada; hoje o diálogo vence por ordem de
+  DOM) e o crossfade do slot da conta.
+- **Os itens do popover da conta medem 40px** (`h-10` em
+  `mobile-glass-surface.ts`), abaixo dos 44 da Fundação `mobile-toque`. O menu do
+  FAB acerta com `h-11`.
+- **`useMatchMedia` local** em `mobile-account-menu.tsx`, duplicando o
+  `useIsMobile` de `hooks/use-mobile.tsx`.
+- **Duas noções de "ativo"** para a mesma lista: a `Sidebar` em igualdade
+  (`isExactPath`), o telefone em prefixo. Em `/categories/abc` a aba acende e o
+  item da barra lateral não.
+- **Cinco cópias de `useIsomorphicLayoutEffect`** (`tabs`, `carousel`,
+  `navigation-menu`, `sidebar`, `bottom-bar`).
+- **Seis bases somadas a `safe-area-inset-bottom`** pelo app, e nenhuma lê
+  `--bottom-bar-pad`.
+- **`lib/glass-classes.ts` afirma que `--glass-sheen` não tem produtor**; tem três
+  (`tabs`, `theme-toggle`, `sidebar`).
+- **O avatar do slot da conta é `<img>` cru** com `eslint-disable`, e o `Avatar`
+  existe.
+- **`ACCOUNT_MENU_WORKSPACE_LINK_ITEMS` repete `MEMBERS_NAV_ITEM` e
+  `SETTINGS_NAV_ITEM`** com outro formato de tipo, e `/wallets` tem página e título
+  mas não está em `ROUTES` nem em navegação nenhuma.
+- **`src/components/ui/empty.tsx`, não rastreado, reprova a asserção 1 do
+  `taxonomy.test.ts`** — trabalho em andamento de outra frente.
 
 Reproduza a qualquer momento com `npm run ds:audit`.

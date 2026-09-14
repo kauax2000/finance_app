@@ -590,14 +590,25 @@
   /* Mobile shell: o TopBar fixo (48 = 3rem, o mesmo do desktop) + área segura.
      Tem de ser a altura do degrau padrão do TopBar. */
   --mobile-header-offset: calc(3rem + env(safe-area-inset-top, 0px));
-  /* Floating island nav (see MobileNavIsland) */
+  /* A tinta do vidro flutuante — a ilha da `BottomBar`, o popover da conta e o
+     dropdown do FAB. Ela segue superfícies diferentes em cada tema de
+     propósito: é calibrada para uma **folha sobre a página**, e não para uma
+     faixa rente à borda (ver a nota de `scroll-fade-material`, que a rejeita
+     justamente por isso). */
   --mobile-glass-bg: oklch(0.985 0 0 / 55%);
   --mobile-glass-border: oklch(1 0 0 / 10%);
-  --mobile-nav-island-height: 3.5rem;
-  --mobile-nav-island-margin: 1rem;
-  --mobile-bottom-pad: calc(
-    var(--mobile-nav-island-height) + var(--mobile-nav-island-margin) +
-      env(safe-area-inset-bottom, 0px)
+
+  /* A barra de baixo (ver `BottomBar`).
+     A **altura** não mora aqui: ela é o degrau do eixo `labels`, publicado pela
+     peça em `--bottom-bar-h`, como o `TopBar` faz com `--top-bar-h`. Aqui fica
+     só o que a casca precisa saber para reservar o espaço.
+     A margem tinha 1rem declarado e **nenhum leitor**: a ilha escrevia `mx-4`
+     nos lados e `0.5rem` embaixo, literais, e a reserva contava 1rem uma vez
+     só. A conta certa tem a margem **duas vezes** — a barra tem folga em cima
+     e embaixo —, e hoje ela tem leitor. */
+  --bottom-bar-margin: 1rem;
+  --bottom-bar-pad: calc(
+    3.5rem + var(--bottom-bar-margin) * 2 + env(safe-area-inset-bottom, 0px)
   );
 }
 

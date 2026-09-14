@@ -8,6 +8,7 @@ import AlertDialogDoc from "./docs/alert-dialog"
 import AnnouncementBarDoc from "./docs/announcement-bar"
 import AvatarDoc from "./docs/avatar"
 import BadgeDoc from "./docs/badge"
+import BottomBarDoc from "./docs/bottom-bar"
 import BreadcrumbDoc from "./docs/breadcrumb"
 import ButtonDoc from "./docs/button"
 import ButtonGroupDoc from "./docs/button-group"
@@ -95,6 +96,7 @@ export const DOCS: Record<string, ComponentType> = {
   "announcement-bar": AnnouncementBarDoc,
   "avatar": AvatarDoc,
   "badge": BadgeDoc,
+  "bottom-bar": BottomBarDoc,
   "breadcrumb": BreadcrumbDoc,
   "button": ButtonDoc,
   "button-group": ButtonGroupDoc,

@@ -1,24 +1,22 @@
 "use client"
 
-import { EllipsisHorizontalIcon } from "@heroicons/react/16/solid"
+import { EllipsisHorizontalIcon } from "@heroicons/react/24/outline"
 /* eslint-disable @next/next/no-img-element -- bottom-nav avatar from user metadata URL */
 
 import { usePathname } from "next/navigation"
-import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { QuickActionButton } from "@/components/layout/quick-actions"
 import { MobileAccountMenu } from "@/components/layout/mobile-account-menu"
-import { MobileNavIsland } from "@/components/layout/mobile-nav-island"
-import { MobileNavTab } from "@/components/layout/mobile-nav-tab"
 import {
-    mobileNavTabIconClass,
-    mobileNavTabInnerClass,
-    mobileNavTabRootClass,
-} from "@/components/layout/mobile-nav-tab-classes"
+    BottomBar,
+    BottomBarSlot,
+    BottomBarTab,
+} from "@/components/ui/bottom-bar"
 import { useAuth } from "@/components/providers"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
     getActiveMobileAccountMenuNavItem,
     getMobileNavTabs,
+    solidIconFor,
     type MobileAccountMenuNavItem,
 } from "@/config/mobile-navigation"
 import { isExactPath, ROUTES } from "@/config/navigation"
@@ -41,6 +39,23 @@ type MobileAccountMenuSlotContentProps = {
     avatarUrl?: string | null
 }
 
+/**
+ * O conteúdo do slot da conta — quatro estados, e quem os conhece é o app.
+ *
+ * A troca entrava por `AnimatePresence`, e essa era a **única** linha do
+ * repositório que importava `motion` — uma dependência inteira (mais o
+ * `framer-motion` que ela arrasta) para um crossfade de 220ms. Aqui ela é a
+ * mesma receita que o `Avatar` e o `Popover` já usam: a `key` remonta o nó, e o
+ * `animate-in` roda na entrada.
+ *
+ * A troca é **só de entrada**, e é decisão: sem `AnimatePresence` o que sai
+ * teria de ficar na árvore um ciclo para transicionar, e a troca aqui acontece
+ * em carregamento e em login — não é um gesto que alguém acompanha.
+ *
+ * `animation-duration-*` e não `duration-*`: o segundo escreve
+ * `transition-duration` junto, que num nó sem transição é declaração morta — a
+ * lição que o `Popover` registra.
+ */
 function MobileAccountMenuSlotContent({
     activeMenuNavItem,
     showEllipsis,
@@ -49,8 +64,6 @@ function MobileAccountMenuSlotContent({
     avatarTone,
     avatarUrl,
 }: MobileAccountMenuSlotContentProps) {
-    const reduceMotion = useReducedMotion()
-
     const slotKey = showEllipsis
         ? "ellipsis"
         : showSkeleton
@@ -61,12 +74,7 @@ function MobileAccountMenuSlotContent({
 
     function renderSlot() {
         if (showEllipsis) {
-            return (
-                <EllipsisHorizontalIcon
-                    className={mobileNavTabIconClass(false)}
-                    aria-hidden
-                />
-            )
+            return <EllipsisHorizontalIcon className="size-6 shrink-0" aria-hidden />
         }
 
         if (showSkeleton) {
@@ -74,10 +82,12 @@ function MobileAccountMenuSlotContent({
         }
 
         if (activeMenuNavItem) {
-            const Icon = activeMenuNavItem.icon
-            return (
-                <Icon className={mobileNavTabIconClass(true)} aria-hidden />
-            )
+            // Quando o slot mostra o ícone de uma rota, aquela rota **está**
+            // ativa — então ele preenche, pela mesma regra das abas. Sem isso a
+            // barra teria duas gramáticas para o mesmo estado.
+            const Icon =
+                solidIconFor(activeMenuNavItem.icon) ?? activeMenuNavItem.icon
+            return <Icon className="size-6 shrink-0" aria-hidden />
         }
 
         return (
@@ -105,28 +115,11 @@ function MobileAccountMenuSlotContent({
     }
 
     return (
-        <span className="relative grid size-6 shrink-0 place-items-center">
-            <AnimatePresence initial={false} mode="sync">
-                <motion.span
-                    key={slotKey}
-                    className="col-start-1 row-start-1 flex items-center justify-center"
-                    initial={
-                        reduceMotion ? false : { opacity: 0, scale: 0.8 }
-                    }
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={
-                        reduceMotion
-                            ? { opacity: 0 }
-                            : { opacity: 0, scale: 0.8 }
-                    }
-                    transition={{
-                        duration: reduceMotion ? 0 : 0.22,
-                        ease: "easeOut",
-                    }}
-                >
-                    {renderSlot()}
-                </motion.span>
-            </AnimatePresence>
+        <span
+            key={slotKey}
+            className="flex animate-in fade-in zoom-in-95 items-center justify-center animation-duration-(--duration-base) ease-(--ease-out)"
+        >
+            {renderSlot()}
         </span>
     )
 }
@@ -149,44 +142,36 @@ export function MobileBottomNav() {
     const showEllipsis = !user && !loading
 
     return (
-        <MobileNavIsland trailing={<QuickActionButton variant="fab" />}>
-            <div className="grid h-full grid-cols-4 items-stretch gap-0.5">
-                {navTabs.map((item) => (
-                    <MobileNavTab
-                        key={item.href}
-                        href={item.href}
-                        name={item.name}
-                        icon={item.icon}
-                        active={isMobileNavTabActive(pathname, item.href)}
-                    />
-                ))}
+        <BottomBar action={<QuickActionButton variant="fab" />}>
+            {navTabs.map((item) => (
+                <BottomBarTab
+                    key={item.href}
+                    href={item.href}
+                    label={item.name}
+                    icon={item.icon}
+                    iconActive={solidIconFor(item.icon)}
+                    active={isMobileNavTabActive(pathname, item.href)}
+                />
+            ))}
 
-                <MobileAccountMenu>
-                    <button
-                        type="button"
-                        aria-label={
-                            activeMenuNavItem?.name ??
-                            "Abrir menu da conta e mais opções"
-                        }
-                        className={mobileNavTabRootClass}
-                    >
-                        <span
-                            className={mobileNavTabInnerClass(
-                                activeMenuNavItem != null
-                            )}
-                        >
-                            <MobileAccountMenuSlotContent
-                                activeMenuNavItem={activeMenuNavItem}
-                                showEllipsis={showEllipsis}
-                                showSkeleton={showSkeleton}
-                                userName={userName}
-                                avatarTone={avatarTone}
-                                avatarUrl={user?.user_metadata?.avatar_url}
-                            />
-                        </span>
-                    </button>
-                </MobileAccountMenu>
-            </div>
-        </MobileNavIsland>
+            <MobileAccountMenu>
+                <BottomBarSlot
+                    active={activeMenuNavItem != null}
+                    aria-label={
+                        activeMenuNavItem?.name ??
+                        "Abrir menu da conta e mais opções"
+                    }
+                >
+                    <MobileAccountMenuSlotContent
+                        activeMenuNavItem={activeMenuNavItem}
+                        showEllipsis={showEllipsis}
+                        showSkeleton={showSkeleton}
+                        userName={userName}
+                        avatarTone={avatarTone}
+                        avatarUrl={user?.user_metadata?.avatar_url}
+                    />
+                </BottomBarSlot>
+            </MobileAccountMenu>
+        </BottomBar>
     )
 }

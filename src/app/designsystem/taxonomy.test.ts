@@ -152,6 +152,7 @@ describe("taxonomia", () => {
   it("5. Templates é o nível de página, e não uma terceira gaveta", () => {
     const templates = REGISTRY.filter((e) => e.category === "Templates")
     expect(templates.map((e) => e.slug).sort()).toEqual([
+      "bottom-bar",
       "page-header",
       "page-section",
       "table-panel",

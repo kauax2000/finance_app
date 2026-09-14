@@ -267,6 +267,12 @@ const LAYER: Record<string, Layer> = {
   toolbar: "Organismos",
 
   // ── Templates: o que estrutura a página ─────────────────────────────────
+  /**
+   * A barra de baixo do telefone — a irmã do `top-bar`. Ela não mostra
+   * conteúdo nenhum por si: dispõe onde as abas, o slot de conta e a ação
+   * primária vão, e fica parada sobre a tela que rola por baixo dela.
+   */
+  "bottom-bar": "Templates",
   "page-header": "Templates",
   "page-section": "Templates",
   /**
@@ -473,6 +479,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("toolbar", "Toolbar", "A linha de filtros e ações acima de uma lista, e a densidade dela.", ui("toolbar"), "Toolbar, ToolbarRow, ToolbarFilters, ToolbarActions, ToolbarFilterIndicator"),
 
   // ── Templates ───────────────────────────────────────────────────────────
+  entry("bottom-bar", "Bottom Bar", "A barra de baixo do telefone: as abas, o slot de conta e a ação primária, flutuando sobre o conteúdo.", ui("bottom-bar"), "BottomBar, BottomBarRow, BottomBarTabs, BottomBarTab, BottomBarSlot, bottomBarActionClassName"),
   entry("page-header", "Page Header", "O topo de uma tela: trilha, título, fatos e a ação principal.", ui("page-header"), "PageHeader, PageHeaderTitleRow, PageHeaderTitle, PageHeaderDescription, PageHeaderEyebrow, PageHeaderMeta, PageHeaderActions"),
   entry("page-section", "Page Section", "O bloco que dá ritmo vertical a uma tela, com título e ação.", ui("page-section"), "PageSection, PageSectionHeader, PageSectionTitle, PageSectionDescription"),
   entry("table-panel", "Table Panel", "A tabela como o app a mostra: moldura, barra de ações e rodapé de paginação.", ui("table-panel"), "TablePanel, TablePanelToolbar, TablePanelFooter"),
