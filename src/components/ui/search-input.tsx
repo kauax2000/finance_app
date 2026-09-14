@@ -79,7 +79,17 @@ function SearchInput({
       />
       {onClear && temTexto ? (
         <InputGroupAddon align="inline-end">
-          <InputGroupButton aria-label={clearLabel} onClick={onClear}>
+          <InputGroupButton
+            aria-label={clearLabel}
+            onClick={(event) => {
+              // O × some com o texto: sem devolver o foco ao campo, ele caía no <body>.
+              const campo = event.currentTarget
+                .closest('[data-slot="search-input"]')
+                ?.querySelector<HTMLInputElement>("input")
+              onClear()
+              campo?.focus()
+            }}
+          >
             <XMarkIcon aria-hidden />
           </InputGroupButton>
         </InputGroupAddon>
