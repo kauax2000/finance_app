@@ -1,6 +1,5 @@
 "use client"
 
-/* eslint-disable react-hooks/set-state-in-effect -- URL / embedded parent sync intentionally applies filters in effects */
 
 import {
     keepPreviousData,
@@ -804,22 +803,25 @@ export function useTransactionsListController(
         if (!user || !currentWorkspaceId) return false
 
         setSaving(true)
-        const ok = await persistTransactionSave({
-            supabase,
-            user,
-            workspaceId: currentWorkspaceId,
-            payload,
-            resolveEditingTransaction: (editingId) =>
-                editingTransaction?.id === editingId
-                    ? editingTransaction
-                    : (transactions.find((t) => t.id === editingId) ?? null),
-            onAfterSuccess: async () => {
-                await refreshAll()
-                emitWorkspaceDataChanged()
-            },
-        })
-        setSaving(false)
-        return ok
+        try {
+            return await persistTransactionSave({
+                supabase,
+                user,
+                workspaceId: currentWorkspaceId,
+                payload,
+                resolveEditingTransaction: (editingId) =>
+                    editingTransaction?.id === editingId
+                        ? editingTransaction
+                        : (transactions.find((t) => t.id === editingId) ?? null),
+                onAfterSuccess: async () => {
+                    await refreshAll()
+                    emitWorkspaceDataChanged()
+                },
+            })
+        } finally {
+            // Se a persistência lançar, o botão não fica preso em "salvando".
+            setSaving(false)
+        }
     }
 
     const handleSaveInstallmentPlan = async (
@@ -828,18 +830,21 @@ export function useTransactionsListController(
         if (!user || !currentWorkspaceId) return false
 
         setSaving(true)
-        const ok = await persistInstallmentPlanCreate({
-            supabase,
-            user,
-            workspaceId: currentWorkspaceId,
-            payload,
-            onAfterSuccess: async () => {
-                await refreshAll()
-                emitWorkspaceDataChanged()
-            },
-        })
-        setSaving(false)
-        return ok
+        try {
+            return await persistInstallmentPlanCreate({
+                supabase,
+                user,
+                workspaceId: currentWorkspaceId,
+                payload,
+                onAfterSuccess: async () => {
+                    await refreshAll()
+                    emitWorkspaceDataChanged()
+                },
+            })
+        } finally {
+            // Se a persistência lançar, o botão não fica preso em "salvando".
+            setSaving(false)
+        }
     }
 
     const handleUpdateInstallmentPlan = async (
@@ -849,66 +854,67 @@ export function useTransactionsListController(
         if (!user || !currentWorkspaceId) return false
 
         setSaving(true)
-        const ok = await persistInstallmentPlanUpdate({
-            supabase,
-            planId,
-            payload,
-            onAfterSuccess: async () => {
-                await refreshAll()
-                emitWorkspaceDataChanged()
-            },
-        })
-        setSaving(false)
-        return ok
+        try {
+            return await persistInstallmentPlanUpdate({
+                supabase,
+                planId,
+                payload,
+                onAfterSuccess: async () => {
+                    await refreshAll()
+                    emitWorkspaceDataChanged()
+                },
+            })
+        } finally {
+            // Se a persistência lançar, o botão não fica preso em "salvando".
+            setSaving(false)
+        }
     }
 
     const confirmDelete = async () => {
-        if (!pendingDelete) return
+        if (!pendingDelete || !currentWorkspaceId) return
 
         setDeleting(true)
-        const mode = pendingDelete.mode
-        const ids =
-            mode === "single"
-                ? [pendingDelete.transaction.id]
-                : pendingDelete.ids
-        const rows =
-            mode === "single"
-                ? [
-                      {
-                          id: pendingDelete.transaction.id,
-                          installment_plan_id:
-                              pendingDelete.transaction.installment_plan_id,
-                      },
-                  ]
-                : pendingDelete.ids.map((id) => {
-                      const t = transactions.find((x) => x.id === id)
-                      return {
-                          id,
-                          installment_plan_id: t?.installment_plan_id ?? null,
-                      }
-                  })
+        try {
+            const mode = pendingDelete.mode
+            const ids =
+                mode === "single"
+                    ? [pendingDelete.transaction.id]
+                    : pendingDelete.ids
+            const rows =
+                mode === "single"
+                    ? [
+                          {
+                              id: pendingDelete.transaction.id,
+                              installment_plan_id:
+                                  pendingDelete.transaction.installment_plan_id,
+                          },
+                      ]
+                    : pendingDelete.ids.map((id) => {
+                          const t = transactions.find((x) => x.id === id)
+                          return {
+                              id,
+                              installment_plan_id: t?.installment_plan_id ?? null,
+                          }
+                      })
 
-        if (!currentWorkspaceId) return
-        const ok = await deleteTransactionsByIds(supabase, ids, currentWorkspaceId, {
-            rows,
-        })
-        if (!ok) {
-            setDeleting(false)
-            return
-        }
+            const ok = await deleteTransactionsByIds(supabase, ids, currentWorkspaceId, {
+                rows,
+            })
+            if (!ok) return
 
-        const deletedCount = ids.length
-        setPendingDelete(null)
-        setDeleting(false)
-        setSelectedIds(new Set())
+            const deletedCount = ids.length
+            setPendingDelete(null)
+            setSelectedIds(new Set())
 
-        const stepBack = deletedCount >= transactions.length && page > 0
-        if (stepBack) {
-            setPage(page - 1)
-        } else {
+            // Página esvaziada volta uma; o resumo e os bundles recarregam nos dois casos.
+            if (deletedCount >= transactions.length && page > 0) {
+                setPage(page - 1)
+            }
             await refreshAll()
+            emitWorkspaceDataChanged()
+        } finally {
+            setDeleting(false)
         }
-        emitWorkspaceDataChanged()
     }
 
     const toggleSort = (key: SortKey) => {
