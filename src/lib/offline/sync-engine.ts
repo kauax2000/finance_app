@@ -2,6 +2,7 @@ import { syncMutation } from "@/lib/offline/handlers"
 import {
     getPendingMutations,
     removeMutation,
+    resetStaleSyncing,
     updateMutation,
 } from "@/lib/offline/outbox"
 import { isOnline } from "@/lib/offline/connectivity"
@@ -53,7 +54,21 @@ function dispatchForEntities(entities: Set<OfflineEntity>): void {
  */
 export async function processOutbox(): Promise<void> {
     if (!isOnline() || processing) return
+    // Uma aba drena a fila por vez: duas enviavam a mesma mutação. Com o lock na mão,
+    // o que estiver `syncing` é resto de uma aba que fechou, e volta para a fila.
+    if (typeof navigator !== "undefined" && navigator.locks) {
+        await navigator.locks.request("finance-outbox", { ifAvailable: true }, async (lock) => {
+            if (lock) await drainOutbox(true)
+        })
+        return
+    }
+    await drainOutbox(false)
+}
+
+async function drainOutbox(resetStale: boolean): Promise<void> {
+    if (processing) return
     processing = true
+    if (resetStale) await resetStaleSyncing()
 
     let minRetryDelay: number | null = null
 

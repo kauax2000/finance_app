@@ -127,9 +127,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
                 validateCurrentSession().then((ok) => {
                     if (!ok) {
-                        setSession(null)
-                        setUser(null)
-                        prevSignedInUserIdRef.current = null
+                        // Sessão revogada em outro aparelho: além de sair da tela, some com
+                        // os dados em cache e o login local (o SIGNED_OUT zera o estado).
+                        void clearClientCaches().finally(() =>
+                            supabase.auth.signOut({ scope: "local" }),
+                        )
                     }
                 }).catch(() => {})
             } else {
@@ -155,9 +157,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setLoading(false)
                 void validateCurrentSession().then((ok) => {
                     if (!ok) {
-                        setSession(null)
-                        setUser(null)
-                        prevSignedInUserIdRef.current = null
+                        // Sessão revogada em outro aparelho: além de sair da tela, some com
+                        // os dados em cache e o login local (o SIGNED_OUT zera o estado).
+                        void clearClientCaches().finally(() =>
+                            supabase.auth.signOut({ scope: "local" }),
+                        )
                     }
                 })
                 return
