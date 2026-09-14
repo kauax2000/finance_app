@@ -2,6 +2,7 @@
 
 import { ArrowTrendingDownIcon, ArrowTrendingUpIcon, MinusIcon } from "@heroicons/react/16/solid"
 import { cn } from "@/lib/utils"
+import { deltaTone } from "@/lib/delta-tone"
 
 const pctFmt = new Intl.NumberFormat("pt-BR", {
     maximumFractionDigits: 1,
@@ -9,6 +10,12 @@ const pctFmt = new Intl.NumberFormat("pt-BR", {
 })
 
 export type InvoiceDeltaDirection = "up" | "down" | "flat"
+
+const DELTA_TEXT = {
+    expense: "text-expense-muted-foreground",
+    income: "text-income-muted-foreground",
+    neutral: "text-muted-foreground",
+} as const
 
 export type InvoiceDeltaVsPriorMeta = {
     direction: InvoiceDeltaDirection
@@ -127,9 +134,7 @@ export function InvoiceDeltaVsPriorChip({
         <span
             className={cn(
                 "inline-flex items-center gap-1 text-2xs font-medium tabular-nums",
-                meta.direction === "down" && "text-success",
-                meta.direction === "up" && "text-warning-muted-foreground",
-                meta.direction === "flat" && "text-muted-foreground",
+                DELTA_TEXT[deltaTone(meta.direction, "expense")],
                 className
             )}
             title={meta.title}

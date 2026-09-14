@@ -14,6 +14,7 @@ import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categor
 import { cn } from "@/lib/utils"
 import { ChevronRightIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ColorTile } from "@/components/ui/color-tile"
+import { deltaTone } from "@/lib/delta-tone"
 
 function stopLinkNavigation(e: React.MouseEvent) {
     e.preventDefault()
@@ -53,7 +54,7 @@ function MomComparisonBadge({ now, prev }: { now: number; prev: number }) {
     if (isMomFlat(now, prev)) {
         const full = "Estável vs mês anterior"
         return (
-            <Badge tone="warning" title={full} aria-label={full} className={base}>
+            <Badge tone={deltaTone("flat", "expense")} title={full} aria-label={full} className={base}>
                 Estável
             </Badge>
         )
@@ -64,7 +65,7 @@ function MomComparisonBadge({ now, prev }: { now: number; prev: number }) {
         const pct = ((drop / prev) * 100).toFixed(0)
         const full = `−${pct}% vs mês anterior`
         return (
-            <Badge tone="success" title={full} aria-label={full} className={base}>
+            <Badge tone={deltaTone("down", "expense")} title={full} aria-label={full} className={base}>
                 −{pct}%
             </Badge>
         )
@@ -75,7 +76,7 @@ function MomComparisonBadge({ now, prev }: { now: number; prev: number }) {
         const pct = ((rise / prev) * 100).toFixed(0)
         const full = `+${pct}% vs mês anterior`
         return (
-            <Badge tone="expense" title={full} aria-label={full} className={base}>
+            <Badge tone={deltaTone("up", "expense")} title={full} aria-label={full} className={base}>
                 +{pct}%
             </Badge>
         )

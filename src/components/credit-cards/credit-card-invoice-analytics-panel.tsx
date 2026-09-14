@@ -57,6 +57,7 @@ import { toastError, toastSuccess } from "@/lib/toast"
 import { transactionsWorkspaceAuxKeys } from "@/lib/queries/keys"
 import { CreditCardInvoiceCategorySpendSection } from "@/components/credit-cards/credit-card-invoice-category-spend-section"
 import { InvoiceDeltaVsPriorChip } from "@/components/credit-cards/invoice-delta-vs-prior-chip"
+import { deltaTone } from "@/lib/delta-tone"
 const currencyFmt = new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
@@ -830,13 +831,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                         {committedVsPriorDelta ? (
                                             <Badge
                                                 size="sm"
-                                                tone={
-                                                    committedVsPriorDelta.direction === "down"
-                                                        ? "success"
-                                                        : committedVsPriorDelta.direction === "up"
-                                                          ? "expense"
-                                                          : "neutral"
-                                                }
+                                                tone={deltaTone(committedVsPriorDelta.direction, "expense")}
                                                 className="gap-1 shrink-0 tabular-nums"
                                                 title={committedVsPriorDelta.label}
                                                 aria-label={committedVsPriorDelta.ariaLabel}

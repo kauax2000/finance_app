@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import type { Category } from "@/lib/supabase"
 import { formatCurrencyBRL } from "@/components/categories/detail/category-detail-utils"
 import { cn } from "@/lib/utils"
+import { deltaTone } from "@/lib/delta-tone"
 
 export type MonthAmountStats = {
     count: number
@@ -45,12 +46,8 @@ type MomDirection = "up" | "down" | "flat"
 function momentumTone(
     isExpense: boolean,
     direction: MomDirection,
-): "success" | "destructive" | "neutral" {
-    if (direction === "flat") return "neutral"
-    if (isExpense) {
-        return direction === "up" ? "destructive" : "success"
-    }
-    return direction === "up" ? "success" : "destructive"
+): "income" | "expense" | "neutral" {
+    return deltaTone(direction, isExpense ? "expense" : "income")
 }
 
 function formatSignedPct(pctRounded: number): string {
@@ -74,7 +71,7 @@ type MomBadgeModel =
     | {
           show: true
           /** Tom, e não forma: o modelo diz a cor do sinal. */
-          tone: "success" | "destructive" | "neutral"
+          tone: "income" | "expense" | "neutral"
           direction: MomDirection
           display: string
           ariaLabel: string
