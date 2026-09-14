@@ -29,16 +29,21 @@ function persisterKey(): string {
     return `${PERSISTER_KEY_BASE}:u:${currentUserIdSync() ?? "anon"}`
 }
 
+/**
+ * A chave é resolvida a cada leitura e gravação, e não uma vez ao montar: quem
+ * entrava sem recarregar a página gravava o cache na chave "anon", e ele sumia
+ * no próximo carregamento. A chave que o persister passa é ignorada.
+ */
 const asyncStorage = {
-    getItem: async (key: string): Promise<string | null> => {
-        const v = await get<string>(key, idbStore)
+    getItem: async (): Promise<string | null> => {
+        const v = await get<string>(persisterKey(), idbStore)
         return v ?? null
     },
-    setItem: async (key: string, value: string): Promise<void> => {
-        await set(key, value, idbStore)
+    setItem: async (_key: string, value: string): Promise<void> => {
+        await set(persisterKey(), value, idbStore)
     },
-    removeItem: async (key: string): Promise<void> => {
-        await del(key, idbStore)
+    removeItem: async (): Promise<void> => {
+        await del(persisterKey(), idbStore)
     },
 }
 
