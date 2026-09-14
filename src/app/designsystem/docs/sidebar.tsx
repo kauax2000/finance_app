@@ -16,7 +16,6 @@ import {
 } from "@heroicons/react/16/solid"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import {
   Collapsible,
   CollapsibleContent,
@@ -29,7 +28,6 @@ import {
 } from "@/components/ui/native-select"
 import {
   ResizableCollapseTrigger,
-  useResizablePanel,
 } from "@/components/ui/resizable"
 import {
   Sidebar,
@@ -59,7 +57,6 @@ import {
 } from "@/components/ui/sidebar"
 import { Kbd } from "@/components/ui/kbd"
 import { TopBar, TopBarStart, TopBarTitle } from "@/components/ui/top-bar"
-import { Muted, Small } from "@/components/ui/typography"
 import { IDENTITY_TONES } from "@/lib/avatar"
 import { cn } from "@/lib/utils"
 import { PhoneFrame, ViewportFrame } from "../ds-frame"

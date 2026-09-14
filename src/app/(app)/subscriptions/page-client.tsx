@@ -8,11 +8,9 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import {
-    supabase,
     type WorkspaceSubscription,
     type WorkspaceSubscriptionListRow,
 } from "@/lib/supabase"
-import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { toastError, toastSuccess } from "@/lib/toast"
 import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"

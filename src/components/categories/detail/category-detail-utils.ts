@@ -21,14 +21,6 @@ export function formatCurrencyBRL(v: number) {
     return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
 }
 
-function monthKeyFromDateISO(date: string) {
-    const prefix = date.slice(0, 10)
-    const parts = prefix.split("-").map(Number)
-    if (parts.length < 2 || Number.isNaN(parts[0]) || Number.isNaN(parts[1])) return null
-    const [y, m] = parts
-    return `${y}-${String(m).padStart(2, "0")}`
-}
-
 export function monthLabelPt(ym: string) {
     const [y, m] = ym.split("-").map(Number)
     if (!y || !m) return ym

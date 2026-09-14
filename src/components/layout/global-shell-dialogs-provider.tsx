@@ -18,7 +18,6 @@ import { CategoryCreateDialog } from "@/components/categories/category-create-di
 import { WorkspaceInviteDialog } from "@/components/members/workspace-invite-dialog"
 import { ROUTES } from "@/config/navigation"
 import { supabase } from "@/lib/supabase"
-import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { useCategoriesQuery } from "@/lib/queries/use-categories"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 import { persistTransactionSave } from "@/lib/transaction-detail-sheet-mutations"

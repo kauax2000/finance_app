@@ -34,7 +34,6 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import {
     DropdownMenu,
@@ -285,14 +284,6 @@ function sliceFillColor(key: InvoiceSliceKey): string {
     return key === "installments_recurring"
         ? "oklch(0.62 0.19 295)"
         : "oklch(0.62 0.18 240)"
-}
-
-function deltaPctLabel(a: number, b: number): string {
-    if (b === 0 && a === 0) return "—"
-    if (b === 0) return "—"
-    const d = ((a - b) / b) * 100
-    const sign = d > 0 ? "+" : ""
-    return `${sign}${pctFmt.format(d)}%`
 }
 
 export function InvoiceCycleSwitcher({

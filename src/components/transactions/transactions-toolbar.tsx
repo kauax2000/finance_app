@@ -133,9 +133,6 @@ export function TransactionsToolbar({
     const isMobile = useIsMobile()
     const [filtersSheetOpen, setFiltersSheetOpen] = React.useState(false)
 
-    const rangeFrom = fullPeriod ? "" : filterDateFrom
-    const rangeTo = fullPeriod ? "" : filterDateTo
-
     const summary = filtersSummaryLine({
         filterType,
         fullPeriod,

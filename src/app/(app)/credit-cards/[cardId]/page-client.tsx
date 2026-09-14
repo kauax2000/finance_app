@@ -106,7 +106,6 @@ import { formatTransactionDayPtBr } from "@/lib/transaction-date"
 import { INSTALLMENT_DELETE_WARNING } from "@/lib/transactions/delete-transactions"
 import { ROUTES, transactionsHrefForCreditCard } from "@/config/navigation"
 import { usePageChromeSlot } from "@/components/layout/page-chrome-provider"
-import { cn } from "@/lib/utils"
 
 const currencyFmt = new Intl.NumberFormat("pt-BR", {
     style: "currency",

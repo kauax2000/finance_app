@@ -11,7 +11,6 @@ import {
   ChartArea,
   ChartBars,
   ChartContainer,
-  ChartDataTable,
   ChartDonut,
   ChartDonutCenter,
   ChartEmpty,

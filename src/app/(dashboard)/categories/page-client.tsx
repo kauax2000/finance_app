@@ -111,7 +111,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         useState<Record<string, number>>({})
     const [prevSpendByCategoryId, setPrevSpendByCategoryId] = useState<Record<string, number>>({})
     const listLoading = categoriesQuery.isPending && !categoriesQuery.data
-    const [budgetsLoading, setBudgetsLoading] = useState(false)
+    const [, setBudgetsLoading] = useState(false)
     const [dialogOpen, setDialogOpen] = useState(() => shouldOpenNew)
     const [editingCategory, setEditingCategory] = useState<Category | null>(null)
     const [filterType, setFilterType] = useState<TransactionFilterType>("expense")
@@ -329,7 +329,6 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     useEffect(() => {
         if (authLoading || !user || !currentWorkspaceId || !currentWorkspace) return
         if (showOnboarding) return
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch updates local page state
         void fetchBudgetsAndSpend()
     }, [
         authLoading,
