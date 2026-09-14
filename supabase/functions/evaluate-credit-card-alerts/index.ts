@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { internalError } from '../_shared/http.ts'
 import { currencyBRL } from '../_shared/formatters.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import { deliverNotification } from '../_shared/deliver-notification.ts'
@@ -152,7 +153,7 @@ Deno.serve(async (req: Request) => {
     .eq('user_id', userId)
     .maybeSingle()
 
-  if (memErr) return json(500, { error: memErr.message })
+  if (memErr) return json(500, { error: internalError('evaluate-credit-card-alerts', memErr) })
   if (!membership) return json(403, { error: 'Not a member of this workspace' })
 
   const { data: card, error: cErr } = await supabaseAdmin
@@ -161,7 +162,7 @@ Deno.serve(async (req: Request) => {
     .eq('id', cardId)
     .maybeSingle()
 
-  if (cErr) return json(500, { error: cErr.message })
+  if (cErr) return json(500, { error: internalError('evaluate-credit-card-alerts', cErr) })
   if (!card || card.workspace_id !== workspaceId || !card.is_active) {
     return json(200, { ok: true, skipped: true, reason: 'no_card' })
   }
@@ -192,7 +193,7 @@ Deno.serve(async (req: Request) => {
     .gte('date', filterRangeStartIso(openWin.start))
     .lte('date', filterRangeEndIso(openWin.end))
 
-  if (txErr) return json(500, { error: txErr.message })
+  if (txErr) return json(500, { error: internalError('evaluate-credit-card-alerts', txErr) })
 
   const rows = (txRows ?? []) as TxRow[]
   const cardLabel = `${card.name} · ${card.last_four}`
@@ -208,7 +209,7 @@ Deno.serve(async (req: Request) => {
     .select('user_id')
     .eq('workspace_id', workspaceId)
 
-  if (membersErr) return json(500, { error: membersErr.message })
+  if (membersErr) return json(500, { error: internalError('evaluate-credit-card-alerts', membersErr) })
 
   const memberIds = (memberRows ?? []).map((m: { user_id: string }) => m.user_id)
 
@@ -218,7 +219,7 @@ Deno.serve(async (req: Request) => {
       .from('profiles')
       .select('id,email')
       .in('id', memberIds)
-    if (profErr) return json(500, { error: profErr.message })
+    if (profErr) return json(500, { error: internalError('evaluate-credit-card-alerts', profErr) })
     for (const p of profileRows ?? []) {
       memberEmails.set(p.id as string, (p.email as string | null) ?? null)
     }
@@ -352,7 +353,7 @@ Deno.serve(async (req: Request) => {
     .select('id, category_id, threshold_brl')
     .eq('credit_card_id', cardId)
 
-  if (aErr) return json(500, { error: aErr.message })
+  if (aErr) return json(500, { error: internalError('evaluate-credit-card-alerts', aErr) })
 
   const categoryNames = new Map<string, string>()
   const catIds = new Set<string>()
@@ -364,7 +365,7 @@ Deno.serve(async (req: Request) => {
       .from('categories')
       .select('id,name')
       .in('id', [...catIds])
-    if (catErr) return json(500, { error: catErr.message })
+    if (catErr) return json(500, { error: internalError('evaluate-credit-card-alerts', catErr) })
     for (const c of cats ?? []) {
       categoryNames.set(c.id, c.name)
     }

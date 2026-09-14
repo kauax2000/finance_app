@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { internalError } from '../_shared/http.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import {
   buildInviteAcceptUrl,
@@ -96,7 +97,7 @@ Deno.serve(async (req: Request) => {
     .eq('user_id', caller.id)
     .maybeSingle()
 
-  if (memberErr) return json(500, { error: memberErr.message })
+  if (memberErr) return json(500, { error: internalError('workspace-invites-create', memberErr) })
   if (!member || member.role !== 'owner') return json(403, { error: 'Only owner can invite' })
 
   const { data: workspace, error: workspaceErr } = await supabaseAdmin
@@ -104,7 +105,7 @@ Deno.serve(async (req: Request) => {
     .select('id,name,type')
     .eq('id', workspaceId)
     .maybeSingle()
-  if (workspaceErr) return json(500, { error: workspaceErr.message })
+  if (workspaceErr) return json(500, { error: internalError('workspace-invites-create', workspaceErr) })
   if (!workspace) return json(404, { error: 'Workspace not found' })
   if (workspace.type === 'personal') {
     return json(400, { error: 'Personal workspaces cannot be shared' })
@@ -117,7 +118,7 @@ Deno.serve(async (req: Request) => {
       .eq('workspace_id', workspaceId)
       .eq('status', 'pending')
       .is('invited_email', null)
-    if (revokeErr) return json(500, { error: revokeErr.message })
+    if (revokeErr) return json(500, { error: internalError('workspace-invites-create', revokeErr) })
   }
 
   const tokenRaw = crypto.randomUUID()
@@ -155,7 +156,7 @@ Deno.serve(async (req: Request) => {
     .select('*')
     .single()
 
-  if (inviteErr) return json(500, { error: inviteErr.message })
+  if (inviteErr) return json(500, { error: internalError('workspace-invites-create', inviteErr) })
 
   const appBase = resolvePublicAppBase(req)
   if (!appBase) {

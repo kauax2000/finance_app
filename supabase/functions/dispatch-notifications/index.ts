@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { internalError } from '../_shared/http.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import { deliverNotification } from '../_shared/deliver-notification.ts'
 import { isNotificationEventType } from '../_shared/notification-types.ts'
@@ -76,7 +77,7 @@ Deno.serve(async (req: Request) => {
     .eq('user_id', userId)
     .maybeSingle()
 
-  if (memErr) return json(500, { error: memErr.message })
+  if (memErr) return json(500, { error: internalError('dispatch-notifications', memErr) })
   if (!membership) {
     return json(403, { error: 'Not a member of this workspace' })
   }

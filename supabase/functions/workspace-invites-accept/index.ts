@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { internalError } from '../_shared/http.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import { deliverNotification } from '../_shared/deliver-notification.ts'
 
@@ -75,7 +76,7 @@ Deno.serve(async (req: Request) => {
       .eq('id', requestedInviteId)
       .not('invited_email', 'is', null)
       .maybeSingle()
-    if (byIdErr) return json(500, { error: byIdErr.message })
+    if (byIdErr) return json(500, { error: internalError('workspace-invites-accept', byIdErr) })
     if (!byId) return json(404, { error: 'Invite not found' })
     tokenHash = byId.token_hash
   }
@@ -88,7 +89,7 @@ Deno.serve(async (req: Request) => {
     p_user_email: userEmail,
   })
 
-  if (rpcErr) return json(500, { error: rpcErr.message })
+  if (rpcErr) return json(500, { error: internalError('workspace-invites-accept', rpcErr) })
 
   const status = typeof result?.status === 'string' ? result.status : 'error'
   const workspaceId =

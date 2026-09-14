@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { internalError } from '../_shared/http.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import {
   assertCallerSessionAllowed,
@@ -51,7 +52,7 @@ async function guardCallerSession(
   const result = await assertCallerSessionAllowed(supabaseAdmin, userId, token, req)
   if (result.ok) return null
   return new Response(
-    JSON.stringify({ error: result.message }),
+    JSON.stringify({ error: internalError('sessions', result) }),
     { status: result.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   )
 }
@@ -105,7 +106,7 @@ Deno.serve(async (req: Request) => {
 
       if (error) {
         return new Response(
-          JSON.stringify({ error: error.message }),
+          JSON.stringify({ error: internalError('sessions', error) }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
@@ -143,7 +144,7 @@ Deno.serve(async (req: Request) => {
 
         if (error) {
           return new Response(
-            JSON.stringify({ error: error.message }),
+            JSON.stringify({ error: internalError('sessions', error) }),
             { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           )
         }
@@ -172,7 +173,7 @@ Deno.serve(async (req: Request) => {
 
         if (error) {
           return new Response(
-            JSON.stringify({ error: error.message }),
+            JSON.stringify({ error: internalError('sessions', error) }),
             { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           )
         }
@@ -195,7 +196,7 @@ Deno.serve(async (req: Request) => {
       const registrationGate = await assertRegistrationAllowed(supabaseAdmin, user.id, token)
       if (!registrationGate.ok) {
         return new Response(
-          JSON.stringify({ error: registrationGate.message }),
+          JSON.stringify({ error: internalError('sessions', registrationGate) }),
           { status: registrationGate.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
@@ -223,7 +224,7 @@ Deno.serve(async (req: Request) => {
 
         if (findErr) {
           return new Response(
-            JSON.stringify({ error: findErr.message }),
+            JSON.stringify({ error: internalError('sessions', findErr) }),
             { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           )
         }
@@ -243,7 +244,7 @@ Deno.serve(async (req: Request) => {
 
           if (upErr) {
             return new Response(
-              JSON.stringify({ error: upErr.message }),
+              JSON.stringify({ error: internalError('sessions', upErr) }),
               { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             )
           }
@@ -268,7 +269,7 @@ Deno.serve(async (req: Request) => {
 
         if (legErr) {
           return new Response(
-            JSON.stringify({ error: legErr.message }),
+            JSON.stringify({ error: internalError('sessions', legErr) }),
             { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           )
         }
@@ -293,7 +294,7 @@ Deno.serve(async (req: Request) => {
 
           if (upErr) {
             return new Response(
-              JSON.stringify({ error: upErr.message }),
+              JSON.stringify({ error: internalError('sessions', upErr) }),
               { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             )
           }
@@ -332,7 +333,7 @@ Deno.serve(async (req: Request) => {
 
       if (error) {
         return new Response(
-          JSON.stringify({ error: error.message }),
+          JSON.stringify({ error: internalError('sessions', error) }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
@@ -378,7 +379,7 @@ Deno.serve(async (req: Request) => {
 
       if (error) {
         return new Response(
-          JSON.stringify({ error: error.message }),
+          JSON.stringify({ error: internalError('sessions', error) }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
@@ -395,7 +396,7 @@ Deno.serve(async (req: Request) => {
     )
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: (error as Error).message }),
+      JSON.stringify({ error: internalError('sessions', error) }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }

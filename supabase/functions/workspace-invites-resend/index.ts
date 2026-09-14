@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { internalError } from '../_shared/http.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import {
   buildInviteAcceptUrl,
@@ -74,7 +75,7 @@ Deno.serve(async (req: Request) => {
     .eq('user_id', caller.id)
     .maybeSingle()
 
-  if (memberErr) return json(500, { error: memberErr.message })
+  if (memberErr) return json(500, { error: internalError('workspace-invites-resend', memberErr) })
   if (!member || member.role !== 'owner') {
     return json(403, { error: 'Only owner can resend invites' })
   }
@@ -85,7 +86,7 @@ Deno.serve(async (req: Request) => {
     .eq('id', inviteId)
     .maybeSingle()
 
-  if (inviteErr) return json(500, { error: inviteErr.message })
+  if (inviteErr) return json(500, { error: internalError('workspace-invites-resend', inviteErr) })
   if (!invite) return json(404, { error: 'Invite not found' })
   if (invite.workspace_id !== workspaceId) {
     return json(400, { error: 'Invite does not belong to this workspace' })
@@ -111,7 +112,7 @@ Deno.serve(async (req: Request) => {
     .update({ token_hash: await sha256Hex(tokenRaw) })
     .eq('id', inviteId)
     .eq('status', 'pending')
-  if (rotateErr) return json(500, { error: rotateErr.message })
+  if (rotateErr) return json(500, { error: internalError('workspace-invites-resend', rotateErr) })
 
   const ws = invite.workspace as { name?: string } | null
   const workspaceName = typeof ws?.name === 'string' ? ws.name : 'workspace'

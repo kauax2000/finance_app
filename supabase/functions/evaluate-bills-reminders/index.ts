@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { internalError } from '../_shared/http.ts'
 import { secretMatches } from '../_shared/timing-safe-equal.ts'
 import {
   deliverNotification,
@@ -119,7 +120,7 @@ Deno.serve(async (req: Request) => {
       .order('id', { ascending: true })
       .range(from, from + INSTANCE_PAGE_SIZE - 1)
 
-    if (iErr) return json(500, { error: iErr.message })
+    if (iErr) return json(500, { error: internalError('evaluate-bills-reminders', iErr) })
 
     const batch = (instances ?? []) as InstanceRow[]
     instancesScanned += batch.length

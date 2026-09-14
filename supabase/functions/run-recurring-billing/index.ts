@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { internalError } from '../_shared/http.ts'
 import { secretMatches } from '../_shared/timing-safe-equal.ts'
 
 // Server-to-server only (cron/scheduler): no CORS — browsers have no business
@@ -28,12 +29,12 @@ Deno.serve(async (req: Request) => {
 
   const { data: subN, error: subErr } = await admin.rpc('run_subscription_billing')
   if (subErr) {
-    return json(500, { error: subErr.message })
+    return json(500, { error: internalError('run-recurring-billing', subErr) })
   }
 
   const { data: instN, error: instErr } = await admin.rpc('run_installment_billing')
   if (instErr) {
-    return json(500, { error: instErr.message })
+    return json(500, { error: internalError('run-recurring-billing', instErr) })
   }
 
   return json(200, {

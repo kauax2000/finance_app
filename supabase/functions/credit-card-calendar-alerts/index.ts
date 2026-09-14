@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { internalError } from '../_shared/http.ts'
 import { secretMatches } from '../_shared/timing-safe-equal.ts'
 import {
   deliverNotification,
@@ -182,7 +183,7 @@ Deno.serve(async (req: Request) => {
       .order('id', { ascending: true })
       .range(from, from + CARD_PAGE_SIZE - 1)
 
-    if (cErr) return json(500, { error: cErr.message })
+    if (cErr) return json(500, { error: internalError('credit-card-calendar-alerts', cErr) })
 
     const batch = (cards ?? []) as CardRow[]
     cardsScanned += batch.length

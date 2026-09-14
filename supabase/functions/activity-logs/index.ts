@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { internalError } from '../_shared/http.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import { assertCallerSessionAllowed, type SupabaseAdmin } from '../_shared/session-guard.ts'
 
@@ -18,7 +19,7 @@ async function guardCallerSession(
   const result = await assertCallerSessionAllowed(supabaseAdmin, userId, token, req)
   if (result.ok) return null
   return new Response(
-    JSON.stringify({ error: result.message }),
+    JSON.stringify({ error: internalError('activity-logs', result) }),
     { status: result.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   )
 }
@@ -307,7 +308,7 @@ Deno.serve(async (req: Request) => {
         .limit(50)
 
       if (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
+        return new Response(JSON.stringify({ error: internalError('activity-logs', error) }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
@@ -392,7 +393,7 @@ Deno.serve(async (req: Request) => {
         .single()
 
       if (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
+        return new Response(JSON.stringify({ error: internalError('activity-logs', error) }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
@@ -420,7 +421,7 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
-    return new Response(JSON.stringify({ error: (error as Error).message }), {
+    return new Response(JSON.stringify({ error: internalError('activity-logs', error) }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
