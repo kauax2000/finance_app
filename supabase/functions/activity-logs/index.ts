@@ -263,7 +263,6 @@ Deno.serve(async (req: Request) => {
       return new Response(
         JSON.stringify({
           error: 'Invalid or expired token',
-          details: authResult.error ?? 'unknown',
         }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )

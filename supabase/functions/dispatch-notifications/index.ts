@@ -46,7 +46,7 @@ Deno.serve(async (req: Request) => {
 
   const authResult = await getAuthUserFromJwt(supabaseUrl, anonKey, jwt)
   if (authResult.error || !authResult.user) {
-    return json(401, { error: 'Invalid or expired token', details: authResult.error ?? 'unknown' })
+    return json(401, { error: 'Invalid or expired token' })
   }
 
   let body: DispatchBody
