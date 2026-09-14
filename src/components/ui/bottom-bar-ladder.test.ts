@@ -202,8 +202,11 @@ describe("régua do BottomBar", () => {
   })
 
   it("17. o marcador viaja com os tokens do sistema", () => {
-    const marcador = CODIGO.slice(CODIGO.indexOf('data-slot="bottom-bar-marker"'))
-      .slice(0, 900)
+    // Até o fim do elemento, e não 900 caracteres: o corte fixo entrava no
+    // fallback do item, que carrega a mesma classe de propósito.
+    const inicio = CODIGO.indexOf('data-slot="bottom-bar-marker"')
+    expect(inicio).toBeGreaterThan(-1)
+    const marcador = CODIGO.slice(inicio, CODIGO.indexOf("/>", inicio))
     for (const eixo of ["x", "y", "w", "h"]) {
       expect(marcador).toContain(`--bottom-bar-marker-${eixo}`)
     }

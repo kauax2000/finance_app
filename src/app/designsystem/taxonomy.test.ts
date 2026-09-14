@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from "node:fs"
+import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 
 import { describe, expect, it } from "vitest"
@@ -70,6 +70,11 @@ describe("taxonomia", () => {
   it("1. todo componente de ui/ tem entrada e página no catálogo", () => {
     const semEntrada = [...arquivos].filter((s) => !camadaDe.has(s))
     expect(semEntrada).toEqual([])
+    // O nome prometia a página e só conferia a entrada.
+    const semPagina = [...arquivos].filter(
+      (s) => !existsSync(join("src/app/designsystem/docs", `${s}.tsx`))
+    )
+    expect(semPagina).toEqual([])
   })
 
   /**

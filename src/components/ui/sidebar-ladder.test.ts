@@ -408,7 +408,11 @@ describe("régua da Sidebar", () => {
     // Os três degraus, distintos e em ordem — cursor e toque no botão, o do
     // ativo no marcador. O repouso do item é transparente: em repouso ele é a
     // própria placa.
-    const marcador = CODIGO.slice(CODIGO.indexOf('data-slot="sidebar-marker"'))
+    // Até o fim do elemento: ir até o fim do arquivo deixava um `bg-current/N`
+    // de qualquer peça abaixo passar pelo alfa do marcador.
+    const inicioDoMarcador = CODIGO.indexOf('data-slot="sidebar-marker"')
+    expect(inicioDoMarcador).toBeGreaterThan(-1)
+    const marcador = CODIGO.slice(inicioDoMarcador, CODIGO.indexOf("/>", inicioDoMarcador))
     const alfaDoMarcador = Number(marcador.match(/bg-current\/(\d+)/)?.[1])
     const alfas = [
       ...[...partes.SIDEBAR_GLASS_STATES!.matchAll(/bg-current\/(\d+)/g)].map((m) =>
