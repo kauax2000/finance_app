@@ -13,7 +13,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
   `aria-busy` e troca o rótulo), `FormCancel` (`tertiary` + `type="button"`, a
   tabela do rodapé embutida), `FormActions` (`inline` ou `sticky`, o rodapé de
   folha) e `FormError` (o erro que não é de campo). **`CustomForm` é `Form`
-  com `layout="none"`** e continua válido — 54 chamadas em 29 arquivos.
+  com `layout="none"`** e continua válido — 41 chamadas em 23 arquivos.
 - Use **`type="submit"`** only for that primary action. Use **`type="button"`** for cancel, dismiss, toggles, and auxiliary actions.
 - Avoid raw **`<form>`** for submit flows unless there is a documented exception.
 - If you add a control that uses **Enter** for its own behavior (e.g. another Radix primitive), either mark it with a stable **`data-slot`** and extend `shouldDeferEnterToWidget` in `form.tsx`, or document the exception.
@@ -31,7 +31,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 O design system deste projeto tem três partes, e nenhuma delas se presume de
 memória:
 
-- **Componentes** em [`src/components/ui/`](src/components/ui) — 75 hoje.
+- **Componentes** em [`src/components/ui/`](src/components/ui) — 79 hoje.
 - **Tokens** em [`src/app/globals.css`](src/app/globals.css).
 - **Documentação viva** em `/designsystem`, com uma página por componente e por
   padrão. Sempre disponível em desenvolvimento; em produção, atrás de
@@ -434,7 +434,7 @@ tema.
   mexeram.
 - **`Card` tem dois eixos, e eles são independentes**: `variant` decide a
   **superfície** (`outline` chapado — o padrão —, `elevated` levantado, `muted`
-  material de segunda ordem, `ghost` sem borda nem preenchimento); `padding`
+  material de segunda ordem, `plain` sem borda nem preenchimento); `padding`
   decide o **ritmo interno** (`none` | `sm` | **`md`, o padrão** | `lg`), numa
   medida só que o casco usa para separar os blocos e os slots para recuar.
   **`padding="none"` é o painel** — o corpo sangra até a borda e as tiras
@@ -753,7 +753,7 @@ tema.
   gatilho.
 - **O `Tabs` tem três eixos, e a moldura não é a fileira.** `variant` é a
   superfície (`solid` bandeja — o padrão —, `underline` um fio sob a fileira com
-  o marcador pousando nele, `ghost` sem nada); `size` mede o **gatilho**;
+  o marcador pousando nele, `plain` sem nada); `size` mede o **gatilho**;
   `stretch` divide a linha em partes iguais (ligado só em `solid`, porque uma
   bandeja lê como controle segmentado e uma fileira de abas de página não); e
   `scrollable` faz a fileira rolar dissolvendo nas pontas.
@@ -775,13 +775,13 @@ tema.
   O `pointer-coarse:min-h-11` só entra quando **não** há `stretch`: aba de
   largura total já tem área de alvo grande; aba de largura de rótulo com 28px
   não tem.
-- **O marcador do `Tabs` é um objeto só, e ele viaja — menos no `ghost`.** O
+- **O marcador do `Tabs` é um objeto só, e ele viaja — menos no `plain`.** O
   realce saiu do gatilho e virou um nó (`tabs-indicator`) absoluto dentro da
   fileira: a trilha publica a caixa da aba ativa em `--tabs-indicator-x/y/w/h` e
   o marcador transiciona para ela em `--duration-base` com `--ease-out`. Antes,
   cada gatilho acendia e apagava o próprio realce, e isso **teleporta** — três
   marcadores piscando não dizem o que um marcador se movendo diz.
-  **O `ghost` não viaja**, e a razão é o trilho: o marcador corre *ao longo de
+  **O `plain` não viaja**, e a razão é o trilho: o marcador corre *ao longo de
   alguma coisa*, e a bandeja do `solid` e o fio do `underline` são essa coisa.
   Sem nenhuma das duas, o mesmo movimento vira um bloco preenchido deslizando
   sozinho sobre o fundo — na variante que existe exatamente para não chamar
@@ -2155,6 +2155,8 @@ literais, e o teste passou a provar que os literais não divergem da tabela.
 
 ### O `Tabs` ganhou `padding`, porque quem fica na linha é a bandeja
 
+*(Superada pela seção "`size` no `Tabs` passa a nomear a bandeja", acima: o eixo `padding` saiu. Fica como registro.)*
+
 A revisão apontou o defeito e ele é real: `size="md"` dava **gatilho 32 e
 bandeja 40**, e numa barra de controles de 32 o componente inteiro saía 8px mais
 alto. Eu tinha defendido isso com um argumento de nomenclatura — "a régua mede
@@ -2186,6 +2188,8 @@ que já vence `stretch`.
 moldura (recuo 0), enquanto o `p-1` mora na trilha, sem prop que a alcançasse.
 
 ### O que não fechou, e por quê
+
+*(Fechado pela mesma seção: a bandeja passou a ser a medida, e no toque ela fica rente aos controles.)*
 
 No ponteiro grosso a bandeja **ainda não fica rente**: medido a 375px, 48 contra
 controles de 40. O `stretch={false}` liga `pointer-coarse:min-h-11` (44) no
@@ -7700,6 +7704,8 @@ aparelho.** O que a medição descarta é um custo grosseiro; ela não prova o
 telefone.
 
 #### Os fades internos viraram o material do iOS, e a camada virou peça
+
+*(Superado: o borrão saiu do `DialogBody` — virava retângulo de tom, ver a invariante 6 de `lib/scroll-fade-classes`. Fica a rampa.)*
 
 `DialogBody` e `MobileSheetFormBody` ganharam o borrão das duas pontas, com a
 rampa **mantida** — mesma decisão da paleta: sem a máscara o conteúdo passaria
