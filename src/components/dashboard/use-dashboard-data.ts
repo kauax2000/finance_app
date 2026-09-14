@@ -31,9 +31,10 @@ import {
 } from "@/lib/budget-month"
 import {
     getDashboardPresetRange,
+    isDashboardPresetKey,
+    previousMonthSamePeriodRange,
     toIsoLocalYmd,
     type DashboardDatePresetKey,
-    isDashboardPresetKey,
 } from "@/components/dashboard/dashboard-date-presets"
 import {
     buildPaymentEventsForMonth,
@@ -462,15 +463,17 @@ export function useDashboardData() {
             ),
         [transactionsWide, calendarYm, creditCardClosingLookup],
     )
-    const kpiPrev = useMemo(
-        () =>
-            aggregateIncomeExpenseForMonth(
-                prevTransactions,
-                prevCalendarYm,
-                creditCardClosingLookup,
-            ),
-        [prevTransactions, prevCalendarYm, creditCardClosingLookup],
-    )
+    const kpiPrev = useMemo(() => {
+        // Mês em curso: compara com o mesmo pedaço do mês anterior (dia 1 até
+        // hoje), e não com o mês inteiro, que sempre parecia maior.
+        const range = todayYmd.startsWith(calendarYm)
+            ? previousMonthSamePeriodRange(calendarYm, todayYmd)
+            : null
+        const rows = range
+            ? prevTransactions.filter((t) => t.date.slice(0, 10) <= range.to)
+            : prevTransactions
+        return aggregateIncomeExpenseForMonth(rows, prevCalendarYm, creditCardClosingLookup)
+    }, [prevTransactions, prevCalendarYm, creditCardClosingLookup, calendarYm, todayYmd])
 
     const expenseByCategory = useMemo(() => {
         const spendById = new Map<string, number>()

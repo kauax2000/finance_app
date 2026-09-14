@@ -13,6 +13,7 @@ import type { ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import { MoneyDisplay } from "@/components/ui/money-display"
+import { currencyBRL } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 
 const pctFmt = new Intl.NumberFormat("pt-BR", {
@@ -142,15 +143,25 @@ export function DashboardKpiCards({
                 icon={ArrowTrendingDownIcon}
                 iconClassName="text-expense"
                 value={
-                    <MoneyDisplay
-                        value={kpiPlanned.expense}
-                        tone="expense"
-                        className="text-xl font-semibold leading-tight md:text-2xl"
-                    />
+                    <>
+                        <MoneyDisplay
+                            value={kpiCurrent.expense}
+                            tone="expense"
+                            className="text-xl font-semibold leading-tight md:text-2xl"
+                        />
+                        {/* Os três cards são lançados, para Receitas − Despesas = Resultado.
+                            O previsto do mês fica como leitura secundária. */}
+                        {kpiPlanned.expense > kpiCurrent.expense ? (
+                            <p className="mt-1 text-2xs text-muted-foreground">
+                                Previsto no mês{" "}
+                                <span className="nums">{currencyBRL(kpiPlanned.expense)}</span>
+                            </p>
+                        ) : null}
+                    </>
                 }
                 badge={
                     <DeltaBadge
-                        cur={kpiPlanned.expense}
+                        cur={kpiCurrent.expense}
                         prev={kpiPrev.expense}
                         invert
                     />
