@@ -1,5 +1,6 @@
 "use client"
 
+import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { CheckIcon, EllipsisHorizontalIcon, TrashIcon } from "@heroicons/react/16/solid"
@@ -128,8 +129,14 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
         }
     }
 
+    const { confirm: confirmAction, dialog: confirmDialog } = useConfirmDialog()
     const onClearAll = async () => {
-        if (!window.confirm("Limpar todas as notificações desta carteira?")) return
+        const ok = await confirmAction({
+            title: "Limpar todas as notificações?",
+            description: "As notificações desta carteira são apagadas.",
+            actionLabel: "Limpar",
+        })
+        if (!ok) return
         if (!user?.id || !currentWorkspaceId) return
         setUnreadCount(0)
         setNotifications([])
@@ -168,6 +175,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
 
     return (
         <div className="flex min-h-0 flex-1 flex-col">
+            {confirmDialog}
             <div className="shrink-0 border-b border-border">
                 <div className="flex items-center gap-3 px-4 pb-4 pt-4 md:pt-5">
                     <div className="flex min-w-0 flex-1 items-center gap-3">

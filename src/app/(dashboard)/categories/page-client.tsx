@@ -1,5 +1,6 @@
 "use client"
 
+import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
@@ -140,6 +141,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     const [icon, setIcon] = useState<CategoryIconId>(CATEGORY_ICONS[0])
     const [editBudgetAmount, setEditBudgetAmount] = useState("")
     const [editBudgetRemoving, setEditBudgetRemoving] = useState(false)
+    const { confirm: confirmAction, dialog: confirmDialog } = useConfirmDialog()
     const [saving, setSaving] = useState(false)
     const isMobile = useIsMobile()
     const subrouteLabels = useDashboardCategoriesSubrouteLabels(pathname)
@@ -524,7 +526,12 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         if (!user || !editingCategory) return
         const existing = budgetForCategory(editingCategory.id)
         if (!existing) return
-        if (!confirm("Remover o orçamento desta categoria para este período?")) return
+        const ok = await confirmAction({
+            title: "Remover o orçamento?",
+            description: "O orçamento desta categoria para este período deixa de existir.",
+            actionLabel: "Remover",
+        })
+        if (!ok) return
         setEditBudgetRemoving(true)
         const { error: delErr } = await deleteCategoryBudgetById(
             existing.id,
@@ -644,6 +651,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
 
     return (
         <div className="min-w-0 max-w-full space-y-3">
+            {confirmDialog}
             <CategoriesToolbar
                 filterType={filterType}
                 onFilterTypeChange={setFilterType}

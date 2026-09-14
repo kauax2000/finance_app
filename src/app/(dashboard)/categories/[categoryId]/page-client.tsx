@@ -1,5 +1,6 @@
 "use client"
 
+import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import * as React from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -136,6 +137,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     const [editIcon, setEditIcon] = React.useState<CategoryIconId>(CATEGORY_ICONS[0])
     const [editBudgetAmount, setEditBudgetAmount] = React.useState("")
     const [editBudgetRemoving, setEditBudgetRemoving] = React.useState(false)
+    const { confirm: confirmAction, dialog: confirmDialog } = useConfirmDialog()
 
     const openEditDialog = React.useCallback(() => {
         if (!category) return
@@ -262,10 +264,16 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     )
 
     const handleEditBudgetRemove = React.useCallback(async () => {
-        if (!budget || !user) return
-        if (!confirm("Remover o orçamento desta categoria para este período?")) return
+        // O guarda da carteira vinha depois do `setEditBudgetRemoving(true)` e
+        // deixava o botão preso em "removendo".
+        if (!budget || !user || !currentWorkspaceId) return
+        const ok = await confirmAction({
+            title: "Remover o orçamento?",
+            description: "O orçamento desta categoria para este período deixa de existir.",
+            actionLabel: "Remover",
+        })
+        if (!ok) return
         setEditBudgetRemoving(true)
-        if (!currentWorkspaceId) return
         const { error: delErr } = await deleteCategoryBudgetById(
             budget.id,
             currentWorkspaceId
@@ -280,7 +288,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
         setEditBudgetAmount("")
         setEditDialogOpen(false)
         invalidateDetail()
-    }, [budget, user, invalidateDetail])
+    }, [budget, user, currentWorkspaceId, confirmAction, invalidateDetail])
 
     const handleDeleteDialogOpenChange = React.useCallback((open: boolean) => {
         if (!open && deleteDeleting) return
@@ -399,6 +407,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
 
     return (
         <div className="min-w-0 max-w-full space-y-5">
+            {confirmDialog}
             <CategoryDetailHero
                 category={category}
                 accentColor={accentColor}
