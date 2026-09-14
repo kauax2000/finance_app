@@ -1,5 +1,6 @@
 "use client"
 
+import { formatMoneyBrlInput } from "@/lib/money-brl"
 import { useCallback, useEffect, useState } from "react"
 import type { Bill, BillFrequency, Category, CreditCard } from "@/lib/supabase"
 import type { PaymentMethod } from "@/lib/payment-methods"
@@ -96,7 +97,7 @@ export function useBillForm({
             setAmountEstimatedStr(
                 b.amount_estimated != null &&
                     typeof b.amount_estimated === "number"
-                    ? String(b.amount_estimated).replace(".", ",")
+                    ? formatMoneyBrlInput(b.amount_estimated)
                     : "",
             )
             const startSlice = b.start_date.slice(0, 10)

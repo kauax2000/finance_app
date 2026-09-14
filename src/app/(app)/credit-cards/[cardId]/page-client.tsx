@@ -1,5 +1,6 @@
 "use client"
 
+import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
@@ -169,7 +170,7 @@ export default function CreditCardDetailPageClient() {
         setEditClosingDay(String(c.closing_day))
         setEditDueDay(String(c.due_day))
         setEditCreditLimit(
-            c.credit_limit != null ? String(c.credit_limit).replace(".", ",") : ""
+            c.credit_limit != null ? formatMoneyBrlInput(c.credit_limit) : ""
         )
         setEditExpiryMonth(
             c.expiry_month != null && c.expiry_month >= 1 && c.expiry_month <= 12
@@ -634,7 +635,7 @@ export default function CreditCardDetailPageClient() {
 
         setEditSaving(true)
         const limitVal = editCreditLimit.trim()
-            ? parseFloat(editCreditLimit.replace(",", "."))
+            ? (parseMoneyBrl(editCreditLimit) ?? NaN)
             : null
         const result = await updateCreditCard({
             workspaceId: currentWorkspaceId,

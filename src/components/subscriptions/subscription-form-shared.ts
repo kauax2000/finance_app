@@ -1,3 +1,4 @@
+import { parseMoneyBrl } from "@/lib/money-brl"
 import type {
     Category,
     SubscriptionBillingInterval,
@@ -62,8 +63,8 @@ export const SUBSCRIPTION_CHARGE_METHOD_OPTIONS: {
 export const SUBSCRIPTION_PAYMENT_NONE = "__none__" as const
 
 function parseAmount(raw: string): number | null {
-    const n = parseFloat(raw.trim().replace(",", "."))
-    if (Number.isNaN(n) || n < 0) return null
+    const n = parseMoneyBrl(raw)
+    if (n == null || n < 0) return null
     return n
 }
 

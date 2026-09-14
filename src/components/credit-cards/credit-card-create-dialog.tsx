@@ -1,5 +1,6 @@
 "use client"
 
+import { parseMoneyBrl } from "@/lib/money-brl"
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import type { User } from "@supabase/supabase-js"
@@ -108,7 +109,7 @@ export function CreditCardCreateDialog({
 
         setSaving(true)
         const limitVal = creditLimit.trim()
-            ? parseFloat(creditLimit.replace(",", "."))
+            ? (parseMoneyBrl(creditLimit) ?? NaN)
             : null
         const insertRow = {
             workspace_id: workspaceId,

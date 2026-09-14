@@ -29,7 +29,7 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile"
 import { toastError } from "@/lib/toast"
 import { supabase } from "@/lib/supabase"
-import { parseMoneyBrl } from "@/lib/money-brl"
+import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
 import type {
     Category,
     CreditCard,
@@ -83,13 +83,8 @@ export function PayBillDialog({
         if (!open || !input) return
         if (input.kind === "regular") {
             const b = input.bill
-            const amt =
-                input.instance.amount != null
-                    ? String(input.instance.amount)
-                    : b.amount_estimated != null
-                      ? String(b.amount_estimated)
-                      : ""
-            setAmountStr(amt.replace(".", ","))
+            const amt = input.instance.amount ?? b.amount_estimated
+            setAmountStr(amt != null ? formatMoneyBrlInput(amt) : "")
             setPaidYmd(localYmdFromDate(new Date()))
             setCategoryId(b.category_id ?? CAT_NONE)
             const pm = b.default_payment_method
@@ -98,7 +93,7 @@ export function PayBillDialog({
             setDesc(b.name)
         } else {
             const v = input.virtual
-            setAmountStr(String(v.amount_estimated).replace(".", ","))
+            setAmountStr(formatMoneyBrlInput(v.amount_estimated))
             setPaidYmd(localYmdFromDate(new Date()))
             setCategoryId(CAT_NONE)
             setPmOption("credit_card")

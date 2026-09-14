@@ -1,5 +1,6 @@
 "use client"
 
+import { formatMoneyBrlInput } from "@/lib/money-brl"
 import { useCallback, useEffect, useState } from "react"
 import type {
     CreditCard,
@@ -68,7 +69,7 @@ export function useSubscriptionForm({
         if (editingSubscription) {
             // eslint-disable-next-line react-hooks/set-state-in-effect -- sync fields when edit/create surface opens
             setName(editingSubscription.name)
-            setAmount(String(editingSubscription.amount).replace(".", ","))
+            setAmount(formatMoneyBrlInput(editingSubscription.amount))
             setBillingInterval(editingSubscription.billing_interval)
             setBillingDate(
                 editingSubscription.next_billing_date

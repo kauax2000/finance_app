@@ -1,5 +1,6 @@
 "use client"
 
+import { parseMoneyBrl } from "@/lib/money-brl"
 import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { useAuth } from "@/components/providers"
@@ -142,7 +143,7 @@ export default function CreditCardsPageClient() {
 
         setSaving(true)
         const limitVal = creditLimit.trim()
-            ? parseFloat(creditLimit.replace(",", "."))
+            ? (parseMoneyBrl(creditLimit) ?? NaN)
             : null
         const result = await createCreditCard({
             workspace_id: currentWorkspaceId,

@@ -1,5 +1,6 @@
 "use client"
 
+import { parseMoneyBrl } from "@/lib/money-brl"
 import { PlusIcon } from "@heroicons/react/16/solid"
 import dynamic from "next/dynamic"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -208,7 +209,7 @@ export default function CreditCardsPageClient() {
 
         setSaving(true)
         const limitVal = creditLimit.trim()
-            ? parseFloat(creditLimit.replace(",", "."))
+            ? (parseMoneyBrl(creditLimit) ?? NaN)
             : null
         const insertRow = {
             workspace_id: currentWorkspaceId,

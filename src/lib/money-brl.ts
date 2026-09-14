@@ -70,3 +70,19 @@ export function formatMoneyBrlTyping(raw: string): string {
     if (!Number.isFinite(cents)) return ""
     return formatMoneyBrlInput(cents / 100)
 }
+
+const MASKED_BRL = /^\d{1,3}(\.\d{3})*,\d{2}$/
+
+/**
+ * Renormaliza o campo de dinheiro no blur.
+ *
+ * O que foi digitado já sai na máscara e fica como está. Um valor posto por
+ * código ("250", "1299.9") é lido como reais — passado a `formatMoneyBrlTyping`
+ * ele viraria centavos ("250" → "2,50").
+ */
+export function normalizeMoneyBrlOnBlur(raw: string): string {
+    const t = raw.trim()
+    if (!t || MASKED_BRL.test(t)) return t
+    const n = parseMoneyBrl(t)
+    return n == null ? formatMoneyBrlTyping(t) : formatMoneyBrlInput(n)
+}

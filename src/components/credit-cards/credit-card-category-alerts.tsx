@@ -1,5 +1,6 @@
 "use client"
 
+import { parseMoneyBrl } from "@/lib/money-brl"
 import { useEffect, useMemo, useState } from "react"
 import { ExclamationTriangleIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { useAuth } from "@/components/providers"
@@ -112,7 +113,7 @@ export function CreditCardCategoryAlerts({
         })
     }, [alerts, comparison])
 
-    const parsedThreshold = parseFloat(threshold.replace(",", "."))
+    const parsedThreshold = (parseMoneyBrl(threshold) ?? NaN)
     const thresholdValid = !Number.isNaN(parsedThreshold) && parsedThreshold > 0
     const duplicateCategory = alerts.some((a) => a.categoryKey === catKey)
     const canSubmit =
