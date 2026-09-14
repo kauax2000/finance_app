@@ -176,7 +176,12 @@ function HoverCardArrow({
       data-slot="hover-card-arrow"
       width={width}
       height={height}
-      className={cn("fill-popover", className)}
+      className={cn(
+        // A seta é a ponta da placa: com a placa translúcida, um triângulo opaco
+        // saía mais escuro que ela. Os alfas são os de `menuPanelSurfaceClassName`.
+        "fill-popover/85 supports-backdrop-filter:dark:fill-popover/60 reduced-transparency:fill-popover",
+        className,
+      )}
       {...props}
     />
   )
