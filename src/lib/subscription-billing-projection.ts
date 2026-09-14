@@ -18,7 +18,7 @@ export type SubscriptionCharge = {
  * âncora, uma cobrança do dia 31 passa por 28/02 e **volta** a 31/03 — é a mesma
  * regra de `public.next_subscription_billing_date(from, interval, anchor_day)`.
  */
-function addMonths(d: Date, n: number, anchorDay?: number | null): Date {
+export function addMonths(d: Date, n: number, anchorDay?: number | null): Date {
     const t = new Date(d.getFullYear(), d.getMonth() + n, 1, 12, 0, 0, 0)
     const dim = new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate()
     t.setDate(Math.min(anchorDay ?? d.getDate(), dim))
