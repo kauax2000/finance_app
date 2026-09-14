@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { executeMutation } from "@/lib/offline/mutation-gateway"
+import { retryStableClientId } from "@/lib/offline/retry-client-id"
 import type { SubscriptionBillingInterval, TransactionPaymentMethod } from "@/lib/supabase"
 
 /**
@@ -46,12 +47,12 @@ export async function createSubscription(input: {
     userId: string
     payload: SubscriptionWritePayload
 }): Promise<SubscriptionMutationResult> {
-    const clientId = crypto.randomUUID()
     const row = {
         workspace_id: input.workspaceId,
         user_id: input.userId,
         ...input.payload,
     }
+    const { clientId, settle } = retryStableClientId(row)
 
     const gateway = await executeMutation({
         entity: "subscription",
@@ -62,7 +63,7 @@ export async function createSubscription(input: {
         onlineFn: async () => {
             const { error } = await supabase
                 .from("workspace_subscriptions")
-                .insert({ ...row, client_id: clientId })
+                .upsert({ ...row, client_id: clientId }, { onConflict: "workspace_id,client_id" })
             if (error) {
                 throw new Error(
                     formatSupabasePostgrestError(error) ??
@@ -72,6 +73,7 @@ export async function createSubscription(input: {
             return { ok: true as const }
         },
     })
+    if (gateway.ok) settle()
     return fromGateway(gateway)
 }
 
