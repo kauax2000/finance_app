@@ -64,7 +64,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 isolate z-(--z-modal) bg-overlay duration-(--duration-slow) ease-out supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        "fixed inset-0 isolate z-(--z-modal) bg-overlay animation-duration-(--duration-slow) ease-(--ease-out) supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
         className
       )}
       {...props}
@@ -126,7 +126,9 @@ const dialogContentVariants = cva(
     // flutuantes — a receita fica igual em todo overlay do sistema. Ver o
     // bloco do doc-comment acima para o que o véu limita.
     modalSurfaceClassName,
-    "duration-(--duration-slow) ease-out",
+    // `animation-duration-*`, e não `duration-*`: o segundo também escreve
+    // `transition-duration`, e sem `transition-property` isso anima tudo.
+    "animation-duration-(--duration-slow) ease-(--ease-out)",
     "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95",
     "data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
     // O recuo do diálogo é **um**, e são os 24px que vinte chamadas já

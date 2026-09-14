@@ -240,7 +240,7 @@ const navigationMenuContentVariants = cva(
   [
     "w-full",
     "data-[motion^=from-]:animate-in data-[motion^=from-]:fade-in data-[motion^=to-]:animate-out data-[motion^=to-]:fade-out",
-    "duration-(--duration-base) ease-(--ease-out)",
+    "animation-duration-(--duration-base) ease-(--ease-out)",
   ],
   {
     variants: {

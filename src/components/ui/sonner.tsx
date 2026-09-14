@@ -57,6 +57,8 @@ export function Toaster({ ...props }: ToasterProps) {
       theme={resolvedTheme === "dark" ? "dark" : "light"}
       position="top-right"
       closeButton
+      // Os rótulos do sonner vêm em inglês ("Notifications", "Close toast").
+      containerAriaLabel="Notificações"
       className="toaster group z-(--z-toast)"
       offset="1rem"
       mobileOffset={{
@@ -76,6 +78,7 @@ export function Toaster({ ...props }: ToasterProps) {
         // e `TOAST_SUCCESS_MS = 4000` lá, dois números iguais sem relação
         // declarada — e o primeiro a mudar deixaria o outro para trás.
         duration: TOAST_DEFAULT_MS,
+        closeButtonAriaLabel: "Fechar notificação",
         classNames: {
           toast: "group toast",
         },
