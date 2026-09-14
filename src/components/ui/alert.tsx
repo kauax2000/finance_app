@@ -246,7 +246,8 @@ function AlertAction({
       className={cn(
         "border-current/25 bg-transparent text-current",
         "hover:bg-current/10 hover:text-current dark:hover:bg-current/10",
-        "active:bg-current/10 active:text-current",
+        // O par `dark:` também no toque: sem ele o cinza do `tertiary` vencia no escuro.
+        "active:bg-current/10 active:text-current dark:active:bg-current/10",
         className
       )}
       {...props}

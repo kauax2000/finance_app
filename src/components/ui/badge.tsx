@@ -71,8 +71,9 @@ export const tagChipSuccessMenuTrigger = cn(
   "aria-expanded:border-0 aria-expanded:bg-success-muted/90 aria-expanded:text-success-muted-foreground",
   "data-[state=open]:border-0 data-[state=open]:bg-success-muted/90 data-[state=open]:text-success-muted-foreground",
   "dark:border-0 dark:hover:border-0",
-  "dark:aria-expanded:bg-success-muted dark:aria-expanded:text-success-foreground",
-  "dark:data-[state=open]:bg-success-muted dark:data-[state=open]:text-success-foreground"
+  // A tinta é a do par -muted: `success-foreground` sobre `success-muted` sumia no escuro.
+  "dark:aria-expanded:bg-success-muted dark:aria-expanded:text-success-muted-foreground",
+  "dark:data-[state=open]:bg-success-muted dark:data-[state=open]:text-success-muted-foreground"
 )
 
 /**

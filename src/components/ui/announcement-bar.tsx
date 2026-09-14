@@ -152,7 +152,7 @@ function AnnouncementBar({
             // vencia estes 15% **no tema escuro** — calado, e só num tema. É a
             // mesma armadilha que o `ThemeToggle` já pagou.
             "hover:border-current/25 hover:bg-current/15 dark:hover:bg-current/15",
-            "active:border-current/25 active:bg-current/15",
+            "active:border-current/25 active:bg-current/15 dark:active:bg-current/15",
             // O alvo cresce por pseudo-elemento, e não por medida: aumentar a
             // caixa devolveria o salto de altura que esta rodada tirou. 10px de
             // cada lado levam 24 a 44.
@@ -239,7 +239,7 @@ function AnnouncementBarAction({
       className={cn(
         "border-current/25 bg-transparent text-current",
         "hover:bg-current/10 hover:text-current dark:hover:bg-current/10",
-        "active:bg-current/10 active:text-current",
+        "active:bg-current/10 active:text-current dark:active:bg-current/10",
         className
       )}
       {...props}
