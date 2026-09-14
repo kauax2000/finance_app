@@ -352,8 +352,6 @@ export interface WorkspaceInvite {
     invited_email: string | null
     role: "member"
     token_hash: string
-    /** Plain token for building accept URL; only returned when RLS allows (owner or invited email). */
-    token_raw?: string | null
     status: WorkspaceInviteStatus
     expires_at: string
     created_by: string

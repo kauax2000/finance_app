@@ -11,7 +11,8 @@ const corsHeaders = {
 }
 
 type AcceptInviteBody = {
-  token: string
+  token?: string
+  invite_id?: string
 }
 
 function json(status: number, payload: unknown): Response {
@@ -53,15 +54,31 @@ Deno.serve(async (req: Request) => {
     return json(400, { error: 'Invalid JSON body' })
   }
 
-  const token = body.token?.trim()
-  if (!token) return json(400, { error: 'token is required' })
+  const token = typeof body.token === 'string' ? body.token.trim() : ''
+  const requestedInviteId = typeof body.invite_id === 'string' ? body.invite_id.trim() : ''
+  if (!token && !requestedInviteId) return json(400, { error: 'token or invite_id is required' })
 
-  const tokenHash = await sha256Hex(token)
   const user = authResult.user
   const userEmail = (user.email ?? '').trim().toLowerCase()
   if (!userEmail) return json(400, { error: 'Authenticated user has no email' })
 
   const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
+
+  // Convite por e-mail aceita pelo id: quem decide é o e-mail, que a RPC confere.
+  // Convite por link não tem e-mail, então só o token o abre.
+  let tokenHash = token ? await sha256Hex(token) : ''
+  if (!token) {
+    if (!/^[0-9a-f-]{36}$/i.test(requestedInviteId)) return json(404, { error: 'Invite not found' })
+    const { data: byId, error: byIdErr } = await supabaseAdmin
+      .from('workspace_invites')
+      .select('token_hash')
+      .eq('id', requestedInviteId)
+      .not('invited_email', 'is', null)
+      .maybeSingle()
+    if (byIdErr) return json(500, { error: byIdErr.message })
+    if (!byId) return json(404, { error: 'Invite not found' })
+    tokenHash = byId.token_hash
+  }
 
   // Atomic validate → claim → join (row-locked; enforces max_uses under
   // concurrency). See migration 20260824121000_accept_workspace_invite_rpc.sql.

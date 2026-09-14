@@ -177,12 +177,10 @@ export function WorkspacePickerMenuBody({
                     >
                         {pendingWorkspaceInvites.map((inv) => {
                             const w = inv.workspace
-                            const token = inv.token_raw?.trim()
-                            if (!token) return null
                             return (
                                 <Link
                                     key={inv.id}
-                                    href={`/invites/accept?token=${encodeURIComponent(token)}`}
+                                    href={`/invites/accept?invite=${encodeURIComponent(inv.id)}`}
                                     onClick={() => callbacks.closePicker()}
                                     className={cn(
                                         pickerRowInteractiveClass,

@@ -34,12 +34,6 @@ import {
     dispatchFinanceMembersMutated,
 } from "@/lib/workspace-data-events"
 
-function buildAcceptInviteUrl(tokenRaw: string): string {
-    if (typeof window === "undefined") return ""
-    const base = window.location.origin.replace(/\/$/, "")
-    return `${base}/invites/accept?token=${encodeURIComponent(tokenRaw)}`
-}
-
 function formatLinkInviteExpiresAt(iso: string | null | undefined): string | null {
     if (!iso) return null
     const end = new Date(iso).getTime()
@@ -90,13 +84,7 @@ export function WorkspaceInviteDialog({
         () => invites.find((i) => i.invited_email == null),
         [invites],
     )
-    const persistedLinkUrl = React.useMemo(() => {
-        const raw = pendingLinkInvite?.token_raw?.trim()
-        if (!raw) return null
-        return buildAcceptInviteUrl(raw)
-    }, [pendingLinkInvite?.token_raw])
-
-    const effectiveLinkUrl = persistedLinkUrl ?? generatedLinkUrl
+    const effectiveLinkUrl = generatedLinkUrl
     const linkInviteExpiresAt =
         pendingLinkInvite?.expires_at ?? generatedLinkExpiresAt
 
@@ -199,7 +187,7 @@ export function WorkspaceInviteDialog({
                 typeof res.expires_at === "string" ? res.expires_at.trim() : ""
             if (exp) setGeneratedLinkExpiresAt(exp)
             toastSuccess(
-                "Link gerado. Ele fica salvo aqui até você revogar ou expirar.",
+                "Link gerado. Copie agora: por segurança ele não fica salvo.",
             )
             await fetchInvites()
             dispatchFinanceMembersMutated()
@@ -338,6 +326,12 @@ export function WorkspaceInviteDialog({
                                                 Qualquer pessoa com conta no app pode aceitar enquanto o convite
                                                 estiver pendente.
                                             </p>
+{pendingLinkInvite && !effectiveLinkUrl ? (
+    <p className="text-xs text-muted-foreground">
+        Já existe um link ativo. Por segurança ele só aparece na hora em que é gerado:
+        gere um novo para copiar (o anterior deixa de valer).
+    </p>
+) : null}
                                             {loadingInvites ? (
                                                 <p className="text-xs text-muted-foreground">Carregando…</p>
                                             ) : effectiveLinkUrl ? (
@@ -555,6 +549,12 @@ export function WorkspaceInviteDialog({
                                             Qualquer pessoa com conta no app pode aceitar enquanto o
                                             convite estiver pendente.
                                         </p>
+{pendingLinkInvite && !effectiveLinkUrl ? (
+    <p className="text-xs text-muted-foreground">
+        Já existe um link ativo. Por segurança ele só aparece na hora em que é gerado:
+        gere um novo para copiar (o anterior deixa de valer).
+    </p>
+) : null}
                                         {loadingInvites ? (
                                             <p className="text-xs text-muted-foreground">
                                                 Carregando…

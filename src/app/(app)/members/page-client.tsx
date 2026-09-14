@@ -64,12 +64,6 @@ function memberDisplayName(member: MemberWithProfile) {
     return member.profile?.full_name || member.profile?.email || "Membro"
 }
 
-function buildAcceptInviteUrl(tokenRaw: string): string {
-    if (typeof window === "undefined") return ""
-    const base = window.location.origin.replace(/\/$/, "")
-    return `${base}/invites/accept?token=${encodeURIComponent(tokenRaw)}`
-}
-
 function formatLinkInviteExpiresAt(iso: string | null | undefined): string | null {
     if (!iso) return null
     const end = new Date(iso).getTime()
@@ -253,13 +247,7 @@ export default function MembersPage() {
         () => invites.find((i) => i.invited_email == null),
         [invites],
     )
-    const persistedLinkUrl = useMemo(() => {
-        const raw = pendingLinkInvite?.token_raw?.trim()
-        if (!raw) return null
-        return buildAcceptInviteUrl(raw)
-    }, [pendingLinkInvite?.token_raw])
-
-    const effectiveLinkUrl = persistedLinkUrl ?? generatedLinkUrl
+    const effectiveLinkUrl = generatedLinkUrl
     const linkInviteExpiresAt =
         pendingLinkInvite?.expires_at ?? generatedLinkExpiresAt
 
@@ -386,25 +374,6 @@ export default function MembersPage() {
             window.removeEventListener(FINANCE_MEMBERS_MUTATED_EVENT, onMutated)
     }, [fetchMembersAndInvites])
 
-    /** One delayed refetch if link invite row exists but token_raw not yet readable (legacy race). */
-    useEffect(() => {
-        if (!currentWorkspaceId || loading) return
-        if (pendingLinkInvite?.invited_email != null) return
-        const raw = pendingLinkInvite?.token_raw?.trim()
-        if (raw || !pendingLinkInvite?.id) return
-        const t = window.setTimeout(() => {
-            void fetchMembersAndInvites()
-        }, 450)
-        return () => window.clearTimeout(t)
-    }, [
-        currentWorkspaceId,
-        loading,
-        pendingLinkInvite?.id,
-        pendingLinkInvite?.invited_email,
-        pendingLinkInvite?.token_raw,
-        fetchMembersAndInvites,
-    ])
-
     const handleInvite = async () => {
         if (!currentWorkspaceId || !inviteEmail.trim() || !canManageMembers) return
 
@@ -483,7 +452,7 @@ export default function MembersPage() {
                 typeof res.expires_at === "string" ? res.expires_at.trim() : ""
             if (exp) setGeneratedLinkExpiresAt(exp)
             toastSuccess(
-                "Link gerado. Ele fica salvo aqui até você revogar ou expirar.",
+                "Link gerado. Copie agora: por segurança ele não fica salvo.",
             )
             await fetchMembersAndInvites()
         } catch (error) {
@@ -887,6 +856,12 @@ export default function MembersPage() {
                                 <p className="text-xs text-muted-foreground">
                                     Qualquer pessoa com conta no app pode aceitar enquanto o convite estiver pendente.
                                 </p>
+{pendingLinkInvite && !effectiveLinkUrl ? (
+    <p className="text-xs text-muted-foreground">
+        Já existe um link ativo. Por segurança ele só aparece na hora em que é gerado:
+        gere um novo para copiar (o anterior deixa de valer).
+    </p>
+) : null}
                                 {effectiveLinkUrl ? (
                                     <div className="space-y-1.5 pt-0.5">
                                         <div className="flex min-w-0 flex-row items-center gap-2">

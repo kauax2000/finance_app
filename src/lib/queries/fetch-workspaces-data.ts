@@ -14,7 +14,6 @@ export type PendingWorkspaceInvite = {
     workspace_id: string
     invited_email: string | null
     expires_at: string
-    token_raw: string | null
     workspace: Workspace | null
 }
 
@@ -113,7 +112,7 @@ export async function fetchWorkspacesData(user: User): Promise<WorkspacesBundle>
         const { data: inviteData, error: inviteErr } = await supabase
             .from("workspace_invites")
             .select(
-                "id, workspace_id, invited_email, expires_at, token_raw, workspace:workspaces(id,name,type,created_by,icon,icon_background_color,created_at,updated_at)",
+                "id, workspace_id, invited_email, expires_at, workspace:workspaces(id,name,type,created_by,icon,icon_background_color,created_at,updated_at)",
             )
             .eq("status", "pending")
             .gt("expires_at", new Date().toISOString())
@@ -125,12 +124,10 @@ export async function fetchWorkspacesData(user: User): Promise<WorkspacesBundle>
                     workspace_id: string
                     invited_email: string | null
                     expires_at: string
-                    token_raw: string | null
                     workspace?: Workspace | Workspace[] | null
                 }
                 const invited = row.invited_email?.trim().toLowerCase()
                 if (!invited || invited !== myEmail) continue
-                if (!row.token_raw?.trim()) continue
                 if (memberWorkspaceIds.has(row.workspace_id)) continue
                 const wv = row.workspace
                 let wRaw: Workspace | null
@@ -158,7 +155,6 @@ export async function fetchWorkspacesData(user: User): Promise<WorkspacesBundle>
                     workspace_id: row.workspace_id,
                     invited_email: row.invited_email,
                     expires_at: row.expires_at,
-                    token_raw: row.token_raw,
                     workspace: wNorm,
                 })
             }

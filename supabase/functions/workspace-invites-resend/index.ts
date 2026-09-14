@@ -27,6 +27,13 @@ function json(status: number, payload: unknown): Response {
   })
 }
 
+async function sha256Hex(input: string): Promise<string> {
+  const data = new TextEncoder().encode(input)
+  const hash = await crypto.subtle.digest('SHA-256', data)
+  const bytes = Array.from(new Uint8Array(hash))
+  return bytes.map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: corsHeaders })
@@ -74,7 +81,7 @@ Deno.serve(async (req: Request) => {
 
   const { data: invite, error: inviteErr } = await supabaseAdmin
     .from('workspace_invites')
-    .select('id, workspace_id, invited_email, status, expires_at, token_raw, workspace:workspaces(name)')
+    .select('id, workspace_id, invited_email, status, expires_at, workspace:workspaces(name)')
     .eq('id', inviteId)
     .maybeSingle()
 
@@ -97,10 +104,14 @@ Deno.serve(async (req: Request) => {
     return json(400, { error: 'Invite has expired' })
   }
 
-  const tokenRaw = typeof invite.token_raw === 'string' ? invite.token_raw.trim() : ''
-  if (!tokenRaw) {
-    return json(500, { error: 'Invite token unavailable' })
-  }
+  // O token não fica salvo: reenviar gera um novo, e o link do e-mail anterior deixa de valer.
+  const tokenRaw = crypto.randomUUID()
+  const { error: rotateErr } = await supabaseAdmin
+    .from('workspace_invites')
+    .update({ token_hash: await sha256Hex(tokenRaw) })
+    .eq('id', inviteId)
+    .eq('status', 'pending')
+  if (rotateErr) return json(500, { error: rotateErr.message })
 
   const ws = invite.workspace as { name?: string } | null
   const workspaceName = typeof ws?.name === 'string' ? ws.name : 'workspace'

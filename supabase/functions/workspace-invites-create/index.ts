@@ -121,8 +121,7 @@ Deno.serve(async (req: Request) => {
   const tokenHash = await sha256Hex(tokenRaw)
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
 
-  // Omit token_raw from INSERT: some PostgREST schema caches reject unknown columns on INSERT.
-  // Persist via UPDATE immediately after the row exists; callers rely on token_raw for reload-safe links.
+  // Só o hash é gravado: o link existe na resposta desta chamada e no e-mail.
   const insertRow = isLink
     ? {
         workspace_id: workspaceId,
@@ -154,20 +153,6 @@ Deno.serve(async (req: Request) => {
     .single()
 
   if (inviteErr) return json(500, { error: inviteErr.message })
-
-  const { error: rawErr } = await supabaseAdmin
-    .from('workspace_invites')
-    .update({ token_raw: tokenRaw })
-    .eq('id', invite.id)
-
-  if (rawErr) {
-    await supabaseAdmin.from('workspace_invites').delete().eq('id', invite.id)
-    return json(500, {
-      error:
-        rawErr.message ||
-        'Não foi possível salvar o token do convite. Verifique se a coluna token_raw existe (workspace-invites-token-raw-and-invitee-rls.sql).',
-    })
-  }
 
   const appBase = resolvePublicAppBase(req)
   const inviteUrl = buildInviteAcceptUrl(appBase, tokenRaw)
