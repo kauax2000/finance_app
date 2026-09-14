@@ -155,6 +155,9 @@ Deno.serve(async (req: Request) => {
   if (inviteErr) return json(500, { error: inviteErr.message })
 
   const appBase = resolvePublicAppBase(req)
+  if (!appBase) {
+    return json(500, { error: 'APP_BASE_URL não configurado.' })
+  }
   const inviteUrl = buildInviteAcceptUrl(appBase, tokenRaw)
 
   if (!isLink) {

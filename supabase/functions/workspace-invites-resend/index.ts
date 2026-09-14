@@ -117,6 +117,9 @@ Deno.serve(async (req: Request) => {
   const workspaceName = typeof ws?.name === 'string' ? ws.name : 'workspace'
 
   const appBase = resolvePublicAppBase(req)
+  if (!appBase) {
+    return json(500, { error: 'APP_BASE_URL não configurado.' })
+  }
   const inviteUrl = buildInviteAcceptUrl(appBase, tokenRaw)
 
   try {

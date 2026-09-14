@@ -1,8 +1,24 @@
-/** Prefer secret APP_BASE_URL in PRD; in dev the browser sends `Origin` on `functions.invoke` (e.g. http://localhost:3000). */
+/**
+ * Base pública do app para montar o link do convite.
+ *
+ * Em produção é o secret APP_BASE_URL. Sem ele, só o `Origin` de desenvolvimento
+ * local é aceito: qualquer outro deixaria quem convida escolher o domínio do
+ * link que sai no e-mail. Vazio significa "não configurado" — quem chama recusa.
+ */
 export function resolvePublicAppBase(req: Request): string {
   const fromEnv = Deno.env.get('APP_BASE_URL')?.trim()?.replace(/\/$/, '') || ''
   if (fromEnv) return fromEnv
-  return req.headers.get('origin')?.trim()?.replace(/\/$/, '') || ''
+  const origin = req.headers.get('origin')?.trim()?.replace(/\/$/, '') || ''
+  return /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) ? origin : ''
+}
+
+export function escapeHtml(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
 }
 
 export function buildInviteAcceptUrl(appBase: string, tokenRaw: string): string {
@@ -72,9 +88,9 @@ export function renderInviteHtml(args: {
   workspaceName: string
   inviteUrl: string
 }): string {
-  const workspace = args.workspaceName.replaceAll('<', '&lt;').replaceAll('>', '&gt;')
-  const inviter = args.inviterName.replaceAll('<', '&lt;').replaceAll('>', '&gt;')
-  const url = args.inviteUrl
+  const workspace = escapeHtml(args.workspaceName)
+  const inviter = escapeHtml(args.inviterName)
+  const url = escapeHtml(args.inviteUrl)
 
   return `<!doctype html>
 <html>
