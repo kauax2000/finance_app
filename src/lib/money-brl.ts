@@ -64,7 +64,8 @@ export function formatMoneyBrlInput(n: number): string {
  * - "123456" -> "1.234,56"
  */
 export function formatMoneyBrlTyping(raw: string): string {
-    const digits = raw.replace(/\D/g, "")
+    // Acima de 15 dígitos o Number perde centavos; o que passar disso é ignorado.
+    const digits = raw.replace(/\D/g, "").slice(0, 15)
     if (!digits) return ""
     const cents = Number(digits)
     if (!Number.isFinite(cents)) return ""

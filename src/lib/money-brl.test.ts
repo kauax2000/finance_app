@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { formatMoneyBrlInput, normalizeMoneyBrlOnBlur, parseMoneyBrl, roundCents } from "./money-brl"
+import { formatMoneyBrlInput, formatMoneyBrlTyping, normalizeMoneyBrlOnBlur, parseMoneyBrl, roundCents } from "./money-brl"
 
 describe("parseMoneyBrl", () => {
     it("parses plain integers", () => {
@@ -77,5 +77,12 @@ describe("roundCents", () => {
         expect(roundCents(0.1 + 0.2)).toBe(0.3)
         expect(roundCents(19.99 * 3)).toBe(59.97)
         expect(roundCents(-0.1 - 0.2)).toBe(-0.3)
+    })
+})
+
+describe("formatMoneyBrlTyping", () => {
+    it("ignora dígitos além de 15, onde o Number perderia centavos", () => {
+        expect(formatMoneyBrlTyping("1234567890123456789")).toBe(formatMoneyBrlTyping("123456789012345"))
+        expect(formatMoneyBrlTyping("123456789012345").endsWith(",45")).toBe(true)
     })
 })

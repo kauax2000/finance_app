@@ -52,6 +52,8 @@ export function currencyBRL(
   opts: CurrencyFormatOptions = {}
 ): string {
   if (!Number.isFinite(value)) return "—"
+  // Arredonda antes de decidir o sinal: 0,001 saía "+R$ 0,00" e −0,001 "−R$ 0,00".
+  value = Math.round(value * 100) / 100 || 0
   const { signed = false, ...rest } = opts
   const fmt = getNumberFormat({
     ...rest,
@@ -89,6 +91,7 @@ export function numberBR(
   value: number,
   options?: Intl.NumberFormatOptions
 ): string {
+  if (!Number.isFinite(value)) return "—"
   return new Intl.NumberFormat(defaultLocale, options).format(value)
 }
 
