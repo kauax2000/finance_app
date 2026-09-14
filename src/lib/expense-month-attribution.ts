@@ -1,3 +1,4 @@
+import { roundCents } from "@/lib/money-brl"
 import { statementCloseYmdForPurchaseDate } from "@/lib/credit-card-billing"
 import type {
     CreditCard,
@@ -77,7 +78,7 @@ export function aggregateIncomeExpenseForMonth(
         if (t.type === "income") income += n
         else expense += n
     }
-    return { income, expense, net: income - expense }
+    return { income: roundCents(income), expense: roundCents(expense), net: roundCents(income - expense) }
 }
 
 export function projectedChargeCountsInExpenseMonth(

@@ -1,3 +1,4 @@
+import { roundCents } from "@/lib/money-brl"
 import type {
     CreditCard,
     Transaction,
@@ -171,10 +172,14 @@ export function buildCategoryCommitmentsForMonth(args: {
     for (const [categoryId, b] of Object.entries(out)) {
         out[categoryId] = {
             ...b,
-            committedTotal:
+            postedTotal: roundCents(Number(b.postedTotal) || 0),
+            projectedInstallmentsTotal: roundCents(Number(b.projectedInstallmentsTotal) || 0),
+            projectedSubscriptionsTotal: roundCents(Number(b.projectedSubscriptionsTotal) || 0),
+            committedTotal: roundCents(
                 (Number(b.postedTotal) || 0) +
-                (Number(b.projectedInstallmentsTotal) || 0) +
-                (Number(b.projectedSubscriptionsTotal) || 0),
+                    (Number(b.projectedInstallmentsTotal) || 0) +
+                    (Number(b.projectedSubscriptionsTotal) || 0),
+            ),
         }
     }
     return out

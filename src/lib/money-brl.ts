@@ -86,3 +86,13 @@ export function normalizeMoneyBrlOnBlur(raw: string): string {
     const n = parseMoneyBrl(t)
     return n == null ? formatMoneyBrlTyping(t) : formatMoneyBrlInput(n)
 }
+
+/**
+ * Arredonda uma soma de valores em reais para centavos.
+ *
+ * Somar reais em ponto flutuante deixa resto (0,1 + 0,2 = 0,30000000000000004),
+ * e o resto aparece em comparação de limiar e em total que devia fechar.
+ */
+export function roundCents(n: number): number {
+    return Math.round(n * 100) / 100
+}

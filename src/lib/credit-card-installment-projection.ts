@@ -4,6 +4,7 @@
  * Used for credit-card invoice commitment totals and calendar deduplication.
  */
 
+import { roundCents } from "@/lib/money-brl"
 import type { Transaction, WorkspaceInstallmentPlan } from "@/lib/supabase"
 import {
     localYmdFromDate,
@@ -244,7 +245,7 @@ export function forecastCreditCardInstallmentsForWindow(
         if (d !== 0) return d
         return a.installmentSequence - b.installmentSequence
     })
-    return { projectedTotal, projectedRows }
+    return { projectedTotal: roundCents(projectedTotal), projectedRows }
 }
 
 /**

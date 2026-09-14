@@ -379,7 +379,7 @@ function ExpenseBudgetOverviewCard({
                     ) : (
                         <div className="space-y-1">
                             <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                                Restante
+                                Gasto no mês
                             </p>
                             <p className="text-xl font-semibold tabular-nums leading-tight md:text-2xl">
                                 {formatCurrencyBRL(monthTotal)}

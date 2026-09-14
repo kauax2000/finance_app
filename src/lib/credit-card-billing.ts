@@ -14,6 +14,7 @@
  * - Due dates are estimates; issuers vary (same month vs next, business days).
  */
 
+import { roundCents } from "@/lib/money-brl"
 import {
     expandAllPlanCharges,
     sumProjectedCreditCardInstallmentsInWindow,
@@ -337,7 +338,7 @@ export function sumCreditCardExpensesInWindow(
             installment_sequence: t.installment_sequence ?? null,
         })
     }
-    return sum
+    return roundCents(sum)
 }
 
 export type CardCycleSnapshot = {
