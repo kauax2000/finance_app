@@ -9,6 +9,7 @@ import {
     PopoverAnchor,
     PopoverContent,
     PopoverTrigger,
+    PopoverTitle,
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { currencyBRL } from "@/lib/formatters"
@@ -692,12 +693,12 @@ export function DashboardPaymentsCalendar({
                                     className="w-[min(calc(100vw-2rem),18rem)] max-w-[min(calc(100vw-2rem),18rem)] p-2"
                                     aria-describedby={undefined}
                                 >
-                                    <p className="sr-only">
+                                    <PopoverTitle className="sr-only">
                                         Lançamentos do dia{" "}
                                         {paymentDayDateLabel(
                                             mobileDayPopoverYmd,
                                         )}
-                                    </p>
+                                    </PopoverTitle>
                                     <p className="mb-2 text-xs font-medium text-muted-foreground">
                                         {paymentDayDateLabel(
                                             mobileDayPopoverYmd,
@@ -825,11 +826,11 @@ export function DashboardPaymentsCalendar({
                                                 className="w-72 p-2"
                                                 align="start"
                                             >
-                                                <p className="mb-2 text-xs font-medium text-muted-foreground">
+                                                <PopoverTitle className="mb-2 text-xs font-medium text-muted-foreground">
                                                     {paymentDayDateLabel(
                                                         cell.ymd,
                                                     )}
-                                                </p>
+                                                </PopoverTitle>
                                                 <PaymentDayEventsListContent
                                                     events={list}
                                                     onTransactionPostedClick={

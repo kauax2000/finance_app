@@ -12,11 +12,7 @@ import {
 } from "@/lib/supabase"
 import type { CcTxRow } from "@/lib/credit-cards-workspace-transactions"
 import { toastError } from "@/lib/toast"
-import {
-    filterRangeEndIso,
-    filterRangeStartIso,
-    transactionCalendarParts,
-} from "@/lib/transaction-date"
+import { filterRangeEndIso, filterRangeStartIso, localYmdFromDate, transactionCalendarParts } from "@/lib/transaction-date"
 import { buildCardMonthlyInvoiceSnapshot } from "@/lib/credit-card-billing"
 import {
     aggregateIncomeExpenseForMonth,
@@ -380,6 +376,9 @@ export function useDashboardData() {
     useEffect(() => {
         if (!queriesEnabled || !coreQueriesPending) {
             if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null }
+            // O estouro vale para uma carga só: sem isto, depois do primeiro,
+            // trocar de carteira nunca mais mostrava o carregando.
+            startTransition(() => setLoadingTimedOut(false))
             return
         }
         if (timerRef.current) return
@@ -449,10 +448,13 @@ export function useDashboardData() {
         for (const c of creditCards) {
             if (!c.is_active) continue
             const snap = snapshots.get(c.id)
-            if (snap) t += Number(snap.committedTotal)
+            if (!snap) continue
+            // Fatura já paga não é valor em aberto.
+            if (invoicePaidByCardClose.has(`${c.id}:${localYmdFromDate(snap.close)}`)) continue
+            t += Number(snap.committedTotal)
         }
         return t
-    }, [creditCards, snapshots])
+    }, [creditCards, snapshots, invoicePaidByCardClose])
 
     const kpiCurrent = useMemo(
         () =>

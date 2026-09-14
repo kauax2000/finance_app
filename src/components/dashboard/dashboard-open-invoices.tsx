@@ -1,5 +1,6 @@
 "use client"
 
+import { localYmdFromDate } from "@/lib/transaction-date"
 import { useMemo } from "react"
 import Link from "next/link"
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid"
@@ -25,7 +26,8 @@ const currencyFmt = new Intl.NumberFormat("pt-BR", {
 
 function openInvoicesSummary(
     active: CreditCard[],
-    snapshots: Map<string, CardMonthlyInvoiceSnapshot>
+    snapshots: Map<string, CardMonthlyInvoiceSnapshot>,
+    paidCardCloseKeys?: Set<string>
 ): {
     totalCommitted: number
     activeCount: number
@@ -36,6 +38,8 @@ function openInvoicesSummary(
     for (const c of active) {
         const snap = snapshots.get(c.id)
         if (!snap) continue
+        // Fatura já paga não entra no total em aberto.
+        if (paidCardCloseKeys?.has(`${c.id}:${localYmdFromDate(snap.close)}`)) continue
         totalCommitted += Number(snap.committedTotal)
         const due = snap.dueEstimate
         if (!earliestDue || due.getTime() < earliestDue.getTime()) {
@@ -184,13 +188,16 @@ export function DashboardOpenInvoices({
     cards,
     snapshots,
     calendarYm,
+    paidCardCloseKeys,
 }: {
     cards: CreditCard[]
     snapshots: Map<string, CardMonthlyInvoiceSnapshot>
     calendarYm: string
+    /** `${cardId}:${fechamento yyyy-mm-dd}` das faturas pagas. */
+    paidCardCloseKeys?: Set<string>
 }) {
     const active = cards.filter((c) => c.is_active)
-    const summary = openInvoicesSummary(active, snapshots)
+    const summary = openInvoicesSummary(active, snapshots, paidCardCloseKeys)
     const monthTitle = useMemo(() => labelYearMonthPt(calendarYm), [calendarYm])
 
     return (

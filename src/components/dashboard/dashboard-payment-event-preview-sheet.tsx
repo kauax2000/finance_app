@@ -275,6 +275,7 @@ export function DashboardPaymentEventPreviewSheet({
         }
     }, [open, isInstallmentKind, planId])
 
+    const previewDateYmd = preview?.dateYmd ?? null
     const installmentBlock = useMemo(() => {
         if (!plan || !isInstallmentKind) return null
         const total = totalPurchaseFromPlan(plan)
@@ -283,15 +284,21 @@ export function DashboardPaymentEventPreviewSheet({
         const postedCount = slices?.length ?? 0
         const futureSlots = Math.max(0, plan.total_installments - postedCount)
 
-        const currentSlotK = plan.generated_count + 1
-        const kn =
-            currentSlotK >= 1 && currentSlotK <= plan.total_installments
-                ? { k: currentSlotK, n: plan.total_installments }
-                : null
-
         const scheduleRows =
             slices != null && !slicesLoading
                 ? buildInstallmentScheduleRows(plan, slices)
+                : null
+
+        // A parcela é a do dia clicado no calendário, e não sempre a próxima a gerar:
+        // abrir a parcela de março mostrava "4/10" quando era a "2/10".
+        const slotFromDate =
+            scheduleRows && previewDateYmd
+                ? resolveCurrentSlotFromDate(scheduleRows, previewDateYmd, plan)
+                : null
+        const currentSlotK = slotFromDate ?? plan.generated_count + 1
+        const kn =
+            currentSlotK >= 1 && currentSlotK <= plan.total_installments
+                ? { k: currentSlotK, n: plan.total_installments }
                 : null
 
         return {
@@ -304,7 +311,7 @@ export function DashboardPaymentEventPreviewSheet({
             slicesLoading,
             scheduleRows,
         }
-    }, [plan, isInstallmentKind, slices, slicesLoading])
+    }, [plan, isInstallmentKind, slices, slicesLoading, previewDateYmd])
 
     const highlightSlot = useMemo(() => {
         if (!installmentBlock?.scheduleRows || !preview?.dateYmd || !plan) return null

@@ -366,6 +366,7 @@ export default function DashboardPageClient() {
                             cards={d.creditCards}
                             snapshots={d.snapshots}
                             calendarYm={d.calendarYm}
+                            paidCardCloseKeys={d.invoicePaidByCardClose}
                         />
                         <DashboardInstallmentsEndingSoon
                             endingSoon={d.installmentsEndingSoon}
