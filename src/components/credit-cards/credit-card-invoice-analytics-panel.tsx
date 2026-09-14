@@ -952,7 +952,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 Composição
                             </h3>
-                            <p className="shrink-0 text-xs font-medium capitalize tabular-nums text-muted-foreground">
+                            <p className="shrink-0 text-xs font-medium tabular-nums text-muted-foreground">
                                 {invoicePeriodLabel}
                             </p>
                         </div>

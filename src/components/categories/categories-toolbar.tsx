@@ -112,7 +112,7 @@ function MonthNavArrowControls({
                             variant="outline"
                             aria-label={pickerAriaLabel}
                             className={cn(
-                                "min-w-0 shrink font-medium capitalize tabular-nums",
+                                "min-w-0 shrink font-medium tabular-nums",
                                 inBar
                                     ? monthNavBarMonthPickerClassName
                                     : dense
@@ -257,7 +257,7 @@ export function MonthNav({
                                 aria-label={pickerAriaLabel}
                                 aria-expanded={open}
                                 className={cn(
-                                    "font-medium capitalize tabular-nums text-muted-foreground hover:text-foreground",
+                                    "font-medium tabular-nums text-muted-foreground hover:text-foreground",
                                     iconOnly
                                         ? cn(
                                               "w-auto shrink-0 gap-1.5 px-1.5",

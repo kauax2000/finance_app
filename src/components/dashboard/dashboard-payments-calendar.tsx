@@ -559,7 +559,7 @@ export function DashboardPaymentsCalendar({
                     <CardToolbar
                         aria-live="polite"
                     >
-                        <p className="text-sm font-semibold capitalize leading-snug text-foreground">
+                        <p className="text-sm font-semibold leading-snug text-foreground">
                             {monthTitle}
                         </p>
                     </CardToolbar>
