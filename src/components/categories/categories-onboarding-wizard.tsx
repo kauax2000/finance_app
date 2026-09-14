@@ -1,5 +1,6 @@
 "use client"
 
+import { deleteCategoryById } from "@/lib/categories/mutations"
 import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { useCallback, useEffect, useMemo, useState } from "react"
@@ -468,10 +469,12 @@ export function CategoriesOnboardingWizard({
         if (!ok) return
         setCrudBusy(true)
         setError(null)
-        const { error: delErr } = await supabase.from("categories").delete().eq("id", c.id)
+        // Pela mutação do app: ela passa pela fila offline e pela carteira, e a
+        // exclusão direta pelo client não passava por nenhuma das duas.
+        const res = await deleteCategoryById(c.id, workspaceId)
         setCrudBusy(false)
-        if (delErr) {
-            setError(formatSupabasePostgrestError(delErr) ?? "Não foi possível excluir a categoria.")
+        if (!res.ok) {
+            setError(res.errorMessage)
             return
         }
         setLocalCategories((prev) => prev.filter((x) => x.id !== c.id))

@@ -45,7 +45,7 @@ export function BillFormSurface({
             {variant === "dialog-desktop" ? (
                 <Button
                     type="button"
-                    variant="outline"
+                    variant="tertiary"
                     size="sm"
                     onClick={onCancel}
                     disabled={saving}
