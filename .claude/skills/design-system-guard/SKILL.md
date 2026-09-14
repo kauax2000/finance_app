@@ -148,6 +148,10 @@ entender a tela antes de mexer: o script vê linhas, não intenção.
 | **F** | semântica / acessibilidade | **Corrigir direto.** `<div onClick>` → `<Button>`, `alt` na imagem, `aria-label` no botão só-ícone. |
 | **H** | `hover:` sem `active:` | **Corrigir direto** somando `active:` ou `group-active:`. Nunca removendo o `hover:` — ver abaixo. |
 | **I** | `Intl.*` ou `toLocaleString` inline | **Corrigir direto** para `@/lib/formatters` ou `@/lib/transaction-date`. |
+| **G** | ícone fora do Heroicons, ou conjunto errado para o tamanho | **Corrigir direto.** `size-4` e abaixo usam `16/solid`, `size-5` usa `20/solid`, `size-6`+ usa `24/outline`. `<svg>` colado só nos `DRAWN_SVG_FILES`. |
+| **J** | faixa de superfície com fio **e** tinta | **Corrigir direto** para a tira do componente (`CardToolbar`, `DialogFooter`…), que não pinta nem desenha fio. |
+| **K** | `collisionPadding` escrito na tela | **Corrigir direto**: remover; a folga vem de `lib/anchored-surface`. |
+| **M** | `parseFloat(x.replace(",", "."))` ou `text-sm` num campo `money` | **Corrigir direto**: `parseMoneyBrl` (ou o `parsedReais` do `onValueChange`) e sem `text-sm`. |
 
 ### D2 — quando o valor arbitrário tem token
 

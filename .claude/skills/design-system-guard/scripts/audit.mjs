@@ -70,7 +70,7 @@ const RUNTIME_COLOR_FILES = [
   "credit-card-brand-logos",
   "registered-credit-card-face",
   "color-tile",
-  "avatar.ts",
+  "src/lib/avatar.ts",
   "manifest.ts",
   "global-error.tsx",
 ]
@@ -343,7 +343,9 @@ function auditFile(absPath, project) {
   // em muitas paradas, e a última fica longe do nome da declaração: com 400 a
   // regra pegava as quatro primeiras e marcava a quinta.
   const emMascara = (index) =>
-    /mask/i.test(src.slice(Math.max(0, index - 900), index + 80))
+    // Só a propriedade de máscara: `/mask/` sozinho calava um hex perto de
+    // qualquer "máscara de dinheiro".
+    /mask-image|maskImage|WebkitMask|--[\w-]*mask/i.test(src.slice(Math.max(0, index - 900), index + 80))
 
   if (!isRuntimeColor && !isCatalog) {
     for (const m of src.matchAll(/#[0-9a-fA-F]{3,8}\b/g)) {
@@ -618,6 +620,17 @@ function auditFile(absPath, project) {
     add("I", m.index, "use `@/lib/transaction-date` ou `@/lib/formatters`", m[0])
   }
 
+  // ── M. Dinheiro lido ou exibido fora da régua ─────────────────────────────
+  // `parseFloat(x.replace(",", "."))` sobre texto mascarado lia "10.000,00" como
+  // 10 e "1.299,90" como 1,30 — gravado assim no banco. E `text-sm` num campo de
+  // dinheiro anula a rampa que impede o zoom do iOS.
+  for (const m of src.matchAll(/parseFloat\([^)]*\.replace\(\s*["'`],["'`]/g)) {
+    add("M", m.index, "use `parseMoneyBrl` de `@/lib/money-brl`", m[0])
+  }
+  for (const m of src.matchAll(/<(?:Form)?Input\b[^>]*\bmoney\b[^>]*\btext-sm\b/g)) {
+    add("M", m.index, "`text-sm` no campo de dinheiro dá zoom no iOS", "text-sm")
+  }
+
   // ── K. Geometria de colisão decidida pela tela ────────────────────────────
   //
   // **Toda superfície ancorada num gatilho cabe inteira na janela**: centra
@@ -672,6 +685,7 @@ const RULE_LABEL = {
   G: "ícone fora do Heroicons",
   H: "hover: sem par de toque",
   I: "formatação fora dos helpers",
+  M: "dinheiro fora da régua",
   J: "faixa de superfície desenhada à mão",
   K: "geometria de colisão decidida pela tela",
 }
