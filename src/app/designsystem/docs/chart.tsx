@@ -906,9 +906,9 @@ const config = {
       </Group>
 
       <DocNote title="Atributo SVG aceita var(), sim">
-        <code>dashboard-installments-projection.tsx</code> afirma num comentário
-        que &ldquo;Bar fill cannot use var() in SVG&rdquo; e por isso fixa{" "}
-        <code>#1f6a59</code>. A premissa está errada: <code>fill</code> e{" "}
+        Um gráfico do app afirmava num comentário que &ldquo;Bar fill cannot
+        use var() in SVG&rdquo; e por isso fixava <code>#1f6a59</code>. A
+        premissa está errada: <code>fill</code> e{" "}
         <code>stroke</code> resolvem <code>var()</code>, e é exatamente o que{" "}
         <code>ChartContainer</code> explora. Com hex, o gráfico é a única parte
         da tela que não acompanha o tema escuro.
