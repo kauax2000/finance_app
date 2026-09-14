@@ -125,7 +125,12 @@ sw.addEventListener("notificationclick", (event) => {
 
     clickEvent.waitUntil(
         (async () => {
-            const url = new URL(href, sw.location.origin).href
+            // A notificação só abre o próprio app: "/\\evil.com" resolveria para outro domínio.
+            const resolved = new URL(href, sw.location.origin)
+            const url =
+                resolved.origin === sw.location.origin
+                    ? resolved.href
+                    : new URL("/dashboard", sw.location.origin).href
             const clients = await sw.clients.matchAll({
                 type: "window",
                 includeUncontrolled: true,
