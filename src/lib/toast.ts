@@ -36,8 +36,9 @@ export function toastSuccess(message: string) {
   sonnerToast.success(message, { duration: TOAST_SUCCESS_MS })
 }
 
-export function toastError(message: string) {
-  sonnerToast.error(message, { duration: TOAST_ERROR_MS })
+/** `id` junta repetições do mesmo aviso num toast só. */
+export function toastError(message: string, opts?: { id?: string }) {
+  sonnerToast.error(message, { duration: TOAST_ERROR_MS, id: opts?.id })
 }
 
 export function toastErrorWithDescription(message: string, description: string) {

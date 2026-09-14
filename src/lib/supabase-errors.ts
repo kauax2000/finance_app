@@ -266,3 +266,14 @@ export function formatAuthErrorMessagePt(raw: string): string {
 
     return s
 }
+
+/**
+ * Lança o erro de uma consulta em vez de seguir com lista vazia.
+ *
+ * Um bundle que troca erro por `[]` mostra "zero" como se fosse verdade e, num
+ * refetch, sobrescreve o cache bom com o vazio; lançando, o React Query mantém o
+ * dado anterior.
+ */
+export function throwIfQueryError(error: unknown, fallback: string): void {
+    if (error) throw new Error(formatSupabasePostgrestError(error) ?? fallback)
+}

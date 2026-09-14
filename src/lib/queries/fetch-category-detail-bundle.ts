@@ -19,8 +19,7 @@ import {
     buildCreditCardClosingLookup,
     transactionCountsInExpenseMonth,
 } from "@/lib/expense-month-attribution"
-import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
-import { toastError } from "@/lib/toast"
+import { throwIfQueryError } from "@/lib/supabase-errors"
 
 const TX_MONTH_SELECT =
     "*, category:categories(id,name,color), subscription:workspace_subscriptions!subscription_id(id,name), installment_plan:workspace_installment_plans(id,total_installments,installment_amount,final_installment_amount,generated_count,is_active,next_billing_date,description)"
@@ -82,10 +81,7 @@ async function fetchCreditCardsForWorkspace(
         .from("credit_cards")
         .select("id, closing_day")
         .eq("workspace_id", workspaceId)
-    if (error) {
-        console.warn("fetchCategoryDetailBundle credit cards:", error.message)
-        return []
-    }
+    throwIfQueryError(error, "Não foi possível carregar os cartões.")
     return (data as Pick<CreditCard, "id" | "closing_day">[]) ?? []
 }
 
@@ -212,18 +208,18 @@ async function fetchCategoryDetailBundleLegacy(args: {
             .order("name", { ascending: true }),
     ])
 
+    throwIfQueryError(catRes.error, "Não foi possível carregar a categoria.")
+    throwIfQueryError(budRes.error, "Não foi possível carregar o orçamento.")
+    throwIfQueryError(txPaddedRes.error, "Não foi possível carregar as transações do mês.")
+    throwIfQueryError(txSeriesRes.error, "Não foi possível carregar o histórico da categoria.")
+    throwIfQueryError(workspacePaddedRes.error, "Não foi possível carregar as transações da carteira.")
+    throwIfQueryError(plansRes.error, "Não foi possível carregar os parcelamentos.")
+    throwIfQueryError(subsRes.error, "Não foi possível carregar as assinaturas.")
+
     const cat = (catRes.data as Category | null) ?? null
     const budget = (budRes.data as Budget | null) ?? null
 
-    let categoryTxsWide: Transaction[] = []
-    if (txPaddedRes.error) {
-        toastError(
-            formatSupabasePostgrestError(txPaddedRes.error) ??
-                "Não foi possível carregar as transações do mês.",
-        )
-    } else {
-        categoryTxsWide = (txPaddedRes.data as Transaction[] | null) ?? []
-    }
+    const categoryTxsWide = (txPaddedRes.data as Transaction[] | null) ?? []
 
     const installmentPlans =
         (plansRes.data as WorkspaceInstallmentPlan[] | null) ?? []

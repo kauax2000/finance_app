@@ -15,5 +15,7 @@ export function useWorkspacesQuery(user: User | null) {
         },
         enabled: Boolean(userId),
         staleTime: 5 * 60 * 1000,
+        // O provider de carteiras já mostra este erro na tela.
+        meta: { errorToast: false },
     })
 }
