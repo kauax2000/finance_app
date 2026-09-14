@@ -819,6 +819,7 @@ export function TransactionsTable({
                                                         size="icon-sm"
                                                         type="button"
                                                         className="size-7"
+                                                        aria-label={`Editar ${transaction.description || "lançamento"}`}
                                                         onClick={(e) => {
                                                             e.stopPropagation()
                                                             openTransactionDetail(
@@ -834,6 +835,7 @@ export function TransactionsTable({
                                                         size="icon-sm"
                                                         type="button"
                                                         className="size-7 text-destructive hover:text-destructive"
+                                                        aria-label={`Excluir ${transaction.description || "lançamento"}`}
                                                         onClick={(e) => {
                                                             e.stopPropagation()
                                                             onDeleteSingle?.(

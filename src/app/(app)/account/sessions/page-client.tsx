@@ -246,6 +246,7 @@ export default function SessionsPage() {
                                                         type="button"
                                                         variant="tertiary"
                                                         size="icon-sm"
+                                                        aria-label={`Encerrar sessão em ${session.device_name || "outro aparelho"}`}
                                                         onClick={() =>
                                                             void handleRevokeSession(session.id)
                                                         }

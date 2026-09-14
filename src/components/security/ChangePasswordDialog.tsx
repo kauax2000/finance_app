@@ -197,6 +197,8 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         size="sm"
                         className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                         onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                        aria-label={showCurrentPassword ? "Ocultar senha atual" : "Mostrar senha atual"}
+                        aria-pressed={showCurrentPassword}
                     >
                         {showCurrentPassword ? (
                             <EyeSlashIcon className="h-4 w-4" />
@@ -226,6 +228,8 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         size="sm"
                         className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                         onClick={() => setShowNewPassword(!showNewPassword)}
+                        aria-label={showNewPassword ? "Ocultar nova senha" : "Mostrar nova senha"}
+                        aria-pressed={showNewPassword}
                     >
                         {showNewPassword ? (
                             <EyeSlashIcon className="h-4 w-4" />
@@ -266,6 +270,8 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         size="sm"
                         className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        aria-label={showConfirmPassword ? "Ocultar confirmação de senha" : "Mostrar confirmação de senha"}
+                        aria-pressed={showConfirmPassword}
                     >
                         {showConfirmPassword ? (
                             <EyeSlashIcon className="h-4 w-4" />

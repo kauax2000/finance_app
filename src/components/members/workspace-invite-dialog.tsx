@@ -444,6 +444,7 @@ export function WorkspaceInviteDialog({
                                                                 </div>
                                                                 <div className="flex gap-1">
                                                                     <Button
+    aria-label={`Reenviar convite para ${invite.invited_email}`}
                                                                         type="button"
                                                                         variant="outline"
                                                                         size="sm"
@@ -462,6 +463,7 @@ export function WorkspaceInviteDialog({
                                                                         )}
                                                                     </Button>
                                                                     <Button
+    aria-label={`Revogar convite para ${invite.invited_email}`}
                                                                         type="button"
                                                                         variant="outline"
                                                                         size="sm"
@@ -672,6 +674,7 @@ export function WorkspaceInviteDialog({
                                                             </div>
                                                             <div className="flex gap-1">
                                                                 <Button
+    aria-label={`Reenviar convite para ${invite.invited_email}`}
                                                                     type="button"
                                                                     variant="outline"
                                                                     size="sm"
@@ -694,6 +697,7 @@ export function WorkspaceInviteDialog({
                                                                     )}
                                                                 </Button>
                                                                 <Button
+    aria-label={`Revogar convite para ${invite.invited_email}`}
                                                                     type="button"
                                                                     variant="outline"
                                                                     size="sm"
