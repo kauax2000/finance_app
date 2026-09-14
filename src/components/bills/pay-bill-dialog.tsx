@@ -30,6 +30,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { toastError } from "@/lib/toast"
 import { supabase } from "@/lib/supabase"
 import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
+import { currencyBRL } from "@/lib/formatters"
 import type {
     Category,
     CreditCard,
@@ -108,23 +109,20 @@ export function PayBillDialog({
         return `Pagar fatura · ${input.virtual.cardName}`
     }, [input])
 
+    const description =
+        input?.kind === "virtual_cc"
+            ? "A fatura fica marcada como paga. Nenhuma despesa é criada: as compras já estão lançadas no cartão."
+            : "Informe o valor real pago. Será criada uma despesa com ele."
+
     const headerBlock = isMobile ? (
         <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{
-                <>
-                    Informe o valor real pago. Será criada uma despesa e, se aplicável,
-                    a fatura do cartão ficará marcada como paga.
-                </>
-            }</DialogDescription>
+            <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
     ) : (
         <DialogHeader className="flex shrink-0 flex-col gap-1 px-6 pt-6 pb-3 text-left sm:px-6">
             <DialogTitle className="text-lg">{title}</DialogTitle>
-            <DialogDescription>
-                Informe o valor real pago. Será criada uma despesa e, se aplicável,
-                a fatura do cartão ficará marcada como paga.
-            </DialogDescription>
+            <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
     )
 
@@ -136,10 +134,6 @@ export function PayBillDialog({
             const amount = parseMoneyBrl(amountStr)
             if (amount == null || amount <= 0) {
                 toastError("Informe um valor válido.")
-                return
-            }
-            if (input.kind === "virtual_cc" && categoryId === CAT_NONE) {
-                toastError("Selecione uma categoria.")
                 return
             }
             const catFinal =
@@ -195,14 +189,23 @@ export function PayBillDialog({
             {headerBlock}
 
             <div className="scrollbar-thin flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 sm:px-6">
-                <FormInput
-                    money
-                    mono
-                    label="Valor pago"
-                    value={amountStr}
-                    onValueChange={(v) => setAmountStr(v)}
-                    placeholder="R$ 0,00"
-                />
+                {input.kind === "regular" ? (
+                    <FormInput
+                        money
+                        mono
+                        label="Valor pago"
+                        value={amountStr}
+                        onValueChange={(v) => setAmountStr(v)}
+                        placeholder="R$ 0,00"
+                    />
+                ) : (
+                    <p className="text-sm text-muted-foreground">
+                        Valor da fatura:{" "}
+                        <span className="nums font-medium text-foreground">
+                            {currencyBRL(input.virtual.amount_estimated)}
+                        </span>
+                    </p>
+                )}
                 <div className="grid gap-2">
                     <Label>Data do pagamento</Label>
                     <DatePicker
@@ -218,6 +221,8 @@ export function PayBillDialog({
                         className="text-sm"
                     />
                 </div>
+                {input.kind === "regular" ? (
+                <>
                 <div className="grid gap-2">
                     <Label>Categoria</Label>
                     <Select value={categoryId} onValueChange={setCategoryId}>
@@ -286,12 +291,14 @@ export function PayBillDialog({
                         onChange={(e) => setDesc(e.target.value)}
                     />
                 </div>
+                </>
+                ) : null}
             </div>
 
             {isMobile ? (
                 <DialogFooter className="gap-3 shrink-0 px-4 py-4 sm:flex-col sm:px-5">
                     <Button type="submit" disabled={saving} className="w-full">
-                        Registrar pagamento
+                        {input.kind === "virtual_cc" ? "Marcar como paga" : "Registrar pagamento"}
                     </Button>
                     <Button
                         type="button"
@@ -314,7 +321,7 @@ export function PayBillDialog({
                         Cancelar
                     </Button>
                     <Button type="submit" disabled={saving}>
-                        Registrar pagamento
+                        {input.kind === "virtual_cc" ? "Marcar como paga" : "Registrar pagamento"}
                     </Button>
                 </DialogFooter>
             )}

@@ -23,6 +23,16 @@ import {
     shiftYearMonth,
 } from "@/lib/budget-month"
 import { localYmdFromDate } from "@/lib/transaction-date"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
@@ -100,6 +110,8 @@ function InvoiceFaturaHeaderStatus({
     onMarkPaid: () => void | Promise<void>
     onUnmarkPaid: () => void | Promise<void>
 }) {
+    const [confirmUnmarkOpen, setConfirmUnmarkOpen] = useState(false)
+
     if (status === "future") {
         return (
             <Badge
@@ -171,6 +183,7 @@ function InvoiceFaturaHeaderStatus({
     if (status === "paid") {
         if (!showPaymentMenu) return paidBadge
         return (
+            <>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <button
@@ -194,14 +207,29 @@ function InvoiceFaturaHeaderStatus({
                 <DropdownMenuContent align="end">
                     <DropdownMenuItem
                         disabled={paymentSaving}
-                        onSelect={() => {
-                            void onUnmarkPaid()
-                        }}
+                        onSelect={() => setConfirmUnmarkOpen(true)}
                     >
                         {paymentSaving ? "Salvando…" : "Desmarcar pagamento"}
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
+            <AlertDialog open={confirmUnmarkOpen} onOpenChange={setConfirmUnmarkOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Desmarcar pagamento da fatura?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            A fatura volta a constar como não paga e reaparece em Contas a pagar.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => void onUnmarkPaid()}>
+                            Desmarcar
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            </>
         )
     }
 
