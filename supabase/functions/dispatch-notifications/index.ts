@@ -82,9 +82,13 @@ Deno.serve(async (req: Request) => {
     return json(403, { error: 'Not a member of this workspace' })
   }
 
-  const title = (body.title ?? '').trim() || 'Notificação'
-  const msg = (body.body ?? '').trim() || 'Você tem uma nova notificação.'
-  const metadata: Record<string, unknown> = body.metadata ?? {}
+  const title = (body.title ?? '').trim().slice(0, 120) || 'Notificação'
+  const msg = (body.body ?? '').trim().slice(0, 500) || 'Você tem uma nova notificação.'
+  // Vindo do cliente, só o `kind` passa: `critical` furava as preferências de
+  // notificação e `href` decide para onde o clique leva.
+  const rawKind = body.metadata?.kind
+  const metadata: Record<string, unknown> =
+    typeof rawKind === 'string' && rawKind.trim() ? { kind: rawKind.trim().slice(0, 40) } : {}
 
   const delivered = await deliverNotification({
     supabaseAdmin,

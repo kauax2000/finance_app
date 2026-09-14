@@ -132,6 +132,8 @@ Deno.serve(async (req: Request) => {
 
       const daysUntil = diffCalendarDays(today, dueY)
       const isPast = compareYmd(dueY, today) < 0
+      // Conta esquecida há mais de 60 dias não gera aviso diário para sempre.
+      if (isPast && daysUntil < -60) continue
       const bEmbed = raw.bills
       const billMini = Array.isArray(bEmbed) ? (bEmbed[0] ?? null) : bEmbed
       if (!billMini || !billMini.is_active) continue
