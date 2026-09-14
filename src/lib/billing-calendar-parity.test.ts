@@ -27,6 +27,20 @@ describe("billing calendar parity (client)", () => {
         },
     )
 
+    it.each(vectors.subscription_stepping_anchored)(
+        "advanceBilling($from, $interval, âncora $anchor_day) = $expected",
+        ({ from, interval, anchor_day, expected }) => {
+            const d = parseYmdLocal(from)
+            expect(d).toBeDefined()
+            const next = advanceBilling(
+                d!,
+                interval as SubscriptionBillingInterval,
+                anchor_day,
+            )
+            expect(localYmdFromDate(next)).toBe(expected)
+        },
+    )
+
     it.each(vectors.statement_close_for_purchase)(
         "statementClose($purchase, closing=$closing_day) = $expected_close",
         ({ purchase, closing_day, expected_close }) => {

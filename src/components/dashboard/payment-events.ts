@@ -1,6 +1,5 @@
 import type {
     CreditCard,
-    SubscriptionBillingInterval,
     Transaction,
     WorkspaceInstallmentPlan,
     WorkspaceSubscription,
@@ -71,44 +70,6 @@ export type PaymentEvent = {
     installmentPlanId?: string | null
 }
 
-function addMonths(d: Date, n: number): Date {
-    const y = d.getFullYear()
-    const m0 = d.getMonth()
-    const day = d.getDate()
-    const t = new Date(y, m0 + n, 1, 12, 0, 0, 0)
-    const dim = new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate()
-    t.setDate(Math.min(day, dim))
-    return t
-}
-
-function addDays(d: Date, n: number): Date {
-    const t = new Date(d.getTime())
-    t.setDate(t.getDate() + n)
-    return t
-}
-
-function addYears(d: Date, n: number): Date {
-    return addMonths(d, n * 12)
-}
-
-function advanceBilling(
-    d: Date,
-    interval: SubscriptionBillingInterval
-): Date {
-    if (interval === "weekly") return addDays(d, 7)
-    if (interval === "monthly") return addMonths(d, 1)
-    return addYears(d, 1)
-}
-
-function rewindBilling(
-    d: Date,
-    interval: SubscriptionBillingInterval
-): Date {
-    if (interval === "weekly") return addDays(d, -7)
-    if (interval === "monthly") return addMonths(d, -1)
-    return addYears(d, -1)
-}
-
 function monthBounds(ym: string): { start: Date; end: Date } | null {
     const [ys, ms] = ym.split("-")
     const y = Number(ys)
@@ -129,15 +90,6 @@ function eventStatus(dateYmd: string, todayYmd: string): PaymentEventStatus {
     if (c < 0) return "past"
     if (c > 0) return "future"
     return "today"
-}
-
-function subscriptionAnchor(s: WorkspaceSubscription): Date | null {
-    if (s.next_billing_date) {
-        const d = parseYmdLocal(s.next_billing_date.slice(0, 10))
-        return d ?? null
-    }
-    const d = parseYmdLocal(s.start_date.slice(0, 10))
-    return d ?? null
 }
 
 const kindSortOrder: Record<PaymentEventKind, number> = {
