@@ -70,6 +70,12 @@ import {
 } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
+const RECURRING_INTERVAL_LABEL: Record<"daily" | "weekly" | "monthly", string> = {
+    daily: "diária",
+    weekly: "semanal",
+    monthly: "mensal",
+}
+
 const currencyFmt = new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
@@ -514,7 +520,10 @@ export function TransactionDetailSheet({
                                         Recorrência
                                     </p>
                                     <p className="mt-1">
-                                        Sim · {t.recurring_interval ?? "—"}
+                                        Sim ·{" "}
+                                        {t.recurring_interval
+                                            ? RECURRING_INTERVAL_LABEL[t.recurring_interval]
+                                            : "—"}
                                     </p>
                                 </div>
                             ) : null}

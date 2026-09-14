@@ -186,3 +186,12 @@ export function formatMonthShortPtBr(d: Date): string {
         .toLocaleString("pt-BR", { month: "short" })
         .replace(/\.$/, "")
 }
+
+/**
+ * "2026-09-01" → "01/09/2026", sem passar por Date: `new Date("2026-09-01")` é
+ * meia-noite UTC, e no Brasil isso é o dia anterior.
+ */
+export function formatYmdPtBr(ymd: string): string {
+    const [y, m, d] = ymd.slice(0, 10).split("-")
+    return y && m && d ? `${d}/${m}/${y}` : ymd
+}

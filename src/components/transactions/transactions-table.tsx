@@ -213,7 +213,6 @@ export function TransactionsTable({
     enableActions = true,
     showPaginationFooter = true,
 }: TransactionsTableProps) {
-    const selectedIds = selectedIdsProp ?? EMPTY_SELECTED_IDS
     const setSelectedIds = setSelectedIdsProp ?? noopSetSelectedIds
     const page = pageProp ?? 0
     const setPage = setPageProp ?? noopSetPage
@@ -224,10 +223,20 @@ export function TransactionsTable({
         6 + (enableSelection ? 1 : 0) + (enableActions ? 1 : 0)
     const monthHeaderDataColSpan = tableColCount - (enableSelection ? 1 : 0)
 
+    // Projetadas não são linhas do banco: "selecionar todas" as incluía, e a
+    // exclusão em massa tentava apagar o que não existe.
     const pageTransactionIds = React.useMemo(
-        () => transactions.map((t) => t.id),
+        () => transactions.filter((t) => !isProjectedTransactionRow(t)).map((t) => t.id),
         [transactions]
     )
+
+    // Só conta e só apaga o que está na tela: uma seleção feita antes de trocar o
+    // filtro seguia valendo e a exclusão em massa levava linhas invisíveis.
+    const selectedIds = React.useMemo(() => {
+        const raw = selectedIdsProp ?? EMPTY_SELECTED_IDS
+        const visible = new Set(pageTransactionIds)
+        return new Set([...raw].filter((id) => visible.has(id)))
+    }, [selectedIdsProp, pageTransactionIds])
 
     const allPageSelected =
         enableSelection &&

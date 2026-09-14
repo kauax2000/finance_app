@@ -1,5 +1,6 @@
 "use client"
 
+import { formatYmdPtBr } from "@/lib/transaction-date"
 import * as React from "react"
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/16/solid"
 import { XMarkIcon } from "@heroicons/react/20/solid"
@@ -49,10 +50,10 @@ function filtersSummaryLine(args: {
         return `${t} · ${transactionsPresetSummaryLabel(args.datePreset)}`
     }
     if (args.filterDateFrom && args.filterDateTo) {
-        return `${t} · ${args.filterDateFrom} → ${args.filterDateTo}`
+        return `${t} · ${formatYmdPtBr(args.filterDateFrom)} → ${formatYmdPtBr(args.filterDateTo)}`
     }
-    if (args.filterDateFrom) return `${t} · De ${args.filterDateFrom}`
-    if (args.filterDateTo) return `${t} · Até ${args.filterDateTo}`
+    if (args.filterDateFrom) return `${t} · De ${formatYmdPtBr(args.filterDateFrom)}`
+    if (args.filterDateTo) return `${t} · Até ${formatYmdPtBr(args.filterDateTo)}`
     return `${t} · Período personalizado`
 }
 

@@ -711,10 +711,22 @@ export function useTransactionsListController(
         filterDescriptionQuery,
         filterInstallmentPlanId,
         filterSubscriptionId,
+        filterInstallmentsOnly,
         sortKey,
         sortDir,
         currentWorkspaceId,
     ])
+
+    // A folha lê a transação da lista recarregada, e não o retrato de quando abriu:
+    // com o retrato, a segunda edição hidratava o valor velho e o regravava por
+    // cima da primeira (medido: 70 voltava a 50). Fora do filtro, fica o retrato.
+    const liveDetailTransaction = useMemo(
+        () =>
+            (detailTransaction &&
+                transactions.find((t) => t.id === detailTransaction.id)) ??
+            detailTransaction,
+        [detailTransaction, transactions],
+    )
 
     const openTransactionDetail = useCallback(
         (t: Transaction, options?: { edit?: boolean }) => {
@@ -1265,7 +1277,7 @@ export function useTransactionsListController(
     setSortDir,
     didAutoOpen,
     setDidAutoOpen,
-    detailTransaction,
+    detailTransaction: liveDetailTransaction,
     setDetailTransaction,
     detailOpen,
     setDetailOpen,
