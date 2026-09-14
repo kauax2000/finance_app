@@ -188,12 +188,14 @@ const badgeVariants = cva(
 )
 
 export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends React.HTMLAttributes<HTMLSpanElement>,
     VariantProps<typeof badgeVariants> {}
 
 function Badge({ className, variant, tone, size, ...props }: BadgeProps) {
   return (
-    <div
+    // <span>, e não <div>: o chip mora dentro de parágrafo e de linha de texto,
+    // e um <div> dentro de <p> é HTML inválido (o React avisa na hidratação).
+    <span
       data-slot="badge"
       className={cn(badgeVariants({ variant, tone, size }), className)}
       {...props}

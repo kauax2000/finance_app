@@ -974,6 +974,9 @@ function ChartArea({
 }) {
   const chaves = useSeries(config, series)
   const gradiente = variant === "gradient"
+  // O id do gradiente é global no documento: duas áreas com a mesma chave na
+  // página pintavam as duas com o gradiente da primeira.
+  const gradienteId = React.useId().replace(/:/g, "")
   const mostrarLegenda = legend ?? chaves.length >= 2
 
   return (
@@ -998,7 +1001,7 @@ function ChartArea({
               {chaves.map((key, i) => (
                 <linearGradient
                   key={key}
-                  id={`chart-area-${key}`}
+                  id={`chart-area-${gradienteId}-${key}`}
                   x1="0"
                   y1="0"
                   x2="0"
@@ -1038,7 +1041,7 @@ function ChartArea({
               stackId={stacked ? "a" : undefined}
               stroke={serieColor(key, i, config)}
               strokeWidth={2}
-              fill={gradiente ? `url(#chart-area-${key})` : serieColor(key, i, config)}
+              fill={gradiente ? `url(#chart-area-${gradienteId}-${key})` : serieColor(key, i, config)}
               fillOpacity={gradiente ? 1 : 0.15}
               dot={false}
               activeDot={{
