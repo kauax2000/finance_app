@@ -281,8 +281,11 @@ export default function DesignSystemIndexPage() {
                                 key={item.slug}
                                 className="border-b border-border/70 py-0.5"
                             >
-                                {/* O `Button` do sistema, com **três**
-                                    contra-classes medidas: `h-auto` (o `h-8` do
+                                {/* O `Button` do sistema, com **quatro**
+                                    contra-classes medidas: `w-full` (a base é
+                                    `inline-flex` e encolhia até o conteúdo — a
+                                    faixa de hover e a seta paravam no meio da
+                                    coluna), `h-auto` (o `h-8` do
                                     degrau e o `min-h-10` convivem, e no telefone
                                     a grade cai para uma coluna e transborda),
                                     `font-normal` (a base engordaria as 88
@@ -294,7 +297,7 @@ export default function DesignSystemIndexPage() {
                                     variant="tertiary"
                                     size="md"
                                     className={cn(
-                                        "group h-auto min-h-10 justify-start gap-3 rounded-md px-2 py-2 font-normal bg-clip-border transition-colors",
+                                        "group h-auto min-h-10 w-full justify-start gap-3 rounded-md px-2 py-2 font-normal bg-clip-border transition-colors",
                                         "hover:bg-accent/50 active:bg-accent/50",
                                         // `--accent` e `--muted` são a mesma cor
                                         // no escuro hoje; a contra-classe fica
