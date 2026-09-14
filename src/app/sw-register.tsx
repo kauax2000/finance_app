@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
+import { toast } from "@/lib/toast"
 
 function shouldRegisterSw(): boolean {
     if (typeof window === "undefined") return false
@@ -40,14 +41,36 @@ export function SwRegister() {
         let refreshing = false
         let registration: ServiceWorkerRegistration | null = null
 
-        const onControllerChange = () => {
-            // Reload only when an existing SW is replaced (deploy update), not first install.
-            if (!navigator.serviceWorker.controller || refreshing) return
+        let updateReady = false
+
+        const reload = () => {
+            if (refreshing) return
             refreshing = true
             window.location.reload()
         }
 
+        const onControllerChange = () => {
+            // Só quando um SW existente é substituído (deploy), não na primeira instalação.
+            if (!navigator.serviceWorker.controller || refreshing) return
+            // Recarregar com a página à vista apagava o que a pessoa estava digitando.
+            // Escondida, recarrega; à vista, avisa e recarrega quando ela sair da aba.
+            if (document.visibilityState === "hidden") {
+                reload()
+                return
+            }
+            updateReady = true
+            toast.info("Nova versão disponível.", {
+                id: "sw-update",
+                duration: Infinity,
+                action: { label: "Atualizar", onClick: reload },
+            })
+        }
+
         const onVisible = () => {
+            if (document.visibilityState === "hidden" && updateReady) {
+                reload()
+                return
+            }
             if (document.visibilityState === "visible" && registration) {
                 void registration.update().catch(() => {})
             }

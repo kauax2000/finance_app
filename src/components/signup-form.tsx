@@ -206,11 +206,9 @@ export function SignupForm() {
                             </p>
                         ) : null}
                     </div>
-                    <Link href={loginHref}>
-                        <Button variant="outline" className="w-full">
-                            Ir para login
-                        </Button>
-                    </Link>
+                    <Button asChild variant="outline" className="w-full">
+                        <Link href={loginHref}>Ir para login</Link>
+                    </Button>
                 </div>
             </div>
         )

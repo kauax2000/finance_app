@@ -10,6 +10,7 @@ import {
     WORKSPACE_ICON_KEYS,
     WORKSPACE_ICON_MAP,
     type WorkspaceIconKey,
+    WORKSPACE_ICON_LABELS,
 } from "@/lib/workspace-icons"
 
 type WorkspaceAppearanceFormFieldsProps = {
@@ -125,7 +126,7 @@ export function WorkspaceAppearanceFormFields({
                                         : "border-border bg-background"
                                 )}
                                 aria-pressed={selected}
-                                aria-label={`Ícone ${key}`}
+                                aria-label={`Ícone ${WORKSPACE_ICON_LABELS[key]}`}
                             >
                                 {createElement(Cmp, {
                                     className: "size-5",

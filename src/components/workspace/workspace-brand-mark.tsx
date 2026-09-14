@@ -2,6 +2,7 @@
 
 import { createElement } from "react"
 import { UserGroupIcon } from "@heroicons/react/24/outline"
+import { ColorTile } from "@/components/ui/color-tile"
 import { cn } from "@/lib/utils"
 import { getWorkspaceIconComponent } from "@/lib/workspace-icons"
 
@@ -12,6 +13,11 @@ type WorkspaceBrandMarkProps = {
     iconClassName?: string
 }
 
+/**
+ * A marca da carteira é a cor escolhida pela pessoa, e cor de runtime é trabalho
+ * do `ColorTile`: ele escolhe a tinta pelo contraste. O `text-white` cru sumia
+ * sobre cores claras.
+ */
 export function WorkspaceBrandMark({
     iconKey,
     backgroundColor,
@@ -19,20 +25,13 @@ export function WorkspaceBrandMark({
     iconClassName,
 }: WorkspaceBrandMarkProps) {
     const Cmp = getWorkspaceIconComponent(iconKey) ?? UserGroupIcon
-    const glyphClass = cn("size-3.5", iconClassName)
 
     return (
-        <div
-            className={cn(
-                "flex shrink-0 items-center justify-center rounded-md text-white shadow-sm",
-                className
-            )}
-            style={{ backgroundColor }}
-        >
+        <ColorTile color={backgroundColor} className={cn("shrink-0", className)}>
             {createElement(Cmp, {
-                className: glyphClass,
+                className: cn("size-3.5", iconClassName),
                 "aria-hidden": true,
             })}
-        </div>
+        </ColorTile>
     )
 }
