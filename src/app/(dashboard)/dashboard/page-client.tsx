@@ -77,7 +77,7 @@ const DashboardExpenseCategories = dynamic(
     },
 )
 
-function previewFromPaymentEvent(e: PaymentEvent): DashboardPaymentPreviewModel {
+function previewFrom(e: PaymentEvent | UpcomingPaymentRow): DashboardPaymentPreviewModel {
     return {
         kind: e.kind,
         dateYmd: e.dateYmd,
@@ -86,18 +86,6 @@ function previewFromPaymentEvent(e: PaymentEvent): DashboardPaymentPreviewModel 
         sourceHref: e.sourceHref,
         metaId: e.metaId,
         installmentPlanId: e.installmentPlanId,
-    }
-}
-
-function previewFromUpcomingRow(r: UpcomingPaymentRow): DashboardPaymentPreviewModel {
-    return {
-        kind: r.kind,
-        dateYmd: r.dateYmd,
-        title: r.title,
-        amount: r.amount,
-        sourceHref: r.sourceHref,
-        metaId: r.metaId,
-        installmentPlanId: r.installmentPlanId,
     }
 }
 
@@ -342,10 +330,10 @@ export default function DashboardPageClient() {
                         void openTransactionDetailById(id)
                     }}
                     onPaymentEventPreview={(e) => {
-                        openEventPreview(previewFromPaymentEvent(e))
+                        openEventPreview(previewFrom(e))
                     }}
                     onUpcomingPaymentClick={(r) => {
-                        openEventPreview(previewFromUpcomingRow(r))
+                        openEventPreview(previewFrom(r))
                     }}
                 />
             </div>
@@ -420,7 +408,6 @@ export default function DashboardPageClient() {
                 preview={preview}
                 installmentPlans={d.installmentPlans}
                 categories={d.categories}
-                creditCards={d.creditCards}
             />
 
             <AlertDialog

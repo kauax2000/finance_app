@@ -16,15 +16,11 @@ import { currencyBRL } from "@/lib/formatters"
 import { labelYearMonthPt, parseYearMonth } from "@/lib/budget-month"
 import { parseYmdLocal, localYmdFromDate } from "@/lib/transaction-date"
 import { MoneyDisplay } from "@/components/ui/money-display"
+import { tagChipWarning, transactionRowChipShell } from "@/components/ui/badge"
 import {
-    tagChipInfo,
-    tagChipNeutral,
-    tagChipSuccess,
-    tagChipDanger,
-    tagChipWarning,
-    transactionRowChipShell,
-} from "@/components/ui/badge"
-import { paymentEventHasMetaBadge } from "@/components/dashboard/payment-events"
+    paymentEventChipClass,
+    paymentEventMetaBadge,
+} from "@/components/dashboard/payment-event-badge"
 import type {
     PaymentEvent,
     PaymentEventKind,
@@ -146,63 +142,6 @@ function paymentEventAmountTone(kind: PaymentEventKind) {
     return "default" as const
 }
 
-function kindShortLabel(k: PaymentEventKind): string {
-    switch (k) {
-        case "subscription":
-            return "Assinatura"
-        case "installment":
-            return "Parcelada"
-        case "card_close":
-            return "Fechamento"
-        case "card_due":
-            return "Vencimento"
-        case "bill_due":
-            return "Conta"
-        case "posted_income":
-            return "Receita"
-        case "posted_expense":
-            return "Despesa"
-        default:
-            return k
-    }
-}
-
-function chipClass(kind: PaymentEventKind): string {
-    switch (kind) {
-        case "subscription":
-            return tagChipInfo
-        case "installment":
-            return tagChipWarning
-        case "card_close":
-        case "card_due":
-            return tagChipNeutral
-        case "bill_due":
-            return tagChipInfo
-        case "posted_income":
-            return tagChipSuccess
-        case "posted_expense":
-            return tagChipDanger
-        default:
-            return tagChipNeutral
-    }
-}
-
-/** Meta chip: “Parcelada” + warning for posted rows tied to an installment plan. */
-function metaBadgeLabelAndClass(
-    kind: PaymentEventKind,
-    installmentPlanId?: string | null,
-): { label: string; chipClass: string } | null {
-    if (!paymentEventHasMetaBadge({ kind, installmentPlanId })) return null
-    const plan = installmentPlanId?.trim()
-    if (
-        (kind === "posted_expense" || kind === "posted_income") &&
-        plan
-    ) {
-        return { label: "Parcelada", chipClass: tagChipWarning }
-    }
-    return { label: kindShortLabel(kind), chipClass: chipClass(kind) }
-}
-
 function buildCells(ym: string): { ymd: string; inMonth: boolean; label: number }[] {
     const { y, m } = parseYearMonth(ym)
     const first = new Date(y, m - 1, 1)
@@ -282,7 +221,7 @@ function ChargeRowCompactInner({
     /** When true, amount uses foreground color (no income/expense red-green). */
     neutralAmount?: boolean
 }) {
-    const meta = metaBadgeLabelAndClass(kind, installmentPlanId)
+    const meta = paymentEventMetaBadge(kind, installmentPlanId)
     return (
         <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
             <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
@@ -346,7 +285,7 @@ function PaymentDayEventsListContent({
         <ul className="max-h-[min(24rem,70vh)] space-y-2 overflow-y-auto">
             {events.map((e) => {
                 const postedId = postedTransactionIdFromEvent(e)
-                const meta = metaBadgeLabelAndClass(e.kind, e.installmentPlanId)
+                const meta = paymentEventMetaBadge(e.kind, e.installmentPlanId)
                 return (
                     <li key={e.id}>
                         <button
@@ -425,7 +364,7 @@ function EventChips({
                             : e.kind === "posted_income" ||
                                 e.kind === "posted_expense"
                               ? "bg-muted/50 text-muted-foreground"
-                              : chipClass(e.kind),
+                              : paymentEventChipClass(e.kind),
                     )}
                     title={e.title}
                 >
