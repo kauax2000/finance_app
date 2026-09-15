@@ -23,18 +23,6 @@ export function billFrequencyLabel(f: BillFrequency): string {
     return BILL_FREQUENCY_OPTIONS.find((o) => o.value === f)?.label ?? f
 }
 
-export const BILL_PAYMENT_OPTIONS: {
-    value: PaymentMethod
-    label: string
-}[] = [
-    { value: "pix", label: "PIX" },
-    { value: "ted", label: "TED / Débito em conta" },
-    { value: "debit_card", label: "Cartão de débito" },
-    { value: "credit_card", label: "Cartão de crédito" },
-    { value: "cash", label: "Dinheiro" },
-    { value: "other", label: "Outro" },
-]
-
 export const BILL_PAYMENT_NONE = "__none__"
 
 export type BillFormPayloadForSave = {

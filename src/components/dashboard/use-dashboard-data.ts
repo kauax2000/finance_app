@@ -12,7 +12,7 @@ import {
 } from "@/lib/supabase"
 import type { CcTxRow } from "@/lib/credit-cards-workspace-transactions"
 import { toastError } from "@/lib/toast"
-import { filterRangeEndIso, filterRangeStartIso, localYmdFromDate, transactionCalendarParts } from "@/lib/transaction-date"
+import { filterRangeEndIso, filterRangeStartIso, localYmdFromDate, transactionCalendarParts, transactionLocalYmd } from "@/lib/transaction-date"
 import { buildCardMonthlyInvoiceSnapshot } from "@/lib/credit-card-billing"
 import {
     aggregateIncomeExpenseForMonth,
@@ -133,17 +133,11 @@ function maxYmd(a: string, b: string) {
     return a.localeCompare(b) >= 0 ? a : b
 }
 
-function transactionYmd(t: Transaction): string | null {
-    const p = transactionCalendarParts(t.date)
-    if (!p) return null
-    return `${p.y}-${String(p.mo).padStart(2, "0")}-${String(p.d).padStart(2, "0")}`
-}
-
 function subscriptionPostedKey(t: Transaction): string | null {
     if (t.type !== "expense") return null
     const sid = t.subscription_id
     if (!sid) return null
-    const ymd = transactionYmd(t)
+    const ymd = transactionLocalYmd(t.date)
     if (!ymd) return null
     return `${sid}:${ymd}`
 }

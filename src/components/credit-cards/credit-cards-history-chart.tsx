@@ -1,5 +1,6 @@
 "use client"
 
+import { currencyBRL } from "@/lib/formatters"
 import { useMemo } from "react"
 import {
     ResponsiveContainer,
@@ -39,11 +40,6 @@ const BAR_COLORS = [
 function alpha(color: string, pct: number): string {
     return `color-mix(in oklab, ${color} ${pct}%, transparent)`
 }
-
-const currencyFmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-})
 
 export type CreditCardHistoryRow = Record<string, string | number | boolean | undefined>
 
@@ -144,7 +140,7 @@ function CreditCardsHistoryTooltip({
                                 </span>
                             </span>
                             <span className="shrink-0 font-medium">
-                                {currencyFmt.format(num)}
+                                {currencyBRL(num)}
                             </span>
                         </li>
                     )

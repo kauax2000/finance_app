@@ -1,6 +1,8 @@
 "use client"
 
-import { useEffect, useMemo, useState, type ReactNode } from "react"
+import { SectionLabel } from "@/components/transactions/installment-purchase-section"
+import { currencyBRL } from "@/lib/formatters"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import type { CreditCard, WorkspaceSubscriptionListRow } from "@/lib/supabase"
 import { supabase } from "@/lib/supabase"
@@ -47,11 +49,6 @@ import {
 } from "@/components/ui/badge"
 import { formatDatePtBr } from "@/lib/transaction-date"
 
-const currencyFmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-})
-
 type SubscriptionTransactionCharge = {
     id: string
     amount: number
@@ -92,25 +89,6 @@ function subscriptionChargeStatusChipClassName(
     if (status === "pending") return tagChipWarning
     if (status === "paid") return tagChipSuccess
     return tagChipSky
-}
-
-function SectionLabel({
-    children,
-    className,
-}: {
-    children: ReactNode
-    className?: string
-}) {
-    return (
-        <p
-            className={cn(
-                "text-2xs font-semibold uppercase tracking-wide text-muted-foreground",
-                className
-            )}
-        >
-            {children}
-        </p>
-    )
 }
 
 export type SubscriptionDetailSheetProps = {
@@ -304,7 +282,7 @@ export function SubscriptionDetailSheet({
     const viewBody = (
         <div className="flex min-h-0 flex-1 flex-col gap-0">
             <DialogDescription className="sr-only">
-                Assinatura {s.name}. Valor {currencyFmt.format(Number(s.amount))}.
+                Assinatura {s.name}. Valor {currencyBRL(Number(s.amount))}.
                 Próxima cobrança {formatDatePtBr(nextCharge)}.
             </DialogDescription>
             <div
@@ -418,7 +396,7 @@ export function SubscriptionDetailSheet({
                     <div>
                         <p className="text-xs text-muted-foreground">Valor</p>
                         <p className="mt-0.5 text-2xl font-semibold tabular-nums tracking-tight text-foreground">
-                            {currencyFmt.format(Number(s.amount))}
+                            {currencyBRL(Number(s.amount))}
                         </p>
                     </div>
                     <div>
@@ -550,7 +528,7 @@ export function SubscriptionDetailSheet({
                                                         : "—"}
                                                 </TableCell>
                                                 <TableCell className="px-2 py-1.5 text-right tabular-nums font-medium">
-                                                    {currencyFmt.format(row.amount)}
+                                                    {currencyBRL(row.amount)}
                                                 </TableCell>
                                                 <TableCell className="px-2 py-1.5">
                                                     <span

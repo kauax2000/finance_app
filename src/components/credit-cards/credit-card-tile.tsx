@@ -1,5 +1,6 @@
 "use client"
 
+import { currencyBRL } from "@/lib/formatters"
 import Link from "next/link"
 import type { CreditCard } from "@/lib/supabase"
 import type { CardCycleSnapshot } from "@/lib/credit-card-billing"
@@ -12,11 +13,6 @@ import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ChevronRightIcon } from "@heroicons/react/16/solid"
 import { cn } from "@/lib/utils"
-
-const currencyFmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-})
 
 export type CreditCardTileProps = {
     card: CreditCard
@@ -109,7 +105,7 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                                         Fatura aberta (planejada)
                                     </p>
                                     <p className="mt-0.5 text-base font-semibold tabular-nums text-foreground">
-                                        {currencyFmt.format(
+                                        {currencyBRL(
                                             snapshot.committedOpenTotal
                                         )}
                                     </p>
@@ -117,10 +113,10 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                                     0 ? (
                                         <p className="mt-1 text-2xs leading-snug text-muted-foreground">
                                             Total registrado{" "}
-                                            {currencyFmt.format(snapshot.openTotal)}
+                                            {currencyBRL(snapshot.openTotal)}
                                             {" · "}
                                             Parcelas previstas{" "}
-                                            {currencyFmt.format(
+                                            {currencyBRL(
                                                 snapshot.projectedOpenInstallmentsTotal
                                             )}
                                         </p>
@@ -138,7 +134,7 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                                         delta === 0 && "text-foreground"
                                     )}
                                 >
-                                    {delta === 0 ? "—" : currencyFmt.format(delta)}
+                                    {delta === 0 ? "—" : currencyBRL(delta)}
                                 </span>
                             </div>
 

@@ -1,5 +1,6 @@
 "use client"
 
+import { creditInvoiceSlotCompactLabel, creditInvoiceSlotStatusChipClass } from "@/lib/credit-card-display"
 import * as React from "react"
 import Link from "next/link"
 import { ArrowPathRoundedSquareIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
@@ -24,16 +25,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import {
-    tagChipDanger,
-    tagChipInfo,
-    tagChipSuccess,
-    tagChipWarning,
-    transactionExpenseTypeRowChip,
-    transactionIncomeTypeRowChip,
-    transactionParceladaRowChip,
-    transactionRowChipShell,
-} from "@/components/ui/badge"
+import { tagChipInfo, tagChipSuccess, tagChipWarning, transactionExpenseTypeRowChip, transactionIncomeTypeRowChip, transactionParceladaRowChip, transactionRowChipShell } from "@/components/ui/badge"
 import { paymentMethodLabel } from "@/lib/payment-methods"
 import {
     classifyTransactionInvoiceSlot,
@@ -94,8 +86,8 @@ function creditCardInvoiceBadgeForRow(
     if (slot === "open") {
         return {
             slot,
-            label: "Aberta",
-            chipClass: tagChipSuccess,
+            label: creditInvoiceSlotCompactLabel(slot),
+            chipClass: creditInvoiceSlotStatusChipClass(slot),
             title: "Fatura aberta",
         }
     }
@@ -125,8 +117,8 @@ function creditCardInvoiceBadgeForRow(
         }
         return {
             slot,
-            label: "Fechada",
-            chipClass: tagChipWarning,
+            label: creditInvoiceSlotCompactLabel(slot),
+            chipClass: creditInvoiceSlotStatusChipClass(slot),
             title,
         }
     }
@@ -141,8 +133,8 @@ function creditCardInvoiceBadgeForRow(
     }
     return {
         slot,
-        label: "Anterior",
-        chipClass: tagChipDanger,
+        label: creditInvoiceSlotCompactLabel(slot),
+        chipClass: creditInvoiceSlotStatusChipClass(slot),
         title: "Fatura anterior — ainda não marcada como paga",
     }
 }

@@ -39,19 +39,6 @@ export type SubscriptionFormPayload = {
     is_active: boolean
 }
 
-/** Ordered labels for recurring charges (e.g. TED ≈ débito em conta / automático). */
-export const SUBSCRIPTION_CHARGE_METHOD_OPTIONS: {
-    value: PaymentMethod
-    label: string
-}[] = [
-    { value: "credit_card", label: "Cartão de crédito" },
-    { value: "ted", label: "Débito em conta / automático" },
-    { value: "debit_card", label: "Cartão de débito" },
-    { value: "pix", label: "PIX" },
-    { value: "cash", label: "Dinheiro" },
-    { value: "other", label: "Outro" },
-]
-
 export const SUBSCRIPTION_PAYMENT_NONE = "__none__" as const
 
 function parseAmount(raw: string): number | null {

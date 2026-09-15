@@ -1,5 +1,6 @@
 "use client"
 
+import { currencyBRL } from "@/lib/formatters"
 import { useEffect, useMemo, useState } from "react"
 import type {
     Category,
@@ -58,11 +59,6 @@ const RECURRING_INTERVAL_LABEL: Record<"daily" | "weekly" | "monthly", string> =
     weekly: "semanal",
     monthly: "mensal",
 }
-
-const currencyFmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-})
 
 export type TransactionDetailSheetProps = {
     transaction: Transaction | null
@@ -225,7 +221,7 @@ export function TransactionDetailSheet({
         <div className="flex min-h-0 flex-1 flex-col gap-0">
             <DialogDescription className="sr-only">
                 {isIncome ? "Receita" : "Despesa"}. {formatTransactionDayPtBr(t.date)}.
-                Valor {currencyFmt.format(Number(t.amount))}.
+                Valor {currencyBRL(Number(t.amount))}.
             </DialogDescription>
             <div
                 className={cn(
@@ -312,7 +308,7 @@ export function TransactionDetailSheet({
                             )}
                         >
                             {isIncome ? "+" : "−"}
-                            {currencyFmt.format(Number(t.amount))}
+                            {currencyBRL(Number(t.amount))}
                         </p>
                         {t.installment_plan_id ? (
                             <p className="mt-1 text-2xs leading-snug text-muted-foreground">

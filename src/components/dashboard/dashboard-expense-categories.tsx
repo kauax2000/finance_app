@@ -1,5 +1,6 @@
 "use client"
 
+import { currencyBRL } from "@/lib/formatters"
 import Link from "next/link"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid"
@@ -16,11 +17,6 @@ import { Button } from "@/components/ui/button"
 import { ROUTES } from "@/config/navigation"
 import { labelYearMonthPt } from "@/lib/budget-month"
 import { cn } from "@/lib/utils"
-
-const currencyFmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-})
 
 const pctFmt = new Intl.NumberFormat("pt-BR", {
     maximumFractionDigits: 1,
@@ -117,7 +113,7 @@ function CategoryTooltip({
         <div className="min-w-[10rem] rounded-lg border border-border/80 bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md">
             <p className="font-medium text-foreground">{row.name}</p>
             <p className="mt-1 tabular-nums text-muted-foreground">
-                {currencyFmt.format(row.value)} · {pctFmt.format(row.pct)}% do total
+                {currencyBRL(row.value)} · {pctFmt.format(row.pct)}% do total
             </p>
         </div>
     )
@@ -227,7 +223,7 @@ export function DashboardExpenseCategories({
         () => Math.max(1, ...listRows.map((r) => r.value)),
         [listRows],
     )
-    const totalDisplay = currencyFmt.format(total)
+    const totalDisplay = currencyBRL(total)
 
     return (
         <div className="min-w-0 space-y-2">
@@ -408,7 +404,7 @@ export function DashboardExpenseCategories({
                                                         </span>
                                                         <span className="flex shrink-0 flex-col items-end gap-0.5 tabular-nums">
                                                             <span className="font-medium text-foreground">
-                                                                {currencyFmt.format(
+                                                                {currencyBRL(
                                                                     row.value,
                                                                 )}
                                                             </span>

@@ -1,5 +1,6 @@
 "use client"
 
+import { currencyBRL } from "@/lib/formatters"
 import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
@@ -106,11 +107,6 @@ import { formatTransactionDayPtBr } from "@/lib/transaction-date"
 import { INSTALLMENT_DELETE_WARNING } from "@/lib/transactions/delete-transactions"
 import { ROUTES, transactionsHrefForCreditCard } from "@/config/navigation"
 import { usePageChromeSlot } from "@/components/layout/page-chrome-provider"
-
-const currencyFmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-})
 
 export default function CreditCardDetailPageClient() {
     const isMobile = useIsMobile()
@@ -989,7 +985,7 @@ export default function CreditCardDetailPageClient() {
                                                 ? "Receita"
                                                 : "Despesa"}{" "}
                                             de{" "}
-                                            {currencyFmt.format(
+                                            {currencyBRL(
                                                 Number(pendingTransactionDelete.amount)
                                             )}
                                         </li>

@@ -1,5 +1,6 @@
 "use client"
 
+import { currencyBRL } from "@/lib/formatters"
 import { useCallback, useMemo, useState, type ReactNode } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import {
@@ -58,11 +59,6 @@ import { transactionsWorkspaceAuxKeys } from "@/lib/queries/keys"
 import { CreditCardInvoiceCategorySpendSection } from "@/components/credit-cards/credit-card-invoice-category-spend-section"
 import { InvoiceDeltaVsPriorChip } from "@/components/credit-cards/invoice-delta-vs-prior-chip"
 import { deltaTone } from "@/lib/delta-tone"
-const currencyFmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-})
-
 const pctFmt = new Intl.NumberFormat("pt-BR", {
     maximumFractionDigits: 1,
     minimumFractionDigits: 0,
@@ -823,7 +819,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                                 Valor
                                             </p>
                                             <p className="text-3xl font-bold tabular-nums tracking-tight text-foreground">
-                                                {currencyFmt.format(
+                                                {currencyBRL(
                                                     snapshot.committedOpenTotal
                                                 )}
                                             </p>
@@ -1012,7 +1008,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                                         Distribuição
                                                     </p>
                                                     <p className="mt-1 max-w-[min(11rem,82%)] text-lg font-semibold tabular-nums text-foreground md:text-xl">
-                                                        {currencyFmt.format(
+                                                        {currencyBRL(
                                                             analytics.openTotal
                                                         )}
                                                     </p>
@@ -1023,7 +1019,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                                         {SLICE_LABEL[activeSlice]}
                                                     </p>
                                                     <p className="mt-1 text-lg font-semibold tabular-nums text-foreground md:text-xl">
-                                                        {currencyFmt.format(
+                                                        {currencyBRL(
                                                             open[activeSlice]
                                                         )}
                                                     </p>
@@ -1090,7 +1086,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                                                 ariaContext="fatia"
                                                             />
                                                             <span>
-                                                                {currencyFmt.format(v)}
+                                                                {currencyBRL(v)}
                                                             </span>
                                                         </span>
                                                     </button>
@@ -1114,7 +1110,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                             Dias úteis
                                         </p>
                                         <p className="text-base font-semibold tabular-nums leading-snug text-foreground">
-                                            {currencyFmt.format(
+                                            {currencyBRL(
                                                 analytics.weekdayWeekend.weekdayTotal
                                             )}
                                         </p>
@@ -1131,7 +1127,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                             Fim de semana
                                         </p>
                                         <p className="text-base font-semibold tabular-nums leading-snug text-foreground">
-                                            {currencyFmt.format(
+                                            {currencyBRL(
                                                 analytics.weekdayWeekend.weekendTotal
                                             )}
                                         </p>
@@ -1151,7 +1147,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                     <>
                                         A maior concentração de gastos aconteceu na semana{" "}
                                         {strongestWeek} deste período, totalizando{" "}
-                                        {currencyFmt.format(strongestWeekTotal)}.
+                                        {currencyBRL(strongestWeekTotal)}.
                                     </>
                                 ) : (
                                     <>
@@ -1194,7 +1190,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                     </p>
                                     <p className="text-base font-semibold tabular-nums leading-snug text-foreground">
                                         {analytics.meanTicket != null
-                                            ? currencyFmt.format(analytics.meanTicket)
+                                            ? currencyBRL(analytics.meanTicket)
                                             : "—"}
                                     </p>
                                     <p className="text-2xs leading-snug text-muted-foreground">
@@ -1209,7 +1205,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                     </p>
                                     <p className="text-base font-semibold tabular-nums leading-snug text-foreground">
                                         {analytics.medianTicket != null
-                                            ? currencyFmt.format(analytics.medianTicket)
+                                            ? currencyBRL(analytics.medianTicket)
                                             : "—"}
                                     </p>
                                     <p className="text-2xs leading-snug text-muted-foreground">
@@ -1248,7 +1244,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                 Total mínimo comprometido
                             </p>
                             <p className="text-2xl font-bold tabular-nums tracking-tight text-foreground md:text-3xl">
-                                {currencyFmt.format(analytics.minimumCommittedOpen)}
+                                {currencyBRL(analytics.minimumCommittedOpen)}
                             </p>
                         </div>
                     </div>

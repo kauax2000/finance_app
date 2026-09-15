@@ -1,14 +1,10 @@
 import type { CreditCardInvoiceSlot } from "@/lib/credit-card-billing"
+import { currencyBRL } from "@/lib/formatters"
 import {
     tagChipDanger,
     tagChipSuccess,
     tagChipWarning,
 } from "@/components/ui/badge"
-
-const currencyFmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-})
 
 /** Short table / inline pill label for invoice cycle vs “today”. */
 export function creditInvoiceSlotCompactLabel(
@@ -61,5 +57,5 @@ export function creditCardLimitLine(
     if (creditLimit == null) return null
     const limitNum = Number(creditLimit)
     if (Number.isNaN(limitNum)) return null
-    return `Limite ${currencyFmt.format(limitNum)}`
+    return `Limite ${currencyBRL(limitNum)}`
 }

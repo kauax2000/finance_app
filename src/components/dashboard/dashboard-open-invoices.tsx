@@ -1,5 +1,6 @@
 "use client"
 
+import { currencyBRL } from "@/lib/formatters"
 import { localYmdFromDate } from "@/lib/transaction-date"
 import { useMemo } from "react"
 import Link from "next/link"
@@ -19,11 +20,6 @@ import type { CreditCard } from "@/lib/supabase"
 import { creditCardDetailPath, ROUTES } from "@/config/navigation"
 import { creditCardIdentitySubtitle } from "@/lib/credit-card-display"
 import { labelYearMonthPt } from "@/lib/budget-month"
-const currencyFmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-})
-
 function openInvoicesSummary(
     active: CreditCard[],
     snapshots: Map<string, CardMonthlyInvoiceSnapshot>,
@@ -73,7 +69,7 @@ function InvoiceRow({
               : snap?.status === "not_open"
                 ? "Ainda não aberta"
                 : "—"
-    const ariaLabel = `Abrir cartão ${card.name}, final ${card.last_four}. ${statusLabel}. Total ${currencyFmt.format(committedTotal)}.`
+    const ariaLabel = `Abrir cartão ${card.name}, final ${card.last_four}. ${statusLabel}. Total ${currencyBRL(committedTotal)}.`
     const statusTone =
         snap?.status === "open"
             ? "success"
@@ -133,7 +129,7 @@ function InvoiceRow({
                                         Total do cartão
                                     </p>
                                     <p className="text-xl font-semibold tabular-nums tracking-tight text-foreground min-[480px]:text-right">
-                                        {currencyFmt.format(committedTotal)}
+                                        {currencyBRL(committedTotal)}
                                     </p>
                                 </div>
                                 {postedTotal > 0 || projectedParcelas > 0 ? (
@@ -143,7 +139,7 @@ function InvoiceRow({
                                                 <span className="font-medium text-foreground/80">
                                                     Registrado:{" "}
                                                 </span>
-                                                {currencyFmt.format(postedTotal)}
+                                                {currencyBRL(postedTotal)}
                                             </p>
                                         ) : null}
                                         {projectedParcelas > 0 ? (
@@ -151,7 +147,7 @@ function InvoiceRow({
                                                 <span className="font-medium text-foreground/80">
                                                     Previsto:{" "}
                                                 </span>
-                                                {currencyFmt.format(projectedParcelas)}
+                                                {currencyBRL(projectedParcelas)}
                                             </p>
                                         ) : null}
                                     </div>

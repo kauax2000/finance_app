@@ -6,11 +6,7 @@
 
 import { roundCents } from "@/lib/money-brl"
 import type { Transaction, WorkspaceInstallmentPlan } from "@/lib/supabase"
-import {
-    localYmdFromDate,
-    parseYmdLocal,
-    transactionCalendarParts,
-} from "@/lib/transaction-date"
+import { localYmdFromDate, parseYmdLocal, transactionLocalYmd } from "@/lib/transaction-date"
 import { addMonths } from "@/lib/subscription-billing-projection"
 
 export type ProjectedInstallmentCharge = {
@@ -36,12 +32,6 @@ function isDateInInclusiveRange(d: Date, start: Date, end: Date): boolean {
         compareCalendarDatesOnly(d, start) >= 0 &&
         compareCalendarDatesOnly(d, end) <= 0
     )
-}
-
-function transactionLocalYmd(iso: string): string | null {
-    const p = transactionCalendarParts(iso)
-    if (!p) return null
-    return `${p.y}-${String(p.mo).padStart(2, "0")}-${String(p.d).padStart(2, "0")}`
 }
 
 /**

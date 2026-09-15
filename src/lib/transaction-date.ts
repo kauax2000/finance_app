@@ -216,3 +216,10 @@ export function daysBetweenYmd(fromYmd: string, toYmd: string): number | null {
     if (!a || !b) return null
     return Math.round((b.getTime() - a.getTime()) / 86_400_000)
 }
+
+/** `YYYY-MM-DD` do dia-calendário de uma data de lançamento, ou `null` se ilegível. */
+export function transactionLocalYmd(isoOrString: string): string | null {
+    const p = transactionCalendarParts(isoOrString)
+    if (!p) return null
+    return `${p.y}-${pad2(p.mo)}-${pad2(p.d)}`
+}

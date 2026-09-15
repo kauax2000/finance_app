@@ -1,5 +1,6 @@
 "use client"
 
+import { paymentMethodOptions } from "@/lib/payment-methods"
 import { useMemo } from "react"
 import Link from "next/link"
 import type {
@@ -22,7 +23,6 @@ import { DatePicker } from "@/components/ui/date-picker"
 import { SubscriptionCategoryPicker } from "@/components/subscriptions/subscription-form-pickers"
 import {
     SUBSCRIPTION_BILLING_OPTIONS,
-    SUBSCRIPTION_CHARGE_METHOD_OPTIONS,
     SUBSCRIPTION_PAYMENT_NONE,
     type ExpenseCategoryOption,
 } from "@/components/subscriptions/subscription-form-shared"
@@ -210,7 +210,7 @@ export function SubscriptionFormFields({
                         >
                             Não informado
                         </SelectItem>
-                        {SUBSCRIPTION_CHARGE_METHOD_OPTIONS.map((o) => (
+                        {paymentMethodOptions().map((o) => (
                             <SelectItem
                                 key={o.value}
                                 value={o.value}

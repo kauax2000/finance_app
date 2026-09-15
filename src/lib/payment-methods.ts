@@ -11,7 +11,9 @@ export type PaymentMethod = (typeof PAYMENT_METHOD_VALUES)[number]
 
 const LABELS: Record<PaymentMethod, string> = {
     pix: "PIX",
-    ted: "TED",
+    // Conta e assinatura escreviam "TED / Débito em conta" e "Débito em conta /
+    // automático" nas próprias listas; o rótulo é um só, e diz as duas coisas.
+    ted: "TED / débito em conta",
     debit_card: "Cartão de débito",
     credit_card: "Cartão de crédito",
     cash: "Dinheiro",

@@ -5,7 +5,7 @@ import type {
     WorkspaceInstallmentPlan,
     WorkspaceSubscription,
 } from "@/lib/supabase"
-import { localYmdFromDate, transactionCalendarParts } from "@/lib/transaction-date"
+import { localYmdFromDate, transactionLocalYmd } from "@/lib/transaction-date"
 import { paddedBoundsForYearMonth, periodBoundsFromYearMonth } from "@/lib/budget-month"
 import {
     buildCreditCardClosingLookup,
@@ -29,12 +29,6 @@ export type CategoryCommitmentTotals = {
 }
 
 export type CategoryCommitmentsById = Record<string, CategoryCommitmentTotals>
-
-function transactionLocalYmd(t: Pick<Transaction, "date">): string | null {
-    const p = transactionCalendarParts(t.date)
-    if (!p) return null
-    return `${p.y}-${String(p.mo).padStart(2, "0")}-${String(p.d).padStart(2, "0")}`
-}
 
 function ensureBucket(out: CategoryCommitmentsById, categoryId: string): CategoryCommitmentTotals {
     const prev = out[categoryId]
@@ -109,7 +103,7 @@ export function buildCategoryCommitmentsForMonth(args: {
         if (t.type !== "expense") continue
         const sid = t.subscription_id
         if (!sid) continue
-        const ymd = transactionLocalYmd(t as Pick<Transaction, "date">)
+        const ymd = transactionLocalYmd((t as Pick<Transaction, "date">).date)
         if (!ymd) continue
         postedBySubscriptionDay.add(`${sid}:${ymd}`)
     }

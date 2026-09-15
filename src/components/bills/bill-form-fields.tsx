@@ -1,5 +1,6 @@
 "use client"
 
+import { paymentMethodOptions } from "@/lib/payment-methods"
 import { useMemo } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -25,7 +26,6 @@ import { parseYmdLocal, localYmdFromDate } from "@/lib/transaction-date"
 import {
     BILL_CATEGORY_NONE,
     BILL_FREQUENCY_OPTIONS,
-    BILL_PAYMENT_OPTIONS,
     BILL_PAYMENT_NONE,
 } from "@/components/bills/bill-form-shared"
 import {
@@ -284,7 +284,7 @@ export function BillFormFields({
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value={BILL_PAYMENT_NONE}>— Não definido —</SelectItem>
-                        {BILL_PAYMENT_OPTIONS.map((o) => (
+                        {paymentMethodOptions().map((o) => (
                             <SelectItem key={o.value} value={o.value}>
                                 {o.label}
                             </SelectItem>
