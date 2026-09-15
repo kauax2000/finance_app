@@ -8,7 +8,6 @@ import {
     type WorkspaceSubscription,
 } from "@/lib/supabase"
 import {
-    addMonths,
 } from "@/components/categories/detail/category-detail-utils"
 import {
     periodBoundsFromYearMonth,
@@ -146,7 +145,7 @@ async function fetchCategoryDetailBundleLegacy(args: {
     const { period_start } = periodBoundsFromYearMonth(yearMonth)
     const { padStart, padEnd } = paddedBoundsForYearMonth(yearMonth)
     const monthsBack = 12
-    const rangeStartYm = addMonths(yearMonth, -(monthsBack - 1))
+    const rangeStartYm = shiftYearMonth(yearMonth, -(monthsBack - 1))
     const { period_start: rangeStart } = periodBoundsFromYearMonth(rangeStartYm)
     const seriesStart = minYmd(rangeStart, padStart)
 

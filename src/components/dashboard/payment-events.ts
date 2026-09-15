@@ -21,7 +21,7 @@ import {
     projectedSubscriptionCountsInExpenseMonth,
     type CreditCardClosingLookup,
 } from "@/lib/expense-month-attribution"
-import { formatYearMonth, paddedBoundsForYearMonth, periodBoundsFromYearMonth } from "@/lib/budget-month"
+import { paddedBoundsForYearMonth, periodBoundsFromYearMonth } from "@/lib/budget-month"
 import { expandSubscriptionChargesInYmdRange } from "@/lib/subscription-billing-projection"
 import { localYmdFromDate, parseYmdLocal, transactionCalendarParts } from "@/lib/transaction-date"
 
@@ -355,47 +355,6 @@ export type UpcomingPaymentRow = {
     installmentPlanId?: string | null
 }
 
-/** Next N rows from today onward (incl. hoje), excluding past-only posted noise for calendar; we skip pure posted_* here. */
-export function buildUpcomingPayments(
-    events: PaymentEvent[],
-    todayYmd: string,
-    limit: number = 12
-): UpcomingPaymentRow[] {
-    const today = parseYmdLocal(todayYmd)
-    if (!today) return []
-    const rows: UpcomingPaymentRow[] = []
-    const seen = new Set<string>()
-    for (const e of events) {
-        if (e.kind === "posted_income" || e.kind === "posted_expense") continue
-        if (e.status === "past") continue
-        if (seen.has(e.id)) continue
-        seen.add(e.id)
-        const d = parseYmdLocal(e.dateYmd)
-        if (!d) continue
-        const t0 = new Date(
-            today.getFullYear(),
-            today.getMonth(),
-            today.getDate()
-        )
-        const d0 = new Date(d.getFullYear(), d.getMonth(), d.getDate())
-        const daysUntil = Math.round((d0.getTime() - t0.getTime()) / 86_400_000)
-        if (daysUntil < 0) continue
-        rows.push({
-            id: e.id,
-            dateYmd: e.dateYmd,
-            kind: e.kind,
-            title: e.title,
-            amount: e.amount,
-            sourceHref: e.sourceHref,
-            daysUntil,
-            metaId: e.metaId,
-            installmentPlanId: e.installmentPlanId,
-        })
-    }
-    rows.sort((a, b) => a.dateYmd.localeCompare(b.dateYmd))
-    return rows.slice(0, limit)
-}
-
 function pickEarlierPaymentEvent(a: PaymentEvent, b: PaymentEvent): PaymentEvent {
     const d = compareYmd(a.dateYmd, b.dateYmd)
     if (d < 0) return a
@@ -466,46 +425,4 @@ export function buildUpcomingPaymentsForVisibleMonth(
         })
     }
     return rows
-}
-
-/** Merge events for several months (e.g. current + next) for upcoming list. */
-export function buildPaymentEventsForMonths(
-    yms: string[],
-    args: Omit<Parameters<typeof buildPaymentEventsForMonth>[1], never>
-): PaymentEvent[] {
-    const map = new Map<string, PaymentEvent>()
-    for (const ym of yms) {
-        for (const e of buildPaymentEventsForMonth(ym, args)) {
-            map.set(e.id, e)
-        }
-    }
-    return [...map.values()].sort((a, b) => {
-        const d = a.dateYmd.localeCompare(b.dateYmd)
-        if (d !== 0) return d
-        return a.id.localeCompare(b.id)
-    })
-}
-
-export function calendarMonthKeysAround(
-    centerYm: string,
-    extraMonths: number
-): string[] {
-    const keys: string[] = []
-    const [y, m] = centerYm.split("-").map(Number)
-    if (!y || !m) return [centerYm]
-    for (let i = -extraMonths; i <= extraMonths; i++) {
-        const d = new Date(y, m - 1 + i, 1)
-        keys.push(formatYearMonth(d))
-    }
-    return keys
-}
-
-/** Today + next months (same day-of-month anchor), for upcoming-payment projection. */
-export function forwardMonthKeysFromToday(inclusiveMonths: number = 6): string[] {
-    const d = new Date()
-    const keys: string[] = []
-    for (let i = 0; i < inclusiveMonths; i++) {
-        keys.push(formatYearMonth(new Date(d.getFullYear(), d.getMonth() + i, 1)))
-    }
-    return keys
 }

@@ -1,5 +1,6 @@
 "use client"
 
+import { currencyBRL } from "@/lib/formatters"
 import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -18,7 +19,6 @@ import type { Category, CreditCard } from "@/lib/supabase"
 import {
     buildDailySeries,
     buildMonthlySeries,
-    formatCurrencyBRL,
     hexToRgba,
 } from "@/components/categories/detail/category-detail-utils"
 import {
@@ -125,7 +125,7 @@ export function CategoryDetailTrends({
                                 <XAxis dataKey="day" tick={{ fontSize: 11 }} />
                                 <YAxis width={44} tick={{ fontSize: 11 }} />
                                 <Tooltip
-                                    formatter={(value) => formatCurrencyBRL(Number(value))}
+                                    formatter={(value) => currencyBRL(Number(value))}
                                     labelFormatter={(_, payload) =>
                                         payload?.[0]?.payload
                                             ? `Dia ${(payload[0].payload as { day: string }).day}`
@@ -152,7 +152,7 @@ export function CategoryDetailTrends({
                                     height={52}
                                 />
                                 <YAxis width={44} tick={{ fontSize: 11 }} />
-                                <Tooltip formatter={(value) => formatCurrencyBRL(Number(value))} />
+                                <Tooltip formatter={(value) => currencyBRL(Number(value))} />
                                 <Bar dataKey="total" fill={hexToRgba(accentColor, 0.85)} radius={[3, 3, 0, 0]} />
                             </BarChart>
                         )}

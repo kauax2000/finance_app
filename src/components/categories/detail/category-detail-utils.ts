@@ -1,5 +1,5 @@
 import type { CreditCard, Transaction } from "@/lib/supabase"
-import { formatYearMonth, periodBoundsFromYearMonth } from "@/lib/budget-month"
+import { periodBoundsFromYearMonth, shiftYearMonth } from "@/lib/budget-month"
 import {
     buildCreditCardClosingLookup,
     expenseYearMonthKey,
@@ -17,10 +17,6 @@ export function hexToRgba(hex: string, alpha: number) {
     return `rgba(${r},${g},${b},${alpha})`
 }
 
-export function formatCurrencyBRL(v: number) {
-    return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
-}
-
 export function monthLabelPt(ym: string) {
     const [y, m] = ym.split("-").map(Number)
     if (!y || !m) return ym
@@ -29,13 +25,6 @@ export function monthLabelPt(ym: string) {
         year: "2-digit",
         timeZone: "UTC",
     })
-}
-
-export function addMonths(ym: string, delta: number) {
-    const [y, m] = ym.split("-").map(Number)
-    if (!y || !m) return ym
-    const d = new Date(Date.UTC(y, m - 1 + delta, 1))
-    return formatYearMonth(d)
 }
 
 export function buildDailySeries(
@@ -77,7 +66,9 @@ export function buildMonthlySeries(
     creditCards?: Pick<CreditCard, "id" | "closing_day">[],
 ) {
     const months = Array.from({ length: monthsBack }, (_, i) =>
-        addMonths(baseYm, -(monthsBack - 1 - i)),
+        // `shiftYearMonth` é local. A cópia anterior montava a data em UTC e lia
+        // em hora local: em São Paulo cada mês da série saía um mês antes.
+        shiftYearMonth(baseYm, -(monthsBack - 1 - i)),
     )
     const totals: Record<string, number> = Object.fromEntries(months.map((m) => [m, 0]))
     const closingLookup: CreditCardClosingLookup = buildCreditCardClosingLookup(

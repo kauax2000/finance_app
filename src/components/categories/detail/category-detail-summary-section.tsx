@@ -10,7 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Category } from "@/lib/supabase"
-import { formatCurrencyBRL } from "@/components/categories/detail/category-detail-utils"
+import { currencyBRL } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 import { deltaTone } from "@/lib/delta-tone"
 
@@ -222,7 +222,7 @@ function ExpenseBudgetOverviewCard({
           ? "#F59E0B"
           : "#10B981"
     const budgetBarLabel = hasBudget
-        ? `Uso do orçamento: ${budgetPctRounded}% de ${formatCurrencyBRL(limit)}${over ? ", acima do limite" : ""}`
+        ? `Uso do orçamento: ${budgetPctRounded}% de ${currencyBRL(limit)}${over ? ", acima do limite" : ""}`
         : undefined
 
     return (
@@ -236,7 +236,7 @@ function ExpenseBudgetOverviewCard({
                     {hasBudget ? (
                         <p className="hidden tabular-nums text-2xs text-muted-foreground md:block">
                             Limite{" "}
-                            <span className="font-medium text-foreground">{formatCurrencyBRL(limit)}</span>
+                            <span className="font-medium text-foreground">{currencyBRL(limit)}</span>
                         </p>
                     ) : (
                         <p className="hidden text-2xs font-medium uppercase tracking-wide text-muted-foreground md:block">
@@ -256,7 +256,7 @@ function ExpenseBudgetOverviewCard({
                                     Limite
                                 </p>
                                 <p className="tabular-nums text-2xs font-medium text-foreground">
-                                    {formatCurrencyBRL(limit)}
+                                    {currencyBRL(limit)}
                                 </p>
                             </div>
                             <div className="grid grid-cols-2 items-end gap-3 md:flex md:flex-wrap md:justify-between md:gap-x-6 md:gap-y-4">
@@ -265,20 +265,20 @@ function ExpenseBudgetOverviewCard({
                                         Gasto
                                     </p>
                                     <p className="truncate text-lg font-semibold tabular-nums leading-tight sm:text-xl md:text-2xl">
-                                        {formatCurrencyBRL(monthTotal)}
+                                        {currencyBRL(monthTotal)}
                                     </p>
                                     {projectedMonthTotal && projectedMonthTotal > 0 ? (
                                         <p className="text-xs leading-snug text-muted-foreground">
                                             Registrado{" "}
                                             <span className="tabular-nums">
-                                                {formatCurrencyBRL(postedMonthTotal ?? 0)}
+                                                {currencyBRL(postedMonthTotal ?? 0)}
                                             </span>{" "}
                                             <span className="text-muted-foreground/70">
                                                 ·
                                             </span>{" "}
                                             +{" "}
                                             <span className="tabular-nums">
-                                                {formatCurrencyBRL(projectedMonthTotal)}
+                                                {currencyBRL(projectedMonthTotal)}
                                             </span>{" "}
                                             previstos
                                             {projectedInstallmentsTotal || projectedSubscriptionsTotal ? (
@@ -291,7 +291,7 @@ function ExpenseBudgetOverviewCard({
                                                     projectedInstallmentsTotal > 0 ? (
                                                         <>
                                                             <span className="tabular-nums">
-                                                                {formatCurrencyBRL(
+                                                                {currencyBRL(
                                                                     projectedInstallmentsTotal
                                                                 )}
                                                             </span>
@@ -314,7 +314,7 @@ function ExpenseBudgetOverviewCard({
                                                     projectedSubscriptionsTotal > 0 ? (
                                                         <>
                                                             <span className="tabular-nums">
-                                                                {formatCurrencyBRL(
+                                                                {currencyBRL(
                                                                     projectedSubscriptionsTotal
                                                                 )}
                                                             </span>
@@ -343,7 +343,7 @@ function ExpenseBudgetOverviewCard({
                                             overBudget && "text-destructive",
                                         )}
                                     >
-                                        {formatCurrencyBRL(Math.abs(remaining))}
+                                        {currencyBRL(Math.abs(remaining))}
                                     </p>
                                 </div>
                             </div>
@@ -379,7 +379,7 @@ function ExpenseBudgetOverviewCard({
                                 Gasto no mês
                             </p>
                             <p className="text-xl font-semibold tabular-nums leading-tight md:text-2xl">
-                                {formatCurrencyBRL(monthTotal)}
+                                {currencyBRL(monthTotal)}
                             </p>
                             <p className="text-xs text-muted-foreground">Sem orçamento definido</p>
                         </div>
@@ -467,18 +467,18 @@ export function CategoryDetailSummarySection({
                             headerRight={momBadge.show ? <MomBadge model={momBadge} /> : undefined}
                         >
                             <p className="text-lg font-semibold tabular-nums leading-tight md:text-xl">
-                                {formatCurrencyBRL(monthTotal)}
+                                {currencyBRL(monthTotal)}
                             </p>
                         </SummaryMetricCard>
                         <SummaryMetricCard label="Média / lançamento">
                             <p className="text-lg font-semibold tabular-nums leading-tight md:text-xl">
-                                {stats.count > 0 ? formatCurrencyBRL(stats.avg) : "—"}
+                                {stats.count > 0 ? currencyBRL(stats.avg) : "—"}
                             </p>
                         </SummaryMetricCard>
                         <SummaryMetricCard label="Maior · menor">
                             <p className="text-sm font-semibold tabular-nums leading-snug md:text-base">
                                 {stats.count > 0
-                                    ? `${formatCurrencyBRL(stats.max)} · ${formatCurrencyBRL(stats.min)}`
+                                    ? `${currencyBRL(stats.max)} · ${currencyBRL(stats.min)}`
                                     : "—"}
                             </p>
                         </SummaryMetricCard>
