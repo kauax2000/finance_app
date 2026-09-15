@@ -336,7 +336,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             return
         }
         setDeleteDialogOpen(false)
-        router.push("/categories")
+        router.push(ROUTES.DASHBOARD_CATEGORIES)
     }, [categoryId, router])
 
     React.useEffect(() => {

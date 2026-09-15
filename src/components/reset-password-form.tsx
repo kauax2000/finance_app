@@ -1,5 +1,6 @@
 "use client"
 
+import { ROUTES } from "@/config/navigation"
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy"
 import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -124,7 +125,7 @@ function ResetPasswordFormContent() {
                 setSuccess(true)
                 setLoading(false)
                 setTimeout(() => {
-                    router.push("/login")
+                    router.push(ROUTES.LOGIN)
                 }, 3000)
             }
         } catch {
@@ -163,7 +164,7 @@ function ResetPasswordFormContent() {
                         <Link href="/forgot-password">Solicitar novo link</Link>
                     </Button>
                     <p className="text-center text-sm text-muted-foreground">
-                        <Link href="/login" className="text-primary-accent font-medium underline-offset-4 hover:underline">
+                        <Link href={ROUTES.LOGIN} className="text-primary-accent font-medium underline-offset-4 hover:underline">
                             Voltar ao login
                         </Link>
                     </p>
@@ -184,7 +185,7 @@ function ResetPasswordFormContent() {
                             </p>
                         </div>
                         <Button asChild className="w-full">
-                            <Link href="/login">Voltar ao login</Link>
+                            <Link href={ROUTES.LOGIN}>Voltar ao login</Link>
                         </Button>
                     </div>
                 ) : (
@@ -223,7 +224,7 @@ function ResetPasswordFormContent() {
                 )}
 
                 <p className="text-center text-sm text-muted-foreground">
-                    <Link href="/login" className="text-primary-accent font-medium underline-offset-4 hover:underline">
+                    <Link href={ROUTES.LOGIN} className="text-primary-accent font-medium underline-offset-4 hover:underline">
                         Voltar ao login
                     </Link>
                 </p>

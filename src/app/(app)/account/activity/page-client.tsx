@@ -1,5 +1,6 @@
 "use client"
 
+import { ROUTES } from "@/config/navigation"
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
@@ -216,7 +217,7 @@ export default function ActivityPage() {
     useEffect(() => {
         if (authLoading) return
         if (!authSession) {
-            router.replace("/login")
+            router.replace(ROUTES.LOGIN)
             return
         }
         void fetchActivities()

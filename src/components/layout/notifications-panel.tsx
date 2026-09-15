@@ -1,5 +1,6 @@
 "use client"
 
+import { ROUTES } from "@/config/navigation"
 import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -229,7 +230,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                         variant="inbox-empty"
                         onOpenPreferences={() => {
                             close()
-                            router.push("/settings")
+                            router.push(ROUTES.SETTINGS)
                         }}
                     />
                 ) : (

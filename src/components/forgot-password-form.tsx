@@ -1,5 +1,6 @@
 "use client"
 
+import { ROUTES } from "@/config/navigation"
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -139,7 +140,7 @@ export function ForgotPasswordForm() {
                 setSuccess(true)
                 setLoading(false)
                 setTimeout(() => {
-                    router.push("/login")
+                    router.push(ROUTES.LOGIN)
                 }, 3000)
             }
         } catch {
@@ -160,7 +161,7 @@ export function ForgotPasswordForm() {
                             </p>
                         </div>
                         <Button asChild className="w-full">
-                            <Link href="/login">Voltar ao login</Link>
+                            <Link href={ROUTES.LOGIN}>Voltar ao login</Link>
                         </Button>
                     </div>
                 ) : step === "email" ? (
@@ -343,7 +344,7 @@ export function ForgotPasswordForm() {
                 {step === "email" && (
                     <p className="text-center text-sm text-muted-foreground">
                         Lembrou a senha?{" "}
-                        <Link href="/login" className="text-primary-accent font-medium underline-offset-4 hover:underline">
+                        <Link href={ROUTES.LOGIN} className="text-primary-accent font-medium underline-offset-4 hover:underline">
                             Fazer login
                         </Link>
                     </p>
