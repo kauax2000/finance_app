@@ -909,16 +909,16 @@ function CarouselDots({
             data-active={ativo || undefined}
             className={cn(
               "group/dot flex shrink-0 cursor-pointer items-center justify-center",
-              "rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+              "rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/70",
               barra
                 ? "min-w-0 flex-1 py-2 pointer-coarse:py-5"
-                : "size-6 pointer-coarse:h-11"
+                : "size-6 pointer-coarse:size-11"
             )}
           >
             <span
               aria-hidden="true"
               className={cn(
-                "rounded-full transition-[background-color,width] duration-(--duration-base) ease-out",
+                "rounded-full transition-[background-color,width] duration-(--duration-base) ease-(--ease-out)",
                 barra ? "h-1 w-full" : "size-2",
                 // O ponto apagado também é um controle, e a 1.4.11 pede 3:1.
                 // Varridos os degraus contra o fundo real nos dois temas, **45%

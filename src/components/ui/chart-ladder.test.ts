@@ -157,7 +157,9 @@ describe("escada e invariantes do Chart", () => {
   })
 
   it("7. o eixo de valor ancora em zero por padrão", () => {
-    expect(CODIGO).toMatch(/domain = \[0, "auto"\]/)
+    expect(CODIGO).toMatch(/\[0, "auto"\]/)
+    // …e o eixo de categoria não herda o domínio numérico.
+    expect(CODIGO).toMatch(/props\.type === "category" \? undefined/)
   })
 
   it("8. o vão entre marcas é pintado com uma superfície nomeada, uma vez só", () => {

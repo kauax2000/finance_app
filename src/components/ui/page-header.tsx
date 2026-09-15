@@ -1,7 +1,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { ArrowLeftIcon } from "@heroicons/react/16/solid"
-import { Slot } from "@radix-ui/react-slot"
+import { Slot } from "radix-ui"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { Button } from "@/components/ui/button"
@@ -259,7 +259,7 @@ function PageHeaderMeta({
   // `asChild` porque o elemento certo depende do que a faixa carrega: um `dl`
   // quando são pares termo/valor — que é o caso comum num app de finanças —, e
   // uma `div` quando são só rótulos soltos.
-  const Comp = asChild ? Slot : "div"
+  const Comp = asChild ? Slot.Root : "div"
   return (
     <Comp
       data-slot="page-header-meta"

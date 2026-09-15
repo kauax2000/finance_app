@@ -500,11 +500,13 @@ function NavigationMenu({
      * É o mesmo trabalho que o `collisionBoundary` do Radix faz nas
      * primitivas Popper. Aqui ele é à mão porque esta primitiva não tem.
      */
+    // A janela que **contém** a raiz: dentro da moldura do catálogo `window` é a de fora.
+    const janela = raiz.ownerDocument.defaultView ?? window
     const limite = () => {
       let esquerda = 0
-      let direita = window.innerWidth
+      let direita = janela.innerWidth
       let n: HTMLElement | null = raiz.parentElement
-      while (n && n !== document.body) {
+      while (n && n !== raiz.ownerDocument.body) {
         const cs = getComputedStyle(n)
         if (cs.overflowX !== "visible" || cs.overflowY !== "visible") {
           const r = n.getBoundingClientRect()
@@ -586,12 +588,12 @@ function NavigationMenu({
 
     // A raiz é `w-fit`. Estreitar a janela pode não mudar a caixa dela, e aí
     // nenhum dos dois observadores acorda — mas o retângulo de recorte mudou.
-    window.addEventListener("resize", medir)
+    janela.addEventListener("resize", medir)
 
     return () => {
       ro.disconnect()
       mo.disconnect()
-      window.removeEventListener("resize", medir)
+      janela.removeEventListener("resize", medir)
     }
   }, [segueGatilho, orientation, size, variant])
 
@@ -608,10 +610,13 @@ function NavigationMenu({
     [size, variant, align, orientation, viewport, indicator, anchored, segueGatilho]
   )
 
+  // Memorizado: inline, a função nova a cada render religava o ref (null → nó).
+  const rootRef = React.useMemo(() => composeRefs(raizRef, ref), [ref])
+
   return (
     <NavigationMenuContext.Provider value={ctx}>
       <NavigationMenuPrimitive.Root
-        ref={composeRefs(raizRef, ref)}
+        ref={rootRef}
         data-slot="navigation-menu"
         data-variant={variant}
         data-size={size}

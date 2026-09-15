@@ -20,7 +20,7 @@ import {
     MOBILE_GLASS_FAB_MENU_ITEM_CLASSNAME,
     MOBILE_GLASS_MENU_INNER_CLASSNAME,
     MOBILE_GLASS_MENU_SEPARATOR_CLASSNAME,
-} from "@/components/layout/mobile-glass-surface"
+} from "@/lib/mobile-glass-surface"
 import { cn } from "@/lib/utils"
 import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
 import type { NewTransactionMode } from "@/components/transactions/transactions-toolbar"

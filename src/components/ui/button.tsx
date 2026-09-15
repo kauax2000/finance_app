@@ -66,7 +66,7 @@ const buttonVariants = cva(
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input-fill/30 dark:hover:bg-input-fill/50",
         destructive:
           "bg-destructive/10 text-destructive-muted-foreground hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        link: "text-primary-accent underline-offset-4 hover:underline",
+        link: "text-primary-accent underline-offset-4 hover:underline active:underline",
       },
       // Uma escada só, de 24 a 40 em degraus de 4, e a coluna `icon-*` espelha
       // a de texto degrau a degrau: `md` casa com `icon-md`, `lg` com

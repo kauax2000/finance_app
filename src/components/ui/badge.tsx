@@ -59,7 +59,7 @@ export const tagChipUnreadCount =
 
 /** Chip de filtro selecionado — tonal, não preenchido. */
 export const tagChipFilterSelected =
-  "bg-success-muted text-success-muted-foreground ring-1 ring-success/25 dark:ring-success/40"
+  "bg-primary-muted text-primary-muted-foreground ring-1 ring-primary-accent/25 dark:ring-primary-accent/40"
 
 /** Chip de filtro disponível. */
 export const tagChipFilterIdle = tagChipNeutral
@@ -97,7 +97,7 @@ export const tagChipIncomeIconColor = "text-income-muted-foreground"
 export const tagChipExpenseIconColor = "text-expense-muted-foreground"
 
 const badgeVariants = cva(
-  "inline-flex items-center justify-center rounded-full border border-transparent text-center font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+  "inline-flex items-center justify-center rounded-full border border-transparent text-center font-medium transition-colors focus:outline-none focus-visible:ring-3 focus-visible:ring-ring/70",
   {
     variants: {
       /**

@@ -32,7 +32,7 @@ import {
     MOBILE_GLASS_MENU_INNER_CLASSNAME,
     MOBILE_GLASS_MENU_ROW_CLASSNAME,
     MOBILE_GLASS_MENU_SEPARATOR_CLASSNAME,
-} from "@/components/layout/mobile-glass-surface"
+} from "@/lib/mobile-glass-surface"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { cn } from "@/lib/utils"
 

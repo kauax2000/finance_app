@@ -282,10 +282,21 @@ const TabsListContext = React.createContext<{
 
 /** Junta o ref do hook de dissolução com o ref local da medição. */
 function composeRefs<T>(...refs: Array<React.Ref<T> | undefined>) {
-  return (node: T | null) => {
-    for (const ref of refs) {
-      if (typeof ref === "function") ref(node)
-      else if (ref) (ref as React.RefObject<T | null>).current = node
+  return (node: T | null): void | (() => void) => {
+    // No React 19 um ref que devolve limpeza não é chamado com `null`: sem
+    // repassar a do `useScrollFade`, o observador dele vazava a cada troca.
+    const limpezas = refs.map((ref) => {
+      if (typeof ref === "function") return ref(node)
+      if (ref) (ref as React.RefObject<T | null>).current = node
+      return undefined
+    })
+    return () => {
+      refs.forEach((ref, i) => {
+        const limpar = limpezas[i]
+        if (typeof limpar === "function") limpar()
+        else if (typeof ref === "function") ref(null)
+        else if (ref) (ref as React.RefObject<T | null>).current = null
+      })
     }
   }
 }
@@ -694,8 +705,8 @@ function TabsList({
    * O Tailwind varre o código como texto: `scroll-fade-${axis}` não existiria
    * para o scanner, e o CSS nunca seria gerado.
    *
-   * O `ref` do hook devolve uma função de limpeza, e ela sobrevive à cadeia de
-   * refs do Radix porque o `composeRefs` desta versão a propaga. É premissa de
+   * O `ref` do hook devolve uma função de limpeza, e ela sobrevive porque o
+   * `composeRefs` deste arquivo a devolve. É premissa de
    * dependência, como a instância única do `Dialog`: se ela cair, o
    * `ResizeObserver` vaza a cada desmontagem.
    */

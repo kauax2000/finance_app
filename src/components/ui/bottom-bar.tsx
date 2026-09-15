@@ -6,7 +6,7 @@ import Link from "next/link"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
-import { MOBILE_GLASS_SURFACE_CLASSNAME } from "@/components/layout/mobile-glass-surface"
+import { MOBILE_GLASS_SURFACE_CLASSNAME } from "@/lib/mobile-glass-surface"
 import type { HeroIcon } from "@/types/navigation"
 import { cn } from "@/lib/utils"
 

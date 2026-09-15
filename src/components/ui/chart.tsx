@@ -741,7 +741,7 @@ function ChartLegendContent({
               "focus-visible:ring-3 focus-visible:ring-ring/70",
               // O estado não é só opacidade: o rótulo risca, e é isso que
               // sobrevive a quem não distingue o degrau de transparência.
-              off && "text-muted-foreground line-through opacity-60"
+              off && "text-muted-foreground line-through"
             )}
           >
             {corpo}
@@ -813,7 +813,7 @@ function ChartYAxis({
   // como `$ 22 mil` e `$ 5,5 mil` — o cifrão comido — num eixo de 56px que
   // servia bem no desktop. O Recharts 3 calcula a calha a partir dos rótulos.
   width = "auto" as const,
-  domain = [0, "auto"] as const,
+  domain,
   ...props
 }: React.ComponentProps<typeof YAxis> & { format?: ChartFormat }) {
   return (
@@ -822,7 +822,9 @@ function ChartYAxis({
       axisLine={axisLine}
       tickMargin={tickMargin}
       width={width}
-      domain={domain as never}
+      // `[0, "auto"]` é para eixo de número; um `domain={undefined}` explícito
+      // caía no padrão e o aplicava ao eixo de categorias das barras deitadas.
+      domain={(domain ?? (props.type === "category" ? undefined : [0, "auto"])) as never}
       tickFormatter={(value) => formatChartValue(value, format)}
       {...props}
     />
@@ -908,6 +910,7 @@ function ChartFrame({
   series,
   config,
   x,
+  xLabel,
   format,
   children,
 }: {
@@ -916,6 +919,7 @@ function ChartFrame({
   series: string[]
   config: ChartConfig
   x?: string
+  xLabel?: string
   format: ChartFormat
   children: React.ReactNode
 }) {
@@ -935,6 +939,7 @@ function ChartFrame({
             series={series}
             config={config}
             x={x}
+            xLabel={xLabel}
             format={format}
           />
         </CollapsibleContent>
@@ -1361,6 +1366,7 @@ function ChartDonut({
       series={[dataKey]}
       config={config}
       x={nameKey}
+      xLabel="Categoria"
       format={format}
     >
       {/*
@@ -1728,6 +1734,7 @@ function ChartDataTable({
   series,
   config,
   x,
+  xLabel = "Período",
   format = "currency",
   xFormat = "text",
   className,
@@ -1736,6 +1743,8 @@ function ChartDataTable({
   series: string[]
   config: ChartConfig
   x?: string
+  /** O nome da primeira coluna. A rosca rotula categorias, não períodos. */
+  xLabel?: string
   format?: ChartFormat
   xFormat?: ChartFormat
   className?: string
@@ -1744,9 +1753,9 @@ function ChartDataTable({
     <Table data-slot="chart-data-table" className={className}>
       <TableHeader>
         <TableRow>
-          {x ? <TableHead>Período</TableHead> : null}
+          {x ? <TableHead>{xLabel}</TableHead> : null}
           {series.map((key) => (
-            <TableHead key={key} className="text-right">
+            <TableHead key={key} numeric>
               {config[key]?.label ?? key}
             </TableHead>
           ))}
@@ -1759,7 +1768,7 @@ function ChartDataTable({
               <TableCell>{formatChartValue(row[x], xFormat)}</TableCell>
             ) : null}
             {series.map((key) => (
-              <TableCell key={key} className="nums text-right font-mono">
+              <TableCell key={key} numeric className="font-mono">
                 {formatChartValue(row[key], format)}
               </TableCell>
             ))}

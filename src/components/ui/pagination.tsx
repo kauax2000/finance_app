@@ -347,7 +347,7 @@ function PaginationEdge({
         className={cn(classes, "pointer-events-none opacity-50")}
       >
         {/* O nome vai junto: sem ele, no telefone (rótulo escondido) o extremo desabilitado não se chama nada. */}
-        <span data-slot="pagination-link" aria-disabled="true" aria-label={ariaLabel}>
+        <span data-slot="pagination-link" role="link" aria-disabled="true" aria-label={ariaLabel}>
           {children}
         </span>
       </Button>

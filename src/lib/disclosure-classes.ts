@@ -189,4 +189,4 @@ export const disclosureMarkerClassName = [
  * abrindo em curvas diferentes.
  */
 export const disclosureMotionClassName =
-  "overflow-hidden duration-(--duration-base) ease-(--ease-out)"
+  "overflow-hidden animation-duration-(--duration-base) ease-(--ease-out)"

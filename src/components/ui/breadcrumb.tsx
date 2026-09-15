@@ -53,7 +53,7 @@ const breadcrumbSizes = {
   md: {
     list: "gap-2 text-sm",
     icon: "size-3.5",
-    ellipsis: "size-5",
+    ellipsis: "size-4",
   },
 } as const
 

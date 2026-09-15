@@ -44,7 +44,7 @@ type ToasterProps = ComponentProps<typeof Sonner>
  *
  * ## O desvio no telefone tem uma causa
  *
- * `mobileOffset.top` soma a área segura ao cabeçalho do app (4,5rem). Sem isso
+ * `mobileOffset.top` soma a área segura ao cabeçalho do app (4rem). Sem isso
  * o toast nasce **atrás** do cabeçalho fixo. No topo e não no rodapé porque
  * embaixo está a ilha de navegação, e um toast sobre ela cobre o alvo de toque
  * mais usado do app.

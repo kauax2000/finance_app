@@ -38,7 +38,7 @@ import { Button } from "@/components/ui/button"
 const announcementBarVariants = cva(
   [
     "flex w-full items-center gap-3 text-sm",
-    "has-[>svg]:gap-x-3 [&>svg]:size-(--announcement-icon) [&>svg]:shrink-0 [&>svg]:text-current",
+    "[&>svg]:size-(--announcement-icon) [&>svg]:shrink-0 [&>svg]:text-current",
   ],
   {
     variants: {
@@ -133,7 +133,7 @@ function AnnouncementBar({
             // `ms-auto` e não `flex-1` no texto: assim a barra funciona tanto
             // com `AnnouncementBarContent` quanto com um texto solto como
             // filho, que é como as chamadas mais curtas a escrevem.
-            "relative -mr-1 ms-auto shrink-0 text-current",
+            "relative -me-1 ms-auto shrink-0 text-current",
             // **O realce dele é mais forte que o do botão de ação, e não é
             // capricho.** Medido no escuro, `current/10` dá contraste 1,23–1,29
             // contra o fundo — o hover do `Button tertiary` do app dá 1,11 e o
@@ -155,8 +155,8 @@ function AnnouncementBar({
             "active:border-current/25 active:bg-current/15 dark:active:bg-current/15",
             // O alvo cresce por pseudo-elemento, e não por medida: aumentar a
             // caixa devolveria o salto de altura que esta rodada tirou. 10px de
-            // cada lado levam 24 a 44.
-            "pointer-coarse:after:absolute pointer-coarse:after:-inset-2.5 pointer-coarse:after:content-['']"
+            // cada lado levam os 22 da caixa de padding a 46 (a borda não conta).
+            "pointer-coarse:after:absolute pointer-coarse:after:-inset-3 pointer-coarse:after:content-['']"
           )}
         >
           <XMarkIcon aria-hidden />

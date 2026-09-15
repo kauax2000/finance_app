@@ -182,7 +182,7 @@ export function ThemeToggle({
             data-visual={visualIsLight ? "light" : "dark"}
             data-glass={glass ? "" : undefined}
             className={cn(
-                "group/theme relative inline-flex h-8 w-18 shrink-0 items-center rounded-full bg-muted p-0.5 outline-none transition-colors",
+                "group/theme relative inline-flex h-8 w-18 shrink-0 items-center rounded-full bg-muted p-0.5 outline-none transition-colors duration-(--duration-fast) ease-(--ease-out)",
                 glass && GLASS_SHEEN,
                 // O alvo de toque real: a pílula tem 32px de altura, e o
                 // pseudo-elemento a leva aos 44px que um dedo pede sem mexer no

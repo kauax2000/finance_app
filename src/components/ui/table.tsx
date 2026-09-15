@@ -391,9 +391,9 @@ function TableRow({
       className={cn(
         "border-b border-border transition-colors data-[state=selected]:bg-muted",
         interactive &&
-          "cursor-pointer hover:bg-muted/30 active:bg-muted/30 focus-visible:inset-ring-3 focus-visible:ring-ring/70 focus-visible:outline-none group/table-row",
+          "cursor-pointer hover:bg-muted/30 active:bg-muted/30 focus-visible:inset-ring-3 focus-visible:inset-ring-ring/70 focus-visible:outline-none group/table-row",
         variant === "group" &&
-          "border-border/80 bg-muted/30 hover:bg-muted/30 [&>td]:h-auto [&>td]:py-1.5 [&>td]:text-2xs [&>td]:font-semibold [&>td]:tracking-wider [&>td]:text-muted-foreground [&>td]:uppercase",
+          "border-border/80 bg-muted/30 [&>td]:h-auto [&>td]:py-1.5 [&>td]:text-2xs [&>td]:font-semibold [&>td]:tracking-wider [&>td]:text-muted-foreground [&>td]:uppercase",
         className
       )}
       {...props}
@@ -668,7 +668,7 @@ function TableEmpty({
   ...props
 }: Omit<React.ComponentProps<"td">, "colSpan"> & { colSpan: number }) {
   return (
-    <TableRow className="hover:bg-transparent active:bg-transparent">
+    <TableRow>
       <TableCell
         colSpan={colSpan}
         className={cn("py-8 text-center", className)}

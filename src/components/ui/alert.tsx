@@ -125,7 +125,8 @@ function Alert({
       data-slot="alert"
       data-tone={tone ?? "default"}
       role={
-        role ?? (tone === "destructive" || tone === "warning" ? "alert" : "status")
+        // Só o destrutivo interrompe, como na `AnnouncementBar`.
+        role ?? (tone === "destructive" ? "alert" : "status")
       }
       className={cn(alertVariants({ tone, variant, size }), className)}
       {...props}
@@ -149,7 +150,6 @@ function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
       className={cn(
         "font-heading font-medium tracking-tight text-balance",
         "group-has-[>svg]/alert:col-start-2",
-        "[.border-b]:pb-2",
         className
       )}
       {...props}

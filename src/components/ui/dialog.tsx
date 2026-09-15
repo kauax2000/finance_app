@@ -191,6 +191,8 @@ function DialogContent({
         className={cn(
           dialogContentVariants({ size, layout }),
           showCloseButton && "[--dialog-close:--spacing(11)]",
+          // Um `DialogCloseButton` composto também reserva, como no `Sheet`.
+          "has-[>[data-slot=dialog-close-button]]:[--dialog-close:--spacing(11)]",
           className
         )}
         {...props}
@@ -433,7 +435,8 @@ function DialogFooter({
       )}
       {...props}
     >
-      {children}
+      {/* Cancelar vem antes da ação: à esquerda no desktop e, com o
+          `flex-col-reverse`, embaixo no telefone. */}
       {showCloseButton && (
         <DialogPrimitive.Close asChild>
           <Button type="button" variant="tertiary">
@@ -441,6 +444,7 @@ function DialogFooter({
           </Button>
         </DialogPrimitive.Close>
       )}
+      {children}
     </div>
   )
 }

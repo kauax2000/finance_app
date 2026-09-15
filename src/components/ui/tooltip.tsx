@@ -137,6 +137,7 @@ function TooltipContent({
           "data-[side=bottom]:slide-in-from-top-1 data-[side=left]:slide-in-from-right-1 data-[side=right]:slide-in-from-left-1 data-[side=top]:slide-in-from-bottom-1",
           "fade-in-0 zoom-in-95 fade-out-0 zoom-out-95",
           "data-[state=delayed-open]:animate-in data-[state=instant-open]:animate-in data-[state=closed]:animate-out",
+          "animation-duration-(--duration-instant) ease-(--ease-out)",
           className
         )}
         {...props}
