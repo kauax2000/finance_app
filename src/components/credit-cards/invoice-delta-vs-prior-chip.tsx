@@ -1,13 +1,10 @@
 "use client"
 
+import { percentPointsBR } from "@/lib/formatters"
 import { ArrowTrendingDownIcon, ArrowTrendingUpIcon, MinusIcon } from "@heroicons/react/16/solid"
 import { cn } from "@/lib/utils"
 import { deltaTone } from "@/lib/delta-tone"
 
-const pctFmt = new Intl.NumberFormat("pt-BR", {
-    maximumFractionDigits: 1,
-    minimumFractionDigits: 0,
-})
 
 export type InvoiceDeltaDirection = "up" | "down" | "flat"
 
@@ -29,7 +26,7 @@ function deltaPctLabelFromValues(current: number, prior: number): string {
     if (prior === 0) return "—"
     const d = ((current - prior) / prior) * 100
     const sign = d > 0 ? "+" : ""
-    return `${sign}${pctFmt.format(d)}%`
+    return `${sign}${percentPointsBR(d)}%`
 }
 
 function ariaContextLabel(context: "fatia" | "category"): string {
@@ -95,7 +92,7 @@ export function getInvoiceDeltaVsPriorMetaFromPct(
 
 export function formatDeltaPctDisplay(pct: number): string {
     const sign = pct > 0 ? "+" : ""
-    return `${sign}${pctFmt.format(pct)}%`
+    return `${sign}${percentPointsBR(pct)}%`
 }
 
 export function deltaDirectionFromPct(pct: number): InvoiceDeltaDirection {

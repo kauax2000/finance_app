@@ -223,3 +223,18 @@ export function transactionLocalYmd(isoOrString: string): string | null {
     if (!p) return null
     return `${p.y}-${pad2(p.mo)}-${pad2(p.d)}`
 }
+
+/**
+ * "2026-09" → "set. de 26", para eixo de gráfico mês a mês. Em UTC de propósito:
+ * `new Date(y, m - 1, 1)` local e o `toLocaleDateString` concordam, mas a série
+ * das categorias já quebrou uma vez por misturar os dois fusos.
+ */
+export function formatYearMonthShortPtBr(ym: string): string {
+    const [y, m] = ym.split("-").map(Number)
+    if (!y || !m) return ym
+    return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString("pt-BR", {
+        month: "short",
+        year: "2-digit",
+        timeZone: "UTC",
+    })
+}

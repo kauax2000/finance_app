@@ -1,5 +1,12 @@
 "use client"
 
+import {
+    EmptyState,
+    EmptyStateActions,
+    EmptyStateDescription,
+    EmptyStateIcon,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
 import { currencyBRL } from "@/lib/formatters"
 import { localYmdFromDate } from "@/lib/transaction-date"
 import { useMemo } from "react"
@@ -230,19 +237,16 @@ export function DashboardOpenInvoices({
                         </p>
                     </CardToolbar>
                     {active.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center gap-4 px-4 py-10 text-center">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/60">
-                                <CreditCardGlyph className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                            <div className="space-y-1">
-                                <p className="text-sm font-medium text-foreground">
-                                    Nenhum cartão ativo
-                                </p>
-                                <p className="max-w-sm text-sm text-muted-foreground">
-                                    Cadastre ou ative um cartão para acompanhar faturas
-                                    abertas no dashboard.
-                                </p>
-                            </div>
+                        <EmptyState variant="plain">
+                            <EmptyStateIcon>
+                                <CreditCardGlyph />
+                            </EmptyStateIcon>
+                            <EmptyStateTitle>Nenhum cartão ativo</EmptyStateTitle>
+                            <EmptyStateDescription>
+                                Cadastre ou ative um cartão para acompanhar faturas
+                                abertas no dashboard.
+                            </EmptyStateDescription>
+                            <EmptyStateActions>
                             <Button
                                 asChild
                                 type="button"
@@ -254,7 +258,8 @@ export function DashboardOpenInvoices({
                                     Ir para cartões
                                 </Link>
                             </Button>
-                        </div>
+                            </EmptyStateActions>
+                        </EmptyState>
                     ) : (
                         <>
                             <CardToolbar>

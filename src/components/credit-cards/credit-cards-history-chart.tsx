@@ -1,5 +1,6 @@
 "use client"
 
+import { formatYearMonthShortPtBr } from "@/lib/transaction-date"
 import { currencyBRL } from "@/lib/formatters"
 import { useMemo } from "react"
 import {
@@ -47,16 +48,6 @@ function ymFromCloseDate(close: Date): string {
     const y = close.getFullYear()
     const m = close.getMonth() + 1
     return `${y}-${String(m).padStart(2, "0")}`
-}
-
-function labelFromYm(ym: string): string {
-    const [ys, ms] = ym.split("-")
-    const y = Number(ys)
-    const m = Number(ms)
-    if (!Number.isFinite(y) || !Number.isFinite(m)) return ym
-    const d = new Date(y, m - 1, 1)
-    const short = d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" })
-    return short.replace(/\.$/, "")
 }
 
 type CellMeta = {
@@ -209,7 +200,7 @@ export function CreditCardsHistoryChart({
         const chartData: CreditCardHistoryRow[] = sortedYm.map((ym) => {
             const row: CreditCardHistoryRow = {
                 ym,
-                label: labelFromYm(ym),
+                label: formatYearMonthShortPtBr(ym),
             }
             let anyOpen = false
             for (let i = 0; i < cards.length; i++) {

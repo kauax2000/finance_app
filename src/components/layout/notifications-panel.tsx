@@ -46,7 +46,7 @@ function formatRelativeTime(iso: string): string {
     if (h < 24) return `há ${h} h`
     const d = Math.floor(h / 24)
     if (d < 7) return `há ${d} d`
-    return new Date(iso).toLocaleDateString()
+    return new Date(iso).toLocaleDateString("pt-BR")
 }
 
 type NotificationsPanelProps = {

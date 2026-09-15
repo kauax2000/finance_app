@@ -1,5 +1,10 @@
 "use client"
 
+import {
+    EmptyState,
+    EmptyStateDescription,
+    EmptyStateIcon,
+} from "@/components/ui/empty-state"
 import { useMemo } from "react"
 import Link from "next/link"
 import { ArrowTopRightOnSquareIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
@@ -117,14 +122,12 @@ export function DashboardRecentTransactions({
                                 {monthTitle}
                             </p>
                         </CardToolbar>
-                        <div className="flex flex-col items-center justify-center gap-2 px-4 py-10 text-center">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/60">
-                                <ReceiptPercentIcon className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                                {emptyMessage}
-                            </p>
-                        </div>
+                        <EmptyState variant="plain">
+                            <EmptyStateIcon>
+                                <ReceiptPercentIcon aria-hidden />
+                            </EmptyStateIcon>
+                            <EmptyStateDescription>{emptyMessage}</EmptyStateDescription>
+                        </EmptyState>
                         <CardNote className="py-4"
                             aria-hidden
                         />

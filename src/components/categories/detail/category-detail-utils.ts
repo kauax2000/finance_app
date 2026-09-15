@@ -5,7 +5,7 @@ import {
     expenseYearMonthKey,
     type CreditCardClosingLookup,
 } from "@/lib/expense-month-attribution"
-import { monthYearKeyFromTransactionDate } from "@/lib/transaction-date"
+import { formatYearMonthShortPtBr, monthYearKeyFromTransactionDate } from "@/lib/transaction-date"
 
 export function hexToRgba(hex: string, alpha: number) {
     const raw = hex.replace("#", "").trim()
@@ -17,15 +17,6 @@ export function hexToRgba(hex: string, alpha: number) {
     return `rgba(${r},${g},${b},${alpha})`
 }
 
-export function monthLabelPt(ym: string) {
-    const [y, m] = ym.split("-").map(Number)
-    if (!y || !m) return ym
-    return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString("pt-BR", {
-        month: "short",
-        year: "2-digit",
-        timeZone: "UTC",
-    })
-}
 
 export function buildDailySeries(
     yearMonth: string,
@@ -87,7 +78,7 @@ export function buildMonthlySeries(
         totals[mk] += Number(t.amount)
     }
 
-    return months.map((ym) => ({ name: monthLabelPt(ym), total: totals[ym] ?? 0 }))
+    return months.map((ym) => ({ name: formatYearMonthShortPtBr(ym), total: totals[ym] ?? 0 }))
 }
 
 export function computeAmountStats(amounts: number[]) {

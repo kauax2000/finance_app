@@ -1,10 +1,7 @@
 "use client"
 
-import {
-    compareYmd,
-    daysBetweenYmd,
-} from "@/lib/transaction-date"
-import { billInstancePill } from "@/components/bills/bill-status"
+import { compareYmd } from "@/lib/transaction-date"
+import { billInstancePill, billDaysDeltaLabel } from "@/components/bills/bill-status"
 import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -32,13 +29,6 @@ const TABS: { value: BillHistoryTab; label: string }[] = [
 ]
 
 const PAGE = 30
-
-function daysDeltaLabel(dueYmd: string, todayYmd: string): string {
-    const days = daysBetweenYmd(todayYmd, dueYmd) ?? 0
-    if (days === 0) return "hoje"
-    if (days > 0) return `em ${days}d`
-    return `há ${Math.abs(days)}d`
-}
 
 function instanceDotClass(inst: BillInstance, todayYmd: string): string {
     if (inst.status === "paid") return "bg-success"
@@ -171,7 +161,7 @@ export function BillDetailHistoryList({
                                                     `${due}T12:00:00`
                                                 )}
                                                 <span className="ml-1.5 text-xs font-normal text-muted-foreground">
-                                                    ({daysDeltaLabel(due, todayYmd)})
+                                                    ({billDaysDeltaLabel(due, todayYmd, { compact: true })})
                                                 </span>
                                             </p>
                                             <div className="shrink-0 text-right tabular-nums">

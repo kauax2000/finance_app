@@ -140,7 +140,7 @@ export function BillDetailSheet({
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent
-                side={isMobile ? "bottom" : "right"}
+                side="right"
                 fillMobileViewport={isMobile}
                 className={cn(
                     "flex w-full flex-col gap-0 overflow-hidden p-0 data-[side=right]:sm:max-w-md",
@@ -370,7 +370,7 @@ export function BillDetailSheet({
                                         <MoneyDisplay value={stats.paidSum} />
                                     </StatCardValue>
                                 </StatCard>
-                                <StatCard tone="info">
+                                <StatCard tone="default">
                                     <StatCardLabel>Média paga</StatCardLabel>
                                     <StatCardValue>
                                         {stats.avgPaid != null ? (
@@ -386,7 +386,7 @@ export function BillDetailSheet({
                                         {stats.lateN}
                                     </StatCardValue>
                                 </StatCard>
-                                <StatCard tone="expense">
+                                <StatCard tone="default">
                                     <StatCardLabel>Pendentes 60d</StatCardLabel>
                                     <StatCardValue>{stats.next60}</StatCardValue>
                                 </StatCard>

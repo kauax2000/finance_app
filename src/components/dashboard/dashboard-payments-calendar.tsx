@@ -161,23 +161,9 @@ function buildCells(ym: string): { ymd: string; inMonth: boolean; label: number 
     return out
 }
 
-function groupEventsByYmd(events: PaymentEvent[]): Map<string, PaymentEvent[]> {
-    const m = new Map<string, PaymentEvent[]>()
-    for (const e of events) {
-        const list = m.get(e.dateYmd) ?? []
-        list.push(e)
-        m.set(e.dateYmd, list)
-    }
-    for (const [, list] of m) {
-        list.sort((a, b) => a.id.localeCompare(b.id))
-    }
-    return m
-}
-
-function groupUpcomingRowsByYmd(
-    rows: UpcomingPaymentRow[],
-): { ymd: string; list: UpcomingPaymentRow[] }[] {
-    const m = new Map<string, UpcomingPaymentRow[]>()
+/** Linhas por dia, cada dia em ordem estável de `id`. */
+function groupByYmd<T extends { dateYmd: string; id: string }>(rows: T[]): Map<string, T[]> {
+    const m = new Map<string, T[]>()
     for (const r of rows) {
         const list = m.get(r.dateYmd) ?? []
         list.push(r)
@@ -186,8 +172,7 @@ function groupUpcomingRowsByYmd(
     for (const [, list] of m) {
         list.sort((a, b) => a.id.localeCompare(b.id))
     }
-    const keys = [...m.keys()].sort()
-    return keys.map((ymd) => ({ ymd, list: m.get(ymd) ?? [] }))
+    return m
 }
 
 /** Mobile list: at most `maxPastDays` distinct days with events on or before `todayYmd`, then all days after `todayYmd`. */
@@ -409,7 +394,7 @@ export function DashboardPaymentsCalendar({
     onUpcomingPaymentClick: (row: UpcomingPaymentRow) => void
 }) {
     const isMobile = useIsMobile()
-    const byYmd = React.useMemo(() => groupEventsByYmd(events), [events])
+    const byYmd = React.useMemo(() => groupByYmd(events), [events])
     const cells = React.useMemo(() => buildCells(calendarYm), [calendarYm])
 
     const modifierDates = React.useMemo(() => {
@@ -444,7 +429,9 @@ export function DashboardPaymentsCalendar({
     )
 
     const upcomingGrouped = React.useMemo(
-        () => groupUpcomingRowsByYmd(upcomingRows),
+        () => [...groupByYmd(upcomingRows)]
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([ymd, list]) => ({ ymd, list })),
         [upcomingRows],
     )
 

@@ -1,5 +1,6 @@
 "use client"
 
+import { percentPointsBR } from "@/lib/formatters"
 import {
   ArrowTrendingDownIcon,
   ArrowTrendingUpIcon,
@@ -16,10 +17,6 @@ import { MoneyDisplay } from "@/components/ui/money-display"
 import { currencyBRL } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 
-const pctFmt = new Intl.NumberFormat("pt-BR", {
-    maximumFractionDigits: 1,
-    minimumFractionDigits: 0,
-})
 
 function DeltaBadge({
     cur,
@@ -50,7 +47,7 @@ function DeltaBadge({
     const good = invert ? deltaPct <= 0 : deltaPct >= 0
     const isFlat = deltaPct === 0
 
-    const display = `${deltaPct >= 0 ? "+" : ""}${pctFmt.format(deltaPct)}%`
+    const display = `${deltaPct >= 0 ? "+" : ""}${percentPointsBR(deltaPct)}%`
 
     if (isFlat) {
         return (

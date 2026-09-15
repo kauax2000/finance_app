@@ -1,10 +1,7 @@
 "use client"
 
-import {
-    compareYmd,
-    daysBetweenYmd,
-} from "@/lib/transaction-date"
-import { billDuePill } from "@/components/bills/bill-status"
+import { compareYmd } from "@/lib/transaction-date"
+import { billDuePill, billDaysDeltaLabel } from "@/components/bills/bill-status"
 import { CreditCardIcon, EllipsisHorizontalIcon, ForwardIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { CreditCardIcon as CreditCardMiniIcon } from "@heroicons/react/20/solid"
 import {
@@ -50,14 +47,6 @@ function pendingStatusPill(
     return billDuePill(row.dueYmd, todayYmd)
 }
 
-function daysDeltaLabel(dueYmd: string, todayYmd: string): string {
-    const days = daysBetweenYmd(todayYmd, dueYmd) ?? 0
-    if (days === 0) return "vence hoje"
-    if (days > 0) return `em ${days} dia${days === 1 ? "" : "s"}`
-    const a = Math.abs(days)
-    return `há ${a} dia${a === 1 ? "" : "s"}`
-}
-
 export type BillPendingCardProps = {
     row: BillPendingRow
     todayYmd: string
@@ -79,7 +68,7 @@ export function BillPendingCard({
 }: BillPendingCardProps) {
     const pill = pendingStatusPill(row, todayYmd)
     const dueFmt = formatTransactionDmyPtBr(`${row.dueYmd}T12:00:00`)
-    const delta = daysDeltaLabel(row.dueYmd, todayYmd)
+    const delta = billDaysDeltaLabel(row.dueYmd, todayYmd)
     const isEstimated =
         row.kind === "regular"
             ? row.instance.amount == null &&

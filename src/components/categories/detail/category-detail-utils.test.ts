@@ -2,13 +2,14 @@ import { describe, expect, it } from "vitest"
 
 // O defeito só aparece fora de UTC: a série montava a data em UTC e lia em hora local.
 process.env.TZ = "America/Sao_Paulo"
-const { buildMonthlySeries, monthLabelPt } = await import("./category-detail-utils")
+const { buildMonthlySeries } = await import("./category-detail-utils")
+const { formatYearMonthShortPtBr } = await import("@/lib/transaction-date")
 
 describe("buildMonthlySeries", () => {
     it("termina no mês pedido, e não um mês antes, em São Paulo", () => {
         const series = buildMonthlySeries("2026-09", [], "cat", null, 3)
         expect(series.map((s) => s.name)).toEqual(
-            ["2026-07", "2026-08", "2026-09"].map(monthLabelPt)
+            ["2026-07", "2026-08", "2026-09"].map(formatYearMonthShortPtBr)
         )
     })
 

@@ -1,5 +1,6 @@
 "use client"
 
+import { useIsMobile } from "@/hooks/use-mobile"
 import * as React from "react"
 import Link from "next/link"
 import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/20/solid"
@@ -41,22 +42,6 @@ export type MobileAccountMenuProps = {
 
 const rowButtonClass = MOBILE_GLASS_MENU_ROW_CLASSNAME
 
-const MOBILE_POPOVER_X_CENTER_QUERY = "(max-width: 767px)"
-
-function useMatchMedia(query: string): boolean {
-    const [matches, setMatches] = React.useState(false)
-
-    React.useEffect(() => {
-        const media = window.matchMedia(query)
-        const update = () => setMatches(media.matches)
-
-        update()
-        media.addEventListener("change", update)
-        return () => media.removeEventListener("change", update)
-    }, [query])
-
-    return matches
-}
 
 /**
  * Anchor virtual que espelha os limites verticais do trigger (avatar) mas fixa
@@ -151,7 +136,7 @@ export function MobileAccountMenu({ children }: MobileAccountMenuProps) {
 
     const [open, setOpen] = React.useState(false)
     const triggerRef = React.useRef<HTMLElement | null>(null)
-    const isMobileCenter = useMatchMedia(MOBILE_POPOVER_X_CENTER_QUERY)
+    const isMobileCenter = useIsMobile()
     const centeredAnchorRef = React.useRef(
         createCenteredViewportAnchor(triggerRef)
     )

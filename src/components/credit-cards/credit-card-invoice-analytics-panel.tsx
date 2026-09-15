@@ -1,5 +1,6 @@
 "use client"
 
+import { percentPointsBR } from "@/lib/formatters"
 import { currencyBRL } from "@/lib/formatters"
 import { useCallback, useMemo, useState, type ReactNode } from "react"
 import { useQueryClient } from "@tanstack/react-query"
@@ -59,10 +60,6 @@ import { transactionsWorkspaceAuxKeys } from "@/lib/queries/keys"
 import { CreditCardInvoiceCategorySpendSection } from "@/components/credit-cards/credit-card-invoice-category-spend-section"
 import { InvoiceDeltaVsPriorChip } from "@/components/credit-cards/invoice-delta-vs-prior-chip"
 import { deltaTone } from "@/lib/delta-tone"
-const pctFmt = new Intl.NumberFormat("pt-BR", {
-    maximumFractionDigits: 1,
-    minimumFractionDigits: 0,
-})
 
 const SLICE_LABEL: Record<InvoiceSliceKey, string> = {
     installments_recurring: "Parcelas e recorrências",
@@ -355,7 +352,7 @@ function committedVsPriorDeltaPct(snapshot: CardCycleSnapshot): {
         }
     }
     const sign = pct > 0 ? "+" : ""
-    const pctDisplay = `${sign}${pctFmt.format(pct)}%`
+    const pctDisplay = `${sign}${percentPointsBR(pct)}%`
     const label = `${pctDisplay} vs. fatura anterior`
     return {
         direction: pct > 0 ? "up" : "down",
@@ -723,7 +720,7 @@ export function CreditCardInvoiceAnalyticsPanel({
             const v = open[k]
             const share =
                 analytics.openTotal > 0 ? (v / analytics.openTotal) * 100 : 0
-            return `${SLICE_LABEL[k]} ${pctFmt.format(share)}%`
+            return `${SLICE_LABEL[k]} ${percentPointsBR(share)}%`
         })
         return `Composição da fatura: ${parts.join(", ")}`
     }, [open, analytics.openTotal])
@@ -741,7 +738,7 @@ export function CreditCardInvoiceAnalyticsPanel({
         const nPlans = analytics.installmentRows.length
         if (openTot > 0) {
             segs.push(
-                `${pctFmt.format((minC / openTot) * 100)}% da fatura planejada`
+                `${percentPointsBR((minC / openTot) * 100)}% da fatura planejada`
             )
         }
         if (nPlans > 0) {
@@ -885,7 +882,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                         Uso do limite estimado
                                     </span>
                                     <span className="tabular-nums text-sm font-semibold text-foreground">
-                                        {pctFmt.format(openLimitPct)}%
+                                        {percentPointsBR(openLimitPct)}%
                                     </span>
                                 </div>
                                 <div
@@ -1024,7 +1021,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                                         )}
                                                     </p>
                                                     <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">
-                                                        {pctFmt.format(
+                                                        {percentPointsBR(
                                                             analytics.openTotal > 0
                                                                 ? (open[activeSlice] /
                                                                       analytics.openTotal) *
@@ -1075,7 +1072,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                                                 <span className="font-normal text-muted-foreground">
                                                                     {" "}
                                                                     ·{" "}
-                                                                    {pctFmt.format(share)}%
+                                                                    {percentPointsBR(share)}%
                                                                 </span>
                                                             </span>
                                                         </span>
@@ -1116,7 +1113,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                         </p>
                                     </div>
                                     <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                                        {pctFmt.format(analytics.weekdayWeekend.weekdayPct)}%
+                                        {percentPointsBR(analytics.weekdayWeekend.weekdayPct)}%
                                     </p>
                                 </div>
                             </div>
@@ -1133,7 +1130,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                         </p>
                                     </div>
                                     <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                                        {pctFmt.format(analytics.weekdayWeekend.weekendPct)}%
+                                        {percentPointsBR(analytics.weekdayWeekend.weekendPct)}%
                                     </p>
                                 </div>
                             </div>

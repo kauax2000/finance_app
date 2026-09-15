@@ -1,5 +1,6 @@
 "use client"
 
+import { percentPointsBR } from "@/lib/formatters"
 import Link from "next/link"
 import { ChevronRightIcon } from "@heroicons/react/16/solid"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -27,10 +28,6 @@ const FALLBACK_FILLS = [
     "var(--chart-5)",
 ]
 
-const pctFmt = new Intl.NumberFormat("pt-BR", {
-    maximumFractionDigits: 1,
-    minimumFractionDigits: 0,
-})
 
 function isHex6(s: string): boolean {
     return /^#[0-9A-Fa-f]{6}$/.test(s.trim())
@@ -75,7 +72,7 @@ function CategoryPieTooltip({
         <div className="min-w-[10rem] rounded-lg border border-border/80 bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md">
             <p className="font-medium text-foreground">{row.name}</p>
             <p className="mt-1 tabular-nums text-muted-foreground">
-                {currencyBRL(row.value)} · {pctFmt.format(row.pct)}% do total
+                {currencyBRL(row.value)} · {percentPointsBR(row.pct)}% do total
             </p>
         </div>
     )
@@ -262,7 +259,7 @@ export function CreditCardInvoiceCategorySpendSection({
                                                     {currencyBRL(activeRow.total)}
                                                 </p>
                                                 <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">
-                                                    {pctFmt.format(activeRow.shareOpenPct)}%
+                                                    {percentPointsBR(activeRow.shareOpenPct)}%
                                                 </p>
                                             </>
                                         ) : activePieRow ? (
@@ -274,7 +271,7 @@ export function CreditCardInvoiceCategorySpendSection({
                                                     {currencyBRL(activePieRow.value)}
                                                 </p>
                                                 <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">
-                                                    {pctFmt.format(activePieRow.pct)}%
+                                                    {percentPointsBR(activePieRow.pct)}%
                                                 </p>
                                             </>
                                         ) : null}
@@ -302,7 +299,7 @@ export function CreditCardInvoiceCategorySpendSection({
                                                 {c.name}
                                             </p>
                                             <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">
-                                                {pctFmt.format(c.shareOpenPct)}% do total
+                                                {percentPointsBR(c.shareOpenPct)}% do total
                                             </p>
                                         </div>
                                         <div

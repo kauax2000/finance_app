@@ -910,7 +910,7 @@ export default function SubscriptionsPageClient() {
                                                     >
                                                         {s.is_active
                                                             ? "Ativa"
-                                                            : "Inativa"}
+                                                            : "Pausada"}
                                                     </span>
                                                 </TableCell>
                                                 <TableCell className="px-3 py-3 pr-4 text-left">

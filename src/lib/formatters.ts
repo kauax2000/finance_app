@@ -95,6 +95,19 @@ export function numberBR(
   return new Intl.NumberFormat(defaultLocale, options).format(value)
 }
 
+const percentPointsFmt = new Intl.NumberFormat(defaultLocale, {
+  maximumFractionDigits: 1,
+  minimumFractionDigits: 0,
+})
+
+/**
+ * Pontos percentuais já multiplicados por 100, sem o sinal de %: `12.34` → "12,3".
+ * As telas escrevem o "%" ao lado; `percentBR` é para a fração (0,1234 → "12,3%").
+ */
+export function percentPointsBR(value: number): string {
+  return Number.isFinite(value) ? percentPointsFmt.format(value) : "—"
+}
+
 export function percentBR(
   value: number,
   opts: { locale?: string; maximumFractionDigits?: number } = {}

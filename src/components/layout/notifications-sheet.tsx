@@ -26,7 +26,7 @@ export function NotificationsSheet() {
             }}
         >
             <SheetContent
-                side={isMobile ? "bottom" : "right"}
+                side="right"
                 fillMobileViewport={isMobile}
                 className={cn(
                     "flex w-full flex-col gap-0 p-0",
