@@ -20,8 +20,9 @@
  * respiro de um menu passa a mudar o do outro, que é o comportamento que a
  * tabela acima mostra não existir antes.
  *
- * Segue o precedente de [`tag-chip-classes`](./tag-chip-classes.ts): classe
- * compartilhada é `lib/`, não um componente vazio em `ui/`.
+ * Classe compartilhada entre componentes é `lib/`, não um componente vazio em
+ * `ui/`. (As classes de chip abriram esse precedente e moraram em `lib/` até a
+ * rodada 77 — mas elas tinham dono, o `Badge`, e foram para ele.)
  */
 
 /**
@@ -109,7 +110,7 @@ export const menuSurfaceClassName = [
   /** Acima do véu da Sheet (`z-(--z-sheet)`); abaixo do Toaster (`z-(--z-toast)`). */
   "z-(--z-popover) flex min-w-36 flex-col overflow-hidden",
   menuPanelSurfaceClassName,
-  "duration-(--duration-instant)",
+  "animation-duration-(--duration-instant) ease-(--ease-out)",
   "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
   "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
 ].join(" ")
@@ -186,6 +187,9 @@ export const menuSubTriggerClassName = [
   MENU_TOUCH_TARGET,
   "focus:bg-accent focus:text-accent-foreground",
   "data-inset:pl-7 data-open:bg-accent data-open:text-accent-foreground",
+  // O mesmo estado das outras linhas: sem ele um submenu desabilitado saía
+  // igual ao ativo nos três menus.
+  "data-disabled:pointer-events-none data-disabled:opacity-50",
   "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
 ].join(" ")
 

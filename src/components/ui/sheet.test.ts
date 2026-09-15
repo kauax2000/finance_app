@@ -50,7 +50,12 @@ describe("régua do Sheet", () => {
     expect(EIXO_SIDE).not.toMatch(/\bh-full\b/)
     // E a altura das laterais vem do par de âncoras, não de uma medida.
     for (const lado of ["right", "left"] as const) {
-      const l = EIXO_SIDE.slice(EIXO_SIDE.indexOf(`${lado}:`))
+      // A fatia para no lado seguinte: ir até o fim do eixo deixava `right`
+      // passar com os tokens de `left`.
+      const i = EIXO_SIDE.indexOf(`${lado}:`)
+      expect(i, lado).toBeGreaterThan(-1)
+      const depois = LADOS.map((o) => EIXO_SIDE.indexOf(`${o}:`, i + 1)).filter((n) => n > i)
+      const l = EIXO_SIDE.slice(i, depois.length ? Math.min(...depois) : undefined)
       expect(l, lado).toContain("--sheet-gap-block-start")
       expect(l, lado).toContain("--sheet-gap-block-end")
     }

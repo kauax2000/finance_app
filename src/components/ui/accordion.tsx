@@ -67,11 +67,13 @@ import {
 type AccordionContextValue = {
   size: DisclosureSize
   markerSide: "start" | "end"
+  variant: "plain" | "contained" | "separated"
 }
 
 const AccordionContext = React.createContext<AccordionContextValue>({
   size: "md",
   markerSide: "end",
+  variant: "plain",
 })
 
 const accordionVariants = cva("flex w-full flex-col", {
@@ -107,7 +109,10 @@ function Accordion({
      */
     markerSide?: "start" | "end"
   }) {
-  const ctx = React.useMemo(() => ({ size, markerSide }), [size, markerSide])
+  const ctx = React.useMemo(
+    () => ({ size, markerSide, variant: variant ?? "plain" }),
+    [size, markerSide, variant]
+  )
 
   return (
     <AccordionContext.Provider value={ctx}>
@@ -126,16 +131,17 @@ function AccordionItem({
   className,
   ...props
 }: React.ComponentProps<typeof AccordionPrimitive.Item>) {
+  const { variant } = React.useContext(AccordionContext)
   return (
     <AccordionPrimitive.Item
       data-slot="accordion-item"
       className={cn(
-        // A variante desce por seletor de ascendente em vez de por contexto
-        // porque aqui ela é só pintura, e um `data-variant` no item duplicaria
-        // um dado que a raiz já publica.
-        "in-data-[variant=plain]:not-last:border-b",
-        "in-data-[variant=contained]:not-last:border-b",
-        "in-data-[variant=separated]:overflow-hidden in-data-[variant=separated]:rounded-xl in-data-[variant=separated]:border in-data-[variant=separated]:border-border in-data-[variant=separated]:bg-card",
+        // A variante chega por contexto. Por seletor de ascendente (`in-data-…`)
+        // ela casava o `data-variant` de **qualquer** ancestral — o `Carousel`
+        // publica `plain`, o `Alert` e o `EmptyState` publicam os seus.
+        variant !== "separated" && "not-last:border-b",
+        variant === "separated" &&
+          "overflow-hidden rounded-xl border border-border bg-card",
         "min-w-0",
         className
       )}

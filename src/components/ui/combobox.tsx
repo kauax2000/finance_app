@@ -409,7 +409,13 @@ function ComboboxClear({
         className
       )}
       onClick={(event) => {
+        // O × some quando não há seleção: sem devolver o foco ao gatilho, ele
+        // caía no <body> e o teclado recomeçava do topo da página.
+        const gatilho = event.currentTarget.parentElement?.querySelector<HTMLElement>(
+          '[data-slot="combobox-trigger"]'
+        )
         clear()
+        gatilho?.focus()
         onClick?.(event)
       }}
       {...props}

@@ -3,7 +3,7 @@
  * (src/lib/fixtures/billing-calendar-vectors.json). Ver também o teste Vitest
  * do cliente e o pgTAP de next_subscription_billing_date.
  */
-import { assertEquals, assertMatch } from 'jsr:@std/assert'
+import { assertEquals, assertMatch } from 'jsr:@std/assert@1.0.19'
 import {
   addCalendarDays,
   appTodayYmd,

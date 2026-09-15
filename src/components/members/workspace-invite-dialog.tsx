@@ -30,15 +30,10 @@ import { supabase, type WorkspaceInvite } from "@/lib/supabase"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
 import { toastError, toastSuccess } from "@/lib/toast"
+import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import {
     dispatchFinanceMembersMutated,
 } from "@/lib/workspace-data-events"
-
-function buildAcceptInviteUrl(tokenRaw: string): string {
-    if (typeof window === "undefined") return ""
-    const base = window.location.origin.replace(/\/$/, "")
-    return `${base}/invites/accept?token=${encodeURIComponent(tokenRaw)}`
-}
 
 function formatLinkInviteExpiresAt(iso: string | null | undefined): string | null {
     if (!iso) return null
@@ -90,13 +85,7 @@ export function WorkspaceInviteDialog({
         () => invites.find((i) => i.invited_email == null),
         [invites],
     )
-    const persistedLinkUrl = React.useMemo(() => {
-        const raw = pendingLinkInvite?.token_raw?.trim()
-        if (!raw) return null
-        return buildAcceptInviteUrl(raw)
-    }, [pendingLinkInvite?.token_raw])
-
-    const effectiveLinkUrl = persistedLinkUrl ?? generatedLinkUrl
+    const effectiveLinkUrl = generatedLinkUrl
     const linkInviteExpiresAt =
         pendingLinkInvite?.expires_at ?? generatedLinkExpiresAt
 
@@ -199,7 +188,7 @@ export function WorkspaceInviteDialog({
                 typeof res.expires_at === "string" ? res.expires_at.trim() : ""
             if (exp) setGeneratedLinkExpiresAt(exp)
             toastSuccess(
-                "Link gerado. Ele fica salvo aqui até você revogar ou expirar.",
+                "Link gerado. Copie agora: por segurança ele não fica salvo.",
             )
             await fetchInvites()
             dispatchFinanceMembersMutated()
@@ -247,11 +236,18 @@ export function WorkspaceInviteDialog({
         }
     }
 
+    const { confirm: confirmRevoke, dialog: revokeConfirmDialog } = useConfirmDialog()
     const handleRevokeInvite = async (inviteId: string) => {
         if (!canManageMembers) {
             toastError("Apenas owner pode revogar convites.")
             return
         }
+        const ok = await confirmRevoke({
+            title: "Revogar o convite?",
+            description: "O link ou o e-mail enviado deixa de funcionar.",
+            actionLabel: "Revogar",
+        })
+        if (!ok) return
         setBusyInviteId(inviteId)
         const { error } = await supabase
             .from("workspace_invites")
@@ -273,6 +269,7 @@ export function WorkspaceInviteDialog({
 
     return (
         <>
+            {revokeConfirmDialog}
             {isMobile ? (
                 <Sheet open={open} onOpenChange={onOpenChange}>
                     <SheetContent
@@ -338,6 +335,12 @@ export function WorkspaceInviteDialog({
                                                 Qualquer pessoa com conta no app pode aceitar enquanto o convite
                                                 estiver pendente.
                                             </p>
+{pendingLinkInvite && !effectiveLinkUrl ? (
+    <p className="text-xs text-muted-foreground">
+        Já existe um link ativo. Por segurança ele só aparece na hora em que é gerado:
+        gere um novo para copiar (o anterior deixa de valer).
+    </p>
+) : null}
                                             {loadingInvites ? (
                                                 <p className="text-xs text-muted-foreground">Carregando…</p>
                                             ) : effectiveLinkUrl ? (
@@ -450,6 +453,7 @@ export function WorkspaceInviteDialog({
                                                                 </div>
                                                                 <div className="flex gap-1">
                                                                     <Button
+    aria-label={`Reenviar convite para ${invite.invited_email}`}
                                                                         type="button"
                                                                         variant="outline"
                                                                         size="sm"
@@ -468,6 +472,7 @@ export function WorkspaceInviteDialog({
                                                                         )}
                                                                     </Button>
                                                                     <Button
+    aria-label={`Revogar convite para ${invite.invited_email}`}
                                                                         type="button"
                                                                         variant="outline"
                                                                         size="sm"
@@ -555,6 +560,12 @@ export function WorkspaceInviteDialog({
                                             Qualquer pessoa com conta no app pode aceitar enquanto o
                                             convite estiver pendente.
                                         </p>
+{pendingLinkInvite && !effectiveLinkUrl ? (
+    <p className="text-xs text-muted-foreground">
+        Já existe um link ativo. Por segurança ele só aparece na hora em que é gerado:
+        gere um novo para copiar (o anterior deixa de valer).
+    </p>
+) : null}
                                         {loadingInvites ? (
                                             <p className="text-xs text-muted-foreground">
                                                 Carregando…
@@ -672,6 +683,7 @@ export function WorkspaceInviteDialog({
                                                             </div>
                                                             <div className="flex gap-1">
                                                                 <Button
+    aria-label={`Reenviar convite para ${invite.invited_email}`}
                                                                     type="button"
                                                                     variant="outline"
                                                                     size="sm"
@@ -694,6 +706,7 @@ export function WorkspaceInviteDialog({
                                                                     )}
                                                                 </Button>
                                                                 <Button
+    aria-label={`Revogar convite para ${invite.invited_email}`}
                                                                     type="button"
                                                                     variant="outline"
                                                                     size="sm"

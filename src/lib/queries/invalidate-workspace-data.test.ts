@@ -46,6 +46,11 @@ const CASES: Case[] = [
             queryRoot.transactionsWorkspaceAux,
             // billingStats do bundle de assinaturas deriva de transactions
             queryRoot.subscriptionsPageBundle,
+            // somam lançamentos: detalhe da categoria, faturas e contas a pagar
+            queryRoot.categoryDetailBundle,
+            queryRoot.creditCardExpenseRows,
+            queryRoot.creditCardsPageBundle,
+            queryRoot.billsPageBundle,
         ],
     },
     {

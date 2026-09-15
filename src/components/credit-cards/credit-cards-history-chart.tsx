@@ -1,5 +1,7 @@
 "use client"
 
+import { formatYearMonthShortPtBr } from "@/lib/transaction-date"
+import { currencyBRL } from "@/lib/formatters"
 import { useMemo } from "react"
 import {
     ResponsiveContainer,
@@ -40,27 +42,12 @@ function alpha(color: string, pct: number): string {
     return `color-mix(in oklab, ${color} ${pct}%, transparent)`
 }
 
-const currencyFmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-})
-
 export type CreditCardHistoryRow = Record<string, string | number | boolean | undefined>
 
 function ymFromCloseDate(close: Date): string {
     const y = close.getFullYear()
     const m = close.getMonth() + 1
     return `${y}-${String(m).padStart(2, "0")}`
-}
-
-function labelFromYm(ym: string): string {
-    const [ys, ms] = ym.split("-")
-    const y = Number(ys)
-    const m = Number(ms)
-    if (!Number.isFinite(y) || !Number.isFinite(m)) return ym
-    const d = new Date(y, m - 1, 1)
-    const short = d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" })
-    return short.replace(/\.$/, "")
 }
 
 type CellMeta = {
@@ -144,7 +131,7 @@ function CreditCardsHistoryTooltip({
                                 </span>
                             </span>
                             <span className="shrink-0 font-medium">
-                                {currencyFmt.format(num)}
+                                {currencyBRL(num)}
                             </span>
                         </li>
                     )
@@ -213,7 +200,7 @@ export function CreditCardsHistoryChart({
         const chartData: CreditCardHistoryRow[] = sortedYm.map((ym) => {
             const row: CreditCardHistoryRow = {
                 ym,
-                label: labelFromYm(ym),
+                label: formatYearMonthShortPtBr(ym),
             }
             let anyOpen = false
             for (let i = 0; i < cards.length; i++) {
@@ -237,11 +224,18 @@ export function CreditCardsHistoryChart({
 
         const positiveTotals = monthlyTotals.filter((t) => t > 0)
         const hasAnyValue = positiveTotals.length > 0
-        const max = positiveTotals.length ? Math.max(...positiveTotals) : 0
-        const min = positiveTotals.length ? Math.min(...positiveTotals) : 0
+        // A fatura aberta ainda está crescendo: somada, ela vira a "menor fatura"
+        // e puxa a média para baixo. Os indicadores leem só faturas fechadas, e
+        // caem para todas quando ainda não há nenhuma fechada.
+        const closedTotals = monthlyTotals.filter(
+            (t, i) => t > 0 && !chartData[i].isOpen,
+        )
+        const kpiTotals = closedTotals.length > 0 ? closedTotals : positiveTotals
+        const max = kpiTotals.length ? Math.max(...kpiTotals) : 0
+        const min = kpiTotals.length ? Math.min(...kpiTotals) : 0
         const avg =
-            positiveTotals.length > 0
-                ? positiveTotals.reduce((a, b) => a + b, 0) / positiveTotals.length
+            kpiTotals.length > 0
+                ? kpiTotals.reduce((a, b) => a + b, 0) / kpiTotals.length
                 : 0
 
         return {

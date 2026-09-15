@@ -1,5 +1,10 @@
 "use client"
 
+import {
+    EmptyState,
+    EmptyStateDescription,
+    EmptyStateIcon,
+} from "@/components/ui/empty-state"
 import { useMemo } from "react"
 import Link from "next/link"
 import { ArrowTopRightOnSquareIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
@@ -8,7 +13,7 @@ import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import type { Transaction } from "@/lib/supabase"
 import type { WorkspaceMemberDirectoryEntry } from "@/components/dashboard/use-dashboard-data"
-import { transactionParceladaRowChip } from "@/lib/tag-chip-classes"
+import { transactionParceladaRowChip } from "@/components/ui/badge"
 import { formatTransactionDayPtBr } from "@/lib/transaction-date"
 import { cn, getInitials } from "@/lib/utils"
 import { identityToneFor } from "@/lib/avatar"
@@ -113,18 +118,16 @@ export function DashboardRecentTransactions({
                         <CardToolbar
                             aria-live="polite"
                         >
-                            <p className="text-sm font-semibold capitalize leading-snug text-foreground">
+                            <p className="text-sm font-semibold leading-snug text-foreground">
                                 {monthTitle}
                             </p>
                         </CardToolbar>
-                        <div className="flex flex-col items-center justify-center gap-2 px-4 py-10 text-center">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/60">
-                                <ReceiptPercentIcon className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                                {emptyMessage}
-                            </p>
-                        </div>
+                        <EmptyState variant="plain">
+                            <EmptyStateIcon>
+                                <ReceiptPercentIcon aria-hidden />
+                            </EmptyStateIcon>
+                            <EmptyStateDescription>{emptyMessage}</EmptyStateDescription>
+                        </EmptyState>
                         <CardNote className="py-4"
                             aria-hidden
                         />
@@ -138,7 +141,7 @@ export function DashboardRecentTransactions({
                                 <CardToolbar
                                     aria-live="polite"
                                 >
-                                    <p className="text-sm font-semibold capitalize leading-snug text-foreground">
+                                    <p className="text-sm font-semibold leading-snug text-foreground">
                                         {monthTitle}
                                     </p>
                                 </CardToolbar>

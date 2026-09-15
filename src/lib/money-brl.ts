@@ -64,9 +64,36 @@ export function formatMoneyBrlInput(n: number): string {
  * - "123456" -> "1.234,56"
  */
 export function formatMoneyBrlTyping(raw: string): string {
-    const digits = raw.replace(/\D/g, "")
+    // Acima de 15 dígitos o Number perde centavos; o que passar disso é ignorado.
+    const digits = raw.replace(/\D/g, "").slice(0, 15)
     if (!digits) return ""
     const cents = Number(digits)
     if (!Number.isFinite(cents)) return ""
     return formatMoneyBrlInput(cents / 100)
+}
+
+const MASKED_BRL = /^\d{1,3}(\.\d{3})*,\d{2}$/
+
+/**
+ * Renormaliza o campo de dinheiro no blur.
+ *
+ * O que foi digitado já sai na máscara e fica como está. Um valor posto por
+ * código ("250", "1299.9") é lido como reais — passado a `formatMoneyBrlTyping`
+ * ele viraria centavos ("250" → "2,50").
+ */
+export function normalizeMoneyBrlOnBlur(raw: string): string {
+    const t = raw.trim()
+    if (!t || MASKED_BRL.test(t)) return t
+    const n = parseMoneyBrl(t)
+    return n == null ? formatMoneyBrlTyping(t) : formatMoneyBrlInput(n)
+}
+
+/**
+ * Arredonda uma soma de valores em reais para centavos.
+ *
+ * Somar reais em ponto flutuante deixa resto (0,1 + 0,2 = 0,30000000000000004),
+ * e o resto aparece em comparação de limiar e em total que devia fechar.
+ */
+export function roundCents(n: number): number {
+    return Math.round(n * 100) / 100
 }

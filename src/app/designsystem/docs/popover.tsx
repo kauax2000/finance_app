@@ -93,9 +93,9 @@ export default function PopoverDoc() {
           </PopoverTrigger>
           <PopoverContent padding="none" className="w-auto">
             <PopoverHeader>
-              <p className="text-xs font-medium text-muted-foreground">
+              <PopoverTitle className="text-xs font-medium text-muted-foreground">
                 Período
-              </p>
+              </PopoverTitle>
             </PopoverHeader>
             <div className="flex flex-col p-1">
               {["Este mês", "Trimestre", "Ano"].map((r) => (

@@ -1,8 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/providers"
+import { useWorkspace } from "@/components/workspace-provider"
+import { supabase, type WorkspaceDeleteImpact } from "@/lib/supabase"
 import {
   Dialog,
   DialogCloseButton,
@@ -40,6 +42,10 @@ const DATA_LOSS_ITEMS = [
     "Seu perfil de usuário",
 ] as const
 
+function plural(n: number, one: string, many: string): string {
+    return `${n} ${n === 1 ? one : many}`
+}
+
 interface DeleteAccountDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
@@ -57,6 +63,37 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
     const [success, setSuccess] = useState(false)
 
     const userEmail = user?.email || ""
+
+    // Carteiras compartilhadas criadas pela pessoa somem para todos os membros.
+    // Busca ao abrir: a lista em cache pode não ter uma carteira criada em outro aparelho.
+    const { fetchWorkspaceDeleteImpact } = useWorkspace()
+    const [sharedOwned, setSharedOwned] = useState<
+        { id: string; name: string; impact: WorkspaceDeleteImpact | null | undefined }[]
+    >([])
+    useEffect(() => {
+        if (!open || !user) return
+        let cancelled = false
+        void (async () => {
+            const { data } = await supabase
+                .from("workspaces")
+                .select("id,name")
+                .eq("type", "shared")
+                .eq("created_by", user.id)
+            const rows = (data ?? []) as { id: string; name: string }[]
+            if (cancelled) return
+            setSharedOwned(rows.map((w) => ({ ...w, impact: undefined })))
+            const withImpact = await Promise.all(
+                rows.map(async (w) => {
+                    const res = await fetchWorkspaceDeleteImpact(w.id)
+                    return { ...w, impact: res.ok ? res.impact : null }
+                }),
+            )
+            if (!cancelled) setSharedOwned(withImpact)
+        })()
+        return () => {
+            cancelled = true
+        }
+    }, [open, user, fetchWorkspaceDeleteImpact])
     const emailsMatch = confirmEmail.toLowerCase() === userEmail.toLowerCase()
 
     const resetState = () => {
@@ -226,13 +263,42 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                         </li>
                     ))}
                 </ul>
+                {sharedOwned.length > 0 ? (
+                    <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                            Estas carteiras compartilhadas foram criadas por você e serão apagadas para
+                            todos os membros:
+                        </p>
+                        <ul className="flex list-none flex-col gap-2" role="list">
+                            {sharedOwned.map((w) => {
+                                const i = w.impact
+                                return (
+                                    <li
+                                        key={w.id}
+                                        className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm"
+                                    >
+                                        <span className="block font-medium text-foreground">{w.name}</span>
+                                        {i === undefined ? (
+                                            <span className="text-xs text-muted-foreground">Contando…</span>
+                                        ) : i ? (
+                                            <span className="text-xs text-muted-foreground">
+                                                {plural(i.other_members, "outro membro", "outros membros")} ·{" "}
+                                                {plural(i.transactions, "lançamento", "lançamentos")}
+                                            </span>
+                                        ) : null}
+                                    </li>
+                                )
+                            })}
+                        </ul>
+                    </div>
+                ) : null}
             </div>
         </div>
     )
 
     const footerWarning = isMobile ? (
         <DialogFooter className={sheetFooterMobileClass}>
-            <Button type="button" variant="destructive" className="h-10 w-full" onClick={handleContinue}>
+            <Button type="button" variant="destructive" size="xl" className="w-full" onClick={handleContinue}>
                 Continuar
             </Button>
         </DialogFooter>
@@ -294,7 +360,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                     <Button
                         type="submit"
                         variant="destructive"
-                        className="h-10 w-full"
+                        size="xl" className="w-full"
                         disabled={loading || !emailsMatch || !password}
                     >
                         {loading ? (

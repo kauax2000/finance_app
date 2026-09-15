@@ -5,10 +5,10 @@ import { ROUTES } from "@/config/navigation"
 
 export default function GlobalError({
     error,
-    reset,
+    unstable_retry,
 }: {
     error: Error & { digest?: string }
-    reset: () => void
+    unstable_retry: () => void
 }) {
     useEffect(() => {
         console.error(error)
@@ -16,6 +16,9 @@ export default function GlobalError({
 
     return (
         <html lang="pt-BR" suppressHydrationWarning>
+            <head>
+                <title>Algo deu errado · Finance</title>
+            </head>
             <body
                 style={{
                     margin: 0,
@@ -59,7 +62,7 @@ export default function GlobalError({
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                         <button
                             type="button"
-                            onClick={reset}
+                            onClick={unstable_retry}
                             style={{
                                 cursor: "pointer",
                                 height: 36,
@@ -93,7 +96,9 @@ export default function GlobalError({
                             Ir para o painel
                         </a>
                     </div>
-                    {error.message ? (
+                    {/* A mensagem crua só em desenvolvimento; em produção ela
+                        pode carregar detalhe interno e não ajuda quem usa. */}
+                    {process.env.NODE_ENV === "development" && error.message ? (
                         <p
                             style={{
                                 marginTop: 16,

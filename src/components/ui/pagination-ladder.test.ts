@@ -35,6 +35,8 @@ const passos = (classe: string) => Number(classe.match(/size-(\d+)/)?.[1]) * 4
 function corpo(inicio: string, fim: string) {
   const i = CODIGO.indexOf(inicio)
   const f = CODIGO.indexOf(fim, i + inicio.length)
+  // Âncora que sumiu fatiava de -1 e a asserção lia o arquivo errado.
+  if (i < 0 || f < 0) throw new Error(`fatia não encontrada: ${inicio} … ${fim}`)
   return CODIGO.slice(i, f)
 }
 

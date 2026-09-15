@@ -87,3 +87,10 @@ describe("buildPushPayloadPreview", () => {
         expect(payload.notification_id).toBe("n-1")
     })
 })
+
+describe("resolveNotificationHref — links que saem do app", () => {
+    it("barra invertida não passa como caminho interno", () => {
+        expect(resolveNotificationHref({ href: "/\\evil.com" })).not.toBe("/\\evil.com")
+        expect(resolveNotificationHref({ href: "//evil.com" })).not.toBe("//evil.com")
+    })
+})

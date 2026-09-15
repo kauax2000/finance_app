@@ -201,7 +201,20 @@ function Sheet({
   surface?: SheetSurfaceMode
 }) {
   const isMobile = useIsMobile()
-  const surface: SheetSurface = isMobile && modo === "auto" ? "drawer" : "panel"
+  const escolhida: SheetSurface = isMobile && modo === "auto" ? "drawer" : "panel"
+  // A superfície é decidida ao abrir e fica até fechar. Com ela ao vivo, girar
+  // um tablet ou estreitar a janela com a folha aberta desmontava uma primitiva
+  // e montava a outra — o foco e o que estava digitado iam junto.
+  const [travada, setTravada] = React.useState<SheetSurface | null>(null)
+  const aberta = props.open
+  if (aberta === true && travada === null) setTravada(escolhida)
+  if (aberta === false && travada !== null) setTravada(null)
+  const surface = travada ?? escolhida
+  const onOpenChange = (next: boolean) => {
+    // Sem `open` controlado não há prop para ler: trava pelo evento.
+    if (aberta === undefined) setTravada(next ? escolhida : null)
+    props.onOpenChange?.(next)
+  }
   // Dentro da moldura do catálogo ela deixa de ser modal — senão o
   // `RemoveScroll` do Radix trava a rolagem da **página de fora**. Antes de
   // `{...props}`, para quem chama continuar mandando. Ver `useViewportModal`.
@@ -218,11 +231,17 @@ function Sheet({
           repositionInputs
           modal={modal}
           {...props}
+          onOpenChange={onOpenChange}
         >
           {children}
         </DrawerPrimitive.Root>
       ) : (
-        <SheetPrimitive.Root data-slot="sheet" modal={modal} {...props}>
+        <SheetPrimitive.Root
+          data-slot="sheet"
+          modal={modal}
+          {...props}
+          onOpenChange={onOpenChange}
+        >
           {children}
         </SheetPrimitive.Root>
       )}

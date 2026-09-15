@@ -1,5 +1,6 @@
 "use client"
 
+import { creditInvoiceSlotCompactLabel, creditInvoiceSlotStatusChipClass } from "@/lib/credit-card-display"
 import * as React from "react"
 import Link from "next/link"
 import { ArrowPathRoundedSquareIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
@@ -24,16 +25,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import {
-    tagChipDanger,
-    tagChipInfo,
-    tagChipSuccess,
-    tagChipWarning,
-    transactionExpenseTypeRowChip,
-    transactionIncomeTypeRowChip,
-    transactionParceladaRowChip,
-    transactionRowChipShell,
-} from "@/lib/tag-chip-classes"
+import { tagChipInfo, tagChipSuccess, tagChipWarning, transactionExpenseTypeRowChip, transactionIncomeTypeRowChip, transactionParceladaRowChip, transactionRowChipShell } from "@/components/ui/badge"
 import { paymentMethodLabel } from "@/lib/payment-methods"
 import {
     classifyTransactionInvoiceSlot,
@@ -51,7 +43,7 @@ const EMPTY_INVOICE_PAID_KEYS: ReadonlySet<string> = new Set()
 function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
     if (!active) return null
     return (
-        <span className="ml-1 inline-flex text-2xs leading-none text-muted-foreground">
+        <span aria-hidden className="ml-1 inline-flex text-2xs leading-none text-muted-foreground">
             {dir === "asc" ? "▲" : "▼"}
         </span>
     )
@@ -94,8 +86,8 @@ function creditCardInvoiceBadgeForRow(
     if (slot === "open") {
         return {
             slot,
-            label: "Aberta",
-            chipClass: tagChipSuccess,
+            label: creditInvoiceSlotCompactLabel(slot),
+            chipClass: creditInvoiceSlotStatusChipClass(slot),
             title: "Fatura aberta",
         }
     }
@@ -125,8 +117,8 @@ function creditCardInvoiceBadgeForRow(
         }
         return {
             slot,
-            label: "Fechada",
-            chipClass: tagChipWarning,
+            label: creditInvoiceSlotCompactLabel(slot),
+            chipClass: creditInvoiceSlotStatusChipClass(slot),
             title,
         }
     }
@@ -141,8 +133,8 @@ function creditCardInvoiceBadgeForRow(
     }
     return {
         slot,
-        label: "Anterior",
-        chipClass: tagChipDanger,
+        label: creditInvoiceSlotCompactLabel(slot),
+        chipClass: creditInvoiceSlotStatusChipClass(slot),
         title: "Fatura anterior — ainda não marcada como paga",
     }
 }
@@ -213,7 +205,6 @@ export function TransactionsTable({
     enableActions = true,
     showPaginationFooter = true,
 }: TransactionsTableProps) {
-    const selectedIds = selectedIdsProp ?? EMPTY_SELECTED_IDS
     const setSelectedIds = setSelectedIdsProp ?? noopSetSelectedIds
     const page = pageProp ?? 0
     const setPage = setPageProp ?? noopSetPage
@@ -224,10 +215,20 @@ export function TransactionsTable({
         6 + (enableSelection ? 1 : 0) + (enableActions ? 1 : 0)
     const monthHeaderDataColSpan = tableColCount - (enableSelection ? 1 : 0)
 
+    // Projetadas não são linhas do banco: "selecionar todas" as incluía, e a
+    // exclusão em massa tentava apagar o que não existe.
     const pageTransactionIds = React.useMemo(
-        () => transactions.map((t) => t.id),
+        () => transactions.filter((t) => !isProjectedTransactionRow(t)).map((t) => t.id),
         [transactions]
     )
+
+    // Só conta e só apaga o que está na tela: uma seleção feita antes de trocar o
+    // filtro seguia valendo e a exclusão em massa levava linhas invisíveis.
+    const selectedIds = React.useMemo(() => {
+        const raw = selectedIdsProp ?? EMPTY_SELECTED_IDS
+        const visible = new Set(pageTransactionIds)
+        return new Set([...raw].filter((id) => visible.has(id)))
+    }, [selectedIdsProp, pageTransactionIds])
 
     const allPageSelected =
         enableSelection &&
@@ -810,6 +811,7 @@ export function TransactionsTable({
                                                         size="icon-sm"
                                                         type="button"
                                                         className="size-7"
+                                                        aria-label={`Editar ${transaction.description || "lançamento"}`}
                                                         onClick={(e) => {
                                                             e.stopPropagation()
                                                             openTransactionDetail(
@@ -825,6 +827,7 @@ export function TransactionsTable({
                                                         size="icon-sm"
                                                         type="button"
                                                         className="size-7 text-destructive hover:text-destructive"
+                                                        aria-label={`Excluir ${transaction.description || "lançamento"}`}
                                                         onClick={(e) => {
                                                             e.stopPropagation()
                                                             onDeleteSingle?.(

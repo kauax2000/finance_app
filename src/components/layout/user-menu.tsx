@@ -14,7 +14,7 @@ import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/16/solid"
 import Link from "next/link"
 import { ACCOUNT_MENU_LINK_ITEMS } from "@/components/layout/account-menu-links"
 import { ROUTES } from "@/config/navigation"
-import { AppThemeToggle } from "@/components/settings/app-theme-toggle"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 interface UserMenuProps {
     children: React.ReactNode
@@ -52,7 +52,7 @@ export function UserMenu({ children }: UserMenuProps) {
                         onPointerDown={(e) => e.stopPropagation()}
                     >
                         <span className="text-sm text-foreground">Tema</span>
-                        <AppThemeToggle className="ml-auto shrink-0" />
+                        <ThemeToggle className="ml-auto shrink-0" />
                     </div>
 
                     <DropdownMenuSeparator className="mx-0 my-0 bg-border/60" />

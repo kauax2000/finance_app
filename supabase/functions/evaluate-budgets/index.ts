@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import { deliverNotification } from '../_shared/deliver-notification.ts'
 
@@ -22,8 +22,7 @@ type Body = {
 
 type BudgetRow = {
   id: string
-  user_id: string
-  workspace_id: string | null
+  workspace_id: string
   category_id: string
   period_start: string
   period_end: string
@@ -33,9 +32,16 @@ type BudgetRow = {
   threshold_over_sent_at: string | null
 }
 
+type ThresholdKey = 'threshold_80_sent_at' | 'threshold_100_sent_at' | 'threshold_over_sent_at'
+
 function pct(spend: number, amount: number): number {
   if (!amount) return 0
   return (spend / amount) * 100
+}
+
+function fail(context: string, error: unknown): Response {
+  console.error(`evaluate-budgets: ${context}`, error)
+  return json(500, { error: 'Erro ao avaliar orçamento.' })
 }
 
 Deno.serve(async (req: Request) => {
@@ -51,7 +57,7 @@ Deno.serve(async (req: Request) => {
 
   const authResult = await getAuthUserFromJwt(supabaseUrl, anonKey, jwt)
   if (authResult.error || !authResult.user) {
-    return json(401, { error: 'Invalid or expired token', details: authResult.error ?? 'unknown' })
+    return json(401, { error: 'Invalid or expired token' })
   }
 
   let body: Body
@@ -66,160 +72,145 @@ Deno.serve(async (req: Request) => {
     return json(400, { error: 'Invalid occurred_at' })
   }
 
-  const user = authResult.user
-  const userId = user.id
-
-  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
-
-  // Only evaluate when we have a category_id (budget is per category)
   const categoryId = body.category_id
   if (!categoryId) {
     return json(200, { ok: true, skipped: true, reason: 'no_category' })
   }
 
-  // Find active budget for that category & day
-  const day = occurredAt.toISOString().slice(0, 10) // YYYY-MM-DD
+  const userId = authResult.user.id
+  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
+
+  // O orçamento é da carteira da categoria, e não de quem lançou: numa carteira
+  // compartilhada o orçamento criado por um membro vale para o lançamento de outro.
+  const { data: category, error: catErr } = await supabaseAdmin
+    .from('categories')
+    .select('workspace_id,name')
+    .eq('id', categoryId)
+    .maybeSingle()
+  if (catErr) return fail('categoria', catErr)
+  const workspaceId = (category as { workspace_id?: string | null } | null)?.workspace_id ?? null
+  if (!workspaceId) return json(200, { ok: true, skipped: true, reason: 'no_category' })
+  const categoryName = (category as { name?: string }).name ?? 'esta categoria'
+
+  const { data: membership, error: memErr } = await supabaseAdmin
+    .from('workspace_members')
+    .select('user_id')
+    .eq('workspace_id', workspaceId)
+    .eq('user_id', userId)
+    .maybeSingle()
+  if (memErr) return fail('membro', memErr)
+  if (!membership) return json(403, { error: 'Not a member of this workspace' })
+
+  // Datas de lançamento ficam ao meio-dia UTC: o prefixo ISO é o dia do lançamento.
+  const day = occurredAt.toISOString().slice(0, 10)
   const { data: budget, error: bErr } = await supabaseAdmin
     .from('budgets')
     .select('*')
-    .eq('user_id', userId)
+    .eq('workspace_id', workspaceId)
     .eq('category_id', categoryId)
     .lte('period_start', day)
     .gte('period_end', day)
     .order('period_start', { ascending: false })
+    .limit(1)
     .maybeSingle()
-
-  if (bErr) return json(500, { error: bErr.message })
+  if (bErr) return fail('orçamento', bErr)
   if (!budget) return json(200, { ok: true, skipped: true, reason: 'no_budget' })
 
   const b = budget as BudgetRow
 
-  let workspaceId = b.workspace_id
-  if (!workspaceId) {
-    const { data: ws, error: wsErr } = await supabaseAdmin
-      .from('workspaces')
-      .select('id')
-      .eq('created_by', userId)
-      .eq('type', 'personal')
-      .order('created_at', { ascending: true })
-      .limit(1)
-      .maybeSingle()
-    if (wsErr) return json(500, { error: wsErr.message })
-    workspaceId = ws?.id ?? null
-  }
-  if (!workspaceId) {
-    return json(500, { error: 'Budget has no workspace; run workspace migrations' })
-  }
-
-  const { data: prefs, error: prefsErr } = await supabaseAdmin
-    .from('workspace_member_notification_prefs')
-    .select('*')
-    .eq('workspace_id', workspaceId)
-    .eq('user_id', userId)
-    .maybeSingle()
-  if (prefsErr) return json(500, { error: prefsErr.message })
-
-  const s = prefs ?? {
-    notify_email: true,
-    notify_in_app: true,
-    notify_budget: true,
-  }
-
-  if (!s.notify_budget) {
-    return json(200, { ok: true, skipped: true, reason: 'budget_disabled' })
-  }
-
-  const { data: catRow, error: catErr } = await supabaseAdmin
-    .from('categories')
-    .select('workspace_id')
-    .eq('id', categoryId)
-    .maybeSingle()
-  if (catErr) return json(500, { error: catErr.message })
-
-  const spendWorkspaceId =
-    (catRow as { workspace_id?: string | null } | null)?.workspace_id ?? b.workspace_id ?? workspaceId
-
-  // Sum expenses for the period: workspace-wide when we know workspace (shared carteira),
-  // else fall back to the acting user's transactions only (legacy rows).
-  let sumQuery = supabaseAdmin
+  const { data: sumRows, error: sumErr } = await supabaseAdmin
     .from('transactions')
-    .select('amount,type,category_id,date')
+    .select('amount')
+    .eq('workspace_id', workspaceId)
     .eq('category_id', categoryId)
     .eq('type', 'expense')
     .gte('date', `${b.period_start}T00:00:00.000Z`)
     .lte('date', `${b.period_end}T23:59:59.999Z`)
-
-  if (spendWorkspaceId) {
-    sumQuery = sumQuery.eq('workspace_id', spendWorkspaceId)
-  } else {
-    sumQuery = sumQuery.eq('user_id', userId)
-  }
-
-  const { data: sumRows, error: sumErr } = await sumQuery
-
-  if (sumErr) return json(500, { error: sumErr.message })
+  if (sumErr) return fail('soma', sumErr)
 
   const budgetAmount = Number(b.amount)
-  const spend = (sumRows ?? []).reduce((acc: number, r: { amount: number }) => acc + Number(r.amount || 0), 0)
+  // Em centavos: somar reais em ponto flutuante erra na segunda casa.
+  const spend =
+    (sumRows ?? []).reduce(
+      (acc: number, r: { amount: number }) => acc + Math.round(Number(r.amount || 0) * 100),
+      0,
+    ) / 100
   const percent = pct(spend, budgetAmount)
   const hitOver = spend > budgetAmount
   const hit100 = spend >= budgetAmount && !hitOver
   const hit80 = spend >= budgetAmount * 0.8 && spend < budgetAmount
 
-  const thresholds: Array<{ key: 'threshold_80_sent_at' | 'threshold_100_sent_at' | 'threshold_over_sent_at'; hit: boolean; title: string; body: string }> = [
+  const thresholds: Array<{ key: ThresholdKey; hit: boolean; title: string; body: string }> = [
     {
       key: 'threshold_80_sent_at',
       hit: hit80,
       title: 'Orçamento chegando ao limite (80%)',
-      body: `Você já usou ${percent.toFixed(0)}% do seu orçamento nesta categoria.`,
+      body: `Já foram usados ${percent.toFixed(0)}% do orçamento de ${categoryName}.`,
     },
     {
       key: 'threshold_100_sent_at',
       hit: hit100,
       title: 'Orçamento atingiu 100%',
-      body: `Você atingiu 100% do seu orçamento nesta categoria.`,
+      body: `O orçamento de ${categoryName} chegou a 100%.`,
     },
     {
       key: 'threshold_over_sent_at',
       hit: hitOver,
       title: 'Orçamento excedido',
-      body: `Você excedeu seu orçamento (${percent.toFixed(0)}%).`,
+      body: `O orçamento de ${categoryName} foi excedido (${percent.toFixed(0)}%).`,
     },
   ]
 
-  // Pick the most severe threshold that is hit and not yet sent
-  const nowIso = new Date().toISOString()
-  let chosen: typeof thresholds[number] | null = null
+  // O limiar mais severo atingido e ainda não enviado.
+  let chosen: (typeof thresholds)[number] | null = null
   for (const t of thresholds.slice().reverse()) {
     if (t.hit && !b[t.key]) {
       chosen = t
       break
     }
   }
-
   if (!chosen) {
     return json(200, { ok: true, skipped: true, reason: 'no_new_threshold', percent })
   }
 
-  // Mark threshold as sent (dedupe).
-  // Use a conditional update so parallel invocations cannot both claim the same threshold.
-  const updatePayload: Record<string, string> = { [chosen.key]: nowIso }
+  // Reivindicação condicional: duas avaliações em paralelo não enviam o mesmo limiar.
+  const nowIso = new Date().toISOString()
   const { data: claimed, error: upErr } = await supabaseAdmin
     .from('budgets')
-    .update(updatePayload)
+    .update({ [chosen.key]: nowIso })
     .eq('id', b.id)
     .is(chosen.key, null)
     .select('id')
     .maybeSingle()
-  if (upErr) return json(500, { error: upErr.message })
+  if (upErr) return fail('reivindicação', upErr)
   if (!claimed) {
-    return json(200, {
-      ok: true,
-      skipped: true,
-      reason: 'threshold_already_sent',
-      threshold: chosen.key,
-      percent,
-    })
+    return json(200, { ok: true, skipped: true, reason: 'threshold_already_sent', percent })
+  }
+
+  const releaseClaim = () =>
+    supabaseAdmin.from('budgets').update({ [chosen!.key]: null }).eq('id', b.id).eq(chosen!.key, nowIso)
+
+  // Todos os membros recebem; cada um com as próprias preferências, que
+  // deliverNotification confere (notify_budget).
+  const { data: memberRows, error: membersErr } = await supabaseAdmin
+    .from('workspace_members')
+    .select('user_id')
+    .eq('workspace_id', workspaceId)
+  if (membersErr) {
+    await releaseClaim()
+    return fail('membros', membersErr)
+  }
+  const memberIds = (memberRows ?? []).map((m: { user_id: string }) => m.user_id)
+
+  const emails = new Map<string, string | null>()
+  if (memberIds.length > 0) {
+    const { data: profileRows } = await supabaseAdmin
+      .from('profiles')
+      .select('id,email')
+      .in('id', memberIds)
+    for (const p of profileRows ?? []) {
+      emails.set(p.id as string, (p.email as string | null) ?? null)
+    }
   }
 
   const metadata = {
@@ -231,29 +222,38 @@ Deno.serve(async (req: Request) => {
     href: `/categories/${categoryId}`,
   }
 
-  const delivered = await deliverNotification({
-    supabaseAdmin,
-    userId,
-    userEmail: user.email,
-    workspaceId,
-    type: 'budget',
-    title: chosen.title,
-    body: chosen.body,
-    metadata,
-  })
-
-  if (!delivered.ok) {
-    return json(500, { error: delivered.error })
+  let anyDelivered = false
+  const results: Array<Record<string, unknown>> = []
+  for (const memberId of memberIds) {
+    try {
+      const r = await deliverNotification({
+        supabaseAdmin,
+        userId: memberId,
+        userEmail: emails.get(memberId) ?? null,
+        workspaceId,
+        type: 'budget',
+        title: chosen.title,
+        body: chosen.body,
+        metadata,
+      })
+      if (r.ok) {
+        anyDelivered = true
+        results.push({ user_id: memberId, in_app: r.in_app, email: r.email, push: r.push })
+      } else {
+        console.error('evaluate-budgets: entrega', memberId, r.error)
+        results.push({ user_id: memberId, error: 'delivery_failed' })
+      }
+    } catch (e) {
+      console.error('evaluate-budgets: entrega', memberId, e)
+      results.push({ user_id: memberId, error: 'delivery_failed' })
+    }
   }
 
-  return json(200, {
-    ok: true,
-    delivered: {
-      in_app: delivered.in_app,
-      email: delivered.email,
-      push: delivered.push,
-    },
-    percent,
-  })
-})
+  // Ninguém recebeu: libera o limiar para uma próxima avaliação tentar de novo.
+  if (!anyDelivered) {
+    await releaseClaim()
+    return json(500, { error: 'Erro ao entregar o alerta de orçamento.', percent })
+  }
 
+  return json(200, { ok: true, percent, results })
+})

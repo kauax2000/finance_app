@@ -1,5 +1,6 @@
 "use client"
 
+import { addDaysYmd, compareYmd } from "@/lib/transaction-date"
 import { AdjustmentsHorizontalIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
 import { useCallback, useMemo, useState } from "react"
@@ -61,20 +62,6 @@ import type { Bill } from "@/lib/supabase"
 
 const DETAIL_QUERY = "detail"
 
-function cmpYmd(a: string, b: string): number {
-    return a.localeCompare(b)
-}
-
-function addDaysToYmd(ymd: string, days: number): string {
-    const parts = ymd.split("-").map((x) => Number.parseInt(x, 10))
-    const y = parts[0] ?? 1970
-    const m = parts[1] ?? 1
-    const d = parts[2] ?? 1
-    const dt = new Date(y, m - 1, d)
-    dt.setDate(dt.getDate() + days)
-    return localYmdFromDate(dt)
-}
-
 async function handleSkipBillInstance(opts: {
     workspaceId: string | null
     user: User
@@ -108,7 +95,7 @@ function comparePendingRows(
 ): number {
     const inv = dir === "asc" ? 1 : -1
     if (key === "due_date") {
-        const c = cmpYmd(a.dueYmd, b.dueYmd)
+        const c = compareYmd(a.dueYmd, b.dueYmd)
         if (c !== 0) return c * inv
     } else if (key === "amount") {
         const na = a.amountHint ?? -Infinity
@@ -144,7 +131,7 @@ function compareModelSummaries(
     } else if (key === "due_date") {
         const da = a.nextDueYmd ?? "9999-12-31"
         const db = b.nextDueYmd ?? "9999-12-31"
-        const c = cmpYmd(da, db)
+        const c = compareYmd(da, db)
         if (c !== 0) return c * inv
     } else if (key === "amount") {
         const na =
@@ -196,8 +183,8 @@ export default function BillsPageClient() {
             <Button
                 type="button"
                 variant="outline"
-                size="icon-lg"
-                className="relative size-9 shrink-0"
+                size="icon-md"
+                className="relative shrink-0"
                 disabled={!billsHasTableEarly}
                 onClick={() => setMobileFiltersSheetOpen(true)}
                 aria-label="Filtros e ordenação"
@@ -242,7 +229,7 @@ export default function BillsPageClient() {
     }, [])
 
     const todayYmd = useMemo(() => localYmdFromDate(new Date()), [])
-    const limit30Ymd = useMemo(() => addDaysToYmd(todayYmd, 30), [todayYmd])
+    const limit30Ymd = useMemo(() => addDaysYmd(todayYmd, 30), [todayYmd])
 
     const virtualRows = useMemo(() => {
         if (!bundleQ.data?.creditCards?.length || bundleQ.data.tableMissing) {
@@ -297,7 +284,7 @@ export default function BillsPageClient() {
                 virtual: v,
             })
         }
-        rows.sort((a, b) => cmpYmd(a.dueYmd, b.dueYmd))
+        rows.sort((a, b) => compareYmd(a.dueYmd, b.dueYmd))
         return rows
     }, [bundleQ.data?.bills, pendingRegular, virtualRows])
 
@@ -307,7 +294,7 @@ export default function BillsPageClient() {
     )
 
     const overdueRows = useMemo(
-        () => regularRows.filter((r) => cmpYmd(r.dueYmd, todayYmd) < 0),
+        () => regularRows.filter((r) => compareYmd(r.dueYmd, todayYmd) < 0),
         [regularRows, todayYmd]
     )
     const soonFilterRows = useMemo(
@@ -315,10 +302,10 @@ export default function BillsPageClient() {
             [...regularRows]
                 .filter(
                     (r) =>
-                        cmpYmd(r.dueYmd, todayYmd) >= 0 &&
-                        cmpYmd(r.dueYmd, limit30Ymd) <= 0
+                        compareYmd(r.dueYmd, todayYmd) >= 0 &&
+                        compareYmd(r.dueYmd, limit30Ymd) <= 0
                 )
-                .sort((a, b) => cmpYmd(a.dueYmd, b.dueYmd)),
+                .sort((a, b) => compareYmd(a.dueYmd, b.dueYmd)),
         [regularRows, todayYmd, limit30Ymd]
     )
 
@@ -360,7 +347,7 @@ export default function BillsPageClient() {
                 continue
             }
             const curDue = cur.due_date.slice(0, 10)
-            if (cmpYmd(due, curDue) < 0) nextPendingByBill.set(inst.bill_id, inst)
+            if (compareYmd(due, curDue) < 0) nextPendingByBill.set(inst.bill_id, inst)
         }
 
         return bills.map((bill) => {
@@ -374,7 +361,7 @@ export default function BillsPageClient() {
                 paid90Count += 1
                 const paidDay = inst.paid_at.slice(0, 10)
                 const due = inst.due_date.slice(0, 10)
-                if (cmpYmd(paidDay, due) > 0) latePay90Count += 1
+                if (compareYmd(paidDay, due) > 0) latePay90Count += 1
             }
             const avgCharge =
                 paid90Count > 0

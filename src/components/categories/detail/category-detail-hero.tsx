@@ -83,7 +83,6 @@ export function CategoryDetailHero({
                         <DropdownMenuContent
                             align="end"
                             className="w-44"
-                            onCloseAutoFocus={(e) => e.preventDefault()}
                         >
                             <DropdownMenuItem onSelect={() => onEdit()}>
                                 <PencilIcon className="h-4 w-4" aria-hidden />
@@ -161,7 +160,6 @@ export function CategoryDetailHero({
                         <DropdownMenuContent
                             align="end"
                             className="w-44"
-                            onCloseAutoFocus={(e) => e.preventDefault()}
                         >
                             <DropdownMenuItem onSelect={() => onEdit()}>
                                 <PencilIcon className="h-4 w-4" aria-hidden />

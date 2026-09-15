@@ -120,7 +120,9 @@ function ItemGroup({
 }: React.ComponentProps<"div"> & VariantProps<typeof itemGroupVariants>) {
   return (
     <div
-      role="list"
+      // Sem `role="list"`: o `Item` não é `listitem` (ele pode ser um link), e
+      // uma lista sem itens é o que o leitor de tela anuncia errado. Quem é
+      // lista de verdade passa `role` e marca os itens.
       data-slot="item-group"
       data-variant={variant ?? "spaced"}
       className={cn(itemGroupVariants({ variant, className }))}

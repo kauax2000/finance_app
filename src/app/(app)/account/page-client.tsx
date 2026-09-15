@@ -1,6 +1,7 @@
 "use client"
 /* eslint-disable @next/next/no-img-element -- profile avatars use data URLs / external metadata URLs */
 
+import { ROUTES } from "@/config/navigation"
 import { useState } from "react"
 import Link from "next/link"
 import { useAuth } from "@/components/providers"
@@ -150,7 +151,7 @@ export default function AccountPage() {
                 <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
                     <CardContent className="flex flex-col p-0">
                         <Link
-                            href="/account/sessions"
+                            href={ROUTES.ACCOUNT_SESSIONS}
                             className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 transition-colors hover:bg-muted/30 sm:py-3.5"
                         >
                             <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -167,7 +168,7 @@ export default function AccountPage() {
                             <ArrowRightIcon className="size-4 shrink-0 text-muted-foreground" />
                         </Link>
                         <Link
-                            href="/account/activity"
+                            href={ROUTES.ACCOUNT_ACTIVITY}
                             className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted/30 sm:py-3.5"
                         >
                             <div className="flex min-w-0 flex-1 items-center gap-3">

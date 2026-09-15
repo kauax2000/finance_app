@@ -81,7 +81,7 @@ export const disclosureRowClassName = [
    * (`group-hover/disclosure:group-data-[state=open]/disclosure:`), o Tailwind
    * compila uma **cadeia de descendente** — e quando as duas apontam para o
    * mesmo elemento o seletor não casa com nada. Este projeto já pagou essa
-   * medição no `AppThemeToggle`, e a saída registrada lá é esta: o estado mora
+   * medição no `ThemeToggle`, e a saída registrada lá é esta: o estado mora
    * numa variável na raiz, e o hover só troca **qual** variável o filho lê.
    * Cada classe fica com um variante só.
    */
@@ -189,4 +189,4 @@ export const disclosureMarkerClassName = [
  * abrindo em curvas diferentes.
  */
 export const disclosureMotionClassName =
-  "overflow-hidden duration-(--duration-base) ease-(--ease-out)"
+  "overflow-hidden animation-duration-(--duration-base) ease-(--ease-out)"

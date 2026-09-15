@@ -1,5 +1,12 @@
 {
-  "$comment": "Vetores dourados de calendário de billing. Validados por: src/lib/billing-calendar-parity.test.ts (cliente), supabase/functions/_shared/credit-card-cycle.test.ts (edge) e supabase/tests/database/billing_calendar_parity.test.sql (SQL next_subscription_billing_date). Ao mudar regra de stepping/fechamento, atualize os 3 juntos.",
+  "$comment": "Vetores dourados de calendário de billing. Validados por: src/lib/billing-calendar-parity.test.ts (cliente), supabase/functions/_shared/credit-card-cycle.test.ts (edge) e supabase/tests/database/billing_calendar_parity.test.sql + billing_anchor.test.sql (SQL next_subscription_billing_date). Ao mudar regra de stepping/fechamento, atualize os 3 juntos.",
+  "subscription_stepping_anchored": [
+    { "from": "2026-02-28", "interval": "monthly", "anchor_day": 31, "expected": "2026-03-31" },
+    { "from": "2026-02-28", "interval": "bimonthly", "anchor_day": 31, "expected": "2026-04-30" },
+    { "from": "2027-02-28", "interval": "yearly", "anchor_day": 29, "expected": "2028-02-29" },
+    { "from": "2026-04-30", "interval": "monthly", "anchor_day": 31, "expected": "2026-05-31" },
+    { "from": "2026-01-15", "interval": "weekly", "anchor_day": 31, "expected": "2026-01-22" }
+  ],
   "subscription_stepping": [
     { "from": "2026-01-15", "interval": "weekly", "expected": "2026-01-22" },
     { "from": "2026-12-28", "interval": "weekly", "expected": "2027-01-04" },

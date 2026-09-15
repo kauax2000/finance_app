@@ -87,6 +87,13 @@ export const viewport = {
     width: "device-width",
     initialScale: 1,
     viewportFit: "cover" as const,
+    // A cor da barra do navegador acompanha o tema do sistema: `--background`
+    // de cada tema. O manifesto não aceita duas cores e fica com a clara.
+    // ponytail: segue `prefers-color-scheme`, não a escolha feita no app.
+    themeColor: [
+        { media: "(prefers-color-scheme: light)", color: "#fafafa" },
+        { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+    ],
 }
 
 export default function RootLayout({

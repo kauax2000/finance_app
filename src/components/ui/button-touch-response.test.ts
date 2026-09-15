@@ -16,7 +16,7 @@ import { buttonVariants } from "./button"
  * `toggle.tsx`, `tabs.tsx`, `menubar.tsx`, `item.tsx` e `calendar.tsx`; o
  * conserto passou a morar na origem.
  *
- * E o par escuro entra junto pela aritmética que o `AppThemeToggle` já pagou:
+ * E o par escuro entra junto pela aritmética que o `ThemeToggle` já pagou:
  * `&:active` e `&:is(.dark *)` empatam em especificidade, e o `dark:` é emitido
  * depois — sem `dark:active:`, o realce de toque perderia para o de tema, calado
  * e só num tema.
@@ -71,7 +71,7 @@ describe("resposta ao toque do Button", () => {
    * impede que ela **cresça**: uma variante nova nasce com o par, ou o teste cai.
    * Cada nome sai daqui quando o conserto dele for autorizado.
    */
-  const PENDENTES = ["primary", "secondary", "outline", "destructive"] as const
+  const PENDENTES = ["secondary", "outline", "destructive"] as const
 
   it("2. quem já foi consertado pinta no toque o mesmo que pinta no cursor", () => {
     for (const variant of PESOS_QUE_PREENCHEM) {

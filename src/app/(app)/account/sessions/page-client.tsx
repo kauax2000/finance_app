@@ -1,5 +1,6 @@
 "use client"
 
+import { ROUTES } from "@/config/navigation"
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
@@ -96,7 +97,7 @@ export default function SessionsPage() {
     useEffect(() => {
         if (authLoading) return
         if (!authSession) {
-            router.replace("/login")
+            router.replace(ROUTES.LOGIN)
             return
         }
         void fetchSessions()
@@ -153,7 +154,8 @@ export default function SessionsPage() {
         return <SessionsPageSkeleton />
     }
 
-    const activeSessionCount = sessions.filter((s) => s.is_current).length
+    // A lista já é só de sessões ativas; contar `is_current` dava sempre 1.
+    const activeSessionCount = sessions.length
     const otherSessionsCount = sessions.filter((s) => !s.is_current).length
 
     return (
@@ -187,9 +189,9 @@ export default function SessionsPage() {
                     <CardContent className="flex flex-col p-0">
                         <CardToolbar className="justify-end">
                             <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                                {activeSessionCount} sessão
-                                {activeSessionCount !== 1 ? "s" : ""} ativa
-                                {activeSessionCount !== 1 ? "s" : ""}
+                                {activeSessionCount === 1
+                                    ? "1 sessão ativa"
+                                    : `${activeSessionCount} sessões ativas`}
                             </p>
                         </CardToolbar>
                         {sessions.length > 0 ? (
@@ -245,6 +247,7 @@ export default function SessionsPage() {
                                                         type="button"
                                                         variant="tertiary"
                                                         size="icon-sm"
+                                                        aria-label={`Encerrar sessão em ${session.device_name || "outro aparelho"}`}
                                                         onClick={() =>
                                                             void handleRevokeSession(session.id)
                                                         }

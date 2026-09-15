@@ -8,6 +8,7 @@ export async function getAuthUserFromJwt(
 ): Promise<{ user: AuthUser; error: null } | { user: null; error: string }> {
   const base = supabaseUrl.replace(/\/$/, '')
   const res = await fetch(`${base}/auth/v1/user`, {
+    signal: AbortSignal.timeout(10_000),
     headers: {
       Authorization: `Bearer ${jwt}`,
       apikey: anonKey,

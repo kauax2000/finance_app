@@ -10,7 +10,7 @@ export default function AppLayoutClient({
     defaultSidebarOpen: boolean
 }) {
     return (
-        <SidebarAppShell defaultSidebarOpen={defaultSidebarOpen} titleMode="app">
+        <SidebarAppShell defaultSidebarOpen={defaultSidebarOpen}>
             {children}
         </SidebarAppShell>
     )

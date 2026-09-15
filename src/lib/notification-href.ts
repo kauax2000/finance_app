@@ -4,7 +4,7 @@
  */
 export function resolveNotificationHref(metadata: Record<string, unknown>): string {
     const raw = metadata.href
-    if (typeof raw === "string" && raw.startsWith("/") && !raw.startsWith("//")) {
+    if (typeof raw === "string" && raw.startsWith("/") && !raw.startsWith("//") && !raw.includes("\\")) {
         return raw.trim()
     }
     const kind = metadata.kind

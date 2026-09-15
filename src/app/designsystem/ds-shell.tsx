@@ -5,7 +5,6 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { barSurfaceClassName } from "@/lib/bar-classes"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -17,9 +16,10 @@ import {
   DialogCloseButton,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { AppThemeToggle } from "@/components/settings/app-theme-toggle"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { AppWordmark } from "@/components/layout/app-wordmark"
 import { Container } from "@/components/ui/container"
+import { TopBar } from "@/components/ui/top-bar"
 import { CATEGORY_ORDER, REGISTRY } from "./registry"
 import { DsSearch } from "./ds-search"
 
@@ -29,7 +29,7 @@ import { DsSearch } from "./ds-search"
  *
  * O alternador existe aqui porque metade do valor deste site é conferir o tema
  * escuro, e sem ele cada verificação vira uma ida às configurações e uma volta.
- * Mas ele é o `AppThemeToggle` do produto, não um segundo controle: um catálogo
+ * Mas ele é o `ThemeToggle` do produto, não um segundo controle: um catálogo
  * de design system que inventa a própria versão de algo que o app já tem é a
  * primeira coisa a desmentir o que ele documenta.
  */
@@ -92,17 +92,11 @@ function DsTopBar() {
     setNavAberta(false)
   }, [pathname])
 
-  // A superfície é a régua de barra, e ela mora em `lib/bar-classes`: opaca de
-  // base e translúcida só onde o borrão existe — sem `backdrop-filter`, os 60%
-  // deixariam o conteúdo passar por trás do título. Ela estava escrita à mão
-  // aqui até a fileira do `Menubar` precisar da mesma receita.
+  // É o `TopBar`: 56px com o fio dentro, `--z-sticky`, e a régua de barra de
+  // `lib/bar-classes` como superfície. Sem calha própria porque o `Container`
+  // de dentro já traz a do catálogo.
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-(--z-sticky) h-14 border-b border-border",
-        barSurfaceClassName
-      )}
-    >
+    <TopBar size="md" surface="glass" gutter="none">
       {/* Esquerda e direita são as duas `flex-1`, e a busca no meio não encolhe.
           Com a busca sendo a única flexível, ela centralizava no espaço que
           sobrava — e como a marca cresceu, "o que sobrava" deixou de ser
@@ -111,7 +105,7 @@ function DsTopBar() {
       <Container
         size="xl"
         gutter="page"
-        className="flex h-full items-center gap-2 sm:gap-3"
+        className="flex h-full min-w-0 items-center gap-2 sm:gap-3"
       >
         <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
         {/* `Sheet`: painel de borda a partir de 768px, gaveta abaixo — e é
@@ -181,7 +175,7 @@ function DsTopBar() {
                   lista, separado dela por um fio. */}
               <div className="flex items-center justify-between gap-3 border-b border-border py-3">
                 <span className="text-sm text-muted-foreground">Tema</span>
-                <AppThemeToggle />
+                <ThemeToggle glass />
               </div>
               <DsNav />
             </div>
@@ -247,10 +241,10 @@ function DsTopBar() {
             existe a partir de `lg` — e é ele que faz o par elástico com a
             esquerda para a busca cair no centro exato. */}
         <div className="hidden items-center justify-end gap-1 sm:gap-2 lg:flex lg:flex-1">
-          <AppThemeToggle />
+          <ThemeToggle glass />
         </div>
       </Container>
-    </header>
+    </TopBar>
   )
 }
 

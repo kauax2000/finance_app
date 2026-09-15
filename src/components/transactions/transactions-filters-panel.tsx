@@ -804,7 +804,7 @@ export function TransactionsFiltersPanel({
                             </SelectTrigger>
                             <SelectContent
                                 sideOffset={8}
-                                className="max-h-72 z-(--z-sheet) p-1"
+                                className="max-h-72 p-1"
                             >
                                 <SelectItem value="__any__">Qualquer plano</SelectItem>
                                 {installmentPlans.map((p) => (
@@ -839,7 +839,7 @@ export function TransactionsFiltersPanel({
                             </SelectTrigger>
                             <SelectContent
                                 sideOffset={8}
-                                className="max-h-72 z-(--z-sheet) p-1"
+                                className="max-h-72 p-1"
                             >
                                 <SelectItem value="__any__">
                                     Qualquer assinatura

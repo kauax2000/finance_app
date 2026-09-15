@@ -14,7 +14,7 @@
     "ds:docs-map": "node scripts/generate-ds-docs-map.mjs",
     "test:assinaturas-prereqs": "node scripts/verify-assinaturas-prereqs.mjs",
     "test:unit": "vitest run",
-    "test:edge": "deno test supabase/functions/_shared",
+    "test:edge": "deno test --allow-read supabase/functions/_shared",
     "test:db": "node scripts/ensure-local-supabase-db.mjs && supabase test db",
     "test:db:skip-check": "supabase test db",
     "generate:pwa-icons": "node scripts/generate-pwa-icons.mjs",
@@ -25,7 +25,8 @@
     "supabase:functions:serve": "supabase functions serve",
     "supabase:functions:serve:sessions": "supabase functions serve sessions",
     "supabase:deploy:sessions": "supabase functions deploy sessions",
-    "supabase:deploy:functions": "supabase functions deploy sessions activity-logs delete-user dispatch-notifications evaluate-budgets evaluate-credit-card-alerts credit-card-calendar-alerts evaluate-bills-reminders workspace-invites-create workspace-invites-accept workspace-invites-resend run-recurring-billing push-subscribe push-unsubscribe notify-transaction-created"
+    "supabase:deploy:functions": "supabase functions deploy sessions activity-logs delete-user dispatch-notifications evaluate-budgets evaluate-credit-card-alerts credit-card-calendar-alerts evaluate-bills-reminders workspace-invites-create workspace-invites-accept workspace-invites-resend run-recurring-billing push-subscribe push-unsubscribe notify-transaction-created",
+    "db:types": "supabase gen types typescript --local | (echo '// GERADO POR `npm run db:types` (supabase gen types typescript --local). Não edite à mão.'; cat) > src/types/database.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -42,7 +43,6 @@
     "embla-carousel-react": "^8.6.0",
     "idb-keyval": "^6.2.2",
     "input-otp": "^1.5.0",
-    "motion": "^12.38.0",
     "next": "^16.2.6",
     "next-themes": "^0.4.6",
     "radix-ui": "^1.4.3",

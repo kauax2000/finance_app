@@ -303,7 +303,7 @@ export default function AccordionDoc() {
         variante empilhada, o Tailwind compila uma{" "}
         <strong>cadeia de descendente</strong> — e quando as duas apontam para o
         mesmo elemento o seletor não casa com nada. Este projeto já pagou essa
-        medição no <code>AppThemeToggle</code>: o estado mora numa variável na
+        medição no <code>ThemeToggle</code>: o estado mora numa variável na
         raiz, e o cursor só troca qual variável o filho lê.
       </DocNote>
 

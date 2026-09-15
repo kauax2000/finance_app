@@ -42,7 +42,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import {
     tagChipFilterIdle,
     tagChipFilterSelected,
-} from "@/lib/tag-chip-classes"
+} from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { ChevronDownIcon } from "@heroicons/react/16/solid"
 function CategoryRows({

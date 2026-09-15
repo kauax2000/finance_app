@@ -14,11 +14,9 @@ const MAX_DEG = 11
 /** Scales normalized tilt for gradient/glare motion (does not change physical rotation). */
 const GLARE_GAIN = 1.85
 const GLARE_CLAMP = 1.2
-/** Idle sway amplitude (deg) — keep high enough to read at a glance without hover. */
-const IDLE_DEG = 8.5
-/** Lerp toward desired tilt; higher = snappier idle so motion is obvious. */
+/** Lerp toward desired tilt. */
 const SMOOTHING_ALPHA = 0.32
-const IDLE_MIN_FRAME_MS = 16
+const MIN_FRAME_MS = 16
 
 export type CreditCardFaceTiltProps = {
     children: ReactNode
@@ -29,6 +27,11 @@ export type CreditCardFaceTiltProps = {
 /**
  * 3D tilt from pointer position (edge under cursor recedes). Disabled when
  * `prefers-reduced-motion: reduce`.
+ *
+ * Só anima sob o cursor. Havia uma oscilação ociosa num requestAnimationFrame
+ * sem fim, com setState a cada quadro em cada cartão da tela — uma lista de
+ * cartões re-renderizava 60 vezes por segundo parada. Ao sair, a transição CSS
+ * leva o cartão ao neutro e o loop para.
  */
 export function CreditCardFaceTilt({
     children,
@@ -60,7 +63,7 @@ export function CreditCardFaceTilt({
     }, [])
 
     useEffect(() => {
-        const active = !disabled && !reduceMotion
+        const active = !disabled && !reduceMotion && hovered
         if (!active) {
             stopRaf()
             return
@@ -70,17 +73,8 @@ export function CreditCardFaceTilt({
             rafRef.current = requestAnimationFrame(loop)
             if (document.visibilityState === "hidden") return
 
-            if (ts - lastFrameRef.current < IDLE_MIN_FRAME_MS) return
+            if (ts - lastFrameRef.current < MIN_FRAME_MS) return
             lastFrameRef.current = ts
-
-            if (!hovered) {
-                const t = ts / 1000
-                desiredRef.current = {
-                    // Same axes as hover tilt, clearly visible when not hovered.
-                    rx: Math.sin(t * 0.62) * IDLE_DEG,
-                    ry: Math.cos(t * 0.48) * IDLE_DEG,
-                }
-            }
 
             const d = desiredRef.current
             const c = currentRef.current
@@ -116,8 +110,9 @@ export function CreditCardFaceTilt({
 
     const onLeave = useCallback(() => {
         setHovered(false)
-        // No snapping back to neutral; the RAF loop will immediately start driving `desiredRef`
-        // from the idle oscillator and smoothing will blend from the current angle.
+        desiredRef.current = { rx: 0, ry: 0 }
+        currentRef.current = { rx: 0, ry: 0 }
+        setTilt({ rx: 0, ry: 0 })
     }, [])
 
     const onEnter = useCallback(() => {
@@ -137,10 +132,7 @@ export function CreditCardFaceTilt({
             <div
                 className={cn(
                     "origin-center will-change-transform [transform-style:preserve-3d]",
-                    active &&
-                        (hovered
-                            ? "transition-[transform] duration-200 ease-out"
-                            : "transition-none")
+                    active && "transition-[transform] duration-200 ease-out"
                 )}
                 style={
                     active

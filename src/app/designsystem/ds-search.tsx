@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/command";
 import { Kbd } from "@/components/ui/kbd";
 import { CATEGORY_ORDER, REGISTRY } from "./registry";
-import { SEARCH_INDEX } from "./search-index";
 
 /**
  * A busca do catálogo: um gatilho no meio do cabeçalho e a paleta de comandos.
@@ -104,7 +103,7 @@ export function DsSearch() {
         open={open}
         onOpenChange={setOpen}
         title="Buscar no design system"
-        description={`Busque entre as ${REGISTRY.length} páginas pelo nome, pela descrição ou pelo texto de cada uma.`}
+        description={`Busque entre as ${REGISTRY.length} páginas pelo nome.`}
         commandProps={{
           // A busca por substring sem acento, graduada, mora em
           // `lib/command-filter` — a mesma que o `Combobox` usa. Era escrita
@@ -116,12 +115,9 @@ export function DsSearch() {
           autoFocus
           value={query}
           onValueChange={setQuery}
-          // Os três tipos de coisa que o catálogo guarda, na ordem em que a
-          // barra lateral os lista: token (Fundações), componente (Átomos,
-          // Moléculas, Organismos, Templates) e padrão (Padrões). "89 páginas" contava o
-          // continente e não o conteúdo — quem abre a busca não procura uma
-          // página, procura o `Badge`, o `--z-popover` ou a regra de dinheiro.
-          placeholder="Buscar componente, token ou padrão…"
+          // A busca casa só com o nome da página: descrição e texto do corpo
+          // traziam páginas que apenas mencionavam o que se procurava.
+          placeholder="Buscar pelo nome…"
         />
 
         <CommandList>
@@ -132,7 +128,7 @@ export function DsSearch() {
               {`Nada encontrado para "${query}".`}
             </CommandEmptyTitle>
             <CommandEmptyDescription>
-              {`A busca cobre o nome, a descrição e o texto de cada uma das ${REGISTRY.length} páginas.`}
+              {`A busca cobre o nome de cada uma das ${REGISTRY.length} páginas.`}
             </CommandEmptyDescription>
             <Button
               type="button"
@@ -149,16 +145,9 @@ export function DsSearch() {
               {group.items.map((item) => (
                 <CommandItem
                   key={item.slug}
-                  value={`${item.name} ${item.slug} ${item.description}`}
-                  keywords={[SEARCH_INDEX[item.slug] ?? ""]}
+                  value={item.name}
                   onSelect={() => go(item.slug)}
                 >
-                  {/* Só o nome. A descrição continua no `value` acima, então
-                      ela ainda **encontra** a página — ela só deixou de ser
-                      desenhada. Numa lista de 80 páginas a segunda linha dobra
-                      a altura de cada resultado e corta o número de opções
-                      visíveis pela metade, e ela é justamente o texto que quem
-                      busca por nome não lê. */}
                   <CommandItemContent>
                     <CommandItemTitle>{item.name}</CommandItemTitle>
                   </CommandItemContent>

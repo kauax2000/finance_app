@@ -1,5 +1,6 @@
 "use client"
 
+import { currencyBRL } from "@/lib/formatters"
 import { ArrowDownIcon, ArrowUpIcon, ArrowsUpDownIcon, PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ArrowPathRoundedSquareIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -8,11 +9,9 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import {
-    supabase,
     type WorkspaceSubscription,
     type WorkspaceSubscriptionListRow,
 } from "@/lib/supabase"
-import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { toastError, toastSuccess } from "@/lib/toast"
 import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -57,7 +56,7 @@ import {
     updateSubscription,
 } from "@/lib/subscriptions/mutations"
 import { dispatchFinanceSubscriptionsMutated } from "@/lib/workspace-data-events"
-import { tagChipSuccess } from "@/lib/tag-chip-classes"
+import { tagChipSuccess } from "@/components/ui/badge"
 import {
     formatSubscriptionChargeDatePtBr,
     formatSubscriptionTxSummary,
@@ -71,13 +70,6 @@ type SortDir = SubscriptionSortDir
 type PendingDelete =
     | { mode: "single"; subscription: WorkspaceSubscriptionListRow }
     | { mode: "bulk"; ids: string[] }
-
-function formatMoneyBRL(amount: number): string {
-    return new Intl.NumberFormat("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-    }).format(amount)
-}
 
 function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
     if (!active) {
@@ -865,7 +857,7 @@ export default function SubscriptionsPageClient() {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="whitespace-nowrap px-4 py-3 tabular-nums">
-                                                    {formatMoneyBRL(
+                                                    {currencyBRL(
                                                         Number(s.amount)
                                                     )}
                                                 </TableCell>
@@ -918,7 +910,7 @@ export default function SubscriptionsPageClient() {
                                                     >
                                                         {s.is_active
                                                             ? "Ativa"
-                                                            : "Inativa"}
+                                                            : "Pausada"}
                                                     </span>
                                                 </TableCell>
                                                 <TableCell className="px-3 py-3 pr-4 text-left">
@@ -1094,7 +1086,7 @@ export default function SubscriptionsPageClient() {
                                                 extrato não são removidos.
                                             </li>
                                             <li>
-                                                {formatMoneyBRL(
+                                                {currencyBRL(
                                                     Number(
                                                         pendingDelete
                                                             .subscription

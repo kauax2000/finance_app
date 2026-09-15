@@ -1,6 +1,8 @@
 "use client"
 
-import { useEffect, useMemo, useState, type ReactNode } from "react"
+import { SectionLabel } from "@/components/transactions/installment-purchase-section"
+import { currencyBRL } from "@/lib/formatters"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import type { CreditCard, WorkspaceSubscriptionListRow } from "@/lib/supabase"
 import { supabase } from "@/lib/supabase"
@@ -44,13 +46,9 @@ import {
     tagChipSky,
     tagChipSuccess,
     tagChipWarning,
-} from "@/lib/tag-chip-classes"
-import { formatDatePtBr } from "@/lib/transaction-date"
-
-const currencyFmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-})
+} from "@/components/ui/badge"
+import { formatDatePtBr, localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
+import { advanceBilling } from "@/lib/subscription-billing-projection"
 
 type SubscriptionTransactionCharge = {
     id: string
@@ -66,24 +64,19 @@ type SubscriptionChargeRow = {
     status: "posted" | "paid" | "pending"
 }
 
+/**
+ * A próxima cobrança depois de `ymd`, pela mesma regra do banco: o dia-âncora
+ * é cortado no fim do mês e volta depois (31/01 → 28/02 → 31/03). O `setMonth`
+ * cru que havia aqui levava 31/01 para 03/03, e tratava bimestral como mensal.
+ */
 function addSubscriptionIntervalYmd(
     ymd: string,
-    interval: WorkspaceSubscriptionListRow["billing_interval"]
+    interval: WorkspaceSubscriptionListRow["billing_interval"],
+    anchorDay: number | null | undefined,
 ): string {
-    const [y, m, d] = ymd.split("-").map(Number)
-    if (!y || !m || !d) return ymd
-    const dt = new Date(y, m - 1, d)
-    if (interval === "weekly") {
-        dt.setDate(dt.getDate() + 7)
-    } else if (interval === "yearly") {
-        dt.setFullYear(dt.getFullYear() + 1)
-    } else {
-        dt.setMonth(dt.getMonth() + 1)
-    }
-    const yy = dt.getFullYear()
-    const mm = String(dt.getMonth() + 1).padStart(2, "0")
-    const dd = String(dt.getDate()).padStart(2, "0")
-    return `${yy}-${mm}-${dd}`
+    const from = parseYmdLocal(ymd)
+    if (!from) return ymd
+    return localYmdFromDate(advanceBilling(from, interval, anchorDay ?? from.getDate()))
 }
 
 function subscriptionChargeStatusChipClassName(
@@ -92,25 +85,6 @@ function subscriptionChargeStatusChipClassName(
     if (status === "pending") return tagChipWarning
     if (status === "paid") return tagChipSuccess
     return tagChipSky
-}
-
-function SectionLabel({
-    children,
-    className,
-}: {
-    children: ReactNode
-    className?: string
-}) {
-    return (
-        <p
-            className={cn(
-                "text-2xs font-semibold uppercase tracking-wide text-muted-foreground",
-                className
-            )}
-        >
-            {children}
-        </p>
-    )
 }
 
 export type SubscriptionDetailSheetProps = {
@@ -264,7 +238,8 @@ export function SubscriptionDetailSheet({
             (latestCharge
                 ? addSubscriptionIntervalYmd(
                       latestCharge.date.slice(0, 10),
-                      s?.billing_interval ?? "monthly"
+                      s?.billing_interval ?? "monthly",
+                      s?.billing_anchor_day
                   )
                 : null)
         if (nextDate) {
@@ -276,7 +251,7 @@ export function SubscriptionDetailSheet({
             })
         }
         return rows.slice(0, 2)
-    }, [latestCharge, nextCharge, s?.amount, s?.billing_interval])
+    }, [latestCharge, nextCharge, s?.amount, s?.billing_interval, s?.billing_anchor_day])
 
     if (!s) {
         return null
@@ -304,7 +279,7 @@ export function SubscriptionDetailSheet({
     const viewBody = (
         <div className="flex min-h-0 flex-1 flex-col gap-0">
             <DialogDescription className="sr-only">
-                Assinatura {s.name}. Valor {currencyFmt.format(Number(s.amount))}.
+                Assinatura {s.name}. Valor {currencyBRL(Number(s.amount))}.
                 Próxima cobrança {formatDatePtBr(nextCharge)}.
             </DialogDescription>
             <div
@@ -418,7 +393,7 @@ export function SubscriptionDetailSheet({
                     <div>
                         <p className="text-xs text-muted-foreground">Valor</p>
                         <p className="mt-0.5 text-2xl font-semibold tabular-nums tracking-tight text-foreground">
-                            {currencyFmt.format(Number(s.amount))}
+                            {currencyBRL(Number(s.amount))}
                         </p>
                     </div>
                     <div>
@@ -550,7 +525,7 @@ export function SubscriptionDetailSheet({
                                                         : "—"}
                                                 </TableCell>
                                                 <TableCell className="px-2 py-1.5 text-right tabular-nums font-medium">
-                                                    {currencyFmt.format(row.amount)}
+                                                    {currencyBRL(row.amount)}
                                                 </TableCell>
                                                 <TableCell className="px-2 py-1.5">
                                                     <span
@@ -604,7 +579,7 @@ export function SubscriptionDetailSheet({
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent
-                side={isMobile ? "bottom" : "right"}
+                side="right"
                 fillMobileViewport={isMobile}
                 className={cn(
                     "flex w-full flex-col gap-0 overflow-hidden p-0 data-[side=right]:sm:max-w-md",
@@ -623,7 +598,9 @@ export function SubscriptionDetailSheet({
                             submitDisabled={submitDisabled}
                             submitLabel={submitLabel}
                             saving={saving}
-                            onCancel={() => onOpenChange(false)}
+                            // Cancelar sai da edição, não da folha: a assinatura
+                            // continua à vista, como na folha de transação.
+                            onCancel={() => setDetailMode("view")}
                         />
                     </div>
                 ) : (

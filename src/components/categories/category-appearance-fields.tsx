@@ -99,6 +99,36 @@ export const CATEGORY_ICONS = [
 
 export type CategoryIconId = (typeof CATEGORY_ICONS)[number]
 
+/** Nome do ícone para leitor de tela: a chave ("utensils") vazava em inglês. */
+export const CATEGORY_ICON_LABELS: Record<CategoryIconId, string> = {
+    utensils: "Alimentação",
+    car: "Carro",
+    home: "Casa",
+    "gamepad-2": "Lazer",
+    heart: "Saúde",
+    "graduation-cap": "Educação",
+    laptop: "Computador",
+    briefcase: "Trabalho",
+    "trending-up": "Investimentos",
+    gift: "Presente",
+    "shopping-cart": "Mercado",
+    coffee: "Café",
+    plane: "Viagem",
+    phone: "Telefone",
+    zap: "Energia",
+    "more-horizontal": "Outros",
+    "paw-print": "Pet",
+    dog: "Cachorro",
+    cat: "Gato",
+    "users-round": "Família",
+    "shopping-bag": "Compras",
+    receipt: "Contas",
+    bus: "Transporte público",
+    bike: "Bicicleta",
+    pill: "Remédios",
+    stethoscope: "Médico",
+}
+
 /** O corpo do ícone acompanha a caixa em que ele é desenhado. */
 type CategoryIconSet = { micro: HeroIcon; mini: HeroIcon }
 
@@ -174,7 +204,7 @@ export function CategoryColorSwatches({
                     type="button"
                     onClick={() => onChange(c)}
                     className={`h-8 w-8 rounded-full border-2 transition-shadow ${
-                        value === c ? "border-gray-900 dark:border-white" : "border-transparent"
+                        value === c ? "border-foreground" : "border-transparent"
                     }`}
                     style={{ backgroundColor: c }}
                     aria-label={`Cor ${c}`}
@@ -201,14 +231,14 @@ export function CategoryIconGrid({
                     key={key}
                     type="button"
                     onClick={() => onChange(key)}
-                    title={key}
+                    title={CATEGORY_ICON_LABELS[key]}
                     className={cn(
                         "flex h-9 w-9 items-center justify-center rounded-lg border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
                         normalized === key
                             ? "border-primary-accent bg-primary/10 text-primary-accent"
                             : "border-border/80 bg-background",
                     )}
-                    aria-label={`Ícone ${key}`}
+                    aria-label={`Ícone ${CATEGORY_ICON_LABELS[key]}`}
                     aria-pressed={normalized === key}
                 >
                     <CategoryIconPreview name={key} className="h-4 w-4" />

@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import { formatMoneyBrlTyping, parseMoneyBrl } from "@/lib/money-brl"
+import { formatMoneyBrlTyping, normalizeMoneyBrlOnBlur, parseMoneyBrl } from "@/lib/money-brl"
 import { cn } from "@/lib/utils"
 import {
   fieldDisabledClassName,
@@ -117,7 +117,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     // renormalização — que é justamente o que os dez campos à mão não tinham.
     const handleBlur = money
       ? (e: React.FocusEvent<HTMLInputElement>) => {
-          const masked = formatMoneyBrlTyping(e.target.value)
+          // Não é a máscara de digitação: um valor posto por código ("250") é
+          // lido como reais. Deslocar os dígitos o transformava em 2,50.
+          const masked = normalizeMoneyBrlOnBlur(e.target.value)
           if (masked !== value) {
             onValueChange?.(masked, parseMoneyBrl(masked))
           }

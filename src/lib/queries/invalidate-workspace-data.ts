@@ -63,6 +63,17 @@ export async function invalidateWorkspaceData(
                 queryKey: [queryRoot.subscriptionsPageBundle, workspaceId],
             }),
         )
+        // Estes também somam lançamentos: um lançamento novo deixava o detalhe da
+        // categoria, as faturas e as contas a pagar com o total velho.
+        for (const queryKey of [
+            [queryRoot.categoryDetailBundle, workspaceId],
+            creditCardExpenseRowsKeys.pack(workspaceId),
+            [queryRoot.creditCardsPageBundle, workspaceId],
+            billsPageBundleKeys.bundle(workspaceId),
+            ["dashboardPendingBills", workspaceId],
+        ]) {
+            tasks.push(queryClient.invalidateQueries({ queryKey }))
+        }
     }
 
     if (all || domains.includes("categories")) {

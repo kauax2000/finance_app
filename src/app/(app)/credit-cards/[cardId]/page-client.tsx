@@ -1,5 +1,7 @@
 "use client"
 
+import { currencyBRL } from "@/lib/formatters"
+import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
@@ -105,12 +107,6 @@ import { formatTransactionDayPtBr } from "@/lib/transaction-date"
 import { INSTALLMENT_DELETE_WARNING } from "@/lib/transactions/delete-transactions"
 import { ROUTES, transactionsHrefForCreditCard } from "@/config/navigation"
 import { usePageChromeSlot } from "@/components/layout/page-chrome-provider"
-import { cn } from "@/lib/utils"
-
-const currencyFmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-})
 
 export default function CreditCardDetailPageClient() {
     const isMobile = useIsMobile()
@@ -169,7 +165,7 @@ export default function CreditCardDetailPageClient() {
         setEditClosingDay(String(c.closing_day))
         setEditDueDay(String(c.due_day))
         setEditCreditLimit(
-            c.credit_limit != null ? String(c.credit_limit).replace(".", ",") : ""
+            c.credit_limit != null ? formatMoneyBrlInput(c.credit_limit) : ""
         )
         setEditExpiryMonth(
             c.expiry_month != null && c.expiry_month >= 1 && c.expiry_month <= 12
@@ -634,7 +630,7 @@ export default function CreditCardDetailPageClient() {
 
         setEditSaving(true)
         const limitVal = editCreditLimit.trim()
-            ? parseFloat(editCreditLimit.replace(",", "."))
+            ? (parseMoneyBrl(editCreditLimit) ?? NaN)
             : null
         const result = await updateCreditCard({
             workspaceId: currentWorkspaceId,
@@ -989,7 +985,7 @@ export default function CreditCardDetailPageClient() {
                                                 ? "Receita"
                                                 : "Despesa"}{" "}
                                             de{" "}
-                                            {currencyFmt.format(
+                                            {currencyBRL(
                                                 Number(pendingTransactionDelete.amount)
                                             )}
                                         </li>

@@ -7,7 +7,8 @@ import { EnvelopeIcon as EnvelopeOutlineIcon, UserGroupIcon } from "@heroicons/r
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { supabase, WorkspaceInvite, WorkspaceMember } from "@/lib/supabase"
-import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
+import { describeSupabaseErrorForLog, formatSupabasePostgrestError } from "@/lib/supabase-errors"
+import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { isPostgrestTransientNetworkError } from "@/lib/transient-network-retry"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
 import {
@@ -23,22 +24,27 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Badge } from "@/components/ui/badge"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
+    Badge,
+    tagChipInfo,
+    tagChipSuccess,
+} from "@/components/ui/badge"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { CustomForm } from "@/components/ui/form"
 import {
     Tooltip,
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { tagChipInfo, tagChipSuccess } from "@/lib/tag-chip-classes"
 import { cn, getInitials } from "@/lib/utils"
 import { identityToneFor } from "@/lib/avatar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -59,12 +65,6 @@ type MemberWithProfile = WorkspaceMember & {
 
 function memberDisplayName(member: MemberWithProfile) {
     return member.profile?.full_name || member.profile?.email || "Membro"
-}
-
-function buildAcceptInviteUrl(tokenRaw: string): string {
-    if (typeof window === "undefined") return ""
-    const base = window.location.origin.replace(/\/$/, "")
-    return `${base}/invites/accept?token=${encodeURIComponent(tokenRaw)}`
 }
 
 function formatLinkInviteExpiresAt(iso: string | null | undefined): string | null {
@@ -250,13 +250,7 @@ export default function MembersPage() {
         () => invites.find((i) => i.invited_email == null),
         [invites],
     )
-    const persistedLinkUrl = useMemo(() => {
-        const raw = pendingLinkInvite?.token_raw?.trim()
-        if (!raw) return null
-        return buildAcceptInviteUrl(raw)
-    }, [pendingLinkInvite?.token_raw])
-
-    const effectiveLinkUrl = persistedLinkUrl ?? generatedLinkUrl
+    const effectiveLinkUrl = generatedLinkUrl
     const linkInviteExpiresAt =
         pendingLinkInvite?.expires_at ?? generatedLinkExpiresAt
 
@@ -291,17 +285,19 @@ export default function MembersPage() {
         }
 
         if (membersRes.error) {
-            const msg = formatSupabasePostgrestError(membersRes.error)
-            if (msg) console.error("Members fetch error:", msg)
+            console.error("Members fetch error:", describeSupabaseErrorForLog(membersRes.error))
         }
         if (invitesRes.error) {
-            const msg = formatSupabasePostgrestError(invitesRes.error)
-            if (msg) console.error("Invites fetch error:", msg)
+            console.error("Invites fetch error:", describeSupabaseErrorForLog(invitesRes.error))
         }
 
         const errParts: string[] = []
-        const membersMsg = formatSupabasePostgrestError(membersRes.error)
-        const invitesMsg = formatSupabasePostgrestError(invitesRes.error)
+        const membersMsg = membersRes.error
+            ? (formatSupabasePostgrestError(membersRes.error) ?? "não foi possível carregar")
+            : null
+        const invitesMsg = invitesRes.error
+            ? (formatSupabasePostgrestError(invitesRes.error) ?? "não foi possível carregar")
+            : null
         if (membersMsg) errParts.push(`Membros: ${membersMsg}`)
         if (invitesMsg) errParts.push(`Convites: ${invitesMsg}`)
         if (errParts.length > 0) {
@@ -383,25 +379,6 @@ export default function MembersPage() {
             window.removeEventListener(FINANCE_MEMBERS_MUTATED_EVENT, onMutated)
     }, [fetchMembersAndInvites])
 
-    /** One delayed refetch if link invite row exists but token_raw not yet readable (legacy race). */
-    useEffect(() => {
-        if (!currentWorkspaceId || loading) return
-        if (pendingLinkInvite?.invited_email != null) return
-        const raw = pendingLinkInvite?.token_raw?.trim()
-        if (raw || !pendingLinkInvite?.id) return
-        const t = window.setTimeout(() => {
-            void fetchMembersAndInvites()
-        }, 450)
-        return () => window.clearTimeout(t)
-    }, [
-        currentWorkspaceId,
-        loading,
-        pendingLinkInvite?.id,
-        pendingLinkInvite?.invited_email,
-        pendingLinkInvite?.token_raw,
-        fetchMembersAndInvites,
-    ])
-
     const handleInvite = async () => {
         if (!currentWorkspaceId || !inviteEmail.trim() || !canManageMembers) return
 
@@ -480,7 +457,7 @@ export default function MembersPage() {
                 typeof res.expires_at === "string" ? res.expires_at.trim() : ""
             if (exp) setGeneratedLinkExpiresAt(exp)
             toastSuccess(
-                "Link gerado. Ele fica salvo aqui até você revogar ou expirar.",
+                "Link gerado. Copie agora: por segurança ele não fica salvo.",
             )
             await fetchMembersAndInvites()
         } catch (error) {
@@ -525,11 +502,18 @@ export default function MembersPage() {
         }
     }
 
+    const { confirm: confirmRevoke, dialog: revokeConfirmDialog } = useConfirmDialog()
     const handleRevokeInvite = async (inviteId: string) => {
         if (!canManageMembers) {
             toastError("Apenas owner pode revogar convites.")
             return
         }
+        const ok = await confirmRevoke({
+            title: "Revogar o convite?",
+            description: "O link ou o e-mail enviado deixa de funcionar.",
+            actionLabel: "Revogar",
+        })
+        if (!ok) return
         setBusyInviteId(inviteId)
         const { error } = await supabase
             .from("workspace_invites")
@@ -620,45 +604,43 @@ export default function MembersPage() {
 
     return (
         <div className="min-w-0 max-w-full space-y-5">
-            <Dialog
+            {revokeConfirmDialog}
+            <AlertDialog
                 open={removeDialogOpen}
                 onOpenChange={(open) => {
                     setRemoveDialogOpen(open)
                     if (!open) setRemoveTarget(null)
                 }}
             >
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Remover membro</DialogTitle>
-                        <DialogDescription>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Remover membro</AlertDialogTitle>
+                        <AlertDialogDescription>
                             {removeTarget ? (
                                 <>
                                     Tem certeza que deseja remover{" "}
                                     <span className="font-medium">
                                         {removeTarget.name}
                                     </span>{" "}
-                                    ({removeTarget.email || "e-mail indisponível"}) deste
+                                    ({removeTarget.email || "e-mail indisponível"}) desta
                                     carteira?
                                 </>
                             ) : (
                                 "Tem certeza que deseja remover este membro?"
                             )}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setRemoveDialogOpen(false)}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel
                             disabled={Boolean(removeTarget && busyMemberId === removeTarget.userId)}
                         >
                             Cancelar
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="destructive"
+                        </AlertDialogCancel>
+                        <AlertDialogAction
                             disabled={Boolean(removeTarget && busyMemberId === removeTarget.userId)}
-                            onClick={() => {
+                            onClick={(e) => {
+                                // Fica aberto enquanto remove; fecha quando termina.
+                                e.preventDefault()
                                 if (!removeTarget) return
                                 void handleRemoveMember(removeTarget.userId).then(() => {
                                     setRemoveDialogOpen(false)
@@ -673,10 +655,10 @@ export default function MembersPage() {
                             ) : (
                                 "Remover"
                             )}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             <div className="min-w-0 space-y-2">
                 <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -884,6 +866,12 @@ export default function MembersPage() {
                                 <p className="text-xs text-muted-foreground">
                                     Qualquer pessoa com conta no app pode aceitar enquanto o convite estiver pendente.
                                 </p>
+{pendingLinkInvite && !effectiveLinkUrl ? (
+    <p className="text-xs text-muted-foreground">
+        Já existe um link ativo. Por segurança ele só aparece na hora em que é gerado:
+        gere um novo para copiar (o anterior deixa de valer).
+    </p>
+) : null}
                                 {effectiveLinkUrl ? (
                                     <div className="space-y-1.5 pt-0.5">
                                         <div className="flex min-w-0 flex-row items-center gap-2">

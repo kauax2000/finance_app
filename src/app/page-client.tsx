@@ -1,5 +1,6 @@
 "use client"
 
+import { ROUTES } from "@/config/navigation"
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { AppBootstrapScreen } from "@/components/layout/app-bootstrap-screen"
@@ -12,9 +13,9 @@ export default function HomePage() {
   useEffect(() => {
     if (!loading) {
       if (user) {
-        router.push("/dashboard")
+        router.push(ROUTES.DASHBOARD)
       } else {
-        router.push("/login")
+        router.push(ROUTES.LOGIN)
       }
     }
   }, [user, loading, router])

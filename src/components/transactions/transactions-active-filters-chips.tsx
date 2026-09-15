@@ -1,5 +1,6 @@
 "use client"
 
+import { formatYmdPtBr } from "@/lib/transaction-date"
 import * as React from "react"
 import { XMarkIcon } from "@heroicons/react/16/solid"
 import type { Category, CreditCard } from "@/lib/supabase"
@@ -177,11 +178,11 @@ export function TransactionsActiveFiltersChips({
             if (datePreset) {
                 label = `Período: ${transactionsPresetSummaryLabel(datePreset)}`
             } else if (filterDateFrom && filterDateTo) {
-                label = `Período: ${filterDateFrom} → ${filterDateTo}`
+                label = `Período: ${formatYmdPtBr(filterDateFrom)} → ${formatYmdPtBr(filterDateTo)}`
             } else if (filterDateFrom) {
-                label = `Período: De ${filterDateFrom}`
+                label = `Período: De ${formatYmdPtBr(filterDateFrom)}`
             } else if (filterDateTo) {
-                label = `Período: Até ${filterDateTo}`
+                label = `Período: Até ${formatYmdPtBr(filterDateTo)}`
             }
             out.push({
                 key: "period",

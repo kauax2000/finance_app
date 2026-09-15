@@ -1,3 +1,23 @@
+/** Mensagens das edges que chegam em inglês até a tela. */
+const EDGE_ERROR_PT: Record<string, string> = {
+    "Invite not found": "Convite não encontrado. Peça um novo a quem convidou você.",
+    "Invite is not pending": "Este convite já foi utilizado ou não está mais pendente.",
+    "Invite expired": "Este convite expirou. Peça um novo a quem convidou você.",
+    "Invite has expired": "Este convite expirou.",
+    "Invite email does not match current user": "Este convite foi enviado para outro e-mail. Entre com a conta desse e-mail.",
+    "Invite exhausted": "Este convite já atingiu o limite de usos.",
+    "Only owner can invite": "Só quem é dono da carteira pode convidar.",
+    "Only owner can resend invites": "Só quem é dono da carteira pode reenviar convites.",
+    "Personal workspaces cannot be shared": "A carteira pessoal não pode ser compartilhada.",
+    "Link invites cannot be resent by email": "Convite por link não é reenviado por e-mail.",
+    "Not a member of this workspace": "Você não faz parte desta carteira.",
+    "Invalid or expired token": "Sessão inválida ou expirada; faça login novamente.",
+    "Session expired or invalidated": "Sessão encerrada; faça login novamente.",
+    "Missing authorization header": "Sessão inválida ou expirada; faça login novamente.",
+    "Too many invites": "Muitos convites enviados nas últimas 24 horas. Tente de novo mais tarde.",
+    "Email send failed": "Não foi possível enviar o e-mail do convite. Tente de novo.",
+}
+
 /** Parses Edge Function handler JSON or Supabase gateway errors (e.g. Invalid JWT). */
 export function parseEdgeFunctionError(responseText: string, fallback: string): string {
     try {
@@ -9,7 +29,9 @@ export function parseEdgeFunctionError(responseText: string, fallback: string): 
         if (parsed.code === 401 || parsed.message === 'Invalid JWT') {
             return 'Sessão inválida ou expirada; faça login novamente.'
         }
-        if (typeof parsed.error === 'string' && parsed.error) return parsed.error
+        if (typeof parsed.error === 'string' && parsed.error) {
+            return EDGE_ERROR_PT[parsed.error] ?? parsed.error
+        }
         if (typeof parsed.message === 'string' && parsed.message) return parsed.message
     } catch {
         /* non-JSON body */

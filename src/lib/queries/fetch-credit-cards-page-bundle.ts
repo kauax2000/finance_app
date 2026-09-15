@@ -1,9 +1,5 @@
 import { supabase, type CreditCard, type WorkspaceInstallmentPlan } from "@/lib/supabase"
-import {
-    formatSupabasePostgrestError,
-    isPostgrestRelationMissingError,
-    isWorkspaceInstallmentPlansTableMissingError,
-} from "@/lib/supabase-errors"
+import { formatSupabasePostgrestError, isPostgrestRelationMissingError, isWorkspaceInstallmentPlansTableMissingError, throwIfQueryError } from "@/lib/supabase-errors"
 import { fetchCreditCardExpenseRows, type CcTxRow } from "@/lib/credit-cards-workspace-transactions"
 
 export type CreditCardsPageBundle = {
@@ -53,12 +49,13 @@ export async function fetchCreditCardsPageBundle(
         cards = list
     }
 
-    const ccTransactions = txPack.error ? [] : (txPack.rows ?? [])
+    throwIfQueryError(txPack.error, "Não foi possível carregar os lançamentos dos cartões.")
+    const ccTransactions = txPack.rows ?? []
 
     let installmentPlans: WorkspaceInstallmentPlan[] = []
     if (plansRes.error) {
         if (!isWorkspaceInstallmentPlansTableMissingError(plansRes.error)) {
-            /* keep empty; non-fatal for page */
+            throwIfQueryError(plansRes.error, "Não foi possível carregar os parcelamentos.")
         }
     } else {
         installmentPlans = (plansRes.data as WorkspaceInstallmentPlan[]) ?? []

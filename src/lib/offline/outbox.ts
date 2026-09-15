@@ -51,6 +51,17 @@ export async function getPendingMutations(): Promise<OfflineMutation[]> {
         .sortBy("createdAt")
 }
 
+/**
+ * Devolve para `pending` o que ficou `syncing` — uma aba fechou no meio do envio.
+ * Só é seguro com o lock da fila na mão: aí ninguém mais está enviando.
+ */
+export async function resetStaleSyncing(): Promise<number> {
+    const db = getOfflineDb()
+    const n = await db.outbox.where("status").equals("syncing").modify({ status: "pending" })
+    if (n > 0) notify()
+    return n
+}
+
 export async function getPendingCount(): Promise<number> {
     const db = getOfflineDb()
     return db.outbox.where("status").anyOf(["pending", "failed"]).count()

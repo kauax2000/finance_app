@@ -9,21 +9,18 @@ import {
     PopoverAnchor,
     PopoverContent,
     PopoverTrigger,
+    PopoverTitle,
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { currencyBRL } from "@/lib/formatters"
 import { labelYearMonthPt, parseYearMonth } from "@/lib/budget-month"
-import { parseYmdLocal, localYmdFromDate } from "@/lib/transaction-date"
+import { formatYmdPtBr, parseYmdLocal, localYmdFromDate } from "@/lib/transaction-date"
 import { MoneyDisplay } from "@/components/ui/money-display"
+import { tagChipWarning, transactionRowChipShell } from "@/components/ui/badge"
 import {
-    tagChipInfo,
-    tagChipNeutral,
-    tagChipSuccess,
-    tagChipDanger,
-    tagChipWarning,
-    transactionRowChipShell,
-} from "@/lib/tag-chip-classes"
-import { paymentEventHasMetaBadge } from "@/components/dashboard/payment-events"
+    paymentEventChipClass,
+    paymentEventMetaBadge,
+} from "@/components/dashboard/payment-event-badge"
 import type {
     PaymentEvent,
     PaymentEventKind,
@@ -117,7 +114,7 @@ function MobilePaymentsCalendarGrid({
                                 "flex min-h-10 w-full flex-col items-center justify-center rounded-md text-xs font-semibold tabular-nums transition-colors",
                                 !cell.inMonth && "opacity-40",
                                 isToday &&
-                                    "ring-2 ring-primary ring-offset-2 ring-offset-background",
+                                    "ring-2 ring-primary-accent ring-offset-2 ring-offset-background",
                                 hasEvents
                                     ? "hover:bg-muted/40"
                                     : "cursor-default hover:bg-transparent",
@@ -145,63 +142,6 @@ function paymentEventAmountTone(kind: PaymentEventKind) {
     return "default" as const
 }
 
-function kindShortLabel(k: PaymentEventKind): string {
-    switch (k) {
-        case "subscription":
-            return "Assinatura"
-        case "installment":
-            return "Parcelada"
-        case "card_close":
-            return "Fechamento"
-        case "card_due":
-            return "Vencimento"
-        case "bill_due":
-            return "Conta"
-        case "posted_income":
-            return "Receita"
-        case "posted_expense":
-            return "Despesa"
-        default:
-            return k
-    }
-}
-
-function chipClass(kind: PaymentEventKind): string {
-    switch (kind) {
-        case "subscription":
-            return tagChipInfo
-        case "installment":
-            return tagChipWarning
-        case "card_close":
-        case "card_due":
-            return tagChipNeutral
-        case "bill_due":
-            return tagChipInfo
-        case "posted_income":
-            return tagChipSuccess
-        case "posted_expense":
-            return tagChipDanger
-        default:
-            return tagChipNeutral
-    }
-}
-
-/** Meta chip: “Parcelada” + warning for posted rows tied to an installment plan. */
-function metaBadgeLabelAndClass(
-    kind: PaymentEventKind,
-    installmentPlanId?: string | null,
-): { label: string; chipClass: string } | null {
-    if (!paymentEventHasMetaBadge({ kind, installmentPlanId })) return null
-    const plan = installmentPlanId?.trim()
-    if (
-        (kind === "posted_expense" || kind === "posted_income") &&
-        plan
-    ) {
-        return { label: "Parcelada", chipClass: tagChipWarning }
-    }
-    return { label: kindShortLabel(kind), chipClass: chipClass(kind) }
-}
-
 function buildCells(ym: string): { ymd: string; inMonth: boolean; label: number }[] {
     const { y, m } = parseYearMonth(ym)
     const first = new Date(y, m - 1, 1)
@@ -221,23 +161,9 @@ function buildCells(ym: string): { ymd: string; inMonth: boolean; label: number 
     return out
 }
 
-function groupEventsByYmd(events: PaymentEvent[]): Map<string, PaymentEvent[]> {
-    const m = new Map<string, PaymentEvent[]>()
-    for (const e of events) {
-        const list = m.get(e.dateYmd) ?? []
-        list.push(e)
-        m.set(e.dateYmd, list)
-    }
-    for (const [, list] of m) {
-        list.sort((a, b) => a.id.localeCompare(b.id))
-    }
-    return m
-}
-
-function groupUpcomingRowsByYmd(
-    rows: UpcomingPaymentRow[],
-): { ymd: string; list: UpcomingPaymentRow[] }[] {
-    const m = new Map<string, UpcomingPaymentRow[]>()
+/** Linhas por dia, cada dia em ordem estável de `id`. */
+function groupByYmd<T extends { dateYmd: string; id: string }>(rows: T[]): Map<string, T[]> {
+    const m = new Map<string, T[]>()
     for (const r of rows) {
         const list = m.get(r.dateYmd) ?? []
         list.push(r)
@@ -246,8 +172,7 @@ function groupUpcomingRowsByYmd(
     for (const [, list] of m) {
         list.sort((a, b) => a.id.localeCompare(b.id))
     }
-    const keys = [...m.keys()].sort()
-    return keys.map((ymd) => ({ ymd, list: m.get(ymd) ?? [] }))
+    return m
 }
 
 /** Mobile list: at most `maxPastDays` distinct days with events on or before `todayYmd`, then all days after `todayYmd`. */
@@ -281,7 +206,7 @@ function ChargeRowCompactInner({
     /** When true, amount uses foreground color (no income/expense red-green). */
     neutralAmount?: boolean
 }) {
-    const meta = metaBadgeLabelAndClass(kind, installmentPlanId)
+    const meta = paymentEventMetaBadge(kind, installmentPlanId)
     return (
         <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
             <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
@@ -316,10 +241,6 @@ function ChargeRowCompactInner({
     )
 }
 
-function paymentDayDateLabel(ymd: string): string {
-    return ymd.split("-").reverse().join("/")
-}
-
 function postedTransactionIdFromEvent(e: PaymentEvent): string | null {
     if (e.kind !== "posted_income" && e.kind !== "posted_expense") return null
     if (e.transactionId) return e.transactionId
@@ -345,7 +266,7 @@ function PaymentDayEventsListContent({
         <ul className="max-h-[min(24rem,70vh)] space-y-2 overflow-y-auto">
             {events.map((e) => {
                 const postedId = postedTransactionIdFromEvent(e)
-                const meta = metaBadgeLabelAndClass(e.kind, e.installmentPlanId)
+                const meta = paymentEventMetaBadge(e.kind, e.installmentPlanId)
                 return (
                     <li key={e.id}>
                         <button
@@ -424,7 +345,7 @@ function EventChips({
                             : e.kind === "posted_income" ||
                                 e.kind === "posted_expense"
                               ? "bg-muted/50 text-muted-foreground"
-                              : chipClass(e.kind),
+                              : paymentEventChipClass(e.kind),
                     )}
                     title={e.title}
                 >
@@ -473,7 +394,7 @@ export function DashboardPaymentsCalendar({
     onUpcomingPaymentClick: (row: UpcomingPaymentRow) => void
 }) {
     const isMobile = useIsMobile()
-    const byYmd = React.useMemo(() => groupEventsByYmd(events), [events])
+    const byYmd = React.useMemo(() => groupByYmd(events), [events])
     const cells = React.useMemo(() => buildCells(calendarYm), [calendarYm])
 
     const modifierDates = React.useMemo(() => {
@@ -508,7 +429,9 @@ export function DashboardPaymentsCalendar({
     )
 
     const upcomingGrouped = React.useMemo(
-        () => groupUpcomingRowsByYmd(upcomingRows),
+        () => [...groupByYmd(upcomingRows)]
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([ymd, list]) => ({ ymd, list })),
         [upcomingRows],
     )
 
@@ -558,7 +481,7 @@ export function DashboardPaymentsCalendar({
                     <CardToolbar
                         aria-live="polite"
                     >
-                        <p className="text-sm font-semibold capitalize leading-snug text-foreground">
+                        <p className="text-sm font-semibold leading-snug text-foreground">
                             {monthTitle}
                         </p>
                     </CardToolbar>
@@ -619,7 +542,7 @@ export function DashboardPaymentsCalendar({
                                 {upcomingGrouped.map(({ ymd, list }) => (
                                     <div key={ymd} className="space-y-1.5">
                                         <div className="bg-card px-2 py-1 text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                                            {ymd.split("-").reverse().join("/")}
+                                            {formatYmdPtBr(ymd)}
                                         </div>
                                         <div className="space-y-1.5 pl-1">
                                             {list.map((r) => (
@@ -692,14 +615,14 @@ export function DashboardPaymentsCalendar({
                                     className="w-[min(calc(100vw-2rem),18rem)] max-w-[min(calc(100vw-2rem),18rem)] p-2"
                                     aria-describedby={undefined}
                                 >
-                                    <p className="sr-only">
+                                    <PopoverTitle className="sr-only">
                                         Lançamentos do dia{" "}
-                                        {paymentDayDateLabel(
+                                        {formatYmdPtBr(
                                             mobileDayPopoverYmd,
                                         )}
-                                    </p>
+                                    </PopoverTitle>
                                     <p className="mb-2 text-xs font-medium text-muted-foreground">
-                                        {paymentDayDateLabel(
+                                        {formatYmdPtBr(
                                             mobileDayPopoverYmd,
                                         )}
                                     </p>
@@ -729,7 +652,7 @@ export function DashboardPaymentsCalendar({
                                 mobileGroupedForList.map(({ ymd, list }) => (
                                     <div key={ymd} className="space-y-1.5">
                                         <div className="bg-card px-2 py-1 text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                                            {ymd.split("-").reverse().join("/")}
+                                            {formatYmdPtBr(ymd)}
                                         </div>
                                         <div className="space-y-1.5 pl-1">
                                             {list.map((e) => (
@@ -796,7 +719,7 @@ export function DashboardPaymentsCalendar({
                                                         !cell.inMonth &&
                                                             "opacity-40",
                                                         isToday &&
-                                                            "ring-2 ring-primary ring-offset-2 ring-offset-background",
+                                                            "ring-2 ring-primary-accent ring-offset-2 ring-offset-background",
                                                         list.length === 0 &&
                                                             "cursor-default hover:bg-card"
                                                     )}
@@ -825,11 +748,11 @@ export function DashboardPaymentsCalendar({
                                                 className="w-72 p-2"
                                                 align="start"
                                             >
-                                                <p className="mb-2 text-xs font-medium text-muted-foreground">
-                                                    {paymentDayDateLabel(
+                                                <PopoverTitle className="mb-2 text-xs font-medium text-muted-foreground">
+                                                    {formatYmdPtBr(
                                                         cell.ymd,
                                                     )}
-                                                </p>
+                                                </PopoverTitle>
                                                 <PaymentDayEventsListContent
                                                     events={list}
                                                     onTransactionPostedClick={

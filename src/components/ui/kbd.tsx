@@ -105,7 +105,10 @@ function useApplePlatform(ativo: boolean) {
   React.useEffect(() => {
     if (!ativo) return
     setApple(
-      /mac|iphone|ipad|ipod/i.test(navigator.platform || navigator.userAgent)
+      /mac|iphone|ipad|ipod/i.test(
+        (navigator as Navigator & { userAgentData?: { platform?: string } })
+          .userAgentData?.platform || navigator.userAgent
+      )
     )
   }, [ativo])
 

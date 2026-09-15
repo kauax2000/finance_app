@@ -1,5 +1,14 @@
 "use client"
 
+import {
+    EmptyState,
+    EmptyStateActions,
+    EmptyStateDescription,
+    EmptyStateIcon,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
+import { currencyBRL } from "@/lib/formatters"
+import { localYmdFromDate } from "@/lib/transaction-date"
 import { useMemo } from "react"
 import Link from "next/link"
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid"
@@ -18,14 +27,10 @@ import type { CreditCard } from "@/lib/supabase"
 import { creditCardDetailPath, ROUTES } from "@/config/navigation"
 import { creditCardIdentitySubtitle } from "@/lib/credit-card-display"
 import { labelYearMonthPt } from "@/lib/budget-month"
-const currencyFmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-})
-
 function openInvoicesSummary(
     active: CreditCard[],
-    snapshots: Map<string, CardMonthlyInvoiceSnapshot>
+    snapshots: Map<string, CardMonthlyInvoiceSnapshot>,
+    paidCardCloseKeys?: Set<string>
 ): {
     totalCommitted: number
     activeCount: number
@@ -36,6 +41,8 @@ function openInvoicesSummary(
     for (const c of active) {
         const snap = snapshots.get(c.id)
         if (!snap) continue
+        // Fatura já paga não entra no total em aberto.
+        if (paidCardCloseKeys?.has(`${c.id}:${localYmdFromDate(snap.close)}`)) continue
         totalCommitted += Number(snap.committedTotal)
         const due = snap.dueEstimate
         if (!earliestDue || due.getTime() < earliestDue.getTime()) {
@@ -69,7 +76,7 @@ function InvoiceRow({
               : snap?.status === "not_open"
                 ? "Ainda não aberta"
                 : "—"
-    const ariaLabel = `Abrir cartão ${card.name}, final ${card.last_four}. ${statusLabel}. Total ${currencyFmt.format(committedTotal)}.`
+    const ariaLabel = `Abrir cartão ${card.name}, final ${card.last_four}. ${statusLabel}. Total ${currencyBRL(committedTotal)}.`
     const statusTone =
         snap?.status === "open"
             ? "success"
@@ -129,7 +136,7 @@ function InvoiceRow({
                                         Total do cartão
                                     </p>
                                     <p className="text-xl font-semibold tabular-nums tracking-tight text-foreground min-[480px]:text-right">
-                                        {currencyFmt.format(committedTotal)}
+                                        {currencyBRL(committedTotal)}
                                     </p>
                                 </div>
                                 {postedTotal > 0 || projectedParcelas > 0 ? (
@@ -139,7 +146,7 @@ function InvoiceRow({
                                                 <span className="font-medium text-foreground/80">
                                                     Registrado:{" "}
                                                 </span>
-                                                {currencyFmt.format(postedTotal)}
+                                                {currencyBRL(postedTotal)}
                                             </p>
                                         ) : null}
                                         {projectedParcelas > 0 ? (
@@ -147,7 +154,7 @@ function InvoiceRow({
                                                 <span className="font-medium text-foreground/80">
                                                     Previsto:{" "}
                                                 </span>
-                                                {currencyFmt.format(projectedParcelas)}
+                                                {currencyBRL(projectedParcelas)}
                                             </p>
                                         ) : null}
                                     </div>
@@ -184,13 +191,16 @@ export function DashboardOpenInvoices({
     cards,
     snapshots,
     calendarYm,
+    paidCardCloseKeys,
 }: {
     cards: CreditCard[]
     snapshots: Map<string, CardMonthlyInvoiceSnapshot>
     calendarYm: string
+    /** `${cardId}:${fechamento yyyy-mm-dd}` das faturas pagas. */
+    paidCardCloseKeys?: Set<string>
 }) {
     const active = cards.filter((c) => c.is_active)
-    const summary = openInvoicesSummary(active, snapshots)
+    const summary = openInvoicesSummary(active, snapshots, paidCardCloseKeys)
     const monthTitle = useMemo(() => labelYearMonthPt(calendarYm), [calendarYm])
 
     return (
@@ -222,24 +232,21 @@ export function DashboardOpenInvoices({
                     <CardToolbar
                         aria-live="polite"
                     >
-                        <p className="text-sm font-semibold capitalize leading-snug text-foreground">
+                        <p className="text-sm font-semibold leading-snug text-foreground">
                             {monthTitle}
                         </p>
                     </CardToolbar>
                     {active.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center gap-4 px-4 py-10 text-center">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/60">
-                                <CreditCardGlyph className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                            <div className="space-y-1">
-                                <p className="text-sm font-medium text-foreground">
-                                    Nenhum cartão ativo
-                                </p>
-                                <p className="max-w-sm text-sm text-muted-foreground">
-                                    Cadastre ou ative um cartão para acompanhar faturas
-                                    abertas no dashboard.
-                                </p>
-                            </div>
+                        <EmptyState variant="plain">
+                            <EmptyStateIcon>
+                                <CreditCardGlyph />
+                            </EmptyStateIcon>
+                            <EmptyStateTitle>Nenhum cartão ativo</EmptyStateTitle>
+                            <EmptyStateDescription>
+                                Cadastre ou ative um cartão para acompanhar faturas
+                                abertas no dashboard.
+                            </EmptyStateDescription>
+                            <EmptyStateActions>
                             <Button
                                 asChild
                                 type="button"
@@ -251,7 +258,8 @@ export function DashboardOpenInvoices({
                                     Ir para cartões
                                 </Link>
                             </Button>
-                        </div>
+                            </EmptyStateActions>
+                        </EmptyState>
                     ) : (
                         <>
                             <CardToolbar>

@@ -1,5 +1,6 @@
 "use client"
 
+import { formatTransactionDayMonthPtBr } from "@/lib/transaction-date"
 import { useMemo } from "react"
 import {
     Bar,
@@ -27,11 +28,6 @@ const chartCfg = {
     paid: { label: "Pago", color: "var(--chart-3)" },
     avg: { label: "Média", color: "var(--muted-foreground)" },
 } satisfies import("@/components/ui/chart").ChartConfig
-
-function parseYmdToLabel(ymd: string): string {
-    const [, mo, da] = ymd.split("-")
-    return `${da}/${mo}`
-}
 
 export function BillHistoryAnalytics({ instances }: { instances: BillInstance[] }) {
     const paidDescending = useMemo(() => {
@@ -64,7 +60,9 @@ export function BillHistoryAnalytics({ instances }: { instances: BillInstance[] 
         const mn = vals.length ? Math.min(...vals) : 0
         const mx = vals.length ? Math.max(...vals) : 0
         const cy = String(new Date().getFullYear())
-        const yearSum = last12
+        // O ano inteiro, e não só os 12 últimos: uma conta semanal tem mais de
+        // doze pagamentos por ano.
+        const yearSum = paidDescending
             .filter((r) => r.due_date.slice(0, 4) === cy)
             .reduce((a, r) => a + Number(r.paid_amount), 0)
         return {
@@ -76,7 +74,7 @@ export function BillHistoryAnalytics({ instances }: { instances: BillInstance[] 
             lastAmt: vals.length ? vals[vals.length - 1] : null,
             n,
         }
-    }, [last12])
+    }, [last12, paidDescending])
 
     const chartData = useMemo(
         () =>
@@ -91,7 +89,7 @@ export function BillHistoryAnalytics({ instances }: { instances: BillInstance[] 
                         : window.reduce((a, b) => a + b, 0) / window.length
                 return {
                     id: row.id,
-                    label: parseYmdToLabel(ymd),
+                    label: formatTransactionDayMonthPtBr(ymd),
                     paid,
                     avg6: m6,
                 }
@@ -126,7 +124,7 @@ export function BillHistoryAnalytics({ instances }: { instances: BillInstance[] 
                         <MoneyDisplay value={averages.avgAll} />
                     </StatCardValue>
                 </StatCard>
-                <StatCard tone="warning">
+                <StatCard tone="default">
                     <StatCardLabel>Mín / máx ({last12.length} últ.)</StatCardLabel>
                     <StatCardValue className="flex flex-wrap gap-x-2 text-xs sm:text-sm">
                         <MoneyDisplay value={averages.mn} />
@@ -135,7 +133,7 @@ export function BillHistoryAnalytics({ instances }: { instances: BillInstance[] 
                     </StatCardValue>
                 </StatCard>
                 <StatCard tone="expense">
-                    <StatCardLabel>Total pago este ano · {last12.length}</StatCardLabel>
+                    <StatCardLabel>Pago em {new Date().getFullYear()}</StatCardLabel>
                     <StatCardValue>
                         <MoneyDisplay value={averages.yearSum} />
                     </StatCardValue>

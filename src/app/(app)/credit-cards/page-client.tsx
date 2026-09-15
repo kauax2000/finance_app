@@ -1,5 +1,6 @@
 "use client"
 
+import { parseMoneyBrl } from "@/lib/money-brl"
 import { PlusIcon } from "@heroicons/react/16/solid"
 import dynamic from "next/dynamic"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -7,9 +8,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
-import { supabase } from "@/lib/supabase"
 import { createCreditCard } from "@/lib/credit-cards/mutations"
-import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { toastError, toastSuccess, toastWarning } from "@/lib/toast"
 import { CustomForm } from "@/components/ui/form"
 import {
@@ -208,7 +207,7 @@ export default function CreditCardsPageClient() {
 
         setSaving(true)
         const limitVal = creditLimit.trim()
-            ? parseFloat(creditLimit.replace(",", "."))
+            ? (parseMoneyBrl(creditLimit) ?? NaN)
             : null
         const insertRow = {
             workspace_id: currentWorkspaceId,
@@ -264,6 +263,20 @@ export default function CreditCardsPageClient() {
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-base">
+                            Cartões indisponíveis no momento
+                        </CardTitle>
+                        <CardDescription>
+                            Não foi possível carregar seus cartões. Tente de novo em alguns
+                            minutos.
+                        </CardDescription>
+                    </CardHeader>
+                </Card>
+                {/* O passo a passo do banco é para quem desenvolve: em produção
+                    a pessoa só vê o aviso acima. */}
+                {process.env.NODE_ENV === "development" ? (
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base">
                             Tabela ainda não criada no banco
                         </CardTitle>
                         <CardDescription className="space-y-3">
@@ -300,6 +313,7 @@ export default function CreditCardsPageClient() {
                         </CardDescription>
                     </CardHeader>
                 </Card>
+                ) : null}
             </div>
         )
     }

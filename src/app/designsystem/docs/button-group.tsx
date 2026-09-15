@@ -31,7 +31,7 @@ export default function ButtonGroupDoc() {
 
       <DocSection
         title="Par de navegação"
-        description="Andar no tempo não é a ação da tela, então o trio fica no segundo degrau. Sem contorno para separar, quem marca as emendas é o divisor."
+        description="Andar no tempo não é a ação da tela, então o trio fica no segundo degrau. Sem contorno para separar, a emenda é um vão de 1px de cima a baixo, transparente: aparece a superfície de trás, como o fio que corta o primário."
         code={`<ButtonGroup>
   <Button variant="secondary">Anterior</Button>
   <Button variant="secondary">Hoje</Button>
@@ -49,9 +49,13 @@ export default function ButtonGroupDoc() {
         Os cantos internos são achatados e as bordas vizinhas se sobrepõem em
         1px, então a emenda é um fio só e não uma linha dupla. Sobre esse fio
         vai um divisor de <code>currentColor</code> a 20%, que segue a cor do
-        texto de cada variante — clareia sobre o primário preenchido, escurece
-        sobre o claro — porque num botão cheio não há borda visível para marcar
-        onde um termina e o outro começa. Antes o{" "}
+        texto de cada variante, porque num botão cheio não há borda visível para
+        marcar onde um termina e o outro começa. Quem tem borda visível é a
+        exceção: no <code>outline</code> e no primário — que é tecla, com
+        contorno em <code>--primary-edge</code> — a borda compartilhada já
+        desenha a emenda, e ali o divisor fica desligado. No{" "}
+        <code>secondary</code> ele também sai: os botões ficam a 1px um do
+        outro, e o vão transparente mostra o fundo de cima a baixo. Antes o{" "}
         <code>Button</code> carregava{" "}
         <code>in-data-[slot=button-group]:rounded-xl</code>, que dentro do grupo
         deixava cada filho <em>mais</em> arredondado — o oposto de colar. Quem

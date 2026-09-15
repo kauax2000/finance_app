@@ -10,6 +10,7 @@ import {
     WORKSPACE_ICON_KEYS,
     WORKSPACE_ICON_MAP,
     type WorkspaceIconKey,
+    WORKSPACE_ICON_LABELS,
 } from "@/lib/workspace-icons"
 
 type WorkspaceAppearanceFormFieldsProps = {
@@ -121,11 +122,11 @@ export function WorkspaceAppearanceFormFields({
                                     "flex size-11 items-center justify-center rounded-lg border text-foreground transition-colors",
                                     "hover:bg-accent hover:text-accent-foreground",
                                     selected
-                                        ? "border-primary bg-primary/10 ring-2 ring-primary ring-offset-2 ring-offset-background"
+                                        ? "border-primary bg-primary/10 ring-2 ring-primary-accent ring-offset-2 ring-offset-background"
                                         : "border-border bg-background"
                                 )}
                                 aria-pressed={selected}
-                                aria-label={`Ícone ${key}`}
+                                aria-label={`Ícone ${WORKSPACE_ICON_LABELS[key]}`}
                             >
                                 {createElement(Cmp, {
                                     className: "size-5",

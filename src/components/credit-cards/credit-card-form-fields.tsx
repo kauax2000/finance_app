@@ -111,7 +111,7 @@ function CreditCardBillingSection({
                         </SelectTrigger>
                         <SelectContent
                             align="start"
-                            className="z-(--z-toast) min-w-[var(--radix-select-trigger-width)] p-1"
+                            className="min-w-[var(--radix-select-trigger-width)] p-1"
                             sideOffset={6}
                         >
                             {DAY_OPTIONS.map((d) => (
@@ -145,7 +145,7 @@ function CreditCardBillingSection({
                         </SelectTrigger>
                         <SelectContent
                             align="start"
-                            className="z-(--z-toast) min-w-[var(--radix-select-trigger-width)] p-1"
+                            className="min-w-[var(--radix-select-trigger-width)] p-1"
                             sideOffset={6}
                         >
                             {DAY_OPTIONS.map((d) => (

@@ -7,6 +7,7 @@ import {
   ChevronUpIcon,
 } from "@heroicons/react/16/solid"
 import * as React from "react"
+import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import useEmblaCarousel, {
   type UseEmblaCarouselType,
 } from "embla-carousel-react"
@@ -319,10 +320,10 @@ const CONTROL_POSITION = {
  * Por isso o degrau é `2.5`: 26 + 2×10 = **46**, e 44 é piso, não teto. Os 2px
  * a mais não custam nada num controle sem vizinho.
  *
- * As três ocorrências que esta casa já tinha carregam o mesmo desconto e
- * afirmam 44 nos comentários: `PageHeaderBack` (36 → 42), o × da
- * `AnnouncementBar` (24 → 42) e os degraus do `Breadcrumb` (20 → 42). Fica no
- * backlog com o número; consertá-las é rodada delas.
+ * As três ocorrências que esta casa já tinha carregavam o mesmo desconto e
+ * afirmavam 44 nos comentários. O `PageHeaderBack` foi pago (32 com
+ * `-inset-2` → 46); o × da `AnnouncementBar` (24 → 42) e os degraus do
+ * `Breadcrumb` (20 → 42) ficam no backlog com o número.
  */
 const CONTROL_TOUCH_TARGET =
   "pointer-coarse:after:absolute pointer-coarse:after:-inset-2.5 pointer-coarse:after:content-['']"
@@ -443,8 +444,6 @@ function useCarousel() {
  * o palpite do `cva` e a seta salta dele para o valor medido. O `Tabs` tem o
  * mesmo, local, pelo mesmo motivo.
  */
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect
 
 /** Junta o ref do embla ao ref de medição. O `Tabs` tem o mesmo, local. */
 function composeRefs<T>(...refs: (React.Ref<T> | undefined)[]) {
@@ -505,6 +504,10 @@ function Carousel({
 
   const handleKeyDown = React.useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
+      // A escuta é em captura na região inteira: sem esta saída, a seta dentro
+      // de um campo num slide trocava de slide em vez de mover o cursor.
+      const alvo = event.target as HTMLElement
+      if (alvo.closest("input, textarea, select, [contenteditable=''], [contenteditable='true']")) return
       // A seta segue o eixo. Antes eram sempre as horizontais, inclusive num
       // carrossel vertical, onde a tecla certa não fazia nada.
       const anterior = orientation === "horizontal" ? "ArrowLeft" : "ArrowUp"
@@ -906,16 +909,16 @@ function CarouselDots({
             data-active={ativo || undefined}
             className={cn(
               "group/dot flex shrink-0 cursor-pointer items-center justify-center",
-              "rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+              "rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/70",
               barra
                 ? "min-w-0 flex-1 py-2 pointer-coarse:py-5"
-                : "size-6 pointer-coarse:h-11"
+                : "size-6 pointer-coarse:size-11"
             )}
           >
             <span
               aria-hidden="true"
               className={cn(
-                "rounded-full transition-[background-color,width] duration-(--duration-base) ease-out",
+                "rounded-full transition-[background-color,width] duration-(--duration-base) ease-(--ease-out)",
                 barra ? "h-1 w-full" : "size-2",
                 // O ponto apagado também é um controle, e a 1.4.11 pede 3:1.
                 // Varridos os degraus contra o fundo real nos dois temas, **45%

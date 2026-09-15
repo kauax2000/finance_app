@@ -3,6 +3,7 @@
 import { ChevronDownIcon, PlusIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
 import { Button } from "@/components/ui/button"
+import { ButtonGroup } from "@/components/ui/button-group"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -29,17 +30,12 @@ export function TransactionNewSplitButton({
     className,
 }: TransactionNewSplitButtonProps) {
     return (
-        <div
-            className={cn(
-                "flex min-h-0 min-w-0 max-w-full items-stretch overflow-hidden rounded-md",
-                className,
-            )}
-        >
+        <ButtonGroup className={cn("min-w-0 max-w-full", className)}>
             <Button
                 type="button"
                 variant="primary"
                 size="lg"
-                className="h-9 min-w-0 flex-1 justify-center gap-2 rounded-r-none border-r border-border/50 text-xs md:h-8"
+                className="h-9 min-w-0 flex-1 justify-center gap-2 text-xs md:h-8"
                 onClick={() => onNew("expense")}
             >
                 <PlusIcon className="h-4 w-4 shrink-0" />
@@ -51,7 +47,7 @@ export function TransactionNewSplitButton({
                         type="button"
                         variant="primary"
                         size="lg"
-                        className="h-9 w-8 shrink-0 rounded-l-none border-l-0 px-0 text-xs md:h-8"
+                        className="h-9 w-8 shrink-0 px-0 text-xs md:h-8"
                         aria-label="Mais tipos de lançamento"
                     >
                         <ChevronDownIcon
@@ -77,6 +73,6 @@ export function TransactionNewSplitButton({
                     {menuFooter}
                 </DropdownMenuContent>
             </DropdownMenu>
-        </div>
+        </ButtonGroup>
     )
 }

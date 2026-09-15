@@ -84,16 +84,20 @@ export function WorkspaceAppearanceEditDialog({
         }
 
         setSubmitting(true)
-        const updated = await updateWorkspace(workspace.id, {
-            name: trimmed,
-            icon,
-            icon_background_color: previewColor,
-        })
-        setSubmitting(false)
-
-        if (updated) {
-            setLocalError(null)
-            onOpenChange(false)
+        try {
+            const updated = await updateWorkspace(workspace.id, {
+                name: trimmed,
+                icon,
+                icon_background_color: previewColor,
+            })
+            if (updated) {
+                setLocalError(null)
+                onOpenChange(false)
+            }
+        } catch {
+            setLocalError("Não foi possível salvar a carteira. Tente novamente.")
+        } finally {
+            setSubmitting(false)
         }
     }
 
@@ -124,7 +128,7 @@ export function WorkspaceAppearanceEditDialog({
             </div>
             {isMobile ? (
                 <DialogFooter className={sheetFooterMobileClass}>
-                    <Button type="submit" disabled={submitting} className="h-10 w-full">
+                    <Button type="submit" disabled={submitting} size="xl" className="w-full">
                         {submitting ? "Salvando…" : "Salvar alterações"}
                     </Button>
                 </DialogFooter>

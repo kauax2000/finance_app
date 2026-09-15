@@ -1,5 +1,13 @@
 "use client"
 
+import {
+    EmptyState,
+    EmptyStateDescription,
+    EmptyStateIcon,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
+import { percentPointsBR } from "@/lib/formatters"
+import { currencyBRL } from "@/lib/formatters"
 import Link from "next/link"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid"
@@ -17,15 +25,6 @@ import { ROUTES } from "@/config/navigation"
 import { labelYearMonthPt } from "@/lib/budget-month"
 import { cn } from "@/lib/utils"
 
-const currencyFmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-})
-
-const pctFmt = new Intl.NumberFormat("pt-BR", {
-    maximumFractionDigits: 1,
-    minimumFractionDigits: 0,
-})
 
 /** Fallback palette when category color is missing or invalid (theme-aware neutrals + accents). */
 const FALLBACK_FILLS = [
@@ -117,7 +116,7 @@ function CategoryTooltip({
         <div className="min-w-[10rem] rounded-lg border border-border/80 bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md">
             <p className="font-medium text-foreground">{row.name}</p>
             <p className="mt-1 tabular-nums text-muted-foreground">
-                {currencyFmt.format(row.value)} · {pctFmt.format(row.pct)}% do total
+                {currencyBRL(row.value)} · {percentPointsBR(row.pct)}% do total
             </p>
         </div>
     )
@@ -227,7 +226,7 @@ export function DashboardExpenseCategories({
         () => Math.max(1, ...listRows.map((r) => r.value)),
         [listRows],
     )
-    const totalDisplay = currencyFmt.format(total)
+    const totalDisplay = currencyBRL(total)
 
     return (
         <div className="min-w-0 space-y-2">
@@ -256,7 +255,7 @@ export function DashboardExpenseCategories({
                     <CardToolbar
                         aria-live="polite"
                     >
-                        <p className="text-sm font-semibold capitalize leading-snug text-foreground">
+                        <p className="text-sm font-semibold leading-snug text-foreground">
                             {monthTitle}
                         </p>
                     </CardToolbar>
@@ -408,12 +407,12 @@ export function DashboardExpenseCategories({
                                                         </span>
                                                         <span className="flex shrink-0 flex-col items-end gap-0.5 tabular-nums">
                                                             <span className="font-medium text-foreground">
-                                                                {currencyFmt.format(
+                                                                {currencyBRL(
                                                                     row.value,
                                                                 )}
                                                             </span>
                                                             <span className="text-2xs text-muted-foreground">
-                                                                {pctFmt.format(
+                                                                {percentPointsBR(
                                                                     row.pct,
                                                                 )}
                                                                 % do total
@@ -443,21 +442,16 @@ export function DashboardExpenseCategories({
                             </div>
                         </>
                     ) : (
-                        <div className="flex min-h-[240px] flex-col items-center justify-center gap-2 px-4 py-8 text-center">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/60">
-                                <ReceiptPercentIcon
-                                    className="h-6 w-6 text-muted-foreground"
-                                    aria-hidden
-                                />
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                                Nenhuma despesa no período
-                            </p>
-                            <p className="max-w-sm text-xs text-muted-foreground">
+                        <EmptyState variant="plain" className="min-h-[240px]">
+                            <EmptyStateIcon>
+                                <ReceiptPercentIcon aria-hidden />
+                            </EmptyStateIcon>
+                            <EmptyStateTitle>Nenhuma despesa no período</EmptyStateTitle>
+                            <EmptyStateDescription>
                                 As categorias aparecem assim que despesas forem
                                 registradas.
-                            </p>
-                        </div>
+                            </EmptyStateDescription>
+                        </EmptyState>
                     )}
                     </div>
                 </CardContent>

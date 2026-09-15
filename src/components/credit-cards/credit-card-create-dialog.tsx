@@ -1,5 +1,6 @@
 "use client"
 
+import { parseMoneyBrl } from "@/lib/money-brl"
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import type { User } from "@supabase/supabase-js"
@@ -108,7 +109,7 @@ export function CreditCardCreateDialog({
 
         setSaving(true)
         const limitVal = creditLimit.trim()
-            ? parseFloat(creditLimit.replace(",", "."))
+            ? (parseMoneyBrl(creditLimit) ?? NaN)
             : null
         const insertRow = {
             workspace_id: workspaceId,
@@ -125,8 +126,16 @@ export function CreditCardCreateDialog({
                 ? { expiry_month: exp.month, expiry_year: exp.year }
                 : {}),
         }
-        const result = await createCreditCard(insertRow)
-        setSaving(false)
+        let result: Awaited<ReturnType<typeof createCreditCard>>
+        try {
+            result = await createCreditCard(insertRow)
+        } catch (err) {
+            toastError(err instanceof Error ? err.message : "Não foi possível cadastrar o cartão.")
+            return
+        } finally {
+            // Se a criação lançar, o botão não fica preso em "salvando".
+            setSaving(false)
+        }
 
         if (!result.ok) {
             toastError(result.errorMessage)

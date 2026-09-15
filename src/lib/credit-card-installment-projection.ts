@@ -4,12 +4,10 @@
  * Used for credit-card invoice commitment totals and calendar deduplication.
  */
 
+import { roundCents } from "@/lib/money-brl"
 import type { Transaction, WorkspaceInstallmentPlan } from "@/lib/supabase"
-import {
-    localYmdFromDate,
-    parseYmdLocal,
-    transactionCalendarParts,
-} from "@/lib/transaction-date"
+import { localYmdFromDate, parseYmdLocal, transactionLocalYmd } from "@/lib/transaction-date"
+import { addMonths } from "@/lib/subscription-billing-projection"
 
 export type ProjectedInstallmentCharge = {
     planId: string
@@ -17,16 +15,6 @@ export type ProjectedInstallmentCharge = {
     amount: number
     /** 1-based parcel index (matches `transactions.installment_sequence` when posted). */
     installmentSequence: number
-}
-
-function addMonths(d: Date, n: number): Date {
-    const y = d.getFullYear()
-    const m0 = d.getMonth()
-    const day = d.getDate()
-    const t = new Date(y, m0 + n, 1, 12, 0, 0, 0)
-    const dim = new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate()
-    t.setDate(Math.min(day, dim))
-    return t
 }
 
 function compareCalendarDatesOnly(a: Date, b: Date): number {
@@ -46,12 +34,6 @@ function isDateInInclusiveRange(d: Date, start: Date, end: Date): boolean {
     )
 }
 
-function transactionLocalYmd(iso: string): string | null {
-    const p = transactionCalendarParts(iso)
-    if (!p) return null
-    return `${p.y}-${String(p.mo).padStart(2, "0")}-${String(p.d).padStart(2, "0")}`
-}
-
 /**
  * Remaining charges for one plan (same stepping as `payment-events` / billing RPC).
  */
@@ -65,6 +47,8 @@ export function expandRemainingInstallmentCharges(
     const start = parseYmdLocal(plan.next_billing_date.slice(0, 10))
     if (!start) return []
 
+    // Dia-âncora: somar mês a mês a partir da data já cortada levava 31 → 28 para sempre.
+    const anchor = plan.billing_anchor_day ?? start.getDate()
     const out: ProjectedInstallmentCharge[] = []
     let cur = new Date(start.getTime())
     for (let i = 0; i < remaining; i++) {
@@ -79,7 +63,7 @@ export function expandRemainingInstallmentCharges(
             amount: amt,
             installmentSequence,
         })
-        cur = addMonths(cur, 1)
+        cur = addMonths(cur, 1, anchor)
     }
     return out
 }
@@ -103,10 +87,11 @@ export function expandAllPlanCharges(
     if (!next) return []
 
     // Expected charge date for sequence 1.
-    const firstCharge = addMonths(next, -Number(plan.generated_count) || 0)
+    const anchor = plan.billing_anchor_day ?? next.getDate()
+    const firstCharge = addMonths(next, -(Number(plan.generated_count) || 0), anchor)
     const out: ProjectedInstallmentCharge[] = []
     for (let seq = 1; seq <= total; seq++) {
-        const chargeDate = addMonths(firstCharge, seq - 1)
+        const chargeDate = addMonths(firstCharge, seq - 1, anchor)
         const amount =
             seq === total
                 ? Number(plan.final_installment_amount)
@@ -250,7 +235,7 @@ export function forecastCreditCardInstallmentsForWindow(
         if (d !== 0) return d
         return a.installmentSequence - b.installmentSequence
     })
-    return { projectedTotal, projectedRows }
+    return { projectedTotal: roundCents(projectedTotal), projectedRows }
 }
 
 /**

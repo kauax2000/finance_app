@@ -88,48 +88,33 @@ export function CategoryCreateDialog({
         e.preventDefault()
         if (!user || !workspaceId) return
 
+        const trimmedName = name.trim()
+        if (!trimmedName) {
+            toastError("Informe o nome da categoria.")
+            return
+        }
+
+        // O orçamento é validado antes de criar a categoria: se ele reprovasse
+        // depois, a categoria já existiria e um segundo clique a duplicava.
+        const rawBudget = type === "expense" ? editBudgetAmount.trim() : ""
+        const budgetAmt = rawBudget ? parseMoneyBrl(rawBudget) : null
+        if (rawBudget && (budgetAmt === null || budgetAmt <= 0)) {
+            toastError("Informe um valor válido em reais, maior que zero.")
+            return
+        }
+
         setSaving(true)
-
-        const categoryData = {
-            user_id: user.id,
-            workspace_id: workspaceId,
-            name,
-            type,
-            color,
-            icon,
-        }
-
-        const saveExpenseBudgetForCategory = async (
-            categoryId: string
-        ): Promise<boolean> => {
-            if (type !== "expense") return true
-            const raw = editBudgetAmount.trim()
-            if (raw.length === 0) return true
-            const amt = parseMoneyBrl(editBudgetAmount)
-            if (amt === null || amt <= 0) {
-                toastError("Informe um valor válido em reais, maior que zero.")
-                return false
-            }
-            const { error: budErr } = await upsertCategoryBudget({
-                userId: user.id,
-                workspaceId,
-                categoryId,
-                yearMonth: budgetMonthYm,
-                amount: amt,
-            })
-            if (budErr) {
-                toastError(
-                    formatSupabasePostgrestError(budErr) ??
-                        "Não foi possível salvar o orçamento.",
-                )
-                return false
-            }
-            return true
-        }
 
         const { data: inserted, error: insErr } = await supabase
             .from("categories")
-            .insert(categoryData)
+            .insert({
+                user_id: user.id,
+                workspace_id: workspaceId,
+                name: trimmedName,
+                type,
+                color,
+                icon,
+            })
             .select("id")
             .single()
 
@@ -142,12 +127,22 @@ export function CategoryCreateDialog({
             return
         }
 
-        const budgetOk = await saveExpenseBudgetForCategory(inserted.id)
-        if (!budgetOk) {
-            setSaving(false)
-            dispatchFinanceCategoriesMutated()
-            router.refresh()
-            return
+        if (budgetAmt !== null) {
+            const { error: budErr } = await upsertCategoryBudget({
+                userId: user.id,
+                workspaceId,
+                categoryId: inserted.id,
+                yearMonth: budgetMonthYm,
+                amount: budgetAmt,
+            })
+            if (budErr) {
+                // A categoria existe: fecha o diálogo e diz onde terminar.
+                toastError(
+                    `Categoria criada, mas o orçamento não foi salvo. Defina-o no detalhe da categoria. ${
+                        formatSupabasePostgrestError(budErr) ?? ""
+                    }`.trim(),
+                )
+            }
         }
 
         void invokeEdgeJson("dispatch-notifications", {
@@ -155,7 +150,7 @@ export function CategoryCreateDialog({
                 workspace_id: workspaceId,
                 type: "system",
                 title: "Categoria criada",
-                body: `Você criou a categoria “${name}”.`,
+                body: `Você criou a categoria “${trimmedName}”.`,
                 metadata: {
                     kind: "category_created",
                     critical: false,
@@ -248,7 +243,7 @@ export function CategoryCreateDialog({
                             <Button
                                 type="submit"
                                 disabled={saving}
-                                className="h-10 w-full"
+                                size="xl" className="w-full"
                             >
                                 {saving ? "Salvando..." : "Salvar"}
                             </Button>

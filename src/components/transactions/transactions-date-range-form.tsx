@@ -1,26 +1,11 @@
 "use client"
 
+import { localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
 import { XMarkIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { DatePicker } from "@/components/ui/date-picker"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
-
-function ymdToLocalDate(s: string): Date | undefined {
-    if (!s) return undefined
-    const parts = s.split("-").map((p) => parseInt(p, 10))
-    if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return undefined
-    const [y, m, d] = parts
-    return new Date(y, m - 1, d)
-}
-
-function localDateToYmd(d: Date | undefined): string {
-    if (!d) return ""
-    const y = d.getFullYear()
-    const mo = d.getMonth() + 1
-    const day = d.getDate()
-    return `${y}-${String(mo).padStart(2, "0")}-${String(day).padStart(2, "0")}`
-}
 
 export function TransactionsDateRangeForm({
     idPrefix,
@@ -49,6 +34,8 @@ export function TransactionsDateRangeForm({
 }) {
     const fromId = `${idPrefix}-from`
     const toId = `${idPrefix}-to`
+    // YYYY-MM-DD compara como texto. Um período ao contrário filtrava tudo fora.
+    const invertido = Boolean(draftFrom && draftTo && draftFrom > draftTo)
 
     return (
         <div className={cn("space-y-3", className)}>
@@ -65,10 +52,10 @@ export function TransactionsDateRangeForm({
                         displayStyle="numeric"
                         placeholder="—"
                         value={
-                            draftFrom ? ymdToLocalDate(draftFrom) : undefined
+                            draftFrom ? parseYmdLocal(draftFrom) : undefined
                         }
                         onChange={(d) =>
-                            onDraftFromChange(d ? localDateToYmd(d) : "")
+                            onDraftFromChange(d ? localYmdFromDate(d) : "")
                         }
                     />
                 </div>
@@ -83,13 +70,18 @@ export function TransactionsDateRangeForm({
                         id={toId}
                         displayStyle="numeric"
                         placeholder="—"
-                        value={draftTo ? ymdToLocalDate(draftTo) : undefined}
+                        value={draftTo ? parseYmdLocal(draftTo) : undefined}
                         onChange={(d) =>
-                            onDraftToChange(d ? localDateToYmd(d) : "")
+                            onDraftToChange(d ? localYmdFromDate(d) : "")
                         }
                     />
                 </div>
             </div>
+            {invertido ? (
+                <p role="alert" className="text-xs text-destructive">
+                    A data inicial é depois da final.
+                </p>
+            ) : null}
             <div
                 className={cn(
                     "flex flex-wrap items-center justify-between gap-2",
@@ -122,6 +114,7 @@ export function TransactionsDateRangeForm({
                         type="button"
                         size="sm"
                         className="h-8 text-xs"
+                        disabled={invertido}
                         onClick={() => onApply()}
                     >
                         Aplicar

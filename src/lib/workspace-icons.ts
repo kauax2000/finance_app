@@ -47,6 +47,30 @@ export const WORKSPACE_ICON_KEYS = [
 
 export type WorkspaceIconKey = (typeof WORKSPACE_ICON_KEYS)[number]
 
+/** Nome do ícone para leitor de tela: a chave ("building-2") vazava em inglês. */
+export const WORKSPACE_ICON_LABELS: Record<WorkspaceIconKey, string> = {
+    briefcase: "Trabalho",
+    home: "Casa",
+    users: "Família",
+    plane: "Viagem",
+    heart: "Coração",
+    "shopping-cart": "Mercado",
+    wallet: "Carteira",
+    "building-2": "Empresa",
+    laptop: "Computador",
+    "trending-up": "Investimentos",
+    gift: "Presentes",
+    sparkles: "Especial",
+    target: "Meta",
+    zap: "Energia",
+    coffee: "Café",
+    music: "Música",
+    camera: "Fotografia",
+    dumbbell: "Academia",
+    "book-open": "Estudos",
+    globe: "Mundo",
+}
+
 export function isWorkspaceIconKey(value: string): value is WorkspaceIconKey {
     return (WORKSPACE_ICON_KEYS as readonly string[]).includes(value)
 }

@@ -12,11 +12,7 @@ import {
 } from "@/lib/supabase"
 import type { CcTxRow } from "@/lib/credit-cards-workspace-transactions"
 import { toastError } from "@/lib/toast"
-import {
-    filterRangeEndIso,
-    filterRangeStartIso,
-    transactionCalendarParts,
-} from "@/lib/transaction-date"
+import { filterRangeEndIso, filterRangeStartIso, localYmdFromDate, transactionCalendarParts, transactionLocalYmd } from "@/lib/transaction-date"
 import { buildCardMonthlyInvoiceSnapshot } from "@/lib/credit-card-billing"
 import {
     aggregateIncomeExpenseForMonth,
@@ -31,9 +27,9 @@ import {
 } from "@/lib/budget-month"
 import {
     getDashboardPresetRange,
-    toIsoLocalYmd,
-    type DashboardDatePresetKey,
     isDashboardPresetKey,
+    previousMonthSamePeriodRange,
+    type DashboardDatePresetKey,
 } from "@/components/dashboard/dashboard-date-presets"
 import {
     buildPaymentEventsForMonth,
@@ -137,17 +133,11 @@ function maxYmd(a: string, b: string) {
     return a.localeCompare(b) >= 0 ? a : b
 }
 
-function transactionYmd(t: Transaction): string | null {
-    const p = transactionCalendarParts(t.date)
-    if (!p) return null
-    return `${p.y}-${String(p.mo).padStart(2, "0")}-${String(p.d).padStart(2, "0")}`
-}
-
 function subscriptionPostedKey(t: Transaction): string | null {
     if (t.type !== "expense") return null
     const sid = t.subscription_id
     if (!sid) return null
-    const ymd = transactionYmd(t)
+    const ymd = transactionLocalYmd(t.date)
     if (!ymd) return null
     return `${sid}:${ymd}`
 }
@@ -233,7 +223,7 @@ export function useDashboardData() {
         return { from: period_start, to: period_end, preset }
     }, [calendarYm])
 
-    const todayYmd = useMemo(() => toIsoLocalYmd(new Date()), [])
+    const todayYmd = useMemo(() => localYmdFromDate(new Date()), [])
 
     const paddedTxIsoRange = useMemo(
         (): TransactionsRangeKey => paddedCalendarIsoRange(calendarYm),
@@ -379,6 +369,9 @@ export function useDashboardData() {
     useEffect(() => {
         if (!queriesEnabled || !coreQueriesPending) {
             if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null }
+            // O estouro vale para uma carga só: sem isto, depois do primeiro,
+            // trocar de carteira nunca mais mostrava o carregando.
+            startTransition(() => setLoadingTimedOut(false))
             return
         }
         if (timerRef.current) return
@@ -448,10 +441,13 @@ export function useDashboardData() {
         for (const c of creditCards) {
             if (!c.is_active) continue
             const snap = snapshots.get(c.id)
-            if (snap) t += Number(snap.committedTotal)
+            if (!snap) continue
+            // Fatura já paga não é valor em aberto.
+            if (invoicePaidByCardClose.has(`${c.id}:${localYmdFromDate(snap.close)}`)) continue
+            t += Number(snap.committedTotal)
         }
         return t
-    }, [creditCards, snapshots])
+    }, [creditCards, snapshots, invoicePaidByCardClose])
 
     const kpiCurrent = useMemo(
         () =>
@@ -462,15 +458,17 @@ export function useDashboardData() {
             ),
         [transactionsWide, calendarYm, creditCardClosingLookup],
     )
-    const kpiPrev = useMemo(
-        () =>
-            aggregateIncomeExpenseForMonth(
-                prevTransactions,
-                prevCalendarYm,
-                creditCardClosingLookup,
-            ),
-        [prevTransactions, prevCalendarYm, creditCardClosingLookup],
-    )
+    const kpiPrev = useMemo(() => {
+        // Mês em curso: compara com o mesmo pedaço do mês anterior (dia 1 até
+        // hoje), e não com o mês inteiro, que sempre parecia maior.
+        const range = todayYmd.startsWith(calendarYm)
+            ? previousMonthSamePeriodRange(calendarYm, todayYmd)
+            : null
+        const rows = range
+            ? prevTransactions.filter((t) => t.date.slice(0, 10) <= range.to)
+            : prevTransactions
+        return aggregateIncomeExpenseForMonth(rows, prevCalendarYm, creditCardClosingLookup)
+    }, [prevTransactions, prevCalendarYm, creditCardClosingLookup, calendarYm, todayYmd])
 
     const expenseByCategory = useMemo(() => {
         const spendById = new Map<string, number>()

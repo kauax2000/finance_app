@@ -1,5 +1,6 @@
 "use client"
 
+import { paymentMethodOptions } from "@/lib/payment-methods"
 import { useMemo } from "react"
 import Link from "next/link"
 import type {
@@ -22,9 +23,7 @@ import { DatePicker } from "@/components/ui/date-picker"
 import { SubscriptionCategoryPicker } from "@/components/subscriptions/subscription-form-pickers"
 import {
     SUBSCRIPTION_BILLING_OPTIONS,
-    SUBSCRIPTION_CHARGE_METHOD_OPTIONS,
     SUBSCRIPTION_PAYMENT_NONE,
-    subscriptionTodayIsoDate,
     type ExpenseCategoryOption,
 } from "@/components/subscriptions/subscription-form-shared"
 import { localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
@@ -125,13 +124,13 @@ export function SubscriptionFormFields({
                     >
                         <SelectTrigger
                             id="sub-form-billing"
-                            className="h-9 w-full min-w-0 justify-between gap-2 px-2.5 py-0 text-sm font-normal shadow-none data-[size=default]:h-9 [&>svg]:size-4"
+                            className="h-9 w-full min-w-0 justify-between gap-2 px-2.5 py-0 text-sm font-normal shadow-none [&>svg]:size-4"
                         >
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent
                             align="start"
-                            className="z-(--z-toast) min-w-[var(--radix-select-trigger-width)] p-1"
+                            className="min-w-[var(--radix-select-trigger-width)] p-1"
                             sideOffset={6}
                         >
                             {SUBSCRIPTION_BILLING_OPTIONS.map((o) => (
@@ -161,7 +160,7 @@ export function SubscriptionFormFields({
                     value={parseYmdLocal(billingDate)}
                     onChange={(d) =>
                         setBillingDate(
-                            d ? localYmdFromDate(d) : subscriptionTodayIsoDate()
+                            d ? localYmdFromDate(d) : localYmdFromDate(new Date())
                         )
                     }
                     placeholder="Selecione a data"
@@ -196,13 +195,13 @@ export function SubscriptionFormFields({
                 >
                     <SelectTrigger
                         id="sub-form-payment-method"
-                        className="h-9 w-full min-w-0 justify-between gap-2 px-2.5 py-0 text-sm font-normal shadow-none data-[size=default]:h-9 [&>svg]:size-4"
+                        className="h-9 w-full min-w-0 justify-between gap-2 px-2.5 py-0 text-sm font-normal shadow-none [&>svg]:size-4"
                     >
                         <SelectValue placeholder="Não informado" />
                     </SelectTrigger>
                     <SelectContent
                         align="start"
-                        className="z-(--z-toast) min-w-[var(--radix-select-trigger-width)] p-1"
+                        className="min-w-[var(--radix-select-trigger-width)] p-1"
                         sideOffset={6}
                     >
                         <SelectItem
@@ -211,7 +210,7 @@ export function SubscriptionFormFields({
                         >
                             Não informado
                         </SelectItem>
-                        {SUBSCRIPTION_CHARGE_METHOD_OPTIONS.map((o) => (
+                        {paymentMethodOptions().map((o) => (
                             <SelectItem
                                 key={o.value}
                                 value={o.value}
@@ -255,13 +254,13 @@ export function SubscriptionFormFields({
                         >
                             <SelectTrigger
                                 id="sub-form-card"
-                                className="h-9 w-full min-w-0 justify-between gap-2 px-2.5 py-0 text-sm font-normal shadow-none data-[size=default]:h-9 [&>svg]:size-4"
+                                className="h-9 w-full min-w-0 justify-between gap-2 px-2.5 py-0 text-sm font-normal shadow-none [&>svg]:size-4"
                             >
                                 <SelectValue placeholder="Selecione o cartão" />
                             </SelectTrigger>
                             <SelectContent
                                 align="start"
-                                className="z-(--z-toast) min-w-[var(--radix-select-trigger-width)] p-1"
+                                className="min-w-[var(--radix-select-trigger-width)] p-1"
                                 sideOffset={6}
                             >
                                 <SelectItem

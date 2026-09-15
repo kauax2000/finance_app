@@ -1,13 +1,12 @@
 "use client"
 
+import { ROUTES } from "@/config/navigation"
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Badge } from "@/components/ui/badge"
-import { InformationCircleIcon } from "@heroicons/react/16/solid"
-import { ChartBarIcon, CheckCircleIcon, Cog6ToothIcon, ExclamationTriangleIcon, KeyIcon, ShieldCheckIcon, ShieldExclamationIcon, UserGroupIcon, UserIcon, UserMinusIcon, UserPlusIcon } from "@heroicons/react/24/outline"
 import {
+    Badge,
     tagChipDanger,
     tagChipFilterIdle,
     tagChipFilterSelected,
@@ -15,7 +14,9 @@ import {
     tagChipNeutral,
     tagChipSuccess,
     tagChipWarning,
-} from "@/lib/tag-chip-classes"
+} from "@/components/ui/badge"
+import { InformationCircleIcon } from "@heroicons/react/16/solid"
+import { ChartBarIcon, CheckCircleIcon, Cog6ToothIcon, ExclamationTriangleIcon, KeyIcon, ShieldCheckIcon, ShieldExclamationIcon, UserGroupIcon, UserIcon, UserMinusIcon, UserPlusIcon } from "@heroicons/react/24/outline"
 import { cn } from "@/lib/utils"
 import { getActivities, type ActivityLog } from "@/lib/activity"
 import { useAuth } from "@/components/providers"
@@ -216,7 +217,7 @@ export default function ActivityPage() {
     useEffect(() => {
         if (authLoading) return
         if (!authSession) {
-            router.replace("/login")
+            router.replace(ROUTES.LOGIN)
             return
         }
         void fetchActivities()

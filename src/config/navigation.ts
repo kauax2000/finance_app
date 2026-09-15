@@ -8,7 +8,6 @@ export const ROUTES = {
     TRANSACTIONS: "/transactions",
     DASHBOARD_CATEGORIES: "/categories",
     SETTINGS: "/settings",
-    SETTINGS_CREDIT_CARDS: "/settings/credit-cards",
     CREDIT_CARDS: "/credit-cards",
     SUBSCRIPTIONS: "/subscriptions",
     BILLS: "/bills",
@@ -116,7 +115,6 @@ export const SETTINGS_NAV_ITEM: NavigationItem = {
 export const DASHBOARD_PAGE_TITLES: Record<string, string> = {
     [ROUTES.DASHBOARD]: "Dashboard",
     [ROUTES.DASHBOARD_CATEGORIES]: "Categorias",
-    "/wallets": "Contas",
 }
 
 /** Header title for (app) route group (top-level pages) */
@@ -142,11 +140,6 @@ export const APP_SUB_PAGE_TITLES: Record<string, SubPageMeta> = {
         parent: ROUTES.ACCOUNT,
         parentTitle: "Minha conta",
         title: "Atividade",
-    },
-    [ROUTES.SETTINGS_CREDIT_CARDS]: {
-        parent: ROUTES.SETTINGS,
-        parentTitle: "Configurações",
-        title: "Cartões de crédito",
     },
 }
 

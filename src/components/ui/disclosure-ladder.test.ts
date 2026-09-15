@@ -149,7 +149,7 @@ describe("o realce não troca a cor de fundo", () => {
   /**
    * O empurrão depende de dois estados ao mesmo tempo — cursor **e** aberto —, e
    * variante empilhada apontando para o mesmo elemento compila uma cadeia de
-   * descendente que não casa com nada. A saída registrada no `AppThemeToggle` é
+   * descendente que não casa com nada. A saída registrada no `ThemeToggle` é
    * a variável na raiz; este teste impede a volta da forma que não funciona.
    */
   it("a direção do empurrão vem de variável, não de variante empilhada", () => {

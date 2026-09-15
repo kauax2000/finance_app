@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import * as ResizablePrimitive from "react-resizable-panels"
 import {
   ChevronDownIcon,
@@ -507,9 +508,17 @@ function useResizablePanel() {
   const [handle, setHandle] = ResizablePrimitive.usePanelCallbackRef()
   const [isCollapsed, setIsCollapsed] = React.useState(false)
 
-  const sync = React.useCallback(() => {
-    setIsCollapsed(handle?.isCollapsed() ?? false)
+  // O painel pode guardar o primeiro `onResize` que recebeu, de quando o
+  // `handle` ainda era nulo: lido pela ref, o colapso sempre consulta o atual.
+  // Sem isso a largura ia a 48 e `isCollapsed` seguia falso — a barra
+  // redimensionável nunca entrava em modo ícone.
+  const handleRef = React.useRef(handle)
+  useIsomorphicLayoutEffect(() => {
+    handleRef.current = handle
   }, [handle])
+  const sync = React.useCallback(() => {
+    setIsCollapsed(handleRef.current?.isCollapsed() ?? false)
+  }, [])
 
   const collapse = React.useCallback(() => handle?.collapse(), [handle])
   const expand = React.useCallback(() => handle?.expand(), [handle])
@@ -518,9 +527,12 @@ function useResizablePanel() {
     else handle?.collapse()
   }, [handle])
 
+  // Um objeto novo a cada render faria o painel receber props "diferentes" sempre.
+  const panelProps = React.useMemo(() => ({ panelRef: setHandle, onResize: sync }), [setHandle, sync])
+
   return {
     /** Espalhe no `ResizablePanel` que este hook governa. */
-    panelProps: { panelRef: setHandle, onResize: sync },
+    panelProps,
     isCollapsed,
     collapse,
     expand,

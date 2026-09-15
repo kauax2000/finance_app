@@ -22,8 +22,19 @@ const monthNavDenseMonthPickerClassName =
     "h-10 flex-1 gap-2 px-3 text-sm md:h-8 md:gap-1.5 md:px-2 md:text-xs"
 const monthNavDenseCalendarIconClassName = "size-4 md:size-3.5"
 
+/**
+ * Inside the TopBar: the system default step (`md`, 32) at every width. The
+ * dense sizing above is 40 on mobile to match the toolbar segment controls;
+ * the bar is 48 tall and every button in it is `md`.
+ */
+const monthNavBarButtonClassName = "h-8 px-2 text-xs"
+const monthNavBarIconButtonClassName = "size-8"
+const monthNavBarMonthPickerClassName = "h-8 flex-1 gap-1.5 px-2 text-xs"
+const monthNavBarCalendarIconClassName = "size-3.5"
+
 function MonthNavArrowControls({
     dense,
+    inBar,
     budgetMonthYm,
     onBudgetMonthYmChange,
     onJump,
@@ -32,6 +43,8 @@ function MonthNavArrowControls({
     esteMesInsidePopoverOnNarrow,
 }: {
     dense?: boolean
+    /** Sizing for the `TopBar` (`md` at every width). */
+    inBar?: boolean
     budgetMonthYm: string
     onBudgetMonthYmChange: (ym: string) => void
     onJump: () => void
@@ -57,7 +70,11 @@ function MonthNavArrowControls({
                 size="sm"
                 className={cn(
                     "shrink-0 text-muted-foreground",
-                    dense ? monthNavDenseButtonClassName : "h-10 px-2 text-sm",
+                    inBar
+                        ? monthNavBarButtonClassName
+                        : dense
+                          ? monthNavDenseButtonClassName
+                          : "h-10 px-2 text-sm",
                     esteMesInsidePopoverOnNarrow && "hidden md:inline-flex",
                 )}
                 onClick={() => onJump()}
@@ -67,8 +84,15 @@ function MonthNavArrowControls({
             <Button
                 type="button"
                 variant="outline"
-                size="icon-lg"
-                className={cn("shrink-0", dense ? monthNavDenseIconButtonClassName : "size-10")}
+                size={inBar ? "icon-md" : "icon-lg"}
+                className={cn(
+                    "shrink-0",
+                    inBar
+                        ? monthNavBarIconButtonClassName
+                        : dense
+                          ? monthNavDenseIconButtonClassName
+                          : "size-10",
+                )}
                 aria-label="Mês anterior"
                 onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, -1))}
             >
@@ -88,8 +112,10 @@ function MonthNavArrowControls({
                             variant="outline"
                             aria-label={pickerAriaLabel}
                             className={cn(
-                                "min-w-0 shrink font-medium capitalize tabular-nums",
-                                dense
+                                "min-w-0 shrink font-medium tabular-nums",
+                                inBar
+                                    ? monthNavBarMonthPickerClassName
+                                    : dense
                                     ? monthNavDenseMonthPickerClassName
                                     : "h-10 flex-1 gap-2 px-3 text-sm",
                             )}
@@ -97,7 +123,11 @@ function MonthNavArrowControls({
                             <CalendarIcon
                                 className={cn(
                                     "shrink-0 opacity-80",
-                                    dense ? monthNavDenseCalendarIconClassName : "size-4",
+                                    inBar
+                                        ? monthNavBarCalendarIconClassName
+                                        : dense
+                                          ? monthNavDenseCalendarIconClassName
+                                          : "size-4",
                                 )}
                                 aria-hidden
                             />
@@ -107,7 +137,6 @@ function MonthNavArrowControls({
                     <PopoverContent
                         align="center"
                         className="w-auto p-0"
-                        onCloseAutoFocus={(e) => e.preventDefault()}
                     >
                         <BudgetMonthSelects
                             valueYm={budgetMonthYm}
@@ -144,8 +173,15 @@ function MonthNavArrowControls({
             <Button
                 type="button"
                 variant="outline"
-                size="icon-lg"
-                className={cn("shrink-0", dense ? monthNavDenseIconButtonClassName : "size-10")}
+                size={inBar ? "icon-md" : "icon-lg"}
+                className={cn(
+                    "shrink-0",
+                    inBar
+                        ? monthNavBarIconButtonClassName
+                        : dense
+                          ? monthNavDenseIconButtonClassName
+                          : "size-10",
+                )}
                 aria-label="Próximo mês"
                 onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, 1))}
             >
@@ -160,6 +196,7 @@ export function MonthNav({
     onBudgetMonthYmChange,
     onJumpToCurrentMonth,
     dense,
+    inBar,
     iconOnly,
     className,
     mobileTriggerFullWidth,
@@ -168,6 +205,8 @@ export function MonthNav({
     onBudgetMonthYmChange: (ym: string) => void
     onJumpToCurrentMonth?: () => void
     dense?: boolean
+    /** Sizing for the `TopBar`: every control at `md` (32), at every width. */
+    inBar?: boolean
     /** Mobile trigger: calendar + chevron only (no month label). */
     iconOnly?: boolean
     className?: string
@@ -184,6 +223,7 @@ export function MonthNav({
     const arrowControls = (
         <MonthNavArrowControls
             dense={dense}
+            inBar={inBar}
             budgetMonthYm={budgetMonthYm}
             onBudgetMonthYmChange={onBudgetMonthYmChange}
             onJump={jump}
@@ -217,7 +257,7 @@ export function MonthNav({
                                 aria-label={pickerAriaLabel}
                                 aria-expanded={open}
                                 className={cn(
-                                    "font-medium capitalize tabular-nums text-muted-foreground hover:text-foreground",
+                                    "font-medium tabular-nums text-muted-foreground hover:text-foreground",
                                     iconOnly
                                         ? cn(
                                               "w-auto shrink-0 gap-1.5 px-1.5",
@@ -227,9 +267,11 @@ export function MonthNav({
                                           )
                                         : cn(
                                               "gap-1.5",
-                                              dense
-                                                  ? monthNavDenseButtonClassName
-                                                  : "h-9 px-2.5 text-sm",
+                                              inBar
+                                                  ? monthNavBarButtonClassName
+                                                  : dense
+                                                    ? monthNavDenseButtonClassName
+                                                    : "h-9 px-2.5 text-sm",
                                           ),
                                 )}
                             >
@@ -244,7 +286,7 @@ export function MonthNav({
                                     <span
                                         className={cn(
                                             "min-w-0 truncate",
-                                            dense &&
+                                            (dense || inBar) &&
                                                 "max-w-[min(5.75rem,30vw)] sm:max-w-none",
                                         )}
                                     >
@@ -263,7 +305,6 @@ export function MonthNav({
                         <PopoverContent
                             align="start"
                             className="w-auto p-0"
-                            onCloseAutoFocus={(e) => e.preventDefault()}
                         >
                             <BudgetMonthSelects
                                 valueYm={budgetMonthYm}

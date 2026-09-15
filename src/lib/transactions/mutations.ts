@@ -8,6 +8,7 @@ import type {
     TransactionFormSavePayload,
 } from "@/components/transactions/transaction-form-types"
 import { executeMutation } from "@/lib/offline/mutation-gateway"
+import { retryStableClientId } from "@/lib/offline/retry-client-id"
 import { dispatchFinanceTransactionsMutated } from "@/lib/workspace-data-events"
 import { scheduleNotifyTransactionCreated } from "@/lib/transaction-notifications"
 
@@ -20,7 +21,6 @@ export type SaveTransactionContext = {
 function buildTransactionRow(
     ctx: SaveTransactionContext,
     payload: TransactionFormSavePayload,
-    clientId?: string
 ) {
     return {
         user_id: ctx.userId,
@@ -34,7 +34,6 @@ function buildTransactionRow(
         recurring_interval: payload.recurringInterval,
         payment_method: payload.paymentMethod,
         payment_credit_card_id: payload.paymentCreditCardId,
-        ...(clientId ? { client_id: clientId } : {}),
     }
 }
 
@@ -79,14 +78,14 @@ async function saveTransactionOnline(
 
     let { data: inserted, error } = await supabase
         .from("transactions")
-        .insert(row)
+        .upsert(row, { onConflict: "workspace_id,client_id" })
         .select("id")
         .single()
 
     if (error && isTransactionsPaymentColumnsUnsupportedError(error)) {
         const retry = await supabase
             .from("transactions")
-            .insert(stripPaymentColumns(row))
+            .upsert(stripPaymentColumns(row), { onConflict: "workspace_id,client_id" })
             .select("id")
             .single()
         inserted = retry.data
@@ -114,8 +113,9 @@ export async function saveTransaction(
     payload: TransactionFormSavePayload
 ): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
     const editingId = payload.editingId ?? ctx.editingTransactionId ?? null
-    const clientId = crypto.randomUUID()
-    const row = buildTransactionRow(ctx, payload, editingId ? undefined : clientId)
+    const baseRow = buildTransactionRow(ctx, payload)
+    const { clientId, settle } = retryStableClientId(baseRow)
+    const row = editingId ? baseRow : { ...baseRow, client_id: clientId }
     const operation = editingId ? "update" : "insert"
     const offlinePayload = editingId
         ? { ...row, serverId: editingId }
@@ -136,6 +136,7 @@ export async function saveTransaction(
             return result
         },
     })
+    if (gateway.ok) settle()
 
     if (!gateway.ok) {
         return { ok: false, errorMessage: gateway.errorMessage }

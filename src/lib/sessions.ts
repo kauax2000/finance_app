@@ -266,8 +266,11 @@ export async function validateCurrentSession(): Promise<boolean> {
         if (isEdgeInvokeTransportFailure(e) || isClientSideAuthError(message)) {
             return true
         }
+        // "Sessão encerrada" é a tradução de edge-errors.ts para
+        // "Session expired or invalidated": sem ela a revogação passava batida.
         if (
             message.includes('Session expired or invalidated') ||
+            message.includes('Sessão encerrada') ||
             message.includes('Sessão inválida')
         ) {
             clearCurrentSession()

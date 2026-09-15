@@ -102,6 +102,8 @@ describe("buildPaymentEventsForMonth credit card attribution", () => {
         user_id: "u",
         name: "Visa",
         last_four: "1234",
+        brand: null,
+        credit_limit: null,
         closing_day: 28,
         due_day: 5,
         is_active: true,

@@ -1,5 +1,7 @@
 "use client"
 
+import { deleteCategoryById } from "@/lib/categories/mutations"
+import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import type { User } from "@supabase/supabase-js"
@@ -458,14 +460,21 @@ export function CategoriesOnboardingWizard({
         }
     }
 
+    const { confirm: confirmAction, dialog: confirmDialog } = useConfirmDialog()
     const handleDeleteCategory = async (c: Category) => {
-        if (!confirm(`Excluir a categoria “${c.name}”?`)) return
+        const ok = await confirmAction({
+            title: `Excluir a categoria “${c.name}”?`,
+            actionLabel: "Excluir",
+        })
+        if (!ok) return
         setCrudBusy(true)
         setError(null)
-        const { error: delErr } = await supabase.from("categories").delete().eq("id", c.id)
+        // Pela mutação do app: ela passa pela fila offline e pela carteira, e a
+        // exclusão direta pelo client não passava por nenhuma das duas.
+        const res = await deleteCategoryById(c.id, workspaceId)
         setCrudBusy(false)
-        if (delErr) {
-            setError(formatSupabasePostgrestError(delErr) ?? "Não foi possível excluir a categoria.")
+        if (!res.ok) {
+            setError(res.errorMessage)
             return
         }
         setLocalCategories((prev) => prev.filter((x) => x.id !== c.id))
@@ -562,6 +571,7 @@ export function CategoriesOnboardingWizard({
 
     return (
         <div className={CATEGORIES_ONBOARDING_OUTER_CLASS}>
+            {confirmDialog}
             {isMobile ? (
                 <Sheet open={addOpen} onOpenChange={handleAddOpenChange}>
                     <SheetContent
@@ -604,7 +614,7 @@ export function CategoriesOnboardingWizard({
                                 </div>
                             </div>
                             <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
-                                <Button type="submit" disabled={crudBusy} className="h-10 w-full">
+                                <Button type="submit" disabled={crudBusy} size="xl" className="w-full">
                                     {crudBusy ? "Salvando…" : "Criar"}
                                 </Button>
                             </DialogFooter>
@@ -727,7 +737,7 @@ export function CategoriesOnboardingWizard({
                                     </div>
                                 </div>
                                 <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
-                                    <Button type="submit" disabled={crudBusy} className="h-10 w-full">
+                                    <Button type="submit" disabled={crudBusy} size="xl" className="w-full">
                                         {crudBusy ? "Salvando…" : "Salvar"}
                                     </Button>
                                 </DialogFooter>

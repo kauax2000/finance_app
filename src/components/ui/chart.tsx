@@ -67,7 +67,7 @@ import {
  * `rounded-lg border-border/80 bg-popover`, quatro vezes), 3 legendas,
  * 4 `Intl.NumberFormat` redeclarados com `currencyBRL` existindo ao lado, e
  * 4 `tickFormatter` compactos inline sem nenhum chamar `currencyCompactBRL` —
- * que é exatamente a regra que a página `/designsystem/graficos` manda seguir.
+ * que é exatamente a regra que a página `/designsystem/chart` manda seguir.
  *
  * A raiz do abandono era esta linha:
  *
@@ -359,38 +359,46 @@ function ChartContainer({
   )
 }
 
-const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
+/**
+ * O CSS das cores de série, montado a partir do `config`.
+ *
+ * Chave e cor entram num `<style>`: uma cor com `}` fechava a regra e injetava
+ * CSS arbitrário na página. Só passam chave de identificador e cor sem
+ * `;{}<>`, que cobre hex, `var(--x)`, `oklch()` e `rgb()`. Exportada para teste.
+ */
+const SAFE_CHART_KEY = /^[A-Za-z0-9_-]+$/
+const SAFE_CHART_COLOR = /^[#\w\s().,%/-]+$/
+
+export function chartStyleCss(id: string, config: ChartConfig): string | null {
   const entries = Object.entries(config).filter(
-    ([, cfg]) => "theme" in cfg || "color" in cfg
+    ([key, cfg]) => SAFE_CHART_KEY.test(key) && ("theme" in cfg || "color" in cfg)
   )
   if (!entries.length) return null
+  const safeId = id.replace(/[^A-Za-z0-9_:-]/g, "")
 
-  return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart="${id}"] {
-${entries
-  .map(([key, itemConfig]) => {
-    const color =
-      "theme" in itemConfig && itemConfig.theme
-        ? itemConfig.theme[theme as keyof typeof itemConfig.theme]
-        : "color" in itemConfig
-          ? itemConfig.color
-          : undefined
-    return color ? `  --color-${key}: ${color};` : null
-  })
-  .filter(Boolean)
-  .join("\n")}
+  return Object.entries(THEMES)
+    .map(([theme, prefix]) => {
+      const lines = entries
+        .map(([key, itemConfig]) => {
+          const color =
+            "theme" in itemConfig && itemConfig.theme
+              ? itemConfig.theme[theme as keyof typeof itemConfig.theme]
+              : "color" in itemConfig
+                ? itemConfig.color
+                : undefined
+          return color && SAFE_CHART_COLOR.test(color) ? `  --color-${key}: ${color};` : null
+        })
+        .filter(Boolean)
+        .join("\n")
+      return `\n${prefix} [data-chart="${safeId}"] {\n${lines}\n}\n`
+    })
+    .join("\n")
 }
-`
-          )
-          .join("\n"),
-      }}
-    />
-  )
+
+const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
+  const css = chartStyleCss(id, config)
+  if (!css) return null
+  return <style dangerouslySetInnerHTML={{ __html: css }} />
 }
 
 /* -------------------------------------------------------------------------
@@ -733,7 +741,7 @@ function ChartLegendContent({
               "focus-visible:ring-3 focus-visible:ring-ring/70",
               // O estado não é só opacidade: o rótulo risca, e é isso que
               // sobrevive a quem não distingue o degrau de transparência.
-              off && "text-muted-foreground line-through opacity-60"
+              off && "text-muted-foreground line-through"
             )}
           >
             {corpo}
@@ -791,7 +799,7 @@ function ChartXAxis({
 /**
  * O eixo de valor começa em zero, e isso é padrão e não conselho. Truncar a
  * base multiplica visualmente uma diferença de 3% — é a regra que
- * `/designsystem/graficos` escreve e que nenhum eixo do app aplicava sozinho.
+ * `/designsystem/chart` escreve e que nenhum eixo do app aplicava sozinho.
  * Quem tiver um caso legítimo (uma série que não cruza zero, num gráfico de
  * linha) passa `domain` e assume.
  */
@@ -805,7 +813,7 @@ function ChartYAxis({
   // como `$ 22 mil` e `$ 5,5 mil` — o cifrão comido — num eixo de 56px que
   // servia bem no desktop. O Recharts 3 calcula a calha a partir dos rótulos.
   width = "auto" as const,
-  domain = [0, "auto"] as const,
+  domain,
   ...props
 }: React.ComponentProps<typeof YAxis> & { format?: ChartFormat }) {
   return (
@@ -814,7 +822,9 @@ function ChartYAxis({
       axisLine={axisLine}
       tickMargin={tickMargin}
       width={width}
-      domain={domain as never}
+      // `[0, "auto"]` é para eixo de número; um `domain={undefined}` explícito
+      // caía no padrão e o aplicava ao eixo de categorias das barras deitadas.
+      domain={(domain ?? (props.type === "category" ? undefined : [0, "auto"])) as never}
       tickFormatter={(value) => formatChartValue(value, format)}
       {...props}
     />
@@ -900,6 +910,7 @@ function ChartFrame({
   series,
   config,
   x,
+  xLabel,
   format,
   children,
 }: {
@@ -908,6 +919,7 @@ function ChartFrame({
   series: string[]
   config: ChartConfig
   x?: string
+  xLabel?: string
   format: ChartFormat
   children: React.ReactNode
 }) {
@@ -927,6 +939,7 @@ function ChartFrame({
             series={series}
             config={config}
             x={x}
+            xLabel={xLabel}
             format={format}
           />
         </CollapsibleContent>
@@ -966,6 +979,9 @@ function ChartArea({
 }) {
   const chaves = useSeries(config, series)
   const gradiente = variant === "gradient"
+  // O id do gradiente é global no documento: duas áreas com a mesma chave na
+  // página pintavam as duas com o gradiente da primeira.
+  const gradienteId = React.useId().replace(/:/g, "")
   const mostrarLegenda = legend ?? chaves.length >= 2
 
   return (
@@ -990,7 +1006,7 @@ function ChartArea({
               {chaves.map((key, i) => (
                 <linearGradient
                   key={key}
-                  id={`chart-area-${key}`}
+                  id={`chart-area-${gradienteId}-${key}`}
                   x1="0"
                   y1="0"
                   x2="0"
@@ -1030,7 +1046,7 @@ function ChartArea({
               stackId={stacked ? "a" : undefined}
               stroke={serieColor(key, i, config)}
               strokeWidth={2}
-              fill={gradiente ? `url(#chart-area-${key})` : serieColor(key, i, config)}
+              fill={gradiente ? `url(#chart-area-${gradienteId}-${key})` : serieColor(key, i, config)}
               fillOpacity={gradiente ? 1 : 0.15}
               dot={false}
               activeDot={{
@@ -1350,6 +1366,7 @@ function ChartDonut({
       series={[dataKey]}
       config={config}
       x={nameKey}
+      xLabel="Categoria"
       format={format}
     >
       {/*
@@ -1717,6 +1734,7 @@ function ChartDataTable({
   series,
   config,
   x,
+  xLabel = "Período",
   format = "currency",
   xFormat = "text",
   className,
@@ -1725,6 +1743,8 @@ function ChartDataTable({
   series: string[]
   config: ChartConfig
   x?: string
+  /** O nome da primeira coluna. A rosca rotula categorias, não períodos. */
+  xLabel?: string
   format?: ChartFormat
   xFormat?: ChartFormat
   className?: string
@@ -1733,9 +1753,9 @@ function ChartDataTable({
     <Table data-slot="chart-data-table" className={className}>
       <TableHeader>
         <TableRow>
-          {x ? <TableHead>Período</TableHead> : null}
+          {x ? <TableHead>{xLabel}</TableHead> : null}
           {series.map((key) => (
-            <TableHead key={key} className="text-right">
+            <TableHead key={key} numeric>
               {config[key]?.label ?? key}
             </TableHead>
           ))}
@@ -1748,7 +1768,7 @@ function ChartDataTable({
               <TableCell>{formatChartValue(row[x], xFormat)}</TableCell>
             ) : null}
             {series.map((key) => (
-              <TableCell key={key} className="nums text-right font-mono">
+              <TableCell key={key} numeric className="font-mono">
                 {formatChartValue(row[key], format)}
               </TableCell>
             ))}

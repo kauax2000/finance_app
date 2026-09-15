@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { supabase, type Transaction } from "@/lib/supabase"
 import { transactionsKeys, type TransactionsRangeKey } from "@/lib/queries/keys"
+import { fetchAllRows } from "@/lib/queries/fetch-all-rows"
 
 /** Narrow select for dashboard / calendar (category joined client-side). */
 const TRANSACTION_RANGE_COLUMNS =
@@ -20,17 +21,19 @@ export function useTransactionsRangeQuery(
         queryKey: transactionsKeys.summary(workspaceId ?? "__none__", range),
         queryFn: async (): Promise<Transaction[]> => {
             if (!workspaceId) return []
-            const { data, error } = await supabase
-                .from("transactions")
-                .select(TRANSACTION_RANGE_COLUMNS)
-                .eq("workspace_id", workspaceId)
-                .gte("date", range.from)
-                .lte("date", range.to)
-                .order("date", { ascending: false })
-                .order("created_at", { ascending: false })
-                .limit(6000)
-            if (error) throw new Error(error.message)
-            return (data as Transaction[]) ?? []
+            return fetchAllRows<Transaction>((from, to) =>
+                supabase
+                    .from("transactions")
+                    .select(TRANSACTION_RANGE_COLUMNS)
+                    .eq("workspace_id", workspaceId)
+                    .gte("date", range.from)
+                    .lte("date", range.to)
+                    .order("date", { ascending: false })
+                    .order("created_at", { ascending: false })
+                    .order("id", { ascending: false })
+                    .range(from, to)
+                    .returns<Transaction[]>(),
+            )
         },
         enabled,
         staleTime: 60_000,
@@ -56,15 +59,17 @@ export function useTransactionsSummaryRangeQuery(
                 : (["transactionsSummaryOnly", "__none__", "", ""] as const),
         queryFn: async (): Promise<Pick<Transaction, "type" | "amount">[]> => {
             if (!workspaceId || !range) return []
-            const { data, error } = await supabase
-                .from("transactions")
-                .select("type,amount")
-                .eq("workspace_id", workspaceId)
-                .gte("date", range.from)
-                .lte("date", range.to)
-                .limit(6000)
-            if (error) throw new Error(error.message)
-            return (data as Pick<Transaction, "type" | "amount">[]) ?? []
+            return fetchAllRows<Pick<Transaction, "type" | "amount">>((from, to) =>
+                supabase
+                    .from("transactions")
+                    .select("type,amount")
+                    .eq("workspace_id", workspaceId)
+                    .gte("date", range.from)
+                    .lte("date", range.to)
+                    .order("id")
+                    .range(from, to)
+                    .returns<Pick<Transaction, "type" | "amount">[]>(),
+            )
         },
         enabled,
         staleTime: 60_000,

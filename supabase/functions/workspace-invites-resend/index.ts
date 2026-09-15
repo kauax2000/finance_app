@@ -1,5 +1,8 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
+import { internalError } from '../_shared/http.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
+import { inviteEmailLimitReached, recentInviteLogs } from '../_shared/invite-rate-limit.ts'
+import { sha256Hex } from '../_shared/token-hash.ts'
 import {
   buildInviteAcceptUrl,
   renderInviteHtml,
@@ -42,7 +45,7 @@ Deno.serve(async (req: Request) => {
 
   const authResult = await getAuthUserFromJwt(supabaseUrl, anonKey, jwt)
   if (authResult.error || !authResult.user) {
-    return json(401, { error: 'Invalid or expired token', details: authResult.error ?? 'unknown' })
+    return json(401, { error: 'Invalid or expired token' })
   }
 
   let body: ResendBody
@@ -67,18 +70,18 @@ Deno.serve(async (req: Request) => {
     .eq('user_id', caller.id)
     .maybeSingle()
 
-  if (memberErr) return json(500, { error: memberErr.message })
+  if (memberErr) return json(500, { error: internalError('workspace-invites-resend', memberErr) })
   if (!member || member.role !== 'owner') {
     return json(403, { error: 'Only owner can resend invites' })
   }
 
   const { data: invite, error: inviteErr } = await supabaseAdmin
     .from('workspace_invites')
-    .select('id, workspace_id, invited_email, status, expires_at, token_raw, workspace:workspaces(name)')
+    .select('id, workspace_id, invited_email, status, expires_at, workspace:workspaces(name)')
     .eq('id', inviteId)
     .maybeSingle()
 
-  if (inviteErr) return json(500, { error: inviteErr.message })
+  if (inviteErr) return json(500, { error: internalError('workspace-invites-resend', inviteErr) })
   if (!invite) return json(404, { error: 'Invite not found' })
   if (invite.workspace_id !== workspaceId) {
     return json(400, { error: 'Invite does not belong to this workspace' })
@@ -97,21 +100,35 @@ Deno.serve(async (req: Request) => {
     return json(400, { error: 'Invite has expired' })
   }
 
-  const tokenRaw = typeof invite.token_raw === 'string' ? invite.token_raw.trim() : ''
-  if (!tokenRaw) {
-    return json(500, { error: 'Invite token unavailable' })
+  const appBase = resolvePublicAppBase(req)
+  if (!appBase) {
+    return json(500, { error: 'APP_BASE_URL não configurado.' })
   }
+
+  const { data: logs, error: logsErr } = await recentInviteLogs(supabaseAdmin, caller.id)
+  if (logsErr) return json(500, { error: internalError('workspace-invites-resend', logsErr) })
+  if (inviteEmailLimitReached(logs ?? [], invitedEmail)) {
+    return json(429, { error: 'Too many invites' })
+  }
+
+  // O token não fica salvo: reenviar gera um novo, e o link do e-mail anterior deixa de valer.
+  const tokenRaw = crypto.randomUUID()
+  const { error: rotateErr } = await supabaseAdmin
+    .from('workspace_invites')
+    .update({ token_hash: await sha256Hex(tokenRaw) })
+    .eq('id', inviteId)
+    .eq('status', 'pending')
+  if (rotateErr) return json(500, { error: internalError('workspace-invites-resend', rotateErr) })
 
   const ws = invite.workspace as { name?: string } | null
   const workspaceName = typeof ws?.name === 'string' ? ws.name : 'workspace'
 
-  const appBase = resolvePublicAppBase(req)
   const inviteUrl = buildInviteAcceptUrl(appBase, tokenRaw)
 
   try {
     await sendEmailResend({
       to: invitedEmail,
-      subject: `Convite para o workspace ${workspaceName}`,
+      subject: `Convite para o workspace ${workspaceName.slice(0, 60)}`,
       html: renderInviteHtml({
         inviterName: caller.email ?? 'Alguém',
         workspaceName,
@@ -119,7 +136,8 @@ Deno.serve(async (req: Request) => {
       }),
     })
   } catch (error) {
-    return json(500, { error: error instanceof Error ? error.message : 'Email send failed' })
+    console.error('workspace-invites-resend: email', error)
+    return json(502, { error: 'Email send failed' })
   }
 
   await supabaseAdmin.from('user_activity_logs').insert({

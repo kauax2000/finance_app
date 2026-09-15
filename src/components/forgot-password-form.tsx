@@ -1,5 +1,7 @@
 "use client"
 
+import { ROUTES } from "@/config/navigation"
+import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -56,8 +58,8 @@ export function ForgotPasswordForm() {
 
         if (!password) {
             errors.password = "Senha é obrigatória"
-        } else if (password.length < 6) {
-            errors.password = "A senha deve ter pelo menos 6 caracteres"
+        } else if (password.length < MIN_PASSWORD_LENGTH) {
+            errors.password = `A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres`
         }
 
         if (!confirmPassword) {
@@ -138,7 +140,7 @@ export function ForgotPasswordForm() {
                 setSuccess(true)
                 setLoading(false)
                 setTimeout(() => {
-                    router.push("/login")
+                    router.push(ROUTES.LOGIN)
                 }, 3000)
             }
         } catch {
@@ -159,7 +161,7 @@ export function ForgotPasswordForm() {
                             </p>
                         </div>
                         <Button asChild className="w-full">
-                            <Link href="/login">Voltar ao login</Link>
+                            <Link href={ROUTES.LOGIN}>Voltar ao login</Link>
                         </Button>
                     </div>
                 ) : step === "email" ? (
@@ -201,7 +203,7 @@ export function ForgotPasswordForm() {
                                 </p>
                             )}
                         </div>
-                        <Button type="submit" className="w-full hover:bg-primary/90" disabled={loading}>
+                        <Button type="submit" className="w-full" disabled={loading}>
                             {loading ? "Enviando..." : "Enviar token"}
                         </Button>
                     </CustomForm>
@@ -259,8 +261,9 @@ export function ForgotPasswordForm() {
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
+                                    aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                                    aria-pressed={showPassword}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                                    tabIndex={-1}
                                 >
                                     {showPassword ? (
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -301,8 +304,9 @@ export function ForgotPasswordForm() {
                                 <button
                                     type="button"
                                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    aria-label={showConfirmPassword ? "Ocultar confirmação de senha" : "Mostrar confirmação de senha"}
+                                    aria-pressed={showConfirmPassword}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                                    tabIndex={-1}
                                 >
                                     {showConfirmPassword ? (
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -323,7 +327,7 @@ export function ForgotPasswordForm() {
                                 </p>
                             )}
                         </div>
-                        <Button type="submit" className="w-full hover:bg-primary/90" disabled={loading}>
+                        <Button type="submit" className="w-full" disabled={loading}>
                             {loading ? "Atualizando..." : "Atualizar Senha"}
                         </Button>
                         <Button
@@ -340,7 +344,7 @@ export function ForgotPasswordForm() {
                 {step === "email" && (
                     <p className="text-center text-sm text-muted-foreground">
                         Lembrou a senha?{" "}
-                        <Link href="/login" className="text-primary-accent font-medium underline-offset-4 hover:underline">
+                        <Link href={ROUTES.LOGIN} className="text-primary-accent font-medium underline-offset-4 hover:underline">
                             Fazer login
                         </Link>
                     </p>

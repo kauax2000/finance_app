@@ -1,5 +1,6 @@
 "use client"
 
+import { currencyBRL } from "@/lib/formatters"
 import { ArrowTopRightOnSquareIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
 import * as React from "react"
@@ -39,11 +40,6 @@ import {
 } from "@/components/ui/alert-dialog"
 
 const PAGE_SIZE = 100
-
-const currencyFmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-})
 
 export function CategoryEmbeddedTransactions({
     categoryType,
@@ -552,9 +548,7 @@ export function CategoryEmbeddedTransactions({
                                                   ]
                                                 : pendingDelete.ids.map((id) => ({
                                                       installment_plan_id:
-                                                          transactions.find(
-                                                              (t) => t.id === id
-                                                          )?.installment_plan_id ??
+                                                          displayTransactions.find((t) => t.id === id)?.installment_plan_id ??
                                                           null,
                                                   }))
                                         ) ? (
@@ -578,7 +572,7 @@ export function CategoryEmbeddedTransactions({
                                                         ? "Receita"
                                                         : "Despesa"}{" "}
                                                     de{" "}
-                                                    {currencyFmt.format(
+                                                    {currencyBRL(
                                                         Number(pendingDelete.transaction.amount)
                                                     )}
                                                 </li>

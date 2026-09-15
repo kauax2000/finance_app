@@ -53,6 +53,8 @@ export async function assertCallerSessionAllowed(
   const currentHash = hashes[0]
   const sessionIdHeader = req.headers.get('x-app-session-id')?.trim() || null
   const authSessionId = jwtAuthSessionId(token)
+  const safeAuthSessionId =
+    authSessionId && /^[0-9a-f-]{36}$/i.test(authSessionId) ? authSessionId : null
 
   const [totalRes, activeRes] = await Promise.all([
     supabaseAdmin
@@ -105,13 +107,18 @@ export async function assertCallerSessionAllowed(
   }
 
   if (sessionIdHeader) {
-    const { data: bySid, error: sidErr } = await supabaseAdmin
+    // Só religa a linha que é deste login: um aparelho revogado, com JWT ainda
+    // válido, conseguia listar as próprias sessões e se prender a outra ativa.
+    let bySidQuery = supabaseAdmin
       .from('user_sessions')
       .select('id')
       .eq('id', sessionIdHeader)
       .eq('user_id', userId)
       .eq('is_active', true)
-      .maybeSingle()
+    bySidQuery = safeAuthSessionId
+      ? bySidQuery.or(`auth_session_id.is.null,auth_session_id.eq.${safeAuthSessionId}`)
+      : bySidQuery.is('auth_session_id', null)
+    const { data: bySid, error: sidErr } = await bySidQuery.maybeSingle()
 
     if (sidErr) return { ok: false, status: 500, message: sidErr.message }
     if (bySid) return rebind(bySid.id)

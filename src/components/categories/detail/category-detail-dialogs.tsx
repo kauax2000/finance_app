@@ -176,7 +176,7 @@ export function CategoryDetailDialogs({
                                 <Button
                                     type="submit"
                                     disabled={editSaving || editBudgetRemoving}
-                                    className="h-10 w-full"
+                                    size="xl" className="w-full"
                                 >
                                     {editSaving ? "Salvando…" : "Salvar"}
                                 </Button>

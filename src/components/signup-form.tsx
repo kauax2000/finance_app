@@ -1,10 +1,12 @@
 "use client"
 
+import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy"
 import { useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 import { getSafeInternalNextPath } from "@/lib/auth-return-path"
+import { formatAuthErrorMessagePt } from "@/lib/supabase-errors"
 import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -30,7 +32,7 @@ interface PasswordRequirements {
 // Helper function to check all password requirements
 function checkPasswordRequirements(password: string): PasswordRequirements {
     return {
-        hasMinLength: password.length >= 8,
+        hasMinLength: password.length >= MIN_PASSWORD_LENGTH,
         hasLowercase: /[a-z]/.test(password),
         hasUppercase: /[A-Z]/.test(password),
         hasDigit: /\d/.test(password),
@@ -125,8 +127,8 @@ export function SignupForm() {
 
         if (!password) {
             errors.password = "Senha é obrigatória"
-        } else if (password.length < 8) {
-            errors.password = "A senha deve ter pelo menos 8 caracteres"
+        } else if (password.length < MIN_PASSWORD_LENGTH) {
+            errors.password = `A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres`
         } else if (!passwordRegex.test(password)) {
             errors.password = "Use letras maiúsculas, minúsculas, números e símbolos"
         }
@@ -162,7 +164,7 @@ export function SignupForm() {
         })
 
         if (error) {
-            setError(error.message)
+            setError(formatAuthErrorMessagePt(error.message))
             setLoading(false)
         } else if (data.session && nextPath) {
             setLoading(false)
@@ -182,7 +184,7 @@ export function SignupForm() {
             },
         })
         if (error) {
-            setError(error.message)
+            setError(formatAuthErrorMessagePt(error.message))
         }
     }
 
@@ -206,11 +208,9 @@ export function SignupForm() {
                             </p>
                         ) : null}
                     </div>
-                    <Link href={loginHref}>
-                        <Button variant="outline" className="w-full">
-                            Ir para login
-                        </Button>
-                    </Link>
+                    <Button asChild variant="outline" className="w-full">
+                        <Link href={loginHref}>Ir para login</Link>
+                    </Button>
                 </div>
             </div>
         )
@@ -307,8 +307,9 @@ export function SignupForm() {
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
+                                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                                aria-pressed={showPassword}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                                tabIndex={-1}
                             >
                                 {showPassword ? (
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -412,7 +413,7 @@ export function SignupForm() {
                             </div>
                         )}
                     </div>
-                    <Button type="submit" className="w-full hover:bg-primary/90" disabled={loading}>
+                    <Button type="submit" className="w-full" disabled={loading}>
                         {loading ? "Criando conta..." : "Criar conta"}
                     </Button>
                 </CustomForm>

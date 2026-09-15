@@ -25,7 +25,12 @@ export function useIsIos(): boolean {
     const [isIos, setIsIos] = useState(false)
 
     useEffect(() => {
-        setIsIos(/iphone|ipad|ipod/i.test(window.navigator.userAgent))
+        const nav = window.navigator
+        // Desde o iPadOS 13 o iPad se anuncia como Mac; o que o denuncia é o toque.
+        setIsIos(
+            /iphone|ipad|ipod/i.test(nav.userAgent) ||
+                (/macintosh/i.test(nav.userAgent) && nav.maxTouchPoints > 1)
+        )
     }, [])
 
     return isIos

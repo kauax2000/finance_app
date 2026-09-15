@@ -1,6 +1,7 @@
 "use client"
 
 import { supabase } from "@/lib/supabase"
+import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 
 export type WorkspaceMemberNotificationPrefs = {
     workspace_id: string
@@ -72,7 +73,12 @@ export async function getWorkspaceNotificationPrefs(
         .eq("workspace_id", workspaceId)
         .maybeSingle()
 
-    if (error) throw new Error(error.message)
+    if (error) {
+        throw new Error(
+            formatSupabasePostgrestError(error) ??
+                "Não foi possível carregar as preferências de notificação.",
+        )
+    }
     return (data as WorkspaceMemberNotificationPrefs) ?? null
 }
 
@@ -96,7 +102,10 @@ export async function ensureWorkspaceNotificationPrefsRow(
     if (error) {
         const reread = await getWorkspaceNotificationPrefs(userId, workspaceId)
         if (reread) return reread
-        throw new Error(error.message)
+        throw new Error(
+            formatSupabasePostgrestError(error) ??
+                "Não foi possível salvar as preferências de notificação.",
+        )
     }
 
     return data as WorkspaceMemberNotificationPrefs
@@ -117,6 +126,11 @@ export async function patchWorkspaceNotificationPrefs(
         .select("*")
         .single()
 
-    if (error) throw new Error(error.message)
+    if (error) {
+        throw new Error(
+            formatSupabasePostgrestError(error) ??
+                "Não foi possível salvar as preferências de notificação.",
+        )
+    }
     return data as WorkspaceMemberNotificationPrefs
 }

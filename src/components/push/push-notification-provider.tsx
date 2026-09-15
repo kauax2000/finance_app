@@ -1,5 +1,6 @@
 "use client"
 
+import { supabase } from "@/lib/supabase"
 import { useEffect, useRef } from "react"
 import { useAuth } from "@/components/providers"
 import { useWorkspaceNotificationPrefs } from "@/hooks/use-workspace-notification-prefs"
@@ -31,7 +32,16 @@ export function PushNotificationProvider({ children }: { children: React.ReactNo
                         await subscribeToPush()
                     }
                 } else {
-                    await unsubscribeFromPush()
+                    // A inscrição é do aparelho, não da carteira: só sai quando
+                    // nenhuma carteira da pessoa quer push.
+                    const { count, error } = await supabase
+                        .from("workspace_member_notification_prefs")
+                        .select("workspace_id", { count: "exact", head: true })
+                        .eq("user_id", user.id)
+                        .eq("notify_push", true)
+                    if (!error && (count ?? 0) === 0) {
+                        await unsubscribeFromPush()
+                    }
                 }
             } catch (err) {
                 console.warn("[push] sync failed", err)

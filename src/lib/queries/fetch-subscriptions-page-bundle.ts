@@ -5,10 +5,7 @@ import {
     type WorkspaceSubscription,
     type WorkspaceSubscriptionListRow,
 } from "@/lib/supabase"
-import {
-    formatSupabasePostgrestError,
-    isPostgrestRelationMissingError,
-} from "@/lib/supabase-errors"
+import { formatSupabasePostgrestError, isPostgrestRelationMissingError, throwIfQueryError } from "@/lib/supabase-errors"
 
 const SUBSCRIPTION_LIST_SELECT = "*, category:categories(*)"
 
@@ -85,8 +82,8 @@ async function fetchSubscriptionsPageBundleLegacy(
             .order("date", { ascending: false }),
     ])
 
-    const cats: Category[] =
-        !catRes.error && catRes.data ? (catRes.data as Category[]) : []
+    throwIfQueryError(catRes.error, "Não foi possível carregar as categorias.")
+    const cats: Category[] = (catRes.data as Category[] | null) ?? []
 
     let creditCards: CreditCard[] = []
     if (cardsRes.error) {
@@ -117,7 +114,8 @@ async function fetchSubscriptionsPageBundleLegacy(
     }
 
     let billingStats: Record<string, { count: number; lastDate: string }> = {}
-    if (!txSubRes.error && txSubRes.data) {
+    throwIfQueryError(txSubRes.error, "Não foi possível carregar as cobranças das assinaturas.")
+    if (txSubRes.data) {
         const m = new Map<string, { count: number; lastDate: string }>()
         for (const row of txSubRes.data as {
             subscription_id: string | null

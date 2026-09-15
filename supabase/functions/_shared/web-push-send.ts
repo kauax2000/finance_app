@@ -69,7 +69,7 @@ export async function sendWebPushToUser(args: {
           keys: { p256dh: row.p256dh, auth: row.auth },
         },
         body,
-        { TTL: 60 * 60 * 24 }
+        { TTL: 60 * 60 * 24, timeout: 10_000 }
       )
       sent += 1
     } catch (err) {

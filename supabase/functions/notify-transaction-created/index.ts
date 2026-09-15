@@ -1,4 +1,5 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
+import { internalError } from '../_shared/http.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import { secretMatches } from '../_shared/timing-safe-equal.ts'
 import { processTransactionNotification } from '../_shared/process-transaction-notification.ts'
@@ -87,7 +88,7 @@ Deno.serve(async (req: Request) => {
       .eq('id', transactionId)
       .maybeSingle()
 
-    if (ownerErr) return json(500, { error: ownerErr.message })
+    if (ownerErr) return json(500, { error: internalError('notify-transaction-created', ownerErr) })
     if (!txOwner) return json(404, { error: 'Transaction not found' })
     if (txOwner.user_id !== authResult.user.id) {
       return json(403, { error: 'Forbidden' })

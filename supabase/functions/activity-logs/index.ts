@@ -1,4 +1,5 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
+import { internalError } from '../_shared/http.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import { assertCallerSessionAllowed, type SupabaseAdmin } from '../_shared/session-guard.ts'
 
@@ -18,7 +19,7 @@ async function guardCallerSession(
   const result = await assertCallerSessionAllowed(supabaseAdmin, userId, token, req)
   if (result.ok) return null
   return new Response(
-    JSON.stringify({ error: result.message }),
+    JSON.stringify({ error: internalError('activity-logs', result) }),
     { status: result.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   )
 }
@@ -37,6 +38,7 @@ const ACTIVITY_TYPES = new Set([
 ])
 
 /** null window = always allow insert (no dedupe) */
+// Segurança nunca é deduplicada: duas trocas de senha num dia são dois eventos.
 const DEDUPE_WINDOW_MINUTES: Record<string, number | null> = {
   family_member_invited: 24 * 60,
   family_member_joined: 24 * 60,
@@ -44,10 +46,10 @@ const DEDUPE_WINDOW_MINUTES: Record<string, number | null> = {
   family_permission_changed: 60,
   family_role_changed: 60,
   profile_update: 60,
-  password_change: 24 * 60,
-  security_settings: 24 * 60,
-  device_added: 24 * 60,
-  device_removed: 24 * 60,
+  password_change: null,
+  security_settings: null,
+  device_added: null,
+  device_removed: null,
 }
 
 const STATUS_VALUES = new Set(['success', 'failed', 'pending'])
@@ -261,7 +263,6 @@ Deno.serve(async (req: Request) => {
       return new Response(
         JSON.stringify({
           error: 'Invalid or expired token',
-          details: authResult.error ?? 'unknown',
         }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
@@ -306,7 +307,7 @@ Deno.serve(async (req: Request) => {
         .limit(50)
 
       if (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
+        return new Response(JSON.stringify({ error: internalError('activity-logs', error) }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
@@ -391,7 +392,7 @@ Deno.serve(async (req: Request) => {
         .single()
 
       if (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
+        return new Response(JSON.stringify({ error: internalError('activity-logs', error) }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
@@ -419,7 +420,7 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
-    return new Response(JSON.stringify({ error: (error as Error).message }), {
+    return new Response(JSON.stringify({ error: internalError('activity-logs', error) }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

@@ -1,5 +1,7 @@
 "use client"
 
+import { percentPointsBR } from "@/lib/formatters"
+import { currencyBRL } from "@/lib/formatters"
 import { useCallback, useMemo, useState, type ReactNode } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import {
@@ -23,8 +25,17 @@ import {
     shiftYearMonth,
 } from "@/lib/budget-month"
 import { localYmdFromDate } from "@/lib/transaction-date"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import {
     DropdownMenu,
@@ -48,15 +59,7 @@ import { toastError, toastSuccess } from "@/lib/toast"
 import { transactionsWorkspaceAuxKeys } from "@/lib/queries/keys"
 import { CreditCardInvoiceCategorySpendSection } from "@/components/credit-cards/credit-card-invoice-category-spend-section"
 import { InvoiceDeltaVsPriorChip } from "@/components/credit-cards/invoice-delta-vs-prior-chip"
-const currencyFmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-})
-
-const pctFmt = new Intl.NumberFormat("pt-BR", {
-    maximumFractionDigits: 1,
-    minimumFractionDigits: 0,
-})
+import { deltaTone } from "@/lib/delta-tone"
 
 const SLICE_LABEL: Record<InvoiceSliceKey, string> = {
     installments_recurring: "Parcelas e recorrências",
@@ -100,6 +103,8 @@ function InvoiceFaturaHeaderStatus({
     onMarkPaid: () => void | Promise<void>
     onUnmarkPaid: () => void | Promise<void>
 }) {
+    const [confirmUnmarkOpen, setConfirmUnmarkOpen] = useState(false)
+
     if (status === "future") {
         return (
             <Badge
@@ -171,6 +176,7 @@ function InvoiceFaturaHeaderStatus({
     if (status === "paid") {
         if (!showPaymentMenu) return paidBadge
         return (
+            <>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <button
@@ -194,14 +200,29 @@ function InvoiceFaturaHeaderStatus({
                 <DropdownMenuContent align="end">
                     <DropdownMenuItem
                         disabled={paymentSaving}
-                        onSelect={() => {
-                            void onUnmarkPaid()
-                        }}
+                        onSelect={() => setConfirmUnmarkOpen(true)}
                     >
                         {paymentSaving ? "Salvando…" : "Desmarcar pagamento"}
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
+            <AlertDialog open={confirmUnmarkOpen} onOpenChange={setConfirmUnmarkOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Desmarcar pagamento da fatura?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            A fatura volta a constar como não paga e reaparece em Contas a pagar.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => void onUnmarkPaid()}>
+                            Desmarcar
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            </>
         )
     }
 
@@ -257,14 +278,6 @@ function sliceFillColor(key: InvoiceSliceKey): string {
     return key === "installments_recurring"
         ? "oklch(0.62 0.19 295)"
         : "oklch(0.62 0.18 240)"
-}
-
-function deltaPctLabel(a: number, b: number): string {
-    if (b === 0 && a === 0) return "—"
-    if (b === 0) return "—"
-    const d = ((a - b) / b) * 100
-    const sign = d > 0 ? "+" : ""
-    return `${sign}${pctFmt.format(d)}%`
 }
 
 export function InvoiceCycleSwitcher({
@@ -339,7 +352,7 @@ function committedVsPriorDeltaPct(snapshot: CardCycleSnapshot): {
         }
     }
     const sign = pct > 0 ? "+" : ""
-    const pctDisplay = `${sign}${pctFmt.format(pct)}%`
+    const pctDisplay = `${sign}${percentPointsBR(pct)}%`
     const label = `${pctDisplay} vs. fatura anterior`
     return {
         direction: pct > 0 ? "up" : "down",
@@ -707,7 +720,7 @@ export function CreditCardInvoiceAnalyticsPanel({
             const v = open[k]
             const share =
                 analytics.openTotal > 0 ? (v / analytics.openTotal) * 100 : 0
-            return `${SLICE_LABEL[k]} ${pctFmt.format(share)}%`
+            return `${SLICE_LABEL[k]} ${percentPointsBR(share)}%`
         })
         return `Composição da fatura: ${parts.join(", ")}`
     }, [open, analytics.openTotal])
@@ -725,7 +738,7 @@ export function CreditCardInvoiceAnalyticsPanel({
         const nPlans = analytics.installmentRows.length
         if (openTot > 0) {
             segs.push(
-                `${pctFmt.format((minC / openTot) * 100)}% da fatura planejada`
+                `${percentPointsBR((minC / openTot) * 100)}% da fatura planejada`
             )
         }
         if (nPlans > 0) {
@@ -803,7 +816,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                                 Valor
                                             </p>
                                             <p className="text-3xl font-bold tabular-nums tracking-tight text-foreground">
-                                                {currencyFmt.format(
+                                                {currencyBRL(
                                                     snapshot.committedOpenTotal
                                                 )}
                                             </p>
@@ -811,13 +824,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                         {committedVsPriorDelta ? (
                                             <Badge
                                                 size="sm"
-                                                tone={
-                                                    committedVsPriorDelta.direction === "down"
-                                                        ? "success"
-                                                        : committedVsPriorDelta.direction === "up"
-                                                          ? "expense"
-                                                          : "neutral"
-                                                }
+                                                tone={deltaTone(committedVsPriorDelta.direction, "expense")}
                                                 className="gap-1 shrink-0 tabular-nums"
                                                 title={committedVsPriorDelta.label}
                                                 aria-label={committedVsPriorDelta.ariaLabel}
@@ -875,7 +882,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                         Uso do limite estimado
                                     </span>
                                     <span className="tabular-nums text-sm font-semibold text-foreground">
-                                        {pctFmt.format(openLimitPct)}%
+                                        {percentPointsBR(openLimitPct)}%
                                     </span>
                                 </div>
                                 <div
@@ -933,7 +940,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 Composição
                             </h3>
-                            <p className="shrink-0 text-xs font-medium capitalize tabular-nums text-muted-foreground">
+                            <p className="shrink-0 text-xs font-medium tabular-nums text-muted-foreground">
                                 {invoicePeriodLabel}
                             </p>
                         </div>
@@ -998,7 +1005,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                                         Distribuição
                                                     </p>
                                                     <p className="mt-1 max-w-[min(11rem,82%)] text-lg font-semibold tabular-nums text-foreground md:text-xl">
-                                                        {currencyFmt.format(
+                                                        {currencyBRL(
                                                             analytics.openTotal
                                                         )}
                                                     </p>
@@ -1009,12 +1016,12 @@ export function CreditCardInvoiceAnalyticsPanel({
                                                         {SLICE_LABEL[activeSlice]}
                                                     </p>
                                                     <p className="mt-1 text-lg font-semibold tabular-nums text-foreground md:text-xl">
-                                                        {currencyFmt.format(
+                                                        {currencyBRL(
                                                             open[activeSlice]
                                                         )}
                                                     </p>
                                                     <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">
-                                                        {pctFmt.format(
+                                                        {percentPointsBR(
                                                             analytics.openTotal > 0
                                                                 ? (open[activeSlice] /
                                                                       analytics.openTotal) *
@@ -1065,7 +1072,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                                                 <span className="font-normal text-muted-foreground">
                                                                     {" "}
                                                                     ·{" "}
-                                                                    {pctFmt.format(share)}%
+                                                                    {percentPointsBR(share)}%
                                                                 </span>
                                                             </span>
                                                         </span>
@@ -1076,7 +1083,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                                                 ariaContext="fatia"
                                                             />
                                                             <span>
-                                                                {currencyFmt.format(v)}
+                                                                {currencyBRL(v)}
                                                             </span>
                                                         </span>
                                                     </button>
@@ -1100,13 +1107,13 @@ export function CreditCardInvoiceAnalyticsPanel({
                                             Dias úteis
                                         </p>
                                         <p className="text-base font-semibold tabular-nums leading-snug text-foreground">
-                                            {currencyFmt.format(
+                                            {currencyBRL(
                                                 analytics.weekdayWeekend.weekdayTotal
                                             )}
                                         </p>
                                     </div>
                                     <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                                        {pctFmt.format(analytics.weekdayWeekend.weekdayPct)}%
+                                        {percentPointsBR(analytics.weekdayWeekend.weekdayPct)}%
                                     </p>
                                 </div>
                             </div>
@@ -1117,13 +1124,13 @@ export function CreditCardInvoiceAnalyticsPanel({
                                             Fim de semana
                                         </p>
                                         <p className="text-base font-semibold tabular-nums leading-snug text-foreground">
-                                            {currencyFmt.format(
+                                            {currencyBRL(
                                                 analytics.weekdayWeekend.weekendTotal
                                             )}
                                         </p>
                                     </div>
                                     <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                                        {pctFmt.format(analytics.weekdayWeekend.weekendPct)}%
+                                        {percentPointsBR(analytics.weekdayWeekend.weekendPct)}%
                                     </p>
                                 </div>
                             </div>
@@ -1137,7 +1144,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                     <>
                                         A maior concentração de gastos aconteceu na semana{" "}
                                         {strongestWeek} deste período, totalizando{" "}
-                                        {currencyFmt.format(strongestWeekTotal)}.
+                                        {currencyBRL(strongestWeekTotal)}.
                                     </>
                                 ) : (
                                     <>
@@ -1180,7 +1187,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                     </p>
                                     <p className="text-base font-semibold tabular-nums leading-snug text-foreground">
                                         {analytics.meanTicket != null
-                                            ? currencyFmt.format(analytics.meanTicket)
+                                            ? currencyBRL(analytics.meanTicket)
                                             : "—"}
                                     </p>
                                     <p className="text-2xs leading-snug text-muted-foreground">
@@ -1195,7 +1202,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                     </p>
                                     <p className="text-base font-semibold tabular-nums leading-snug text-foreground">
                                         {analytics.medianTicket != null
-                                            ? currencyFmt.format(analytics.medianTicket)
+                                            ? currencyBRL(analytics.medianTicket)
                                             : "—"}
                                     </p>
                                     <p className="text-2xs leading-snug text-muted-foreground">
@@ -1234,7 +1241,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                 Total mínimo comprometido
                             </p>
                             <p className="text-2xl font-bold tabular-nums tracking-tight text-foreground md:text-3xl">
-                                {currencyFmt.format(analytics.minimumCommittedOpen)}
+                                {currencyBRL(analytics.minimumCommittedOpen)}
                             </p>
                         </div>
                     </div>

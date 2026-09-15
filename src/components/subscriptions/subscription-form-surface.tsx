@@ -54,7 +54,7 @@ export function SubscriptionFormSurface({
             {variant === "dialog-desktop" || variant === "detail-sheet" ? (
                 <Button
                     type="button"
-                    variant="outline"
+                    variant="tertiary"
                     size="sm"
                     className={cn(
                         variant === "detail-sheet" && "max-sm:hidden"

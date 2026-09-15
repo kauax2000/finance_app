@@ -67,6 +67,17 @@ const nextConfig: NextConfig = {
         destination: "/credit-cards",
         permanent: true,
       },
+      {
+        source: "/settings/credit-cards",
+        destination: "/credit-cards",
+        permanent: true,
+      },
+      {
+        // A gaveta de notificações abre pela query no shell do app.
+        source: "/notifications",
+        destination: "/dashboard?notifications=1",
+        permanent: false,
+      },
     ]
   },
 };

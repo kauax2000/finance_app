@@ -1,3 +1,4 @@
+import { localYmdFromDate } from "@/lib/transaction-date"
 import {
     supabase,
     type Bill,
@@ -12,10 +13,7 @@ import {
     normalizeCcTxRow,
     type CcTxRow,
 } from "@/lib/credit-cards-workspace-transactions"
-import {
-    formatSupabasePostgrestError,
-    isPostgrestRelationMissingError,
-} from "@/lib/supabase-errors"
+import { formatSupabasePostgrestError, isPostgrestRelationMissingError, throwIfQueryError } from "@/lib/supabase-errors"
 
 const BILL_LIST_SELECT =
     "*, category:categories(id,name,type,color,icon,user_id,workspace_id)"
@@ -108,7 +106,8 @@ async function fetchBillsPageBundleLegacy(
 
     const ninetyDaysAgo = new Date()
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
-    const since = ninetyDaysAgo.toISOString().slice(0, 10)
+    // Data local: em UTC, depois das 21h o corte já pulava para o dia seguinte.
+    const since = localYmdFromDate(ninetyDaysAgo)
 
     const [pendingRes, paidRes] = await Promise.all([
         supabase
@@ -167,6 +166,12 @@ async function fetchBillsPageBundleLegacy(
             .select("*")
             .eq("workspace_id", workspaceId),
     ])
+
+    throwIfQueryError(cats.error, "Não foi possível carregar as categorias.")
+    throwIfQueryError(cards.error, "Não foi possível carregar os cartões.")
+    throwIfQueryError(ccPack.error, "Não foi possível carregar os lançamentos dos cartões.")
+    throwIfQueryError(plans.error, "Não foi possível carregar os parcelamentos.")
+    throwIfQueryError(invPay.error, "Não foi possível carregar os pagamentos de fatura.")
 
     return {
         bills,

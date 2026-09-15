@@ -1,7 +1,17 @@
 "use client"
 
 import { MoneyDisplay } from "@/components/ui/money-display"
+import { currencyBRL, percentBR, signedCurrencyBRL } from "@/lib/formatters"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { Group, Spec, Stack } from "../ds-kit"
+
+const EXEMPLOS = [
+  ["currencyBRL(1234.5)", currencyBRL(1234.5), "o padrão: todo valor exibido"],
+  ["currencyBRL(1234.5, { compact: true })", currencyBRL(1234.5, { compact: true }), "eixo de gráfico, cartão estreito"],
+  ["signedCurrencyBRL(1234.5)", signedCurrencyBRL(1234.5), "coluna onde entrada e saída convivem"],
+  ["signedCurrencyBRL(-89.9)", signedCurrencyBRL(-89.9), "o sinal vem do número"],
+  ["percentBR(0.8842)", percentBR(0.8842), "orçamento consumido, variação"],
+]
 
 export default function MoneyDisplayDoc() {
   return (
@@ -77,6 +87,94 @@ export default function MoneyDisplayDoc() {
         <MoneyDisplay value={1234567} compact size="xl" />
       </DocSection>
 
+      <Group
+        title="Quando o valor precisa ser string"
+        description="Em src/lib/formatters.ts, e o MoneyDisplay usa currencyBRL por dentro. As funções servem para onde um componente não cabe: rótulo de eixo, texto de notificação, aria-label, exportação."
+      >
+        <Spec title="Saídas" meta="lib/formatters.ts">
+          <Stack className="gap-3">
+            {EXEMPLOS.map(([chamada, saida, uso]) => (
+              <div key={chamada} className="flex flex-col">
+                <code className="font-mono text-2xs text-muted-foreground">
+                  {chamada}
+                </code>
+                <span className="nums text-sm font-medium text-foreground">
+                  {saida}
+                </span>
+                <span className="text-xs text-muted-foreground">{uso}</span>
+              </div>
+            ))}
+          </Stack>
+        </Spec>
+
+        <Spec title="Qual usar">
+          <Stack className="gap-2 text-xs text-muted-foreground">
+            <p>
+              <strong className="text-foreground">MoneyDisplay</strong> —
+              quando o valor aparece na tela. Ele já resolve cor, tamanho e
+              alinhamento.
+            </p>
+            <p>
+              <strong className="text-foreground">currencyBRL</strong> — quando
+              o resultado precisa ser uma string: eixo de gráfico, texto de
+              push, <code>aria-label</code>, exportação.
+            </p>
+            <p>
+              <strong className="text-foreground">&lt;Input money&gt;</strong> —
+              quando o app <em>recebe</em> o valor. Com rótulo e erro ligados,{" "}
+              <strong className="text-foreground">&lt;FormInput money&gt;</strong>.
+            </p>
+          </Stack>
+        </Spec>
+      </Group>
+
+      <Group title="A regra do sinal e da cor" layout="grid">
+        <Spec title="Numa lista mista">
+          <Stack className="gap-1">
+            <div className="flex items-baseline justify-between gap-4">
+              <span className="text-sm text-muted-foreground">Salário</span>
+              <MoneyDisplay value={8432.15} signed tone="income" mono />
+            </div>
+            <div className="flex items-baseline justify-between gap-4">
+              <span className="text-sm text-muted-foreground">Mercado</span>
+              <MoneyDisplay value={-128.4} signed tone="expense" mono />
+            </div>
+            <div className="flex items-baseline justify-between gap-4">
+              <span className="text-sm text-muted-foreground">Streaming</span>
+              <MoneyDisplay value={-39.9} signed tone="expense" mono />
+            </div>
+          </Stack>
+        </Spec>
+
+        <Spec title="Numa lista de um tipo só">
+          <Stack className="gap-1">
+            <p className="mb-1 text-2xs text-muted-foreground uppercase">
+              Despesas de março
+            </p>
+            <div className="flex items-baseline justify-between gap-4">
+              <span className="text-sm text-muted-foreground">Mercado</span>
+              <MoneyDisplay value={128.4} mono />
+            </div>
+            <div className="flex items-baseline justify-between gap-4">
+              <span className="text-sm text-muted-foreground">Streaming</span>
+              <MoneyDisplay value={39.9} mono />
+            </div>
+          </Stack>
+        </Spec>
+      </Group>
+
+      <DocNote title="Sinal e cor juntos são redundantes, e tudo bem">
+        Quando entrada e saída convivem na mesma lista, o sinal e a cor dizem a
+        mesma coisa de duas formas. Isso é proposital: cerca de 8% dos homens não
+        distingue verde de vermelho, e para eles a cor sozinha não carrega nada.
+      </DocNote>
+
+      <DocNote title="Numa lista de um tipo só, o sinal atrapalha">
+        Numa tela chamada &ldquo;Despesas&rdquo;, um menos na frente de cada
+        valor não acrescenta informação e ainda dá a impressão de desconto.
+        Sinal só onde há mistura.
+      </DocNote>
+
       <DocNote title="O menos é o tipográfico, nos dois caminhos">
         O <code>Intl</code> devolve <code>-R$ 89,90</code>{" "}
         com hífen-menos (U+002D), e o caminho de <code>signed</code>{" "}
@@ -107,10 +205,10 @@ export default function MoneyDisplayDoc() {
         rows={[
           { prop: "value", type: "number | null | undefined", description: "O valor. null vira zero." },
           { prop: "tone", type: '"default" | "income" | "expense" | "muted"', default: '"default"', description: "A cor do valor." },
-          { prop: "size", type: '"sm" | "default" | "lg" | "xl" | "2xl"', default: '"default"', description: "O tamanho do texto." },
+          { prop: "size", type: '"sm" | "md" | "lg" | "xl" | "2xl"', default: '"md"', description: "O tamanho do texto." },
           { prop: "signed", type: "boolean", default: "false", description: "Mostra o + no positivo." },
           { prop: "compact", type: "boolean", default: "false", description: "1,2 mil em vez de 1.234,50." },
-          { prop: "tabular", type: "boolean", default: "xl e 2xl", description: "Força ou desliga a Geist Mono." },
+          { prop: "mono", type: "boolean", default: "xl e 2xl", description: "Força ou desliga a Geist Mono. A figura tabular fica ligada sempre." },
         ]}
       />
     </>

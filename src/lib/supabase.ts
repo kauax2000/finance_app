@@ -112,6 +112,8 @@ export interface WorkspaceSubscription {
     start_date: string
     next_billing_date: string | null
     day_of_month: number | null
+    /** Dia do mês em que a cobrança cai; mantido pelo banco (trigger `maintain_billing_anchor_day`). */
+    billing_anchor_day?: number | null
     category_id: string | null
     notes: string | null
     payment_method: TransactionPaymentMethod | null
@@ -194,6 +196,8 @@ export interface WorkspaceInstallmentPlan {
     installment_amount: number
     final_installment_amount: number
     next_billing_date: string
+    /** Dia do mês das parcelas; mantido pelo banco (trigger `maintain_billing_anchor_day`). */
+    billing_anchor_day?: number | null
     is_active: boolean
     created_at: string
     updated_at: string
@@ -348,8 +352,6 @@ export interface WorkspaceInvite {
     invited_email: string | null
     role: "member"
     token_hash: string
-    /** Plain token for building accept URL; only returned when RLS allows (owner or invited email). */
-    token_raw?: string | null
     status: WorkspaceInviteStatus
     expires_at: string
     created_by: string

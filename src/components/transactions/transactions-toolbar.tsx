@@ -1,5 +1,6 @@
 "use client"
 
+import { formatYmdPtBr } from "@/lib/transaction-date"
 import * as React from "react"
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/16/solid"
 import { XMarkIcon } from "@heroicons/react/20/solid"
@@ -49,10 +50,10 @@ function filtersSummaryLine(args: {
         return `${t} · ${transactionsPresetSummaryLabel(args.datePreset)}`
     }
     if (args.filterDateFrom && args.filterDateTo) {
-        return `${t} · ${args.filterDateFrom} → ${args.filterDateTo}`
+        return `${t} · ${formatYmdPtBr(args.filterDateFrom)} → ${formatYmdPtBr(args.filterDateTo)}`
     }
-    if (args.filterDateFrom) return `${t} · De ${args.filterDateFrom}`
-    if (args.filterDateTo) return `${t} · Até ${args.filterDateTo}`
+    if (args.filterDateFrom) return `${t} · De ${formatYmdPtBr(args.filterDateFrom)}`
+    if (args.filterDateTo) return `${t} · Até ${formatYmdPtBr(args.filterDateTo)}`
     return `${t} · Período personalizado`
 }
 
@@ -131,9 +132,6 @@ export function TransactionsToolbar({
 }) {
     const isMobile = useIsMobile()
     const [filtersSheetOpen, setFiltersSheetOpen] = React.useState(false)
-
-    const rangeFrom = fullPeriod ? "" : filterDateFrom
-    const rangeTo = fullPeriod ? "" : filterDateTo
 
     const summary = filtersSummaryLine({
         filterType,
@@ -305,7 +303,7 @@ export function TransactionsToolbar({
                 }}
             >
                 <SheetContent
-                    side={isMobile ? "bottom" : "right"}
+                    side="right"
                     fillMobileViewport={isMobile}
                     className={cn(
                         "flex w-full flex-col gap-0 overflow-hidden p-0",
@@ -357,7 +355,8 @@ export function TransactionsToolbar({
                         >
                             <Button
                                 type="button"
-                                variant="destructive"
+                                // Limpar filtros não apaga dado nenhum: vermelho aqui era alarme falso.
+                                variant="tertiary"
                                 size={isMobile ? "xl" : "lg"}
                                 className={isMobile ? "w-full" : undefined}
                                 onClick={() => {

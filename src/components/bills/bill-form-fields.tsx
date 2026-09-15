@@ -1,5 +1,6 @@
 "use client"
 
+import { paymentMethodOptions } from "@/lib/payment-methods"
 import { useMemo } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -25,7 +26,6 @@ import { parseYmdLocal, localYmdFromDate } from "@/lib/transaction-date"
 import {
     BILL_CATEGORY_NONE,
     BILL_FREQUENCY_OPTIONS,
-    BILL_PAYMENT_OPTIONS,
     BILL_PAYMENT_NONE,
 } from "@/components/bills/bill-form-shared"
 import {
@@ -266,7 +266,14 @@ export function BillFormFields({
                 <Label>Forma de pagamento preferida</Label>
                 <Select
                     value={paymentMethodOption}
-                    onValueChange={setPaymentMethodOption}
+                    onValueChange={(next) => {
+                        setPaymentMethodOption(next)
+                        // O seletor mostrava o primeiro cartão com o estado vazio, e a
+                        // conta era salva sem cartão. O primeiro cartão vai para o estado.
+                        if (next === "credit_card" && !paymentCreditCardId && creditCards[0]) {
+                            setPaymentCreditCardId(creditCards[0].id)
+                        }
+                    }}
                 >
                     <SelectTrigger
                         size="sm"
@@ -277,7 +284,7 @@ export function BillFormFields({
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value={BILL_PAYMENT_NONE}>— Não definido —</SelectItem>
-                        {BILL_PAYMENT_OPTIONS.map((o) => (
+                        {paymentMethodOptions().map((o) => (
                             <SelectItem key={o.value} value={o.value}>
                                 {o.label}
                             </SelectItem>
@@ -289,10 +296,7 @@ export function BillFormFields({
                 <div className="grid gap-2">
                     <Label>Cartão</Label>
                     <Select
-                        value={
-                            paymentCreditCardId ||
-                            (creditCards[0]?.id ?? "")
-                        }
+                        value={paymentCreditCardId}
                         onValueChange={setPaymentCreditCardId}
                     >
                         <SelectTrigger

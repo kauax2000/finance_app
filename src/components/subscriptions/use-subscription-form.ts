@@ -1,5 +1,7 @@
 "use client"
 
+import { localYmdFromDate } from "@/lib/transaction-date"
+import { formatMoneyBrlInput } from "@/lib/money-brl"
 import { useCallback, useEffect, useState } from "react"
 import type {
     CreditCard,
@@ -11,7 +13,6 @@ import { toastError } from "@/lib/toast"
 import {
     SUBSCRIPTION_SELECT_NONE,
     buildSubscriptionFormPayload,
-    subscriptionTodayIsoDate,
     type ExpenseCategoryOption,
     type SubscriptionFormPayload,
 } from "@/components/subscriptions/subscription-form-shared"
@@ -52,7 +53,7 @@ export function useSubscriptionForm({
     const [billingInterval, setBillingInterval] =
         useState<SubscriptionBillingInterval>("monthly")
     const [billingDate, setBillingDate] = useState(() =>
-        subscriptionTodayIsoDate()
+        localYmdFromDate(new Date())
     )
     const [categoryId, setCategoryId] = useState<string>(
         SUBSCRIPTION_SELECT_NONE
@@ -68,7 +69,7 @@ export function useSubscriptionForm({
         if (editingSubscription) {
             // eslint-disable-next-line react-hooks/set-state-in-effect -- sync fields when edit/create surface opens
             setName(editingSubscription.name)
-            setAmount(String(editingSubscription.amount).replace(".", ","))
+            setAmount(formatMoneyBrlInput(editingSubscription.amount))
             setBillingInterval(editingSubscription.billing_interval)
             setBillingDate(
                 editingSubscription.next_billing_date
@@ -87,7 +88,7 @@ export function useSubscriptionForm({
             setName("")
             setAmount("")
             setBillingInterval("monthly")
-            setBillingDate(subscriptionTodayIsoDate())
+            setBillingDate(localYmdFromDate(new Date()))
             setCategoryId(SUBSCRIPTION_SELECT_NONE)
             setNotes("")
             setPaymentMethod(null)

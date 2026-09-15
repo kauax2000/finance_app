@@ -15,6 +15,7 @@ import {
   EmptyStateIcon,
   EmptyStateTitle,
 } from "@/components/ui/empty-state"
+import { Skeleton } from "@/components/ui/skeleton"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 export default function EmptyStateDoc() {
@@ -102,6 +103,28 @@ export default function EmptyStateDoc() {
             <Button variant="tertiary">Voltar ao início</Button>
           </EmptyStateActions>
         </EmptyState>
+      </DocSection>
+
+      <DocSection
+        title="Os quatro estados, na ordem"
+        description="Toda tela tem quatro: carregando, erro, vazio e com conteúdo. Uma tela que só desenha o último está incompleta, mesmo parecendo pronta onde o dado chega em 20ms. Carregando vem antes de vazio, e o esqueleto tem a forma do que vem depois."
+        code={`if (isLoading) return <ListaSkeleton />
+if (error) return <ErroComTentarDeNovo />
+if (!itens.length) return <EmptyState … />
+return <Lista itens={itens} />`}
+        previewClassName="items-stretch"
+      >
+        <div className="flex w-full max-w-sm flex-col gap-3">
+          {[0, 1].map((i) => (
+            <div key={i} className="flex items-center gap-3">
+              <Skeleton className="size-10 shrink-0 rounded-full" />
+              <div className="min-w-0 flex-1">
+                <Skeleton className="h-4 w-28 max-w-full" />
+                <Skeleton className="mt-1.5 h-3 w-16 max-w-full" />
+              </div>
+            </div>
+          ))}
+        </div>
       </DocSection>
 
       <DocSection

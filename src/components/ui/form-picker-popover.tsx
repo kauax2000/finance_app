@@ -195,11 +195,14 @@ function FormPickerPopoverContent({
       side="bottom"
       align="start"
       sideOffset={6}
-      // Abrir não rouba o foco: num seletor ancorado a um campo, isso fecharia
-      // o teclado do telefone e faria a folha inteira saltar. **Fechar** devolve
-      // o foco ao gatilho, que é o padrão do Radix e o que o teclado precisa.
+      // Abrir não rouba o foco **no toque**: ali isso fecharia o teclado do
+      // telefone e faria a folha inteira saltar. Com mouse e teclado, o foco
+      // entra — sem ele, quem navega por teclado no desktop não alcançava a
+      // busca nem a lista. **Fechar** devolve o foco ao gatilho, como o Radix faz.
       onOpenAutoFocus={(e) => {
-        e.preventDefault()
+        if (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches) {
+          e.preventDefault()
+        }
         onOpenAutoFocus?.(e)
       }}
       padding="none"

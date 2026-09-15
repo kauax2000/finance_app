@@ -1,5 +1,6 @@
 "use client"
 
+import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy"
 import { useState } from "react"
 import { useAuth } from "@/components/providers"
 import { supabase } from "@/lib/supabase"
@@ -46,7 +47,7 @@ interface PasswordRequirements {
 
 function checkPasswordRequirements(password: string): PasswordRequirements {
     return {
-        hasMinLength: password.length >= 8,
+        hasMinLength: password.length >= MIN_PASSWORD_LENGTH,
         hasLowercase: /[a-z]/.test(password),
         hasUppercase: /[A-Z]/.test(password),
         hasDigit: /\d/.test(password),
@@ -197,6 +198,8 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         size="sm"
                         className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                         onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                        aria-label={showCurrentPassword ? "Ocultar senha atual" : "Mostrar senha atual"}
+                        aria-pressed={showCurrentPassword}
                     >
                         {showCurrentPassword ? (
                             <EyeSlashIcon className="h-4 w-4" />
@@ -226,6 +229,8 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         size="sm"
                         className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                         onClick={() => setShowNewPassword(!showNewPassword)}
+                        aria-label={showNewPassword ? "Ocultar nova senha" : "Mostrar nova senha"}
+                        aria-pressed={showNewPassword}
                     >
                         {showNewPassword ? (
                             <EyeSlashIcon className="h-4 w-4" />
@@ -266,6 +271,8 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         size="sm"
                         className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        aria-label={showConfirmPassword ? "Ocultar confirmação de senha" : "Mostrar confirmação de senha"}
+                        aria-pressed={showConfirmPassword}
                     >
                         {showConfirmPassword ? (
                             <EyeSlashIcon className="h-4 w-4" />
@@ -305,7 +312,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
             {isMobile ? (
                 <DialogFooter className={sheetFooterMobileClass}>
                     {!success ? (
-                        <Button type="submit" disabled={loading} className="h-10 w-full">
+                        <Button type="submit" disabled={loading} size="xl" className="w-full">
                             {loading ? "Alterando..." : "Alterar senha"}
                         </Button>
                     ) : null}

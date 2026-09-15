@@ -64,7 +64,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    "public/sw.js",
+    // O SW compilado e as cópias que o Finder deixa ao duplicar ("sw 2.js").
+    "public/sw*.js",
   ]),
 ]);
 

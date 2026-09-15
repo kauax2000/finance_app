@@ -66,7 +66,6 @@ function InvitedCarteiraOverflowMenu({
                 <DropdownMenuContent
                     align="end"
                     className="w-48"
-                    onCloseAutoFocus={(e) => e.preventDefault()}
                 >
                     <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
@@ -109,7 +108,6 @@ function OwnerCarteiraOverflowMenu({
                 <DropdownMenuContent
                     align="end"
                     className="w-48"
-                    onCloseAutoFocus={(e) => e.preventDefault()}
                 >
                     <DropdownMenuItem onSelect={() => onEdit()}>
                         <PencilIcon className="h-4 w-4" aria-hidden />

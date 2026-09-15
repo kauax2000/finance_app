@@ -1,8 +1,13 @@
 "use client"
 
+import { compareYmd } from "@/lib/transaction-date"
+import { billDuePill, billDaysDeltaLabel } from "@/components/bills/bill-status"
 import { CreditCardIcon, EllipsisHorizontalIcon, ForwardIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { CreditCardIcon as CreditCardMiniIcon } from "@heroicons/react/20/solid"
-import { Badge } from "@/components/ui/badge"
+import {
+    Badge,
+    tagChipInfo,
+} from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
     Card,
@@ -24,21 +29,13 @@ import {
     CategoryIconPreview,
     normalizeCategoryIcon,
 } from "@/components/categories/category-appearance-fields"
-import { formatTransactionDmyPtBr } from "@/lib/transaction-date"
-import { cn } from "@/lib/utils"
 import {
-    tagChipDanger,
-    tagChipInfo,
-    tagChipNeutral,
-    tagChipWarning,
-} from "@/lib/tag-chip-classes"
+    formatTransactionDmyPtBr,
+} from "@/lib/transaction-date"
+import { cn } from "@/lib/utils"
 import { ColorTile } from "@/components/ui/color-tile"
 
 const EXPENSE_CATEGORY_FALLBACK_COLOR = "var(--expense)"
-
-function cmpYmd(a: string, b: string): number {
-    return a.localeCompare(b)
-}
 
 function pendingStatusPill(
     row: BillPendingRow,
@@ -47,26 +44,7 @@ function pendingStatusPill(
     if (row.kind === "virtual_cc") {
         return { label: "Fatura cartão", className: tagChipInfo }
     }
-    if (cmpYmd(row.dueYmd, todayYmd) < 0) {
-        return { label: "Atrasada", className: tagChipDanger }
-    }
-    if (row.dueYmd === todayYmd) {
-        return { label: "Hoje", className: tagChipWarning }
-    }
-    return { label: "Pendente", className: tagChipNeutral }
-}
-
-function daysDeltaLabel(dueYmd: string, todayYmd: string): string {
-    const partsDue = dueYmd.split("-").map((x) => Number.parseInt(x, 10))
-    const partsTo = todayYmd.split("-").map((x) => Number.parseInt(x, 10))
-    const dDue = new Date(partsDue[0] ?? 1970, (partsDue[1] ?? 1) - 1, partsDue[2] ?? 1)
-    const dTo = new Date(partsTo[0] ?? 1970, (partsTo[1] ?? 1) - 1, partsTo[2] ?? 1)
-    const ms = dDue.getTime() - dTo.getTime()
-    const days = Math.round(ms / 86400000)
-    if (days === 0) return "vence hoje"
-    if (days > 0) return `em ${days} dia${days === 1 ? "" : "s"}`
-    const a = Math.abs(days)
-    return `há ${a} dia${a === 1 ? "" : "s"}`
+    return billDuePill(row.dueYmd, todayYmd)
 }
 
 export type BillPendingCardProps = {
@@ -90,7 +68,7 @@ export function BillPendingCard({
 }: BillPendingCardProps) {
     const pill = pendingStatusPill(row, todayYmd)
     const dueFmt = formatTransactionDmyPtBr(`${row.dueYmd}T12:00:00`)
-    const delta = daysDeltaLabel(row.dueYmd, todayYmd)
+    const delta = billDaysDeltaLabel(row.dueYmd, todayYmd)
     const isEstimated =
         row.kind === "regular"
             ? row.instance.amount == null &&
@@ -235,7 +213,7 @@ export function BillPendingCard({
                             <span className="text-muted-foreground/70"> · </span>
                             <span
                                 className={cn(
-                                    cmpYmd(row.dueYmd, todayYmd) < 0 &&
+                                    compareYmd(row.dueYmd, todayYmd) < 0 &&
                                         "font-medium text-destructive"
                                 )}
                             >

@@ -22,6 +22,8 @@ export default function AcceptInvitePageClient() {
     const { refreshWorkspaces, setCurrentWorkspaceId } = useWorkspace()
     const params = useSearchParams()
     const token = useMemo(() => params.get("token")?.trim() ?? "", [params])
+    /** Convite por e-mail aberto pelo menu de carteiras: o id basta, quem decide é o e-mail. */
+    const inviteId = useMemo(() => params.get("invite")?.trim() ?? "", [params])
 
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -33,14 +35,17 @@ export default function AcceptInvitePageClient() {
     refreshWorkspacesRef.current = refreshWorkspaces
     setCurrentWorkspaceIdRef.current = setCurrentWorkspaceId
 
-    const loginHref = `${ROUTES.LOGIN}?next=${encodeURIComponent(`/invites/accept?token=${token}`)}`
-    const signupHref = `/register?next=${encodeURIComponent(`/invites/accept?token=${token}`)}`
+    const returnPath = token
+        ? `/invites/accept?token=${encodeURIComponent(token)}`
+        : `/invites/accept?invite=${encodeURIComponent(inviteId)}`
+    const loginHref = `${ROUTES.LOGIN}?next=${encodeURIComponent(returnPath)}`
+    const signupHref = `/register?next=${encodeURIComponent(returnPath)}`
 
     useEffect(() => {
         const run = async () => {
             if (authLoading) return
 
-            if (!token) {
+            if (!token && !inviteId) {
                 setAuthGate(false)
                 setError("Convite inválido (token ausente).")
                 setLoading(false)
@@ -60,7 +65,7 @@ export default function AcceptInvitePageClient() {
 
             try {
                 const res = await invokeEdgeJson<AcceptResponse>("workspace-invites-accept", {
-                    body: { token },
+                    body: token ? { token } : { invite_id: inviteId },
                 })
 
                 setError(null)
@@ -81,6 +86,9 @@ export default function AcceptInvitePageClient() {
                 if (/not pending|invite is not pending/i.test(msg)) {
                     msg = "Este convite já foi utilizado ou não está mais pendente."
                 }
+                if (/invite not found/i.test(msg)) {
+                    msg = "Convite não encontrado. Peça um novo a quem convidou você."
+                }
                 setError(msg)
             } finally {
                 setLoading(false)
@@ -88,9 +96,9 @@ export default function AcceptInvitePageClient() {
         }
 
         void run()
-    }, [token, user, authLoading])
+    }, [token, inviteId, user, authLoading])
 
-    const showSuccess = !loading && !error && !authGate && Boolean(user) && Boolean(token)
+    const showSuccess = !loading && !error && !authGate && Boolean(user) && Boolean(token || inviteId)
 
     return (
         <div className="mx-auto w-full max-w-xl">

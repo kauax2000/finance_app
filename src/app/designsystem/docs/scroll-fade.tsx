@@ -3,7 +3,12 @@
 import type * as React from "react"
 
 import { ScrollFade } from "@/components/ui/scroll-fade"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
 import { ColorTile } from "@/components/ui/color-tile"
 import { Caption } from "@/components/ui/typography"
@@ -97,6 +102,7 @@ export default function ScrollFadeDoc() {
             <Button variant="outline">abrir sobre um popover</Button>
           </PopoverTrigger>
           <PopoverContent padding="none" className="w-56">
+            <PopoverTitle className="sr-only">Carteiras</PopoverTitle>
             <ScrollFade className="h-40">
               <div className="flex flex-col p-3">
                 {Array.from({ length: 15 }, (_, i) => (

@@ -1,5 +1,6 @@
 "use client"
 
+import { currencyBRL } from "@/lib/formatters"
 import { useState } from "react"
 import Link from "next/link"
 import type { CreditCard, CreditCardInvoicePayment } from "@/lib/supabase"
@@ -28,11 +29,6 @@ import {
 import { ArrowUpRightIcon, ChevronDownIcon, PencilIcon, PowerIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { EllipsisHorizontalIcon } from "@heroicons/react/20/solid"
 import { cn } from "@/lib/utils"
-
-const currencyFmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-})
 
 function formatExpiryLine(card: CreditCard): string | null {
     const m = card.expiry_month
@@ -273,7 +269,7 @@ export function CreditCardDetailView({
                                         <dt className="text-muted-foreground">Limite</dt>
                                         <dd className="tabular-nums font-medium text-foreground">
                                             {limitNum != null && !Number.isNaN(limitNum)
-                                                ? currencyFmt.format(limitNum)
+                                                ? currencyBRL(limitNum)
                                                 : "—"}
                                         </dd>
                                     </div>

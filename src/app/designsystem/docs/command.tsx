@@ -70,7 +70,9 @@ export default function CommandDoc() {
               <CommandItem>
                 <PlusIcon aria-hidden />
                 Nova transação
-                <CommandShortcut>⌘N</CommandShortcut>
+                <CommandShortcut>
+                  <Kbd keys="mod+n" />
+                </CommandShortcut>
               </CommandItem>
             </CommandGroup>
           </CommandList>
@@ -78,7 +80,7 @@ export default function CommandDoc() {
       </DocSection>
 
       <DocSection
-        title="Como diálogo (⌘K)"
+        title="Como diálogo (⌘K ou Ctrl+K)"
         code={`const [open, setOpen] = React.useState(false)
 
 React.useEffect(() => {
@@ -104,22 +106,24 @@ React.useEffect(() => {
     <CommandItemTitle>Nova transação</CommandItemTitle>
     <CommandItemDescription>Lança uma despesa ou receita</CommandItemDescription>
   </CommandItemContent>
-  <CommandShortcut>⌘N</CommandShortcut>
+  <CommandShortcut><Kbd keys="mod+n" /></CommandShortcut>
 </CommandItem>`}
       >
         <Command variant="panel" autoSelectFirst={false} className="max-w-sm">
           <CommandList>
             <CommandGroup heading="Ações">
               {[
-                ["Nova transação", "Lança uma despesa ou receita", "⌘N"],
-                ["Nova fatura", "Registra uma conta a pagar", "⌘F"],
+                ["Nova transação", "Lança uma despesa ou receita", "mod+n"],
+                ["Nova fatura", "Registra uma conta a pagar", "mod+f"],
               ].map(([t, d, k]) => (
                 <CommandItem key={t}>
                   <CommandItemContent>
                     <CommandItemTitle>{t}</CommandItemTitle>
                     <CommandItemDescription>{d}</CommandItemDescription>
                   </CommandItemContent>
-                  <CommandShortcut>{k}</CommandShortcut>
+                  <CommandShortcut>
+                    <Kbd keys={k} />
+                  </CommandShortcut>
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -437,7 +441,7 @@ React.useEffect(() => {
 
       <DocNote title="O primeiro consumidor é este catálogo">
         A busca do cabeçalho aqui em cima é um <code>CommandDialog</code>{" "}
-        — abra com <kbd>⌘</kbd><kbd>K</kbd>. O código está em{" "}
+        — abra com <Kbd keys="mod+k" />. O código está em{" "}
         <code>src/app/designsystem/ds-search.tsx</code> e serve de referência
         para as duas decisões que o componente não toma: o que entra na lista e
         como se filtra.
@@ -447,8 +451,8 @@ React.useEffect(() => {
         O padrão pontua por aproximação, então &ldquo;cor&rdquo; devolve Carousel e Combobox junto com Cores. A busca do catálogo passa um <code>filter</code> por substring, com acentos removidos dos dois lados.
       </DocNote>
 
-      <DocNote title="⌘K precisa de um gatilho visível também">
-        Um atalho que só existe no teclado não existe no telefone e ninguém descobre. O botão no cabeçalho é o que torna a paleta encontrável; o <kbd>⌘</kbd><kbd>K</kbd> desenhado dentro dele ensina o atalho.
+      <DocNote title="O atalho precisa de um gatilho visível também">
+        Um atalho que só existe no teclado não existe no telefone e ninguém descobre. O botão no cabeçalho é o que torna a paleta encontrável; o <Kbd keys="mod+k" /> desenhado dentro dele ensina o atalho — ⌘K no Apple, Ctrl+K no resto.
       </DocNote>
       <PropsTable
         rows={[

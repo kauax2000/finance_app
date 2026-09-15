@@ -53,20 +53,24 @@ export default function DescriptionListDoc() {
         code={`<DescriptionList layout="inline">
   <DescriptionListItem>
     <DescriptionTerm>Limite total</DescriptionTerm>
-    <DescriptionDetails>R$ 8.000,00</DescriptionDetails>
+    <DescriptionDetails>
+      <MoneyDisplay value={8000} />
+    </DescriptionDetails>
   </DescriptionListItem>
 </DescriptionList>`}
         previewClassName="items-stretch"
       >
         <DescriptionList layout="inline" className="w-full max-w-sm">
           {[
-            ["Limite total", "R$ 8.000,00"],
-            ["Limite usado", "R$ 1.482,30"],
-            ["Disponível", "R$ 6.517,70"],
+            ["Limite total", 8000],
+            ["Limite usado", 1482.3],
+            ["Disponível", 6517.7],
           ].map(([term, value]) => (
             <DescriptionListItem key={term}>
               <DescriptionTerm>{term}</DescriptionTerm>
-              <DescriptionDetails>{value}</DescriptionDetails>
+              <DescriptionDetails>
+                <MoneyDisplay value={value as number} />
+              </DescriptionDetails>
             </DescriptionListItem>
           ))}
         </DescriptionList>
@@ -92,13 +96,15 @@ export default function DescriptionListDoc() {
           className="w-full max-w-sm rounded-xl border border-border px-4 py-3"
         >
           {[
-            ["Compras do período", "R$ 1.284,60"],
-            ["Parcelamentos", "R$ 197,70"],
-            ["Encargos", "R$ 0,00"],
+            ["Compras do período", 1284.6],
+            ["Parcelamentos", 197.7],
+            ["Encargos", 0],
           ].map(([term, value]) => (
             <DescriptionListItem key={term}>
               <DescriptionTerm>{term}</DescriptionTerm>
-              <DescriptionDetails>{value}</DescriptionDetails>
+              <DescriptionDetails>
+                <MoneyDisplay value={value as number} />
+              </DescriptionDetails>
             </DescriptionListItem>
           ))}
           <DescriptionListItem>
@@ -122,12 +128,14 @@ export default function DescriptionListDoc() {
             ["Final", "4821"],
             ["Fechamento", "28 de março"],
             ["Vencimento", "5 de abril"],
-            ["Limite total", "R$ 8.000,00"],
-            ["Disponível", "R$ 6.517,70"],
+            ["Limite total", 8000],
+            ["Disponível", 6517.7],
           ].map(([term, value]) => (
             <DescriptionListItem key={term}>
               <DescriptionTerm>{term}</DescriptionTerm>
-              <DescriptionDetails>{value}</DescriptionDetails>
+              <DescriptionDetails>
+                {typeof value === "number" ? <MoneyDisplay value={value} /> : value}
+              </DescriptionDetails>
             </DescriptionListItem>
           ))}
         </DescriptionList>

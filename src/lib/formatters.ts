@@ -52,6 +52,8 @@ export function currencyBRL(
   opts: CurrencyFormatOptions = {}
 ): string {
   if (!Number.isFinite(value)) return "—"
+  // Arredonda antes de decidir o sinal: 0,001 saía "+R$ 0,00" e −0,001 "−R$ 0,00".
+  value = Math.round(value * 100) / 100 || 0
   const { signed = false, ...rest } = opts
   const fmt = getNumberFormat({
     ...rest,
@@ -89,7 +91,21 @@ export function numberBR(
   value: number,
   options?: Intl.NumberFormatOptions
 ): string {
+  if (!Number.isFinite(value)) return "—"
   return new Intl.NumberFormat(defaultLocale, options).format(value)
+}
+
+const percentPointsFmt = new Intl.NumberFormat(defaultLocale, {
+  maximumFractionDigits: 1,
+  minimumFractionDigits: 0,
+})
+
+/**
+ * Pontos percentuais já multiplicados por 100, sem o sinal de %: `12.34` → "12,3".
+ * As telas escrevem o "%" ao lado; `percentBR` é para a fração (0,1234 → "12,3%").
+ */
+export function percentPointsBR(value: number): string {
+  return Number.isFinite(value) ? percentPointsFmt.format(value) : "—"
 }
 
 export function percentBR(

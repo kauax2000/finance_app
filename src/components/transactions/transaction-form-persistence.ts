@@ -16,7 +16,7 @@ export async function persistInstallmentPlanCreate(options: {
     payload: InstallmentPlanFormSavePayload
     onAfterSuccess: () => Promise<void>
 }): Promise<boolean> {
-    const { supabase, user, workspaceId, payload, onAfterSuccess } = options
+    const { supabase, workspaceId, payload, onAfterSuccess } = options
 
     const rpcArgs = {
         p_workspace_id: workspaceId,

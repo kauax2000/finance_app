@@ -1,6 +1,9 @@
 "use client"
 
-import { Badge } from "@/components/ui/badge"
+import { billDuePill } from "@/components/bills/bill-status"
+import {
+    Badge,
+} from "@/components/ui/badge"
 import {
     Card,
     CardContent,
@@ -15,33 +18,13 @@ import {
     normalizeCategoryIcon,
 } from "@/components/categories/category-appearance-fields"
 import type { BillRowWithCategory } from "@/lib/queries/fetch-bills-page-bundle"
-import { formatTransactionDmyPtBr } from "@/lib/transaction-date"
-import { cn } from "@/lib/utils"
 import {
-    tagChipDanger,
-    tagChipNeutral,
-    tagChipWarning,
-} from "@/lib/tag-chip-classes"
+    formatTransactionDmyPtBr,
+} from "@/lib/transaction-date"
+import { cn } from "@/lib/utils"
 import { ColorTile } from "@/components/ui/color-tile"
 
 const EXPENSE_CATEGORY_FALLBACK_COLOR = "var(--expense)"
-
-function cmpYmd(a: string, b: string): number {
-    return a.localeCompare(b)
-}
-
-function nextParcelStatus(
-    dueYmd: string,
-    todayYmd: string
-): { label: string; className: string } {
-    if (cmpYmd(dueYmd, todayYmd) < 0) {
-        return { label: "Atrasada", className: tagChipDanger }
-    }
-    if (dueYmd === todayYmd) {
-        return { label: "Hoje", className: tagChipWarning }
-    }
-    return { label: "Pendente", className: tagChipNeutral }
-}
 
 export type BillSummaryCardProps = {
     bill: BillRowWithCategory
@@ -72,7 +55,7 @@ export function BillSummaryCard({
     const iconId = normalizeCategoryIcon(bill.icon ?? "receipt")
 
     const nextPill =
-        nextDueYmd != null ? nextParcelStatus(nextDueYmd, todayYmd) : null
+        nextDueYmd != null ? billDuePill(nextDueYmd, todayYmd) : null
 
     return (
         <Card
