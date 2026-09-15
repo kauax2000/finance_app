@@ -14,7 +14,7 @@ import {
 import { cn } from "@/lib/utils"
 import { currencyBRL } from "@/lib/formatters"
 import { labelYearMonthPt, parseYearMonth } from "@/lib/budget-month"
-import { parseYmdLocal, localYmdFromDate } from "@/lib/transaction-date"
+import { formatYmdPtBr, parseYmdLocal, localYmdFromDate } from "@/lib/transaction-date"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { tagChipWarning, transactionRowChipShell } from "@/components/ui/badge"
 import {
@@ -254,10 +254,6 @@ function ChargeRowCompactInner({
             ) : null}
         </div>
     )
-}
-
-function paymentDayDateLabel(ymd: string): string {
-    return ymd.split("-").reverse().join("/")
 }
 
 function postedTransactionIdFromEvent(e: PaymentEvent): string | null {
@@ -559,7 +555,7 @@ export function DashboardPaymentsCalendar({
                                 {upcomingGrouped.map(({ ymd, list }) => (
                                     <div key={ymd} className="space-y-1.5">
                                         <div className="bg-card px-2 py-1 text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                                            {ymd.split("-").reverse().join("/")}
+                                            {formatYmdPtBr(ymd)}
                                         </div>
                                         <div className="space-y-1.5 pl-1">
                                             {list.map((r) => (
@@ -634,12 +630,12 @@ export function DashboardPaymentsCalendar({
                                 >
                                     <PopoverTitle className="sr-only">
                                         Lançamentos do dia{" "}
-                                        {paymentDayDateLabel(
+                                        {formatYmdPtBr(
                                             mobileDayPopoverYmd,
                                         )}
                                     </PopoverTitle>
                                     <p className="mb-2 text-xs font-medium text-muted-foreground">
-                                        {paymentDayDateLabel(
+                                        {formatYmdPtBr(
                                             mobileDayPopoverYmd,
                                         )}
                                     </p>
@@ -669,7 +665,7 @@ export function DashboardPaymentsCalendar({
                                 mobileGroupedForList.map(({ ymd, list }) => (
                                     <div key={ymd} className="space-y-1.5">
                                         <div className="bg-card px-2 py-1 text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                                            {ymd.split("-").reverse().join("/")}
+                                            {formatYmdPtBr(ymd)}
                                         </div>
                                         <div className="space-y-1.5 pl-1">
                                             {list.map((e) => (
@@ -766,7 +762,7 @@ export function DashboardPaymentsCalendar({
                                                 align="start"
                                             >
                                                 <PopoverTitle className="mb-2 text-xs font-medium text-muted-foreground">
-                                                    {paymentDayDateLabel(
+                                                    {formatYmdPtBr(
                                                         cell.ymd,
                                                     )}
                                                 </PopoverTitle>

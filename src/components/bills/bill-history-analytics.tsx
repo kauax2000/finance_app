@@ -1,5 +1,6 @@
 "use client"
 
+import { formatTransactionDayMonthPtBr } from "@/lib/transaction-date"
 import { useMemo } from "react"
 import {
     Bar,
@@ -27,11 +28,6 @@ const chartCfg = {
     paid: { label: "Pago", color: "var(--chart-3)" },
     avg: { label: "Média", color: "var(--muted-foreground)" },
 } satisfies import("@/components/ui/chart").ChartConfig
-
-function parseYmdToLabel(ymd: string): string {
-    const [, mo, da] = ymd.split("-")
-    return `${da}/${mo}`
-}
 
 export function BillHistoryAnalytics({ instances }: { instances: BillInstance[] }) {
     const paidDescending = useMemo(() => {
@@ -91,7 +87,7 @@ export function BillHistoryAnalytics({ instances }: { instances: BillInstance[] 
                         : window.reduce((a, b) => a + b, 0) / window.length
                 return {
                     id: row.id,
-                    label: parseYmdToLabel(ymd),
+                    label: formatTransactionDayMonthPtBr(ymd),
                     paid,
                     avg6: m6,
                 }

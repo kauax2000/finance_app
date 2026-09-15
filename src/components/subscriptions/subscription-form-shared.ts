@@ -24,14 +24,6 @@ export function subscriptionBillingIntervalLabel(
     return SUBSCRIPTION_BILLING_OPTIONS.find((o) => o.value === i)?.label ?? i
 }
 
-export function subscriptionTodayIsoDate(): string {
-    const d = new Date()
-    const y = d.getFullYear()
-    const m = String(d.getMonth() + 1).padStart(2, "0")
-    const day = String(d.getDate()).padStart(2, "0")
-    return `${y}-${m}-${day}`
-}
-
 export type SubscriptionFormPayload = {
     name: string
     amount: number

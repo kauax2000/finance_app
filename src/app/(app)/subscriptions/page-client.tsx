@@ -1,5 +1,6 @@
 "use client"
 
+import { currencyBRL } from "@/lib/formatters"
 import { ArrowDownIcon, ArrowUpIcon, ArrowsUpDownIcon, PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ArrowPathRoundedSquareIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -69,13 +70,6 @@ type SortDir = SubscriptionSortDir
 type PendingDelete =
     | { mode: "single"; subscription: WorkspaceSubscriptionListRow }
     | { mode: "bulk"; ids: string[] }
-
-function formatMoneyBRL(amount: number): string {
-    return new Intl.NumberFormat("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-    }).format(amount)
-}
 
 function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
     if (!active) {
@@ -863,7 +857,7 @@ export default function SubscriptionsPageClient() {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="whitespace-nowrap px-4 py-3 tabular-nums">
-                                                    {formatMoneyBRL(
+                                                    {currencyBRL(
                                                         Number(s.amount)
                                                     )}
                                                 </TableCell>
@@ -1092,7 +1086,7 @@ export default function SubscriptionsPageClient() {
                                                 extrato não são removidos.
                                             </li>
                                             <li>
-                                                {formatMoneyBRL(
+                                                {currencyBRL(
                                                     Number(
                                                         pendingDelete
                                                             .subscription

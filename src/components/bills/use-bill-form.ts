@@ -1,5 +1,6 @@
 "use client"
 
+import { localYmdFromDate } from "@/lib/transaction-date"
 import { formatMoneyBrlInput } from "@/lib/money-brl"
 import { useCallback, useEffect, useState } from "react"
 import type { Bill, BillFrequency, Category, CreditCard } from "@/lib/supabase"
@@ -9,7 +10,6 @@ import {
     BILL_CATEGORY_NONE,
     BILL_PAYMENT_NONE,
     buildBillFormPayload,
-    billTodayYmd,
     type BillFormPayloadForSave,
 } from "@/components/bills/bill-form-shared"
 import type { BillFormFieldsProps } from "@/components/bills/bill-form-fields"
@@ -70,7 +70,7 @@ export function useBillForm({
         useState<BillFrequency>("monthly")
     const [dueDayOfMonth, setDueDayOfMonth] = useState(10)
     const [amountEstimatedStr, setAmountEstimatedStr] = useState("")
-    const [startDate, setStartDateYmd] = useState(billTodayYmd())
+    const [startDate, setStartDateYmd] = useState(localYmdFromDate(new Date()))
     const [endDateYmd, setEndDateYmd] = useState("")
     const [paymentMethodOption, setPaymentMethodOption] = useState(
         BILL_PAYMENT_NONE,
@@ -121,7 +121,7 @@ export function useBillForm({
             setFrequency("monthly")
             setDueDayOfMonth(10)
             setAmountEstimatedStr("")
-            setStartDateYmd(billTodayYmd())
+            setStartDateYmd(localYmdFromDate(new Date()))
             setEndDateYmd("")
             setPaymentMethodOption(BILL_PAYMENT_NONE)
             setPaymentCreditCardId("")

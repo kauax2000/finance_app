@@ -4,6 +4,7 @@ import type {
     WorkspaceInstallmentPlan,
     WorkspaceSubscription,
 } from "@/lib/supabase"
+import { compareYmd } from "@/lib/transaction-date"
 import type { BillInstanceCalendarRow } from "@/lib/queries/fetch-bills-dashboard"
 import {
     buildGlobalInstallmentDedupeKeys,
@@ -79,10 +80,6 @@ function monthBounds(ym: string): { start: Date; end: Date } | null {
     const start = new Date(y, m - 1, 1, 12, 0, 0, 0)
     const end = new Date(y, m, 0, 12, 0, 0, 0)
     return { start, end }
-}
-
-function compareYmd(a: string, b: string): number {
-    return a.localeCompare(b)
 }
 
 function eventStatus(dateYmd: string, todayYmd: string): PaymentEventStatus {

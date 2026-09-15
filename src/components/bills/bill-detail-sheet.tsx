@@ -1,5 +1,10 @@
 "use client"
 
+import {
+    addDaysYmd,
+    compareYmd,
+} from "@/lib/transaction-date"
+import { billDuePill } from "@/components/bills/bill-status"
 import { useMemo } from "react"
 import { PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { EllipsisHorizontalIcon, XMarkIcon } from "@heroicons/react/20/solid"
@@ -15,9 +20,6 @@ import {
 import { Button } from "@/components/ui/button"
 import {
     Badge,
-    tagChipDanger,
-    tagChipNeutral,
-    tagChipWarning,
 } from "@/components/ui/badge"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -43,26 +45,13 @@ import { useBillDetailBundleQuery } from "@/lib/queries/use-bill-detail-bundle"
 import type { BillRowWithCategory } from "@/lib/queries/fetch-bills-page-bundle"
 import type { BillInstance } from "@/lib/supabase"
 import type { PayBillInput } from "@/lib/bills/pay-bill-flow"
-import { formatTransactionDmyPtBr } from "@/lib/transaction-date"
-import { localYmdFromDate } from "@/lib/transaction-date"
+import {
+    formatTransactionDmyPtBr,
+} from "@/lib/transaction-date"
 import { cn } from "@/lib/utils"
 import { ColorTile } from "@/components/ui/color-tile"
 
 const EXPENSE_CATEGORY_FALLBACK_COLOR = "var(--expense)"
-
-function cmpYmd(a: string, b: string): number {
-    return a.localeCompare(b)
-}
-
-function addDaysToYmd(ymd: string, days: number): string {
-    const parts = ymd.split("-").map((x) => Number.parseInt(x, 10))
-    const y = parts[0] ?? 1970
-    const m = parts[1] ?? 1
-    const d = parts[2] ?? 1
-    const dt = new Date(y, m - 1, d)
-    dt.setDate(dt.getDate() + days)
-    return localYmdFromDate(dt)
-}
 
 function nextPendingHero(instances: BillInstance[]): BillInstance | null {
     const pend = instances
@@ -71,13 +60,6 @@ function nextPendingHero(instances: BillInstance[]): BillInstance | null {
             a.due_date.slice(0, 10).localeCompare(b.due_date.slice(0, 10))
         )
     return pend[0] ?? null
-}
-
-function nextParcelPill(dueYmd: string, todayYmd: string) {
-    if (cmpYmd(dueYmd, todayYmd) < 0)
-        return { label: "Atrasada", className: tagChipDanger }
-    if (dueYmd === todayYmd) return { label: "Hoje", className: tagChipWarning }
-    return { label: "Pendente", className: tagChipNeutral }
 }
 
 export type BillDetailSheetProps = {
@@ -116,8 +98,8 @@ export function BillDetailSheet({
 
     const nextInst = useMemo(() => nextPendingHero(instances), [instances])
 
-    const limit90 = useMemo(() => addDaysToYmd(todayYmd, -90), [todayYmd])
-    const limit60 = useMemo(() => addDaysToYmd(todayYmd, 60), [todayYmd])
+    const limit90 = useMemo(() => addDaysYmd(todayYmd, -90), [todayYmd])
+    const limit60 = useMemo(() => addDaysYmd(todayYmd, 60), [todayYmd])
 
     const stats = useMemo(() => {
         let paidSum = 0
@@ -132,14 +114,14 @@ export function BillDetailSheet({
                 i.paid_amount != null
             ) {
                 const paidDay = i.paid_at.slice(0, 10)
-                if (cmpYmd(paidDay, limit90) >= 0) {
+                if (compareYmd(paidDay, limit90) >= 0) {
                     paidSum += Number(i.paid_amount)
                     paidN += 1
-                    if (cmpYmd(paidDay, due) > 0) lateN += 1
+                    if (compareYmd(paidDay, due) > 0) lateN += 1
                 }
             }
             if (i.status === "pending") {
-                if (cmpYmd(due, todayYmd) >= 0 && cmpYmd(due, limit60) <= 0) {
+                if (compareYmd(due, todayYmd) >= 0 && compareYmd(due, limit60) <= 0) {
                     next60 += 1
                 }
             }
@@ -322,7 +304,7 @@ export function BillDetailSheet({
                                             )}
                                         </p>
                                         {(() => {
-                                            const pill = nextParcelPill(
+                                            const pill = billDuePill(
                                                 nextInst.due_date.slice(0, 10),
                                                 todayYmd
                                             )

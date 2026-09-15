@@ -195,3 +195,24 @@ export function formatYmdPtBr(ymd: string): string {
     const [y, m, d] = ymd.slice(0, 10).split("-")
     return y && m && d ? `${d}/${m}/${y}` : ymd
 }
+
+/** Ordem de dois `YYYY-MM-DD`: a data em texto compara na ordem do calendário. */
+export function compareYmd(a: string, b: string): number {
+    return a.localeCompare(b)
+}
+
+/** `YYYY-MM-DD` deslocado de `days` dias no calendário local. */
+export function addDaysYmd(ymd: string, days: number): string {
+    const d = parseYmdLocal(ymd.slice(0, 10))
+    if (!d) return ymd
+    d.setDate(d.getDate() + days)
+    return localYmdFromDate(d)
+}
+
+/** Dias de `fromYmd` até `toYmd` no calendário local (negativo quando `to` vem antes). */
+export function daysBetweenYmd(fromYmd: string, toYmd: string): number | null {
+    const a = parseYmdLocal(fromYmd.slice(0, 10))
+    const b = parseYmdLocal(toYmd.slice(0, 10))
+    if (!a || !b) return null
+    return Math.round((b.getTime() - a.getTime()) / 86_400_000)
+}

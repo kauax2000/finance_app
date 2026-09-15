@@ -1,5 +1,6 @@
 "use client"
 
+import { localYmdFromDate } from "@/lib/transaction-date"
 import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { tagChipFilterIdle, tagChipFilterSelected } from "@/components/ui/badge"
@@ -13,10 +14,6 @@ export type TransactionsDatePresetKey =
 
 function pad2(x: number) {
     return String(x).padStart(2, "0")
-}
-
-function toIsoLocalYmd(d: Date) {
-    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 }
 
 function startOfCurrentMonth(now: Date) {
@@ -33,13 +30,13 @@ export function getTransactionsPresetRange(
     preset: TransactionsDatePresetKey,
     now: Date = new Date()
 ): { from: string; to: string } {
-    const to = toIsoLocalYmd(now)
+    const to = localYmdFromDate(now)
     if (preset === "monthToToday") {
-        return { from: toIsoLocalYmd(startOfCurrentMonth(now)), to }
+        return { from: localYmdFromDate(startOfCurrentMonth(now)), to }
     }
 
     const days = preset === "last7" ? 7 : preset === "last15" ? 15 : 30
-    return { from: toIsoLocalYmd(startOfLastNDays(now, days)), to }
+    return { from: localYmdFromDate(startOfLastNDays(now, days)), to }
 }
 
 const PRESETS: Array<{

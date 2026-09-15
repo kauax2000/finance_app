@@ -29,7 +29,6 @@ import {
     getDashboardPresetRange,
     isDashboardPresetKey,
     previousMonthSamePeriodRange,
-    toIsoLocalYmd,
     type DashboardDatePresetKey,
 } from "@/components/dashboard/dashboard-date-presets"
 import {
@@ -230,7 +229,7 @@ export function useDashboardData() {
         return { from: period_start, to: period_end, preset }
     }, [calendarYm])
 
-    const todayYmd = useMemo(() => toIsoLocalYmd(new Date()), [])
+    const todayYmd = useMemo(() => localYmdFromDate(new Date()), [])
 
     const paddedTxIsoRange = useMemo(
         (): TransactionsRangeKey => paddedCalendarIsoRange(calendarYm),

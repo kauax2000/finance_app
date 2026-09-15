@@ -2,6 +2,7 @@ import type {
     SubscriptionBillingInterval,
     WorkspaceSubscription,
 } from "@/lib/supabase"
+import { compareYmd } from "@/lib/transaction-date"
 import { localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
 
 export type SubscriptionCharge = {
@@ -72,10 +73,6 @@ export function subscriptionAnchor(
     }
     const d = parseYmdLocal(s.start_date.slice(0, 10))
     return d ?? null
-}
-
-function compareYmd(a: string, b: string): number {
-    return a.localeCompare(b)
 }
 
 /** All billing charges with `chargeYmd` in `[rangeStartYmd, rangeEndYmd]` (inclusive). */

@@ -24,7 +24,6 @@ import {
     SUBSCRIPTION_BILLING_OPTIONS,
     SUBSCRIPTION_CHARGE_METHOD_OPTIONS,
     SUBSCRIPTION_PAYMENT_NONE,
-    subscriptionTodayIsoDate,
     type ExpenseCategoryOption,
 } from "@/components/subscriptions/subscription-form-shared"
 import { localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
@@ -161,7 +160,7 @@ export function SubscriptionFormFields({
                     value={parseYmdLocal(billingDate)}
                     onChange={(d) =>
                         setBillingDate(
-                            d ? localYmdFromDate(d) : subscriptionTodayIsoDate()
+                            d ? localYmdFromDate(d) : localYmdFromDate(new Date())
                         )
                     }
                     placeholder="Selecione a data"
