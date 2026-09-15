@@ -162,6 +162,14 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
             const hasNameChanged = editName !== currentName
             const isRemovingPhoto = removeCurrentPhoto && currentAvatarUrl
             const isAddingNewPhoto = !!avatarPreview
+            let profileSaved = false
+
+            // Valida antes de gravar qualquer coisa: esta checagem vinha depois do
+            // perfil, e o nome era salvo enquanto a tela dizia só "erro".
+            if (editEmail !== userEmail && !editPassword) {
+                setErrorMessage("Para alterar o email, digite sua senha atual.")
+                return
+            }
 
             if (hasNameChanged || isRemovingPhoto || isAddingNewPhoto) {
                 // A foto vai para o Storage e o perfil guarda só a URL. Antes o
@@ -192,6 +200,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                     setSaving(false)
                     return
                 }
+                profileSaved = true
                 void createActivity({
                     type: "profile_update",
                     description: "Dados do perfil atualizados",
@@ -210,17 +219,16 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
             }
 
             if (editEmail !== userEmail) {
-                if (!editPassword) {
-                    setErrorMessage("Para alterar o email, digite sua senha atual.")
-                    setSaving(false)
-                    return
-                }
                 const { error: emailError, needsConfirmation } = await updateEmail(
                     editEmail,
                     editPassword,
                 )
                 if (emailError) {
-                    setErrorMessage(emailError)
+                    setErrorMessage(
+                        profileSaved
+                            ? `Nome e foto foram salvos, mas o email não mudou: ${emailError}`
+                            : emailError,
+                    )
                     setSaving(false)
                     return
                 }

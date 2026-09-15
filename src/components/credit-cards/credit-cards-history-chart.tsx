@@ -233,11 +233,18 @@ export function CreditCardsHistoryChart({
 
         const positiveTotals = monthlyTotals.filter((t) => t > 0)
         const hasAnyValue = positiveTotals.length > 0
-        const max = positiveTotals.length ? Math.max(...positiveTotals) : 0
-        const min = positiveTotals.length ? Math.min(...positiveTotals) : 0
+        // A fatura aberta ainda está crescendo: somada, ela vira a "menor fatura"
+        // e puxa a média para baixo. Os indicadores leem só faturas fechadas, e
+        // caem para todas quando ainda não há nenhuma fechada.
+        const closedTotals = monthlyTotals.filter(
+            (t, i) => t > 0 && !chartData[i].isOpen,
+        )
+        const kpiTotals = closedTotals.length > 0 ? closedTotals : positiveTotals
+        const max = kpiTotals.length ? Math.max(...kpiTotals) : 0
+        const min = kpiTotals.length ? Math.min(...kpiTotals) : 0
         const avg =
-            positiveTotals.length > 0
-                ? positiveTotals.reduce((a, b) => a + b, 0) / positiveTotals.length
+            kpiTotals.length > 0
+                ? kpiTotals.reduce((a, b) => a + b, 0) / kpiTotals.length
                 : 0
 
         return {

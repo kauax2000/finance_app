@@ -47,7 +47,8 @@ import {
     tagChipSuccess,
     tagChipWarning,
 } from "@/components/ui/badge"
-import { formatDatePtBr } from "@/lib/transaction-date"
+import { formatDatePtBr, localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
+import { advanceBilling } from "@/lib/subscription-billing-projection"
 
 type SubscriptionTransactionCharge = {
     id: string
@@ -63,24 +64,19 @@ type SubscriptionChargeRow = {
     status: "posted" | "paid" | "pending"
 }
 
+/**
+ * A próxima cobrança depois de `ymd`, pela mesma regra do banco: o dia-âncora
+ * é cortado no fim do mês e volta depois (31/01 → 28/02 → 31/03). O `setMonth`
+ * cru que havia aqui levava 31/01 para 03/03, e tratava bimestral como mensal.
+ */
 function addSubscriptionIntervalYmd(
     ymd: string,
-    interval: WorkspaceSubscriptionListRow["billing_interval"]
+    interval: WorkspaceSubscriptionListRow["billing_interval"],
+    anchorDay: number | null | undefined,
 ): string {
-    const [y, m, d] = ymd.split("-").map(Number)
-    if (!y || !m || !d) return ymd
-    const dt = new Date(y, m - 1, d)
-    if (interval === "weekly") {
-        dt.setDate(dt.getDate() + 7)
-    } else if (interval === "yearly") {
-        dt.setFullYear(dt.getFullYear() + 1)
-    } else {
-        dt.setMonth(dt.getMonth() + 1)
-    }
-    const yy = dt.getFullYear()
-    const mm = String(dt.getMonth() + 1).padStart(2, "0")
-    const dd = String(dt.getDate()).padStart(2, "0")
-    return `${yy}-${mm}-${dd}`
+    const from = parseYmdLocal(ymd)
+    if (!from) return ymd
+    return localYmdFromDate(advanceBilling(from, interval, anchorDay ?? from.getDate()))
 }
 
 function subscriptionChargeStatusChipClassName(
@@ -242,7 +238,8 @@ export function SubscriptionDetailSheet({
             (latestCharge
                 ? addSubscriptionIntervalYmd(
                       latestCharge.date.slice(0, 10),
-                      s?.billing_interval ?? "monthly"
+                      s?.billing_interval ?? "monthly",
+                      s?.billing_anchor_day
                   )
                 : null)
         if (nextDate) {
@@ -254,7 +251,7 @@ export function SubscriptionDetailSheet({
             })
         }
         return rows.slice(0, 2)
-    }, [latestCharge, nextCharge, s?.amount, s?.billing_interval])
+    }, [latestCharge, nextCharge, s?.amount, s?.billing_interval, s?.billing_anchor_day])
 
     if (!s) {
         return null

@@ -199,6 +199,17 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
         async (e: React.FormEvent) => {
             e.preventDefault()
             if (!user || !currentWorkspaceId) return
+            // Receita não tem orçamento: virar receita apaga os orçamentos da
+            // categoria, que antes ficavam órfãos somando nos totais de despesa.
+            const becomesIncome = category?.type === "expense" && editType === "income"
+            if (becomesIncome) {
+                const ok = await confirmAction({
+                    title: "Transformar em receita?",
+                    description: "Os orçamentos desta categoria são apagados.",
+                    actionLabel: "Transformar",
+                })
+                if (!ok) return
+            }
             setEditSaving(true)
             const { error } = await supabase
                 .from("categories")
@@ -216,6 +227,22 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                         "Não foi possível salvar a categoria. Tente novamente.",
                 )
                 return
+            }
+
+            if (becomesIncome) {
+                const { error: budgetsError } = await supabase
+                    .from("budgets")
+                    .delete()
+                    .eq("workspace_id", currentWorkspaceId)
+                    .eq("category_id", categoryId)
+                if (budgetsError) {
+                    setEditSaving(false)
+                    toastError(
+                        "A categoria virou receita, mas os orçamentos antigos não foram apagados. Tente de novo.",
+                    )
+                    invalidateDetail()
+                    return
+                }
             }
 
             if (editType === "expense") {
@@ -260,6 +287,8 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             editBudgetAmount,
             yearMonth,
             invalidateDetail,
+            category?.type,
+            confirmAction,
         ],
     )
 

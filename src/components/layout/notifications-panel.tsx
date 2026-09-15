@@ -2,7 +2,7 @@
 
 import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { useRouter } from "next/navigation"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { CheckIcon, EllipsisHorizontalIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { XMarkIcon } from "@heroicons/react/20/solid"
 import { Badge } from "@/components/ui/badge"
@@ -61,21 +61,27 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
     const [loading, setLoading] = useState(true)
     const [notifications, setNotifications] = useState<AppNotification[]>([])
 
+    // Trocar de carteira no meio de uma busca, ou marcar/limpar enquanto ela
+    // corre, não pode deixar a resposta velha sobrescrever a nova.
+    const fetchSeq = useRef(0)
     const fetchNotifications = useCallback(async () => {
         if (!user?.id || !currentWorkspaceId) return
+        const seq = ++fetchSeq.current
         setLoading(true)
         try {
             const rows = await listNotifications(user.id, currentWorkspaceId)
+            if (seq !== fetchSeq.current) return
             setNotifications(rows)
             setUnreadCount(rows.filter((n) => !n.read_at).length)
             dismissPageFetchError("notifications")
         } catch (e) {
+            if (seq !== fetchSeq.current) return
             toastPageFetchError(
                 "notifications",
                 e instanceof Error ? e.message : "Erro ao carregar notificações"
             )
         } finally {
-            setLoading(false)
+            if (seq === fetchSeq.current) setLoading(false)
         }
     }, [user?.id, currentWorkspaceId, setUnreadCount])
 
@@ -103,6 +109,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
 
     const onMarkAsRead = async (id: string) => {
         if (!user?.id || !currentWorkspaceId) return
+        fetchSeq.current++
         const wasUnread = notifications.some((n) => n.id === id && !n.read_at)
         if (wasUnread) adjustUnreadCount(-1)
         setNotifications((cur) =>
@@ -118,6 +125,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
 
     const onDelete = async (id: string) => {
         if (!user?.id || !currentWorkspaceId) return
+        fetchSeq.current++
         const wasUnread = notifications.some((n) => n.id === id && !n.read_at)
         if (wasUnread) adjustUnreadCount(-1)
         setNotifications((cur) => cur.filter((n) => n.id !== id))
@@ -138,6 +146,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
         })
         if (!ok) return
         if (!user?.id || !currentWorkspaceId) return
+        fetchSeq.current++
         setUnreadCount(0)
         setNotifications([])
         try {
