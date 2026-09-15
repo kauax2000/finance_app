@@ -1,4 +1,4 @@
-import { assert, assertFalse } from 'jsr:@std/assert'
+import { assert, assertFalse } from 'jsr:@std/assert@1.0.19'
 import { secretMatches, timingSafeEqual } from './timing-safe-equal.ts'
 
 Deno.test('timingSafeEqual: equal strings match', () => {

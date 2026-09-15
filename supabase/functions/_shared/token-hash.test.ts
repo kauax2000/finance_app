@@ -1,4 +1,4 @@
-import { assertEquals, assertMatch, assertNotEquals } from 'jsr:@std/assert'
+import { assertEquals, assertMatch, assertNotEquals } from 'jsr:@std/assert@1.0.19'
 import { legacyHashToken, sha256Hex, tokenHashCandidates } from './token-hash.ts'
 
 Deno.test('sha256Hex produces the known SHA-256 of "abc"', async () => {

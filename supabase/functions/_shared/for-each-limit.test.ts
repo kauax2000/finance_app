@@ -1,4 +1,4 @@
-import { assertEquals } from 'jsr:@std/assert'
+import { assertEquals } from 'jsr:@std/assert@1.0.19'
 import { forEachLimit } from './for-each-limit.ts'
 
 Deno.test('processa todos os itens sem passar do teto de chamadas abertas', async () => {

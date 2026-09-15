@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
 import { internalError } from '../_shared/http.ts'
 import { FAN_OUT_CONCURRENCY, forEachLimit } from '../_shared/for-each-limit.ts'
 import { secretMatches } from '../_shared/timing-safe-equal.ts'

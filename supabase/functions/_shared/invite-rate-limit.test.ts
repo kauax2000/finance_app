@@ -1,4 +1,4 @@
-import { assertEquals } from 'jsr:@std/assert'
+import { assertEquals } from 'jsr:@std/assert@1.0.19'
 import {
   INVITE_EMAILS_PER_DAY,
   INVITE_EMAILS_PER_RECIPIENT_PER_DAY,
