@@ -205,43 +205,24 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
                 return null
             }
 
-            const type = input.type ?? "shared"
             const icon_background_color =
                 input.icon_background_color?.trim() || randomWorkspaceAccentColor()
 
+            // Carteira e dono numa chamada só: com dois inserts, a falha do segundo
+            // deixava uma carteira sem membros, invisível e impossível de apagar.
             const { data: workspace, error: createError } = await supabase
-                .from("workspaces")
-                .insert({
-                    name: trimmed,
-                    type,
-                    created_by: user.id,
-                    icon: input.icon,
-                    icon_background_color,
+                .rpc("create_shared_workspace", {
+                    p_name: trimmed,
+                    p_icon: input.icon,
+                    p_icon_background_color: icon_background_color,
                 })
-                .select("*")
-                .single()
+                .single<Workspace>()
 
             if (createError || !workspace) {
                 console.error("Error creating workspace:", createError)
                 setMutationError(
                     describeWorkspaceSupabaseError(createError) ??
                         "Não foi possível criar a carteira. Se o problema continuar, tente mais tarde ou entre em contato com o suporte.",
-                )
-                return null
-            }
-
-            const { error: membershipError } = await supabase
-                .from("workspace_members")
-                .insert({
-                    workspace_id: workspace.id,
-                    user_id: user.id,
-                    role: "owner",
-                })
-
-            if (membershipError) {
-                console.error("Error creating workspace membership:", membershipError)
-                setMutationError(
-                    "A carteira foi criada, mas não foi possível vinculá-la a você como responsável. Recarregue a página ou entre em contato com o suporte.",
                 )
                 return null
             }

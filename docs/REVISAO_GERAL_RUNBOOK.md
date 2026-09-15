@@ -42,6 +42,7 @@ cair.
 20260915120000_invite_token_not_stored.sql
 20260915130000_account_deletion_cascade.sql
 20260915140000_pay_bill_instance.sql
+20260915150000_create_shared_workspace.sql
 ```
 
 `supabase db push` aplica na ordem. Convites pendentes com link já enviado
@@ -52,7 +53,7 @@ quem precisar reenvia.
 
 Logo depois das migrações:
 
-- Front: lê `pay_bill_instance` (140000) e não seleciona mais `token_raw`.
+- Front: lê `pay_bill_instance` (140000) e `create_shared_workspace` (150000), e não seleciona mais `token_raw`.
 - Edge Functions alteradas: `_shared` (todas que o importam), `activity-logs`,
   `credit-card-calendar-alerts`, `delete-user` (depende de 130000),
   `dispatch-notifications`, `evaluate-bills-reminders`, `evaluate-budgets`,

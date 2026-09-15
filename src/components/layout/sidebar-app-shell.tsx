@@ -13,19 +13,31 @@ import { NotificationsUiProvider } from "@/components/layout/notifications-ui-pr
 import { NotificationsSheet } from "@/components/layout/notifications-sheet"
 import { GlobalShellDialogsProvider } from "@/components/layout/global-shell-dialogs-provider"
 import { PageChromeProvider } from "@/components/layout/page-chrome-provider"
+import { DASHBOARD_PAGE_TITLES, ROUTES } from "@/config/navigation"
 
 type SidebarAppShellProps = {
     children: React.ReactNode
-    titleMode: "dashboard" | "app"
     defaultSidebarOpen: boolean
+}
+
+/**
+ * O cabeçalho do painel e de categorias é o título; o resto usa breadcrumb.
+ * A escolha vinha de dois grupos de rota com a mesma casca — e trocar de grupo
+ * desmontava a casca inteira (guarda de sessão, provedores, barra lateral).
+ */
+function titleModeFor(pathname: string): "dashboard" | "app" {
+    return pathname in DASHBOARD_PAGE_TITLES ||
+        pathname.startsWith(`${ROUTES.DASHBOARD_CATEGORIES}/`)
+        ? "dashboard"
+        : "app"
 }
 
 export function SidebarAppShell({
     children,
-    titleMode,
     defaultSidebarOpen,
 }: SidebarAppShellProps) {
     const pathname = usePathname()
+    const titleMode = titleModeFor(pathname)
 
     return (
         <AuthGuard>
