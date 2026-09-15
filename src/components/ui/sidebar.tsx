@@ -411,19 +411,27 @@ function Sidebar({
         defaultSize={256}
         minSize={SIDEBAR_WIDTH_MIN}
         maxSize={SIDEBAR_WIDTH_MAX}
-        data-slot="sidebar"
-        data-state={state}
-        data-collapsible={state === "collapsed" ? collapsible : ""}
-        data-variant={variant}
-        data-side={side}
-        dir={dir}
-        className={cn(
-          "group peer hidden text-sidebar-foreground md:block",
-          sidebarVariants({ side, variant, collapsible }),
-          className
-        )}
+        data-slot="sidebar-panel"
       >
-        {miolo}
+        {/* A lib põe o `className` do painel num `div` interno e os atributos no
+            de fora: `group` e `data-collapsible` ficavam em nós diferentes, e os
+            `group-data-[collapsible=icon]:` do miolo não casavam com nada. Os
+            dois moram neste nó. */}
+        <div
+          data-slot="sidebar"
+          data-state={state}
+          data-collapsible={state === "collapsed" ? collapsible : ""}
+          data-variant={variant}
+          data-side={side}
+          dir={dir}
+          className={cn(
+            "group peer hidden size-full text-sidebar-foreground md:block",
+            sidebarVariants({ side, variant, collapsible }),
+            className
+          )}
+        >
+          {miolo}
+        </div>
       </ResizablePanel>
     )
 
