@@ -263,6 +263,20 @@ export default function CreditCardsPageClient() {
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-base">
+                            Cartões indisponíveis no momento
+                        </CardTitle>
+                        <CardDescription>
+                            Não foi possível carregar seus cartões. Tente de novo em alguns
+                            minutos.
+                        </CardDescription>
+                    </CardHeader>
+                </Card>
+                {/* O passo a passo do banco é para quem desenvolve: em produção
+                    a pessoa só vê o aviso acima. */}
+                {process.env.NODE_ENV === "development" ? (
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base">
                             Tabela ainda não criada no banco
                         </CardTitle>
                         <CardDescription className="space-y-3">
@@ -299,6 +313,7 @@ export default function CreditCardsPageClient() {
                         </CardDescription>
                     </CardHeader>
                 </Card>
+                ) : null}
             </div>
         )
     }

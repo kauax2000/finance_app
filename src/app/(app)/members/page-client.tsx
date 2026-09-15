@@ -7,7 +7,8 @@ import { EnvelopeIcon as EnvelopeOutlineIcon, UserGroupIcon } from "@heroicons/r
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { supabase, WorkspaceInvite, WorkspaceMember } from "@/lib/supabase"
-import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
+import { describeSupabaseErrorForLog, formatSupabasePostgrestError } from "@/lib/supabase-errors"
+import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { isPostgrestTransientNetworkError } from "@/lib/transient-network-retry"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
 import {
@@ -29,13 +30,15 @@ import {
     tagChipSuccess,
 } from "@/components/ui/badge"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { CustomForm } from "@/components/ui/form"
 import {
     Tooltip,
@@ -282,17 +285,19 @@ export default function MembersPage() {
         }
 
         if (membersRes.error) {
-            const msg = formatSupabasePostgrestError(membersRes.error)
-            if (msg) console.error("Members fetch error:", msg)
+            console.error("Members fetch error:", describeSupabaseErrorForLog(membersRes.error))
         }
         if (invitesRes.error) {
-            const msg = formatSupabasePostgrestError(invitesRes.error)
-            if (msg) console.error("Invites fetch error:", msg)
+            console.error("Invites fetch error:", describeSupabaseErrorForLog(invitesRes.error))
         }
 
         const errParts: string[] = []
-        const membersMsg = formatSupabasePostgrestError(membersRes.error)
-        const invitesMsg = formatSupabasePostgrestError(invitesRes.error)
+        const membersMsg = membersRes.error
+            ? (formatSupabasePostgrestError(membersRes.error) ?? "não foi possível carregar")
+            : null
+        const invitesMsg = invitesRes.error
+            ? (formatSupabasePostgrestError(invitesRes.error) ?? "não foi possível carregar")
+            : null
         if (membersMsg) errParts.push(`Membros: ${membersMsg}`)
         if (invitesMsg) errParts.push(`Convites: ${invitesMsg}`)
         if (errParts.length > 0) {
@@ -497,11 +502,18 @@ export default function MembersPage() {
         }
     }
 
+    const { confirm: confirmRevoke, dialog: revokeConfirmDialog } = useConfirmDialog()
     const handleRevokeInvite = async (inviteId: string) => {
         if (!canManageMembers) {
             toastError("Apenas owner pode revogar convites.")
             return
         }
+        const ok = await confirmRevoke({
+            title: "Revogar o convite?",
+            description: "O link ou o e-mail enviado deixa de funcionar.",
+            actionLabel: "Revogar",
+        })
+        if (!ok) return
         setBusyInviteId(inviteId)
         const { error } = await supabase
             .from("workspace_invites")
@@ -592,45 +604,43 @@ export default function MembersPage() {
 
     return (
         <div className="min-w-0 max-w-full space-y-5">
-            <Dialog
+            {revokeConfirmDialog}
+            <AlertDialog
                 open={removeDialogOpen}
                 onOpenChange={(open) => {
                     setRemoveDialogOpen(open)
                     if (!open) setRemoveTarget(null)
                 }}
             >
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Remover membro</DialogTitle>
-                        <DialogDescription>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Remover membro</AlertDialogTitle>
+                        <AlertDialogDescription>
                             {removeTarget ? (
                                 <>
                                     Tem certeza que deseja remover{" "}
                                     <span className="font-medium">
                                         {removeTarget.name}
                                     </span>{" "}
-                                    ({removeTarget.email || "e-mail indisponível"}) deste
+                                    ({removeTarget.email || "e-mail indisponível"}) desta
                                     carteira?
                                 </>
                             ) : (
                                 "Tem certeza que deseja remover este membro?"
                             )}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setRemoveDialogOpen(false)}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel
                             disabled={Boolean(removeTarget && busyMemberId === removeTarget.userId)}
                         >
                             Cancelar
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="destructive"
+                        </AlertDialogCancel>
+                        <AlertDialogAction
                             disabled={Boolean(removeTarget && busyMemberId === removeTarget.userId)}
-                            onClick={() => {
+                            onClick={(e) => {
+                                // Fica aberto enquanto remove; fecha quando termina.
+                                e.preventDefault()
                                 if (!removeTarget) return
                                 void handleRemoveMember(removeTarget.userId).then(() => {
                                     setRemoveDialogOpen(false)
@@ -645,10 +655,10 @@ export default function MembersPage() {
                             ) : (
                                 "Remover"
                             )}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             <div className="min-w-0 space-y-2">
                 <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">

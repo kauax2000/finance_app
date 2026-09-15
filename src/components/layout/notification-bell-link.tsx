@@ -47,7 +47,11 @@ export function NotificationBellLink() {
             variant="tertiary"
             size="icon-md"
             className="relative"
-            aria-label="Notificações"
+            aria-label={
+                unreadCount > 0
+                    ? `Notificações, ${unreadCount} não ${unreadCount === 1 ? "lida" : "lidas"}`
+                    : "Notificações"
+            }
             aria-expanded={isOpen}
             onClick={() => toggle()}
         >

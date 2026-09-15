@@ -598,7 +598,9 @@ export function SubscriptionDetailSheet({
                             submitDisabled={submitDisabled}
                             submitLabel={submitLabel}
                             saving={saving}
-                            onCancel={() => onOpenChange(false)}
+                            // Cancelar sai da edição, não da folha: a assinatura
+                            // continua à vista, como na folha de transação.
+                            onCancel={() => setDetailMode("view")}
                         />
                     </div>
                 ) : (

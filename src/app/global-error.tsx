@@ -96,7 +96,9 @@ export default function GlobalError({
                             Ir para o painel
                         </a>
                     </div>
-                    {error.message ? (
+                    {/* A mensagem crua só em desenvolvimento; em produção ela
+                        pode carregar detalhe interno e não ajuda quem usa. */}
+                    {process.env.NODE_ENV === "development" && error.message ? (
                         <p
                             style={{
                                 marginTop: 16,

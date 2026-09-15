@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 import { getSafeInternalNextPath } from "@/lib/auth-return-path"
+import { formatAuthErrorMessagePt } from "@/lib/supabase-errors"
 import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -163,7 +164,7 @@ export function SignupForm() {
         })
 
         if (error) {
-            setError(error.message)
+            setError(formatAuthErrorMessagePt(error.message))
             setLoading(false)
         } else if (data.session && nextPath) {
             setLoading(false)
@@ -183,7 +184,7 @@ export function SignupForm() {
             },
         })
         if (error) {
-            setError(error.message)
+            setError(formatAuthErrorMessagePt(error.message))
         }
     }
 

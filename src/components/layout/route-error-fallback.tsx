@@ -60,7 +60,11 @@ export function RouteErrorFallback({ error, retry, variant = "page" }: RouteErro
                     <ExclamationTriangleIcon />
                     <AlertTitle>Detalhes técnicos</AlertTitle>
                     <AlertDescription className="break-words font-mono text-xs">
-                        {error.message || "Erro desconhecido."}
+                        {/* A mensagem crua é para quem desenvolve; em produção
+                            fica só o código, que casa com o log do servidor. */}
+                        {process.env.NODE_ENV === "development"
+                            ? error.message || "Erro desconhecido."
+                            : "Erro inesperado."}
                         {error.digest ? (
                             <span className="mt-1 block text-muted-foreground">
                                 Código: {error.digest}

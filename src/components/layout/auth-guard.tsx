@@ -23,7 +23,9 @@ function AuthGuardInner({ children }: AuthGuardProps) {
         if (loading || user || inviteAcceptPublic) return
         const query = searchParams.toString()
         const next = query ? `${pathname}?${query}` : pathname
-        router.push(`${ROUTES.LOGIN}?next=${encodeURIComponent(next)}`)
+        // `replace`: com `push` o "voltar" do login devolvia à rota protegida,
+        // que mandava de novo para o login.
+        router.replace(`${ROUTES.LOGIN}?next=${encodeURIComponent(next)}`)
     }, [user, loading, router, pathname, searchParams, inviteAcceptPublic])
 
     if (loading) {

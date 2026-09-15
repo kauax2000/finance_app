@@ -30,6 +30,7 @@ import { supabase, type WorkspaceInvite } from "@/lib/supabase"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
 import { toastError, toastSuccess } from "@/lib/toast"
+import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import {
     dispatchFinanceMembersMutated,
 } from "@/lib/workspace-data-events"
@@ -235,11 +236,18 @@ export function WorkspaceInviteDialog({
         }
     }
 
+    const { confirm: confirmRevoke, dialog: revokeConfirmDialog } = useConfirmDialog()
     const handleRevokeInvite = async (inviteId: string) => {
         if (!canManageMembers) {
             toastError("Apenas owner pode revogar convites.")
             return
         }
+        const ok = await confirmRevoke({
+            title: "Revogar o convite?",
+            description: "O link ou o e-mail enviado deixa de funcionar.",
+            actionLabel: "Revogar",
+        })
+        if (!ok) return
         setBusyInviteId(inviteId)
         const { error } = await supabase
             .from("workspace_invites")
@@ -261,6 +269,7 @@ export function WorkspaceInviteDialog({
 
     return (
         <>
+            {revokeConfirmDialog}
             {isMobile ? (
                 <Sheet open={open} onOpenChange={onOpenChange}>
                     <SheetContent

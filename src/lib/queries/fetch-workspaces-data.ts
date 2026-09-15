@@ -6,7 +6,7 @@ import {
 } from "@/lib/settings"
 import { supabase, type Workspace, type WorkspaceRole } from "@/lib/supabase"
 import { describeWorkspaceSupabaseError } from "@/lib/queries/workspace-errors"
-import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
+import { describeSupabaseErrorForLog, formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { isPostgrestTransientNetworkError } from "@/lib/transient-network-retry"
 
 export type PendingWorkspaceInvite = {
@@ -53,7 +53,7 @@ export async function fetchWorkspacesData(user: User): Promise<WorkspacesBundle>
 
     if (error) {
         const formatted = formatSupabasePostgrestError(error)
-        if (formatted) console.error("Error loading workspaces:", formatted)
+        console.error("Error loading workspaces:", describeSupabaseErrorForLog(error))
         throw new WorkspacesLoadError(
             describeWorkspaceSupabaseError(error) ??
                 formatted ??

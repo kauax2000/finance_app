@@ -15,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { supabase, type Profile } from "@/lib/supabase"
 import { clearCurrentSession, createSession, validateCurrentSession } from "@/lib/sessions"
 import { callDeleteUserAccount } from "@/lib/delete-account"
+import { formatAuthErrorMessagePt } from "@/lib/supabase-errors"
 import { ThemeProvider } from "@/components/theme-provider"
 import { PwaShellProvider } from "@/components/pwa/pwa-shell-provider"
 import { Toaster } from "@/components/ui/sonner"
@@ -226,7 +227,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             },
         })
 
-        if (error) return { error: error.message }
+        if (error) return { error: formatAuthErrorMessagePt(error.message) }
 
         const { data: refreshData } = await supabase.auth.getUser()
         if (refreshData?.user) {
@@ -258,7 +259,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         })
 
         if (error) {
-            return { error: error.message, needsConfirmation: false }
+            return { error: formatAuthErrorMessagePt(error.message), needsConfirmation: false }
         }
 
         const { data: refreshData } = await supabase.auth.getUser()
