@@ -69,7 +69,7 @@ export default function FormPickerPopoverDoc() {
     </FormPickerPopoverList>
     <FormPickerPopoverFooter>
       <FormPickerPopoverFooterAction>
-        <Link href="/settings/credit-cards">Cadastrar cartão</Link>
+        <Link href="/credit-cards">Cadastrar cartão</Link>
       </FormPickerPopoverFooterAction>
     </FormPickerPopoverFooter>
   </FormPickerPopoverContent>
@@ -269,7 +269,7 @@ function PickerDemo() {
             </FormPickerPopoverList>
             <FormPickerPopoverFooter>
               <FormPickerPopoverFooterAction>
-                <Link href="/settings/credit-cards">Cadastrar cartão</Link>
+                <Link href="/credit-cards">Cadastrar cartão</Link>
               </FormPickerPopoverFooterAction>
             </FormPickerPopoverFooter>
           </FormPickerPopoverContent>
