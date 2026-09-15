@@ -24,28 +24,28 @@ export default function ProgressDoc() {
             <span className="text-muted-foreground">Mercado</span>
             <span className="nums text-muted-foreground">45%</span>
           </div>
-          <Progress value={45} />
+          <Progress value={45} aria-label="Mercado" />
         </div>
         <div className="flex w-full flex-col gap-1.5">
           <div className="flex items-baseline justify-between text-xs">
             <span className="text-muted-foreground">Transporte</span>
             <span className="nums text-muted-foreground">72%</span>
           </div>
-          <Progress value={72} tone="success" />
+          <Progress value={72} tone="success" aria-label="Transporte" />
         </div>
         <div className="flex w-full flex-col gap-1.5">
           <div className="flex items-baseline justify-between text-xs">
             <span className="text-muted-foreground">Lazer</span>
             <span className="nums text-muted-foreground">88%</span>
           </div>
-          <Progress value={88} tone="warning" />
+          <Progress value={88} tone="warning" aria-label="Lazer" />
         </div>
         <div className="flex w-full flex-col gap-1.5">
           <div className="flex items-baseline justify-between text-xs">
             <span className="text-muted-foreground">Assinaturas</span>
             <span className="nums text-warning-muted-foreground">104%</span>
           </div>
-          <Progress value={104} tone="destructive" />
+          <Progress value={104} tone="destructive" aria-label="Assinaturas" />
         </div>
       </DocSection>
 
@@ -61,14 +61,14 @@ export default function ProgressDoc() {
             <span className="text-muted-foreground">Gasto do mês</span>
             <span className="nums text-muted-foreground">62%</span>
           </div>
-          <Progress value={62} tone="expense" />
+          <Progress value={62} tone="expense" aria-label="Gasto do mês" />
         </div>
         <div className="flex w-full flex-col gap-1.5">
           <div className="flex items-baseline justify-between text-xs">
             <span className="text-muted-foreground">Meta de reserva</span>
             <span className="nums text-muted-foreground">38%</span>
           </div>
-          <Progress value={38} tone="income" />
+          <Progress value={38} tone="income" aria-label="Meta de reserva" />
         </div>
       </DocSection>
 
@@ -83,13 +83,13 @@ export default function ProgressDoc() {
           <code className="w-16 shrink-0 font-mono text-2xs text-muted-foreground">
             sm
           </code>
-          <Progress value={70} size="sm" />
+          <Progress value={70} size="sm" aria-label="Barra sm" />
         </div>
         <div className="flex w-full items-center gap-3">
           <code className="w-16 shrink-0 font-mono text-2xs text-muted-foreground">
             md
           </code>
-          <Progress value={70} />
+          <Progress value={70} aria-label="Barra md" />
         </div>
       </DocSection>
 

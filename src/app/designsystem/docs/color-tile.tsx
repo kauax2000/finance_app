@@ -13,6 +13,7 @@ import {
   ReceiptPercentIcon as ReceiptMiniIcon,
 } from "@heroicons/react/20/solid"
 import { ColorTile } from "@/components/ui/color-tile"
+import { MoneyDisplay } from "@/components/ui/money-display"
 import { Muted } from "@/components/ui/typography"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
@@ -62,9 +63,7 @@ export default function ColorTileDoc() {
               <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
                 {nome}
               </span>
-              <span className="nums shrink-0 text-sm text-muted-foreground">
-                R$ 1.240,00
-              </span>
+              <MoneyDisplay value={1240} tone="muted" className="shrink-0" />
             </li>
           ))}
         </ul>

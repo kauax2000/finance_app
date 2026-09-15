@@ -205,10 +205,10 @@ export default function MoneyDisplayDoc() {
         rows={[
           { prop: "value", type: "number | null | undefined", description: "O valor. null vira zero." },
           { prop: "tone", type: '"default" | "income" | "expense" | "muted"', default: '"default"', description: "A cor do valor." },
-          { prop: "size", type: '"sm" | "default" | "lg" | "xl" | "2xl"', default: '"default"', description: "O tamanho do texto." },
+          { prop: "size", type: '"sm" | "md" | "lg" | "xl" | "2xl"', default: '"md"', description: "O tamanho do texto." },
           { prop: "signed", type: "boolean", default: "false", description: "Mostra o + no positivo." },
           { prop: "compact", type: "boolean", default: "false", description: "1,2 mil em vez de 1.234,50." },
-          { prop: "tabular", type: "boolean", default: "xl e 2xl", description: "Força ou desliga a Geist Mono." },
+          { prop: "mono", type: "boolean", default: "xl e 2xl", description: "Força ou desliga a Geist Mono. A figura tabular fica ligada sempre." },
         ]}
       />
     </>

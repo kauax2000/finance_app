@@ -212,7 +212,7 @@ export default function ItemDoc() {
           {
             prop: "variant",
             type: '"plain" | "outline" | "muted"',
-            default: '"default"',
+            default: '"plain"',
             description: "A superfície da linha.",
           },
           {
@@ -250,7 +250,7 @@ export default function ItemDoc() {
           {
             prop: "ItemMedia",
             type: 'variant: "plain" | "icon" | "image"',
-            default: '"default"',
+            default: '"plain"',
             description: "image acompanha a escada em medida e em raio.",
           },
           {

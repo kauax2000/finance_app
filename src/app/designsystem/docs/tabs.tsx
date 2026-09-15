@@ -366,7 +366,7 @@ export default function TabsDoc() {
             type: "boolean",
             default: "variant === solid",
             description:
-              "Abas de largura igual dividindo a linha. Desligado, o alvo de toque cresce para 44px.",
+              "Abas de largura igual dividindo a linha. Desligado, cada aba mede o próprio rótulo.",
           },
           {
             prop: "glass",
@@ -425,11 +425,12 @@ export default function TabsDoc() {
         defeito que o <code>Menubar</code> já teve e já corrigiu.
       </DocNote>
 
-      <DocNote title="A bandeja padrão cresceu de 36 para 40">
-        Consequência direta de <code>md</code> ser o padrão do sistema e nomear
-        um gatilho de 32. Quem quiser os 36 de antes pede <code>{'size="sm"'}</code>{" "}
-        — e ganha de brinde o gatilho de 28 que a versão anterior prometia sem
-        entregar.
+      <DocNote title="size nomeia a bandeja, e o gatilho deriva">
+        Houve uma rodada em que <code>size</code> media o gatilho e a bandeja
+        saía 8px maior — uma linha de controles de 32 recebia um{" "}
+        <code>Tabs</code> de 40. Hoje a bandeja <strong>é</strong> o degrau do{" "}
+        <code>Button</code> de mesmo nome (<code>md</code> 32) e o gatilho mede
+        bandeja − 4; o eixo de recuo que existiu no meio do caminho saiu.
       </DocNote>
 
       <DocNote title="flex-1 nas abas era decorativo">

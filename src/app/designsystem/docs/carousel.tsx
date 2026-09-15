@@ -106,8 +106,9 @@ export default function CarouselDoc() {
         <br />
         Hoje <code>inside</code> pousa a seta sobre a borda do viewport e{" "}
         <code>outside</code> <strong>reserva a própria calha</strong> —{" "}
-        <code>px-12</code> na raiz, seta em <code>left-0</code>. A distância
-        visual é a mesma de antes; o que mudou é quem paga por ela.
+        <code>px-9</code> na raiz (36px: a seta de 28 mais 8 de respiro), seta em{" "}
+        <code>left-0</code>. A calha começou em <code>px-12</code>, herdada do
+        shadcn, e deixava 20px de vão entre a seta e o trilho.
       </DocNote>
 
       <DocSection
@@ -166,7 +167,7 @@ export default function CarouselDoc() {
           </>
         }
         code={`<Carousel controls="inside">…</Carousel>   {/* o padrão */}
-<Carousel controls="outside">…</Carousel>  {/* reserva px-12 na raiz */}
+<Carousel controls="outside">…</Carousel>  {/* reserva px-9 (36px) na raiz */}
 <Carousel controls="none">…</Carousel>     {/* gesto e pontos */}`}
         previewClassName="flex-col items-stretch gap-6"
       >
@@ -492,7 +493,7 @@ export default function CarouselDoc() {
             type: '"inside" | "outside" | "none"',
             default: '"inside"',
             description:
-              "Onde a seta pousa. outside reserva px-12 na própria raiz; nenhum modo desenha fora da caixa.",
+              "Onde a seta pousa. outside reserva px-9 (36px, a seta mais 8) na própria raiz; nenhum modo desenha fora da caixa.",
           },
           {
             prop: "gap",

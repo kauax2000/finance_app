@@ -8,6 +8,7 @@ import {
   CollapsibleMarker,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import { Kbd } from "@/components/ui/kbd"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 const TEXTO_LONGO = [
@@ -147,7 +148,7 @@ export default function CollapsibleDoc() {
 
       <DocNote title="O que está fechado ainda existe para a busca do navegador?">
         Sem <code>peek</code>, não — o conteúdo recolhido sai do DOM, e{" "}
-        <kbd>⌘F</kbd> não o encontra. Se o que está lá dentro precisa ser
+        <Kbd keys="mod+f" /> não o encontra. Se o que está lá dentro precisa ser
         localizável, ele não deveria estar escondido — <strong>ou</strong> ele
         quer <code>peek</code>, que mantém o nó montado e o texto na árvore de
         acessibilidade.

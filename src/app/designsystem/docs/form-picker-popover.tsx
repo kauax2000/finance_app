@@ -153,10 +153,10 @@ export default function FormPickerPopoverDoc() {
           },
           {
             prop: "FormPickerPopoverTrigger",
-            type: "ComponentProps<typeof Button>",
-            default: 'variant="outline" size="xl"',
+            type: 'Omit<ComponentProps<"button">, "size"> & { size?: "sm" | "md" | "lg" | "xl" }',
+            default: 'size="xl"',
             description:
-              "O gatilho é o campo: altura da escada, peso normal, e o chevron que gira ao abrir.",
+              "O gatilho é o campo: veste field-classes (não é mais Button), altura da escada, peso normal, e o chevron que gira ao abrir.",
           },
           {
             prop: "FormPickerPopoverSearch",

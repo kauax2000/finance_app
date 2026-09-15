@@ -35,7 +35,7 @@ export default function SelectDoc() {
 </Select>`}
       >
         <Select>
-          <SelectTrigger className="w-56">
+          <SelectTrigger className="w-56" aria-label="Categoria">
             <SelectValue placeholder="Categoria" />
           </SelectTrigger>
           <SelectContent>
@@ -56,7 +56,7 @@ export default function SelectDoc() {
 </SelectGroup>`}
       >
         <Select>
-          <SelectTrigger size="sm" className="w-40">
+          <SelectTrigger size="sm" className="w-40" aria-label="Categoria (sm)">
             <SelectValue placeholder="sm" />
           </SelectTrigger>
           <SelectContent>
@@ -73,7 +73,7 @@ export default function SelectDoc() {
           </SelectContent>
         </Select>
         <Select disabled>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-40" aria-label="Categoria (desabilitado)">
             <SelectValue placeholder="Desabilitado" />
           </SelectTrigger>
           <SelectContent />

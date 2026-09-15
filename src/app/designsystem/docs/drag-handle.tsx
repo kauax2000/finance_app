@@ -144,18 +144,20 @@ export default function DragHandleDoc() {
         <code>drag-handle.test.ts</code> é o que impede que a próxima escape.
       </DocNote>
 
-      <DocNote title="70% é o piso da tinta de arraste, e vale para as duas peças">
+      <DocNote title="75% é o piso da alça, e 70% o da pega">
         A alça era <code>bg-muted-foreground/35</code> por cima da{" "}
         <code>opacity:.7</code> do vaul: <strong>24,5% de alfa efetivo</strong>,
         que medido contra <code>--background</code> dá{" "}
         <strong>1,41:1 no claro e 1,46 no escuro</strong> — contra os 3:1 que a
         WCAG 1.4.11 pede de um componente não-textual. Varridos os degraus,{" "}
-        <strong>70% é o primeiro que passa nos dois temas</strong>: 3,06 e 4,24.
-        É o mesmo degrau a que a pega do{" "}
+        Contra a placa opaca, <strong>70% era o primeiro que passava nos dois
+        temas</strong>: 3,06 e 4,24 — o mesmo degrau da pega do{" "}
         <Link href="/designsystem/resizable" className="underline">
           Resizable
-        </Link>{" "}
-        chegou, por varredura independente e contra outra superfície. O par de
+        </Link>
+        . A folha virou vidro e a folga de 0,06 sumiu (2,85 no claro); varridos
+        de novo, <strong>75% é o primeiro que passa: 3,12 e 4,73</strong>. A pega
+        segue em 70%, porque vive entre dois painéis opacos. O par de
         cursor e toque vai a 90% — 4,61 e 6,36 —, e é um <strong>par</strong>:{" "}
         <code>hover:</code> compila dentro de{" "}
         <code>@media (hover: hover)</code> e não existe no telefone, que é

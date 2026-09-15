@@ -169,8 +169,8 @@ export default function FormDoc() {
         mascara sozinho, então o fundo dela <strong>já é</strong> a placa da
         folha. Ela chegou a pintar um degradê — cor cheia na ponta de fora,
         transparente encostando no fade — e isso saía como uma{" "}
-        <strong>banda</strong>: a placa é <code>--popover</code> a 60%, e um{" "}
-        <code>--popover</code> opaco no topo da tira é mais claro que ela. Cor
+        <strong>banda</strong>: a placa é <code>--background</code> translúcida
+        (40% no escuro), e a cor cheia no topo da tira não é a cor dela. Cor
         com alfa não tem cor cheia pintável sem empilhar. E ele não traz área
         segura — ela é da <strong>superfície</strong>, e o casco da folha já a
         carrega.
@@ -192,7 +192,7 @@ export default function FormDoc() {
         description="pending desce por contexto: desabilita o cancelar, e no enviar troca o rótulo, mostra o Spinner e marca aria-busy. O Enter durante o envio não duplica — o botão está desabilitado, e é isso que a busca do Enter filtra."
         code={`<Form pending={saving} onSubmit={handleSubmit}>
   <FormError>{erroGeral}</FormError>
-  <FormTextarea label="Observação" description="Enter quebra linha; ⌘+Enter envia." />
+  <FormTextarea label="Observação" description="Enter quebra linha; ⌘/Ctrl+Enter envia." />
   <FormActions>
     <FormCancel>Cancelar</FormCancel>
     <FormSubmit pendingLabel="Salvando…">Salvar</FormSubmit>
@@ -269,7 +269,7 @@ export default function FormDoc() {
 
       <DocSection
         title="Os campos deferem o Enter"
-        description="Experimente: Enter no campo de texto envia; dentro da observação, quebra linha — e ⌘+Enter envia de lá mesmo; sobre o seletor, abre a lista."
+        description="Experimente: Enter no campo de texto envia; dentro da observação, quebra linha — e ⌘/Ctrl+Enter envia de lá mesmo; sobre o seletor, abre a lista."
         previewClassName="items-stretch"
       >
         <EnterDeferDemo />
@@ -616,7 +616,7 @@ function EstadoDemo() {
           label="Observação"
           rows={3}
           placeholder="Enter quebra linha"
-          description="⌘+Enter envia de dentro do textarea."
+          description="⌘/Ctrl+Enter envia de dentro do textarea."
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
         />
@@ -673,7 +673,7 @@ function EnterDeferDemo() {
         <Field>
           <FieldLabel>Observação</FieldLabel>
           <FieldControl>
-            <Textarea placeholder="Enter quebra linha; ⌘+Enter envia" />
+            <Textarea placeholder="Enter quebra linha; ⌘/Ctrl+Enter envia" />
           </FieldControl>
         </Field>
       </FieldGroup>
