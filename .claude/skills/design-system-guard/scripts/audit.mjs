@@ -65,6 +65,9 @@ const BARE_BW = /\b(?:bg|text|border|ring|fill|stroke|divide|placeholder)-(?:whi
  */
 const RUNTIME_COLOR_FILES = [
   "category-appearance-fields",
+  // A marca do Google no botão de entrar: quatro hexadecimais que são de outra
+  // pessoa e não seguem o tema.
+  "google-icon",
   "workspace-appearance-form-fields",
   "workspace-appearance-edit-dialog",
   "credit-card-brand-logos",
@@ -107,6 +110,7 @@ const FOREIGN_ICON_PACKAGES =
  */
 const DRAWN_SVG_FILES = [
   "app-logo",
+  "google-icon",
   "app-wordmark",
   "credit-card-brand-logos",
   "registered-credit-card-face",

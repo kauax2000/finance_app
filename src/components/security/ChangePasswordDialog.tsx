@@ -23,7 +23,12 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { Alert, AlertTitle } from "@/components/ui/alert"
 import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import {
+    InputGroup,
+    InputGroupAddon,
+    InputGroupButton,
+    InputGroupInput,
+} from "@/components/ui/input-group"
 import { Label } from "@/components/ui/label"
 import { CheckCircleIcon, CheckIcon, ExclamationTriangleIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
 import { cn } from "@/lib/utils"
@@ -184,8 +189,8 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
         <div className="space-y-4">
             <div className="space-y-2">
                 <Label htmlFor="current-password">Senha atual</Label>
-                <div className="relative">
-                    <Input
+                <InputGroup>
+                    <InputGroupInput
                         id="current-password"
                         type={showCurrentPassword ? "text" : "password"}
                         value={currentPassword}
@@ -193,30 +198,23 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         placeholder="Digite sua senha atual"
                         required
                         disabled={loading}
-                        className="pr-10"
                     />
-                    <Button
-                        type="button"
-                        variant="tertiary"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                        aria-label={showCurrentPassword ? "Ocultar senha atual" : "Mostrar senha atual"}
-                        aria-pressed={showCurrentPassword}
-                    >
-                        {showCurrentPassword ? (
-                            <EyeSlashIcon className="h-4 w-4" />
-                        ) : (
-                            <EyeIcon className="h-4 w-4" />
-                        )}
-                    </Button>
-                </div>
+                    <InputGroupAddon align="inline-end">
+                        <InputGroupButton
+                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                            aria-label={showCurrentPassword ? "Ocultar senha atual" : "Mostrar senha atual"}
+                            aria-pressed={showCurrentPassword}
+                        >
+                            {showCurrentPassword ? <EyeSlashIcon /> : <EyeIcon />}
+                        </InputGroupButton>
+                    </InputGroupAddon>
+                </InputGroup>
             </div>
 
             <div className="space-y-2">
                 <Label htmlFor="new-password">Nova senha</Label>
-                <div className="relative">
-                    <Input
+                <InputGroup>
+                    <InputGroupInput
                         id="new-password"
                         type={showNewPassword ? "text" : "password"}
                         value={newPassword}
@@ -224,24 +222,17 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         placeholder="Digite a nova senha"
                         required
                         disabled={loading}
-                        className="pr-10"
                     />
-                    <Button
-                        type="button"
-                        variant="tertiary"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                        aria-label={showNewPassword ? "Ocultar nova senha" : "Mostrar nova senha"}
-                        aria-pressed={showNewPassword}
-                    >
-                        {showNewPassword ? (
-                            <EyeSlashIcon className="h-4 w-4" />
-                        ) : (
-                            <EyeIcon className="h-4 w-4" />
-                        )}
-                    </Button>
-                </div>
+                    <InputGroupAddon align="inline-end">
+                        <InputGroupButton
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            aria-label={showNewPassword ? "Ocultar nova senha" : "Mostrar nova senha"}
+                            aria-pressed={showNewPassword}
+                        >
+                            {showNewPassword ? <EyeSlashIcon /> : <EyeIcon />}
+                        </InputGroupButton>
+                    </InputGroupAddon>
+                </InputGroup>
 
                 {newPassword.length > 0 ? (
                     <div className="mt-2 grid grid-cols-2 gap-1.5 rounded-lg border border-border/80 bg-muted/20 p-3">
@@ -257,8 +248,8 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
 
             <div className="space-y-2">
                 <Label htmlFor="confirm-password">Confirmar nova senha</Label>
-                <div className="relative">
-                    <Input
+                <InputGroup>
+                    <InputGroupInput
                         id="confirm-password"
                         type={showConfirmPassword ? "text" : "password"}
                         value={confirmPassword}
@@ -266,24 +257,17 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         placeholder="Confirme a nova senha"
                         required
                         disabled={loading}
-                        className="pr-10"
                     />
-                    <Button
-                        type="button"
-                        variant="tertiary"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        aria-label={showConfirmPassword ? "Ocultar confirmação de senha" : "Mostrar confirmação de senha"}
-                        aria-pressed={showConfirmPassword}
-                    >
-                        {showConfirmPassword ? (
-                            <EyeSlashIcon className="h-4 w-4" />
-                        ) : (
-                            <EyeIcon className="h-4 w-4" />
-                        )}
-                    </Button>
-                </div>
+                    <InputGroupAddon align="inline-end">
+                        <InputGroupButton
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            aria-label={showConfirmPassword ? "Ocultar confirmação de senha" : "Mostrar confirmação de senha"}
+                            aria-pressed={showConfirmPassword}
+                        >
+                            {showConfirmPassword ? <EyeSlashIcon /> : <EyeIcon />}
+                        </InputGroupButton>
+                    </InputGroupAddon>
+                </InputGroup>
             </div>
 
             {error ? (
