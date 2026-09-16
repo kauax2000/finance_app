@@ -10119,23 +10119,22 @@ duas das correções que ele prescrevia estavam erradas, e a 02 diz quais.
 
 O que sobra, do mais barato ao mais caro:
 
-- **84 `hover:` sem par de toque.** No telefone essas superfícies não respondem
-  ao toque. A correção é **somar** `active:`, nunca remover o `hover:`.
-- **77 formatações fora dos helpers** — `Intl.*` e `toLocaleDateString` na tela,
-  cada um livre para divergir. Destino: `@/lib/formatters` e
-  `@/lib/transaction-date`.
-- **51 primitivos crus** com equivalente no design system, quase todos
-  `<button>`. Muda tipos de props: `npx tsc --noEmit` a cada arquivo.
-- **353 valores arbitrários**, hoje majoritariamente legítimos: `w-[…]` e `h-[…]`
+- ~~**84 `hover:` sem par de toque**~~ — **pago na migração do backlog**: a
+  regra **H** está em **0**, em quatro tratamentos (variante destrutiva, par
+  `active:`, realce removido onde nada clica, e a classe morta do `TableRow`).
+- ~~**77 formatações fora dos helpers**~~ — **pago**: a regra **I** está em
+  **0**, e dois helpers novos nasceram de contagem
+  (`formatDateTimeShortPtBr`, `formatMonthLongPtBr`).
+- **41 primitivos crus** com equivalente no design system (eram 51), quase
+  todos `<button>`. Muda tipos de props: `npx tsc --noEmit` a cada arquivo.
+- **306 valores arbitrários**, hoje majoritariamente legítimos: `w-[…]` e `h-[…]`
   de esqueleto, que existem para casar com a largura do conteúdo real.
 
 E o que a rodada do `Card` deixou de propósito para uma próxima, porque a
 decisão foi mexer só no design system:
 
-- **46 telas abrem com a mesma string** — `className="gap-0 overflow-hidden
-  border border-border py-0 shadow-none ring-0"` —, que hoje é `padding="none"`
-  e mais nada. `border border-border` virou o padrão, e `shadow-none`/`ring-0`
-  nunca desligaram coisa alguma.
+- ~~**46 telas abrem com a mesma string**~~ — **pago**: eram **61 cartões em
+  30 arquivos**, e hoje são `padding="none"`. O app tem zero.
 - **24 barras de topo e 18 faixas de pé feitas à mão**, em cinco e nove
   grafias. Destino: `CardToolbar` e `CardNote`.
 - **`AppAppearanceSettings`** (`src/components/settings/app-appearance-settings.tsx`)
@@ -10144,7 +10143,8 @@ decisão foi mexer só no design system:
 
 E o que a rodada do `Alert` deixou, pela mesma razão:
 
-- **11 avisos tonais feitos à mão** contra 4 que usam o componente —
+- ~~**11 avisos tonais feitos à mão**~~ — **pago**: eram **18 em 9 arquivos**,
+  e hoje são `Alert`. O que segue abaixo é o registro do que eles eram —
   `flex items-start gap-2 rounded-lg border border-X/30 bg-X-muted …` em
   `invites/accept`, `ChangePasswordDialog`, `edit-profile-dialog` e
   `credit-card-category-alerts`; e `bg-X-muted p-3 rounded-md` sem borda em
@@ -10157,10 +10157,10 @@ E o que a rodada do `Alert` deixou, pela mesma razão:
 
 E o que a rodada do `Dialog` deixou:
 
-- **32 corpos roláveis** (`min-h-0 flex-1 overflow-y-auto`) e **16 cabeçalhos**
-  com `shrink-0 px-6 …` em cinco grafias continuam escritos à mão. Destino:
-  `DialogBody` e o `DialogHeader`, que em `layout="fixed"` já dá as duas
-  coisas. Elas são redundantes hoje, não erradas.
+- ~~**32 corpos roláveis** (`min-h-0 flex-1 overflow-y-auto`)~~ — **pago**: os
+  **28** que existiam viraram `DialogBody`, e com eles os **30** `DialogFooter`
+  que escreviam recuo, sangria e — em sete — a tinta e o canto que a regra
+  **J** proíbe. Os cabeçalhos com `shrink-0 px-6 …` continuam à mão.
 - **Os 6 diálogos sem `className`** ficaram 64px mais largos (`sm` → `md`) e com
   24px de recuo em vez de 16 — consequência direta de o padrão passar a
   descrever o app. Vale conferir tela a tela se algum queria mesmo ser `sm`.
@@ -10923,5 +10923,56 @@ E o que a rodada da `BottomBar` deixou:
   mas não está em `ROUTES` nem em navegação nenhuma.
 - **`src/components/ui/empty.tsx`, não rastreado, reprova a asserção 1 do
   `taxonomy.test.ts`** — trabalho em andamento de outra frente.
+
+### A migração do backlog, e o que ela deixou (PR #7)
+
+As fases M1 a M10 do plano 3 correram sobre este backlog. O auditor foi de
+**540 para 354 achados**, e cinco regras zeraram: **A**, **D**, **D3**, **H** e
+**I**. O que sobra é **C** 41 · **C'** 5 · **D2** 306 · **G** 2 — e os dois
+últimos do **G** são o falso positivo já registrado aqui (o `ColorTile
+size="lg"` aplica `size-5`, e o `size` daquele sítio é decidido em tempo de
+execução).
+
+**O que zerou, em contagem:** a string do painel nos cartões (61), as larguras
+cruas do `DropdownMenuContent` (19), os itens destrutivos à mão (13), os avisos
+tonais à mão (18), a formatação fora dos helpers (41), os `hover:` sem par
+(66), os ícones no conjunto errado (42 dos 44), as cores literais (14), os
+componentes nascendo em `src/app/` (4), os corpos roláveis à mão (28), os
+`dialogFooterClass` (14), as faixas opacas `border-t bg-background` (12), os
+`role="toolbar"` sem foco itinerante (4) e o último `toast` cru do sonner.
+
+**O que continua aberto, com o número de hoje:**
+
+- **54 `<Label htmlFor>` à mão**, em 19 arquivos. Os 12 das telas de
+  autenticação migraram (são públicas, e cada campo foi medido no navegador);
+  os que sobram exigem sessão, e a régua desta rodada foi não migrar campo que
+  não dá para ver — é justamente onde um `htmlFor` errado passa despercebido.
+- **41 primitivos crus** (regra **C**), quase todos `<button>` com
+  `className` próprio. Cada um é decisão de sítio: vestir o `Button` ou ficar
+  cru **com o motivo escrito**, que é a régua da composição.
+- **4 `role="tablist"` à mão**, todos filtro. O destino deles é o
+  `ToggleGroup`, que deixou de desmarcar tudo ao clicar no item ativo — o que
+  falta é uma decisão de desenho: o `Toggle` não tem a bandeja segmentada, e é
+  ela que o app renderiza. As duas abas de verdade já são `Tabs`.
+- **42 blocos `muted` escritos à mão** (`rounded-lg border border-border/NN
+  bg-muted/NN p-3`), em 28 arquivos, com sete grafias de borda e cinco de
+  tinta. Destino: `Card variant="muted"`.
+- **16 cabeçalhos de diálogo** com `shrink-0 px-6 …`.
+- **14 `md:h-8`** fora das barras (as cinco barras migraram para o `Toolbar` e
+  perguntam o apontador, não a largura).
+- **`transactions-date-range-form` continua com dois `DatePicker`**. O
+  `mode="range"` resolveria de graça o período invertido, mas troca dois campos
+  por um — é mudança de interação, e precisa ser vista numa tela logada.
+- **Três `<img>` crus ficam, com o motivo escrito no sítio**: 16px e 80px estão
+  fora da escada do `Avatar` (24 a 56).
+- **D2 (306 valores arbitrários) segue fora por decisão** — quase todos são
+  largura de esqueleto casando com o conteúdo real.
+
+**O que esta migração não pôde fazer, e é a maior ressalva:** nenhuma tela
+logada foi vista. O que sustenta as mudanças ali é o compilador, os 604 testes,
+o auditor e as páginas públicas (`/login`, `/register`, `/forgot-password`,
+`/404`), que foram medidas no navegador a cada fase. As telas de dentro pedem
+uma passada com sessão — em especial os diálogos e folhas (M4), as barras de
+filtro (M7) e os blocos vazios (M3), que são onde a migração mais mexeu.
 
 Reproduza a qualquer momento com `npm run ds:audit`.
