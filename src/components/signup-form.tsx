@@ -239,6 +239,7 @@ export function SignupForm() {
                         </Alert>
                     )}
                     <FormInput
+                        id="fullName"
                         label="Nome completo"
                         type="text"
                         placeholder="João Silva"
@@ -252,6 +253,7 @@ export function SignupForm() {
                         error={fieldErrors.fullName}
                     />
                     <FormInput
+                        id="email"
                         label="Email"
                         type="email"
                         placeholder="seu@email.com"
@@ -265,6 +267,7 @@ export function SignupForm() {
                         error={fieldErrors.email}
                     />
                     <FormInput
+                        id="phone"
                         label="Telefone celular"
                         type="tel"
                         placeholder="(11) 99999-9999"
@@ -278,6 +281,7 @@ export function SignupForm() {
                         <InputGroup>
                             <FieldControl>
     <InputGroupInput
+                                    id="password"
                                     type={showPassword ? "text" : "password"}
                                     placeholder="Digite sua senha"
                                     value={password}

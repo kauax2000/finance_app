@@ -197,6 +197,7 @@ function ResetPasswordFormContent() {
                             </Alert>
                         )}
                         <FormInput
+                            id="password"
                             label="Nova Senha"
                             type="password"
                             placeholder="••••••••"
@@ -205,6 +206,7 @@ function ResetPasswordFormContent() {
                             required
                         />
                         <FormInput
+                            id="confirmPassword"
                             label="Confirmar Senha"
                             type="password"
                             placeholder="••••••••"

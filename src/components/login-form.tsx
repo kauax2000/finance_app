@@ -126,6 +126,7 @@ export function LoginForm() {
                         o `id` e o `aria-invalid` que estavam aqui à mão saem, e o
                         erro deixa de ser um `<p>` solto que ninguém anunciava. */}
                     <FormInput
+                        id="email"
                         ref={emailInputRef}
                         label="Email"
                         type="email"
@@ -158,6 +159,7 @@ export function LoginForm() {
                         <InputGroup>
                             <FieldControl>
                                 <InputGroupInput
+                                    id="password"
                                     ref={passwordInputRef}
                                     type={showPassword ? "text" : "password"}
                                     placeholder="Digite sua senha"

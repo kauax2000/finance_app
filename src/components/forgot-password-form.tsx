@@ -196,6 +196,7 @@ export function ForgotPasswordForm() {
                             </Alert>
                         ) : null}
                         <FormInput
+                            id="email"
                             label="Email"
                             type="email"
                             placeholder="seu@email.com"
@@ -225,6 +226,7 @@ export function ForgotPasswordForm() {
                             </Alert>
                         ) : null}
                         <FormInput
+                            id="token"
                             label="Token de recuperação"
                             type="text"
                             placeholder="Cole o token do email aqui"
@@ -242,6 +244,7 @@ export function ForgotPasswordForm() {
                             <InputGroup>
                                 <FieldControl>
     <InputGroupInput
+                                        id="password"
                                         type={showPassword ? "text" : "password"}
                                         placeholder="Digite sua nova senha"
                                         value={password}
@@ -273,6 +276,7 @@ export function ForgotPasswordForm() {
                             <InputGroup>
                                 <FieldControl>
     <InputGroupInput
+                                        id="confirmPassword"
                                         type={showConfirmPassword ? "text" : "password"}
                                         placeholder="Confirme sua senha"
                                         value={confirmPassword}
