@@ -1,7 +1,7 @@
 "use client"
 
 import { currencyBRL, numberBR } from "@/lib/formatters"
-import { ArrowDownIcon, ArrowUpIcon, ArrowsUpDownIcon, PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ArrowPathRoundedSquareIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
@@ -70,28 +70,6 @@ type SortDir = SubscriptionSortDir
 type PendingDelete =
     | { mode: "single"; subscription: WorkspaceSubscriptionListRow }
     | { mode: "bulk"; ids: string[] }
-
-function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
-    if (!active) {
-        return (
-            <ArrowsUpDownIcon
-                className="ml-1 size-3.5 shrink-0 text-muted-foreground"
-                aria-hidden
-            />
-        )
-    }
-    return dir === "asc" ? (
-        <ArrowUpIcon
-            className="ml-1 size-3.5 shrink-0 text-foreground"
-            aria-hidden
-        />
-    ) : (
-        <ArrowDownIcon
-            className="ml-1 size-3.5 shrink-0 text-foreground"
-            aria-hidden
-        />
-    )
-}
 
 function compareSubscriptions(
     a: WorkspaceSubscriptionListRow,
@@ -685,101 +663,27 @@ export default function SubscriptionsPageClient() {
                                         </TableHead>
                                         <TableHead
                                             className="h-11 px-4 py-0 align-middle"
-                                            aria-sort={
-                                                sortKey === "name"
-                                                    ? sortDir === "asc"
-                                                        ? "ascending"
-                                                        : "descending"
-                                                    : "none"
-                                            }
+                                            sort={sortKey === "name" ? sortDir : "none"}
+                                            onSort={() => toggleSort("name")}
                                         >
-                                            <button
-                                                type="button"
-                                                className={cn(
-                                                    "-mx-1 inline-flex items-center rounded-md px-1 py-1 text-xs font-semibold tracking-wide outline-none transition-colors hover:bg-muted/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                                                    sortKey === "name"
-                                                        ? "text-foreground"
-                                                        : "text-muted-foreground hover:text-foreground"
-                                                )}
-                                                onClick={() =>
-                                                    toggleSort("name")
-                                                }
-                                            >
-                                                Assinatura
-                                                <SortIndicator
-                                                    active={sortKey === "name"}
-                                                    dir={sortDir}
-                                                />
-                                            </button>
+                                            Assinatura
                                         </TableHead>
                                         <TableHead
                                             className="h-11 px-4 py-0 align-middle"
-                                            aria-sort={
-                                                sortKey === "amount"
-                                                    ? sortDir === "asc"
-                                                        ? "ascending"
-                                                        : "descending"
-                                                    : "none"
-                                            }
+                                            sort={sortKey === "amount" ? sortDir : "none"}
+                                            onSort={() => toggleSort("amount")}
                                         >
-                                            <button
-                                                type="button"
-                                                className={cn(
-                                                    "-mx-1 inline-flex items-center rounded-md px-1 py-1 text-xs font-semibold tracking-wide outline-none transition-colors hover:bg-muted/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                                                    sortKey === "amount"
-                                                        ? "text-foreground"
-                                                        : "text-muted-foreground hover:text-foreground"
-                                                )}
-                                                onClick={() =>
-                                                    toggleSort("amount")
-                                                }
-                                            >
-                                                Valor
-                                                <SortIndicator
-                                                    active={
-                                                        sortKey === "amount"
-                                                    }
-                                                    dir={sortDir}
-                                                />
-                                            </button>
+                                            Valor
                                         </TableHead>
                                         <TableHead className="hidden h-11 px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground sm:table-cell">
                                             Periodicidade
                                         </TableHead>
                                         <TableHead
                                             className="h-11 px-4 py-0 align-middle"
-                                            aria-sort={
-                                                sortKey === "next_billing_date"
-                                                    ? sortDir === "asc"
-                                                        ? "ascending"
-                                                        : "descending"
-                                                    : "none"
-                                            }
+                                            sort={sortKey === "next_billing_date" ? sortDir : "none"}
+                                            onSort={() => toggleSort("next_billing_date")}
                                         >
-                                            <button
-                                                type="button"
-                                                className={cn(
-                                                    "-mx-1 inline-flex items-center rounded-md px-1 py-1 text-xs font-semibold tracking-wide outline-none transition-colors hover:bg-muted/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                                                    sortKey ===
-                                                        "next_billing_date"
-                                                        ? "text-foreground"
-                                                        : "text-muted-foreground hover:text-foreground"
-                                                )}
-                                                onClick={() =>
-                                                    toggleSort(
-                                                        "next_billing_date"
-                                                    )
-                                                }
-                                            >
-                                                Próxima
-                                                <SortIndicator
-                                                    active={
-                                                        sortKey ===
-                                                        "next_billing_date"
-                                                    }
-                                                    dir={sortDir}
-                                                />
-                                            </button>
+                                            Próxima
                                         </TableHead>
                                         <TableHead className="hidden h-11 px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground md:table-cell">
                                             Categoria
