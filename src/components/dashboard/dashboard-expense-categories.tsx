@@ -1,5 +1,6 @@
 "use client"
 
+import { chartSeriesColor } from "@/components/ui/chart"
 import {
     EmptyState,
     EmptyStateDescription,
@@ -26,14 +27,11 @@ import { labelYearMonthPt } from "@/lib/budget-month"
 import { cn } from "@/lib/utils"
 
 
-/** Fallback palette when category color is missing or invalid (theme-aware neutrals + accents). */
-const FALLBACK_FILLS = [
-    "oklch(0.65 0.15 166)",
-    "oklch(0.62 0.19 264)",
-    "oklch(0.7 0.15 45)",
-    "oklch(0.58 0.2 25)",
-    "oklch(0.55 0.12 250)",
-]
+/**
+ * A categoria sem cor cai na rampa do sistema — os mesmos `--chart-1..5` que
+ * todo gráfico usa, em vez das cinco `oklch()` escritas à mão que moravam aqui
+ * e que ninguém media contra o tema.
+ */
 
 function isHex6(s: string): boolean {
     return /^#[0-9A-Fa-f]{6}$/.test(s.trim())
@@ -41,7 +39,7 @@ function isHex6(s: string): boolean {
 
 function resolveFill(raw: string | undefined, index: number): string {
     if (raw && isHex6(raw)) return raw.trim()
-    return FALLBACK_FILLS[index % FALLBACK_FILLS.length]
+    return chartSeriesColor(index)
 }
 
 /** Keeps the donut center label readable without overlapping slice edges. */

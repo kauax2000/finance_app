@@ -38,8 +38,8 @@ import type { ExpenseCategoryOption } from "@/components/subscriptions/subscript
 import type { SubscriptionFormPayload } from "@/components/subscriptions/subscription-form-shared"
 import { SubscriptionFormSurface } from "@/components/subscriptions/subscription-form-surface"
 import { useSubscriptionForm } from "@/components/subscriptions/use-subscription-form"
-import { PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
-import { EllipsisHorizontalIcon, XMarkIcon } from "@heroicons/react/20/solid"
+import { EllipsisHorizontalIcon, PencilIcon, TrashIcon, XMarkIcon } from "@heroicons/react/16/solid"
+
 import { cn } from "@/lib/utils"
 import { Switch } from "@/components/ui/switch"
 import {
@@ -312,7 +312,6 @@ export function SubscriptionDetailSheet({
                                     aria-label="Mais opções"
                                 >
                                     <EllipsisHorizontalIcon
-                                        className="h-5 w-5"
                                         aria-hidden
                                     />
                                 </Button>
@@ -327,7 +326,7 @@ export function SubscriptionDetailSheet({
                                 <DropdownMenuItem variant="destructive"
                                     onClick={() => onDelete(s)}
                                 >
-                                    <TrashIcon className="h-4 w-4" aria-hidden />
+                                    <TrashIcon aria-hidden />
                                     Excluir
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -340,7 +339,7 @@ export function SubscriptionDetailSheet({
                             onClick={() => onOpenChange(false)}
                             aria-label="Fechar"
                         >
-                            <XMarkIcon className="h-5 w-5" aria-hidden />
+                            <XMarkIcon aria-hidden />
                         </Button>
                     </div>
                 </div>

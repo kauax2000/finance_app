@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 import { supabase, type Category } from "@/lib/supabase"
 import { CardNote } from "@/components/ui/card"
+import { ColorTile } from "@/components/ui/color-tile"
 import { Button } from "@/components/ui/button"
 import { CustomForm, FormInput } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
@@ -511,12 +512,9 @@ export function CategoriesOnboardingWizard({
                 className="flex flex-col gap-2 rounded-lg border border-border/80 bg-background/80 px-2 py-2 sm:flex-row sm:items-center"
             >
                 <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <div
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border/60 text-white shadow-sm"
-                        style={{ backgroundColor: bg }}
-                    >
-                        <CategoryIconPreview name={c.icon ?? ""} className="h-4 w-4" />
-                    </div>
+                    <ColorTile size="sm" color={bg} className="shrink-0">
+                        <CategoryIconPreview name={c.icon ?? ""} />
+                    </ColorTile>
                     <span className="min-w-0 flex-1 truncate text-xs font-medium">{c.name}</span>
                     <Button
                         type="button"
@@ -1046,16 +1044,14 @@ export function CategoriesOnboardingWizard({
                                     )}
                                 >
                                     <div className="flex min-w-0 flex-1 items-center gap-2">
-                                        <div
-                                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border/50 text-white"
-                                            style={{ backgroundColor: bg }}
+                                        <ColorTile
+                                            size="sm"
+                                            color={bg}
+                                            className="shrink-0"
                                             aria-hidden
                                         >
-                                            <CategoryIconPreview
-                                                name={c.icon ?? ""}
-                                                className="h-3.5 w-3.5"
-                                            />
-                                        </div>
+                                            <CategoryIconPreview name={c.icon ?? ""} />
+                                        </ColorTile>
                                         <span className="min-w-0 truncate text-sm font-medium text-foreground">
                                             {c.name}
                                         </span>

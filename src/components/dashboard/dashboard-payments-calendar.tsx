@@ -1,7 +1,8 @@
 "use client"
 
+import { CalendarDaysIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
-import { CalendarDaysIcon } from "@heroicons/react/20/solid"
+
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import {

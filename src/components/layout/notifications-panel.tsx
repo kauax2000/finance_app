@@ -4,8 +4,8 @@ import { ROUTES } from "@/config/navigation"
 import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { CheckIcon, EllipsisHorizontalIcon, TrashIcon } from "@heroicons/react/16/solid"
-import { XMarkIcon } from "@heroicons/react/20/solid"
+import { CheckIcon, EllipsisHorizontalIcon, TrashIcon, XMarkIcon } from "@heroicons/react/16/solid"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -214,7 +214,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                         onClick={() => close()}
                         aria-label="Fechar notificações"
                     >
-                        <XMarkIcon className="h-5 w-5" />
+                        <XMarkIcon />
                     </Button>
                 </div>
             </div>
@@ -284,7 +284,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                                                         className="shrink-0"
                                                         aria-label="Mais opções"
                                                     >
-                                                        <EllipsisHorizontalIcon className="h-4 w-4" />
+                                                        <EllipsisHorizontalIcon />
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" size="sm">
@@ -299,7 +299,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                                                     <DropdownMenuItem variant="destructive"
                                                         onClick={() => void onDelete(notification.id)}
                                                     >
-                                                        <TrashIcon className="h-4 w-4" />
+                                                        <TrashIcon />
                                                         Excluir
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>

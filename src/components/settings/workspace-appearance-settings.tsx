@@ -114,7 +114,7 @@ function OwnerCarteiraOverflowMenu({
                         <DropdownMenuItem variant="destructive"
                             onSelect={() => onDelete()}
                         >
-                            <TrashIcon className="h-4 w-4" aria-hidden />
+                            <TrashIcon aria-hidden />
                             Excluir carteira
                         </DropdownMenuItem>
                     ) : null}

@@ -1,5 +1,6 @@
 "use client"
 
+import { CreditCardIcon } from "@heroicons/react/16/solid"
 import { formatYearMonthShortPtBr } from "@/lib/transaction-date"
 import { currencyBRL, currencyCompactBRL } from "@/lib/formatters"
 import { useMemo } from "react"
@@ -12,7 +13,7 @@ import {
     Tooltip,
     Bar,
 } from "recharts"
-import { CreditCardIcon } from "@heroicons/react/24/outline"
+
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import type { CreditCard as CreditCardRow, WorkspaceInstallmentPlan } from "@/lib/supabase"
@@ -262,7 +263,7 @@ export function CreditCardsHistoryChart({
         return (
             <Card padding="none" className="relative">
                 <CardContent className="flex min-h-[280px] flex-col items-center justify-center gap-2 px-4 py-10 text-center">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/60">
+                    <div className="flex size-12 items-center justify-center rounded-full bg-muted/60">
                         <CreditCardIcon className="h-6 w-6 text-muted-foreground" aria-hidden />
                     </div>
                     <p className="text-sm text-muted-foreground">Nenhum cartão ativo</p>
@@ -388,7 +389,7 @@ export function CreditCardsHistoryChart({
                             </ResponsiveContainer>
                         ) : (
                             <div className="flex h-[300px] flex-col items-center justify-center gap-2 px-4 text-center">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/60">
+                                <div className="flex size-12 items-center justify-center rounded-full bg-muted/60">
                                     <CreditCardIcon
                                         className="h-6 w-6 text-muted-foreground"
                                         aria-hidden

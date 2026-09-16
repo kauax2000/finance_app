@@ -27,8 +27,8 @@ import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ExclamationTriangleIcon, TrashIcon } from "@heroicons/react/16/solid"
-import { CheckCircleIcon, TrashIcon as TrashMiniIcon } from "@heroicons/react/20/solid"
+import { CheckCircleIcon, ExclamationTriangleIcon, TrashIcon } from "@heroicons/react/16/solid"
+
 import { CheckCircleIcon as CheckCircleOutlineIcon } from "@heroicons/react/24/outline"
 const dialogFooterClass =
     "!mx-0 !mb-0 mt-0 shrink-0 flex flex-row flex-wrap justify-end gap-2 border-t border-border bg-background px-6 py-4 sm:flex-row"
@@ -184,7 +184,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
             {success ? (
             <CheckCircleIcon className="h-5 w-5 shrink-0 text-success" aria-hidden />
             ) : (
-            <TrashMiniIcon className="h-5 w-5 shrink-0" aria-hidden />
+            <TrashIcon className="h-5 w-5 shrink-0" aria-hidden />
             )}
             {title}
             </DialogTitle>
@@ -211,7 +211,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                 {success ? (
                     <CheckCircleIcon className="h-5 w-5 shrink-0 text-success" aria-hidden />
                 ) : (
-                    <TrashMiniIcon className="h-5 w-5 shrink-0" aria-hidden />
+                    <TrashIcon className="h-5 w-5 shrink-0" aria-hidden />
                 )}
                 {title}
             </DialogTitle>
@@ -223,7 +223,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
         <div className={scrollPadding}>
             <div className="flex flex-col items-center justify-center py-4">
                 <div className="mb-4 rounded-full bg-success-muted p-4">
-                    <CheckCircleOutlineIcon className="h-12 w-12 text-success" />
+                    <CheckCircleOutlineIcon className="size-12 text-success" />
                 </div>
                 <p className="text-center text-sm text-muted-foreground">
                     Todos os seus dados foram removidos permanentemente.

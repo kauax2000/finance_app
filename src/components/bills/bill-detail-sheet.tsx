@@ -6,8 +6,8 @@ import {
 } from "@/lib/transaction-date"
 import { billDuePill } from "@/components/bills/bill-status"
 import { useMemo } from "react"
-import { PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
-import { EllipsisHorizontalIcon, XMarkIcon } from "@heroicons/react/20/solid"
+import { EllipsisHorizontalIcon, PencilIcon, TrashIcon, XMarkIcon } from "@heroicons/react/16/solid"
+
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
   Sheet,
@@ -244,7 +244,6 @@ export function BillDetailSheet({
                                                 aria-label="Mais opções"
                                             >
                                                 <EllipsisHorizontalIcon
-                                                    className="h-5 w-5"
                                                     aria-hidden
                                                 />
                                             </Button>
@@ -257,7 +256,7 @@ export function BillDetailSheet({
                                             <DropdownMenuItem variant="destructive"
                                                 onClick={onAskDelete}
                                             >
-                                                <TrashIcon className="h-4 w-4" aria-hidden />
+                                                <TrashIcon aria-hidden />
                                                 Excluir conta
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
@@ -271,7 +270,7 @@ export function BillDetailSheet({
                                     onClick={() => onOpenChange(false)}
                                     aria-label="Fechar"
                                 >
-                                    <XMarkIcon className="h-5 w-5" aria-hidden />
+                                    <XMarkIcon aria-hidden />
                                 </Button>
                             </div>
                         </div>

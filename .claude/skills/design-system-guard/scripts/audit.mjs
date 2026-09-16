@@ -74,6 +74,12 @@ const RUNTIME_COLOR_FILES = [
   "registered-credit-card-face",
   "color-tile",
   "src/lib/avatar.ts",
+  // A cor da barra do navegador: `meta[name=theme-color]` não lê `var()`, e os
+  // dois valores são o `--background` de cada tema escritos por extenso.
+  "src/app/layout.tsx",
+  // `hexToRgba` converte a cor que a pessoa gravou; o `rgba(0,0,0,alpha)` é o
+  // que sobra quando o hexadecimal do banco não é válido.
+  "category-detail-utils",
   "manifest.ts",
   "global-error.tsx",
 ]
@@ -449,7 +455,14 @@ function auditFile(absPath, project) {
       const declared = heroiconSet.get(m[1])
       if (!declared) continue
       const found = m[2].match(/\bsize-(\d+(?:\.\d+)?)\b/)
-      const n = found ? parseFloat(found[1]) : 4
+      // `EmptyStateIcon` dimensiona o filho: o poço é 36/48/56 e o `svg` é
+      // metade dele, ou seja 18/24/28px. Um ícone ali não declara classe de
+      // tamanho de propósito, e contá-lo como `size-4` acusava o conjunto `24`,
+      // que é justamente o certo.
+      const dentroDeEmptyState = /<EmptyStateIcon\b[^>]*>\s*$/.test(
+        src.slice(Math.max(0, m.index - 200), m.index)
+      )
+      const n = found ? parseFloat(found[1]) : dentroDeEmptyState ? 6 : 4
       const want = heroiconSetForSize(n)
       if (want !== declared) {
         add(

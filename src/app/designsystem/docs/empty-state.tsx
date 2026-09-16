@@ -1,11 +1,7 @@
 "use client"
 
-import {
-  ExclamationTriangleIcon,
-  MagnifyingGlassIcon,
-  PlusIcon,
-  ReceiptPercentIcon,
-} from "@heroicons/react/16/solid"
+import { ExclamationTriangleIcon, MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
+import { PlusIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import {

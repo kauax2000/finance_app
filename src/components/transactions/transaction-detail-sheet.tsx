@@ -49,8 +49,8 @@ import type {
     InstallmentPlanUpdatePayload,
     TransactionFormSavePayload,
 } from "@/components/transactions/transaction-form-types"
-import { ArrowPathRoundedSquareIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
-import { EllipsisHorizontalIcon, XMarkIcon } from "@heroicons/react/20/solid"
+import { ArrowPathRoundedSquareIcon, EllipsisHorizontalIcon, PencilIcon, TrashIcon, XMarkIcon } from "@heroicons/react/16/solid"
+
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 
@@ -252,7 +252,7 @@ export function TransactionDetailSheet({
                                     className="shrink-0"
                                     aria-label="Mais opções"
                                 >
-                                    <EllipsisHorizontalIcon className="h-5 w-5" aria-hidden />
+                                    <EllipsisHorizontalIcon aria-hidden />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" size="sm">
@@ -265,7 +265,7 @@ export function TransactionDetailSheet({
                                 <DropdownMenuItem variant="destructive"
                                     onClick={() => onDelete(t)}
                                 >
-                                    <TrashIcon className="h-4 w-4" aria-hidden />
+                                    <TrashIcon aria-hidden />
                                     Excluir
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -278,7 +278,7 @@ export function TransactionDetailSheet({
                             onClick={() => onOpenChange(false)}
                             aria-label="Fechar"
                         >
-                            <XMarkIcon className="h-5 w-5" aria-hidden />
+                            <XMarkIcon aria-hidden />
                         </Button>
                     </div>
                 </div>

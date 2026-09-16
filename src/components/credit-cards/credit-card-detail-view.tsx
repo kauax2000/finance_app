@@ -26,8 +26,8 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ArrowUpRightIcon, ChevronDownIcon, PencilIcon, PowerIcon, TrashIcon } from "@heroicons/react/16/solid"
-import { EllipsisHorizontalIcon } from "@heroicons/react/20/solid"
+import { ArrowUpRightIcon, ChevronDownIcon, EllipsisHorizontalIcon, PencilIcon, PowerIcon, TrashIcon } from "@heroicons/react/16/solid"
+
 import { cn } from "@/lib/utils"
 
 function formatExpiryLine(card: CreditCard): string | null {
@@ -175,7 +175,6 @@ export function CreditCardDetailView({
                                         aria-label="Mais opções"
                                     >
                                         <EllipsisHorizontalIcon
-                                            className="h-5 w-5"
                                             aria-hidden
                                         />
                                     </Button>
@@ -215,7 +214,7 @@ export function CreditCardDetailView({
                                     <DropdownMenuItem variant="destructive"
                                         onClick={() => onDelete()}
                                     >
-                                        <TrashIcon className="h-4 w-4" aria-hidden />
+                                        <TrashIcon aria-hidden />
                                         Excluir
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>

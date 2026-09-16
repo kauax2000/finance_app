@@ -796,7 +796,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             {categories.length === 0 && (
                 <Card>
                     <CardContent className="flex flex-col items-center justify-center py-12">
-                        <ChartPieIcon className="h-12 w-12 text-muted-foreground mb-4" />
+                        <ChartPieIcon className="size-12 text-muted-foreground mb-4" />
                         <p className="text-muted-foreground mb-4">Nenhuma categoria encontrada</p>
                         <Button onClick={() => openDialog()}>
                             <PlusIcon className="mr-2 h-4 w-4" />

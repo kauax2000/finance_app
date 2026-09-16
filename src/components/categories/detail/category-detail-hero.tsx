@@ -90,7 +90,7 @@ export function CategoryDetailHero({
                             <DropdownMenuItem variant="destructive"
                                 onSelect={() => onDelete()}
                             >
-                                <TrashIcon className="h-4 w-4" aria-hidden />
+                                <TrashIcon aria-hidden />
                                 Excluir
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -165,7 +165,7 @@ export function CategoryDetailHero({
                             <DropdownMenuItem variant="destructive"
                                 onSelect={() => onDelete()}
                             >
-                                <TrashIcon className="h-4 w-4" aria-hidden />
+                                <TrashIcon aria-hidden />
                                 Excluir
                             </DropdownMenuItem>
                         </DropdownMenuContent>

@@ -478,7 +478,6 @@ export function useDashboardData() {
             spendById.set(id, (spendById.get(id) ?? 0) + Number(t.amount))
         }
 
-        const fallbackColor = "#8884d8"
         const expenseCats = categories.filter((c) => c.type === "expense")
 
         const rows: { id: string; name: string; value: number; color: string }[] =
@@ -486,14 +485,15 @@ export function useDashboardData() {
                 id: c.id,
                 name: c.name,
                 value: spendById.get(c.id) ?? 0,
-                color: c.color ?? fallbackColor,
+                // Sem cor gravada, quem decide é a rampa do gráfico (ver `resolveFill`).
+                color: c.color ?? "",
             }))
 
         rows.push({
             id: "__none__",
             name: "Sem categoria",
             value: spendById.get("__none__") ?? 0,
-            color: fallbackColor,
+            color: "",
         })
 
         rows.sort((a, b) => {

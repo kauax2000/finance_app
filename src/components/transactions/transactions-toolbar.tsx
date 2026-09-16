@@ -2,8 +2,8 @@
 
 import { formatYmdPtBr } from "@/lib/transaction-date"
 import * as React from "react"
-import { AdjustmentsHorizontalIcon } from "@heroicons/react/16/solid"
-import { XMarkIcon } from "@heroicons/react/20/solid"
+import { AdjustmentsHorizontalIcon, XMarkIcon } from "@heroicons/react/16/solid"
+
 import {
     TransactionTypeSegment,
     type TransactionFilterType,
@@ -337,7 +337,7 @@ export function TransactionsToolbar({
                                 onClick={() => setFiltersSheetOpen(false)}
                                 aria-label="Fechar"
                             >
-                                <XMarkIcon className="h-5 w-5" aria-hidden />
+                                <XMarkIcon aria-hidden />
                             </Button>
                         </div>
 

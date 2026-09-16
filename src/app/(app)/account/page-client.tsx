@@ -122,7 +122,7 @@ export default function AccountPage() {
                                             onClick={() => setDeleteAccountOpen(true)}
                                             className="cursor-pointer gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
                                         >
-                                            <TrashIcon className="h-4 w-4" />
+                                            <TrashIcon />
                                             Excluir conta
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>

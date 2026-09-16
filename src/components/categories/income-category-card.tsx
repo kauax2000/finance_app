@@ -9,7 +9,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
+import { CATEGORY_COLORS, CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
 import { cn } from "@/lib/utils"
 import { ChevronRightIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ColorTile } from "@/components/ui/color-tile"
@@ -30,7 +30,7 @@ export function IncomeCategoryCard({
     onEdit: () => void
     onDelete: () => void
 }) {
-    const color = category.color || "#10B981"
+    const color = category.color || CATEGORY_COLORS[0]
 
     return (
         // O cartão inteiro é clicável por um link esticado (::after) no título, e
@@ -93,7 +93,7 @@ export function IncomeCategoryCard({
                                 <DropdownMenuItem variant="destructive"
                                     onSelect={() => onDelete()}
                                 >
-                                    <TrashIcon className="h-4 w-4" aria-hidden />
+                                    <TrashIcon aria-hidden />
                                     Excluir
                                 </DropdownMenuItem>
                             </DropdownMenuContent>

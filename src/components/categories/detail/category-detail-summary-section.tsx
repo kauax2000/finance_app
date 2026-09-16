@@ -219,8 +219,8 @@ function ExpenseBudgetOverviewCard({
     const budgetFillColor = over
         ? "var(--destructive)"
         : near
-          ? "#F59E0B"
-          : "#10B981"
+          ? "var(--warning)"
+          : "var(--success)"
     const budgetBarLabel = hasBudget
         ? `Uso do orçamento: ${budgetPctRounded}% de ${currencyBRL(limit)}${over ? ", acima do limite" : ""}`
         : undefined

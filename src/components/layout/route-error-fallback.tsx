@@ -1,7 +1,9 @@
 "use client"
 
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline"
+import { ExclamationTriangleIcon as ExclamationTriangleMicroIcon } from "@heroicons/react/16/solid"
 import { useEffect } from "react"
-import { ExclamationTriangleIcon } from "@heroicons/react/16/solid"
+
 import { ROUTES } from "@/config/navigation"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -57,7 +59,9 @@ export function RouteErrorFallback({ error, retry, variant = "page" }: RouteErro
                     </EmptyStateActions>
                 </EmptyState>
                 <Alert tone="destructive" className="w-full">
-                    <ExclamationTriangleIcon />
+                    {/* O alerta desenha o ícone a 16px (`--alert-icon`), e o do
+                        bloco vazio sai a 24 — conjuntos diferentes, de propósito. */}
+                    <ExclamationTriangleMicroIcon />
                     <AlertTitle>Detalhes técnicos</AlertTitle>
                     <AlertDescription className="break-words font-mono text-xs">
                         {/* A mensagem crua é para quem desenvolve; em produção

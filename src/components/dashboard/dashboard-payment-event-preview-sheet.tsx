@@ -1,5 +1,6 @@
 "use client"
 
+import { XMarkIcon } from "@heroicons/react/16/solid"
 import { useMemo, type ReactNode } from "react"
 import Link from "next/link"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -20,7 +21,6 @@ import {
     summarizeInstallmentPlan,
     useInstallmentSlices,
 } from "@/components/transactions/installment-purchase-section"
-import { XMarkIcon } from "@heroicons/react/20/solid"
 
 export type DashboardPaymentPreviewModel = Pick<
     PaymentEvent,
@@ -171,7 +171,7 @@ export function DashboardPaymentEventPreviewSheet({
                                     onClick={() => onOpenChange(false)}
                                     aria-label="Fechar"
                                 >
-                                    <XMarkIcon className="h-5 w-5" aria-hidden />
+                                    <XMarkIcon aria-hidden />
                                 </Button>
                             </div>
                         </div>
