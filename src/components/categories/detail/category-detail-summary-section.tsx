@@ -2,6 +2,12 @@
 
 import type { ReactNode } from "react"
 import {
+    DescriptionDetails,
+    DescriptionList,
+    DescriptionListItem,
+    DescriptionTerm,
+} from "@/components/ui/description-list"
+import {
     PageSection,
     PageSectionHeader,
     PageSectionTitle,
@@ -256,14 +262,16 @@ function ExpenseBudgetOverviewCard({
                 <CardContent className="space-y-4 p-3 md:p-4">
                     {hasBudget ? (
                         <>
-                            <div className="flex w-full items-center justify-between gap-2 rounded-md border border-border/60 bg-muted/20 px-3 py-2 md:hidden">
-                                <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                                    Limite
-                                </p>
-                                <p className="tabular-nums text-2xs font-medium text-foreground">
-                                    {currencyBRL(limit)}
-                                </p>
-                            </div>
+                            <DescriptionList className="gap-0 md:hidden">
+                                <DescriptionListItem className="flex w-full items-center justify-between gap-2">
+                                    <DescriptionTerm className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+                                        Limite
+                                    </DescriptionTerm>
+                                    <DescriptionDetails className="text-2xs font-medium">
+                                        {currencyBRL(limit)}
+                                    </DescriptionDetails>
+                                </DescriptionListItem>
+                            </DescriptionList>
                             <div className="grid grid-cols-2 items-end gap-3 md:flex md:flex-wrap md:justify-between md:gap-x-6 md:gap-y-4">
                                 <div className="min-w-0 space-y-1">
                                     <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">

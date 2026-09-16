@@ -2,6 +2,12 @@
 
 import { percentPointsBR } from "@/lib/formatters"
 import {
+    DescriptionDetails,
+    DescriptionList,
+    DescriptionListItem,
+    DescriptionTerm,
+} from "@/components/ui/description-list"
+import {
     PageSection,
     PageSectionHeader,
     PageSectionTitle,
@@ -1100,42 +1106,40 @@ export function CreditCardInvoiceAnalyticsPanel({
                         <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                             Hábitos de consumo
                         </h3>
-                        <div className="grid gap-2 text-xs sm:grid-cols-2">
-                            <div className="rounded-md border border-border/50 bg-muted/20 px-3 py-2 dark:bg-muted/10">
-                                <div className="flex items-start justify-between gap-2">
-                                    <div className="min-w-0 flex-1 space-y-1">
-                                        <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            Dias úteis
-                                        </p>
-                                        <p className="text-base font-semibold tabular-nums leading-snug text-foreground">
-                                            {currencyBRL(
-                                                analytics.weekdayWeekend.weekdayTotal
-                                            )}
-                                        </p>
-                                    </div>
-                                    <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                        <DescriptionList layout="grid" className="gap-2 text-xs">
+                            <DescriptionListItem className="space-y-1">
+                                <DescriptionTerm className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                    Dias úteis
+                                </DescriptionTerm>
+                                {/* A fatia fica na linha do valor, dentro da definição. */}
+                                <DescriptionDetails className="flex items-baseline justify-between gap-2">
+                                    <span className="text-base font-semibold leading-snug">
+                                        {currencyBRL(
+                                            analytics.weekdayWeekend.weekdayTotal
+                                        )}
+                                    </span>
+                                    <span className="shrink-0 text-xs text-muted-foreground">
                                         {percentPointsBR(analytics.weekdayWeekend.weekdayPct)}%
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="rounded-md border border-border/50 bg-muted/20 px-3 py-2 dark:bg-muted/10">
-                                <div className="flex items-start justify-between gap-2">
-                                    <div className="min-w-0 flex-1 space-y-1">
-                                        <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            Fim de semana
-                                        </p>
-                                        <p className="text-base font-semibold tabular-nums leading-snug text-foreground">
-                                            {currencyBRL(
-                                                analytics.weekdayWeekend.weekendTotal
-                                            )}
-                                        </p>
-                                    </div>
-                                    <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                                    </span>
+                                </DescriptionDetails>
+                            </DescriptionListItem>
+                            <DescriptionListItem className="space-y-1">
+                                <DescriptionTerm className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                    Fim de semana
+                                </DescriptionTerm>
+                                {/* A fatia fica na linha do valor, dentro da definição. */}
+                                <DescriptionDetails className="flex items-baseline justify-between gap-2">
+                                    <span className="text-base font-semibold leading-snug">
+                                        {currencyBRL(
+                                            analytics.weekdayWeekend.weekendTotal
+                                        )}
+                                    </span>
+                                    <span className="shrink-0 text-xs text-muted-foreground">
                                         {percentPointsBR(analytics.weekdayWeekend.weekendPct)}%
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                                    </span>
+                                </DescriptionDetails>
+                            </DescriptionListItem>
+                        </DescriptionList>
                         <div className="space-y-2">
                             <InsightNoticePanel
                                 variant="info"
@@ -1180,38 +1184,38 @@ export function CreditCardInvoiceAnalyticsPanel({
                             </Badge>
                         </div>
 
-                        <div className="grid gap-2 text-xs sm:grid-cols-2">
-                            <div className="rounded-md border border-border/50 bg-muted/20 px-3 py-2 dark:bg-muted/10">
-                                <div className="space-y-1">
-                                    <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                        Ticket médio
-                                    </p>
-                                    <p className="text-base font-semibold tabular-nums leading-snug text-foreground">
+                        <DescriptionList layout="grid" className="gap-2 text-xs">
+                            <DescriptionListItem className="space-y-1">
+                                <DescriptionTerm className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                    Ticket médio
+                                </DescriptionTerm>
+                                <DescriptionDetails className="space-y-1">
+                                    <span className="block text-base font-semibold leading-snug">
                                         {analytics.meanTicket != null
                                             ? currencyBRL(analytics.meanTicket)
                                             : "—"}
-                                    </p>
-                                    <p className="text-2xs leading-snug text-muted-foreground">
+                                    </span>
+                                    <span className="block text-2xs leading-snug text-muted-foreground">
                                         Valor médio por despesa na fatura aberta.
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="rounded-md border border-border/50 bg-muted/20 px-3 py-2 dark:bg-muted/10">
-                                <div className="space-y-1">
-                                    <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                        Ticket mediano
-                                    </p>
-                                    <p className="text-base font-semibold tabular-nums leading-snug text-foreground">
+                                    </span>
+                                </DescriptionDetails>
+                            </DescriptionListItem>
+                            <DescriptionListItem className="space-y-1">
+                                <DescriptionTerm className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                    Ticket mediano
+                                </DescriptionTerm>
+                                <DescriptionDetails className="space-y-1">
+                                    <span className="block text-base font-semibold leading-snug">
                                         {analytics.medianTicket != null
                                             ? currencyBRL(analytics.medianTicket)
                                             : "—"}
-                                    </p>
-                                    <p className="text-2xs leading-snug text-muted-foreground">
+                                    </span>
+                                    <span className="block text-2xs leading-snug text-muted-foreground">
                                         Metade das despesas ficou abaixo deste valor.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                                    </span>
+                                </DescriptionDetails>
+                            </DescriptionListItem>
+                        </DescriptionList>
                     </section>
 
                 </div>

@@ -9,6 +9,12 @@ import {
 } from "@/components/ui/empty-state"
 import { currencyBRL } from "@/lib/formatters"
 import {
+    DescriptionDetails,
+    DescriptionList,
+    DescriptionListItem,
+    DescriptionTerm,
+} from "@/components/ui/description-list"
+import {
     PageSection,
     PageSectionHeader,
     PageSectionTitle,
@@ -135,15 +141,17 @@ function InvoiceRow({
 
                     <div className="min-w-0 w-full">
                         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:items-stretch">
-                            <div className="min-w-0 rounded-lg border border-border/70 bg-muted/10 p-3 dark:bg-muted/5">
-                                <div className="flex flex-col gap-2 min-[480px]:flex-row min-[480px]:items-baseline min-[480px]:justify-between">
-                                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                                        Total do cartão
-                                    </p>
-                                    <p className="text-xl font-semibold tabular-nums tracking-tight text-foreground min-[480px]:text-right">
-                                        {currencyBRL(committedTotal)}
-                                    </p>
-                                </div>
+                            <div className="min-w-0">
+                                <DescriptionList className="gap-0">
+                                    <DescriptionListItem className="flex flex-col gap-2 min-[480px]:flex-row min-[480px]:items-baseline min-[480px]:justify-between">
+                                        <DescriptionTerm className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+                                            Total do cartão
+                                        </DescriptionTerm>
+                                        <DescriptionDetails className="text-xl font-semibold tabular-nums tracking-tight min-[480px]:text-right">
+                                            {currencyBRL(committedTotal)}
+                                        </DescriptionDetails>
+                                    </DescriptionListItem>
+                                </DescriptionList>
                                 {postedTotal > 0 || projectedParcelas > 0 ? (
                                     <div className="mt-3 space-y-1 border-t border-border/50 pt-3 text-2xs leading-relaxed text-muted-foreground">
                                         {postedTotal > 0 ? (
@@ -166,24 +174,24 @@ function InvoiceRow({
                                 ) : null}
                             </div>
 
-                            <div className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-col sm:gap-2">
-                                <div className="min-w-0 rounded-md border border-border/60 bg-muted/15 px-2.5 py-2 dark:bg-muted/10">
-                                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+                            <DescriptionList className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-col sm:gap-2">
+                                <DescriptionListItem>
+                                    <DescriptionTerm className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                         Fechamento
-                                    </p>
-                                    <p className="mt-0.5 truncate text-sm font-medium tabular-nums text-foreground">
+                                    </DescriptionTerm>
+                                    <DescriptionDetails className="mt-0.5 truncate font-medium">
                                         {snap ? formatDatePtBr(snap.close) : "—"}
-                                    </p>
-                                </div>
-                                <div className="min-w-0 rounded-md border border-border/60 bg-muted/15 px-2.5 py-2 dark:bg-muted/10">
-                                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+                                    </DescriptionDetails>
+                                </DescriptionListItem>
+                                <DescriptionListItem>
+                                    <DescriptionTerm className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                         Vencimento
-                                    </p>
-                                    <p className="mt-0.5 truncate text-sm font-medium tabular-nums text-foreground">
+                                    </DescriptionTerm>
+                                    <DescriptionDetails className="mt-0.5 truncate font-medium">
                                         {snap ? formatDatePtBr(snap.dueEstimate) : "—"}
-                                    </p>
-                                </div>
-                            </div>
+                                    </DescriptionDetails>
+                                </DescriptionListItem>
+                            </DescriptionList>
                         </div>
                     </div>
                 </div>

@@ -1,6 +1,12 @@
 "use client"
 
 import { currencyBRL } from "@/lib/formatters"
+import {
+    DescriptionDetails,
+    DescriptionList,
+    DescriptionListItem,
+    DescriptionTerm,
+} from "@/components/ui/description-list"
 import Link from "next/link"
 import type { CreditCard } from "@/lib/supabase"
 import type { CardCycleSnapshot } from "@/lib/credit-card-billing"
@@ -101,28 +107,32 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                     {snapshot ? (
                         <>
                             <div className="flex flex-col gap-2">
-                                <div className="rounded-lg border border-border/60 bg-muted/15 px-2.5 py-2 dark:bg-muted/10">
-                                    <p className="text-2xs font-medium text-muted-foreground">
-                                        Fatura aberta (planejada)
-                                    </p>
-                                    <p className="mt-0.5 text-base font-semibold tabular-nums text-foreground">
-                                        {currencyBRL(
-                                            snapshot.committedOpenTotal
-                                        )}
-                                    </p>
-                                    {(snapshot.projectedOpenInstallmentsTotal ?? 0) >
-                                    0 ? (
-                                        <p className="mt-1 text-2xs leading-snug text-muted-foreground">
-                                            Total registrado{" "}
-                                            {currencyBRL(snapshot.openTotal)}
-                                            {" · "}
-                                            Parcelas previstas{" "}
-                                            {currencyBRL(
-                                                snapshot.projectedOpenInstallmentsTotal
-                                            )}
-                                        </p>
-                                    ) : null}
-                                </div>
+                                <DescriptionList className="gap-0">
+                                    <DescriptionListItem>
+                                        <DescriptionTerm className="text-2xs font-medium text-muted-foreground">
+                                            Fatura aberta (planejada)
+                                        </DescriptionTerm>
+                                        <DescriptionDetails>
+                                            <p className="mt-0.5 text-base font-semibold tabular-nums text-foreground">
+                                                {currencyBRL(
+                                                    snapshot.committedOpenTotal
+                                                )}
+                                            </p>
+                                            {(snapshot.projectedOpenInstallmentsTotal ?? 0) >
+                                            0 ? (
+                                                <p className="mt-1 text-2xs leading-snug text-muted-foreground">
+                                                    Total registrado{" "}
+                                                    {currencyBRL(snapshot.openTotal)}
+                                                    {" · "}
+                                                    Parcelas previstas{" "}
+                                                    {currencyBRL(
+                                                        snapshot.projectedOpenInstallmentsTotal
+                                                    )}
+                                                </p>
+                                            ) : null}
+                                        </DescriptionDetails>
+                                    </DescriptionListItem>
+                                </DescriptionList>
                             </div>
 
                             <div className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-background/80 px-2.5 py-2 text-2xs dark:bg-background/50">
