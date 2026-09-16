@@ -55,7 +55,7 @@ function SectionTitleRow({
                 <div className="flex h-8 min-w-0 items-end">
                     <Skeleton className={titleClassName} />
                 </div>
-                <Skeleton className="h-10 w-full rounded-md md:h-8 md:w-32" />
+                <Skeleton className="h-8 w-full rounded-md pointer-coarse:h-10 md:w-32" />
             </div>
         )
     }

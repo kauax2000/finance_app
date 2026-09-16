@@ -10,7 +10,7 @@ export type TransactionFilterType = "all" | "income" | "expense"
 
 /** Shared chrome for filter + form type segments (matches transaction toolbar). */
 export const transactionSegmentContainerClassName =
-    "inline-flex h-10 w-full items-stretch gap-0.5 rounded-lg bg-muted/60 p-0.5 ring-1 ring-border/60 md:h-8 md:w-auto dark:bg-muted/40"
+    "inline-flex h-8 w-full items-stretch gap-0.5 rounded-lg bg-muted/60 p-0.5 ring-1 ring-border/60 pointer-coarse:h-10 md:w-auto dark:bg-muted/40"
 
 export function transactionSegmentTabClassName(selected: boolean) {
     return cn(

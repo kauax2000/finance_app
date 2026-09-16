@@ -174,7 +174,7 @@ export function DashboardInstallmentsEndingSoon({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-10 w-full gap-2 px-2 text-xs md:h-8 md:w-auto"
+                    className="h-8 w-full gap-2 px-2 text-xs pointer-coarse:h-10 md:w-auto"
                 >
                     <Link href={transactionsHref}>
                         <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />

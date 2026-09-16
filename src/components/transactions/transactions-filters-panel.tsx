@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
+import { SearchInput } from "@/components/ui/search-input"
 import { Label } from "@/components/ui/label"
 import {
     Popover,
@@ -413,11 +414,11 @@ export function TransactionsFiltersPanel({
                             </div>
 
                             <div className="rounded-xl border border-border/60 bg-muted/10 p-3 dark:bg-muted/10">
-                                <Input
-                                    type="search"
+                                <SearchInput
                                     placeholder="Buscar cartão…"
                                     value={cardQuery}
                                     onChange={(e) => setCardQuery(e.target.value)}
+                                    onClear={() => setCardQuery("")}
                                     disabled={sortedCards.length === 0}
                                 />
                                 {creditCardIds.length === 0 ? (
@@ -533,13 +534,13 @@ export function TransactionsFiltersPanel({
                                                 Limpar
                                             </Button>
                                         </div>
-                                        <Input
-                                            type="search"
+                                        <SearchInput
                                             placeholder="Buscar categoria…"
                                             value={categoryQuery}
                                             onChange={(e) =>
                                                 setCategoryQuery(e.target.value)
                                             }
+                                            onClear={() => setCategoryQuery("")}
                                             disabled={sortedCategories.length === 0}
                                         />
                                     </PopoverHeader>
@@ -767,13 +768,13 @@ export function TransactionsFiltersPanel({
             <Separator tone="soft" className={FILTERS_DRAWER_SECTION_DIVIDER_CLASSNAME} />
 
             <FilterSection title="Descrição">
-                <Input
-                    type="search"
+                <SearchInput
                     placeholder="Buscar na descrição…"
                     value={descriptionQuery}
                     onChange={(e) =>
                         onDescriptionQueryChange(e.target.value)
                     }
+                    onClear={() => onDescriptionQueryChange("")}
                 />
             </FilterSection>
 

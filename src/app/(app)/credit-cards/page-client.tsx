@@ -27,6 +27,12 @@ import {
 } from "@/components/credit-cards/credit-cards-view-segment"
 import { Button } from "@/components/ui/button"
 import {
+    Toolbar,
+    ToolbarActions,
+    toolbarIconControlClassName,
+} from "@/components/ui/toolbar"
+import { cn } from "@/lib/utils"
+import {
   Dialog,
   DialogBody,
   DialogCloseButton,
@@ -321,25 +327,27 @@ export default function CreditCardsPageClient() {
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between gap-2 md:flex-wrap md:gap-3">
+            <Toolbar>
                 <CreditCardsViewSegment
                     value={pageView}
                     onChange={setPageView}
                     className="min-w-0 flex-1 md:max-w-full md:flex-none"
                 />
-                <Button
-                    type="button"
-                    variant="primary"
-                    size="sm"
-                    className="inline-flex size-10 shrink-0 rounded-lg p-0 text-xs md:size-auto md:h-8 md:w-auto md:gap-2 md:px-3"
-                    aria-label="Novo cartão"
-                    disabled={!canCreateCard}
-                    onClick={() => setCreateOpen(true)}
-                >
-                    <PlusIcon className="size-4 shrink-0" />
-                    <span className="hidden md:inline">Novo cartão</span>
-                </Button>
-            </div>
+                <ToolbarActions>
+                    <Button
+                        type="button"
+                        variant="primary"
+                        size="sm"
+                        className={cn(toolbarIconControlClassName, "shrink-0 rounded-lg p-0 text-xs md:size-auto md:h-(--toolbar-control) md:w-auto md:gap-2 md:px-3")}
+                        aria-label="Novo cartão"
+                        disabled={!canCreateCard}
+                        onClick={() => setCreateOpen(true)}
+                    >
+                        <PlusIcon className="size-4 shrink-0" />
+                        <span className="hidden md:inline">Novo cartão</span>
+                    </Button>
+                </ToolbarActions>
+            </Toolbar>
 
             {pageView === "cards" ? (
                 cards.length === 0 ? (

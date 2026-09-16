@@ -292,7 +292,7 @@ export function BillsToolbar({
                             type="button"
                             variant="primary"
                             size="sm"
-                            className="h-8 gap-2 text-xs"
+                            className={cn(toolbarControlClassName, "gap-2 text-xs")}
                             onClick={onNewBill}
                             disabled={!hasTable}
                         >

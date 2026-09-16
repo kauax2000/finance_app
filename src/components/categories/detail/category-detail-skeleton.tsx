@@ -163,7 +163,7 @@ function TrendsSkeleton() {
                 <div className="flex h-8 min-w-0 items-end gap-2">
                     <Skeleton className="h-3 w-24" />
                 </div>
-                <div className="inline-flex h-9 w-full max-w-full shrink-0 items-stretch rounded-lg bg-muted/60 p-0.5 ring-1 ring-border/60 md:h-8 md:w-[12.5rem] dark:bg-muted/40">
+                <div className="inline-flex h-8 w-full max-w-full shrink-0 items-stretch rounded-lg bg-muted/60 p-0.5 ring-1 ring-border/60 pointer-coarse:h-10 md:w-[12.5rem] dark:bg-muted/40">
                     <div className="flex h-full w-full min-h-0 items-center gap-0.5 px-0.5">
                         <Skeleton className="h-[calc(100%-2px)] flex-1 rounded-md" />
                         <Skeleton className="h-[calc(100%-2px)] flex-1 rounded-md" />
@@ -190,8 +190,8 @@ function EmbeddedTransactionsSkeleton({ rowCount = 8 }: { rowCount?: number }) {
                     <Skeleton className="h-3 w-36" />
                 </div>
                 <div className="flex w-full min-w-0 flex-col gap-2 md:w-auto md:flex-row md:items-center md:justify-end md:gap-2">
-                    <Skeleton className="h-10 w-full rounded-md md:h-8 md:w-56" />
-                    <Skeleton className="h-10 w-full rounded-md md:h-8 md:w-32" />
+                    <Skeleton className="h-8 w-full rounded-md pointer-coarse:h-10 md:w-56" />
+                    <Skeleton className="h-8 w-full rounded-md pointer-coarse:h-10 md:w-32" />
                 </div>
             </div>
 

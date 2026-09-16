@@ -29,6 +29,8 @@ import {
 } from "@/lib/category-expense-month-rows"
 import type { Transaction } from "@/lib/supabase"
 import { TransactionsToolbar } from "@/components/transactions/transactions-toolbar"
+import { toolbarControlClassName } from "@/components/ui/toolbar"
+import { cn } from "@/lib/utils"
 import { TransactionsActiveFiltersChips } from "@/components/transactions/transactions-active-filters-chips"
 import { TransactionsTable } from "@/components/transactions/transactions-table"
 import { TransactionFormDialog } from "@/components/transactions/transaction-form-dialog"
@@ -292,7 +294,7 @@ export function CategoryEmbeddedTransactions({
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                className="h-10 min-w-0 flex-1 gap-2 px-2 text-xs md:h-8 md:w-auto"
+                                className={cn(toolbarControlClassName, "min-w-0 flex-1 gap-2 px-2 text-xs md:w-auto")}
                             >
                                 <Link href={transactionsListHref}>
                                     <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />

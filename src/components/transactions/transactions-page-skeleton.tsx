@@ -31,7 +31,7 @@ function ToolbarSkeleton() {
         <div className="flex min-w-0 max-w-full flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-3">
             <div className="flex min-w-0 max-w-full items-center gap-2 md:contents">
                 <div
-                    className="inline-flex h-10 min-w-0 max-w-full flex-1 shrink items-stretch rounded-lg bg-muted/60 p-0.5 ring-1 ring-border/60 md:h-8 md:max-w-fit md:shrink-0 dark:bg-muted/40"
+                    className="inline-flex h-8 min-w-0 max-w-full flex-1 shrink items-stretch rounded-lg bg-muted/60 p-0.5 ring-1 ring-border/60 pointer-coarse:h-10 md:max-w-fit md:shrink-0 dark:bg-muted/40"
                     aria-hidden
                 >
                     <div className="flex h-full w-full min-h-0 items-center gap-0.5 px-0.5 md:w-auto">
