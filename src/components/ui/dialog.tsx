@@ -231,7 +231,7 @@ function DialogHeaderRow({
         className
       )}
     >
-      <div className="min-w-0 space-y-1">{children}</div>
+      <div className="min-w-0">{children}</div>
       {endAdornment != null ? (
         <div className={cn("shrink-0", DIALOG_CLOSE_RESERVE)}>
           {endAdornment}
@@ -242,7 +242,8 @@ function DialogHeaderRow({
 }
 
 /**
- * O cabeçalho, e o fio sob ele.
+ * O cabeçalho. Sem fio: o que o separa do corpo é o respiro, e a dissolução
+ * quando há rolagem.
  *
  * `shrink-0` e o recuo passaram a vir de fábrica: eram exatamente as duas
  * coisas que as 16 chamadas escreviam toda vez (`shrink-0 px-6 pt-6 pb-2`), em
@@ -427,7 +428,7 @@ function DialogFooter({
         // caixa de três blocos era o que o próprio arquivo já criticava ao
         // explicar por que o `bg-muted/50` saiu daqui: o peso dos botões e o
         // recuo já dizem que ali começa outra coisa.
-        "flex shrink-0 flex-col-reverse gap-2 rounded-b-xl",
+        "flex shrink-0 flex-col-reverse gap-2",
         // O par do cabeçalho: sem tinta, pelo mesmo motivo escrito lá.
         "-mx-(--dialog-bleed) -mb-(--dialog-bleed)",
         "px-(--dialog-px) py-4 sm:flex-row sm:justify-end",

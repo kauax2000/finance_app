@@ -445,8 +445,8 @@ const navigationMenuLinkVariants = cva(
  * O mecanismo é o do marcador do `Tabs`: `ResizeObserver` na raiz e nos
  * gatilhos, `MutationObserver` em `data-state` — nada de laço por quadro. A
  * diferença é que aqui a leitura é por `getBoundingClientRect` e não por
- * `offsetLeft`: o `NavigationMenuItem` é `relative`, então ele **é** o
- * `offsetParent` do gatilho e `offsetLeft` daria zero. A troca é segura porque
+ * `offsetLeft`: o painel é medido contra a raiz, e o `getBoundingClientRect`
+ * dispensa depender de quem é o `offsetParent` (o item deixou de ser `relative`). A troca é segura porque
  * esta raiz não rola por dentro — foi a rolagem que obrigou o `Tabs` a fazer o
  * contrário.
  *

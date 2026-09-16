@@ -26,13 +26,6 @@
  * calibrado (o polegar de um switch em `inset-y-0.5`, por exemplo) isso desloca
  * 1px, e é o tipo de coisa que só aparece medindo.
  *
- * ## 4. O modo material exige conteúdo atrás
- *
- * Esta é a única das quatro que não é de mecânica. `glass-material` abre a
- * lâmina para o borrão aparecer — e onde não há nada por baixo, o borrão não
- * desenha nada e a abertura só enfraquece a peça. A régua de escolha é a mesma
- * que `globals.css` escreve entre os dois vidros da casa, e ela é por premissa.
- *
  * ## 3. O raio é herdado, e é isso que torna a peça portátil
  *
  * A utility **não declara `border-radius`**. Ela usa o do consumidor, então
@@ -40,6 +33,13 @@
  * nenhum. É a mesma decisão que a variante `bare` do `Command` registrou: um
  * número do contêiner copiado para dentro do componente é o defeito, e herdar é
  * o conserto.
+ *
+ * ## 4. O modo material exige conteúdo atrás
+ *
+ * Esta é a única das quatro que não é de mecânica. `glass-material` abre a
+ * lâmina para o borrão aparecer — e onde não há nada por baixo, o borrão não
+ * desenha nada e a abertura só enfraquece a peça. A régua de escolha é a mesma
+ * que `globals.css` escreve entre os dois vidros da casa, e ela é por premissa.
  *
  * ## O que a utility lê
  *
@@ -148,8 +148,9 @@ export const glassRoundSurfaceClassName = "glass glass-control glass-round"
  * entra pela **variável** `--glass-tone`, que a receita pinta como a camada de
  * cima, acima da lâmina.
  *
- * **A cor vem dos pares `-muted` que já existem**, e não de uma receita nova. O
- * **E o tom é opaco.** Ele já foi translúcido — 75%/65% nos semânticos, 80% na
+ * **A cor vem dos pares `-muted` que já existem**, e não de uma receita nova.
+ *
+ * **E o tom é opaco** — ou quase: a identidade abre 98% no claro e 92% no escuro (ver `GLASS_IDENTITY_TONES`). Ele já foi translúcido — 75%/65% nos semânticos, 80% na
  * identidade —, e o efeito era medível: a lâmina abaixo dele compõe para
  * **rgb 2** sobre a página, então os 20% que atravessavam puxavam o corpo para
  * baixo. O avatar de vidro saía **20% mais escuro** que o opaco da mesma
@@ -158,7 +159,7 @@ export const glassRoundSurfaceClassName = "glass glass-control glass-round"
  *
  * Clarear a lâmina não resolvia — de 82% para 20% de preto o corpo só ia de
  * 41,2 para 42,4, porque a página atrás já é `rgb 10`. A alavanca era o alfa do
- * tom, e a 100% o corpo passa a ser **idêntico** ao da versão opaca.
+ * tom, e perto de 100% o corpo passa a ser praticamente **idêntico** ao da versão opaca.
  *
  * O que se perde é a translucidez do corpo, e o que ela deixava passar era a
  * lâmina preta — nada de útil. **Numa peça com tom as nuvens já chegavam a
@@ -243,10 +244,9 @@ export const glassRoundSurfaceClassName = "glass glass-control glass-round"
  * o modo de vidro; o export ficou sem ninguém.
  *
  * **A camada continua na `@utility`**, lida como
- * `var(--glass-sheen, transparent)`. Ela é ponto de contrato, não código morto:
- * hoje não há produtor, e a primeira peça de vidro **clicável** que aparecer
- * volta a precisar dela. As duas que sobraram — `Avatar` e `ColorTile` — não
- * são clicáveis.
+ * `var(--glass-sheen, transparent)`. Ela é ponto de contrato: hoje quem a
+ * produz são os estados de `Tabs`, `ThemeToggle` e `Sidebar`, que publicam o
+ * realce por variável.
  */
 
 /**

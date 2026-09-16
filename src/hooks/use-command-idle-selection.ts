@@ -136,7 +136,11 @@ export function useCommandIdleSelection(ativo: boolean): CommandIdleSelection {
     (event: React.KeyboardEvent<HTMLDivElement>) => {
       if (event.defaultPrevented) return
 
-      if (!navegou.current && event.key === "ArrowUp") {
+      // Ctrl+P e Ctrl+K são a seta para cima do cmdk (atalhos vim): a partir do
+      // ocioso elas procurariam `itens[-2]` e ficariam mortas como a seta.
+      const sobe =
+        event.key === "ArrowUp" || (event.ctrlKey && (event.key === "p" || event.key === "k"))
+      if (!navegou.current && sobe) {
         // Simétrica à de baixo, que entra na primeira linha por conta própria.
         // Sem isto a tecla ficaria morta, porque o cmdk procuraria o item
         // **anterior** a uma seleção que não existe.

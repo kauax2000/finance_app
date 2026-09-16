@@ -367,11 +367,20 @@ function ChartContainer({
  * `;{}<>`, que cobre hex, `var(--x)`, `oklch()` e `rgb()`. Exportada para teste.
  */
 const SAFE_CHART_KEY = /^[A-Za-z0-9_-]+$/
+
+/**
+ * A chave de série como nome de variável CSS. "Cartão Nubank" vira
+ * "Cart-o-Nubank" em vez de ser descartada — antes a série ficava sem cor.
+ * Quem escreve a cor (o `<style>`) e quem a lê (`serieColor`) passam por aqui.
+ */
+function chartKeyToken(key: string): string {
+  return key.replace(/[^A-Za-z0-9_-]/g, "-")
+}
 const SAFE_CHART_COLOR = /^[#\w\s().,%/-]+$/
 
 export function chartStyleCss(id: string, config: ChartConfig): string | null {
   const entries = Object.entries(config).filter(
-    ([key, cfg]) => SAFE_CHART_KEY.test(key) && ("theme" in cfg || "color" in cfg)
+    ([key, cfg]) => SAFE_CHART_KEY.test(chartKeyToken(key)) && ("theme" in cfg || "color" in cfg)
   )
   if (!entries.length) return null
   const safeId = id.replace(/[^A-Za-z0-9_:-]/g, "")
@@ -386,7 +395,7 @@ export function chartStyleCss(id: string, config: ChartConfig): string | null {
               : "color" in itemConfig
                 ? itemConfig.color
                 : undefined
-          return color && SAFE_CHART_COLOR.test(color) ? `  --color-${key}: ${color};` : null
+          return color && SAFE_CHART_COLOR.test(color) ? `  --color-${chartKeyToken(key)}: ${color};` : null
         })
         .filter(Boolean)
         .join("\n")
@@ -545,7 +554,7 @@ function ChartTooltipContent({
                     !hideIndicator && (
                       <div
                         className={cn(
-                          "shrink-0 rounded-xs border-(--color-border) bg-(--color-bg)",
+                          "shrink-0 rounded-xs border-(--indicator-border) bg-(--indicator-bg)",
                           {
                             "h-2.5 w-2.5": indicator === "dot",
                             "w-1": indicator === "line",
@@ -556,8 +565,10 @@ function ChartTooltipContent({
                         )}
                         style={
                           {
-                            "--color-bg": indicatorColor,
-                            "--color-border": indicatorColor,
+                            // Nomes próprios: `--color-border` local sombreava
+                            // o token do tema para tudo dentro do indicador.
+                            "--indicator-bg": indicatorColor,
+                            "--indicator-border": indicatorColor,
                           } as React.CSSProperties
                         }
                       />
@@ -895,8 +906,8 @@ function useSeries(config: ChartConfig, series?: string[]) {
 
 function serieColor(key: string, index: number, config: ChartConfig): string {
   const cfg = config[key]
-  if (cfg && "color" in cfg && cfg.color) return `var(--color-${key})`
-  if (cfg && "theme" in cfg && cfg.theme) return `var(--color-${key})`
+  if (cfg && "color" in cfg && cfg.color) return `var(--color-${chartKeyToken(key)})`
+  if (cfg && "theme" in cfg && cfg.theme) return `var(--color-${chartKeyToken(key)})`
   return chartSeriesColor(index)
 }
 
@@ -1534,7 +1545,7 @@ function ChartDonutCenter({
           // Pela mesma razão do valor: proporcional à caixa, em `style` e não
           // em classe. O piso é `--text-2xs`, o menor degrau do sistema — sem
           // ele, uma rosca pequena escreveria a legenda abaixo da escala.
-          style={{ fontSize: "min(0.75rem, max(0.6875rem, 6.5cqw))" }}
+          style={{ fontSize: "min(var(--text-xs), max(var(--text-2xs), 6.5cqw))" }}
         >
           {label}
         </span>

@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest"
  * Ela nasceu como a régua do `EdgePanel`, que era um componente à parte; a
  * rodada 64 dissolveu aquele arquivo aqui, e o teste veio junto com o `cva`.
  *
- * Cada asserção aqui nomeia o defeito que a produziu, e as sete foram
+ * Cada asserção aqui nomeia o defeito que a produziu, e as nove foram
  * verificadas **reintroduzindo** esse defeito. É o procedimento que
  * `glass.test.ts` e `scroll-fade.test.ts` já usam, e é o único jeito de saber
  * que a asserção testa o código e não o comentário.

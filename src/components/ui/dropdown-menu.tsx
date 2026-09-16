@@ -219,19 +219,12 @@ function DropdownMenuContent({
         >
           {children}
         </div>
-        {footer}
+        {footer ? <div className="shrink-0">{footer}</div> : null}
       </DropdownMenuPrimitive.Content>
     </DropdownMenuPrimitive.Portal>
   )
 }
 
-/**
- * `variant="destructive"` existe porque as telas escreviam
- * `text-destructive focus:text-destructive` na mão. **Ela ainda espera por
- * elas**: hoje são 14 chamadas em 12 arquivos, todas na mesma grafia, e nenhuma
- * usa a variant — que além da tinta traz o `focus:bg-destructive/10` e o par
- * escuro que a grafia manual não tem.
- */
 /**
  * A faixa de identidade do painel — avatar, nome, contexto.
  *
@@ -296,6 +289,13 @@ function DropdownMenuSection({
   )
 }
 
+/**
+ * `variant="destructive"` existe porque as telas escreviam
+ * `text-destructive focus:text-destructive` na mão. **Ela ainda espera por
+ * elas**: hoje são 14 chamadas em 12 arquivos, todas na mesma grafia, e nenhuma
+ * usa a variant — que além da tinta traz o `focus:bg-destructive/10` e o par
+ * escuro que a grafia manual não tem.
+ */
 function DropdownMenuItem({
   className,
   inset,

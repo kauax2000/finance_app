@@ -11,8 +11,8 @@ import { dragHandleClassName } from "./drag-handle"
  * asserção.
  *
  * **O primeiro foi uma classe que perdia calada.** O `vaul` injeta
- * `[data-vaul-handle]` numa folha criada em tempo de execução, que entra
- * **depois** da folha do app e empata em especificidade. A régua anterior
+ * `[data-vaul-handle]` numa folha criada em tempo de execução e **sem camada**,
+ * e CSS sem camada vence as utilities do Tailwind (que moram em `@layer`). A régua anterior
  * escrevia `!h-1.5 !w-12 !bg-…` e, ao lado deles, `rounded-full` **sem** `!` —
  * medido no navegador, o `border-radius` computado da alça era **16px**, o do
  * `vaul`. Três classes venciam, a quarta não, e nada apontava a diferença.
@@ -48,8 +48,8 @@ const classes = dragHandleClassName.split(/\s+/).filter(Boolean)
 describe("régua da alça de arraste", () => {
   /**
    * A tabela é a folha que o `vaul` injeta, propriedade por propriedade. Toda
-   * classe daqui que escreva uma delas tem de vencer, e a única forma de vencer
-   * um empate de especificidade contra uma folha emitida depois é `!`.
+   * classe daqui que escreva uma delas tem de vencer, e contra CSS sem camada a
+   * especificidade não compra nada — só `!` inverte a ordem das camadas.
    *
    * `my-*` fica de fora de propósito: o `vaul` declara `margin-left` e
    * `margin-right`, e não a margem vertical — não há disputa, então não há `!`.

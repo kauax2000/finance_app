@@ -16,35 +16,35 @@ import { cn } from "@/lib/utils"
 
 /** Concluído, pago, ativo. */
 export const tagChipSuccess =
-  "bg-success-muted text-success-muted-foreground hover:bg-success-muted/80 dark:hover:bg-success-muted/60"
+  "bg-success-muted text-success-muted-foreground"
 
 /** Atrasado, cancelado, falhou. */
 export const tagChipDanger =
-  "bg-destructive-muted text-destructive-muted-foreground hover:bg-destructive-muted/80 dark:hover:bg-destructive-muted/60"
+  "bg-destructive-muted text-destructive-muted-foreground"
 
 /** Receita — os tokens de dinheiro, mais saturados que os de status. */
 export const tagChipIncome =
-  "bg-income-muted text-income-muted-foreground hover:bg-income-muted/80 dark:hover:bg-income-muted/60"
+  "bg-income-muted text-income-muted-foreground"
 
 /** Despesa — os tokens de dinheiro, mais saturados que os de status. */
 export const tagChipExpense =
-  "bg-expense-muted text-expense-muted-foreground hover:bg-expense-muted/80 dark:hover:bg-expense-muted/60"
+  "bg-expense-muted text-expense-muted-foreground"
 
 /** Pendente, rascunho, sem estado. */
 export const tagChipNeutral =
-  "bg-muted text-muted-foreground hover:bg-muted/80 dark:hover:bg-muted/60"
+  "bg-muted text-muted-foreground"
 
 /** Vence hoje, perto do limite. */
 export const tagChipWarning =
-  "bg-warning-muted text-warning-muted-foreground hover:bg-warning-muted/80 dark:hover:bg-warning-muted/60"
+  "bg-warning-muted text-warning-muted-foreground"
 
 /** Informativo, em análise. */
 export const tagChipInfo =
-  "bg-info-muted text-info-muted-foreground hover:bg-info-muted/80 dark:hover:bg-info-muted/60"
+  "bg-info-muted text-info-muted-foreground"
 
 /** Só o `Badge` usa: a marca em tinta suave não tem chip fora dele. */
 const tagChipPrimary =
-  "bg-primary-muted text-primary-muted-foreground hover:bg-primary-muted/80 dark:hover:bg-primary-muted/60"
+  "bg-primary-muted text-primary-muted-foreground"
 
 /** Apelido de `info`, do tempo em que a tela escolhia o tom. Não use em código novo. */
 export const tagChipViolet =
@@ -171,13 +171,13 @@ const badgeVariants = cva(
       { variant: "soft", tone: "income", class: tagChipIncome },
       { variant: "soft", tone: "expense", class: tagChipExpense },
 
-      { variant: "outline", tone: "primary", class: "border-primary-accent/40 text-primary-accent hover:bg-primary-muted/40" },
-      { variant: "outline", tone: "neutral", class: "border-border text-foreground hover:bg-muted" },
-      { variant: "outline", tone: "success", class: "border-success/40 text-success-muted-foreground hover:bg-success-muted/40" },
-      { variant: "outline", tone: "warning", class: "border-warning/40 text-warning-muted-foreground hover:bg-warning-muted/40" },
-      { variant: "outline", tone: "destructive", class: "border-destructive/40 text-destructive-muted-foreground hover:bg-destructive-muted/40" },
-      { variant: "outline", tone: "income", class: "border-income/40 text-income-muted-foreground hover:bg-income-muted/40" },
-      { variant: "outline", tone: "expense", class: "border-expense/40 text-expense-muted-foreground hover:bg-expense-muted/40" },
+      { variant: "outline", tone: "primary", class: "border-primary-accent/40 text-primary-accent" },
+      { variant: "outline", tone: "neutral", class: "border-border text-foreground" },
+      { variant: "outline", tone: "success", class: "border-success/40 text-success-muted-foreground" },
+      { variant: "outline", tone: "warning", class: "border-warning/40 text-warning-muted-foreground" },
+      { variant: "outline", tone: "destructive", class: "border-destructive/40 text-destructive-muted-foreground" },
+      { variant: "outline", tone: "income", class: "border-income/40 text-income-muted-foreground" },
+      { variant: "outline", tone: "expense", class: "border-expense/40 text-expense-muted-foreground" },
     ],
     defaultVariants: {
       variant: "soft",

@@ -1,5 +1,5 @@
 /**
- * A superfície de menu — uma só, para os dois menus do projeto.
+ * A superfície de menu — uma só, para os três menus do projeto e o `Command`.
  *
  * `DropdownMenu` e `ContextMenu` desenham a mesma coisa e diferem só em como
  * são invocados: um por clique num gatilho, outro pelo botão direito. Mesmo
@@ -44,6 +44,17 @@
 const MENU_TOUCH_TARGET = "pointer-coarse:min-h-11"
 
 /**
+ * Só a tinta e o material, sem raio, sombra nem fio — para quem já tem casca
+ * própria e só troca o token, como o `CommandDialog` sobre o `DialogContent`.
+ */
+export const menuPanelTintClassName = [
+  "bg-popover/85 glass-surface",
+  "supports-backdrop-filter:dark:bg-popover/60",
+  /** A cor sólida é de quem veste — a utility é dona de uma propriedade só. */
+  "reduced-transparency:bg-popover",
+].join(" ")
+
+/**
  * **A superfície, e só ela** — raio, tinta, sombra e fio, sem geometria, sem
  * camada e sem animação.
  *
@@ -85,10 +96,7 @@ const MENU_TOUCH_TARGET = "pointer-coarse:min-h-11"
  */
 export const menuPanelSurfaceClassName = [
   "rounded-lg text-popover-foreground shadow-md ring-1 ring-foreground/10",
-  "bg-popover/85 glass-surface",
-  "supports-backdrop-filter:dark:bg-popover/60",
-  /** A cor sólida é de quem veste — a utility é dona de uma propriedade só. */
-  "reduced-transparency:bg-popover",
+  menuPanelTintClassName,
 ].join(" ")
 
 /**
@@ -169,28 +177,24 @@ export const menuItemGeometryClassName = [
  * um nome só, para as duas superfícies.
  */
 export const menuItemClassName = [
-  "group/menu-item relative flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none",
-  MENU_TOUCH_TARGET,
+  "group/menu-item",
+  menuItemGeometryClassName,
   "focus:bg-accent focus:text-accent-foreground",
   "data-inset:pl-7",
   "data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20",
   "data-disabled:pointer-events-none data-disabled:opacity-50",
-  // `:not([class*='size-'])` e não `[&_svg]:size-4`: quem passa um `size-5`
-  // explícito no ícone tem o direito de ser obedecido.
-  "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   "focus:*:[svg]:text-accent-foreground data-[variant=destructive]:*:[svg]:text-destructive",
 ].join(" ")
 
 /** O gatilho de submenu: a linha, mais o estado aberto. */
 export const menuSubTriggerClassName = [
-  "group/menu-item flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none",
-  MENU_TOUCH_TARGET,
+  "group/menu-item",
+  menuItemGeometryClassName,
   "focus:bg-accent focus:text-accent-foreground",
   "data-inset:pl-7 data-open:bg-accent data-open:text-accent-foreground",
   // O mesmo estado das outras linhas: sem ele um submenu desabilitado saía
   // igual ao ativo nos três menus.
   "data-disabled:pointer-events-none data-disabled:opacity-50",
-  "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
 ].join(" ")
 
 /**
@@ -199,12 +203,14 @@ export const menuSubTriggerClassName = [
  * colunas de recuo (a do indicador e a do `inset`) brigariam pelo mesmo lugar.
  */
 export const menuIndicatorItemClassName = [
-  "group/menu-item relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none",
-  MENU_TOUCH_TARGET,
+  "group/menu-item",
+  menuItemGeometryClassName,
+  // O indicador mora à direita: o recuo desse lado cresce. Quem compõe passa
+  // por `cn()`, e o `twMerge` guarda o `px-1.5` da geometria com o `pr-8` por cima.
+  "pr-8",
   "focus:bg-accent focus:text-accent-foreground",
   "data-inset:pl-7",
   "data-disabled:pointer-events-none data-disabled:opacity-50",
-  "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
 ].join(" ")
 
 /** Onde o indicador de marca é ancorado. */

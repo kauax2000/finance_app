@@ -59,7 +59,9 @@ export function Toaster({ ...props }: ToasterProps) {
       closeButton
       // Os rótulos do sonner vêm em inglês ("Notifications", "Close toast").
       containerAriaLabel="Notificações"
-      className="toaster group z-(--z-toast)"
+      // Sem `z-(--z-toast)`: o sonner declara `z-index: 999999999` fora de
+      // camada, e a utility perdia calada. O toast já fica acima de tudo.
+      className="toaster"
       offset="1rem"
       mobileOffset={{
         // A barra do topo (48) mais 16 de respiro.
@@ -80,7 +82,7 @@ export function Toaster({ ...props }: ToasterProps) {
         duration: TOAST_DEFAULT_MS,
         closeButtonAriaLabel: "Fechar notificação",
         classNames: {
-          toast: "group toast",
+          toast: "toast",
         },
       }}
       {...props}
