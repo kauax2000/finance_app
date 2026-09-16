@@ -1,6 +1,11 @@
 "use client"
 
 import * as React from "react"
+import {
+    Field,
+    FieldControl,
+    FieldLabel,
+} from "@/components/ui/field"
 import type { Category, CreditCard } from "@/lib/supabase"
 import {
     PAYMENT_METHOD_VALUES,
@@ -15,7 +20,6 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { SearchInput } from "@/components/ui/search-input"
-import { Label } from "@/components/ui/label"
 import {
     Popover,
     PopoverContent,
@@ -314,10 +318,12 @@ export function TransactionsFiltersPanel({
                                             paymentMethods.includes(pm)
                                         const id = `${fieldUid}-pm-${pm}`
                                         return (
-                                            <div
+                                            <Field
+                                                orientation="horizontal"
                                                 key={pm}
                                                 className="flex items-center gap-2 rounded-md px-2 py-1.5"
                                             >
+                                                <FieldControl>
                                                 <Checkbox
                                                     id={id}
                                                     checked={checked}
@@ -325,13 +331,13 @@ export function TransactionsFiltersPanel({
                                                         onTogglePaymentMethod(pm)
                                                     }
                                                 />
-                                                <Label
-                                                    htmlFor={id}
+                                                </FieldControl>
+                                                <FieldLabel
                                                     className="cursor-pointer text-sm font-normal"
                                                 >
                                                     {paymentMethodLabel(pm)}
-                                                </Label>
-                                            </div>
+                                                </FieldLabel>
+                                            </Field>
                                         )
                                     })}
                                 </div>
@@ -442,10 +448,12 @@ export function TransactionsFiltersPanel({
                                         const checked = creditCardIds.includes(c.id)
                                         const id = `${fieldUid}-card-${c.id}`
                                         return (
-                                            <div
+                                            <Field
+                                                orientation="horizontal"
                                                 key={c.id}
                                                 className="flex items-center gap-2 rounded-md px-2 py-1.5"
                                             >
+                                                <FieldControl>
                                                 <Checkbox
                                                     id={id}
                                                     checked={checked}
@@ -453,15 +461,15 @@ export function TransactionsFiltersPanel({
                                                         onToggleCreditCardId(c.id)
                                                     }
                                                 />
-                                                <Label
-                                                    htmlFor={id}
+                                                </FieldControl>
+                                                <FieldLabel
                                                     className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-sm font-normal"
                                                 >
                                                     <span className="truncate">
                                                         {c.name} · •••• {c.last_four}
                                                     </span>
-                                                </Label>
-                                            </div>
+                                                </FieldLabel>
+                                            </Field>
                                         )
                                     })
                                 )}
@@ -546,7 +554,8 @@ export function TransactionsFiltersPanel({
                                     </PopoverHeader>
                                     <div className="max-h-56 overflow-y-auto p-2">
                                         <div className="space-y-0.5">
-                                            <div className="flex items-center gap-2 rounded-md px-2 py-1.5">
+                                            <Field orientation="horizontal" className="flex items-center gap-2 rounded-md px-2 py-1.5">
+                                                <FieldControl>
                                                 <Checkbox
                                                     id={`${fieldUid}-uncat`}
                                                     checked={uncategorizedOnly}
@@ -555,8 +564,8 @@ export function TransactionsFiltersPanel({
                                                         onUncategorizedOnlyChange(next)
                                                     }}
                                                 />
-                                                <Label
-                                                    htmlFor={`${fieldUid}-uncat`}
+                                                </FieldControl>
+                                                <FieldLabel
                                                     className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-sm font-normal"
                                                 >
                                                     <span
@@ -566,8 +575,8 @@ export function TransactionsFiltersPanel({
                                                     <span className="truncate">
                                                         Sem categoria
                                                     </span>
-                                                </Label>
-                                            </div>
+                                                </FieldLabel>
+                                            </Field>
                                             {sortedCategories.length === 0 ? (
                                                 <p className="px-2 py-2 text-xs text-muted-foreground">
                                                     Nenhuma categoria neste espaço.
@@ -582,7 +591,8 @@ export function TransactionsFiltersPanel({
                                                         cat.id
                                                     )
                                                     return (
-                                                        <div
+                                                        <Field
+                                                            orientation="horizontal"
                                                             key={cat.id}
                                                             className={cn(
                                                                 "flex items-center gap-2 rounded-md px-2 py-1.5",
@@ -591,6 +601,7 @@ export function TransactionsFiltersPanel({
                                                                     : "hover:bg-muted/50"
                                                             )}
                                                         >
+                                                            <FieldControl>
                                                             <Checkbox
                                                                 id={`${fieldUid}-cat-${cat.id}`}
                                                                 checked={checked}
@@ -603,8 +614,8 @@ export function TransactionsFiltersPanel({
                                                                     )
                                                                 }
                                                             />
-                                                            <Label
-                                                                htmlFor={`${fieldUid}-cat-${cat.id}`}
+                                                            </FieldControl>
+                                                            <FieldLabel
                                                                 className={cn(
                                                                     "flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-sm font-normal",
                                                                     uncategorizedOnly &&
@@ -623,8 +634,8 @@ export function TransactionsFiltersPanel({
                                                                 <span className="truncate">
                                                                     {cat.name}
                                                                 </span>
-                                                            </Label>
-                                                        </div>
+                                                            </FieldLabel>
+                                                        </Field>
                                                     )
                                                 })
                                             )}
@@ -732,13 +743,13 @@ export function TransactionsFiltersPanel({
 
             <FilterSection title="Valor (R$)">
                 <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                        <Label
-                            htmlFor={`${fieldUid}-amt-min`}
+                    <Field>
+                        <FieldLabel
                             className="text-2xs text-muted-foreground"
                         >
                             Mínimo
-                        </Label>
+                        </FieldLabel>
+                        <FieldControl>
                         <Input
                             money
                             id={`${fieldUid}-amt-min`}
@@ -746,14 +757,15 @@ export function TransactionsFiltersPanel({
                             value={amountMin}
                             onValueChange={onAmountMinChange}
                         />
-                    </div>
-                    <div className="space-y-2">
-                        <Label
-                            htmlFor={`${fieldUid}-amt-max`}
+                        </FieldControl>
+                    </Field>
+                    <Field>
+                        <FieldLabel
                             className="text-2xs text-muted-foreground"
                         >
                             Máximo
-                        </Label>
+                        </FieldLabel>
+                        <FieldControl>
                         <Input
                             money
                             id={`${fieldUid}-amt-max`}
@@ -761,7 +773,8 @@ export function TransactionsFiltersPanel({
                             value={amountMax}
                             onValueChange={onAmountMaxChange}
                         />
-                    </div>
+                        </FieldControl>
+                    </Field>
                 </div>
             </FilterSection>
 
@@ -782,13 +795,12 @@ export function TransactionsFiltersPanel({
 
             <FilterSection title="Origem">
                 <div className="space-y-6">
-                    <div className="space-y-2">
-                        <Label
-                            htmlFor={`${fieldUid}-origem-plan`}
+                    <Field>
+                        <FieldLabel
                             className="text-2xs text-muted-foreground"
                         >
                             Plano parcelado
-                        </Label>
+                        </FieldLabel>
                         <Select
                             value={installmentPlanId ?? "__any__"}
                             onValueChange={(v) =>
@@ -797,12 +809,14 @@ export function TransactionsFiltersPanel({
                                 )
                             }
                         >
+                            <FieldControl>
                             <SelectTrigger
                                 id={`${fieldUid}-origem-plan`}
                                 className={FILTERS_DRAWER_SELECT_TRIGGER_CLASSNAME}
                             >
                                 <SelectValue placeholder="Qualquer" />
                             </SelectTrigger>
+                            </FieldControl>
                             <SelectContent
                                 sideOffset={8}
                                 className="max-h-72 p-1"
@@ -816,14 +830,13 @@ export function TransactionsFiltersPanel({
                                 ))}
                             </SelectContent>
                         </Select>
-                    </div>
-                    <div className="space-y-2">
-                        <Label
-                            htmlFor={`${fieldUid}-origem-sub`}
+                    </Field>
+                    <Field>
+                        <FieldLabel
                             className="text-2xs text-muted-foreground"
                         >
                             Assinatura
-                        </Label>
+                        </FieldLabel>
                         <Select
                             value={subscriptionId ?? "__any__"}
                             onValueChange={(v) =>
@@ -832,12 +845,14 @@ export function TransactionsFiltersPanel({
                                 )
                             }
                         >
+                            <FieldControl>
                             <SelectTrigger
                                 id={`${fieldUid}-origem-sub`}
                                 className={FILTERS_DRAWER_SELECT_TRIGGER_CLASSNAME}
                             >
                                 <SelectValue placeholder="Qualquer" />
                             </SelectTrigger>
+                            </FieldControl>
                             <SelectContent
                                 sideOffset={8}
                                 className="max-h-72 p-1"
@@ -852,7 +867,7 @@ export function TransactionsFiltersPanel({
                                 ))}
                             </SelectContent>
                         </Select>
-                    </div>
+                    </Field>
                 </div>
             </FilterSection>
         </div>

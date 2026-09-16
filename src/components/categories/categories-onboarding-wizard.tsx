@@ -1,6 +1,11 @@
 "use client"
 
 import { deleteCategoryById } from "@/lib/categories/mutations"
+import {
+    Field,
+    FieldControl,
+    FieldLabel,
+} from "@/components/ui/field"
 import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { useCallback, useEffect, useMemo, useState } from "react"
@@ -11,7 +16,6 @@ import { ColorTile } from "@/components/ui/color-tile"
 import { Button } from "@/components/ui/button"
 import { CustomForm, FormInput } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Dialog,
   DialogBody,
@@ -531,10 +535,11 @@ export function CategoriesOnboardingWizard({
                 </div>
                 <div className="flex items-center justify-end gap-2 sm:justify-end">
                     {c.type === "expense" ? (
-                        <>
-                            <Label htmlFor={`bud-${c.id}`} className="sr-only">
-                                Limite {c.name}
-                            </Label>
+                        // Horizontal, e não vertical: o vertical dá `w-full` aos filhos, e o
+                        // campo tem largura fixa na linha.
+                        <Field orientation="horizontal" className="w-auto shrink-0 gap-0">
+                            <FieldLabel className="sr-only">Limite {c.name}</FieldLabel>
+                            <FieldControl>
                             <Input
                                 money
                                 id={`bud-${c.id}`}
@@ -549,7 +554,8 @@ export function CategoriesOnboardingWizard({
                                 }
                                 className="h-8 min-w-[6.75rem] w-[6.75rem] shrink-0 text-right text-xs sm:min-w-[7.25rem] sm:w-[7.25rem]"
                             />
-                        </>
+                            </FieldControl>
+                        </Field>
                     ) : (
                         <span className="text-2xs text-muted-foreground">Sem orçamento</span>
                     )}
@@ -589,17 +595,15 @@ export function CategoriesOnboardingWizard({
                         >
                             <DialogBody>
                                 <div className="space-y-4 py-2">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="onb-add-name">Nome</Label>
-                                        <Input
-                                            id="onb-add-name"
-                                            value={addName}
-                                            onChange={(e) => setAddName(e.target.value)}
-                                            placeholder="Ex: Alimentação"
-                                            required
-                                            disabled={crudBusy}
-                                        />
-                                    </div>
+                                    <FormInput
+                                        id="onb-add-name"
+                                        label="Nome"
+                                        value={addName}
+                                        onChange={(e) => setAddName(e.target.value)}
+                                        placeholder="Ex: Alimentação"
+                                        required
+                                        disabled={crudBusy}
+                                    />
                                     <TransactionFormTypeSegment
                                         value={addType}
                                         onChange={setAddType}
@@ -634,17 +638,15 @@ export function CategoriesOnboardingWizard({
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4 py-2">
-                                <div className="space-y-2">
-                                    <Label htmlFor="onb-add-name">Nome</Label>
-                                    <Input
-                                        id="onb-add-name"
-                                        value={addName}
-                                        onChange={(e) => setAddName(e.target.value)}
-                                        placeholder="Ex: Alimentação"
-                                        required
-                                        disabled={crudBusy}
-                                    />
-                                </div>
+                                <FormInput
+                                    id="onb-add-name"
+                                    label="Nome"
+                                    value={addName}
+                                    onChange={(e) => setAddName(e.target.value)}
+                                    placeholder="Ex: Alimentação"
+                                    required
+                                    disabled={crudBusy}
+                                />
                                 <TransactionFormTypeSegment
                                     value={addType}
                                     onChange={setAddType}
@@ -696,17 +698,15 @@ export function CategoriesOnboardingWizard({
                             >
                                 <DialogBody>
                                     <div className="space-y-3 py-1">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="onb-edit-name">Nome</Label>
-                                            <Input
-                                                id="onb-edit-name"
-                                                value={editName}
-                                                onChange={(e) => setEditName(e.target.value)}
-                                                className="text-sm"
-                                                required
-                                                disabled={crudBusy}
-                                            />
-                                        </div>
+                                        <FormInput
+                                            id="onb-edit-name"
+                                            label="Nome"
+                                            value={editName}
+                                            onChange={(e) => setEditName(e.target.value)}
+                                            className="text-sm"
+                                            required
+                                            disabled={crudBusy}
+                                        />
                                         <TransactionFormTypeSegment
                                             value={editType}
                                             onChange={setEditType}
@@ -766,17 +766,15 @@ export function CategoriesOnboardingWizard({
                                     </DialogDescription>
                                 </DialogHeader>
                                 <div className="space-y-3 py-1">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="onb-edit-name">Nome</Label>
-                                        <Input
-                                            id="onb-edit-name"
-                                            value={editName}
-                                            onChange={(e) => setEditName(e.target.value)}
-                                            className="text-sm"
-                                            required
-                                            disabled={crudBusy}
-                                        />
-                                    </div>
+                                    <FormInput
+                                        id="onb-edit-name"
+                                        label="Nome"
+                                        value={editName}
+                                        onChange={(e) => setEditName(e.target.value)}
+                                        className="text-sm"
+                                        required
+                                        disabled={crudBusy}
+                                    />
                                     <TransactionFormTypeSegment
                                         value={editType}
                                         onChange={setEditType}

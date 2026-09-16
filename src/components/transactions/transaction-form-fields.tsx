@@ -1,6 +1,12 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import {
+    Field,
+    FieldControl,
+    FieldLabel,
+    FieldTitle,
+} from "@/components/ui/field"
 import Link from "next/link"
 import type { Category, CreditCard } from "@/lib/supabase"
 import { paymentMethodOptions, type PaymentMethod } from "@/lib/payment-methods"
@@ -27,8 +33,6 @@ import { splitTotalAcrossInstallments } from "@/lib/installment-amounts"
 import { parseMoneyBrl } from "@/lib/money-brl"
 import { Button } from "@/components/ui/button"
 import { FormInput, FormRadioGroup } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { DatePicker } from "@/components/ui/date-picker"
 import {
     FormPickerPopoverContent,
@@ -478,23 +482,20 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                         />
                     )}
 
-                    <div className="space-y-1.5">
-                        <Label htmlFor="tx-inst-n" className="text-xs">
-                            Número de parcelas
-                        </Label>
-                        <Input
-                            id="tx-inst-n"
-                            type="number"
-                            min={2}
-                            step={1}
-                            value={installmentCount}
-                            onChange={(e) =>
-                                setInstallmentCount(e.target.value)
-                            }
-                            placeholder="12"
-                            className="text-sm tabular-nums"
-                        />
-                    </div>
+                    <FormInput
+                        id="tx-inst-n"
+                        fieldSize="sm"
+                        label="Número de parcelas"
+                        type="number"
+                        min={2}
+                        step={1}
+                        value={installmentCount}
+                        onChange={(e) =>
+                            setInstallmentCount(e.target.value)
+                        }
+                        placeholder="12"
+                        className="text-sm tabular-nums"
+                    />
 
                     {installmentPreview ? (
                         <p className="rounded-lg border border-border/60 bg-muted/25 px-3 py-2 text-xs text-muted-foreground">
@@ -514,23 +515,20 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                 />
             )}
 
-            <div className="space-y-1.5">
-                <Label htmlFor="tx-description" className="text-xs">
-                    Descrição
-                </Label>
-                <Input
-                    id="tx-description"
-                    value={description}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setDescription(e.target.value)
-                    }
-                    className="text-sm"
-                    placeholder="Ex: Supermercado"
-                />
-            </div>
+            <FormInput
+                id="tx-description"
+                fieldSize="sm"
+                label="Descrição"
+                value={description}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setDescription(e.target.value)
+                }
+                className="text-sm"
+                placeholder="Ex: Supermercado"
+            />
 
-            <div className="space-y-1.5">
-                <Label className="text-xs">Categoria</Label>
+            <Field size="sm">
+                <FieldLabel htmlFor="tx-category">Categoria</FieldLabel>
                 <Popover
                     modal={isMobile}
                     open={categoryPopoverOpen}
@@ -596,18 +594,24 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                         </FormPickerPopoverFooter>
                     </FormPickerPopoverContent>
                 </Popover>
-            </div>
+            </Field>
 
-            <div className="space-y-1.5">
-                <Label htmlFor="tx-date" className="text-xs">
-                    {showInstallmentFields
-                        ? segmentMode === "edit"
-                            ? planIsActive
-                                ? "Próxima data de cobrança"
-                                : "Data de cobrança"
-                            : "Data da primeira cobrança"
-                        : "Data"}
-                </Label>
+            <Field size="sm">
+                {/* Com o plano concluído não há controle, só um aviso: o `for` apontava
+                    para um `<p>`, que não é rotulável. Ali o rótulo vira título. */}
+                {showInstallmentFields && segmentMode === "edit" && !planIsActive ? (
+                    <FieldTitle>Data de cobrança</FieldTitle>
+                ) : (
+                    <FieldLabel>
+                        {showInstallmentFields
+                            ? segmentMode === "edit"
+                                ? planIsActive
+                                    ? "Próxima data de cobrança"
+                                    : "Data de cobrança"
+                                : "Data da primeira cobrança"
+                            : "Data"}
+                    </FieldLabel>
+                )}
                 {showInstallmentFields &&
                 segmentMode === "edit" &&
                 !planIsActive ? (
@@ -618,26 +622,29 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                         Plano concluído — não há próxima cobrança agendada.
                     </p>
                 ) : (
-                    <DatePicker
-                        id="tx-date"
-                        className="text-sm"
-                        value={parseYmdLocal(dateYmd)}
-                        onChange={(d) =>
-                            setDateYmd(
-                                d
-                                    ? localYmdFromDate(d)
-                                    : localYmdFromDate(new Date())
-                            )
-                        }
-                        placeholder="Selecione a data"
-                    />
+                    <FieldControl>
+                        <DatePicker
+                            id="tx-date"
+                            className="text-sm"
+                            value={parseYmdLocal(dateYmd)}
+                            onChange={(d) =>
+                                setDateYmd(
+                                    d
+                                        ? localYmdFromDate(d)
+                                        : localYmdFromDate(new Date())
+                                )
+                            }
+                            placeholder="Selecione a data"
+                        />
+                    </FieldControl>
                 )}
-            </div>
+            </Field>
 
             {type === "expense" || showInstallmentFields ? (
                 <>
-                    <div className="space-y-1.5">
-                        <Label className="text-xs">Forma de pagamento</Label>
+                    <Field size="sm">
+                        {/* Título visual: as fichas já são um grupo com `aria-label`. */}
+                        <FieldTitle>Forma de pagamento</FieldTitle>
                         <PaymentMethodChips
                             value={paymentMethod}
                             onChange={(next) => {
@@ -647,13 +654,15 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                                 }
                             }}
                         />
-                    </div>
+                    </Field>
 
                     {paymentMethod === "credit_card" ? (
-                        <div className="space-y-1.5">
-                            <Label htmlFor="tx-credit-card" className="text-xs">
-                                Cartão
-                            </Label>
+                        <Field size="sm">
+                            {activeCards.length === 0 ? (
+                                <FieldTitle>Cartão</FieldTitle>
+                            ) : (
+                                <FieldLabel htmlFor="tx-credit-card">Cartão</FieldLabel>
+                            )}
                             {activeCards.length === 0 ? (
                                 <p className="rounded-lg border border-dashed border-border/80 bg-muted/20 px-3 py-2.5 text-xs text-muted-foreground">
                                     Cadastre um cartão em{" "}
@@ -745,7 +754,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                                     </span>
                                 </p>
                             ) : null}
-                        </div>
+                        </Field>
                     ) : null}
                 </>
             ) : null}

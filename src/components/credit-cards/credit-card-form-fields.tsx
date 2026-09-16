@@ -1,6 +1,13 @@
 "use client"
 
 import { CalendarIcon, InformationCircleIcon } from "@heroicons/react/16/solid"
+import {
+    Field,
+    FieldControl,
+    FieldLabel,
+    FieldLegend,
+    FieldSet,
+} from "@/components/ui/field"
 import { useMemo } from "react"
 import { CreditCardBillingFormPreview } from "@/components/credit-cards/credit-card-billing-form-preview"
 import { CreditCardBrandPreview } from "@/components/credit-cards/credit-card-brand-preview"
@@ -18,8 +25,6 @@ import {
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { FormInput } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
     Select,
     SelectContent,
@@ -92,23 +97,24 @@ function CreditCardBillingSection({
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                    <Label htmlFor={`${idPrefix}-close`} className="text-xs">
-                        {CREDIT_CARD_BILLING_FORM.closing.label}
-                    </Label>
+                <Field size="sm">
+                    <FieldLabel>{CREDIT_CARD_BILLING_FORM.closing.label}</FieldLabel>
                     <Select
                         value={closingDay || undefined}
                         onValueChange={onClosingDayChange}
                         required
                     >
-                        <SelectTrigger
-                            id={`${idPrefix}-close`}
-                            className={billingDaySelectTriggerClass}
-                        >
-                            <SelectValue
-                                placeholder={CREDIT_CARD_BILLING_FORM.closing.placeholder}
-                            />
-                        </SelectTrigger>
+                        {/* O embrulho vai no gatilho, não na raiz do `Select`. */}
+                        <FieldControl>
+                            <SelectTrigger
+                                id={`${idPrefix}-close`}
+                                className={billingDaySelectTriggerClass}
+                            >
+                                <SelectValue
+                                    placeholder={CREDIT_CARD_BILLING_FORM.closing.placeholder}
+                                />
+                            </SelectTrigger>
+                        </FieldControl>
                         <SelectContent
                             align="start"
                             className="min-w-[var(--radix-select-trigger-width)] p-1"
@@ -125,24 +131,25 @@ function CreditCardBillingSection({
                             ))}
                         </SelectContent>
                     </Select>
-                </div>
-                <div className="space-y-1.5">
-                    <Label htmlFor={`${idPrefix}-due`} className="text-xs">
-                        {CREDIT_CARD_BILLING_FORM.due.label}
-                    </Label>
+                </Field>
+                <Field size="sm">
+                    <FieldLabel>{CREDIT_CARD_BILLING_FORM.due.label}</FieldLabel>
                     <Select
                         value={dueDay || undefined}
                         onValueChange={onDueDayChange}
                         required
                     >
-                        <SelectTrigger
-                            id={`${idPrefix}-due`}
-                            className={billingDaySelectTriggerClass}
-                        >
-                            <SelectValue
-                                placeholder={CREDIT_CARD_BILLING_FORM.due.placeholder}
-                            />
-                        </SelectTrigger>
+                        {/* O embrulho vai no gatilho, não na raiz do `Select`. */}
+                        <FieldControl>
+                            <SelectTrigger
+                                id={`${idPrefix}-due`}
+                                className={billingDaySelectTriggerClass}
+                            >
+                                <SelectValue
+                                    placeholder={CREDIT_CARD_BILLING_FORM.due.placeholder}
+                                />
+                            </SelectTrigger>
+                        </FieldControl>
                         <SelectContent
                             align="start"
                             className="min-w-[var(--radix-select-trigger-width)] p-1"
@@ -159,7 +166,7 @@ function CreditCardBillingSection({
                             ))}
                         </SelectContent>
                     </Select>
-                </div>
+                </Field>
             </div>
 
             {showUnusualDueWarning ? (
@@ -241,25 +248,21 @@ export function CreditCardFormFields({
 }: CreditCardFormFieldsProps) {
     return (
         <>
+            <FormInput
+                id={`${idPrefix}-name`}
+                fieldSize="sm"
+                label="Nome no cartão / apelido"
+                value={name}
+                onChange={(e) => onNameChange(e.target.value)}
+                placeholder="Ex: Nubank Roxinho"
+                className="text-sm"
+                required
+            />
             <div className="space-y-1.5">
-                <Label htmlFor={`${idPrefix}-name`} className="text-xs">
-                    Nome no cartão / apelido
-                </Label>
-                <Input
-                    id={`${idPrefix}-name`}
-                    value={name}
-                    onChange={(e) => onNameChange(e.target.value)}
-                    placeholder="Ex: Nubank Roxinho"
-                    className="text-sm"
-                    required
-                />
-            </div>
-            <div className="space-y-1.5">
-                <Label htmlFor={`${idPrefix}-pan`} className="text-xs">
-                    Número do cartão
-                </Label>
-                <Input
+                <FormInput
                     id={`${idPrefix}-pan`}
+                    fieldSize="sm"
+                    label="Número do cartão"
                     inputMode="numeric"
                     autoComplete="cc-number"
                     value={formatCardNumberGroups(cardNumber)}
@@ -269,60 +272,51 @@ export function CreditCardFormFields({
                     placeholder="0000 0000 0000 0000"
                     className="w-full min-w-0 text-sm tabular-nums"
                     required={!savedLastFour}
+                    description={
+                        savedLastFour && normalizeCardDigits(cardNumber).length === 0
+                            ? `Final salvo: •••• ${savedLastFour}. Deixe em branco para manter ou informe o número completo para alterar.`
+                            : "O número completo não é salvo."
+                    }
                 />
-                {savedLastFour && normalizeCardDigits(cardNumber).length === 0 ? (
-                    <p className="text-2xs leading-snug text-muted-foreground">
-                        Final salvo: •••• {savedLastFour}. Deixe em branco para manter ou
-                        informe o número completo para alterar.
-                    </p>
-                ) : (
-                    <p className="text-2xs leading-snug text-muted-foreground">
-                        O número completo não é salvo.
-                    </p>
-                )}
                 <CreditCardBrandPreview cardNumber={cardNumber} />
             </div>
-            <div className="space-y-1.5">
-                <p className="text-xs font-medium text-foreground">Validade do cartão</p>
+            {/* Mês e ano são um grupo com título: `fieldset` + `legend`, e não um
+                `<p>` solto que o leitor de tela não liga aos dois campos. */}
+            <FieldSet size="sm" className="gap-1.5">
+                <FieldLegend variant="label" className="text-foreground">
+                    Validade do cartão
+                </FieldLegend>
                 <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                        <Label htmlFor={`${idPrefix}-exp-m`} className="text-xs">
-                            Mês
-                        </Label>
-                        <Input
-                            id={`${idPrefix}-exp-m`}
-                            inputMode="numeric"
-                            maxLength={2}
-                            value={expiryMonth}
-                            onChange={(e) =>
-                                onExpiryMonthChange(
-                                    e.target.value.replace(/\D/g, "").slice(0, 2)
-                                )
-                            }
-                            placeholder="MM"
-                            className="text-sm tabular-nums"
-                        />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label htmlFor={`${idPrefix}-exp-y`} className="text-xs">
-                            Ano
-                        </Label>
-                        <Input
-                            id={`${idPrefix}-exp-y`}
-                            inputMode="numeric"
-                            maxLength={4}
-                            value={expiryYear}
-                            onChange={(e) =>
-                                onExpiryYearChange(
-                                    e.target.value.replace(/\D/g, "").slice(0, 4)
-                                )
-                            }
-                            placeholder="AAAA"
-                            className="text-sm tabular-nums"
-                        />
-                    </div>
+                    <FormInput
+                        id={`${idPrefix}-exp-m`}
+                        label="Mês"
+                        inputMode="numeric"
+                        maxLength={2}
+                        value={expiryMonth}
+                        onChange={(e) =>
+                            onExpiryMonthChange(
+                                e.target.value.replace(/\D/g, "").slice(0, 2)
+                            )
+                        }
+                        placeholder="MM"
+                        className="text-sm tabular-nums"
+                    />
+                    <FormInput
+                        id={`${idPrefix}-exp-y`}
+                        label="Ano"
+                        inputMode="numeric"
+                        maxLength={4}
+                        value={expiryYear}
+                        onChange={(e) =>
+                            onExpiryYearChange(
+                                e.target.value.replace(/\D/g, "").slice(0, 4)
+                            )
+                        }
+                        placeholder="AAAA"
+                        className="text-sm tabular-nums"
+                    />
                 </div>
-            </div>
+            </FieldSet>
             <FormInput
                 money
                 fieldSize="sm"

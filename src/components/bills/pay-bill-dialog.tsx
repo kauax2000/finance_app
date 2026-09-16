@@ -2,6 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react"
 import {
+    Field,
+    FieldControl,
+    FieldLabel,
+} from "@/components/ui/field"
+import {
   Dialog,
   DialogCloseButton,
   DialogContent,
@@ -16,8 +21,6 @@ import {
 } from "@/components/ui/sheet"
 import { CustomForm, FormInput } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
 import { DatePicker } from "@/components/ui/date-picker"
 import {
     Select,
@@ -209,32 +212,36 @@ export function PayBillDialog({
                         </span>
                     </p>
                 )}
-                <div className="grid gap-2">
-                    <Label>Data do pagamento</Label>
-                    <DatePicker
-                        value={
-                            parseYmdLocal(paidYmd.slice(0, 10)) ??
-                            new Date()
-                        }
-                        onChange={(d) =>
-                            setPaidYmd(
-                                d ? localYmdFromDate(d) : localYmdFromDate(new Date()),
-                            )
-                        }
-                        className="text-sm"
-                    />
-                </div>
+                <Field>
+                    <FieldLabel>Data do pagamento</FieldLabel>
+                    <FieldControl>
+                        <DatePicker
+                            value={
+                                parseYmdLocal(paidYmd.slice(0, 10)) ??
+                                new Date()
+                            }
+                            onChange={(d) =>
+                                setPaidYmd(
+                                    d ? localYmdFromDate(d) : localYmdFromDate(new Date()),
+                                )
+                            }
+                            className="text-sm"
+                        />
+                    </FieldControl>
+                </Field>
                 {input.kind === "regular" ? (
                 <>
-                <div className="grid gap-2">
-                    <Label>Categoria</Label>
+                <Field>
+                    <FieldLabel>Categoria</FieldLabel>
                     <Select value={categoryId} onValueChange={setCategoryId}>
-                        <SelectTrigger
-                            data-slot="select-trigger"
-                            className="bg-background shadow-xs"
-                        >
-                            <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
+                        <FieldControl>
+                            <SelectTrigger
+                                data-slot="select-trigger"
+                                className="bg-background shadow-xs"
+                            >
+                                <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                        </FieldControl>
                         <SelectContent>
                             <SelectItem value={CAT_NONE}>— Escolha —</SelectItem>
                             {categoriesExpense.map((c) => (
@@ -244,16 +251,18 @@ export function PayBillDialog({
                             ))}
                         </SelectContent>
                     </Select>
-                </div>
-                <div className="grid gap-2">
-                    <Label>Forma de pagamento</Label>
+                </Field>
+                <Field>
+                    <FieldLabel>Forma de pagamento</FieldLabel>
                     <Select value={pmOption} onValueChange={setPmOption}>
-                        <SelectTrigger
-                            data-slot="select-trigger"
-                            className="bg-background shadow-xs"
-                        >
-                            <SelectValue />
-                        </SelectTrigger>
+                        <FieldControl>
+                            <SelectTrigger
+                                data-slot="select-trigger"
+                                className="bg-background shadow-xs"
+                            >
+                                <SelectValue />
+                            </SelectTrigger>
+                        </FieldControl>
                         <SelectContent>
                             <SelectItem value={BILL_PAYMENT_NONE}>
                                 — Não especificado —
@@ -265,17 +274,19 @@ export function PayBillDialog({
                             ))}
                         </SelectContent>
                     </Select>
-                </div>
+                </Field>
                 {pmOption === "credit_card" ? (
-                    <div className="grid gap-2">
-                        <Label>Cartão</Label>
+                    <Field>
+                        <FieldLabel>Cartão</FieldLabel>
                         <Select value={pccId || ""} onValueChange={setPccId}>
-                            <SelectTrigger
-                                data-slot="select-trigger"
-                                className="bg-background shadow-xs"
-                            >
-                                <SelectValue placeholder="Cartão" />
-                            </SelectTrigger>
+                            <FieldControl>
+                                <SelectTrigger
+                                    data-slot="select-trigger"
+                                    className="bg-background shadow-xs"
+                                >
+                                    <SelectValue placeholder="Cartão" />
+                                </SelectTrigger>
+                            </FieldControl>
                             <SelectContent>
                                 {creditCards.map((c) => (
                                     <SelectItem key={c.id} value={c.id}>
@@ -284,16 +295,14 @@ export function PayBillDialog({
                                 ))}
                             </SelectContent>
                         </Select>
-                    </div>
+                    </Field>
                 ) : null}
-                <div className="grid gap-2">
-                    <Label htmlFor="pay-desc">Descrição no extrato</Label>
-                    <Input
-                        id="pay-desc"
-                        value={desc}
-                        onChange={(e) => setDesc(e.target.value)}
-                    />
-                </div>
+                <FormInput
+                    id="pay-desc"
+                    label="Descrição no extrato"
+                    value={desc}
+                    onChange={(e) => setDesc(e.target.value)}
+                />
                 </>
                 ) : null}
             </div>
