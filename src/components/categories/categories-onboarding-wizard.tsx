@@ -1035,6 +1035,8 @@ export function CategoriesOnboardingWizard({
 
                 {step === 2 ? (
                     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                        {/* Poço de rolagem à mão de propósito, como as duas listas do
+                            passo 1: o `overflow-hidden` do `Card` recortaria a rolagem. */}
                         <div className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain rounded-xl border border-border/50 bg-muted/10 p-2">
                         {expenseCategories.map((c) => {
                             const raw = (amountByCategoryId[c.id] ?? "").trim()

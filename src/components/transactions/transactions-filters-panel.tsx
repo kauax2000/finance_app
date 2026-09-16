@@ -5,6 +5,8 @@ import {
     Field,
     FieldControl,
     FieldLabel,
+    FieldLegend,
+    FieldSet,
 } from "@/components/ui/field"
 import type { Category, CreditCard } from "@/lib/supabase"
 import {
@@ -252,11 +254,13 @@ export function TransactionsFiltersPanel({
                                 />
                             </div>
 
-                            <div>
-                                <p className="mb-2 text-2xs font-medium text-muted-foreground">
+                            {/* O período personalizado é um grupo com título: `fieldset` +
+                                `legend`, e não uma caixa pintada sob um `<p>`. */}
+                            <FieldSet className="gap-2">
+                                <FieldLegend variant="label" className="text-2xs font-medium text-muted-foreground">
                                     Personalizado
-                                </p>
-                                <div className="rounded-xl border border-border/60 bg-muted/20 p-3 dark:bg-muted/10">
+                                </FieldLegend>
+                                <div>
                                     <TransactionsDateRangeForm
                                         idPrefix={periodIdPrefix}
                                         draftFrom={periodDraftFrom}
@@ -278,7 +282,7 @@ export function TransactionsFiltersPanel({
                                         showCancel={false}
                                     />
                                 </div>
-                            </div>
+                            </FieldSet>
                         </div>
                     </FilterSection>
 
@@ -419,6 +423,9 @@ export function TransactionsFiltersPanel({
                                 </div>
                             </div>
 
+                            {/* A busca e o poço de rolagem abaixo ficam à mão de propósito:
+                                o poço rola, e o `overflow-hidden` do `Card` recorta a
+                                rolagem e o anel de foco das caixas de dentro. */}
                             <div className="rounded-xl border border-border/60 bg-muted/10 p-3 dark:bg-muted/10">
                                 <SearchInput
                                     placeholder="Buscar cartão…"

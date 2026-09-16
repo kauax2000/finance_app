@@ -55,7 +55,7 @@ function CardSkeleton({ seed }: { seed: number }) {
                 <Skeleton className="h-6 w-16 shrink-0 rounded-full" />
             </div>
             <CardContent className="space-y-3 px-4 pb-4 pt-3">
-                <div className="rounded-lg border border-border/60 bg-muted/15 px-3 py-2.5">
+                <div>
                     <Skeleton className="h-3 w-24" />
                     <Skeleton className="mt-2 h-7 w-28 tabular-nums" />
                     <Skeleton className="mt-2 h-3 w-[min(100%,14rem)] max-w-full" />

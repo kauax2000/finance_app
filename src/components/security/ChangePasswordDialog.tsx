@@ -2,6 +2,9 @@
 
 import { useTimeout } from "@/hooks/use-timeout"
 import {
+    Card,
+} from "@/components/ui/card"
+import {
     Field,
     FieldControl,
     FieldLabel,
@@ -238,14 +241,14 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                 </InputGroup>
 
                 {newPassword.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-1.5 rounded-lg border border-border/80 bg-muted/20 p-3">
+                    <Card variant="muted" padding="sm" className="grid grid-cols-2 gap-1.5 px-3">
                         <ReqRow met={passwordRequirements.hasMinLength} label="8+ caracteres" />
                         <ReqRow met={passwordRequirements.hasLowercase} label="minúscula" />
                         <ReqRow met={passwordRequirements.hasUppercase} label="maiúscula" />
                         <ReqRow met={passwordRequirements.hasDigit} label="número" />
                         <ReqRow met={passwordRequirements.hasSymbol} label="símbolo" />
                         <ReqRow met={passwordIsValid} label="senha forte" />
-                    </div>
+                    </Card>
                 ) : null}
             </Field>
 

@@ -2,6 +2,12 @@
 
 import { createElement } from "react"
 import {
+    Item,
+    ItemContent,
+    ItemDescription,
+    ItemMedia,
+} from "@/components/ui/item"
+import {
     Field,
     FieldControl,
     FieldLabel,
@@ -49,17 +55,21 @@ export function WorkspaceAppearanceFormFields({
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
-                <WorkspaceBrandMark
-                    iconKey={icon}
-                    backgroundColor={previewColor}
-                    className="size-10 rounded-lg"
-                    iconClassName="size-5"
-                />
-                <p className="text-xs text-muted-foreground leading-snug">
-                    {previewHint}
-                </p>
-            </div>
+            <Item variant="muted" size="md" className="gap-3">
+                <ItemMedia>
+                    <WorkspaceBrandMark
+                        iconKey={icon}
+                        backgroundColor={previewColor}
+                        className="size-10 rounded-lg"
+                        iconClassName="size-5"
+                    />
+                </ItemMedia>
+                <ItemContent>
+                    <ItemDescription className="text-xs leading-snug text-muted-foreground">
+                        {previewHint}
+                    </ItemDescription>
+                </ItemContent>
+            </Item>
 
             <Field>
                 <div className="flex items-baseline justify-between gap-2">

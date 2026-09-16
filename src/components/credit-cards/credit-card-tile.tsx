@@ -215,7 +215,7 @@ export function CreditCardTileSkeleton() {
                 </div>
                 <CardContent className="min-w-0 flex-1 space-y-3 border-0 p-0">
                     <div className="flex flex-col gap-2">
-                        <div className="rounded-lg border border-border/60 bg-muted/15 px-2.5 py-2 dark:bg-muted/10">
+                        <div>
                             <Skeleton className="h-2.5 w-[min(100%,11rem)] max-w-full" />
                             <Skeleton className="mt-0.5 h-6 w-36 max-w-[min(100%,55%)] tabular-nums" />
                         </div>

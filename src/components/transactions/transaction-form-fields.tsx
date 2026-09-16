@@ -616,6 +616,8 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                 {showInstallmentFields &&
                 segmentMode === "edit" &&
                 !planIsActive ? (
+                    // À mão de propósito: ocupa o lugar do seletor de data e imita a
+                    // superfície dele, sem ser controle.
                     <p
                         id="tx-date"
                         className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2 text-sm text-muted-foreground"

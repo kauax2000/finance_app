@@ -335,7 +335,7 @@ function DashboardInvoicesSkeleton() {
                                     </div>
                                     <Skeleton className="h-3 w-40 max-w-full rounded-md" />
                                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:items-stretch">
-                                        <div className="space-y-2 rounded-lg border border-border/70 bg-muted/10 p-3 dark:bg-muted/5">
+                                        <div className="space-y-2">
                                             <div className="flex flex-col gap-2 min-[480px]:flex-row min-[480px]:items-baseline min-[480px]:justify-between">
                                                 <Skeleton className="h-3 w-24 rounded-md" />
                                                 <Skeleton className="h-7 w-28 rounded-md min-[480px]:ml-auto" />

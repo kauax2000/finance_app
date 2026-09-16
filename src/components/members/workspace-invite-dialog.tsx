@@ -2,6 +2,15 @@
 
 import { useTimeout } from "@/hooks/use-timeout"
 import {
+    Card,
+} from "@/components/ui/card"
+import {
+    Item,
+    ItemActions,
+    ItemContent,
+    ItemMedia,
+} from "@/components/ui/item"
+import {
     Field,
     FieldControl,
     FieldLabel,
@@ -336,7 +345,7 @@ export function WorkspaceInviteDialog({
                                             </Field>
                                         </CustomForm>
 
-                                        <div className="space-y-2 rounded-lg border bg-muted/20 p-3">
+                                        <Card variant="muted" padding="sm" className="gap-2 px-3">
                                             <div className="flex items-center gap-2">
                                                 <LinkIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
                                                 <p className="text-sm font-medium">Link de convite</p>
@@ -440,7 +449,7 @@ export function WorkspaceInviteDialog({
                                                     )}
                                                 </Button>
                                             )}
-                                        </div>
+                                        </Card>
 
                                         {invites.filter((i) => i.invited_email != null).length > 0 ? (
                                             <div className="grid gap-2">
@@ -450,18 +459,16 @@ export function WorkspaceInviteDialog({
                                                 {invites
                                                     .filter((invite) => invite.invited_email != null)
                                                     .map((invite) => (
-                                                        <div
-                                                            key={invite.id}
-                                                            className="rounded-lg border bg-muted/20 p-2"
-                                                        >
-                                                            <div className="flex flex-wrap items-center justify-between gap-2">
-                                                                <div className="flex min-w-0 items-center gap-2">
-                                                                    <EnvelopeIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                                                    <span className="truncate text-sm">
+                                                        <Item key={invite.id} variant="outline" size="sm">
+                                                            <ItemMedia variant="icon">
+                                                                <EnvelopeIcon className="text-muted-foreground" />
+                                                            </ItemMedia>
+                                                            <ItemContent className="min-w-0">
+                                                                <span className="truncate">
                                                                         {invite.invited_email}
-                                                                    </span>
-                                                                </div>
-                                                                <div className="flex gap-1">
+                                                                </span>
+                                                            </ItemContent>
+                                                            <ItemActions className="gap-1">
                                                                     <Button
     aria-label={`Reenviar convite para ${invite.invited_email}`}
                                                                         type="button"
@@ -493,9 +500,8 @@ export function WorkspaceInviteDialog({
                                                                     >
                                                                         Revogar
                                                                     </Button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                                                            </ItemActions>
+                                                        </Item>
                                                     ))}
                                             </div>
                                         ) : null}
@@ -564,7 +570,7 @@ export function WorkspaceInviteDialog({
                                         </Field>
                                     </CustomForm>
 
-                                    <div className="space-y-2 rounded-lg border bg-muted/20 p-3">
+                                    <Card variant="muted" padding="sm" className="gap-2 px-3">
                                         <div className="flex items-center gap-2">
                                             <LinkIcon className="h-4 w-4 text-muted-foreground shrink-0" />
                                             <p className="text-sm font-medium">Link de convite</p>
@@ -673,7 +679,7 @@ export function WorkspaceInviteDialog({
                                                 )}
                                             </Button>
                                         )}
-                                    </div>
+                                    </Card>
 
                                     {invites.filter((i) => i.invited_email != null).length > 0 ? (
                                         <div className="grid gap-2">
@@ -683,18 +689,16 @@ export function WorkspaceInviteDialog({
                                             {invites
                                                 .filter((invite) => invite.invited_email != null)
                                                 .map((invite) => (
-                                                    <div
-                                                        key={invite.id}
-                                                        className="rounded-lg border bg-muted/20 p-2"
-                                                    >
-                                                        <div className="flex flex-wrap items-center justify-between gap-2">
-                                                            <div className="flex min-w-0 items-center gap-2">
-                                                                <EnvelopeIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                                                <span className="truncate text-sm">
+                                                    <Item key={invite.id} variant="outline" size="sm">
+                                                        <ItemMedia variant="icon">
+                                                            <EnvelopeIcon className="text-muted-foreground" />
+                                                        </ItemMedia>
+                                                        <ItemContent className="min-w-0">
+                                                            <span className="truncate">
                                                                     {invite.invited_email}
-                                                                </span>
-                                                            </div>
-                                                            <div className="flex gap-1">
+                                                            </span>
+                                                        </ItemContent>
+                                                        <ItemActions className="gap-1">
                                                                 <Button
     aria-label={`Reenviar convite para ${invite.invited_email}`}
                                                                     type="button"
@@ -734,9 +738,8 @@ export function WorkspaceInviteDialog({
                                                                 >
                                                                     Revogar
                                                                 </Button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                                        </ItemActions>
+                                                    </Item>
                                                 ))}
                                         </div>
                                     ) : null}

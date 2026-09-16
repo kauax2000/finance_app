@@ -1,6 +1,9 @@
 "use client"
 
 import { useTimeout } from "@/hooks/use-timeout"
+import {
+    Item,
+} from "@/components/ui/item"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/providers"
@@ -256,9 +259,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                 <ul className="flex list-none flex-col gap-2" role="list">
                     {DATA_LOSS_ITEMS.map((item) => (
                         <li key={item}>
-                            <div className="rounded-lg border border-border/80 bg-muted/20 px-3 py-2.5 text-sm text-foreground">
-                                {item}
-                            </div>
+                            <Item variant="outline">{item}</Item>
                         </li>
                     ))}
                 </ul>
