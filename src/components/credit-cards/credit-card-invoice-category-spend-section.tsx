@@ -1,10 +1,16 @@
 "use client"
 
+import { ChartTooltip } from "@/components/ui/chart"
 import { percentPointsBR } from "@/lib/formatters"
 import Link from "next/link"
 import { ChevronRightIcon } from "@heroicons/react/16/solid"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts"
+import {
+    Cell,
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+} from "recharts"
 import {
     CategoryIconPreview,
     normalizeCategoryIcon,
@@ -228,7 +234,7 @@ export function CreditCardInvoiceCategorySpendSection({
                                                 />
                                             ))}
                                         </Pie>
-                                        <Tooltip content={<CategoryPieTooltip />} />
+                                        <ChartTooltip content={<CategoryPieTooltip />} />
                                     </PieChart>
                                 </ResponsiveContainer>
                                 <div

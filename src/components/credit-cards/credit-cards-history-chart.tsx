@@ -1,5 +1,9 @@
 "use client"
 
+import {
+    ChartTooltip,
+    chartSeriesColor,
+} from "@/components/ui/chart"
 import { CreditCardIcon } from "@heroicons/react/16/solid"
 import { formatYearMonthShortPtBr } from "@/lib/transaction-date"
 import { currencyBRL, currencyCompactBRL } from "@/lib/formatters"
@@ -10,7 +14,6 @@ import {
     CartesianGrid,
     XAxis,
     YAxis,
-    Tooltip,
     Bar,
 } from "recharts"
 
@@ -30,13 +33,11 @@ import {
  * sem dizer nada sobre estado. Eram seis hex que não acompanhavam o tema.
  * O acesso é por módulo, então o número de faixas não precisa bater.
  */
-const BAR_COLORS = [
-    "var(--chart-1)",
-    "var(--chart-2)",
-    "var(--chart-3)",
-    "var(--chart-4)",
-    "var(--chart-5)",
-]
+/**
+ * A rampa é do sistema, e o `% 5` que morava aqui mentia: com seis cartões,
+ * o sexto saía com a cor do primeiro. `chartSeriesColor` devolve
+ * `--muted-foreground` do sexto em diante, que é dizer "este não é dos cinco".
+ */
 
 /** O que `hexToRgba` fazia, sem exigir que a cor seja hex. */
 function alpha(color: string, pct: number): string {
@@ -109,7 +110,7 @@ function CreditCardsHistoryTooltip({
                     const num = typeof v === "number" ? v : 0
                     const openKey = `${c.id}_open`
                     const isOpen = row[openKey] === true
-                    const color = BAR_COLORS[idx % BAR_COLORS.length]
+                    const color = chartSeriesColor(idx)
                     return (
                         <li
                             key={c.id}
@@ -146,7 +147,7 @@ function LegendStrip({ cards }: { cards: CreditCardRow[] }) {
     return (
         <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
             {cards.map((c, idx) => {
-                const color = BAR_COLORS[idx % BAR_COLORS.length]
+                const color = chartSeriesColor(idx)
                 return (
                     <span
                         key={c.id}
@@ -362,7 +363,7 @@ export function CreditCardsHistoryChart({
                                         domain={yDomain}
                                         tickFormatter={(v) => currencyCompactBRL(Number(v))}
                                     />
-                                    <Tooltip
+                                    <ChartTooltip
                                         content={
                                             <CreditCardsHistoryTooltip cards={cards} />
                                         }
@@ -371,7 +372,7 @@ export function CreditCardsHistoryChart({
                                         }}
                                     />
                                     {cards.map((c, idx) => {
-                                        const color = BAR_COLORS[idx % BAR_COLORS.length]
+                                        const color = chartSeriesColor(idx)
                                         return (
                                             <Bar
                                                 key={c.id}

@@ -144,7 +144,6 @@ export function BillHistoryAnalytics({ instances }: { instances: BillInstance[] 
             <div className="rounded-xl border border-border/80 bg-card p-2 sm:p-3">
                 <ChartContainer config={chartCfg} className="aspect-[16/10] md:aspect-video">
                     <ComposedChart
-                        accessibilityLayer={false}
                         data={chartData}
                         margin={{ left: -8, right: 8 }}
                     >

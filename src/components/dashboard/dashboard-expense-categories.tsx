@@ -1,6 +1,9 @@
 "use client"
 
-import { chartSeriesColor } from "@/components/ui/chart"
+import {
+    ChartTooltip,
+    chartSeriesColor,
+} from "@/components/ui/chart"
 import {
     EmptyState,
     EmptyStateDescription,
@@ -18,7 +21,6 @@ import {
     PieChart,
     Pie,
     Cell,
-    Tooltip,
 } from "recharts"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -302,7 +304,7 @@ export function DashboardExpenseCategories({
                                                         />
                                                     ))}
                                                 </Pie>
-                                                <Tooltip
+                                                <ChartTooltip
                                                     content={<CategoryTooltip />}
                                                 />
                                             </PieChart>
