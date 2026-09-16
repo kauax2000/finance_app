@@ -1,6 +1,9 @@
 "use client"
 
 import { currencyBRL } from "@/lib/formatters"
+import {
+    Card,
+} from "@/components/ui/card"
 import { useEffect, useMemo, useState } from "react"
 import type {
     Category,
@@ -285,7 +288,8 @@ export function TransactionDetailSheet({
             </div>
 
             <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-4 sm:px-5">
-                <section className="space-y-3 rounded-xl border border-border/70 bg-muted/20 p-4 dark:bg-muted/10">
+                <Card asChild variant="muted" className="gap-3 px-4">
+                <section>
                     <div className="flex items-start justify-between gap-3">
                         <SectionLabel className="shrink-0">Resumo</SectionLabel>
                         <p className="shrink-0 text-right text-xs tabular-nums text-muted-foreground">
@@ -318,6 +322,7 @@ export function TransactionDetailSheet({
                         ) : null}
                     </div>
                 </section>
+                </Card>
 
                 <section className="space-y-3">
                     <SectionLabel>Detalhes</SectionLabel>

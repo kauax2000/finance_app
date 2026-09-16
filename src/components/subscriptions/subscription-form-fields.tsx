@@ -2,6 +2,10 @@
 
 import { paymentMethodOptions } from "@/lib/payment-methods"
 import {
+    EmptyState,
+    EmptyStateDescription,
+} from "@/components/ui/empty-state"
+import {
     Field,
     FieldControl,
     FieldDescription,
@@ -236,16 +240,18 @@ export function SubscriptionFormFields({
                         <FieldLabel>Cartão de crédito</FieldLabel>
                     )}
                     {cardSelectOptions.length === 0 ? (
-                        <p className="rounded-lg border border-dashed border-border/80 bg-muted/20 px-3 py-2.5 text-xs text-muted-foreground">
-                            Cadastre um cartão em{" "}
-                            <Link
-                                href={creditCardsHref}
-                                className="font-medium text-foreground underline-offset-2 hover:underline"
-                            >
-                                Cartões de crédito
-                            </Link>{" "}
-                            para vincular esta assinatura.
-                        </p>
+                        <EmptyState size="sm">
+                            <EmptyStateDescription>
+                                Cadastre um cartão em{" "}
+                                <Link
+                                    href={creditCardsHref}
+                                    className="font-medium text-foreground underline-offset-2 hover:underline"
+                                >
+                                    Cartões de crédito
+                                </Link>{" "}
+                                para vincular esta assinatura.
+                            </EmptyStateDescription>
+                        </EmptyState>
                     ) : (
                         <Select
                             value={

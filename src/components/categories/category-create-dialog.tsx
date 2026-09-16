@@ -1,6 +1,9 @@
 "use client"
 
 import * as React from "react"
+import {
+    Card,
+} from "@/components/ui/card"
 import { useRouter } from "next/navigation"
 import type { User } from "@supabase/supabase-js"
 import {
@@ -199,7 +202,7 @@ export function CategoryCreateDialog({
             />
 
             {type === "expense" ? (
-                <div className="space-y-3 rounded-lg border border-border/60 bg-muted/20 p-3">
+                <Card variant="muted" padding="sm" className="px-3">
                     <p className="text-xs text-muted-foreground">
                         Limite de despesas para {dialogBudgetPeriod.period_start} a{" "}
                         {dialogBudgetPeriod.period_end}.
@@ -211,7 +214,7 @@ export function CategoryCreateDialog({
                         value={editBudgetAmount}
                         onValueChange={setEditBudgetAmount}
                     />
-                </div>
+                </Card>
             ) : null}
         </div>
     )

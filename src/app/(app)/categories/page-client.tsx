@@ -609,7 +609,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             />
 
             {type === "expense" ? (
-                <div className="space-y-3 rounded-lg border border-border/60 bg-muted/20 p-3">
+                <Card variant="muted" padding="sm" className="px-3">
                     <p className="text-xs text-muted-foreground">
                         Limite de despesas para {dialogBudgetPeriod.period_start} a{" "}
                         {dialogBudgetPeriod.period_end}.
@@ -632,7 +632,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                             {editBudgetRemoving ? "Removendo…" : "Remover orçamento"}
                         </Button>
                     ) : null}
-                </div>
+                </Card>
             ) : null}
         </div>
     )

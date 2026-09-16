@@ -2,6 +2,9 @@
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
+    Card,
+} from "@/components/ui/card"
+import {
   Sheet,
   SheetContent,
 } from "@/components/ui/sheet"
@@ -123,7 +126,7 @@ export function CategoryDetailDialogs({
                 onIconChange={onEditIconChange}
             />
             {editType === "expense" ? (
-                <div className="space-y-3 rounded-lg border border-border/60 bg-muted/20 p-3">
+                <Card variant="muted" padding="sm" className="px-3">
                     <p className="text-xs text-muted-foreground">
                         Limite de despesas para {periodStart} a {periodEnd}.
                     </p>
@@ -145,7 +148,7 @@ export function CategoryDetailDialogs({
                             {editBudgetRemoving ? "Removendo…" : "Remover orçamento"}
                         </Button>
                     ) : null}
-                </div>
+                </Card>
             ) : null}
         </div>
     )

@@ -1,6 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import {
+    Card,
+} from "@/components/ui/card"
 import { FormInput } from "@/components/ui/form"
 import { useWorkspace } from "@/components/workspace-provider"
 import { Button } from "@/components/ui/button"
@@ -157,7 +160,7 @@ export function WorkspaceDeleteDialog({
             ) : impactError ? (
                 <p className="text-sm text-destructive">{impactError}</p>
             ) : (
-                <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm">
+                <Card variant="muted" padding="none" className="px-3 py-2">
                     <p className="font-medium text-foreground">Resumo nesta carteira</p>
                     <ul className="mt-2 space-y-1 text-muted-foreground">
                         <li>
@@ -173,7 +176,7 @@ export function WorkspaceDeleteDialog({
                             <span className="tabular-nums text-foreground">{categories}</span>
                         </li>
                     </ul>
-                </div>
+                </Card>
             )}
 
             <FormInput

@@ -121,7 +121,7 @@ export default function PlansPage() {
                                     enquanto.
                                 </p>
                             </div>
-                            <div className="mx-auto w-full max-w-md space-y-3 rounded-lg border border-border/80 bg-muted/20 p-4 sm:p-4">
+                            <Card variant="muted" className="mx-auto w-full max-w-md gap-3 px-4">
                                 <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                                     <WrenchIcon className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
                                     Em andamento neste momento
@@ -140,7 +140,7 @@ export default function PlansPage() {
                                         </li>
                                     ))}
                                 </ul>
-                            </div>
+                            </Card>
                         </div>
                         <CardNote>
                             <InformationCircleIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />

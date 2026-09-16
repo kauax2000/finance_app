@@ -2,6 +2,10 @@
 
 import { deleteCategoryById } from "@/lib/categories/mutations"
 import {
+    EmptyState,
+    EmptyStateDescription,
+} from "@/components/ui/empty-state"
+import {
     Field,
     FieldControl,
     FieldLabel,
@@ -987,10 +991,12 @@ export function CategoriesOnboardingWizard({
                         </div>
 
                         {localCategories.length === 0 ? (
-                            <p className="shrink-0 rounded-lg border border-dashed border-border/80 bg-muted/15 px-3 py-4 text-center text-xs text-muted-foreground">
-                                Nenhuma categoria. Use &quot;Adicionar categoria&quot; para criar receitas e
-                                despesas.
-                            </p>
+                            <EmptyState size="sm" className="shrink-0">
+                                <EmptyStateDescription>
+                                    Nenhuma categoria. Use &quot;Adicionar categoria&quot; para criar receitas e
+                                    despesas.
+                                </EmptyStateDescription>
+                            </EmptyState>
                         ) : (
                             <DialogBody className="pr-0.5">
                                 <div className="space-y-4 pb-1">
@@ -1009,10 +1015,12 @@ export function CategoriesOnboardingWizard({
                                             Despesas
                                         </p>
                                         {expenseCategories.length === 0 ? (
-                                            <p className="rounded-lg border border-dashed border-border/80 bg-muted/15 px-3 py-4 text-center text-xs text-muted-foreground">
-                                                Nenhuma categoria de despesa. Adicione ao menos uma para
-                                                continuar.
-                                            </p>
+                                            <EmptyState size="sm">
+                                                <EmptyStateDescription>
+                                                    Nenhuma categoria de despesa. Adicione ao menos uma para
+                                                    continuar.
+                                                </EmptyStateDescription>
+                                            </EmptyState>
                                         ) : (
                                             <div className="space-y-2 rounded-xl border border-border/50 bg-muted/10 p-2">
                                                 {expenseCategories.map((c) => renderCategoryRow(c))}

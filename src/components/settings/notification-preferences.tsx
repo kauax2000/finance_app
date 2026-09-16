@@ -16,7 +16,11 @@ import {
 import { ArrowRightIcon } from "@heroicons/react/16/solid"
 import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Alert, AlertTitle } from "@/components/ui/alert"
+import {
+    Alert,
+    AlertDescription,
+    AlertTitle,
+} from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import { useAuth } from "@/components/providers"
@@ -209,10 +213,12 @@ export function NotificationPreferences() {
                 <CardContent className="flex flex-col p-0">
                     {showNoWorkspaceMessage ? (
                         <div className="px-4 py-4">
-                            <div className="rounded-xl border border-border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
-                                Selecione uma carteira na barra lateral para ajustar notificações
-                                desse espaço.
-                            </div>
+                            <Alert>
+                                <AlertDescription>
+                                    Selecione uma carteira na barra lateral para ajustar notificações
+                                    desse espaço.
+                                </AlertDescription>
+                            </Alert>
                         </div>
                     ) : null}
                     {error ? (

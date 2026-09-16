@@ -1,6 +1,9 @@
 "use client"
 
 import { SectionLabel } from "@/components/transactions/installment-purchase-section"
+import {
+    Card,
+} from "@/components/ui/card"
 import { currencyBRL } from "@/lib/formatters"
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
@@ -346,7 +349,8 @@ export function SubscriptionDetailSheet({
             </div>
 
             <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-4 sm:px-5">
-                <section className="space-y-3 rounded-xl border border-border/70 bg-muted/20 p-4 dark:bg-muted/10">
+                <Card asChild variant="muted" className="gap-3 px-4">
+                <section>
                     <div className="flex items-center justify-between gap-3">
                         <SectionLabel className="shrink-0">Resumo</SectionLabel>
                         <div
@@ -403,6 +407,7 @@ export function SubscriptionDetailSheet({
                         </p>
                     </div>
                 </section>
+                </Card>
 
                 <section className="space-y-3">
                     <SectionLabel>Detalhes</SectionLabel>

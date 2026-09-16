@@ -8,6 +8,10 @@ import {
 } from "@/components/ui/empty-state"
 import { MembersSectionSkeleton } from "@/components/members/members-section-skeleton"
 import {
+    Alert,
+    AlertDescription,
+} from "@/components/ui/alert"
+import {
     Field,
     FieldControl,
     FieldLabel,
@@ -769,9 +773,11 @@ export default function MembersPage() {
                         <PageSectionTitle>Convidar</PageSectionTitle>
                     </PageSectionHeader>
                     {!canManageMembers ? (
-                        <div className="rounded-xl border border-border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
-                            Apenas o proprietário da carteira pode enviar convites.
-                        </div>
+                        <Alert>
+                            <AlertDescription>
+                                Apenas o proprietário da carteira pode enviar convites.
+                            </AlertDescription>
+                        </Alert>
                     ) : null}
                     <Card padding="none">
                         <CardContent className="flex flex-col p-0">

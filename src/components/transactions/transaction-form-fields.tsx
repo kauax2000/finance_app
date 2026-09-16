@@ -2,6 +2,10 @@
 
 import { useMemo, useState } from "react"
 import {
+    EmptyState,
+    EmptyStateDescription,
+} from "@/components/ui/empty-state"
+import {
     Field,
     FieldControl,
     FieldLabel,
@@ -495,13 +499,10 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                         }
                         placeholder="12"
                         className="text-sm tabular-nums"
+                        // A prévia das parcelas descreve este campo: como descrição
+                        // ela é anunciada com ele, e não uma caixa solta abaixo.
+                        description={installmentPreview || undefined}
                     />
-
-                    {installmentPreview ? (
-                        <p className="rounded-lg border border-border/60 bg-muted/25 px-3 py-2 text-xs text-muted-foreground">
-                            {installmentPreview}
-                        </p>
-                    ) : null}
                 </>
             ) : (
                 <FormInput
@@ -664,16 +665,18 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                                 <FieldLabel htmlFor="tx-credit-card">Cartão</FieldLabel>
                             )}
                             {activeCards.length === 0 ? (
-                                <p className="rounded-lg border border-dashed border-border/80 bg-muted/20 px-3 py-2.5 text-xs text-muted-foreground">
-                                    Cadastre um cartão em{" "}
-                                    <Link
-                                        href={creditCardsHref}
-                                        className="font-medium text-foreground underline-offset-2 hover:underline"
-                                    >
-                                        Cartões de crédito
-                                    </Link>{" "}
-                                    para vincular esta despesa.
-                                </p>
+                                <EmptyState size="sm">
+                                    <EmptyStateDescription>
+                                        Cadastre um cartão em{" "}
+                                        <Link
+                                            href={creditCardsHref}
+                                            className="font-medium text-foreground underline-offset-2 hover:underline"
+                                        >
+                                            Cartões de crédito
+                                        </Link>{" "}
+                                        para vincular esta despesa.
+                                    </EmptyStateDescription>
+                                </EmptyState>
                             ) : (
                                 <Popover
                                     modal={isMobile}
