@@ -756,7 +756,7 @@ export function useTransactionsListController(
             } else {
                 const { data, error } = await supabase
                     .from("transactions")
-                    .select("*")
+                    .select("amount, category_id, created_at, date, description, id, installment_plan_id, installment_sequence, is_recurring, payment_credit_card_id, payment_method, recurring_interval, subscription_id, type, updated_at, user_id, workspace_id")
                     .eq("id", txnParam)
                     .eq("workspace_id", currentWorkspaceId)
                     .maybeSingle()

@@ -36,7 +36,7 @@ export async function fetchPendingBillInstancesForDashboard(
     if (res.error) {
         const raw = await supabase
             .from("bill_instances")
-            .select("*")
+            .select("amount, bill_id, created_at, due_date, id, notes, paid_amount, paid_at, payment_credit_card_id, payment_method, status, transaction_id, updated_at, user_id, workspace_id")
             .eq("workspace_id", workspaceId)
             .eq("status", "pending")
             .order("due_date", { ascending: true })

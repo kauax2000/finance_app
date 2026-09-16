@@ -1,5 +1,6 @@
 "use client"
 
+import { useTimeout } from "@/hooks/use-timeout"
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy"
 import { useState } from "react"
 import { useAuth } from "@/components/providers"
@@ -86,6 +87,7 @@ function ReqRow({
 export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialogProps) {
     const isMobile = useIsMobile()
     const { user } = useAuth()
+    const later = useTimeout()
     const [loading, setLoading] = useState(false)
     const [showCurrentPassword, setShowCurrentPassword] = useState(false)
     const [showNewPassword, setShowNewPassword] = useState(false)
@@ -167,7 +169,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
             }
 
             setSuccess(true)
-            setTimeout(() => {
+            later(() => {
                 handleOpenChange(false)
             }, 2000)
         } catch {

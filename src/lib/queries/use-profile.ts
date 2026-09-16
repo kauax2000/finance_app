@@ -11,7 +11,7 @@ export function useProfileQuery(userId: string | undefined) {
             if (!userId) return null
             const { data, error } = await supabase
                 .from("profiles")
-                .select("*")
+                .select("avatar_color, avatar_url, created_at, email, full_name, id, updated_at")
                 .eq("id", userId)
                 .maybeSingle()
             if (error) throw new Error(error.message)

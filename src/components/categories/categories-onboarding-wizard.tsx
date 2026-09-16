@@ -360,7 +360,7 @@ export function CategoriesOnboardingWizard({
                     color: addColor,
                     icon: addIcon,
                 })
-                .select("*")
+                .select("color, created_at, icon, id, name, type, updated_at, user_id, workspace_id")
 
             const row = data?.[0] as Category | undefined
 

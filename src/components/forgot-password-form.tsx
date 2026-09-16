@@ -1,5 +1,6 @@
 "use client"
 
+import { useTimeout } from "@/hooks/use-timeout"
 import { ROUTES } from "@/config/navigation"
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy"
 import { useState } from "react"
@@ -23,6 +24,7 @@ interface FieldErrors {
 
 export function ForgotPasswordForm() {
     const router = useRouter()
+    const later = useTimeout()
     const [email, setEmail] = useState("")
     const [token, setToken] = useState("")
     const [password, setPassword] = useState("")
@@ -139,7 +141,7 @@ export function ForgotPasswordForm() {
             } else {
                 setSuccess(true)
                 setLoading(false)
-                setTimeout(() => {
+                later(() => {
                     router.push(ROUTES.LOGIN)
                 }, 3000)
             }

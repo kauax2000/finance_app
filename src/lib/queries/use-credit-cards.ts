@@ -12,7 +12,7 @@ export function useCreditCardsQuery(workspaceId: string | null) {
             if (!workspaceId) return []
             const { data, error } = await supabase
                 .from("credit_cards")
-                .select("*")
+                .select("brand, closing_day, created_at, credit_limit, due_day, expiry_month, expiry_year, id, is_active, last_four, name, updated_at, user_id, workspace_id")
                 .eq("workspace_id", workspaceId)
                 .order("name")
             if (error && isPostgrestRelationMissingError(error)) return []

@@ -54,7 +54,7 @@ export type DatabaseDriftChecks = [
     Expect<SameColumns<Tables<"workspaces">, Workspace>>,
     Expect<SameColumns<Tables<"budgets">, Budget, "client_id">>,
     Expect<SameColumns<Tables<"workspace_members">, WorkspaceMember, never, "workspace">>,
-    Expect<SameColumns<Tables<"workspace_invites">, WorkspaceInvite>>,
+    Expect<SameColumns<Tables<"workspace_invites">, WorkspaceInvite, "token_hash">>,
     Expect<SameColumns<Tables<"profiles">, Profile>>,
     Expect<SameColumns<Tables<"user_sessions">, Session, "auth_session_id" | "device_fingerprint" | "device_id" | "token_hash">>,
 ]

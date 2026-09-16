@@ -1,5 +1,6 @@
 "use client"
 
+import { useTimeout } from "@/hooks/use-timeout"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/providers"
@@ -55,6 +56,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
     const isMobile = useIsMobile()
     const { user, deleteAccount } = useAuth()
     const router = useRouter()
+    const later = useTimeout()
     const [step, setStep] = useState<"warning" | "confirm">("warning")
     const [confirmEmail, setConfirmEmail] = useState("")
     const [password, setPassword] = useState("")
@@ -142,7 +144,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
         setSuccess(true)
         setLoading(false)
 
-        setTimeout(() => {
+        later(() => {
             router.push("/")
             router.refresh()
         }, 2000)

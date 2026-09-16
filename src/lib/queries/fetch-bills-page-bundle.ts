@@ -112,13 +112,13 @@ async function fetchBillsPageBundleLegacy(
     const [pendingRes, paidRes] = await Promise.all([
         supabase
             .from("bill_instances")
-            .select("*")
+            .select("amount, bill_id, created_at, due_date, id, notes, paid_amount, paid_at, payment_credit_card_id, payment_method, status, transaction_id, updated_at, user_id, workspace_id")
             .eq("workspace_id", workspaceId)
             .eq("status", "pending")
             .order("due_date", { ascending: true }),
         supabase
             .from("bill_instances")
-            .select("*")
+            .select("amount, bill_id, created_at, due_date, id, notes, paid_amount, paid_at, payment_credit_card_id, payment_method, status, transaction_id, updated_at, user_id, workspace_id")
             .eq("workspace_id", workspaceId)
             .eq("status", "paid")
             .gte("due_date", since)
@@ -142,12 +142,12 @@ async function fetchBillsPageBundleLegacy(
     const [cats, cards, ccPack, plans, invPay] = await Promise.all([
         supabase
             .from("categories")
-            .select("*")
+            .select("color, created_at, icon, id, name, type, updated_at, user_id, workspace_id")
             .eq("workspace_id", workspaceId)
             .order("name"),
         supabase
             .from("credit_cards")
-            .select("*")
+            .select("brand, closing_day, created_at, credit_limit, due_day, expiry_month, expiry_year, id, is_active, last_four, name, updated_at, user_id, workspace_id")
             .eq("workspace_id", workspaceId)
             .order("name"),
         supabase
@@ -159,11 +159,11 @@ async function fetchBillsPageBundleLegacy(
             .order("date", { ascending: false }),
         supabase
             .from("workspace_installment_plans")
-            .select("*")
+            .select("billing_anchor_day, category_id, created_at, description, final_installment_amount, generated_count, id, installment_amount, is_active, next_billing_date, payment_credit_card_id, payment_method, total_installments, updated_at, user_id, workspace_id")
             .eq("workspace_id", workspaceId),
         supabase
             .from("credit_card_invoice_payments")
-            .select("*")
+            .select("created_at, created_by, credit_card_id, id, paid_at, statement_close_date, status, updated_at, workspace_id")
             .eq("workspace_id", workspaceId),
     ])
 
@@ -255,7 +255,7 @@ export async function fetchBillDetailBundle(
 
     const { data: inst, error: iErr } = await supabase
         .from("bill_instances")
-        .select("*")
+        .select("amount, bill_id, created_at, due_date, id, notes, paid_amount, paid_at, payment_credit_card_id, payment_method, status, transaction_id, updated_at, user_id, workspace_id")
         .eq("workspace_id", workspaceId)
         .eq("bill_id", billId)
         .order("due_date", { ascending: false })

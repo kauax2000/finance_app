@@ -226,7 +226,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             const [budRes, txRes, plansRes, subsRes, cardsRes] = await Promise.all([
                 supabase
                     .from("budgets")
-                    .select("*")
+                    .select("amount, category_id, created_at, id, month, period_end, period_start, threshold_100_sent_at, threshold_80_sent_at, threshold_over_sent_at, updated_at, user_id, workspace_id, year")
                     .eq("workspace_id", currentWorkspaceId)
                     .eq("period_start", period_start),
                 supabase
@@ -240,12 +240,12 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                     .lte("date", `${padEnd}T23:59:59.999Z`),
                 supabase
                     .from("workspace_installment_plans")
-                    .select("*")
+                    .select("billing_anchor_day, category_id, created_at, description, final_installment_amount, generated_count, id, installment_amount, is_active, next_billing_date, payment_credit_card_id, payment_method, total_installments, updated_at, user_id, workspace_id")
                     .eq("workspace_id", currentWorkspaceId)
                     .order("next_billing_date", { ascending: true }),
                 supabase
                     .from("workspace_subscriptions")
-                    .select("*")
+                    .select("amount, billing_anchor_day, billing_interval, category_id, created_at, currency, day_of_month, id, is_active, name, next_billing_date, notes, payment_credit_card_id, payment_method, start_date, updated_at, user_id, workspace_id")
                     .eq("workspace_id", currentWorkspaceId)
                     .order("name", { ascending: true }),
                 supabase

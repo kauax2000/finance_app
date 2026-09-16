@@ -1,5 +1,6 @@
 "use client"
 
+import { useTimeout } from "@/hooks/use-timeout"
 import { ROUTES } from "@/config/navigation"
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy"
 import { useState, useEffect, Suspense } from "react"
@@ -14,6 +15,7 @@ import { Label } from "@/components/ui/label"
 function ResetPasswordFormContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
+    const later = useTimeout()
     const [password, setPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
     const [loading, setLoading] = useState(false)
@@ -58,8 +60,8 @@ function ResetPasswordFormContent() {
         }
 
         // Small delay to ensure the URL is fully loaded
-        setTimeout(checkToken, 100)
-    }, [searchParams])
+        later(checkToken, 100)
+    }, [searchParams, later])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -124,7 +126,7 @@ function ResetPasswordFormContent() {
             } else {
                 setSuccess(true)
                 setLoading(false)
-                setTimeout(() => {
+                later(() => {
                     router.push(ROUTES.LOGIN)
                 }, 3000)
             }

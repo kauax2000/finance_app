@@ -58,7 +58,7 @@ async function insertBillWithFirstInstanceOnline(opts: {
     const { data: bill, error: billErr } = await supabase
         .from("bills")
         .insert(row)
-        .select("*")
+        .select("amount_estimated, category_id, created_at, default_payment_credit_card_id, default_payment_method, description, due_day_of_month, end_date, frequency, icon, id, is_active, name, notes, reminder_days_before, start_date, updated_at, user_id, workspace_id")
         .single()
 
     if (billErr || !bill) {

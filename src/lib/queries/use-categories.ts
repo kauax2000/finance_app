@@ -11,7 +11,7 @@ export function useCategoriesQuery(workspaceId: string | null) {
             if (!workspaceId) return []
             const { data, error } = await supabase
                 .from("categories")
-                .select("*")
+                .select("color, created_at, icon, id, name, type, updated_at, user_id, workspace_id")
                 .eq("workspace_id", workspaceId)
                 .order("type", { ascending: true })
                 .order("name", { ascending: true })

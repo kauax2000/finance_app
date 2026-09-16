@@ -351,7 +351,6 @@ export interface WorkspaceInvite {
     workspace_id: string
     invited_email: string | null
     role: "member"
-    token_hash: string
     status: WorkspaceInviteStatus
     expires_at: string
     created_by: string

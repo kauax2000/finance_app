@@ -68,7 +68,7 @@ export async function getWorkspaceNotificationPrefs(
 ): Promise<WorkspaceMemberNotificationPrefs | null> {
     const { data, error } = await supabase
         .from("workspace_member_notification_prefs")
-        .select("*")
+        .select("created_at, notify_bills, notify_budget, notify_credit_card_calendar, notify_credit_cards, notify_email, notify_in_app, notify_promotions, notify_push, notify_transactions, updated_at, user_id, workspace_id")
         .eq("user_id", userId)
         .eq("workspace_id", workspaceId)
         .maybeSingle()
@@ -96,7 +96,7 @@ export async function ensureWorkspaceNotificationPrefsRow(
             user_id: userId,
             ...INSERT_DEFAULTS,
         })
-        .select("*")
+        .select("created_at, notify_bills, notify_budget, notify_credit_card_calendar, notify_credit_cards, notify_email, notify_in_app, notify_promotions, notify_push, notify_transactions, updated_at, user_id, workspace_id")
         .single()
 
     if (error) {
@@ -123,7 +123,7 @@ export async function patchWorkspaceNotificationPrefs(
         .update(patch)
         .eq("user_id", userId)
         .eq("workspace_id", workspaceId)
-        .select("*")
+        .select("created_at, notify_bills, notify_budget, notify_credit_card_calendar, notify_credit_cards, notify_email, notify_in_app, notify_promotions, notify_push, notify_transactions, updated_at, user_id, workspace_id")
         .single()
 
     if (error) {

@@ -35,7 +35,7 @@ export async function listNotifications(
 ): Promise<AppNotification[]> {
     const { data, error } = await supabase
         .from("notifications")
-        .select("*")
+        .select("body, created_at, id, metadata, read_at, title, type, user_id, workspace_id")
         .eq("user_id", userId)
         .eq("workspace_id", workspaceId)
         .order("created_at", { ascending: false })
@@ -51,7 +51,7 @@ export async function countUnreadNotifications(
 ): Promise<number> {
     const { count, error } = await supabase
         .from("notifications")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .eq("user_id", userId)
         .eq("workspace_id", workspaceId)
         .is("read_at", null)

@@ -286,7 +286,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
             if (Object.keys(updates).length === 0) {
                 const { data: existing } = await supabase
                     .from("workspaces")
-                    .select("*")
+                    .select("categories_onboarding_completed_at, created_at, created_by, icon, icon_background_color, id, name, type, updated_at")
                     .eq("id", workspaceId)
                     .single()
                 return (existing as Workspace) ?? null
@@ -296,7 +296,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
                 .from("workspaces")
                 .update(updates)
                 .eq("id", workspaceId)
-                .select("*")
+                .select("categories_onboarding_completed_at, created_at, created_by, icon, icon_background_color, id, name, type, updated_at")
                 .single()
 
             if (updateError || !workspace) {

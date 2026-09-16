@@ -1,5 +1,6 @@
 "use client"
 
+import { useTimeout } from "@/hooks/use-timeout"
 import * as React from "react"
 import { CheckIcon, DocumentDuplicateIcon, EnvelopeIcon, LinkIcon, PaperAirplaneIcon } from "@heroicons/react/16/solid"
 import type { User } from "@supabase/supabase-js"
@@ -66,6 +67,7 @@ export function WorkspaceInviteDialog({
     canManageMembers,
 }: WorkspaceInviteDialogProps) {
     const isMobile = useIsMobile()
+    const later = useTimeout()
     const [invites, setInvites] = React.useState<WorkspaceInvite[]>([])
     const [inviteEmail, setInviteEmail] = React.useState("")
     const [loadingInvites, setLoadingInvites] = React.useState(false)
@@ -94,7 +96,7 @@ export function WorkspaceInviteDialog({
         setLoadingInvites(true)
         const { data, error } = await supabase
             .from("workspace_invites")
-            .select("*")
+            .select("accepted_at, created_at, created_by, expires_at, id, invited_email, max_uses, role, status, usage_count, workspace_id")
             .eq("workspace_id", workspaceId)
             .eq("status", "pending")
             .order("created_at", { ascending: false })
@@ -142,7 +144,6 @@ export function WorkspaceInviteDialog({
                         workspace_id: workspaceId,
                         invited_email: emailLower,
                         role: "member",
-                        token_hash: "",
                         status: "pending",
                         expires_at: res.expires_at!,
                         created_by: user.id,
@@ -207,7 +208,7 @@ export function WorkspaceInviteDialog({
         try {
             await navigator.clipboard.writeText(effectiveLinkUrl)
             setLinkCopied(true)
-            window.setTimeout(() => setLinkCopied(false), 2000)
+            later(() => setLinkCopied(false), 2000)
         } catch {
             toastError("Não foi possível copiar o link.")
         }
