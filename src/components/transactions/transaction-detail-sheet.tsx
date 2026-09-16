@@ -408,7 +408,7 @@ export function TransactionDetailSheet({
                                     </p>
                                     <Link
                                         href={subscriptionsHref}
-                                        className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-border/70 bg-muted/40 px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                        className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-border/70 bg-muted/40 px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:text-foreground"
                                     >
                                         <ArrowPathRoundedSquareIcon
                                             className="size-3.5 shrink-0 opacity-80"

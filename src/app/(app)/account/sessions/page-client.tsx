@@ -252,7 +252,7 @@ export default function SessionsPage() {
                                                             void handleRevokeSession(session.id)
                                                         }
                                                         disabled={revoking === session.id}
-                                                        className="shrink-0 text-muted-foreground hover:text-destructive md:size-icon-xs"
+                                                        className="shrink-0 text-muted-foreground hover:text-destructive active:text-destructive md:size-icon-xs"
                                                     >
                                                         {revoking === session.id ? (
                                                             <Spinner className="md:h-3.5 md:w-3.5" />

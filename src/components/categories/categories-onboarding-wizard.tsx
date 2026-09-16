@@ -554,9 +554,9 @@ export function CategoriesOnboardingWizard({
                     )}
                     <Button
                         type="button"
-                        variant="tertiary"
+                        variant="destructive"
                         size="icon-lg"
-                        className="h-8 w-8 shrink-0 text-destructive hover:text-destructive"
+                        className="h-8 w-8 shrink-0"
                         disabled={crudBusy}
                         onClick={() => void handleDeleteCategory(c)}
                         aria-label={`Excluir ${c.name}`}

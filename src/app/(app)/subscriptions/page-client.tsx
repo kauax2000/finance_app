@@ -547,7 +547,7 @@ export default function SubscriptionsPageClient() {
                                             type="button"
                                             variant="tertiary"
                                             size="xl"
-                                            className="shrink-0 px-3 text-xs text-muted-foreground hover:text-foreground"
+                                            className="shrink-0 px-3 text-xs text-muted-foreground hover:text-foreground active:text-foreground"
                                             onClick={() =>
                                                 setSelectedIds(new Set())
                                             }
@@ -659,7 +659,7 @@ export default function SubscriptionsPageClient() {
                         >
                             <Table className="min-w-[720px] text-sm">
                                 <TableHeader className="sticky top-0 z-10 bg-muted/50 [&_tr]:border-b-0">
-                                    <TableRow className="border-0 hover:bg-transparent [&>th]:border-b [&>th]:border-border">
+                                    <TableRow className="border-0 [&>th]:border-b [&>th]:border-border">
                                         <TableHead className="w-10 px-2 py-0 md:w-11 md:px-3">
                                             <Checkbox
                                                 aria-label="Selecionar todas na lista filtrada"
@@ -933,10 +933,10 @@ export default function SubscriptionsPageClient() {
                                                             <PencilIcon className="size-3.5" />
                                                         </Button>
                                                         <Button
-                                                            variant="tertiary"
+                                                            variant="destructive"
                                                             size="icon-sm"
                                                             type="button"
-                                                            className="size-7 text-destructive hover:text-destructive"
+                                                            className="size-7"
                                                             onClick={(e) => {
                                                                 e.stopPropagation()
                                                                 setPendingDelete(

@@ -203,7 +203,7 @@ export function InstallmentPurchaseSection({
                 <div className="mt-3 overflow-x-auto rounded-lg border border-border/50 bg-background/40">
                     <Table className="min-w-[280px] text-xs">
                         <TableHeader>
-                            <TableRow className="hover:bg-transparent">
+                            <TableRow>
                                 <TableHead className="h-8 w-10 px-2 text-2xs font-semibold uppercase tracking-wide">
                                     #
                                 </TableHead>
@@ -220,7 +220,7 @@ export function InstallmentPurchaseSection({
                         </TableHeader>
                         <TableBody>
                             {summary.slicesLoading ? (
-                                <TableRow className="hover:bg-transparent">
+                                <TableRow>
                                     <TableCell
                                         colSpan={4}
                                         className="h-10 px-2 text-center text-muted-foreground"
@@ -274,7 +274,7 @@ export function InstallmentPurchaseSection({
                                     )
                                 })
                             ) : (
-                                <TableRow className="hover:bg-transparent">
+                                <TableRow>
                                     <TableCell
                                         colSpan={4}
                                         className="h-10 px-2 text-center text-muted-foreground"

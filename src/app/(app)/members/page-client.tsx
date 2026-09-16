@@ -759,9 +759,9 @@ export default function MembersPage() {
                                                 {canManageMembers && !isOwner && !isMe ? (
                                                     <Button
                                                         type="button"
-                                                        variant="tertiary"
+                                                        variant="destructive"
                                                         size="icon-sm"
-                                                        className="size-8 shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                        className="size-8 shrink-0"
                                                         disabled={busyMemberId === member.user_id}
                                                         aria-label="Remover membro"
                                                         title="Remover membro"
@@ -910,9 +910,9 @@ export default function MembersPage() {
                                                 {pendingLinkInvite && canManageMembers ? (
                                                     <Button
                                                         type="button"
-                                                        variant="outline"
+                                                        variant="destructive"
                                                         size="sm"
-                                                        className="h-8 shrink-0 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                        className="h-8 shrink-0"
                                                         disabled={busyInviteId === pendingLinkInvite.id}
                                                         onClick={() =>
                                                             void handleRevokeInvite(pendingLinkInvite.id)
@@ -998,7 +998,7 @@ export default function MembersPage() {
                                 <ul className="divide-y divide-border" role="list">
                                     {pendingEmailInvites.map((invite) => (
                                         <li key={invite.id}>
-                                            <div className="flex flex-col gap-3 px-4 py-3 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between">
+                                            <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                                                 <div className="flex min-w-0 flex-1 items-center gap-2.5">
                                                     <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted/60">
                                                         <EnvelopeIcon className="size-4 text-muted-foreground" />
@@ -1064,14 +1064,14 @@ export default function MembersPage() {
                                                         </Button>
                                                         <Button
                                                             type="button"
-                                                            variant="outline"
+                                                            variant="destructive"
                                                             size="sm"
                                                             disabled={
                                                                 busyInviteId === invite.id ||
                                                                 busyResendInviteId === invite.id
                                                             }
                                                             onClick={() => void handleRevokeInvite(invite.id)}
-                                                            className="min-w-0 flex-1 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive sm:flex-none sm:shrink-0"
+                                                            className="min-w-0 flex-1 sm:flex-none sm:shrink-0"
                                                             aria-label={
                                                                 busyInviteId === invite.id
                                                                     ? "Revogando convite"

@@ -272,7 +272,7 @@ function PaymentDayEventsListContent({
                     <li key={e.id}>
                         <button
                             type="button"
-                            className="flex w-full items-center justify-between gap-3 rounded-md px-2 py-2 text-left text-sm hover:bg-muted/50"
+                            className="flex w-full items-center justify-between gap-3 rounded-md px-2 py-2 text-left text-sm hover:bg-muted/50 active:bg-muted/50"
                             onClick={() => {
                                 if (postedId) {
                                     onTransactionPostedClick(postedId)
@@ -550,7 +550,7 @@ export function DashboardPaymentsCalendar({
                                                 <button
                                                     key={r.id}
                                                     type="button"
-                                                    className="flex w-full items-center justify-between gap-2 rounded-lg border border-border/60 px-2 py-2 text-left text-sm hover:bg-muted/40"
+                                                    className="flex w-full items-center justify-between gap-2 rounded-lg border border-border/60 px-2 py-2 text-left text-sm hover:bg-muted/40 active:bg-muted/40"
                                                     onClick={() =>
                                                         onUpcomingPaymentClick(r)
                                                     }
@@ -660,7 +660,7 @@ export function DashboardPaymentsCalendar({
                                                 <button
                                                     key={e.id}
                                                     type="button"
-                                                    className="flex w-full items-center justify-between gap-2 rounded-lg border border-border/60 px-2 py-2 text-left text-sm hover:bg-muted/40"
+                                                    className="flex w-full items-center justify-between gap-2 rounded-lg border border-border/60 px-2 py-2 text-left text-sm hover:bg-muted/40 active:bg-muted/40"
                                                     onClick={() => {
                                                         const postedId =
                                                             postedTransactionIdFromEvent(

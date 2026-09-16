@@ -384,9 +384,9 @@ export function WorkspaceInviteDialog({
                                                             {pendingLinkInvite && canManageMembers ? (
                                                                 <Button
                                                                     type="button"
-                                                                    variant="outline"
+                                                                    variant="destructive"
                                                                     size="sm"
-                                                                    className="h-8 shrink-0 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                                    className="h-8 shrink-0"
                                                                     disabled={
                                                                         busyInviteId === pendingLinkInvite.id
                                                                     }
@@ -476,9 +476,8 @@ export function WorkspaceInviteDialog({
                                                                     <Button
     aria-label={`Revogar convite para ${invite.invited_email}`}
                                                                         type="button"
-                                                                        variant="outline"
+                                                                        variant="destructive"
                                                                         size="sm"
-                                                                        className="text-destructive"
                                                                         disabled={busyInviteId === invite.id}
                                                                         onClick={() =>
                                                                             void handleRevokeInvite(invite.id)
@@ -611,9 +610,9 @@ export function WorkspaceInviteDialog({
                                                         {pendingLinkInvite && canManageMembers ? (
                                                             <Button
                                                                 type="button"
-                                                                variant="outline"
+                                                                variant="destructive"
                                                                 size="sm"
-                                                                className="h-8 shrink-0 text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+                                                                className="h-8 shrink-0"
                                                                 disabled={
                                                                     busyInviteId === pendingLinkInvite.id
                                                                 }
@@ -710,9 +709,8 @@ export function WorkspaceInviteDialog({
                                                                 <Button
     aria-label={`Revogar convite para ${invite.invited_email}`}
                                                                     type="button"
-                                                                    variant="outline"
+                                                                    variant="destructive"
                                                                     size="sm"
-                                                                    className="text-destructive"
                                                                     disabled={
                                                                         busyInviteId === invite.id
                                                                     }

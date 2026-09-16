@@ -1046,7 +1046,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                                 <li key={k}>
                                                     <button
                                                         type="button"
-                                                        className="flex w-full items-center justify-between gap-3 rounded-md border border-transparent px-2 py-1.5 text-left transition-colors hover:border-border/60 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                                        className="flex w-full items-center justify-between gap-3 rounded-md border border-transparent px-2 py-1.5 text-left transition-colors hover:border-border/60 hover:bg-muted/30 active:border-border/60 active:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                                         onMouseEnter={() =>
                                                             setActiveSlice(k)
                                                         }

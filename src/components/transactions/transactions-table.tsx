@@ -276,7 +276,7 @@ export function TransactionsTable({
                                 type="button"
                                 variant="tertiary"
                                 size="xl"
-                                className="shrink-0 px-3 text-xs text-muted-foreground hover:text-foreground"
+                                className="shrink-0 px-3 text-xs text-muted-foreground hover:text-foreground active:text-foreground"
                                 onClick={() => setSelectedIds(new Set())}
                                 aria-label="Limpar seleção"
                             >
@@ -377,7 +377,7 @@ export function TransactionsTable({
             >
                 <Table className="min-w-[640px] text-sm md:min-w-[700px]">
                     <TableHeader className="sticky top-0 z-10 bg-muted/50 [&_tr]:border-b-0">
-                        <TableRow className="border-0 hover:bg-transparent [&>th]:border-b [&>th]:border-border">
+                        <TableRow className="border-0 [&>th]:border-b [&>th]:border-border">
                             {enableSelection ? (
                                 <TableHead className="w-10 px-2 py-0 md:w-11 md:px-3">
                                     <Checkbox
@@ -561,7 +561,7 @@ export function TransactionsTable({
                             return (
                                 <React.Fragment key={transaction.id}>
                                     {showMonthHeader ? (
-                                        <TableRow className="border-border/80 bg-muted/30 hover:bg-muted/30">
+                                        <TableRow className="border-border/80 bg-muted/30 hover:bg-muted/30 active:bg-muted/30">
                                             {enableSelection ? (
                                                 <TableCell className="w-10 px-2 py-2 align-middle md:w-11 md:px-3">
                                                     <Checkbox
@@ -824,10 +824,10 @@ export function TransactionsTable({
                                                         <PencilIcon className="size-3.5" />
                                                     </Button>
                                                     <Button
-                                                        variant="tertiary"
+                                                        variant="destructive"
                                                         size="icon-sm"
                                                         type="button"
-                                                        className="size-7 text-destructive hover:text-destructive"
+                                                        className="size-7"
                                                         aria-label={`Excluir ${transaction.description || "lançamento"}`}
                                                         onClick={(e) => {
                                                             e.stopPropagation()
@@ -890,7 +890,7 @@ export function TransactionsTable({
                             type="button"
                             variant="tertiary"
                             size="icon-lg"
-                            className="size-8 rounded-md text-muted-foreground hover:text-foreground disabled:opacity-40"
+                            className="size-8 rounded-md text-muted-foreground hover:text-foreground active:text-foreground disabled:opacity-40"
                             disabled={page <= 0 || total === 0}
                             aria-label="Página anterior"
                             onClick={() => setPage((p) => Math.max(0, p - 1))}
@@ -901,7 +901,7 @@ export function TransactionsTable({
                             type="button"
                             variant="tertiary"
                             size="icon-lg"
-                            className="size-8 rounded-md text-muted-foreground hover:text-foreground disabled:opacity-40"
+                            className="size-8 rounded-md text-muted-foreground hover:text-foreground active:text-foreground disabled:opacity-40"
                             disabled={page >= totalPages - 1 || total === 0}
                             aria-label="Próxima página"
                             onClick={() =>

@@ -64,7 +64,7 @@ function ToolbarSkeleton() {
 
 function MonthBandSkeletonRow() {
     return (
-        <TableRow className="border-border/80 bg-muted/30 hover:bg-muted/30">
+        <TableRow className="border-border/80 bg-muted/30 hover:bg-muted/30 active:bg-muted/30">
             <TableCell className="w-10 px-2 py-2 align-middle md:w-11 md:px-3">
                 <Skeleton className="size-4 shrink-0 rounded-sm" />
             </TableCell>
@@ -143,7 +143,7 @@ function TableSkeleton({ rowCount }: { rowCount: number }) {
                 <div className="min-w-0 overflow-hidden rounded-t-xl">
                     <Table className="min-w-[640px] text-sm md:min-w-[700px]">
                         <TableHeader className="sticky top-0 z-10 bg-muted/50 [&_tr]:border-b-0">
-                            <TableRow className="border-0 hover:bg-transparent [&>th]:border-b [&>th]:border-border">
+                            <TableRow className="border-0 [&>th]:border-b [&>th]:border-border">
                                 <TableHead className="w-10 px-2 py-0 md:w-11 md:px-3">
                                     <Skeleton className="mx-auto size-4 rounded-sm" />
                                 </TableHead>

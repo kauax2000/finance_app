@@ -93,7 +93,7 @@ export default function AccountPage() {
                                             type="button"
                                             variant="tertiary"
                                             size="icon-lg"
-                                            className="size-9 shrink-0 text-muted-foreground hover:text-foreground"
+                                            className="size-9 shrink-0 text-muted-foreground hover:text-foreground active:text-foreground"
                                             aria-label="Mais opções da conta"
                                         >
                                             <EllipsisVerticalIcon className="size-4" aria-hidden />
@@ -149,7 +149,7 @@ export default function AccountPage() {
                     <CardContent className="flex flex-col p-0">
                         <Link
                             href={ROUTES.ACCOUNT_SESSIONS}
-                            className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 transition-colors hover:bg-muted/30 sm:py-3.5"
+                            className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 transition-colors hover:bg-muted/30 active:bg-muted/30 sm:py-3.5"
                         >
                             <div className="flex min-w-0 flex-1 items-center gap-3">
                                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40">
@@ -166,7 +166,7 @@ export default function AccountPage() {
                         </Link>
                         <Link
                             href={ROUTES.ACCOUNT_ACTIVITY}
-                            className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted/30 sm:py-3.5"
+                            className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted/30 active:bg-muted/30 sm:py-3.5"
                         >
                             <div className="flex min-w-0 flex-1 items-center gap-3">
                                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40">

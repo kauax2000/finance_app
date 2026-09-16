@@ -315,7 +315,7 @@ export function TransactionsFiltersPanel({
                                         return (
                                             <div
                                                 key={pm}
-                                                className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50"
+                                                className="flex items-center gap-2 rounded-md px-2 py-1.5"
                                             >
                                                 <Checkbox
                                                     id={id}
@@ -383,7 +383,7 @@ export function TransactionsFiltersPanel({
                                         type="button"
                                         variant="tertiary"
                                         size="sm"
-                                        className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground"
+                                        className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground active:text-foreground"
                                         disabled={sortedCards.length === 0}
                                         onClick={() => {
                                             for (const c of sortedCards) {
@@ -399,7 +399,7 @@ export function TransactionsFiltersPanel({
                                         type="button"
                                         variant="tertiary"
                                         size="sm"
-                                        className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground"
+                                        className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground active:text-foreground"
                                         disabled={creditCardIds.length === 0}
                                         onClick={() => {
                                             for (const id of creditCardIds) {
@@ -443,7 +443,7 @@ export function TransactionsFiltersPanel({
                                         return (
                                             <div
                                                 key={c.id}
-                                                className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/40"
+                                                className="flex items-center gap-2 rounded-md px-2 py-1.5"
                                             >
                                                 <Checkbox
                                                     id={id}
@@ -505,7 +505,7 @@ export function TransactionsFiltersPanel({
                                                 type="button"
                                                 variant="tertiary"
                                                 size="sm"
-                                                className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground"
+                                                className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground active:text-foreground"
                                                 disabled={
                                                     uncategorizedOnly ||
                                                     allCategoryIds.length === 0
@@ -523,7 +523,7 @@ export function TransactionsFiltersPanel({
                                                 type="button"
                                                 variant="tertiary"
                                                 size="sm"
-                                                className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground"
+                                                className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground active:text-foreground"
                                                 disabled={categoryIds.length === 0}
                                                 onClick={() => {
                                                     for (const id of categoryIds)
@@ -545,7 +545,7 @@ export function TransactionsFiltersPanel({
                                     </PopoverHeader>
                                     <div className="max-h-56 overflow-y-auto p-2">
                                         <div className="space-y-0.5">
-                                            <div className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50">
+                                            <div className="flex items-center gap-2 rounded-md px-2 py-1.5">
                                                 <Checkbox
                                                     id={`${fieldUid}-uncat`}
                                                     checked={uncategorizedOnly}
@@ -638,7 +638,7 @@ export function TransactionsFiltersPanel({
                                         type="button"
                                         variant="tertiary"
                                         size="sm"
-                                        className="h-8 px-2 text-2xs text-muted-foreground hover:text-foreground"
+                                        className="h-8 px-2 text-2xs text-muted-foreground hover:text-foreground active:text-foreground"
                                         disabled={uncategorizedOnly}
                                         onClick={onClearAllCategories}
                                         aria-label="Limpar todas as categorias selecionadas"

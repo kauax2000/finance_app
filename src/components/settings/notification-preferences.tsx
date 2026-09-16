@@ -92,7 +92,7 @@ function PrefRow({
     disabled?: boolean
 }) {
     return (
-        <div className="flex items-start justify-between gap-5 rounded-lg border border-border/80 bg-muted/20 p-3 sm:p-3.5 transition-colors hover:bg-muted/30">
+        <div className="flex items-start justify-between gap-5 rounded-lg border border-border/80 bg-muted/20 p-3 sm:p-3.5">
             <div className="min-w-0 space-y-0.5 pr-2">
                 <Label htmlFor={id} className="text-sm font-medium">
                     {title}

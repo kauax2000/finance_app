@@ -326,9 +326,9 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                                 </Button>
                                 <Button
                                     type="button"
-                                    variant="tertiary"
+                                    variant="destructive"
                                     size="sm"
-                                    className="gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                    className="gap-1.5"
                                     onClick={handleRemovePhoto}
                                 >
                                     <TrashIcon className="h-3.5 w-3.5" />

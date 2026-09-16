@@ -268,11 +268,8 @@ export function MobileAccountMenu({ children }: MobileAccountMenuProps) {
                             <div className="flex shrink-0 flex-col px-2.5 pt-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom,0px))]">
                                 <Button
                                     type="button"
-                                    variant="tertiary"
-                                    className={cn(
-                                        rowButtonClass,
-                                        "text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                    )}
+                                    variant="destructive"
+                                    className={rowButtonClass}
                                     onClick={() => {
                                         closeMenu()
                                         void signOut()

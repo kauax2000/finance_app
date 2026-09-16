@@ -144,7 +144,7 @@ export function BillDetailHistoryList({
                         return (
                             <div
                                 key={inst.id}
-                                className="flex flex-col gap-2 rounded-lg px-3 py-2.5 hover:bg-muted/40"
+                                className="flex flex-col gap-2 rounded-lg px-3 py-2.5"
                             >
                                 <div className="flex items-start gap-3">
                                     <span

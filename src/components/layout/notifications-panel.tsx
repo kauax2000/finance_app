@@ -317,8 +317,8 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                 <div className="shrink-0 border-t border-border">
                     <Button
                         type="button"
-                        variant="tertiary"
-                        className="h-12 w-full rounded-none text-destructive hover:text-destructive"
+                        variant="destructive"
+                        className="h-12 w-full rounded-none"
                         onClick={() => void onClearAll()}
                     >
                         <TrashIcon className="mr-2 h-4 w-4" />

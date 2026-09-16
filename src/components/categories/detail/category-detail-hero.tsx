@@ -74,7 +74,7 @@ export function CategoryDetailHero({
                                 type="button"
                                 variant="tertiary"
                                 size="icon-lg"
-                                className="size-9 shrink-0 text-muted-foreground hover:text-foreground"
+                                className="size-9 shrink-0 text-muted-foreground hover:text-foreground active:text-foreground"
                                 aria-label={`Opções da categoria ${category.name}`}
                             >
                                 <EllipsisVerticalIcon className="size-4" aria-hidden />
@@ -149,7 +149,7 @@ export function CategoryDetailHero({
                                 type="button"
                                 variant="tertiary"
                                 size="icon-lg"
-                                className="size-9 shrink-0 text-muted-foreground hover:text-foreground"
+                                className="size-9 shrink-0 text-muted-foreground hover:text-foreground active:text-foreground"
                                 aria-label={`Opções da categoria ${category.name}`}
                             >
                                 <EllipsisVerticalIcon className="size-4" aria-hidden />

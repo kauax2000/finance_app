@@ -156,7 +156,7 @@ function MonthNavArrowControls({
                                     type="button"
                                     variant="tertiary"
                                     size="sm"
-                                    className="h-8 w-full text-xs text-muted-foreground hover:text-foreground"
+                                    className="h-8 w-full text-xs text-muted-foreground hover:text-foreground active:text-foreground"
                                     onClick={() => {
                                         onJump()
                                         setMonthPickerOpen(false)

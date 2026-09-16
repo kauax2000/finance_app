@@ -482,7 +482,7 @@ export function SubscriptionDetailSheet({
                         <div className="mt-3 overflow-x-auto rounded-lg border border-border/50 bg-background/40">
                             <Table className="min-w-[280px] text-xs">
                                 <TableHeader>
-                                    <TableRow className="hover:bg-transparent">
+                                    <TableRow>
                                         <TableHead className="h-8 px-2 text-2xs font-semibold uppercase tracking-wide">
                                             Cobrança
                                         </TableHead>
@@ -496,7 +496,7 @@ export function SubscriptionDetailSheet({
                                 </TableHeader>
                                 <TableBody>
                                     {latestChargeLoading ? (
-                                        <TableRow className="h-9 border-border/40 hover:bg-transparent">
+                                        <TableRow className="h-9 border-border/40">
                                             <TableCell className="px-2 py-1.5">
                                                 <Skeleton className="h-3.5 w-20 rounded-md" />
                                             </TableCell>
@@ -544,7 +544,7 @@ export function SubscriptionDetailSheet({
                                             </TableRow>
                                         ))
                                     ) : (
-                                        <TableRow className="hover:bg-transparent">
+                                        <TableRow>
                                             <TableCell
                                                 colSpan={3}
                                                 className="h-10 px-2 text-center text-muted-foreground"

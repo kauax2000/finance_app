@@ -220,7 +220,7 @@ export function ExpenseCategoryCard({
                                         type="button"
                                         variant="tertiary"
                                         size="icon-lg"
-                                        className="relative z-10 size-8 text-muted-foreground hover:text-foreground"
+                                        className="relative z-10 size-8 text-muted-foreground hover:text-foreground active:text-foreground"
                                         aria-label={`Opções da categoria ${category.name}`}
                                         onClick={(e) => stopLinkNavigation(e)}
                                         onPointerDown={(e) => e.stopPropagation()}

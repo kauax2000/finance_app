@@ -438,9 +438,9 @@ export function BillDetailSheet({
                             </Button>
                             <Button
                                 type="button"
-                                variant="outline"
+                                variant="destructive"
                                 size="sm"
-                                className="w-full text-destructive hover:text-destructive sm:w-auto"
+                                className="w-full sm:w-auto"
                                 onClick={onAskDelete}
                             >
                                 Excluir conta

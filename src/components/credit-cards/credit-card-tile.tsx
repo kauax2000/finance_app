@@ -91,7 +91,7 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                                 showInactiveBadge={false}
                             />
                         </CreditCardFaceTilt>
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors group-hover:text-foreground">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors group-hover:text-foreground active:text-foreground">
                             Ver detalhes
                             <ChevronRightIcon className="size-3.5 shrink-0 opacity-85 transition-transform group-hover:translate-x-0.5" aria-hidden />
                         </span>

@@ -264,7 +264,7 @@ function RecentTransactionsSkeleton() {
                     <div className="overflow-x-auto">
                         <Table className="min-w-[640px] text-sm md:min-w-[700px]">
                             <TableHeader className="bg-muted/50">
-                                <TableRow className="border-0 hover:bg-transparent">
+                                <TableRow className="border-0">
                                     <TableHead className="h-11 px-4 py-0">
                                         <Skeleton className="h-3 w-10 rounded-md" />
                                     </TableHead>
