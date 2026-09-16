@@ -8,6 +8,9 @@ import {
 } from "@/components/ui/empty-state"
 import { SessionsPageSkeleton } from "@/components/account/sessions-page-skeleton"
 import {
+    Item,
+} from "@/components/ui/item"
+import {
     PageSection,
     PageSectionHeader,
     PageSectionTitle,
@@ -158,12 +161,15 @@ export default function SessionsPage() {
                             >
                                 {sessions.map((session) => (
                                     <li key={session.id} className="min-w-0">
-                                        <div
+                                        {/* A linha não é clicável: o realce de `hover:` que
+                                            ela tinha não respondia a nada, e saiu. */}
+                                        <Item
+                                            variant="outline"
                                             className={cn(
-                                                "rounded-lg border p-3 transition-colors sm:p-3.5",
+                                                "block p-3 sm:p-3.5",
                                                 session.is_current
-                                                    ? "border-primary-accent/30 bg-primary/5 hover:bg-primary/10"
-                                                    : "border-border/80 bg-muted/20 hover:bg-muted/30",
+                                                    ? "border-primary-accent/30 bg-primary/5"
+                                                    : "border-border/80",
                                             )}
                                         >
                                             <div className="flex items-start justify-between gap-3">
@@ -225,7 +231,7 @@ export default function SessionsPage() {
                                                     {formatRelativeTime(session.last_active_at)}
                                                 </span>
                                             </div>
-                                        </div>
+                                        </Item>
                                     </li>
                                 ))}
                             </ul>

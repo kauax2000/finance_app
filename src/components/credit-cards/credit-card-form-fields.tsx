@@ -80,21 +80,19 @@ function CreditCardBillingSection({
     }, [closingDay, dueDay])
 
     return (
-        <div className="space-y-3 rounded-lg border border-border/60 bg-muted/10 p-3 dark:bg-muted/5">
-            <div className="space-y-1">
-                <div className="flex items-center gap-1.5">
-                    <CalendarIcon
-                        className="size-3.5 shrink-0 text-muted-foreground"
-                        aria-hidden
-                    />
-                    <p className="text-xs font-medium text-foreground">
-                        {CREDIT_CARD_BILLING_FORM.sectionTitle}
-                    </p>
-                </div>
-                <p className="text-2xs leading-snug text-muted-foreground">
-                    {CREDIT_CARD_BILLING_FORM.lead}
-                </p>
-            </div>
+        // Fechamento e vencimento são um grupo com título: `fieldset` + `legend`,
+        // e não uma caixa pintada. A legenda tem de ser o primeiro filho.
+        <FieldSet size="sm" className="gap-3">
+            <FieldLegend variant="label" className="flex items-center gap-1.5 text-foreground">
+                <CalendarIcon
+                    className="size-3.5 shrink-0 text-muted-foreground"
+                    aria-hidden
+                />
+                {CREDIT_CARD_BILLING_FORM.sectionTitle}
+            </FieldLegend>
+            <p className="-mt-2 text-2xs leading-snug text-muted-foreground">
+                {CREDIT_CARD_BILLING_FORM.lead}
+            </p>
 
             <div className="grid grid-cols-2 gap-3">
                 <Field size="sm">
@@ -223,7 +221,7 @@ function CreditCardBillingSection({
                     </Alert>
                 </CollapsibleContent>
             </Collapsible>
-        </div>
+        </FieldSet>
     )
 }
 
