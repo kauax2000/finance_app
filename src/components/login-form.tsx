@@ -7,10 +7,9 @@ import { supabase } from "@/lib/supabase"
 import { formatAuthErrorMessagePt } from "@/lib/supabase-errors"
 import { getSafeInternalNextPath } from "@/lib/auth-return-path"
 import { Alert, AlertTitle } from "@/components/ui/alert"
-import { CustomForm } from "@/components/ui/form"
+import { CustomForm, FormInput } from "@/components/ui/form"
 import { GoogleIcon } from "@/components/icons/google-icon"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
     InputGroup,
     InputGroupAddon,
@@ -18,7 +17,12 @@ import {
     InputGroupInput,
 } from "@/components/ui/input-group"
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
-import { Label } from "@/components/ui/label"
+import {
+    Field,
+    FieldControl,
+    FieldError,
+    FieldLabel,
+} from "@/components/ui/field"
 
 // Email validation regex
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -118,37 +122,32 @@ export function LoginForm() {
                     </Alert>
                 ) : null}
                 <CustomForm onSubmit={handleLogin} className="flex flex-col gap-4" noValidate>
-                    <div className="flex flex-col gap-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                            ref={emailInputRef}
-                            id="email"
-                            type="email"
-                            placeholder="seu@email.com"
-                            value={email}
-                            onChange={(e) => {
-                                setEmail(e.target.value)
-                                setError("")
-                                if (fieldErrors.email) {
-                                    setFieldErrors(prev => ({ ...prev, email: undefined }))
-                                }
-                            }}
-                            aria-invalid={!!fieldErrors.email}
-                            aria-describedby={fieldErrors.email ? "login-email-error" : undefined}
-                            className={fieldErrors.email ? "border-destructive" : ""}
-                        />
-                        {fieldErrors.email ? (
-                            <p
-                                id="login-email-error"
-                                className="text-control-sm font-medium text-destructive"
-                            >
-                                {fieldErrors.email}
-                            </p>
-                        ) : null}
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <div className="flex items-center justify-between">
-                            <Label htmlFor="password">Senha</Label>
+                    {/* `FormInput` liga rótulo, erro e `aria-describedby` sozinho:
+                        o `id` e o `aria-invalid` que estavam aqui à mão saem, e o
+                        erro deixa de ser um `<p>` solto que ninguém anunciava. */}
+                    <FormInput
+                        ref={emailInputRef}
+                        label="Email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        value={email}
+                        onChange={(e) => {
+                            setEmail(e.target.value)
+                            setError("")
+                            if (fieldErrors.email) {
+                                setFieldErrors(prev => ({ ...prev, email: undefined }))
+                            }
+                        }}
+                        error={fieldErrors.email}
+                    />
+                    {/* O rótulo divide a linha com o link de recuperar senha, então
+                        aqui é `Field` composto em vez de `FormInput` — e o embrulho
+                        vai no `InputGroupInput`, nunca no grupo: o `id` numa `div`
+                        deixa o `<label for>` apontando para algo que não é
+                        rotulável. */}
+                    <Field>
+                        <div className="flex items-center justify-between gap-2">
+                            <FieldLabel>Senha</FieldLabel>
                             <Link
                                 href="/forgot-password"
                                 className="text-sm text-muted-foreground underline-offset-4 hover:underline"
@@ -156,25 +155,22 @@ export function LoginForm() {
                                 Esqueceu a senha?
                             </Link>
                         </div>
-                        <InputGroup aria-invalid={!!fieldErrors.password}>
-                            <InputGroupInput
-                                ref={passwordInputRef}
-                                id="password"
-                                type={showPassword ? "text" : "password"}
-                                placeholder="Digite sua senha"
-                                value={password}
-                                onChange={(e) => {
-                                    setPassword(e.target.value)
-                                    setError("")
-                                    if (fieldErrors.password) {
-                                        setFieldErrors(prev => ({ ...prev, password: undefined }))
-                                    }
-                                }}
-                                aria-invalid={!!fieldErrors.password}
-                                aria-describedby={
-                                    fieldErrors.password ? "login-password-error" : undefined
-                                }
-                            />
+                        <InputGroup>
+                            <FieldControl>
+                                <InputGroupInput
+                                    ref={passwordInputRef}
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="Digite sua senha"
+                                    value={password}
+                                    onChange={(e) => {
+                                        setPassword(e.target.value)
+                                        setError("")
+                                        if (fieldErrors.password) {
+                                            setFieldErrors(prev => ({ ...prev, password: undefined }))
+                                        }
+                                    }}
+                                />
+                            </FieldControl>
                             <InputGroupAddon align="inline-end">
                                 <InputGroupButton
                                     onClick={() => setShowPassword(!showPassword)}
@@ -186,14 +182,9 @@ export function LoginForm() {
                             </InputGroupAddon>
                         </InputGroup>
                         {fieldErrors.password ? (
-                            <p
-                                id="login-password-error"
-                                className="text-control-sm font-medium text-destructive"
-                            >
-                                {fieldErrors.password}
-                            </p>
+                            <FieldError>{fieldErrors.password}</FieldError>
                         ) : null}
-                    </div>
+                    </Field>
                     <Button type="submit" className="w-full" disabled={loading}>
                         {loading ? "Entrando..." : "Entrar"}
                     </Button>

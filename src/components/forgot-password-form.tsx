@@ -1,5 +1,11 @@
 "use client"
 
+import {
+    Field,
+    FieldControl,
+    FieldError,
+    FieldLabel,
+} from "@/components/ui/field"
 import { useTimeout } from "@/hooks/use-timeout"
 import { ROUTES } from "@/config/navigation"
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy"
@@ -8,9 +14,8 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { CustomForm } from "@/components/ui/form"
+import { CustomForm, FormInput } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
     InputGroup,
     InputGroupAddon,
@@ -18,7 +23,6 @@ import {
     InputGroupInput,
 } from "@/components/ui/input-group"
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
-import { Label } from "@/components/ui/label"
 
 // Email validation regex
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -191,28 +195,19 @@ export function ForgotPasswordForm() {
                                 <AlertTitle>{error}</AlertTitle>
                             </Alert>
                         ) : null}
-                        <div className="flex flex-col gap-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                placeholder="seu@email.com"
-                                value={email}
-                                onChange={(e) => {
-                                    setEmail(e.target.value)
-                                    if (fieldErrors.email) {
-                                        setFieldErrors(prev => ({ ...prev, email: undefined }))
-                                    }
-                                }}
-                                aria-invalid={!!fieldErrors.email}
-                                className={fieldErrors.email ? "border-destructive" : ""}
-                            />
-                            {fieldErrors.email && (
-                                <p className="text-control-sm font-medium text-destructive">
-                                    {fieldErrors.email}
-                                </p>
-                            )}
-                        </div>
+                        <FormInput
+                            label="Email"
+                            type="email"
+                            placeholder="seu@email.com"
+                            value={email}
+                            onChange={(e) => {
+                                setEmail(e.target.value)
+                                if (fieldErrors.email) {
+                                    setFieldErrors(prev => ({ ...prev, email: undefined }))
+                                }
+                            }}
+                            error={fieldErrors.email}
+                        />
                         <Button type="submit" className="w-full" disabled={loading}>
                             {loading ? "Enviando..." : "Enviar token"}
                         </Button>
@@ -229,45 +224,36 @@ export function ForgotPasswordForm() {
                                 <AlertTitle>{error}</AlertTitle>
                             </Alert>
                         ) : null}
-                        <div className="flex flex-col gap-2">
-                            <Label htmlFor="token">Token de recuperação</Label>
-                            <Input
-                                id="token"
-                                type="text"
-                                placeholder="Cole o token do email aqui"
-                                value={token}
-                                onChange={(e) => {
-                                    setToken(e.target.value)
-                                    if (fieldErrors.token) {
-                                        setFieldErrors(prev => ({ ...prev, token: undefined }))
-                                    }
-                                }}
-                                aria-invalid={!!fieldErrors.token}
-                                className={fieldErrors.token ? "border-destructive" : ""}
-                            />
-                            {fieldErrors.token && (
-                                <p className="text-control-sm font-medium text-destructive">
-                                    {fieldErrors.token}
-                                </p>
-                            )}
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <Label htmlFor="password">Nova Senha</Label>
-                            <InputGroup aria-invalid={!!fieldErrors.password}>
-                                <InputGroupInput
-                                    id="password"
-                                    type={showPassword ? "text" : "password"}
-                                    placeholder="Digite sua nova senha"
-                                    value={password}
-                                    onChange={(e) => {
-                                        setPassword(e.target.value)
-                                        if (fieldErrors.password) {
-                                            setFieldErrors(prev => ({ ...prev, password: undefined }))
-                                        }
-                                    }}
-                                    aria-invalid={!!fieldErrors.password}
-
-                                />
+                        <FormInput
+                            label="Token de recuperação"
+                            type="text"
+                            placeholder="Cole o token do email aqui"
+                            value={token}
+                            onChange={(e) => {
+                                setToken(e.target.value)
+                                if (fieldErrors.token) {
+                                    setFieldErrors(prev => ({ ...prev, token: undefined }))
+                                }
+                            }}
+                            error={fieldErrors.token}
+                        />
+                        <Field>
+                            <FieldLabel>Nova Senha</FieldLabel>
+                            <InputGroup>
+                                <FieldControl>
+    <InputGroupInput
+                                        type={showPassword ? "text" : "password"}
+                                        placeholder="Digite sua nova senha"
+                                        value={password}
+                                        onChange={(e) => {
+                                            setPassword(e.target.value)
+                                            if (fieldErrors.password) {
+                                                setFieldErrors(prev => ({ ...prev, password: undefined }))
+                                            }
+                                        }}
+    
+                                    />
+                                </FieldControl>
                                 <InputGroupAddon align="inline-end">
                                     <InputGroupButton
                                         onClick={() => setShowPassword(!showPassword)}
@@ -278,29 +264,27 @@ export function ForgotPasswordForm() {
                                     </InputGroupButton>
                                 </InputGroupAddon>
                             </InputGroup>
-                            {fieldErrors.password && (
-                                <p className="text-control-sm font-medium text-destructive">
-                                    {fieldErrors.password}
-                                </p>
-                            )}
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-                            <InputGroup aria-invalid={!!fieldErrors.confirmPassword}>
-                                <InputGroupInput
-                                    id="confirmPassword"
-                                    type={showConfirmPassword ? "text" : "password"}
-                                    placeholder="Confirme sua senha"
-                                    value={confirmPassword}
-                                    onChange={(e) => {
-                                        setConfirmPassword(e.target.value)
-                                        if (fieldErrors.confirmPassword) {
-                                            setFieldErrors(prev => ({ ...prev, confirmPassword: undefined }))
-                                        }
-                                    }}
-                                    aria-invalid={!!fieldErrors.confirmPassword}
-
-                                />
+                            {fieldErrors.password ? (
+                                <FieldError>{fieldErrors.password}</FieldError>
+                            ) : null}
+                        </Field>
+                        <Field>
+                            <FieldLabel>Confirmar Senha</FieldLabel>
+                            <InputGroup>
+                                <FieldControl>
+    <InputGroupInput
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        placeholder="Confirme sua senha"
+                                        value={confirmPassword}
+                                        onChange={(e) => {
+                                            setConfirmPassword(e.target.value)
+                                            if (fieldErrors.confirmPassword) {
+                                                setFieldErrors(prev => ({ ...prev, confirmPassword: undefined }))
+                                            }
+                                        }}
+    
+                                    />
+                                </FieldControl>
                                 <InputGroupAddon align="inline-end">
                                     <InputGroupButton
                                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -311,12 +295,10 @@ export function ForgotPasswordForm() {
                                     </InputGroupButton>
                                 </InputGroupAddon>
                             </InputGroup>
-                            {fieldErrors.confirmPassword && (
-                                <p className="text-control-sm font-medium text-destructive">
-                                    {fieldErrors.confirmPassword}
-                                </p>
-                            )}
-                        </div>
+                            {fieldErrors.confirmPassword ? (
+                                <FieldError>{fieldErrors.confirmPassword}</FieldError>
+                            ) : null}
+                        </Field>
                         <Button type="submit" className="w-full" disabled={loading}>
                             {loading ? "Atualizando..." : "Atualizar Senha"}
                         </Button>

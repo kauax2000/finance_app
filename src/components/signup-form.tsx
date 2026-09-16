@@ -1,5 +1,11 @@
 "use client"
 
+import {
+    Field,
+    FieldControl,
+    FieldError,
+    FieldLabel,
+} from "@/components/ui/field"
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy"
 import { useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -8,10 +14,9 @@ import { supabase } from "@/lib/supabase"
 import { getSafeInternalNextPath } from "@/lib/auth-return-path"
 import { formatAuthErrorMessagePt } from "@/lib/supabase-errors"
 import { Alert, AlertTitle } from "@/components/ui/alert"
-import { CustomForm } from "@/components/ui/form"
+import { CustomForm, FormInput } from "@/components/ui/form"
 import { GoogleIcon } from "@/components/icons/google-icon"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
     InputGroup,
     InputGroupAddon,
@@ -19,7 +24,6 @@ import {
     InputGroupInput,
 } from "@/components/ui/input-group"
 import { CheckIcon, EyeIcon, EyeSlashIcon, MinusIcon } from "@heroicons/react/16/solid"
-import { Label } from "@/components/ui/label"
 
 // Email validation regex
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -234,84 +238,57 @@ export function SignupForm() {
                             <AlertTitle>{error}</AlertTitle>
                         </Alert>
                     )}
-                    <div className="flex flex-col gap-2">
-                        <Label htmlFor="fullName">Nome completo</Label>
-                        <Input
-                            id="fullName"
-                            type="text"
-                            placeholder="João Silva"
-                            value={fullName}
-                            onChange={(e) => {
-                                setFullName(e.target.value)
-                                if (fieldErrors.fullName) {
-                                    setFieldErrors(prev => ({ ...prev, fullName: undefined }))
-                                }
-                            }}
-                            aria-invalid={!!fieldErrors.fullName}
-                            className={fieldErrors.fullName ? "border-destructive" : ""}
-                        />
-                        {fieldErrors.fullName && (
-                            <p className="text-control-sm font-medium text-destructive">
-                                {fieldErrors.fullName}
-                            </p>
-                        )}
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                            id="email"
-                            type="email"
-                            placeholder="seu@email.com"
-                            value={email}
-                            onChange={(e) => {
-                                setEmail(e.target.value)
-                                if (fieldErrors.email) {
-                                    setFieldErrors(prev => ({ ...prev, email: undefined }))
-                                }
-                            }}
-                            aria-invalid={!!fieldErrors.email}
-                            className={fieldErrors.email ? "border-destructive" : ""}
-                        />
-                        {fieldErrors.email && (
-                            <p className="text-control-sm font-medium text-destructive">
-                                {fieldErrors.email}
-                            </p>
-                        )}
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <Label htmlFor="phone">Telefone celular</Label>
-                        <Input
-                            id="phone"
-                            type="tel"
-                            placeholder="(11) 99999-9999"
-                            value={phone}
-                            onChange={handlePhoneChange}
-                            aria-invalid={!!fieldErrors.phone}
-                            className={fieldErrors.phone ? "border-destructive" : ""}
-                            maxLength={15}
-                        />
-                        {fieldErrors.phone && (
-                            <p className="text-control-sm font-medium text-destructive">
-                                {fieldErrors.phone}
-                            </p>
-                        )}
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <Label htmlFor="password">Senha</Label>
-                        <InputGroup aria-invalid={!!fieldErrors.password}>
-                            <InputGroupInput
-                                id="password"
-                                type={showPassword ? "text" : "password"}
-                                placeholder="Digite sua senha"
-                                value={password}
-                                onChange={(e) => {
-                                    setPassword(e.target.value)
-                                    if (fieldErrors.password) {
-                                        setFieldErrors(prev => ({ ...prev, password: undefined }))
-                                    }
-                                }}
-                                aria-invalid={!!fieldErrors.password}
-                            />
+                    <FormInput
+                        label="Nome completo"
+                        type="text"
+                        placeholder="João Silva"
+                        value={fullName}
+                        onChange={(e) => {
+                            setFullName(e.target.value)
+                            if (fieldErrors.fullName) {
+                                setFieldErrors(prev => ({ ...prev, fullName: undefined }))
+                            }
+                        }}
+                        error={fieldErrors.fullName}
+                    />
+                    <FormInput
+                        label="Email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        value={email}
+                        onChange={(e) => {
+                            setEmail(e.target.value)
+                            if (fieldErrors.email) {
+                                setFieldErrors(prev => ({ ...prev, email: undefined }))
+                            }
+                        }}
+                        error={fieldErrors.email}
+                    />
+                    <FormInput
+                        label="Telefone celular"
+                        type="tel"
+                        placeholder="(11) 99999-9999"
+                        value={phone}
+                        onChange={handlePhoneChange}
+                        maxLength={15}
+                        error={fieldErrors.phone}
+                    />
+                    <Field>
+                        <FieldLabel>Senha</FieldLabel>
+                        <InputGroup>
+                            <FieldControl>
+    <InputGroupInput
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="Digite sua senha"
+                                    value={password}
+                                    onChange={(e) => {
+                                        setPassword(e.target.value)
+                                        if (fieldErrors.password) {
+                                            setFieldErrors(prev => ({ ...prev, password: undefined }))
+                                        }
+                                    }}
+                                />
+                            </FieldControl>
                             <InputGroupAddon align="inline-end">
                                 <InputGroupButton
                                     onClick={() => setShowPassword(!showPassword)}
@@ -322,11 +299,9 @@ export function SignupForm() {
                                 </InputGroupButton>
                             </InputGroupAddon>
                         </InputGroup>
-                        {fieldErrors.password && (
-                            <p className="text-control-sm font-medium text-destructive">
-                                {fieldErrors.password}
-                            </p>
-                        )}
+                        {fieldErrors.password ? (
+                            <FieldError>{fieldErrors.password}</FieldError>
+                        ) : null}
 
                         {/* Password Requirements Visual Indicator */}
                         {password.length > 0 && (
@@ -386,7 +361,7 @@ export function SignupForm() {
                                 </div>
                             </div>
                         )}
-                    </div>
+                    </Field>
                     <Button type="submit" className="w-full" disabled={loading}>
                         {loading ? "Criando conta..." : "Criar conta"}
                     </Button>
