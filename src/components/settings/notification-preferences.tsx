@@ -2,12 +2,18 @@
 
 import { useCallback, useState, type ReactNode } from "react"
 import {
+    Field,
+    FieldContent,
+    FieldControl,
+    FieldDescription,
+    FieldLabel,
+} from "@/components/ui/field"
+import {
     PageSection,
     PageSectionHeader,
     PageSectionTitle,
 } from "@/components/ui/page-section"
 import { ArrowRightIcon } from "@heroicons/react/16/solid"
-import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertTitle } from "@/components/ui/alert"
@@ -97,23 +103,28 @@ function PrefRow({
     disabled?: boolean
 }) {
     return (
-        <div className="flex items-start justify-between gap-5 rounded-lg border border-border/80 bg-muted/20 p-3 sm:p-3.5">
-            <div className="min-w-0 space-y-0.5 pr-2">
-                <Label htmlFor={id} className="text-sm font-medium">
-                    {title}
-                </Label>
-                <p className="text-xs leading-snug text-muted-foreground">
+        // `Field` horizontal: o rótulo segue ligado ao interruptor, e a descrição
+        // passa a ser anunciada com ele por `aria-describedby`.
+        <Field
+            orientation="horizontal"
+            className="justify-between gap-5 rounded-lg border border-border/80 bg-muted/20 p-3 sm:p-3.5"
+        >
+            <FieldContent className="min-w-0 gap-0.5 pr-2">
+                <FieldLabel className="text-sm font-medium">{title}</FieldLabel>
+                <FieldDescription className="text-xs leading-snug">
                     {description}
-                </p>
-            </div>
-            <Switch
-                id={id}
-                className="mt-0.5 shrink-0"
-                checked={checked}
-                onCheckedChange={onCheckedChange}
-                disabled={disabled}
-            />
-        </div>
+                </FieldDescription>
+            </FieldContent>
+            <FieldControl>
+                <Switch
+                    id={id}
+                    className="mt-0.5 shrink-0"
+                    checked={checked}
+                    onCheckedChange={onCheckedChange}
+                    disabled={disabled}
+                />
+            </FieldControl>
+        </Field>
     )
 }
 

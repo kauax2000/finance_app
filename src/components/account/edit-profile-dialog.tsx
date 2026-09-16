@@ -20,11 +20,13 @@ import {
 } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Alert, AlertTitle } from "@/components/ui/alert"
-import { CustomForm } from "@/components/ui/form"
+import {
+    CustomForm,
+    FormInput,
+} from "@/components/ui/form"
 import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { ArrowPathIcon, CheckCircleIcon, ExclamationTriangleIcon, PhotoIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { getInitials, cn } from "@/lib/utils"
 import { createActivity } from "@/lib/activity"
@@ -356,53 +358,46 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                 </p>
             </div>
 
-            <div className="space-y-1.5">
-                <Label htmlFor="edit-name" className="text-xs">
-                    Nome
-                </Label>
-                <Input
-                    id="edit-name"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    placeholder="Seu nome"
-                />
-            </div>
+            <FormInput
+                id="edit-name"
+                label="Nome"
+                fieldSize="sm"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Seu nome"
+            />
 
-            <div className="space-y-1.5">
-                <Label htmlFor="edit-email" className="text-xs">
-                    Email
-                </Label>
-                <Input
-                    id="edit-email"
-                    type="email"
-                    value={editEmail}
-                    onChange={(e) => setEditEmail(e.target.value)}
-                    placeholder="seu@email.com"
-                />
-                {editEmail !== userEmail && (
-                    <p className="flex items-center gap-1 text-xs text-warning-muted-foreground">
-                        <ExclamationTriangleIcon className="h-3 w-3 shrink-0" />
-                        Você receberá um link de confirmação no novo email
-                    </p>
-                )}
-            </div>
+            {/* O aviso da troca de e-mail é descrição do campo, e agora é anunciado
+                com ele por `aria-describedby`. */}
+            <FormInput
+                id="edit-email"
+                label="Email"
+                fieldSize="sm"
+                type="email"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+                placeholder="seu@email.com"
+                description={
+                    editEmail !== userEmail ? (
+                        <span className="flex items-center gap-1 text-warning-muted-foreground">
+                            <ExclamationTriangleIcon className="h-3 w-3 shrink-0" />
+                            Você receberá um link de confirmação no novo email
+                        </span>
+                    ) : undefined
+                }
+            />
 
             {editEmail !== userEmail && (
-                <div className="space-y-1.5">
-                    <Label htmlFor="edit-password" className="text-xs">
-                        Senha atual
-                    </Label>
-                    <Input
-                        id="edit-password"
-                        type="password"
-                        value={editPassword}
-                        onChange={(e) => setEditPassword(e.target.value)}
-                        placeholder="Digite sua senha para confirmar"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                        Necessário confirmar sua identidade para alterar o email
-                    </p>
-                </div>
+                <FormInput
+                    id="edit-password"
+                    label="Senha atual"
+                    fieldSize="sm"
+                    type="password"
+                    value={editPassword}
+                    onChange={(e) => setEditPassword(e.target.value)}
+                    placeholder="Digite sua senha para confirmar"
+                    description="Necessário confirmar sua identidade para alterar o email"
+                />
             )}
 
             {errorMessage && (

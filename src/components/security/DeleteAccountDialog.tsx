@@ -23,11 +23,12 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { CustomForm } from "@/components/ui/form"
+import {
+    CustomForm,
+    FormInput,
+} from "@/components/ui/form"
 import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { CheckCircleIcon, ExclamationTriangleIcon, TrashIcon } from "@heroicons/react/16/solid"
 
 import { CheckCircleIcon as CheckCircleOutlineIcon } from "@heroicons/react/24/outline"
@@ -315,34 +316,29 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
         <CustomForm onSubmit={handleDeleteFormSubmit} className="flex min-h-0 flex-1 flex-col">
             <DialogBody>
                 <div className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="confirm-email">Confirme seu email</Label>
-                        <Input
-                            id="confirm-email"
-                            type="email"
-                            placeholder={userEmail}
-                            value={confirmEmail}
-                            onChange={(e) => setConfirmEmail(e.target.value)}
-                            className={emailsMatch && confirmEmail ? "border-success/50" : ""}
-                        />
-                        {confirmEmail && !emailsMatch ? (
-                            <p className="text-xs text-destructive">O email não confere</p>
-                        ) : null}
-                    </div>
+                    {/* O "não confere" era um `<p>` solto, sem `aria-invalid` e sem
+                        ligação com o campo; como `error` ele marca o campo e é
+                        anunciado. */}
+                    <FormInput
+                        id="confirm-email"
+                        label="Confirme seu email"
+                        type="email"
+                        placeholder={userEmail}
+                        value={confirmEmail}
+                        onChange={(e) => setConfirmEmail(e.target.value)}
+                        className={emailsMatch && confirmEmail ? "border-success/50" : ""}
+                        error={confirmEmail && !emailsMatch ? "O email não confere" : undefined}
+                    />
 
-                    <div className="space-y-2">
-                        <Label htmlFor="delete-password">Sua senha</Label>
-                        <Input
-                            id="delete-password"
-                            type="password"
-                            placeholder="Digite sua senha"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                            Necessário confirmar sua identidade para excluir a conta.
-                        </p>
-                    </div>
+                    <FormInput
+                        id="delete-password"
+                        label="Sua senha"
+                        type="password"
+                        placeholder="Digite sua senha"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        description="Necessário confirmar sua identidade para excluir a conta."
+                    />
 
                     {error ? (
                         <Alert tone="destructive" size="sm">

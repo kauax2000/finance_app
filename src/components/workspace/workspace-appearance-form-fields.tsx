@@ -1,9 +1,13 @@
 "use client"
 
 import { createElement } from "react"
+import {
+    Field,
+    FieldControl,
+    FieldLabel,
+} from "@/components/ui/field"
 import { WorkspaceBrandMark } from "@/components/workspace/workspace-brand-mark"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import {
     WORKSPACE_ACCENT_PALETTE,
@@ -57,9 +61,9 @@ export function WorkspaceAppearanceFormFields({
                 </p>
             </div>
 
-            <div className="space-y-2">
+            <Field>
                 <div className="flex items-baseline justify-between gap-2">
-                    <Label htmlFor={nameId}>Nome</Label>
+                    <FieldLabel>Nome</FieldLabel>
                     {/* O `maxLength` truncava calado: o campo simplesmente parava
                         de aceitar tecla. A contagem só aparece perto do teto,
                         porque um contador sempre visível é ruído nos 100
@@ -70,15 +74,17 @@ export function WorkspaceAppearanceFormFields({
                         </span>
                     ) : null}
                 </div>
-                <Input
-                    id={nameId}
-                    value={name}
-                    onChange={(e) => onNameChange(e.target.value)}
-                    placeholder="Ex.: Casa, Freelance"
-                    autoComplete="off"
-                    maxLength={NOME_MAX}
-                />
-            </div>
+                <FieldControl>
+                    <Input
+                        id={nameId}
+                        value={name}
+                        onChange={(e) => onNameChange(e.target.value)}
+                        placeholder="Ex.: Casa, Freelance"
+                        autoComplete="off"
+                        maxLength={NOME_MAX}
+                    />
+                </FieldControl>
+            </Field>
 
             <fieldset className="space-y-2">
                 <legend className="text-sm font-medium">Cor de destaque</legend>

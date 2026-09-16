@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { FormInput } from "@/components/ui/form"
 import { useWorkspace } from "@/components/workspace-provider"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,8 +19,6 @@ import {
 } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Workspace } from "@/lib/supabase"
 
@@ -177,21 +176,21 @@ export function WorkspaceDeleteDialog({
                 </div>
             )}
 
-            <div className="space-y-2">
-                <Label htmlFor="workspace-delete-confirm-name">
-                    Digite o nome da carteira para confirmar:{" "}
-                    <span className="font-semibold text-foreground">{workspace?.name ?? ""}</span>
-                </Label>
-                <Input
-                    id="workspace-delete-confirm-name"
-                    autoComplete="off"
-                    value={confirmName}
-                    onChange={(e) => setConfirmName(e.target.value)}
-                    placeholder="Nome exato da carteira"
-                    disabled={impactLoading || Boolean(impactError)}
-                    aria-invalid={confirmName.length > 0 && !nameMatches}
-                />
-            </div>
+            <FormInput
+                id="workspace-delete-confirm-name"
+                label={
+                    <span>
+                        Digite o nome da carteira para confirmar:{" "}
+                        <span className="font-semibold text-foreground">{workspace?.name ?? ""}</span>
+                    </span>
+                }
+                autoComplete="off"
+                value={confirmName}
+                onChange={(e) => setConfirmName(e.target.value)}
+                placeholder="Nome exato da carteira"
+                disabled={impactLoading || Boolean(impactError)}
+                aria-invalid={confirmName.length > 0 && !nameMatches}
+            />
 
             {deleteError ? <p className="text-sm text-destructive">{deleteError}</p> : null}
         </div>

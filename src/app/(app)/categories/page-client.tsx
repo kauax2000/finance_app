@@ -27,8 +27,6 @@ import {
 import { Card, CardContent } from "@/components/ui/card"
 import { CustomForm, FormInput } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { CategoryDeleteAlertBody } from "@/components/categories/category-delete-alert-body"
 import { CategoriesToolbar, MonthNav } from "@/components/categories/categories-toolbar"
 import { useDashboardCategoriesSubrouteLabels } from "@/components/layout/dashboard-category-subroute-title"
@@ -587,18 +585,16 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
 
     const categoryFormFields = (
         <div className="space-y-4 py-4">
-            <div className="space-y-2">
-                <Label htmlFor="name">Nome</Label>
-                <Input
-                    id="name"
-                    value={name}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setName(e.target.value)
-                    }
-                    placeholder="Ex: Alimentação"
-                    required
-                />
-            </div>
+            <FormInput
+                id="name"
+                label="Nome"
+                value={name}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setName(e.target.value)
+                }
+                placeholder="Ex: Alimentação"
+                required
+            />
 
             <TransactionFormTypeSegment
                 value={type}

@@ -14,8 +14,6 @@ import {
 } from "@/components/transactions/transaction-type-segment"
 import { CustomForm, FormInput } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Dialog,
   DialogBody,
@@ -177,18 +175,16 @@ export function CategoryCreateDialog({
 
     const fieldsBlock = (
         <div className="space-y-4 py-4">
-            <div className="space-y-2">
-                <Label htmlFor="global-cat-name">Nome</Label>
-                <Input
-                    id="global-cat-name"
-                    value={name}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setName(e.target.value)
-                    }
-                    placeholder="Ex: Alimentação"
-                    required
-                />
-            </div>
+            <FormInput
+                id="global-cat-name"
+                label="Nome"
+                value={name}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setName(e.target.value)
+                }
+                placeholder="Ex: Alimentação"
+                required
+            />
 
             <TransactionFormTypeSegment
                 value={type}

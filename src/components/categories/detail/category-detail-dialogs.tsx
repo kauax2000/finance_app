@@ -6,8 +6,6 @@ import {
   SheetContent,
 } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Dialog,
   DialogBody,
@@ -104,18 +102,16 @@ export function CategoryDetailDialogs({
 
     const editFields = (
         <div className="space-y-4 py-4">
-            <div className="space-y-2">
-                <Label htmlFor="category-edit-name">Nome</Label>
-                <Input
-                    id="category-edit-name"
-                    value={editName}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        onEditNameChange(e.target.value)
-                    }
-                    placeholder="Ex: Alimentação"
-                    required
-                />
-            </div>
+            <FormInput
+                id="category-edit-name"
+                label="Nome"
+                value={editName}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    onEditNameChange(e.target.value)
+                }
+                placeholder="Ex: Alimentação"
+                required
+            />
             <TransactionFormTypeSegment
                 value={editType}
                 onChange={onEditTypeChange}

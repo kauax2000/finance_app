@@ -1,6 +1,11 @@
 "use client"
 
 import { useTimeout } from "@/hooks/use-timeout"
+import {
+    Field,
+    FieldControl,
+    FieldLabel,
+} from "@/components/ui/field"
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy"
 import { useState } from "react"
 import { useAuth } from "@/components/providers"
@@ -30,7 +35,6 @@ import {
     InputGroupButton,
     InputGroupInput,
 } from "@/components/ui/input-group"
-import { Label } from "@/components/ui/label"
 import { CheckCircleIcon, CheckIcon, ExclamationTriangleIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
 import { cn } from "@/lib/utils"
 
@@ -182,9 +186,10 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
 
     const passwordFieldsBody = (
         <div className="space-y-4">
-            <div className="space-y-2">
-                <Label htmlFor="current-password">Senha atual</Label>
+            <Field>
+                <FieldLabel>Senha atual</FieldLabel>
                 <InputGroup>
+                    <FieldControl>
                     <InputGroupInput
                         id="current-password"
                         type={showCurrentPassword ? "text" : "password"}
@@ -194,6 +199,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         required
                         disabled={loading}
                     />
+                    </FieldControl>
                     <InputGroupAddon align="inline-end">
                         <InputGroupButton
                             onClick={() => setShowCurrentPassword(!showCurrentPassword)}
@@ -204,11 +210,12 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         </InputGroupButton>
                     </InputGroupAddon>
                 </InputGroup>
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-                <Label htmlFor="new-password">Nova senha</Label>
+            <Field>
+                <FieldLabel>Nova senha</FieldLabel>
                 <InputGroup>
+                    <FieldControl>
                     <InputGroupInput
                         id="new-password"
                         type={showNewPassword ? "text" : "password"}
@@ -218,6 +225,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         required
                         disabled={loading}
                     />
+                    </FieldControl>
                     <InputGroupAddon align="inline-end">
                         <InputGroupButton
                             onClick={() => setShowNewPassword(!showNewPassword)}
@@ -230,7 +238,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                 </InputGroup>
 
                 {newPassword.length > 0 ? (
-                    <div className="mt-2 grid grid-cols-2 gap-1.5 rounded-lg border border-border/80 bg-muted/20 p-3">
+                    <div className="grid grid-cols-2 gap-1.5 rounded-lg border border-border/80 bg-muted/20 p-3">
                         <ReqRow met={passwordRequirements.hasMinLength} label="8+ caracteres" />
                         <ReqRow met={passwordRequirements.hasLowercase} label="minúscula" />
                         <ReqRow met={passwordRequirements.hasUppercase} label="maiúscula" />
@@ -239,11 +247,12 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         <ReqRow met={passwordIsValid} label="senha forte" />
                     </div>
                 ) : null}
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirmar nova senha</Label>
+            <Field>
+                <FieldLabel>Confirmar nova senha</FieldLabel>
                 <InputGroup>
+                    <FieldControl>
                     <InputGroupInput
                         id="confirm-password"
                         type={showConfirmPassword ? "text" : "password"}
@@ -253,6 +262,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         required
                         disabled={loading}
                     />
+                    </FieldControl>
                     <InputGroupAddon align="inline-end">
                         <InputGroupButton
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -263,7 +273,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         </InputGroupButton>
                     </InputGroupAddon>
                 </InputGroup>
-            </div>
+            </Field>
 
             {error ? (
                 <Alert tone="destructive" size="sm">

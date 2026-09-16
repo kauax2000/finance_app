@@ -1,6 +1,11 @@
 "use client"
 
 import { useTimeout } from "@/hooks/use-timeout"
+import {
+    Field,
+    FieldControl,
+    FieldLabel,
+} from "@/components/ui/field"
 import * as React from "react"
 import { CheckIcon, DocumentDuplicateIcon, EnvelopeIcon, LinkIcon, PaperAirplaneIcon } from "@heroicons/react/16/solid"
 import type { User } from "@supabase/supabase-js"
@@ -8,7 +13,6 @@ import { CustomForm } from "@/components/ui/form"
 import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Dialog,
   DialogCloseButton,
@@ -297,8 +301,10 @@ export function WorkspaceInviteDialog({
                                                 void handleInvite()
                                             }}
                                         >
-                                            <Label htmlFor="global-invite-email">E-mail</Label>
+                                            <Field>
+                                            <FieldLabel>E-mail</FieldLabel>
                                             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                                <FieldControl>
                                                 <Input
                                                     id="global-invite-email"
                                                     value={inviteEmail}
@@ -309,6 +315,7 @@ export function WorkspaceInviteDialog({
                                                     disabled={savingInvite}
                                                     className="sm:flex-1"
                                                 />
+                                                </FieldControl>
                                                 <Button
                                                     type="submit"
                                                     disabled={
@@ -326,6 +333,7 @@ export function WorkspaceInviteDialog({
                                                     )}
                                                 </Button>
                                             </div>
+                                            </Field>
                                         </CustomForm>
 
                                         <div className="space-y-2 rounded-lg border bg-muted/20 p-3">
@@ -521,8 +529,10 @@ export function WorkspaceInviteDialog({
                                             void handleInvite()
                                         }}
                                     >
-                                        <Label htmlFor="global-invite-email">E-mail</Label>
+                                        <Field>
+                                        <FieldLabel>E-mail</FieldLabel>
                                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                            <FieldControl>
                                             <Input
                                                 id="global-invite-email"
                                                 value={inviteEmail}
@@ -533,6 +543,7 @@ export function WorkspaceInviteDialog({
                                                 disabled={savingInvite}
                                                 className="sm:flex-1"
                                             />
+                                            </FieldControl>
                                             <Button
                                                 type="submit"
                                                 disabled={
@@ -550,6 +561,7 @@ export function WorkspaceInviteDialog({
                                                 )}
                                             </Button>
                                         </div>
+                                        </Field>
                                     </CustomForm>
 
                                     <div className="space-y-2 rounded-lg border bg-muted/20 p-3">

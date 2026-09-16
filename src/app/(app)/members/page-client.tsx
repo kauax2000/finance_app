@@ -8,6 +8,11 @@ import {
 } from "@/components/ui/empty-state"
 import { MembersSectionSkeleton } from "@/components/members/members-section-skeleton"
 import {
+    Field,
+    FieldControl,
+    FieldLabel,
+} from "@/components/ui/field"
+import {
     PageSection,
     PageSectionHeader,
     PageSectionTitle,
@@ -35,7 +40,6 @@ import { Spinner } from "@/components/ui/spinner"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
     Badge,
@@ -782,8 +786,10 @@ export default function MembersPage() {
                                         void handleInvite()
                                     }}
                                 >
-                                    <Label htmlFor="invite-email">E-mail</Label>
+                                    <Field>
+                                    <FieldLabel>E-mail</FieldLabel>
                                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                        <FieldControl>
                                         <Input
                                             id="invite-email"
                                             value={inviteEmail}
@@ -792,6 +798,7 @@ export default function MembersPage() {
                                             disabled={!canManageMembers || savingInvite}
                                             className="sm:flex-1"
                                         />
+                                        </FieldControl>
                                         <Button
                                             type="submit"
                                             disabled={
@@ -811,6 +818,7 @@ export default function MembersPage() {
                                             )}
                                         </Button>
                                     </div>
+                                    </Field>
                                 </CustomForm>
                             </div>
                             <Separator />
