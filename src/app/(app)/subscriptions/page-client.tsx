@@ -1,6 +1,6 @@
 "use client"
 
-import { currencyBRL } from "@/lib/formatters"
+import { currencyBRL, numberBR } from "@/lib/formatters"
 import { ArrowDownIcon, ArrowUpIcon, ArrowsUpDownIcon, PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ArrowPathRoundedSquareIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -393,7 +393,7 @@ export default function SubscriptionsPageClient() {
         toastSuccess(
             n === 1
                 ? "Assinatura removida."
-                : `${n.toLocaleString("pt-BR")} assinaturas removidas.`
+                : `${numberBR(n)} assinaturas removidas.`
         )
         setPendingDelete(null)
         setSelectedIds(new Set())
@@ -541,7 +541,7 @@ export default function SubscriptionsPageClient() {
                                         <p className="min-w-0 pt-0.5 text-sm font-medium leading-snug text-foreground">
                                             {selectedIds.size === 1
                                                 ? "1 selecionada"
-                                                : `${selectedIds.size.toLocaleString("pt-BR")} selecionadas`}
+                                                : `${numberBR(selectedIds.size)} selecionadas`}
                                         </p>
                                         <Button
                                             type="button"
@@ -603,7 +603,7 @@ export default function SubscriptionsPageClient() {
                                     <span className="mr-auto text-xs tabular-nums text-muted-foreground">
                                         {selectedIds.size === 1
                                             ? "1 selecionada"
-                                            : `${selectedIds.size.toLocaleString("pt-BR")} selecionadas`}
+                                            : `${numberBR(selectedIds.size)} selecionadas`}
                                     </span>
                                     <div className="flex flex-wrap items-center justify-end gap-2">
                                         <Button
@@ -965,24 +965,20 @@ export default function SubscriptionsPageClient() {
                                 ) : statusFilter !== "all" ? (
                                     <>
                                         <span className="text-foreground/90">
-                                            {filteredSorted.length.toLocaleString(
-                                                "pt-BR"
-                                            )}
+                                            {numberBR(filteredSorted.length)}
                                         </span>
                                         <span className="mx-1 text-border">
                                             ·
                                         </span>
                                         <span>
                                             na lista filtrada (total no espaço:{" "}
-                                            {rows.length.toLocaleString(
-                                                "pt-BR"
-                                            )}
+                                            {numberBR(rows.length)}
                                             )
                                         </span>
                                     </>
                                 ) : (
                                     <>
-                                        {rows.length.toLocaleString("pt-BR")}{" "}
+                                        {numberBR(rows.length)}{" "}
                                         {rows.length === 1
                                             ? "assinatura"
                                             : "assinaturas"}
@@ -1065,7 +1061,7 @@ export default function SubscriptionsPageClient() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>
                             {pendingDelete?.mode === "bulk"
-                                ? `Excluir ${pendingDelete.ids.length.toLocaleString("pt-BR")} assinaturas?`
+                                ? `Excluir ${numberBR(pendingDelete.ids.length)} assinaturas?`
                                 : "Excluir assinatura?"}
                         </AlertDialogTitle>
                         <AlertDialogDescription asChild>
@@ -1105,9 +1101,7 @@ export default function SubscriptionsPageClient() {
                                     <>
                                         <p className="text-foreground">
                                             As{" "}
-                                            {pendingDelete.ids.length.toLocaleString(
-                                                "pt-BR"
-                                            )}{" "}
+                                            {numberBR(pendingDelete.ids.length)}{" "}
                                             assinaturas selecionadas serão
                                             removidas.
                                         </p>
@@ -1134,10 +1128,10 @@ export default function SubscriptionsPageClient() {
                                             {pendingDelete.ids.length > 8 ? (
                                                 <li className="text-muted-foreground">
                                                     e mais{" "}
-                                                    {(
+                                                    {numberBR((
                                                         pendingDelete.ids
                                                             .length - 8
-                                                    ).toLocaleString("pt-BR")}{" "}
+                                                    ))}{" "}
                                                     …
                                                 </li>
                                             ) : null}

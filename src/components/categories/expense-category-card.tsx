@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils"
 import { ChevronRightIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ColorTile } from "@/components/ui/color-tile"
 import { deltaTone } from "@/lib/delta-tone"
+import { currencyBRL } from "@/lib/formatters"
 
 function stopLinkNavigation(e: React.MouseEvent) {
     e.preventDefault()
@@ -22,7 +23,7 @@ function stopLinkNavigation(e: React.MouseEvent) {
 }
 
 const currency = (n: number) =>
-    n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+    currencyBRL(n)
 
 function isMomFlat(now: number, prev: number): boolean {
     if (prev <= 0) return false

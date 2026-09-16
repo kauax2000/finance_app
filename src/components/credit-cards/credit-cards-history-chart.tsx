@@ -1,7 +1,7 @@
 "use client"
 
 import { formatYearMonthShortPtBr } from "@/lib/transaction-date"
-import { currencyBRL } from "@/lib/formatters"
+import { currencyBRL, currencyCompactBRL } from "@/lib/formatters"
 import { useMemo } from "react"
 import {
     ResponsiveContainer,
@@ -359,12 +359,7 @@ export function CreditCardsHistoryChart({
                                         tickLine={false}
                                         className="text-2xs text-muted-foreground"
                                         domain={yDomain}
-                                        tickFormatter={(v) =>
-                                            Number(v).toLocaleString("pt-BR", {
-                                                notation: "compact",
-                                                maximumFractionDigits: 0,
-                                            })
-                                        }
+                                        tickFormatter={(v) => currencyCompactBRL(Number(v))}
                                     />
                                     <Tooltip
                                         content={

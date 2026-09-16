@@ -188,6 +188,24 @@ export function formatMonthShortPtBr(d: Date): string {
 }
 
 /**
+ * "15/05/25 14:30" — data e hora curtas, para o que expira.
+ *
+ * Ela existe porque seis chamadas escreviam
+ * `new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })`
+ * à mão, em dois arquivos que dizem a mesma frase sobre o mesmo convite.
+ */
+export function formatDateTimeShortPtBr(iso: string): string {
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return iso.trim()
+    return d.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })
+}
+
+/** "setembro" — o nome do mês por extenso, para o seletor de mês. */
+export function formatMonthLongPtBr(d: Date): string {
+    return d.toLocaleString("pt-BR", { month: "long" })
+}
+
+/**
  * "2026-09-01" → "01/09/2026", sem passar por Date: `new Date("2026-09-01")` é
  * meia-noite UTC, e no Brasil isso é o dia anterior.
  */

@@ -59,6 +59,7 @@ import type {
     BillRowWithCategory,
 } from "@/lib/queries/fetch-bills-page-bundle"
 import type { Bill } from "@/lib/supabase"
+import { numberBR } from "@/lib/formatters"
 
 const DETAIL_QUERY = "detail"
 
@@ -765,14 +766,12 @@ export default function BillsPageClient() {
                         {mode === "pending" ? (
                             <>
                                 <span className="text-foreground/90">
-                                    {sortedPendingCards.length.toLocaleString(
-                                        "pt-BR"
-                                    )}
+                                    {numberBR(sortedPendingCards.length)}
                                 </span>
                                 <span className="mx-1 text-border">·</span>
                                 {pendingFilter === "all" ? (
                                     <span>
-                                        {regularRows.length.toLocaleString("pt-BR")}{" "}
+                                        {numberBR(regularRows.length)}{" "}
                                         {regularRows.length === 1
                                             ? "pendência no espaço"
                                             : "pendências no espaço"}
@@ -780,7 +779,7 @@ export default function BillsPageClient() {
                                 ) : (
                                     <span>
                                         na lista filtrada (
-                                        {regularRows.length.toLocaleString("pt-BR")}{" "}
+                                        {numberBR(regularRows.length)}{" "}
                                         no espaço)
                                     </span>
                                 )}
@@ -788,9 +787,7 @@ export default function BillsPageClient() {
                         ) : (
                             <>
                                 <span className="text-foreground/90">
-                                    {sortedModelCards.length.toLocaleString(
-                                        "pt-BR"
-                                    )}
+                                    {numberBR(sortedModelCards.length)}
                                 </span>
                                 <span className="mx-1 text-border">·</span>
                                 <span>modelos de conta</span>

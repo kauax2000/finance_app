@@ -48,6 +48,7 @@ import {
     categoriesOnboardingPanelShellClass,
 } from "@/components/categories/categories-onboarding-panel-styles"
 import { cn } from "@/lib/utils"
+import { currencyBRL } from "@/lib/formatters"
 type Props = {
     user: User
     workspaceId: string
@@ -1034,10 +1035,7 @@ export function CategoriesOnboardingWizard({
                             const raw = (amountByCategoryId[c.id] ?? "").trim()
                             const amt = raw === "" ? null : parseMoneyBrl(raw)
                             if (amt === null || amt <= 0) return null
-                            const formatted = amt.toLocaleString("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                            })
+                            const formatted = currencyBRL(amt)
                             const bg = c.color || CATEGORY_COLORS[3]
                             return (
                                 <div

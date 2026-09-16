@@ -35,6 +35,7 @@ import {
 } from "@/lib/credit-card-billing"
 import type { SortDir, TransactionsListSortKey } from "@/components/transactions/transactions-list-types"
 import { isProjectedTransactionRow } from "@/lib/category-expense-month-rows"
+import { numberBR } from "@/lib/formatters"
 
 export type TransactionsTableSortKey = TransactionsListSortKey
 
@@ -269,7 +270,7 @@ export function TransactionsTable({
                             <p className="min-w-0 pt-0.5 text-sm font-medium leading-snug text-foreground">
                                 {selectedIds.size === 1
                                     ? "1 selecionada"
-                                    : `${selectedIds.size.toLocaleString("pt-BR")} selecionadas`}
+                                    : `${numberBR(selectedIds.size)} selecionadas`}
                             </p>
                             <Button
                                 type="button"
@@ -324,7 +325,7 @@ export function TransactionsTable({
                         <span className="mr-auto text-xs tabular-nums text-muted-foreground">
                             {selectedIds.size === 1
                                 ? "1 selecionada"
-                                : `${selectedIds.size.toLocaleString("pt-BR")} selecionadas`}
+                                : `${numberBR(selectedIds.size)} selecionadas`}
                         </span>
                         <div className="flex flex-wrap items-center justify-end gap-2">
                             <Button
@@ -861,7 +862,7 @@ export function TransactionsTable({
                             </span>
                             <span className="mx-1 text-border">·</span>
                             <span>
-                                {total.toLocaleString("pt-BR")}{" "}
+                                {numberBR(total)}{" "}
                                 {total === 1 ? "transação" : "transações"}
                             </span>
                         </>

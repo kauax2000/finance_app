@@ -1,5 +1,6 @@
 "use client"
 
+import { formatTransactionDayMonthPtBr } from "@/lib/transaction-date"
 import { ROUTES } from "@/config/navigation"
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
@@ -116,10 +117,7 @@ const formatRelativeTime = (dateString: string) => {
     if (hours < 24) return `Há ${hours}h`
     if (days < 7) return `Há ${days}d`
 
-    return date.toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "short",
-    })
+    return formatTransactionDayMonthPtBr(date.toISOString())
 }
 
 const FAMILY_TYPES = [

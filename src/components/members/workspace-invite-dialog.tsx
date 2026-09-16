@@ -32,6 +32,7 @@ import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
 import { toastError, toastSuccess } from "@/lib/toast"
 import { useConfirmDialog } from "@/components/use-confirm-dialog"
+import { formatDateTimeShortPtBr } from "@/lib/transaction-date"
 import {
     dispatchFinanceMembersMutated,
 } from "@/lib/workspace-data-events"
@@ -44,11 +45,11 @@ function formatLinkInviteExpiresAt(iso: string | null | undefined): string | nul
     if (ms <= 0) return "Este link já expirou."
     const days = Math.ceil(ms / 86_400_000)
     if (days > 1)
-        return `Expira em cerca de ${days} dias (${new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}).`
+        return `Expira em cerca de ${days} dias (${formatDateTimeShortPtBr(iso)}).`
     if (days === 1)
-        return `Expira em cerca de 1 dia (${new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}).`
+        return `Expira em cerca de 1 dia (${formatDateTimeShortPtBr(iso)}).`
     const hours = Math.max(1, Math.ceil(ms / 3_600_000))
-    return `Expira em cerca de ${hours} h (${new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}).`
+    return `Expira em cerca de ${hours} h (${formatDateTimeShortPtBr(iso)}).`
 }
 
 export type WorkspaceInviteDialogProps = {

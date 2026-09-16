@@ -1,6 +1,6 @@
 "use client"
 
-import { currencyBRL } from "@/lib/formatters"
+import { currencyBRL, numberBR } from "@/lib/formatters"
 import { ArrowTopRightOnSquareIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
 import * as React from "react"
@@ -529,7 +529,7 @@ export function CategoryEmbeddedTransactions({
                             <AlertDialogHeader>
                                 <AlertDialogTitle>
                                     {pendingDelete?.mode === "bulk"
-                                        ? `Excluir ${pendingDelete.ids.length.toLocaleString("pt-BR")} transações?`
+                                        ? `Excluir ${numberBR(pendingDelete.ids.length)} transações?`
                                         : "Excluir transação?"}
                                 </AlertDialogTitle>
                                 <AlertDialogDescription asChild>
@@ -597,9 +597,7 @@ export function CategoryEmbeddedTransactions({
                                                 {pendingDelete.ids.length > 8 ? (
                                                     <li className="text-muted-foreground">
                                                         e mais{" "}
-                                                        {(pendingDelete.ids.length - 8).toLocaleString(
-                                                            "pt-BR"
-                                                        )}{" "}
+                                                        {numberBR((pendingDelete.ids.length - 8))}{" "}
                                                         …
                                                     </li>
                                                 ) : null}

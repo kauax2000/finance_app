@@ -1,6 +1,7 @@
 "use client"
 /* eslint-disable @next/next/no-img-element -- profile avatars use data URLs / external metadata URLs */
 
+import { formatDateLongPtBr } from "@/lib/transaction-date"
 import { ROUTES } from "@/config/navigation"
 import { useState } from "react"
 import Link from "next/link"
@@ -35,11 +36,7 @@ export default function AccountPage() {
         user?.email || userName
     )
     const createdAt = user?.created_at
-        ? new Date(user.created_at).toLocaleDateString("pt-BR", {
-              day: "2-digit",
-              month: "long",
-              year: "numeric",
-          })
+        ? formatDateLongPtBr(user.created_at)
         : "N/A"
 
     const currentAvatarUrl = user?.user_metadata?.avatar_url

@@ -31,6 +31,7 @@ import {
 import {
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
+import { numberBR } from "@/lib/formatters"
 import {
     hasInstallmentDeleteImpact,
     INSTALLMENT_DELETE_WARNING,
@@ -433,7 +434,7 @@ export default function TransactionsPage() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>
                             {pendingDelete?.mode === "bulk"
-                                ? `Excluir ${pendingDelete.ids.length.toLocaleString("pt-BR")} transações?`
+                                ? `Excluir ${numberBR(pendingDelete.ids.length)} transações?`
                                 : "Excluir transação?"}
                         </AlertDialogTitle>
                         <AlertDialogDescription asChild>
@@ -501,9 +502,7 @@ export default function TransactionsPage() {
                                     <>
                                         <p className="text-foreground">
                                             As{" "}
-                                            {pendingDelete.ids.length.toLocaleString(
-                                                "pt-BR"
-                                            )}{" "}
+                                            {numberBR(pendingDelete.ids.length)}{" "}
                                             transações selecionadas serão
                                             removidas do extrato.
                                         </p>
@@ -537,10 +536,10 @@ export default function TransactionsPage() {
                                             {pendingDelete.ids.length > 8 ? (
                                                 <li className="text-muted-foreground">
                                                     e mais{" "}
-                                                    {(
+                                                    {numberBR((
                                                         pendingDelete.ids.length -
                                                         8
-                                                    ).toLocaleString("pt-BR")}{" "}
+                                                    ))}{" "}
                                                     …
                                                 </li>
                                             ) : null}

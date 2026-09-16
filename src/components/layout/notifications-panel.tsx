@@ -34,6 +34,7 @@ import {
     toastPageFetchError,
 } from "@/lib/toast"
 import { cn } from "@/lib/utils"
+import { formatDatePtBr } from "@/lib/transaction-date"
 
 function formatRelativeTime(iso: string): string {
     const t = new Date(iso).getTime()
@@ -47,7 +48,7 @@ function formatRelativeTime(iso: string): string {
     if (h < 24) return `há ${h} h`
     const d = Math.floor(h / 24)
     if (d < 7) return `há ${d} d`
-    return new Date(iso).toLocaleDateString("pt-BR")
+    return formatDatePtBr(iso)
 }
 
 type NotificationsPanelProps = {

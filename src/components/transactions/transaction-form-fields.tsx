@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { ChevronDownIcon } from "@heroicons/react/16/solid"
+import { currencyBRL } from "@/lib/formatters"
 function CategoryRows({
     categories,
     search,
@@ -319,12 +320,12 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
             if (installmentAmount <= 0) return null
             const same = installmentAmount === finalInstallmentAmount
             return same
-                ? `${n} parcelas de ${installmentAmount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`
-                : `${n - 1} × ${installmentAmount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} + última ${finalInstallmentAmount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`
+                ? `${n} parcelas de ${currencyBRL(installmentAmount)}`
+                : `${n - 1} × ${currencyBRL(installmentAmount)} + última ${currencyBRL(finalInstallmentAmount)}`
         }
         const per = parseMoneyBrl(installmentPerAmount)
         if (per === null || per <= 0) return null
-        return `${n} parcelas de ${per.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`
+        return `${n} parcelas de ${currencyBRL(per)}`
     }, [
         showInstallmentFields,
         installmentValueMode,

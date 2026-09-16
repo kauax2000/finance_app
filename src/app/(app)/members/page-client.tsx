@@ -49,6 +49,7 @@ import {
 import { cn, getInitials } from "@/lib/utils"
 import { identityToneFor } from "@/lib/avatar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { formatDatePtBr, formatDateTimeShortPtBr } from "@/lib/transaction-date"
 import {
     dispatchFinanceMembersMutated,
     FINANCE_MEMBERS_MUTATED_EVENT,
@@ -75,10 +76,10 @@ function formatLinkInviteExpiresAt(iso: string | null | undefined): string | nul
     const ms = end - Date.now()
     if (ms <= 0) return "Este link já expirou."
     const days = Math.ceil(ms / 86_400_000)
-    if (days > 1) return `Expira em cerca de ${days} dias (${new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}).`
-    if (days === 1) return `Expira em cerca de 1 dia (${new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}).`
+    if (days > 1) return `Expira em cerca de ${days} dias (${formatDateTimeShortPtBr(iso)}).`
+    if (days === 1) return `Expira em cerca de 1 dia (${formatDateTimeShortPtBr(iso)}).`
     const hours = Math.max(1, Math.ceil(ms / 3_600_000))
-    return `Expira em cerca de ${hours} h (${new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}).`
+    return `Expira em cerca de ${hours} h (${formatDateTimeShortPtBr(iso)}).`
 }
 
 /**
@@ -1013,16 +1014,16 @@ export default function MembersPage() {
                                                                         ? "Aceites ilimitados até revogar ou expirar"
                                                                         : `${invite.usage_count ?? 0} / ${invite.max_uses} usos`}
                                                                     {" · "}Expira:{" "}
-                                                                    {new Date(
+                                                                    {formatDatePtBr(
                                                                         invite.expires_at
-                                                                    ).toLocaleDateString("pt-BR")}
+                                                                    )}
                                                                 </>
                                                             ) : (
                                                                 <>
                                                                     Expira:{" "}
-                                                                    {new Date(
+                                                                    {formatDatePtBr(
                                                                         invite.expires_at
-                                                                    ).toLocaleDateString("pt-BR")}
+                                                                    )}
                                                                 </>
                                                             )}
                                                         </p>
