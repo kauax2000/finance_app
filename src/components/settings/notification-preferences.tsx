@@ -108,7 +108,10 @@ function PrefRow({
 }) {
     return (
         // `Field` horizontal: o rótulo segue ligado ao interruptor, e a descrição
-        // passa a ser anunciada com ele por `aria-describedby`.
+        // passa a ser anunciada com ele por `aria-describedby`. A caixa pintada
+        // fica à mão de propósito: é a linha de uma preferência, e o `Field` é
+        // quem ela é — `Card` ou `Item` trocariam a semântica do campo pela de
+        // uma superfície.
         <Field
             orientation="horizontal"
             className="justify-between gap-5 rounded-lg border border-border/80 bg-muted/20 p-3 sm:p-3.5"

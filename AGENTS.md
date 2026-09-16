@@ -3252,6 +3252,9 @@ fileira flex. As outras três são de aparência: os dois campos de valor do
 `fieldSize` só tem `sm` (`text-xs`) e `md` — eles são **2 de 9 rótulos irmãos**
 na mesma grafia, e migrar só os dois deixaria dois rótulos de outro corpo e
 outra cor no meio do painel. Migrar o painel inteiro é rodada própria.
+*(Foi, na N7: o painel inteiro migrou, com a mesma grafia de rótulo por
+`className` no `FieldLabel`, e o orçamento `sr-only` do assistente num `Field`
+horizontal, que não estica o campo de largura fixa.)*
 
 **Um conserto que veio junto, e não estava no plano.** Seis dos sítios
 escreviam `className="text-sm"` no campo de dinheiro. A superfície é
@@ -10262,9 +10265,12 @@ E o que a rodada do `Tabs` e do `Combobox` deixou:
   `ToggleGroup`** — `bills-toolbar`, `subscriptions-toolbar`,
   `bill-detail-history-list` e o `TransactionTypeSegment` de filtro. A página do
   próprio `Tabs` já ensinava essa regra enquanto o app a quebrava quatro vezes.
-- **`transactionSegmentTabClassName` tem uma sombra literal** —
-  `dark:shadow-[0_1px_2px_0_rgb(0_0_0/0.35)]` — e um `z-[1]`. Saem junto na
-  migração.
+  *(Pago no PR #7: as duas abas de verdade viraram `Tabs` na M6, e os quatro
+  filtros também — decisão do dono na N3, no lugar do `ToggleGroup`, que não tem
+  a bandeja. Zero `role="tablist"` à mão.)*
+- ~~**`transactionSegmentTabClassName` tem uma sombra literal**~~ —
+  `dark:shadow-[0_1px_2px_0_rgb(0_0_0/0.35)]` — e um `z-[1]`. *(Pagos na N3: as
+  duas constantes saíram com as 24 referências.)*
 - **`input-group.tsx:69` reimplementa a superfície de campo em forma `has-[…]`**
   — a quarta ocorrência, e a prova de que a régua era real. Não dá para consumir
   `field-classes` direto porque ali as classes vivem sob `has-`; o destino é uma
@@ -10441,7 +10447,9 @@ E o que a rodada do campo, do formulário e da barra deixou:
   as strings copiadas, mais `monthNavDense*` (4 constantes, ramo `false` morto),
   `transactionSegment*` e o booleano `dense` costurado por três componentes.
   Destino: `Toolbar` + `ToolbarRow` + as duas réguas. São 19 `md:h-8` em 14
-  arquivos.
+  arquivos. *(Pago: as barras na M7, e os 14 `md:h-8` que sobraram fora delas
+  na N1 — `toolbarControlClassName` dentro de uma `Toolbar`, `h-8
+  pointer-coarse:h-10` fora. Zero `md:h-8`.)*
 - **4 barras de seleção com `role="toolbar"` escrito à mão**, nenhuma com foco
   itinerante — e `transactions-table.tsx:260,318` está copiado verbatim em
   `subscriptions/page-client.tsx:545,607`.
@@ -10487,9 +10495,9 @@ E o que a revisão da barra deixou:
 - ~~4 `role="tablist"` dentro de formulários~~ — **pagos** na rodada do `Radio`.
   Restam os **6** que são filtro ou aba de página, e esses continuam sendo
   trilho segmentado.
-- **`TransactionTypeSegment` é aba numa tela e filtro na outra.** Separar é
-  pré-requisito de qualquer migração dos trilhos.
-- **A cromagem de seis telas mora numa pasta de *feature*.**
+- ~~**`TransactionTypeSegment` é aba numa tela e filtro na outra.**~~ *(Pago na
+  N3: é `Tabs` nas duas, e o componente ficou só como invólucro do filtro.)*
+- ~~**A cromagem de seis telas mora numa pasta de *feature*.**~~ *(Paga na N3.)*
   `transactionSegmentContainerClassName` e `transactionSegmentTabClassName` são
   exportados de `components/transactions/` e importados por faturas, cartões,
   assinaturas e categorias — o invariante 1 no nível do sistema. Levam junto a
@@ -10497,7 +10505,8 @@ E o que a revisão da barra deixou:
 - **3 `<Input type="search">` sem a supressão do ×** em
   `transactions-filters-panel.tsx` (418, 538, 772), e o
   `FormPickerPopoverSearch`, que hoje reimplementa o que o `SearchInput` faz.
-  Destino: os quatro passam a consumir a peça.
+  Destino: os quatro passam a consumir a peça. *(Os 3 do painel pagos na N1,
+  com `onClear`; o `FormPickerPopoverSearch` continua à parte.)*
 - **A busca não existe na barra em nenhuma tela.** O catálogo agora mostra a
   forma e diz que o app não a tem; tomar a decisão é trabalho de produto.
 
@@ -10692,6 +10701,8 @@ E o que a rodada do gráfico deixou — as sete telas que não migraram, contada
 - **2 telas usam o `<Tooltip>` cru do Recharts**, que renderiza **sem tema
   nenhum** (`dashboard-installments-projection`, `category-detail-trends`).
 - **3 legendas à mão**, com `LegendStrip` sendo a mesma peça em 2 arquivos.
+  *(O `LegendStrip` — que era um arquivo só — pago na N2: é `ChartLegendContent`
+  solto no cabeçalho do histórico de cartões.)*
   Destino: `ChartLegendContent`, e a de `dashboard-expense-categories` é
   `interactive`.
 - **4 `new Intl.NumberFormat(… "BRL")` redeclarados** nos gráficos (10 no resto
@@ -10941,38 +10952,73 @@ componentes nascendo em `src/app/` (4), os corpos roláveis à mão (28), os
 `dialogFooterClass` (14), as faixas opacas `border-t bg-background` (12), os
 `role="toolbar"` sem foco itinerante (4) e o último `toast` cru do sonner.
 
+**O que a segunda passada pagou (PR #7, N1 a N10).** Os itens que a primeira
+passada deixou abertos foram todos atacados, e desta vez **logado**: o dono
+entrou no painel do navegador contra o Supabase local, e cada fase mediu as
+telas que tocou, antes e depois, a 1280px e a 375px — quando não dava para ter
+o antes na mesma sessão, pelo `git stash`. O auditor foi de **354 para 312**; C'
+zerou; C foi de 41 para **9, todos com o motivo escrito no sítio**.
+
+- ~~54 `<Label htmlFor>` à mão~~ → **0** (N7). Sobram 3 `FieldLabel htmlFor`, de
+  propósito: gatilhos com `id` fixo que o componente não repassa
+  (`subscription-category-picker`, `tx-category`, `tx-credit-card`). Todo `id`
+  que existia continua — a lição do `37543c1`, em que a primeira passada
+  apagou os `id` dos formulários de entrada e só a E2E pegou.
+- ~~41 primitivos crus~~ → **9** (N9). Os que ficam: as áreas clicáveis dos
+  cartões de conta e da notificação (o cartão ou a linha tem ações irmãs, e
+  botão dentro de botão é inválido), as células do calendário (são a grade),
+  as linhas do seletor de carteira (itens de menu fora de um `Menu`), o
+  `global-error` (substitui o layout raiz) e o `input type="color"` nativo.
+- ~~5 C'~~ → **0**: `fieldset` → `FieldSet`, `details` → `Collapsible`, e o
+  auditor passou a tratar os dois como primitivo **com** peça.
+- ~~4 `role="tablist"` à mão~~ → **0** (N3), como `Tabs` — decisão do dono.
+  A bandeja de atalhos de período fica à mão, com motivo: é grupo de
+  alternância com `aria-pressed`, não escolha entre visões.
+- ~~42 blocos `muted`~~ → **14: 8 à mão com o motivo escrito e 6 cópias em
+  esqueleto** (N8), cada um no
+  componente da forma que tinha: `Alert`, `EmptyState`, `Card variant="muted"`,
+  `FieldSet`, `DescriptionList` (rótulo + valor dentro de cartão — a moldura
+  interna sai), `Item` e descrição de campo. Ficam os poços de rolagem (o
+  `overflow-hidden` do `Card` recorta a rolagem), a face do cartão de crédito,
+  o aviso que ocupa o lugar do seletor de data e a linha de preferência de
+  notificação (é um `Field`, e a caixa é a linha dele).
+- ~~16 cabeçalhos de diálogo~~ → **0** (N5). Medido: em nove diálogos o recuo
+  à mão já era **morto** — o `DialogHeader` aplica o seu por
+  `group-data-[layout=fixed]`, mais específico. Mudaram de verdade a conta a
+  pagar (título 18 → 16px) e a folha de filtros das contas, que tinha o dobro
+  do recuo (32px) por um `px-4` somado ao da peça.
+- ~~14 `md:h-8`~~ → **0** (N1).
+- ~~Seletor de período com dois `DatePicker`~~ → `DatePicker mode="range"` (N4).
+  Medir o calendário achou um defeito anterior: a folha de filtros não avisava
+  o pai quando abria pelo botão, e a cada duas datas escolhidas uma era
+  apagada logo depois do `onChange`.
+- **Sobras que não estavam registradas**, pagas: 22 seções em `PageSection`
+  (N6 — o título passou a 16px semibold, por decisão, e o `PageSectionHeader`
+  virou grade para reservar a altura da ação, que vazava 8px no telefone); 2
+  tabelas em `TablePanel` (N10 — a barra de seleção sai de dentro da moldura
+  para cima dela); 3 buscas em `SearchInput` (N1); o `LegendStrip` (N2).
+
+**O auditor aprendeu três coisas nesta passada**, e cada uma foi medida contra
+um caso que ela errava: o filho direto de um componente com `asChild` não é
+cru (exceto sob `*Trigger`, `*Close` e `*Anchor`, que só repassam
+comportamento — sem essa ressalva a célula do calendário sumia da contagem);
+`fieldset`/`details`/`summary` têm peça; e no catálogo a prosa das props
+`description` e `title` é citação, como o `code={…}`.
+
 **O que continua aberto, com o número de hoje:**
 
-- **54 `<Label htmlFor>` à mão**, em 19 arquivos. Os 12 das telas de
-  autenticação migraram (são públicas, e cada campo foi medido no navegador);
-  os que sobram exigem sessão, e a régua desta rodada foi não migrar campo que
-  não dá para ver — é justamente onde um `htmlFor` errado passa despercebido.
-- **41 primitivos crus** (regra **C**), quase todos `<button>` com
-  `className` próprio. Cada um é decisão de sítio: vestir o `Button` ou ficar
-  cru **com o motivo escrito**, que é a régua da composição.
-- **4 `role="tablist"` à mão**, todos filtro. O destino deles é o
-  `ToggleGroup`, que deixou de desmarcar tudo ao clicar no item ativo — o que
-  falta é uma decisão de desenho: o `Toggle` não tem a bandeja segmentada, e é
-  ela que o app renderiza. As duas abas de verdade já são `Tabs`.
-- **42 blocos `muted` escritos à mão** (`rounded-lg border border-border/NN
-  bg-muted/NN p-3`), em 28 arquivos, com sete grafias de borda e cinco de
-  tinta. Destino: `Card variant="muted"`.
-- **16 cabeçalhos de diálogo** com `shrink-0 px-6 …`.
-- **14 `md:h-8`** fora das barras (as cinco barras migraram para o `Toolbar` e
-  perguntam o apontador, não a largura).
-- **`transactions-date-range-form` continua com dois `DatePicker`**. O
-  `mode="range"` resolveria de graça o período invertido, mas troca dois campos
-  por um — é mudança de interação, e precisa ser vista numa tela logada.
-- **Três `<img>` crus ficam, com o motivo escrito no sítio**: 16px e 80px estão
-  fora da escada do `Avatar` (24 a 56).
-- **D2 (306 valores arbitrários) segue fora por decisão** — quase todos são
+- **D2 (301 valores arbitrários) segue fora por decisão** — quase todos são
   largura de esqueleto casando com o conteúdo real.
-
-**O que esta migração não pôde fazer, e é a maior ressalva:** nenhuma tela
-logada foi vista. O que sustenta as mudanças ali é o compilador, os 604 testes,
-o auditor e as páginas públicas (`/login`, `/register`, `/forgot-password`,
-`/404`), que foram medidas no navegador a cada fase. As telas de dentro pedem
-uma passada com sessão — em especial os diálogos e folhas (M4), as barras de
-filtro (M7) e os blocos vazios (M3), que são onde a migração mais mexeu.
+- **G 2** — o falso positivo já registrado (`ColorTile size="lg"`).
+- **Três `<img>` crus**, com o motivo escrito (16px e 80px fora da escada do
+  `Avatar`).
+- **O `FormPickerPopoverSearch`** ainda reimplementa o que o `SearchInput` faz.
+- **Não medido logado, por ambiente e não por escolha:** o assistente de
+  categorias (só aparece sem categorias), os avisos de membros e de carteira
+  (só sem permissão ou sem carteira), os vazios de cartão (só sem cartão), a
+  lista de sessões (a edge `sessions` não está servida localmente e responde
+  503), a pílula do menu da fatura e o "Tentar novamente" do seletor de
+  carteira (só em erro). Nesses sítios o que sustenta a troca é o compilador,
+  os 604 testes e a mesma receita dos sítios medidos.
 
 Reproduza a qualquer momento com `npm run ds:audit`.

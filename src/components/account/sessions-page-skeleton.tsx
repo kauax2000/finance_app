@@ -32,7 +32,7 @@ export function SessionsPageSkeleton() {
                         >
                             {[1, 2, 3].map((i) => (
                                 <li key={i} className="min-w-0">
-                                    <div className="rounded-lg border border-border/80 bg-muted/20 p-3 sm:p-3.5">
+                                    <div className="rounded-lg border border-border/80 p-3 sm:p-3.5">
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="flex min-w-0 flex-1 items-center gap-2.5">
                                                 <Skeleton className="h-9 w-9 shrink-0 rounded-full" />

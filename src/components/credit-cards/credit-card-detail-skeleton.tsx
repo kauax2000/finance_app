@@ -92,7 +92,7 @@ function CategorySpendSectionSkeleton() {
                 {CATEGORY_ROW_KEYS.map((key) => (
                     <li
                         key={key}
-                        className="rounded-lg border border-border/50 bg-muted/15 px-3 py-2.5 dark:bg-muted/10"
+                        className="rounded-lg border border-border/50 px-3 py-2.5"
                     >
                         <div className="flex min-w-0 items-center gap-2">
                             <Skeleton className="size-8 shrink-0 rounded-md sm:size-9" />
