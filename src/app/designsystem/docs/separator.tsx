@@ -1,5 +1,6 @@
 "use client"
 
+import { MoneyDisplay } from "@/components/ui/money-display"
 import { Separator } from "@/components/ui/separator"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
@@ -32,7 +33,7 @@ export default function SeparatorDoc() {
         code={`<div className="flex items-center gap-3">
   <span>12 transações</span>
   <Separator orientation="vertical" />
-  <span>R$ 1.482,30</span>
+  <MoneyDisplay value={1482.3} tone="muted" />
 </div>
 
 <Separator orientation="vertical" className="h-7" />`}
@@ -41,7 +42,7 @@ export default function SeparatorDoc() {
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
           <span>12 transações</span>
           <Separator orientation="vertical" />
-          <span>R$ 1.482,30</span>
+          <MoneyDisplay value={1482.3} tone="muted" />
           <Separator orientation="vertical" />
           <span>3 categorias</span>
         </div>

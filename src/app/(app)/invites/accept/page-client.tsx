@@ -1,5 +1,6 @@
 "use client"
 
+import { Container } from "@/components/ui/container"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
@@ -8,6 +9,7 @@ import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { ROUTES } from "@/config/navigation"
 import { supabase } from "@/lib/supabase"
@@ -22,6 +24,8 @@ export default function AcceptInvitePageClient() {
     const { refreshWorkspaces, setCurrentWorkspaceId } = useWorkspace()
     const params = useSearchParams()
     const token = useMemo(() => params.get("token")?.trim() ?? "", [params])
+    /** Convite por e-mail aberto pelo menu de carteiras: o id basta, quem decide é o e-mail. */
+    const inviteId = useMemo(() => params.get("invite")?.trim() ?? "", [params])
 
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -33,14 +37,17 @@ export default function AcceptInvitePageClient() {
     refreshWorkspacesRef.current = refreshWorkspaces
     setCurrentWorkspaceIdRef.current = setCurrentWorkspaceId
 
-    const loginHref = `${ROUTES.LOGIN}?next=${encodeURIComponent(`/invites/accept?token=${token}`)}`
-    const signupHref = `/register?next=${encodeURIComponent(`/invites/accept?token=${token}`)}`
+    const returnPath = token
+        ? `/invites/accept?token=${encodeURIComponent(token)}`
+        : `/invites/accept?invite=${encodeURIComponent(inviteId)}`
+    const loginHref = `${ROUTES.LOGIN}?next=${encodeURIComponent(returnPath)}`
+    const signupHref = `/register?next=${encodeURIComponent(returnPath)}`
 
     useEffect(() => {
         const run = async () => {
             if (authLoading) return
 
-            if (!token) {
+            if (!token && !inviteId) {
                 setAuthGate(false)
                 setError("Convite inválido (token ausente).")
                 setLoading(false)
@@ -60,7 +67,7 @@ export default function AcceptInvitePageClient() {
 
             try {
                 const res = await invokeEdgeJson<AcceptResponse>("workspace-invites-accept", {
-                    body: { token },
+                    body: token ? { token } : { invite_id: inviteId },
                 })
 
                 setError(null)
@@ -81,6 +88,9 @@ export default function AcceptInvitePageClient() {
                 if (/not pending|invite is not pending/i.test(msg)) {
                     msg = "Este convite já foi utilizado ou não está mais pendente."
                 }
+                if (/invite not found/i.test(msg)) {
+                    msg = "Convite não encontrado. Peça um novo a quem convidou você."
+                }
                 setError(msg)
             } finally {
                 setLoading(false)
@@ -88,12 +98,12 @@ export default function AcceptInvitePageClient() {
         }
 
         void run()
-    }, [token, user, authLoading])
+    }, [token, inviteId, user, authLoading])
 
-    const showSuccess = !loading && !error && !authGate && Boolean(user) && Boolean(token)
+    const showSuccess = !loading && !error && !authGate && Boolean(user) && Boolean(token || inviteId)
 
     return (
-        <div className="mx-auto w-full max-w-xl">
+        <Container>
             <Card>
                 <CardHeader>
                     <CardTitle className="text-base">Aceitar convite</CardTitle>
@@ -130,16 +140,16 @@ export default function AcceptInvitePageClient() {
                             </div>
                         </>
                     ) : error ? (
-                        <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive-muted p-3 text-sm text-destructive-muted-foreground">
-                            <ExclamationCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
-                            <span>{error}</span>
-                        </div>
+                        <Alert tone="destructive">
+                            <ExclamationCircleIcon />
+                            <AlertTitle>{error}</AlertTitle>
+                        </Alert>
                     ) : showSuccess ? (
                         <div className="space-y-2">
-                            <div className="flex items-start gap-2 rounded-lg border border-success/30 bg-success-muted p-3 text-sm text-success-muted-foreground">
-                                <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
-                                <div className="space-y-1">
-                                    <p className="font-medium">Convite aceito com sucesso.</p>
+                            <Alert tone="success">
+                                <CheckCircleIcon />
+                                <AlertTitle>Convite aceito com sucesso.</AlertTitle>
+                                <AlertDescription className="space-y-1">
                                     {acceptedWorkspaceName ? (
                                         <p>
                                             Você agora faz parte da carteira <strong>{acceptedWorkspaceName}</strong>.
@@ -147,12 +157,12 @@ export default function AcceptInvitePageClient() {
                                     ) : (
                                         <p>A carteira compartilhada já está disponível na sua conta.</p>
                                     )}
-                                    <p className="text-xs text-muted-foreground">
+                                    <p>
                                         Use o seletor de carteiras no menu lateral (topo) para alternar entre{" "}
                                         <strong>Pessoal</strong> e esta carteira.
                                     </p>
-                                </div>
-                            </div>
+                                </AlertDescription>
+                            </Alert>
                         </div>
                     ) : null}
 
@@ -169,6 +179,6 @@ export default function AcceptInvitePageClient() {
                     ) : null}
                 </CardContent>
             </Card>
-        </div>
+        </Container>
     )
 }

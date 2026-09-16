@@ -2,6 +2,17 @@
 
 import type { ReactNode } from "react"
 import {
+    DescriptionDetails,
+    DescriptionList,
+    DescriptionListItem,
+    DescriptionTerm,
+} from "@/components/ui/description-list"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
+import {
   ArrowTrendingDownIcon,
   ArrowTrendingUpIcon,
   InformationCircleIcon,
@@ -10,8 +21,9 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Category } from "@/lib/supabase"
-import { formatCurrencyBRL } from "@/components/categories/detail/category-detail-utils"
+import { currencyBRL } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
+import { deltaTone } from "@/lib/delta-tone"
 
 export type MonthAmountStats = {
     count: number
@@ -45,12 +57,8 @@ type MomDirection = "up" | "down" | "flat"
 function momentumTone(
     isExpense: boolean,
     direction: MomDirection,
-): "success" | "destructive" | "neutral" {
-    if (direction === "flat") return "neutral"
-    if (isExpense) {
-        return direction === "up" ? "destructive" : "success"
-    }
-    return direction === "up" ? "success" : "destructive"
+): "income" | "expense" | "neutral" {
+    return deltaTone(direction, isExpense ? "expense" : "income")
 }
 
 function formatSignedPct(pctRounded: number): string {
@@ -74,7 +82,7 @@ type MomBadgeModel =
     | {
           show: true
           /** Tom, e não forma: o modelo diz a cor do sinal. */
-          tone: "success" | "destructive" | "neutral"
+          tone: "income" | "expense" | "neutral"
           direction: MomDirection
           display: string
           ariaLabel: string
@@ -222,66 +230,68 @@ function ExpenseBudgetOverviewCard({
     const budgetFillColor = over
         ? "var(--destructive)"
         : near
-          ? "#F59E0B"
-          : "#10B981"
+          ? "var(--warning)"
+          : "var(--success)"
     const budgetBarLabel = hasBudget
-        ? `Uso do orçamento: ${budgetPctRounded}% de ${formatCurrencyBRL(limit)}${over ? ", acima do limite" : ""}`
+        ? `Uso do orçamento: ${budgetPctRounded}% de ${currencyBRL(limit)}${over ? ", acima do limite" : ""}`
         : undefined
 
     return (
-        <div className="min-w-0 space-y-2 md:col-span-6">
-            <div className="flex min-w-0 items-center justify-between gap-2">
-                <p className="min-w-0 flex-1 truncate text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Orçamento do mês
-                </p>
-
-                <div className="flex shrink-0 items-center gap-2">
-                    {hasBudget ? (
-                        <p className="hidden tabular-nums text-2xs text-muted-foreground md:block">
-                            Limite{" "}
-                            <span className="font-medium text-foreground">{formatCurrencyBRL(limit)}</span>
-                        </p>
-                    ) : (
-                        <p className="hidden text-2xs font-medium uppercase tracking-wide text-muted-foreground md:block">
-                            Sem limite
-                        </p>
-                    )}
-                    {budgetHeaderRight ?? null}
-                </div>
-            </div>
+        <PageSection className="md:col-span-6">
+            <PageSectionHeader
+                actions={
+                    <>
+                        {hasBudget ? (
+                            <p className="hidden tabular-nums text-2xs text-muted-foreground md:block">
+                                Limite{" "}
+                                <span className="font-medium text-foreground">{currencyBRL(limit)}</span>
+                            </p>
+                        ) : (
+                            <p className="hidden text-2xs font-medium uppercase tracking-wide text-muted-foreground md:block">
+                                Sem limite
+                            </p>
+                        )}
+                        {budgetHeaderRight ?? null}
+                    </>
+                }
+            >
+                <PageSectionTitle className="truncate">Orçamento do mês</PageSectionTitle>
+            </PageSectionHeader>
 
             <Card padding="none" className="min-w-0">
                 <CardContent className="space-y-4 p-3 md:p-4">
                     {hasBudget ? (
                         <>
-                            <div className="flex w-full items-center justify-between gap-2 rounded-md border border-border/60 bg-muted/20 px-3 py-2 md:hidden">
-                                <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                                    Limite
-                                </p>
-                                <p className="tabular-nums text-2xs font-medium text-foreground">
-                                    {formatCurrencyBRL(limit)}
-                                </p>
-                            </div>
+                            <DescriptionList className="gap-0 md:hidden">
+                                <DescriptionListItem className="flex w-full items-center justify-between gap-2">
+                                    <DescriptionTerm className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+                                        Limite
+                                    </DescriptionTerm>
+                                    <DescriptionDetails className="text-2xs font-medium">
+                                        {currencyBRL(limit)}
+                                    </DescriptionDetails>
+                                </DescriptionListItem>
+                            </DescriptionList>
                             <div className="grid grid-cols-2 items-end gap-3 md:flex md:flex-wrap md:justify-between md:gap-x-6 md:gap-y-4">
                                 <div className="min-w-0 space-y-1">
                                     <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                         Gasto
                                     </p>
                                     <p className="truncate text-lg font-semibold tabular-nums leading-tight sm:text-xl md:text-2xl">
-                                        {formatCurrencyBRL(monthTotal)}
+                                        {currencyBRL(monthTotal)}
                                     </p>
                                     {projectedMonthTotal && projectedMonthTotal > 0 ? (
                                         <p className="text-xs leading-snug text-muted-foreground">
                                             Registrado{" "}
                                             <span className="tabular-nums">
-                                                {formatCurrencyBRL(postedMonthTotal ?? 0)}
+                                                {currencyBRL(postedMonthTotal ?? 0)}
                                             </span>{" "}
                                             <span className="text-muted-foreground/70">
                                                 ·
                                             </span>{" "}
                                             +{" "}
                                             <span className="tabular-nums">
-                                                {formatCurrencyBRL(projectedMonthTotal)}
+                                                {currencyBRL(projectedMonthTotal)}
                                             </span>{" "}
                                             previstos
                                             {projectedInstallmentsTotal || projectedSubscriptionsTotal ? (
@@ -294,7 +304,7 @@ function ExpenseBudgetOverviewCard({
                                                     projectedInstallmentsTotal > 0 ? (
                                                         <>
                                                             <span className="tabular-nums">
-                                                                {formatCurrencyBRL(
+                                                                {currencyBRL(
                                                                     projectedInstallmentsTotal
                                                                 )}
                                                             </span>
@@ -317,7 +327,7 @@ function ExpenseBudgetOverviewCard({
                                                     projectedSubscriptionsTotal > 0 ? (
                                                         <>
                                                             <span className="tabular-nums">
-                                                                {formatCurrencyBRL(
+                                                                {currencyBRL(
                                                                     projectedSubscriptionsTotal
                                                                 )}
                                                             </span>
@@ -346,7 +356,7 @@ function ExpenseBudgetOverviewCard({
                                             overBudget && "text-destructive",
                                         )}
                                     >
-                                        {formatCurrencyBRL(Math.abs(remaining))}
+                                        {currencyBRL(Math.abs(remaining))}
                                     </p>
                                 </div>
                             </div>
@@ -379,17 +389,17 @@ function ExpenseBudgetOverviewCard({
                     ) : (
                         <div className="space-y-1">
                             <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                                Restante
+                                Gasto no mês
                             </p>
                             <p className="text-xl font-semibold tabular-nums leading-tight md:text-2xl">
-                                {formatCurrencyBRL(monthTotal)}
+                                {currencyBRL(monthTotal)}
                             </p>
                             <p className="text-xs text-muted-foreground">Sem orçamento definido</p>
                         </div>
                     )}
                 </CardContent>
             </Card>
-        </div>
+        </PageSection>
     )
 }
 
@@ -404,9 +414,11 @@ function SummaryMetricCard({
 }) {
     return (
         <Card
-            className={cn(
-                "h-full min-w-0 gap-0 overflow-hidden py-0 shadow-none transition-[color,box-shadow] duration-150 hover:ring-foreground/15",
-            )}
+            padding="none"
+            /* O `hover:ring-foreground/15` que morava aqui não desenhava nada: o
+               `Card` só declara largura de anel no `focus-visible`, e este cartão
+               não é clicável. Com ele saiu a transição, que não tinha o que animar. */
+            className="h-full min-w-0"
         >
             <div className={categorySummaryHeaderClassName}>
                 <div className="flex min-w-0 flex-1 items-center justify-between gap-2 md:min-w-0 md:flex-1">
@@ -470,18 +482,18 @@ export function CategoryDetailSummarySection({
                             headerRight={momBadge.show ? <MomBadge model={momBadge} /> : undefined}
                         >
                             <p className="text-lg font-semibold tabular-nums leading-tight md:text-xl">
-                                {formatCurrencyBRL(monthTotal)}
+                                {currencyBRL(monthTotal)}
                             </p>
                         </SummaryMetricCard>
                         <SummaryMetricCard label="Média / lançamento">
                             <p className="text-lg font-semibold tabular-nums leading-tight md:text-xl">
-                                {stats.count > 0 ? formatCurrencyBRL(stats.avg) : "—"}
+                                {stats.count > 0 ? currencyBRL(stats.avg) : "—"}
                             </p>
                         </SummaryMetricCard>
                         <SummaryMetricCard label="Maior · menor">
                             <p className="text-sm font-semibold tabular-nums leading-snug md:text-base">
                                 {stats.count > 0
-                                    ? `${formatCurrencyBRL(stats.max)} · ${formatCurrencyBRL(stats.min)}`
+                                    ? `${currencyBRL(stats.max)} · ${currencyBRL(stats.min)}`
                                     : "—"}
                             </p>
                         </SummaryMetricCard>

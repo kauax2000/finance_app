@@ -1,4 +1,5 @@
 import type { Bill, BillFrequency } from "@/lib/supabase"
+import { compareYmd } from "@/lib/transaction-date"
 import { localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
 
 function daysInMonth(year: number, monthIndex0: number): number {
@@ -8,10 +9,6 @@ function daysInMonth(year: number, monthIndex0: number): number {
 /** Calendar day pinned to noon local for stable comparisons. */
 function noonDate(year: number, monthIndex0: number, day: number): Date {
     return new Date(year, monthIndex0, Math.min(day, daysInMonth(year, monthIndex0)), 12, 0, 0, 0)
-}
-
-function compareYmd(aYmd: string, bYmd: string): number {
-    return aYmd.localeCompare(bYmd)
 }
 
 /** First due date ≥ start matching `due_day_of_month` (clamped within month). */

@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { executeMutation } from "@/lib/offline/mutation-gateway"
+import { retryStableClientId } from "@/lib/offline/retry-client-id"
 import { dispatchFinanceCategoriesMutated } from "@/lib/workspace-data-events"
 
 export type CategoryRowInput = {
@@ -18,9 +19,9 @@ export async function saveCategory(
     | { ok: true; categoryId: string; queued: boolean }
     | { ok: false; errorMessage: string }
 > {
-    const clientId = crypto.randomUUID()
     const editingId = input.editingId ?? null
     const { editingId: _e, ...row } = input
+    const { clientId, settle } = retryStableClientId(row)
     const operation = editingId ? "update" : "insert"
     const offlinePayload = editingId
         ? { ...row, serverId: editingId }
@@ -50,7 +51,7 @@ export async function saveCategory(
 
             const { data, error } = await supabase
                 .from("categories")
-                .insert({ ...row, client_id: clientId })
+                .upsert({ ...row, client_id: clientId }, { onConflict: "workspace_id,client_id" })
                 .select("id")
                 .single()
 
@@ -63,6 +64,7 @@ export async function saveCategory(
             return { categoryId: data.id as string, queued: false }
         },
     })
+    if (gateway.ok) settle()
 
     if (!gateway.ok) {
         return { ok: false, errorMessage: gateway.errorMessage }

@@ -117,6 +117,8 @@ type FieldContextValue = {
   hasDescription: boolean
   hasError: boolean
   setHasControl: (present: boolean) => void
+  /** O `id` explícito do controle, quando quem chama escreveu um. */
+  setExplicitControlId: (id: string | null) => void
   setHasDescription: (present: boolean) => void
   setHasError: (present: boolean) => void
 }
@@ -301,12 +303,15 @@ function Field({
   const [hasControl, setHasControl] = React.useState(false)
   const [hasDescription, setHasDescription] = React.useState(false)
   const [hasError, setHasError] = React.useState(false)
+  const [explicitControlId, setExplicitControlId] = React.useState<string | null>(null)
 
   const isInvalid = invalid ?? hasError
 
   const field = React.useMemo<FieldContextValue>(
     () => ({
-      controlId: `${reactId}-control`,
+      // Um `id` escrito no controle vence o gerado — e o rótulo precisa saber
+      // disso: apontava para o gerado, e o `<label for>` ficava sem alvo.
+      controlId: explicitControlId ?? `${reactId}-control`,
       labelId: `${reactId}-label`,
       descriptionId: `${reactId}-description`,
       errorId: `${reactId}-error`,
@@ -315,10 +320,11 @@ function Field({
       hasDescription,
       hasError,
       setHasControl,
+      setExplicitControlId,
       setHasDescription,
       setHasError,
     }),
-    [reactId, isInvalid, hasControl, hasDescription, hasError]
+    [reactId, explicitControlId, isInvalid, hasControl, hasDescription, hasError]
   )
 
   return (
@@ -375,12 +381,22 @@ function Field({
 function FieldControl({ children }: { children: React.ReactNode }) {
   const field = React.useContext(FieldContext)
   const setHasControl = field?.setHasControl
+  const setExplicitControlId = field?.setExplicitControlId
+  const explicitId = React.isValidElement(children)
+    ? ((children.props as { id?: string }).id ?? null)
+    : null
 
   React.useEffect(() => {
     if (!setHasControl) return
     setHasControl(true)
     return () => setHasControl(false)
   }, [setHasControl])
+
+  React.useEffect(() => {
+    if (!setExplicitControlId) return
+    setExplicitControlId(explicitId)
+    return () => setExplicitControlId(null)
+  }, [setExplicitControlId, explicitId])
 
   if (!field) {
     return <>{children}</>
@@ -518,13 +534,18 @@ function FieldOptionalMark() {
  */
 function FieldTitle({
   className,
+  id,
   optional,
   children,
   ...props
 }: React.ComponentProps<"div"> & { optional?: boolean }) {
   const size = useFieldSize()
+  const field = React.useContext(FieldContext)
   return (
     <div
+      // O `aria-labelledby` do grupo aponta para o `labelId`: sem este `id`, o
+      // grupo apontava para um elemento que não existe e ficava sem nome.
+      id={id ?? field?.labelId}
       data-slot="field-title"
       className={cn(
         "flex w-fit items-center gap-2 font-medium group-data-[disabled=true]/field:opacity-50",

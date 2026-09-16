@@ -1,5 +1,12 @@
 "use client"
 
+import {
+    EmptyState,
+    EmptyStateActions,
+    EmptyStateDescription,
+    EmptyStateIcon,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
 import { PlusIcon } from "@heroicons/react/16/solid"
 import { MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
 import { formatTransactionDayPtBr } from "@/lib/transaction-date"
@@ -31,6 +38,7 @@ import {
 import {
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
+import { numberBR } from "@/lib/formatters"
 import {
     hasInstallmentDeleteImpact,
     INSTALLMENT_DELETE_WARNING,
@@ -334,91 +342,81 @@ export default function TransactionsPage() {
             ) : null}
 
             {!hasNoTransactions && !hasNoMatches ? (
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
-                    <CardContent className="relative flex flex-col p-0">
-                        <TransactionsTable
-                            transactions={transactions}
-                            selectedIds={selectedIds}
-                            setSelectedIds={setSelectedIds}
-                            sortKey={sortKey}
-                            sortDir={sortDir}
-                            onToggleSort={toggleSort}
-                            openTransactionDetail={openTransactionDetail}
-                            onDeleteSingle={(transaction) =>
-                                setPendingDelete({ mode: "single", transaction })
-                            }
-                            onDeleteBulk={(ids) =>
-                                setPendingDelete({ mode: "bulk", ids })
-                            }
-                            page={page}
-                            setPage={setPage}
-                            pageSize={PAGE_SIZE}
-                            totalCount={totalCount}
-                            invoicePaidByCardClose={invoicePaidByCardClose}
-                        />
-                    </CardContent>
-                </Card>
+                <TransactionsTable
+                    transactions={transactions}
+                    selectedIds={selectedIds}
+                    setSelectedIds={setSelectedIds}
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onToggleSort={toggleSort}
+                    openTransactionDetail={openTransactionDetail}
+                    onDeleteSingle={(transaction) =>
+                        setPendingDelete({ mode: "single", transaction })
+                    }
+                    onDeleteBulk={(ids) =>
+                        setPendingDelete({ mode: "bulk", ids })
+                    }
+                    page={page}
+                    setPage={setPage}
+                    pageSize={PAGE_SIZE}
+                    totalCount={totalCount}
+                    invoicePaidByCardClose={invoicePaidByCardClose}
+                />
             ) : hasNoMatches ? (
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent
-                        className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
+                        className="px-4 py-12 md:py-14"
                         role="status"
                         aria-live="polite"
                     >
-                        <div
-                            className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                            aria-hidden
-                        >
-                            <MagnifyingGlassIcon className="size-7 text-muted-foreground" />
-                        </div>
-                        <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                            Nenhuma transação com esses filtros
-                        </h2>
-                        <p className="mb-6 max-w-md text-center text-sm text-muted-foreground">
-                            Tente outro tipo (receita/despesa), ampliar o período ou usar um
-                            preset como &quot;Mês atual&quot;.
-                        </p>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="xl"
-                            className="min-w-[10rem] text-xs"
-                            onClick={() => {
-                                resetAllFilters()
-                            }}
-                        >
-                            Limpar filtros
-                        </Button>
+                        <EmptyState variant="plain" size="lg">
+                            <EmptyStateIcon><MagnifyingGlassIcon aria-hidden /></EmptyStateIcon>
+                            <EmptyStateTitle>Nenhuma transação com esses filtros</EmptyStateTitle>
+                            <EmptyStateDescription>
+                                Tente outro tipo (receita/despesa), ampliar o período ou usar um
+                                preset como &quot;Mês atual&quot;.
+                            </EmptyStateDescription>
+                            <EmptyStateActions>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="xl"
+                                    className="min-w-[10rem] text-xs"
+                                    onClick={() => {
+                                        resetAllFilters()
+                                    }}
+                                >
+                                    Limpar filtros
+                                </Button>
+                            </EmptyStateActions>
+                        </EmptyState>
                     </CardContent>
                 </Card>
             ) : (
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent
-                        className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
+                        className="px-4 py-12 md:py-14"
                         role="status"
                         aria-live="polite"
                     >
-                        <div
-                            className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                            aria-hidden
-                        >
-                            <ReceiptPercentIcon className="size-7 text-muted-foreground" />
-                        </div>
-                        <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                            Comece a registrar suas movimentações
-                        </h2>
-                        <p className="mb-6 max-w-md text-center text-sm text-muted-foreground">
-                            Lance receitas e despesas para ver o histórico aqui e acompanhar
-                            suas finanças por categoria.
-                        </p>
-                        <Button
-                            type="button"
-                            size="xl"
-                            onClick={() => openDialog()}
-                        >
-                            <PlusIcon className="mr-1.5 size-3.5" />
-                            Nova transação
-                        </Button>
+                        <EmptyState variant="plain" size="lg">
+                            <EmptyStateIcon><ReceiptPercentIcon aria-hidden /></EmptyStateIcon>
+                            <EmptyStateTitle>Comece a registrar suas movimentações</EmptyStateTitle>
+                            <EmptyStateDescription>
+                                Lance receitas e despesas para ver o histórico aqui e acompanhar
+                                suas finanças por categoria.
+                            </EmptyStateDescription>
+                            <EmptyStateActions>
+                                <Button
+                                    type="button"
+                                    size="xl"
+                                    onClick={() => openDialog()}
+                                >
+                                    <PlusIcon className="mr-1.5 size-3.5" />
+                                    Nova transação
+                                </Button>
+                            </EmptyStateActions>
+                        </EmptyState>
                     </CardContent>
                 </Card>
             )}
@@ -433,7 +431,7 @@ export default function TransactionsPage() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>
                             {pendingDelete?.mode === "bulk"
-                                ? `Excluir ${pendingDelete.ids.length.toLocaleString("pt-BR")} transações?`
+                                ? `Excluir ${numberBR(pendingDelete.ids.length)} transações?`
                                 : "Excluir transação?"}
                         </AlertDialogTitle>
                         <AlertDialogDescription asChild>
@@ -501,9 +499,7 @@ export default function TransactionsPage() {
                                     <>
                                         <p className="text-foreground">
                                             As{" "}
-                                            {pendingDelete.ids.length.toLocaleString(
-                                                "pt-BR"
-                                            )}{" "}
+                                            {numberBR(pendingDelete.ids.length)}{" "}
                                             transações selecionadas serão
                                             removidas do extrato.
                                         </p>
@@ -537,10 +533,10 @@ export default function TransactionsPage() {
                                             {pendingDelete.ids.length > 8 ? (
                                                 <li className="text-muted-foreground">
                                                     e mais{" "}
-                                                    {(
+                                                    {numberBR((
                                                         pendingDelete.ids.length -
                                                         8
-                                                    ).toLocaleString("pt-BR")}{" "}
+                                                    ))}{" "}
                                                     …
                                                 </li>
                                             ) : null}

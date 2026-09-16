@@ -1,4 +1,6 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
+import { internalError } from '../_shared/http.ts'
+import { currencyBRL } from '../_shared/formatters.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import { deliverNotification } from '../_shared/deliver-notification.ts'
 import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
@@ -9,6 +11,8 @@ import {
   isoPrefixYmd,
   openInvoiceWindow,
   type Ymd,
+  appTodayYmd,
+  compareYmd,
 } from '../_shared/credit-card-cycle.ts'
 
 const corsHeaders = {
@@ -29,10 +33,6 @@ type Body = {
   payment_credit_card_id: string | null
   category_id: string | null
   occurred_at: string
-}
-
-function brl(n: number): string {
-  return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
 function pct(spend: number, limit: number): number {
@@ -126,7 +126,7 @@ Deno.serve(async (req: Request) => {
 
   const authResult = await getAuthUserFromJwt(supabaseUrl, anonKey, jwt)
   if (authResult.error || !authResult.user) {
-    return json(401, { error: 'Invalid or expired token', details: authResult.error ?? 'unknown' })
+    return json(401, { error: 'Invalid or expired token' })
   }
 
   let body: Body
@@ -153,7 +153,7 @@ Deno.serve(async (req: Request) => {
     .eq('user_id', userId)
     .maybeSingle()
 
-  if (memErr) return json(500, { error: memErr.message })
+  if (memErr) return json(500, { error: internalError('evaluate-credit-card-alerts', memErr) })
   if (!membership) return json(403, { error: 'Not a member of this workspace' })
 
   const { data: card, error: cErr } = await supabaseAdmin
@@ -162,7 +162,7 @@ Deno.serve(async (req: Request) => {
     .eq('id', cardId)
     .maybeSingle()
 
-  if (cErr) return json(500, { error: cErr.message })
+  if (cErr) return json(500, { error: internalError('evaluate-credit-card-alerts', cErr) })
   if (!card || card.workspace_id !== workspaceId || !card.is_active) {
     return json(200, { ok: true, skipped: true, reason: 'no_card' })
   }
@@ -175,7 +175,12 @@ Deno.serve(async (req: Request) => {
     return json(200, { ok: true, skipped: true, reason: 'bad_closing_day' })
   }
 
-  const openWin = openInvoiceWindow(refYmd, closingDay)
+  // A janela é a fatura aberta de hoje, e não a da data da compra: um
+  // lançamento retroativo calculava a fatura antiga e alertava sobre ela.
+  const openWin = openInvoiceWindow(appTodayYmd(), closingDay)
+  if (compareYmd(refYmd, openWin.start) < 0 || compareYmd(refYmd, openWin.end) > 0) {
+    return json(200, { ok: true, skipped: true, reason: 'outside_open_invoice' })
+  }
   const periodKey = formatYmd(openWin.end)
 
   const { data: txRows, error: txErr } = await supabaseAdmin
@@ -188,7 +193,7 @@ Deno.serve(async (req: Request) => {
     .gte('date', filterRangeStartIso(openWin.start))
     .lte('date', filterRangeEndIso(openWin.end))
 
-  if (txErr) return json(500, { error: txErr.message })
+  if (txErr) return json(500, { error: internalError('evaluate-credit-card-alerts', txErr) })
 
   const rows = (txRows ?? []) as TxRow[]
   const cardLabel = `${card.name} · ${card.last_four}`
@@ -204,7 +209,7 @@ Deno.serve(async (req: Request) => {
     .select('user_id')
     .eq('workspace_id', workspaceId)
 
-  if (membersErr) return json(500, { error: membersErr.message })
+  if (membersErr) return json(500, { error: internalError('evaluate-credit-card-alerts', membersErr) })
 
   const memberIds = (memberRows ?? []).map((m: { user_id: string }) => m.user_id)
 
@@ -214,7 +219,7 @@ Deno.serve(async (req: Request) => {
       .from('profiles')
       .select('id,email')
       .in('id', memberIds)
-    if (profErr) return json(500, { error: profErr.message })
+    if (profErr) return json(500, { error: internalError('evaluate-credit-card-alerts', profErr) })
     for (const p of profileRows ?? []) {
       memberEmails.set(p.id as string, (p.email as string | null) ?? null)
     }
@@ -299,21 +304,21 @@ Deno.serve(async (req: Request) => {
         hit: hit80,
         kind: 'cc_limit_warning',
         title: 'Cartão: perto do limite',
-        body: `O cartão ${cardLabel} está com cerca de ${p.toFixed(0)}% do limite usado nesta fatura aberta (${brl(spendTotal)} de ${brl(limitNum)}).`,
+        body: `O cartão ${cardLabel} está com cerca de ${p.toFixed(0)}% do limite usado nesta fatura aberta (${currencyBRL(spendTotal)} de ${currencyBRL(limitNum)}).`,
       },
       {
         key: '100',
         hit: hit100,
         kind: 'cc_limit_reached',
         title: 'Cartão: limite atingido',
-        body: `O cartão ${cardLabel} atingiu o limite nesta fatura aberta (${brl(spendTotal)} de ${brl(limitNum)}).`,
+        body: `O cartão ${cardLabel} atingiu o limite nesta fatura aberta (${currencyBRL(spendTotal)} de ${currencyBRL(limitNum)}).`,
       },
       {
         key: 'over',
         hit: hitOver,
         kind: 'cc_limit_exceeded',
         title: 'Cartão: limite ultrapassado',
-        body: `O cartão ${cardLabel} ultrapassou o limite nesta fatura aberta (${brl(spendTotal)} de ${brl(limitNum)}).`,
+        body: `O cartão ${cardLabel} ultrapassou o limite nesta fatura aberta (${currencyBRL(spendTotal)} de ${currencyBRL(limitNum)}).`,
       },
     ]
 
@@ -348,7 +353,7 @@ Deno.serve(async (req: Request) => {
     .select('id, category_id, threshold_brl')
     .eq('credit_card_id', cardId)
 
-  if (aErr) return json(500, { error: aErr.message })
+  if (aErr) return json(500, { error: internalError('evaluate-credit-card-alerts', aErr) })
 
   const categoryNames = new Map<string, string>()
   const catIds = new Set<string>()
@@ -360,7 +365,7 @@ Deno.serve(async (req: Request) => {
       .from('categories')
       .select('id,name')
       .in('id', [...catIds])
-    if (catErr) return json(500, { error: catErr.message })
+    if (catErr) return json(500, { error: internalError('evaluate-credit-card-alerts', catErr) })
     for (const c of cats ?? []) {
       categoryNames.set(c.id, c.name)
     }
@@ -377,7 +382,7 @@ Deno.serve(async (req: Request) => {
 
     const catName = catKey ? (categoryNames.get(catKey) ?? 'Categoria') : 'Sem categoria'
     const title = 'Cartão: alerta por categoria'
-    const body = `No cartão ${cardLabel}, a categoria "${catName}" passou do valor definido (${brl(spendCat)} ≥ ${brl(threshold)}) na fatura aberta.`
+    const body = `No cartão ${cardLabel}, a categoria "${catName}" passou do valor definido (${currencyBRL(spendCat)} ≥ ${currencyBRL(threshold)}) na fatura aberta.`
 
     const delivered = await notifyMembers(`cat:${alert.id}:${periodKey}`, title, body, {
       kind: 'cc_category_limit_crossed',

@@ -1,10 +1,6 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import {
-    transactionSegmentContainerClassName,
-    transactionSegmentTabClassName,
-} from "@/components/transactions/transaction-type-segment"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 
 export type CreditCardsPageView = "cards" | "history"
@@ -14,6 +10,16 @@ const TABS: { value: CreditCardsPageView; label: string }[] = [
     { value: "history", label: "Histórico" },
 ]
 
+/**
+ * A aba da página de cartões — ela troca a grade pelo gráfico de 12 meses, que
+ * é o que faz dela aba e não filtro.
+ *
+ * Ela desenhava o trilho à mão: uma `<div role="tablist">` com a chapa de
+ * `transaction-type-segment` e `<Button role="tab">` dentro, sem foco
+ * itinerante e sem painel. `Tabs variant="solid"` é o mesmo desenho — bandeja
+ * 32 com gatilho 28, 40/36 no dedo — com o marcador que viaja, as setas do
+ * teclado e o ARIA do Radix.
+ */
 export function CreditCardsViewSegment({
     value,
     onChange,
@@ -24,28 +30,18 @@ export function CreditCardsViewSegment({
     className?: string
 }) {
     return (
-        <div
-            className={cn(transactionSegmentContainerClassName, className)}
-            role="tablist"
-            aria-label="Visão da página de cartões"
+        <Tabs
+            value={value}
+            onValueChange={(next) => onChange(next as CreditCardsPageView)}
+            className={cn("w-full md:w-auto", className)}
         >
-            {TABS.map((tab) => {
-                const selected = value === tab.value
-                return (
-                    <Button
-                        key={tab.value}
-                        type="button"
-                        role="tab"
-                        aria-selected={selected}
-                        size="sm"
-                        variant="tertiary"
-                        className={transactionSegmentTabClassName(selected)}
-                        onClick={() => onChange(tab.value)}
-                    >
+            <TabsList aria-label="Visão da página de cartões" className="w-full md:w-auto">
+                {TABS.map((tab) => (
+                    <TabsTrigger key={tab.value} value={tab.value}>
                         {tab.label}
-                    </Button>
-                )
-            })}
-        </div>
+                    </TabsTrigger>
+                ))}
+            </TabsList>
+        </Tabs>
     )
 }

@@ -15,44 +15,13 @@ import {
 import { DragHandle } from "@/components/ui/drag-handle"
 
 /**
- * A folha no desktop, a gaveta no telefone — e uma API só.
- *
- * ## Por que
- *
- * O app abria 37 folhas de baixo com uma alça de gaveta desenhada em cima. A
- * alça era uma `div` com `aria-hidden` e **nenhum handler**: ela prometia o
- * arraste e não entregava. A "física de gaveta" eram dois keyframes de CSS
- * (`translate3d(0,100%,0) → 0`) — uma animação de entrada, que não responde ao
- * dedo. Enquanto isso o `Drawer` (vaul), que faz exatamente isso de verdade,
- * existia no projeto com **zero telas**.
- *
- * A regra agora é a que o produto sempre quis: **folha é coisa de desktop; no
- * telefone ela é gaveta.** Não é um `if` espalhado por 37 arquivos — a
- * superfície se escolhe aqui, e quem chama escreve `<Sheet>` nos dois casos.
- *
- * ## Como isso é possível
- *
- * Porque as três superfícies modais do projeto são **a mesma primitiva**: o
- * `vaul` é construído sobre `@radix-ui/react-dialog`, o mesmo pacote que o
- * `radix-ui` reexporta, e há **uma instância só** em `node_modules`. Medido em
- * runtime, não suposto: com um `DialogTitle` do Radix dentro de um `Drawer` do
- * vaul, o `aria-labelledby` da gaveta aponta para o `id` que o título gerou.
- *
- * É o que faz a cromagem do `Dialog` servir os três: diálogo, folha e gaveta.
- *
- * Se um dia as versões divergirem e o npm instalar duas cópias de
- * `@radix-ui/react-dialog`, os contextos deixam de se enxergar e o título passa
- * a lançar dentro da gaveta. É a única premissa frágil desta arquitetura, e
- * está escrita aqui para quem for mexer em dependência saber o que olhar.
- */
-/**
  * O painel de borda — o ramo desktop da folha.
  *
  * **Isto já foi um componente, e voltou a ser um ramo.** Ele nasceu `EdgePanel`
  * porque duas coisas se chamavam `Sheet` e respondiam diferente ao telefone:
  * conteúdo vira gaveta, e a navegação lateral — dizia a rodada — devia
  * continuar painel. A `Sidebar` usava este `cva` por fora. A decisão foi
- * invertida (rodada 64): **no telefone tudo é gaveta**, inclusive a navegação,
+ * invertida (rodada 64): no telefone tudo passou a ser gaveta, inclusive a navegação — e a rodada 66 devolveu o painel à navegação como eixo (`surface`),
  * e sem um consumidor que precisasse do painel em toda largura o componente
  * separado era uma segunda API para a mesma moldura. Ele dissolveu aqui, com
  * os dois eixos, o gume composto e a área segura exatamente como eram.
@@ -152,7 +121,7 @@ const sheetContentVariants = cva(
  * telefone (`MobileBottomNav` e FAB estão em `--z-modal`); abaixo do `Toaster`.
  */
 const SHEET_OVERLAY_CLASS =
-  "fixed inset-0 z-(--z-sheet) bg-overlay supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0"
+  "fixed inset-0 z-(--z-sheet) bg-overlay supports-backdrop-filter:backdrop-blur-xs"
 
 /**
  * Qual superfície está de fato montada.
@@ -192,6 +161,37 @@ export function useSheetSurface(): SheetSurface {
   return React.useContext(SheetSurfaceContext)
 }
 
+/**
+ * A folha no desktop, a gaveta no telefone — e uma API só.
+ *
+ * ## Por que
+ *
+ * O app abria 37 folhas de baixo com uma alça de gaveta desenhada em cima. A
+ * alça era uma `div` com `aria-hidden` e **nenhum handler**: ela prometia o
+ * arraste e não entregava. A "física de gaveta" eram dois keyframes de CSS
+ * (`translate3d(0,100%,0) → 0`) — uma animação de entrada, que não responde ao
+ * dedo. Enquanto isso o `Drawer` (vaul), que faz exatamente isso de verdade,
+ * existia no projeto com **zero telas**.
+ *
+ * A regra agora é a que o produto sempre quis: **folha é coisa de desktop; no
+ * telefone ela é gaveta** — menos quem pede `surface="panel"` (a navegação, rodada 66). Não é um `if` espalhado por 37 arquivos — a
+ * superfície se escolhe aqui, e quem chama escreve `<Sheet>` nos dois casos.
+ *
+ * ## Como isso é possível
+ *
+ * Porque as três superfícies modais do projeto são **a mesma primitiva**: o
+ * `vaul` é construído sobre `@radix-ui/react-dialog`, o mesmo pacote que o
+ * `radix-ui` reexporta, e há **uma instância só** em `node_modules`. Medido em
+ * runtime, não suposto: com um `DialogTitle` do Radix dentro de um `Drawer` do
+ * vaul, o `aria-labelledby` da gaveta aponta para o `id` que o título gerou.
+ *
+ * É o que faz a cromagem do `Dialog` servir os três: diálogo, folha e gaveta.
+ *
+ * Se um dia as versões divergirem e o npm instalar duas cópias de
+ * `@radix-ui/react-dialog`, os contextos deixam de se enxergar e o título passa
+ * a lançar dentro da gaveta. É a única premissa frágil desta arquitetura, e
+ * está escrita aqui para quem for mexer em dependência saber o que olhar.
+ */
 function Sheet({
   children,
   surface: modo = "auto",
@@ -201,7 +201,20 @@ function Sheet({
   surface?: SheetSurfaceMode
 }) {
   const isMobile = useIsMobile()
-  const surface: SheetSurface = isMobile && modo === "auto" ? "drawer" : "panel"
+  const escolhida: SheetSurface = isMobile && modo === "auto" ? "drawer" : "panel"
+  // A superfície é decidida ao abrir e fica até fechar. Com ela ao vivo, girar
+  // um tablet ou estreitar a janela com a folha aberta desmontava uma primitiva
+  // e montava a outra — o foco e o que estava digitado iam junto.
+  const [travada, setTravada] = React.useState<SheetSurface | null>(null)
+  const aberta = props.open
+  if (aberta === true && travada === null) setTravada(escolhida)
+  if (aberta === false && travada !== null) setTravada(null)
+  const surface = travada ?? escolhida
+  const onOpenChange = (next: boolean) => {
+    // Sem `open` controlado não há prop para ler: trava pelo evento.
+    if (aberta === undefined) setTravada(next ? escolhida : null)
+    props.onOpenChange?.(next)
+  }
   // Dentro da moldura do catálogo ela deixa de ser modal — senão o
   // `RemoveScroll` do Radix trava a rolagem da **página de fora**. Antes de
   // `{...props}`, para quem chama continuar mandando. Ver `useViewportModal`.
@@ -218,11 +231,17 @@ function Sheet({
           repositionInputs
           modal={modal}
           {...props}
+          onOpenChange={onOpenChange}
         >
           {children}
         </DrawerPrimitive.Root>
       ) : (
-        <SheetPrimitive.Root data-slot="sheet" modal={modal} {...props}>
+        <SheetPrimitive.Root
+          data-slot="sheet"
+          modal={modal}
+          {...props}
+          onOpenChange={onOpenChange}
+        >
           {children}
         </SheetPrimitive.Root>
       )}
@@ -270,10 +289,11 @@ function SheetOverlay({
       data-slot="sheet-overlay"
       className={cn(
         SHEET_OVERLAY_CLASS,
-        // Só o painel anima o véu por keyframe; na gaveta o véu acompanha o
-        // dedo, e uma duração fixa brigaria com o arraste.
+        // Só o painel anima o véu por keyframe. Na gaveta o vaul já anima o
+        // próprio véu (`fadeIn`, medido no computado) e o acompanha no arraste;
+        // as classes de entrada ali eram mortas.
         surface === "panel" &&
-          "ease-in-out data-open:animation-duration-(--duration-slow) data-closed:animation-duration-(--duration-slow)",
+          "data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0 ease-in-out data-open:animation-duration-(--duration-slow) data-closed:animation-duration-(--duration-slow)",
         className
       )}
       {...props}

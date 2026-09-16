@@ -97,7 +97,11 @@ function Stepper({
         {itens.map((item, i) =>
           React.cloneElement(
             item as React.ReactElement<{ step?: number; isLast?: boolean }>,
-            { step: i + 1, isLast: i === itens.length - 1 }
+            {
+              // Uma lista que não começa em 1 passa `step` à mão; o índice só preenche.
+              step: (item as React.ReactElement<{ step?: number }>).props.step ?? i + 1,
+              isLast: i === itens.length - 1,
+            }
           )
         )}
       </ol>
@@ -163,7 +167,7 @@ function StepperItem({
           state === "complete" &&
             "border-transparent bg-primary text-primary-foreground",
           state === "current" &&
-            "border-primary-accent bg-primary/10 text-primary-accent",
+            "border-primary-accent bg-primary-muted text-primary-accent",
           state === "upcoming" &&
             "border-border bg-transparent text-muted-foreground"
         )}
@@ -200,7 +204,7 @@ function StepperItem({
         <span
           className={cn(
             "h-px flex-1",
-            state === "complete" ? "bg-primary" : "bg-border"
+            state === "complete" ? "bg-primary-accent" : "bg-border"
           )}
           aria-hidden
         />
@@ -230,7 +234,7 @@ function StepperItem({
             // centro do marcador, medido nos três conectores. Meia largura
             // menos meio fio é o que faz os dois centros coincidirem.
             "my-1 h-6 w-px shrink-0 ms-[calc((var(--stepper-marker)_-_1px)/2)]",
-            state === "complete" ? "bg-primary" : "bg-border"
+            state === "complete" ? "bg-primary-accent" : "bg-border"
           )}
         />
       ) : null}

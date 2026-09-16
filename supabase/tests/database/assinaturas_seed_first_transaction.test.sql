@@ -128,7 +128,7 @@ select ok(
   (
     select
       (t.date at time zone 'utc')::date
-      = coalesce(ws.next_billing_date, ws.start_date)
+      = ws.start_date
     from public.transactions t
     join _pgtap_subscription_seed s on s.id = t.subscription_id
     join public.workspace_subscriptions ws on ws.id = s.id

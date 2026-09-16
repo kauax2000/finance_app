@@ -284,7 +284,7 @@ export default function SheetDoc() {
             prop: "DialogCloseButton",
             type: "@/components/ui/dialog",
             description:
-              "O ×. A folha não o injeta mais — 16 das 36 chamadas o desligavam, porque ele flutua sobre o conteúdo e some atrás de um cabeçalho fixo. Quem quer, compõe; dentro de um cabeçalho, className=\"static\".",
+              "O ×. A folha não o injeta mais — 16 das 36 chamadas o desligavam, porque ele flutua sobre o conteúdo e some atrás de um cabeçalho fixo. Quem quer, compõe; dentro de um cabeçalho, placement=\"inline\".",
           },
         ]}
       />

@@ -71,3 +71,6 @@ supabase/.branches/
 
 # Estado da skill de design; o relatório de crítica fica em docs/design/
 .impeccable/
+
+# preferências e logs locais do editor Cursor
+.cursor/

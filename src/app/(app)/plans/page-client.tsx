@@ -1,25 +1,35 @@
 "use client"
 
+import {
+    EmptyState,
+    EmptyStateDescription,
+    EmptyStateIcon,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
 import { InformationCircleIcon, WrenchIcon } from "@heroicons/react/16/solid"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import { SparklesIcon } from "@heroicons/react/20/solid"
 import { ReceiptPercentIcon, SparklesIcon as SparklesOutlineIcon } from "@heroicons/react/24/outline"
-import { Badge } from "@/components/ui/badge"
+import {
+    Badge,
+    tagChipInfo,
+    tagChipWarning,
+} from "@/components/ui/badge"
 import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
-import { tagChipInfo, tagChipWarning } from "@/lib/tag-chip-classes"
 import { cn } from "@/lib/utils"
 
 export default function PlansPage() {
     return (
         <div className="min-w-0 max-w-full space-y-5">
-            <div className="min-w-0 space-y-2">
-                <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Plano atual
-                        </p>
-                    </div>
-                </div>
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <PageSection>
+                <PageSectionHeader>
+                    <PageSectionTitle>Plano atual</PageSectionTitle>
+                </PageSectionHeader>
+                <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:py-3.5">
                             <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -59,17 +69,13 @@ export default function PlansPage() {
                         </CardNote>
                     </CardContent>
                 </Card>
-            </div>
+            </PageSection>
 
-            <div className="min-w-0 space-y-2">
-                <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Planos disponíveis
-                        </p>
-                    </div>
-                </div>
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <PageSection>
+                <PageSectionHeader>
+                    <PageSectionTitle>Planos disponíveis</PageSectionTitle>
+                </PageSectionHeader>
+                <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <CardToolbar>
                             <p className="min-w-0 text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -115,7 +121,7 @@ export default function PlansPage() {
                                     enquanto.
                                 </p>
                             </div>
-                            <div className="mx-auto w-full max-w-md space-y-3 rounded-lg border border-border/80 bg-muted/20 p-4 sm:p-4">
+                            <Card variant="muted" className="mx-auto w-full max-w-md gap-3 px-4">
                                 <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                                     <WrenchIcon className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
                                     Em andamento neste momento
@@ -134,7 +140,7 @@ export default function PlansPage() {
                                         </li>
                                     ))}
                                 </ul>
-                            </div>
+                            </Card>
                         </div>
                         <CardNote>
                             <InformationCircleIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
@@ -145,17 +151,13 @@ export default function PlansPage() {
                         </CardNote>
                     </CardContent>
                 </Card>
-            </div>
+            </PageSection>
 
-            <div className="min-w-0 space-y-2">
-                <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Histórico de pagamentos
-                        </p>
-                    </div>
-                </div>
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <PageSection>
+                <PageSectionHeader>
+                    <PageSectionTitle>Histórico de pagamentos</PageSectionTitle>
+                </PageSectionHeader>
+                <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <CardToolbar className="justify-end">
                             <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
@@ -163,30 +165,25 @@ export default function PlansPage() {
                             </p>
                         </CardToolbar>
                         <div
-                            className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
+                            className="px-4 py-12 md:py-14"
                             role="status"
                             aria-live="polite"
                         >
-                            <div
-                                className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                                aria-hidden
-                            >
-                                <ReceiptPercentIcon className="size-7 text-muted-foreground" />
-                            </div>
-                            <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                                Nenhum pagamento por aqui
-                            </h2>
-                            <p className="max-w-md text-center text-sm text-muted-foreground">
-                                Quando você assinar um plano pago, suas faturas e recibos vão
-                                aparecer neste histórico.
-                            </p>
+                            <EmptyState variant="plain" size="lg">
+                                <EmptyStateIcon><ReceiptPercentIcon aria-hidden /></EmptyStateIcon>
+                                <EmptyStateTitle>Nenhum pagamento por aqui</EmptyStateTitle>
+                                <EmptyStateDescription>
+                                    Quando você assinar um plano pago, suas faturas e recibos vão
+                                    aparecer neste histórico.
+                                </EmptyStateDescription>
+                            </EmptyState>
                         </div>
                         <CardNote
                             aria-hidden
                         />
                     </CardContent>
                 </Card>
-            </div>
+            </PageSection>
         </div>
     )
 }

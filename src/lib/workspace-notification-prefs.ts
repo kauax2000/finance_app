@@ -1,6 +1,7 @@
 "use client"
 
 import { supabase } from "@/lib/supabase"
+import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 
 export type WorkspaceMemberNotificationPrefs = {
     workspace_id: string
@@ -67,12 +68,17 @@ export async function getWorkspaceNotificationPrefs(
 ): Promise<WorkspaceMemberNotificationPrefs | null> {
     const { data, error } = await supabase
         .from("workspace_member_notification_prefs")
-        .select("*")
+        .select("created_at, notify_bills, notify_budget, notify_credit_card_calendar, notify_credit_cards, notify_email, notify_in_app, notify_promotions, notify_push, notify_transactions, updated_at, user_id, workspace_id")
         .eq("user_id", userId)
         .eq("workspace_id", workspaceId)
         .maybeSingle()
 
-    if (error) throw new Error(error.message)
+    if (error) {
+        throw new Error(
+            formatSupabasePostgrestError(error) ??
+                "Não foi possível carregar as preferências de notificação.",
+        )
+    }
     return (data as WorkspaceMemberNotificationPrefs) ?? null
 }
 
@@ -90,13 +96,16 @@ export async function ensureWorkspaceNotificationPrefsRow(
             user_id: userId,
             ...INSERT_DEFAULTS,
         })
-        .select("*")
+        .select("created_at, notify_bills, notify_budget, notify_credit_card_calendar, notify_credit_cards, notify_email, notify_in_app, notify_promotions, notify_push, notify_transactions, updated_at, user_id, workspace_id")
         .single()
 
     if (error) {
         const reread = await getWorkspaceNotificationPrefs(userId, workspaceId)
         if (reread) return reread
-        throw new Error(error.message)
+        throw new Error(
+            formatSupabasePostgrestError(error) ??
+                "Não foi possível salvar as preferências de notificação.",
+        )
     }
 
     return data as WorkspaceMemberNotificationPrefs
@@ -114,9 +123,14 @@ export async function patchWorkspaceNotificationPrefs(
         .update(patch)
         .eq("user_id", userId)
         .eq("workspace_id", workspaceId)
-        .select("*")
+        .select("created_at, notify_bills, notify_budget, notify_credit_card_calendar, notify_credit_cards, notify_email, notify_in_app, notify_promotions, notify_push, notify_transactions, updated_at, user_id, workspace_id")
         .single()
 
-    if (error) throw new Error(error.message)
+    if (error) {
+        throw new Error(
+            formatSupabasePostgrestError(error) ??
+                "Não foi possível salvar as preferências de notificação.",
+        )
+    }
     return data as WorkspaceMemberNotificationPrefs
 }

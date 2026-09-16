@@ -8,7 +8,6 @@ import {
     type WorkspaceSubscription,
 } from "@/lib/supabase"
 import {
-    addMonths,
 } from "@/components/categories/detail/category-detail-utils"
 import {
     periodBoundsFromYearMonth,
@@ -19,8 +18,7 @@ import {
     buildCreditCardClosingLookup,
     transactionCountsInExpenseMonth,
 } from "@/lib/expense-month-attribution"
-import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
-import { toastError } from "@/lib/toast"
+import { throwIfQueryError } from "@/lib/supabase-errors"
 
 const TX_MONTH_SELECT =
     "*, category:categories(id,name,color), subscription:workspace_subscriptions!subscription_id(id,name), installment_plan:workspace_installment_plans(id,total_installments,installment_amount,final_installment_amount,generated_count,is_active,next_billing_date,description)"
@@ -82,10 +80,7 @@ async function fetchCreditCardsForWorkspace(
         .from("credit_cards")
         .select("id, closing_day")
         .eq("workspace_id", workspaceId)
-    if (error) {
-        console.warn("fetchCategoryDetailBundle credit cards:", error.message)
-        return []
-    }
+    throwIfQueryError(error, "Não foi possível carregar os cartões.")
     return (data as Pick<CreditCard, "id" | "closing_day">[]) ?? []
 }
 
@@ -150,7 +145,7 @@ async function fetchCategoryDetailBundleLegacy(args: {
     const { period_start } = periodBoundsFromYearMonth(yearMonth)
     const { padStart, padEnd } = paddedBoundsForYearMonth(yearMonth)
     const monthsBack = 12
-    const rangeStartYm = addMonths(yearMonth, -(monthsBack - 1))
+    const rangeStartYm = shiftYearMonth(yearMonth, -(monthsBack - 1))
     const { period_start: rangeStart } = periodBoundsFromYearMonth(rangeStartYm)
     const seriesStart = minYmd(rangeStart, padStart)
 
@@ -165,13 +160,13 @@ async function fetchCategoryDetailBundleLegacy(args: {
     ] = await Promise.all([
         supabase
             .from("categories")
-            .select("*")
+            .select("color, created_at, icon, id, name, type, updated_at, user_id, workspace_id")
             .eq("workspace_id", workspaceId)
             .eq("id", categoryId)
             .maybeSingle(),
         supabase
             .from("budgets")
-            .select("*")
+            .select("amount, category_id, created_at, id, month, period_end, period_start, threshold_100_sent_at, threshold_80_sent_at, threshold_over_sent_at, updated_at, user_id, workspace_id, year")
             .eq("workspace_id", workspaceId)
             .eq("category_id", categoryId)
             .eq("period_start", period_start)
@@ -200,30 +195,30 @@ async function fetchCategoryDetailBundleLegacy(args: {
             .lte("date", `${padEnd}T23:59:59.999Z`),
         supabase
             .from("workspace_installment_plans")
-            .select("*")
+            .select("billing_anchor_day, category_id, created_at, description, final_installment_amount, generated_count, id, installment_amount, is_active, next_billing_date, payment_credit_card_id, payment_method, total_installments, updated_at, user_id, workspace_id")
             .eq("workspace_id", workspaceId)
             .eq("category_id", categoryId)
             .order("next_billing_date", { ascending: true }),
         supabase
             .from("workspace_subscriptions")
-            .select("*")
+            .select("amount, billing_anchor_day, billing_interval, category_id, created_at, currency, day_of_month, id, is_active, name, next_billing_date, notes, payment_credit_card_id, payment_method, start_date, updated_at, user_id, workspace_id")
             .eq("workspace_id", workspaceId)
             .eq("category_id", categoryId)
             .order("name", { ascending: true }),
     ])
 
+    throwIfQueryError(catRes.error, "Não foi possível carregar a categoria.")
+    throwIfQueryError(budRes.error, "Não foi possível carregar o orçamento.")
+    throwIfQueryError(txPaddedRes.error, "Não foi possível carregar as transações do mês.")
+    throwIfQueryError(txSeriesRes.error, "Não foi possível carregar o histórico da categoria.")
+    throwIfQueryError(workspacePaddedRes.error, "Não foi possível carregar as transações da carteira.")
+    throwIfQueryError(plansRes.error, "Não foi possível carregar os parcelamentos.")
+    throwIfQueryError(subsRes.error, "Não foi possível carregar as assinaturas.")
+
     const cat = (catRes.data as Category | null) ?? null
     const budget = (budRes.data as Budget | null) ?? null
 
-    let categoryTxsWide: Transaction[] = []
-    if (txPaddedRes.error) {
-        toastError(
-            formatSupabasePostgrestError(txPaddedRes.error) ??
-                "Não foi possível carregar as transações do mês.",
-        )
-    } else {
-        categoryTxsWide = (txPaddedRes.data as Transaction[] | null) ?? []
-    }
+    const categoryTxsWide = (txPaddedRes.data as Transaction[] | null) ?? []
 
     const installmentPlans =
         (plansRes.data as WorkspaceInstallmentPlan[] | null) ?? []

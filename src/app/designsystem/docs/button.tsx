@@ -2,6 +2,7 @@
 
 import { PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
+import { FormSubmit } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
@@ -106,6 +107,40 @@ export default function ButtonDoc() {
         </Button>
         <Button disabled>desabilitado</Button>
       </DocSection>
+
+      <DocSection
+        title="O primário é uma tecla"
+        description="Corpo chapado, contorno e plinto mais escuros e um fio de luz de 1px no topo. Ao apertar, a tecla afunda: o plinto e a sombra somem e entra uma sombra interna no topo. Enviando, ela fica afundada com opacidade cheia, porque salvando não é o mesmo que desabilitado."
+        code={`<Button>salvar</Button>
+<Button disabled>desabilitado</Button>
+<FormSubmit pending pendingLabel="salvando">salvar</FormSubmit>`}
+      >
+        <Button>salvar</Button>
+        <Button disabled>desabilitado</Button>
+        <FormSubmit pending pendingLabel="salvando">
+          salvar
+        </FormSubmit>
+      </DocSection>
+
+      <DocNote title="O realce é token, não alfa">
+        O hover era <code>bg-primary/90</code>, e um alfa único troca de
+        direção por tema: clareava no claro, onde o rótulo caía de 7,31 para
+        5,81, e escurecia no escuro — com uma força diferente para cada
+        superfície embaixo. <code>--primary-hover</code> é opaco e escurece nos
+        dois temas, porque o contato do primário é o rótulo branco e escurecer é
+        o único sentido que sobe o contraste dele: 9,01 no claro e 6,21 no
+        escuro. O toque pinta o mesmo que o cursor.
+      </DocNote>
+
+      <DocNote title="Elevação escura, não luz">
+        Este botão já vestiu vidro quatro vezes, e as quatro saíram na tela:
+        luz clara no corpo ou na borda faz o botão inteiro ler mais claro. A
+        elevação daqui é escura — contorno e plinto em{" "}
+        <code>--primary-edge</code>, sombra preta por fora —, e a única luz é
+        um fio de 1px no topo, acima da faixa do texto. O plinto é sombra
+        interna: a caixa mantém a altura do degrau e continua alinhada ao{" "}
+        <code>Input</code> do lado.
+      </DocNote>
 
       <DocNote title="A maiúscula inicial é do sistema">
         O rótulo de um CTA não depende de quem o escreve: o botão embrulha texto

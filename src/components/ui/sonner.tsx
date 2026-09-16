@@ -44,7 +44,7 @@ type ToasterProps = ComponentProps<typeof Sonner>
  *
  * ## O desvio no telefone tem uma causa
  *
- * `mobileOffset.top` soma a área segura ao cabeçalho do app (4,5rem). Sem isso
+ * `mobileOffset.top` soma a área segura ao cabeçalho do app (4rem). Sem isso
  * o toast nasce **atrás** do cabeçalho fixo. No topo e não no rodapé porque
  * embaixo está a ilha de navegação, e um toast sobre ela cobre o alvo de toque
  * mais usado do app.
@@ -57,10 +57,15 @@ export function Toaster({ ...props }: ToasterProps) {
       theme={resolvedTheme === "dark" ? "dark" : "light"}
       position="top-right"
       closeButton
-      className="toaster group z-(--z-toast)"
+      // Os rótulos do sonner vêm em inglês ("Notifications", "Close toast").
+      containerAriaLabel="Notificações"
+      // Sem `z-(--z-toast)`: o sonner declara `z-index: 999999999` fora de
+      // camada, e a utility perdia calada. O toast já fica acima de tudo.
+      className="toaster"
       offset="1rem"
       mobileOffset={{
-        top: "calc(env(safe-area-inset-top, 0px) + 4.5rem)",
+        // A barra do topo (48) mais 16 de respiro.
+        top: "calc(env(safe-area-inset-top, 0px) + 4rem)",
       }}
       icons={{
         success: <CheckCircleIcon aria-hidden />,
@@ -75,8 +80,9 @@ export function Toaster({ ...props }: ToasterProps) {
         // e `TOAST_SUCCESS_MS = 4000` lá, dois números iguais sem relação
         // declarada — e o primeiro a mudar deixaria o outro para trás.
         duration: TOAST_DEFAULT_MS,
+        closeButtonAriaLabel: "Fechar notificação",
         classNames: {
-          toast: "group toast",
+          toast: "toast",
         },
       }}
       {...props}

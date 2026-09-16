@@ -52,8 +52,13 @@ import {
     UserGroupIcon as MiniUserGroupIcon,
 } from "@heroicons/react/20/solid"
 import type { HeroIcon } from "@/types/navigation"
-import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
+import {
+    FieldTitle,
+} from "@/components/ui/field"
+import {
+    ToggleGroup,
+    ToggleGroupItem,
+} from "@/components/ui/toggle-group"
 
 export const CATEGORY_COLORS = [
     "#10B981",
@@ -98,6 +103,36 @@ export const CATEGORY_ICONS = [
 ] as const
 
 export type CategoryIconId = (typeof CATEGORY_ICONS)[number]
+
+/** Nome do ícone para leitor de tela: a chave ("utensils") vazava em inglês. */
+export const CATEGORY_ICON_LABELS: Record<CategoryIconId, string> = {
+    utensils: "Alimentação",
+    car: "Carro",
+    home: "Casa",
+    "gamepad-2": "Lazer",
+    heart: "Saúde",
+    "graduation-cap": "Educação",
+    laptop: "Computador",
+    briefcase: "Trabalho",
+    "trending-up": "Investimentos",
+    gift: "Presente",
+    "shopping-cart": "Mercado",
+    coffee: "Café",
+    plane: "Viagem",
+    phone: "Telefone",
+    zap: "Energia",
+    "more-horizontal": "Outros",
+    "paw-print": "Pet",
+    dog: "Cachorro",
+    cat: "Gato",
+    "users-round": "Família",
+    "shopping-bag": "Compras",
+    receipt: "Contas",
+    bus: "Transporte público",
+    bike: "Bicicleta",
+    pill: "Remédios",
+    stethoscope: "Médico",
+}
 
 /** O corpo do ícone acompanha a caixa em que ele é desenhado. */
 type CategoryIconSet = { micro: HeroIcon; mini: HeroIcon }
@@ -166,22 +201,27 @@ export function CategoryColorSwatches({
     idPrefix?: string
 }) {
     return (
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Cor da categoria">
+        // Escolha única: `ToggleGroup`, com setas e sem desmarcar tudo. A cor
+        // vem por `style`, que vence a tinta do estado ligado; o que marca a
+        // escolhida é a borda.
+        <ToggleGroup
+            type="single"
+            value={value}
+            onValueChange={(next) => onChange(next)}
+            aria-label="Cor da categoria"
+            className="flex-wrap gap-2"
+        >
             {CATEGORY_COLORS.map((c, i) => (
-                <button
+                <ToggleGroupItem
                     key={c}
                     id={`${idPrefix}-${i}`}
-                    type="button"
-                    onClick={() => onChange(c)}
-                    className={`h-8 w-8 rounded-full border-2 transition-shadow ${
-                        value === c ? "border-gray-900 dark:border-white" : "border-transparent"
-                    }`}
+                    value={c}
+                    className="size-8 min-w-0 rounded-full border-2 border-transparent p-0 data-[state=on]:border-foreground"
                     style={{ backgroundColor: c }}
                     aria-label={`Cor ${c}`}
-                    aria-pressed={value === c}
                 />
             ))}
-        </div>
+        </ToggleGroup>
     )
 }
 
@@ -195,26 +235,27 @@ export function CategoryIconGrid({
     const normalized = normalizeCategoryIcon(value)
 
     return (
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Ícone da categoria">
+        <ToggleGroup
+            type="single"
+            variant="outline"
+            size="lg"
+            value={normalized}
+            onValueChange={(next) => onChange(next as CategoryIconId)}
+            aria-label="Ícone da categoria"
+            className="flex-wrap gap-1.5"
+        >
             {CATEGORY_ICONS.map((key) => (
-                <button
+                <ToggleGroupItem
                     key={key}
-                    type="button"
-                    onClick={() => onChange(key)}
-                    title={key}
-                    className={cn(
-                        "flex h-9 w-9 items-center justify-center rounded-lg border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-                        normalized === key
-                            ? "border-primary-accent bg-primary/10 text-primary-accent"
-                            : "border-border/80 bg-background",
-                    )}
-                    aria-label={`Ícone ${key}`}
-                    aria-pressed={normalized === key}
+                    value={key}
+                    title={CATEGORY_ICON_LABELS[key]}
+                    className="size-9 text-muted-foreground"
+                    aria-label={`Ícone ${CATEGORY_ICON_LABELS[key]}`}
                 >
-                    <CategoryIconPreview name={key} className="h-4 w-4" />
-                </button>
+                    <CategoryIconPreview name={key} className="size-4" />
+                </ToggleGroupItem>
             ))}
-        </div>
+        </ToggleGroup>
     )
 }
 
@@ -236,12 +277,14 @@ export function CategoryAppearanceFields({
 }) {
     return (
         <>
+            {/* Títulos, e não `label`: as grades são grupos com o próprio
+                `aria-label`, e um `label` sem alvo não rotula nada. */}
             <div className="space-y-2">
-                <Label id={colorLabelId}>Cor</Label>
+                <FieldTitle id={colorLabelId}>Cor</FieldTitle>
                 <CategoryColorSwatches value={color} onChange={onColorChange} />
             </div>
             <div className="space-y-2">
-                <Label id={iconLabelId}>Ícone</Label>
+                <FieldTitle id={iconLabelId}>Ícone</FieldTitle>
                 <CategoryIconGrid value={icon} onChange={onIconChange} />
             </div>
         </>

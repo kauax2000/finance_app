@@ -1,5 +1,20 @@
 "use client"
 
+import {
+    ChartTooltip,
+    chartSeriesColor,
+} from "@/components/ui/chart"
+import {
+    EmptyState,
+    EmptyStateDescription,
+    EmptyStateIcon,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
+import { percentPointsBR } from "@/lib/formatters"
+import {
+    Item,
+} from "@/components/ui/item"
+import { currencyBRL } from "@/lib/formatters"
 import Link from "next/link"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid"
@@ -9,32 +24,24 @@ import {
     PieChart,
     Pie,
     Cell,
-    Tooltip,
 } from "recharts"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import { ROUTES } from "@/config/navigation"
 import { labelYearMonthPt } from "@/lib/budget-month"
 import { cn } from "@/lib/utils"
 
-const currencyFmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-})
 
-const pctFmt = new Intl.NumberFormat("pt-BR", {
-    maximumFractionDigits: 1,
-    minimumFractionDigits: 0,
-})
-
-/** Fallback palette when category color is missing or invalid (theme-aware neutrals + accents). */
-const FALLBACK_FILLS = [
-    "oklch(0.65 0.15 166)",
-    "oklch(0.62 0.19 264)",
-    "oklch(0.7 0.15 45)",
-    "oklch(0.58 0.2 25)",
-    "oklch(0.55 0.12 250)",
-]
+/**
+ * A categoria sem cor cai na rampa do sistema — os mesmos `--chart-1..5` que
+ * todo gráfico usa, em vez das cinco `oklch()` escritas à mão que moravam aqui
+ * e que ninguém media contra o tema.
+ */
 
 function isHex6(s: string): boolean {
     return /^#[0-9A-Fa-f]{6}$/.test(s.trim())
@@ -42,7 +49,7 @@ function isHex6(s: string): boolean {
 
 function resolveFill(raw: string | undefined, index: number): string {
     if (raw && isHex6(raw)) return raw.trim()
-    return FALLBACK_FILLS[index % FALLBACK_FILLS.length]
+    return chartSeriesColor(index)
 }
 
 /** Keeps the donut center label readable without overlapping slice edges. */
@@ -117,7 +124,7 @@ function CategoryTooltip({
         <div className="min-w-[10rem] rounded-lg border border-border/80 bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md">
             <p className="font-medium text-foreground">{row.name}</p>
             <p className="mt-1 tabular-nums text-muted-foreground">
-                {currencyFmt.format(row.value)} · {pctFmt.format(row.pct)}% do total
+                {currencyBRL(row.value)} · {percentPointsBR(row.pct)}% do total
             </p>
         </div>
     )
@@ -227,36 +234,35 @@ export function DashboardExpenseCategories({
         () => Math.max(1, ...listRows.map((r) => r.value)),
         [listRows],
     )
-    const totalDisplay = currencyFmt.format(total)
+    const totalDisplay = currencyBRL(total)
 
     return (
-        <div className="min-w-0 space-y-2">
-            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex h-8 min-w-0 items-end">
-                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                        Despesas por categoria
-                    </p>
-                </div>
-                <Button
-                    asChild
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-10 w-full gap-2 px-2 text-xs md:h-8 md:w-auto"
-                >
-                    <Link href={ROUTES.DASHBOARD_CATEGORIES}>
-                        <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />
-                        <span className="truncate">Ver categorias</span>
-                    </Link>
-                </Button>
-            </div>
+        <PageSection>
+            <PageSectionHeader
+                actions={
+                    <Button
+                        asChild
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-2 px-2 text-xs pointer-coarse:h-10"
+                    >
+                        <Link href={ROUTES.DASHBOARD_CATEGORIES}>
+                            <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />
+                            <span className="truncate">Ver categorias</span>
+                        </Link>
+                    </Button>
+                }
+            >
+                <PageSectionTitle>Despesas por categoria</PageSectionTitle>
+            </PageSectionHeader>
 
-            <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <Card padding="none">
                 <CardContent className="relative flex flex-col gap-0 p-0">
                     <CardToolbar
                         aria-live="polite"
                     >
-                        <p className="text-sm font-semibold capitalize leading-snug text-foreground">
+                        <p className="text-sm font-semibold leading-snug text-foreground">
                             {monthTitle}
                         </p>
                     </CardToolbar>
@@ -305,7 +311,7 @@ export function DashboardExpenseCategories({
                                                         />
                                                     ))}
                                                 </Pie>
-                                                <Tooltip
+                                                <ChartTooltip
                                                     content={<CategoryTooltip />}
                                                 />
                                             </PieChart>
@@ -364,11 +370,12 @@ export function DashboardExpenseCategories({
                                             )
                                         return (
                                             <li key={row.key}>
-                                                <button
-                                                    type="button"
+                                                <Item
+                                                    asChild
+                                                    interactive
+                                                    size="sm"
                                                     className={cn(
-                                                        "w-full rounded-lg border px-2 py-2 text-left transition-colors",
-                                                        "border-transparent hover:border-border/60 hover:bg-muted/30",
+                                                        "block px-2 py-2 text-left",
                                                         isActive &&
                                                             activeKey !== null &&
                                                             "border-border/80 bg-muted/40",
@@ -376,6 +383,9 @@ export function DashboardExpenseCategories({
                                                             activeKey !== null &&
                                                             "opacity-45",
                                                     )}
+                                                >
+                                                <button
+                                                    type="button"
                                                     onMouseEnter={() =>
                                                         setActiveKey(row.key)
                                                     }
@@ -408,12 +418,12 @@ export function DashboardExpenseCategories({
                                                         </span>
                                                         <span className="flex shrink-0 flex-col items-end gap-0.5 tabular-nums">
                                                             <span className="font-medium text-foreground">
-                                                                {currencyFmt.format(
+                                                                {currencyBRL(
                                                                     row.value,
                                                                 )}
                                                             </span>
                                                             <span className="text-2xs text-muted-foreground">
-                                                                {pctFmt.format(
+                                                                {percentPointsBR(
                                                                     row.pct,
                                                                 )}
                                                                 % do total
@@ -436,6 +446,7 @@ export function DashboardExpenseCategories({
                                                         />
                                                     </div>
                                                 </button>
+                                                </Item>
                                             </li>
                                         )
                                     })}
@@ -443,25 +454,20 @@ export function DashboardExpenseCategories({
                             </div>
                         </>
                     ) : (
-                        <div className="flex min-h-[240px] flex-col items-center justify-center gap-2 px-4 py-8 text-center">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/60">
-                                <ReceiptPercentIcon
-                                    className="h-6 w-6 text-muted-foreground"
-                                    aria-hidden
-                                />
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                                Nenhuma despesa no período
-                            </p>
-                            <p className="max-w-sm text-xs text-muted-foreground">
+                        <EmptyState variant="plain" className="min-h-[240px]">
+                            <EmptyStateIcon>
+                                <ReceiptPercentIcon aria-hidden />
+                            </EmptyStateIcon>
+                            <EmptyStateTitle>Nenhuma despesa no período</EmptyStateTitle>
+                            <EmptyStateDescription>
                                 As categorias aparecem assim que despesas forem
                                 registradas.
-                            </p>
-                        </div>
+                            </EmptyStateDescription>
+                        </EmptyState>
                     )}
                     </div>
                 </CardContent>
             </Card>
-        </div>
+        </PageSection>
     )
 }

@@ -1,10 +1,26 @@
 "use client"
 
 import { useCallback, useState, type ReactNode } from "react"
+import {
+    Field,
+    FieldContent,
+    FieldControl,
+    FieldDescription,
+    FieldLabel,
+} from "@/components/ui/field"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import { ArrowRightIcon } from "@heroicons/react/16/solid"
-import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+    Alert,
+    AlertDescription,
+    AlertTitle,
+} from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import { useAuth } from "@/components/providers"
@@ -91,23 +107,31 @@ function PrefRow({
     disabled?: boolean
 }) {
     return (
-        <div className="flex items-start justify-between gap-5 rounded-lg border border-border/80 bg-muted/20 p-3 sm:p-3.5 transition-colors hover:bg-muted/30">
-            <div className="min-w-0 space-y-0.5 pr-2">
-                <Label htmlFor={id} className="text-sm font-medium">
-                    {title}
-                </Label>
-                <p className="text-xs leading-snug text-muted-foreground">
+        // `Field` horizontal: o rótulo segue ligado ao interruptor, e a descrição
+        // passa a ser anunciada com ele por `aria-describedby`. A caixa pintada
+        // fica à mão de propósito: é a linha de uma preferência, e o `Field` é
+        // quem ela é — `Card` ou `Item` trocariam a semântica do campo pela de
+        // uma superfície.
+        <Field
+            orientation="horizontal"
+            className="justify-between gap-5 rounded-lg border border-border/80 bg-muted/20 p-3 sm:p-3.5"
+        >
+            <FieldContent className="min-w-0 gap-0.5 pr-2">
+                <FieldLabel className="text-sm font-medium">{title}</FieldLabel>
+                <FieldDescription className="text-xs leading-snug">
                     {description}
-                </p>
-            </div>
-            <Switch
-                id={id}
-                className="mt-0.5 shrink-0"
-                checked={checked}
-                onCheckedChange={onCheckedChange}
-                disabled={disabled}
-            />
-        </div>
+                </FieldDescription>
+            </FieldContent>
+            <FieldControl>
+                <Switch
+                    id={id}
+                    className="mt-0.5 shrink-0"
+                    checked={checked}
+                    onCheckedChange={onCheckedChange}
+                    disabled={disabled}
+                />
+            </FieldControl>
+        </Field>
     )
 }
 
@@ -171,39 +195,40 @@ export function NotificationPreferences() {
         !authLoading && !workspaceLoading && !currentWorkspaceId
 
     return (
-        <div className="min-w-0 space-y-2">
-            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                <div className="flex h-8 min-w-0 items-end">
-                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                        Notificações desta carteira
-                    </p>
-                </div>
-                <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-10 w-full gap-1.5 border-dashed text-sm sm:h-7 sm:w-fit sm:shrink-0 sm:self-auto sm:text-control-sm"
-                    onClick={() => openNotifications()}
-                >
-                    Ver histórico
-                    <ArrowRightIcon className="size-4 opacity-70 sm:size-3.5" />
-                </Button>
-            </div>
-            <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+        <PageSection>
+            <PageSectionHeader
+                actions={
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-1.5 border-dashed text-xs pointer-coarse:h-10"
+                        onClick={() => openNotifications()}
+                    >
+                        Ver histórico
+                        <ArrowRightIcon className="size-3.5 opacity-70" />
+                    </Button>
+                }
+            >
+                <PageSectionTitle>Notificações desta carteira</PageSectionTitle>
+            </PageSectionHeader>
+            <Card padding="none">
                 <CardContent className="flex flex-col p-0">
                     {showNoWorkspaceMessage ? (
                         <div className="px-4 py-4">
-                            <div className="rounded-xl border border-border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
-                                Selecione uma carteira na barra lateral para ajustar notificações
-                                desse espaço.
-                            </div>
+                            <Alert>
+                                <AlertDescription>
+                                    Selecione uma carteira na barra lateral para ajustar notificações
+                                    desse espaço.
+                                </AlertDescription>
+                            </Alert>
                         </div>
                     ) : null}
                     {error ? (
                         <div className="border-b border-border px-4 py-3">
-                            <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-                                {error}
-                            </div>
+                            <Alert tone="destructive" size="sm">
+                                <AlertTitle>{error}</AlertTitle>
+                            </Alert>
                         </div>
                     ) : null}
                     {showSkeleton ? (
@@ -363,6 +388,6 @@ export function NotificationPreferences() {
                     ) : null}
                 </CardContent>
             </Card>
-        </div>
+        </PageSection>
     )
 }

@@ -1,5 +1,27 @@
 "use client"
 
+import {
+    EmptyState,
+    EmptyStateDescription,
+    EmptyStateIcon,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
+import { MembersSectionSkeleton } from "@/components/members/members-section-skeleton"
+import {
+    Alert,
+    AlertDescription,
+} from "@/components/ui/alert"
+import {
+    Field,
+    FieldControl,
+    FieldLabel,
+} from "@/components/ui/field"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
+import { useTimeout } from "@/hooks/use-timeout"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 import { CheckIcon, DocumentDuplicateIcon, EnvelopeIcon, InformationCircleIcon, LinkIcon, TrashIcon } from "@heroicons/react/16/solid"
@@ -7,7 +29,8 @@ import { EnvelopeIcon as EnvelopeOutlineIcon, UserGroupIcon } from "@heroicons/r
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { supabase, WorkspaceInvite, WorkspaceMember } from "@/lib/supabase"
-import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
+import { describeSupabaseErrorForLog, formatSupabasePostgrestError } from "@/lib/supabase-errors"
+import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { isPostgrestTransientNetworkError } from "@/lib/transient-network-retry"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
 import {
@@ -21,27 +44,32 @@ import { Spinner } from "@/components/ui/spinner"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Badge } from "@/components/ui/badge"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
+    Badge,
+    tagChipInfo,
+    tagChipSuccess,
+} from "@/components/ui/badge"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { CustomForm } from "@/components/ui/form"
 import {
     Tooltip,
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { tagChipInfo, tagChipSuccess } from "@/lib/tag-chip-classes"
 import { cn, getInitials } from "@/lib/utils"
 import { identityToneFor } from "@/lib/avatar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { formatDatePtBr, formatDateTimeShortPtBr } from "@/lib/transaction-date"
 import {
     dispatchFinanceMembersMutated,
     FINANCE_MEMBERS_MUTATED_EVENT,
@@ -61,12 +89,6 @@ function memberDisplayName(member: MemberWithProfile) {
     return member.profile?.full_name || member.profile?.email || "Membro"
 }
 
-function buildAcceptInviteUrl(tokenRaw: string): string {
-    if (typeof window === "undefined") return ""
-    const base = window.location.origin.replace(/\/$/, "")
-    return `${base}/invites/accept?token=${encodeURIComponent(tokenRaw)}`
-}
-
 function formatLinkInviteExpiresAt(iso: string | null | undefined): string | null {
     if (!iso) return null
     const end = new Date(iso).getTime()
@@ -74,10 +96,10 @@ function formatLinkInviteExpiresAt(iso: string | null | undefined): string | nul
     const ms = end - Date.now()
     if (ms <= 0) return "Este link já expirou."
     const days = Math.ceil(ms / 86_400_000)
-    if (days > 1) return `Expira em cerca de ${days} dias (${new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}).`
-    if (days === 1) return `Expira em cerca de 1 dia (${new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}).`
+    if (days > 1) return `Expira em cerca de ${days} dias (${formatDateTimeShortPtBr(iso)}).`
+    if (days === 1) return `Expira em cerca de 1 dia (${formatDateTimeShortPtBr(iso)}).`
     const hours = Math.max(1, Math.ceil(ms / 3_600_000))
-    return `Expira em cerca de ${hours} h (${new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}).`
+    return `Expira em cerca de ${hours} h (${formatDateTimeShortPtBr(iso)}).`
 }
 
 /**
@@ -110,58 +132,14 @@ function mergeMemberRowsForDisplay(
     })
 }
 
-function MembersSectionSkeleton() {
-    return (
-        <div className="min-w-0 space-y-2">
-            <div className="flex h-8 min-w-0 items-end">
-                <Skeleton className="h-3 w-24" />
-            </div>
-            <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
-                <CardContent className="flex flex-col p-0">
-                    <CardToolbar>
-                        <Skeleton className="h-4 w-32 max-w-[55%]" />
-                        <Skeleton className="h-4 w-20 shrink-0" />
-                    </CardToolbar>
-                    <ul
-                        className="flex list-none flex-col gap-2.5 px-3 py-3 sm:px-4 sm:py-4"
-                        role="list"
-                    >
-                        {[1, 2, 3].map((i) => (
-                            <li key={i} className="min-w-0">
-                                <div className="rounded-lg border border-border/80 bg-muted/30 p-3 sm:p-3.5">
-                                    <div className="flex items-center gap-3">
-                                        <Skeleton className="size-9 shrink-0 rounded-lg" />
-                                        <div className="min-w-0 flex-1 space-y-2">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <Skeleton className="h-4 w-28 max-w-full" />
-                                                <Skeleton className="h-5 w-14 shrink-0 rounded-full" />
-                                            </div>
-                                            <Skeleton className="h-3 w-40 max-w-full" />
-                                        </div>
-                                        <Skeleton className="size-8 shrink-0 rounded-md" />
-                                    </div>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-                    <CardNote>
-                        <Skeleton className="mt-0.5 size-3.5 shrink-0 rounded" />
-                        <Skeleton className="h-3 w-full max-w-md" />
-                    </CardNote>
-                </CardContent>
-            </Card>
-        </div>
-    )
-}
-
 const membersPageSkeleton = (
     <div className="min-w-0 max-w-full space-y-5" role="status" aria-busy="true" aria-label="Carregando membros">
         <MembersSectionSkeleton />
-        <div className="min-w-0 space-y-2">
-            <div className="flex h-8 min-w-0 items-end">
-                <Skeleton className="h-3 w-28" />
+        <div className="min-w-0 space-y-4">
+            <div className="flex h-6 min-w-0 items-center">
+                <Skeleton className="h-4 w-28" />
             </div>
-            <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <Card padding="none">
                 <CardContent className="flex flex-col gap-0 p-0">
                     <div className="space-y-2 px-4 py-4">
                         <Skeleton className="h-4 w-14" />
@@ -187,7 +165,7 @@ const membersPageSkeleton = (
                 <Skeleton className="h-3 w-40" />
                 <Skeleton className="h-3 w-24 shrink-0" />
             </div>
-            <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <Card padding="none">
                 <CardContent className="flex flex-col p-0">
                     <ul className="divide-y divide-border" role="list">
                         {[1, 2].map((i) => (
@@ -223,6 +201,7 @@ export default function MembersPage() {
         isWorkspaceOwner,
         loading: workspaceLoading,
     } = useWorkspace()
+    const later = useTimeout()
     const [members, setMembers] = useState<MemberWithProfile[]>([])
     const [invites, setInvites] = useState<WorkspaceInvite[]>([])
     const [inviteEmail, setInviteEmail] = useState("")
@@ -250,13 +229,7 @@ export default function MembersPage() {
         () => invites.find((i) => i.invited_email == null),
         [invites],
     )
-    const persistedLinkUrl = useMemo(() => {
-        const raw = pendingLinkInvite?.token_raw?.trim()
-        if (!raw) return null
-        return buildAcceptInviteUrl(raw)
-    }, [pendingLinkInvite?.token_raw])
-
-    const effectiveLinkUrl = persistedLinkUrl ?? generatedLinkUrl
+    const effectiveLinkUrl = generatedLinkUrl
     const linkInviteExpiresAt =
         pendingLinkInvite?.expires_at ?? generatedLinkExpiresAt
 
@@ -276,7 +249,7 @@ export default function MembersPage() {
                     .eq("workspace_id", currentWorkspaceId),
                 supabase
                     .from("workspace_invites")
-                    .select("*")
+                    .select("accepted_at, created_at, created_by, expires_at, id, invited_email, max_uses, role, status, usage_count, workspace_id")
                     .eq("workspace_id", currentWorkspaceId)
                     .eq("status", "pending")
                     .order("created_at", { ascending: false }),
@@ -291,17 +264,19 @@ export default function MembersPage() {
         }
 
         if (membersRes.error) {
-            const msg = formatSupabasePostgrestError(membersRes.error)
-            if (msg) console.error("Members fetch error:", msg)
+            console.error("Members fetch error:", describeSupabaseErrorForLog(membersRes.error))
         }
         if (invitesRes.error) {
-            const msg = formatSupabasePostgrestError(invitesRes.error)
-            if (msg) console.error("Invites fetch error:", msg)
+            console.error("Invites fetch error:", describeSupabaseErrorForLog(invitesRes.error))
         }
 
         const errParts: string[] = []
-        const membersMsg = formatSupabasePostgrestError(membersRes.error)
-        const invitesMsg = formatSupabasePostgrestError(invitesRes.error)
+        const membersMsg = membersRes.error
+            ? (formatSupabasePostgrestError(membersRes.error) ?? "não foi possível carregar")
+            : null
+        const invitesMsg = invitesRes.error
+            ? (formatSupabasePostgrestError(invitesRes.error) ?? "não foi possível carregar")
+            : null
         if (membersMsg) errParts.push(`Membros: ${membersMsg}`)
         if (invitesMsg) errParts.push(`Convites: ${invitesMsg}`)
         if (errParts.length > 0) {
@@ -383,25 +358,6 @@ export default function MembersPage() {
             window.removeEventListener(FINANCE_MEMBERS_MUTATED_EVENT, onMutated)
     }, [fetchMembersAndInvites])
 
-    /** One delayed refetch if link invite row exists but token_raw not yet readable (legacy race). */
-    useEffect(() => {
-        if (!currentWorkspaceId || loading) return
-        if (pendingLinkInvite?.invited_email != null) return
-        const raw = pendingLinkInvite?.token_raw?.trim()
-        if (raw || !pendingLinkInvite?.id) return
-        const t = window.setTimeout(() => {
-            void fetchMembersAndInvites()
-        }, 450)
-        return () => window.clearTimeout(t)
-    }, [
-        currentWorkspaceId,
-        loading,
-        pendingLinkInvite?.id,
-        pendingLinkInvite?.invited_email,
-        pendingLinkInvite?.token_raw,
-        fetchMembersAndInvites,
-    ])
-
     const handleInvite = async () => {
         if (!currentWorkspaceId || !inviteEmail.trim() || !canManageMembers) return
 
@@ -434,7 +390,6 @@ export default function MembersPage() {
                         workspace_id: currentWorkspaceId,
                         invited_email: emailLower,
                         role: "member",
-                        token_hash: "",
                         status: "pending",
                         expires_at: expiresAt,
                         created_by: user.id,
@@ -480,7 +435,7 @@ export default function MembersPage() {
                 typeof res.expires_at === "string" ? res.expires_at.trim() : ""
             if (exp) setGeneratedLinkExpiresAt(exp)
             toastSuccess(
-                "Link gerado. Ele fica salvo aqui até você revogar ou expirar.",
+                "Link gerado. Copie agora: por segurança ele não fica salvo.",
             )
             await fetchMembersAndInvites()
         } catch (error) {
@@ -496,7 +451,7 @@ export default function MembersPage() {
         try {
             await navigator.clipboard.writeText(effectiveLinkUrl)
             setLinkCopied(true)
-            window.setTimeout(() => setLinkCopied(false), 2000)
+            later(() => setLinkCopied(false), 2000)
         } catch {
             toastError("Não foi possível copiar o link.")
         }
@@ -525,11 +480,18 @@ export default function MembersPage() {
         }
     }
 
+    const { confirm: confirmRevoke, dialog: revokeConfirmDialog } = useConfirmDialog()
     const handleRevokeInvite = async (inviteId: string) => {
         if (!canManageMembers) {
             toastError("Apenas owner pode revogar convites.")
             return
         }
+        const ok = await confirmRevoke({
+            title: "Revogar o convite?",
+            description: "O link ou o e-mail enviado deixa de funcionar.",
+            actionLabel: "Revogar",
+        })
+        if (!ok) return
         setBusyInviteId(inviteId)
         const { error } = await supabase
             .from("workspace_invites")
@@ -591,24 +553,19 @@ export default function MembersPage() {
 
     if (!currentWorkspaceId) {
         return (
-            <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <Card padding="none">
                 <CardContent
-                    className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
+                    className="px-4 py-12 md:py-14"
                     role="status"
                     aria-live="polite"
                 >
-                    <div
-                        className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                        aria-hidden
-                    >
-                        <UserGroupIcon className="size-7 text-muted-foreground" />
-                    </div>
-                    <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                        Nenhuma carteira selecionada
-                    </h2>
-                    <p className="max-w-md text-center text-sm text-muted-foreground">
-                        Selecione uma carteira no menu lateral para gerenciar membros e convites.
-                    </p>
+                    <EmptyState variant="plain" size="lg">
+                        <EmptyStateIcon><UserGroupIcon aria-hidden /></EmptyStateIcon>
+                        <EmptyStateTitle>Nenhuma carteira selecionada</EmptyStateTitle>
+                        <EmptyStateDescription>
+                            Selecione uma carteira no menu lateral para gerenciar membros e convites.
+                        </EmptyStateDescription>
+                    </EmptyState>
                 </CardContent>
             </Card>
         )
@@ -620,45 +577,43 @@ export default function MembersPage() {
 
     return (
         <div className="min-w-0 max-w-full space-y-5">
-            <Dialog
+            {revokeConfirmDialog}
+            <AlertDialog
                 open={removeDialogOpen}
                 onOpenChange={(open) => {
                     setRemoveDialogOpen(open)
                     if (!open) setRemoveTarget(null)
                 }}
             >
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Remover membro</DialogTitle>
-                        <DialogDescription>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Remover membro</AlertDialogTitle>
+                        <AlertDialogDescription>
                             {removeTarget ? (
                                 <>
                                     Tem certeza que deseja remover{" "}
                                     <span className="font-medium">
                                         {removeTarget.name}
                                     </span>{" "}
-                                    ({removeTarget.email || "e-mail indisponível"}) deste
+                                    ({removeTarget.email || "e-mail indisponível"}) desta
                                     carteira?
                                 </>
                             ) : (
                                 "Tem certeza que deseja remover este membro?"
                             )}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setRemoveDialogOpen(false)}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel
                             disabled={Boolean(removeTarget && busyMemberId === removeTarget.userId)}
                         >
                             Cancelar
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="destructive"
+                        </AlertDialogCancel>
+                        <AlertDialogAction
                             disabled={Boolean(removeTarget && busyMemberId === removeTarget.userId)}
-                            onClick={() => {
+                            onClick={(e) => {
+                                // Fica aberto enquanto remove; fecha quando termina.
+                                e.preventDefault()
                                 if (!removeTarget) return
                                 void handleRemoveMember(removeTarget.userId).then(() => {
                                     setRemoveDialogOpen(false)
@@ -673,20 +628,16 @@ export default function MembersPage() {
                             ) : (
                                 "Remover"
                             )}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
-            <div className="min-w-0 space-y-2">
-                <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Membros
-                        </p>
-                    </div>
-                </div>
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <PageSection>
+                <PageSectionHeader>
+                    <PageSectionTitle>Membros</PageSectionTitle>
+                </PageSectionHeader>
+                <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <CardToolbar className="justify-end">
                             <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
@@ -713,8 +664,9 @@ export default function MembersPage() {
                                 return (
                                     <li key={member.user_id} className="min-w-0">
                                         <Card
+                                            padding="none"
                                             className={cn(
-                                                "gap-0 overflow-hidden rounded-lg border border-border/80 bg-muted/20 py-0 shadow-none ring-0 transition-colors hover:bg-muted/30",
+                                                "rounded-lg border-border/80 bg-muted/20 transition-colors hover:bg-muted/30",
                                                 isMe && "border-primary-accent/30 bg-primary/5 hover:bg-primary/10"
                                             )}
                                         >
@@ -774,9 +726,9 @@ export default function MembersPage() {
                                                 {canManageMembers && !isOwner && !isMe ? (
                                                     <Button
                                                         type="button"
-                                                        variant="tertiary"
+                                                        variant="destructive"
                                                         size="icon-sm"
-                                                        className="size-8 shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                        className="size-8 shrink-0"
                                                         disabled={busyMemberId === member.user_id}
                                                         aria-label="Remover membro"
                                                         title="Remover membro"
@@ -810,26 +762,24 @@ export default function MembersPage() {
                         </CardNote>
                     </CardContent>
                 </Card>
-            </div>
+            </PageSection>
 
             <div
                 id="workspace-invites"
                 className="min-w-0 space-y-5 scroll-mt-[calc(var(--mobile-header-offset)+0.5rem)] md:scroll-mt-6"
             >
-                <div className="min-w-0 space-y-2">
-                    <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                        <div className="flex h-8 min-w-0 items-end">
-                            <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                                Convidar
-                            </p>
-                        </div>
-                    </div>
+                <PageSection>
+                    <PageSectionHeader>
+                        <PageSectionTitle>Convidar</PageSectionTitle>
+                    </PageSectionHeader>
                     {!canManageMembers ? (
-                        <div className="rounded-xl border border-border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
-                            Apenas o proprietário da carteira pode enviar convites.
-                        </div>
+                        <Alert>
+                            <AlertDescription>
+                                Apenas o proprietário da carteira pode enviar convites.
+                            </AlertDescription>
+                        </Alert>
                     ) : null}
-                    <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                    <Card padding="none">
                         <CardContent className="flex flex-col p-0">
                             <CardToolbar>
                                 <p className="text-xs leading-snug text-muted-foreground">Por e-mail ou link</p>
@@ -842,8 +792,10 @@ export default function MembersPage() {
                                         void handleInvite()
                                     }}
                                 >
-                                    <Label htmlFor="invite-email">E-mail</Label>
+                                    <Field>
+                                    <FieldLabel>E-mail</FieldLabel>
                                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                        <FieldControl>
                                         <Input
                                             id="invite-email"
                                             value={inviteEmail}
@@ -852,6 +804,7 @@ export default function MembersPage() {
                                             disabled={!canManageMembers || savingInvite}
                                             className="sm:flex-1"
                                         />
+                                        </FieldControl>
                                         <Button
                                             type="submit"
                                             disabled={
@@ -871,6 +824,7 @@ export default function MembersPage() {
                                             )}
                                         </Button>
                                     </div>
+                                    </Field>
                                 </CustomForm>
                             </div>
                             <Separator />
@@ -884,6 +838,12 @@ export default function MembersPage() {
                                 <p className="text-xs text-muted-foreground">
                                     Qualquer pessoa com conta no app pode aceitar enquanto o convite estiver pendente.
                                 </p>
+{pendingLinkInvite && !effectiveLinkUrl ? (
+    <p className="text-xs text-muted-foreground">
+        Já existe um link ativo. Por segurança ele só aparece na hora em que é gerado:
+        gere um novo para copiar (o anterior deixa de valer).
+    </p>
+) : null}
                                 {effectiveLinkUrl ? (
                                     <div className="space-y-1.5 pt-0.5">
                                         <div className="flex min-w-0 flex-row items-center gap-2">
@@ -919,9 +879,9 @@ export default function MembersPage() {
                                                 {pendingLinkInvite && canManageMembers ? (
                                                     <Button
                                                         type="button"
-                                                        variant="outline"
+                                                        variant="destructive"
                                                         size="sm"
-                                                        className="h-8 shrink-0 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                        className="h-8 shrink-0"
                                                         disabled={busyInviteId === pendingLinkInvite.id}
                                                         onClick={() =>
                                                             void handleRevokeInvite(pendingLinkInvite.id)
@@ -966,17 +926,13 @@ export default function MembersPage() {
                             </div>
                         </CardContent>
                     </Card>
-                </div>
+                </PageSection>
 
-                <div className="min-w-0 space-y-2">
-                    <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                        <div className="flex h-8 min-w-0 items-end">
-                            <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                                Convites pendentes
-                            </p>
-                        </div>
-                    </div>
-                    <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <PageSection>
+                    <PageSectionHeader>
+                        <PageSectionTitle>Convites pendentes</PageSectionTitle>
+                    </PageSectionHeader>
+                    <Card padding="none">
                         <CardContent className="flex flex-col p-0">
                             <CardToolbar className="justify-end">
                                 <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
@@ -986,28 +942,23 @@ export default function MembersPage() {
                             </CardToolbar>
                             {pendingEmailInvites.length === 0 ? (
                                 <div
-                                    className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
+                                    className="px-4 py-12 md:py-14"
                                     role="status"
                                     aria-live="polite"
                                 >
-                                    <div
-                                        className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                                        aria-hidden
-                                    >
-                                        <EnvelopeOutlineIcon className="size-7 text-muted-foreground" />
-                                    </div>
-                                    <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                                        Nenhum convite pendente
-                                    </h2>
-                                    <p className="max-w-md text-center text-sm text-muted-foreground">
-                                        Os convites enviados aparecem aqui até serem aceitos ou expirarem.
-                                    </p>
+                                    <EmptyState variant="plain" size="lg">
+                                        <EmptyStateIcon><EnvelopeOutlineIcon aria-hidden /></EmptyStateIcon>
+                                        <EmptyStateTitle>Nenhum convite pendente</EmptyStateTitle>
+                                        <EmptyStateDescription>
+                                            Os convites enviados aparecem aqui até serem aceitos ou expirarem.
+                                        </EmptyStateDescription>
+                                    </EmptyState>
                                 </div>
                             ) : (
                                 <ul className="divide-y divide-border" role="list">
                                     {pendingEmailInvites.map((invite) => (
                                         <li key={invite.id}>
-                                            <div className="flex flex-col gap-3 px-4 py-3 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between">
+                                            <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                                                 <div className="flex min-w-0 flex-1 items-center gap-2.5">
                                                     <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted/60">
                                                         <EnvelopeIcon className="size-4 text-muted-foreground" />
@@ -1023,16 +974,16 @@ export default function MembersPage() {
                                                                         ? "Aceites ilimitados até revogar ou expirar"
                                                                         : `${invite.usage_count ?? 0} / ${invite.max_uses} usos`}
                                                                     {" · "}Expira:{" "}
-                                                                    {new Date(
+                                                                    {formatDatePtBr(
                                                                         invite.expires_at
-                                                                    ).toLocaleDateString("pt-BR")}
+                                                                    )}
                                                                 </>
                                                             ) : (
                                                                 <>
                                                                     Expira:{" "}
-                                                                    {new Date(
+                                                                    {formatDatePtBr(
                                                                         invite.expires_at
-                                                                    ).toLocaleDateString("pt-BR")}
+                                                                    )}
                                                                 </>
                                                             )}
                                                         </p>
@@ -1073,14 +1024,14 @@ export default function MembersPage() {
                                                         </Button>
                                                         <Button
                                                             type="button"
-                                                            variant="outline"
+                                                            variant="destructive"
                                                             size="sm"
                                                             disabled={
                                                                 busyInviteId === invite.id ||
                                                                 busyResendInviteId === invite.id
                                                             }
                                                             onClick={() => void handleRevokeInvite(invite.id)}
-                                                            className="min-w-0 flex-1 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive sm:flex-none sm:shrink-0"
+                                                            className="min-w-0 flex-1 sm:flex-none sm:shrink-0"
                                                             aria-label={
                                                                 busyInviteId === invite.id
                                                                     ? "Revogando convite"
@@ -1113,7 +1064,7 @@ export default function MembersPage() {
                             />
                         </CardContent>
                     </Card>
-                </div>
+                </PageSection>
             </div>
         </div>
     )

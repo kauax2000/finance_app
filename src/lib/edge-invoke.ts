@@ -74,7 +74,9 @@ export async function invokeEdgeJson<T>(
             /\b127\.0\.0\.1\b/.test(supabaseBase) ||
             /\blocalhost\b/i.test(supabaseBase)
 
-        if (httpStatus === 404) {
+        // 404 com `error` no corpo veio da própria função ("Invite not found"),
+        // e não do gateway: só o segundo significa função ausente.
+        if (httpStatus === 404 && !/"error"\s*:/.test(responseText)) {
             throw new Error(
                 isLikelyLocalSupabase
                     ? `Edge Function "${fnName}" não encontrada (404). Com Supabase local: mantenha \`supabase start\` a correr e noutro terminal \`supabase functions serve ${fnName}\` (ou \`supabase functions serve\`).`

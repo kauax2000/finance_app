@@ -4,15 +4,62 @@ import { isPostgrestTransientNetworkError } from "@/lib/transient-network-retry"
 export const TRANSIENT_NETWORK_MESSAGE_PT =
     "Falha de conexão. Verifique sua internet e tente novamente."
 
+/** Erros que o banco e o PostgREST mandam com código estável, em português. */
+const POSTGREST_CODE_PT: Record<string, string> = {
+    "23505": "Já existe um registro com esses dados.",
+    "23503": "Este item está ligado a outro registro e não pode ser alterado assim.",
+    "23514": "Algum valor informado é inválido.",
+    "22P02": "Algum valor informado é inválido.",
+    "42501": "Você não tem permissão para fazer isso.",
+    PGRST301: "Sessão expirada. Entre novamente.",
+    PGRST303: "Sessão expirada. Entre novamente.",
+    "28000": "Sessão expirada. Entre novamente.",
+}
+
+/** As mensagens de `raise exception` das nossas funções SQL. */
+const RAISE_MESSAGE_PT: Record<string, string> = {
+    workspace_last_owner: "A carteira precisa de pelo menos um dono.",
+    workspace_personal_immutable: "A carteira pessoal não pode ser alterada nem excluída.",
+    workspace_not_owner: "Só quem é dono da carteira pode fazer isso.",
+    workspace_not_found: "Carteira não encontrada.",
+    workspace_member_immutable_keys: "Não é possível trocar a pessoa ou a carteira de um membro.",
+    workspace_name_required: "Informe um nome para a carteira.",
+    cross_workspace_reference: "A categoria ou o cartão escolhido é de outra carteira.",
+    "category not in card workspace": "A categoria escolhida é de outra carteira.",
+    bill_payment_invalid_amount: "Informe um valor de pagamento maior que zero.",
+    bill_payment_invalid_date: "Informe uma data de pagamento válida.",
+    "not a workspace member": "Você não faz parte desta carteira.",
+    "not authenticated": "Sessão expirada. Entre novamente.",
+    forbidden: "Você não tem permissão para fazer isso.",
+}
+
 /**
- * Normalizes PostgREST / Supabase client errors for UI and logging.
- * Some failures surface as truthy objects that stringify as `{}` in the DevTools console.
+ * O texto que a pessoa lê quando uma chamada ao Supabase falha.
+ *
+ * Devolve português para o que é conhecido (rede, códigos do Postgres/PostgREST,
+ * as exceções das nossas funções SQL) e `null` para o resto — quem chama já tem
+ * o `?? "Não foi possível …"` certo para a própria tela. Antes esta função
+ * devolvia o `message` cru, em inglês e com o código, e ele ia direto ao toast.
+ * Para log, use `describeSupabaseErrorForLog`.
  */
 export function formatSupabasePostgrestError(error: unknown): string | null {
     if (error == null) return null
     if (isPostgrestTransientNetworkError(error)) {
         return TRANSIENT_NETWORK_MESSAGE_PT
     }
+    if (typeof error === "string") return error.trim() || null
+    if (typeof error !== "object") return null
+
+    const e = error as { message?: unknown; code?: unknown }
+    const message = typeof e.message === "string" ? e.message.trim().toLowerCase() : ""
+    if (message && RAISE_MESSAGE_PT[message]) return RAISE_MESSAGE_PT[message]
+    const code = typeof e.code === "string" ? e.code.trim() : ""
+    return (code && POSTGREST_CODE_PT[code]) || null
+}
+
+/** O erro inteiro, para `console.error`. Nunca mostre isto na tela. */
+export function describeSupabaseErrorForLog(error: unknown): string | null {
+    if (error == null) return null
     if (typeof error === "string") return error.trim() || null
     if (typeof error !== "object") return String(error)
 
@@ -265,4 +312,15 @@ export function formatAuthErrorMessagePt(raw: string): string {
     }
 
     return s
+}
+
+/**
+ * Lança o erro de uma consulta em vez de seguir com lista vazia.
+ *
+ * Um bundle que troca erro por `[]` mostra "zero" como se fosse verdade e, num
+ * refetch, sobrescreve o cache bom com o vazio; lançando, o React Query mantém o
+ * dado anterior.
+ */
+export function throwIfQueryError(error: unknown, fallback: string): void {
+    if (error) throw new Error(formatSupabasePostgrestError(error) ?? fallback)
 }

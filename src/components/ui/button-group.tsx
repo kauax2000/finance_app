@@ -43,6 +43,21 @@ export function ButtonGroup({ className, children, ...props }: ButtonGroupProps)
                 "[&>*:not(:first-child)]:before:-left-px",
                 "[&>*:not(:first-child)]:before:w-px",
                 "[&>*:not(:first-child)]:before:bg-current/20",
+                // Quem tem borda visível desenha a própria emenda, e o filete
+                // por cima era um segundo traço para ela. O primário é tecla,
+                // com contorno em `--primary-edge`; o `outline` tem o contorno
+                // no nome. Nos dois a sobreposição de 1px já dá um fio só.
+                "[&>[data-variant=primary]]:before:hidden",
+                "[&>[data-variant=outline]]:before:hidden",
+                // O `secondary` não tem borda que desenhe a emenda, e o filete
+                // recuado lia como risco no meio de um bloco. No lugar dele a
+                // emenda é um vão de 1px de cima a baixo, **transparente**: o
+                // botão deixa de sobrepor o vizinho e passa a 1px dele, e o que
+                // aparece ali é a superfície de trás, qualquer que seja — o grupo
+                // não precisa saber a cor do fundo. É a mesma leitura do fio do
+                // primário: uma emenda que corta a peça inteira.
+                "[&>[data-variant=secondary]]:before:hidden",
+                "[&>[data-variant=secondary]:not(:first-child)]:ml-px",
                 // O divisor mora 1px fora da própria caixa, ou seja, por cima
                 // da aresta do vizinho da esquerda. Quando esse vizinho entra
                 // em hover ele sobe para z-10 e cobria o filete, e a emenda

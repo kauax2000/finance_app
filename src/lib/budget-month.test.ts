@@ -28,8 +28,8 @@ describe("budget-month", () => {
         expect(parseYearMonth(ym)).toEqual({ y: 2026, m: 9 })
     })
 
-    it("labelYearMonthPt returns non-empty string", () => {
-        expect(labelYearMonthPt("2026-04").length).toBeGreaterThan(3)
+    it("labelYearMonthPt só põe maiúscula no mês", () => {
+        expect(labelYearMonthPt("2026-09")).toBe("Setembro de 2026")
     })
 
     it("labelYearMonthPt capitalizes first letter of month", () => {

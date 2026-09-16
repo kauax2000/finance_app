@@ -25,11 +25,30 @@ function Slider({
   value,
   min = 0,
   max = 100,
+  thumbLabels,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   ...props
-}: React.ComponentProps<typeof SliderPrimitive.Root>) {
+}: React.ComponentProps<typeof SliderPrimitive.Root> & {
+  /** Nome de cada punho. Com dois, o padrão é "Valor mínimo" e "Valor máximo". */
+  thumbLabels?: string[]
+}) {
   const resolved = value ?? defaultValue
   const thumbCount =
     Array.isArray(resolved) && resolved.length > 0 ? resolved.length : 1
+
+  // Quem tem papel de `slider` é o punho, não a raiz: o nome precisa chegar a
+  // ele. Sem isto um punho único ficava sem nome, e o par recebia o
+  // "Minimum"/"Maximum" em inglês do Radix.
+  const nomeDoPunho = (index: number): string | undefined =>
+    thumbLabels?.[index] ??
+    (thumbCount === 1
+      ? ariaLabel
+      : thumbCount === 2
+        ? index === 0
+          ? "Valor mínimo"
+          : "Valor máximo"
+        : undefined)
 
   return (
     <SliderPrimitive.Root
@@ -75,6 +94,8 @@ function Slider({
         <SliderPrimitive.Thumb
           data-slot="slider-thumb"
           key={index}
+          aria-label={nomeDoPunho(index)}
+          aria-labelledby={thumbCount === 1 && !ariaLabel ? ariaLabelledBy : undefined}
           className={cn(
             "relative block size-3.5 shrink-0 rounded-full border border-primary-accent/50 bg-background shadow-sm",
             // 44px de alvo sob um punho de 14 — o mínimo confortável de

@@ -1,11 +1,22 @@
 "use client"
 
+import { useTimeout } from "@/hooks/use-timeout"
+import {
+    Card,
+} from "@/components/ui/card"
+import {
+    Field,
+    FieldControl,
+    FieldLabel,
+} from "@/components/ui/field"
+import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy"
 import { useState } from "react"
 import { useAuth } from "@/components/providers"
 import { supabase } from "@/lib/supabase"
 import { createActivity } from "@/lib/activity"
 import {
   Dialog,
+  DialogBody,
   DialogCloseButton,
   DialogContent,
   DialogFooter,
@@ -18,18 +29,17 @@ import {
   SheetContent,
 } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { Alert, AlertTitle } from "@/components/ui/alert"
 import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import {
+    InputGroup,
+    InputGroupAddon,
+    InputGroupButton,
+    InputGroupInput,
+} from "@/components/ui/input-group"
 import { CheckCircleIcon, CheckIcon, ExclamationTriangleIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
 import { cn } from "@/lib/utils"
-
-const dialogFooterClass =
-    "!mx-0 !mb-0 mt-0 shrink-0 flex flex-row flex-wrap justify-end gap-2 border-t border-border bg-background px-6 py-4 sm:flex-row"
-
-const sheetFooterMobileClass =
-    "mt-0 shrink-0 flex-col gap-2 border-t border-border bg-background px-4 py-4"
 
 interface ChangePasswordDialogProps {
     open: boolean
@@ -46,7 +56,7 @@ interface PasswordRequirements {
 
 function checkPasswordRequirements(password: string): PasswordRequirements {
     return {
-        hasMinLength: password.length >= 8,
+        hasMinLength: password.length >= MIN_PASSWORD_LENGTH,
         hasLowercase: /[a-z]/.test(password),
         hasUppercase: /[A-Z]/.test(password),
         hasDigit: /\d/.test(password),
@@ -85,6 +95,7 @@ function ReqRow({
 export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialogProps) {
     const isMobile = useIsMobile()
     const { user } = useAuth()
+    const later = useTimeout()
     const [loading, setLoading] = useState(false)
     const [showCurrentPassword, setShowCurrentPassword] = useState(false)
     const [showNewPassword, setShowNewPassword] = useState(false)
@@ -166,7 +177,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
             }
 
             setSuccess(true)
-            setTimeout(() => {
+            later(() => {
                 handleOpenChange(false)
             }, 2000)
         } catch {
@@ -178,10 +189,11 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
 
     const passwordFieldsBody = (
         <div className="space-y-4">
-            <div className="space-y-2">
-                <Label htmlFor="current-password">Senha atual</Label>
-                <div className="relative">
-                    <Input
+            <Field>
+                <FieldLabel>Senha atual</FieldLabel>
+                <InputGroup>
+                    <FieldControl>
+                    <InputGroupInput
                         id="current-password"
                         type={showCurrentPassword ? "text" : "password"}
                         value={currentPassword}
@@ -189,28 +201,25 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         placeholder="Digite sua senha atual"
                         required
                         disabled={loading}
-                        className="pr-10"
                     />
-                    <Button
-                        type="button"
-                        variant="tertiary"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    >
-                        {showCurrentPassword ? (
-                            <EyeSlashIcon className="h-4 w-4" />
-                        ) : (
-                            <EyeIcon className="h-4 w-4" />
-                        )}
-                    </Button>
-                </div>
-            </div>
+                    </FieldControl>
+                    <InputGroupAddon align="inline-end">
+                        <InputGroupButton
+                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                            aria-label={showCurrentPassword ? "Ocultar senha atual" : "Mostrar senha atual"}
+                            aria-pressed={showCurrentPassword}
+                        >
+                            {showCurrentPassword ? <EyeSlashIcon /> : <EyeIcon />}
+                        </InputGroupButton>
+                    </InputGroupAddon>
+                </InputGroup>
+            </Field>
 
-            <div className="space-y-2">
-                <Label htmlFor="new-password">Nova senha</Label>
-                <div className="relative">
-                    <Input
+            <Field>
+                <FieldLabel>Nova senha</FieldLabel>
+                <InputGroup>
+                    <FieldControl>
+                    <InputGroupInput
                         id="new-password"
                         type={showNewPassword ? "text" : "password"}
                         value={newPassword}
@@ -218,39 +227,36 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         placeholder="Digite a nova senha"
                         required
                         disabled={loading}
-                        className="pr-10"
                     />
-                    <Button
-                        type="button"
-                        variant="tertiary"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                    >
-                        {showNewPassword ? (
-                            <EyeSlashIcon className="h-4 w-4" />
-                        ) : (
-                            <EyeIcon className="h-4 w-4" />
-                        )}
-                    </Button>
-                </div>
+                    </FieldControl>
+                    <InputGroupAddon align="inline-end">
+                        <InputGroupButton
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            aria-label={showNewPassword ? "Ocultar nova senha" : "Mostrar nova senha"}
+                            aria-pressed={showNewPassword}
+                        >
+                            {showNewPassword ? <EyeSlashIcon /> : <EyeIcon />}
+                        </InputGroupButton>
+                    </InputGroupAddon>
+                </InputGroup>
 
                 {newPassword.length > 0 ? (
-                    <div className="mt-2 grid grid-cols-2 gap-1.5 rounded-lg border border-border/80 bg-muted/20 p-3">
+                    <Card variant="muted" padding="sm" className="grid grid-cols-2 gap-1.5 px-3">
                         <ReqRow met={passwordRequirements.hasMinLength} label="8+ caracteres" />
                         <ReqRow met={passwordRequirements.hasLowercase} label="minúscula" />
                         <ReqRow met={passwordRequirements.hasUppercase} label="maiúscula" />
                         <ReqRow met={passwordRequirements.hasDigit} label="número" />
                         <ReqRow met={passwordRequirements.hasSymbol} label="símbolo" />
                         <ReqRow met={passwordIsValid} label="senha forte" />
-                    </div>
+                    </Card>
                 ) : null}
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirmar nova senha</Label>
-                <div className="relative">
-                    <Input
+            <Field>
+                <FieldLabel>Confirmar nova senha</FieldLabel>
+                <InputGroup>
+                    <FieldControl>
+                    <InputGroupInput
                         id="confirm-password"
                         type={showConfirmPassword ? "text" : "password"}
                         value={confirmPassword}
@@ -258,60 +264,51 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         placeholder="Confirme a nova senha"
                         required
                         disabled={loading}
-                        className="pr-10"
                     />
-                    <Button
-                        type="button"
-                        variant="tertiary"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    >
-                        {showConfirmPassword ? (
-                            <EyeSlashIcon className="h-4 w-4" />
-                        ) : (
-                            <EyeIcon className="h-4 w-4" />
-                        )}
-                    </Button>
-                </div>
-            </div>
+                    </FieldControl>
+                    <InputGroupAddon align="inline-end">
+                        <InputGroupButton
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            aria-label={showConfirmPassword ? "Ocultar confirmação de senha" : "Mostrar confirmação de senha"}
+                            aria-pressed={showConfirmPassword}
+                        >
+                            {showConfirmPassword ? <EyeSlashIcon /> : <EyeIcon />}
+                        </InputGroupButton>
+                    </InputGroupAddon>
+                </InputGroup>
+            </Field>
 
             {error ? (
-                <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-                    <ExclamationTriangleIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                    <span className="min-w-0 break-words">{error}</span>
-                </div>
+                <Alert tone="destructive" size="sm">
+                    <ExclamationTriangleIcon />
+                    <AlertTitle className="break-words">{error}</AlertTitle>
+                </Alert>
             ) : null}
             {success ? (
-                <div className="flex items-start gap-2 rounded-lg border border-success/30 bg-success-muted px-3 py-2 text-xs text-success-muted-foreground">
-                    <CheckCircleIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                    <span>Senha alterada com sucesso!</span>
-                </div>
+                <Alert tone="success" size="sm">
+                    <CheckCircleIcon />
+                    <AlertTitle>Senha alterada com sucesso!</AlertTitle>
+                </Alert>
             ) : null}
         </div>
     )
 
     const passwordForm = (
         <CustomForm onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-            <div
-                className={cn(
-                    "min-h-0 flex-1 overflow-y-auto py-4",
-                    isMobile ? "px-4" : "px-6",
-                )}
-            >
+            <DialogBody>
                 {passwordFieldsBody}
-            </div>
+            </DialogBody>
 
             {isMobile ? (
-                <DialogFooter className={sheetFooterMobileClass}>
+                <DialogFooter className="flex-col">
                     {!success ? (
-                        <Button type="submit" disabled={loading} className="h-10 w-full">
+                        <Button type="submit" disabled={loading} size="xl" className="w-full">
                             {loading ? "Alterando..." : "Alterar senha"}
                         </Button>
                     ) : null}
                 </DialogFooter>
             ) : (
-                <DialogFooter className={dialogFooterClass}>
+                <DialogFooter>
                     <Button
                         type="button"
                         variant="outline"
@@ -352,7 +349,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent layout="fixed">
-                <DialogHeader className="shrink-0 px-6 py-4 text-left">
+                <DialogHeader>
                     <DialogTitle>Alterar senha</DialogTitle>
                 </DialogHeader>
                 {passwordForm}

@@ -33,13 +33,17 @@ const PRIMITIVE_TO_COMPONENT = {
   dialog: "Dialog",
   progress: "Progress",
   hr: "Separator",
+  // Tinham ido para a lista de lacunas quando não havia peça. Hoje há.
+  fieldset: "FieldSet",
+  details: "Collapsible",
+  summary: "CollapsibleTrigger",
 }
 
 /**
  * Primitivos sem equivalente no design system. Sinalizar é útil, mas o veredito
  * é diferente: são lacuna, não correção.
  */
-const PRIMITIVE_WITHOUT_COMPONENT = new Set(["details", "summary", "meter", "fieldset"])
+const PRIMITIVE_WITHOUT_COMPONENT = new Set(["meter"])
 
 /** A paleta padrão do Tailwind. Nenhuma delas acompanha o tema. */
 const TAILWIND_PALETTE =
@@ -65,12 +69,21 @@ const BARE_BW = /\b(?:bg|text|border|ring|fill|stroke|divide|placeholder)-(?:whi
  */
 const RUNTIME_COLOR_FILES = [
   "category-appearance-fields",
+  // A marca do Google no botão de entrar: quatro hexadecimais que são de outra
+  // pessoa e não seguem o tema.
+  "google-icon",
   "workspace-appearance-form-fields",
   "workspace-appearance-edit-dialog",
   "credit-card-brand-logos",
   "registered-credit-card-face",
   "color-tile",
-  "avatar.ts",
+  "src/lib/avatar.ts",
+  // A cor da barra do navegador: `meta[name=theme-color]` não lê `var()`, e os
+  // dois valores são o `--background` de cada tema escritos por extenso.
+  "src/app/layout.tsx",
+  // `hexToRgba` converte a cor que a pessoa gravou; o `rgba(0,0,0,alpha)` é o
+  // que sobra quando o hexadecimal do banco não é válido.
+  "category-detail-utils",
   "manifest.ts",
   "global-error.tsx",
 ]
@@ -99,13 +112,20 @@ const FOREIGN_ICON_PACKAGES =
  * A lista é curta de propósito. Se um arquivo novo quiser entrar aqui, a
  * pergunta é se ele desenha uma marca ou um movimento; qualquer outra coisa é
  * um ícone, e ícone vem do Heroicons.
+ *
+ * A única exceção a essa pergunta é `sidebar-toggle-icon`, por decisão do
+ * dono: o Heroicons não tem o pictograma de barra lateral, e o gatilho dela
+ * usa um desenho próprio na grade do `16/solid`. É um arquivo só, com um
+ * ícone só — o próximo ícone próprio pede a mesma decisão explícita.
  */
 const DRAWN_SVG_FILES = [
   "app-logo",
+  "google-icon",
   "app-wordmark",
   "credit-card-brand-logos",
   "registered-credit-card-face",
   "spinner",
+  "sidebar-toggle-icon",
 ]
 
 /**
@@ -145,11 +165,19 @@ const SKIP_DIRS = new Set(["node_modules", ".next", ".git"])
 /**
  * Onde o Heroicons não tem o conjunto que a régua pede.
  *
- * `app-theme-toggle` faz um crossfade `outline` ↔ `solid` a 16px, e **não
+ * `theme-toggle` faz um crossfade `outline` ↔ `solid` a 16px, e **não
  * existe `16/outline`** — os conjuntos micro e mini são só sólidos. É a mesma
  * classe de lacuna do círculo do `Spinner`, e a saída é a mesma: nomear.
+ *
+ * O sino de notificações entrou na rodada 80, por decisão do dono: `24/outline`
+ * a 16px num botão `icon-md`, com o traço do sol do alternador ao lado dele. A
+ * página do `TopBar` o reproduz, e por isso vem junto.
  */
-const HEROICON_SET_EXCEPTIONS = ["app-theme-toggle"]
+const HEROICON_SET_EXCEPTIONS = [
+  "components/ui/theme-toggle",
+  "components/layout/notification-bell-link",
+  "designsystem/docs/top-bar",
+]
 
 /**
  * Onde fio **mais** tinta não é uma tira mal desenhada, e sim a emenda entre
@@ -212,7 +240,13 @@ function semComentarios(src) {
  * linha seguinte.
  */
 function semEspecimes(src) {
-  return src.replace(/\bcode=\{`[\s\S]*?`\}/g, (m) => m.replace(/[^\n]/g, " "))
+  return (
+    src
+      .replace(/\bcode=\{`[\s\S]*?`\}/g, (m) => m.replace(/[^\n]/g, " "))
+      // A prosa também é citação: `description="É um <fieldset> de verdade…"`
+      // descreve a peça, e o `<fieldset>` dentro da frase não é marcação.
+      .replace(/\b(?:description|title)="[^"]*"/g, (m) => m.replace(/[^\n]/g, " "))
+  )
 }
 
 /** Conta a linha de um índice. */
@@ -304,6 +338,20 @@ function auditFile(absPath, project) {
   if (!isUi) {
     for (const m of src.matchAll(/<([a-z][a-z0-9]*)\b/g)) {
       const tag = m[1]
+      // Filho direto de um componente com `asChild` não é cru: o `Slot` do pai
+      // funde nele as classes, o estado e o foco da peça, e o primitivo só dá o
+      // elemento semântico. É o padrão documentado de `Item asChild` e
+      // `Card interactive asChild`, e sem esta exceção a forma certa de uma
+      // linha clicável contava igual a um `<button>` pintado à mão.
+      //
+      // Gatilho não entra: `PopoverTrigger asChild`, `DropdownMenuTrigger
+      // asChild` e companhia só repassam comportamento, sem estilo nenhum — ali
+      // o filho continua sendo o que está escrito. Medido: sem essa ressalva a
+      // célula do calendário, um `<button>` pintado à mão sob um
+      // `PopoverTrigger`, sumia da contagem.
+      const antes = src.slice(Math.max(0, m.index - 1200), m.index)
+      const pai = antes.match(/<([A-Z][\w.]*)\b[^<>]*\basChild\b[^<>]*>\s*$/)
+      if (pai && !/(Trigger|Close|Anchor)$/.test(pai[1])) continue
       if (PRIMITIVE_TO_COMPONENT[tag]) {
         add(
           "C",
@@ -329,7 +377,9 @@ function auditFile(absPath, project) {
   // em muitas paradas, e a última fica longe do nome da declaração: com 400 a
   // regra pegava as quatro primeiras e marcava a quinta.
   const emMascara = (index) =>
-    /mask/i.test(src.slice(Math.max(0, index - 900), index + 80))
+    // Só a propriedade de máscara: `/mask/` sozinho calava um hex perto de
+    // qualquer "máscara de dinheiro".
+    /mask-image|maskImage|WebkitMask|--[\w-]*mask/i.test(src.slice(Math.max(0, index - 900), index + 80))
 
   if (!isRuntimeColor && !isCatalog) {
     for (const m of src.matchAll(/#[0-9a-fA-F]{3,8}\b/g)) {
@@ -429,7 +479,14 @@ function auditFile(absPath, project) {
       const declared = heroiconSet.get(m[1])
       if (!declared) continue
       const found = m[2].match(/\bsize-(\d+(?:\.\d+)?)\b/)
-      const n = found ? parseFloat(found[1]) : 4
+      // `EmptyStateIcon` dimensiona o filho: o poço é 36/48/56 e o `svg` é
+      // metade dele, ou seja 18/24/28px. Um ícone ali não declara classe de
+      // tamanho de propósito, e contá-lo como `size-4` acusava o conjunto `24`,
+      // que é justamente o certo.
+      const dentroDeEmptyState = /<EmptyStateIcon\b[^>]*>\s*$/.test(
+        src.slice(Math.max(0, m.index - 200), m.index)
+      )
+      const n = found ? parseFloat(found[1]) : dentroDeEmptyState ? 6 : 4
       const want = heroiconSetForSize(n)
       if (want !== declared) {
         add(
@@ -604,6 +661,17 @@ function auditFile(absPath, project) {
     add("I", m.index, "use `@/lib/transaction-date` ou `@/lib/formatters`", m[0])
   }
 
+  // ── M. Dinheiro lido ou exibido fora da régua ─────────────────────────────
+  // `parseFloat(x.replace(",", "."))` sobre texto mascarado lia "10.000,00" como
+  // 10 e "1.299,90" como 1,30 — gravado assim no banco. E `text-sm` num campo de
+  // dinheiro anula a rampa que impede o zoom do iOS.
+  for (const m of src.matchAll(/parseFloat\([^)]*\.replace\(\s*["'`],["'`]/g)) {
+    add("M", m.index, "use `parseMoneyBrl` de `@/lib/money-brl`", m[0])
+  }
+  for (const m of src.matchAll(/<(?:Form)?Input\b[^>]*\bmoney\b[^>]*\btext-sm\b/g)) {
+    add("M", m.index, "`text-sm` no campo de dinheiro dá zoom no iOS", "text-sm")
+  }
+
   // ── K. Geometria de colisão decidida pela tela ────────────────────────────
   //
   // **Toda superfície ancorada num gatilho cabe inteira na janela**: centra
@@ -658,6 +726,7 @@ const RULE_LABEL = {
   G: "ícone fora do Heroicons",
   H: "hover: sem par de toque",
   I: "formatação fora dos helpers",
+  M: "dinheiro fora da régua",
   J: "faixa de superfície desenhada à mão",
   K: "geometria de colisão decidida pela tela",
 }

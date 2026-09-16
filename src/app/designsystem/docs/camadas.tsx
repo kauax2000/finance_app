@@ -5,13 +5,13 @@ import { Group, Spec, Stack } from "../ds-kit"
 
 const LAYERS = [
   ["--z-base", "0", "o conteúdo da página"],
-  ["--z-raised", "10", "o que se destaca sem sair do fluxo: ponto de timeline, cabeçalho grudado no desktop"],
-  ["--z-sticky", "20", "a alça de redimensionar da sidebar"],
-  ["--z-banner", "30", "a faixa de offline, abaixo do cabeçalho"],
-  ["--z-header", "40", "o cabeçalho fixo do telefone"],
-  ["--z-modal", "50", "Dialog, AlertDialog, Drawer, Tooltip, HoverCard, Menubar, ContextMenu"],
-  ["--z-sheet", "70", "a folha lateral, que cobre o modal"],
-  ["--z-popover", "80", "Popover, DropdownMenu e Select — abrem por cima da folha"],
+  ["--z-raised", "10", "o que se destaca sem sair do fluxo: o cabeçalho sticky da Table"],
+  ["--z-sticky", "20", "a TopBar grudada no desktop e o trilho fixo da Sidebar"],
+  ["--z-banner", "30", "a AnnouncementBar sticky — a faixa de offline, abaixo do cabeçalho"],
+  ["--z-header", "40", "a TopBar fixa do telefone"],
+  ["--z-modal", "50", "Dialog, AlertDialog e a BottomBar"],
+  ["--z-sheet", "70", "Sheet e Drawer — cobrem o modal e a barra de baixo"],
+  ["--z-popover", "80", "toda superfície ancorada: Popover, DropdownMenu, Select, Combobox, Tooltip, HoverCard, ContextMenu, Menubar, NavigationMenu"],
   ["--z-toast", "100", "o toast, sempre por último"],
 ]
 

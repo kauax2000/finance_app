@@ -104,14 +104,21 @@ function MoneyDisplay({
     <span
       data-slot="money-display"
       title={exact}
-      aria-label={exact}
       className={cn(
         moneyDisplayVariants({ tone, mono: figures, size }),
         className
       )}
       {...props}
     >
-      {text}
+      {/* `aria-label` num <span> sem papel é ignorado: o valor cheio vai como texto. */}
+      {exact ? (
+        <>
+          <span aria-hidden>{text}</span>
+          <span className="sr-only">{exact}</span>
+        </>
+      ) : (
+        text
+      )}
     </span>
   )
 }

@@ -2,13 +2,13 @@
 
 import { invokeEdgeJson } from "@/lib/edge-invoke"
 import { scheduleEvaluateCreditCardAlerts } from "@/lib/credit-card-notifications"
-import type { Bill, TransactionPaymentMethod } from "@/lib/supabase"
+import type { Bill, BillInstance, TransactionPaymentMethod } from "@/lib/supabase"
 import type { SupabaseClient, User } from "@supabase/supabase-js"
 import { computeNextBillInstanceDueYmd } from "@/lib/bills/recurrence"
 import type { VirtualCreditCardBill } from "@/lib/bills/credit-card-bill-projector"
 import { calendarYmdToStorageIso } from "@/lib/transaction-date"
-import type { BillInstance } from "@/lib/supabase"
 import { assertActionAllowedOffline } from "@/lib/offline/mutation-gateway"
+import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 
 export type PayBillRegularInput = {
     kind: "regular"
@@ -33,69 +33,11 @@ export type PayBillPayload = {
     description: string | null
 }
 
-function stripPm<T extends Record<string, unknown>>(row: T): Omit<
-    T,
-    "payment_method" | "payment_credit_card_id"
-> {
-    const { payment_method, payment_credit_card_id, ...rest } = row as T & {
-        payment_method?: unknown
-        payment_credit_card_id?: unknown
-    }
-    void payment_method
-    void payment_credit_card_id
-    return rest as Omit<T, "payment_method" | "payment_credit_card_id">
-}
-
-async function insertExpenseTransaction(opts: {
-    supabase: SupabaseClient
-    user: User
-    workspaceId: string
-    payload: PayBillPayload
-    dateIso: string
-}): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
-    const { supabase, user, workspaceId, payload, dateIso } = opts
-    const txRow = {
-        user_id: user.id,
-        workspace_id: workspaceId,
-        category_id: payload.categoryId,
-        type: "expense" as const,
-        amount: payload.amount,
-        description: payload.description,
-        date: dateIso,
-        is_recurring: false,
-        recurring_interval: null as string | null,
-        payment_method: payload.paymentMethod,
-        payment_credit_card_id: payload.paymentCreditCardId,
-    }
-
-    let res = await supabase.from("transactions").insert(txRow).select("id").single()
-
-    if (
-        res.error &&
-        String(res.error.message ?? "").toLowerCase().includes("payment")
-    ) {
-        res = await supabase
-            .from("transactions")
-            .insert(stripPm(txRow))
-            .select("id")
-            .single()
-    }
-
-    if (res.error || !res.data?.id) {
-        return {
-            ok: false,
-            error: res.error?.message ?? "Não foi possível criar a transação.",
-        }
-    }
-
-    return { ok: true, id: String(res.data.id) }
-}
-
-async function fireBudgetAndCcAlerts(
+function fireBudgetAndCcAlerts(
     workspaceId: string,
     payload: PayBillPayload,
     dateIso: string
-): Promise<void> {
+): void {
     void invokeEdgeJson("evaluate-budgets", {
         body: {
             category_id: payload.categoryId,
@@ -128,59 +70,15 @@ export async function executePayBillFlow(options: {
         }
     }
 
-    const { supabase, user, workspaceId, input, payload } = options
-    const dateIso = calendarYmdToStorageIso(payload.paidDateYmd.slice(0, 10))
+    const { supabase, workspaceId, input, payload } = options
+    const paidYmd = payload.paidDateYmd.slice(0, 10)
+    const dateIso = calendarYmdToStorageIso(paidYmd)
 
-    const inserted = await insertExpenseTransaction({
-        supabase,
-        user,
-        workspaceId,
-        payload,
-        dateIso,
-    })
-    if (!inserted.ok) return inserted
-
-    if (input.kind === "regular") {
-        const { instance, bill } = input
-
-        const { error: upErr } = await supabase
-            .from("bill_instances")
-            .update({
-                status: "paid",
-                paid_at: new Date().toISOString(),
-                paid_amount: payload.amount,
-                payment_method: payload.paymentMethod,
-                payment_credit_card_id: payload.paymentCreditCardId,
-                transaction_id: inserted.id,
-                amount: payload.amount,
-            })
-            .eq("id", instance.id)
-            .eq("workspace_id", workspaceId)
-
-        if (upErr) {
-            return { ok: false, error: upErr.message }
-        }
-
-        const nextYmd = computeNextBillInstanceDueYmd(
-            bill,
-            instance.due_date.slice(0, 10),
-        )
-        if (nextYmd) {
-            const { error: nextErr } = await supabase.from("bill_instances").insert({
-                workspace_id: workspaceId,
-                user_id: user.id,
-                bill_id: bill.id,
-                due_date: nextYmd,
-                status: "pending",
-                amount: null,
-            })
-            if (nextErr && nextErr.code !== "23505") {
-                return { ok: false, error: nextErr.message }
-            }
-        }
-    } else {
+    if (input.kind === "virtual_cc") {
+        // Pagar a fatura não é uma despesa: as compras já estão lançadas no
+        // cartão, e o cartão não paga a própria fatura. Só marca como paga.
         const virt = input.virtual
-        const { error: ccPayErr } = await supabase
+        const { error } = await supabase
             .from("credit_card_invoice_payments")
             .upsert(
                 {
@@ -188,19 +86,43 @@ export async function executePayBillFlow(options: {
                     credit_card_id: virt.credit_card_id,
                     statement_close_date: virt.statement_close_date_ymd,
                     status: "paid",
-                    created_by: user.id,
-                    paid_at: new Date().toISOString(),
+                    created_by: options.user.id,
+                    paid_at: dateIso,
                 },
-                {
-                    onConflict: "workspace_id,credit_card_id,statement_close_date",
-                },
+                { onConflict: "workspace_id,credit_card_id,statement_close_date" },
             )
+        if (error) {
+            return {
+                ok: false,
+                error: formatSupabasePostgrestError(error) ?? "Erro ao registrar fatura.",
+            }
+        }
+        return { ok: true }
+    }
 
-        if (ccPayErr) {
-            return { ok: false, error: ccPayErr.message ?? "Erro ao registrar fatura." }
+    // Uma transação só no banco: parcela, despesa e próxima parcela.
+    const { instance, bill } = input
+    const { error } = await supabase.rpc("pay_bill_instance", {
+        p_instance_id: instance.id,
+        p_amount: payload.amount,
+        p_paid_date: paidYmd,
+        p_category_id: payload.categoryId,
+        p_payment_method: payload.paymentMethod,
+        p_payment_credit_card_id: payload.paymentCreditCardId,
+        p_description: payload.description,
+        p_next_due_date: computeNextBillInstanceDueYmd(bill, instance.due_date.slice(0, 10)),
+    })
+    if (error) {
+        if (String(error.message ?? "").includes("BILL_INSTANCE_NOT_PENDING")) {
+            return { ok: false, error: "Esta conta já foi paga." }
+        }
+        return {
+            ok: false,
+            error:
+                formatSupabasePostgrestError(error) ?? "Não foi possível registrar o pagamento.",
         }
     }
 
-    await fireBudgetAndCcAlerts(workspaceId, payload, dateIso)
+    fireBudgetAndCcAlerts(workspaceId, payload, dateIso)
     return { ok: true }
 }

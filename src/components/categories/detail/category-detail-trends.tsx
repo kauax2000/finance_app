@@ -1,7 +1,12 @@
 "use client"
 
+import { currencyBRL } from "@/lib/formatters"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import * as React from "react"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
     Area,
@@ -18,14 +23,9 @@ import type { Category, CreditCard } from "@/lib/supabase"
 import {
     buildDailySeries,
     buildMonthlySeries,
-    formatCurrencyBRL,
     hexToRgba,
 } from "@/components/categories/detail/category-detail-utils"
-import {
-    transactionSegmentContainerClassName,
-    transactionSegmentTabClassName,
-} from "@/components/transactions/transaction-type-segment"
-import { cn } from "@/lib/utils"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 type SeriesRow = { date: string; amount: number | string; type: string; category_id: string | null }
 
@@ -71,48 +71,26 @@ export function CategoryDetailTrends({
     const monthlyTitle = isExpense ? "Despesas por mês" : "Receitas por mês"
 
     return (
-        <section className="min-w-0 space-y-3" aria-labelledby="category-trends-heading">
-            <div className="flex min-w-0 max-w-full flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-3">
-                <div className="flex h-8 min-w-0 items-end gap-2">
-                    <h3
-                        id="category-trends-heading"
-                        className="text-2xs font-medium uppercase tracking-wide text-muted-foreground"
+        <PageSection aria-labelledby="category-trends-heading">
+            <PageSectionHeader
+                actions={
+                    <Tabs
+                        value={tab}
+                        onValueChange={(next) => setTab(next as typeof tab)}
+                        className="w-auto"
                     >
-                        Tendência
-                    </h3>
-                </div>
-                <div
-                    className={cn(
-                        transactionSegmentContainerClassName,
-                        "w-full max-w-full shrink-0 md:w-auto",
-                    )}
-                    role="tablist"
-                    aria-label="Período do gráfico"
-                >
-                    <Button
-                        type="button"
-                        role="tab"
-                        aria-selected={tab === "daily"}
-                        size="sm"
-                        variant="tertiary"
-                        className={transactionSegmentTabClassName(tab === "daily")}
-                        onClick={() => setTab("daily")}
-                    >
-                        Dia a dia
-                    </Button>
-                    <Button
-                        type="button"
-                        role="tab"
-                        aria-selected={tab === "monthly"}
-                        size="sm"
-                        variant="tertiary"
-                        className={transactionSegmentTabClassName(tab === "monthly")}
-                        onClick={() => setTab("monthly")}
-                    >
-                        12 meses
-                    </Button>
-                </div>
-            </div>
+                        <TabsList aria-label="Período do gráfico" className="w-auto">
+                            <TabsTrigger value="daily">Dia a dia</TabsTrigger>
+                            <TabsTrigger value="monthly">12 meses</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+                }
+            >
+                {/* `h3`: a tendência é um bloco dentro do detalhe da categoria. */}
+                <PageSectionTitle asChild>
+                    <h3 id="category-trends-heading">Tendência</h3>
+                </PageSectionTitle>
+            </PageSectionHeader>
             <Card padding="none">
                 <CardContent className="p-3">
                     <p className="mb-2 w-full text-xs font-medium text-muted-foreground md:min-w-0 md:truncate">
@@ -125,7 +103,7 @@ export function CategoryDetailTrends({
                                 <XAxis dataKey="day" tick={{ fontSize: 11 }} />
                                 <YAxis width={44} tick={{ fontSize: 11 }} />
                                 <Tooltip
-                                    formatter={(value) => formatCurrencyBRL(Number(value))}
+                                    formatter={(value) => currencyBRL(Number(value))}
                                     labelFormatter={(_, payload) =>
                                         payload?.[0]?.payload
                                             ? `Dia ${(payload[0].payload as { day: string }).day}`
@@ -152,13 +130,13 @@ export function CategoryDetailTrends({
                                     height={52}
                                 />
                                 <YAxis width={44} tick={{ fontSize: 11 }} />
-                                <Tooltip formatter={(value) => formatCurrencyBRL(Number(value))} />
+                                <Tooltip formatter={(value) => currencyBRL(Number(value))} />
                                 <Bar dataKey="total" fill={hexToRgba(accentColor, 0.85)} radius={[3, 3, 0, 0]} />
                             </BarChart>
                         )}
                     </ResponsiveContainer>
                 </CardContent>
             </Card>
-        </section>
+        </PageSection>
     )
 }

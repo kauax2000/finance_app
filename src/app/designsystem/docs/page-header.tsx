@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { MoneyDisplay } from "@/components/ui/money-display"
 import {
   PageHeader,
   PageHeaderActions,
@@ -198,8 +199,8 @@ export default function PageHeaderDoc() {
             <dl>
               <div className="flex items-baseline gap-2">
                 <dt className="text-muted-foreground">Total</dt>
-                <dd className="nums font-medium text-foreground">
-                  R$ 1.284,60
+                <dd>
+                  <MoneyDisplay value={1284.6} className="font-medium" />
                 </dd>
               </div>
               <div className="flex items-baseline gap-2">

@@ -274,7 +274,6 @@ function readTokens(cssPath) {
  * escuro.
  */
 function precisaDePar(nome, valor) {
-  if (nome.endsWith("-surface")) return false
   const v = String(valor).trim().replace(/\s+/g, " ")
   if (/^var\(--[a-z0-9-]+\)$/i.test(v)) return true
   return /oklch|color-mix|rgba?\(|hsla?\(|#[0-9a-f]{3,8}\b/i.test(v)

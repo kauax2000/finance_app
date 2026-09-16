@@ -125,7 +125,8 @@ function Alert({
       data-slot="alert"
       data-tone={tone ?? "default"}
       role={
-        role ?? (tone === "destructive" || tone === "warning" ? "alert" : "status")
+        // Só o destrutivo interrompe, como na `AnnouncementBar`.
+        role ?? (tone === "destructive" ? "alert" : "status")
       }
       className={cn(alertVariants({ tone, variant, size }), className)}
       {...props}
@@ -149,7 +150,6 @@ function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
       className={cn(
         "font-heading font-medium tracking-tight text-balance",
         "group-has-[>svg]/alert:col-start-2",
-        "[.border-b]:pb-2",
         className
       )}
       {...props}
@@ -227,7 +227,7 @@ function AlertActions({ className, ...props }: React.ComponentProps<"div">) {
  * **O `dark:hover:` é obrigatório, e não redundante.** `&:hover` e
  * `&:is(.dark *)` empatam em especificidade, e o `dark:` é emitido depois — sem
  * esta linha, o `dark:hover:bg-muted/50` do `tertiary` venceria o realce tonal
- * no tema escuro, calado e só num tema. É a armadilha que o `AppThemeToggle`
+ * no tema escuro, calado e só num tema. É a armadilha que o `ThemeToggle`
  * já pagou uma vez.
  *
  * `asChild` continua valendo: uma das seis chamadas é um `<Link>` dentro do
@@ -246,7 +246,8 @@ function AlertAction({
       className={cn(
         "border-current/25 bg-transparent text-current",
         "hover:bg-current/10 hover:text-current dark:hover:bg-current/10",
-        "active:bg-current/10 active:text-current",
+        // O par `dark:` também no toque: sem ele o cinza do `tertiary` vencia no escuro.
+        "active:bg-current/10 active:text-current dark:active:bg-current/10",
         className
       )}
       {...props}

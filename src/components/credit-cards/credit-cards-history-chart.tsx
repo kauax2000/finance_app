@@ -1,5 +1,18 @@
 "use client"
 
+import {
+    ChartLegendContent,
+    ChartTooltip,
+    chartSeriesColor,
+} from "@/components/ui/chart"
+import { CreditCardIcon } from "@heroicons/react/16/solid"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
+import { formatYearMonthShortPtBr } from "@/lib/transaction-date"
+import { currencyBRL, currencyCompactBRL } from "@/lib/formatters"
 import { useMemo } from "react"
 import {
     ResponsiveContainer,
@@ -7,10 +20,9 @@ import {
     CartesianGrid,
     XAxis,
     YAxis,
-    Tooltip,
     Bar,
 } from "recharts"
-import { CreditCardIcon } from "@heroicons/react/24/outline"
+
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import type { CreditCard as CreditCardRow, WorkspaceInstallmentPlan } from "@/lib/supabase"
@@ -27,23 +39,16 @@ import {
  * sem dizer nada sobre estado. Eram seis hex que não acompanhavam o tema.
  * O acesso é por módulo, então o número de faixas não precisa bater.
  */
-const BAR_COLORS = [
-    "var(--chart-1)",
-    "var(--chart-2)",
-    "var(--chart-3)",
-    "var(--chart-4)",
-    "var(--chart-5)",
-]
+/**
+ * A rampa é do sistema, e o `% 5` que morava aqui mentia: com seis cartões,
+ * o sexto saía com a cor do primeiro. `chartSeriesColor` devolve
+ * `--muted-foreground` do sexto em diante, que é dizer "este não é dos cinco".
+ */
 
 /** O que `hexToRgba` fazia, sem exigir que a cor seja hex. */
 function alpha(color: string, pct: number): string {
     return `color-mix(in oklab, ${color} ${pct}%, transparent)`
 }
-
-const currencyFmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-})
 
 export type CreditCardHistoryRow = Record<string, string | number | boolean | undefined>
 
@@ -51,16 +56,6 @@ function ymFromCloseDate(close: Date): string {
     const y = close.getFullYear()
     const m = close.getMonth() + 1
     return `${y}-${String(m).padStart(2, "0")}`
-}
-
-function labelFromYm(ym: string): string {
-    const [ys, ms] = ym.split("-")
-    const y = Number(ys)
-    const m = Number(ms)
-    if (!Number.isFinite(y) || !Number.isFinite(m)) return ym
-    const d = new Date(y, m - 1, 1)
-    const short = d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" })
-    return short.replace(/\.$/, "")
 }
 
 type CellMeta = {
@@ -121,7 +116,7 @@ function CreditCardsHistoryTooltip({
                     const num = typeof v === "number" ? v : 0
                     const openKey = `${c.id}_open`
                     const isOpen = row[openKey] === true
-                    const color = BAR_COLORS[idx % BAR_COLORS.length]
+                    const color = chartSeriesColor(idx)
                     return (
                         <li
                             key={c.id}
@@ -144,35 +139,12 @@ function CreditCardsHistoryTooltip({
                                 </span>
                             </span>
                             <span className="shrink-0 font-medium">
-                                {currencyFmt.format(num)}
+                                {currencyBRL(num)}
                             </span>
                         </li>
                     )
                 })}
             </ul>
-        </div>
-    )
-}
-
-function LegendStrip({ cards }: { cards: CreditCardRow[] }) {
-    return (
-        <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
-            {cards.map((c, idx) => {
-                const color = BAR_COLORS[idx % BAR_COLORS.length]
-                return (
-                    <span
-                        key={c.id}
-                        className="flex max-w-[10rem] items-center gap-1.5 text-2xs text-muted-foreground"
-                    >
-                        <span
-                            className="size-2 shrink-0 rounded-full"
-                            style={{ backgroundColor: alpha(color, 75) }}
-                            aria-hidden
-                        />
-                        <span className="truncate">{c.name}</span>
-                    </span>
-                )
-            })}
         </div>
     )
 }
@@ -213,7 +185,7 @@ export function CreditCardsHistoryChart({
         const chartData: CreditCardHistoryRow[] = sortedYm.map((ym) => {
             const row: CreditCardHistoryRow = {
                 ym,
-                label: labelFromYm(ym),
+                label: formatYearMonthShortPtBr(ym),
             }
             let anyOpen = false
             for (let i = 0; i < cards.length; i++) {
@@ -237,11 +209,18 @@ export function CreditCardsHistoryChart({
 
         const positiveTotals = monthlyTotals.filter((t) => t > 0)
         const hasAnyValue = positiveTotals.length > 0
-        const max = positiveTotals.length ? Math.max(...positiveTotals) : 0
-        const min = positiveTotals.length ? Math.min(...positiveTotals) : 0
+        // A fatura aberta ainda está crescendo: somada, ela vira a "menor fatura"
+        // e puxa a média para baixo. Os indicadores leem só faturas fechadas, e
+        // caem para todas quando ainda não há nenhuma fechada.
+        const closedTotals = monthlyTotals.filter(
+            (t, i) => t > 0 && !chartData[i].isOpen,
+        )
+        const kpiTotals = closedTotals.length > 0 ? closedTotals : positiveTotals
+        const max = kpiTotals.length ? Math.max(...kpiTotals) : 0
+        const min = kpiTotals.length ? Math.min(...kpiTotals) : 0
         const avg =
-            positiveTotals.length > 0
-                ? positiveTotals.reduce((a, b) => a + b, 0) / positiveTotals.length
+            kpiTotals.length > 0
+                ? kpiTotals.reduce((a, b) => a + b, 0) / kpiTotals.length
                 : 0
 
         return {
@@ -266,9 +245,9 @@ export function CreditCardsHistoryChart({
 
     if (cards.length === 0) {
         return (
-            <Card className="relative gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <Card padding="none" className="relative">
                 <CardContent className="flex min-h-[280px] flex-col items-center justify-center gap-2 px-4 py-10 text-center">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/60">
+                    <div className="flex size-12 items-center justify-center rounded-full bg-muted/60">
                         <CreditCardIcon className="h-6 w-6 text-muted-foreground" aria-hidden />
                     </div>
                     <p className="text-sm text-muted-foreground">Nenhum cartão ativo</p>
@@ -281,21 +260,29 @@ export function CreditCardsHistoryChart({
     }
 
     return (
-        <div className="min-w-0 space-y-2">
-            <div className="flex min-w-0 flex-row items-center justify-between gap-x-3 gap-y-1">
-                <div className="flex min-h-8 min-w-0 shrink-0 items-center">
-                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                        Histórico de faturas
-                    </p>
-                </div>
+        <PageSection>
+            <PageSectionHeader>
+                <PageSectionTitle>Histórico de faturas</PageSectionTitle>
+                {/* A legenda mora no cabeçalho, fora do gráfico — como a da rosca
+                    —, então o `payload` é montado aqui, com a mesma tinta a 75%
+                    que as barras usam. Ela vem **abaixo** do título, e não como
+                    `actions`: a coluna de ações tem a largura do conteúdo, e com
+                    seis nomes longos a legenda levava o título a 0px no telefone. */}
                 {chartData.length > 0 && hasAnyValue ? (
-                    <div className="min-w-0 flex-1">
-                        <LegendStrip cards={cards} />
-                    </div>
+                    <ChartLegendContent
+                        align="start"
+                        verticalAlign="top"
+                        className="gap-x-3 gap-y-1 pt-1 pb-0 text-2xs text-muted-foreground"
+                        payload={cards.map((c, idx) => ({
+                            value: c.name,
+                            dataKey: c.id,
+                            color: alpha(chartSeriesColor(idx), 75),
+                        }))}
+                    />
                 ) : null}
-            </div>
+            </PageSectionHeader>
 
-            <Card className="relative gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <Card padding="none" className="relative">
                 <CardContent className="relative flex flex-col gap-0 p-0">
                     <CardToolbar>
                         {chartData.length > 0 && hasAnyValue ? (
@@ -365,14 +352,9 @@ export function CreditCardsHistoryChart({
                                         tickLine={false}
                                         className="text-2xs text-muted-foreground"
                                         domain={yDomain}
-                                        tickFormatter={(v) =>
-                                            Number(v).toLocaleString("pt-BR", {
-                                                notation: "compact",
-                                                maximumFractionDigits: 0,
-                                            })
-                                        }
+                                        tickFormatter={(v) => currencyCompactBRL(Number(v))}
                                     />
-                                    <Tooltip
+                                    <ChartTooltip
                                         content={
                                             <CreditCardsHistoryTooltip cards={cards} />
                                         }
@@ -381,7 +363,7 @@ export function CreditCardsHistoryChart({
                                         }}
                                     />
                                     {cards.map((c, idx) => {
-                                        const color = BAR_COLORS[idx % BAR_COLORS.length]
+                                        const color = chartSeriesColor(idx)
                                         return (
                                             <Bar
                                                 key={c.id}
@@ -399,7 +381,7 @@ export function CreditCardsHistoryChart({
                             </ResponsiveContainer>
                         ) : (
                             <div className="flex h-[300px] flex-col items-center justify-center gap-2 px-4 text-center">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/60">
+                                <div className="flex size-12 items-center justify-center rounded-full bg-muted/60">
                                     <CreditCardIcon
                                         className="h-6 w-6 text-muted-foreground"
                                         aria-hidden
@@ -416,6 +398,6 @@ export function CreditCardsHistoryChart({
                     </div>
                 </CardContent>
             </Card>
-        </div>
+        </PageSection>
     )
 }

@@ -8,6 +8,7 @@ import AlertDialogDoc from "./docs/alert-dialog"
 import AnnouncementBarDoc from "./docs/announcement-bar"
 import AvatarDoc from "./docs/avatar"
 import BadgeDoc from "./docs/badge"
+import BottomBarDoc from "./docs/bottom-bar"
 import BreadcrumbDoc from "./docs/breadcrumb"
 import ButtonDoc from "./docs/button"
 import ButtonGroupDoc from "./docs/button-group"
@@ -17,7 +18,6 @@ import CardDoc from "./docs/card"
 import CarouselDoc from "./docs/carousel"
 import ChartDoc from "./docs/chart"
 import CheckboxDoc from "./docs/checkbox"
-import ChipsStatusDoc from "./docs/chips-status"
 import CodeDoc from "./docs/code"
 import CollapsibleDoc from "./docs/collapsible"
 import ColorTileDoc from "./docs/color-tile"
@@ -26,11 +26,9 @@ import CommandDoc from "./docs/command"
 import ContainerDoc from "./docs/container"
 import ContextMenuDoc from "./docs/context-menu"
 import CoresDoc from "./docs/cores"
-import DatasDoc from "./docs/datas"
 import DatePickerDoc from "./docs/date-picker"
 import DescriptionListDoc from "./docs/description-list"
 import DialogDoc from "./docs/dialog"
-import DinheiroDoc from "./docs/dinheiro"
 import DragHandleDoc from "./docs/drag-handle"
 import DrawerDoc from "./docs/drawer"
 import DropdownMenuDoc from "./docs/dropdown-menu"
@@ -39,9 +37,7 @@ import FieldDoc from "./docs/field"
 import FormDoc from "./docs/form"
 import FormPickerPopoverDoc from "./docs/form-picker-popover"
 import FormaElevacaoDoc from "./docs/forma-elevacao"
-import FormulariosDoc from "./docs/formularios"
 import GlassDoc from "./docs/glass"
-import GraficosDoc from "./docs/graficos"
 import HoverCardDoc from "./docs/hover-card"
 import IconografiaDoc from "./docs/iconografia"
 import InputDoc from "./docs/input"
@@ -84,13 +80,14 @@ import TableDoc from "./docs/table"
 import TablePanelDoc from "./docs/table-panel"
 import TabsDoc from "./docs/tabs"
 import TextareaDoc from "./docs/textarea"
+import ThemeToggleDoc from "./docs/theme-toggle"
 import TimelineDoc from "./docs/timeline"
 import ToggleDoc from "./docs/toggle"
 import ToggleGroupDoc from "./docs/toggle-group"
 import ToolbarDoc from "./docs/toolbar"
 import TooltipDoc from "./docs/tooltip"
+import TopBarDoc from "./docs/top-bar"
 import TypographyDoc from "./docs/typography"
-import VazioCarregandoDoc from "./docs/vazio-carregando"
 
 export const DOCS: Record<string, ComponentType> = {
   "accordion": AccordionDoc,
@@ -99,6 +96,7 @@ export const DOCS: Record<string, ComponentType> = {
   "announcement-bar": AnnouncementBarDoc,
   "avatar": AvatarDoc,
   "badge": BadgeDoc,
+  "bottom-bar": BottomBarDoc,
   "breadcrumb": BreadcrumbDoc,
   "button": ButtonDoc,
   "button-group": ButtonGroupDoc,
@@ -108,7 +106,6 @@ export const DOCS: Record<string, ComponentType> = {
   "carousel": CarouselDoc,
   "chart": ChartDoc,
   "checkbox": CheckboxDoc,
-  "chips-status": ChipsStatusDoc,
   "code": CodeDoc,
   "collapsible": CollapsibleDoc,
   "color-tile": ColorTileDoc,
@@ -117,11 +114,9 @@ export const DOCS: Record<string, ComponentType> = {
   "container": ContainerDoc,
   "context-menu": ContextMenuDoc,
   "cores": CoresDoc,
-  "datas": DatasDoc,
   "date-picker": DatePickerDoc,
   "description-list": DescriptionListDoc,
   "dialog": DialogDoc,
-  "dinheiro": DinheiroDoc,
   "drag-handle": DragHandleDoc,
   "drawer": DrawerDoc,
   "dropdown-menu": DropdownMenuDoc,
@@ -130,9 +125,7 @@ export const DOCS: Record<string, ComponentType> = {
   "form": FormDoc,
   "form-picker-popover": FormPickerPopoverDoc,
   "forma-elevacao": FormaElevacaoDoc,
-  "formularios": FormulariosDoc,
   "glass": GlassDoc,
-  "graficos": GraficosDoc,
   "hover-card": HoverCardDoc,
   "iconografia": IconografiaDoc,
   "input": InputDoc,
@@ -175,11 +168,12 @@ export const DOCS: Record<string, ComponentType> = {
   "table-panel": TablePanelDoc,
   "tabs": TabsDoc,
   "textarea": TextareaDoc,
+  "theme-toggle": ThemeToggleDoc,
   "timeline": TimelineDoc,
   "toggle": ToggleDoc,
   "toggle-group": ToggleGroupDoc,
   "toolbar": ToolbarDoc,
   "tooltip": TooltipDoc,
+  "top-bar": TopBarDoc,
   "typography": TypographyDoc,
-  "vazio-carregando": VazioCarregandoDoc,
 }

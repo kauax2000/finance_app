@@ -172,8 +172,10 @@ function Avatar({
  */
 const AvatarImage = React.forwardRef<
   HTMLImageElement,
-  React.ComponentProps<typeof AvatarPrimitive.Image>
->(({ className, alt = "", ...props }, ref) => (
+  // `alt` obrigatório: `""` é a escolha certa ao lado do nome, mas tem de ser
+  // escrita — um padrão silencioso deixava foto sem nome nenhum.
+  Omit<React.ComponentProps<typeof AvatarPrimitive.Image>, "alt"> & { alt: string }
+>(({ className, alt, ...props }, ref) => (
   <AvatarPrimitive.Image
     ref={ref}
     data-slot="avatar-image"
@@ -184,7 +186,7 @@ const AvatarImage = React.forwardRef<
     decoding="async"
     className={cn(
       "aspect-square h-full w-full object-cover",
-      "animate-in fade-in duration-(--duration-base) ease-(--ease-out)",
+      "animate-in fade-in animation-duration-(--duration-base) ease-(--ease-out)",
       className
     )}
     {...props}

@@ -64,7 +64,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 isolate z-(--z-modal) bg-overlay duration-(--duration-slow) ease-out supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        "fixed inset-0 isolate z-(--z-modal) bg-overlay animation-duration-(--duration-slow) ease-(--ease-out) supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
         className
       )}
       {...props}
@@ -126,7 +126,9 @@ const dialogContentVariants = cva(
     // flutuantes — a receita fica igual em todo overlay do sistema. Ver o
     // bloco do doc-comment acima para o que o véu limita.
     modalSurfaceClassName,
-    "duration-(--duration-slow) ease-out",
+    // `animation-duration-*`, e não `duration-*`: o segundo também escreve
+    // `transition-duration`, e sem `transition-property` isso anima tudo.
+    "animation-duration-(--duration-slow) ease-(--ease-out)",
     "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95",
     "data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
     // O recuo do diálogo é **um**, e são os 24px que vinte chamadas já
@@ -189,6 +191,8 @@ function DialogContent({
         className={cn(
           dialogContentVariants({ size, layout }),
           showCloseButton && "[--dialog-close:--spacing(11)]",
+          // Um `DialogCloseButton` composto também reserva, como no `Sheet`.
+          "has-[>[data-slot=dialog-close-button]]:[--dialog-close:--spacing(11)]",
           className
         )}
         {...props}
@@ -227,7 +231,7 @@ function DialogHeaderRow({
         className
       )}
     >
-      <div className="min-w-0 space-y-1">{children}</div>
+      <div className="min-w-0">{children}</div>
       {endAdornment != null ? (
         <div className={cn("shrink-0", DIALOG_CLOSE_RESERVE)}>
           {endAdornment}
@@ -238,7 +242,8 @@ function DialogHeaderRow({
 }
 
 /**
- * O cabeçalho, e o fio sob ele.
+ * O cabeçalho. Sem fio: o que o separa do corpo é o respiro, e a dissolução
+ * quando há rolagem.
  *
  * `shrink-0` e o recuo passaram a vir de fábrica: eram exatamente as duas
  * coisas que as 16 chamadas escreviam toda vez (`shrink-0 px-6 pt-6 pb-2`), em
@@ -423,7 +428,7 @@ function DialogFooter({
         // caixa de três blocos era o que o próprio arquivo já criticava ao
         // explicar por que o `bg-muted/50` saiu daqui: o peso dos botões e o
         // recuo já dizem que ali começa outra coisa.
-        "flex shrink-0 flex-col-reverse gap-2 rounded-b-xl",
+        "flex shrink-0 flex-col-reverse gap-2",
         // O par do cabeçalho: sem tinta, pelo mesmo motivo escrito lá.
         "-mx-(--dialog-bleed) -mb-(--dialog-bleed)",
         "px-(--dialog-px) py-4 sm:flex-row sm:justify-end",
@@ -431,7 +436,8 @@ function DialogFooter({
       )}
       {...props}
     >
-      {children}
+      {/* Cancelar vem antes da ação: à esquerda no desktop e, com o
+          `flex-col-reverse`, embaixo no telefone. */}
       {showCloseButton && (
         <DialogPrimitive.Close asChild>
           <Button type="button" variant="tertiary">
@@ -439,6 +445,7 @@ function DialogFooter({
           </Button>
         </DialogPrimitive.Close>
       )}
+      {children}
     </div>
   )
 }

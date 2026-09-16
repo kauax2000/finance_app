@@ -2,14 +2,16 @@
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
+    Card,
+} from "@/components/ui/card"
+import {
   Sheet,
   SheetContent,
 } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Dialog,
+  DialogBody,
   DialogCloseButton,
   DialogContent,
   DialogDescription,
@@ -103,18 +105,16 @@ export function CategoryDetailDialogs({
 
     const editFields = (
         <div className="space-y-4 py-4">
-            <div className="space-y-2">
-                <Label htmlFor="category-edit-name">Nome</Label>
-                <Input
-                    id="category-edit-name"
-                    value={editName}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        onEditNameChange(e.target.value)
-                    }
-                    placeholder="Ex: Alimentação"
-                    required
-                />
-            </div>
+            <FormInput
+                id="category-edit-name"
+                label="Nome"
+                value={editName}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    onEditNameChange(e.target.value)
+                }
+                placeholder="Ex: Alimentação"
+                required
+            />
             <TransactionFormTypeSegment
                 value={editType}
                 onChange={onEditTypeChange}
@@ -126,7 +126,7 @@ export function CategoryDetailDialogs({
                 onIconChange={onEditIconChange}
             />
             {editType === "expense" ? (
-                <div className="space-y-3 rounded-lg border border-border/60 bg-muted/20 p-3">
+                <Card variant="muted" padding="sm" className="px-3">
                     <p className="text-xs text-muted-foreground">
                         Limite de despesas para {periodStart} a {periodEnd}.
                     </p>
@@ -148,7 +148,7 @@ export function CategoryDetailDialogs({
                             {editBudgetRemoving ? "Removendo…" : "Remover orçamento"}
                         </Button>
                     ) : null}
-                </div>
+                </Card>
             ) : null}
         </div>
     )
@@ -169,14 +169,14 @@ export function CategoryDetailDialogs({
                             onSubmit={onEditSubmit}
                             className="flex min-h-0 flex-1 flex-col"
                         >
-                            <div className="min-h-0 flex-1 overflow-y-auto px-4">
+                            <DialogBody>
                                 {editFields}
-                            </div>
-                            <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
+                            </DialogBody>
+                            <DialogFooter className="flex-col">
                                 <Button
                                     type="submit"
                                     disabled={editSaving || editBudgetRemoving}
-                                    className="h-10 w-full"
+                                    size="xl" className="w-full"
                                 >
                                     {editSaving ? "Salvando…" : "Salvar"}
                                 </Button>

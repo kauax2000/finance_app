@@ -3,7 +3,7 @@
 import { pwaIconSrc } from "@/lib/pwa/icon-url"
 import { defaultCache } from "@serwist/next/worker"
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist"
-import { Serwist } from "serwist"
+import { NetworkOnly, Serwist } from "serwist"
 
 declare global {
     interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -18,9 +18,18 @@ const serwist = new Serwist({
     skipWaiting: true,
     clientsClaim: true,
     navigationPreload: true,
-    // PostgREST / Edge Functions are not cached; omitting a route lets the browser fetch
-    // directly so offline failures surface as normal network errors (not SW no-response).
-    runtimeCaching: [...defaultCache],
+    // O `defaultCache` guarda todo GET de outra origem por 1h (NetworkFirst), e isso
+    // incluía as respostas do Supabase: dados de uma conta ficavam no Cache Storage do
+    // aparelho depois do logout. As rotas do Supabase passam direto pela rede — a regra
+    // vem antes, e a primeira que casa vence. Offline, o dado vem do cache do React Query.
+    runtimeCaching: [
+        {
+            matcher: ({ url, sameOrigin }) =>
+                !sameOrigin && /\/(rest|auth|functions|storage|realtime)\/v1\//.test(url.pathname),
+            handler: new NetworkOnly(),
+        },
+        ...defaultCache,
+    ],
 })
 
 serwist.addEventListeners()
@@ -116,7 +125,12 @@ sw.addEventListener("notificationclick", (event) => {
 
     clickEvent.waitUntil(
         (async () => {
-            const url = new URL(href, sw.location.origin).href
+            // A notificação só abre o próprio app: "/\\evil.com" resolveria para outro domínio.
+            const resolved = new URL(href, sw.location.origin)
+            const url =
+                resolved.origin === sw.location.origin
+                    ? resolved.href
+                    : new URL("/dashboard", sw.location.origin).href
             const clients = await sw.clients.matchAll({
                 type: "window",
                 includeUncontrolled: true,

@@ -9,6 +9,7 @@ import {
     computeNextBillInstanceDueYmd,
 } from "@/lib/bills/recurrence"
 import { executeMutation } from "@/lib/offline/mutation-gateway"
+import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 
 /** Re-export save payload typing for callers (single source). */
 export type { SavePayload }
@@ -57,7 +58,7 @@ async function insertBillWithFirstInstanceOnline(opts: {
     const { data: bill, error: billErr } = await supabase
         .from("bills")
         .insert(row)
-        .select("*")
+        .select("amount_estimated, category_id, created_at, default_payment_credit_card_id, default_payment_method, description, due_day_of_month, end_date, frequency, icon, id, is_active, name, notes, reminder_days_before, start_date, updated_at, user_id, workspace_id")
         .single()
 
     if (billErr || !bill) {
@@ -182,7 +183,7 @@ export async function updateBillRow(opts: {
                 .update(updateRow)
                 .eq("id", billId)
                 .eq("workspace_id", workspaceId)
-            if (error) throw new Error(error.message)
+            if (error) throw new Error(formatSupabasePostgrestError(error) ?? "Não foi possível salvar a conta.")
             return { ok: true as const }
         },
     })
@@ -210,7 +211,7 @@ export async function deleteBillCascade(opts: {
                 .delete()
                 .eq("id", billId)
                 .eq("workspace_id", workspaceId)
-            if (error) throw new Error(error.message)
+            if (error) throw new Error(formatSupabasePostgrestError(error) ?? "Não foi possível excluir a conta.")
             return { ok: true as const }
         },
     })

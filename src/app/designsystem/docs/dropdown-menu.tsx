@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Kbd } from "@/components/ui/kbd"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 export default function DropdownMenuDoc() {
@@ -54,7 +55,9 @@ export default function DropdownMenuDoc() {
             <DropdownMenuLabel>Transação</DropdownMenuLabel>
             <DropdownMenuItem>
               Editar
-              <DropdownMenuShortcut>⌘E</DropdownMenuShortcut>
+              <DropdownMenuShortcut>
+                <Kbd keys="mod+e" />
+              </DropdownMenuShortcut>
             </DropdownMenuItem>
             <DropdownMenuItem>Duplicar</DropdownMenuItem>
             <DropdownMenuSub>

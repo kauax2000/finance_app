@@ -1,8 +1,19 @@
 "use client"
 
+import { compareYmd } from "@/lib/transaction-date"
+import {
+    DescriptionDetails,
+    DescriptionList,
+    DescriptionListItem,
+    DescriptionTerm,
+} from "@/components/ui/description-list"
+import { billDuePill, billDaysDeltaLabel } from "@/components/bills/bill-status"
 import { CreditCardIcon, EllipsisHorizontalIcon, ForwardIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { CreditCardIcon as CreditCardMiniIcon } from "@heroicons/react/20/solid"
-import { Badge } from "@/components/ui/badge"
+import {
+    Badge,
+    tagChipInfo,
+} from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
     Card,
@@ -24,21 +35,13 @@ import {
     CategoryIconPreview,
     normalizeCategoryIcon,
 } from "@/components/categories/category-appearance-fields"
-import { formatTransactionDmyPtBr } from "@/lib/transaction-date"
-import { cn } from "@/lib/utils"
 import {
-    tagChipDanger,
-    tagChipInfo,
-    tagChipNeutral,
-    tagChipWarning,
-} from "@/lib/tag-chip-classes"
+    formatTransactionDmyPtBr,
+} from "@/lib/transaction-date"
+import { cn } from "@/lib/utils"
 import { ColorTile } from "@/components/ui/color-tile"
 
 const EXPENSE_CATEGORY_FALLBACK_COLOR = "var(--expense)"
-
-function cmpYmd(a: string, b: string): number {
-    return a.localeCompare(b)
-}
 
 function pendingStatusPill(
     row: BillPendingRow,
@@ -47,26 +50,7 @@ function pendingStatusPill(
     if (row.kind === "virtual_cc") {
         return { label: "Fatura cartão", className: tagChipInfo }
     }
-    if (cmpYmd(row.dueYmd, todayYmd) < 0) {
-        return { label: "Atrasada", className: tagChipDanger }
-    }
-    if (row.dueYmd === todayYmd) {
-        return { label: "Hoje", className: tagChipWarning }
-    }
-    return { label: "Pendente", className: tagChipNeutral }
-}
-
-function daysDeltaLabel(dueYmd: string, todayYmd: string): string {
-    const partsDue = dueYmd.split("-").map((x) => Number.parseInt(x, 10))
-    const partsTo = todayYmd.split("-").map((x) => Number.parseInt(x, 10))
-    const dDue = new Date(partsDue[0] ?? 1970, (partsDue[1] ?? 1) - 1, partsDue[2] ?? 1)
-    const dTo = new Date(partsTo[0] ?? 1970, (partsTo[1] ?? 1) - 1, partsTo[2] ?? 1)
-    const ms = dDue.getTime() - dTo.getTime()
-    const days = Math.round(ms / 86400000)
-    if (days === 0) return "vence hoje"
-    if (days > 0) return `em ${days} dia${days === 1 ? "" : "s"}`
-    const a = Math.abs(days)
-    return `há ${a} dia${a === 1 ? "" : "s"}`
+    return billDuePill(row.dueYmd, todayYmd)
 }
 
 export type BillPendingCardProps = {
@@ -90,7 +74,7 @@ export function BillPendingCard({
 }: BillPendingCardProps) {
     const pill = pendingStatusPill(row, todayYmd)
     const dueFmt = formatTransactionDmyPtBr(`${row.dueYmd}T12:00:00`)
-    const delta = daysDeltaLabel(row.dueYmd, todayYmd)
+    const delta = billDaysDeltaLabel(row.dueYmd, todayYmd)
     const isEstimated =
         row.kind === "regular"
             ? row.instance.amount == null &&
@@ -115,6 +99,10 @@ export function BillPendingCard({
                 row.kind === "regular" && !row.bill.is_active && "opacity-[0.82]"
             )}
         >
+            {/* Cru de propósito: é a área clicável do cartão, e o cartão não pode
+                ser o botão — o rodapé, logo abaixo, tem as próprias ações, e botão
+                dentro de botão é inválido. `Card interactive asChild` só serve a um
+                cartão que é inteiro a ação. */}
             <button
                 type="button"
                 className={cn(
@@ -206,43 +194,47 @@ export function BillPendingCard({
                 </CardToolbar>
 
                 <CardContent className="space-y-3 px-4 pb-4 pt-3">
-                    <div className="rounded-lg border border-border/80 bg-muted/15 px-3 py-2.5">
-                        <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
-                            Valor estimado
-                        </p>
-                        <div className="mt-1 flex flex-wrap items-baseline gap-1 tabular-nums">
-                            {row.amountHint != null ? (
-                                <>
-                                    {isEstimated ? (
+                    <DescriptionList className="gap-0">
+                        <DescriptionListItem>
+                            <DescriptionTerm className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                Valor estimado
+                            </DescriptionTerm>
+                            <DescriptionDetails>
+                                <div className="mt-1 flex flex-wrap items-baseline gap-1 tabular-nums">
+                                    {row.amountHint != null ? (
+                                        <>
+                                            {isEstimated ? (
+                                                <span className="text-sm text-muted-foreground">
+                                                    ~
+                                                </span>
+                                            ) : null}
+                                            <MoneyDisplay
+                                                value={row.amountHint}
+                                                size="lg"
+                                                className="font-semibold tracking-tight"
+                                            />
+                                        </>
+                                    ) : (
                                         <span className="text-sm text-muted-foreground">
-                                            ~
+                                            Definido no pagamento
                                         </span>
-                                    ) : null}
-                                    <MoneyDisplay
-                                        value={row.amountHint}
-                                        size="lg"
-                                        className="font-semibold tracking-tight"
-                                    />
-                                </>
-                            ) : (
-                                <span className="text-sm text-muted-foreground">
-                                    Definido no pagamento
-                                </span>
-                            )}
-                        </div>
-                        <p className="mt-1.5 text-xs text-muted-foreground">
-                            Venc. {dueFmt}
-                            <span className="text-muted-foreground/70"> · </span>
-                            <span
-                                className={cn(
-                                    cmpYmd(row.dueYmd, todayYmd) < 0 &&
-                                        "font-medium text-destructive"
-                                )}
-                            >
-                                {delta}
-                            </span>
-                        </p>
-                    </div>
+                                    )}
+                                </div>
+                                <p className="mt-1.5 text-xs text-muted-foreground">
+                                    Venc. {dueFmt}
+                                    <span className="text-muted-foreground/70"> · </span>
+                                    <span
+                                        className={cn(
+                                            compareYmd(row.dueYmd, todayYmd) < 0 &&
+                                                "font-medium text-destructive"
+                                        )}
+                                    >
+                                        {delta}
+                                    </span>
+                                </p>
+                            </DescriptionDetails>
+                        </DescriptionListItem>
+                    </DescriptionList>
                 </CardContent>
             </button>
 
@@ -272,7 +264,7 @@ export function BillPendingCard({
                                 <EllipsisHorizontalIcon className="size-4" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuContent align="end" size="md">
                             <DropdownMenuItem
                                 onClick={(e) => {
                                     e.stopPropagation()
@@ -291,8 +283,7 @@ export function BillPendingCard({
                                 <ForwardIcon className="mr-2 size-4" />
                                 Ignorar parcela
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
+                            <DropdownMenuItem variant="destructive"
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     onDeleteBill()

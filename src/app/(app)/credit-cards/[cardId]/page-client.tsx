@@ -1,9 +1,12 @@
 "use client"
 
+import { CreditCardIcon } from "@heroicons/react/24/outline"
+import { currencyBRL } from "@/lib/formatters"
+import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
-import { CreditCardIcon } from "@heroicons/react/16/solid"
+
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import {
@@ -51,6 +54,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import {
   Dialog,
+  DialogBody,
   DialogCloseButton,
   DialogContent,
   DialogDescription,
@@ -105,12 +109,6 @@ import { formatTransactionDayPtBr } from "@/lib/transaction-date"
 import { INSTALLMENT_DELETE_WARNING } from "@/lib/transactions/delete-transactions"
 import { ROUTES, transactionsHrefForCreditCard } from "@/config/navigation"
 import { usePageChromeSlot } from "@/components/layout/page-chrome-provider"
-import { cn } from "@/lib/utils"
-
-const currencyFmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-})
 
 export default function CreditCardDetailPageClient() {
     const isMobile = useIsMobile()
@@ -169,7 +167,7 @@ export default function CreditCardDetailPageClient() {
         setEditClosingDay(String(c.closing_day))
         setEditDueDay(String(c.due_day))
         setEditCreditLimit(
-            c.credit_limit != null ? String(c.credit_limit).replace(".", ",") : ""
+            c.credit_limit != null ? formatMoneyBrlInput(c.credit_limit) : ""
         )
         setEditExpiryMonth(
             c.expiry_month != null && c.expiry_month >= 1 && c.expiry_month <= 12
@@ -200,7 +198,7 @@ export default function CreditCardDetailPageClient() {
         const [cardRes, txPack, plansPack, paymentsPack] = await Promise.all([
             supabase
                 .from("credit_cards")
-                .select("*")
+                .select("brand, closing_day, created_at, credit_limit, due_day, expiry_month, expiry_year, id, is_active, last_four, name, updated_at, user_id, workspace_id")
                 .eq("id", cardId)
                 .eq("workspace_id", currentWorkspaceId)
                 .maybeSingle(),
@@ -293,11 +291,11 @@ export default function CreditCardDetailPageClient() {
             const [categoriesRes, cardsRes] = await Promise.all([
                 supabase
                     .from("categories")
-                    .select("*")
+                    .select("color, created_at, icon, id, name, type, updated_at, user_id, workspace_id")
                     .eq("workspace_id", currentWorkspaceId),
                 supabase
                     .from("credit_cards")
-                    .select("*")
+                    .select("brand, closing_day, created_at, credit_limit, due_day, expiry_month, expiry_year, id, is_active, last_four, name, updated_at, user_id, workspace_id")
                     .eq("workspace_id", currentWorkspaceId)
                     .order("name"),
             ])
@@ -634,7 +632,7 @@ export default function CreditCardDetailPageClient() {
 
         setEditSaving(true)
         const limitVal = editCreditLimit.trim()
-            ? parseFloat(editCreditLimit.replace(",", "."))
+            ? (parseMoneyBrl(editCreditLimit) ?? NaN)
             : null
         const result = await updateCreditCard({
             workspaceId: currentWorkspaceId,
@@ -773,7 +771,7 @@ export default function CreditCardDetailPageClient() {
                     onSubmit={handleSaveEdit}
                     className="flex min-h-0 flex-1 flex-col"
                 >
-                    <div className="min-h-0 flex-1 overflow-y-auto px-4">
+                    <DialogBody>
                         <div className="space-y-3 pb-2">
                             <CreditCardFormFields
                                 formKey={`edit-detail-${card.id}-${editFormKey}`}
@@ -795,8 +793,8 @@ export default function CreditCardDetailPageClient() {
                                 onExpiryYearChange={setEditExpiryYear}
                             />
                         </div>
-                    </div>
-                    <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
+                    </DialogBody>
+                    <DialogFooter className="flex-col">
                         <Button
                             type="submit"
                             size="sm"
@@ -821,13 +819,13 @@ export default function CreditCardDetailPageClient() {
                     onSubmit={handleSaveEdit}
                     className="flex min-h-0 flex-1 flex-col"
                 >
-                    <DialogHeader className="shrink-0 px-6 pt-6 pb-2">
+                    <DialogHeader>
                         <DialogTitle>Editar cartão</DialogTitle>
                         <DialogDescription>
                             Atualize os dados do cartão. O número completo não é armazenado.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="min-h-0 flex-1 overflow-y-auto px-6">
+                    <DialogBody>
                         <div className="space-y-3 pb-2">
                             <CreditCardFormFields
                                 formKey={`edit-detail-${card.id}-${editFormKey}`}
@@ -849,8 +847,8 @@ export default function CreditCardDetailPageClient() {
                                 onExpiryYearChange={setEditExpiryYear}
                             />
                         </div>
-                    </div>
-                    <DialogFooter className="mx-0 mb-0 mt-0 shrink-0 flex-row flex-wrap justify-end gap-2 rounded-b-xl bg-background px-6 pt-4 pb-5 sm:gap-3">
+                    </DialogBody>
+                    <DialogFooter className="sm:gap-3">
                         <Button
                             type="button"
                             variant="outline"
@@ -989,7 +987,7 @@ export default function CreditCardDetailPageClient() {
                                                 ? "Receita"
                                                 : "Despesa"}{" "}
                                             de{" "}
-                                            {currencyFmt.format(
+                                            {currencyBRL(
                                                 Number(pendingTransactionDelete.amount)
                                             )}
                                         </li>

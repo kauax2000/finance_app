@@ -65,7 +65,7 @@ import { P } from "@/components/ui/typography"
 /**
  * Onde o Enter **não** é sequestrado, e por quê.
  *
- * Esta lista é a fonte: a página `/designsystem/formularios` a importa em vez
+ * Esta lista é a fonte: a página `/designsystem/form` a importa em vez
  * de redigitá-la. Ela era uma cópia à mão, e já tinha divergido — a página
  * mostrava 6 regras enquanto o código checava 7, e a que faltava era
  * justamente a do seletor ancorado, que é a lição mais geral do arquivo.
@@ -85,6 +85,10 @@ export const ENTER_DEFERRAL_RULES = [
   },
   { match: 'role="combobox"', why: "o Enter confirma o item destacado" },
   { match: 'role="listbox"', why: "o Enter confirma o item destacado" },
+  {
+    match: "<button>, <a href>, radio, checkbox e switch",
+    why: "o Enter já aciona o próprio controle — sem esta regra, Enter num botão focado (o chip «Dinheiro») enviava o formulário",
+  },
 ] as const
 
 /**
@@ -96,6 +100,24 @@ export function shouldDeferEnterToWidget(target: HTMLElement): boolean {
     target.tagName === "TEXTAREA" ||
     target.tagName === "SELECT" ||
     target.isContentEditable
+  ) {
+    return true
+  }
+  // Botão, link e controles de escolha têm o próprio Enter. Sequestrá-lo
+  // clicava o "Salvar" quando a pessoa só queria acionar o botão focado —
+  // medido no chip "Dinheiro" da nova transação. O botão de enviar focado
+  // continua enviando: é o Enter nativo dele que faz isso.
+  if (target.tagName === "BUTTON" || target.tagName === "A") {
+    return true
+  }
+  const ownRole = target.getAttribute("role")
+  if (ownRole === "radio" || ownRole === "checkbox" || ownRole === "switch") {
+    return true
+  }
+  if (
+    target.closest(
+      'button, a[href], [role="radio"], [role="checkbox"], [role="switch"]'
+    )
   ) {
     return true
   }
@@ -146,7 +168,12 @@ function submitFrom(form: HTMLFormElement) {
       `button[type="submit"][form="${CSS.escape(form.id)}"]:not(:disabled)`
     ) as HTMLButtonElement | null
   }
-  submitButton?.click()
+  if (submitButton) {
+    submitButton.click()
+    return
+  }
+  // Sem botão de enviar à vista, o envio ainda passa pela validação nativa.
+  form.requestSubmit()
 }
 
 type FormContextValue = { id: string; pending: boolean }

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { executeMutation } from "@/lib/offline/mutation-gateway"
 
-const enqueueMutation = vi.fn(async () => ({
+const enqueueMutation = vi.fn(async (..._args: unknown[]) => ({
     id: "mut-1",
     idempotencyKey: "key-1",
     entity: "transaction" as const,

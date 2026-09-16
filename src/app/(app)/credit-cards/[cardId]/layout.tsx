@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/container"
 import type { ReactNode } from "react"
 
 export default function CreditCardDetailLayout({
@@ -6,6 +7,6 @@ export default function CreditCardDetailLayout({
     children: ReactNode
 }) {
     return (
-        <div className="mx-auto w-full min-w-0 max-w-2xl px-1 sm:px-0">{children}</div>
+        <Container size="lg">{children}</Container>
     )
 }

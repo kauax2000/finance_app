@@ -287,7 +287,7 @@ export default function ToolbarDoc() {
         <Toolbar className="w-full">
           <ToolbarActions>
             <Select defaultValue="2026-09">
-              <SelectTrigger className={toolbarControlClassName}>
+              <SelectTrigger className={toolbarControlClassName} aria-label="Mês">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -326,37 +326,16 @@ export default function ToolbarDoc() {
         </Toolbar>
       </DocSection>
 
-      <DocNote title="Numa barra, o trilho é size=&quot;sm&quot; padding=&quot;tight&quot;">
+      <DocNote title="Numa barra, o trilho é o Tabs no padrão">
         Quem fica lado a lado com o <code>Button</code> não é o gatilho — é a{" "}
-        <strong>bandeja</strong>. E ela é <code>gatilho + 2×recuo</code>, então
-        com o recuo cheio <code>size=&quot;md&quot;</code> produzia uma bandeja
-        de <strong>40</strong> numa linha de controles de 32. Com{" "}
-        <code>tight</code> as três caem na escada:{" "}
-        <code>sm</code> → 32, <code>md</code> → 36, <code>lg</code> → 40.
+        <strong>bandeja</strong>, e é ela que o <code>size</code> do{" "}
+        <code>Tabs</code> nomeia. O padrão do <code>solid</code> é{" "}
+        <code>md</code>: bandeja de <strong>32</strong>, rente aos controles de 32
+        da barra, com o gatilho em 28. Não há eixo de recuo para acertar.
         <br />
-        É a receita que o app já usa à mão —{" "}
-        <code>transaction-type-segment.tsx</code> escreve <code>p-0.5</code> com{" "}
-        <code>md:h-8</code>, bandeja de 32 rente aos botões da barra. E{" "}
-        <code>size</code> continua nomeando a caixa real do gatilho, que é a
-        correção registrada que consertou o <code>Menubar</code> (entregava 24) e
-        o próprio <code>Tabs</code> (entregava 27).
-      </DocNote>
-
-      <DocNote title="No ponteiro grosso a bandeja ainda não fecha, e é limite do Tabs">
-        Medido a 375px: bandeja <strong>48</strong> contra controles de{" "}
-        <strong>40</strong>. O <code>stretch={"{false}"}</code> liga{" "}
-        <code>pointer-coarse:min-h-11</code> no gatilho (44), e 44 + 4 dá 48. E
-        não há combinação que feche: <strong>uma bandeja com recuo nunca iguala
-        o gatilho</strong>, então ficar rente exige que a{" "}
-        <strong>bandeja</strong> seja a coisa dimensionada e o gatilho derive —
-        que é o que o app faz à mão (<code>h-10 md:h-8</code> com{" "}
-        <code>items-stretch</code>). O <code>Tabs</code> hoje dimensiona o
-        gatilho, e o <code>h-7</code> do degrau vence qualquer{" "}
-        <code>items-stretch</code>: medido, uma moldura forçada a 40 deixa o
-        gatilho em 28 e sobra uma faixa morta de 6px em cima e embaixo.
-        Fechar isso é trocar o <code>h-*</code> do degrau por{" "}
-        <code>min-h-*</code> e dar altura à bandeja — mudança de semântica do{" "}
-        <code>size</code>, e decisão de uma próxima rodada.
+        No ponteiro grosso a bandeja tem piso de <strong>40</strong>, o mesmo
+        degrau que <code>--toolbar-control</code> publica, e o gatilho vai a 36 —
+        a geometria que o app já renderiza no telefone.
       </DocNote>
 
       <DocNote title="Nada quebra em linhas — o conteúdo troca">

@@ -8,7 +8,6 @@ import {
     isTransactionsInstallmentPlanEmbedUnsupportedError,
     isTransactionsSubscriptionEmbedUnsupportedError,
 } from "@/lib/supabase-errors"
-import { toastError } from "@/lib/toast"
 import {
     INSTALLMENT_PLAN_LIST_EMBED,
     TRANSACTION_DETAIL_SHEET_SELECT,
@@ -203,10 +202,7 @@ export async function fetchTransactionsListPage(
     }
 
     if (error) {
-        toastError(
-            formatSupabasePostgrestError(error) ??
-                "Não foi possível carregar as transações.",
-        )
+        // Quem avisa é o QueryCache.onError: avisar aqui também dava dois toasts.
         throw new Error(
             formatSupabasePostgrestError(error) ??
                 "Não foi possível carregar as transações.",

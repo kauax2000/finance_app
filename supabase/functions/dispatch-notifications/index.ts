@@ -1,4 +1,5 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
+import { internalError } from '../_shared/http.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import { deliverNotification } from '../_shared/deliver-notification.ts'
 import { isNotificationEventType } from '../_shared/notification-types.ts'
@@ -45,7 +46,7 @@ Deno.serve(async (req: Request) => {
 
   const authResult = await getAuthUserFromJwt(supabaseUrl, anonKey, jwt)
   if (authResult.error || !authResult.user) {
-    return json(401, { error: 'Invalid or expired token', details: authResult.error ?? 'unknown' })
+    return json(401, { error: 'Invalid or expired token' })
   }
 
   let body: DispatchBody
@@ -76,14 +77,18 @@ Deno.serve(async (req: Request) => {
     .eq('user_id', userId)
     .maybeSingle()
 
-  if (memErr) return json(500, { error: memErr.message })
+  if (memErr) return json(500, { error: internalError('dispatch-notifications', memErr) })
   if (!membership) {
     return json(403, { error: 'Not a member of this workspace' })
   }
 
-  const title = (body.title ?? '').trim() || 'Notificação'
-  const msg = (body.body ?? '').trim() || 'Você tem uma nova notificação.'
-  const metadata: Record<string, unknown> = body.metadata ?? {}
+  const title = (body.title ?? '').trim().slice(0, 120) || 'Notificação'
+  const msg = (body.body ?? '').trim().slice(0, 500) || 'Você tem uma nova notificação.'
+  // Vindo do cliente, só o `kind` passa: `critical` furava as preferências de
+  // notificação e `href` decide para onde o clique leva.
+  const rawKind = body.metadata?.kind
+  const metadata: Record<string, unknown> =
+    typeof rawKind === 'string' && rawKind.trim() ? { kind: rawKind.trim().slice(0, 40) } : {}
 
   const delivered = await deliverNotification({
     supabaseAdmin,

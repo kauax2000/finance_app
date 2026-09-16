@@ -1,9 +1,19 @@
 "use client"
 
+import { ChartTooltip } from "@/components/ui/chart"
+import {
+    Item,
+} from "@/components/ui/item"
+import { percentPointsBR } from "@/lib/formatters"
 import Link from "next/link"
 import { ChevronRightIcon } from "@heroicons/react/16/solid"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts"
+import {
+    Cell,
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+} from "recharts"
 import {
     CategoryIconPreview,
     normalizeCategoryIcon,
@@ -27,10 +37,6 @@ const FALLBACK_FILLS = [
     "var(--chart-5)",
 ]
 
-const pctFmt = new Intl.NumberFormat("pt-BR", {
-    maximumFractionDigits: 1,
-    minimumFractionDigits: 0,
-})
 
 function isHex6(s: string): boolean {
     return /^#[0-9A-Fa-f]{6}$/.test(s.trim())
@@ -75,7 +81,7 @@ function CategoryPieTooltip({
         <div className="min-w-[10rem] rounded-lg border border-border/80 bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md">
             <p className="font-medium text-foreground">{row.name}</p>
             <p className="mt-1 tabular-nums text-muted-foreground">
-                {currencyBRL(row.value)} · {pctFmt.format(row.pct)}% do total
+                {currencyBRL(row.value)} · {percentPointsBR(row.pct)}% do total
             </p>
         </div>
     )
@@ -231,7 +237,7 @@ export function CreditCardInvoiceCategorySpendSection({
                                                 />
                                             ))}
                                         </Pie>
-                                        <Tooltip content={<CategoryPieTooltip />} />
+                                        <ChartTooltip content={<CategoryPieTooltip />} />
                                     </PieChart>
                                 </ResponsiveContainer>
                                 <div
@@ -262,7 +268,7 @@ export function CreditCardInvoiceCategorySpendSection({
                                                     {currencyBRL(activeRow.total)}
                                                 </p>
                                                 <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">
-                                                    {pctFmt.format(activeRow.shareOpenPct)}%
+                                                    {percentPointsBR(activeRow.shareOpenPct)}%
                                                 </p>
                                             </>
                                         ) : activePieRow ? (
@@ -274,7 +280,7 @@ export function CreditCardInvoiceCategorySpendSection({
                                                     {currencyBRL(activePieRow.value)}
                                                 </p>
                                                 <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">
-                                                    {pctFmt.format(activePieRow.pct)}%
+                                                    {percentPointsBR(activePieRow.pct)}%
                                                 </p>
                                             </>
                                         ) : null}
@@ -289,7 +295,7 @@ export function CreditCardInvoiceCategorySpendSection({
                             const key = categoryRowKey(c)
                             const isActive = activeCategoryKey === key
                             const rowSurfaceClass = cn(
-                                "rounded-lg border border-border/50 bg-muted/15 px-3 py-2.5 transition-colors dark:bg-muted/10",
+                                "block border-border/50 px-3 py-2.5",
                                 isActive && "border-border/60 bg-muted/30",
                             )
                             const rowBody = (
@@ -302,7 +308,7 @@ export function CreditCardInvoiceCategorySpendSection({
                                                 {c.name}
                                             </p>
                                             <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">
-                                                {pctFmt.format(c.shareOpenPct)}% do total
+                                                {percentPointsBR(c.shareOpenPct)}% do total
                                             </p>
                                         </div>
                                         <div
@@ -340,30 +346,32 @@ export function CreditCardInvoiceCategorySpendSection({
                                     onMouseLeave={() => setActiveCategoryKey(null)}
                                 >
                                     {c.categoryId != null ? (
+                                        <Item
+                                            asChild
+                                            interactive
+                                            variant="outline"
+                                            className={cn("group/row no-underline text-inherit", rowSurfaceClass)}
+                                        >
                                         <Link
                                             href={categoryDetailPath(c.categoryId, {
                                                 type: "expense",
                                                 month: invoiceYearMonth,
                                             })}
-                                            className={cn(
-                                                "group/row block no-underline text-inherit",
-                                                rowSurfaceClass,
-                                                "hover:bg-muted/30 active:bg-muted/30",
-                                                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                                            )}
                                             aria-label={`Ver detalhes de ${c.name}`}
                                             onFocus={() => setActiveCategoryKey(key)}
                                             onBlur={() => setActiveCategoryKey(null)}
                                         >
                                             {rowBody}
                                         </Link>
+                                        </Item>
                                     ) : (
-                                        <div
+                                        <Item
+                                            variant="outline"
                                             className={rowSurfaceClass}
                                             title="Defina uma categoria nas transações para ver o detalhe"
                                         >
                                             {rowBody}
-                                        </div>
+                                        </Item>
                                     )}
                                 </li>
                             )

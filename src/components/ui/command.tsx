@@ -10,8 +10,7 @@ import { Caption, P } from "@/components/ui/typography"
 import {
   menuItemGeometryClassName,
   menuSeparatorClassName,
-  menuPanelSurfaceClassName,
-} from "@/lib/menu-classes"
+  menuPanelSurfaceClassName, menuPanelTintClassName } from "@/lib/menu-classes"
 import {
   scrollFadeBandsClassName,
   scrollFadeBleedClassName,
@@ -187,7 +186,7 @@ function Command({
  * botão parecia simplesmente não funcionar.
  *
  * Um componente chamado `CommandDialog` que não monta o `Command` é uma
- * armadilha com o nome trocado. Agora ele monta, já em `variant="dialog"`, e
+ * armadilha com o nome trocado. Agora ele monta, transparente (`plain`), e
  * `commandProps` é a saída para o que a raiz precisa receber — o `filter`
  * próprio do `ds-search`, por exemplo.
  */
@@ -236,7 +235,7 @@ function CommandDialog({
           // `Command` pintando —, com neutralizadores sob variante; era um
           // remendo para a placa dupla, e a placa dupla saiu.
           "overflow-hidden border-0 p-0",
-          "bg-popover/85 supports-backdrop-filter:dark:bg-popover/60 reduced-transparency:bg-popover",
+          menuPanelTintClassName,
           className
         )}
         showCloseButton={showCloseButton}
@@ -349,15 +348,20 @@ function CommandInput({
       // que passa atrás dele.
       className="relative z-10 flex shrink-0 items-center p-2"
     >
-      {/* Sem anel de foco, e é decisão e não esquecimento: o campo é
-            autofocado quando a paleta abre, então o anel nasceria aceso e
-            nunca apagaria — indicador que está sempre ligado não indica nada.
-            Numa paleta quem carrega o foco visível é a **linha selecionada**,
-            que se move com as setas; o anel aqui competia com ela. */}
+      {/* Anel de foco **fora** do diálogo. Na paleta (`CommandDialog`) o campo é
+            autofocado ao abrir, o anel nasceria aceso e nunca apagaria, e quem
+            carrega o foco visível é a linha selecionada — ali ele some. No
+            `Command` solto e no `Combobox` quem chega por teclado precisa vê-lo. */}
         {/* Não veste `field-classes` de propósito: este campo imita o gatilho do
             cabeçalho do catálogo que o abriu — `border-border`, sem anel de foco
             — e não um campo de formulário. A decisão está registrada acima. */}
-        <div className="flex h-8 w-full min-w-0 items-center gap-2 rounded-lg border border-border bg-input-fill/30 px-3">
+        <div
+          className={cn(
+            "flex h-8 w-full min-w-0 items-center gap-2 rounded-lg border border-border bg-input-fill/30 px-3",
+            "has-[input:focus-visible]:border-ring has-[input:focus-visible]:ring-3 has-[input:focus-visible]:ring-ring/70",
+            "[[data-slot=dialog-content]_&]:has-[input:focus-visible]:border-border [[data-slot=dialog-content]_&]:has-[input:focus-visible]:ring-0"
+          )}
+        >
         <MagnifyingGlassIcon
           aria-hidden
           className="size-4 shrink-0 text-muted-foreground opacity-70"
@@ -380,7 +384,13 @@ function CommandInput({
             size="icon-xs"
             aria-label="Limpar busca"
             className="-mr-1.5 shrink-0"
-            onClick={() => onValueChange("")}
+            onClick={(event) => {
+              onValueChange("")
+              // Limpar pelo × não dispara `input` no campo, e a raiz lê `onInput`
+              // para voltar ao estado ocioso. O evento sai do botão, e não do
+              // `<input>`, para não reentrar no `onChange` com o texto velho.
+              event.currentTarget.dispatchEvent(new Event("input", { bubbles: true }))
+            }}
           >
             <XMarkIcon aria-hidden />
           </Button>
@@ -425,7 +435,7 @@ function CommandInput({
  * a lista nasceria no teto e **deslizaria** até o tamanho certo toda vez que a
  * paleta abrisse. É o mesmo problema que o `Tabs` resolve com `indicatorReady`, e
  * a espera aqui são dois `requestAnimationFrame` encadeados — o padrão que o
- * `AppThemeToggle` já usa, e exatamente o tempo que a medida leva para chegar.
+ * `ThemeToggle` já usa, e exatamente o tempo que a medida leva para chegar.
  */
 function CommandList({
   className,
@@ -735,8 +745,8 @@ function CommandItemDescription({
  * É onde vive o que a lista não pode ensinar: as teclas que navegam, o que o
  * Enter faz, o escopo da busca. Numa paleta isso não é enfeite — ela é uma
  * interface de teclado, e sem a legenda a pessoa descobre `↑↓` e `↵` por
- * tentativa. Sangra até as bordas e traz o próprio fio, como o `CardFooter` e
- * o `DialogFooter`.
+ * tentativa. Sangra até as bordas, sem fio nem tinta: quem marca o limite é a
+ * lista dissolvendo por baixo.
  *
  * Tinta mais quieta que a lista, porque não é uma das opções.
  */
@@ -754,10 +764,6 @@ function CommandFooter({ className, ...props }: React.ComponentProps<"div">) {
         // entre o último item e o texto sempre que se rolava até o fim — no
         // fim não há conteúdo para dissolver ali. A pista virou
         // `--command-foot-fade`, que é máscara e não ocupa espaço.
-        //
-        // O gradiente vai a `popover` cheio embaixo, e não a `popover/85`: é a
-        // borda inferior da paleta, onde não há nada ao lado para comparar, e
-        // parar em 85% deixaria a lista aparecendo através do fim.
         //
         // `pointer-events-none` pelo mesmo motivo que o `ScrollFade` o usa: a
         // faixa cobre itens roláveis, e não pode comer o clique deles.

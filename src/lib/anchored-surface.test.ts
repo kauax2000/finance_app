@@ -71,7 +71,11 @@ describe("toda superfície ancorada cabe inteira na janela", () => {
         // Escritas por extenso, com o nome da própria primitiva: o Tailwind
         // varre o código como texto, e uma classe montada em runtime nunca
         // chega ao CSS.
-        expect(src).toContain(`max-w-(--radix-${primitiva}-content-available-width)`)
+        // O tooltip escreve o teto dentro de um `min()`, junto do teto de leitura:
+        // com duas classes `max-w-*` o twMerge apagaria uma delas.
+        expect(src).toMatch(
+          new RegExp(`max-w-(\\(|\\[min\\([^\\]]*var\\()--radix-${primitiva}-content-available-width\\)`),
+        )
         expect(src).toContain(`max-h-(--radix-${primitiva}-content-available-height)`)
       })
 

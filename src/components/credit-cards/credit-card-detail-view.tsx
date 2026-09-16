@@ -1,5 +1,6 @@
 "use client"
 
+import { currencyBRL } from "@/lib/formatters"
 import { useState } from "react"
 import Link from "next/link"
 import type { CreditCard, CreditCardInvoicePayment } from "@/lib/supabase"
@@ -25,14 +26,9 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ArrowUpRightIcon, ChevronDownIcon, PencilIcon, PowerIcon, TrashIcon } from "@heroicons/react/16/solid"
-import { EllipsisHorizontalIcon } from "@heroicons/react/20/solid"
-import { cn } from "@/lib/utils"
+import { ArrowUpRightIcon, ChevronDownIcon, EllipsisHorizontalIcon, PencilIcon, PowerIcon, TrashIcon } from "@heroicons/react/16/solid"
 
-const currencyFmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-})
+import { cn } from "@/lib/utils"
 
 function formatExpiryLine(card: CreditCard): string | null {
     const m = card.expiry_month
@@ -152,7 +148,7 @@ export function CreditCardDetailView({
                 </Button>
             </div>
 
-            <Card className="gap-0 overflow-hidden py-0">
+            <Card padding="none">
                 <CardHeader className="pb-3 pt-4">
                     <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0 flex-1">
@@ -179,14 +175,12 @@ export function CreditCardDetailView({
                                         aria-label="Mais opções"
                                     >
                                         <EllipsisHorizontalIcon
-                                            className="h-5 w-5"
                                             aria-hidden
                                         />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent
-                                    align="end"
-                                    className="w-52"
+                                    align="end" size="lg"
                                 >
                                     <DropdownMenuItem onClick={() => onEdit()}>
                                         <PencilIcon className="h-4 w-4" aria-hidden />
@@ -217,11 +211,10 @@ export function CreditCardDetailView({
                                             )}
                                         </DropdownMenuItem>
                                     ) : null}
-                                    <DropdownMenuItem
-                                        className="text-destructive focus:text-destructive"
+                                    <DropdownMenuItem variant="destructive"
                                         onClick={() => onDelete()}
                                     >
-                                        <TrashIcon className="h-4 w-4" aria-hidden />
+                                        <TrashIcon aria-hidden />
                                         Excluir
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -273,7 +266,7 @@ export function CreditCardDetailView({
                                         <dt className="text-muted-foreground">Limite</dt>
                                         <dd className="tabular-nums font-medium text-foreground">
                                             {limitNum != null && !Number.isNaN(limitNum)
-                                                ? currencyFmt.format(limitNum)
+                                                ? currencyBRL(limitNum)
                                                 : "—"}
                                         </dd>
                                     </div>
@@ -366,7 +359,6 @@ export function CreditCardDetailView({
                         onTransactionClick={onTransactionClick}
                         sectionTitle="Últimos lançamentos"
                         viewAllHref={transactionsHref}
-                        viewAllLabel="Ver todas as transações neste cartão"
                         emptyMessage={CC_DETAIL_INVOICE_POSTED_EMPTY_MESSAGE}
                         truncationFooter={
                             invoicePostedListTruncated

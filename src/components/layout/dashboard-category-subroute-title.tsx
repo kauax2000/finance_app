@@ -34,7 +34,7 @@ export function DashboardCategorySubrouteDesktopNav({ pathname }: { pathname: st
         <div className="hidden min-w-0 items-center gap-2 text-sm md:flex">
             <Link
                 href={ROUTES.DASHBOARD_CATEGORIES}
-                className="min-w-0 max-w-[45%] truncate text-muted-foreground transition-colors hover:text-foreground"
+                className="min-w-0 max-w-[45%] truncate text-muted-foreground transition-colors hover:text-foreground active:text-foreground"
             >
                 Categorias
             </Link>

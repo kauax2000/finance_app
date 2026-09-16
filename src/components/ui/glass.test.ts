@@ -49,7 +49,6 @@ const REDONDO = CSS.slice(
     CSS.indexOf("@utility glass-material {")
 ).replace(/\/\*[\s\S]*?\*\//g, " ")
 
-/** A superfície das peças que flutuam — menus, seletor, popover, prévia. */
 /** Lê um arquivo do repositório sem comentários — o corte que a 26 já usava. */
 const semComentariosDe = (caminho: string) =>
     readFileSync(join(process.cwd(), caminho), "utf8")
@@ -287,7 +286,10 @@ describe("a superfície de vidro", () => {
         // velada ela compôs acima de tudo atrás e leu como opaca. `--background`
         // afunda no véu, e é o borrão que a distingue.
         for (const [nome, regua, ancora, token] of [
-            ["flutuante", SUPERFICIE_FLUTUANTE, "menuPanelSurfaceClassName", "popover"],
+            // A flutuante mora em `menuPanelTintClassName` — a tinta que
+            // `menuPanelSurfaceClassName` compõe, e que o `CommandDialog`
+            // veste sozinha, sem raio nem fio.
+            ["flutuante", SUPERFICIE_FLUTUANTE, "menuPanelTintClassName", "popover"],
             ["modal", semComentariosDe("src/lib/modal-classes.ts"), "modalSurfaceClassName", "background"],
         ] as const) {
             const i = regua.indexOf(ancora)
@@ -326,7 +328,9 @@ describe("a superfície de vidro", () => {
         expect(dialogo).not.toMatch(/\bbg-transparent\b/)
         // E pinta o tom do popover, nos três estados da régua — a paleta é uma
         // superfície de comandos, não um diálogo.
-        expect(dialogo).toContain("bg-popover/85 supports-backdrop-filter:dark:bg-popover/60 reduced-transparency:bg-popover")
+        // Ele veste a tinta da régua em vez de repetir a string: os três
+        // estados são os da asserção 23, e uma cópia aqui divergiria dela.
+        expect(dialogo).toContain("menuPanelTintClassName")
         expect(paleta).not.toContain("supports-backdrop-filter:dark:bg-transparent")
         expect(paleta).not.toContain("reduced-transparency:bg-transparent")
     })
@@ -538,9 +542,9 @@ describe("a superfície de vidro", () => {
         expect(RECEITA_CODIGO).toContain("var(--glass-tone, transparent)")
         expect(RECEITA_CODIGO).toContain("var(--glass-sheen, transparent)")
 
-        // **O aro e as nuvens não tingem.** Vidro colorido tinge o corpo; o
-        // reflexo da aresta é a luz do ambiente, não a cor do material — um aro
-        // verde faria a peça ler como plástico pintado.
+        // **O aro e as nuvens não leem o tom do corpo.** Eles puxam matiz de
+        // `--glass-ink` (asserções 14 e 15), com o alfa preso; ler `--glass-tone`
+        // engrossaria a aresta, que é o que fazia a peça ler como plástico.
         const aro = RECEITA_CODIGO.slice(RECEITA_CODIGO.indexOf("var(--glass-rim-angle)"))
         expect(aro).not.toContain("--glass-tone")
         const nuvens = RECEITA_CODIGO.slice(nuvem, RECEITA_CODIGO.indexOf("var(--glass-rim-angle)"))
@@ -577,17 +581,27 @@ describe("a superfície de vidro", () => {
          * por item, um eixo por item deixaria escrever a trilha com um poço de
          * vidro ao lado de um avatar chapado.
          *
-         * O que os quatro têm em comum não é a camada, é a régua: **nenhum
-         * deles é clicável**. No `Tabs` quem recebe o clique é o gatilho; o marcador
-         * é superfície, e fica atrás dele. É a mesma linha que manteve `Avatar`
-         * e `ColorTile` depois de o `Button` reprovar quatro vezes na tela.
+         * O `theme-toggle` entrou pela mesma porta que o `Tabs`: ele e uma
+         * fileira `solid` são a mesma anatomia — uma bandeja com um polegar que
+         * desliza —, e o polegar já vestia as três classes do `tabs-indicator`.
+         *
+         * O que os cinco têm em comum não é a camada, é a régua: **nenhuma das
+         * peças de vidro é clicável**. No `Tabs` quem recebe o clique é o
+         * gatilho e no alternador é a raiz; o polegar é superfície, e fica atrás
+         * dela. É a mesma linha que manteve `Avatar` e `ColorTile` depois de o
+         * `Button` reprovar quatro vezes na tela.
          */
-        const COM_MODO = ["avatar", "color-tile", "tabs", "timeline"]
+        const COM_MODO = [
+            "avatar",
+            "color-tile",
+            "tabs",
+            "theme-toggle",
+            "timeline",
+        ]
 
         // 1. A tradução existe, em qualquer das três formas: tabela semântica,
-        //    tabela de identidade, ou `--glass-tone` literal (o `Checkbox`, sob
-        //    `data-[state=checked]:`, e o `ColorTile`, cuja cor é de runtime e
-        //    por isso não cabe em tabela nenhuma).
+        //    tabela de identidade, ou `--glass-tone` literal (o `ColorTile`, cuja
+        //    cor é de runtime e por isso não cabe em tabela nenhuma).
         for (const nome of COM_MODO) {
             expect(base(nome)).toMatch(/GLASS_TONES|GLASS_IDENTITY_TONES|--glass-tone/)
         }
@@ -744,12 +758,23 @@ describe("a superfície de vidro", () => {
 
         // Os dois consumidores: a extração só é real com dois, e é o que
         // impede a cópia à mão do cabeçalho de voltar.
-        const shell = semComentariosDe("src/app/designsystem/ds-shell.tsx")
+        // Desde a rodada 80 o cabeçalho é o `TopBar`, e as duas barras que o
+        // vestem — a do catálogo e a do app — não escrevem borrão próprio.
+        const topo = semComentariosDe("src/components/ui/top-bar.tsx")
         const menubar = semComentariosDe("src/components/ui/menubar.tsx")
-        expect(shell, "o cabeçalho não veste a régua").toContain("barSurfaceClassName")
-        expect(shell, "a cópia do cabeçalho voltou").not.toContain(
-            "bg-background/95 glass-surface"
-        )
+        expect(topo, "o cabeçalho não veste a régua").toContain("barSurfaceClassName")
+        expect(topo, "o cabeçalho escreve borrão próprio").not.toMatch(/\bbackdrop-blur/)
+        for (const casca of [
+            "src/app/designsystem/ds-shell.tsx",
+            "src/components/layout/app-header.tsx",
+        ]) {
+            const fonte = semComentariosDe(casca)
+            expect(fonte, `${casca} não veste o TopBar`).toContain("<TopBar")
+            expect(fonte, `${casca} escreve borrão próprio`).not.toMatch(/\bbackdrop-blur/)
+            expect(fonte, `a cópia da régua voltou em ${casca}`).not.toContain(
+                "bg-background/95 glass-surface"
+            )
+        }
         expect(menubar, "a fileira não veste a régua").toContain("barSurfaceClassName")
         expect(menubar, "a fileira escreve borrão próprio").not.toMatch(/\bbackdrop-blur/)
 

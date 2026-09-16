@@ -4,6 +4,7 @@ import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
+  DialogBody,
   DialogCloseButton,
   DialogDescription,
   DialogFooter,
@@ -63,19 +64,15 @@ export function TransactionFormSurface({
     const formPickersOpen =
         fieldsProps.categoryPopoverOpen || fieldsProps.creditCardPopoverOpen
 
-    const fieldsScrollClass =
-        variant === "detail-sheet"
-            ? cn("min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-5", scrollClassName)
-            : variant === "dialog-mobile"
-              ? cn(
-                    "min-h-0 flex-1 px-4",
-                    formPickersOpen ? "overflow-hidden" : "overflow-y-auto",
-                    scrollClassName
-                )
-              : cn(
-                    "scrollbar-thin min-h-0 flex-1 overflow-y-auto px-6 pb-4 pt-4",
-                    scrollClassName
-                )
+    // O recuo saiu daqui: quem o dá é o `--dialog-px` do casco — 16 na folha, 24
+    // no diálogo —, que é a conta que este ternário fazia à mão. Fica o que é
+    // deste formulário: com um seletor aberto o corpo para de rolar, para o
+    // gesto não vazar para a lista atrás.
+    const fieldsScrollClass = cn(
+        variant === "dialog-mobile" && formPickersOpen && "overflow-hidden",
+        variant === "dialog-desktop" && "scrollbar-thin",
+        scrollClassName
+    )
 
     if (variant === "dialog-mobile") {
         return (
@@ -92,11 +89,11 @@ export function TransactionFormSurface({
                     onSubmit={handleSubmit}
                     className="flex min-h-0 flex-1 flex-col"
                 >
-                    <div className={fieldsScrollClass}>
+                    <DialogBody className={fieldsScrollClass}>
                         <TransactionFormFields {...fieldsProps} />
-                    </div>
+                    </DialogBody>
                     {showFooter ? (
-                        <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
+                        <DialogFooter className="flex-col">
                             {footer}
                         </DialogFooter>
                     ) : null}
@@ -119,11 +116,11 @@ export function TransactionFormSurface({
                 <DialogDescription className="sr-only">
                     {formDescription}
                 </DialogDescription>
-                <div className={fieldsScrollClass}>
+                <DialogBody className={fieldsScrollClass}>
                     <TransactionFormFields {...fieldsProps} />
-                </div>
+                </DialogBody>
                 {showFooter ? (
-                    <DialogFooter className="shrink-0 flex-col gap-2 px-4 py-4 sm:flex-row sm:flex-wrap sm:justify-end sm:px-5">
+                    <DialogFooter className="flex-col">
                         {footer}
                     </DialogFooter>
                 ) : null}
@@ -136,7 +133,7 @@ export function TransactionFormSurface({
             onSubmit={handleSubmit}
             className="flex min-h-0 flex-1 flex-col overflow-hidden"
         >
-            <DialogHeader className="shrink-0 px-6 pt-6 pb-3">
+            <DialogHeader>
                 <DialogHeaderRow
                     endAdornment={
                         <DialogCloseButton
@@ -149,11 +146,11 @@ export function TransactionFormSurface({
                     <DialogDescription>{formDescription}</DialogDescription>
                 </DialogHeaderRow>
             </DialogHeader>
-            <div className={fieldsScrollClass}>
+            <DialogBody className={fieldsScrollClass}>
                 <TransactionFormFields {...fieldsProps} />
-            </div>
+            </DialogBody>
             {showFooter ? (
-                <DialogFooter className="mx-0 mb-0 mt-0 shrink-0 flex-row flex-wrap justify-end gap-2 rounded-b-xl bg-background px-6 pt-4 pb-5">
+                <DialogFooter>
                     {footer}
                 </DialogFooter>
             ) : null}

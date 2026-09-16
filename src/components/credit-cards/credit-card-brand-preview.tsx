@@ -1,6 +1,9 @@
 "use client"
 
 import type { ComponentType, ReactNode } from "react"
+import {
+    Item,
+} from "@/components/ui/item"
 import { CreditCardIcon } from "@heroicons/react/16/solid"
 import {
     LogoAmericanExpress,
@@ -77,14 +80,9 @@ function PreviewShell({
     className?: string
 }) {
     return (
-        <div
-            className={cn(
-                "flex min-w-0 items-center gap-2 rounded-md border border-border/50 bg-muted/10 px-2.5 py-1.5",
-                className
-            )}
-        >
+        <Item variant="outline" size="sm" className={cn("min-w-0 flex-nowrap", className)}>
             {children}
-        </div>
+        </Item>
     )
 }
 

@@ -1,6 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import {
+    Card,
+} from "@/components/ui/card"
+import { FormInput } from "@/components/ui/form"
 import { useWorkspace } from "@/components/workspace-provider"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,16 +22,8 @@ import {
 } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Workspace } from "@/lib/supabase"
-
-const dialogFooterClass =
-    "!mx-0 !mb-0 mt-0 flex flex-row flex-wrap justify-end gap-2 border-t border-border bg-background px-6 py-4 sm:flex-row"
-
-const sheetFooterMobileClass =
-    "mt-0 shrink-0 flex-col gap-2 border-t border-border bg-background px-4 py-4"
 
 type WorkspaceDeleteDialogProps = {
     open: boolean
@@ -164,7 +160,7 @@ export function WorkspaceDeleteDialog({
             ) : impactError ? (
                 <p className="text-sm text-destructive">{impactError}</p>
             ) : (
-                <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm">
+                <Card variant="muted" padding="none" className="px-3 py-2">
                     <p className="font-medium text-foreground">Resumo nesta carteira</p>
                     <ul className="mt-2 space-y-1 text-muted-foreground">
                         <li>
@@ -180,35 +176,35 @@ export function WorkspaceDeleteDialog({
                             <span className="tabular-nums text-foreground">{categories}</span>
                         </li>
                     </ul>
-                </div>
+                </Card>
             )}
 
-            <div className="space-y-2">
-                <Label htmlFor="workspace-delete-confirm-name">
-                    Digite o nome da carteira para confirmar:{" "}
-                    <span className="font-semibold text-foreground">{workspace?.name ?? ""}</span>
-                </Label>
-                <Input
-                    id="workspace-delete-confirm-name"
-                    autoComplete="off"
-                    value={confirmName}
-                    onChange={(e) => setConfirmName(e.target.value)}
-                    placeholder="Nome exato da carteira"
-                    disabled={impactLoading || Boolean(impactError)}
-                    aria-invalid={confirmName.length > 0 && !nameMatches}
-                />
-            </div>
+            <FormInput
+                id="workspace-delete-confirm-name"
+                label={
+                    <span>
+                        Digite o nome da carteira para confirmar:{" "}
+                        <span className="font-semibold text-foreground">{workspace?.name ?? ""}</span>
+                    </span>
+                }
+                autoComplete="off"
+                value={confirmName}
+                onChange={(e) => setConfirmName(e.target.value)}
+                placeholder="Nome exato da carteira"
+                disabled={impactLoading || Boolean(impactError)}
+                aria-invalid={confirmName.length > 0 && !nameMatches}
+            />
 
             {deleteError ? <p className="text-sm text-destructive">{deleteError}</p> : null}
         </div>
     )
 
     const footerActions = isMobile ? (
-        <DialogFooter className={sheetFooterMobileClass}>
+        <DialogFooter className="flex-col">
             <Button
                 type="button"
                 variant="destructive"
-                className="h-10 w-full"
+                size="xl" className="w-full"
                 disabled={deleting || impactLoading || Boolean(impactError) || !nameMatches}
                 onClick={() => void handleDelete()}
             >
@@ -216,7 +212,7 @@ export function WorkspaceDeleteDialog({
             </Button>
         </DialogFooter>
     ) : (
-        <DialogFooter className={dialogFooterClass}>
+        <DialogFooter>
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={deleting}>
                 Cancelar
             </Button>
@@ -259,7 +255,7 @@ export function WorkspaceDeleteDialog({
                     size="lg"
                     className="[--dialog-max-h:min(92vh,40rem)]"
                 >
-                <DialogHeader className="px-6 py-4 text-left">
+                <DialogHeader>
                     <DialogTitle>Excluir carteira</DialogTitle>
                     <DialogDescription>Esta ação é permanente e não pode ser desfeita.</DialogDescription>
                     {headerDetailBlock}

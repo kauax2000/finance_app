@@ -15,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { supabase, type Profile } from "@/lib/supabase"
 import { clearCurrentSession, createSession, validateCurrentSession } from "@/lib/sessions"
 import { callDeleteUserAccount } from "@/lib/delete-account"
+import { formatAuthErrorMessagePt } from "@/lib/supabase-errors"
 import { ThemeProvider } from "@/components/theme-provider"
 import { PwaShellProvider } from "@/components/pwa/pwa-shell-provider"
 import { Toaster } from "@/components/ui/sonner"
@@ -88,6 +89,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch {
             /* best effort */
         }
+        try {
+            // O runtime do service worker guarda GETs do Supabase; o precache do app fica.
+            if (typeof caches !== "undefined") {
+                const keys = await caches.keys()
+                await Promise.all(
+                    keys.filter((k) => !k.includes("precache")).map((k) => caches.delete(k)),
+                )
+            }
+        } catch {
+            /* best effort */
+        }
     }, [queryClient])
 
     const initializeUserData = useCallback(async () => {
@@ -116,9 +128,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
                 validateCurrentSession().then((ok) => {
                     if (!ok) {
-                        setSession(null)
-                        setUser(null)
-                        prevSignedInUserIdRef.current = null
+                        // Sessão revogada em outro aparelho: além de sair da tela, some com
+                        // os dados em cache e o login local (o SIGNED_OUT zera o estado).
+                        void clearClientCaches().finally(() =>
+                            supabase.auth.signOut({ scope: "local" }),
+                        )
                     }
                 }).catch(() => {})
             } else {
@@ -144,9 +158,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setLoading(false)
                 void validateCurrentSession().then((ok) => {
                     if (!ok) {
-                        setSession(null)
-                        setUser(null)
-                        prevSignedInUserIdRef.current = null
+                        // Sessão revogada em outro aparelho: além de sair da tela, some com
+                        // os dados em cache e o login local (o SIGNED_OUT zera o estado).
+                        void clearClientCaches().finally(() =>
+                            supabase.auth.signOut({ scope: "local" }),
+                        )
                     }
                 })
                 return
@@ -211,7 +227,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             },
         })
 
-        if (error) return { error: error.message }
+        if (error) return { error: formatAuthErrorMessagePt(error.message) }
 
         const { data: refreshData } = await supabase.auth.getUser()
         if (refreshData?.user) {
@@ -243,7 +259,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         })
 
         if (error) {
-            return { error: error.message, needsConfirmation: false }
+            return { error: formatAuthErrorMessagePt(error.message), needsConfirmation: false }
         }
 
         const { data: refreshData } = await supabase.auth.getUser()
@@ -301,20 +317,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ): Promise<{ error: string | null }> => {
         if (!user) return { error: "Usuário não autenticado" }
 
-        const { data: signInData, error: signInError } =
-            await supabase.auth.signInWithPassword({
-                email: user.email || "",
-                password: password,
-            })
-
-        if (signInError) {
-            return { error: "Senha incorreta" }
-        }
-
-        if (!signInData.session?.access_token) {
-            return { error: "Sessão inválida ou expirada; faça login novamente." }
-        }
-
+        // A senha é conferida na edge, que tem o limite de tentativas.
         try {
             await callDeleteUserAccount(password)
         } catch (e) {

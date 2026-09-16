@@ -13,7 +13,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
   `aria-busy` e troca o rótulo), `FormCancel` (`tertiary` + `type="button"`, a
   tabela do rodapé embutida), `FormActions` (`inline` ou `sticky`, o rodapé de
   folha) e `FormError` (o erro que não é de campo). **`CustomForm` é `Form`
-  com `layout="none"`** e continua válido — 54 chamadas em 29 arquivos.
+  com `layout="none"`** e continua válido — 41 chamadas em 23 arquivos.
 - Use **`type="submit"`** only for that primary action. Use **`type="button"`** for cancel, dismiss, toggles, and auxiliary actions.
 - Avoid raw **`<form>`** for submit flows unless there is a documented exception.
 - If you add a control that uses **Enter** for its own behavior (e.g. another Radix primitive), either mark it with a stable **`data-slot`** and extend `shouldDeferEnterToWidget` in `form.tsx`, or document the exception.
@@ -31,14 +31,14 @@ This version has breaking changes — APIs, conventions, and file structure may 
 O design system deste projeto tem três partes, e nenhuma delas se presume de
 memória:
 
-- **Componentes** em [`src/components/ui/`](src/components/ui) — 75 hoje.
+- **Componentes** em [`src/components/ui/`](src/components/ui) — 79 hoje.
 - **Tokens** em [`src/app/globals.css`](src/app/globals.css).
 - **Documentação viva** em `/designsystem`, com uma página por componente e por
   padrão. Sempre disponível em desenvolvimento; em produção, atrás de
   `NEXT_PUBLIC_DS_DOCS`.
 - **A taxonomia é atomic design canônico**, e mora no mapa `LAYER` de
   [`registry.ts`](src/app/designsystem/registry.ts): Fundações → Átomos →
-  Moléculas → Organismos → **Templates** → Padrões. Ele é **exaustivo**: um
+  Moléculas → Organismos → **Templates**. Ele é **exaustivo**: um
   componente novo sem camada não compila. A regra de cada nível está escrita no
   topo do arquivo, e [`taxonomy.test.ts`](src/app/designsystem/taxonomy.test.ts)
   a tranca. **A régua é a hierarquia que cresce**: átomo é indivisível (anatomia
@@ -61,9 +61,11 @@ baratos, não cansam e não erram diferente a cada vez. `ds:catalog` também avi
 quando um token existe em `:root` sem par em `.dark`, que é a origem mais comum
 de "isso some no tema escuro".
 
-As páginas de **Padrões** (`/designsystem/dinheiro`, `datas`, `formularios`,
-`mobile-toque`, `vazio-carregando`, `graficos`, `chips-status`) valem mais que
-qualquer página de componente: são as decisões que atravessam telas.
+Não há páginas de "padrão": toda decisão que atravessa telas mora na página de
+quem a implementa — o dinheiro em `/designsystem/money-display`, o Enter em
+`form`, a paleta de gráfico em `chart` e `cores`, os chips em `badge`, as datas
+em `typography`, o toque e a área segura em `mobile-toque` (Fundação). Ver a
+rodada 77.
 
 ### Invariantes
 
@@ -198,6 +200,11 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   — invisível — e em direções trocadas, clareando no claro e afundando o botão
   na página no escuro. O token puxa a base na direção do próprio texto: escurece
   no claro (1,26:1), clareia no escuro (1,39:1). Sempre na direção do contato.
+  **`--primary-hover` segue a mesma regra e por isso escurece nos dois temas**:
+  o contato do primário é o rótulo branco, e escurecer é o único sentido que
+  sobe o contraste dele (9,01 no claro, 6,21 no escuro). Com ele vêm
+  `--primary-edge` e `--primary-highlight`, a aresta e a luz da tecla — ver a
+  rodada 78.
   `--primary` **preenche** (botão, checkbox, switch, faixa do slider) e é medido
   contra o texto que fica em cima; `--primary-accent` é **marca sobre o fundo**
   — texto, ícone, e todo traço fino: barra lateral de citação, contorno de chip
@@ -303,6 +310,17 @@ tema.
 
 ### Required primitives for new screens
 
+- **A barra do topo da janela**: [`TopBar`](src/components/ui/top-bar.tsx) —
+  a do app e a do catálogo são ela. Não escreva `<header className="sticky …">`
+  nem `backdrop-blur` numa barra: `position`, `size`, `surface` e `gutter`
+  cobrem as duas contagens, e a altura já contém o fio e a área segura. Ver a
+  rodada 80.
+- **A barra de baixo do telefone**: [`BottomBar`](src/components/ui/bottom-bar.tsx)
+  — a do app é ela. Não escreva `fixed bottom-0` nem uma grade de abas à mão:
+  as abas são `BottomBarTab` (com `iconActive` para o par sólido), o gatilho de
+  popover é `BottomBarSlot`, e a ação primária veste `bottomBarActionClassName`,
+  que lê a altura da barra e **não declara cor**. O realce viaja sozinho, e a
+  área segura mora dentro da caixa. Ver a rodada 82.
 - **Page chrome**: [`PageHeader`](src/components/ui/page-header.tsx) +
   [`PageSection`](src/components/ui/page-section.tsx) +
   [`Container`](src/components/ui/container.tsx). Os três têm `size` (`sm` |
@@ -321,9 +339,8 @@ tema.
 - **Empty states**: [`EmptyState`](src/components/ui/empty-state.tsx) (+ title / description / actions slots).
 - **Money**: [`MoneyDisplay`](src/components/ui/money-display.tsx) e **`<Input money>`** ([`input.tsx`](src/components/ui/input.tsx)), com a forma curta `<FormInput money>`; formatting helpers in [`src/lib/formatters.ts`](src/lib/formatters.ts) (`currencyBRL`, `signedCurrencyBRL`, `percentBR`).
 - **Dates**: [`src/lib/transaction-date.ts`](src/lib/transaction-date.ts) — e.g. `formatDatePtBr`, `formatTransactionDmyPtBr`, `formatDateLongPtBr`, `formatRelativeDayPtBr`.
-- **Status chips / filters**: [`src/lib/tag-chip-classes.ts`](src/lib/tag-chip-classes.ts) — token-based classes only.
+- **Status chips / filters**: as constantes `tagChip*`, exportadas de [`badge.tsx`](src/components/ui/badge.tsx) — a mesma superfície que as tintas `soft` do `Badge` leem.
 - **Régua compartilhada em `lib/`**: além de
-  [`tag-chip-classes`](src/lib/tag-chip-classes.ts),
   [`menu-classes`](src/lib/menu-classes.ts) e
   [`scroll-fade-classes`](src/lib/scroll-fade-classes.ts), agora
   [`field-classes`](src/lib/field-classes.ts) — a superfície de campo que
@@ -350,6 +367,7 @@ tema.
   três faixas do `Card` e do `Dialog`. Escolha-o quando a lista é longa e pede
   busca; `Select` quando é curta, `Combobox` quando cabe numa palavra.
 - **Listas e detalhe**: [`Item`](src/components/ui/item.tsx) para linha de lista (e para o que a `Table` vira no telefone), [`DescriptionList`](src/components/ui/description-list.tsx) para pares termo/valor, [`Timeline`](src/components/ui/timeline.tsx) para histórico, [`Toolbar`](src/components/ui/toolbar.tsx) para a linha de filtros e ações.
+- **Tema**: [`ThemeToggle`](src/components/ui/theme-toggle.tsx) — o único alternador claro/escuro. Não escreva outro controle com `setTheme`.
 - **Carregando**: [`Skeleton`](src/components/ui/skeleton.tsx) para uma tela esperando dado; [`Spinner`](src/components/ui/spinner.tsx) só para ação curta sem fim conhecido.
 - **Borda de região rolável**: a dissolução é uma **primitiva do sistema**, não
   um efeito da paleta de comandos. Ela mora em três camadas — as `@utility`
@@ -364,7 +382,7 @@ tema.
 
 ### Component rules
 
-- **`Badge`**: use semantic `variant` + `size` (`xs` | `sm` | `default`); avoid duplicating chip classes outside `tag-chip-classes` / Badge.
+- **`Badge`**: `variant` (forma) + `tone` (cor) + `size` (`xs` | `sm` | `md`); as classes de chip moram no próprio `badge.tsx` e não se duplicam fora dele.
 - **`Button` — a hierarquia é uma escada, e ela desce em peso visual**:
   `primary` preenche de verde, `secondary` preenche de cinza, `tertiary` não
   preenche nada. **`tertiary` acende no cursor e no toque** — o par
@@ -416,7 +434,7 @@ tema.
   mexeram.
 - **`Card` tem dois eixos, e eles são independentes**: `variant` decide a
   **superfície** (`outline` chapado — o padrão —, `elevated` levantado, `muted`
-  material de segunda ordem, `ghost` sem borda nem preenchimento); `padding`
+  material de segunda ordem, `plain` sem borda nem preenchimento); `padding`
   decide o **ritmo interno** (`none` | `sm` | **`md`, o padrão** | `lg`), numa
   medida só que o casco usa para separar os blocos e os slots para recuar.
   **`padding="none"` é o painel** — o corpo sangra até a borda e as tiras
@@ -735,7 +753,7 @@ tema.
   gatilho.
 - **O `Tabs` tem três eixos, e a moldura não é a fileira.** `variant` é a
   superfície (`solid` bandeja — o padrão —, `underline` um fio sob a fileira com
-  o marcador pousando nele, `ghost` sem nada); `size` mede o **gatilho**;
+  o marcador pousando nele, `plain` sem nada); `size` mede o **gatilho**;
   `stretch` divide a linha em partes iguais (ligado só em `solid`, porque uma
   bandeja lê como controle segmentado e uma fileira de abas de página não); e
   `scrollable` faz a fileira rolar dissolvendo nas pontas.
@@ -757,13 +775,13 @@ tema.
   O `pointer-coarse:min-h-11` só entra quando **não** há `stretch`: aba de
   largura total já tem área de alvo grande; aba de largura de rótulo com 28px
   não tem.
-- **O marcador do `Tabs` é um objeto só, e ele viaja — menos no `ghost`.** O
+- **O marcador do `Tabs` é um objeto só, e ele viaja — menos no `plain`.** O
   realce saiu do gatilho e virou um nó (`tabs-indicator`) absoluto dentro da
   fileira: a trilha publica a caixa da aba ativa em `--tabs-indicator-x/y/w/h` e
   o marcador transiciona para ela em `--duration-base` com `--ease-out`. Antes,
   cada gatilho acendia e apagava o próprio realce, e isso **teleporta** — três
   marcadores piscando não dizem o que um marcador se movendo diz.
-  **O `ghost` não viaja**, e a razão é o trilho: o marcador corre *ao longo de
+  **O `plain` não viaja**, e a razão é o trilho: o marcador corre *ao longo de
   alguma coisa*, e a bandeja do `solid` e o fio do `underline` são essa coisa.
   Sem nenhuma das duas, o mesmo movimento vira um bloco preenchido deslizando
   sozinho sobre o fundo — na variante que existe exatamente para não chamar
@@ -2137,6 +2155,8 @@ literais, e o teste passou a provar que os literais não divergem da tabela.
 
 ### O `Tabs` ganhou `padding`, porque quem fica na linha é a bandeja
 
+*(Superada pela seção "`size` no `Tabs` passa a nomear a bandeja", acima: o eixo `padding` saiu. Fica como registro.)*
+
 A revisão apontou o defeito e ele é real: `size="md"` dava **gatilho 32 e
 bandeja 40**, e numa barra de controles de 32 o componente inteiro saía 8px mais
 alto. Eu tinha defendido isso com um argumento de nomenclatura — "a régua mede
@@ -2168,6 +2188,8 @@ que já vence `stretch`.
 moldura (recuo 0), enquanto o `p-1` mora na trilha, sem prop que a alcançasse.
 
 ### O que não fechou, e por quê
+
+*(Fechado pela mesma seção: a bandeja passou a ser a medida, e no toque ela fica rente aos controles.)*
 
 No ponteiro grosso a bandeja **ainda não fica rente**: medido a 375px, 48 contra
 controles de 40. O `stretch={false}` liga `pointer-coarse:min-h-11` (44) no
@@ -3230,6 +3252,9 @@ fileira flex. As outras três são de aparência: os dois campos de valor do
 `fieldSize` só tem `sm` (`text-xs`) e `md` — eles são **2 de 9 rótulos irmãos**
 na mesma grafia, e migrar só os dois deixaria dois rótulos de outro corpo e
 outra cor no meio do painel. Migrar o painel inteiro é rodada própria.
+*(Foi, na N7: o painel inteiro migrou, com a mesma grafia de rótulo por
+`className` no `FieldLabel`, e o orçamento `sr-only` do assistente num `Field`
+horizontal, que não estica o campo de largura fixa.)*
 
 **Um conserto que veio junto, e não estava no plano.** Seis dos sítios
 escreviam `className="text-sm"` no campo de dinheiro. A superfície é
@@ -4881,7 +4906,9 @@ pixel de CSS") e do carrossel ("classe montada em runtime não existe na folha")
 - **`AppSidebar` não adota `resizable` nem `variant="inset"`.** As duas são
   decisão de produto. Fica o registro de que o `peer-data-[variant=inset]:*` do
   `SidebarInset` é **código inalcançável** hoje: a casca usa a variante padrão.
-- **O `md:z-10` cru do `AppHeader` fica.** A barra entrou na escala
+- ~~**O `md:z-10` cru do `AppHeader` fica.**~~ Pago na rodada 80: o `TopBar`
+  grudado mora em `--z-sticky`, e a barra lateral e o cabeçalho empatam em 20 —
+  decidido pela ordem no DOM, onde o cabeçalho vem depois. A barra entrou na escala
   (`--z-sticky`), e o cabeçalho é `layout/`, fora do que esta rodada abriu. Hoje
   os dois não se sobrepõem; no dia em que se sobrepuserem, quem ganha é a barra.
 - **`Dialog` e `Popover` não leem a janela da moldura** — só o `EdgePanel`, que é
@@ -7681,6 +7708,8 @@ telefone.
 
 #### Os fades internos viraram o material do iOS, e a camada virou peça
 
+*(Superado: o borrão saiu do `DialogBody` — virava retângulo de tom, ver a invariante 6 de `lib/scroll-fade-classes`. Fica a rampa.)*
+
 `DialogBody` e `MobileSheetFormBody` ganharam o borrão das duas pontas, com a
 rampa **mantida** — mesma decisão da paleta: sem a máscara o conteúdo passaria
 nítido pela borda. Os dois eram um elemento só, e passaram a ser casca
@@ -9539,6 +9568,546 @@ primeira sabotagem dela **passou**, porque o meu `replace` não achou o trecho
 (havia um comentário no meio) e eu não o tinha assertado. Refeita com `assert`,
 ela reprova.
 
+### Rodada 77 — a sexta gaveta sai, e cada decisão volta para o dono
+
+O catálogo tinha **Padrões**: sete páginas que "não são componente", e a régua
+do `registry.ts` as descrevia assim mesmo — *decisões que atravessam telas*.
+Medido, quase todo o conteúdo delas **já estava** nas páginas de camada, e as
+cópias divergiam: as notas da rampa em `graficos` e em `cores`, os três vazios
+em `vazio-carregando` e em `empty-state`, o "hook que pisca" em `mobile-toque`
+e em `table`. A categoria não guardava decisão sem dono; guardava a segunda
+cópia dela.
+
+| Era | Foi para | Camada |
+| --- | --- | --- |
+| `dinheiro` | `money-display` — as funções de `lib/formatters`, a regra do sinal | Átomo |
+| `datas` | `typography` — os sete formatos, o fuso, o travessão | Fundação |
+| `chips-status` | `badge` — e o **código** também, abaixo | Átomo |
+| `formularios` | `form` — as regras do Enter, lidas da fonte | Organismo |
+| `graficos` | `chart` (a cor da série, as regras) e `cores` (a rampa medida) | Organismo + Fundação |
+| `vazio-carregando` | `empty-state` (os quatro estados) e `announcement-bar` (o offline) | Molécula |
+| `mobile-toque` | fica, como **Fundação** "Toque e área segura" | Fundação |
+
+`mobile-toque` não se dissolveu porque o conteúdo dele **é** Fundação: os
+`--mobile-*` da área segura e a política do `@custom-variant` moram em
+`globals.css`. O slug ficou — quatro comentários de `ui/` apontam para ele.
+
+**As classes de chip foram morar no `Badge`, e não só a página.**
+`lib/tag-chip-classes.ts` e as tintas `soft` do `Badge` eram duas cópias das
+mesmas sete strings, e já divergiam: o `Badge` não tinha o par `dark:hover:`.
+Hoje as constantes são exportadas de `badge.tsx` com os mesmos nomes, o `cva`
+as lê, e os 20 importadores mudaram só o caminho — zero pixel nas telas. A
+única mudança visível é a do próprio `Badge`: no tema escuro o hover dele passa
+a `/60`, como o dos chips sempre foi. Sem alias para o arquivo antigo, pelo
+precedente do `EdgePanel`.
+
+**A asserção 6 do `taxonomy.test.ts` perdeu a exceção.** Ela pulava Padrões
+para `form.tsx`, `chart.tsx` e `empty-state.tsx` terem duas páginas; hoje vale
+para todo arquivo de `ui/`. E o tipo `Category` sem a sexta chave é o que
+impede a volta: o `tsc` acusa quem a escrever.
+
+As URLs antigas dão 404, sem redirect — o precedente de `/tipografia`: rota de
+desenvolvimento e zero links internos. Ficam de fora o `text-[10px]` da pílula
+de linha (`transactionRowChipShell`), que não é degrau do `Badge` e mudaria
+pixel em cinco telas, e os apelidos `tagChipViolet`/`tagChipSky`.
+
+### Rodada 78 — o primário vira tecla
+
+Pedido: o `Button variant="primary"` acompanhar o resto do design system, na
+direção **elevado e elegante**, com uma referência de botão tátil — corpo
+chapado, contorno mais escuro, plinto grosso na base e um fio de luz fino no
+topo. Medido antes, ele era o peso mais atrasado da casa:
+
+| Defeito | Número |
+| --- | --- |
+| hover por alfa (`bg-primary/90`) trocava de direção por tema | clareava no claro (rótulo 7,31 → **5,81**), escurecia no escuro |
+| a força do hover dependia da superfície embaixo | 1,113 sobre `muted` contra 1,158 sobre a página, no escuro |
+| inerte ao toque | estava em `PENDENTES` |
+| sem `aria-expanded:` | os outros três pesos têm |
+| `transition-all` com a curva do navegador | `--tw-ease` vazio, o defeito das rodadas 62/63 |
+| `[a]:hover:bg-primary/90` | a mesma classe duas vezes |
+| enviando lia como desabilitado | o `FormSubmit` desabilita, e o primário ia a `opacity-50` |
+
+**O realce virou token, e escurece nos dois temas.** `--primary-hover` é
+opaco: rótulo em **9,01** no claro e **6,21** no escuro, passo contra a base
+1,23 e 1,19. É a regra do `--secondary-hover` — puxar na direção do contato —,
+e o contato do primário é o rótulo branco nos dois temas; clarear no escuro
+gastaria a margem de 0,72. O custo fica dito: no escuro o hover dá **2,76**
+contra `--card`, e quem identifica o controle nesse estado é o rótulo.
+
+**A tecla.** `--primary-edge` é o contorno e o plinto (1px de sombra interna
+na base, somado ao 1px de borda); `--primary-highlight` é o fio de luz de 1px
+no topo, por dentro. Medido: aresta contra corpo **1,53** no claro e **1,86**
+no escuro, fio de luz contra corpo 1,53 e 1,51. O plinto é interno, então a
+caixa mantém o degrau — 24/28/32/36/40, medidos — e segue alinhada ao `Input`.
+Ao apertar, o plinto, a luz e a sombra de fora somem e entra uma sombra interna
+no topo; enviando, a tecla fica afundada com **opacidade 1**.
+
+**Não é vidro, e a diferença é a direção da luz.** As quatro reprovações deste
+botão (a lápide em `lib/glass-classes.ts`) acenderam o corpo ou a borda, e a
+leitura foi "botão mais claro". Aqui a elevação é **escura** — aresta e plinto
+abaixo do corpo, sombra preta —, e a única luz é 1px acima da faixa do texto.
+Visto ampliado 3× nos dois temas, ele lê como tecla, e a chave de desligar a luz
+(`--primary-highlight: transparent`) não foi usada.
+
+**A armadilha que custou uma medição: `inset-shadow-(--x)` prefixa `inset`.**
+Com o `inset` que o token já traz, o emitido virou `inset inset …`, inválido —
+e uma camada inválida derruba a cadeia inteira de `box-shadow`: a sombra de
+fora e **o anel de foco** junto. Medido: `box-shadow: none`, com a classe no
+elemento e a regra na folha. A saída é um token só (`--primary-shadow-value`,
+as duas internas mais a `--shadow-xs-value`) lido por `shadow-(…)`, que não
+prefixa nada. Depois, com Tab de verdade: anel de 3px em `--ring` compondo com
+as três sombras da tecla.
+
+**E a leitura do anel no mesmo passo do Tab mentiu de novo.** A primeira veio
+com a borda ainda na cor da aresta e a cadeia a meio caminho — a transição de
+150ms estava rodando. Meio segundo depois, certa. É a lição de sempre: valor em
+transição não é valor final.
+
+**Enviando precisou de dois variantes juntos.** `aria-busy:` e `disabled:`
+empatam em especificidade, e quem decidiria seria a ordem de emissão; os estados
+de envio vão sob `aria-busy:disabled:`, que vence.
+
+**A transição da base passou a ser enumerada**, para todos os pesos:
+`[color,background-color,border-color,box-shadow,opacity,translate]` com
+`--duration-fast` e `--ease-out`. O carrossel passa a própria lista, e o
+`twMerge` a mantém.
+
+**As telas.** Os 5 `hover:bg-primary/90` dos formulários de autenticação
+saíram, e não era cosmético: o `twMerge` deixaria o `className` vencer, e esses
+botões seguiriam com o hover de alfa. **13** `className="h-10 w-full"` viraram
+`size="xl" className="w-full"`; os **4** que já traziam `size="sm"` ficaram,
+porque trocar mudaria o corpo do rótulo. `not-found-shell.tsx` trocou
+`buttonVariants()` num `<Link>` por `<Button asChild>`.
+
+**O `ButtonGroup` desliga o divisor no primário.** O filete `bg-current/20`
+existe para marcar a emenda de botões cheios sem borda visível; sobre o
+primário ele saía branco, por cima do fio escuro que o contorno em
+`--primary-edge` já desenha com a sobreposição de 1px — dois traços para a
+mesma emenda. `[&>[data-variant=primary]]:before:hidden` o tira dali, e a mesma
+linha vale para o `outline`, cuja borda também é a emenda. O `secondary`, que
+não tem borda, também perdeu o filete — recuado nas pontas, ele lia como risco
+no meio de um bloco — e ganhou uma emenda de cima a baixo como a do primário:
+os botões deixam de se sobrepor e ficam a 1px um do outro
+(`[&>[data-variant=secondary]:not(:first-child)]:ml-px`, que vence o `-ml-px`
+por especificidade). O vão é **transparente**, então mostra a superfície de trás
+sem o grupo precisar saber qual é.
+
+**Uma correção ao plano.** Ele contava o dia selecionado do `Calendar` entre os
+consumidores de `hover:bg-primary/90`; não era — as duas ocorrências que a
+varredura achou em `ui/` eram as duas classes da própria linha do `Button`.
+
+**O teste.**
+[`button-primary.test.ts`](src/components/ui/button-primary.test.ts) tem 8
+asserções — o realce sem alfa, zero cor literal, a tecla num token e nunca por
+`inset-shadow-`, o toque, o envio, a transição, os tokens nos dois temas com
+**aresta < hover < corpo** (a elevação é escura, por construção) e nenhuma tela
+remendando o hover. Oito sabotagens, oito reprovações. `primary` saiu de
+`PENDENTES` em `button-touch-response.test.ts`.
+
+**O que ficou de fora.** `secondary`, `outline` e `destructive` não viraram
+tecla, embora a referência mostre os três assim; o `destructive` é véu no tema
+claro e pede medição própria. O toque **mantido** não foi amostrado por quadro —
+o painel do navegador não segura o clique —, e o que o prova são as regras
+`:active` e `[aria-busy]:disabled` lidas no CSS emitido. O desvio de centragem
+do rótulo é de **0,5px** em todos os degraus (a borda do topo contra borda mais
+plinto na base), e ficou sem compensação.
+
+### Rodada 79 — o alternador de tema entra no design system
+
+O `AppThemeToggle` já era o controle certo — `Switch` do Radix com as duas
+faces, gate de montagem com `Skeleton`, deslize adiado dois quadros por causa do
+`disableTransitionOnChange` —, mas morava em `src/components/settings/`, fora do
+registry e sem página. O catálogo o usava no próprio topo e o citava em quatro
+notas sem nunca documentá-lo.
+
+Ele foi **promovido sem mudar um pixel**: `src/components/ui/theme-toggle.tsx`,
+export `ThemeToggle`, `data-slot="theme-toggle"`. Sem alias — são três
+consumidores (`user-menu`, `mobile-account-menu`, `ds-shell`), migrados na mesma
+mudança. Camada **Átomo**: um controle, com trilho, polegar e faces como anatomia
+do `Switch`, e o único import de `ui/` é o `Skeleton`. A exceção do auditor para
+os dois conjuntos de ícone passou a nomear o caminho inteiro
+(`components/ui/theme-toggle`), para a página de docs não herdá-la.
+
+`AppAppearanceSettings` saiu junto: um segundo controle de tema, com zero
+importadores, que o backlog já mandava remover. Fica **um** alternador no app.
+
+### Rodada 80 — a barra do topo vira peça: `TopBar`
+
+O design system tinha o topo **de dentro** da tela (`PageHeader`) e o de cada
+superfície (`DialogHeader`, `CardHeader`…), e não tinha a barra do topo da
+**janela**. Mapeado o repositório inteiro, ela existia escrita à mão **duas
+vezes**, e as duas já divergiam:
+
+| Onde | Desktop | Telefone | Altura | Superfície |
+| --- | --- | --- | --- | --- |
+| `AppHeader` (`layout/app-header.tsx`) | `md:sticky md:z-10` (cru) | `fixed z-(--z-header)` + área segura | 64 + fio · 48 recolhida · 56 + fio | opaca; vidro **à mão** só rolado e só no desktop |
+| `DsTopBar` (`designsystem/ds-shell.tsx`) | `sticky z-(--z-sticky)` | a mesma | 56 com o fio dentro | `barSurfaceClassName` |
+
+Mais nada no app é barra de topo: as quatro telas de entrada, o 404, o erro e
+o bootstrap mostram a marca acima do conteúdo, e a ilha do telefone é a barra
+de **baixo**. O `AppHeader` divergia em quatro pontos, todos medidos: borrão de
+8px sem `saturate` e sem guarda de transparência reduzida (a única superfície de
+vidro do repositório fora da receita); `md:z-10` cru; o fio **por fora** da
+altura, então o telefone media 57 + área segura contra os 56 + área segura de
+`--mobile-header-offset` — o conteúdo começava 1px debaixo da barra; e um
+`MobileHeaderBack` que era a segunda cópia do `PageHeaderBack`.
+
+**O nome é `TopBar`**, decisão do dono: `Header` sozinho disputaria a leitura
+com `PageHeader`, `DialogHeader`, `CardHeader` e `HoverCardHeader`, que são
+outra coisa. É **Template** — dispõe onde o voltar, o título e as ações vão, e
+não mostra conteúdo nenhum por si.
+
+**Quatro eixos, e cada um tem as duas barras como contagem.** `size` (`sm` 48 ·
+`md` 56 · **`sm` é o padrão: 48 no telefone e no desktop**, um tamanho só com a
+`Sidebar` aberta ou recolhida — decisão do dono, depois de o telefone passar
+por 56 e por 44; o degrau `auto` saiu, porque passaria a ser a mesma string do
+`sm`, e o `lg` 64 saiu por decisão do dono, sem consumidor);
+`position` (`static` · **`sticky`** · `fixed` · `auto`, que é `fixed` no
+telefone e `sticky` acima, a forma do app); `surface` (**`solid`** · `glass` ·
+`scroll`, que é `solid` até o conteúdo passar por baixo e `glass` depois);
+`gutter` (**`bar`** · `none`, para quem traz o próprio `Container`). As peças
+são `TopBarStart`, `TopBarTitle` (um `<h1>` truncado, com `asChild`),
+`TopBarContent` e `TopBarActions`. **Não há voltar novo**: é o
+`PageHeaderBack`, que já tinha a medida do app.
+
+**A altura é do `<header>`, com o fio e a área segura dentro.** O degrau
+publica `--top-bar-h`, `fixed` publica `--top-bar-safe`, e a caixa é a soma em
+`border-box` — o total no telefone **é** `--mobile-header-offset`, por
+construção, e a asserção 4 do teste compara o degrau `md` com o token.
+
+**`sticky` fica em `--z-sticky`, e não em `--z-header`.** A faixa de sem
+conexão é `fixed md:top-0` em `--z-banner` (30) e cobre a barra do desktop de
+propósito; a 40 a barra a esconderia. `fixed` é o telefone, onde a faixa desce
+para `top-(--mobile-header-offset)`, e ali a barra vai a 40.
+
+**`scroll` acende pelo primeiro ancestral que rola, e não pela janela.** É ele
+que faz o conteúdo passar por baixo de uma barra `sticky`. No app não há
+nenhum, e a resposta continua sendo a janela; dentro de uma região rolável —
+e é o caso de toda moldura do catálogo, cujo `<body>` é `overflow: hidden` — é a
+região. Escutar só a janela deixaria o modo indemonstrável. A escuta é em
+**captura** na janela, e o alvo é decidido a cada evento — a janela ou um
+ancestral da barra; uma lista rolando dentro da tela não acende nada. **A
+primeira versão resolvia o ancestral uma vez, na montagem, e falhou medida**:
+dentro da moldura o CSS chega depois do efeito, o `overflow` ainda lia
+`visible`, e a barra ficava escutando a janela para sempre — `data-scrolled`
+parado em `false` com 184px rolados. A escolha é entre
+duas strings inteiras do `cva` (`rolou ? "glass" : "solid"`), nunca uma classe
+montada.
+
+**As duas barras migraram.** O `DsTopBar` sai idêntico — 56, `z-20`,
+`blur(24px) saturate(1.5)`, medidos antes e depois. O `AppHeader` vira
+`<TopBar position="auto" surface="scroll">` com as duas árvores em
+`contents md:hidden` / `hidden md:contents`, para as peças continuarem filhas
+diretas da linha. **Isto muda pixel em produção**, e é dito: o vidro rolado
+passa de 8px para 24px com `saturate(1.5)` e ganha o guarda; **o telefone
+também acende ao rolar** (era sempre opaco); o desktop vai de `z-10` a `z-20`;
+no desktop a barra fica em **48 fixo** (era 64, e 48 só com a lateral
+recolhida); no telefone ela vai de 56 + fio para **48**, o mesmo do desktop, com o fio e a área segura dentro — e
+`--mobile-header-offset` (`globals.css`) e o recuo do toast no telefone
+(`sonner.tsx`, 48 + 16) descem junto; o título passa a `text-sm font-medium`,
+a receita da barra de exemplo da página da Sidebar, que agora é o `TopBar`; a transição do fundo passa de
+`duration-200` com a curva do navegador para a da barra lateral; e a seta de
+voltar do telefone alinha à calha de 16px (`-ms-2.5` no lugar de `-ml-1`).
+
+**O sino de notificações desceu para `icon-md` (32) e virou outline**, por
+decisão do dono: ele era `icon-lg` (36), fora do padrão da escada, e sólido ao
+lado do sol outline do `ThemeToggle`. Como não existe `16/outline`, é o
+`24/outline` a 16px — contra a regra G, e por isso a segunda exceção nomeada em
+`HEROICON_SET_EXCEPTIONS`, junto com a página do `TopBar`, que o reproduz. O
+sino fica 4px menor na barra do app, nos dois ramos. **E o divisor vertical
+entre o gatilho da barra lateral e o título saiu** — no app e na página —, para
+a barra ficar igual à de exemplo da página da Sidebar, que nunca o teve.
+
+**Todo botão da barra fica no degrau padrão, `md` (32)** — decisão do dono.
+Isso tocou quem mora nela: o `SidebarTrigger` (padrão de `icon-sm` para
+`icon-md`, e o único lugar dele é a barra), o `PageHeaderBack` (`icon-md` no `TopBar` e
+no `PageHeader`, sem prop de tamanho, com recuo `-ms-2` e alvo de toque
+`-inset-2` = 46), o seletor de carteira do telefone (`icon-xl` com `h-9`
+cravado para `icon-md`), o filtro de faturas e o `MonthNav` que as páginas
+publicam como `dateFilter` (prop `inBar`: 32 em qualquer largura, onde o
+`dense` dá 40 no telefone para casar com o trilho segmentado das barras de
+filtro). O gatilho da lateral e o voltar passaram a `-ml-2`/`-ms-2`, para o
+glifo alinhar com a calha de 16px.
+
+**O borrão só respeita o raio da própria barra.** Nas molduras do catálogo a
+barra de vidro rolada saía com os cantos de cima quadrados. O primeiro conserto
+— `clip-path` no raio da moldura — não resolveu, e a medição explicou: o
+`backdrop-filter` ignora o recorte de **todo** ancestral no Chromium
+(`overflow-hidden`, `clip-path` fora e dentro do iframe, máscara, `contain:
+paint`, os quatro testados), e só respeita o `border-radius` do elemento que
+borra. Hoje o `TopBar` arredonda os cantos de cima por `--top-bar-r` (0 por
+padrão), e a moldura publica o raio dela na tela. O `clip-path` saiu. É a
+mesma família da rodada 76, que só não apareceu naquele painel.
+
+**O gatilho da lateral tem ícone próprio.** O `SidebarTrigger` trocou o
+`Bars3Icon` por um desenho do dono — um painel com a coluna da esquerda
+separada —, em [`components/icons/sidebar-toggle-icon.tsx`](src/components/icons/sidebar-toggle-icon.tsx),
+na grade do `16/solid` e com `currentColor`. É o mesmo ícone para abrir e para
+fechar (passou antes por duas setas do Heroicons, uma por estado); quem diz o
+que o clique faz é o `aria-label` — "Recolher barra lateral" / "Abrir barra
+lateral", e no telefone quem decide é o painel (`openMobile`). **É a primeira
+exceção à regra G que não é marca nem movimento**, e ela está nomeada em
+`DRAWN_SVG_FILES`, restrita a esse arquivo.
+
+`sidebar-ladder` #17 e #24 e `glass` #27 passaram a ler `top-bar.tsx`, e a #27
+agora exige que as duas cascas vistam o `TopBar` sem escrever borrão.
+[`top-bar-ladder.test.ts`](src/components/ui/top-bar-ladder.test.ts) tranca
+os degraus, o `auto`, a altura contra o token, as camadas, o vidro, o fio e a
+curva.
+
+### Rodada 81 — o vidro vai para o polegar do alternador
+
+Pedido: uma versão de vidro do `ThemeToggle`, igual à do `Tabs`. O encaixe já
+estava escrito no cabeçalho do componente — ele e uma fileira `solid` são **a
+mesma anatomia**, uma bandeja com um polegar que desliza —, e o polegar já
+vestia as três classes do `tabs-indicator` (`bg-background`, `border-border/80`,
+`shadow-xs`).
+
+**A bandeja não entra, e o número é da rodada 59**: o `Menubar solid` já foi
+medido a 60% e cai de rgb **38 para 27** sobre a página, deixando de ler como
+bandeja. Quem veste é a peça que se move — e ela passa na régua que manteve
+`Avatar` e `ColorTile` depois de o `Button` reprovar quatro vezes: **o polegar
+não é clicável** (o clique é da raiz) e não carrega texto por cima.
+
+**`glass-round`, porque a peça é redonda.** O aro linear põe o pico nos *cantos*
+da caixa, e um círculo não os tem — medido no `Avatar`, 0% do perímetro via o
+pico contra 14% com o cônico.
+
+**O corpo não se move, e é construção e não sorte.** `--glass-tone` é
+`--background` opaco, que é o que o ramo chapado pinta. Medido nos dois temas,
+com os dois polegares lado a lado:
+
+| | tom do vidro | fundo do chapado | caixa | borda |
+| --- | --- | --- | --- | --- |
+| escuro | `oklch(0.145 0 0)` | `oklch(0.145 0 0)` | 34×28 | 1px |
+| claro | `oklch(0.985 0 0)` | `oklch(0.985 0 0)` | 34×28 | 1px |
+
+Zero deslocamento: a armadilha nº 2 da régua (`border: 1px solid transparent`
+encolhe o conteúdo em 2px) não morde porque a borda de 1px **já estava lá**. O
+que entra são as camadas — 6 gradientes contra 0 no chapado —, e o aro sozinho é
+que faz o material, como a rodada 44 mediu.
+
+**O realce voltou a ter produtor, e quem publica é a raiz.** `--glass-sheen`
+precisa **herdar** até o polegar, e é a mesma razão pela qual no `Tabs` quem
+publica é a trilha e não o gatilho. São os quatro degraus de lá — medidos no
+polegar, com ponteiro real: `oklch(1 0 0 / 7%)` no escuro e `oklch(0 0 0 / 5%)`
+no claro. O par `active:` é obrigatório e não é simetria: `hover:` compila
+dentro de `@media (hover: hover)` e não existe no dedo.
+
+**O eixo entra sem neutralizador**, em dois ramos exclusivos — um
+`bg-background` deixado na base morreria calado sob o shorthand `background`. O
+arquivo entrou em `COM_MODO` no `glass.test.ts`, e as duas sabotagens reprovam:
+um `dark:bg-transparent` no ramo de vidro e a tradução removida.
+
+**O primeiro consumidor é o catálogo.** Por decisão do dono, os dois
+alternadores do `ds-shell` — o do cabeçalho e o da folha de navegação —
+passaram a `<ThemeToggle glass />`. Medido no cabeçalho: `data-glass`, tom
+`oklch(0.145 0 0)` (o `--background`), 6 camadas de gradiente contra 0 no
+chapado da página, e a mesma caixa de 34×28 com 1px de borda. **Em produção
+nada muda**: `UserMenu` e `MobileAccountMenu` seguem chapados.
+
+**O que não foi verificado:** o aro não foi visto **ampliado** — o recorte de
+zoom não é suportado no painel do navegador deste ambiente. O que prova a
+superfície é o computado (as 6 camadas, o tom e o realce acima) e as asserções.
+
+### Rodada 82 — a barra de baixo vira peça: `BottomBar`
+
+A barra do **topo** virou peça na rodada 80. A de **baixo** estava onde o
+`AppHeader` estava antes dela, e pior: **seis arquivos** em
+`src/components/layout/` — a casca, a aba, três funções de classe, o material e
+o quadrado do FAB —, com os três silêncios que esta casa trata como sinal para
+olhar: `ds:audit` reportando **um** achado no subsistema inteiro (a regra H não
+enxerga dentro de `cn()` nem de função, e era ali que tudo morava), nenhuma
+entrada no catálogo, e **zero testes**.
+
+Hoje é [`BottomBar`](src/components/ui/bottom-bar.tsx), **Template**, e o
+`MobileBottomNav` ficou só com a fiação — `useAuth`, `usePathname`, os quatro
+estados do slot da conta —, como o `AppHeader` faz com o `TopBar`. Saíram
+`mobile-nav-island.tsx`, `mobile-nav-tab.tsx`, `mobile-nav-tab-classes.ts` e
+`mobile-fab-button-classes.ts`, **sem alias**.
+
+#### As peças, e o que cada uma apagou
+
+| Peça | O que ela apaga |
+| --- | --- |
+| `BottomBar` | o `<nav>` fixo, `pointer-events-none` — a faixa invisível de largura total não pode engolir o toque na base da tela |
+| `BottomBarRow` | a linha que recebe os eventos |
+| `BottomBarTabs` | a pílula de vidro **e** o `grid-cols-4` cravado no consumidor — as colunas agora derivam de `Children.toArray(children).length` |
+| `BottomBarTab` | a aba e as três funções de classe |
+| `BottomBarSlot` | o `<button>` cru do slot da conta (o único achado do auditor) |
+| `bottomBarActionClassName` | a string de 56px com **seis `!important`** |
+
+Eixos: `labels` (56 → 64, padrão desligado) e `shape` (`island`, um valor só,
+de propósito: é ele que dá dono ao `--bottom-bar-margin`; `flush` entra no dia
+em que houver caso).
+
+#### O token de margem não tinha leitor
+
+`--mobile-nav-island-margin: 1rem` estava declarado, documentado na Fundação
+`mobile-toque` como "a folga entre a ilha e a borda", e **nenhum componente o
+lia**: a ilha escrevia `mx-4` nos lados e `0.5rem` embaixo, literais. E a reserva
+de conteúdo contava a margem **uma vez**, quando a barra tem folga em cima e
+embaixo.
+
+Os tokens viraram `--bottom-bar-margin` e `--bottom-bar-pad` (altura **+ 2×
+margem** + área segura), e a **altura deixou de ser token**: ela é o degrau do
+eixo `labels`, publicado em `--bottom-bar-h`, pela mecânica do `--top-bar-h`. Uma
+altura que depende de eixo não pode morar em `globals.css` — seriam duas
+declarações precisando concordar. Medido: margem **16 nos quatro lados**, contra
+8 embaixo antes.
+
+#### O FAB era um quadrado verde inerte
+
+Os seis `!important` (`hover:!bg-primary`, `hover:!border-primary` e os pares
+`dark:`) anulavam a tecla que o primário virou na rodada 78. A ação agora lê
+`--bottom-bar-h` — **56 não é degrau do `Button`**, que termina em 40 — e não
+declara cor nenhuma. Medido: aresta `oklch(0.36 0.09 166)`, plinto e fio de luz
+de volta, e o cursor escurecendo até `--primary-hover` (rgb 0,108,72). O
+`active:scale-95` saiu junto: a base já afunda, e dois afundamentos são um a
+mais.
+
+#### `motion` saiu, e era dependência inteira para um crossfade
+
+Verificado em `src/`, `e2e/` e `scripts/`: **um** consumidor, os 220ms de troca
+do slot da conta — arrastando `framer-motion` (3,2M) como transitiva. Hoje é a
+receita do `Avatar` e do `Popover`: a `key` remonta o nó e `animate-in` roda na
+entrada, com `animation-duration-*` (e não `duration-*`, que escreveria
+`transition-duration` morto). **A troca é só de entrada, e é decisão**: sem
+`AnimatePresence` o que sai teria de ficar na árvore um ciclo, e a troca acontece
+em carregamento e login — não é gesto que alguém acompanha.
+
+#### O vidro é o da folha, e não o da barra
+
+A pílula **não** veste `barSurfaceClassName` (`--background` a 95/60): aquela
+serve barra **rente** à borda. A ilha flutua com margem sobre a lista, e
+`--mobile-glass-bg` (55/45) é calibrado para uma folha sobre a página — a
+própria nota de `scroll-fade-material` o descreve assim ao rejeitá-lo para uma
+faixa de borda. Trocar deixaria a pílula quase opaca e mataria o que justifica o
+borrão.
+
+**E o anel fica — o plano mandava tirar, e a medição reverteu.** O argumento era
+"três separadores para a mesma emenda". Medido: `--mobile-glass-border` é
+**branco** e dá **1,007** contra a pílula no tema claro — branco no branco, não
+existe; ali quem desenha a aresta é o `ring-1 ring-border/20`. No escuro a conta
+se inverte (borda 1,117, anel 1,042). É a física do `--secondary-hover`: um valor
+único não serve os dois temas quando a direção que lê se inverte.
+
+#### A pílula e o realce são `rounded-full`, e isso é concentricidade de graça
+
+Com raio fixo seriam **28 por fora e 25 por dentro** (56 − 1 de borda − 2 de
+recuo) — dois números que param de concordar no dia em que o recuo mudar. Com
+`rounded-full` a conta é a própria definição da forma: medido 28/25 no padrão e
+32/29 com `labels`, sem ninguém recalcular. A ação é **redonda** junto: ao lado
+de uma pílula, um quadrado de cantos moles lê como a forma que não decidiu.
+
+#### A aba ativa preenche, e isso não é a regra G ao contrário
+
+`iconActive` troca o glifo pelo par sólido quando a aba é a página. É **prop e
+não derivação**: a peça não tem como saber o sólido de um ícone qualquer, e
+adivinhar por nome quebraria no build de produção, onde o nome da função é
+mangled. O mapa mora em `solidIconFor`, em `config/mobile-navigation.ts`, e é
+**chaveado pelo componente, não pela rota** — uma tabela por `href` seria uma
+segunda lista de rotas para sair de sincronia, e keyed pelo ícone ela serve as
+abas **e** o slot com uma consulta só (nove pares).
+
+A regra G existe porque 24, 20 e 16 são **redesenhos** para tamanhos diferentes;
+aqui a grade é 24 dos dois lados e muda só o preenchimento. O auditor concorda
+por construção — ele compara o número do conjunto, não o traço —, e não houve
+exceção nomeada. Medido: ativa ⇔ sólida em **12 de 12** abas.
+
+#### O realce viaja
+
+Cada item pintava o próprio fundo, e isso **teleporta**. Hoje é um marcador só,
+com o mecanismo do `Tabs` e da `Sidebar floating`: a pílula publica a caixa do
+item ativo em `--bottom-bar-marker-x/y/w/h`, e ele transiciona em
+`--duration-base` com `--ease-out` — a curva de objeto que viaja num trilho.
+
+**A tinta, e não o vidro do `Tabs`.** O precedente idêntico é a `Sidebar
+floating`, marcador dentro de placa de vidro. E o número decidiu: o
+`--glass-tone` do `Tabs` (`--background`) é rgb **10**, a pílula compõe em **16**
+e o realce de hoje em **44** — vestir aquela receita inverteria o realce de claro
+para escuro. **Sem esticão de lente**: o repositório tem zero vocabulário de mola,
+e `scaleX` está rejeitado por escrito em três lugares.
+
+Três coisas que a peça exigiu, e as três falhariam caladas:
+
+- **`offsetLeft` direto, e não a cadeia da `Sidebar`**: lá o `<li>` é `relative` e
+  vira o `offsetParent`; aqui a aba e o slot são filhos diretos da pílula.
+  `:scope > [data-active]` cobre os dois com um seletor só.
+- **Os itens não eram `relative`.** Elemento estático pinta antes de posicionado,
+  e o marcador cobriria o ícone. Medido: `elementFromPoint` no centro do ativo
+  devolve o ícone, nos dois temas. E **sem `-z-10`**, pela razão que a `Sidebar`
+  registra.
+- **Antes de medir, o próprio item pinta o realce**, no mesmo alfa, por contexto.
+  Aqui ceder **não** precisa apagar: na `Sidebar` a base do `cva` pintava o ativo
+  incondicionalmente; aqui a string é inteira da peça.
+
+Medido: trajeto de 2 a 140px com **oito amostras intermediárias**, quatro cliques
+alternados sem erro, o marcador na 4ª coluna com o slot, e acompanhando a altura
+com `labels` (58 = 58). O desalinho de ¼–½px é o arredondamento inteiro de
+`offset*` contra colunas fracionárias (66,75) — o mesmo do `Tabs`.
+
+#### O rótulo cabe dentro do realce, e não dentro do item
+
+Com `labels`, "Transações" vazava pela curva: a caixa tinha a largura do item
+(64,75px), mas o rótulo mora no arco de baixo, onde a pílula mede **~51px**. O
+`px-2` corta a caixa para dentro da corda e o `truncate` põe as reticências ali.
+Medido pela forma, com os quatro cantos da caixa de texto testados contra o
+contorno: 48,8px dentro de 64,8 com quatro abas, e **35,4 dentro de 51,4** num
+estresse de cinco colunas com "Contas a pagar". "Categorias" também trunca, de
+propósito: qualquer aba pode virar ativa.
+
+#### O catálogo seleciona em vez de navegar
+
+Os espécimes vivem num `PhoneFrame`, e `BottomBarTab` é `<Link>` — que é o certo
+no app. Clicar navegava a moldura e levava a demonstração embora. Cada palco tem
+estado próprio, e o `onClick` faz `preventDefault()` **mantendo o `href`**, que é
+o que o trecho de código ensina. **A peça não foi tocada** por isso.
+
+#### O que o navegador achou e os testes não
+
+- **`BottomBarTabs` contava os filhos e não os renderizava.** Destruturava
+  `children` para `Children.toArray` e fechava a `<div />`: a grade saía com as
+  quatro colunas certas e **vazia**, com o `tsc` e as catorze asserções passando
+  nos dois estados. Entrou a asserção 15.
+- **Uma asserção certificava algo falso.** `not.toMatch(/ring-1\s+ring-border/)`
+  passava porque o anel mora na constante importada, e ela lia o arquivo da peça
+  — media a chamada, e não o resultado. Saiu.
+- **O `curl` do SSR não provava nada**: os espécimes entram por um portal que só
+  existe no cliente, e vinham zero marcadores *e* zero abas. A prova veio de
+  `renderToStaticMarkup` num script: zero marcadores, e o fallback nos três itens.
+
+O teste de escada tem **19 asserções**, e cada uma que trata desta rodada foi
+verificada reintroduzindo o defeito. Duas foram consertadas por serem
+instrumento errado: a 12 proibia qualquer template literal, e os `setProperty` do
+marcador são valor de variável, não classe; a 19 cortava 600 caracteres e entrava
+no fallback, que carrega a classe de propósito.
+
+#### Lições de instrumento
+
+- **`\bease-out\b` casa dentro de `--ease-out`.** O `-` é fronteira de palavra; a
+  asserção acusava o próprio conserto até ganhar `(?<![-(])`.
+- **`oklab` e `oklch` são a mesma cor em notações diferentes** — e ler o cursor no
+  mesmo passo pegou o início da transição. As duas coisas juntas pareceram "o
+  hover não muda nada".
+- **Um `git stash push` num arquivo não rastreado não faz nada**, calado.
+- **Um servidor de desenvolvimento órfão** (13h35m no ar) segurava a porta 3000 e
+  impedia o harness de subir o seu.
+- **Um clique no slot não selecionou**, uma vez, e não reproduziu em cinco
+  seguintes. Registrado sem causa, porque os dados não a mostram.
+
+#### O que muda em produção
+
+Não é zero-pixel: a folga de baixo vai de 8 a 16px, o FAB ganha a tecla e fica
+redondo, a barra vira pílula, as abas respondem ao cursor e têm anel de foco, o
+ícone ativo preenche, o realce viaja, e as transições entram na escala. A troca
+de `--primary-foreground` para `--foreground` na tinta do ativo, que o plano
+listava como mudança, **não muda pixel**: no escuro as duas são rgb 250.
+
+**Nenhuma tela foi vista logada** — o app exige sessão. O que prova a migração é
+o `tsc`, a suíte, o auditor e os espécimes, que exercitam as mesmas peças.
+
 ### Backlog de migração
 
 A rodada 01 entregou tokens, componentes, documentação e o auditor, sem migrar
@@ -9553,23 +10122,22 @@ duas das correções que ele prescrevia estavam erradas, e a 02 diz quais.
 
 O que sobra, do mais barato ao mais caro:
 
-- **84 `hover:` sem par de toque.** No telefone essas superfícies não respondem
-  ao toque. A correção é **somar** `active:`, nunca remover o `hover:`.
-- **77 formatações fora dos helpers** — `Intl.*` e `toLocaleDateString` na tela,
-  cada um livre para divergir. Destino: `@/lib/formatters` e
-  `@/lib/transaction-date`.
-- **51 primitivos crus** com equivalente no design system, quase todos
-  `<button>`. Muda tipos de props: `npx tsc --noEmit` a cada arquivo.
-- **353 valores arbitrários**, hoje majoritariamente legítimos: `w-[…]` e `h-[…]`
+- ~~**84 `hover:` sem par de toque**~~ — **pago na migração do backlog**: a
+  regra **H** está em **0**, em quatro tratamentos (variante destrutiva, par
+  `active:`, realce removido onde nada clica, e a classe morta do `TableRow`).
+- ~~**77 formatações fora dos helpers**~~ — **pago**: a regra **I** está em
+  **0**, e dois helpers novos nasceram de contagem
+  (`formatDateTimeShortPtBr`, `formatMonthLongPtBr`).
+- **41 primitivos crus** com equivalente no design system (eram 51), quase
+  todos `<button>`. Muda tipos de props: `npx tsc --noEmit` a cada arquivo.
+- **306 valores arbitrários**, hoje majoritariamente legítimos: `w-[…]` e `h-[…]`
   de esqueleto, que existem para casar com a largura do conteúdo real.
 
 E o que a rodada do `Card` deixou de propósito para uma próxima, porque a
 decisão foi mexer só no design system:
 
-- **46 telas abrem com a mesma string** — `className="gap-0 overflow-hidden
-  border border-border py-0 shadow-none ring-0"` —, que hoje é `padding="none"`
-  e mais nada. `border border-border` virou o padrão, e `shadow-none`/`ring-0`
-  nunca desligaram coisa alguma.
+- ~~**46 telas abrem com a mesma string**~~ — **pago**: eram **61 cartões em
+  30 arquivos**, e hoje são `padding="none"`. O app tem zero.
 - **24 barras de topo e 18 faixas de pé feitas à mão**, em cinco e nove
   grafias. Destino: `CardToolbar` e `CardNote`.
 - **`AppAppearanceSettings`** (`src/components/settings/app-appearance-settings.tsx`)
@@ -9578,7 +10146,8 @@ decisão foi mexer só no design system:
 
 E o que a rodada do `Alert` deixou, pela mesma razão:
 
-- **11 avisos tonais feitos à mão** contra 4 que usam o componente —
+- ~~**11 avisos tonais feitos à mão**~~ — **pago**: eram **18 em 9 arquivos**,
+  e hoje são `Alert`. O que segue abaixo é o registro do que eles eram —
   `flex items-start gap-2 rounded-lg border border-X/30 bg-X-muted …` em
   `invites/accept`, `ChangePasswordDialog`, `edit-profile-dialog` e
   `credit-card-category-alerts`; e `bg-X-muted p-3 rounded-md` sem borda em
@@ -9591,10 +10160,10 @@ E o que a rodada do `Alert` deixou, pela mesma razão:
 
 E o que a rodada do `Dialog` deixou:
 
-- **32 corpos roláveis** (`min-h-0 flex-1 overflow-y-auto`) e **16 cabeçalhos**
-  com `shrink-0 px-6 …` em cinco grafias continuam escritos à mão. Destino:
-  `DialogBody` e o `DialogHeader`, que em `layout="fixed"` já dá as duas
-  coisas. Elas são redundantes hoje, não erradas.
+- ~~**32 corpos roláveis** (`min-h-0 flex-1 overflow-y-auto`)~~ — **pago**: os
+  **28** que existiam viraram `DialogBody`, e com eles os **30** `DialogFooter`
+  que escreviam recuo, sangria e — em sete — a tinta e o canto que a regra
+  **J** proíbe. Os cabeçalhos com `shrink-0 px-6 …` continuam à mão.
 - **Os 6 diálogos sem `className`** ficaram 64px mais largos (`sm` → `md`) e com
   24px de recuo em vez de 16 — consequência direta de o padrão passar a
   descrever o app. Vale conferir tela a tela se algum queria mesmo ser `sm`.
@@ -9615,9 +10184,10 @@ E o que a rodada do `Drawer` e do `Popover` deixou:
   declarar `pb-(--sheet-drawer-safe)`, e a classe que 19 telas importavam do
   chrome de folha para receber o `env()` deixou de existir junto com ele. O que
   fica são as superfícies que **não** são folha e escrevem o próprio recuo —
-  `mobile-account-menu`, `mobile-nav-island`, `install-pwa-sheet` e
-  `notifications-sheet` —, e um caso solto: `bills-toolbar.tsx`, que reescrevia
-  a classe inteira à mão em vez de importá-la.
+  `mobile-account-menu`, `install-pwa-sheet` e `notifications-sheet` —, e um
+  caso solto: `bills-toolbar.tsx`, que reescrevia a classe inteira à mão em vez
+  de importá-la. (A `mobile-nav-island` estava nesta lista e foi paga na rodada
+  82: a `BottomBar` soma `env(safe-area-inset-bottom)` dentro da própria caixa.)
 - **`DialogHeaderRow` ainda separa título e descrição com `space-y-1`.** É o
   mesmo par de identidade que saiu do `PopoverHeader` nesta rodada. Um
   `gap-0.5` a menos, e o par volta a ler como uma coisa só.
@@ -9695,9 +10265,12 @@ E o que a rodada do `Tabs` e do `Combobox` deixou:
   `ToggleGroup`** — `bills-toolbar`, `subscriptions-toolbar`,
   `bill-detail-history-list` e o `TransactionTypeSegment` de filtro. A página do
   próprio `Tabs` já ensinava essa regra enquanto o app a quebrava quatro vezes.
-- **`transactionSegmentTabClassName` tem uma sombra literal** —
-  `dark:shadow-[0_1px_2px_0_rgb(0_0_0/0.35)]` — e um `z-[1]`. Saem junto na
-  migração.
+  *(Pago no PR #7: as duas abas de verdade viraram `Tabs` na M6, e os quatro
+  filtros também — decisão do dono na N3, no lugar do `ToggleGroup`, que não tem
+  a bandeja. Zero `role="tablist"` à mão.)*
+- ~~**`transactionSegmentTabClassName` tem uma sombra literal**~~ —
+  `dark:shadow-[0_1px_2px_0_rgb(0_0_0/0.35)]` — e um `z-[1]`. *(Pagos na N3: as
+  duas constantes saíram com as 24 referências.)*
 - **`input-group.tsx:69` reimplementa a superfície de campo em forma `has-[…]`**
   — a quarta ocorrência, e a prova de que a régua era real. Não dá para consumir
   `field-classes` direto porque ali as classes vivem sob `has-`; o destino é uma
@@ -9821,7 +10394,8 @@ E o que a rodada do campo de data e dos dois cartões deixou:
 - ~~**`Button variant="tertiary"` não tem par `active:`**~~ — **pago na rodada
   29b**, na origem. E a contagem estava errada para menos: medindo as cinco
   variantes que pintam fundo, **quatro** ficavam inertes ao toque, não uma.
-  `primary`, `secondary`, `outline` e `destructive` continuam pendentes, e
+  `secondary`, `outline` e `destructive` continuam pendentes (o `primary` foi
+  pago na rodada 78), e
   agora com mecanismo: a lista vive em
   [`button-touch-response.test.ts`](src/components/ui/button-touch-response.test.ts),
   que **falha se ela crescer**.
@@ -9873,7 +10447,9 @@ E o que a rodada do campo, do formulário e da barra deixou:
   as strings copiadas, mais `monthNavDense*` (4 constantes, ramo `false` morto),
   `transactionSegment*` e o booleano `dense` costurado por três componentes.
   Destino: `Toolbar` + `ToolbarRow` + as duas réguas. São 19 `md:h-8` em 14
-  arquivos.
+  arquivos. *(Pago: as barras na M7, e os 14 `md:h-8` que sobraram fora delas
+  na N1 — `toolbarControlClassName` dentro de uma `Toolbar`, `h-8
+  pointer-coarse:h-10` fora. Zero `md:h-8`.)*
 - **4 barras de seleção com `role="toolbar"` escrito à mão**, nenhuma com foco
   itinerante — e `transactions-table.tsx:260,318` está copiado verbatim em
   `subscriptions/page-client.tsx:545,607`.
@@ -9919,9 +10495,9 @@ E o que a revisão da barra deixou:
 - ~~4 `role="tablist"` dentro de formulários~~ — **pagos** na rodada do `Radio`.
   Restam os **6** que são filtro ou aba de página, e esses continuam sendo
   trilho segmentado.
-- **`TransactionTypeSegment` é aba numa tela e filtro na outra.** Separar é
-  pré-requisito de qualquer migração dos trilhos.
-- **A cromagem de seis telas mora numa pasta de *feature*.**
+- ~~**`TransactionTypeSegment` é aba numa tela e filtro na outra.**~~ *(Pago na
+  N3: é `Tabs` nas duas, e o componente ficou só como invólucro do filtro.)*
+- ~~**A cromagem de seis telas mora numa pasta de *feature*.**~~ *(Paga na N3.)*
   `transactionSegmentContainerClassName` e `transactionSegmentTabClassName` são
   exportados de `components/transactions/` e importados por faturas, cartões,
   assinaturas e categorias — o invariante 1 no nível do sistema. Levam junto a
@@ -9929,7 +10505,8 @@ E o que a revisão da barra deixou:
 - **3 `<Input type="search">` sem a supressão do ×** em
   `transactions-filters-panel.tsx` (418, 538, 772), e o
   `FormPickerPopoverSearch`, que hoje reimplementa o que o `SearchInput` faz.
-  Destino: os quatro passam a consumir a peça.
+  Destino: os quatro passam a consumir a peça. *(Os 3 do painel pagos na N1,
+  com `onClear`; o `FormPickerPopoverSearch` continua à parte.)*
 - **A busca não existe na barra em nenhuma tela.** O catálogo agora mostra a
   forma e diz que o app não a tem; tomar a decisão é trabalho de produto.
 
@@ -10081,7 +10658,8 @@ E o que a rodada do `carousel` deixou (com o que a **29b** já fechou marcado):
   conserto de uma linha em cada, e vale para o app inteiro.
 
 - **Os três alvos de dedo por pseudo-elemento da casa medem 42, e dizem 44.**
-  `PageHeaderBack` (36), o × da `AnnouncementBar` (24) e os degraus do
+  `PageHeaderBack` (36, **pago**: hoje 32 com `-inset-2` = 46), o × da
+  `AnnouncementBar` (24) e os degraus do
   `Breadcrumb` (20) — os três somam o `inset` à caixa de **borda** na conta do
   comentário, quando o bloco que contém um absoluto é a caixa de **padding**, e
   os três controles têm 1px de borda. Medido no `::after` do carrossel antes do
@@ -10123,6 +10701,8 @@ E o que a rodada do gráfico deixou — as sete telas que não migraram, contada
 - **2 telas usam o `<Tooltip>` cru do Recharts**, que renderiza **sem tema
   nenhum** (`dashboard-installments-projection`, `category-detail-trends`).
 - **3 legendas à mão**, com `LegendStrip` sendo a mesma peça em 2 arquivos.
+  *(O `LegendStrip` — que era um arquivo só — pago na N2: é `ChartLegendContent`
+  solto no cabeçalho do histórico de cartões.)*
   Destino: `ChartLegendContent`, e a de `dashboard-expense-categories` é
   `interactive`.
 - **4 `new Intl.NumberFormat(… "BRL")` redeclarados** nos gráficos (10 no resto
@@ -10173,7 +10753,9 @@ E o que a rodada 40 deixou, ao extrair o vidro:
   ganhou `glass-material`, e a premissa passou a ser eixo em vez de nome. O que
   sobra é adoção — **nenhum consumidor usa o modo**, e o candidato honesto é uma
   superfície com conteúdo rolando por baixo, que o pintado nunca serviu.
-- **`app-header.tsx` ainda escreve o material à mão**, em `blur(8px)` sem
+- ~~**`app-header.tsx` ainda escreve o material à mão**~~ — **pago na rodada
+  80**: ele é o `TopBar`, que veste `barSurfaceClassName`. O registro antigo, em
+  `blur(8px)` sem
   vibrância, sem vestir `glass-surface` e sem o `reduced-transparency:` que o
   cabeçalho do catálogo passou a ter. Depois da rodada 51 ele é a **única**
   superfície de vidro do repositório fora da receita — as outras 11 e a folha do
@@ -10305,5 +10887,138 @@ E o que a rodada das ações por linha deixou:
 - **"O valor desce quando há botões" mora na demonstração.** Se as telas
   adotarem o gêmeo, é a primeira coisa que elas vão reescrever — e aí a linha
   do telefone vira candidata a peça.
+
+E o que a rodada do `TopBar` deixou:
+
+- **O título do desktop tem 5 grafias do mesmo `<h1>`** —
+  `truncate text-base font-medium leading-none` em `page-title.tsx` (2×),
+  `breadcrumb.tsx` (2×) e `dashboard-category-subroute-title.tsx`, que é quase
+  uma cópia do `AppBreadcrumbNav`. O `TopBarTitle` do telefone é
+  `font-semibold leading-tight`. As duas medidas continuam valendo, cada uma no
+  seu ramo; decidir uma é decisão de produto.
+- **Os 56px da barra ainda estão cravados em dois lugares fora dela**:
+  `sonner.tsx:63` (área segura + `4.5rem`) e o `top-14` /
+  `h-[calc(100dvh-3.5rem)]` da coluna do catálogo em `ds-shell.tsx`.
+- **A barra do app mora dentro do `<main>`** (o `SidebarInset`), então não é o
+  landmark `banner`. Tirá-la de lá é mudança de estrutura da casca.
+- **As quatro telas de entrada** repetem o mesmo invólucro (`flex min-h-svh
+  flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10` + a coluna
+  `max-w-sm` + a marca). A versão "Marca" do `TopBar` é a forma delas se um dia
+  precisarem de barra; hoje o que falta é um invólucro, não uma barra.
+- **O `Safari` não foi medido.** O vidro rolado e a escuta em captura foram
+  verificados no Chromium do painel.
+
+E o que a rodada da `BottomBar` deixou:
+
+- **Não verificado logado**: a barra real do app, o empate do `Dialog` com a
+  barra em `--z-modal` (50, decisão registrada; hoje o diálogo vence por ordem de
+  DOM) e o crossfade do slot da conta.
+- **Os itens do popover da conta medem 40px** (`h-10` em
+  `mobile-glass-surface.ts`), abaixo dos 44 da Fundação `mobile-toque`. O menu do
+  FAB acerta com `h-11`.
+- **`useMatchMedia` local** em `mobile-account-menu.tsx`, duplicando o
+  `useIsMobile` de `hooks/use-mobile.tsx`.
+- **Duas noções de "ativo"** para a mesma lista: a `Sidebar` em igualdade
+  (`isExactPath`), o telefone em prefixo. Em `/categories/abc` a aba acende e o
+  item da barra lateral não.
+- **Cinco cópias de `useIsomorphicLayoutEffect`** (`tabs`, `carousel`,
+  `navigation-menu`, `sidebar`, `bottom-bar`).
+- **Seis bases somadas a `safe-area-inset-bottom`** pelo app, e nenhuma lê
+  `--bottom-bar-pad`.
+- **`lib/glass-classes.ts` afirma que `--glass-sheen` não tem produtor**; tem três
+  (`tabs`, `theme-toggle`, `sidebar`).
+- **O avatar do slot da conta é `<img>` cru** com `eslint-disable`, e o `Avatar`
+  existe.
+- **`ACCOUNT_MENU_WORKSPACE_LINK_ITEMS` repete `MEMBERS_NAV_ITEM` e
+  `SETTINGS_NAV_ITEM`** com outro formato de tipo, e `/wallets` tem página e título
+  mas não está em `ROUTES` nem em navegação nenhuma.
+- **`src/components/ui/empty.tsx`, não rastreado, reprova a asserção 1 do
+  `taxonomy.test.ts`** — trabalho em andamento de outra frente.
+
+### A migração do backlog, e o que ela deixou (PR #7)
+
+As fases M1 a M10 do plano 3 correram sobre este backlog. O auditor foi de
+**540 para 354 achados**, e cinco regras zeraram: **A**, **D**, **D3**, **H** e
+**I**. O que sobra é **C** 41 · **C'** 5 · **D2** 306 · **G** 2 — e os dois
+últimos do **G** são o falso positivo já registrado aqui (o `ColorTile
+size="lg"` aplica `size-5`, e o `size` daquele sítio é decidido em tempo de
+execução).
+
+**O que zerou, em contagem:** a string do painel nos cartões (61), as larguras
+cruas do `DropdownMenuContent` (19), os itens destrutivos à mão (13), os avisos
+tonais à mão (18), a formatação fora dos helpers (41), os `hover:` sem par
+(66), os ícones no conjunto errado (42 dos 44), as cores literais (14), os
+componentes nascendo em `src/app/` (4), os corpos roláveis à mão (28), os
+`dialogFooterClass` (14), as faixas opacas `border-t bg-background` (12), os
+`role="toolbar"` sem foco itinerante (4) e o último `toast` cru do sonner.
+
+**O que a segunda passada pagou (PR #7, N1 a N10).** Os itens que a primeira
+passada deixou abertos foram todos atacados, e desta vez **logado**: o dono
+entrou no painel do navegador contra o Supabase local, e cada fase mediu as
+telas que tocou, antes e depois, a 1280px e a 375px — quando não dava para ter
+o antes na mesma sessão, pelo `git stash`. O auditor foi de **354 para 312**; C'
+zerou; C foi de 41 para **9, todos com o motivo escrito no sítio**.
+
+- ~~54 `<Label htmlFor>` à mão~~ → **0** (N7). Sobram 3 `FieldLabel htmlFor`, de
+  propósito: gatilhos com `id` fixo que o componente não repassa
+  (`subscription-category-picker`, `tx-category`, `tx-credit-card`). Todo `id`
+  que existia continua — a lição do `37543c1`, em que a primeira passada
+  apagou os `id` dos formulários de entrada e só a E2E pegou.
+- ~~41 primitivos crus~~ → **9** (N9). Os que ficam: as áreas clicáveis dos
+  cartões de conta e da notificação (o cartão ou a linha tem ações irmãs, e
+  botão dentro de botão é inválido), as células do calendário (são a grade),
+  as linhas do seletor de carteira (itens de menu fora de um `Menu`), o
+  `global-error` (substitui o layout raiz) e o `input type="color"` nativo.
+- ~~5 C'~~ → **0**: `fieldset` → `FieldSet`, `details` → `Collapsible`, e o
+  auditor passou a tratar os dois como primitivo **com** peça.
+- ~~4 `role="tablist"` à mão~~ → **0** (N3), como `Tabs` — decisão do dono.
+  A bandeja de atalhos de período fica à mão, com motivo: é grupo de
+  alternância com `aria-pressed`, não escolha entre visões.
+- ~~42 blocos `muted`~~ → **14: 8 à mão com o motivo escrito e 6 cópias em
+  esqueleto** (N8), cada um no
+  componente da forma que tinha: `Alert`, `EmptyState`, `Card variant="muted"`,
+  `FieldSet`, `DescriptionList` (rótulo + valor dentro de cartão — a moldura
+  interna sai), `Item` e descrição de campo. Ficam os poços de rolagem (o
+  `overflow-hidden` do `Card` recorta a rolagem), a face do cartão de crédito,
+  o aviso que ocupa o lugar do seletor de data e a linha de preferência de
+  notificação (é um `Field`, e a caixa é a linha dele).
+- ~~16 cabeçalhos de diálogo~~ → **0** (N5). Medido: em nove diálogos o recuo
+  à mão já era **morto** — o `DialogHeader` aplica o seu por
+  `group-data-[layout=fixed]`, mais específico. Mudaram de verdade a conta a
+  pagar (título 18 → 16px) e a folha de filtros das contas, que tinha o dobro
+  do recuo (32px) por um `px-4` somado ao da peça.
+- ~~14 `md:h-8`~~ → **0** (N1).
+- ~~Seletor de período com dois `DatePicker`~~ → `DatePicker mode="range"` (N4).
+  Medir o calendário achou um defeito anterior: a folha de filtros não avisava
+  o pai quando abria pelo botão, e a cada duas datas escolhidas uma era
+  apagada logo depois do `onChange`.
+- **Sobras que não estavam registradas**, pagas: 22 seções em `PageSection`
+  (N6 — o título passou a 16px semibold, por decisão, e o `PageSectionHeader`
+  virou grade para reservar a altura da ação, que vazava 8px no telefone); 2
+  tabelas em `TablePanel` (N10 — a barra de seleção sai de dentro da moldura
+  para cima dela); 3 buscas em `SearchInput` (N1); o `LegendStrip` (N2).
+
+**O auditor aprendeu três coisas nesta passada**, e cada uma foi medida contra
+um caso que ela errava: o filho direto de um componente com `asChild` não é
+cru (exceto sob `*Trigger`, `*Close` e `*Anchor`, que só repassam
+comportamento — sem essa ressalva a célula do calendário sumia da contagem);
+`fieldset`/`details`/`summary` têm peça; e no catálogo a prosa das props
+`description` e `title` é citação, como o `code={…}`.
+
+**O que continua aberto, com o número de hoje:**
+
+- **D2 (301 valores arbitrários) segue fora por decisão** — quase todos são
+  largura de esqueleto casando com o conteúdo real.
+- **G 2** — o falso positivo já registrado (`ColorTile size="lg"`).
+- **Três `<img>` crus**, com o motivo escrito (16px e 80px fora da escada do
+  `Avatar`).
+- **O `FormPickerPopoverSearch`** ainda reimplementa o que o `SearchInput` faz.
+- **Não medido logado, por ambiente e não por escolha:** o assistente de
+  categorias (só aparece sem categorias), os avisos de membros e de carteira
+  (só sem permissão ou sem carteira), os vazios de cartão (só sem cartão), a
+  lista de sessões (a edge `sessions` não está servida localmente e responde
+  503), a pílula do menu da fatura e o "Tentar novamente" do seletor de
+  carteira (só em erro). Nesses sítios o que sustenta a troca é o compilador,
+  os 604 testes e a mesma receita dos sítios medidos.
 
 Reproduza a qualquer momento com `npm run ds:audit`.

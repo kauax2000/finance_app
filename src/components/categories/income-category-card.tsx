@@ -9,7 +9,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
+import { CATEGORY_COLORS, CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
 import { cn } from "@/lib/utils"
 import { ChevronRightIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ColorTile } from "@/components/ui/color-tile"
@@ -30,16 +30,17 @@ export function IncomeCategoryCard({
     onEdit: () => void
     onDelete: () => void
 }) {
-    const color = category.color || "#10B981"
+    const color = category.color || CATEGORY_COLORS[0]
 
     return (
-        <Link
-            href={href}
+        // O cartão inteiro é clicável por um link esticado (::after) no título, e
+        // não por um <a> em volta de tudo: o botão de menu ficava dentro de um
+        // link, e o aria-label do link apagava o conteúdo do cartão.
+        <div
             className={cn(
-                "group block h-full rounded-xl no-underline",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                "group relative block h-full rounded-xl",
+                "has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring has-[a:focus-visible]:ring-offset-2 has-[a:focus-visible]:ring-offset-background",
             )}
-            aria-label={`Abrir categoria ${category.name}. Ver detalhes.`}
         >
             <Card
                 padding="none"
@@ -60,7 +61,12 @@ export function IncomeCategoryCard({
                                     "truncate @min-[360px]/card-header:max-w-none",
                                 )}
                             >
-                                {category.name}
+                                <Link
+                                    href={href}
+                                    className="no-underline after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none"
+                                >
+                                    {category.name}
+                                </Link>
                             </CardTitle>
                         </div>
                         <DropdownMenu>
@@ -69,7 +75,7 @@ export function IncomeCategoryCard({
                                     type="button"
                                     variant="tertiary"
                                     size="icon-lg"
-                                    className="size-8 text-muted-foreground hover:text-foreground"
+                                    className="relative z-10 size-8 text-muted-foreground hover:text-foreground active:text-foreground"
                                     aria-label={`Opções da categoria ${category.name}`}
                                     onClick={(e) => stopLinkNavigation(e)}
                                     onPointerDown={(e) => e.stopPropagation()}
@@ -78,19 +84,16 @@ export function IncomeCategoryCard({
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
-                                align="end"
-                                className="w-44"
-                                onCloseAutoFocus={(e) => e.preventDefault()}
+                                align="end" size="sm"
                             >
                                 <DropdownMenuItem onSelect={() => onEdit()}>
                                     <PencilIcon className="h-4 w-4" aria-hidden />
                                     Editar
                                 </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    className="text-destructive focus:text-destructive"
+                                <DropdownMenuItem variant="destructive"
                                     onSelect={() => onDelete()}
                                 >
-                                    <TrashIcon className="h-4 w-4" aria-hidden />
+                                    <TrashIcon aria-hidden />
                                     Excluir
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -115,6 +118,6 @@ export function IncomeCategoryCard({
                     </div>
                 </CardContent>
             </Card>
-        </Link>
+        </div>
     )
 }

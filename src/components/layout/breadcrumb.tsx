@@ -46,7 +46,7 @@ export function AppBreadcrumbNav({ pathname }: AppBreadcrumbNavProps) {
         <div className="flex min-w-0 items-center gap-2 text-sm">
             <Link
                 href={subPage.parent}
-                className="min-w-0 max-w-[45%] truncate text-muted-foreground hover:text-foreground transition-colors"
+                className="min-w-0 max-w-[45%] truncate text-muted-foreground hover:text-foreground active:text-foreground transition-colors"
             >
                 {subPage.parentTitle}
             </Link>

@@ -1,13 +1,28 @@
 "use client"
 
+import {
+    Field,
+    FieldControl,
+    FieldError,
+    FieldLabel,
+} from "@/components/ui/field"
+import { useTimeout } from "@/hooks/use-timeout"
+import { ROUTES } from "@/config/navigation"
+import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
-import { CustomForm } from "@/components/ui/form"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { CustomForm, FormInput } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import {
+    InputGroup,
+    InputGroupAddon,
+    InputGroupButton,
+    InputGroupInput,
+} from "@/components/ui/input-group"
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
 
 // Email validation regex
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -21,6 +36,7 @@ interface FieldErrors {
 
 export function ForgotPasswordForm() {
     const router = useRouter()
+    const later = useTimeout()
     const [email, setEmail] = useState("")
     const [token, setToken] = useState("")
     const [password, setPassword] = useState("")
@@ -56,8 +72,8 @@ export function ForgotPasswordForm() {
 
         if (!password) {
             errors.password = "Senha é obrigatória"
-        } else if (password.length < 6) {
-            errors.password = "A senha deve ter pelo menos 6 caracteres"
+        } else if (password.length < MIN_PASSWORD_LENGTH) {
+            errors.password = `A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres`
         }
 
         if (!confirmPassword) {
@@ -137,8 +153,8 @@ export function ForgotPasswordForm() {
             } else {
                 setSuccess(true)
                 setLoading(false)
-                setTimeout(() => {
-                    router.push("/login")
+                later(() => {
+                    router.push(ROUTES.LOGIN)
                 }, 3000)
             }
         } catch {
@@ -152,14 +168,14 @@ export function ForgotPasswordForm() {
             <div className="flex flex-col gap-6 p-6">
                 {success ? (
                     <div className="flex flex-col gap-4">
-                        <div className="bg-success-muted text-success-muted-foreground text-sm p-3 rounded-md">
-                            <p className="font-medium">Senha atualizada!</p>
-                            <p className="text-muted-foreground mt-1">
+                        <Alert tone="success" variant="plain">
+                            <AlertTitle>Senha atualizada!</AlertTitle>
+                            <AlertDescription>
                                 Você será redirecionado para o login em breve.
-                            </p>
-                        </div>
+                            </AlertDescription>
+                        </Alert>
                         <Button asChild className="w-full">
-                            <Link href="/login">Voltar ao login</Link>
+                            <Link href={ROUTES.LOGIN}>Voltar ao login</Link>
                         </Button>
                     </div>
                 ) : step === "email" ? (
@@ -170,38 +186,30 @@ export function ForgotPasswordForm() {
                             </p>
                         </div>
                         {successMessage && (
-                            <div className="bg-success-muted text-success-muted-foreground text-sm p-3 rounded-md">
-                                {successMessage}
-                            </div>
+                            <Alert tone="success" variant="plain">
+                                <AlertTitle>{successMessage}</AlertTitle>
+                            </Alert>
                         )}
                         {error ? (
-                            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                                {error}
-                            </div>
+                            <Alert tone="destructive" variant="plain">
+                                <AlertTitle>{error}</AlertTitle>
+                            </Alert>
                         ) : null}
-                        <div className="flex flex-col gap-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                placeholder="seu@email.com"
-                                value={email}
-                                onChange={(e) => {
-                                    setEmail(e.target.value)
-                                    if (fieldErrors.email) {
-                                        setFieldErrors(prev => ({ ...prev, email: undefined }))
-                                    }
-                                }}
-                                aria-invalid={!!fieldErrors.email}
-                                className={fieldErrors.email ? "border-destructive" : ""}
-                            />
-                            {fieldErrors.email && (
-                                <p className="text-control-sm font-medium text-destructive">
-                                    {fieldErrors.email}
-                                </p>
-                            )}
-                        </div>
-                        <Button type="submit" className="w-full hover:bg-primary/90" disabled={loading}>
+                        <FormInput
+                            id="email"
+                            label="Email"
+                            type="email"
+                            placeholder="seu@email.com"
+                            value={email}
+                            onChange={(e) => {
+                                setEmail(e.target.value)
+                                if (fieldErrors.email) {
+                                    setFieldErrors(prev => ({ ...prev, email: undefined }))
+                                }
+                            }}
+                            error={fieldErrors.email}
+                        />
+                        <Button type="submit" className="w-full" disabled={loading}>
                             {loading ? "Enviando..." : "Enviar token"}
                         </Button>
                     </CustomForm>
@@ -213,117 +221,89 @@ export function ForgotPasswordForm() {
                             </p>
                         </div>
                         {error ? (
-                            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                                {error}
-                            </div>
+                            <Alert tone="destructive" variant="plain">
+                                <AlertTitle>{error}</AlertTitle>
+                            </Alert>
                         ) : null}
-                        <div className="flex flex-col gap-2">
-                            <Label htmlFor="token">Token de recuperação</Label>
-                            <Input
-                                id="token"
-                                type="text"
-                                placeholder="Cole o token do email aqui"
-                                value={token}
-                                onChange={(e) => {
-                                    setToken(e.target.value)
-                                    if (fieldErrors.token) {
-                                        setFieldErrors(prev => ({ ...prev, token: undefined }))
-                                    }
-                                }}
-                                aria-invalid={!!fieldErrors.token}
-                                className={fieldErrors.token ? "border-destructive" : ""}
-                            />
-                            {fieldErrors.token && (
-                                <p className="text-control-sm font-medium text-destructive">
-                                    {fieldErrors.token}
-                                </p>
-                            )}
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <Label htmlFor="password">Nova Senha</Label>
-                            <div className="relative">
-                                <Input
-                                    id="password"
-                                    type={showPassword ? "text" : "password"}
-                                    placeholder="Digite sua nova senha"
-                                    value={password}
-                                    onChange={(e) => {
-                                        setPassword(e.target.value)
-                                        if (fieldErrors.password) {
-                                            setFieldErrors(prev => ({ ...prev, password: undefined }))
-                                        }
-                                    }}
-                                    aria-invalid={!!fieldErrors.password}
-                                    className={fieldErrors.password ? "border-destructive pr-10" : "pr-10"}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                                    tabIndex={-1}
-                                >
-                                    {showPassword ? (
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                                            <line x1="1" x2="23" y1="1" y2="23" />
-                                        </svg>
-                                    ) : (
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                            <circle cx="12" cy="12" r="3" />
-                                        </svg>
-                                    )}
-                                </button>
-                            </div>
-                            {fieldErrors.password && (
-                                <p className="text-control-sm font-medium text-destructive">
-                                    {fieldErrors.password}
-                                </p>
-                            )}
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-                            <div className="relative">
-                                <Input
-                                    id="confirmPassword"
-                                    type={showConfirmPassword ? "text" : "password"}
-                                    placeholder="Confirme sua senha"
-                                    value={confirmPassword}
-                                    onChange={(e) => {
-                                        setConfirmPassword(e.target.value)
-                                        if (fieldErrors.confirmPassword) {
-                                            setFieldErrors(prev => ({ ...prev, confirmPassword: undefined }))
-                                        }
-                                    }}
-                                    aria-invalid={!!fieldErrors.confirmPassword}
-                                    className={fieldErrors.confirmPassword ? "border-destructive pr-10" : "pr-10"}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                                    tabIndex={-1}
-                                >
-                                    {showConfirmPassword ? (
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                                            <line x1="1" x2="23" y1="1" y2="23" />
-                                        </svg>
-                                    ) : (
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                            <circle cx="12" cy="12" r="3" />
-                                        </svg>
-                                    )}
-                                </button>
-                            </div>
-                            {fieldErrors.confirmPassword && (
-                                <p className="text-control-sm font-medium text-destructive">
-                                    {fieldErrors.confirmPassword}
-                                </p>
-                            )}
-                        </div>
-                        <Button type="submit" className="w-full hover:bg-primary/90" disabled={loading}>
+                        <FormInput
+                            id="token"
+                            label="Token de recuperação"
+                            type="text"
+                            placeholder="Cole o token do email aqui"
+                            value={token}
+                            onChange={(e) => {
+                                setToken(e.target.value)
+                                if (fieldErrors.token) {
+                                    setFieldErrors(prev => ({ ...prev, token: undefined }))
+                                }
+                            }}
+                            error={fieldErrors.token}
+                        />
+                        <Field>
+                            <FieldLabel>Nova Senha</FieldLabel>
+                            <InputGroup>
+                                <FieldControl>
+    <InputGroupInput
+                                        id="password"
+                                        type={showPassword ? "text" : "password"}
+                                        placeholder="Digite sua nova senha"
+                                        value={password}
+                                        onChange={(e) => {
+                                            setPassword(e.target.value)
+                                            if (fieldErrors.password) {
+                                                setFieldErrors(prev => ({ ...prev, password: undefined }))
+                                            }
+                                        }}
+    
+                                    />
+                                </FieldControl>
+                                <InputGroupAddon align="inline-end">
+                                    <InputGroupButton
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                                        aria-pressed={showPassword}
+                                    >
+                                        {showPassword ? <EyeSlashIcon /> : <EyeIcon />}
+                                    </InputGroupButton>
+                                </InputGroupAddon>
+                            </InputGroup>
+                            {fieldErrors.password ? (
+                                <FieldError>{fieldErrors.password}</FieldError>
+                            ) : null}
+                        </Field>
+                        <Field>
+                            <FieldLabel>Confirmar Senha</FieldLabel>
+                            <InputGroup>
+                                <FieldControl>
+    <InputGroupInput
+                                        id="confirmPassword"
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        placeholder="Confirme sua senha"
+                                        value={confirmPassword}
+                                        onChange={(e) => {
+                                            setConfirmPassword(e.target.value)
+                                            if (fieldErrors.confirmPassword) {
+                                                setFieldErrors(prev => ({ ...prev, confirmPassword: undefined }))
+                                            }
+                                        }}
+    
+                                    />
+                                </FieldControl>
+                                <InputGroupAddon align="inline-end">
+                                    <InputGroupButton
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        aria-label={showConfirmPassword ? "Ocultar confirmação de senha" : "Mostrar confirmação de senha"}
+                                        aria-pressed={showConfirmPassword}
+                                    >
+                                        {showConfirmPassword ? <EyeSlashIcon /> : <EyeIcon />}
+                                    </InputGroupButton>
+                                </InputGroupAddon>
+                            </InputGroup>
+                            {fieldErrors.confirmPassword ? (
+                                <FieldError>{fieldErrors.confirmPassword}</FieldError>
+                            ) : null}
+                        </Field>
+                        <Button type="submit" className="w-full" disabled={loading}>
                             {loading ? "Atualizando..." : "Atualizar Senha"}
                         </Button>
                         <Button
@@ -340,7 +320,7 @@ export function ForgotPasswordForm() {
                 {step === "email" && (
                     <p className="text-center text-sm text-muted-foreground">
                         Lembrou a senha?{" "}
-                        <Link href="/login" className="text-primary-accent font-medium underline-offset-4 hover:underline">
+                        <Link href={ROUTES.LOGIN} className="text-primary-accent font-medium underline-offset-4 hover:underline">
                             Fazer login
                         </Link>
                     </p>

@@ -9,6 +9,7 @@ export async function sendEmailResend(args: {
   const from = Deno.env.get('RESEND_FROM')?.trim() || 'Finance App <no-reply@finance.app>'
 
   const res = await fetch('https://api.resend.com/emails', {
+    signal: AbortSignal.timeout(10_000),
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,

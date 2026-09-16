@@ -2,6 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react"
 import {
+    Field,
+    FieldControl,
+    FieldLabel,
+} from "@/components/ui/field"
+import {
   Dialog,
   DialogCloseButton,
   DialogContent,
@@ -16,8 +21,6 @@ import {
 } from "@/components/ui/sheet"
 import { CustomForm, FormInput } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
 import { DatePicker } from "@/components/ui/date-picker"
 import {
     Select,
@@ -29,7 +32,8 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile"
 import { toastError } from "@/lib/toast"
 import { supabase } from "@/lib/supabase"
-import { parseMoneyBrl } from "@/lib/money-brl"
+import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
+import { currencyBRL } from "@/lib/formatters"
 import type {
     Category,
     CreditCard,
@@ -83,13 +87,8 @@ export function PayBillDialog({
         if (!open || !input) return
         if (input.kind === "regular") {
             const b = input.bill
-            const amt =
-                input.instance.amount != null
-                    ? String(input.instance.amount)
-                    : b.amount_estimated != null
-                      ? String(b.amount_estimated)
-                      : ""
-            setAmountStr(amt.replace(".", ","))
+            const amt = input.instance.amount ?? b.amount_estimated
+            setAmountStr(amt != null ? formatMoneyBrlInput(amt) : "")
             setPaidYmd(localYmdFromDate(new Date()))
             setCategoryId(b.category_id ?? CAT_NONE)
             const pm = b.default_payment_method
@@ -98,7 +97,7 @@ export function PayBillDialog({
             setDesc(b.name)
         } else {
             const v = input.virtual
-            setAmountStr(String(v.amount_estimated).replace(".", ","))
+            setAmountStr(formatMoneyBrlInput(v.amount_estimated))
             setPaidYmd(localYmdFromDate(new Date()))
             setCategoryId(CAT_NONE)
             setPmOption("credit_card")
@@ -113,23 +112,20 @@ export function PayBillDialog({
         return `Pagar fatura · ${input.virtual.cardName}`
     }, [input])
 
+    const description =
+        input?.kind === "virtual_cc"
+            ? "A fatura fica marcada como paga. Nenhuma despesa é criada: as compras já estão lançadas no cartão."
+            : "Informe o valor real pago. Será criada uma despesa com ele."
+
     const headerBlock = isMobile ? (
         <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{
-                <>
-                    Informe o valor real pago. Será criada uma despesa e, se aplicável,
-                    a fatura do cartão ficará marcada como paga.
-                </>
-            }</DialogDescription>
+            <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
     ) : (
-        <DialogHeader className="flex shrink-0 flex-col gap-1 px-6 pt-6 pb-3 text-left sm:px-6">
-            <DialogTitle className="text-lg">{title}</DialogTitle>
-            <DialogDescription>
-                Informe o valor real pago. Será criada uma despesa e, se aplicável,
-                a fatura do cartão ficará marcada como paga.
-            </DialogDescription>
+        <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+            <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
     )
 
@@ -141,10 +137,6 @@ export function PayBillDialog({
             const amount = parseMoneyBrl(amountStr)
             if (amount == null || amount <= 0) {
                 toastError("Informe um valor válido.")
-                return
-            }
-            if (input.kind === "virtual_cc" && categoryId === CAT_NONE) {
-                toastError("Selecione uma categoria.")
                 return
             }
             const catFinal =
@@ -185,6 +177,9 @@ export function PayBillDialog({
 
             await onPaid()
             onOpenChange(false)
+        } catch (err) {
+            // Sem este catch, uma falha ao recarregar depois do pagamento escapava calada.
+            toastError(err instanceof Error ? err.message : "Não foi possível registrar o pagamento.")
         } finally {
             setSaving(false)
         }
@@ -200,38 +195,53 @@ export function PayBillDialog({
             {headerBlock}
 
             <div className="scrollbar-thin flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 sm:px-6">
-                <FormInput
-                    money
-                    mono
-                    label="Valor pago"
-                    value={amountStr}
-                    onValueChange={(v) => setAmountStr(v)}
-                    placeholder="R$ 0,00"
-                />
-                <div className="grid gap-2">
-                    <Label>Data do pagamento</Label>
-                    <DatePicker
-                        value={
-                            parseYmdLocal(paidYmd.slice(0, 10)) ??
-                            new Date()
-                        }
-                        onChange={(d) =>
-                            setPaidYmd(
-                                d ? localYmdFromDate(d) : localYmdFromDate(new Date()),
-                            )
-                        }
-                        className="text-sm"
+                {input.kind === "regular" ? (
+                    <FormInput
+                        money
+                        mono
+                        label="Valor pago"
+                        value={amountStr}
+                        onValueChange={(v) => setAmountStr(v)}
+                        placeholder="R$ 0,00"
                     />
-                </div>
-                <div className="grid gap-2">
-                    <Label>Categoria</Label>
+                ) : (
+                    <p className="text-sm text-muted-foreground">
+                        Valor da fatura:{" "}
+                        <span className="nums font-medium text-foreground">
+                            {currencyBRL(input.virtual.amount_estimated)}
+                        </span>
+                    </p>
+                )}
+                <Field>
+                    <FieldLabel>Data do pagamento</FieldLabel>
+                    <FieldControl>
+                        <DatePicker
+                            value={
+                                parseYmdLocal(paidYmd.slice(0, 10)) ??
+                                new Date()
+                            }
+                            onChange={(d) =>
+                                setPaidYmd(
+                                    d ? localYmdFromDate(d) : localYmdFromDate(new Date()),
+                                )
+                            }
+                            className="text-sm"
+                        />
+                    </FieldControl>
+                </Field>
+                {input.kind === "regular" ? (
+                <>
+                <Field>
+                    <FieldLabel>Categoria</FieldLabel>
                     <Select value={categoryId} onValueChange={setCategoryId}>
-                        <SelectTrigger
-                            data-slot="select-trigger"
-                            className="bg-background shadow-xs"
-                        >
-                            <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
+                        <FieldControl>
+                            <SelectTrigger
+                                data-slot="select-trigger"
+                                className="bg-background shadow-xs"
+                            >
+                                <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                        </FieldControl>
                         <SelectContent>
                             <SelectItem value={CAT_NONE}>— Escolha —</SelectItem>
                             {categoriesExpense.map((c) => (
@@ -241,16 +251,18 @@ export function PayBillDialog({
                             ))}
                         </SelectContent>
                     </Select>
-                </div>
-                <div className="grid gap-2">
-                    <Label>Forma de pagamento</Label>
+                </Field>
+                <Field>
+                    <FieldLabel>Forma de pagamento</FieldLabel>
                     <Select value={pmOption} onValueChange={setPmOption}>
-                        <SelectTrigger
-                            data-slot="select-trigger"
-                            className="bg-background shadow-xs"
-                        >
-                            <SelectValue />
-                        </SelectTrigger>
+                        <FieldControl>
+                            <SelectTrigger
+                                data-slot="select-trigger"
+                                className="bg-background shadow-xs"
+                            >
+                                <SelectValue />
+                            </SelectTrigger>
+                        </FieldControl>
                         <SelectContent>
                             <SelectItem value={BILL_PAYMENT_NONE}>
                                 — Não especificado —
@@ -262,17 +274,19 @@ export function PayBillDialog({
                             ))}
                         </SelectContent>
                     </Select>
-                </div>
+                </Field>
                 {pmOption === "credit_card" ? (
-                    <div className="grid gap-2">
-                        <Label>Cartão</Label>
+                    <Field>
+                        <FieldLabel>Cartão</FieldLabel>
                         <Select value={pccId || ""} onValueChange={setPccId}>
-                            <SelectTrigger
-                                data-slot="select-trigger"
-                                className="bg-background shadow-xs"
-                            >
-                                <SelectValue placeholder="Cartão" />
-                            </SelectTrigger>
+                            <FieldControl>
+                                <SelectTrigger
+                                    data-slot="select-trigger"
+                                    className="bg-background shadow-xs"
+                                >
+                                    <SelectValue placeholder="Cartão" />
+                                </SelectTrigger>
+                            </FieldControl>
                             <SelectContent>
                                 {creditCards.map((c) => (
                                     <SelectItem key={c.id} value={c.id}>
@@ -281,22 +295,22 @@ export function PayBillDialog({
                                 ))}
                             </SelectContent>
                         </Select>
-                    </div>
+                    </Field>
                 ) : null}
-                <div className="grid gap-2">
-                    <Label htmlFor="pay-desc">Descrição no extrato</Label>
-                    <Input
-                        id="pay-desc"
-                        value={desc}
-                        onChange={(e) => setDesc(e.target.value)}
-                    />
-                </div>
+                <FormInput
+                    id="pay-desc"
+                    label="Descrição no extrato"
+                    value={desc}
+                    onChange={(e) => setDesc(e.target.value)}
+                />
+                </>
+                ) : null}
             </div>
 
             {isMobile ? (
-                <DialogFooter className="gap-3 shrink-0 px-4 py-4 sm:flex-col sm:px-5">
+                <DialogFooter className="gap-3 sm:flex-col">
                     <Button type="submit" disabled={saving} className="w-full">
-                        Registrar pagamento
+                        {input.kind === "virtual_cc" ? "Marcar como paga" : "Registrar pagamento"}
                     </Button>
                     <Button
                         type="button"
@@ -309,7 +323,7 @@ export function PayBillDialog({
                     </Button>
                 </DialogFooter>
             ) : (
-                <DialogFooter className="shrink-0 gap-3 px-6 py-4">
+                <DialogFooter className="gap-3">
                     <Button
                         type="button"
                         variant="outline"
@@ -319,7 +333,7 @@ export function PayBillDialog({
                         Cancelar
                     </Button>
                     <Button type="submit" disabled={saving}>
-                        Registrar pagamento
+                        {input.kind === "virtual_cc" ? "Marcar como paga" : "Registrar pagamento"}
                     </Button>
                 </DialogFooter>
             )}

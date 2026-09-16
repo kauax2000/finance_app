@@ -1,21 +1,36 @@
 "use client"
 
+import {
+    EmptyState,
+    EmptyStateDescription,
+    EmptyStateIcon,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
+import { ActivityPageSkeleton } from "@/components/account/activity-page-skeleton"
+import {
+    ToggleGroup,
+    ToggleGroupItem,
+} from "@/components/ui/toggle-group"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
+import { formatTransactionDayMonthPtBr } from "@/lib/transaction-date"
+import { ROUTES } from "@/config/navigation"
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Badge } from "@/components/ui/badge"
-import { InformationCircleIcon } from "@heroicons/react/16/solid"
-import { ChartBarIcon, CheckCircleIcon, Cog6ToothIcon, ExclamationTriangleIcon, KeyIcon, ShieldCheckIcon, ShieldExclamationIcon, UserGroupIcon, UserIcon, UserMinusIcon, UserPlusIcon } from "@heroicons/react/24/outline"
 import {
+    Badge,
     tagChipDanger,
-    tagChipFilterIdle,
-    tagChipFilterSelected,
     tagChipInfo,
     tagChipNeutral,
     tagChipSuccess,
     tagChipWarning,
-} from "@/lib/tag-chip-classes"
+} from "@/components/ui/badge"
+import { InformationCircleIcon } from "@heroicons/react/16/solid"
+import { ChartBarIcon, CheckCircleIcon, Cog6ToothIcon, ExclamationTriangleIcon, KeyIcon, ShieldCheckIcon, ShieldExclamationIcon, UserGroupIcon, UserIcon, UserMinusIcon, UserPlusIcon } from "@heroicons/react/24/outline"
 import { cn } from "@/lib/utils"
 import { getActivities, type ActivityLog } from "@/lib/activity"
 import { useAuth } from "@/components/providers"
@@ -115,10 +130,7 @@ const formatRelativeTime = (dateString: string) => {
     if (hours < 24) return `Há ${hours}h`
     if (days < 7) return `Há ${days}d`
 
-    return date.toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "short",
-    })
+    return formatTransactionDayMonthPtBr(date.toISOString())
 }
 
 const FAMILY_TYPES = [
@@ -142,52 +154,6 @@ const filters = [
     { key: "security", label: "Segurança" },
     { key: "profile", label: "Perfil" },
 ] as const
-
-function ActivityPageSkeleton() {
-    return (
-        <div className="min-w-0 max-w-full space-y-5" role="status" aria-busy="true">
-            <div className="min-w-0 space-y-2">
-                <div className="flex h-8 min-w-0 items-end">
-                    <Skeleton className="h-3 w-36" />
-                </div>
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
-                    <CardContent className="flex flex-col p-0">
-                        <CardToolbar className="justify-end">
-                            <Skeleton className="h-3 w-28 shrink-0" />
-                        </CardToolbar>
-                        <CardToolbar>
-                            <div className="flex flex-wrap gap-2">
-                                {[1, 2, 3, 4].map((i) => (
-                                    <Skeleton key={i} className="h-8 w-24 shrink-0 rounded-full" />
-                                ))}
-                            </div>
-                        </CardToolbar>
-                        <ul className="divide-y divide-border" role="list">
-                            {[1, 2, 3, 4, 5].map((i) => (
-                                <li key={i}>
-                                    <div className="flex items-start gap-3 px-4 py-2.5">
-                                        <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
-                                        <div className="min-w-0 flex-1 space-y-1.5">
-                                            <div className="flex min-w-0 items-center gap-2">
-                                                <Skeleton className="h-4 min-w-0 max-w-[12rem] flex-1" />
-                                                <Skeleton className="h-3 w-10 shrink-0 rounded" />
-                                            </div>
-                                            <Skeleton className="h-3 w-full max-w-md" />
-                                        </div>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                        <CardNote>
-                            <Skeleton className="mt-0.5 size-3.5 shrink-0 rounded" />
-                            <Skeleton className="h-3 w-full max-w-md" />
-                        </CardNote>
-                    </CardContent>
-                </Card>
-            </div>
-        </div>
-    )
-}
 
 export default function ActivityPage() {
     const router = useRouter()
@@ -216,7 +182,7 @@ export default function ActivityPage() {
     useEffect(() => {
         if (authLoading) return
         if (!authSession) {
-            router.replace("/login")
+            router.replace(ROUTES.LOGIN)
             return
         }
         void fetchActivities()
@@ -257,15 +223,11 @@ export default function ActivityPage() {
 
     return (
         <div className="min-w-0 max-w-full space-y-5">
-            <div className="min-w-0 space-y-2">
-                <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Histórico de atividades
-                        </p>
-                    </div>
-                </div>
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <PageSection>
+                <PageSectionHeader>
+                    <PageSectionTitle>Histórico de atividades</PageSectionTitle>
+                </PageSectionHeader>
+                <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <CardToolbar className="justify-end">
                             <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
@@ -274,23 +236,27 @@ export default function ActivityPage() {
                             </p>
                         </CardToolbar>
                         <CardToolbar>
-                            <div className="flex flex-wrap gap-2">
+                            {/* Escolha única entre filtros: `ToggleGroup`, que não deixa
+                                desmarcar tudo e anuncia o item ativo como marcado. */}
+                            <ToggleGroup
+                                type="single"
+                                variant="outline"
+                                size="sm"
+                                value={filter}
+                                onValueChange={(next) => setFilter(next as typeof filter)}
+                                aria-label="Filtrar atividades"
+                                className="flex-wrap gap-2"
+                            >
                                 {filters.map(({ key, label }) => (
-                                    <button
+                                    <ToggleGroupItem
                                         key={key}
-                                        type="button"
-                                        onClick={() => setFilter(key)}
-                                        className={cn(
-                                            "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-                                            filter === key
-                                                ? tagChipFilterSelected
-                                                : tagChipFilterIdle,
-                                        )}
+                                        value={key}
+                                        className="rounded-full px-3"
                                     >
                                         {label} ({activityCounts[key]})
-                                    </button>
+                                    </ToggleGroupItem>
                                 ))}
-                            </div>
+                            </ToggleGroup>
                         </CardToolbar>
                         {filteredActivities.length > 0 ? (
                             <ul className="divide-y divide-border" role="list">
@@ -354,24 +320,19 @@ export default function ActivityPage() {
                             </ul>
                         ) : (
                             <div
-                                className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
+                                className="px-4 py-12 md:py-14"
                                 role="status"
                                 aria-live="polite"
                             >
-                                <div
-                                    className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                                    aria-hidden
-                                >
-                                    <ChartBarIcon className="size-7 text-muted-foreground" />
-                                </div>
-                                <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                                    Nenhuma atividade encontrada
-                                </h2>
-                                <p className="max-w-md text-center text-sm text-muted-foreground">
-                                    {filter === "all"
+                                <EmptyState variant="plain" size="lg">
+                                    <EmptyStateIcon><ChartBarIcon aria-hidden /></EmptyStateIcon>
+                                    <EmptyStateTitle>Nenhuma atividade encontrada</EmptyStateTitle>
+                                    <EmptyStateDescription>
+                                        {filter === "all"
                                         ? "Suas atividades aparecerão aqui."
                                         : "Tente selecionar outro filtro."}
-                                </p>
+                                    </EmptyStateDescription>
+                                </EmptyState>
                             </div>
                         )}
                         <CardNote>
@@ -382,7 +343,7 @@ export default function ActivityPage() {
                         </CardNote>
                     </CardContent>
                 </Card>
-            </div>
+            </PageSection>
         </div>
     )
 }

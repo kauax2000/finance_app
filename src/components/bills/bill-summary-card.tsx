@@ -1,6 +1,15 @@
 "use client"
 
-import { Badge } from "@/components/ui/badge"
+import { billDuePill } from "@/components/bills/bill-status"
+import {
+    DescriptionDetails,
+    DescriptionList,
+    DescriptionListItem,
+    DescriptionTerm,
+} from "@/components/ui/description-list"
+import {
+    Badge,
+} from "@/components/ui/badge"
 import {
     Card,
     CardContent,
@@ -15,33 +24,13 @@ import {
     normalizeCategoryIcon,
 } from "@/components/categories/category-appearance-fields"
 import type { BillRowWithCategory } from "@/lib/queries/fetch-bills-page-bundle"
-import { formatTransactionDmyPtBr } from "@/lib/transaction-date"
-import { cn } from "@/lib/utils"
 import {
-    tagChipDanger,
-    tagChipNeutral,
-    tagChipWarning,
-} from "@/lib/tag-chip-classes"
+    formatTransactionDmyPtBr,
+} from "@/lib/transaction-date"
+import { cn } from "@/lib/utils"
 import { ColorTile } from "@/components/ui/color-tile"
 
 const EXPENSE_CATEGORY_FALLBACK_COLOR = "var(--expense)"
-
-function cmpYmd(a: string, b: string): number {
-    return a.localeCompare(b)
-}
-
-function nextParcelStatus(
-    dueYmd: string,
-    todayYmd: string
-): { label: string; className: string } {
-    if (cmpYmd(dueYmd, todayYmd) < 0) {
-        return { label: "Atrasada", className: tagChipDanger }
-    }
-    if (dueYmd === todayYmd) {
-        return { label: "Hoje", className: tagChipWarning }
-    }
-    return { label: "Pendente", className: tagChipNeutral }
-}
 
 export type BillSummaryCardProps = {
     bill: BillRowWithCategory
@@ -72,7 +61,7 @@ export function BillSummaryCard({
     const iconId = normalizeCategoryIcon(bill.icon ?? "receipt")
 
     const nextPill =
-        nextDueYmd != null ? nextParcelStatus(nextDueYmd, todayYmd) : null
+        nextDueYmd != null ? billDuePill(nextDueYmd, todayYmd) : null
 
     return (
         <Card
@@ -82,6 +71,10 @@ export function BillSummaryCard({
                 !bill.is_active && "opacity-[0.82]"
             )}
         >
+            {/* Cru de propósito: é a área clicável do cartão, e o cartão não pode
+                ser o botão — o rodapé, logo abaixo, tem as próprias ações, e botão
+                dentro de botão é inválido. `Card interactive asChild` só serve a um
+                cartão que é inteiro a ação. */}
             <button
                 type="button"
                 className={cn(
@@ -142,51 +135,55 @@ export function BillSummaryCard({
                 </CardToolbar>
 
                 <CardContent className="space-y-3 px-4 pb-3 pt-3">
-                    <div className="rounded-lg border border-border/80 bg-muted/15 px-3 py-2.5">
-                        <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
-                            Próxima parcela
-                        </p>
-                        {nextDueYmd ? (
-                            <>
-                                <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-                                    <span className="text-sm font-medium tabular-nums">
-                                        {formatTransactionDmyPtBr(
-                                            `${nextDueYmd}T12:00:00`
-                                        )}
-                                    </span>
-                                    {nextPill ? (
-                                        <Badge
-                                            tone="neutral"
-                                            className={cn(
-                                                "shrink-0 border-0 text-xs",
-                                                nextPill.className
+                    <DescriptionList className="gap-0">
+                        <DescriptionListItem>
+                            <DescriptionTerm className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                Próxima parcela
+                            </DescriptionTerm>
+                            <DescriptionDetails>
+                                {nextDueYmd ? (
+                                    <>
+                                        <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                                            <span className="text-sm font-medium tabular-nums">
+                                                {formatTransactionDmyPtBr(
+                                                    `${nextDueYmd}T12:00:00`
+                                                )}
+                                            </span>
+                                            {nextPill ? (
+                                                <Badge
+                                                    tone="neutral"
+                                                    className={cn(
+                                                        "shrink-0 border-0 text-xs",
+                                                        nextPill.className
+                                                    )}
+                                                >
+                                                    {nextPill.label}
+                                                </Badge>
+                                            ) : null}
+                                        </div>
+                                        <div className="mt-1 text-sm text-muted-foreground tabular-nums">
+                                            {nextAmountHint != null ? (
+                                                <>
+                                                    ~
+                                                    <MoneyDisplay
+                                                        value={nextAmountHint}
+                                                        tone="muted"
+                                                        size="sm"
+                                                    />
+                                                </>
+                                            ) : (
+                                                "Valor no pagamento"
                                             )}
-                                        >
-                                            {nextPill.label}
-                                        </Badge>
-                                    ) : null}
-                                </div>
-                                <div className="mt-1 text-sm text-muted-foreground tabular-nums">
-                                    {nextAmountHint != null ? (
-                                        <>
-                                            ~
-                                            <MoneyDisplay
-                                                value={nextAmountHint}
-                                                tone="muted"
-                                                size="sm"
-                                            />
-                                        </>
-                                    ) : (
-                                        "Valor no pagamento"
-                                    )}
-                                </div>
-                            </>
-                        ) : (
-                            <p className="mt-1 text-sm text-muted-foreground">
-                                Sem parcela pendente
-                            </p>
-                        )}
-                    </div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <p className="mt-1 text-sm text-muted-foreground">
+                                        Sem parcela pendente
+                                    </p>
+                                )}
+                            </DescriptionDetails>
+                        </DescriptionListItem>
+                    </DescriptionList>
 
                     <div className="grid grid-cols-3 gap-2 text-center">
                         <div className="rounded-lg border border-border/60 bg-background/60 px-2 py-2">

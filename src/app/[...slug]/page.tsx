@@ -1,15 +1,10 @@
-import type { Metadata } from "next"
+import { notFound } from "next/navigation"
 
-import { NotFoundShell } from "../not-found-shell"
-
-export const metadata: Metadata = {
-    title: "Página não encontrada",
-    robots: {
-        index: false,
-        follow: false,
-    },
-}
-
+/**
+ * Rota desconhecida responde 404 de verdade. Renderizar a página de "não
+ * encontrada" daqui devolvia status 200 — o que buscadores e monitores leem
+ * como página válida. `notFound()` cai em `src/app/not-found.tsx`.
+ */
 export default function CatchAllUnknownPage() {
-    return <NotFoundShell />
+    notFound()
 }

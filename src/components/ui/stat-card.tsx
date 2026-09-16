@@ -210,6 +210,10 @@ function StatCardDelta({
     >
       {direction === "up" ? <ArrowUpIcon aria-hidden /> : null}
       {direction === "down" ? <ArrowDownIcon aria-hidden /> : null}
+      {/* A seta é só desenho: sem isto o leitor ouvia "12%" sem saber para onde. */}
+      {direction === "up" || direction === "down" ? (
+        <span className="sr-only">{direction === "up" ? "subiu " : "caiu "}</span>
+      ) : null}
       {children}
     </div>
   )

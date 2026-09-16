@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 
 const corsHeaders = {
@@ -56,8 +56,38 @@ Deno.serve(async (req: Request) => {
     return json(400, { error: 'endpoint and keys (p256dh, auth) are required' })
   }
 
+  // O servidor faz POST neste endereço ao enviar push: só serviços de push conhecidos.
+  let endpointUrl: URL
+  try {
+    endpointUrl = new URL(endpoint)
+  } catch {
+    return json(400, { error: 'Invalid endpoint' })
+  }
+  const host = endpointUrl.hostname
+  const allowedHost =
+    host === 'fcm.googleapis.com' ||
+    host === 'updates.push.services.mozilla.com' ||
+    host === 'web.push.apple.com' ||
+    host.endsWith('.notify.windows.com') ||
+    host.endsWith('.push.apple.com')
+  if (endpointUrl.protocol !== 'https:' || !allowedHost) {
+    return json(400, { error: 'Invalid endpoint' })
+  }
+
   const userId = authResult.user.id
   const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
+
+  // Um aparelho é um endpoint: se outra conta entrou nele antes, a inscrição dela
+  // sai, senão o push de uma pessoa chegava na tela da outra.
+  const { error: cleanupErr } = await supabaseAdmin
+    .from('push_subscriptions')
+    .delete()
+    .eq('endpoint', endpoint)
+    .neq('user_id', userId)
+  if (cleanupErr) {
+    console.error('push-subscribe: cleanup', cleanupErr)
+    return json(500, { error: 'Erro ao registrar o aparelho.' })
+  }
 
   const { error } = await supabaseAdmin.from('push_subscriptions').upsert(
     {
@@ -72,7 +102,8 @@ Deno.serve(async (req: Request) => {
   )
 
   if (error) {
-    return json(500, { error: error.message })
+    console.error('push-subscribe: upsert', error)
+    return json(500, { error: 'Erro ao registrar o aparelho.' })
   }
 
   return json(200, { ok: true })

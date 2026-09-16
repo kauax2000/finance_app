@@ -1,5 +1,6 @@
 "use client"
 
+import { parseMoneyBrl } from "@/lib/money-brl"
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import type { User } from "@supabase/supabase-js"
@@ -7,6 +8,7 @@ import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
+  DialogBody,
   DialogCloseButton,
   DialogContent,
   DialogDescription,
@@ -108,7 +110,7 @@ export function CreditCardCreateDialog({
 
         setSaving(true)
         const limitVal = creditLimit.trim()
-            ? parseFloat(creditLimit.replace(",", "."))
+            ? (parseMoneyBrl(creditLimit) ?? NaN)
             : null
         const insertRow = {
             workspace_id: workspaceId,
@@ -125,8 +127,16 @@ export function CreditCardCreateDialog({
                 ? { expiry_month: exp.month, expiry_year: exp.year }
                 : {}),
         }
-        const result = await createCreditCard(insertRow)
-        setSaving(false)
+        let result: Awaited<ReturnType<typeof createCreditCard>>
+        try {
+            result = await createCreditCard(insertRow)
+        } catch (err) {
+            toastError(err instanceof Error ? err.message : "Não foi possível cadastrar o cartão.")
+            return
+        } finally {
+            // Se a criação lançar, o botão não fica preso em "salvando".
+            setSaving(false)
+        }
 
         if (!result.ok) {
             toastError(result.errorMessage)
@@ -168,7 +178,7 @@ export function CreditCardCreateDialog({
                         onSubmit={handleCreate}
                         className="flex min-h-0 flex-1 flex-col"
                     >
-                        <div className="min-h-0 flex-1 overflow-y-auto px-4">
+                        <DialogBody>
                             <div className="space-y-3 pb-2">
                                 <CreditCardFormFields
                                     formKey={`create-global-${createFormKey}`}
@@ -189,8 +199,8 @@ export function CreditCardCreateDialog({
                                     onExpiryYearChange={setExpiryYear}
                                 />
                             </div>
-                        </div>
-                        <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
+                        </DialogBody>
+                        <DialogFooter className="flex-col">
                             <Button
                                 type="submit"
                                 size="sm"
@@ -213,14 +223,14 @@ export function CreditCardCreateDialog({
                     onSubmit={handleCreate}
                     className="flex min-h-0 flex-1 flex-col"
                 >
-                    <DialogHeader className="shrink-0 px-6 pt-6 pb-2">
+                    <DialogHeader>
                         <DialogTitle>Cadastro de cartão</DialogTitle>
                         <DialogDescription>
                             Dados para identificar o cartão nas despesas (não armazenamos o
                             número completo).
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="min-h-0 flex-1 overflow-y-auto px-6">
+                    <DialogBody>
                         <div className="space-y-3 pb-2">
                             <CreditCardFormFields
                                 formKey={`create-global-${createFormKey}`}
@@ -241,8 +251,8 @@ export function CreditCardCreateDialog({
                                 onExpiryYearChange={setExpiryYear}
                             />
                         </div>
-                    </div>
-                    <DialogFooter className="mx-0 mb-0 mt-0 shrink-0 flex-row flex-wrap justify-end gap-2 rounded-b-xl bg-background px-6 pt-4 pb-5 sm:gap-3">
+                    </DialogBody>
+                    <DialogFooter className="sm:gap-3">
                         <Button
                             type="button"
                             variant="outline"

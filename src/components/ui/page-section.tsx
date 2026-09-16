@@ -86,10 +86,17 @@ function PageSection({
  * caber um "Ver todas". É o precedente de `FormPickerPopoverEmpty` e de
  * `HoverCardBody` — quando o catálogo escreve a anatomia, falta uma peça.
  *
- * A ação se centra numa caixa de **exatamente uma linha de título**, e não com
- * `items-center` no bloco todo: com uma descrição de duas linhas, centrar no
- * bloco desce o botão para o meio do parágrafo. É a mesma conta do voltar do
- * `PageHeader`, com a variável do degrau em vez de um número.
+ * A ação se centra na **linha do título**, e não com `items-center` no bloco
+ * todo: com uma descrição de duas linhas, centrar no bloco desce o botão para o
+ * meio do parágrafo.
+ *
+ * A caixa de ações tinha a altura exata de uma linha de título (24px no `md`),
+ * e um controle é mais alto que isso: medido no dashboard, o "Ver categorias"
+ * de 32px vazava 4px para cima e para baixo a 1280px, e o de 40px vazava 8px no
+ * telefone — o respiro até o cartão caía de 16 para 8px, e o vazamento de cima
+ * invadia a seção anterior. Agora o cabeçalho é uma grade: o título e a ação
+ * dividem a primeira linha, que mede o maior dos dois, e a descrição desce para
+ * a segunda. A ação continua centrada no título, e a altura dela entra na conta.
  *
  * Título e descrição **não levam `gap`** — par de identidade.
  */
@@ -102,14 +109,20 @@ function PageSectionHeader({
   return (
     <div
       data-slot="page-section-header"
-      className={cn("flex items-start gap-4", className)}
+      className={cn(
+        "grid min-w-0 items-center",
+        actions ? "grid-cols-[minmax(0,1fr)_auto] gap-x-4" : "grid-cols-1",
+        className
+      )}
       {...props}
     >
-      <div className="flex min-w-0 flex-1 flex-col">{children}</div>
+      {/* `contents`: título e descrição viram itens da grade, sempre na primeira
+          coluna — o título na linha da ação, a descrição logo abaixo. */}
+      <div className="contents *:col-start-1 *:min-w-0">{children}</div>
       {actions ? (
         <div
           data-slot="page-section-actions"
-          className="flex h-(--page-section-title-line) shrink-0 items-center gap-2"
+          className="col-start-2 row-start-1 flex shrink-0 items-center gap-2"
         >
           {actions}
         </div>

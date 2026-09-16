@@ -84,14 +84,13 @@ const drawerContentVariants = cva(
     // As alturas saem de variáveis para uma gaveta poder baixar o teto sem
     // reescrever a fórmula: uma lista curta pede menos que 85%.
     "[--drawer-max-h:85dvh]",
-    // A área segura é da superfície. As 11 telas que hoje escrevem
-    // `pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]` à mão o fazem porque
-    // a folha não a carregava; aqui ela vem de fábrica, e some sozinha no
-    // aparelho que não tem barra de gestos.
+    // A área segura é da superfície, com a mesma conta da gaveta do `Sheet`:
+    // 24px de respiro mais a barra de gestos. Antes aqui era só o `env()`, e a
+    // mesma gaveta saía 24px mais baixa por dentro que a do `Sheet`.
     "data-[vaul-drawer-direction=bottom]:pb-(--drawer-safe)",
     "data-[vaul-drawer-direction=top]:pt-(--drawer-safe)",
-    "data-[vaul-drawer-direction=bottom]:[--drawer-safe:env(safe-area-inset-bottom,0px)]",
-    "data-[vaul-drawer-direction=top]:[--drawer-safe:env(safe-area-inset-top,0px)]",
+    "data-[vaul-drawer-direction=bottom]:[--drawer-safe:calc(--spacing(6)+env(safe-area-inset-bottom,0px))]",
+    "data-[vaul-drawer-direction=top]:[--drawer-safe:calc(--spacing(6)+env(safe-area-inset-top,0px))]",
     // A folga do topo muda com o aparelho, então ela também é variável.
     "data-[vaul-drawer-direction=bottom]:[--drawer-h:calc(100dvh-max(0.5rem,env(safe-area-inset-top,0px)))]",
     "data-[vaul-drawer-direction=top]:[--drawer-h:calc(100dvh-max(0.5rem,env(safe-area-inset-bottom,0px)))]",

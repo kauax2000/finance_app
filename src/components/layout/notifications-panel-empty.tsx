@@ -54,7 +54,7 @@ export function NotificationsPanelEmpty({
             className="flex min-h-[min(320px,50dvh)] flex-1 flex-col items-center justify-center px-4 py-10 text-center"
         >
             <div
-                className="mb-4 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted shadow-sm ring-1 ring-border/60"
+                className="mb-4 flex size-12 shrink-0 items-center justify-center rounded-xl bg-muted shadow-sm ring-1 ring-border/60"
                 aria-hidden
             >
                 <Icon className="h-6 w-6 text-muted-foreground" />

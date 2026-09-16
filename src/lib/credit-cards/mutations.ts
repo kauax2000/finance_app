@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { executeMutation } from "@/lib/offline/mutation-gateway"
+import { retryStableClientId } from "@/lib/offline/retry-client-id"
 import { dispatchFinanceCreditCardsMutated } from "@/lib/workspace-data-events"
 
 export type CreditCardInsertRow = {
@@ -23,7 +24,7 @@ export async function createCreditCard(
     | { ok: true; cardId: string; queued: boolean }
     | { ok: false; errorMessage: string }
 > {
-    const clientId = crypto.randomUUID()
+    const { clientId, settle } = retryStableClientId(row)
     const offlinePayload = { ...row, client_id: clientId }
 
     const gateway = await executeMutation({
@@ -36,7 +37,7 @@ export async function createCreditCard(
         onlineFn: async () => {
             const { data, error } = await supabase
                 .from("credit_cards")
-                .insert({ ...row, client_id: clientId })
+                .upsert({ ...row, client_id: clientId }, { onConflict: "workspace_id,client_id" })
                 .select("id")
                 .single()
 
@@ -49,6 +50,7 @@ export async function createCreditCard(
             return { cardId: data.id as string, queued: false }
         },
     })
+    if (gateway.ok) settle()
 
     if (!gateway.ok) {
         return { ok: false, errorMessage: gateway.errorMessage }

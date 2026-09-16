@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { formatMoneyBrlInput, parseMoneyBrl } from "./money-brl"
+import { formatMoneyBrlInput, formatMoneyBrlTyping, normalizeMoneyBrlOnBlur, parseMoneyBrl, roundCents } from "./money-brl"
 
 describe("parseMoneyBrl", () => {
     it("parses plain integers", () => {
@@ -44,5 +44,45 @@ describe("formatMoneyBrlInput", () => {
 
     it("returns empty for non-finite", () => {
         expect(formatMoneyBrlInput(Number.NaN)).toBe("")
+    })
+})
+
+describe("normalizeMoneyBrlOnBlur", () => {
+    it("lê valor posto por código como reais, e não como centavos", () => {
+        expect(normalizeMoneyBrlOnBlur("250")).toBe("250,00")
+        expect(normalizeMoneyBrlOnBlur("1299.9")).toBe("1.299,90")
+        expect(normalizeMoneyBrlOnBlur("12,5")).toBe("12,50")
+    })
+
+    it("mantém o que já está na máscara", () => {
+        expect(normalizeMoneyBrlOnBlur("10.000,00")).toBe("10.000,00")
+        expect(normalizeMoneyBrlOnBlur("0,05")).toBe("0,05")
+    })
+
+    it("vazio continua vazio", () => {
+        expect(normalizeMoneyBrlOnBlur("")).toBe("")
+    })
+})
+
+describe("máscara lida como número", () => {
+    // parseFloat(x.replace(",", ".")) dava 10 e 1,3 para estes dois.
+    it("milhar com ponto e centavos com vírgula", () => {
+        expect(parseMoneyBrl("10.000,00")).toBe(10000)
+        expect(parseMoneyBrl("1.299,90")).toBe(1299.9)
+    })
+})
+
+describe("roundCents", () => {
+    it("tira o resto do ponto flutuante das somas", () => {
+        expect(roundCents(0.1 + 0.2)).toBe(0.3)
+        expect(roundCents(19.99 * 3)).toBe(59.97)
+        expect(roundCents(-0.1 - 0.2)).toBe(-0.3)
+    })
+})
+
+describe("formatMoneyBrlTyping", () => {
+    it("ignora dígitos além de 15, onde o Number perderia centavos", () => {
+        expect(formatMoneyBrlTyping("1234567890123456789")).toBe(formatMoneyBrlTyping("123456789012345"))
+        expect(formatMoneyBrlTyping("123456789012345").endsWith(",45")).toBe(true)
     })
 })

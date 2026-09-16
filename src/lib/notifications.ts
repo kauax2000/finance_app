@@ -1,6 +1,7 @@
 "use client"
 
 import { supabase } from "@/lib/supabase"
+import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 
 export type AppNotificationType =
     | "transaction"
@@ -22,19 +23,25 @@ export type AppNotification = {
     created_at: string
 }
 
+/** O `message` do PostgREST vem em inglês e chegava ao toast do painel. */
+function fail(error: unknown, fallback: string): never {
+    console.error(fallback, error)
+    throw new Error(formatSupabasePostgrestError(error) ?? fallback)
+}
+
 export async function listNotifications(
     userId: string,
     workspaceId: string
 ): Promise<AppNotification[]> {
     const { data, error } = await supabase
         .from("notifications")
-        .select("*")
+        .select("body, created_at, id, metadata, read_at, title, type, user_id, workspace_id")
         .eq("user_id", userId)
         .eq("workspace_id", workspaceId)
         .order("created_at", { ascending: false })
         .limit(100)
 
-    if (error) throw new Error(error.message)
+    if (error) fail(error, "Não foi possível carregar as notificações.")
     return (data as AppNotification[]) ?? []
 }
 
@@ -44,12 +51,12 @@ export async function countUnreadNotifications(
 ): Promise<number> {
     const { count, error } = await supabase
         .from("notifications")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .eq("user_id", userId)
         .eq("workspace_id", workspaceId)
         .is("read_at", null)
 
-    if (error) throw new Error(error.message)
+    if (error) fail(error, "Não foi possível contar as notificações.")
     return count ?? 0
 }
 
@@ -65,7 +72,7 @@ export async function markRead(
         .eq("workspace_id", workspaceId)
         .eq("id", id)
 
-    if (error) throw new Error(error.message)
+    if (error) fail(error, "Não foi possível marcar como lida.")
 }
 
 export async function markAllRead(userId: string, workspaceId: string): Promise<void> {
@@ -76,7 +83,7 @@ export async function markAllRead(userId: string, workspaceId: string): Promise<
         .eq("workspace_id", workspaceId)
         .is("read_at", null)
 
-    if (error) throw new Error(error.message)
+    if (error) fail(error, "Não foi possível marcar todas como lidas.")
 }
 
 export async function deleteNotification(
@@ -91,7 +98,7 @@ export async function deleteNotification(
         .eq("workspace_id", workspaceId)
         .eq("id", id)
 
-    if (error) throw new Error(error.message)
+    if (error) fail(error, "Não foi possível excluir a notificação.")
 }
 
 export async function clearAllNotifications(
@@ -104,5 +111,5 @@ export async function clearAllNotifications(
         .eq("user_id", userId)
         .eq("workspace_id", workspaceId)
 
-    if (error) throw new Error(error.message)
+    if (error) fail(error, "Não foi possível limpar as notificações.")
 }

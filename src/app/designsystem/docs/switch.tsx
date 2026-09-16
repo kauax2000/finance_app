@@ -58,7 +58,7 @@ export default function SwitchDoc() {
       </DocSection>
 
       <DocNote title="Quando &ldquo;marcado&rdquo; não diz qual é qual">
-        Um switch nu responde &ldquo;ligado ou não&rdquo;, o que não serve para escolher entre duas coisas igualmente válidas: num alternador de tema, &ldquo;marcado&rdquo; não diz se o escuro é o estado ou o destino. O <code>AppThemeToggle</code> desenha <strong>as duas faces</strong> no trilho e acende a que está valendo — é o controle no topo deste site.
+        Um switch nu responde &ldquo;ligado ou não&rdquo;, o que não serve para escolher entre duas coisas igualmente válidas: num alternador de tema, &ldquo;marcado&rdquo; não diz se o escuro é o estado ou o destino. O <code>ThemeToggle</code> — que tem página própria — desenha <strong>as duas faces</strong> no trilho e acende a que está valendo — é o controle no topo deste site.
       </DocNote>
 
       <DocNote title="O trilho desligado usa --input-fill">

@@ -1,6 +1,9 @@
 "use client"
 
 import * as React from "react"
+import {
+    Card,
+} from "@/components/ui/card"
 import { useRouter } from "next/navigation"
 import type { User } from "@supabase/supabase-js"
 import {
@@ -14,10 +17,9 @@ import {
 } from "@/components/transactions/transaction-type-segment"
 import { CustomForm, FormInput } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Dialog,
+  DialogBody,
   DialogCloseButton,
   DialogContent,
   DialogDescription,
@@ -88,48 +90,33 @@ export function CategoryCreateDialog({
         e.preventDefault()
         if (!user || !workspaceId) return
 
+        const trimmedName = name.trim()
+        if (!trimmedName) {
+            toastError("Informe o nome da categoria.")
+            return
+        }
+
+        // O orçamento é validado antes de criar a categoria: se ele reprovasse
+        // depois, a categoria já existiria e um segundo clique a duplicava.
+        const rawBudget = type === "expense" ? editBudgetAmount.trim() : ""
+        const budgetAmt = rawBudget ? parseMoneyBrl(rawBudget) : null
+        if (rawBudget && (budgetAmt === null || budgetAmt <= 0)) {
+            toastError("Informe um valor válido em reais, maior que zero.")
+            return
+        }
+
         setSaving(true)
-
-        const categoryData = {
-            user_id: user.id,
-            workspace_id: workspaceId,
-            name,
-            type,
-            color,
-            icon,
-        }
-
-        const saveExpenseBudgetForCategory = async (
-            categoryId: string
-        ): Promise<boolean> => {
-            if (type !== "expense") return true
-            const raw = editBudgetAmount.trim()
-            if (raw.length === 0) return true
-            const amt = parseMoneyBrl(editBudgetAmount)
-            if (amt === null || amt <= 0) {
-                toastError("Informe um valor válido em reais, maior que zero.")
-                return false
-            }
-            const { error: budErr } = await upsertCategoryBudget({
-                userId: user.id,
-                workspaceId,
-                categoryId,
-                yearMonth: budgetMonthYm,
-                amount: amt,
-            })
-            if (budErr) {
-                toastError(
-                    formatSupabasePostgrestError(budErr) ??
-                        "Não foi possível salvar o orçamento.",
-                )
-                return false
-            }
-            return true
-        }
 
         const { data: inserted, error: insErr } = await supabase
             .from("categories")
-            .insert(categoryData)
+            .insert({
+                user_id: user.id,
+                workspace_id: workspaceId,
+                name: trimmedName,
+                type,
+                color,
+                icon,
+            })
             .select("id")
             .single()
 
@@ -142,12 +129,22 @@ export function CategoryCreateDialog({
             return
         }
 
-        const budgetOk = await saveExpenseBudgetForCategory(inserted.id)
-        if (!budgetOk) {
-            setSaving(false)
-            dispatchFinanceCategoriesMutated()
-            router.refresh()
-            return
+        if (budgetAmt !== null) {
+            const { error: budErr } = await upsertCategoryBudget({
+                userId: user.id,
+                workspaceId,
+                categoryId: inserted.id,
+                yearMonth: budgetMonthYm,
+                amount: budgetAmt,
+            })
+            if (budErr) {
+                // A categoria existe: fecha o diálogo e diz onde terminar.
+                toastError(
+                    `Categoria criada, mas o orçamento não foi salvo. Defina-o no detalhe da categoria. ${
+                        formatSupabasePostgrestError(budErr) ?? ""
+                    }`.trim(),
+                )
+            }
         }
 
         void invokeEdgeJson("dispatch-notifications", {
@@ -155,7 +152,7 @@ export function CategoryCreateDialog({
                 workspace_id: workspaceId,
                 type: "system",
                 title: "Categoria criada",
-                body: `Você criou a categoria “${name}”.`,
+                body: `Você criou a categoria “${trimmedName}”.`,
                 metadata: {
                     kind: "category_created",
                     critical: false,
@@ -181,18 +178,16 @@ export function CategoryCreateDialog({
 
     const fieldsBlock = (
         <div className="space-y-4 py-4">
-            <div className="space-y-2">
-                <Label htmlFor="global-cat-name">Nome</Label>
-                <Input
-                    id="global-cat-name"
-                    value={name}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setName(e.target.value)
-                    }
-                    placeholder="Ex: Alimentação"
-                    required
-                />
-            </div>
+            <FormInput
+                id="global-cat-name"
+                label="Nome"
+                value={name}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setName(e.target.value)
+                }
+                placeholder="Ex: Alimentação"
+                required
+            />
 
             <TransactionFormTypeSegment
                 value={type}
@@ -207,7 +202,7 @@ export function CategoryCreateDialog({
             />
 
             {type === "expense" ? (
-                <div className="space-y-3 rounded-lg border border-border/60 bg-muted/20 p-3">
+                <Card variant="muted" padding="sm" className="px-3">
                     <p className="text-xs text-muted-foreground">
                         Limite de despesas para {dialogBudgetPeriod.period_start} a{" "}
                         {dialogBudgetPeriod.period_end}.
@@ -219,7 +214,7 @@ export function CategoryCreateDialog({
                         value={editBudgetAmount}
                         onValueChange={setEditBudgetAmount}
                     />
-                </div>
+                </Card>
             ) : null}
         </div>
     )
@@ -241,14 +236,14 @@ export function CategoryCreateDialog({
                         onSubmit={handleSubmit}
                         className="flex min-h-0 flex-1 flex-col"
                     >
-                        <div className="min-h-0 flex-1 overflow-y-auto px-4">
+                        <DialogBody>
                             {fieldsBlock}
-                        </div>
-                        <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
+                        </DialogBody>
+                        <DialogFooter className="flex-col">
                             <Button
                                 type="submit"
                                 disabled={saving}
-                                className="h-10 w-full"
+                                size="xl" className="w-full"
                             >
                                 {saving ? "Salvando..." : "Salvar"}
                             </Button>
@@ -263,7 +258,7 @@ export function CategoryCreateDialog({
     return (
         <Dialog open={open} onOpenChange={onSheetOpenChange}>
             <DialogContent layout="fixed">
-                <DialogHeader className="shrink-0 px-6 pt-6 pb-2">
+                <DialogHeader>
                     <DialogTitle>Nova categoria</DialogTitle>
                     <DialogDescription>{description}</DialogDescription>
                 </DialogHeader>
@@ -271,10 +266,10 @@ export function CategoryCreateDialog({
                     onSubmit={handleSubmit}
                     className="flex min-h-0 flex-1 flex-col"
                 >
-                    <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-2">
+                    <DialogBody className="pb-2">
                         {fieldsBlock}
-                    </div>
-                    <DialogFooter className="mx-0 mb-0 mt-0 shrink-0 flex-row flex-wrap justify-end gap-2 rounded-b-xl bg-background px-6 pt-4 pb-5">
+                    </DialogBody>
+                    <DialogFooter>
                         <Button
                             type="button"
                             variant="outline"

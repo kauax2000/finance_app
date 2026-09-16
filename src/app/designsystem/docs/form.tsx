@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import * as React from "react"
 
 import { Button } from "@/components/ui/button"
@@ -18,6 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import {
+  ENTER_DEFERRAL_RULES,
   Form,
   FormActions,
   FormCancel,
@@ -26,12 +26,28 @@ import {
   FormSubmit,
   FormTextarea,
 } from "@/components/ui/form"
+import {
+  Field,
+  FieldControl,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 import { Kbd } from "@/components/ui/kbd"
 import { Label } from "@/components/ui/label"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 import { PhoneFrame } from "../ds-frame"
+import { Group, Spec, Stack } from "../ds-kit"
 
 export default function FormDoc() {
   return (
@@ -40,12 +56,8 @@ export default function FormDoc() {
         O formulário do projeto: o <code>&lt;form&gt;</code>, o contrato do{" "}
         <Kbd>Enter</Kbd> e as peças que compõem os átomos — <code>FormInput</code>{" "}
         sobre o <code>Field</code>, <code>FormSubmit</code> sobre o{" "}
-        <code>Button</code> e o <code>Spinner</code>. As sete regras do Enter
-        estão em{" "}
-        <Link href="/designsystem/formularios" className="underline">
-          Formulários e Enter
-        </Link>
-        , lidas da fonte.
+        <code>Button</code> e o <code>Spinner</code>. As regras do Enter
+        estão mais abaixo, lidas da fonte.
       </Usage>
 
       <DocSection
@@ -157,8 +169,8 @@ export default function FormDoc() {
         mascara sozinho, então o fundo dela <strong>já é</strong> a placa da
         folha. Ela chegou a pintar um degradê — cor cheia na ponta de fora,
         transparente encostando no fade — e isso saía como uma{" "}
-        <strong>banda</strong>: a placa é <code>--popover</code> a 60%, e um{" "}
-        <code>--popover</code> opaco no topo da tira é mais claro que ela. Cor
+        <strong>banda</strong>: a placa é <code>--background</code> translúcida
+        (40% no escuro), e a cor cheia no topo da tira não é a cor dela. Cor
         com alfa não tem cor cheia pintável sem empilhar. E ele não traz área
         segura — ela é da <strong>superfície</strong>, e o casco da folha já a
         carrega.
@@ -180,7 +192,7 @@ export default function FormDoc() {
         description="pending desce por contexto: desabilita o cancelar, e no enviar troca o rótulo, mostra o Spinner e marca aria-busy. O Enter durante o envio não duplica — o botão está desabilitado, e é isso que a busca do Enter filtra."
         code={`<Form pending={saving} onSubmit={handleSubmit}>
   <FormError>{erroGeral}</FormError>
-  <FormTextarea label="Observação" description="Enter quebra linha; ⌘+Enter envia." />
+  <FormTextarea label="Observação" description="Enter quebra linha; ⌘/Ctrl+Enter envia." />
   <FormActions>
     <FormCancel>Cancelar</FormCancel>
     <FormSubmit pendingLabel="Salvando…">Salvar</FormSubmit>
@@ -223,6 +235,54 @@ export default function FormDoc() {
         chamadas em 29 arquivos, todas trazendo o próprio <code>gap</code> —
         trocar o nome sem trocar o conteúdo seria diff sem ganho. Elas migram
         quando a tela migrar os campos e os botões.
+      </DocNote>
+
+      <DocNote title="A ação principal é a única type=&quot;submit&quot;">
+        Cancelar, alternar e todo o resto levam{" "}
+        <code>type=&quot;button&quot;</code>. Sem isso, o botão de cancelar vira
+        o alvo do <Kbd>Enter</Kbd> e o formulário fecha em vez de salvar. E dois{" "}
+        <code>type=&quot;submit&quot;</code> no mesmo formulário fazem o{" "}
+        <Kbd>Enter</Kbd> escolher o primeiro do DOM, que raramente é o que a
+        pessoa quer: se há duas ações que salvam de formas diferentes, uma delas
+        é <code>type=&quot;button&quot;</code> com <code>onClick</code> próprio.
+      </DocNote>
+
+      <Group
+        title="Onde o Enter não é sequestrado"
+        description="shouldDeferEnterToWidget, em ui/form.tsx. A lista é lida da fonte: redigitada aqui, ela já tinha divergido — seis regras na documentação contra sete no código, e a que faltava era a do seletor ancorado num campo."
+      >
+        <Spec title="As regras" meta="ENTER_DEFERRAL_RULES">
+          <Stack className="gap-2">
+            {ENTER_DEFERRAL_RULES.map((rule) => (
+              <div key={rule.match} className="flex flex-col">
+                <code className="font-mono text-2xs text-foreground">
+                  {rule.match}
+                </code>
+                <span className="text-xs text-muted-foreground">
+                  {rule.why}
+                </span>
+              </div>
+            ))}
+          </Stack>
+        </Spec>
+      </Group>
+
+      <DocSection
+        title="Os campos deferem o Enter"
+        description="Experimente: Enter no campo de texto envia; dentro da observação, quebra linha — e ⌘/Ctrl+Enter envia de lá mesmo; sobre o seletor, abre a lista."
+        previewClassName="items-stretch"
+      >
+        <EnterDeferDemo />
+      </DocSection>
+
+      <DocNote title="O portal não protege ninguém">
+        Um popover é portalizado para o <code>body</code>, mas{" "}
+        <strong>eventos de portal do React sobem pela árvore do React</strong>, e
+        a raiz do seletor é filha do formulário. Medido: o <Kbd>Enter</Kbd> no
+        campo de busca de um seletor ancorado{" "}
+        <strong>salvava a transação</strong>, com o conteúdo comprovadamente
+        fora do <code>&lt;form&gt;</code> no DOM. Todo campo de texto dentro de
+        um portal precisa da regra, mesmo parecendo estar longe do formulário.
       </DocNote>
 
       <PropsTable
@@ -556,7 +616,7 @@ function EstadoDemo() {
           label="Observação"
           rows={3}
           placeholder="Enter quebra linha"
-          description="⌘+Enter envia de dentro do textarea."
+          description="⌘/Ctrl+Enter envia de dentro do textarea."
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
         />
@@ -571,5 +631,58 @@ function EstadoDemo() {
         </FormActions>
       </Form>
     </div>
+  )
+}
+
+function EnterDeferDemo() {
+  const [n, setN] = React.useState(0)
+
+  return (
+    <Form
+      layout="none"
+      className="flex w-full max-w-sm flex-col gap-4"
+      onSubmit={(e) => {
+        e.preventDefault()
+        setN((v) => v + 1)
+      }}
+    >
+      <FieldGroup>
+        <Field>
+          <FieldLabel>Campo de texto</FieldLabel>
+          <FieldControl>
+            <Input placeholder="Enter aqui envia" />
+          </FieldControl>
+        </Field>
+        <Field>
+          <FieldLabel>Seletor</FieldLabel>
+          {/* O `FieldControl` embrulha o **gatilho**, e não a raiz do Radix:
+              `Select.Root` não renderiza nó nenhum, então o `id` não chegaria
+              a lugar algum e o rótulo apontaria para o vazio. */}
+          <Select>
+            <FieldControl>
+              <SelectTrigger>
+                <SelectValue placeholder="Enter aqui abre a lista" />
+              </SelectTrigger>
+            </FieldControl>
+            <SelectContent>
+              <SelectItem value="mercado">Mercado</SelectItem>
+              <SelectItem value="transporte">Transporte</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field>
+          <FieldLabel>Observação</FieldLabel>
+          <FieldControl>
+            <Textarea placeholder="Enter quebra linha; ⌘/Ctrl+Enter envia" />
+          </FieldControl>
+        </Field>
+      </FieldGroup>
+      <FormActions align="between">
+        <span className="self-center text-xs text-muted-foreground">
+          Envios: <span className="nums">{n}</span>
+        </span>
+        <FormSubmit>Salvar</FormSubmit>
+      </FormActions>
+    </Form>
   )
 }

@@ -1,6 +1,9 @@
 "use client"
 
 import * as React from "react"
+import {
+    Button,
+} from "@/components/ui/button"
 import Link from "next/link"
 import { PlusIcon } from "@heroicons/react/16/solid"
 import { CheckIcon } from "@heroicons/react/20/solid"
@@ -18,7 +21,13 @@ const workspaceRowIconBoxClassDefault =
 const workspaceRowIconBoxClassComfortable =
     "flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/80 text-foreground [&_svg]:text-foreground"
 
-/** Estilo alinhado ao DropdownMenuItem, sem exigir contexto Radix Menu (funciona no sheet móvel). */
+/**
+ * Estilo alinhado ao DropdownMenuItem, sem exigir contexto Radix Menu (funciona no sheet móvel).
+ *
+ * É por isso que as linhas deste arquivo são `<button>` cru, de propósito: elas
+ * são itens de menu fora de um menu, e o `DropdownMenuItem` só existe dentro do
+ * `Menu` do Radix. `Item` não serve — tem outra geometria e outro realce.
+ */
 const pickerRowInteractiveClass =
     "relative flex w-full cursor-pointer select-none items-center text-left text-sm outline-hidden transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground active:bg-accent/90 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0"
 
@@ -177,12 +186,10 @@ export function WorkspacePickerMenuBody({
                     >
                         {pendingWorkspaceInvites.map((inv) => {
                             const w = inv.workspace
-                            const token = inv.token_raw?.trim()
-                            if (!token) return null
                             return (
                                 <Link
                                     key={inv.id}
-                                    href={`/invites/accept?token=${encodeURIComponent(token)}`}
+                                    href={`/invites/accept?invite=${encodeURIComponent(inv.id)}`}
                                     onClick={() => callbacks.closePicker()}
                                     className={cn(
                                         pickerRowInteractiveClass,
@@ -340,13 +347,15 @@ export function WorkspacePickerMenuBody({
                         Não foi possível concluir esta ação
                     </p>
                     <p className="mt-1 text-xs leading-snug text-muted-foreground">{error}</p>
-                    <button
+                    <Button
                         type="button"
-                        className="mt-2 text-xs font-medium text-primary-accent underline-offset-4 hover:underline"
+                        variant="link"
+                        size="xs"
+                        className="mt-2 h-auto px-0 font-medium"
                         onClick={() => void refreshWorkspaces()}
                     >
                         Tentar novamente
-                    </button>
+                    </Button>
                 </div>
             ) : null}
 

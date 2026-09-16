@@ -1,17 +1,20 @@
 "use client"
 
+import { useTimeout } from "@/hooks/use-timeout"
+import { ROUTES } from "@/config/navigation"
+import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy"
 import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
-import { CustomForm } from "@/components/ui/form"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { CustomForm, FormInput } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 
 function ResetPasswordFormContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
+    const later = useTimeout()
     const [password, setPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
     const [loading, setLoading] = useState(false)
@@ -56,8 +59,8 @@ function ResetPasswordFormContent() {
         }
 
         // Small delay to ensure the URL is fully loaded
-        setTimeout(checkToken, 100)
-    }, [searchParams])
+        later(checkToken, 100)
+    }, [searchParams, later])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -70,8 +73,8 @@ function ResetPasswordFormContent() {
             return
         }
 
-        if (password.length < 6) {
-            setError("A senha deve ter pelo menos 6 caracteres")
+        if (password.length < MIN_PASSWORD_LENGTH) {
+            setError(`A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres`)
             setLoading(false)
             return
         }
@@ -122,8 +125,8 @@ function ResetPasswordFormContent() {
             } else {
                 setSuccess(true)
                 setLoading(false)
-                setTimeout(() => {
-                    router.push("/login")
+                later(() => {
+                    router.push(ROUTES.LOGIN)
                 }, 3000)
             }
         } catch {
@@ -152,17 +155,17 @@ function ResetPasswordFormContent() {
         return (
             <div className="w-full rounded-xl border bg-card text-card-foreground shadow-sm">
                 <div className="flex flex-col gap-6 p-6">
-                    <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
-                        <p className="font-medium">Link expirado ou inválido</p>
-                        <p className="text-muted-foreground mt-1">
+                    <Alert tone="destructive" variant="plain">
+                        <AlertTitle>Link expirado ou inválido</AlertTitle>
+                        <AlertDescription>
                             O link de recuperação expirou. Por favor, solicite um novo link.
-                        </p>
-                    </div>
+                        </AlertDescription>
+                    </Alert>
                     <Button asChild className="w-full">
                         <Link href="/forgot-password">Solicitar novo link</Link>
                     </Button>
                     <p className="text-center text-sm text-muted-foreground">
-                        <Link href="/login" className="text-primary-accent font-medium underline-offset-4 hover:underline">
+                        <Link href={ROUTES.LOGIN} className="text-primary-accent font-medium underline-offset-4 hover:underline">
                             Voltar ao login
                         </Link>
                     </p>
@@ -176,53 +179,49 @@ function ResetPasswordFormContent() {
             <div className="flex flex-col gap-6 p-6">
                 {success ? (
                     <div className="flex flex-col gap-4">
-                        <div className="bg-success-muted text-success-muted-foreground text-sm p-3 rounded-md">
-                            <p className="font-medium">Senha atualizada!</p>
-                            <p className="text-muted-foreground mt-1">
+                        <Alert tone="success" variant="plain">
+                            <AlertTitle>Senha atualizada!</AlertTitle>
+                            <AlertDescription>
                                 Você será redirecionado para o login em breve.
-                            </p>
-                        </div>
+                            </AlertDescription>
+                        </Alert>
                         <Button asChild className="w-full">
-                            <Link href="/login">Voltar ao login</Link>
+                            <Link href={ROUTES.LOGIN}>Voltar ao login</Link>
                         </Button>
                     </div>
                 ) : (
                     <CustomForm onSubmit={handleSubmit} className="flex flex-col gap-4">
                         {error && (
-                            <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
-                                {error}
-                            </div>
+                            <Alert tone="destructive" variant="plain">
+                                <AlertTitle>{error}</AlertTitle>
+                            </Alert>
                         )}
-                        <div className="flex flex-col gap-2">
-                            <Label htmlFor="password">Nova Senha</Label>
-                            <Input
-                                id="password"
-                                type="password"
-                                placeholder="••••••••"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                            />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-                            <Input
-                                id="confirmPassword"
-                                type="password"
-                                placeholder="••••••••"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                required
-                            />
-                        </div>
-                        <Button type="submit" className="w-full hover:bg-primary/90" disabled={loading}>
+                        <FormInput
+                            id="password"
+                            label="Nova Senha"
+                            type="password"
+                            placeholder="••••••••"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                        <FormInput
+                            id="confirmPassword"
+                            label="Confirmar Senha"
+                            type="password"
+                            placeholder="••••••••"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                        />
+                        <Button type="submit" className="w-full" disabled={loading}>
                             {loading ? "Atualizando..." : "Atualizar Senha"}
                         </Button>
                     </CustomForm>
                 )}
 
                 <p className="text-center text-sm text-muted-foreground">
-                    <Link href="/login" className="text-primary-accent font-medium underline-offset-4 hover:underline">
+                    <Link href={ROUTES.LOGIN} className="text-primary-accent font-medium underline-offset-4 hover:underline">
                         Voltar ao login
                     </Link>
                 </p>

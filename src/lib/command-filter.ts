@@ -20,12 +20,17 @@
  * palavra aparece no texto daquela página. Um campo que diz "buscar componente"
  * precisa que o componente venha primeiro: **o nome pesa mais que o corpo**.
  *
- * | Onde casou | Nota |
- * | --- | --- |
- * | começo do rótulo | 1 |
- * | meio do rótulo | 0,8 |
- * | no corpo (`keywords`) | 0,4 |
- * | em lugar nenhum | 0 |
+ * | Onde casou | Nota | Exemplo |
+ * | --- | --- | --- |
+ * | o rótulo inteiro (sem espaço, hífen nem pontuação) | 1 | `datepicker` → Date Picker |
+ * | começo do rótulo | 0,9 | `drop` → Dropdown Menu |
+ * | começo de uma palavra | 0,8 | `select` → Native Select |
+ * | meio do rótulo, ignorando espaço e hífen | 0,7 | `moneydisp` → Money Display, `tton` → Button |
+ * | cada palavra da consulta começa uma palavra, em qualquer ordem | 0,6 | `menu drop` |
+ * | no corpo (`keywords`) | 0,4 | |
+ * | em lugar nenhum | 0 | |
+ *
+ * Sem subsequência difusa em nenhum degrau: é o defeito do cmdk descrito acima.
  *
  * **Não somar um degrau de prefixo para `keywords`.** Ele reordenaria a paleta
  * do catálogo, e esta extração promete não mudar o comportamento dela.
@@ -68,8 +73,18 @@ export function commandFilter(
   if (!q) return 1
 
   const rotulo = normalizeSearchText(value)
-  if (rotulo.startsWith(q)) return 1
-  if (rotulo.includes(q)) return 0.8
+  const compacto = (s: string) => s.replace(/[^a-z0-9]/g, "")
+  const qc = compacto(q)
+  const rc = compacto(rotulo)
+  const palavras = rotulo.split(/[^a-z0-9]+/).filter(Boolean)
+
+  if (qc && rc === qc) return 1
+  if (rotulo.startsWith(q)) return 0.9
+  if (qc && palavras.some((p) => p.startsWith(qc))) return 0.8
+  if (qc && rc.includes(qc)) return 0.7
+  const termos = q.split(/[^a-z0-9]+/).filter(Boolean)
+  if (termos.length > 1 && termos.every((t) => palavras.some((p) => p.startsWith(t))))
+    return 0.6
 
   const corpo = normalizeSearchText((keywords ?? []).join(" "))
   return corpo.includes(q) ? 0.4 : 0

@@ -16,7 +16,7 @@ import { buttonVariants } from "./button"
  * `toggle.tsx`, `tabs.tsx`, `menubar.tsx`, `item.tsx` e `calendar.tsx`; o
  * conserto passou a morar na origem.
  *
- * E o par escuro entra junto pela aritmética que o `AppThemeToggle` já pagou:
+ * E o par escuro entra junto pela aritmética que o `ThemeToggle` já pagou:
  * `&:active` e `&:is(.dark *)` empatam em especificidade, e o `dark:` é emitido
  * depois — sem `dark:active:`, o realce de toque perderia para o de tema, calado
  * e só num tema.
@@ -60,18 +60,12 @@ describe("resposta ao toque do Button", () => {
   })
 
   /**
-   * As que ainda **não** têm o par, medidas.
-   *
-   * A rodada que criou este teste foi autorizada a consertar `tertiary`, que é
-   * o que a seta do carrossel veste. Medindo as outras, o defeito é maior do que
-   * o backlog dizia: **quatro das cinco** variantes que pintam fundo ficam
-   * inertes no dedo, e não uma.
-   *
-   * A lista fica escrita em vez de o teste ser afrouxado, e a asserção 3 é o que
-   * impede que ela **cresça**: uma variante nova nasce com o par, ou o teste cai.
-   * Cada nome sai daqui quando o conserto dele for autorizado.
+   * As que ainda **não** têm o par: nenhuma. A lista chegou a ter quatro
+   * nomes (a rodada 29b consertou `tertiary`, a 78 o `primary`, o plano 3 os
+   * outros três). Ela fica, vazia, porque a asserção 3 é o que impede uma
+   * variante nova de nascer sem o par.
    */
-  const PENDENTES = ["primary", "secondary", "outline", "destructive"] as const
+  const PENDENTES = [] as const
 
   it("2. quem já foi consertado pinta no toque o mesmo que pinta no cursor", () => {
     for (const variant of PESOS_QUE_PREENCHEM) {

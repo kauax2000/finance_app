@@ -249,7 +249,7 @@ function useAlturaCheia() {
  */
 const COLLAPSIBLE_PEEK_SHELL = [
   "overflow-hidden",
-  "h-(--collapsible-peek) has-data-[state=open]:h-(--collapsible-full)",
+  "h-(--collapsible-peek) has-[>[data-slot=collapsible-content][data-state=open]]:h-(--collapsible-full)",
 
   // A rampa, **proporcional com teto**. Fixa em 40px ela comia dois terços do
   // degrau `sm`: 40 de rampa num peek de 60 deixa uma linha nítida e duas
@@ -259,7 +259,7 @@ const COLLAPSIBLE_PEEK_SHELL = [
   // `_-_` obrigatório no `-` binário: com espaço literal a classe é cortada no
   // meio, a rampa vira inválida em cascata e a máscara cai para `none`.
   "[mask-image:linear-gradient(to_bottom,#000_calc(100%_-_min(2.5rem,40%)),transparent)]",
-  "has-data-[state=open]:[mask-image:none]",
+  "has-[>[data-slot=collapsible-content][data-state=open]]:[mask-image:none]",
 ].join(" ")
 
 function CollapsibleContent({

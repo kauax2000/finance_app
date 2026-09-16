@@ -63,6 +63,7 @@ type DatePickerSize = "sm" | "md" | "lg" | "xl"
 type DatePickerBaseProps = {
   id?: string
   "aria-labelledby"?: string
+  "aria-describedby"?: string
   "aria-invalid"?: boolean
   disabled?: boolean
   className?: string
@@ -125,6 +126,7 @@ export function DatePicker(props: DatePickerProps) {
   const {
     id,
     "aria-labelledby": ariaLabelledBy,
+    "aria-describedby": ariaDescribedBy,
     "aria-invalid": ariaInvalid,
     disabled,
     className,
@@ -181,6 +183,9 @@ export function DatePicker(props: DatePickerProps) {
             type="button"
             disabled={disabled}
             aria-labelledby={ariaLabelledBy}
+            // O `FieldControl` injeta a descrição e o erro aqui; sem repassar,
+            // o leitor de tela nunca os lia.
+            aria-describedby={ariaDescribedBy}
             aria-invalid={ariaInvalid}
             data-slot="date-picker-trigger"
             data-size={size}

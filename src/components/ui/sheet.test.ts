@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest"
  * Ela nasceu como a régua do `EdgePanel`, que era um componente à parte; a
  * rodada 64 dissolveu aquele arquivo aqui, e o teste veio junto com o `cva`.
  *
- * Cada asserção aqui nomeia o defeito que a produziu, e as sete foram
+ * Cada asserção aqui nomeia o defeito que a produziu, e as nove foram
  * verificadas **reintroduzindo** esse defeito. É o procedimento que
  * `glass.test.ts` e `scroll-fade.test.ts` já usam, e é o único jeito de saber
  * que a asserção testa o código e não o comentário.
@@ -50,7 +50,12 @@ describe("régua do Sheet", () => {
     expect(EIXO_SIDE).not.toMatch(/\bh-full\b/)
     // E a altura das laterais vem do par de âncoras, não de uma medida.
     for (const lado of ["right", "left"] as const) {
-      const l = EIXO_SIDE.slice(EIXO_SIDE.indexOf(`${lado}:`))
+      // A fatia para no lado seguinte: ir até o fim do eixo deixava `right`
+      // passar com os tokens de `left`.
+      const i = EIXO_SIDE.indexOf(`${lado}:`)
+      expect(i, lado).toBeGreaterThan(-1)
+      const depois = LADOS.map((o) => EIXO_SIDE.indexOf(`${o}:`, i + 1)).filter((n) => n > i)
+      const l = EIXO_SIDE.slice(i, depois.length ? Math.min(...depois) : undefined)
       expect(l, lado).toContain("--sheet-gap-block-start")
       expect(l, lado).toContain("--sheet-gap-block-end")
     }

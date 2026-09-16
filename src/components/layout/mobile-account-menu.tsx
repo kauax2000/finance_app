@@ -1,5 +1,6 @@
 "use client"
 
+import { useIsMobile } from "@/hooks/use-mobile"
 import * as React from "react"
 import Link from "next/link"
 import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/20/solid"
@@ -31,8 +32,8 @@ import {
     MOBILE_GLASS_MENU_INNER_CLASSNAME,
     MOBILE_GLASS_MENU_ROW_CLASSNAME,
     MOBILE_GLASS_MENU_SEPARATOR_CLASSNAME,
-} from "@/components/layout/mobile-glass-surface"
-import { AppThemeToggle } from "@/components/settings/app-theme-toggle"
+} from "@/lib/mobile-glass-surface"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { cn } from "@/lib/utils"
 
 export type MobileAccountMenuProps = {
@@ -41,22 +42,6 @@ export type MobileAccountMenuProps = {
 
 const rowButtonClass = MOBILE_GLASS_MENU_ROW_CLASSNAME
 
-const MOBILE_POPOVER_X_CENTER_QUERY = "(max-width: 767px)"
-
-function useMatchMedia(query: string): boolean {
-    const [matches, setMatches] = React.useState(false)
-
-    React.useEffect(() => {
-        const media = window.matchMedia(query)
-        const update = () => setMatches(media.matches)
-
-        update()
-        media.addEventListener("change", update)
-        return () => media.removeEventListener("change", update)
-    }, [query])
-
-    return matches
-}
 
 /**
  * Anchor virtual que espelha os limites verticais do trigger (avatar) mas fixa
@@ -151,7 +136,7 @@ export function MobileAccountMenu({ children }: MobileAccountMenuProps) {
 
     const [open, setOpen] = React.useState(false)
     const triggerRef = React.useRef<HTMLElement | null>(null)
-    const isMobileCenter = useMatchMedia(MOBILE_POPOVER_X_CENTER_QUERY)
+    const isMobileCenter = useIsMobile()
     const centeredAnchorRef = React.useRef(
         createCenteredViewportAnchor(triggerRef)
     )
@@ -203,7 +188,7 @@ export function MobileAccountMenu({ children }: MobileAccountMenuProps) {
                                 onPointerDown={(e) => e.stopPropagation()}
                             >
                                 <span className="text-sm text-foreground">Tema</span>
-                                <AppThemeToggle className="ml-auto shrink-0" />
+                                <ThemeToggle className="ml-auto shrink-0" />
                             </div>
                         </div>
 
@@ -283,11 +268,8 @@ export function MobileAccountMenu({ children }: MobileAccountMenuProps) {
                             <div className="flex shrink-0 flex-col px-2.5 pt-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom,0px))]">
                                 <Button
                                     type="button"
-                                    variant="tertiary"
-                                    className={cn(
-                                        rowButtonClass,
-                                        "text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                    )}
+                                    variant="destructive"
+                                    className={rowButtonClass}
                                     onClick={() => {
                                         closeMenu()
                                         void signOut()

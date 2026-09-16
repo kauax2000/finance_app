@@ -1,23 +1,20 @@
 "use client"
 
+import { compareYmd } from "@/lib/transaction-date"
+import { billInstancePill, billDaysDeltaLabel } from "@/components/bills/bill-status"
 import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { MoneyDisplay } from "@/components/ui/money-display"
 import {
-    transactionSegmentContainerClassName,
-    transactionSegmentTabClassName,
-} from "@/components/transactions/transaction-type-segment"
+    Badge,
+} from "@/components/ui/badge"
+import { MoneyDisplay } from "@/components/ui/money-display"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { paymentMethodLabel } from "@/lib/payment-methods"
 import type { BillInstance } from "@/lib/supabase"
-import { formatTransactionDmyPtBr } from "@/lib/transaction-date"
-import { cn } from "@/lib/utils"
 import {
-    tagChipDanger,
-    tagChipNeutral,
-    tagChipSuccess,
-    tagChipWarning,
-} from "@/lib/tag-chip-classes"
+    formatTransactionDmyPtBr,
+} from "@/lib/transaction-date"
+import { cn } from "@/lib/utils"
 
 export type BillHistoryTab = "pending" | "paid" | "skipped" | "all"
 
@@ -30,41 +27,13 @@ const TABS: { value: BillHistoryTab; label: string }[] = [
 
 const PAGE = 30
 
-function cmpYmd(a: string, b: string): number {
-    return a.localeCompare(b)
-}
-
-function daysDeltaLabel(dueYmd: string, todayYmd: string): string {
-    const partsDue = dueYmd.split("-").map((x) => Number.parseInt(x, 10))
-    const partsTo = todayYmd.split("-").map((x) => Number.parseInt(x, 10))
-    const dDue = new Date(partsDue[0] ?? 1970, (partsDue[1] ?? 1) - 1, partsDue[2] ?? 1)
-    const dTo = new Date(partsTo[0] ?? 1970, (partsTo[1] ?? 1) - 1, partsTo[2] ?? 1)
-    const ms = dDue.getTime() - dTo.getTime()
-    const days = Math.round(ms / 86400000)
-    if (days === 0) return "hoje"
-    if (days > 0) return `em ${days}d`
-    return `há ${Math.abs(days)}d`
-}
-
 function instanceDotClass(inst: BillInstance, todayYmd: string): string {
     if (inst.status === "paid") return "bg-success"
     if (inst.status === "skipped") return "bg-muted-foreground/50"
     const due = inst.due_date.slice(0, 10)
-    if (cmpYmd(due, todayYmd) < 0) return "bg-destructive"
+    if (compareYmd(due, todayYmd) < 0) return "bg-destructive"
     if (due === todayYmd) return "bg-warning"
     return "bg-muted-foreground"
-}
-
-function statusBadge(inst: BillInstance, todayYmd: string) {
-    if (inst.status === "paid")
-        return { label: "Paga", className: tagChipSuccess }
-    if (inst.status === "skipped")
-        return { label: "Ignorada", className: tagChipNeutral }
-    const due = inst.due_date.slice(0, 10)
-    if (cmpYmd(due, todayYmd) < 0)
-        return { label: "Atrasada", className: tagChipDanger }
-    if (due === todayYmd) return { label: "Hoje", className: tagChipWarning }
-    return { label: "Pendente", className: tagChipNeutral }
 }
 
 function filterInstances(
@@ -129,32 +98,25 @@ export function BillDetailHistoryList({
 
     return (
         <div className="space-y-3">
-            <div
-                className={cn(transactionSegmentContainerClassName, "w-full flex-wrap")}
-                role="tablist"
-                aria-label="Filtrar histórico"
+            <Tabs
+                value={tab}
+                onValueChange={(next) => {
+                    setTab(next as BillHistoryTab)
+                    setShown(PAGE)
+                }}
+                className="w-full md:w-fit"
             >
-                {TABS.map((t) => {
-                    const selected = tab === t.value
-                    return (
-                        <Button
-                            key={t.value}
-                            type="button"
-                            role="tab"
-                            aria-selected={selected}
-                            size="sm"
-                            variant="tertiary"
-                            className={transactionSegmentTabClassName(selected)}
-                            onClick={() => {
-                                setTab(t.value)
-                                setShown(PAGE)
-                            }}
-                        >
+                {/* `md:w-fit`, e não `md:w-auto`: aqui o pai é bloco, e uma moldura
+                    `flex` com largura automática ocupa a folha inteira. O trilho
+                    antigo era `inline-flex` e tinha a largura dos rótulos. */}
+                <TabsList aria-label="Filtrar histórico" className="w-full md:w-fit">
+                    {TABS.map((t) => (
+                        <TabsTrigger key={t.value} value={t.value}>
                             {t.label}
-                        </Button>
-                    )
-                })}
-            </div>
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
+            </Tabs>
 
             <div className="space-y-1">
                 {visible.length === 0 ? (
@@ -164,7 +126,7 @@ export function BillDetailHistoryList({
                 ) : (
                     visible.map((inst) => {
                         const due = inst.due_date.slice(0, 10)
-                        const badge = statusBadge(inst, todayYmd)
+                        const badge = billInstancePill(inst, todayYmd)
                         const pm =
                             inst.payment_method != null
                                 ? paymentMethodLabel(inst.payment_method)
@@ -172,7 +134,7 @@ export function BillDetailHistoryList({
                         return (
                             <div
                                 key={inst.id}
-                                className="flex flex-col gap-2 rounded-lg px-3 py-2.5 hover:bg-muted/40"
+                                className="flex flex-col gap-2 rounded-lg px-3 py-2.5"
                             >
                                 <div className="flex items-start gap-3">
                                     <span
@@ -189,7 +151,7 @@ export function BillDetailHistoryList({
                                                     `${due}T12:00:00`
                                                 )}
                                                 <span className="ml-1.5 text-xs font-normal text-muted-foreground">
-                                                    ({daysDeltaLabel(due, todayYmd)})
+                                                    ({billDaysDeltaLabel(due, todayYmd, { compact: true })})
                                                 </span>
                                             </p>
                                             <div className="shrink-0 text-right tabular-nums">

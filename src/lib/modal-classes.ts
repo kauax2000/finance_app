@@ -1,6 +1,6 @@
 /**
- * A superfície das peças modais — uma só, para as cinco, **e a mesma da
- * superfície flutuante**.
+ * A superfície das peças modais — uma só, para as quatro. **Não é** a da
+ * superfície flutuante: esta pinta `--background`, aquela `--popover`.
  *
  * `Dialog`, `AlertDialog`, `Sheet` e `Drawer` pintam a mesma
  * placa. Ela já esteve escrita no `cva` do `dialog.tsx` mais `bg-background`

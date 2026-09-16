@@ -1,5 +1,13 @@
 "use client"
 
+import {
+    EmptyState,
+    EmptyStateActions,
+    EmptyStateDescription,
+    EmptyStateIcon,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
+import { currencyBRL, numberBR } from "@/lib/formatters"
 import { ArrowTopRightOnSquareIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
 import * as React from "react"
@@ -21,6 +29,8 @@ import {
 } from "@/lib/category-expense-month-rows"
 import type { Transaction } from "@/lib/supabase"
 import { TransactionsToolbar } from "@/components/transactions/transactions-toolbar"
+import { toolbarControlClassName } from "@/components/ui/toolbar"
+import { cn } from "@/lib/utils"
 import { TransactionsActiveFiltersChips } from "@/components/transactions/transactions-active-filters-chips"
 import { TransactionsTable } from "@/components/transactions/transactions-table"
 import { TransactionFormDialog } from "@/components/transactions/transaction-form-dialog"
@@ -39,11 +49,6 @@ import {
 } from "@/components/ui/alert-dialog"
 
 const PAGE_SIZE = 100
-
-const currencyFmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-})
 
 export function CategoryEmbeddedTransactions({
     categoryType,
@@ -289,7 +294,7 @@ export function CategoryEmbeddedTransactions({
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                className="h-10 min-w-0 flex-1 gap-2 px-2 text-xs md:h-8 md:w-auto"
+                                className={cn(toolbarControlClassName, "min-w-0 flex-1 gap-2 px-2 text-xs md:w-auto")}
                             >
                                 <Link href={transactionsListHref}>
                                     <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />
@@ -435,90 +440,80 @@ export function CategoryEmbeddedTransactions({
                     ) : null}
 
                     {!displayHasNoTransactions && !displayHasNoMatches ? (
-                        <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
-                            <CardContent className="relative flex flex-col p-0">
-                                <TransactionsTable
-                                    transactions={displayTransactions}
-                                    selectedIds={selectedIds}
-                                    setSelectedIds={setSelectedIds}
-                                    sortKey={sortKey}
-                                    sortDir={sortDir}
-                                    onToggleSort={toggleSort}
-                                    openTransactionDetail={openTransactionDetail}
-                                    onDeleteSingle={(transaction) =>
-                                        setPendingDelete({ mode: "single", transaction })
-                                    }
-                                    onDeleteBulk={(ids) =>
-                                        setPendingDelete({ mode: "bulk", ids })
-                                    }
-                                    page={page}
-                                    setPage={setPage}
-                                    pageSize={PAGE_SIZE}
-                                    totalCount={displayTotalCount}
-                                    invoicePaidByCardClose={invoicePaidByCardClose}
-                                />
-                            </CardContent>
-                        </Card>
+                        <TransactionsTable
+                            transactions={displayTransactions}
+                            selectedIds={selectedIds}
+                            setSelectedIds={setSelectedIds}
+                            sortKey={sortKey}
+                            sortDir={sortDir}
+                            onToggleSort={toggleSort}
+                            openTransactionDetail={openTransactionDetail}
+                            onDeleteSingle={(transaction) =>
+                                setPendingDelete({ mode: "single", transaction })
+                            }
+                            onDeleteBulk={(ids) =>
+                                setPendingDelete({ mode: "bulk", ids })
+                            }
+                            page={page}
+                            setPage={setPage}
+                            pageSize={PAGE_SIZE}
+                            totalCount={displayTotalCount}
+                            invoicePaidByCardClose={invoicePaidByCardClose}
+                        />
                     ) : displayHasNoMatches ? (
-                        <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                        <Card padding="none">
                             <CardContent
-                                className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
+                                className="px-4 py-12 md:py-14"
                                 role="status"
                                 aria-live="polite"
                             >
-                                <div
-                                    className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                                    aria-hidden
-                                >
-                                    <MagnifyingGlassIcon className="size-7 text-muted-foreground" />
-                                </div>
-                                <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                                    Nenhuma transação com esses filtros
-                                </h2>
-                                <p className="mb-6 max-w-md text-center text-sm text-muted-foreground">
-                                    Tente outro tipo (receita/despesa), ampliar o período ou ajustar os filtros
-                                    avançados.
-                                </p>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="xl"
-                                    className="min-w-[10rem] text-xs"
-                                    onClick={() => {
-                                        resetAllFilters()
-                                    }}
-                                >
-                                    Limpar filtros
-                                </Button>
+                                <EmptyState variant="plain" size="lg">
+                                    <EmptyStateIcon><MagnifyingGlassIcon aria-hidden /></EmptyStateIcon>
+                                    <EmptyStateTitle>Nenhuma transação com esses filtros</EmptyStateTitle>
+                                    <EmptyStateDescription>
+                                        Tente outro tipo (receita/despesa), ampliar o período ou ajustar os filtros
+                                        avançados.
+                                    </EmptyStateDescription>
+                                    <EmptyStateActions>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="xl"
+                                            className="min-w-[10rem] text-xs"
+                                            onClick={() => {
+                                                resetAllFilters()
+                                            }}
+                                        >
+                                            Limpar filtros
+                                        </Button>
+                                    </EmptyStateActions>
+                                </EmptyState>
                             </CardContent>
                         </Card>
                     ) : (
-                        <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                        <Card padding="none">
                             <CardContent
-                                className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
+                                className="px-4 py-12 md:py-14"
                                 role="status"
                                 aria-live="polite"
                             >
-                                <div
-                                    className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                                    aria-hidden
-                                >
-                                    <ReceiptPercentIcon className="size-7 text-muted-foreground" />
-                                </div>
-                                <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                                    Comece a registrar suas movimentações
-                                </h2>
-                                <p className="mb-6 max-w-md text-center text-sm text-muted-foreground">
-                                    Lance receitas e despesas para ver o histórico aqui.
-                                </p>
-                                <Button
-                                    type="button"
-                                    size="xl"
-                                    onClick={() => openDialog()}
-                                >
-                                    <PlusIcon className="mr-1.5 size-3.5" />
-                                    Nova transação
-                                </Button>
+                                <EmptyState variant="plain" size="lg">
+                                    <EmptyStateIcon><ReceiptPercentIcon aria-hidden /></EmptyStateIcon>
+                                    <EmptyStateTitle>Comece a registrar suas movimentações</EmptyStateTitle>
+                                    <EmptyStateDescription>
+                                        Lance receitas e despesas para ver o histórico aqui.
+                                    </EmptyStateDescription>
+                                    <EmptyStateActions>
+                                        <Button
+                                            type="button"
+                                            size="xl"
+                                            onClick={() => openDialog()}
+                                        >
+                                            <PlusIcon className="mr-1.5 size-3.5" />
+                                            Nova transação
+                                        </Button>
+                                    </EmptyStateActions>
+                                </EmptyState>
                             </CardContent>
                         </Card>
                     )}
@@ -533,7 +528,7 @@ export function CategoryEmbeddedTransactions({
                             <AlertDialogHeader>
                                 <AlertDialogTitle>
                                     {pendingDelete?.mode === "bulk"
-                                        ? `Excluir ${pendingDelete.ids.length.toLocaleString("pt-BR")} transações?`
+                                        ? `Excluir ${numberBR(pendingDelete.ids.length)} transações?`
                                         : "Excluir transação?"}
                                 </AlertDialogTitle>
                                 <AlertDialogDescription asChild>
@@ -552,9 +547,7 @@ export function CategoryEmbeddedTransactions({
                                                   ]
                                                 : pendingDelete.ids.map((id) => ({
                                                       installment_plan_id:
-                                                          transactions.find(
-                                                              (t) => t.id === id
-                                                          )?.installment_plan_id ??
+                                                          displayTransactions.find((t) => t.id === id)?.installment_plan_id ??
                                                           null,
                                                   }))
                                         ) ? (
@@ -578,7 +571,7 @@ export function CategoryEmbeddedTransactions({
                                                         ? "Receita"
                                                         : "Despesa"}{" "}
                                                     de{" "}
-                                                    {currencyFmt.format(
+                                                    {currencyBRL(
                                                         Number(pendingDelete.transaction.amount)
                                                     )}
                                                 </li>
@@ -603,9 +596,7 @@ export function CategoryEmbeddedTransactions({
                                                 {pendingDelete.ids.length > 8 ? (
                                                     <li className="text-muted-foreground">
                                                         e mais{" "}
-                                                        {(pendingDelete.ids.length - 8).toLocaleString(
-                                                            "pt-BR"
-                                                        )}{" "}
+                                                        {numberBR((pendingDelete.ids.length - 8))}{" "}
                                                         …
                                                     </li>
                                                 ) : null}

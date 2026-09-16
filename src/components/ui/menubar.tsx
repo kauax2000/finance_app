@@ -122,9 +122,8 @@ const menubarVariants = cva("flex w-fit items-center gap-0.5 rounded-lg p-0.5", 
        */
       solid: "border border-transparent bg-muted",
     },
-    size: { sm: "", md: "", lg: "" },
   },
-  defaultVariants: { variant: "outline", size: "md" },
+  defaultVariants: { variant: "outline" },
 })
 
 /**
@@ -168,7 +167,10 @@ function Menubar({
   size = "md",
   ...props
 }: React.ComponentProps<typeof MenubarPrimitive.Root> &
-  VariantProps<typeof menubarVariants>) {
+  VariantProps<typeof menubarVariants> & {
+    /** A altura do gatilho (28, 32, 36). A fileira cresce em volta; ela não tem degrau. */
+    size?: MenubarSize
+  }) {
   const ctx = React.useMemo(
     () => ({ size: size ?? "md", variant: variant ?? "outline" }),
     [size, variant]
@@ -180,7 +182,7 @@ function Menubar({
         data-slot="menubar"
         data-variant={variant}
         data-size={size}
-        className={cn(menubarVariants({ variant, size }), className)}
+        className={cn(menubarVariants({ variant }), className)}
         {...props}
       />
     </MenubarContext.Provider>

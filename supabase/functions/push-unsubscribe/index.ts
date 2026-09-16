@@ -1,4 +1,5 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
+import { internalError } from '../_shared/http.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 
 const corsHeaders = {
@@ -56,7 +57,7 @@ Deno.serve(async (req: Request) => {
 
   const { error } = await query
   if (error) {
-    return json(500, { error: error.message })
+    return json(500, { error: internalError('push-unsubscribe', error) })
   }
 
   return json(200, { ok: true })

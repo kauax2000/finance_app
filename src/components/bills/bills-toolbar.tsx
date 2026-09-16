@@ -1,5 +1,14 @@
 "use client"
 
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+    Toolbar,
+    ToolbarActions,
+    toolbarControlClassName,
+    ToolbarFilterIndicator,
+    ToolbarFilters,
+    toolbarIconControlClassName,
+} from "@/components/ui/toolbar"
 import { AdjustmentsHorizontalIcon, ChevronDownIcon, PlusIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
 import { Badge } from "@/components/ui/badge"
@@ -15,15 +24,13 @@ import {
   SheetContent,
 } from "@/components/ui/sheet"
 import {
+  DialogBody,
   DialogCloseButton,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-    transactionSegmentContainerClassName,
-    transactionSegmentTabClassName,
-} from "@/components/transactions/transaction-type-segment"
+
 import { cn } from "@/lib/utils"
 
 export type BillsPageMode = "pending" | "bills"
@@ -147,55 +154,48 @@ export function BillsToolbar({
 
     return (
         <>
-            <div className="flex flex-row flex-wrap items-center gap-2 md:gap-3">
-                <div className="flex min-w-0 max-w-full shrink-0 items-center gap-2">
-                    <div
+            <Toolbar>
+                <ToolbarFilters className="max-w-full shrink-0 flex-none">
+                    {/* Aba, e não filtro: ela troca o cartão da tela e reseta o
+                        eixo de ordenação. `Tabs variant="solid"` é o mesmo
+                        desenho do trilho que estava aqui à mão, com foco
+                        itinerante e o marcador que viaja. */}
+                    <Tabs
+                        value={mode}
+                        onValueChange={(next) =>
+                            onModeChange(next as BillsPageMode)
+                        }
                         className={cn(
-                            transactionSegmentContainerClassName,
                             "w-fit max-w-full shrink-0",
                             !hasTable && "pointer-events-none opacity-50"
                         )}
-                        role="tablist"
-                        aria-label="Modo de visualização"
                     >
-                        {MODE_TABS.map((tab) => {
-                            const selected = mode === tab.value
-                            return (
-                                <Button
+                        <TabsList aria-label="Modo de visualização">
+                            {MODE_TABS.map((tab) => (
+                                <TabsTrigger
                                     key={tab.value}
-                                    type="button"
-                                    role="tab"
-                                    aria-selected={selected}
-                                    size="sm"
-                                    variant="tertiary"
+                                    value={tab.value}
                                     disabled={!hasTable}
-                                    className={cn(
-                                        transactionSegmentTabClassName(
-                                            selected
-                                        ),
-                                        "flex-none"
-                                    )}
-                                    onClick={() => onModeChange(tab.value)}
                                 >
                                     {tab.label}
-                                </Button>
-                            )
-                        })}
-                    </div>
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
+                    </Tabs>
                     <Badge
                         size="xs"
                         className="shrink-0"
                     >
                         Beta
                     </Badge>
-                </div>
+                </ToolbarFilters>
 
-                <div className="ml-auto flex min-w-0 shrink-0 flex-wrap items-center justify-end gap-2">
+                <ToolbarActions className="min-w-0">
                     <div className="flex flex-row items-stretch gap-2 md:hidden">
                         <Button
                             type="button"
                             variant="primary"
-                            className="h-10 min-w-0 flex-1 gap-2 text-sm"
+                            className={cn(toolbarControlClassName, "min-w-0 flex-1 gap-2 text-sm")}
                             onClick={onNewBill}
                             disabled={!hasTable}
                         >
@@ -207,7 +207,8 @@ export function BillsToolbar({
                             variant="outline"
                             size="icon-lg"
                             className={cn(
-                                "relative size-10 shrink-0",
+                                toolbarIconControlClassName,
+                                "relative shrink-0",
                                 mobileFiltersTrigger === "external" && "hidden",
                             )}
                             onClick={() => setSheetOpen(true)}
@@ -220,10 +221,7 @@ export function BillsToolbar({
                         >
                             <AdjustmentsHorizontalIcon className="size-4 opacity-80" />
                             {active ? (
-                                <span
-                                    className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary"
-                                    aria-hidden
-                                />
+                                <ToolbarFilterIndicator />
                             ) : null}
                         </Button>
                     </div>
@@ -235,14 +233,14 @@ export function BillsToolbar({
                                     type="button"
                                     variant="outline"
                                     size="sm"
-                                    className="h-8 gap-1.5 text-xs"
+                                    className={cn(toolbarControlClassName, "gap-1.5 text-xs")}
                                     disabled={!hasTable}
                                 >
                                     Filtrar: {filterLabel(mode, pendingFilter, modelFilter)}
                                     <ChevronDownIcon className="size-3.5 opacity-70" />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuContent align="end" size="md">
                                 {mode === "pending"
                                     ? PENDING_FILTER.map((f) => (
                                           <DropdownMenuItem
@@ -272,14 +270,14 @@ export function BillsToolbar({
                                     type="button"
                                     variant="outline"
                                     size="sm"
-                                    className="h-8 gap-1.5 text-xs"
+                                    className={cn(toolbarControlClassName, "gap-1.5 text-xs")}
                                     disabled={!hasTable}
                                 >
                                     Ordenar
                                     <ChevronDownIcon className="size-3.5 opacity-70" />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuContent align="end" size="xl">
                                 {sortOpts.map(([k, d]) => (
                                     <DropdownMenuItem
                                         key={`${k}-${d}`}
@@ -294,7 +292,7 @@ export function BillsToolbar({
                             type="button"
                             variant="primary"
                             size="sm"
-                            className="h-8 gap-2 text-xs"
+                            className={cn(toolbarControlClassName, "gap-2 text-xs")}
                             onClick={onNewBill}
                             disabled={!hasTable}
                         >
@@ -302,27 +300,22 @@ export function BillsToolbar({
                             Nova conta
                         </Button>
                     </div>
-                </div>
-            </div>
+                </ToolbarActions>
+            </Toolbar>
 
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetContent
                     side="bottom"
                     fillMobileViewport
-                    className="flex w-full flex-col rounded-t-2xl px-4 pt-0 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]"
+                    className="flex w-full flex-col rounded-t-2xl pt-0 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]"
                 >
-                    <DialogHeader
-                        className={cn(
-                            "shrink-0 px-0 pt-1 pb-3 text-left",
-                            "mb-3",
-                        )}
-                    >
+                    <DialogHeader>
                         <DialogTitle>Filtros e ordenação</DialogTitle>
                         <DialogDescription>
                             Ajuste o que aparece na lista e a ordem dos itens.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                    <DialogBody>
                     <div className="space-y-6 pb-2">
                         <div className="space-y-2">
                             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -393,13 +386,13 @@ export function BillsToolbar({
                         </div>
                         <Button
                             type="button"
-                            className="h-10 w-full"
+                            size="xl" className="w-full"
                             onClick={() => setSheetOpen(false)}
                         >
                             Concluir
                         </Button>
                     </div>
-                    </div>
+                    </DialogBody>
                 <DialogCloseButton />
                 </SheetContent>
             </Sheet>

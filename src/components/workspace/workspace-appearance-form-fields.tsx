@@ -1,15 +1,34 @@
 "use client"
 
 import { createElement } from "react"
+import {
+    Label,
+} from "@/components/ui/label"
+import {
+    ToggleGroup,
+    ToggleGroupItem,
+} from "@/components/ui/toggle-group"
+import {
+    Item,
+    ItemContent,
+    ItemDescription,
+    ItemMedia,
+} from "@/components/ui/item"
+import {
+    Field,
+    FieldControl,
+    FieldLabel,
+    FieldLegend,
+    FieldSet,
+} from "@/components/ui/field"
 import { WorkspaceBrandMark } from "@/components/workspace/workspace-brand-mark"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
 import {
     WORKSPACE_ACCENT_PALETTE,
     WORKSPACE_ICON_KEYS,
     WORKSPACE_ICON_MAP,
     type WorkspaceIconKey,
+    WORKSPACE_ICON_LABELS,
 } from "@/lib/workspace-icons"
 
 type WorkspaceAppearanceFormFieldsProps = {
@@ -26,6 +45,9 @@ type WorkspaceAppearanceFormFieldsProps = {
     previewHint: string
 }
 
+/** O teto do nome da carteira — o contador acima lê daqui. */
+const NOME_MAX = 120
+
 export function WorkspaceAppearanceFormFields({
     name,
     onNameChange,
@@ -41,54 +63,77 @@ export function WorkspaceAppearanceFormFields({
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
-                <WorkspaceBrandMark
-                    iconKey={icon}
-                    backgroundColor={previewColor}
-                    className="size-10 rounded-lg"
-                    iconClassName="size-5"
-                />
-                <p className="text-xs text-muted-foreground leading-snug">
-                    {previewHint}
-                </p>
-            </div>
+            <Item variant="muted" size="md" className="gap-3">
+                <ItemMedia>
+                    <WorkspaceBrandMark
+                        iconKey={icon}
+                        backgroundColor={previewColor}
+                        className="size-10 rounded-lg"
+                        iconClassName="size-5"
+                    />
+                </ItemMedia>
+                <ItemContent>
+                    <ItemDescription className="text-xs leading-snug text-muted-foreground">
+                        {previewHint}
+                    </ItemDescription>
+                </ItemContent>
+            </Item>
 
-            <div className="space-y-2">
-                <Label htmlFor={nameId}>Nome</Label>
-                <Input
-                    id={nameId}
-                    value={name}
-                    onChange={(e) => onNameChange(e.target.value)}
-                    placeholder="Ex.: Casa, Freelance"
-                    autoComplete="off"
-                    maxLength={120}
-                />
-            </div>
+            <Field>
+                <div className="flex items-baseline justify-between gap-2">
+                    <FieldLabel>Nome</FieldLabel>
+                    {/* O `maxLength` truncava calado: o campo simplesmente parava
+                        de aceitar tecla. A contagem só aparece perto do teto,
+                        porque um contador sempre visível é ruído nos 100
+                        primeiros caracteres. */}
+                    {name.length >= NOME_MAX - 20 ? (
+                        <span className="nums text-2xs text-muted-foreground">
+                            {name.length}/{NOME_MAX}
+                        </span>
+                    ) : null}
+                </div>
+                <FieldControl>
+                    <Input
+                        id={nameId}
+                        value={name}
+                        onChange={(e) => onNameChange(e.target.value)}
+                        placeholder="Ex.: Casa, Freelance"
+                        autoComplete="off"
+                        maxLength={NOME_MAX}
+                    />
+                </FieldControl>
+            </Field>
 
-            <fieldset className="space-y-2">
-                <legend className="text-sm font-medium">Cor de destaque</legend>
+            <FieldSet className="gap-2">
+                <FieldLegend variant="label">Cor de destaque</FieldLegend>
                 <div className="flex flex-wrap items-center gap-2">
-                    {WORKSPACE_ACCENT_PALETTE.map((hex) => (
-                        <button
-                            key={hex}
-                            type="button"
-                            onClick={() => onPreviewColorChange(hex)}
-                            className={cn(
-                                "size-8 rounded-md border-2 transition-transform hover:scale-105",
-                                previewColor.toLowerCase() === hex.toLowerCase()
-                                    ? "border-primary ring-2 ring-primary/30"
-                                    : "border-transparent"
-                            )}
-                            style={{ backgroundColor: hex }}
-                            aria-label={`Cor ${hex}`}
-                            aria-pressed={
-                                previewColor.toLowerCase() ===
-                                hex.toLowerCase()
-                            }
-                        />
-                    ))}
-                    <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+                    <ToggleGroup
+                        type="single"
+                        value={
+                            WORKSPACE_ACCENT_PALETTE.find(
+                                (hex) => hex.toLowerCase() === previewColor.toLowerCase()
+                            ) ?? ""
+                        }
+                        onValueChange={(next) => {
+                            if (next) onPreviewColorChange(next)
+                        }}
+                        aria-label="Cor de destaque"
+                        className="flex-wrap gap-2"
+                    >
+                        {WORKSPACE_ACCENT_PALETTE.map((hex) => (
+                            <ToggleGroupItem
+                                key={hex}
+                                value={hex}
+                                className="size-8 min-w-0 rounded-md border-2 border-transparent p-0 data-[state=on]:border-primary data-[state=on]:ring-2 data-[state=on]:ring-primary/30"
+                                style={{ backgroundColor: hex }}
+                                aria-label={`Cor ${hex}`}
+                            />
+                        ))}
+                    </ToggleGroup>
+                    <Label className="cursor-pointer gap-2 text-xs font-normal text-muted-foreground">
                         <span className="whitespace-nowrap">Outra</span>
+                        {/* Cru de propósito: o seletor de cor nativo não tem peça no
+                            sistema, e o `Input` lhe daria a moldura de um campo. */}
                         <input
                             type="color"
                             value={
@@ -102,39 +147,40 @@ export function WorkspaceAppearanceFormFields({
                             className="h-8 w-12 cursor-pointer rounded border border-border bg-background p-0.5"
                             aria-label="Escolher cor personalizada"
                         />
-                    </label>
+                    </Label>
                 </div>
-            </fieldset>
+            </FieldSet>
 
-            <fieldset className="space-y-2">
-                <legend className="text-sm font-medium">Ícone</legend>
-                <div className="grid grid-cols-5 gap-2 sm:grid-cols-5">
+            <FieldSet className="gap-2">
+                <FieldLegend variant="label">Ícone</FieldLegend>
+                <ToggleGroup
+                    type="single"
+                    variant="outline"
+                    size="lg"
+                    value={icon}
+                    onValueChange={(next) => {
+                        if (next) onIconChange(next as typeof icon)
+                    }}
+                    aria-label="Ícone"
+                    className="grid grid-cols-5 gap-2"
+                >
                     {WORKSPACE_ICON_KEYS.map((key) => {
                         const Cmp = WORKSPACE_ICON_MAP[key]
-                        const selected = icon === key
                         return (
-                            <button
+                            <ToggleGroupItem
                                 key={key}
-                                type="button"
-                                onClick={() => onIconChange(key)}
-                                className={cn(
-                                    "flex size-11 items-center justify-center rounded-lg border text-foreground transition-colors",
-                                    "hover:bg-accent hover:text-accent-foreground",
-                                    selected
-                                        ? "border-primary bg-primary/10 ring-2 ring-primary ring-offset-2 ring-offset-background"
-                                        : "border-border bg-background"
-                                )}
-                                aria-pressed={selected}
-                                aria-label={`Ícone ${key}`}
+                                value={key}
+                                className="size-11"
+                                aria-label={`Ícone ${WORKSPACE_ICON_LABELS[key]}`}
                             >
                                 {createElement(Cmp, {
                                     className: "size-5",
                                 })}
-                            </button>
+                            </ToggleGroupItem>
                         )
                     })}
-                </div>
-            </fieldset>
+                </ToggleGroup>
+            </FieldSet>
 
             {displayError ? (
                 <p

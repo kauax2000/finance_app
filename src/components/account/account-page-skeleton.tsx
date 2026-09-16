@@ -10,11 +10,11 @@ export function AccountPageSkeleton() {
             aria-busy="true"
             aria-label="Carregando informações da conta"
         >
-            <div className="min-w-0 space-y-2">
-                <div className="flex h-8 min-w-0 items-end">
-                    <Skeleton className="h-3 w-16" />
+            <div className="min-w-0 space-y-4">
+                <div className="flex h-6 min-w-0 items-center">
+                    <Skeleton className="h-4 w-16" />
                 </div>
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <div className="flex items-center justify-between gap-3 px-4 py-3 sm:py-3.5">
                             <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -34,11 +34,11 @@ export function AccountPageSkeleton() {
                 </Card>
             </div>
 
-            <div className="min-w-0 space-y-2">
-                <div className="flex h-8 min-w-0 items-end">
-                    <Skeleton className="h-3 w-20" />
+            <div className="min-w-0 space-y-4">
+                <div className="flex h-6 min-w-0 items-center">
+                    <Skeleton className="h-4 w-20" />
                 </div>
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 sm:py-3.5">
                             <div className="flex min-w-0 flex-1 items-center gap-3">

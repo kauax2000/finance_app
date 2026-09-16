@@ -1,5 +1,6 @@
 "use client"
 
+import { formatYmdPtBr } from "@/lib/transaction-date"
 import * as React from "react"
 import { XMarkIcon } from "@heroicons/react/16/solid"
 import type { Category, CreditCard } from "@/lib/supabase"
@@ -67,22 +68,38 @@ function Chip({
             title={title ?? label}
         >
             <span className="min-w-0 flex-1 truncate">{label}</span>
-            <button
-                type="button"
-                className={cn(
-                    "inline-flex size-5 shrink-0 items-center justify-center rounded-full",
-                    "opacity-70 hover:bg-success/20 hover:opacity-100 active:bg-success/25 active:opacity-100",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2"
-                )}
+            <FilterChipRemoveButton
                 aria-label={`Remover filtro: ${label}`}
                 onClick={(e) => {
                     e.stopPropagation()
                     onRemove()
                 }}
-            >
-                <XMarkIcon className="size-3.5" aria-hidden />
-            </button>
+            />
         </Badge>
+    )
+}
+
+/**
+ * O × de um selo de filtro. Eram quatro `<button>` crus iguais, aqui e no
+ * painel de filtros. O `size-5` fica: o × mora dentro do `Badge`, e o
+ * `icon-xs` (24px) esticaria o selo.
+ */
+export function FilterChipRemoveButton(
+    props: Omit<React.ComponentProps<typeof Button>, "children" | "variant" | "size">
+) {
+    return (
+        <Button
+            type="button"
+            variant="tertiary"
+            size="icon-xs"
+            {...props}
+            className={cn(
+                "size-5 shrink-0 rounded-full text-current opacity-70 hover:bg-success/20 hover:opacity-100 active:bg-success/25 active:opacity-100",
+                props.className
+            )}
+        >
+            <XMarkIcon className="size-3.5" aria-hidden />
+        </Button>
     )
 }
 
@@ -177,11 +194,11 @@ export function TransactionsActiveFiltersChips({
             if (datePreset) {
                 label = `Período: ${transactionsPresetSummaryLabel(datePreset)}`
             } else if (filterDateFrom && filterDateTo) {
-                label = `Período: ${filterDateFrom} → ${filterDateTo}`
+                label = `Período: ${formatYmdPtBr(filterDateFrom)} → ${formatYmdPtBr(filterDateTo)}`
             } else if (filterDateFrom) {
-                label = `Período: De ${filterDateFrom}`
+                label = `Período: De ${formatYmdPtBr(filterDateFrom)}`
             } else if (filterDateTo) {
-                label = `Período: Até ${filterDateTo}`
+                label = `Período: Até ${formatYmdPtBr(filterDateTo)}`
             }
             out.push({
                 key: "period",

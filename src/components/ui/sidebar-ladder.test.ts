@@ -206,8 +206,9 @@ describe("régua da Sidebar", () => {
     // `SidebarInset` publica; a tela só a lê.
     expect(CODIGO).toContain("--sidebar-inset-rule:1px")
     expect(CODIGO).toContain("--sidebar-inset-rule:0px")
+    // Desde a rodada 80 quem desenha o cabeçalho é o `TopBar`.
     const header = readFileSync(
-      join(process.cwd(), "src/components/layout/app-header.tsx"),
+      join(process.cwd(), "src/components/ui/top-bar.tsx"),
       "utf8"
     )
     expect(header).toContain("var(--sidebar-inset-rule,1px)")
@@ -407,7 +408,11 @@ describe("régua da Sidebar", () => {
     // Os três degraus, distintos e em ordem — cursor e toque no botão, o do
     // ativo no marcador. O repouso do item é transparente: em repouso ele é a
     // própria placa.
-    const marcador = CODIGO.slice(CODIGO.indexOf('data-slot="sidebar-marker"'))
+    // Até o fim do elemento: ir até o fim do arquivo deixava um `bg-current/N`
+    // de qualquer peça abaixo passar pelo alfa do marcador.
+    const inicioDoMarcador = CODIGO.indexOf('data-slot="sidebar-marker"')
+    expect(inicioDoMarcador).toBeGreaterThan(-1)
+    const marcador = CODIGO.slice(inicioDoMarcador, CODIGO.indexOf("/>", inicioDoMarcador))
     const alfaDoMarcador = Number(marcador.match(/bg-current\/(\d+)/)?.[1])
     const alfas = [
       ...[...partes.SIDEBAR_GLASS_STATES!.matchAll(/bg-current\/(\d+)/g)].map((m) =>
@@ -526,12 +531,17 @@ describe("régua da Sidebar", () => {
     // cabeçalho — quatro nós, e duas curvas leem como duas animações que por
     // acaso começaram juntas. A curva é a das folhas.
     const cabecalho = readFileSync(
-      join(process.cwd(), "src/components/layout/app-header.tsx"),
+      join(process.cwd(), "src/components/ui/top-bar.tsx"),
       "utf8"
+    )
+    // Desde a rodada 80 o cabeçalho não encolhe com a barra (48 fixo no
+    // desktop); o que ele anima é o fundo, e na mesma curva.
+    expect(cabecalho).toMatch(
+      /transition-\[background-color\] duration-\(--duration-slow\) ease-\(--ease-emphasized\)/
     )
     for (const [nome, fonte] of [
       ["sidebar", CODIGO],
-      ["app-header", cabecalho],
+      ["top-bar", cabecalho],
     ] as const) {
       expect(fonte, `${nome} tem ease-linear`).not.toContain("ease-linear")
     }
@@ -544,9 +554,6 @@ describe("régua da Sidebar", () => {
       expect(i, alvo).toBeGreaterThan(-1)
       expect(CODIGO.slice(i, i + 130), alvo).toContain("ease-(--ease-emphasized)")
     }
-    expect(cabecalho).toMatch(
-      /transition-\[height\][^"]*ease-\(--ease-emphasized\)/
-    )
   })
 
   it("25. o marcador soma a cadeia de offsetParent, e não lê a caixa da tela", () => {

@@ -134,16 +134,6 @@ export function diffCalendarDays(from: Ymd, to: Ymd): number {
   return Math.round((ymdToUtcNoon(to) - ymdToUtcNoon(from)) / MS_DAY)
 }
 
-/** @deprecated Use `appTodayYmd()` — o dia de referência do app é America/Sao_Paulo. */
-export function utcTodayYmd(): Ymd {
-  const d = new Date()
-  return {
-    y: d.getUTCFullYear(),
-    m: d.getUTCMonth() + 1,
-    d: d.getUTCDate(),
-  }
-}
-
 /**
  * Dia-calendário de referência do app (America/Sao_Paulo) — espelha
  * `public.app_today()` no Postgres. Entre 21:00 e 23:59 BRT, o dia UTC já é

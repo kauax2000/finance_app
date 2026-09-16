@@ -21,18 +21,12 @@ import type {
     WorkspaceInstallmentPlan,
     WorkspaceSubscription,
 } from "@/lib/supabase"
-import { localYmdFromDate, transactionCalendarParts } from "@/lib/transaction-date"
+import { localYmdFromDate, transactionLocalYmd } from "@/lib/transaction-date"
 
 export const PROJECTED_TRANSACTION_ID_PREFIX = "__projected:"
 
 export function isProjectedTransactionRow(t: Pick<Transaction, "id">): boolean {
     return t.id.startsWith(PROJECTED_TRANSACTION_ID_PREFIX)
-}
-
-function transactionLocalYmd(t: Pick<Transaction, "date">): string | null {
-    const p = transactionCalendarParts(t.date)
-    if (!p) return null
-    return `${p.y}-${String(p.mo).padStart(2, "0")}-${String(p.d).padStart(2, "0")}`
 }
 
 function parseAmountFilter(raw: string): number | null {
@@ -117,7 +111,7 @@ export function buildProjectedCategoryExpenseRows(args: {
         if (t.type !== "expense") continue
         const sid = t.subscription_id
         if (!sid) continue
-        const ymd = transactionLocalYmd(t)
+        const ymd = transactionLocalYmd(t.date)
         if (!ymd) continue
         postedBySubscriptionDay.add(`${sid}:${ymd}`)
     }

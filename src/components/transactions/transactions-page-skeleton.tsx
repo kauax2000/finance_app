@@ -31,7 +31,7 @@ function ToolbarSkeleton() {
         <div className="flex min-w-0 max-w-full flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-3">
             <div className="flex min-w-0 max-w-full items-center gap-2 md:contents">
                 <div
-                    className="inline-flex h-10 min-w-0 max-w-full flex-1 shrink items-stretch rounded-lg bg-muted/60 p-0.5 ring-1 ring-border/60 md:h-8 md:max-w-fit md:shrink-0 dark:bg-muted/40"
+                    className="inline-flex h-8 min-w-0 max-w-full flex-1 shrink items-stretch gap-0.5 rounded-lg bg-muted p-0.5 pointer-coarse:h-10 md:max-w-fit md:shrink-0"
                     aria-hidden
                 >
                     <div className="flex h-full w-full min-h-0 items-center gap-0.5 px-0.5 md:w-auto">
@@ -64,7 +64,7 @@ function ToolbarSkeleton() {
 
 function MonthBandSkeletonRow() {
     return (
-        <TableRow className="border-border/80 bg-muted/30 hover:bg-muted/30">
+        <TableRow className="border-border/80 bg-muted/30 hover:bg-muted/30 active:bg-muted/30">
             <TableCell className="w-10 px-2 py-2 align-middle md:w-11 md:px-3">
                 <Skeleton className="size-4 shrink-0 rounded-sm" />
             </TableCell>
@@ -138,12 +138,12 @@ function TableSkeleton({ rowCount }: { rowCount: number }) {
     }
 
     return (
-        <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+        <Card padding="none">
             <CardContent className="relative flex flex-col p-0">
                 <div className="min-w-0 overflow-hidden rounded-t-xl">
                     <Table className="min-w-[640px] text-sm md:min-w-[700px]">
-                        <TableHeader className="sticky top-0 z-10 bg-muted/50 [&_tr]:border-b-0">
-                            <TableRow className="border-0 hover:bg-transparent [&>th]:border-b [&>th]:border-border">
+                        <TableHeader variant="muted" sticky className="[&_tr]:border-b-0">
+                            <TableRow className="border-0 [&>th]:border-b [&>th]:border-border">
                                 <TableHead className="w-10 px-2 py-0 md:w-11 md:px-3">
                                     <Skeleton className="mx-auto size-4 rounded-sm" />
                                 </TableHead>

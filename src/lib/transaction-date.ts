@@ -186,3 +186,73 @@ export function formatMonthShortPtBr(d: Date): string {
         .toLocaleString("pt-BR", { month: "short" })
         .replace(/\.$/, "")
 }
+
+/**
+ * "15/05/25 14:30" — data e hora curtas, para o que expira.
+ *
+ * Ela existe porque seis chamadas escreviam
+ * `new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })`
+ * à mão, em dois arquivos que dizem a mesma frase sobre o mesmo convite.
+ */
+export function formatDateTimeShortPtBr(iso: string): string {
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return iso.trim()
+    return d.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })
+}
+
+/** "setembro" — o nome do mês por extenso, para o seletor de mês. */
+export function formatMonthLongPtBr(d: Date): string {
+    return d.toLocaleString("pt-BR", { month: "long" })
+}
+
+/**
+ * "2026-09-01" → "01/09/2026", sem passar por Date: `new Date("2026-09-01")` é
+ * meia-noite UTC, e no Brasil isso é o dia anterior.
+ */
+export function formatYmdPtBr(ymd: string): string {
+    const [y, m, d] = ymd.slice(0, 10).split("-")
+    return y && m && d ? `${d}/${m}/${y}` : ymd
+}
+
+/** Ordem de dois `YYYY-MM-DD`: a data em texto compara na ordem do calendário. */
+export function compareYmd(a: string, b: string): number {
+    return a.localeCompare(b)
+}
+
+/** `YYYY-MM-DD` deslocado de `days` dias no calendário local. */
+export function addDaysYmd(ymd: string, days: number): string {
+    const d = parseYmdLocal(ymd.slice(0, 10))
+    if (!d) return ymd
+    d.setDate(d.getDate() + days)
+    return localYmdFromDate(d)
+}
+
+/** Dias de `fromYmd` até `toYmd` no calendário local (negativo quando `to` vem antes). */
+export function daysBetweenYmd(fromYmd: string, toYmd: string): number | null {
+    const a = parseYmdLocal(fromYmd.slice(0, 10))
+    const b = parseYmdLocal(toYmd.slice(0, 10))
+    if (!a || !b) return null
+    return Math.round((b.getTime() - a.getTime()) / 86_400_000)
+}
+
+/** `YYYY-MM-DD` do dia-calendário de uma data de lançamento, ou `null` se ilegível. */
+export function transactionLocalYmd(isoOrString: string): string | null {
+    const p = transactionCalendarParts(isoOrString)
+    if (!p) return null
+    return `${p.y}-${pad2(p.mo)}-${pad2(p.d)}`
+}
+
+/**
+ * "2026-09" → "set. de 26", para eixo de gráfico mês a mês. Em UTC de propósito:
+ * `new Date(y, m - 1, 1)` local e o `toLocaleDateString` concordam, mas a série
+ * das categorias já quebrou uma vez por misturar os dois fusos.
+ */
+export function formatYearMonthShortPtBr(ym: string): string {
+    const [y, m] = ym.split("-").map(Number)
+    if (!y || !m) return ym
+    return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString("pt-BR", {
+        month: "short",
+        year: "2-digit",
+        timeZone: "UTC",
+    })
+}

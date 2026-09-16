@@ -1,5 +1,6 @@
 /** Dashboard period presets (URL `preset=` + derived `from` / `to`). */
 
+import { localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
 import {
     shiftYearMonth,
     periodBoundsFromYearMonth,
@@ -15,10 +16,6 @@ export type DashboardDatePresetKey =
 
 function pad2(n: number) {
     return String(n).padStart(2, "0")
-}
-
-export function toIsoLocalYmd(d: Date): string {
-    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 }
 
 function startOfMonth(d: Date): Date {
@@ -38,30 +35,30 @@ export function getDashboardPresetRange(
     key: Exclude<DashboardDatePresetKey, "custom">,
     now: Date = new Date()
 ): { from: string; to: string } {
-    const to = toIsoLocalYmd(now)
+    const to = localYmdFromDate(now)
 
     if (key === "last30") {
         const s = new Date(now)
         s.setDate(s.getDate() - 29)
-        return { from: toIsoLocalYmd(s), to }
+        return { from: localYmdFromDate(s), to }
     }
     if (key === "last90") {
         const s = new Date(now)
         s.setDate(s.getDate() - 89)
-        return { from: toIsoLocalYmd(s), to }
+        return { from: localYmdFromDate(s), to }
     }
     if (key === "thisMonth") {
         const start = startOfMonth(now)
-        return { from: toIsoLocalYmd(start), to }
+        return { from: localYmdFromDate(start), to }
     }
     if (key === "prevMonth") {
         const firstThis = startOfMonth(now)
         const lastPrev = new Date(firstThis.getTime() - 86_400_000)
         const start = startOfMonth(lastPrev)
-        return { from: toIsoLocalYmd(start), to: toIsoLocalYmd(endOfMonth(lastPrev)) }
+        return { from: localYmdFromDate(start), to: localYmdFromDate(endOfMonth(lastPrev)) }
     }
     if (key === "thisYear") {
-        return { from: toIsoLocalYmd(startOfYear(now)), to }
+        return { from: localYmdFromDate(startOfYear(now)), to }
     }
     return { from: to, to }
 }
@@ -102,8 +99,8 @@ export function previousPeriodRange(
     fromYmd: string,
     toYmd: string
 ): { from: string; to: string } | null {
-    const from = parseYmd(fromYmd)
-    const to = parseYmd(toYmd)
+    const from = parseYmdLocal(fromYmd)
+    const to = parseYmdLocal(toYmd)
     if (!from || !to) return null
     const msDay = 86_400_000
     const days =
@@ -113,7 +110,7 @@ export function previousPeriodRange(
     if (days < 1) return null
     const prevEnd = new Date(stripTime(from).getTime() - msDay)
     const prevStart = new Date(prevEnd.getTime() - (days - 1) * msDay)
-    return { from: toIsoLocalYmd(prevStart), to: toIsoLocalYmd(prevEnd) }
+    return { from: localYmdFromDate(prevStart), to: localYmdFromDate(prevEnd) }
 }
 
 /**
@@ -143,9 +140,3 @@ function stripTime(d: Date): Date {
     return new Date(d.getFullYear(), d.getMonth(), d.getDate())
 }
 
-function parseYmd(s: string): Date | null {
-    const parts = s.split("-").map((p) => parseInt(p, 10))
-    if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return null
-    const [y, m, d] = parts
-    return new Date(y, m - 1, d)
-}

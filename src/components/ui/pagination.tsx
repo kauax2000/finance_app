@@ -320,6 +320,7 @@ function PaginationEdge({
   disabled,
   size,
   children,
+  "aria-label": ariaLabel,
   ...props
 }: { disabled?: boolean; size?: PaginationSize } & React.ComponentProps<"a">) {
   const degrau = usePaginationStep(size)
@@ -345,7 +346,8 @@ function PaginationEdge({
         size={degrau.extremo}
         className={cn(classes, "pointer-events-none opacity-50")}
       >
-        <span data-slot="pagination-link" aria-disabled="true">
+        {/* O nome vai junto: sem ele, no telefone (rótulo escondido) o extremo desabilitado não se chama nada. */}
+        <span data-slot="pagination-link" role="link" aria-disabled="true" aria-label={ariaLabel}>
           {children}
         </span>
       </Button>
@@ -359,7 +361,7 @@ function PaginationEdge({
       size={degrau.extremo}
       className={classes}
     >
-      <a data-slot="pagination-link" {...props}>
+      <a data-slot="pagination-link" aria-label={ariaLabel} {...props}>
         {children}
       </a>
     </Button>

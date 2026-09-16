@@ -1,10 +1,11 @@
+import { roundCents } from "@/lib/money-brl"
 import type {
     CreditCard,
     Transaction,
     WorkspaceInstallmentPlan,
     WorkspaceSubscription,
 } from "@/lib/supabase"
-import { localYmdFromDate, transactionCalendarParts } from "@/lib/transaction-date"
+import { localYmdFromDate, transactionLocalYmd } from "@/lib/transaction-date"
 import { paddedBoundsForYearMonth, periodBoundsFromYearMonth } from "@/lib/budget-month"
 import {
     buildCreditCardClosingLookup,
@@ -28,12 +29,6 @@ export type CategoryCommitmentTotals = {
 }
 
 export type CategoryCommitmentsById = Record<string, CategoryCommitmentTotals>
-
-function transactionLocalYmd(t: Pick<Transaction, "date">): string | null {
-    const p = transactionCalendarParts(t.date)
-    if (!p) return null
-    return `${p.y}-${String(p.mo).padStart(2, "0")}-${String(p.d).padStart(2, "0")}`
-}
 
 function ensureBucket(out: CategoryCommitmentsById, categoryId: string): CategoryCommitmentTotals {
     const prev = out[categoryId]
@@ -108,7 +103,7 @@ export function buildCategoryCommitmentsForMonth(args: {
         if (t.type !== "expense") continue
         const sid = t.subscription_id
         if (!sid) continue
-        const ymd = transactionLocalYmd(t as Pick<Transaction, "date">)
+        const ymd = transactionLocalYmd((t as Pick<Transaction, "date">).date)
         if (!ymd) continue
         postedBySubscriptionDay.add(`${sid}:${ymd}`)
     }
@@ -171,10 +166,14 @@ export function buildCategoryCommitmentsForMonth(args: {
     for (const [categoryId, b] of Object.entries(out)) {
         out[categoryId] = {
             ...b,
-            committedTotal:
+            postedTotal: roundCents(Number(b.postedTotal) || 0),
+            projectedInstallmentsTotal: roundCents(Number(b.projectedInstallmentsTotal) || 0),
+            projectedSubscriptionsTotal: roundCents(Number(b.projectedSubscriptionsTotal) || 0),
+            committedTotal: roundCents(
                 (Number(b.postedTotal) || 0) +
-                (Number(b.projectedInstallmentsTotal) || 0) +
-                (Number(b.projectedSubscriptionsTotal) || 0),
+                    (Number(b.projectedInstallmentsTotal) || 0) +
+                    (Number(b.projectedSubscriptionsTotal) || 0),
+            ),
         }
     }
     return out

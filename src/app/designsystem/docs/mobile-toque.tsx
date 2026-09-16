@@ -5,10 +5,9 @@ import { DocNote, DocSection, Usage } from "../ds-doc"
 import { Group, Spec, Stack } from "../ds-kit"
 
 const SAFE_AREA = [
-  ["--mobile-header-offset", "3,5rem + safe-area topo", "quanto o conteúdo desce sob o cabeçalho fixo"],
-  ["--mobile-nav-island-height", "3,5rem", "a altura da ilha de navegação"],
-  ["--mobile-nav-island-margin", "1rem", "a folga entre a ilha e a borda"],
-  ["--mobile-bottom-pad", "ilha + folga + safe-area", "quanto o conteúdo precisa reservar embaixo"],
+  ["--mobile-header-offset", "3rem + safe-area topo", "quanto o conteúdo desce sob o cabeçalho fixo"],
+  ["--bottom-bar-margin", "1rem", "a folga entre a barra de baixo e a borda"],
+  ["--bottom-bar-pad", "barra + 2× folga + safe-area", "quanto o conteúdo precisa reservar embaixo"],
 ]
 
 export default function MobileToqueDoc() {
@@ -91,10 +90,6 @@ export default function MobileToqueDoc() {
           </Stack>
         </Spec>
       </Group>
-
-      <DocNote title="Tabela vira cartão por CSS, nunca por hook">
-        Dois gêmeos e <code>hidden</code>. Um <code>useIsMobile</code> devolve <code>false</code> no servidor e no primeiro quadro, então a tela pisca. O hook só entra quando a troca é de <em>primitiva</em> — um Dialog que vira Sheet.
-      </DocNote>
 
       <DocNote title="Confira com a emulação de dispositivo ligada">
         Sem ela o navegador responde <code>pointer: fine</code>{" "}

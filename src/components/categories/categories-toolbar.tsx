@@ -1,5 +1,6 @@
 "use client"
 
+import { Toolbar, ToolbarActions } from "@/components/ui/toolbar"
 import { CalendarIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
 import { Button } from "@/components/ui/button"
@@ -14,16 +15,36 @@ import { TransactionTypeSegment, type TransactionFilterType } from "@/components
 import { formatYearMonth, labelYearMonthPt, shiftYearMonth, shortLabelYearMonthPt } from "@/lib/budget-month"
 import { cn } from "@/lib/utils"
 
-/** Dense toolbar sizing: h-10 on mobile (matches segment controls), h-8 from md up. */
-const monthNavDenseButtonClassName =
-    "h-10 px-2 text-sm md:h-8 md:px-2 md:text-xs"
-const monthNavDenseIconButtonClassName = "size-10 md:size-8"
-const monthNavDenseMonthPickerClassName =
-    "h-10 flex-1 gap-2 px-3 text-sm md:h-8 md:gap-1.5 md:px-2 md:text-xs"
+/**
+ * A densidade — 32 no ponteiro fino, 40 no grosso.
+ *
+ * Ela era escrita com `md:`, e a pergunta estava errada: um desktop de 700px
+ * recebia 40px que ninguém pede, e um tablet em paisagem recebia 32 que o dedo
+ * não acerta. Quem responde certo é `--toolbar-control`, que o `Toolbar`
+ * publica — **com o degrau padrão como reserva**, porque duas telas usam este
+ * seletor de mês fora de uma barra, e ali a variável não existe.
+ */
+const DENSO_H = "h-[var(--toolbar-control,--spacing(8))]"
+const DENSO_QUADRADO = "size-[var(--toolbar-control,--spacing(8))]"
+
+const monthNavDenseButtonClassName = cn(DENSO_H, "px-2 text-xs")
+const monthNavDenseIconButtonClassName = DENSO_QUADRADO
+const monthNavDenseMonthPickerClassName = cn(DENSO_H, "flex-1 gap-1.5 px-2 text-xs")
 const monthNavDenseCalendarIconClassName = "size-4 md:size-3.5"
+
+/**
+ * Inside the TopBar: the system default step (`md`, 32) at every width. The
+ * dense sizing above is 40 on mobile to match the toolbar segment controls;
+ * the bar is 48 tall and every button in it is `md`.
+ */
+const monthNavBarButtonClassName = "h-8 px-2 text-xs"
+const monthNavBarIconButtonClassName = "size-8"
+const monthNavBarMonthPickerClassName = "h-8 flex-1 gap-1.5 px-2 text-xs"
+const monthNavBarCalendarIconClassName = "size-3.5"
 
 function MonthNavArrowControls({
     dense,
+    inBar,
     budgetMonthYm,
     onBudgetMonthYmChange,
     onJump,
@@ -32,6 +53,8 @@ function MonthNavArrowControls({
     esteMesInsidePopoverOnNarrow,
 }: {
     dense?: boolean
+    /** Sizing for the `TopBar` (`md` at every width). */
+    inBar?: boolean
     budgetMonthYm: string
     onBudgetMonthYmChange: (ym: string) => void
     onJump: () => void
@@ -57,7 +80,11 @@ function MonthNavArrowControls({
                 size="sm"
                 className={cn(
                     "shrink-0 text-muted-foreground",
-                    dense ? monthNavDenseButtonClassName : "h-10 px-2 text-sm",
+                    inBar
+                        ? monthNavBarButtonClassName
+                        : dense
+                          ? monthNavDenseButtonClassName
+                          : "h-10 px-2 text-sm",
                     esteMesInsidePopoverOnNarrow && "hidden md:inline-flex",
                 )}
                 onClick={() => onJump()}
@@ -67,8 +94,15 @@ function MonthNavArrowControls({
             <Button
                 type="button"
                 variant="outline"
-                size="icon-lg"
-                className={cn("shrink-0", dense ? monthNavDenseIconButtonClassName : "size-10")}
+                size={inBar ? "icon-md" : "icon-lg"}
+                className={cn(
+                    "shrink-0",
+                    inBar
+                        ? monthNavBarIconButtonClassName
+                        : dense
+                          ? monthNavDenseIconButtonClassName
+                          : "size-10",
+                )}
                 aria-label="Mês anterior"
                 onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, -1))}
             >
@@ -88,8 +122,10 @@ function MonthNavArrowControls({
                             variant="outline"
                             aria-label={pickerAriaLabel}
                             className={cn(
-                                "min-w-0 shrink font-medium capitalize tabular-nums",
-                                dense
+                                "min-w-0 shrink font-medium tabular-nums",
+                                inBar
+                                    ? monthNavBarMonthPickerClassName
+                                    : dense
                                     ? monthNavDenseMonthPickerClassName
                                     : "h-10 flex-1 gap-2 px-3 text-sm",
                             )}
@@ -97,7 +133,11 @@ function MonthNavArrowControls({
                             <CalendarIcon
                                 className={cn(
                                     "shrink-0 opacity-80",
-                                    dense ? monthNavDenseCalendarIconClassName : "size-4",
+                                    inBar
+                                        ? monthNavBarCalendarIconClassName
+                                        : dense
+                                          ? monthNavDenseCalendarIconClassName
+                                          : "size-4",
                                 )}
                                 aria-hidden
                             />
@@ -107,7 +147,6 @@ function MonthNavArrowControls({
                     <PopoverContent
                         align="center"
                         className="w-auto p-0"
-                        onCloseAutoFocus={(e) => e.preventDefault()}
                     >
                         <BudgetMonthSelects
                             valueYm={budgetMonthYm}
@@ -127,7 +166,7 @@ function MonthNavArrowControls({
                                     type="button"
                                     variant="tertiary"
                                     size="sm"
-                                    className="h-8 w-full text-xs text-muted-foreground hover:text-foreground"
+                                    className="h-8 w-full text-xs text-muted-foreground hover:text-foreground active:text-foreground"
                                     onClick={() => {
                                         onJump()
                                         setMonthPickerOpen(false)
@@ -144,8 +183,15 @@ function MonthNavArrowControls({
             <Button
                 type="button"
                 variant="outline"
-                size="icon-lg"
-                className={cn("shrink-0", dense ? monthNavDenseIconButtonClassName : "size-10")}
+                size={inBar ? "icon-md" : "icon-lg"}
+                className={cn(
+                    "shrink-0",
+                    inBar
+                        ? monthNavBarIconButtonClassName
+                        : dense
+                          ? monthNavDenseIconButtonClassName
+                          : "size-10",
+                )}
                 aria-label="Próximo mês"
                 onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, 1))}
             >
@@ -160,6 +206,7 @@ export function MonthNav({
     onBudgetMonthYmChange,
     onJumpToCurrentMonth,
     dense,
+    inBar,
     iconOnly,
     className,
     mobileTriggerFullWidth,
@@ -168,6 +215,8 @@ export function MonthNav({
     onBudgetMonthYmChange: (ym: string) => void
     onJumpToCurrentMonth?: () => void
     dense?: boolean
+    /** Sizing for the `TopBar`: every control at `md` (32), at every width. */
+    inBar?: boolean
     /** Mobile trigger: calendar + chevron only (no month label). */
     iconOnly?: boolean
     className?: string
@@ -184,6 +233,7 @@ export function MonthNav({
     const arrowControls = (
         <MonthNavArrowControls
             dense={dense}
+            inBar={inBar}
             budgetMonthYm={budgetMonthYm}
             onBudgetMonthYmChange={onBudgetMonthYmChange}
             onJump={jump}
@@ -217,7 +267,7 @@ export function MonthNav({
                                 aria-label={pickerAriaLabel}
                                 aria-expanded={open}
                                 className={cn(
-                                    "font-medium capitalize tabular-nums text-muted-foreground hover:text-foreground",
+                                    "font-medium tabular-nums text-muted-foreground hover:text-foreground",
                                     iconOnly
                                         ? cn(
                                               "w-auto shrink-0 gap-1.5 px-1.5",
@@ -227,9 +277,11 @@ export function MonthNav({
                                           )
                                         : cn(
                                               "gap-1.5",
-                                              dense
-                                                  ? monthNavDenseButtonClassName
-                                                  : "h-9 px-2.5 text-sm",
+                                              inBar
+                                                  ? monthNavBarButtonClassName
+                                                  : dense
+                                                    ? monthNavDenseButtonClassName
+                                                    : "h-9 px-2.5 text-sm",
                                           ),
                                 )}
                             >
@@ -244,7 +296,7 @@ export function MonthNav({
                                     <span
                                         className={cn(
                                             "min-w-0 truncate",
-                                            dense &&
+                                            (dense || inBar) &&
                                                 "max-w-[min(5.75rem,30vw)] sm:max-w-none",
                                         )}
                                     >
@@ -263,7 +315,6 @@ export function MonthNav({
                         <PopoverContent
                             align="start"
                             className="w-auto p-0"
-                            onCloseAutoFocus={(e) => e.preventDefault()}
                         >
                             <BudgetMonthSelects
                                 valueYm={budgetMonthYm}
@@ -354,13 +405,11 @@ export function CategoriesToolbar({
     className?: string
     includeAll?: boolean
 }) {
+    // O `justify-between` saiu: com o `ms-auto` do `ToolbarActions` o grupo da
+    // direita vai à borda sozinho, e com um grupo só ele continua lá — que é o
+    // caso desta barra quando o seletor de mês não aparece.
     return (
-        <div
-            className={cn(
-                "flex min-w-0 max-w-full items-center justify-between gap-2 md:flex-wrap md:gap-3",
-                className,
-            )}
-        >
+        <Toolbar className={cn("max-w-full", className)}>
             <TransactionTypeSegment
                 value={filterType}
                 onChange={onFilterTypeChange}
@@ -368,7 +417,7 @@ export function CategoriesToolbar({
                 includeAll={includeAll}
             />
 
-            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+            <ToolbarActions>
                 {showMonthControls ? (
                     <MonthNav
                         budgetMonthYm={budgetMonthYm}
@@ -382,14 +431,14 @@ export function CategoriesToolbar({
                     type="button"
                     variant="primary"
                     size="sm"
-                    className="size-10 shrink-0 rounded-lg p-0 text-xs md:size-auto md:h-8 md:gap-2 md:px-3"
+                    className={cn(DENSO_QUADRADO, "shrink-0 rounded-lg p-0 text-xs md:size-auto md:h-(--toolbar-control) md:gap-2 md:px-3 md:w-auto")}
                     aria-label="Nova categoria"
                     onClick={onNewCategory}
                 >
                     <PlusIcon className="size-4 shrink-0" />
                     <span className="hidden truncate md:inline">Nova categoria</span>
                 </Button>
-            </div>
-        </div>
+            </ToolbarActions>
+        </Toolbar>
     )
 }

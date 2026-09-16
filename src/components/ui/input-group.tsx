@@ -129,9 +129,35 @@ const inputGroupAddonVariants = cva(
 function InputGroupAddon({
   className,
   align = "inline-start",
+  children,
   ...props
 }: React.ComponentProps<typeof Label> & VariantProps<typeof inputGroupAddonVariants>) {
   const { controlId } = React.useContext(InputGroupContext)
+  const shared = {
+    "data-slot": "input-group-addon",
+    "data-align": align,
+    className: cn(inputGroupAddonVariants({ align }), className),
+    ...props,
+  }
+
+  // Um addon com botão não pode ser `<label for>`: o nome do botão entrava no
+  // nome do campo ("Limpar busca" anunciado como o campo de busca), e botão
+  // dentro de label não é HTML válido. Ele vira `<div>`, com a mesma régua.
+  // ponytail: o controle é reconhecido pelo `onClick`/`aria-label` do filho
+  // direto; um gatilho que não traga nenhum dos dois ainda cai no `<label>`,
+  // onde o guarda de clique abaixo segura o foco.
+  const temControle = React.Children.toArray(children).some(
+    (c) =>
+      React.isValidElement<{ onClick?: unknown; "aria-label"?: unknown }>(c) &&
+      (typeof c.props.onClick === "function" || c.props["aria-label"] != null)
+  )
+  if (temControle) {
+    return (
+      <Label asChild {...shared}>
+        <div>{children}</div>
+      </Label>
+    )
+  }
 
   return (
     <Label
@@ -146,9 +172,6 @@ function InputGroupAddon({
       // fronteira que o leitor de tela anuncia e ninguém pediu — eram cinco
       // deles na página do catálogo.
       htmlFor={controlId}
-      data-slot="input-group-addon"
-      data-align={align}
-      className={cn(inputGroupAddonVariants({ align }), className)}
       onClick={(e) => {
         // Um botão dentro do rótulo: o clique é dele, e sem isto o `<label>`
         // roubaria o foco para o campo no mesmo gesto.
@@ -156,8 +179,10 @@ function InputGroupAddon({
           e.preventDefault()
         }
       }}
-      {...props}
-    />
+      {...shared}
+    >
+      {children}
+    </Label>
   )
 }
 

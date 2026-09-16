@@ -173,7 +173,7 @@ export default function GlassDoc() {
                 title="Vestindo uma peça que já existe"
                 description="Com `asChild` nenhum nó é criado — o `Slot` mescla as classes no filho. É a forma de dar vidro a um controle sem tocar na `className` dele."
                 code={`<Glass asChild size="control">
-  <AppThemeToggle />
+  <ThemeToggle />
 </Glass>`}
             >
                 <Glass asChild size="control">
@@ -345,12 +345,12 @@ export default function GlassDoc() {
                 <br />
                 Antes de vestir alguma coisa, confira que ela faz{" "}
                 <code>className={"{cn(…, className)}"}</code> na raiz. O{" "}
-                <code>AppThemeToggle</code> faz, nos dois ramos.
+                <code>ThemeToggle</code> faz, nos dois ramos.
                 <br />
                 <br />
                 E o <code>data-slot</code> do filho <strong>vence</strong> o da
                 peça — dentro de <code>{"<Glass asChild>"}</code> um toggle
-                continua se anunciando como <code>app-theme-toggle</code>. É a
+                continua se anunciando como <code>theme-toggle</code>. É a
                 resolução do <code>Slot</code>, e é o nome certo: naquele lugar
                 aquilo é um toggle que por acaso está de vidro.
             </DocNote>

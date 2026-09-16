@@ -36,7 +36,7 @@ const glassVariants = cva("", {
  * dois casos em que compor as classes à mão seria pior:
  *
  * - **vestir uma peça que já existe**, sem tocar na `className` dela —
- *   `<Glass asChild><AppThemeToggle /></Glass>`, que é a forma que o pedido
+ *   `<Glass asChild><ThemeToggle /></Glass>`, que é a forma que o pedido
  *   descreve. Com `asChild` nenhum nó é criado: o `Slot` mescla as classes no
  *   filho.
  * - **ser dono da casca**, quando ninguém mais é — `<Glass className="rounded-xl

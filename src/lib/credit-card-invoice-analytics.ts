@@ -3,6 +3,7 @@
  * Uses the same calendar windows as {@link buildCardCycleSnapshot}.
  */
 
+import { roundCents } from "@/lib/money-brl"
 import type { CcTxAnalyticsRow } from "@/lib/credit-cards-workspace-transactions"
 import type { CardCycleSnapshot } from "@/lib/credit-card-billing"
 import {
@@ -13,6 +14,7 @@ import {
 import { localYmdFromDate, parseYmdLocal, transactionCalendarParts } from "@/lib/transaction-date"
 import { parseInstallmentFromDescription } from "@/lib/transaction-installment"
 import type { WorkspaceInstallmentPlan } from "@/lib/supabase"
+import { currencyBRL } from "@/lib/formatters"
 import {
     forecastCreditCardInstallmentsForWindow,
     type InstallmentDedupeTx,
@@ -138,7 +140,10 @@ export function sumByInvoiceSlice(rows: CcTxAnalyticsRow[]): SliceTotals {
         if (tx.type !== "expense") continue
         out[sliceKeyFor(tx)] += Number(tx.amount)
     }
-    return out
+    return {
+        installments_recurring: roundCents(out.installments_recurring),
+        one_off: roundCents(out.one_off),
+    }
 }
 
 export type CategoryAggregate = {
@@ -184,7 +189,9 @@ export function aggregateByCategory(rows: CcTxAnalyticsRow[]): CategoryAggregate
             cur.total += amt
         }
     }
-    return [...map.values()].sort((a, b) => b.total - a.total)
+    return [...map.values()]
+        .map((c) => ({ ...c, total: roundCents(c.total) }))
+        .sort((a, b) => b.total - a.total)
 }
 
 export type CategoryComparisonRow = CategoryAggregate & {
@@ -619,7 +626,7 @@ export function buildProfileCopy(
     medianTicket: number | null
 ): string {
     const fmt = (n: number) =>
-        n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+        currencyBRL(n)
     switch (profile) {
         case "few_large":
             return `Perfil com poucos gastos altos — ticket mediano ${medianTicket != null ? fmt(medianTicket) : "—"}.`
@@ -678,6 +685,8 @@ export function buildCreditCardInvoiceAnalytics(
     for (const tx of lastClosedRows) {
         if (tx.type === "expense") lastClosedTotal += Number(tx.amount)
     }
+    openTotal = roundCents(openTotal)
+    lastClosedTotal = roundCents(lastClosedTotal)
 
     const sliceOpen = sumByInvoiceSlice(openRows)
     const sliceLastClosed = sumByInvoiceSlice(lastClosedRows)

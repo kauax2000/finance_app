@@ -151,8 +151,8 @@ function Card({
 /**
  * Título, descrição e ação — o cabeçalho **dentro** do respiro do cartão.
  *
- * Ele não é a barra de topo: quem tem fio embaixo e fundo tingido é o
- * `CardToolbar`. Aqui o cabeçalho compartilha a superfície do corpo, e o que o
+ * Ele não é a barra de topo: essa é o `CardToolbar`, uma tira que sangra até a
+ * borda (sem fio nem tinta — ver as tiras). Aqui o cabeçalho compartilha a superfície do corpo, e o que o
  * separa do conteúdo é o `gap` do casco.
  *
  * O `pt-4` que ele carregava saiu. Somado ao `py-4` do casco, dava **32px acima
@@ -170,7 +170,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
         "has-data-[slot=card-description]:grid-rows-[auto_auto]",
         // Quem põe um fio no cabeçalho o transforma em tira, e uma tira precisa
         // do próprio pé. Continua atendido — mas o caminho novo é `CardToolbar`,
-        // que já vem com fio, tinta e altura mínima.
+        // a tira que sangra até a borda com altura mínima.
         className
       )}
       {...props}

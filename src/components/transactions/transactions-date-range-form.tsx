@@ -1,26 +1,11 @@
 "use client"
 
+import { localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
 import { XMarkIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { DatePicker } from "@/components/ui/date-picker"
-import { Label } from "@/components/ui/label"
+import { Field, FieldControl, FieldLabel } from "@/components/ui/field"
 import { cn } from "@/lib/utils"
-
-function ymdToLocalDate(s: string): Date | undefined {
-    if (!s) return undefined
-    const parts = s.split("-").map((p) => parseInt(p, 10))
-    if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return undefined
-    const [y, m, d] = parts
-    return new Date(y, m - 1, d)
-}
-
-function localDateToYmd(d: Date | undefined): string {
-    if (!d) return ""
-    const y = d.getFullYear()
-    const mo = d.getMonth() + 1
-    const day = d.getDate()
-    return `${y}-${String(mo).padStart(2, "0")}-${String(day).padStart(2, "0")}`
-}
 
 export function TransactionsDateRangeForm({
     idPrefix,
@@ -47,49 +32,40 @@ export function TransactionsDateRangeForm({
     className?: string
     footerClassName?: string
 }) {
-    const fromId = `${idPrefix}-from`
-    const toId = `${idPrefix}-to`
+    // Um campo só, e o calendário marca a faixa entre as pontas. Com dois
+    // `DatePicker` independentes o fim podia ficar antes do início, e havia um
+    // alerta para isso; o intervalo torna esse estado impossível. O preço é
+    // aceito: não dá mais para escolher só o "até", e "Limpar" apaga as duas
+    // pontas. O `id` do campo é o do antigo "De".
+    const fieldId = `${idPrefix}-from`
 
     return (
         <div className={cn("space-y-3", className)}>
-            <div className="grid grid-cols-2 gap-2">
-                <div className="min-w-0 space-y-1">
-                    <Label
-                        htmlFor={fromId}
-                        className="text-2xs text-muted-foreground"
-                    >
-                        De
-                    </Label>
+            <Field size="sm">
+                <FieldLabel className="text-2xs text-muted-foreground">
+                    Período
+                </FieldLabel>
+                <FieldControl>
                     <DatePicker
-                        id={fromId}
+                        id={fieldId}
+                        mode="range"
                         displayStyle="numeric"
                         placeholder="—"
                         value={
-                            draftFrom ? ymdToLocalDate(draftFrom) : undefined
+                            draftFrom
+                                ? {
+                                      from: parseYmdLocal(draftFrom),
+                                      to: draftTo ? parseYmdLocal(draftTo) : undefined,
+                                  }
+                                : undefined
                         }
-                        onChange={(d) =>
-                            onDraftFromChange(d ? localDateToYmd(d) : "")
-                        }
+                        onChange={(range) => {
+                            onDraftFromChange(range?.from ? localYmdFromDate(range.from) : "")
+                            onDraftToChange(range?.to ? localYmdFromDate(range.to) : "")
+                        }}
                     />
-                </div>
-                <div className="min-w-0 space-y-1">
-                    <Label
-                        htmlFor={toId}
-                        className="text-2xs text-muted-foreground"
-                    >
-                        Até
-                    </Label>
-                    <DatePicker
-                        id={toId}
-                        displayStyle="numeric"
-                        placeholder="—"
-                        value={draftTo ? ymdToLocalDate(draftTo) : undefined}
-                        onChange={(d) =>
-                            onDraftToChange(d ? localDateToYmd(d) : "")
-                        }
-                    />
-                </div>
-            </div>
+                </FieldControl>
+            </Field>
             <div
                 className={cn(
                     "flex flex-wrap items-center justify-between gap-2",

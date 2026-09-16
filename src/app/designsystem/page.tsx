@@ -30,14 +30,14 @@ import {
  *
  * O índice listava 87 cartões de peso idêntico, e um catálogo sem ponto de
  * entrada obriga cada pessoa a inventar o próprio. Estes quatro não são os mais
- * usados: são os que mudam o que alguém vai escrever nos outros 83 — três
- * padrões que atravessam telas e a página que governa todas as cores.
+ * usados: são os que mudam o que alguém vai escrever nos outros — o valor em
+ * reais, o formulário, o toque e a página que governa todas as cores.
  */
 const START_HERE = [
     { slug: "cores", Icon: SwatchIcon },
-    { slug: "dinheiro", Icon: BanknotesIcon },
-    // A própria glifa da tecla Enter, que é sobre o que a página fala.
-    { slug: "formularios", Icon: ArrowUturnLeftIcon },
+    { slug: "money-display", Icon: BanknotesIcon },
+    // A própria glifa da tecla Enter: o contrato dela mora no Form.
+    { slug: "form", Icon: ArrowUturnLeftIcon },
     { slug: "mobile-toque", Icon: CursorArrowRaysIcon },
 ]
 
@@ -47,7 +47,6 @@ const CATEGORY_BLURB: Record<string, string> = {
     Moléculas: "Feitas de átomos: um grupo pequeno que resolve uma tarefa e lê como uma unidade.",
     Organismos: "Feitos de moléculas: seções com faixas, grupos, submenus ou linhas próprias.",
     Templates: "O que estrutura a página, e não o que ela contém.",
-    Padrões: "Não são componentes: são as decisões que atravessam telas.",
 }
 
 /** `01`, `02` — a numeração do sumário, não a contagem de itens. */
@@ -282,8 +281,11 @@ export default function DesignSystemIndexPage() {
                                 key={item.slug}
                                 className="border-b border-border/70 py-0.5"
                             >
-                                {/* O `Button` do sistema, com **três**
-                                    contra-classes medidas: `h-auto` (o `h-8` do
+                                {/* O `Button` do sistema, com **quatro**
+                                    contra-classes medidas: `w-full` (a base é
+                                    `inline-flex` e encolhia até o conteúdo — a
+                                    faixa de hover e a seta paravam no meio da
+                                    coluna), `h-auto` (o `h-8` do
                                     degrau e o `min-h-10` convivem, e no telefone
                                     a grade cai para uma coluna e transborda),
                                     `font-normal` (a base engordaria as 88
@@ -295,7 +297,7 @@ export default function DesignSystemIndexPage() {
                                     variant="tertiary"
                                     size="md"
                                     className={cn(
-                                        "group h-auto min-h-10 justify-start gap-3 rounded-md px-2 py-2 font-normal bg-clip-border transition-colors",
+                                        "group h-auto min-h-10 w-full justify-start gap-3 rounded-md px-2 py-2 font-normal bg-clip-border transition-colors",
                                         "hover:bg-accent/50 active:bg-accent/50",
                                         // `--accent` e `--muted` são a mesma cor
                                         // no escuro hoje; a contra-classe fica

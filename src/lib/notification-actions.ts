@@ -7,7 +7,8 @@ export type NotificationAction = {
 }
 
 function isSafeInternalPath(href: string): boolean {
-    if (!href.startsWith("/") || href.startsWith("//")) return false
+    // "/\\evil.com" também sai do app: o navegador lê a barra invertida como barra.
+    if (!href.startsWith("/") || href.startsWith("//") || href.includes("\\")) return false
     return true
 }
 

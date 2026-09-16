@@ -1,5 +1,13 @@
 "use client"
 
+import {
+    EmptyState,
+    EmptyStateActions,
+    EmptyStateDescription,
+    EmptyStateIcon,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
+import { addDaysYmd, compareYmd } from "@/lib/transaction-date"
 import { AdjustmentsHorizontalIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
 import { useCallback, useMemo, useState } from "react"
@@ -58,22 +66,9 @@ import type {
     BillRowWithCategory,
 } from "@/lib/queries/fetch-bills-page-bundle"
 import type { Bill } from "@/lib/supabase"
+import { numberBR } from "@/lib/formatters"
 
 const DETAIL_QUERY = "detail"
-
-function cmpYmd(a: string, b: string): number {
-    return a.localeCompare(b)
-}
-
-function addDaysToYmd(ymd: string, days: number): string {
-    const parts = ymd.split("-").map((x) => Number.parseInt(x, 10))
-    const y = parts[0] ?? 1970
-    const m = parts[1] ?? 1
-    const d = parts[2] ?? 1
-    const dt = new Date(y, m - 1, d)
-    dt.setDate(dt.getDate() + days)
-    return localYmdFromDate(dt)
-}
 
 async function handleSkipBillInstance(opts: {
     workspaceId: string | null
@@ -108,7 +103,7 @@ function comparePendingRows(
 ): number {
     const inv = dir === "asc" ? 1 : -1
     if (key === "due_date") {
-        const c = cmpYmd(a.dueYmd, b.dueYmd)
+        const c = compareYmd(a.dueYmd, b.dueYmd)
         if (c !== 0) return c * inv
     } else if (key === "amount") {
         const na = a.amountHint ?? -Infinity
@@ -144,7 +139,7 @@ function compareModelSummaries(
     } else if (key === "due_date") {
         const da = a.nextDueYmd ?? "9999-12-31"
         const db = b.nextDueYmd ?? "9999-12-31"
-        const c = cmpYmd(da, db)
+        const c = compareYmd(da, db)
         if (c !== 0) return c * inv
     } else if (key === "amount") {
         const na =
@@ -196,8 +191,8 @@ export default function BillsPageClient() {
             <Button
                 type="button"
                 variant="outline"
-                size="icon-lg"
-                className="relative size-9 shrink-0"
+                size="icon-md"
+                className="relative shrink-0"
                 disabled={!billsHasTableEarly}
                 onClick={() => setMobileFiltersSheetOpen(true)}
                 aria-label="Filtros e ordenação"
@@ -242,7 +237,7 @@ export default function BillsPageClient() {
     }, [])
 
     const todayYmd = useMemo(() => localYmdFromDate(new Date()), [])
-    const limit30Ymd = useMemo(() => addDaysToYmd(todayYmd, 30), [todayYmd])
+    const limit30Ymd = useMemo(() => addDaysYmd(todayYmd, 30), [todayYmd])
 
     const virtualRows = useMemo(() => {
         if (!bundleQ.data?.creditCards?.length || bundleQ.data.tableMissing) {
@@ -297,7 +292,7 @@ export default function BillsPageClient() {
                 virtual: v,
             })
         }
-        rows.sort((a, b) => cmpYmd(a.dueYmd, b.dueYmd))
+        rows.sort((a, b) => compareYmd(a.dueYmd, b.dueYmd))
         return rows
     }, [bundleQ.data?.bills, pendingRegular, virtualRows])
 
@@ -307,7 +302,7 @@ export default function BillsPageClient() {
     )
 
     const overdueRows = useMemo(
-        () => regularRows.filter((r) => cmpYmd(r.dueYmd, todayYmd) < 0),
+        () => regularRows.filter((r) => compareYmd(r.dueYmd, todayYmd) < 0),
         [regularRows, todayYmd]
     )
     const soonFilterRows = useMemo(
@@ -315,10 +310,10 @@ export default function BillsPageClient() {
             [...regularRows]
                 .filter(
                     (r) =>
-                        cmpYmd(r.dueYmd, todayYmd) >= 0 &&
-                        cmpYmd(r.dueYmd, limit30Ymd) <= 0
+                        compareYmd(r.dueYmd, todayYmd) >= 0 &&
+                        compareYmd(r.dueYmd, limit30Ymd) <= 0
                 )
-                .sort((a, b) => cmpYmd(a.dueYmd, b.dueYmd)),
+                .sort((a, b) => compareYmd(a.dueYmd, b.dueYmd)),
         [regularRows, todayYmd, limit30Ymd]
     )
 
@@ -360,7 +355,7 @@ export default function BillsPageClient() {
                 continue
             }
             const curDue = cur.due_date.slice(0, 10)
-            if (cmpYmd(due, curDue) < 0) nextPendingByBill.set(inst.bill_id, inst)
+            if (compareYmd(due, curDue) < 0) nextPendingByBill.set(inst.bill_id, inst)
         }
 
         return bills.map((bill) => {
@@ -374,7 +369,7 @@ export default function BillsPageClient() {
                 paid90Count += 1
                 const paidDay = inst.paid_at.slice(0, 10)
                 const due = inst.due_date.slice(0, 10)
-                if (cmpYmd(paidDay, due) > 0) latePay90Count += 1
+                if (compareYmd(paidDay, due) > 0) latePay90Count += 1
             }
             const avgCharge =
                 paid90Count > 0
@@ -618,72 +613,66 @@ export default function BillsPageClient() {
             />
 
             {globalEmpty ? (
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent
-                        className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
+                        className="px-4 py-12 md:py-14"
                         role="status"
                         aria-live="polite"
                     >
-                        <div
-                            className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                            aria-hidden
-                        >
-                            <ReceiptPercentIcon className="size-7 text-muted-foreground" />
-                        </div>
-                        <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                            Cadastre suas contas a pagar
-                        </h2>
-                        <p className="mb-6 max-w-md text-center text-sm text-muted-foreground">
-                            Vencimentos variáveis, lembretes e confirmação do valor ao
-                            pagar. Faturas de cartão aparecem automaticamente quando houver
-                            valor em aberto.
-                        </p>
-                        <Button
-                            type="button"
-                            size="xl"
-                            className="gap-1.5"
-                            onClick={() => {
-                                setEditingBill(null)
-                                setFormOpen(true)
-                            }}
-                        >
-                            <PlusIcon className="size-3.5" />
-                            Nova conta
-                        </Button>
+                        <EmptyState variant="plain" size="lg">
+                            <EmptyStateIcon><ReceiptPercentIcon aria-hidden /></EmptyStateIcon>
+                            <EmptyStateTitle>Cadastre suas contas a pagar</EmptyStateTitle>
+                            <EmptyStateDescription>
+                                Vencimentos variáveis, lembretes e confirmação do valor ao
+                                pagar. Faturas de cartão aparecem automaticamente quando houver
+                                valor em aberto.
+                            </EmptyStateDescription>
+                            <EmptyStateActions>
+                                <Button
+                                    type="button"
+                                    size="xl"
+                                    className="gap-1.5"
+                                    onClick={() => {
+                                        setEditingBill(null)
+                                        setFormOpen(true)
+                                    }}
+                                >
+                                    <PlusIcon className="size-3.5" />
+                                    Nova conta
+                                </Button>
+                            </EmptyStateActions>
+                        </EmptyState>
                     </CardContent>
                 </Card>
             ) : hasNoMatches ? (
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent
-                        className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
+                        className="px-4 py-12 md:py-14"
                         role="status"
                         aria-live="polite"
                     >
-                        <div
-                            className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                            aria-hidden
-                        >
-                            <MagnifyingGlassIcon className="size-7 text-muted-foreground" />
-                        </div>
-                        <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                            Nenhuma conta com esses filtros
-                        </h2>
-                        <p className="mb-6 max-w-md text-center text-sm text-muted-foreground">
-                            Tente outro filtro ou limpe para ver tudo.
-                        </p>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="xl"
-                            className="min-w-[10rem] text-xs"
-                            onClick={resetFilters}
-                        >
-                            Limpar filtros
-                        </Button>
+                        <EmptyState variant="plain" size="lg">
+                            <EmptyStateIcon><MagnifyingGlassIcon aria-hidden /></EmptyStateIcon>
+                            <EmptyStateTitle>Nenhuma conta com esses filtros</EmptyStateTitle>
+                            <EmptyStateDescription>
+                                Tente outro filtro ou limpe para ver tudo.
+                            </EmptyStateDescription>
+                            <EmptyStateActions>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="xl"
+                                    className="min-w-[10rem] text-xs"
+                                    onClick={resetFilters}
+                                >
+                                    Limpar filtros
+                                </Button>
+                            </EmptyStateActions>
+                        </EmptyState>
                     </CardContent>
                 </Card>
             ) : showPendingEmptyButHasHistory ? (
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent className="mx-auto max-w-md px-4 py-8 text-center text-sm text-muted-foreground md:py-10">
                         <p className="mb-4">
                             Nenhuma conta pendente no momento. Você tem pagamentos recentes
@@ -778,14 +767,12 @@ export default function BillsPageClient() {
                         {mode === "pending" ? (
                             <>
                                 <span className="text-foreground/90">
-                                    {sortedPendingCards.length.toLocaleString(
-                                        "pt-BR"
-                                    )}
+                                    {numberBR(sortedPendingCards.length)}
                                 </span>
                                 <span className="mx-1 text-border">·</span>
                                 {pendingFilter === "all" ? (
                                     <span>
-                                        {regularRows.length.toLocaleString("pt-BR")}{" "}
+                                        {numberBR(regularRows.length)}{" "}
                                         {regularRows.length === 1
                                             ? "pendência no espaço"
                                             : "pendências no espaço"}
@@ -793,7 +780,7 @@ export default function BillsPageClient() {
                                 ) : (
                                     <span>
                                         na lista filtrada (
-                                        {regularRows.length.toLocaleString("pt-BR")}{" "}
+                                        {numberBR(regularRows.length)}{" "}
                                         no espaço)
                                     </span>
                                 )}
@@ -801,9 +788,7 @@ export default function BillsPageClient() {
                         ) : (
                             <>
                                 <span className="text-foreground/90">
-                                    {sortedModelCards.length.toLocaleString(
-                                        "pt-BR"
-                                    )}
+                                    {numberBR(sortedModelCards.length)}
                                 </span>
                                 <span className="mx-1 text-border">·</span>
                                 <span>modelos de conta</span>

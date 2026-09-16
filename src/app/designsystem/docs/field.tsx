@@ -428,9 +428,9 @@ export default function FieldDoc() {
       <DocNote title="Field não é o formulário">
         Quem cuida do envio e do comportamento do <kbd>Enter</kbd> é o{" "}
         <code>Form</code>. <code>Field</code> cuida de um campo. Os dois se
-        compõem, e o padrão inteiro está em{" "}
-        <Link href="/designsystem/formularios" className="underline">
-          Formulários e Enter
+        compõem, e o contrato inteiro está em{" "}
+        <Link href="/designsystem/form" className="underline">
+          Form
         </Link>
         .
       </DocNote>

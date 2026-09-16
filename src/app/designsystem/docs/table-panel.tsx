@@ -504,12 +504,12 @@ export default function TablePanelDoc() {
         rows={[
           {
             prop: "TablePanel",
-            type: "ComponentProps<typeof Card>",
+            type: "ComponentProps<typeof Card> & { toolbar?: ReactNode }",
             description: "Card padding=\"none\" variant=\"outline\", publicando lg em TableSizeContext. toolbar recebe a barra de topo, que fica fora da moldura.",
           },
           {
             prop: "TablePanelToolbar",
-            type: 'variant: "label" | "title"',
+            type: 'ComponentProps<typeof CardToolbar> · variant: "label" | "title"',
             default: '"label"',
             description: "A barra de topo — CardToolbar com o nome do painel. Vai na prop toolbar do TablePanel, nunca como filho: fica fora da moldura, acima dela, sem fundo e sem borda. Como filho ela cairia dentro, e avisa no console.",
           },

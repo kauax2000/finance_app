@@ -19,6 +19,7 @@ import {
   MenubarSubTrigger,
   MenubarTrigger,
 } from "@/components/ui/menubar"
+import { Kbd } from "@/components/ui/kbd"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 const VARIANTES = [
@@ -101,7 +102,7 @@ export default function MenubarDoc() {
   <MenubarMenu>
     <MenubarTrigger>Arquivo</MenubarTrigger>
     <MenubarContent>
-      <MenubarItem>Exportar CSV<MenubarShortcut>⌘E</MenubarShortcut></MenubarItem>
+      <MenubarItem>Exportar CSV<MenubarShortcut><Kbd keys="mod+e" /></MenubarShortcut></MenubarItem>
       <MenubarSub>
         <MenubarSubTrigger>Exportar como</MenubarSubTrigger>
         <MenubarSubContent>
@@ -328,7 +329,9 @@ function MenubarCompleto() {
         <MenubarContent>
           <MenubarItem>
             Exportar CSV
-            <MenubarShortcut>⌘E</MenubarShortcut>
+            <MenubarShortcut>
+              <Kbd keys="mod+e" />
+            </MenubarShortcut>
           </MenubarItem>
           <MenubarSub>
             <MenubarSubTrigger>Exportar como</MenubarSubTrigger>
@@ -340,7 +343,9 @@ function MenubarCompleto() {
           </MenubarSub>
           <MenubarItem>
             Importar extrato
-            <MenubarShortcut>⌘I</MenubarShortcut>
+            <MenubarShortcut>
+              <Kbd keys="mod+i" />
+            </MenubarShortcut>
           </MenubarItem>
           <MenubarSeparator />
           <MenubarItem variant="destructive">Apagar rascunho</MenubarItem>
@@ -353,7 +358,9 @@ function MenubarCompleto() {
           <MenubarLabel>Seleção</MenubarLabel>
           <MenubarItem>
             Selecionar tudo
-            <MenubarShortcut>⌘A</MenubarShortcut>
+            <MenubarShortcut>
+              <Kbd keys="mod+a" />
+            </MenubarShortcut>
           </MenubarItem>
           <MenubarItem disabled>Desfazer</MenubarItem>
         </MenubarContent>

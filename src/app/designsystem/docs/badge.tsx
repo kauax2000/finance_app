@@ -1,7 +1,31 @@
 "use client"
 
-import { Badge } from "@/components/ui/badge"
+import {
+  Badge,
+  tagChipDanger,
+  tagChipExpense,
+  tagChipFilterIdle,
+  tagChipFilterSelected,
+  tagChipIncome,
+  tagChipInfo,
+  tagChipNeutral,
+  tagChipSuccess,
+  tagChipUnreadCount,
+  tagChipWarning,
+} from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { Group, Spec, Stack } from "../ds-kit"
+
+const CHIPS: [string, string, string][] = [
+  ["tagChipSuccess", tagChipSuccess, "concluído, pago, ativo"],
+  ["tagChipWarning", tagChipWarning, "vence hoje, perto do limite"],
+  ["tagChipDanger", tagChipDanger, "atrasado, cancelado, falhou"],
+  ["tagChipInfo", tagChipInfo, "informativo, em análise"],
+  ["tagChipNeutral", tagChipNeutral, "pendente, rascunho, sem estado"],
+  ["tagChipIncome", tagChipIncome, "receita"],
+  ["tagChipExpense", tagChipExpense, "despesa"],
+]
 
 export default function BadgeDoc() {
   return (
@@ -113,8 +137,83 @@ export default function BadgeDoc() {
         para uma receita faz o extrato parecer um painel de alertas.
       </DocNote>
 
-      <DocNote title="Badge ou chip?">
-        <code>tag-chip-classes.ts</code> é para quando a superfície tonal entra num elemento que já é outro componente. Quando o rótulo é só rótulo, é Badge — e as classes de chip não se duplicam fora desses dois lugares.
+      <Group
+        title="A mesma superfície fora do Badge"
+        description="Quando a tinta tonal precisa entrar num elemento que já é outro componente — gatilho de menu, botão de filtro, pílula de linha de tabela —, as constantes tagChip* saem deste mesmo arquivo. As tintas soft acima leem estas mesmas strings. Quando o rótulo é só rótulo, é Badge."
+      >
+        <Spec title="Estado" meta="ui/badge.tsx">
+          <Stack className="gap-2.5">
+            {CHIPS.map(([nome, classe, uso]) => (
+              <div key={nome} className="flex items-center gap-3">
+                <span
+                  className={cn(
+                    "shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium",
+                    classe
+                  )}
+                >
+                  Exemplo
+                </span>
+                <div className="flex min-w-0 flex-col">
+                  <code className="font-mono text-2xs text-foreground">
+                    {nome}
+                  </code>
+                  <span className="text-xs text-muted-foreground">{uso}</span>
+                </div>
+              </div>
+            ))}
+          </Stack>
+        </Spec>
+
+        <Spec title="Filtro e contagem">
+          <Stack className="gap-3">
+            <div className="flex flex-wrap gap-2">
+              <span
+                className={cn(
+                  "rounded-full px-3 py-1 text-xs font-medium",
+                  tagChipFilterSelected
+                )}
+              >
+                Selecionado
+              </span>
+              <span
+                className={cn(
+                  "rounded-full px-3 py-1 text-xs font-medium",
+                  tagChipFilterIdle
+                )}
+              >
+                Disponível
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span
+                className={cn(
+                  "nums rounded-full px-1.5 py-0.5 text-2xs font-medium",
+                  tagChipUnreadCount
+                )}
+              >
+                3
+              </span>
+              <span className="text-xs text-muted-foreground">
+                não lidas — sem hover, porque não é clicável
+              </span>
+            </div>
+          </Stack>
+        </Spec>
+      </Group>
+
+      <DocNote title="Uma fonte só, e o Badge já foi a segunda">
+        As constantes moravam em <code>lib/tag-chip-classes.ts</code>, e as
+        tintas <code>soft</code> do <code>Badge</code> eram uma segunda cópia
+        das mesmas sete strings — já divergente, sem o par{" "}
+        <code>dark:hover:</code>. Hoje as duas coisas são uma. Uma tela que
+        escreve <code>bg-success-muted text-success-muted-foreground</code> à
+        mão fica de fora quando o vocabulário mudar.
+      </DocNote>
+
+      <DocNote title="tagChipViolet e tagChipSky são apelidos, não cores novas">
+        Os dois apontam para os tokens de <code>info</code>. Ficaram dos tempos
+        em que as telas escolhiam a cor pelo tom, e continuam existindo só para
+        não quebrar quem os importa. Não use em código novo.
       </DocNote>
 
       <PropsTable
@@ -124,7 +223,7 @@ export default function BadgeDoc() {
             type: '"soft" | "outline"',
             default: '"soft"',
             description:
-              "A forma: preenche a tinta suave do tom, ou desenha o contorno na cor dele. Fechado no modo de vidro.",
+              "A forma: preenche a tinta suave do tom, ou desenha o contorno na cor dele.",
           },
           {
             prop: "tone",

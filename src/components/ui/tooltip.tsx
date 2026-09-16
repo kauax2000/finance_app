@@ -124,11 +124,12 @@ function TooltipContent({
         sideOffset={sideOffset}
         collisionPadding={collisionPadding}
         className={cn(
-          // `max-w-xs` é o teto de leitura; o `available-width` é o teto da
-          // janela, e o menor dos dois vence. Sem o segundo, uma dica de 320px
-          // sangra num telefone de 320 — deslocar não resolve o que não cabe.
-          "z-(--z-popover) w-fit max-w-xs origin-(--radix-tooltip-content-transform-origin)",
-          "max-h-(--radix-tooltip-content-available-height) max-w-(--radix-tooltip-content-available-width) overflow-y-auto overscroll-contain",
+          // 20rem é o teto de leitura; o `available-width` é o teto da janela, e
+          // o menor dos dois vence — numa classe só. Com duas (`max-w-xs` e
+          // `max-w-(--radix-…)`) o twMerge apagava a primeira, e a dica perdia o
+          // teto de leitura.
+          "z-(--z-popover) w-fit max-w-[min(20rem,var(--radix-tooltip-content-available-width))] origin-(--radix-tooltip-content-transform-origin)",
+          "max-h-(--radix-tooltip-content-available-height) overflow-y-auto overscroll-contain",
           menuPanelSurfaceClassName,
           tooltipContentVariants({ size }),
           // Entra deslizando do lado do gatilho, o que dá direção ao movimento
@@ -136,6 +137,7 @@ function TooltipContent({
           "data-[side=bottom]:slide-in-from-top-1 data-[side=left]:slide-in-from-right-1 data-[side=right]:slide-in-from-left-1 data-[side=top]:slide-in-from-bottom-1",
           "fade-in-0 zoom-in-95 fade-out-0 zoom-out-95",
           "data-[state=delayed-open]:animate-in data-[state=instant-open]:animate-in data-[state=closed]:animate-out",
+          "animation-duration-(--duration-instant) ease-(--ease-out)",
           className
         )}
         {...props}

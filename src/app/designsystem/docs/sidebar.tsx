@@ -16,7 +16,6 @@ import {
 } from "@heroicons/react/16/solid"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import {
   Collapsible,
   CollapsibleContent,
@@ -29,7 +28,6 @@ import {
 } from "@/components/ui/native-select"
 import {
   ResizableCollapseTrigger,
-  useResizablePanel,
 } from "@/components/ui/resizable"
 import {
   Sidebar,
@@ -58,7 +56,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { Kbd } from "@/components/ui/kbd"
-import { Muted, Small } from "@/components/ui/typography"
+import { TopBar, TopBarStart, TopBarTitle } from "@/components/ui/top-bar"
 import { IDENTITY_TONES } from "@/lib/avatar"
 import { cn } from "@/lib/utils"
 import { PhoneFrame, ViewportFrame } from "../ds-frame"
@@ -220,10 +218,10 @@ function Conteudo({ children }: { children?: React.ReactNode }) {
     <>
       {/* O fio vem da variante, pela variável que o `SidebarInset` publica —
           troque `variant` para `floating` acima e ele some. */}
-      <header className="flex h-12 shrink-0 items-center gap-2 border-b border-b-[length:var(--sidebar-inset-rule,1px)] border-border px-4">
-        {children}
-        <span className="font-heading text-sm font-medium">Início</span>
-      </header>
+      <TopBar>
+        <TopBarStart>{children}</TopBarStart>
+        <TopBarTitle>Início</TopBarTitle>
+      </TopBar>
       <div className="min-h-0 flex-1 space-y-3 p-4">
         <div className="h-20 rounded-lg border border-border bg-card" />
         <div className="grid grid-cols-2 gap-3">
@@ -239,7 +237,7 @@ function Conteudo({ children }: { children?: React.ReactNode }) {
 function CabecalhoComGatilho() {
   return (
     <Conteudo>
-      <SidebarTrigger className="-ml-1" />
+      <SidebarTrigger className="-ml-2" />
     </Conteudo>
   )
 }
@@ -327,6 +325,7 @@ function GatilhoDeColapso() {
     <ResizableCollapseTrigger
       collapsed={colapsado}
       side="start"
+      size="icon-md"
       onClick={toggleSidebar}
       aria-label={colapsado ? "Mostrar a navegação" : "Recolher a navegação"}
     />
@@ -391,7 +390,10 @@ export default function SidebarDoc() {
     <SidebarRail />
   </Sidebar>
   <SidebarInset>
-    <header><SidebarTrigger /></header>
+    <TopBar>
+      <TopBarStart><SidebarTrigger /></TopBarStart>
+      <TopBarTitle>Início</TopBarTitle>
+    </TopBar>
     {children}
   </SidebarInset>
 </SidebarProvider>`}

@@ -74,26 +74,23 @@ export function CategoryDetailHero({
                                 type="button"
                                 variant="tertiary"
                                 size="icon-lg"
-                                className="size-9 shrink-0 text-muted-foreground hover:text-foreground"
+                                className="size-9 shrink-0 text-muted-foreground hover:text-foreground active:text-foreground"
                                 aria-label={`Opções da categoria ${category.name}`}
                             >
                                 <EllipsisVerticalIcon className="size-4" aria-hidden />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent
-                            align="end"
-                            className="w-44"
-                            onCloseAutoFocus={(e) => e.preventDefault()}
+                            align="end" size="sm"
                         >
                             <DropdownMenuItem onSelect={() => onEdit()}>
                                 <PencilIcon className="h-4 w-4" aria-hidden />
                                 Editar
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
+                            <DropdownMenuItem variant="destructive"
                                 onSelect={() => onDelete()}
                             >
-                                <TrashIcon className="h-4 w-4" aria-hidden />
+                                <TrashIcon aria-hidden />
                                 Excluir
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -152,26 +149,23 @@ export function CategoryDetailHero({
                                 type="button"
                                 variant="tertiary"
                                 size="icon-lg"
-                                className="size-9 shrink-0 text-muted-foreground hover:text-foreground"
+                                className="size-9 shrink-0 text-muted-foreground hover:text-foreground active:text-foreground"
                                 aria-label={`Opções da categoria ${category.name}`}
                             >
                                 <EllipsisVerticalIcon className="size-4" aria-hidden />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent
-                            align="end"
-                            className="w-44"
-                            onCloseAutoFocus={(e) => e.preventDefault()}
+                            align="end" size="sm"
                         >
                             <DropdownMenuItem onSelect={() => onEdit()}>
                                 <PencilIcon className="h-4 w-4" aria-hidden />
                                 Editar
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
+                            <DropdownMenuItem variant="destructive"
                                 onSelect={() => onDelete()}
                             >
-                                <TrashIcon className="h-4 w-4" aria-hidden />
+                                <TrashIcon aria-hidden />
                                 Excluir
                             </DropdownMenuItem>
                         </DropdownMenuContent>

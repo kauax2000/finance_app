@@ -3,8 +3,101 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * **A superfície tonal, e ela mora aqui.**
+ *
+ * Estas constantes viviam em `lib/tag-chip-classes.ts`, e as tintas `soft` do
+ * `Badge` eram uma segunda cópia das mesmas sete strings — já divergente: o
+ * `Badge` não tinha o par `dark:hover:`. Hoje as tintas abaixo leem daqui, e a
+ * tela que precisa da superfície **fora** do componente (gatilho de menu, botão
+ * de filtro, pílula de linha de tabela) importa as mesmas constantes do mesmo
+ * arquivo. Os nomes ficaram, para a mudança nas telas ser só de caminho.
+ */
+
+/** Concluído, pago, ativo. */
+export const tagChipSuccess =
+  "bg-success-muted text-success-muted-foreground"
+
+/** Atrasado, cancelado, falhou. */
+export const tagChipDanger =
+  "bg-destructive-muted text-destructive-muted-foreground"
+
+/** Receita — os tokens de dinheiro, mais saturados que os de status. */
+export const tagChipIncome =
+  "bg-income-muted text-income-muted-foreground"
+
+/** Despesa — os tokens de dinheiro, mais saturados que os de status. */
+export const tagChipExpense =
+  "bg-expense-muted text-expense-muted-foreground"
+
+/** Pendente, rascunho, sem estado. */
+export const tagChipNeutral =
+  "bg-muted text-muted-foreground"
+
+/** Vence hoje, perto do limite. */
+export const tagChipWarning =
+  "bg-warning-muted text-warning-muted-foreground"
+
+/** Informativo, em análise. */
+export const tagChipInfo =
+  "bg-info-muted text-info-muted-foreground"
+
+/** Só o `Badge` usa: a marca em tinta suave não tem chip fora dele. */
+const tagChipPrimary =
+  "bg-primary-muted text-primary-muted-foreground"
+
+/** Apelido de `info`, do tempo em que a tela escolhia o tom. Não use em código novo. */
+export const tagChipViolet =
+  "bg-info-muted/80 text-info-muted-foreground hover:bg-info-muted dark:hover:bg-info-muted"
+
+/** Apelido de `info`, idêntico a ele. Não use em código novo. */
+export const tagChipSky = tagChipInfo
+
+/** Contagem sobre um ícone. Sem hover, porque não é clicável. */
+export const tagChipUnreadCount =
+  "bg-success-muted text-success-muted-foreground dark:bg-success-muted/70"
+
+/** Chip de filtro selecionado — tonal, não preenchido. */
+export const tagChipFilterSelected =
+  "bg-primary-muted text-primary-muted-foreground ring-1 ring-primary-accent/25 dark:ring-primary-accent/40"
+
+/** Chip de filtro disponível. */
+export const tagChipFilterIdle = tagChipNeutral
+
+/** Gatilho de menu com período ativo, na paleta de success. */
+export const tagChipSuccessMenuTrigger = cn(
+  tagChipSuccess,
+  "border-0 shadow-none hover:border-0",
+  "aria-expanded:border-0 aria-expanded:bg-success-muted/90 aria-expanded:text-success-muted-foreground",
+  "data-[state=open]:border-0 data-[state=open]:bg-success-muted/90 data-[state=open]:text-success-muted-foreground",
+  "dark:border-0 dark:hover:border-0",
+  // A tinta é a do par -muted: `success-foreground` sobre `success-muted` sumia no escuro.
+  "dark:aria-expanded:bg-success-muted dark:aria-expanded:text-success-muted-foreground",
+  "dark:data-[state=open]:bg-success-muted dark:data-[state=open]:text-success-muted-foreground"
+)
+
+/**
+ * A pílula de linha do extrato e da prévia de pagamento. `text-[10px]` não é
+ * degrau do `Badge` (o `xs` é 11px), e trocar mudaria pixel em cinco telas —
+ * fica registrado em vez de convertido.
+ */
+export const transactionRowChipShell =
+  "inline-flex h-5 shrink-0 items-center justify-center rounded-full border-0 px-2 text-[10px] font-semibold leading-none transition-colors"
+
+/** Receita — coluna "Tipo" da tabela de transações. */
+export const transactionIncomeTypeRowChip = cn(transactionRowChipShell, tagChipIncome)
+
+/** Despesa — coluna "Tipo" da tabela de transações. */
+export const transactionExpenseTypeRowChip = cn(transactionRowChipShell, tagChipExpense)
+
+/** "Parcelada" — a paleta de warning, a mesma do calendário de pagamentos. */
+export const transactionParceladaRowChip = cn(transactionRowChipShell, tagChipWarning)
+
+export const tagChipIncomeIconColor = "text-income-muted-foreground"
+export const tagChipExpenseIconColor = "text-expense-muted-foreground"
+
 const badgeVariants = cva(
-  "inline-flex items-center justify-center rounded-full border border-transparent text-center font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+  "inline-flex items-center justify-center rounded-full border border-transparent text-center font-medium transition-colors focus:outline-none focus-visible:ring-3 focus-visible:ring-ring/70",
   {
     variants: {
       /**
@@ -63,27 +156,28 @@ const badgeVariants = cva(
     /**
      * A tinta sai do cruzamento dos dois eixos.
      *
-     * `soft` preenche com a tinta suave do tom; `outline` desenha o contorno e
-     * o texto **na cor do tom**, sem preencher. É por isso que os valores de
-     * `tone` acima são vazios: sozinho, um tom não sabe se pinta fundo ou
-     * borda.
+     * `soft` preenche com a tinta suave do tom — **as mesmas constantes** que as
+     * telas usam fora do componente, declaradas no topo; `outline` desenha o
+     * contorno e o texto **na cor do tom**, sem preencher. É por isso que os
+     * valores de `tone` acima são vazios: sozinho, um tom não sabe se pinta
+     * fundo ou borda.
      */
     compoundVariants: [
-      { variant: "soft", tone: "primary", class: "bg-primary-muted text-primary-muted-foreground hover:bg-primary-muted/80" },
-      { variant: "soft", tone: "neutral", class: "bg-muted text-muted-foreground hover:bg-muted/80" },
-      { variant: "soft", tone: "success", class: "bg-success-muted text-success-muted-foreground hover:bg-success-muted/80" },
-      { variant: "soft", tone: "warning", class: "bg-warning-muted text-warning-muted-foreground hover:bg-warning-muted/80" },
-      { variant: "soft", tone: "destructive", class: "bg-destructive-muted text-destructive-muted-foreground hover:bg-destructive-muted/80" },
-      { variant: "soft", tone: "income", class: "bg-income-muted text-income-muted-foreground hover:bg-income-muted/80" },
-      { variant: "soft", tone: "expense", class: "bg-expense-muted text-expense-muted-foreground hover:bg-expense-muted/80" },
+      { variant: "soft", tone: "primary", class: tagChipPrimary },
+      { variant: "soft", tone: "neutral", class: tagChipNeutral },
+      { variant: "soft", tone: "success", class: tagChipSuccess },
+      { variant: "soft", tone: "warning", class: tagChipWarning },
+      { variant: "soft", tone: "destructive", class: tagChipDanger },
+      { variant: "soft", tone: "income", class: tagChipIncome },
+      { variant: "soft", tone: "expense", class: tagChipExpense },
 
-      { variant: "outline", tone: "primary", class: "border-primary-accent/40 text-primary-accent hover:bg-primary-muted/40" },
-      { variant: "outline", tone: "neutral", class: "border-border text-foreground hover:bg-muted" },
-      { variant: "outline", tone: "success", class: "border-success/40 text-success-muted-foreground hover:bg-success-muted/40" },
-      { variant: "outline", tone: "warning", class: "border-warning/40 text-warning-muted-foreground hover:bg-warning-muted/40" },
-      { variant: "outline", tone: "destructive", class: "border-destructive/40 text-destructive-muted-foreground hover:bg-destructive-muted/40" },
-      { variant: "outline", tone: "income", class: "border-income/40 text-income-muted-foreground hover:bg-income-muted/40" },
-      { variant: "outline", tone: "expense", class: "border-expense/40 text-expense-muted-foreground hover:bg-expense-muted/40" },
+      { variant: "outline", tone: "primary", class: "border-primary-accent/40 text-primary-accent" },
+      { variant: "outline", tone: "neutral", class: "border-border text-foreground" },
+      { variant: "outline", tone: "success", class: "border-success/40 text-success-muted-foreground" },
+      { variant: "outline", tone: "warning", class: "border-warning/40 text-warning-muted-foreground" },
+      { variant: "outline", tone: "destructive", class: "border-destructive/40 text-destructive-muted-foreground" },
+      { variant: "outline", tone: "income", class: "border-income/40 text-income-muted-foreground" },
+      { variant: "outline", tone: "expense", class: "border-expense/40 text-expense-muted-foreground" },
     ],
     defaultVariants: {
       variant: "soft",
@@ -94,12 +188,14 @@ const badgeVariants = cva(
 )
 
 export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends React.HTMLAttributes<HTMLSpanElement>,
     VariantProps<typeof badgeVariants> {}
 
 function Badge({ className, variant, tone, size, ...props }: BadgeProps) {
   return (
-    <div
+    // <span>, e não <div>: o chip mora dentro de parágrafo e de linha de texto,
+    // e um <div> dentro de <p> é HTML inválido (o React avisa na hidratação).
+    <span
       data-slot="badge"
       className={cn(badgeVariants({ variant, tone, size }), className)}
       {...props}

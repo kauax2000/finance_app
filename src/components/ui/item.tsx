@@ -120,7 +120,9 @@ function ItemGroup({
 }: React.ComponentProps<"div"> & VariantProps<typeof itemGroupVariants>) {
   return (
     <div
-      role="list"
+      // Sem `role="list"`: o `Item` não é `listitem` (ele pode ser um link), e
+      // uma lista sem itens é o que o leitor de tela anuncia errado. Quem é
+      // lista de verdade passa `role` e marca os itens.
       data-slot="item-group"
       data-variant={variant ?? "spaced"}
       className={cn(itemGroupVariants({ variant, className }))}
@@ -228,7 +230,9 @@ function ItemTitle({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="item-title"
       className={cn(
-        "line-clamp-1 flex w-fit items-center gap-2 text-sm leading-snug font-medium underline-offset-4",
+        // Sem `line-clamp-1`: medido, o `flex` vencia o `-webkit-box` e o corte nunca
+        // acontecia. Quem precisa cortar põe o texto num `span` com `truncate`.
+        "flex w-fit items-center gap-2 text-sm leading-snug font-medium underline-offset-4",
         className
       )}
       {...props}

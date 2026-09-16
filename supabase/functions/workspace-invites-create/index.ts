@@ -1,5 +1,8 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
+import { internalError } from '../_shared/http.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
+import { inviteEmailLimitReached, recentInviteLogs } from '../_shared/invite-rate-limit.ts'
+import { sha256Hex } from '../_shared/token-hash.ts'
 import {
   buildInviteAcceptUrl,
   renderInviteHtml,
@@ -30,13 +33,6 @@ function json(status: number, payload: unknown): Response {
   })
 }
 
-async function sha256Hex(input: string): Promise<string> {
-  const data = new TextEncoder().encode(input)
-  const hash = await crypto.subtle.digest('SHA-256', data)
-  const bytes = Array.from(new Uint8Array(hash))
-  return bytes.map((b) => b.toString(16).padStart(2, '0')).join('')
-}
-
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: corsHeaders })
@@ -52,7 +48,7 @@ Deno.serve(async (req: Request) => {
 
   const authResult = await getAuthUserFromJwt(supabaseUrl, anonKey, jwt)
   if (authResult.error || !authResult.user) {
-    return json(401, { error: 'Invalid or expired token', details: authResult.error ?? 'unknown' })
+    return json(401, { error: 'Invalid or expired token' })
   }
 
   let body: CreateInviteBody
@@ -96,16 +92,32 @@ Deno.serve(async (req: Request) => {
     .eq('user_id', caller.id)
     .maybeSingle()
 
-  if (memberErr) return json(500, { error: memberErr.message })
+  if (memberErr) return json(500, { error: internalError('workspace-invites-create', memberErr) })
   if (!member || member.role !== 'owner') return json(403, { error: 'Only owner can invite' })
 
   const { data: workspace, error: workspaceErr } = await supabaseAdmin
     .from('workspaces')
-    .select('id,name')
+    .select('id,name,type')
     .eq('id', workspaceId)
     .maybeSingle()
-  if (workspaceErr) return json(500, { error: workspaceErr.message })
+  if (workspaceErr) return json(500, { error: internalError('workspace-invites-create', workspaceErr) })
   if (!workspace) return json(404, { error: 'Workspace not found' })
+  if (workspace.type === 'personal') {
+    return json(400, { error: 'Personal workspaces cannot be shared' })
+  }
+
+  const appBase = resolvePublicAppBase(req)
+  if (!appBase) {
+    return json(500, { error: 'APP_BASE_URL não configurado.' })
+  }
+
+  if (!isLink) {
+    const { data: logs, error: logsErr } = await recentInviteLogs(supabaseAdmin, caller.id)
+    if (logsErr) return json(500, { error: internalError('workspace-invites-create', logsErr) })
+    if (inviteEmailLimitReached(logs ?? [], invitedEmail)) {
+      return json(429, { error: 'Too many invites' })
+    }
+  }
 
   if (isLink) {
     const { error: revokeErr } = await supabaseAdmin
@@ -114,15 +126,14 @@ Deno.serve(async (req: Request) => {
       .eq('workspace_id', workspaceId)
       .eq('status', 'pending')
       .is('invited_email', null)
-    if (revokeErr) return json(500, { error: revokeErr.message })
+    if (revokeErr) return json(500, { error: internalError('workspace-invites-create', revokeErr) })
   }
 
   const tokenRaw = crypto.randomUUID()
   const tokenHash = await sha256Hex(tokenRaw)
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
 
-  // Omit token_raw from INSERT: some PostgREST schema caches reject unknown columns on INSERT.
-  // Persist via UPDATE immediately after the row exists; callers rely on token_raw for reload-safe links.
+  // Só o hash é gravado: o link existe na resposta desta chamada e no e-mail.
   const insertRow = isLink
     ? {
         workspace_id: workspaceId,
@@ -153,30 +164,15 @@ Deno.serve(async (req: Request) => {
     .select('*')
     .single()
 
-  if (inviteErr) return json(500, { error: inviteErr.message })
+  if (inviteErr) return json(500, { error: internalError('workspace-invites-create', inviteErr) })
 
-  const { error: rawErr } = await supabaseAdmin
-    .from('workspace_invites')
-    .update({ token_raw: tokenRaw })
-    .eq('id', invite.id)
-
-  if (rawErr) {
-    await supabaseAdmin.from('workspace_invites').delete().eq('id', invite.id)
-    return json(500, {
-      error:
-        rawErr.message ||
-        'Não foi possível salvar o token do convite. Verifique se a coluna token_raw existe (workspace-invites-token-raw-and-invitee-rls.sql).',
-    })
-  }
-
-  const appBase = resolvePublicAppBase(req)
   const inviteUrl = buildInviteAcceptUrl(appBase, tokenRaw)
 
   if (!isLink) {
     try {
       await sendEmailResend({
         to: invitedEmail,
-        subject: `Convite para o workspace ${workspace.name}`,
+        subject: `Convite para o workspace ${String(workspace.name).slice(0, 60)}`,
         html: renderInviteHtml({
           inviterName: caller.email ?? 'Alguém',
           workspaceName: workspace.name,
@@ -184,7 +180,10 @@ Deno.serve(async (req: Request) => {
         }),
       })
     } catch (error) {
-      return json(500, { error: error instanceof Error ? error.message : 'Email send failed' })
+      // Sem o e-mail o convite não chegou a ninguém: não deixa uma pendência órfã.
+      console.error('workspace-invites-create: email', error)
+      await supabaseAdmin.from('workspace_invites').update({ status: 'revoked' }).eq('id', invite.id)
+      return json(502, { error: 'Email send failed' })
     }
   }
 

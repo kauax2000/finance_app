@@ -1,7 +1,10 @@
 "use client"
 
+import { Container } from "@/components/ui/container"
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline"
+import { ExclamationTriangleIcon as ExclamationTriangleMicroIcon } from "@heroicons/react/16/solid"
 import { useEffect } from "react"
-import { ExclamationTriangleIcon } from "@heroicons/react/16/solid"
+
 import { ROUTES } from "@/config/navigation"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -16,17 +19,28 @@ import { Muted } from "@/components/ui/typography"
 
 type RouteErrorFallbackProps = {
     error: Error & { digest?: string }
-    reset: () => void
+    retry: () => void
+    /**
+     * `page` ocupa a tela toda (erro fora da casca); `inline` mora dentro da
+     * casca do app, com a barra lateral e o cabeçalho ainda montados.
+     */
+    variant?: "page" | "inline"
 }
 
-export function RouteErrorFallback({ error, reset }: RouteErrorFallbackProps) {
+export function RouteErrorFallback({ error, retry, variant = "page" }: RouteErrorFallbackProps) {
     useEffect(() => {
         console.error(error)
     }, [error])
 
     return (
-        <div className="flex min-h-dvh w-full flex-1 flex-col justify-center bg-background px-4 py-12 sm:px-6">
-            <div className="mx-auto w-full max-w-md space-y-6">
+        <div
+            className={
+                variant === "page"
+                    ? "flex min-h-dvh w-full flex-1 flex-col justify-center bg-background px-4 py-12 sm:px-6"
+                    : "flex w-full flex-1 flex-col justify-center py-8"
+            }
+        >
+            <Container size="sm" className="space-y-6">
                 <EmptyState className="w-full border-border/80 bg-card/40 py-10">
                     <EmptyStateIcon className="bg-destructive-muted text-destructive-muted-foreground">
                         <ExclamationTriangleIcon aria-hidden />
@@ -37,7 +51,7 @@ export function RouteErrorFallback({ error, reset }: RouteErrorFallbackProps) {
                         novo ou voltar ao painel.
                     </EmptyStateDescription>
                     <EmptyStateActions>
-                        <Button type="button" variant="primary" onClick={reset}>
+                        <Button type="button" variant="primary" onClick={retry}>
                             Tentar novamente
                         </Button>
                         <Button type="button" variant="outline" asChild>
@@ -46,10 +60,16 @@ export function RouteErrorFallback({ error, reset }: RouteErrorFallbackProps) {
                     </EmptyStateActions>
                 </EmptyState>
                 <Alert tone="destructive" className="w-full">
-                    <ExclamationTriangleIcon />
+                    {/* O alerta desenha o ícone a 16px (`--alert-icon`), e o do
+                        bloco vazio sai a 24 — conjuntos diferentes, de propósito. */}
+                    <ExclamationTriangleMicroIcon />
                     <AlertTitle>Detalhes técnicos</AlertTitle>
                     <AlertDescription className="break-words font-mono text-xs">
-                        {error.message || "Erro desconhecido."}
+                        {/* A mensagem crua é para quem desenvolve; em produção
+                            fica só o código, que casa com o log do servidor. */}
+                        {process.env.NODE_ENV === "development"
+                            ? error.message || "Erro desconhecido."
+                            : "Erro inesperado."}
                         {error.digest ? (
                             <span className="mt-1 block text-muted-foreground">
                                 Código: {error.digest}
@@ -61,7 +81,7 @@ export function RouteErrorFallback({ error, reset }: RouteErrorFallbackProps) {
                     Se o problema continuar, atualize a página ou faça login de
                     novo.
                 </Muted>
-            </div>
+            </Container>
         </div>
     )
 }

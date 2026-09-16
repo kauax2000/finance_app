@@ -39,7 +39,7 @@ const progressVariants = cva(
 const progressIndicatorVariants = cva(
   cn(
     "h-full rounded-full",
-    "transition-[width] duration-(--duration-slow) ease-out"
+    "transition-[width] duration-(--duration-slow) ease-(--ease-out)"
   ),
   {
     variants: {
@@ -109,9 +109,8 @@ function Progress({
       className={cn(progressVariants({ size }), className)}
       value={clamped}
       max={max}
-      aria-valuetext={
-        excedeu ? `${Math.round((value / max) * 100)}%` : undefined
-      }
+      // Só quando excede: um `undefined` explícito apagava o texto padrão do Radix.
+      {...(excedeu ? { "aria-valuetext": `${Math.round((value / max) * 100)}%` } : {})}
       {...props}
     >
       <ProgressPrimitive.Indicator

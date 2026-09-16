@@ -1,6 +1,11 @@
 "use client"
 
-import { useEffect, useMemo, useState, type ReactNode } from "react"
+import { SectionLabel } from "@/components/transactions/installment-purchase-section"
+import {
+    Card,
+} from "@/components/ui/card"
+import { currencyBRL } from "@/lib/formatters"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import type { CreditCard, WorkspaceSubscriptionListRow } from "@/lib/supabase"
 import { supabase } from "@/lib/supabase"
@@ -36,21 +41,17 @@ import type { ExpenseCategoryOption } from "@/components/subscriptions/subscript
 import type { SubscriptionFormPayload } from "@/components/subscriptions/subscription-form-shared"
 import { SubscriptionFormSurface } from "@/components/subscriptions/subscription-form-surface"
 import { useSubscriptionForm } from "@/components/subscriptions/use-subscription-form"
-import { PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
-import { EllipsisHorizontalIcon, XMarkIcon } from "@heroicons/react/20/solid"
+import { EllipsisHorizontalIcon, PencilIcon, TrashIcon, XMarkIcon } from "@heroicons/react/16/solid"
+
 import { cn } from "@/lib/utils"
 import { Switch } from "@/components/ui/switch"
 import {
     tagChipSky,
     tagChipSuccess,
     tagChipWarning,
-} from "@/lib/tag-chip-classes"
-import { formatDatePtBr } from "@/lib/transaction-date"
-
-const currencyFmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-})
+} from "@/components/ui/badge"
+import { formatDatePtBr, localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
+import { advanceBilling } from "@/lib/subscription-billing-projection"
 
 type SubscriptionTransactionCharge = {
     id: string
@@ -66,24 +67,19 @@ type SubscriptionChargeRow = {
     status: "posted" | "paid" | "pending"
 }
 
+/**
+ * A próxima cobrança depois de `ymd`, pela mesma regra do banco: o dia-âncora
+ * é cortado no fim do mês e volta depois (31/01 → 28/02 → 31/03). O `setMonth`
+ * cru que havia aqui levava 31/01 para 03/03, e tratava bimestral como mensal.
+ */
 function addSubscriptionIntervalYmd(
     ymd: string,
-    interval: WorkspaceSubscriptionListRow["billing_interval"]
+    interval: WorkspaceSubscriptionListRow["billing_interval"],
+    anchorDay: number | null | undefined,
 ): string {
-    const [y, m, d] = ymd.split("-").map(Number)
-    if (!y || !m || !d) return ymd
-    const dt = new Date(y, m - 1, d)
-    if (interval === "weekly") {
-        dt.setDate(dt.getDate() + 7)
-    } else if (interval === "yearly") {
-        dt.setFullYear(dt.getFullYear() + 1)
-    } else {
-        dt.setMonth(dt.getMonth() + 1)
-    }
-    const yy = dt.getFullYear()
-    const mm = String(dt.getMonth() + 1).padStart(2, "0")
-    const dd = String(dt.getDate()).padStart(2, "0")
-    return `${yy}-${mm}-${dd}`
+    const from = parseYmdLocal(ymd)
+    if (!from) return ymd
+    return localYmdFromDate(advanceBilling(from, interval, anchorDay ?? from.getDate()))
 }
 
 function subscriptionChargeStatusChipClassName(
@@ -92,25 +88,6 @@ function subscriptionChargeStatusChipClassName(
     if (status === "pending") return tagChipWarning
     if (status === "paid") return tagChipSuccess
     return tagChipSky
-}
-
-function SectionLabel({
-    children,
-    className,
-}: {
-    children: ReactNode
-    className?: string
-}) {
-    return (
-        <p
-            className={cn(
-                "text-2xs font-semibold uppercase tracking-wide text-muted-foreground",
-                className
-            )}
-        >
-            {children}
-        </p>
-    )
 }
 
 export type SubscriptionDetailSheetProps = {
@@ -264,7 +241,8 @@ export function SubscriptionDetailSheet({
             (latestCharge
                 ? addSubscriptionIntervalYmd(
                       latestCharge.date.slice(0, 10),
-                      s?.billing_interval ?? "monthly"
+                      s?.billing_interval ?? "monthly",
+                      s?.billing_anchor_day
                   )
                 : null)
         if (nextDate) {
@@ -276,7 +254,7 @@ export function SubscriptionDetailSheet({
             })
         }
         return rows.slice(0, 2)
-    }, [latestCharge, nextCharge, s?.amount, s?.billing_interval])
+    }, [latestCharge, nextCharge, s?.amount, s?.billing_interval, s?.billing_anchor_day])
 
     if (!s) {
         return null
@@ -304,7 +282,7 @@ export function SubscriptionDetailSheet({
     const viewBody = (
         <div className="flex min-h-0 flex-1 flex-col gap-0">
             <DialogDescription className="sr-only">
-                Assinatura {s.name}. Valor {currencyFmt.format(Number(s.amount))}.
+                Assinatura {s.name}. Valor {currencyBRL(Number(s.amount))}.
                 Próxima cobrança {formatDatePtBr(nextCharge)}.
             </DialogDescription>
             <div
@@ -337,23 +315,21 @@ export function SubscriptionDetailSheet({
                                     aria-label="Mais opções"
                                 >
                                     <EllipsisHorizontalIcon
-                                        className="h-5 w-5"
                                         aria-hidden
                                     />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuContent align="end" size="sm">
                                 <DropdownMenuItem
                                     onClick={() => setDetailMode("edit")}
                                 >
                                     <PencilIcon className="h-4 w-4" aria-hidden />
                                     Editar
                                 </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    className="text-destructive focus:text-destructive"
+                                <DropdownMenuItem variant="destructive"
                                     onClick={() => onDelete(s)}
                                 >
-                                    <TrashIcon className="h-4 w-4" aria-hidden />
+                                    <TrashIcon aria-hidden />
                                     Excluir
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -366,14 +342,15 @@ export function SubscriptionDetailSheet({
                             onClick={() => onOpenChange(false)}
                             aria-label="Fechar"
                         >
-                            <XMarkIcon className="h-5 w-5" aria-hidden />
+                            <XMarkIcon aria-hidden />
                         </Button>
                     </div>
                 </div>
             </div>
 
             <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-4 sm:px-5">
-                <section className="space-y-3 rounded-xl border border-border/70 bg-muted/20 p-4 dark:bg-muted/10">
+                <Card asChild variant="muted" className="gap-3 px-4">
+                <section>
                     <div className="flex items-center justify-between gap-3">
                         <SectionLabel className="shrink-0">Resumo</SectionLabel>
                         <div
@@ -418,7 +395,7 @@ export function SubscriptionDetailSheet({
                     <div>
                         <p className="text-xs text-muted-foreground">Valor</p>
                         <p className="mt-0.5 text-2xl font-semibold tabular-nums tracking-tight text-foreground">
-                            {currencyFmt.format(Number(s.amount))}
+                            {currencyBRL(Number(s.amount))}
                         </p>
                     </div>
                     <div>
@@ -430,6 +407,7 @@ export function SubscriptionDetailSheet({
                         </p>
                     </div>
                 </section>
+                </Card>
 
                 <section className="space-y-3">
                     <SectionLabel>Detalhes</SectionLabel>
@@ -506,83 +484,81 @@ export function SubscriptionDetailSheet({
                             </div>
                         </div>
 
-                        <div className="mt-3 overflow-x-auto rounded-lg border border-border/50 bg-background/40">
-                            <Table className="min-w-[280px] text-xs">
-                                <TableHeader>
-                                    <TableRow className="hover:bg-transparent">
-                                        <TableHead className="h-8 px-2 text-2xs font-semibold uppercase tracking-wide">
-                                            Cobrança
-                                        </TableHead>
-                                        <TableHead className="h-8 px-2 text-right text-2xs font-semibold uppercase tracking-wide">
-                                            Valor
-                                        </TableHead>
-                                        <TableHead className="h-8 px-2 text-2xs font-semibold uppercase tracking-wide">
-                                            Status
-                                        </TableHead>
+                        <Table variant="outline" size="sm" className="mt-3 min-w-[280px]">
+                            <TableHeader labels="caps">
+                                <TableRow>
+                                    <TableHead>
+                                        Cobrança
+                                    </TableHead>
+                                    <TableHead numeric>
+                                        Valor
+                                    </TableHead>
+                                    <TableHead>
+                                        Status
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {latestChargeLoading ? (
+                                    <TableRow className="h-9 border-border/40">
+                                        <TableCell className="px-2 py-1.5">
+                                            <Skeleton className="h-3.5 w-20 rounded-md" />
+                                        </TableCell>
+                                        <TableCell className="px-2 py-1.5">
+                                            <Skeleton className="ml-auto h-3.5 w-16 rounded-md" />
+                                        </TableCell>
+                                        <TableCell className="px-2 py-1.5">
+                                            <Skeleton className="h-5 w-16 rounded-full" />
+                                        </TableCell>
                                     </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {latestChargeLoading ? (
-                                        <TableRow className="h-9 border-border/40 hover:bg-transparent">
-                                            <TableCell className="px-2 py-1.5">
-                                                <Skeleton className="h-3.5 w-20 rounded-md" />
+                                ) : subscriptionChargeRows.length > 0 ? (
+                                    subscriptionChargeRows.map((row) => (
+                                        <TableRow
+                                            key={row.key}
+                                            className={cn(
+                                                "h-9 border-border/40",
+                                                row.status !== "pending" &&
+                                                    "bg-muted/50 dark:bg-muted/30"
+                                            )}
+                                        >
+                                            <TableCell className="max-w-[9rem] truncate px-2 py-1.5 tabular-nums text-muted-foreground">
+                                                {row.date
+                                                    ? formatDatePtBr(row.date.slice(0, 10))
+                                                    : "—"}
+                                            </TableCell>
+                                            <TableCell className="px-2 py-1.5 text-right tabular-nums font-medium">
+                                                {currencyBRL(row.amount)}
                                             </TableCell>
                                             <TableCell className="px-2 py-1.5">
-                                                <Skeleton className="ml-auto h-3.5 w-16 rounded-md" />
-                                            </TableCell>
-                                            <TableCell className="px-2 py-1.5">
-                                                <Skeleton className="h-5 w-16 rounded-full" />
+                                                <span
+                                                    className={cn(
+                                                        "inline-flex h-5 w-fit items-center justify-center rounded-full border-0 px-2 py-0 text-2xs font-medium uppercase tracking-wide",
+                                                        subscriptionChargeStatusChipClassName(
+                                                            row.status
+                                                        )
+                                                    )}
+                                                >
+                                                    {row.status === "pending"
+                                                        ? "Próxima"
+                                                        : row.status === "paid"
+                                                          ? "Paga"
+                                                          : "Lançada"}
+                                                </span>
                                             </TableCell>
                                         </TableRow>
-                                    ) : subscriptionChargeRows.length > 0 ? (
-                                        subscriptionChargeRows.map((row) => (
-                                            <TableRow
-                                                key={row.key}
-                                                className={cn(
-                                                    "h-9 border-border/40",
-                                                    row.status !== "pending" &&
-                                                        "bg-muted/50 dark:bg-muted/30"
-                                                )}
-                                            >
-                                                <TableCell className="max-w-[9rem] truncate px-2 py-1.5 tabular-nums text-muted-foreground">
-                                                    {row.date
-                                                        ? formatDatePtBr(row.date.slice(0, 10))
-                                                        : "—"}
-                                                </TableCell>
-                                                <TableCell className="px-2 py-1.5 text-right tabular-nums font-medium">
-                                                    {currencyFmt.format(row.amount)}
-                                                </TableCell>
-                                                <TableCell className="px-2 py-1.5">
-                                                    <span
-                                                        className={cn(
-                                                            "inline-flex h-5 w-fit items-center justify-center rounded-full border-0 px-2 py-0 text-2xs font-medium uppercase tracking-wide",
-                                                            subscriptionChargeStatusChipClassName(
-                                                                row.status
-                                                            )
-                                                        )}
-                                                    >
-                                                        {row.status === "pending"
-                                                            ? "Próxima"
-                                                            : row.status === "paid"
-                                                              ? "Paga"
-                                                              : "Lançada"}
-                                                    </span>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
-                                    ) : (
-                                        <TableRow className="hover:bg-transparent">
-                                            <TableCell
-                                                colSpan={3}
-                                                className="h-10 px-2 text-center text-muted-foreground"
-                                            >
-                                                Nenhuma cobrança para exibir.
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </div>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={3}
+                                            className="h-10 px-2 text-center text-muted-foreground"
+                                        >
+                                            Nenhuma cobrança para exibir.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
 
                     </div>
                 </section>
@@ -604,7 +580,7 @@ export function SubscriptionDetailSheet({
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent
-                side={isMobile ? "bottom" : "right"}
+                side="right"
                 fillMobileViewport={isMobile}
                 className={cn(
                     "flex w-full flex-col gap-0 overflow-hidden p-0 data-[side=right]:sm:max-w-md",
@@ -623,7 +599,9 @@ export function SubscriptionDetailSheet({
                             submitDisabled={submitDisabled}
                             submitLabel={submitLabel}
                             saving={saving}
-                            onCancel={() => onOpenChange(false)}
+                            // Cancelar sai da edição, não da folha: a assinatura
+                            // continua à vista, como na folha de transação.
+                            onCancel={() => setDetailMode("view")}
                         />
                     </div>
                 ) : (

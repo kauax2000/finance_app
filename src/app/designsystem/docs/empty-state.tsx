@@ -1,11 +1,7 @@
 "use client"
 
-import {
-  ExclamationTriangleIcon,
-  MagnifyingGlassIcon,
-  PlusIcon,
-  ReceiptPercentIcon,
-} from "@heroicons/react/16/solid"
+import { ExclamationTriangleIcon, MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
+import { PlusIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import {
@@ -15,6 +11,7 @@ import {
   EmptyStateIcon,
   EmptyStateTitle,
 } from "@/components/ui/empty-state"
+import { Skeleton } from "@/components/ui/skeleton"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 export default function EmptyStateDoc() {
@@ -44,8 +41,8 @@ export default function EmptyStateDoc() {
           </EmptyStateIcon>
           <EmptyStateTitle>Nenhuma transação ainda</EmptyStateTitle>
           <EmptyStateDescription>
-            Lance a primeira e o extrato, os totais do mês e os orçamentos
-            começam a se preencher sozinhos.
+              Lance a primeira e o extrato, os totais do mês e os orçamentos
+              começam a se preencher sozinhos.
           </EmptyStateDescription>
           <EmptyStateActions>
             <Button>
@@ -70,7 +67,7 @@ export default function EmptyStateDoc() {
           </EmptyStateIcon>
           <EmptyStateTitle>Nada com esses filtros</EmptyStateTitle>
           <EmptyStateDescription>
-            Nenhuma transação entre 1 e 7 de março na categoria Mercado.
+              Nenhuma transação entre 1 e 7 de março na categoria Mercado.
           </EmptyStateDescription>
           <EmptyStateActions>
             <Button variant="outline">Limpar filtros</Button>
@@ -94,14 +91,36 @@ export default function EmptyStateDoc() {
             <h3>Algo deu errado</h3>
           </EmptyStateTitle>
           <EmptyStateDescription>
-            Não foi possível carregar suas transações. Tente de novo em alguns
-            instantes.
+              Não foi possível carregar suas transações. Tente de novo em alguns
+              instantes.
           </EmptyStateDescription>
           <EmptyStateActions>
             <Button>Tentar de novo</Button>
             <Button variant="tertiary">Voltar ao início</Button>
           </EmptyStateActions>
         </EmptyState>
+      </DocSection>
+
+      <DocSection
+        title="Os quatro estados, na ordem"
+        description="Toda tela tem quatro: carregando, erro, vazio e com conteúdo. Uma tela que só desenha o último está incompleta, mesmo parecendo pronta onde o dado chega em 20ms. Carregando vem antes de vazio, e o esqueleto tem a forma do que vem depois."
+        code={`if (isLoading) return <ListaSkeleton />
+if (error) return <ErroComTentarDeNovo />
+if (!itens.length) return <EmptyState … />
+return <Lista itens={itens} />`}
+        previewClassName="items-stretch"
+      >
+        <div className="flex w-full max-w-sm flex-col gap-3">
+          {[0, 1].map((i) => (
+            <div key={i} className="flex items-center gap-3">
+              <Skeleton className="size-10 shrink-0 rounded-full" />
+              <div className="min-w-0 flex-1">
+                <Skeleton className="h-4 w-28 max-w-full" />
+                <Skeleton className="mt-1.5 h-3 w-16 max-w-full" />
+              </div>
+            </div>
+          ))}
+        </div>
       </DocSection>
 
       <DocSection
@@ -116,7 +135,7 @@ export default function EmptyStateDoc() {
             <EmptyState variant="plain" size="sm">
               <EmptyStateTitle>Nenhuma compra nesta fatura</EmptyStateTitle>
               <EmptyStateDescription>
-                O ciclo fecha em 28 de março.
+                  O ciclo fecha em 28 de março.
               </EmptyStateDescription>
             </EmptyState>
           </CardContent>

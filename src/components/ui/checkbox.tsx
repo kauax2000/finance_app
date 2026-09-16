@@ -19,8 +19,13 @@ function Checkbox({
         // técnica do `Switch`. Não substitui envolver o item num `Label`
         // clicável numa lista — soma a ela.
         "after:absolute after:-inset-3.5 after:content-['']",
-        "hover:bg-muted/60",
+        // O par de toque: `hover:` compila dentro de `@media (hover: hover)`.
+        "hover:bg-muted/60 active:bg-muted/60",
         "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/70",
+        // O estado inválido do `Radio`, que a caixa não tinha: um termo de uso
+        // obrigatório desmarcado não mudava de aparência nenhuma.
+        "aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20",
+        "dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
         "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
         "data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
         "data-[state=indeterminate]:border-primary data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground",
