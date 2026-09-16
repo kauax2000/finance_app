@@ -1,6 +1,7 @@
 "use client"
 
 import {
+    ChartLegendContent,
     ChartTooltip,
     chartSeriesColor,
 } from "@/components/ui/chart"
@@ -143,29 +144,6 @@ function CreditCardsHistoryTooltip({
     )
 }
 
-function LegendStrip({ cards }: { cards: CreditCardRow[] }) {
-    return (
-        <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
-            {cards.map((c, idx) => {
-                const color = chartSeriesColor(idx)
-                return (
-                    <span
-                        key={c.id}
-                        className="flex max-w-[10rem] items-center gap-1.5 text-2xs text-muted-foreground"
-                    >
-                        <span
-                            className="size-2 shrink-0 rounded-full"
-                            style={{ backgroundColor: alpha(color, 75) }}
-                            aria-hidden
-                        />
-                        <span className="truncate">{c.name}</span>
-                    </span>
-                )
-            })}
-        </div>
-    )
-}
-
 export function CreditCardsHistoryChart({
     cards,
     transactions,
@@ -286,7 +264,19 @@ export function CreditCardsHistoryChart({
                 </div>
                 {chartData.length > 0 && hasAnyValue ? (
                     <div className="min-w-0 flex-1">
-                        <LegendStrip cards={cards} />
+                        {/* A legenda mora no cabeçalho, fora do gráfico — como a da
+                            rosca —, então o `payload` é montado aqui, com a mesma
+                            tinta a 75% que as barras usam. */}
+                        <ChartLegendContent
+                            align="end"
+                            verticalAlign="top"
+                            className="gap-x-3 gap-y-1 pb-0 text-2xs text-muted-foreground"
+                            payload={cards.map((c, idx) => ({
+                                value: c.name,
+                                dataKey: c.id,
+                                color: alpha(chartSeriesColor(idx), 75),
+                            }))}
+                        />
                     </div>
                 ) : null}
             </div>
