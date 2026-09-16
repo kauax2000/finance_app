@@ -33,13 +33,17 @@ const PRIMITIVE_TO_COMPONENT = {
   dialog: "Dialog",
   progress: "Progress",
   hr: "Separator",
+  // Tinham ido para a lista de lacunas quando não havia peça. Hoje há.
+  fieldset: "FieldSet",
+  details: "Collapsible",
+  summary: "CollapsibleTrigger",
 }
 
 /**
  * Primitivos sem equivalente no design system. Sinalizar é útil, mas o veredito
  * é diferente: são lacuna, não correção.
  */
-const PRIMITIVE_WITHOUT_COMPONENT = new Set(["details", "summary", "meter", "fieldset"])
+const PRIMITIVE_WITHOUT_COMPONENT = new Set(["meter"])
 
 /** A paleta padrão do Tailwind. Nenhuma delas acompanha o tema. */
 const TAILWIND_PALETTE =
@@ -236,7 +240,13 @@ function semComentarios(src) {
  * linha seguinte.
  */
 function semEspecimes(src) {
-  return src.replace(/\bcode=\{`[\s\S]*?`\}/g, (m) => m.replace(/[^\n]/g, " "))
+  return (
+    src
+      .replace(/\bcode=\{`[\s\S]*?`\}/g, (m) => m.replace(/[^\n]/g, " "))
+      // A prosa também é citação: `description="É um <fieldset> de verdade…"`
+      // descreve a peça, e o `<fieldset>` dentro da frase não é marcação.
+      .replace(/\b(?:description|title)="[^"]*"/g, (m) => m.replace(/[^\n]/g, " "))
+  )
 }
 
 /** Conta a linha de um índice. */

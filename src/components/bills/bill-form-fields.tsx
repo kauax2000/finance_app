@@ -343,41 +343,47 @@ export function BillFormFields({
             <FieldSet className="gap-3">
                 <FieldLegend variant="label">Lembretes</FieldLegend>
                 <div className="flex flex-col gap-3">
-                    <label className="flex cursor-pointer items-center gap-2 text-sm">
-                        <Checkbox
-                            checked={reminder3}
-                            onCheckedChange={(c) =>
-                                setReminder3(c === true)
-                            }
-                            id="bill-r3"
-                        />
-                        <span>3 dias antes do vencimento</span>
-                    </label>
-                    <label className="flex cursor-pointer items-center gap-2 text-sm">
-                        <Checkbox
-                            checked={reminder0}
-                            onCheckedChange={(c) =>
-                                setReminder0(c === true)
-                            }
-                            id="bill-r0"
-                        />
-                        <span>No dia do vencimento</span>
-                    </label>
+                    <Field orientation="horizontal" className="w-auto gap-2">
+                        <FieldControl>
+                            <Checkbox
+                                checked={reminder3}
+                                onCheckedChange={(c) =>
+                                    setReminder3(c === true)
+                                }
+                                id="bill-r3"
+                            />
+                        </FieldControl>
+                        <FieldLabel className="cursor-pointer text-sm font-normal">3 dias antes do vencimento</FieldLabel>
+                    </Field>
+                    <Field orientation="horizontal" className="w-auto gap-2">
+                        <FieldControl>
+                            <Checkbox
+                                checked={reminder0}
+                                onCheckedChange={(c) =>
+                                    setReminder0(c === true)
+                                }
+                                id="bill-r0"
+                            />
+                        </FieldControl>
+                        <FieldLabel className="cursor-pointer text-sm font-normal">No dia do vencimento</FieldLabel>
+                    </Field>
                 </div>
             </FieldSet>
             {editingBill ? (
                 <>
                     <Separator />
-                    <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
-                        <Checkbox
-                            checked={isActive}
-                            onCheckedChange={(c) =>
-                                setIsActive(c === true)
-                            }
-                            id="bill-active"
-                        />
-                        <span>Conta ativa</span>
-                    </label>
+                    <Field orientation="horizontal" className="w-auto gap-2">
+                        <FieldControl>
+                            <Checkbox
+                                checked={isActive}
+                                onCheckedChange={(c) =>
+                                    setIsActive(c === true)
+                                }
+                                id="bill-active"
+                            />
+                        </FieldControl>
+                        <FieldLabel className="cursor-pointer text-sm font-medium">Conta ativa</FieldLabel>
+                    </Field>
                 </>
             ) : null}
             <FormTextarea

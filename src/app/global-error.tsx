@@ -60,6 +60,10 @@ export default function GlobalError({
                         novamente ou volte mais tarde.
                     </p>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                        {/* Cru de propósito, e com estilo em linha: esta página
+                            substitui o layout raiz inteiro (tem o próprio <html>),
+                            e é a que aparece quando o resto quebrou — o CSS do
+                            sistema pode não ter carregado. */}
                         <button
                             type="button"
                             onClick={unstable_retry}

@@ -2,6 +2,12 @@
 
 import { percentPointsBR } from "@/lib/formatters"
 import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleMarker,
+    CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import {
     Item,
 } from "@/components/ui/item"
 import {
@@ -64,7 +70,7 @@ import { MoneyDisplay } from "@/components/ui/money-display"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
-import { ArrowTrendingDownIcon, ArrowTrendingUpIcon, CalendarDaysIcon, ChartBarIcon, ChevronDownIcon, ChevronUpDownIcon, LightBulbIcon, MinusIcon } from "@heroicons/react/16/solid"
+import { ArrowTrendingDownIcon, ArrowTrendingUpIcon, CalendarDaysIcon, ChartBarIcon, ChevronUpDownIcon, LightBulbIcon, MinusIcon } from "@heroicons/react/16/solid"
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts"
 import type { CreditCardInvoicePayment } from "@/lib/supabase"
 import { supabase } from "@/lib/supabase"
@@ -939,14 +945,12 @@ export function CreditCardInvoiceAnalyticsPanel({
                 </Card>
             </PageSection>
 
-            <details className="group rounded-xl border border-border/70 bg-card text-card-foreground shadow-sm open:pb-1">
-                <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium marker:content-none [&::-webkit-details-marker]:hidden">
-                    <span className="flex items-center justify-between gap-2">
-                        Mais sobre este período
-                        <ChevronDownIcon className="size-4 shrink-0 transition-transform group-open:rotate-180" />
-                    </span>
-                </summary>
-                <div className="border-t border-border/60 px-4 pb-4 pt-4">
+            <Collapsible className="rounded-xl border border-border/70 bg-card text-card-foreground shadow-sm">
+                <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between gap-2 px-4 py-3 text-left text-sm font-medium">
+                    Mais sobre este período
+                    <CollapsibleMarker className="size-4" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="border-t border-border/60 px-4 pb-4 pt-4">
                     <section className="space-y-3 pb-6 text-sm">
                         <div className="flex w-full min-w-0 flex-wrap items-end justify-between gap-x-3 gap-y-1">
                             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -1229,8 +1233,8 @@ export function CreditCardInvoiceAnalyticsPanel({
                         </DescriptionList>
                     </section>
 
-                </div>
-            </details>
+                </CollapsibleContent>
+            </Collapsible>
 
             <PageSection className="max-w-full">
                 <PageSectionHeader>
