@@ -140,7 +140,21 @@ export function TransactionsToolbar({
     toolbarTrailing?: () => React.ReactNode
 }) {
     const isMobile = useIsMobile()
-    const [filtersSheetOpen, setFiltersSheetOpen] = React.useState(false)
+    const [filtersSheetOpen, setFiltersSheetOpenLocal] = React.useState(false)
+    // Toda abertura e todo fechamento passam por aqui, e não só os do Radix.
+    // O `onOpenChange` da `Sheet` só dispara quando é ela quem muda o estado —
+    // o botão de filtros, o × e o "Aplicar" do telefone mudavam o estado local
+    // e o pai nunca sabia. O controlador da lista continuava achando a folha
+    // fechada, e com a folha "fechada" ele devolve o rascunho de período ao
+    // filtro aplicado a cada mudança: medido, a cada duas datas escolhidas no
+    // calendário uma era apagada logo depois do `onChange`.
+    const setFiltersSheetOpen = React.useCallback(
+        (open: boolean) => {
+            setFiltersSheetOpenLocal(open)
+            onFiltersSheetOpenChange?.(open)
+        },
+        [onFiltersSheetOpenChange]
+    )
 
     const summary = filtersSummaryLine({
         filterType,
@@ -159,7 +173,7 @@ export function TransactionsToolbar({
 
     const closeMobileSheet = React.useCallback(() => {
         setFiltersSheetOpen(false)
-    }, [])
+    }, [setFiltersSheetOpen])
 
     const panelMobile = (
         <TransactionsFiltersPanel
@@ -297,10 +311,7 @@ export function TransactionsToolbar({
 
             <Sheet
                 open={filtersSheetOpen}
-                onOpenChange={(open) => {
-                    setFiltersSheetOpen(open)
-                    onFiltersSheetOpenChange?.(open)
-                }}
+                onOpenChange={setFiltersSheetOpen}
             >
                 <SheetContent
                     side="right"
