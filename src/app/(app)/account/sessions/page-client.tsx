@@ -1,5 +1,11 @@
 "use client"
 
+import {
+    EmptyState,
+    EmptyStateDescription,
+    EmptyStateIcon,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
 import { SessionsPageSkeleton } from "@/components/account/sessions-page-skeleton"
 import { ROUTES } from "@/config/navigation"
 import { useState, useEffect, useCallback } from "react"
@@ -221,22 +227,17 @@ export default function SessionsPage() {
                             </ul>
                         ) : (
                             <div
-                                className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
+                                className="px-4 py-12 md:py-14"
                                 role="status"
                                 aria-live="polite"
                             >
-                                <div
-                                    className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                                    aria-hidden
-                                >
-                                    <CheckCircleIcon className="size-7 text-success" />
-                                </div>
-                                <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                                    Todas as sessões foram encerradas
-                                </h2>
-                                <p className="max-w-md text-center text-sm text-muted-foreground">
-                                    Você só verá esta sessão ativa neste dispositivo.
-                                </p>
+                                <EmptyState variant="plain" size="lg">
+                                    <EmptyStateIcon><CheckCircleIcon className="size-7 text-success" /></EmptyStateIcon>
+                                    <EmptyStateTitle>Todas as sessões foram encerradas</EmptyStateTitle>
+                                    <EmptyStateDescription>
+                                        Você só verá esta sessão ativa neste dispositivo.
+                                    </EmptyStateDescription>
+                                </EmptyState>
                             </div>
                         )}
                         <CardNote

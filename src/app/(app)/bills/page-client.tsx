@@ -1,5 +1,12 @@
 "use client"
 
+import {
+    EmptyState,
+    EmptyStateActions,
+    EmptyStateDescription,
+    EmptyStateIcon,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
 import { addDaysYmd, compareYmd } from "@/lib/transaction-date"
 import { AdjustmentsHorizontalIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
@@ -608,66 +615,60 @@ export default function BillsPageClient() {
             {globalEmpty ? (
                 <Card padding="none">
                     <CardContent
-                        className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
+                        className="px-4 py-12 md:py-14"
                         role="status"
                         aria-live="polite"
                     >
-                        <div
-                            className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                            aria-hidden
-                        >
-                            <ReceiptPercentIcon className="size-7 text-muted-foreground" />
-                        </div>
-                        <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                            Cadastre suas contas a pagar
-                        </h2>
-                        <p className="mb-6 max-w-md text-center text-sm text-muted-foreground">
-                            Vencimentos variáveis, lembretes e confirmação do valor ao
-                            pagar. Faturas de cartão aparecem automaticamente quando houver
-                            valor em aberto.
-                        </p>
-                        <Button
-                            type="button"
-                            size="xl"
-                            className="gap-1.5"
-                            onClick={() => {
-                                setEditingBill(null)
-                                setFormOpen(true)
-                            }}
-                        >
-                            <PlusIcon className="size-3.5" />
-                            Nova conta
-                        </Button>
+                        <EmptyState variant="plain" size="lg">
+                            <EmptyStateIcon><ReceiptPercentIcon aria-hidden /></EmptyStateIcon>
+                            <EmptyStateTitle>Cadastre suas contas a pagar</EmptyStateTitle>
+                            <EmptyStateDescription>
+                                Vencimentos variáveis, lembretes e confirmação do valor ao
+                                pagar. Faturas de cartão aparecem automaticamente quando houver
+                                valor em aberto.
+                            </EmptyStateDescription>
+                            <EmptyStateActions>
+                                <Button
+                                    type="button"
+                                    size="xl"
+                                    className="gap-1.5"
+                                    onClick={() => {
+                                        setEditingBill(null)
+                                        setFormOpen(true)
+                                    }}
+                                >
+                                    <PlusIcon className="size-3.5" />
+                                    Nova conta
+                                </Button>
+                            </EmptyStateActions>
+                        </EmptyState>
                     </CardContent>
                 </Card>
             ) : hasNoMatches ? (
                 <Card padding="none">
                     <CardContent
-                        className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
+                        className="px-4 py-12 md:py-14"
                         role="status"
                         aria-live="polite"
                     >
-                        <div
-                            className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                            aria-hidden
-                        >
-                            <MagnifyingGlassIcon className="size-7 text-muted-foreground" />
-                        </div>
-                        <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                            Nenhuma conta com esses filtros
-                        </h2>
-                        <p className="mb-6 max-w-md text-center text-sm text-muted-foreground">
-                            Tente outro filtro ou limpe para ver tudo.
-                        </p>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="xl"
-                            className="min-w-[10rem] text-xs"
-                            onClick={resetFilters}
-                        >
-                            Limpar filtros
-                        </Button>
+                        <EmptyState variant="plain" size="lg">
+                            <EmptyStateIcon><MagnifyingGlassIcon aria-hidden /></EmptyStateIcon>
+                            <EmptyStateTitle>Nenhuma conta com esses filtros</EmptyStateTitle>
+                            <EmptyStateDescription>
+                                Tente outro filtro ou limpe para ver tudo.
+                            </EmptyStateDescription>
+                            <EmptyStateActions>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="xl"
+                                    className="min-w-[10rem] text-xs"
+                                    onClick={resetFilters}
+                                >
+                                    Limpar filtros
+                                </Button>
+                            </EmptyStateActions>
+                        </EmptyState>
                     </CardContent>
                 </Card>
             ) : showPendingEmptyButHasHistory ? (

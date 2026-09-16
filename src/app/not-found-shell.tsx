@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/container"
 import { QuestionMarkCircleIcon } from "@heroicons/react/24/outline"
 import Link from "next/link"
 
@@ -15,7 +16,7 @@ import { cn } from "@/lib/utils"
 export function NotFoundShell() {
     return (
         <div className="flex min-h-dvh w-full flex-1 flex-col justify-center bg-background px-4 py-12 sm:px-6">
-            <div className="mx-auto w-full max-w-md space-y-8">
+            <Container size="sm" stack="section">
                 <EmptyState className="w-full border-border/80 bg-card/40 py-10">
                     <EmptyStateIcon>
                         <QuestionMarkCircleIcon aria-hidden />
@@ -40,7 +41,7 @@ export function NotFoundShell() {
                 >
                     Erro 404 — nada para exibir neste caminho.
                 </p>
-            </div>
+            </Container>
         </div>
     )
 }

@@ -1,5 +1,12 @@
 "use client"
 
+import {
+    EmptyState,
+    EmptyStateActions,
+    EmptyStateDescription,
+    EmptyStateIcon,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
 import { currencyBRL, numberBR } from "@/lib/formatters"
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ArrowPathRoundedSquareIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
@@ -895,62 +902,56 @@ export default function SubscriptionsPageClient() {
             ) : hasNoMatches ? (
                 <Card padding="none">
                     <CardContent
-                        className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
+                        className="px-4 py-12 md:py-14"
                         role="status"
                         aria-live="polite"
                     >
-                        <div
-                            className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                            aria-hidden
-                        >
-                            <MagnifyingGlassIcon className="size-7 text-muted-foreground" />
-                        </div>
-                        <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                            Nenhuma assinatura com esses filtros
-                        </h2>
-                        <p className="mb-6 max-w-md text-center text-sm text-muted-foreground">
-                            Tente outro status ou ajuste a ordenação.
-                        </p>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="xl"
-                            className="min-w-[10rem] text-xs"
-                            onClick={resetFilters}
-                        >
-                            Limpar filtros
-                        </Button>
+                        <EmptyState variant="plain" size="lg">
+                            <EmptyStateIcon><MagnifyingGlassIcon aria-hidden /></EmptyStateIcon>
+                            <EmptyStateTitle>Nenhuma assinatura com esses filtros</EmptyStateTitle>
+                            <EmptyStateDescription>
+                                Tente outro status ou ajuste a ordenação.
+                            </EmptyStateDescription>
+                            <EmptyStateActions>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="xl"
+                                    className="min-w-[10rem] text-xs"
+                                    onClick={resetFilters}
+                                >
+                                    Limpar filtros
+                                </Button>
+                            </EmptyStateActions>
+                        </EmptyState>
                     </CardContent>
                 </Card>
             ) : (
                 <Card padding="none">
                     <CardContent
-                        className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
+                        className="px-4 py-12 md:py-14"
                         role="status"
                         aria-live="polite"
                     >
-                        <div
-                            className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                            aria-hidden
-                        >
-                            <ArrowPathRoundedSquareIcon className="size-7 text-muted-foreground" />
-                        </div>
-                        <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                            Cadastre suas assinaturas
-                        </h2>
-                        <p className="mb-6 max-w-md text-center text-sm text-muted-foreground">
-                            Registre serviços recorrentes para acompanhar valores,
-                            datas de cobrança e vínculo com transações.
-                        </p>
-                        <Button
-                            type="button"
-                            size="xl"
-                            className="gap-1.5"
-                            onClick={openCreate}
-                        >
-                            <PlusIcon className="size-3.5" />
-                            Nova assinatura
-                        </Button>
+                        <EmptyState variant="plain" size="lg">
+                            <EmptyStateIcon><ArrowPathRoundedSquareIcon aria-hidden /></EmptyStateIcon>
+                            <EmptyStateTitle>Cadastre suas assinaturas</EmptyStateTitle>
+                            <EmptyStateDescription>
+                                Registre serviços recorrentes para acompanhar valores,
+                                datas de cobrança e vínculo com transações.
+                            </EmptyStateDescription>
+                            <EmptyStateActions>
+                                <Button
+                                    type="button"
+                                    size="xl"
+                                    className="gap-1.5"
+                                    onClick={openCreate}
+                                >
+                                    <PlusIcon className="size-3.5" />
+                                    Nova assinatura
+                                </Button>
+                            </EmptyStateActions>
+                        </EmptyState>
                     </CardContent>
                 </Card>
             )}

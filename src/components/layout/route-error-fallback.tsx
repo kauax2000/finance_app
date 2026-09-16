@@ -1,5 +1,6 @@
 "use client"
 
+import { Container } from "@/components/ui/container"
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline"
 import { ExclamationTriangleIcon as ExclamationTriangleMicroIcon } from "@heroicons/react/16/solid"
 import { useEffect } from "react"
@@ -39,7 +40,7 @@ export function RouteErrorFallback({ error, retry, variant = "page" }: RouteErro
                     : "flex w-full flex-1 flex-col justify-center py-8"
             }
         >
-            <div className="mx-auto w-full max-w-md space-y-6">
+            <Container size="sm" className="space-y-6">
                 <EmptyState className="w-full border-border/80 bg-card/40 py-10">
                     <EmptyStateIcon className="bg-destructive-muted text-destructive-muted-foreground">
                         <ExclamationTriangleIcon aria-hidden />
@@ -80,7 +81,7 @@ export function RouteErrorFallback({ error, retry, variant = "page" }: RouteErro
                     Se o problema continuar, atualize a página ou faça login de
                     novo.
                 </Muted>
-            </div>
+            </Container>
         </div>
     )
 }

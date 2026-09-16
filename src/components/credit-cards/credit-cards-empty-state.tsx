@@ -1,5 +1,12 @@
 "use client"
 
+import {
+    EmptyState,
+    EmptyStateActions,
+    EmptyStateDescription,
+    EmptyStateIcon,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
 import { PlusIcon } from "@heroicons/react/16/solid"
 import { CreditCardIcon } from "@heroicons/react/24/outline"
 import { CREDIT_CARDS_EMPTY_BILLING_HINT } from "@/lib/credit-card-billing-copy"
@@ -14,32 +21,29 @@ export function CreditCardsEmptyState({ onAddCard }: CreditCardsEmptyStateProps)
     return (
         <Card padding="none">
             <CardContent
-                className="flex flex-col items-center justify-center px-4 py-12 text-center md:py-14"
+                className="px-4 py-12 md:py-14"
                 role="status"
                 aria-live="polite"
             >
-                <div
-                    className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                    aria-hidden
-                >
-                    <CreditCardIcon className="size-7 text-muted-foreground" />
-                </div>
-                <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                    Cadastre seus cartões de crédito
-                </h2>
-                <p className="mb-6 max-w-md text-center text-sm text-muted-foreground">
-                    {CREDIT_CARDS_EMPTY_BILLING_HINT}
-                </p>
-                <Button
-                    type="button"
-                    variant="primary"
-                    size="sm"
-                    className="h-8 gap-2 text-xs"
-                    onClick={onAddCard}
-                >
-                    <PlusIcon className="size-4 shrink-0" />
-                    Novo cartão
-                </Button>
+                <EmptyState variant="plain" size="lg">
+                    <EmptyStateIcon><CreditCardIcon aria-hidden /></EmptyStateIcon>
+                    <EmptyStateTitle>Cadastre seus cartões de crédito</EmptyStateTitle>
+                    <EmptyStateDescription>
+                        {CREDIT_CARDS_EMPTY_BILLING_HINT}
+                    </EmptyStateDescription>
+                    <EmptyStateActions>
+                        <Button
+                            type="button"
+                            variant="primary"
+                            size="sm"
+                            className="h-8 gap-2 text-xs"
+                            onClick={onAddCard}
+                        >
+                            <PlusIcon className="size-4 shrink-0" />
+                            Novo cartão
+                        </Button>
+                    </EmptyStateActions>
+                </EmptyState>
             </CardContent>
         </Card>
     )

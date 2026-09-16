@@ -1,5 +1,12 @@
 "use client"
 
+import {
+    EmptyState,
+    EmptyStateActions,
+    EmptyStateDescription,
+    EmptyStateIcon,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
 import { currencyBRL, numberBR } from "@/lib/formatters"
 import { ArrowTopRightOnSquareIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
@@ -458,63 +465,57 @@ export function CategoryEmbeddedTransactions({
                     ) : displayHasNoMatches ? (
                         <Card padding="none">
                             <CardContent
-                                className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
+                                className="px-4 py-12 md:py-14"
                                 role="status"
                                 aria-live="polite"
                             >
-                                <div
-                                    className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                                    aria-hidden
-                                >
-                                    <MagnifyingGlassIcon className="size-7 text-muted-foreground" />
-                                </div>
-                                <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                                    Nenhuma transação com esses filtros
-                                </h2>
-                                <p className="mb-6 max-w-md text-center text-sm text-muted-foreground">
-                                    Tente outro tipo (receita/despesa), ampliar o período ou ajustar os filtros
-                                    avançados.
-                                </p>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="xl"
-                                    className="min-w-[10rem] text-xs"
-                                    onClick={() => {
-                                        resetAllFilters()
-                                    }}
-                                >
-                                    Limpar filtros
-                                </Button>
+                                <EmptyState variant="plain" size="lg">
+                                    <EmptyStateIcon><MagnifyingGlassIcon aria-hidden /></EmptyStateIcon>
+                                    <EmptyStateTitle>Nenhuma transação com esses filtros</EmptyStateTitle>
+                                    <EmptyStateDescription>
+                                        Tente outro tipo (receita/despesa), ampliar o período ou ajustar os filtros
+                                        avançados.
+                                    </EmptyStateDescription>
+                                    <EmptyStateActions>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="xl"
+                                            className="min-w-[10rem] text-xs"
+                                            onClick={() => {
+                                                resetAllFilters()
+                                            }}
+                                        >
+                                            Limpar filtros
+                                        </Button>
+                                    </EmptyStateActions>
+                                </EmptyState>
                             </CardContent>
                         </Card>
                     ) : (
                         <Card padding="none">
                             <CardContent
-                                className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
+                                className="px-4 py-12 md:py-14"
                                 role="status"
                                 aria-live="polite"
                             >
-                                <div
-                                    className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                                    aria-hidden
-                                >
-                                    <ReceiptPercentIcon className="size-7 text-muted-foreground" />
-                                </div>
-                                <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                                    Comece a registrar suas movimentações
-                                </h2>
-                                <p className="mb-6 max-w-md text-center text-sm text-muted-foreground">
-                                    Lance receitas e despesas para ver o histórico aqui.
-                                </p>
-                                <Button
-                                    type="button"
-                                    size="xl"
-                                    onClick={() => openDialog()}
-                                >
-                                    <PlusIcon className="mr-1.5 size-3.5" />
-                                    Nova transação
-                                </Button>
+                                <EmptyState variant="plain" size="lg">
+                                    <EmptyStateIcon><ReceiptPercentIcon aria-hidden /></EmptyStateIcon>
+                                    <EmptyStateTitle>Comece a registrar suas movimentações</EmptyStateTitle>
+                                    <EmptyStateDescription>
+                                        Lance receitas e despesas para ver o histórico aqui.
+                                    </EmptyStateDescription>
+                                    <EmptyStateActions>
+                                        <Button
+                                            type="button"
+                                            size="xl"
+                                            onClick={() => openDialog()}
+                                        >
+                                            <PlusIcon className="mr-1.5 size-3.5" />
+                                            Nova transação
+                                        </Button>
+                                    </EmptyStateActions>
+                                </EmptyState>
                             </CardContent>
                         </Card>
                     )}

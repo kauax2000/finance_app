@@ -1,5 +1,11 @@
 "use client"
 
+import {
+    EmptyState,
+    EmptyStateDescription,
+    EmptyStateIcon,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
 import { MembersSectionSkeleton } from "@/components/members/members-section-skeleton"
 import { useTimeout } from "@/hooks/use-timeout"
 import { useCallback, useEffect, useMemo, useState } from "react"
@@ -536,22 +542,17 @@ export default function MembersPage() {
         return (
             <Card padding="none">
                 <CardContent
-                    className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
+                    className="px-4 py-12 md:py-14"
                     role="status"
                     aria-live="polite"
                 >
-                    <div
-                        className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                        aria-hidden
-                    >
-                        <UserGroupIcon className="size-7 text-muted-foreground" />
-                    </div>
-                    <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                        Nenhuma carteira selecionada
-                    </h2>
-                    <p className="max-w-md text-center text-sm text-muted-foreground">
-                        Selecione uma carteira no menu lateral para gerenciar membros e convites.
-                    </p>
+                    <EmptyState variant="plain" size="lg">
+                        <EmptyStateIcon><UserGroupIcon aria-hidden /></EmptyStateIcon>
+                        <EmptyStateTitle>Nenhuma carteira selecionada</EmptyStateTitle>
+                        <EmptyStateDescription>
+                            Selecione uma carteira no menu lateral para gerenciar membros e convites.
+                        </EmptyStateDescription>
+                    </EmptyState>
                 </CardContent>
             </Card>
         )
@@ -934,22 +935,17 @@ export default function MembersPage() {
                             </CardToolbar>
                             {pendingEmailInvites.length === 0 ? (
                                 <div
-                                    className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
+                                    className="px-4 py-12 md:py-14"
                                     role="status"
                                     aria-live="polite"
                                 >
-                                    <div
-                                        className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                                        aria-hidden
-                                    >
-                                        <EnvelopeOutlineIcon className="size-7 text-muted-foreground" />
-                                    </div>
-                                    <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                                        Nenhum convite pendente
-                                    </h2>
-                                    <p className="max-w-md text-center text-sm text-muted-foreground">
-                                        Os convites enviados aparecem aqui até serem aceitos ou expirarem.
-                                    </p>
+                                    <EmptyState variant="plain" size="lg">
+                                        <EmptyStateIcon><EnvelopeOutlineIcon aria-hidden /></EmptyStateIcon>
+                                        <EmptyStateTitle>Nenhum convite pendente</EmptyStateTitle>
+                                        <EmptyStateDescription>
+                                            Os convites enviados aparecem aqui até serem aceitos ou expirarem.
+                                        </EmptyStateDescription>
+                                    </EmptyState>
                                 </div>
                             ) : (
                                 <ul className="divide-y divide-border" role="list">

@@ -1,5 +1,6 @@
 "use client"
 
+import { Container } from "@/components/ui/container"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
@@ -102,7 +103,7 @@ export default function AcceptInvitePageClient() {
     const showSuccess = !loading && !error && !authGate && Boolean(user) && Boolean(token || inviteId)
 
     return (
-        <div className="mx-auto w-full max-w-xl">
+        <Container>
             <Card>
                 <CardHeader>
                     <CardTitle className="text-base">Aceitar convite</CardTitle>
@@ -178,6 +179,6 @@ export default function AcceptInvitePageClient() {
                     ) : null}
                 </CardContent>
             </Card>
-        </div>
+        </Container>
     )
 }

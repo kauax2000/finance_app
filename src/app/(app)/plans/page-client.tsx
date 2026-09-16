@@ -1,5 +1,11 @@
 "use client"
 
+import {
+    EmptyState,
+    EmptyStateDescription,
+    EmptyStateIcon,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
 import { InformationCircleIcon, WrenchIcon } from "@heroicons/react/16/solid"
 import { SparklesIcon } from "@heroicons/react/20/solid"
 import { ReceiptPercentIcon, SparklesIcon as SparklesOutlineIcon } from "@heroicons/react/24/outline"
@@ -166,23 +172,18 @@ export default function PlansPage() {
                             </p>
                         </CardToolbar>
                         <div
-                            className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
+                            className="px-4 py-12 md:py-14"
                             role="status"
                             aria-live="polite"
                         >
-                            <div
-                                className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                                aria-hidden
-                            >
-                                <ReceiptPercentIcon className="size-7 text-muted-foreground" />
-                            </div>
-                            <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                                Nenhum pagamento por aqui
-                            </h2>
-                            <p className="max-w-md text-center text-sm text-muted-foreground">
-                                Quando você assinar um plano pago, suas faturas e recibos vão
-                                aparecer neste histórico.
-                            </p>
+                            <EmptyState variant="plain" size="lg">
+                                <EmptyStateIcon><ReceiptPercentIcon aria-hidden /></EmptyStateIcon>
+                                <EmptyStateTitle>Nenhum pagamento por aqui</EmptyStateTitle>
+                                <EmptyStateDescription>
+                                    Quando você assinar um plano pago, suas faturas e recibos vão
+                                    aparecer neste histórico.
+                                </EmptyStateDescription>
+                            </EmptyState>
                         </div>
                         <CardNote
                             aria-hidden

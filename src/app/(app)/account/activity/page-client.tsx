@@ -1,5 +1,11 @@
 "use client"
 
+import {
+    EmptyState,
+    EmptyStateDescription,
+    EmptyStateIcon,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
 import { ActivityPageSkeleton } from "@/components/account/activity-page-skeleton"
 import { formatTransactionDayMonthPtBr } from "@/lib/transaction-date"
 import { ROUTES } from "@/config/navigation"
@@ -307,24 +313,19 @@ export default function ActivityPage() {
                             </ul>
                         ) : (
                             <div
-                                className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
+                                className="px-4 py-12 md:py-14"
                                 role="status"
                                 aria-live="polite"
                             >
-                                <div
-                                    className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                                    aria-hidden
-                                >
-                                    <ChartBarIcon className="size-7 text-muted-foreground" />
-                                </div>
-                                <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                                    Nenhuma atividade encontrada
-                                </h2>
-                                <p className="max-w-md text-center text-sm text-muted-foreground">
-                                    {filter === "all"
+                                <EmptyState variant="plain" size="lg">
+                                    <EmptyStateIcon><ChartBarIcon aria-hidden /></EmptyStateIcon>
+                                    <EmptyStateTitle>Nenhuma atividade encontrada</EmptyStateTitle>
+                                    <EmptyStateDescription>
+                                        {filter === "all"
                                         ? "Suas atividades aparecerão aqui."
                                         : "Tente selecionar outro filtro."}
-                                </p>
+                                    </EmptyStateDescription>
+                                </EmptyState>
                             </div>
                         )}
                         <CardNote>
