@@ -27,6 +27,9 @@ type WorkspaceAppearanceFormFieldsProps = {
     previewHint: string
 }
 
+/** O teto do nome da carteira — o contador acima lê daqui. */
+const NOME_MAX = 120
+
 export function WorkspaceAppearanceFormFields({
     name,
     onNameChange,
@@ -55,14 +58,25 @@ export function WorkspaceAppearanceFormFields({
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor={nameId}>Nome</Label>
+                <div className="flex items-baseline justify-between gap-2">
+                    <Label htmlFor={nameId}>Nome</Label>
+                    {/* O `maxLength` truncava calado: o campo simplesmente parava
+                        de aceitar tecla. A contagem só aparece perto do teto,
+                        porque um contador sempre visível é ruído nos 100
+                        primeiros caracteres. */}
+                    {name.length >= NOME_MAX - 20 ? (
+                        <span className="nums text-2xs text-muted-foreground">
+                            {name.length}/{NOME_MAX}
+                        </span>
+                    ) : null}
+                </div>
                 <Input
                     id={nameId}
                     value={name}
                     onChange={(e) => onNameChange(e.target.value)}
                     placeholder="Ex.: Casa, Freelance"
                     autoComplete="off"
-                    maxLength={120}
+                    maxLength={NOME_MAX}
                 />
             </div>
 

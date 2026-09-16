@@ -1,6 +1,6 @@
 "use client"
-/* eslint-disable @next/next/no-img-element -- profile avatars use data URLs / external metadata URLs */
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { formatDateLongPtBr } from "@/lib/transaction-date"
 import { ROUTES } from "@/config/navigation"
 import { useState } from "react"
@@ -59,26 +59,20 @@ export default function AccountPage() {
                     <CardContent className="flex flex-col p-0">
                         <div className="flex items-center justify-between gap-3 px-4 py-3 sm:py-3.5">
                             <div className="flex min-w-0 flex-1 items-center gap-3">
-                                <div className="relative flex size-12 shrink-0 select-none overflow-hidden rounded-lg bg-muted">
+                                <Avatar size="lg" shape="rounded" className="shrink-0">
                                     {currentAvatarUrl ? (
-                                        <img
-                                            src={currentAvatarUrl}
-                                            alt={userName}
-                                            className="aspect-square size-full object-cover"
-                                            decoding="async"
-                                        />
-                                    ) : (
-                                        <div
-                                            className={cn(
-                                                "flex size-full items-center justify-center text-sm font-semibold",
-                                                avatarTone.surface,
-                                                avatarTone.ink
-                                            )}
-                                        >
-                                            {getInitials(userName)}
-                                        </div>
-                                    )}
-                                </div>
+                                        <AvatarImage src={currentAvatarUrl} alt={userName} />
+                                    ) : null}
+                                    <AvatarFallback
+                                        className={cn(
+                                            "font-semibold",
+                                            avatarTone.surface,
+                                            avatarTone.ink
+                                        )}
+                                    >
+                                        {getInitials(userName)}
+                                    </AvatarFallback>
+                                </Avatar>
                                 <div className="min-w-0">
                                     <p className="truncate text-sm font-medium">{userName}</p>
                                     <p className="truncate text-xs text-muted-foreground">

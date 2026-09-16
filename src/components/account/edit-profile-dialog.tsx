@@ -264,6 +264,9 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
     const profileFormFields = (
         <div className="space-y-4">
             <div className="flex flex-col items-center gap-3">
+                {/* Cru de propósito: 80px está acima do `xl` do `Avatar` (56), e este
+                    é o retrato do formulário — ele mostra o preview do arquivo
+                    escolhido antes de existir usuário nenhum para o componente. */}
                 <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted ring-4 ring-background">
                     {avatarPreview ? (
                         <img

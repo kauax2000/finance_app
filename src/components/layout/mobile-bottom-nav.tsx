@@ -1,7 +1,7 @@
 "use client"
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { EllipsisHorizontalIcon } from "@heroicons/react/24/outline"
-/* eslint-disable @next/next/no-img-element -- bottom-nav avatar from user metadata URL */
 
 import { usePathname } from "next/navigation"
 import { QuickActionButton } from "@/components/layout/quick-actions"
@@ -91,26 +91,12 @@ function MobileAccountMenuSlotContent({
         }
 
         return (
-            <span className="relative flex size-6 shrink-0 select-none overflow-hidden rounded-md bg-muted">
-                {avatarUrl ? (
-                    <img
-                        src={avatarUrl}
-                        alt={userName}
-                        className="aspect-square size-full object-cover"
-                        decoding="async"
-                    />
-                ) : (
-                    <span
-                        className={cn(
-                            "flex size-full items-center justify-center text-2xs font-medium",
-                            avatarTone.surface,
-                            avatarTone.ink
-                        )}
-                    >
-                        {getInitials(userName)}
-                    </span>
-                )}
-            </span>
+            <Avatar size="xs" shape="rounded" className="shrink-0">
+                {avatarUrl ? <AvatarImage src={avatarUrl} alt={userName} /> : null}
+                <AvatarFallback className={cn(avatarTone.surface, avatarTone.ink)}>
+                    {getInitials(userName)}
+                </AvatarFallback>
+            </Avatar>
         )
     }
 

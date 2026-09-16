@@ -237,6 +237,11 @@ export function DashboardRecentTransactions({
                                                     )}
                                                 >
                                                     <div
+                                                        /* Cru de propósito: 16px não é degrau do `Avatar` — a
+                                                           escada dele começa em 24 —, e vesti-lo aqui exigiria
+                                                           anular tamanho e corpo do texto. É a régua da casa:
+                                                           quando três de quatro declarações são anuladas, vestir
+                                                           é reimplementar ao contrário. */
                                                         className={cn(
                                                             "relative size-4 shrink-0 overflow-hidden rounded-full bg-muted",
                                                             "ring-1 ring-border/40 ring-offset-0 ring-offset-background",
