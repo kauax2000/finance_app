@@ -2,6 +2,9 @@
 
 import * as React from "react"
 import {
+    FilterChipRemoveButton,
+} from "@/components/transactions/transactions-active-filters-chips"
+import {
     Field,
     FieldControl,
     FieldLabel,
@@ -28,7 +31,7 @@ import {
     PopoverHeader,
     PopoverTrigger,
 } from "@/components/ui/popover"
-import { ChevronDownIcon, XMarkIcon } from "@heroicons/react/16/solid"
+import { ChevronDownIcon } from "@heroicons/react/16/solid"
 import {
     Select,
     SelectContent,
@@ -363,20 +366,12 @@ export function TransactionsFiltersPanel({
                                         <span className="min-w-0 max-w-[12rem] truncate">
                                             {label}
                                         </span>
-                                        <button
-                                            type="button"
-                                            className={cn(
-                                                "inline-flex size-5 shrink-0 items-center justify-center rounded-full",
-                                                "opacity-70 hover:bg-success/20 hover:opacity-100 active:bg-success/25 active:opacity-100",
-                                                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2"
-                                            )}
+                                        <FilterChipRemoveButton
                                             aria-label={`Remover ${label}`}
                                             onClick={() =>
                                                 onTogglePaymentMethod(pm)
                                             }
-                                        >
-                                            <XMarkIcon className="size-3.5" aria-hidden />
-                                        </button>
+                                        />
                                     </Badge>
                                 )
                             })}
@@ -679,20 +674,12 @@ export function TransactionsFiltersPanel({
                                             <span className="min-w-0 max-w-[12rem] truncate">
                                                 Sem categoria
                                             </span>
-                                            <button
-                                                type="button"
-                                                className={cn(
-                                                    "inline-flex size-5 shrink-0 items-center justify-center rounded-full",
-                                                    "opacity-70 hover:bg-success/20 hover:opacity-100 active:bg-success/25 active:opacity-100",
-                                                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2"
-                                                )}
+                                            <FilterChipRemoveButton
                                                 aria-label="Remover filtro sem categoria"
                                                 onClick={() =>
                                                     onUncategorizedOnlyChange(false)
                                                 }
-                                            >
-                                                <XMarkIcon className="size-3.5" aria-hidden />
-                                            </button>
+                                            />
                                         </Badge>
                                     ) : null}
                                     {orderedSelectedCategories.map((cat) => {
@@ -717,23 +704,12 @@ export function TransactionsFiltersPanel({
                                                 <span className="min-w-0 max-w-[12rem] truncate">
                                                     {name}
                                                 </span>
-                                                <button
-                                                    type="button"
-                                                    className={cn(
-                                                        "inline-flex size-5 shrink-0 items-center justify-center rounded-full",
-                                                        "opacity-70 hover:bg-success/20 hover:opacity-100 active:bg-success/25 active:opacity-100",
-                                                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2"
-                                                    )}
+                                                <FilterChipRemoveButton
                                                     aria-label={`Remover ${name}`}
                                                     onClick={() =>
                                                         onToggleCategory(cat.id)
                                                     }
-                                                >
-                                                    <XMarkIcon
-                                                        className="size-3.5"
-                                                        aria-hidden
-                                                    />
-                                                </button>
+                                                />
                                             </Badge>
                                         )
                                     })}

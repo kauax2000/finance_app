@@ -2,6 +2,9 @@
 
 import { percentPointsBR } from "@/lib/formatters"
 import {
+    Button,
+} from "@/components/ui/button"
+import {
     DescriptionDetails,
     DescriptionList,
     DescriptionListItem,
@@ -175,14 +178,9 @@ function InvoiceFaturaHeaderStatus({
         </Badge>
     )
 
-    const invoiceMenuTriggerButtonClass = cn(
-        "group inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border px-2 py-1",
-        "text-left outline-none transition-colors",
-        "hover:bg-muted/80 active:bg-muted/70",
-        "focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-        "disabled:pointer-events-none disabled:opacity-50",
-        "data-[state=open]:bg-muted/60"
-    )
+    // A pílula que abre o menu da fatura: um `Button outline xs` redondo, com o
+    // selo de status dentro. Era um `<button>` cru com as mesmas intenções.
+    const invoiceMenuTriggerButtonClass = "shrink-0 rounded-full px-2 data-[state=open]:bg-muted/60"
 
     if (status === "paid") {
         if (!showPaymentMenu) return paidBadge
@@ -190,8 +188,10 @@ function InvoiceFaturaHeaderStatus({
             <>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <button
+                    <Button
                         type="button"
+                        variant="outline"
+                        size="xs"
                         disabled={paymentSaving}
                         className={invoiceMenuTriggerButtonClass}
                         title="Abrir ações da fatura. Fatura marcada como paga."
@@ -206,7 +206,7 @@ function InvoiceFaturaHeaderStatus({
                             Paga
                         </Badge>
                         <ChevronUpDownIcon className="size-3 shrink-0 text-muted-foreground" aria-hidden />
-                    </button>
+                    </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     <DropdownMenuItem
@@ -247,8 +247,10 @@ function InvoiceFaturaHeaderStatus({
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <button
+                <Button
                     type="button"
+                    variant="outline"
+                    size="xs"
                     disabled={paymentSaving}
                     className={invoiceMenuTriggerButtonClass}
                     title={`Abrir ações da fatura. ${unpaidTitle}`}
@@ -263,7 +265,7 @@ function InvoiceFaturaHeaderStatus({
                         Não paga
                     </Badge>
                     <ChevronUpDownIcon className="size-3 shrink-0 text-muted-foreground" aria-hidden />
-                </button>
+                </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
                 <DropdownMenuItem

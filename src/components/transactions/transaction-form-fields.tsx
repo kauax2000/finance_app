@@ -42,6 +42,7 @@ import {
     FormPickerPopoverContent,
     FormPickerPopoverFooter,
     FormPickerPopoverFooterAction,
+    FormPickerPopoverItem,
     FormPickerPopoverList,
     FormPickerPopoverSearch,
 } from "@/components/ui/form-picker-popover"
@@ -96,14 +97,8 @@ function CategoryRows({
                 const selected = c.id === value
                 return (
                     <li key={c.id}>
-                        <button
-                            type="button"
-                            className={cn(
-                                "flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm transition-colors",
-                                selected
-                                    ? "bg-muted font-medium text-foreground"
-                                    : "hover:bg-muted/60"
-                            )}
+                        <FormPickerPopoverItem
+                            selected={selected}
                             onClick={() => onPick(c.id)}
                         >
                             <span
@@ -115,7 +110,7 @@ function CategoryRows({
                                 aria-hidden
                             />
                             <span className="min-w-0 truncate">{c.name}</span>
-                        </button>
+                        </FormPickerPopoverItem>
                     </li>
                 )
             })}
@@ -195,22 +190,18 @@ function CreditCardRows({
                 const selected = c.id === value
                 return (
                     <li key={c.id}>
-                        <button
-                            type="button"
-                            className={cn(
-                                "flex w-full flex-col gap-0.5 rounded-lg px-3 py-2.5 text-left text-sm transition-colors",
-                                selected
-                                    ? "bg-muted font-medium text-foreground"
-                                    : "hover:bg-muted/60"
-                            )}
+                        <FormPickerPopoverItem
+                            selected={selected}
                             onClick={() => onPick(c.id)}
                         >
-                            <span className="truncate">{c.name}</span>
-                            <span className="text-xs text-muted-foreground">
-                                •••• {c.last_four}
-                                {c.brand ? ` · ${c.brand}` : ""}
+                            <span className="flex min-w-0 flex-col gap-0.5">
+                                <span className="truncate">{c.name}</span>
+                                <span className="text-xs text-muted-foreground">
+                                    •••• {c.last_four}
+                                    {c.brand ? ` · ${c.brand}` : ""}
+                                </span>
                             </span>
-                        </button>
+                        </FormPickerPopoverItem>
                     </li>
                 )
             })}

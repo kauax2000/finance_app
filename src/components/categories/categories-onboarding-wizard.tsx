@@ -499,18 +499,16 @@ export function CategoriesOnboardingWizard({
     }
 
     const skipLink = (
-        <button
+        <Button
             type="button"
-            className={cn(
-                "text-center text-xs text-muted-foreground underline-offset-4",
-                "hover:text-foreground hover:underline",
-                "disabled:pointer-events-none disabled:opacity-50",
-            )}
+            variant="link"
+            size="xs"
+            className="text-muted-foreground hover:text-foreground active:text-foreground"
             disabled={busy}
             onClick={() => void completeOnboarding(false)}
         >
             Configurar depois
-        </button>
+        </Button>
     )
 
     const renderCategoryRow = (c: Category) => {

@@ -71,6 +71,10 @@ export function BillSummaryCard({
                 !bill.is_active && "opacity-[0.82]"
             )}
         >
+            {/* Cru de propósito: é a área clicável do cartão, e o cartão não pode
+                ser o botão — o rodapé, logo abaixo, tem as próprias ações, e botão
+                dentro de botão é inválido. `Card interactive asChild` só serve a um
+                cartão que é inteiro a ação. */}
             <button
                 type="button"
                 className={cn(

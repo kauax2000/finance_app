@@ -8,6 +8,10 @@ import {
 } from "@/components/ui/empty-state"
 import { ActivityPageSkeleton } from "@/components/account/activity-page-skeleton"
 import {
+    ToggleGroup,
+    ToggleGroupItem,
+} from "@/components/ui/toggle-group"
+import {
     PageSection,
     PageSectionHeader,
     PageSectionTitle,
@@ -20,8 +24,6 @@ import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
 import {
     Badge,
     tagChipDanger,
-    tagChipFilterIdle,
-    tagChipFilterSelected,
     tagChipInfo,
     tagChipNeutral,
     tagChipSuccess,
@@ -234,23 +236,27 @@ export default function ActivityPage() {
                             </p>
                         </CardToolbar>
                         <CardToolbar>
-                            <div className="flex flex-wrap gap-2">
+                            {/* Escolha única entre filtros: `ToggleGroup`, que não deixa
+                                desmarcar tudo e anuncia o item ativo como marcado. */}
+                            <ToggleGroup
+                                type="single"
+                                variant="outline"
+                                size="sm"
+                                value={filter}
+                                onValueChange={(next) => setFilter(next as typeof filter)}
+                                aria-label="Filtrar atividades"
+                                className="flex-wrap gap-2"
+                            >
                                 {filters.map(({ key, label }) => (
-                                    <button
+                                    <ToggleGroupItem
                                         key={key}
-                                        type="button"
-                                        onClick={() => setFilter(key)}
-                                        className={cn(
-                                            "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-                                            filter === key
-                                                ? tagChipFilterSelected
-                                                : tagChipFilterIdle,
-                                        )}
+                                        value={key}
+                                        className="rounded-full px-3"
                                     >
                                         {label} ({activityCounts[key]})
-                                    </button>
+                                    </ToggleGroupItem>
                                 ))}
-                            </div>
+                            </ToggleGroup>
                         </CardToolbar>
                         {filteredActivities.length > 0 ? (
                             <ul className="divide-y divide-border" role="list">

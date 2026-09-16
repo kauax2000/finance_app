@@ -1,6 +1,9 @@
 "use client"
 
 import * as React from "react"
+import {
+    Button,
+} from "@/components/ui/button"
 import Link from "next/link"
 import { PlusIcon } from "@heroicons/react/16/solid"
 import { CheckIcon } from "@heroicons/react/20/solid"
@@ -338,13 +341,15 @@ export function WorkspacePickerMenuBody({
                         Não foi possível concluir esta ação
                     </p>
                     <p className="mt-1 text-xs leading-snug text-muted-foreground">{error}</p>
-                    <button
+                    <Button
                         type="button"
-                        className="mt-2 text-xs font-medium text-primary-accent underline-offset-4 hover:underline"
+                        variant="link"
+                        size="xs"
+                        className="mt-2 h-auto px-0 font-medium"
                         onClick={() => void refreshWorkspaces()}
                     >
                         Tentar novamente
-                    </button>
+                    </Button>
                 </div>
             ) : null}
 
