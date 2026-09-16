@@ -6,6 +6,14 @@ import {
     EmptyStateIcon,
 } from "@/components/ui/empty-state"
 import { useMemo } from "react"
+import {
+    Item,
+} from "@/components/ui/item"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import Link from "next/link"
 import { ArrowTopRightOnSquareIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
 import { ReceiptPercentIcon } from "@heroicons/react/24/outline"
@@ -91,29 +99,28 @@ export function DashboardRecentTransactions({
 }) {
     const monthTitle = useMemo(() => labelYearMonthPt(calendarYm), [calendarYm])
     return (
-        <div className="min-w-0 max-w-full space-y-2">
-            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex h-8 min-w-0 items-end">
-                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                        {sectionTitle}
-                    </p>
-                </div>
-                <Button
-                    asChild
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-10 w-full gap-2 px-2 text-xs md:h-8 md:w-auto"
-                >
-                    <Link href={viewAllHref}>
-                        <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />
-                        <span className="truncate">{viewAllLabel}</span>
-                    </Link>
-                </Button>
-            </div>
+        <PageSection className="max-w-full">
+            <PageSectionHeader
+                actions={
+                    <Button
+                        asChild
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-2 px-2 text-xs pointer-coarse:h-10"
+                    >
+                        <Link href={viewAllHref}>
+                            <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />
+                            <span className="truncate">{viewAllLabel}</span>
+                        </Link>
+                    </Button>
+                }
+            >
+                <PageSectionTitle>{sectionTitle}</PageSectionTitle>
+            </PageSectionHeader>
 
             {transactions.length === 0 ? (
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent className="flex flex-col gap-0 p-0">
                         <CardToolbar
                             aria-live="polite"
@@ -136,7 +143,7 @@ export function DashboardRecentTransactions({
             ) : (
                 <>
                     <div className="md:hidden">
-                        <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                        <Card padding="none">
                             <CardContent className="flex flex-col gap-0 p-0">
                                 <CardToolbar
                                     aria-live="polite"
@@ -198,15 +205,14 @@ export function DashboardRecentTransactions({
 
                                 return (
                                     <li key={transaction.id}>
+                                        <Item
+                                            asChild
+                                            interactive
+                                            className="flex-nowrap gap-3 rounded-none border-0 px-4 py-3 text-left"
+                                        >
                                         <button
                                             type="button"
                                             aria-label={rowAriaLabel}
-                                            className={cn(
-                                                "flex w-full min-h-[44px] items-center gap-3 px-4 py-3 text-left transition-colors",
-                                                "hover:bg-muted/30 active:bg-muted/45",
-                                                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                                                "md:min-h-0",
-                                            )}
                                             onClick={() =>
                                                 onTransactionClick?.(transaction)
                                             }
@@ -237,6 +243,11 @@ export function DashboardRecentTransactions({
                                                     )}
                                                 >
                                                     <div
+                                                        /* Cru de propósito: 16px não é degrau do `Avatar` — a
+                                                           escada dele começa em 24 —, e vesti-lo aqui exigiria
+                                                           anular tamanho e corpo do texto. É a régua da casa:
+                                                           quando três de quatro declarações são anuladas, vestir
+                                                           é reimplementar ao contrário. */
                                                         className={cn(
                                                             "relative size-4 shrink-0 overflow-hidden rounded-full bg-muted",
                                                             "ring-1 ring-border/40 ring-offset-0 ring-offset-background",
@@ -301,6 +312,7 @@ export function DashboardRecentTransactions({
                                                 />
                                             </div>
                                         </button>
+                                        </Item>
                                     </li>
                                 )
                             })}
@@ -313,25 +325,21 @@ export function DashboardRecentTransactions({
                     </div>
 
                     <div className="hidden md:block">
-                        <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
-                            <CardContent className="relative flex flex-col p-0">
-                                <TransactionsTable
-                                    transactions={transactions}
-                                    sortKey="date"
-                                    sortDir="desc"
-                                    openTransactionDetail={(tx) =>
-                                        onTransactionClick?.(tx)
-                                    }
-                                    enableSelection={false}
-                                    enableSort={false}
-                                    enableActions={false}
-                                    showPaginationFooter={false}
-                                    invoicePaidByCardClose={
-                                        invoicePaidByCardClose
-                                    }
-                                />
-                            </CardContent>
-                        </Card>
+                        <TransactionsTable
+                            transactions={transactions}
+                            sortKey="date"
+                            sortDir="desc"
+                            openTransactionDetail={(tx) =>
+                                onTransactionClick?.(tx)
+                            }
+                            enableSelection={false}
+                            enableSort={false}
+                            enableActions={false}
+                            showPaginationFooter={false}
+                            invoicePaidByCardClose={
+                                invoicePaidByCardClose
+                            }
+                        />
                     </div>
                 </>
             )}
@@ -353,6 +361,6 @@ export function DashboardRecentTransactions({
                     </Button>
                 </div>
             ) : null}
-        </div>
+        </PageSection>
     )
 }

@@ -10,11 +10,12 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
+import { CATEGORY_COLORS, CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
 import { cn } from "@/lib/utils"
 import { ChevronRightIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ColorTile } from "@/components/ui/color-tile"
 import { deltaTone } from "@/lib/delta-tone"
+import { currencyBRL } from "@/lib/formatters"
 
 function stopLinkNavigation(e: React.MouseEvent) {
     e.preventDefault()
@@ -22,7 +23,7 @@ function stopLinkNavigation(e: React.MouseEvent) {
 }
 
 const currency = (n: number) =>
-    n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+    currencyBRL(n)
 
 function isMomFlat(now: number, prev: number): boolean {
     if (prev <= 0) return false
@@ -119,7 +120,7 @@ export function ExpenseCategoryCard({
     onEdit: () => void
     onDelete: () => void
 }) {
-    const color = category.color || "#EF4444"
+    const color = category.color || CATEGORY_COLORS[3]
     const hasBudget = limit > 0
     const over = hasBudget && spent > limit
     const near = hasBudget && !over && limit > 0 && spent / limit >= 0.85
@@ -169,8 +170,8 @@ export function ExpenseCategoryCard({
     const budgetFillColor = over
         ? "var(--destructive)"
         : near
-          ? "#F59E0B"
-          : "#10B981"
+          ? "var(--warning)"
+          : "var(--success)"
 
     return (
         // O cartão inteiro é clicável por um link esticado (::after) no título, e
@@ -219,7 +220,7 @@ export function ExpenseCategoryCard({
                                         type="button"
                                         variant="tertiary"
                                         size="icon-lg"
-                                        className="relative z-10 size-8 text-muted-foreground hover:text-foreground"
+                                        className="relative z-10 size-8 text-muted-foreground hover:text-foreground active:text-foreground"
                                         aria-label={`Opções da categoria ${category.name}`}
                                         onClick={(e) => stopLinkNavigation(e)}
                                         onPointerDown={(e) => e.stopPropagation()}
@@ -228,18 +229,16 @@ export function ExpenseCategoryCard({
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent
-                                    align="end"
-                                    className="w-44"
+                                    align="end" size="sm"
                                 >
                                     <DropdownMenuItem onSelect={() => onEdit()}>
                                         <PencilIcon className="h-4 w-4" aria-hidden />
                                         Editar
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        className="text-destructive focus:text-destructive"
+                                    <DropdownMenuItem variant="destructive"
                                         onSelect={() => onDelete()}
                                     >
-                                        <TrashIcon className="h-4 w-4" aria-hidden />
+                                        <TrashIcon aria-hidden />
                                         Excluir
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>

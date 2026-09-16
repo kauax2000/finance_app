@@ -8,6 +8,7 @@ import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
+  DialogBody,
   DialogCloseButton,
   DialogContent,
   DialogDescription,
@@ -177,7 +178,7 @@ export function CreditCardCreateDialog({
                         onSubmit={handleCreate}
                         className="flex min-h-0 flex-1 flex-col"
                     >
-                        <div className="min-h-0 flex-1 overflow-y-auto px-4">
+                        <DialogBody>
                             <div className="space-y-3 pb-2">
                                 <CreditCardFormFields
                                     formKey={`create-global-${createFormKey}`}
@@ -198,8 +199,8 @@ export function CreditCardCreateDialog({
                                     onExpiryYearChange={setExpiryYear}
                                 />
                             </div>
-                        </div>
-                        <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
+                        </DialogBody>
+                        <DialogFooter className="flex-col">
                             <Button
                                 type="submit"
                                 size="sm"
@@ -222,14 +223,14 @@ export function CreditCardCreateDialog({
                     onSubmit={handleCreate}
                     className="flex min-h-0 flex-1 flex-col"
                 >
-                    <DialogHeader className="shrink-0 px-6 pt-6 pb-2">
+                    <DialogHeader>
                         <DialogTitle>Cadastro de cartão</DialogTitle>
                         <DialogDescription>
                             Dados para identificar o cartão nas despesas (não armazenamos o
                             número completo).
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="min-h-0 flex-1 overflow-y-auto px-6">
+                    <DialogBody>
                         <div className="space-y-3 pb-2">
                             <CreditCardFormFields
                                 formKey={`create-global-${createFormKey}`}
@@ -250,8 +251,8 @@ export function CreditCardCreateDialog({
                                 onExpiryYearChange={setExpiryYear}
                             />
                         </div>
-                    </div>
-                    <DialogFooter className="mx-0 mb-0 mt-0 shrink-0 flex-row flex-wrap justify-end gap-2 rounded-b-xl bg-background px-6 pt-4 pb-5 sm:gap-3">
+                    </DialogBody>
+                    <DialogFooter className="sm:gap-3">
                         <Button
                             type="button"
                             variant="outline"

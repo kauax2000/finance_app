@@ -1,11 +1,7 @@
 "use client"
 
-import {
-  ExclamationTriangleIcon,
-  MagnifyingGlassIcon,
-  PlusIcon,
-  ReceiptPercentIcon,
-} from "@heroicons/react/16/solid"
+import { ExclamationTriangleIcon, MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
+import { PlusIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import {
@@ -45,8 +41,8 @@ export default function EmptyStateDoc() {
           </EmptyStateIcon>
           <EmptyStateTitle>Nenhuma transação ainda</EmptyStateTitle>
           <EmptyStateDescription>
-            Lance a primeira e o extrato, os totais do mês e os orçamentos
-            começam a se preencher sozinhos.
+              Lance a primeira e o extrato, os totais do mês e os orçamentos
+              começam a se preencher sozinhos.
           </EmptyStateDescription>
           <EmptyStateActions>
             <Button>
@@ -71,7 +67,7 @@ export default function EmptyStateDoc() {
           </EmptyStateIcon>
           <EmptyStateTitle>Nada com esses filtros</EmptyStateTitle>
           <EmptyStateDescription>
-            Nenhuma transação entre 1 e 7 de março na categoria Mercado.
+              Nenhuma transação entre 1 e 7 de março na categoria Mercado.
           </EmptyStateDescription>
           <EmptyStateActions>
             <Button variant="outline">Limpar filtros</Button>
@@ -95,8 +91,8 @@ export default function EmptyStateDoc() {
             <h3>Algo deu errado</h3>
           </EmptyStateTitle>
           <EmptyStateDescription>
-            Não foi possível carregar suas transações. Tente de novo em alguns
-            instantes.
+              Não foi possível carregar suas transações. Tente de novo em alguns
+              instantes.
           </EmptyStateDescription>
           <EmptyStateActions>
             <Button>Tentar de novo</Button>
@@ -139,7 +135,7 @@ return <Lista itens={itens} />`}
             <EmptyState variant="plain" size="sm">
               <EmptyStateTitle>Nenhuma compra nesta fatura</EmptyStateTitle>
               <EmptyStateDescription>
-                O ciclo fecha em 28 de março.
+                  O ciclo fecha em 28 de março.
               </EmptyStateDescription>
             </EmptyState>
           </CardContent>

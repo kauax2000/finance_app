@@ -2,6 +2,17 @@
 
 import type { ReactNode } from "react"
 import {
+    DescriptionDetails,
+    DescriptionList,
+    DescriptionListItem,
+    DescriptionTerm,
+} from "@/components/ui/description-list"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
+import {
   ArrowTrendingDownIcon,
   ArrowTrendingUpIcon,
   InformationCircleIcon,
@@ -219,46 +230,48 @@ function ExpenseBudgetOverviewCard({
     const budgetFillColor = over
         ? "var(--destructive)"
         : near
-          ? "#F59E0B"
-          : "#10B981"
+          ? "var(--warning)"
+          : "var(--success)"
     const budgetBarLabel = hasBudget
         ? `Uso do orçamento: ${budgetPctRounded}% de ${currencyBRL(limit)}${over ? ", acima do limite" : ""}`
         : undefined
 
     return (
-        <div className="min-w-0 space-y-2 md:col-span-6">
-            <div className="flex min-w-0 items-center justify-between gap-2">
-                <p className="min-w-0 flex-1 truncate text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Orçamento do mês
-                </p>
-
-                <div className="flex shrink-0 items-center gap-2">
-                    {hasBudget ? (
-                        <p className="hidden tabular-nums text-2xs text-muted-foreground md:block">
-                            Limite{" "}
-                            <span className="font-medium text-foreground">{currencyBRL(limit)}</span>
-                        </p>
-                    ) : (
-                        <p className="hidden text-2xs font-medium uppercase tracking-wide text-muted-foreground md:block">
-                            Sem limite
-                        </p>
-                    )}
-                    {budgetHeaderRight ?? null}
-                </div>
-            </div>
+        <PageSection className="md:col-span-6">
+            <PageSectionHeader
+                actions={
+                    <>
+                        {hasBudget ? (
+                            <p className="hidden tabular-nums text-2xs text-muted-foreground md:block">
+                                Limite{" "}
+                                <span className="font-medium text-foreground">{currencyBRL(limit)}</span>
+                            </p>
+                        ) : (
+                            <p className="hidden text-2xs font-medium uppercase tracking-wide text-muted-foreground md:block">
+                                Sem limite
+                            </p>
+                        )}
+                        {budgetHeaderRight ?? null}
+                    </>
+                }
+            >
+                <PageSectionTitle className="truncate">Orçamento do mês</PageSectionTitle>
+            </PageSectionHeader>
 
             <Card padding="none" className="min-w-0">
                 <CardContent className="space-y-4 p-3 md:p-4">
                     {hasBudget ? (
                         <>
-                            <div className="flex w-full items-center justify-between gap-2 rounded-md border border-border/60 bg-muted/20 px-3 py-2 md:hidden">
-                                <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                                    Limite
-                                </p>
-                                <p className="tabular-nums text-2xs font-medium text-foreground">
-                                    {currencyBRL(limit)}
-                                </p>
-                            </div>
+                            <DescriptionList className="gap-0 md:hidden">
+                                <DescriptionListItem className="flex w-full items-center justify-between gap-2">
+                                    <DescriptionTerm className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+                                        Limite
+                                    </DescriptionTerm>
+                                    <DescriptionDetails className="text-2xs font-medium">
+                                        {currencyBRL(limit)}
+                                    </DescriptionDetails>
+                                </DescriptionListItem>
+                            </DescriptionList>
                             <div className="grid grid-cols-2 items-end gap-3 md:flex md:flex-wrap md:justify-between md:gap-x-6 md:gap-y-4">
                                 <div className="min-w-0 space-y-1">
                                     <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -386,7 +399,7 @@ function ExpenseBudgetOverviewCard({
                     )}
                 </CardContent>
             </Card>
-        </div>
+        </PageSection>
     )
 }
 
@@ -401,9 +414,11 @@ function SummaryMetricCard({
 }) {
     return (
         <Card
-            className={cn(
-                "h-full min-w-0 gap-0 overflow-hidden py-0 shadow-none transition-[color,box-shadow] duration-150 hover:ring-foreground/15",
-            )}
+            padding="none"
+            /* O `hover:ring-foreground/15` que morava aqui não desenhava nada: o
+               `Card` só declara largura de anel no `focus-visible`, e este cartão
+               não é clicável. Com ele saiu a transição, que não tinha o que animar. */
+            className="h-full min-w-0"
         >
             <div className={categorySummaryHeaderClassName}>
                 <div className="flex min-w-0 flex-1 items-center justify-between gap-2 md:min-w-0 md:flex-1">

@@ -1,6 +1,9 @@
 "use client"
 
 import { SectionLabel } from "@/components/transactions/installment-purchase-section"
+import {
+    Card,
+} from "@/components/ui/card"
 import { currencyBRL } from "@/lib/formatters"
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
@@ -38,8 +41,8 @@ import type { ExpenseCategoryOption } from "@/components/subscriptions/subscript
 import type { SubscriptionFormPayload } from "@/components/subscriptions/subscription-form-shared"
 import { SubscriptionFormSurface } from "@/components/subscriptions/subscription-form-surface"
 import { useSubscriptionForm } from "@/components/subscriptions/use-subscription-form"
-import { PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
-import { EllipsisHorizontalIcon, XMarkIcon } from "@heroicons/react/20/solid"
+import { EllipsisHorizontalIcon, PencilIcon, TrashIcon, XMarkIcon } from "@heroicons/react/16/solid"
+
 import { cn } from "@/lib/utils"
 import { Switch } from "@/components/ui/switch"
 import {
@@ -312,23 +315,21 @@ export function SubscriptionDetailSheet({
                                     aria-label="Mais opções"
                                 >
                                     <EllipsisHorizontalIcon
-                                        className="h-5 w-5"
                                         aria-hidden
                                     />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuContent align="end" size="sm">
                                 <DropdownMenuItem
                                     onClick={() => setDetailMode("edit")}
                                 >
                                     <PencilIcon className="h-4 w-4" aria-hidden />
                                     Editar
                                 </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    className="text-destructive focus:text-destructive"
+                                <DropdownMenuItem variant="destructive"
                                     onClick={() => onDelete(s)}
                                 >
-                                    <TrashIcon className="h-4 w-4" aria-hidden />
+                                    <TrashIcon aria-hidden />
                                     Excluir
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -341,14 +342,15 @@ export function SubscriptionDetailSheet({
                             onClick={() => onOpenChange(false)}
                             aria-label="Fechar"
                         >
-                            <XMarkIcon className="h-5 w-5" aria-hidden />
+                            <XMarkIcon aria-hidden />
                         </Button>
                     </div>
                 </div>
             </div>
 
             <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-4 sm:px-5">
-                <section className="space-y-3 rounded-xl border border-border/70 bg-muted/20 p-4 dark:bg-muted/10">
+                <Card asChild variant="muted" className="gap-3 px-4">
+                <section>
                     <div className="flex items-center justify-between gap-3">
                         <SectionLabel className="shrink-0">Resumo</SectionLabel>
                         <div
@@ -405,6 +407,7 @@ export function SubscriptionDetailSheet({
                         </p>
                     </div>
                 </section>
+                </Card>
 
                 <section className="space-y-3">
                     <SectionLabel>Detalhes</SectionLabel>
@@ -481,83 +484,81 @@ export function SubscriptionDetailSheet({
                             </div>
                         </div>
 
-                        <div className="mt-3 overflow-x-auto rounded-lg border border-border/50 bg-background/40">
-                            <Table className="min-w-[280px] text-xs">
-                                <TableHeader>
-                                    <TableRow className="hover:bg-transparent">
-                                        <TableHead className="h-8 px-2 text-2xs font-semibold uppercase tracking-wide">
-                                            Cobrança
-                                        </TableHead>
-                                        <TableHead className="h-8 px-2 text-right text-2xs font-semibold uppercase tracking-wide">
-                                            Valor
-                                        </TableHead>
-                                        <TableHead className="h-8 px-2 text-2xs font-semibold uppercase tracking-wide">
-                                            Status
-                                        </TableHead>
+                        <Table variant="outline" size="sm" className="mt-3 min-w-[280px]">
+                            <TableHeader labels="caps">
+                                <TableRow>
+                                    <TableHead>
+                                        Cobrança
+                                    </TableHead>
+                                    <TableHead numeric>
+                                        Valor
+                                    </TableHead>
+                                    <TableHead>
+                                        Status
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {latestChargeLoading ? (
+                                    <TableRow className="h-9 border-border/40">
+                                        <TableCell className="px-2 py-1.5">
+                                            <Skeleton className="h-3.5 w-20 rounded-md" />
+                                        </TableCell>
+                                        <TableCell className="px-2 py-1.5">
+                                            <Skeleton className="ml-auto h-3.5 w-16 rounded-md" />
+                                        </TableCell>
+                                        <TableCell className="px-2 py-1.5">
+                                            <Skeleton className="h-5 w-16 rounded-full" />
+                                        </TableCell>
                                     </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {latestChargeLoading ? (
-                                        <TableRow className="h-9 border-border/40 hover:bg-transparent">
-                                            <TableCell className="px-2 py-1.5">
-                                                <Skeleton className="h-3.5 w-20 rounded-md" />
+                                ) : subscriptionChargeRows.length > 0 ? (
+                                    subscriptionChargeRows.map((row) => (
+                                        <TableRow
+                                            key={row.key}
+                                            className={cn(
+                                                "h-9 border-border/40",
+                                                row.status !== "pending" &&
+                                                    "bg-muted/50 dark:bg-muted/30"
+                                            )}
+                                        >
+                                            <TableCell className="max-w-[9rem] truncate px-2 py-1.5 tabular-nums text-muted-foreground">
+                                                {row.date
+                                                    ? formatDatePtBr(row.date.slice(0, 10))
+                                                    : "—"}
+                                            </TableCell>
+                                            <TableCell className="px-2 py-1.5 text-right tabular-nums font-medium">
+                                                {currencyBRL(row.amount)}
                                             </TableCell>
                                             <TableCell className="px-2 py-1.5">
-                                                <Skeleton className="ml-auto h-3.5 w-16 rounded-md" />
-                                            </TableCell>
-                                            <TableCell className="px-2 py-1.5">
-                                                <Skeleton className="h-5 w-16 rounded-full" />
+                                                <span
+                                                    className={cn(
+                                                        "inline-flex h-5 w-fit items-center justify-center rounded-full border-0 px-2 py-0 text-2xs font-medium uppercase tracking-wide",
+                                                        subscriptionChargeStatusChipClassName(
+                                                            row.status
+                                                        )
+                                                    )}
+                                                >
+                                                    {row.status === "pending"
+                                                        ? "Próxima"
+                                                        : row.status === "paid"
+                                                          ? "Paga"
+                                                          : "Lançada"}
+                                                </span>
                                             </TableCell>
                                         </TableRow>
-                                    ) : subscriptionChargeRows.length > 0 ? (
-                                        subscriptionChargeRows.map((row) => (
-                                            <TableRow
-                                                key={row.key}
-                                                className={cn(
-                                                    "h-9 border-border/40",
-                                                    row.status !== "pending" &&
-                                                        "bg-muted/50 dark:bg-muted/30"
-                                                )}
-                                            >
-                                                <TableCell className="max-w-[9rem] truncate px-2 py-1.5 tabular-nums text-muted-foreground">
-                                                    {row.date
-                                                        ? formatDatePtBr(row.date.slice(0, 10))
-                                                        : "—"}
-                                                </TableCell>
-                                                <TableCell className="px-2 py-1.5 text-right tabular-nums font-medium">
-                                                    {currencyBRL(row.amount)}
-                                                </TableCell>
-                                                <TableCell className="px-2 py-1.5">
-                                                    <span
-                                                        className={cn(
-                                                            "inline-flex h-5 w-fit items-center justify-center rounded-full border-0 px-2 py-0 text-2xs font-medium uppercase tracking-wide",
-                                                            subscriptionChargeStatusChipClassName(
-                                                                row.status
-                                                            )
-                                                        )}
-                                                    >
-                                                        {row.status === "pending"
-                                                            ? "Próxima"
-                                                            : row.status === "paid"
-                                                              ? "Paga"
-                                                              : "Lançada"}
-                                                    </span>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
-                                    ) : (
-                                        <TableRow className="hover:bg-transparent">
-                                            <TableCell
-                                                colSpan={3}
-                                                className="h-10 px-2 text-center text-muted-foreground"
-                                            >
-                                                Nenhuma cobrança para exibir.
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </div>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={3}
+                                            className="h-10 px-2 text-center text-muted-foreground"
+                                        >
+                                            Nenhuma cobrança para exibir.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
 
                     </div>
                 </section>

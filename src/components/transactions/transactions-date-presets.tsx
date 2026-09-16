@@ -113,6 +113,10 @@ export function TransactionsDatePresets({
         )
     }
 
+    // Fica à mão de propósito, e não virou `Tabs` com os quatro trilhos de
+    // filtro: isto é um grupo de alternância (`role="group"` + `aria-pressed`)
+    // que aplica um período e some quando o intervalo é personalizado, não uma
+    // escolha entre visões. `Tabs` anunciaria abas sem painel para um atalho.
     return (
         <div
             className={cn(

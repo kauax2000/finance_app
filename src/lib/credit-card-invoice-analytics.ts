@@ -14,6 +14,7 @@ import {
 import { localYmdFromDate, parseYmdLocal, transactionCalendarParts } from "@/lib/transaction-date"
 import { parseInstallmentFromDescription } from "@/lib/transaction-installment"
 import type { WorkspaceInstallmentPlan } from "@/lib/supabase"
+import { currencyBRL } from "@/lib/formatters"
 import {
     forecastCreditCardInstallmentsForWindow,
     type InstallmentDedupeTx,
@@ -625,7 +626,7 @@ export function buildProfileCopy(
     medianTicket: number | null
 ): string {
     const fmt = (n: number) =>
-        n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+        currencyBRL(n)
     switch (profile) {
         case "few_large":
             return `Perfil com poucos gastos altos — ticket mediano ${medianTicket != null ? fmt(medianTicket) : "—"}.`

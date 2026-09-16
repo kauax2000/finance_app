@@ -291,10 +291,9 @@ function DropdownMenuSection({
 
 /**
  * `variant="destructive"` existe porque as telas escreviam
- * `text-destructive focus:text-destructive` na mão. **Ela ainda espera por
- * elas**: hoje são 14 chamadas em 12 arquivos, todas na mesma grafia, e nenhuma
- * usa a variant — que além da tinta traz o `focus:bg-destructive/10` e o par
- * escuro que a grafia manual não tem.
+ * `text-destructive focus:text-destructive` na mão. **As 13 chamadas em 11
+ * arquivos migraram**, e com elas vieram o `focus:bg-destructive/10`, o par
+ * escuro e a tinta do ícone, que a grafia manual não tinha.
  */
 function DropdownMenuItem({
   className,

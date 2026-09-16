@@ -200,92 +200,90 @@ export function InstallmentPurchaseSection({
                     <p className="mt-3 text-2xs leading-snug text-muted-foreground">{warning}</p>
                 ) : null}
 
-                <div className="mt-3 overflow-x-auto rounded-lg border border-border/50 bg-background/40">
-                    <Table className="min-w-[280px] text-xs">
-                        <TableHeader>
-                            <TableRow className="hover:bg-transparent">
-                                <TableHead className="h-8 w-10 px-2 text-2xs font-semibold uppercase tracking-wide">
-                                    #
-                                </TableHead>
-                                <TableHead className="h-8 px-2 text-2xs font-semibold uppercase tracking-wide">
-                                    Data
-                                </TableHead>
-                                <TableHead className="h-8 px-2 text-right text-2xs font-semibold uppercase tracking-wide">
-                                    Valor da parcela
-                                </TableHead>
-                                <TableHead className="h-8 px-2 text-2xs font-semibold uppercase tracking-wide">
-                                    Status
-                                </TableHead>
+                <Table variant="outline" size="sm" className="mt-3 min-w-[280px]">
+                    <TableHeader labels="caps">
+                        <TableRow>
+                            <TableHead className="h-8 w-10 px-2 text-2xs font-semibold uppercase tracking-wide">
+                                #
+                            </TableHead>
+                            <TableHead>
+                                Data
+                            </TableHead>
+                            <TableHead numeric>
+                                Valor da parcela
+                            </TableHead>
+                            <TableHead>
+                                Status
+                            </TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {summary.slicesLoading ? (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={4}
+                                    className="h-10 px-2 text-center text-muted-foreground"
+                                >
+                                    …
+                                </TableCell>
                             </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {summary.slicesLoading ? (
-                                <TableRow className="hover:bg-transparent">
-                                    <TableCell
-                                        colSpan={4}
-                                        className="h-10 px-2 text-center text-muted-foreground"
+                        ) : summary.scheduleRows && summary.scheduleRows.length > 0 ? (
+                            summary.scheduleRows.map((row) => {
+                                const isCurrent = isCurrentRow(row)
+                                return (
+                                    <TableRow
+                                        key={row.slot}
+                                        className={cn(
+                                            "h-9 border-border/40",
+                                            isCurrent && "bg-muted/50 dark:bg-muted/30"
+                                        )}
                                     >
-                                        …
-                                    </TableCell>
-                                </TableRow>
-                            ) : summary.scheduleRows && summary.scheduleRows.length > 0 ? (
-                                summary.scheduleRows.map((row) => {
-                                    const isCurrent = isCurrentRow(row)
-                                    return (
-                                        <TableRow
-                                            key={row.slot}
-                                            className={cn(
-                                                "h-9 border-border/40",
-                                                isCurrent && "bg-muted/50 dark:bg-muted/30"
-                                            )}
-                                        >
-                                            <TableCell className="px-2 py-1.5 font-medium tabular-nums">
-                                                {row.slot}
-                                                {isCurrent ? (
-                                                    <span
-                                                        className="ml-1 text-2xs font-normal text-muted-foreground"
-                                                        title={currentRowTitle}
-                                                    >
-                                                        ●
-                                                    </span>
-                                                ) : null}
-                                            </TableCell>
-                                            <TableCell className="max-w-[7rem] truncate px-2 py-1.5 tabular-nums text-muted-foreground">
-                                                {row.date ? formatTransactionDayPtBr(row.date) : "—"}
-                                            </TableCell>
-                                            <TableCell className="px-2 py-1.5 text-right tabular-nums font-medium">
-                                                {currencyBRL(row.parcelAmount)}
-                                            </TableCell>
-                                            <TableCell className="px-2 py-1.5">
+                                        <TableCell className="px-2 py-1.5 font-medium tabular-nums">
+                                            {row.slot}
+                                            {isCurrent ? (
                                                 <span
-                                                    className={cn(
-                                                        transactionRowChipShell,
-                                                        statusChipClassName(row)
-                                                    )}
+                                                    className="ml-1 text-2xs font-normal text-muted-foreground"
+                                                    title={currentRowTitle}
                                                 >
-                                                    {row.status === "pending"
-                                                        ? "Não lançada"
-                                                        : row.invoicePaid
-                                                          ? "Paga"
-                                                          : "Lançada"}
+                                                    ●
                                                 </span>
-                                            </TableCell>
-                                        </TableRow>
-                                    )
-                                })
-                            ) : (
-                                <TableRow className="hover:bg-transparent">
-                                    <TableCell
-                                        colSpan={4}
-                                        className="h-10 px-2 text-center text-muted-foreground"
-                                    >
-                                        Sem parcelas para exibir.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
+                                            ) : null}
+                                        </TableCell>
+                                        <TableCell className="max-w-[7rem] truncate px-2 py-1.5 tabular-nums text-muted-foreground">
+                                            {row.date ? formatTransactionDayPtBr(row.date) : "—"}
+                                        </TableCell>
+                                        <TableCell className="px-2 py-1.5 text-right tabular-nums font-medium">
+                                            {currencyBRL(row.parcelAmount)}
+                                        </TableCell>
+                                        <TableCell className="px-2 py-1.5">
+                                            <span
+                                                className={cn(
+                                                    transactionRowChipShell,
+                                                    statusChipClassName(row)
+                                                )}
+                                            >
+                                                {row.status === "pending"
+                                                    ? "Não lançada"
+                                                    : row.invoicePaid
+                                                      ? "Paga"
+                                                      : "Lançada"}
+                                            </span>
+                                        </TableCell>
+                                    </TableRow>
+                                )
+                            })
+                        ) : (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={4}
+                                    className="h-10 px-2 text-center text-muted-foreground"
+                                >
+                                    Sem parcelas para exibir.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
 
                 {!summary.slicesLoading && summary.futureSlots > 0 ? (
                     <p className="mt-2.5 text-2xs leading-snug text-muted-foreground">

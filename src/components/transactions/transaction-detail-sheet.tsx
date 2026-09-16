@@ -1,6 +1,9 @@
 "use client"
 
 import { currencyBRL } from "@/lib/formatters"
+import {
+    Card,
+} from "@/components/ui/card"
 import { useEffect, useMemo, useState } from "react"
 import type {
     Category,
@@ -49,8 +52,8 @@ import type {
     InstallmentPlanUpdatePayload,
     TransactionFormSavePayload,
 } from "@/components/transactions/transaction-form-types"
-import { ArrowPathRoundedSquareIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
-import { EllipsisHorizontalIcon, XMarkIcon } from "@heroicons/react/20/solid"
+import { ArrowPathRoundedSquareIcon, EllipsisHorizontalIcon, PencilIcon, TrashIcon, XMarkIcon } from "@heroicons/react/16/solid"
+
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 
@@ -252,21 +255,20 @@ export function TransactionDetailSheet({
                                     className="shrink-0"
                                     aria-label="Mais opções"
                                 >
-                                    <EllipsisHorizontalIcon className="h-5 w-5" aria-hidden />
+                                    <EllipsisHorizontalIcon aria-hidden />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuContent align="end" size="sm">
                                 <DropdownMenuItem
                                     onClick={() => setDetailMode("edit")}
                                 >
                                     <PencilIcon className="h-4 w-4" aria-hidden />
                                     Editar
                                 </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    className="text-destructive focus:text-destructive"
+                                <DropdownMenuItem variant="destructive"
                                     onClick={() => onDelete(t)}
                                 >
-                                    <TrashIcon className="h-4 w-4" aria-hidden />
+                                    <TrashIcon aria-hidden />
                                     Excluir
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -279,14 +281,15 @@ export function TransactionDetailSheet({
                             onClick={() => onOpenChange(false)}
                             aria-label="Fechar"
                         >
-                            <XMarkIcon className="h-5 w-5" aria-hidden />
+                            <XMarkIcon aria-hidden />
                         </Button>
                     </div>
                 </div>
             </div>
 
             <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-4 sm:px-5">
-                <section className="space-y-3 rounded-xl border border-border/70 bg-muted/20 p-4 dark:bg-muted/10">
+                <Card asChild variant="muted" className="gap-3 px-4">
+                <section>
                     <div className="flex items-start justify-between gap-3">
                         <SectionLabel className="shrink-0">Resumo</SectionLabel>
                         <p className="shrink-0 text-right text-xs tabular-nums text-muted-foreground">
@@ -319,6 +322,7 @@ export function TransactionDetailSheet({
                         ) : null}
                     </div>
                 </section>
+                </Card>
 
                 <section className="space-y-3">
                     <SectionLabel>Detalhes</SectionLabel>
@@ -407,17 +411,13 @@ export function TransactionDetailSheet({
                                     <p className="text-xs font-medium text-muted-foreground">
                                         Assinatura
                                     </p>
-                                    <Link
-                                        href={subscriptionsHref}
-                                        className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-border/70 bg-muted/40 px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                                    >
-                                        <ArrowPathRoundedSquareIcon
-                                            className="size-3.5 shrink-0 opacity-80"
-                                            aria-hidden
-                                        />
-                                        {t.subscription?.name ??
-                                            "Ver assinaturas"}
-                                    </Link>
+                                    <Button asChild variant="outline" size="xs" className="mt-2">
+                                        <Link href={subscriptionsHref}>
+                                            <ArrowPathRoundedSquareIcon aria-hidden />
+                                            {t.subscription?.name ??
+                                                "Ver assinaturas"}
+                                        </Link>
+                                    </Button>
                                 </div>
                             ) : null}
                         </div>

@@ -1,12 +1,19 @@
 "use client"
 
 import {
+    ChartTooltip,
+    chartSeriesColor,
+} from "@/components/ui/chart"
+import {
     EmptyState,
     EmptyStateDescription,
     EmptyStateIcon,
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { percentPointsBR } from "@/lib/formatters"
+import {
+    Item,
+} from "@/components/ui/item"
 import { currencyBRL } from "@/lib/formatters"
 import Link from "next/link"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -17,23 +24,24 @@ import {
     PieChart,
     Pie,
     Cell,
-    Tooltip,
 } from "recharts"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import { ROUTES } from "@/config/navigation"
 import { labelYearMonthPt } from "@/lib/budget-month"
 import { cn } from "@/lib/utils"
 
 
-/** Fallback palette when category color is missing or invalid (theme-aware neutrals + accents). */
-const FALLBACK_FILLS = [
-    "oklch(0.65 0.15 166)",
-    "oklch(0.62 0.19 264)",
-    "oklch(0.7 0.15 45)",
-    "oklch(0.58 0.2 25)",
-    "oklch(0.55 0.12 250)",
-]
+/**
+ * A categoria sem cor cai na rampa do sistema — os mesmos `--chart-1..5` que
+ * todo gráfico usa, em vez das cinco `oklch()` escritas à mão que moravam aqui
+ * e que ninguém media contra o tema.
+ */
 
 function isHex6(s: string): boolean {
     return /^#[0-9A-Fa-f]{6}$/.test(s.trim())
@@ -41,7 +49,7 @@ function isHex6(s: string): boolean {
 
 function resolveFill(raw: string | undefined, index: number): string {
     if (raw && isHex6(raw)) return raw.trim()
-    return FALLBACK_FILLS[index % FALLBACK_FILLS.length]
+    return chartSeriesColor(index)
 }
 
 /** Keeps the donut center label readable without overlapping slice edges. */
@@ -229,28 +237,27 @@ export function DashboardExpenseCategories({
     const totalDisplay = currencyBRL(total)
 
     return (
-        <div className="min-w-0 space-y-2">
-            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex h-8 min-w-0 items-end">
-                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                        Despesas por categoria
-                    </p>
-                </div>
-                <Button
-                    asChild
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-10 w-full gap-2 px-2 text-xs md:h-8 md:w-auto"
-                >
-                    <Link href={ROUTES.DASHBOARD_CATEGORIES}>
-                        <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />
-                        <span className="truncate">Ver categorias</span>
-                    </Link>
-                </Button>
-            </div>
+        <PageSection>
+            <PageSectionHeader
+                actions={
+                    <Button
+                        asChild
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-2 px-2 text-xs pointer-coarse:h-10"
+                    >
+                        <Link href={ROUTES.DASHBOARD_CATEGORIES}>
+                            <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />
+                            <span className="truncate">Ver categorias</span>
+                        </Link>
+                    </Button>
+                }
+            >
+                <PageSectionTitle>Despesas por categoria</PageSectionTitle>
+            </PageSectionHeader>
 
-            <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <Card padding="none">
                 <CardContent className="relative flex flex-col gap-0 p-0">
                     <CardToolbar
                         aria-live="polite"
@@ -304,7 +311,7 @@ export function DashboardExpenseCategories({
                                                         />
                                                     ))}
                                                 </Pie>
-                                                <Tooltip
+                                                <ChartTooltip
                                                     content={<CategoryTooltip />}
                                                 />
                                             </PieChart>
@@ -363,11 +370,12 @@ export function DashboardExpenseCategories({
                                             )
                                         return (
                                             <li key={row.key}>
-                                                <button
-                                                    type="button"
+                                                <Item
+                                                    asChild
+                                                    interactive
+                                                    size="sm"
                                                     className={cn(
-                                                        "w-full rounded-lg border px-2 py-2 text-left transition-colors",
-                                                        "border-transparent hover:border-border/60 hover:bg-muted/30",
+                                                        "block px-2 py-2 text-left",
                                                         isActive &&
                                                             activeKey !== null &&
                                                             "border-border/80 bg-muted/40",
@@ -375,6 +383,9 @@ export function DashboardExpenseCategories({
                                                             activeKey !== null &&
                                                             "opacity-45",
                                                     )}
+                                                >
+                                                <button
+                                                    type="button"
                                                     onMouseEnter={() =>
                                                         setActiveKey(row.key)
                                                     }
@@ -435,6 +446,7 @@ export function DashboardExpenseCategories({
                                                         />
                                                     </div>
                                                 </button>
+                                                </Item>
                                             </li>
                                         )
                                     })}
@@ -456,6 +468,6 @@ export function DashboardExpenseCategories({
                     </div>
                 </CardContent>
             </Card>
-        </div>
+        </PageSection>
     )
 }

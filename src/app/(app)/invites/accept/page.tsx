@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/container"
 import { Suspense } from "react"
 import AcceptInvitePageClient from "./page-client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,7 +13,7 @@ export default async function Page(props: {
     return (
         <Suspense
             fallback={
-                <div className="mx-auto w-full max-w-xl">
+                <Container>
                     <Card>
                         <CardHeader>
                             <CardTitle className="text-base">Aceitar convite</CardTitle>
@@ -22,7 +23,7 @@ export default async function Page(props: {
                             <p className="text-sm text-muted-foreground">Processando convite...</p>
                         </CardContent>
                     </Card>
-                </div>
+                </Container>
             }
         >
             <AcceptInvitePageClient />

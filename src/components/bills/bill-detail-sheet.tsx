@@ -6,14 +6,15 @@ import {
 } from "@/lib/transaction-date"
 import { billDuePill } from "@/components/bills/bill-status"
 import { useMemo } from "react"
-import { PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
-import { EllipsisHorizontalIcon, XMarkIcon } from "@heroicons/react/20/solid"
+import { EllipsisHorizontalIcon, PencilIcon, TrashIcon, XMarkIcon } from "@heroicons/react/16/solid"
+
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
   Sheet,
   SheetContent,
 } from "@/components/ui/sheet"
 import {
+  DialogBody,
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -244,21 +245,19 @@ export function BillDetailSheet({
                                                 aria-label="Mais opções"
                                             >
                                                 <EllipsisHorizontalIcon
-                                                    className="h-5 w-5"
                                                     aria-hidden
                                                 />
                                             </Button>
                                         </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="w-44">
+                                        <DropdownMenuContent align="end" size="sm">
                                             <DropdownMenuItem onClick={onEditBill}>
                                                 <PencilIcon className="h-4 w-4" aria-hidden />
                                                 Editar modelo
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem
-                                                className="text-destructive focus:text-destructive"
+                                            <DropdownMenuItem variant="destructive"
                                                 onClick={onAskDelete}
                                             >
-                                                <TrashIcon className="h-4 w-4" aria-hidden />
+                                                <TrashIcon aria-hidden />
                                                 Excluir conta
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
@@ -272,14 +271,14 @@ export function BillDetailSheet({
                                     onClick={() => onOpenChange(false)}
                                     aria-label="Fechar"
                                 >
-                                    <XMarkIcon className="h-5 w-5" aria-hidden />
+                                    <XMarkIcon aria-hidden />
                                 </Button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
+                <DialogBody>
                     {loading ? (
                         <div className="space-y-3">
                             <Skeleton className="h-24 w-full rounded-xl" />
@@ -424,7 +423,7 @@ export function BillDetailSheet({
                             ) : null}
                         </div>
                     )}
-                </div>
+                </DialogBody>
 
                 {bill && !loading ? (
                     <div className="shrink-0 border-t border-border/60 bg-background px-4 py-3 sm:px-5">
@@ -440,9 +439,9 @@ export function BillDetailSheet({
                             </Button>
                             <Button
                                 type="button"
-                                variant="outline"
+                                variant="destructive"
                                 size="sm"
-                                className="w-full text-destructive hover:text-destructive sm:w-auto"
+                                className="w-full sm:w-auto"
                                 onClick={onAskDelete}
                             >
                                 Excluir conta

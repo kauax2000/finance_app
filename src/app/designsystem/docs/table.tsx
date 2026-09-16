@@ -1,8 +1,8 @@
 "use client"
 
+import { InboxIcon } from "@heroicons/react/24/outline"
 import * as React from "react"
 import Link from "next/link"
-import { InboxIcon } from "@heroicons/react/16/solid"
 
 import { Badge } from "@/components/ui/badge"
 import {

@@ -1,5 +1,4 @@
 import { CreditCardTileSkeleton } from "@/components/credit-cards/credit-card-tile"
-import { transactionSegmentContainerClassName } from "@/components/transactions/transaction-type-segment"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
@@ -40,7 +39,7 @@ export function CreditCardsPageSkeleton({
             <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-3">
                 <div
                     className={cn(
-                        transactionSegmentContainerClassName,
+                        "inline-flex h-8 w-full items-stretch gap-0.5 rounded-lg bg-muted p-0.5 pointer-coarse:h-10 md:w-auto",
                         "max-w-full shrink-0",
                     )}
                     aria-hidden

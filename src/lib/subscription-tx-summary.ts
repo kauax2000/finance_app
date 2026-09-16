@@ -1,3 +1,5 @@
+import { formatYmdPtBr } from "@/lib/transaction-date"
+
 /**
  * Pure helpers for subscription-linked transaction summary (Assinaturas detail sheet).
  */
@@ -8,7 +10,9 @@ export function formatSubscriptionChargeDatePtBr(
     if (!iso) return "—"
     const [y, m, d] = iso.split("-").map(Number)
     if (!y || !m || !d) return iso
-    return new Date(y, m - 1, d).toLocaleDateString("pt-BR")
+    // `formatYmdPtBr` não passa por `Date`: `new Date("2026-09-01")` é meia-noite
+    // em UTC, e no Brasil isso é o dia anterior.
+    return formatYmdPtBr(iso)
 }
 
 export function formatSubscriptionTxSummary(

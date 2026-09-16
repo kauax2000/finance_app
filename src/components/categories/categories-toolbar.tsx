@@ -1,5 +1,6 @@
 "use client"
 
+import { Toolbar, ToolbarActions } from "@/components/ui/toolbar"
 import { CalendarIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
 import { Button } from "@/components/ui/button"
@@ -14,12 +15,21 @@ import { TransactionTypeSegment, type TransactionFilterType } from "@/components
 import { formatYearMonth, labelYearMonthPt, shiftYearMonth, shortLabelYearMonthPt } from "@/lib/budget-month"
 import { cn } from "@/lib/utils"
 
-/** Dense toolbar sizing: h-10 on mobile (matches segment controls), h-8 from md up. */
-const monthNavDenseButtonClassName =
-    "h-10 px-2 text-sm md:h-8 md:px-2 md:text-xs"
-const monthNavDenseIconButtonClassName = "size-10 md:size-8"
-const monthNavDenseMonthPickerClassName =
-    "h-10 flex-1 gap-2 px-3 text-sm md:h-8 md:gap-1.5 md:px-2 md:text-xs"
+/**
+ * A densidade — 32 no ponteiro fino, 40 no grosso.
+ *
+ * Ela era escrita com `md:`, e a pergunta estava errada: um desktop de 700px
+ * recebia 40px que ninguém pede, e um tablet em paisagem recebia 32 que o dedo
+ * não acerta. Quem responde certo é `--toolbar-control`, que o `Toolbar`
+ * publica — **com o degrau padrão como reserva**, porque duas telas usam este
+ * seletor de mês fora de uma barra, e ali a variável não existe.
+ */
+const DENSO_H = "h-[var(--toolbar-control,--spacing(8))]"
+const DENSO_QUADRADO = "size-[var(--toolbar-control,--spacing(8))]"
+
+const monthNavDenseButtonClassName = cn(DENSO_H, "px-2 text-xs")
+const monthNavDenseIconButtonClassName = DENSO_QUADRADO
+const monthNavDenseMonthPickerClassName = cn(DENSO_H, "flex-1 gap-1.5 px-2 text-xs")
 const monthNavDenseCalendarIconClassName = "size-4 md:size-3.5"
 
 /**
@@ -156,7 +166,7 @@ function MonthNavArrowControls({
                                     type="button"
                                     variant="tertiary"
                                     size="sm"
-                                    className="h-8 w-full text-xs text-muted-foreground hover:text-foreground"
+                                    className="h-8 w-full text-xs text-muted-foreground hover:text-foreground active:text-foreground"
                                     onClick={() => {
                                         onJump()
                                         setMonthPickerOpen(false)
@@ -395,13 +405,11 @@ export function CategoriesToolbar({
     className?: string
     includeAll?: boolean
 }) {
+    // O `justify-between` saiu: com o `ms-auto` do `ToolbarActions` o grupo da
+    // direita vai à borda sozinho, e com um grupo só ele continua lá — que é o
+    // caso desta barra quando o seletor de mês não aparece.
     return (
-        <div
-            className={cn(
-                "flex min-w-0 max-w-full items-center justify-between gap-2 md:flex-wrap md:gap-3",
-                className,
-            )}
-        >
+        <Toolbar className={cn("max-w-full", className)}>
             <TransactionTypeSegment
                 value={filterType}
                 onChange={onFilterTypeChange}
@@ -409,7 +417,7 @@ export function CategoriesToolbar({
                 includeAll={includeAll}
             />
 
-            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+            <ToolbarActions>
                 {showMonthControls ? (
                     <MonthNav
                         budgetMonthYm={budgetMonthYm}
@@ -423,14 +431,14 @@ export function CategoriesToolbar({
                     type="button"
                     variant="primary"
                     size="sm"
-                    className="size-10 shrink-0 rounded-lg p-0 text-xs md:size-auto md:h-8 md:gap-2 md:px-3"
+                    className={cn(DENSO_QUADRADO, "shrink-0 rounded-lg p-0 text-xs md:size-auto md:h-(--toolbar-control) md:gap-2 md:px-3 md:w-auto")}
                     aria-label="Nova categoria"
                     onClick={onNewCategory}
                 >
                     <PlusIcon className="size-4 shrink-0" />
                     <span className="hidden truncate md:inline">Nova categoria</span>
                 </Button>
-            </div>
-        </div>
+            </ToolbarActions>
+        </Toolbar>
     )
 }

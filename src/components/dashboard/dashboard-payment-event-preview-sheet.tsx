@@ -1,5 +1,9 @@
 "use client"
 
+import { XMarkIcon } from "@heroicons/react/16/solid"
+import {
+    Card,
+} from "@/components/ui/card"
 import { useMemo, type ReactNode } from "react"
 import Link from "next/link"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -20,7 +24,6 @@ import {
     summarizeInstallmentPlan,
     useInstallmentSlices,
 } from "@/components/transactions/installment-purchase-section"
-import { XMarkIcon } from "@heroicons/react/20/solid"
 
 export type DashboardPaymentPreviewModel = Pick<
     PaymentEvent,
@@ -171,13 +174,14 @@ export function DashboardPaymentEventPreviewSheet({
                                     onClick={() => onOpenChange(false)}
                                     aria-label="Fechar"
                                 >
-                                    <XMarkIcon className="h-5 w-5" aria-hidden />
+                                    <XMarkIcon aria-hidden />
                                 </Button>
                             </div>
                         </div>
 
                         <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-4 sm:px-5">
-                            <section className="space-y-3 rounded-xl border border-border/70 bg-muted/20 p-4 dark:bg-muted/10">
+                            <Card asChild variant="muted" className="gap-3 px-4">
+                            <section>
                                 <div className="flex items-start justify-between gap-3">
                                     <SectionLabel className="shrink-0">Resumo</SectionLabel>
                                     <p className="shrink-0 text-right text-xs tabular-nums text-muted-foreground">
@@ -202,6 +206,7 @@ export function DashboardPaymentEventPreviewSheet({
                                     </div>
                                 ) : null}
                             </section>
+                            </Card>
 
                             <section className="space-y-3">
                                 <SectionLabel>Detalhes</SectionLabel>

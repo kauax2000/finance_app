@@ -1,5 +1,6 @@
 "use client"
 
+import { formatMonthLongPtBr } from "@/lib/transaction-date"
 import { formatYearMonth, parseYearMonth } from "@/lib/budget-month"
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
@@ -14,7 +15,7 @@ import {
 export function calendarMonthOptionsPtBr(): { value: string; label: string }[] {
     return Array.from({ length: 12 }, (_, i) => {
         const d = new Date(2024, i, 1)
-        const label = d.toLocaleDateString("pt-BR", { month: "long" })
+        const label = formatMonthLongPtBr(d)
         return { value: String(i + 1).padStart(2, "0"), label }
     })
 }

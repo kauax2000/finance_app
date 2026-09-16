@@ -27,7 +27,14 @@ import {
 } from "@/components/credit-cards/credit-cards-view-segment"
 import { Button } from "@/components/ui/button"
 import {
+    Toolbar,
+    ToolbarActions,
+    toolbarIconControlClassName,
+} from "@/components/ui/toolbar"
+import { cn } from "@/lib/utils"
+import {
   Dialog,
+  DialogBody,
   DialogCloseButton,
   DialogContent,
   DialogDescription,
@@ -320,25 +327,27 @@ export default function CreditCardsPageClient() {
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between gap-2 md:flex-wrap md:gap-3">
+            <Toolbar>
                 <CreditCardsViewSegment
                     value={pageView}
                     onChange={setPageView}
                     className="min-w-0 flex-1 md:max-w-full md:flex-none"
                 />
-                <Button
-                    type="button"
-                    variant="primary"
-                    size="sm"
-                    className="inline-flex size-10 shrink-0 rounded-lg p-0 text-xs md:size-auto md:h-8 md:w-auto md:gap-2 md:px-3"
-                    aria-label="Novo cartão"
-                    disabled={!canCreateCard}
-                    onClick={() => setCreateOpen(true)}
-                >
-                    <PlusIcon className="size-4 shrink-0" />
-                    <span className="hidden md:inline">Novo cartão</span>
-                </Button>
-            </div>
+                <ToolbarActions>
+                    <Button
+                        type="button"
+                        variant="primary"
+                        size="sm"
+                        className={cn(toolbarIconControlClassName, "shrink-0 rounded-lg p-0 text-xs md:size-auto md:h-(--toolbar-control) md:w-auto md:gap-2 md:px-3")}
+                        aria-label="Novo cartão"
+                        disabled={!canCreateCard}
+                        onClick={() => setCreateOpen(true)}
+                    >
+                        <PlusIcon className="size-4 shrink-0" />
+                        <span className="hidden md:inline">Novo cartão</span>
+                    </Button>
+                </ToolbarActions>
+            </Toolbar>
 
             {pageView === "cards" ? (
                 cards.length === 0 ? (
@@ -386,7 +395,7 @@ export default function CreditCardsPageClient() {
                             onSubmit={handleCreate}
                             className="flex min-h-0 flex-1 flex-col"
                         >
-                            <div className="min-h-0 flex-1 overflow-y-auto px-4">
+                            <DialogBody>
                                 <div className="space-y-3 pb-2">
                                     <CreditCardFormFields
                                         formKey={`create-${createFormKey}`}
@@ -407,8 +416,8 @@ export default function CreditCardsPageClient() {
                                         onExpiryYearChange={setExpiryYear}
                                     />
                                 </div>
-                            </div>
-                            <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
+                            </DialogBody>
+                            <DialogFooter className="flex-col">
                                 <Button
                                     type="submit"
                                     size="sm"
@@ -435,14 +444,14 @@ export default function CreditCardsPageClient() {
                             onSubmit={handleCreate}
                             className="flex min-h-0 flex-1 flex-col"
                         >
-                            <DialogHeader className="shrink-0 px-6 pt-6 pb-2">
+                            <DialogHeader>
                                 <DialogTitle>Cadastro de cartão</DialogTitle>
                                 <DialogDescription>
                                     Dados para identificar o cartão nas despesas (não armazenamos o
                                     número completo).
                                 </DialogDescription>
                             </DialogHeader>
-                            <div className="min-h-0 flex-1 overflow-y-auto px-6">
+                            <DialogBody>
                                 <div className="space-y-3 pb-2">
                                     <CreditCardFormFields
                                         formKey={`create-${createFormKey}`}
@@ -463,8 +472,8 @@ export default function CreditCardsPageClient() {
                                         onExpiryYearChange={setExpiryYear}
                                     />
                                 </div>
-                            </div>
-                            <DialogFooter className="mx-0 mb-0 mt-0 shrink-0 flex-row flex-wrap justify-end gap-2 rounded-b-xl bg-background px-6 pt-4 pb-5 sm:gap-3">
+                            </DialogBody>
+                            <DialogFooter className="sm:gap-3">
                                 <Button
                                     type="button"
                                     variant="outline"

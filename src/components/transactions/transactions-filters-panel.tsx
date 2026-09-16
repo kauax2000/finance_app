@@ -1,6 +1,16 @@
 "use client"
 
 import * as React from "react"
+import {
+    FilterChipRemoveButton,
+} from "@/components/transactions/transactions-active-filters-chips"
+import {
+    Field,
+    FieldControl,
+    FieldLabel,
+    FieldLegend,
+    FieldSet,
+} from "@/components/ui/field"
 import type { Category, CreditCard } from "@/lib/supabase"
 import {
     PAYMENT_METHOD_VALUES,
@@ -14,14 +24,14 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { SearchInput } from "@/components/ui/search-input"
 import {
     Popover,
     PopoverContent,
     PopoverHeader,
     PopoverTrigger,
 } from "@/components/ui/popover"
-import { ChevronDownIcon, XMarkIcon } from "@heroicons/react/16/solid"
+import { ChevronDownIcon } from "@heroicons/react/16/solid"
 import {
     Select,
     SelectContent,
@@ -247,11 +257,13 @@ export function TransactionsFiltersPanel({
                                 />
                             </div>
 
-                            <div>
-                                <p className="mb-2 text-2xs font-medium text-muted-foreground">
+                            {/* O período personalizado é um grupo com título: `fieldset` +
+                                `legend`, e não uma caixa pintada sob um `<p>`. */}
+                            <FieldSet className="gap-2">
+                                <FieldLegend variant="label" className="text-2xs font-medium text-muted-foreground">
                                     Personalizado
-                                </p>
-                                <div className="rounded-xl border border-border/60 bg-muted/20 p-3 dark:bg-muted/10">
+                                </FieldLegend>
+                                <div>
                                     <TransactionsDateRangeForm
                                         idPrefix={periodIdPrefix}
                                         draftFrom={periodDraftFrom}
@@ -273,7 +285,7 @@ export function TransactionsFiltersPanel({
                                         showCancel={false}
                                     />
                                 </div>
-                            </div>
+                            </FieldSet>
                         </div>
                     </FilterSection>
 
@@ -313,10 +325,12 @@ export function TransactionsFiltersPanel({
                                             paymentMethods.includes(pm)
                                         const id = `${fieldUid}-pm-${pm}`
                                         return (
-                                            <div
+                                            <Field
+                                                orientation="horizontal"
                                                 key={pm}
-                                                className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50"
+                                                className="flex items-center gap-2 rounded-md px-2 py-1.5"
                                             >
+                                                <FieldControl>
                                                 <Checkbox
                                                     id={id}
                                                     checked={checked}
@@ -324,13 +338,13 @@ export function TransactionsFiltersPanel({
                                                         onTogglePaymentMethod(pm)
                                                     }
                                                 />
-                                                <Label
-                                                    htmlFor={id}
+                                                </FieldControl>
+                                                <FieldLabel
                                                     className="cursor-pointer text-sm font-normal"
                                                 >
                                                     {paymentMethodLabel(pm)}
-                                                </Label>
-                                            </div>
+                                                </FieldLabel>
+                                            </Field>
                                         )
                                     })}
                                 </div>
@@ -352,20 +366,12 @@ export function TransactionsFiltersPanel({
                                         <span className="min-w-0 max-w-[12rem] truncate">
                                             {label}
                                         </span>
-                                        <button
-                                            type="button"
-                                            className={cn(
-                                                "inline-flex size-5 shrink-0 items-center justify-center rounded-full",
-                                                "opacity-70 hover:bg-success/20 hover:opacity-100 active:bg-success/25 active:opacity-100",
-                                                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2"
-                                            )}
+                                        <FilterChipRemoveButton
                                             aria-label={`Remover ${label}`}
                                             onClick={() =>
                                                 onTogglePaymentMethod(pm)
                                             }
-                                        >
-                                            <XMarkIcon className="size-3.5" aria-hidden />
-                                        </button>
+                                        />
                                     </Badge>
                                 )
                             })}
@@ -383,7 +389,7 @@ export function TransactionsFiltersPanel({
                                         type="button"
                                         variant="tertiary"
                                         size="sm"
-                                        className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground"
+                                        className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground active:text-foreground"
                                         disabled={sortedCards.length === 0}
                                         onClick={() => {
                                             for (const c of sortedCards) {
@@ -399,7 +405,7 @@ export function TransactionsFiltersPanel({
                                         type="button"
                                         variant="tertiary"
                                         size="sm"
-                                        className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground"
+                                        className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground active:text-foreground"
                                         disabled={creditCardIds.length === 0}
                                         onClick={() => {
                                             for (const id of creditCardIds) {
@@ -412,12 +418,15 @@ export function TransactionsFiltersPanel({
                                 </div>
                             </div>
 
+                            {/* A busca e o poço de rolagem abaixo ficam à mão de propósito:
+                                o poço rola, e o `overflow-hidden` do `Card` recorta a
+                                rolagem e o anel de foco das caixas de dentro. */}
                             <div className="rounded-xl border border-border/60 bg-muted/10 p-3 dark:bg-muted/10">
-                                <Input
-                                    type="search"
+                                <SearchInput
                                     placeholder="Buscar cartão…"
                                     value={cardQuery}
                                     onChange={(e) => setCardQuery(e.target.value)}
+                                    onClear={() => setCardQuery("")}
                                     disabled={sortedCards.length === 0}
                                 />
                                 {creditCardIds.length === 0 ? (
@@ -441,10 +450,12 @@ export function TransactionsFiltersPanel({
                                         const checked = creditCardIds.includes(c.id)
                                         const id = `${fieldUid}-card-${c.id}`
                                         return (
-                                            <div
+                                            <Field
+                                                orientation="horizontal"
                                                 key={c.id}
-                                                className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/40"
+                                                className="flex items-center gap-2 rounded-md px-2 py-1.5"
                                             >
+                                                <FieldControl>
                                                 <Checkbox
                                                     id={id}
                                                     checked={checked}
@@ -452,15 +463,15 @@ export function TransactionsFiltersPanel({
                                                         onToggleCreditCardId(c.id)
                                                     }
                                                 />
-                                                <Label
-                                                    htmlFor={id}
+                                                </FieldControl>
+                                                <FieldLabel
                                                     className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-sm font-normal"
                                                 >
                                                     <span className="truncate">
                                                         {c.name} · •••• {c.last_four}
                                                     </span>
-                                                </Label>
-                                            </div>
+                                                </FieldLabel>
+                                            </Field>
                                         )
                                     })
                                 )}
@@ -505,7 +516,7 @@ export function TransactionsFiltersPanel({
                                                 type="button"
                                                 variant="tertiary"
                                                 size="sm"
-                                                className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground"
+                                                className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground active:text-foreground"
                                                 disabled={
                                                     uncategorizedOnly ||
                                                     allCategoryIds.length === 0
@@ -523,7 +534,7 @@ export function TransactionsFiltersPanel({
                                                 type="button"
                                                 variant="tertiary"
                                                 size="sm"
-                                                className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground"
+                                                className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground active:text-foreground"
                                                 disabled={categoryIds.length === 0}
                                                 onClick={() => {
                                                     for (const id of categoryIds)
@@ -533,19 +544,20 @@ export function TransactionsFiltersPanel({
                                                 Limpar
                                             </Button>
                                         </div>
-                                        <Input
-                                            type="search"
+                                        <SearchInput
                                             placeholder="Buscar categoria…"
                                             value={categoryQuery}
                                             onChange={(e) =>
                                                 setCategoryQuery(e.target.value)
                                             }
+                                            onClear={() => setCategoryQuery("")}
                                             disabled={sortedCategories.length === 0}
                                         />
                                     </PopoverHeader>
                                     <div className="max-h-56 overflow-y-auto p-2">
                                         <div className="space-y-0.5">
-                                            <div className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50">
+                                            <Field orientation="horizontal" className="flex items-center gap-2 rounded-md px-2 py-1.5">
+                                                <FieldControl>
                                                 <Checkbox
                                                     id={`${fieldUid}-uncat`}
                                                     checked={uncategorizedOnly}
@@ -554,8 +566,8 @@ export function TransactionsFiltersPanel({
                                                         onUncategorizedOnlyChange(next)
                                                     }}
                                                 />
-                                                <Label
-                                                    htmlFor={`${fieldUid}-uncat`}
+                                                </FieldControl>
+                                                <FieldLabel
                                                     className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-sm font-normal"
                                                 >
                                                     <span
@@ -565,8 +577,8 @@ export function TransactionsFiltersPanel({
                                                     <span className="truncate">
                                                         Sem categoria
                                                     </span>
-                                                </Label>
-                                            </div>
+                                                </FieldLabel>
+                                            </Field>
                                             {sortedCategories.length === 0 ? (
                                                 <p className="px-2 py-2 text-xs text-muted-foreground">
                                                     Nenhuma categoria neste espaço.
@@ -581,7 +593,8 @@ export function TransactionsFiltersPanel({
                                                         cat.id
                                                     )
                                                     return (
-                                                        <div
+                                                        <Field
+                                                            orientation="horizontal"
                                                             key={cat.id}
                                                             className={cn(
                                                                 "flex items-center gap-2 rounded-md px-2 py-1.5",
@@ -590,6 +603,7 @@ export function TransactionsFiltersPanel({
                                                                     : "hover:bg-muted/50"
                                                             )}
                                                         >
+                                                            <FieldControl>
                                                             <Checkbox
                                                                 id={`${fieldUid}-cat-${cat.id}`}
                                                                 checked={checked}
@@ -602,8 +616,8 @@ export function TransactionsFiltersPanel({
                                                                     )
                                                                 }
                                                             />
-                                                            <Label
-                                                                htmlFor={`${fieldUid}-cat-${cat.id}`}
+                                                            </FieldControl>
+                                                            <FieldLabel
                                                                 className={cn(
                                                                     "flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-sm font-normal",
                                                                     uncategorizedOnly &&
@@ -622,8 +636,8 @@ export function TransactionsFiltersPanel({
                                                                 <span className="truncate">
                                                                     {cat.name}
                                                                 </span>
-                                                            </Label>
-                                                        </div>
+                                                            </FieldLabel>
+                                                        </Field>
                                                     )
                                                 })
                                             )}
@@ -638,7 +652,7 @@ export function TransactionsFiltersPanel({
                                         type="button"
                                         variant="tertiary"
                                         size="sm"
-                                        className="h-8 px-2 text-2xs text-muted-foreground hover:text-foreground"
+                                        className="h-8 px-2 text-2xs text-muted-foreground hover:text-foreground active:text-foreground"
                                         disabled={uncategorizedOnly}
                                         onClick={onClearAllCategories}
                                         aria-label="Limpar todas as categorias selecionadas"
@@ -660,20 +674,12 @@ export function TransactionsFiltersPanel({
                                             <span className="min-w-0 max-w-[12rem] truncate">
                                                 Sem categoria
                                             </span>
-                                            <button
-                                                type="button"
-                                                className={cn(
-                                                    "inline-flex size-5 shrink-0 items-center justify-center rounded-full",
-                                                    "opacity-70 hover:bg-success/20 hover:opacity-100 active:bg-success/25 active:opacity-100",
-                                                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2"
-                                                )}
+                                            <FilterChipRemoveButton
                                                 aria-label="Remover filtro sem categoria"
                                                 onClick={() =>
                                                     onUncategorizedOnlyChange(false)
                                                 }
-                                            >
-                                                <XMarkIcon className="size-3.5" aria-hidden />
-                                            </button>
+                                            />
                                         </Badge>
                                     ) : null}
                                     {orderedSelectedCategories.map((cat) => {
@@ -698,23 +704,12 @@ export function TransactionsFiltersPanel({
                                                 <span className="min-w-0 max-w-[12rem] truncate">
                                                     {name}
                                                 </span>
-                                                <button
-                                                    type="button"
-                                                    className={cn(
-                                                        "inline-flex size-5 shrink-0 items-center justify-center rounded-full",
-                                                        "opacity-70 hover:bg-success/20 hover:opacity-100 active:bg-success/25 active:opacity-100",
-                                                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2"
-                                                    )}
+                                                <FilterChipRemoveButton
                                                     aria-label={`Remover ${name}`}
                                                     onClick={() =>
                                                         onToggleCategory(cat.id)
                                                     }
-                                                >
-                                                    <XMarkIcon
-                                                        className="size-3.5"
-                                                        aria-hidden
-                                                    />
-                                                </button>
+                                                />
                                             </Badge>
                                         )
                                     })}
@@ -731,13 +726,13 @@ export function TransactionsFiltersPanel({
 
             <FilterSection title="Valor (R$)">
                 <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                        <Label
-                            htmlFor={`${fieldUid}-amt-min`}
+                    <Field>
+                        <FieldLabel
                             className="text-2xs text-muted-foreground"
                         >
                             Mínimo
-                        </Label>
+                        </FieldLabel>
+                        <FieldControl>
                         <Input
                             money
                             id={`${fieldUid}-amt-min`}
@@ -745,14 +740,15 @@ export function TransactionsFiltersPanel({
                             value={amountMin}
                             onValueChange={onAmountMinChange}
                         />
-                    </div>
-                    <div className="space-y-2">
-                        <Label
-                            htmlFor={`${fieldUid}-amt-max`}
+                        </FieldControl>
+                    </Field>
+                    <Field>
+                        <FieldLabel
                             className="text-2xs text-muted-foreground"
                         >
                             Máximo
-                        </Label>
+                        </FieldLabel>
+                        <FieldControl>
                         <Input
                             money
                             id={`${fieldUid}-amt-max`}
@@ -760,20 +756,21 @@ export function TransactionsFiltersPanel({
                             value={amountMax}
                             onValueChange={onAmountMaxChange}
                         />
-                    </div>
+                        </FieldControl>
+                    </Field>
                 </div>
             </FilterSection>
 
             <Separator tone="soft" className={FILTERS_DRAWER_SECTION_DIVIDER_CLASSNAME} />
 
             <FilterSection title="Descrição">
-                <Input
-                    type="search"
+                <SearchInput
                     placeholder="Buscar na descrição…"
                     value={descriptionQuery}
                     onChange={(e) =>
                         onDescriptionQueryChange(e.target.value)
                     }
+                    onClear={() => onDescriptionQueryChange("")}
                 />
             </FilterSection>
 
@@ -781,13 +778,12 @@ export function TransactionsFiltersPanel({
 
             <FilterSection title="Origem">
                 <div className="space-y-6">
-                    <div className="space-y-2">
-                        <Label
-                            htmlFor={`${fieldUid}-origem-plan`}
+                    <Field>
+                        <FieldLabel
                             className="text-2xs text-muted-foreground"
                         >
                             Plano parcelado
-                        </Label>
+                        </FieldLabel>
                         <Select
                             value={installmentPlanId ?? "__any__"}
                             onValueChange={(v) =>
@@ -796,12 +792,14 @@ export function TransactionsFiltersPanel({
                                 )
                             }
                         >
+                            <FieldControl>
                             <SelectTrigger
                                 id={`${fieldUid}-origem-plan`}
                                 className={FILTERS_DRAWER_SELECT_TRIGGER_CLASSNAME}
                             >
                                 <SelectValue placeholder="Qualquer" />
                             </SelectTrigger>
+                            </FieldControl>
                             <SelectContent
                                 sideOffset={8}
                                 className="max-h-72 p-1"
@@ -815,14 +813,13 @@ export function TransactionsFiltersPanel({
                                 ))}
                             </SelectContent>
                         </Select>
-                    </div>
-                    <div className="space-y-2">
-                        <Label
-                            htmlFor={`${fieldUid}-origem-sub`}
+                    </Field>
+                    <Field>
+                        <FieldLabel
                             className="text-2xs text-muted-foreground"
                         >
                             Assinatura
-                        </Label>
+                        </FieldLabel>
                         <Select
                             value={subscriptionId ?? "__any__"}
                             onValueChange={(v) =>
@@ -831,12 +828,14 @@ export function TransactionsFiltersPanel({
                                 )
                             }
                         >
+                            <FieldControl>
                             <SelectTrigger
                                 id={`${fieldUid}-origem-sub`}
                                 className={FILTERS_DRAWER_SELECT_TRIGGER_CLASSNAME}
                             >
                                 <SelectValue placeholder="Qualquer" />
                             </SelectTrigger>
+                            </FieldControl>
                             <SelectContent
                                 sideOffset={8}
                                 className="max-h-72 p-1"
@@ -851,7 +850,7 @@ export function TransactionsFiltersPanel({
                                 ))}
                             </SelectContent>
                         </Select>
-                    </div>
+                    </Field>
                 </div>
             </FilterSection>
         </div>

@@ -1,6 +1,29 @@
 "use client"
 
 import { percentPointsBR } from "@/lib/formatters"
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleMarker,
+    CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import {
+    Item,
+} from "@/components/ui/item"
+import {
+    Button,
+} from "@/components/ui/button"
+import {
+    DescriptionDetails,
+    DescriptionList,
+    DescriptionListItem,
+    DescriptionTerm,
+} from "@/components/ui/description-list"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import { currencyBRL } from "@/lib/formatters"
 import { useCallback, useMemo, useState, type ReactNode } from "react"
 import { useQueryClient } from "@tanstack/react-query"
@@ -47,7 +70,7 @@ import { MoneyDisplay } from "@/components/ui/money-display"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
-import { ArrowTrendingDownIcon, ArrowTrendingUpIcon, CalendarDaysIcon, ChartBarIcon, ChevronDownIcon, ChevronUpDownIcon, LightBulbIcon, MinusIcon } from "@heroicons/react/16/solid"
+import { ArrowTrendingDownIcon, ArrowTrendingUpIcon, CalendarDaysIcon, ChartBarIcon, ChevronUpDownIcon, LightBulbIcon, MinusIcon } from "@heroicons/react/16/solid"
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts"
 import type { CreditCardInvoicePayment } from "@/lib/supabase"
 import { supabase } from "@/lib/supabase"
@@ -164,14 +187,9 @@ function InvoiceFaturaHeaderStatus({
         </Badge>
     )
 
-    const invoiceMenuTriggerButtonClass = cn(
-        "group inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border px-2 py-1",
-        "text-left outline-none transition-colors",
-        "hover:bg-muted/80 active:bg-muted/70",
-        "focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-        "disabled:pointer-events-none disabled:opacity-50",
-        "data-[state=open]:bg-muted/60"
-    )
+    // A pílula que abre o menu da fatura: um `Button outline xs` redondo, com o
+    // selo de status dentro. Era um `<button>` cru com as mesmas intenções.
+    const invoiceMenuTriggerButtonClass = "shrink-0 rounded-full px-2 data-[state=open]:bg-muted/60"
 
     if (status === "paid") {
         if (!showPaymentMenu) return paidBadge
@@ -179,8 +197,10 @@ function InvoiceFaturaHeaderStatus({
             <>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <button
+                    <Button
                         type="button"
+                        variant="outline"
+                        size="xs"
                         disabled={paymentSaving}
                         className={invoiceMenuTriggerButtonClass}
                         title="Abrir ações da fatura. Fatura marcada como paga."
@@ -195,7 +215,7 @@ function InvoiceFaturaHeaderStatus({
                             Paga
                         </Badge>
                         <ChevronUpDownIcon className="size-3 shrink-0 text-muted-foreground" aria-hidden />
-                    </button>
+                    </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     <DropdownMenuItem
@@ -236,8 +256,10 @@ function InvoiceFaturaHeaderStatus({
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <button
+                <Button
                     type="button"
+                    variant="outline"
+                    size="xs"
                     disabled={paymentSaving}
                     className={invoiceMenuTriggerButtonClass}
                     title={`Abrir ações da fatura. ${unpaidTitle}`}
@@ -252,7 +274,7 @@ function InvoiceFaturaHeaderStatus({
                         Não paga
                     </Badge>
                     <ChevronUpDownIcon className="size-3 shrink-0 text-muted-foreground" aria-hidden />
-                </button>
+                </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
                 <DropdownMenuItem
@@ -774,24 +796,20 @@ export function CreditCardInvoiceAnalyticsPanel({
 
     return (
         <div className="space-y-6">
-            <div className="min-w-0 max-w-full space-y-2">
-                <div className="flex min-w-0 flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                    <div className="flex h-8 min-w-0 items-end">
-                        <h2 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Fatura
-                        </h2>
-                    </div>
-                    <div className="w-full min-w-0 md:flex md:w-auto md:justify-end">
+            <PageSection className="max-w-full">
+                <PageSectionHeader
+                    actions={
                         <InvoiceCycleSwitcher
                             snapshot={snapshot}
                             cycleOffset={cycleOffset}
                             bounds={cycleOffsetBounds}
                             onChange={onCycleOffsetChange}
-                            mobileTriggerFullWidth
                         />
-                    </div>
-                </div>
-                <Card className="gap-0 overflow-hidden border-border/80 py-0 shadow-sm">
+                    }
+                >
+                    <PageSectionTitle>Fatura</PageSectionTitle>
+                </PageSectionHeader>
+                <Card variant="elevated" padding="none">
                     <CardToolbar
                         aria-live="polite"
                     >
@@ -925,16 +943,14 @@ export function CreditCardInvoiceAnalyticsPanel({
                         </InsightNoticePanel>
                     </CardContent>
                 </Card>
-            </div>
+            </PageSection>
 
-            <details className="group rounded-xl border border-border/70 bg-card text-card-foreground shadow-sm open:pb-1">
-                <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium marker:content-none [&::-webkit-details-marker]:hidden">
-                    <span className="flex items-center justify-between gap-2">
-                        Mais sobre este período
-                        <ChevronDownIcon className="size-4 shrink-0 transition-transform group-open:rotate-180" />
-                    </span>
-                </summary>
-                <div className="border-t border-border/60 px-4 pb-4 pt-4">
+            <Collapsible className="rounded-xl border border-border/70 bg-card text-card-foreground shadow-sm">
+                <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between gap-2 px-4 py-3 text-left text-sm font-medium">
+                    Mais sobre este período
+                    <CollapsibleMarker className="size-4" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="border-t border-border/60 px-4 pb-4 pt-4">
                     <section className="space-y-3 pb-6 text-sm">
                         <div className="flex w-full min-w-0 flex-wrap items-end justify-between gap-x-3 gap-y-1">
                             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -1044,9 +1060,14 @@ export function CreditCardInvoiceAnalyticsPanel({
                                                     : 0
                                             return (
                                                 <li key={k}>
+                                                    <Item
+                                                        asChild
+                                                        interactive
+                                                        size="sm"
+                                                        className="flex-nowrap justify-between gap-3 rounded-md px-2 py-1.5 text-left"
+                                                    >
                                                     <button
                                                         type="button"
-                                                        className="flex w-full items-center justify-between gap-3 rounded-md border border-transparent px-2 py-1.5 text-left transition-colors hover:border-border/60 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                                         onMouseEnter={() =>
                                                             setActiveSlice(k)
                                                         }
@@ -1087,6 +1108,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                                             </span>
                                                         </span>
                                                     </button>
+                                                    </Item>
                                                 </li>
                                             )
                                         })}
@@ -1099,42 +1121,40 @@ export function CreditCardInvoiceAnalyticsPanel({
                         <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                             Hábitos de consumo
                         </h3>
-                        <div className="grid gap-2 text-xs sm:grid-cols-2">
-                            <div className="rounded-md border border-border/50 bg-muted/20 px-3 py-2 dark:bg-muted/10">
-                                <div className="flex items-start justify-between gap-2">
-                                    <div className="min-w-0 flex-1 space-y-1">
-                                        <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            Dias úteis
-                                        </p>
-                                        <p className="text-base font-semibold tabular-nums leading-snug text-foreground">
-                                            {currencyBRL(
-                                                analytics.weekdayWeekend.weekdayTotal
-                                            )}
-                                        </p>
-                                    </div>
-                                    <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                        <DescriptionList layout="grid" className="gap-2 text-xs">
+                            <DescriptionListItem className="space-y-1">
+                                <DescriptionTerm className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                    Dias úteis
+                                </DescriptionTerm>
+                                {/* A fatia fica na linha do valor, dentro da definição. */}
+                                <DescriptionDetails className="flex items-baseline justify-between gap-2">
+                                    <span className="text-base font-semibold leading-snug">
+                                        {currencyBRL(
+                                            analytics.weekdayWeekend.weekdayTotal
+                                        )}
+                                    </span>
+                                    <span className="shrink-0 text-xs text-muted-foreground">
                                         {percentPointsBR(analytics.weekdayWeekend.weekdayPct)}%
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="rounded-md border border-border/50 bg-muted/20 px-3 py-2 dark:bg-muted/10">
-                                <div className="flex items-start justify-between gap-2">
-                                    <div className="min-w-0 flex-1 space-y-1">
-                                        <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            Fim de semana
-                                        </p>
-                                        <p className="text-base font-semibold tabular-nums leading-snug text-foreground">
-                                            {currencyBRL(
-                                                analytics.weekdayWeekend.weekendTotal
-                                            )}
-                                        </p>
-                                    </div>
-                                    <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                                    </span>
+                                </DescriptionDetails>
+                            </DescriptionListItem>
+                            <DescriptionListItem className="space-y-1">
+                                <DescriptionTerm className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                    Fim de semana
+                                </DescriptionTerm>
+                                {/* A fatia fica na linha do valor, dentro da definição. */}
+                                <DescriptionDetails className="flex items-baseline justify-between gap-2">
+                                    <span className="text-base font-semibold leading-snug">
+                                        {currencyBRL(
+                                            analytics.weekdayWeekend.weekendTotal
+                                        )}
+                                    </span>
+                                    <span className="shrink-0 text-xs text-muted-foreground">
                                         {percentPointsBR(analytics.weekdayWeekend.weekendPct)}%
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                                    </span>
+                                </DescriptionDetails>
+                            </DescriptionListItem>
+                        </DescriptionList>
                         <div className="space-y-2">
                             <InsightNoticePanel
                                 variant="info"
@@ -1179,52 +1199,48 @@ export function CreditCardInvoiceAnalyticsPanel({
                             </Badge>
                         </div>
 
-                        <div className="grid gap-2 text-xs sm:grid-cols-2">
-                            <div className="rounded-md border border-border/50 bg-muted/20 px-3 py-2 dark:bg-muted/10">
-                                <div className="space-y-1">
-                                    <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                        Ticket médio
-                                    </p>
-                                    <p className="text-base font-semibold tabular-nums leading-snug text-foreground">
+                        <DescriptionList layout="grid" className="gap-2 text-xs">
+                            <DescriptionListItem className="space-y-1">
+                                <DescriptionTerm className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                    Ticket médio
+                                </DescriptionTerm>
+                                <DescriptionDetails className="space-y-1">
+                                    <span className="block text-base font-semibold leading-snug">
                                         {analytics.meanTicket != null
                                             ? currencyBRL(analytics.meanTicket)
                                             : "—"}
-                                    </p>
-                                    <p className="text-2xs leading-snug text-muted-foreground">
+                                    </span>
+                                    <span className="block text-2xs leading-snug text-muted-foreground">
                                         Valor médio por despesa na fatura aberta.
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="rounded-md border border-border/50 bg-muted/20 px-3 py-2 dark:bg-muted/10">
-                                <div className="space-y-1">
-                                    <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                        Ticket mediano
-                                    </p>
-                                    <p className="text-base font-semibold tabular-nums leading-snug text-foreground">
+                                    </span>
+                                </DescriptionDetails>
+                            </DescriptionListItem>
+                            <DescriptionListItem className="space-y-1">
+                                <DescriptionTerm className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                    Ticket mediano
+                                </DescriptionTerm>
+                                <DescriptionDetails className="space-y-1">
+                                    <span className="block text-base font-semibold leading-snug">
                                         {analytics.medianTicket != null
                                             ? currencyBRL(analytics.medianTicket)
                                             : "—"}
-                                    </p>
-                                    <p className="text-2xs leading-snug text-muted-foreground">
+                                    </span>
+                                    <span className="block text-2xs leading-snug text-muted-foreground">
                                         Metade das despesas ficou abaixo deste valor.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                                    </span>
+                                </DescriptionDetails>
+                            </DescriptionListItem>
+                        </DescriptionList>
                     </section>
 
-                </div>
-            </details>
+                </CollapsibleContent>
+            </Collapsible>
 
-            <div className="min-w-0 max-w-full space-y-2">
-                <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex h-8 min-w-0 items-end">
-                        <h2 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Parcelas e compromissos
-                        </h2>
-                    </div>
-                </div>
-                <Card className="gap-0 overflow-hidden border-border/80 py-0 shadow-sm">
+            <PageSection className="max-w-full">
+                <PageSectionHeader>
+                    <PageSectionTitle>Parcelas e compromissos</PageSectionTitle>
+                </PageSectionHeader>
+                <Card variant="elevated" padding="none">
                     {committedDetailLine ? (
                         <CardToolbar
                             aria-live="polite"
@@ -1280,13 +1296,13 @@ export function CreditCardInvoiceAnalyticsPanel({
                                         )}
                                     >
                                         {onInstallmentPlanPress ? (
+                                            <Item
+                                                asChild
+                                                interactive
+                                                className="block rounded-[inherit] border-0 px-3 py-2.5 text-left"
+                                            >
                                             <button
                                                 type="button"
-                                                className={cn(
-                                                    "w-full rounded-[inherit] px-3 py-2.5 text-left outline-none transition-colors",
-                                                    "hover:bg-muted/25",
-                                                    "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                                                )}
                                                 aria-label={`Abrir detalhes da compra parcelada: ${row.plan.description?.trim() || "sem título"}`}
                                                 onClick={() =>
                                                     onInstallmentPlanPress(row.plan.id)
@@ -1294,6 +1310,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                             >
                                                 {body}
                                             </button>
+                                            </Item>
                                         ) : (
                                             body
                                         )}
@@ -1314,7 +1331,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                     )}
                     </CardContent>
                 </Card>
-            </div>
+            </PageSection>
 
         </div>
     )

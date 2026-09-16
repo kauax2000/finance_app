@@ -1,5 +1,6 @@
 "use client"
 
+import { currencyCompactBRL } from "@/lib/formatters"
 import { formatTransactionDayMonthPtBr } from "@/lib/transaction-date"
 import { useMemo } from "react"
 import {
@@ -143,7 +144,6 @@ export function BillHistoryAnalytics({ instances }: { instances: BillInstance[] 
             <div className="rounded-xl border border-border/80 bg-card p-2 sm:p-3">
                 <ChartContainer config={chartCfg} className="aspect-[16/10] md:aspect-video">
                     <ComposedChart
-                        accessibilityLayer={false}
                         data={chartData}
                         margin={{ left: -8, right: 8 }}
                     >
@@ -159,12 +159,7 @@ export function BillHistoryAnalytics({ instances }: { instances: BillInstance[] 
                             tick={{ fontSize: 10 }}
                             tickLine={false}
                             axisLine={false}
-                            tickFormatter={(v) =>
-                                Intl.NumberFormat("pt-BR", {
-                                    notation: "compact",
-                                    maximumFractionDigits: 1,
-                                }).format(Number(v))
-                            }
+                            tickFormatter={(v) => currencyCompactBRL(Number(v))}
                         />
                         <ChartTooltip
                             cursor={false}

@@ -13,10 +13,11 @@ import { cn } from "@/lib/utils"
  * comportamento não existir, isto é o que de fato é: uma linha de layout.
  * Para nomear o grupo, passe `role="group"` com `aria-label`.
  *
- * A regra existe porque foi violada: o app escreve `role="toolbar"` à mão em
- * **4 lugares** — `transactions-table.tsx:264,320` e
- * `subscriptions/page-client.tsx:545,608`, sendo os dois últimos cópia verbatim
- * dos dois primeiros —, e nenhum implementa foco itinerante.
+ * A regra existe porque foi violada: o app escrevia `role="toolbar"` à mão em
+ * **4 barras de seleção** — duas em `transactions-table.tsx` e duas em
+ * `subscriptions/page-client.tsx`, cópia verbatim das primeiras —, e nenhuma
+ * implementava foco itinerante. As quatro perderam o papel na migração do
+ * backlog; o `aria-label` ficou, e cada botão voltou a ser um botão.
  *
  * ## A tese anterior estava errada
  *

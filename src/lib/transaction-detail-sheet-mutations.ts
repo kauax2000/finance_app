@@ -18,6 +18,7 @@ import {
 import type { Transaction } from "@/lib/supabase"
 import { toastError, toastSuccess } from "@/lib/toast"
 import type { SupabaseClient, User } from "@supabase/supabase-js"
+import { numberBR } from "@/lib/formatters"
 
 type DbClient = SupabaseClient
 
@@ -226,10 +227,10 @@ export async function deleteTransactionsByIds(
             installmentOnly
                 ? planIds.length === 1
                     ? "Cancelamento enfileirado. Sincroniza ao voltar online."
-                    : `${planIds.length.toLocaleString("pt-BR")} cancelamentos enfileirados.`
+                    : `${numberBR(planIds.length)} cancelamentos enfileirados.`
                 : ids.length === 1
                   ? "Exclusão enfileirada. Sincroniza ao voltar online."
-                  : `${ids.length.toLocaleString("pt-BR")} exclusões enfileiradas.`
+                  : `${numberBR(ids.length)} exclusões enfileiradas.`
         )
         return true
     }
@@ -238,7 +239,7 @@ export async function deleteTransactionsByIds(
         toastSuccess(
             planIds.length === 1
                 ? "Compra parcelada cancelada."
-                : `${planIds.length.toLocaleString("pt-BR")} compras parceladas canceladas.`
+                : `${numberBR(planIds.length)} compras parceladas canceladas.`
         )
         return true
     }
@@ -246,7 +247,7 @@ export async function deleteTransactionsByIds(
     toastSuccess(
         ids.length === 1
             ? "Transação excluída."
-            : `${ids.length.toLocaleString("pt-BR")} transações excluídas.`
+            : `${numberBR(ids.length)} transações excluídas.`
     )
     return true
 }

@@ -1,6 +1,5 @@
 import { toast as sonnerToast } from "sonner"
 
-export { toast } from "sonner"
 
 /**
  * As durações, e por que elas são diferentes.
@@ -62,6 +61,24 @@ export function toastWarning(message: string) {
  */
 export function toastInfo(message: string) {
   sonnerToast.info(message, { duration: TOAST_DEFAULT_MS })
+}
+
+/**
+ * O aviso que espera uma decisão — hoje só a nova versão do app.
+ *
+ * Ele é o caso que mantinha `export { toast } from "sonner"` vivo aqui, e essa
+ * porta deixava qualquer tela pular as durações daqui. `duration: Infinity`
+ * porque um aviso que some sozinho não adianta: sem o clique nada acontece.
+ */
+export function toastPersistentAction(
+  message: string,
+  opts: { id: string; label: string; onClick: () => void }
+) {
+  sonnerToast.info(message, {
+    id: opts.id,
+    duration: Infinity,
+    action: { label: opts.label, onClick: opts.onClick },
+  })
 }
 
 /**

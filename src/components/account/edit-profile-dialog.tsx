@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import { useAuth } from "@/components/providers"
 import {
   Dialog,
+  DialogBody,
   DialogCloseButton,
   DialogContent,
   DialogDescription,
@@ -18,21 +19,18 @@ import {
   SheetContent,
 } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { CustomForm } from "@/components/ui/form"
+import { Alert, AlertTitle } from "@/components/ui/alert"
+import {
+    CustomForm,
+    FormInput,
+} from "@/components/ui/form"
 import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { ArrowPathIcon, CheckCircleIcon, ExclamationTriangleIcon, PhotoIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { getInitials, cn } from "@/lib/utils"
 import { createActivity } from "@/lib/activity"
 import { identityToneFor } from "@/lib/avatar"
-
-const dialogFooterClass =
-    "!mx-0 !mb-0 mt-0 shrink-0 flex flex-row flex-wrap justify-end gap-2 border-t border-border bg-background px-6 py-4 sm:flex-row"
-
-const sheetFooterMobileClass =
-    "mt-0 shrink-0 flex-col gap-2 border-t border-border bg-background px-4 py-4"
 
 type EditProfileDialogProps = {
     open: boolean
@@ -269,6 +267,9 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
     const profileFormFields = (
         <div className="space-y-4">
             <div className="flex flex-col items-center gap-3">
+                {/* Cru de propósito: 80px está acima do `xl` do `Avatar` (56), e este
+                    é o retrato do formulário — ele mostra o preview do arquivo
+                    escolhido antes de existir usuário nenhum para o componente. */}
                 <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted ring-4 ring-background">
                     {avatarPreview ? (
                         <img
@@ -325,9 +326,9 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                                 </Button>
                                 <Button
                                     type="button"
-                                    variant="tertiary"
+                                    variant="destructive"
                                     size="sm"
-                                    className="gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                    className="gap-1.5"
                                     onClick={handleRemovePhoto}
                                 >
                                     <TrashIcon className="h-3.5 w-3.5" />
@@ -357,66 +358,59 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                 </p>
             </div>
 
-            <div className="space-y-1.5">
-                <Label htmlFor="edit-name" className="text-xs">
-                    Nome
-                </Label>
-                <Input
-                    id="edit-name"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    placeholder="Seu nome"
-                />
-            </div>
+            <FormInput
+                id="edit-name"
+                label="Nome"
+                fieldSize="sm"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Seu nome"
+            />
 
-            <div className="space-y-1.5">
-                <Label htmlFor="edit-email" className="text-xs">
-                    Email
-                </Label>
-                <Input
-                    id="edit-email"
-                    type="email"
-                    value={editEmail}
-                    onChange={(e) => setEditEmail(e.target.value)}
-                    placeholder="seu@email.com"
-                />
-                {editEmail !== userEmail && (
-                    <p className="flex items-center gap-1 text-xs text-warning-muted-foreground">
-                        <ExclamationTriangleIcon className="h-3 w-3 shrink-0" />
-                        Você receberá um link de confirmação no novo email
-                    </p>
-                )}
-            </div>
+            {/* O aviso da troca de e-mail é descrição do campo, e agora é anunciado
+                com ele por `aria-describedby`. */}
+            <FormInput
+                id="edit-email"
+                label="Email"
+                fieldSize="sm"
+                type="email"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+                placeholder="seu@email.com"
+                description={
+                    editEmail !== userEmail ? (
+                        <span className="flex items-center gap-1 text-warning-muted-foreground">
+                            <ExclamationTriangleIcon className="h-3 w-3 shrink-0" />
+                            Você receberá um link de confirmação no novo email
+                        </span>
+                    ) : undefined
+                }
+            />
 
             {editEmail !== userEmail && (
-                <div className="space-y-1.5">
-                    <Label htmlFor="edit-password" className="text-xs">
-                        Senha atual
-                    </Label>
-                    <Input
-                        id="edit-password"
-                        type="password"
-                        value={editPassword}
-                        onChange={(e) => setEditPassword(e.target.value)}
-                        placeholder="Digite sua senha para confirmar"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                        Necessário confirmar sua identidade para alterar o email
-                    </p>
-                </div>
+                <FormInput
+                    id="edit-password"
+                    label="Senha atual"
+                    fieldSize="sm"
+                    type="password"
+                    value={editPassword}
+                    onChange={(e) => setEditPassword(e.target.value)}
+                    placeholder="Digite sua senha para confirmar"
+                    description="Necessário confirmar sua identidade para alterar o email"
+                />
             )}
 
             {errorMessage && (
-                <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-                    <ExclamationTriangleIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                    <span className="min-w-0 break-words">{errorMessage}</span>
-                </div>
+                <Alert tone="destructive" size="sm">
+                    <ExclamationTriangleIcon />
+                    <AlertTitle className="break-words">{errorMessage}</AlertTitle>
+                </Alert>
             )}
             {successMessage && (
-                <div className="flex items-start gap-2 rounded-lg border border-success/30 bg-success-muted px-3 py-2 text-xs text-success-muted-foreground">
-                    <CheckCircleIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                    <span className="min-w-0 break-words">{successMessage}</span>
-                </div>
+                <Alert tone="success" size="sm">
+                    <CheckCircleIcon />
+                    <AlertTitle className="break-words">{successMessage}</AlertTitle>
+                </Alert>
             )}
         </div>
     )
@@ -426,17 +420,12 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
             onSubmit={handleProfileFormSubmit}
             className="flex min-h-0 flex-1 flex-col"
         >
-            <div
-                className={cn(
-                    "min-h-0 flex-1 overflow-y-auto py-4",
-                    isMobile ? "px-4" : "px-6",
-                )}
-            >
+            <DialogBody>
                 {profileFormFields}
-            </div>
+            </DialogBody>
 
             {isMobile ? (
-                <DialogFooter className={sheetFooterMobileClass}>
+                <DialogFooter className="flex-col">
                     {!successMessage && (
                         <Button type="submit" disabled={saving} size="xl" className="w-full">
                             {saving ? (
@@ -451,7 +440,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                     )}
                 </DialogFooter>
             ) : (
-                <DialogFooter className={dialogFooterClass}>
+                <DialogFooter>
                     <Button
                         type="button"
                         variant="outline"
@@ -500,7 +489,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent layout="fixed">
-                <DialogHeader className="shrink-0 px-6 py-4 text-left">
+                <DialogHeader>
                     <DialogTitle>Editar perfil</DialogTitle>
                     <DialogDescription className="text-xs leading-snug">
                         Atualize suas informações pessoais

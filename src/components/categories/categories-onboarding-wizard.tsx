@@ -1,18 +1,28 @@
 "use client"
 
 import { deleteCategoryById } from "@/lib/categories/mutations"
+import {
+    EmptyState,
+    EmptyStateDescription,
+} from "@/components/ui/empty-state"
+import {
+    Field,
+    FieldControl,
+    FieldLabel,
+} from "@/components/ui/field"
 import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 import { supabase, type Category } from "@/lib/supabase"
 import { CardNote } from "@/components/ui/card"
+import { ColorTile } from "@/components/ui/color-tile"
 import { Button } from "@/components/ui/button"
 import { CustomForm, FormInput } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Dialog,
+  DialogBody,
   DialogCloseButton,
   DialogContent,
   DialogDescription,
@@ -48,6 +58,7 @@ import {
     categoriesOnboardingPanelShellClass,
 } from "@/components/categories/categories-onboarding-panel-styles"
 import { cn } from "@/lib/utils"
+import { currencyBRL } from "@/lib/formatters"
 type Props = {
     user: User
     workspaceId: string
@@ -488,18 +499,16 @@ export function CategoriesOnboardingWizard({
     }
 
     const skipLink = (
-        <button
+        <Button
             type="button"
-            className={cn(
-                "text-center text-xs text-muted-foreground underline-offset-4",
-                "hover:text-foreground hover:underline",
-                "disabled:pointer-events-none disabled:opacity-50",
-            )}
+            variant="link"
+            size="xs"
+            className="text-muted-foreground hover:text-foreground active:text-foreground"
             disabled={busy}
             onClick={() => void completeOnboarding(false)}
         >
             Configurar depois
-        </button>
+        </Button>
     )
 
     const renderCategoryRow = (c: Category) => {
@@ -510,12 +519,9 @@ export function CategoriesOnboardingWizard({
                 className="flex flex-col gap-2 rounded-lg border border-border/80 bg-background/80 px-2 py-2 sm:flex-row sm:items-center"
             >
                 <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <div
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border/60 text-white shadow-sm"
-                        style={{ backgroundColor: bg }}
-                    >
-                        <CategoryIconPreview name={c.icon ?? ""} className="h-4 w-4" />
-                    </div>
+                    <ColorTile size="sm" color={bg} className="shrink-0">
+                        <CategoryIconPreview name={c.icon ?? ""} />
+                    </ColorTile>
                     <span className="min-w-0 flex-1 truncate text-xs font-medium">{c.name}</span>
                     <Button
                         type="button"
@@ -531,10 +537,11 @@ export function CategoriesOnboardingWizard({
                 </div>
                 <div className="flex items-center justify-end gap-2 sm:justify-end">
                     {c.type === "expense" ? (
-                        <>
-                            <Label htmlFor={`bud-${c.id}`} className="sr-only">
-                                Limite {c.name}
-                            </Label>
+                        // Horizontal, e não vertical: o vertical dá `w-full` aos filhos, e o
+                        // campo tem largura fixa na linha.
+                        <Field orientation="horizontal" className="w-auto shrink-0 gap-0">
+                            <FieldLabel className="sr-only">Limite {c.name}</FieldLabel>
+                            <FieldControl>
                             <Input
                                 money
                                 id={`bud-${c.id}`}
@@ -549,15 +556,16 @@ export function CategoriesOnboardingWizard({
                                 }
                                 className="h-8 min-w-[6.75rem] w-[6.75rem] shrink-0 text-right text-xs sm:min-w-[7.25rem] sm:w-[7.25rem]"
                             />
-                        </>
+                            </FieldControl>
+                        </Field>
                     ) : (
                         <span className="text-2xs text-muted-foreground">Sem orçamento</span>
                     )}
                     <Button
                         type="button"
-                        variant="tertiary"
+                        variant="destructive"
                         size="icon-lg"
-                        className="h-8 w-8 shrink-0 text-destructive hover:text-destructive"
+                        className="h-8 w-8 shrink-0"
                         disabled={crudBusy}
                         onClick={() => void handleDeleteCategory(c)}
                         aria-label={`Excluir ${c.name}`}
@@ -587,19 +595,17 @@ export function CategoriesOnboardingWizard({
                             className="flex min-h-0 flex-1 flex-col"
                             onSubmit={(ev) => void handleAddSubmit(ev)}
                         >
-                            <div className="min-h-0 flex-1 overflow-y-auto px-4">
+                            <DialogBody>
                                 <div className="space-y-4 py-2">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="onb-add-name">Nome</Label>
-                                        <Input
-                                            id="onb-add-name"
-                                            value={addName}
-                                            onChange={(e) => setAddName(e.target.value)}
-                                            placeholder="Ex: Alimentação"
-                                            required
-                                            disabled={crudBusy}
-                                        />
-                                    </div>
+                                    <FormInput
+                                        id="onb-add-name"
+                                        label="Nome"
+                                        value={addName}
+                                        onChange={(e) => setAddName(e.target.value)}
+                                        placeholder="Ex: Alimentação"
+                                        required
+                                        disabled={crudBusy}
+                                    />
                                     <TransactionFormTypeSegment
                                         value={addType}
                                         onChange={setAddType}
@@ -612,8 +618,8 @@ export function CategoriesOnboardingWizard({
                                         onIconChange={setAddIcon}
                                     />
                                 </div>
-                            </div>
-                            <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
+                            </DialogBody>
+                            <DialogFooter className="flex-col">
                                 <Button type="submit" disabled={crudBusy} size="xl" className="w-full">
                                     {crudBusy ? "Salvando…" : "Criar"}
                                 </Button>
@@ -634,17 +640,15 @@ export function CategoriesOnboardingWizard({
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4 py-2">
-                                <div className="space-y-2">
-                                    <Label htmlFor="onb-add-name">Nome</Label>
-                                    <Input
-                                        id="onb-add-name"
-                                        value={addName}
-                                        onChange={(e) => setAddName(e.target.value)}
-                                        placeholder="Ex: Alimentação"
-                                        required
-                                        disabled={crudBusy}
-                                    />
-                                </div>
+                                <FormInput
+                                    id="onb-add-name"
+                                    label="Nome"
+                                    value={addName}
+                                    onChange={(e) => setAddName(e.target.value)}
+                                    placeholder="Ex: Alimentação"
+                                    required
+                                    disabled={crudBusy}
+                                />
                                 <TransactionFormTypeSegment
                                     value={addType}
                                     onChange={setAddType}
@@ -694,19 +698,17 @@ export function CategoriesOnboardingWizard({
                                 onSubmit={(ev) => void handleEditSubmit(ev)}
                                 className="flex min-h-0 flex-1 flex-col"
                             >
-                                <div className="min-h-0 flex-1 overflow-y-auto px-4">
+                                <DialogBody>
                                     <div className="space-y-3 py-1">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="onb-edit-name">Nome</Label>
-                                            <Input
-                                                id="onb-edit-name"
-                                                value={editName}
-                                                onChange={(e) => setEditName(e.target.value)}
-                                                className="text-sm"
-                                                required
-                                                disabled={crudBusy}
-                                            />
-                                        </div>
+                                        <FormInput
+                                            id="onb-edit-name"
+                                            label="Nome"
+                                            value={editName}
+                                            onChange={(e) => setEditName(e.target.value)}
+                                            className="text-sm"
+                                            required
+                                            disabled={crudBusy}
+                                        />
                                         <TransactionFormTypeSegment
                                             value={editType}
                                             onChange={setEditType}
@@ -735,8 +737,8 @@ export function CategoriesOnboardingWizard({
                                             />
                                         ) : null}
                                     </div>
-                                </div>
-                                <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
+                                </DialogBody>
+                                <DialogFooter className="flex-col">
                                     <Button type="submit" disabled={crudBusy} size="xl" className="w-full">
                                         {crudBusy ? "Salvando…" : "Salvar"}
                                     </Button>
@@ -766,17 +768,15 @@ export function CategoriesOnboardingWizard({
                                     </DialogDescription>
                                 </DialogHeader>
                                 <div className="space-y-3 py-1">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="onb-edit-name">Nome</Label>
-                                        <Input
-                                            id="onb-edit-name"
-                                            value={editName}
-                                            onChange={(e) => setEditName(e.target.value)}
-                                            className="text-sm"
-                                            required
-                                            disabled={crudBusy}
-                                        />
-                                    </div>
+                                    <FormInput
+                                        id="onb-edit-name"
+                                        label="Nome"
+                                        value={editName}
+                                        onChange={(e) => setEditName(e.target.value)}
+                                        className="text-sm"
+                                        required
+                                        disabled={crudBusy}
+                                    />
                                     <TransactionFormTypeSegment
                                         value={editType}
                                         onChange={setEditType}
@@ -989,12 +989,14 @@ export function CategoriesOnboardingWizard({
                         </div>
 
                         {localCategories.length === 0 ? (
-                            <p className="shrink-0 rounded-lg border border-dashed border-border/80 bg-muted/15 px-3 py-4 text-center text-xs text-muted-foreground">
-                                Nenhuma categoria. Use &quot;Adicionar categoria&quot; para criar receitas e
-                                despesas.
-                            </p>
+                            <EmptyState size="sm" className="shrink-0">
+                                <EmptyStateDescription>
+                                    Nenhuma categoria. Use &quot;Adicionar categoria&quot; para criar receitas e
+                                    despesas.
+                                </EmptyStateDescription>
+                            </EmptyState>
                         ) : (
-                            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-0.5">
+                            <DialogBody className="pr-0.5">
                                 <div className="space-y-4 pb-1">
                                     {incomeCategories.length > 0 ? (
                                         <div className="space-y-2">
@@ -1011,10 +1013,12 @@ export function CategoriesOnboardingWizard({
                                             Despesas
                                         </p>
                                         {expenseCategories.length === 0 ? (
-                                            <p className="rounded-lg border border-dashed border-border/80 bg-muted/15 px-3 py-4 text-center text-xs text-muted-foreground">
-                                                Nenhuma categoria de despesa. Adicione ao menos uma para
-                                                continuar.
-                                            </p>
+                                            <EmptyState size="sm">
+                                                <EmptyStateDescription>
+                                                    Nenhuma categoria de despesa. Adicione ao menos uma para
+                                                    continuar.
+                                                </EmptyStateDescription>
+                                            </EmptyState>
                                         ) : (
                                             <div className="space-y-2 rounded-xl border border-border/50 bg-muted/10 p-2">
                                                 {expenseCategories.map((c) => renderCategoryRow(c))}
@@ -1022,22 +1026,21 @@ export function CategoriesOnboardingWizard({
                                         )}
                                     </div>
                                 </div>
-                            </div>
+                            </DialogBody>
                         )}
                     </CustomForm>
                 ) : null}
 
                 {step === 2 ? (
                     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                        {/* Poço de rolagem à mão de propósito, como as duas listas do
+                            passo 1: o `overflow-hidden` do `Card` recortaria a rolagem. */}
                         <div className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain rounded-xl border border-border/50 bg-muted/10 p-2">
                         {expenseCategories.map((c) => {
                             const raw = (amountByCategoryId[c.id] ?? "").trim()
                             const amt = raw === "" ? null : parseMoneyBrl(raw)
                             if (amt === null || amt <= 0) return null
-                            const formatted = amt.toLocaleString("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                            })
+                            const formatted = currencyBRL(amt)
                             const bg = c.color || CATEGORY_COLORS[3]
                             return (
                                 <div
@@ -1048,16 +1051,14 @@ export function CategoriesOnboardingWizard({
                                     )}
                                 >
                                     <div className="flex min-w-0 flex-1 items-center gap-2">
-                                        <div
-                                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border/50 text-white"
-                                            style={{ backgroundColor: bg }}
+                                        <ColorTile
+                                            size="sm"
+                                            color={bg}
+                                            className="shrink-0"
                                             aria-hidden
                                         >
-                                            <CategoryIconPreview
-                                                name={c.icon ?? ""}
-                                                className="h-3.5 w-3.5"
-                                            />
-                                        </div>
+                                            <CategoryIconPreview name={c.icon ?? ""} />
+                                        </ColorTile>
                                         <span className="min-w-0 truncate text-sm font-medium text-foreground">
                                             {c.name}
                                         </span>

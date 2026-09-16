@@ -63,7 +63,7 @@ const metricCardHeaderClassName =
 
 function MetricCardSkeleton({ headerRight }: { headerRight?: ReactNode }) {
     return (
-        <Card className="h-full min-w-0 gap-0 overflow-hidden py-0 shadow-none">
+        <Card padding="none" className="h-full min-w-0">
             <div className={metricCardHeaderClassName}>
                 <div className="flex min-w-0 flex-1 items-center justify-between gap-2 md:min-w-0 md:flex-1">
                     <Skeleton className="h-3 w-28 max-w-full" />
@@ -113,9 +113,9 @@ function BudgetMoMMobileCardSkeleton() {
 function SummaryExpenseSkeleton() {
     return (
         <section className="space-y-3" aria-label="Resumo do mês (skeleton)">
-            <div className="min-w-0 space-y-2 md:col-span-6">
+            <div className="min-w-0 space-y-4 md:col-span-6">
                 <div className="flex min-w-0 flex-col items-start gap-2 md:flex-row md:items-start md:justify-between">
-                    <Skeleton className="h-3 w-32" />
+                    <Skeleton className="h-4 w-32" />
                     <div className="flex w-full min-w-0 flex-col items-start gap-2 md:ml-auto md:w-auto md:min-w-0 md:flex-row md:items-center md:justify-end">
                         <BudgetMoMMobileCardSkeleton />
                         <div className="hidden md:block">
@@ -126,7 +126,7 @@ function SummaryExpenseSkeleton() {
 
                 <Card padding="none" className="min-w-0">
                     <CardContent className="space-y-4 p-3 md:p-4">
-                        <div className="flex w-full items-center justify-between gap-2 rounded-md border border-border/60 bg-muted/20 px-3 py-2 md:hidden">
+                        <div className="flex w-full items-center justify-between gap-2 md:hidden">
                             <Skeleton className="h-3 w-12" />
                             <Skeleton className="h-3 w-28" />
                         </div>
@@ -158,12 +158,12 @@ function SummaryExpenseSkeleton() {
 
 function TrendsSkeleton() {
     return (
-        <section className="min-w-0 space-y-3" aria-label="Tendência (skeleton)">
-            <div className="flex min-w-0 max-w-full flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-3">
-                <div className="flex h-8 min-w-0 items-end gap-2">
-                    <Skeleton className="h-3 w-24" />
+        <section className="min-w-0 space-y-4" aria-label="Tendência (skeleton)">
+            <div className="flex min-w-0 items-center justify-between gap-4">
+                <div className="flex h-6 min-w-0 items-center">
+                    <Skeleton className="h-4 w-24" />
                 </div>
-                <div className="inline-flex h-9 w-full max-w-full shrink-0 items-stretch rounded-lg bg-muted/60 p-0.5 ring-1 ring-border/60 md:h-8 md:w-[12.5rem] dark:bg-muted/40">
+                <div className="inline-flex h-8 w-40 shrink-0 items-stretch gap-0.5 rounded-lg bg-muted p-0.5 pointer-coarse:h-10">
                     <div className="flex h-full w-full min-h-0 items-center gap-0.5 px-0.5">
                         <Skeleton className="h-[calc(100%-2px)] flex-1 rounded-md" />
                         <Skeleton className="h-[calc(100%-2px)] flex-1 rounded-md" />
@@ -190,17 +190,17 @@ function EmbeddedTransactionsSkeleton({ rowCount = 8 }: { rowCount?: number }) {
                     <Skeleton className="h-3 w-36" />
                 </div>
                 <div className="flex w-full min-w-0 flex-col gap-2 md:w-auto md:flex-row md:items-center md:justify-end md:gap-2">
-                    <Skeleton className="h-10 w-full rounded-md md:h-8 md:w-56" />
-                    <Skeleton className="h-10 w-full rounded-md md:h-8 md:w-32" />
+                    <Skeleton className="h-8 w-full rounded-md pointer-coarse:h-10 md:w-56" />
+                    <Skeleton className="h-8 w-full rounded-md pointer-coarse:h-10 md:w-32" />
                 </div>
             </div>
 
-            <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <Card padding="none">
                 <CardContent className="relative flex flex-col p-0">
                     <div className="min-w-0 overflow-hidden rounded-t-xl">
                         <Table className="min-w-[700px] text-sm">
-                            <TableHeader className="sticky top-0 z-10 bg-muted/50 [&_tr]:border-b-0">
-                                <TableRow className="border-0 hover:bg-transparent [&>th]:border-b [&>th]:border-border">
+                            <TableHeader variant="muted" sticky className="[&_tr]:border-b-0">
+                                <TableRow className="border-0 [&>th]:border-b [&>th]:border-border">
                                     <TableHead className="w-10 px-2 py-0 md:w-11 md:px-3">
                                         <Skeleton className="mx-auto size-4 rounded-sm" />
                                     </TableHead>

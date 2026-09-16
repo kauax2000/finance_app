@@ -1,9 +1,19 @@
 "use client"
 
 import { paymentMethodOptions } from "@/lib/payment-methods"
+import {
+    FormInput,
+    FormTextarea,
+} from "@/components/ui/form"
+import {
+    Field,
+    FieldControl,
+    FieldLabel,
+    FieldLegend,
+    FieldSet,
+    FieldTitle,
+} from "@/components/ui/field"
 import { useMemo } from "react"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
     Select,
     SelectContent,
@@ -13,7 +23,6 @@ import {
 } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DatePicker } from "@/components/ui/date-picker"
-import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { Muted } from "@/components/ui/typography"
 import type {
@@ -124,36 +133,35 @@ export function BillFormFields({
 
     return (
         <div className="flex flex-col gap-4 px-4 pb-4 sm:gap-5 sm:px-5">
-            <div className="grid gap-2">
-                <Label htmlFor="bill-name">Nome</Label>
-                <Input
-                    id="bill-name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Ex.: Condomínio, Luz, IPTU..."
-                    autoFocus
-                />
-            </div>
-            <div className="grid gap-2">
-                <Label htmlFor="bill-description">Descrição (opcional)</Label>
-                <Input
-                    id="bill-description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Detalhes para lembrar do que é a conta"
-                />
-            </div>
-            <div className="grid gap-2">
-                <Label htmlFor="bill-cat">Categoria (despesa)</Label>
+            <FormInput
+                id="bill-name"
+                label="Nome"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Ex.: Condomínio, Luz, IPTU..."
+                autoFocus
+            />
+            <FormInput
+                id="bill-description"
+                label="Descrição"
+                optional
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Detalhes para lembrar do que é a conta"
+            />
+            <Field>
+                <FieldLabel>Categoria (despesa)</FieldLabel>
                 <Select value={categoryId} onValueChange={setCategoryId}>
-                    <SelectTrigger
-                        id="bill-cat"
-                        size="sm"
-                        className="w-full bg-background shadow-xs"
-                        data-slot="select-trigger"
-                    >
-                        <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
+                    <FieldControl>
+                        <SelectTrigger
+                            id="bill-cat"
+                            size="sm"
+                            className="w-full bg-background shadow-xs"
+                            data-slot="select-trigger"
+                        >
+                            <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                    </FieldControl>
                     <SelectContent>
                         <SelectItem value={BILL_CATEGORY_NONE}>— Sem categoria —</SelectItem>
                         {expenseCategories.map((c) => (
@@ -163,28 +171,32 @@ export function BillFormFields({
                         ))}
                     </SelectContent>
                 </Select>
-            </div>
+            </Field>
+            {/* Título, e não `label`: a grade é um grupo de botões com o próprio
+                `aria-label`, e um `<label>` sem alvo não rotula nada. */}
             <div className="grid gap-2">
-                <Label id="bill-form-icon">Ícone</Label>
+                <FieldTitle id="bill-form-icon">Ícone</FieldTitle>
                 <CategoryIconGrid
                     value={icon}
                     onChange={setIcon}
                 />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-                <div className="grid gap-2">
-                    <Label>Periodicidade</Label>
+                <Field>
+                    <FieldLabel>Periodicidade</FieldLabel>
                     <Select
                         value={frequency}
                         onValueChange={(v) => setFrequency(v as BillFrequency)}
                     >
-                        <SelectTrigger
-                            size="sm"
-                            className="w-full bg-background shadow-xs"
-                            data-slot="select-trigger"
-                        >
-                            <SelectValue />
-                        </SelectTrigger>
+                        <FieldControl>
+                            <SelectTrigger
+                                size="sm"
+                                className="w-full bg-background shadow-xs"
+                                data-slot="select-trigger"
+                            >
+                                <SelectValue />
+                            </SelectTrigger>
+                        </FieldControl>
                         <SelectContent>
                             {BILL_FREQUENCY_OPTIONS.map((o) => (
                                 <SelectItem key={o.value} value={o.value}>
@@ -193,20 +205,22 @@ export function BillFormFields({
                             ))}
                         </SelectContent>
                     </Select>
-                </div>
-                <div className="grid gap-2">
-                    <Label>Vencimento (dia)</Label>
+                </Field>
+                <Field>
+                    <FieldLabel>Vencimento (dia)</FieldLabel>
                     <Select
                         value={String(dueDayOfMonth)}
                         onValueChange={(v) => setDueDayOfMonth(Number(v))}
                     >
-                        <SelectTrigger
-                            size="sm"
-                            className="w-full bg-background shadow-xs"
-                            data-slot="select-trigger"
-                        >
-                            <SelectValue />
-                        </SelectTrigger>
+                        <FieldControl>
+                            <SelectTrigger
+                                size="sm"
+                                className="w-full bg-background shadow-xs"
+                                data-slot="select-trigger"
+                            >
+                                <SelectValue />
+                            </SelectTrigger>
+                        </FieldControl>
                         <SelectContent className="max-h-52">
                             {dayOptions.map((d) => (
                                 <SelectItem key={d} value={String(d)}>
@@ -215,55 +229,58 @@ export function BillFormFields({
                             ))}
                         </SelectContent>
                     </Select>
-                </div>
+                </Field>
             </div>
-            <div className="grid gap-2">
-                <Label htmlFor="bill-est">Valor estimado (opcional)</Label>
-                <Input
-                    id="bill-est"
-                    inputMode="decimal"
-                    value={amountEstimatedStr}
-                    onChange={(e) => setAmountEstimatedStr(e.target.value)}
-                    placeholder="Ex.: 250,90 — só ajuda nas previsões"
-                />
-                <Muted>Não será lançado automaticamente.</Muted>
-            </div>
+            <FormInput
+                id="bill-est"
+                label="Valor estimado"
+                optional
+                inputMode="decimal"
+                value={amountEstimatedStr}
+                onChange={(e) => setAmountEstimatedStr(e.target.value)}
+                placeholder="Ex.: 250,90 — só ajuda nas previsões"
+                description="Não será lançado automaticamente."
+            />
             <div className="grid gap-4 sm:grid-cols-2">
-                <div className="grid gap-2">
-                    <Label>Data de início</Label>
-                    <DatePicker
-                        value={
-                            startDateObj ?? parseYmdLocal(localYmdFromDate(new Date()))
-                        }
-                        onChange={(d) =>
-                            setStartDateYmd(d ? localYmdFromDate(d) : "")
-                        }
-                        placeholder="Início da conta"
-                        className="text-sm"
-                    />
-                </div>
-                <div className="grid gap-2">
-                    <Label>Encerra em (opcional)</Label>
-                    <DatePicker
-                        value={
-                            endDateYmd.trim() && endDateObj
-                                ? endDateObj
-                                : undefined
-                        }
-                        onChange={(d) =>
-                            setEndDateYmd(d ? localYmdFromDate(d) : "")
-                        }
-                        placeholder="Sem data final"
-                        className="text-sm"
-                    />
-                </div>
+                <Field>
+                    <FieldLabel>Data de início</FieldLabel>
+                    <FieldControl>
+                        <DatePicker
+                            value={
+                                startDateObj ?? parseYmdLocal(localYmdFromDate(new Date()))
+                            }
+                            onChange={(d) =>
+                                setStartDateYmd(d ? localYmdFromDate(d) : "")
+                            }
+                            placeholder="Início da conta"
+                            className="text-sm"
+                        />
+                    </FieldControl>
+                </Field>
+                <Field>
+                    <FieldLabel optional>Encerra em</FieldLabel>
+                    <FieldControl>
+                        <DatePicker
+                            value={
+                                endDateYmd.trim() && endDateObj
+                                    ? endDateObj
+                                    : undefined
+                            }
+                            onChange={(d) =>
+                                setEndDateYmd(d ? localYmdFromDate(d) : "")
+                            }
+                            placeholder="Sem data final"
+                            className="text-sm"
+                        />
+                    </FieldControl>
+                </Field>
             </div>
             <Separator />
             <Muted>
                 Padrão ao pagar (pode mudar ao confirmar o pagamento).
             </Muted>
-            <div className="grid gap-2">
-                <Label>Forma de pagamento preferida</Label>
+            <Field>
+                <FieldLabel>Forma de pagamento preferida</FieldLabel>
                 <Select
                     value={paymentMethodOption}
                     onValueChange={(next) => {
@@ -275,13 +292,15 @@ export function BillFormFields({
                         }
                     }}
                 >
-                    <SelectTrigger
-                        size="sm"
-                        className="bg-background shadow-xs"
-                        data-slot="select-trigger"
-                    >
-                        <SelectValue placeholder="Opcional" />
-                    </SelectTrigger>
+                    <FieldControl>
+                        <SelectTrigger
+                            size="sm"
+                            className="bg-background shadow-xs"
+                            data-slot="select-trigger"
+                        >
+                            <SelectValue placeholder="Opcional" />
+                        </SelectTrigger>
+                    </FieldControl>
                     <SelectContent>
                         <SelectItem value={BILL_PAYMENT_NONE}>— Não definido —</SelectItem>
                         {paymentMethodOptions().map((o) => (
@@ -291,21 +310,23 @@ export function BillFormFields({
                         ))}
                     </SelectContent>
                 </Select>
-            </div>
+            </Field>
             {paymentMethodOption === "credit_card" ? (
-                <div className="grid gap-2">
-                    <Label>Cartão</Label>
+                <Field>
+                    <FieldLabel>Cartão</FieldLabel>
                     <Select
                         value={paymentCreditCardId}
                         onValueChange={setPaymentCreditCardId}
                     >
-                        <SelectTrigger
-                            size="sm"
-                            className="bg-background shadow-xs"
-                            data-slot="select-trigger"
-                        >
-                            <SelectValue placeholder="Escolha o cartão" />
-                        </SelectTrigger>
+                        <FieldControl>
+                            <SelectTrigger
+                                size="sm"
+                                className="bg-background shadow-xs"
+                                data-slot="select-trigger"
+                            >
+                                <SelectValue placeholder="Escolha o cartão" />
+                            </SelectTrigger>
+                        </FieldControl>
                         <SelectContent>
                             {creditCards.map((c) => (
                                 <SelectItem key={c.id} value={c.id}>
@@ -314,60 +335,66 @@ export function BillFormFields({
                             ))}
                         </SelectContent>
                     </Select>
-                </div>
+                </Field>
             ) : null}
             <Separator />
-            <div className="space-y-3">
-                <Label>Lembretes</Label>
+            {/* Um grupo de caixas com título é `fieldset` + `legend`. As linhas de
+                cada caixa são a regra C, e ficam para a fase dos primitivos. */}
+            <FieldSet className="gap-3">
+                <FieldLegend variant="label">Lembretes</FieldLegend>
                 <div className="flex flex-col gap-3">
-                    <label className="flex cursor-pointer items-center gap-2 text-sm">
-                        <Checkbox
-                            checked={reminder3}
-                            onCheckedChange={(c) =>
-                                setReminder3(c === true)
-                            }
-                            id="bill-r3"
-                        />
-                        <span>3 dias antes do vencimento</span>
-                    </label>
-                    <label className="flex cursor-pointer items-center gap-2 text-sm">
-                        <Checkbox
-                            checked={reminder0}
-                            onCheckedChange={(c) =>
-                                setReminder0(c === true)
-                            }
-                            id="bill-r0"
-                        />
-                        <span>No dia do vencimento</span>
-                    </label>
+                    <Field orientation="horizontal" className="w-auto gap-2">
+                        <FieldControl>
+                            <Checkbox
+                                checked={reminder3}
+                                onCheckedChange={(c) =>
+                                    setReminder3(c === true)
+                                }
+                                id="bill-r3"
+                            />
+                        </FieldControl>
+                        <FieldLabel className="cursor-pointer text-sm font-normal">3 dias antes do vencimento</FieldLabel>
+                    </Field>
+                    <Field orientation="horizontal" className="w-auto gap-2">
+                        <FieldControl>
+                            <Checkbox
+                                checked={reminder0}
+                                onCheckedChange={(c) =>
+                                    setReminder0(c === true)
+                                }
+                                id="bill-r0"
+                            />
+                        </FieldControl>
+                        <FieldLabel className="cursor-pointer text-sm font-normal">No dia do vencimento</FieldLabel>
+                    </Field>
                 </div>
-            </div>
+            </FieldSet>
             {editingBill ? (
                 <>
                     <Separator />
-                    <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
-                        <Checkbox
-                            checked={isActive}
-                            onCheckedChange={(c) =>
-                                setIsActive(c === true)
-                            }
-                            id="bill-active"
-                        />
-                        <span>Conta ativa</span>
-                    </label>
+                    <Field orientation="horizontal" className="w-auto gap-2">
+                        <FieldControl>
+                            <Checkbox
+                                checked={isActive}
+                                onCheckedChange={(c) =>
+                                    setIsActive(c === true)
+                                }
+                                id="bill-active"
+                            />
+                        </FieldControl>
+                        <FieldLabel className="cursor-pointer text-sm font-medium">Conta ativa</FieldLabel>
+                    </Field>
                 </>
             ) : null}
-            <div className="grid gap-2">
-                <Label htmlFor="bill-notes">Observações</Label>
-                <Textarea
-                    id="bill-notes"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Opcional — notas internas."
-                    rows={3}
-                    className="resize-none shadow-xs"
-                />
-            </div>
+            <FormTextarea
+                id="bill-notes"
+                label="Observações"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Opcional — notas internas."
+                rows={3}
+                className="resize-none shadow-xs"
+            />
         </div>
     )
 }

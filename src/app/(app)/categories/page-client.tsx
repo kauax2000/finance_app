@@ -27,8 +27,6 @@ import {
 import { Card, CardContent } from "@/components/ui/card"
 import { CustomForm, FormInput } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { CategoryDeleteAlertBody } from "@/components/categories/category-delete-alert-body"
 import { CategoriesToolbar, MonthNav } from "@/components/categories/categories-toolbar"
 import { useDashboardCategoriesSubrouteLabels } from "@/components/layout/dashboard-category-subroute-title"
@@ -41,6 +39,7 @@ import {
 } from "@/components/transactions/transaction-type-segment"
 import {
   Dialog,
+  DialogBody,
   DialogCloseButton,
   DialogContent,
   DialogDescription,
@@ -586,18 +585,16 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
 
     const categoryFormFields = (
         <div className="space-y-4 py-4">
-            <div className="space-y-2">
-                <Label htmlFor="name">Nome</Label>
-                <Input
-                    id="name"
-                    value={name}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setName(e.target.value)
-                    }
-                    placeholder="Ex: Alimentação"
-                    required
-                />
-            </div>
+            <FormInput
+                id="name"
+                label="Nome"
+                value={name}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setName(e.target.value)
+                }
+                placeholder="Ex: Alimentação"
+                required
+            />
 
             <TransactionFormTypeSegment
                 value={type}
@@ -612,7 +609,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             />
 
             {type === "expense" ? (
-                <div className="space-y-3 rounded-lg border border-border/60 bg-muted/20 p-3">
+                <Card variant="muted" padding="sm" className="px-3">
                     <p className="text-xs text-muted-foreground">
                         Limite de despesas para {dialogBudgetPeriod.period_start} a{" "}
                         {dialogBudgetPeriod.period_end}.
@@ -635,7 +632,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                             {editBudgetRemoving ? "Removendo…" : "Remover orçamento"}
                         </Button>
                     ) : null}
-                </div>
+                </Card>
             ) : null}
         </div>
     )
@@ -678,10 +675,10 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                             onSubmit={handleSubmit}
                             className="flex min-h-0 flex-1 flex-col"
                         >
-                            <div className="min-h-0 flex-1 overflow-y-auto px-4">
+                            <DialogBody>
                                 {categoryFormFields}
-                            </div>
-                            <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
+                            </DialogBody>
+                            <DialogFooter className="flex-col">
                                 <Button
                                     type="submit"
                                     disabled={saving || editBudgetRemoving}
@@ -698,7 +695,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             ) : (
                 <Dialog open={dialogOpen} onOpenChange={onSheetOpenChange}>
                     <DialogContent layout="fixed">
-                        <DialogHeader className="shrink-0 px-6 pt-6 pb-2">
+                        <DialogHeader>
                             <DialogTitle>{sheetTitle}</DialogTitle>
                             <DialogDescription>{sheetDescription}</DialogDescription>
                         </DialogHeader>
@@ -706,10 +703,10 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                             onSubmit={handleSubmit}
                             className="flex min-h-0 flex-1 flex-col"
                         >
-                            <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-2">
+                            <DialogBody className="pb-2">
                                 {categoryFormFields}
-                            </div>
-                            <DialogFooter className="mx-0 mb-0 mt-0 shrink-0 flex-row flex-wrap justify-end gap-2 rounded-b-xl bg-background px-6 pt-4 pb-5">
+                            </DialogBody>
+                            <DialogFooter>
                                 <Button
                                     type="submit"
                                     size="sm"
@@ -796,7 +793,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             {categories.length === 0 && (
                 <Card>
                     <CardContent className="flex flex-col items-center justify-center py-12">
-                        <ChartPieIcon className="h-12 w-12 text-muted-foreground mb-4" />
+                        <ChartPieIcon className="size-12 text-muted-foreground mb-4" />
                         <p className="text-muted-foreground mb-4">Nenhuma categoria encontrada</p>
                         <Button onClick={() => openDialog()}>
                             <PlusIcon className="mr-2 h-4 w-4" />

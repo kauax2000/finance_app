@@ -1,6 +1,9 @@
 "use client"
 
 import { useTimeout } from "@/hooks/use-timeout"
+import {
+    Item,
+} from "@/components/ui/item"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/providers"
@@ -8,6 +11,7 @@ import { useWorkspace } from "@/components/workspace-provider"
 import { supabase, type WorkspaceDeleteImpact } from "@/lib/supabase"
 import {
   Dialog,
+  DialogBody,
   DialogCloseButton,
   DialogContent,
   DialogDescription,
@@ -21,20 +25,16 @@ import {
 } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
-import { CustomForm } from "@/components/ui/form"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import {
+    CustomForm,
+    FormInput,
+} from "@/components/ui/form"
 import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ExclamationTriangleIcon, TrashIcon } from "@heroicons/react/16/solid"
-import { CheckCircleIcon, TrashIcon as TrashMiniIcon } from "@heroicons/react/20/solid"
+import { CheckCircleIcon, ExclamationTriangleIcon, TrashIcon } from "@heroicons/react/16/solid"
+
 import { CheckCircleIcon as CheckCircleOutlineIcon } from "@heroicons/react/24/outline"
-const dialogFooterClass =
-    "!mx-0 !mb-0 mt-0 shrink-0 flex flex-row flex-wrap justify-end gap-2 border-t border-border bg-background px-6 py-4 sm:flex-row"
-
-const sheetFooterMobileClass =
-    "mt-0 shrink-0 flex-col gap-2 border-t border-border bg-background px-4 py-4"
-
 const DATA_LOSS_ITEMS = [
     "Todas as transações",
     "Todas as carteiras",
@@ -183,7 +183,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
             {success ? (
             <CheckCircleIcon className="h-5 w-5 shrink-0 text-success" aria-hidden />
             ) : (
-            <TrashMiniIcon className="h-5 w-5 shrink-0" aria-hidden />
+            <TrashIcon className="h-5 w-5 shrink-0" aria-hidden />
             )}
             {title}
             </DialogTitle>
@@ -194,10 +194,9 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
         </DialogHeader>
     )
 
-    const scrollPadding = cn("min-h-0 flex-1 overflow-y-auto py-4", isMobile ? "px-4" : "px-6")
 
     const headerDesktop = (
-        <DialogHeader className="shrink-0 px-6 py-4 text-left">
+        <DialogHeader>
             <DialogTitle
                 className={
                     success
@@ -210,7 +209,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                 {success ? (
                     <CheckCircleIcon className="h-5 w-5 shrink-0 text-success" aria-hidden />
                 ) : (
-                    <TrashMiniIcon className="h-5 w-5 shrink-0" aria-hidden />
+                    <TrashIcon className="h-5 w-5 shrink-0" aria-hidden />
                 )}
                 {title}
             </DialogTitle>
@@ -219,20 +218,20 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
     )
 
     const bodySuccess = (
-        <div className={scrollPadding}>
+        <DialogBody>
             <div className="flex flex-col items-center justify-center py-4">
                 <div className="mb-4 rounded-full bg-success-muted p-4">
-                    <CheckCircleOutlineIcon className="h-12 w-12 text-success" />
+                    <CheckCircleOutlineIcon className="size-12 text-success" />
                 </div>
                 <p className="text-center text-sm text-muted-foreground">
                     Todos os seus dados foram removidos permanentemente.
                 </p>
             </div>
-        </div>
+        </DialogBody>
     )
 
     const footerSuccess = isMobile ? null : (
-        <DialogFooter className={dialogFooterClass}>
+        <DialogFooter>
             <Button
                 type="button"
                 variant="outline"
@@ -245,23 +244,22 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
     )
 
     const bodyWarning = (
-        <div className={scrollPadding}>
+        <DialogBody>
             <div className="space-y-3">
-                <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-                    <ExclamationTriangleIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                    <p className="min-w-0 leading-relaxed">
-                        <span className="font-medium">Atenção:</span> não será possível recuperar sua conta nem os dados abaixo.
-                    </p>
-                </div>
+                <Alert tone="destructive" size="sm">
+                    <ExclamationTriangleIcon />
+                    <AlertTitle>Atenção</AlertTitle>
+                    <AlertDescription>
+                        Não será possível recuperar sua conta nem os dados abaixo.
+                    </AlertDescription>
+                </Alert>
                 <p className="text-sm text-muted-foreground">
                     Ao excluir sua conta, os seguintes dados serão removidos permanentemente:
                 </p>
                 <ul className="flex list-none flex-col gap-2" role="list">
                     {DATA_LOSS_ITEMS.map((item) => (
                         <li key={item}>
-                            <div className="rounded-lg border border-border/80 bg-muted/20 px-3 py-2.5 text-sm text-foreground">
-                                {item}
-                            </div>
+                            <Item variant="outline">{item}</Item>
                         </li>
                     ))}
                 </ul>
@@ -295,17 +293,17 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                     </div>
                 ) : null}
             </div>
-        </div>
+        </DialogBody>
     )
 
     const footerWarning = isMobile ? (
-        <DialogFooter className={sheetFooterMobileClass}>
+        <DialogFooter className="flex-col">
             <Button type="button" variant="destructive" size="xl" className="w-full" onClick={handleContinue}>
                 Continuar
             </Button>
         </DialogFooter>
     ) : (
-        <DialogFooter className={dialogFooterClass}>
+        <DialogFooter>
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
                 Cancelar
             </Button>
@@ -317,48 +315,43 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
 
     const bodyConfirm = (
         <CustomForm onSubmit={handleDeleteFormSubmit} className="flex min-h-0 flex-1 flex-col">
-            <div className={scrollPadding}>
+            <DialogBody>
                 <div className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="confirm-email">Confirme seu email</Label>
-                        <Input
-                            id="confirm-email"
-                            type="email"
-                            placeholder={userEmail}
-                            value={confirmEmail}
-                            onChange={(e) => setConfirmEmail(e.target.value)}
-                            className={emailsMatch && confirmEmail ? "border-success/50" : ""}
-                        />
-                        {confirmEmail && !emailsMatch ? (
-                            <p className="text-xs text-destructive">O email não confere</p>
-                        ) : null}
-                    </div>
+                    {/* O "não confere" era um `<p>` solto, sem `aria-invalid` e sem
+                        ligação com o campo; como `error` ele marca o campo e é
+                        anunciado. */}
+                    <FormInput
+                        id="confirm-email"
+                        label="Confirme seu email"
+                        type="email"
+                        placeholder={userEmail}
+                        value={confirmEmail}
+                        onChange={(e) => setConfirmEmail(e.target.value)}
+                        className={emailsMatch && confirmEmail ? "border-success/50" : ""}
+                        error={confirmEmail && !emailsMatch ? "O email não confere" : undefined}
+                    />
 
-                    <div className="space-y-2">
-                        <Label htmlFor="delete-password">Sua senha</Label>
-                        <Input
-                            id="delete-password"
-                            type="password"
-                            placeholder="Digite sua senha"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                            Necessário confirmar sua identidade para excluir a conta.
-                        </p>
-                    </div>
+                    <FormInput
+                        id="delete-password"
+                        label="Sua senha"
+                        type="password"
+                        placeholder="Digite sua senha"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        description="Necessário confirmar sua identidade para excluir a conta."
+                    />
 
                     {error ? (
-                        <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-                            <ExclamationTriangleIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                            <span className="min-w-0 break-words">{error}</span>
-                        </div>
+                        <Alert tone="destructive" size="sm">
+                            <ExclamationTriangleIcon />
+                            <AlertTitle className="break-words">{error}</AlertTitle>
+                        </Alert>
                     ) : null}
                 </div>
-            </div>
+            </DialogBody>
 
             {isMobile ? (
-                <DialogFooter className={sheetFooterMobileClass}>
+                <DialogFooter className="flex-col">
                     <Button
                         type="submit"
                         variant="destructive"
@@ -391,7 +384,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                     </Button>
                 </DialogFooter>
             ) : (
-                <DialogFooter className={dialogFooterClass}>
+                <DialogFooter>
                     <Button
                         type="button"
                         variant="outline"

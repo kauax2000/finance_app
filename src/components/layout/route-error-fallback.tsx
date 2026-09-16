@@ -1,7 +1,10 @@
 "use client"
 
+import { Container } from "@/components/ui/container"
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline"
+import { ExclamationTriangleIcon as ExclamationTriangleMicroIcon } from "@heroicons/react/16/solid"
 import { useEffect } from "react"
-import { ExclamationTriangleIcon } from "@heroicons/react/16/solid"
+
 import { ROUTES } from "@/config/navigation"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -37,7 +40,7 @@ export function RouteErrorFallback({ error, retry, variant = "page" }: RouteErro
                     : "flex w-full flex-1 flex-col justify-center py-8"
             }
         >
-            <div className="mx-auto w-full max-w-md space-y-6">
+            <Container size="sm" className="space-y-6">
                 <EmptyState className="w-full border-border/80 bg-card/40 py-10">
                     <EmptyStateIcon className="bg-destructive-muted text-destructive-muted-foreground">
                         <ExclamationTriangleIcon aria-hidden />
@@ -57,7 +60,9 @@ export function RouteErrorFallback({ error, retry, variant = "page" }: RouteErro
                     </EmptyStateActions>
                 </EmptyState>
                 <Alert tone="destructive" className="w-full">
-                    <ExclamationTriangleIcon />
+                    {/* O alerta desenha o ícone a 16px (`--alert-icon`), e o do
+                        bloco vazio sai a 24 — conjuntos diferentes, de propósito. */}
+                    <ExclamationTriangleMicroIcon />
                     <AlertTitle>Detalhes técnicos</AlertTitle>
                     <AlertDescription className="break-words font-mono text-xs">
                         {/* A mensagem crua é para quem desenvolve; em produção
@@ -76,7 +81,7 @@ export function RouteErrorFallback({ error, retry, variant = "page" }: RouteErro
                     Se o problema continuar, atualize a página ou faça login de
                     novo.
                 </Muted>
-            </div>
+            </Container>
         </div>
     )
 }

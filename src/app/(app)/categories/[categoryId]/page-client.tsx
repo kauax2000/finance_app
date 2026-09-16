@@ -383,7 +383,9 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     const remaining = limit > 0 ? limit - monthTotal : 0
     const overBudget = limit > 0 && monthTotal > limit
 
-    const accentColor = category?.color || (category?.type === "income" ? "#10B981" : "#EF4444")
+    const accentColor =
+        category?.color ||
+        (category?.type === "income" ? CATEGORY_COLORS[0] : CATEGORY_COLORS[3])
 
     const amounts = txs
         .filter((t) => (typeFilter ? t.type === typeFilter : true))

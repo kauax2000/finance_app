@@ -7,6 +7,7 @@ import {
     FormPickerPopoverContent,
     FormPickerPopoverFooter,
     FormPickerPopoverFooterAction,
+    FormPickerPopoverItem,
     FormPickerPopoverList,
     FormPickerPopoverSearch,
 } from "@/components/ui/form-picker-popover"
@@ -16,7 +17,6 @@ import {
     SUBSCRIPTION_SELECT_NONE,
     type ExpenseCategoryOption,
 } from "@/components/subscriptions/subscription-form-shared"
-import { cn } from "@/lib/utils"
 import { ChevronDownIcon } from "@heroicons/react/16/solid"
 function CategoryRows({
     categories,
@@ -52,14 +52,8 @@ function CategoryRows({
                 const selected = c.id === value
                 return (
                     <li key={c.id}>
-                        <button
-                            type="button"
-                            className={cn(
-                                "flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm transition-colors",
-                                selected
-                                    ? "bg-muted font-medium text-foreground"
-                                    : "hover:bg-muted/60"
-                            )}
+                        <FormPickerPopoverItem
+                            selected={selected}
                             onClick={() => onPick(c.id)}
                         >
                             <span
@@ -71,7 +65,7 @@ function CategoryRows({
                                 aria-hidden
                             />
                             <span className="min-w-0 truncate">{c.name}</span>
-                        </button>
+                        </FormPickerPopoverItem>
                     </li>
                 )
             })}
@@ -159,14 +153,8 @@ export function SubscriptionCategoryPicker({
                 <FormPickerPopoverList>
                     <ul className="flex flex-col gap-0.5 pr-1">
                         <li>
-                            <button
-                                type="button"
-                                className={cn(
-                                    "flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm transition-colors",
-                                    value === SUBSCRIPTION_SELECT_NONE
-                                        ? "bg-muted font-medium text-foreground"
-                                        : "hover:bg-muted/60"
-                                )}
+                            <FormPickerPopoverItem
+                                selected={value === SUBSCRIPTION_SELECT_NONE}
                                 onClick={() => {
                                     onChange(SUBSCRIPTION_SELECT_NONE)
                                     setOpen(false)
@@ -175,7 +163,7 @@ export function SubscriptionCategoryPicker({
                                 <span className="text-muted-foreground">
                                     Nenhuma
                                 </span>
-                            </button>
+                            </FormPickerPopoverItem>
                         </li>
                     </ul>
                     <CategoryRows

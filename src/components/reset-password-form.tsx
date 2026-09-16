@@ -7,10 +7,9 @@ import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
-import { CustomForm } from "@/components/ui/form"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { CustomForm, FormInput } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 
 function ResetPasswordFormContent() {
     const router = useRouter()
@@ -156,12 +155,12 @@ function ResetPasswordFormContent() {
         return (
             <div className="w-full rounded-xl border bg-card text-card-foreground shadow-sm">
                 <div className="flex flex-col gap-6 p-6">
-                    <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
-                        <p className="font-medium">Link expirado ou inválido</p>
-                        <p className="text-muted-foreground mt-1">
+                    <Alert tone="destructive" variant="plain">
+                        <AlertTitle>Link expirado ou inválido</AlertTitle>
+                        <AlertDescription>
                             O link de recuperação expirou. Por favor, solicite um novo link.
-                        </p>
-                    </div>
+                        </AlertDescription>
+                    </Alert>
                     <Button asChild className="w-full">
                         <Link href="/forgot-password">Solicitar novo link</Link>
                     </Button>
@@ -180,12 +179,12 @@ function ResetPasswordFormContent() {
             <div className="flex flex-col gap-6 p-6">
                 {success ? (
                     <div className="flex flex-col gap-4">
-                        <div className="bg-success-muted text-success-muted-foreground text-sm p-3 rounded-md">
-                            <p className="font-medium">Senha atualizada!</p>
-                            <p className="text-muted-foreground mt-1">
+                        <Alert tone="success" variant="plain">
+                            <AlertTitle>Senha atualizada!</AlertTitle>
+                            <AlertDescription>
                                 Você será redirecionado para o login em breve.
-                            </p>
-                        </div>
+                            </AlertDescription>
+                        </Alert>
                         <Button asChild className="w-full">
                             <Link href={ROUTES.LOGIN}>Voltar ao login</Link>
                         </Button>
@@ -193,32 +192,28 @@ function ResetPasswordFormContent() {
                 ) : (
                     <CustomForm onSubmit={handleSubmit} className="flex flex-col gap-4">
                         {error && (
-                            <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
-                                {error}
-                            </div>
+                            <Alert tone="destructive" variant="plain">
+                                <AlertTitle>{error}</AlertTitle>
+                            </Alert>
                         )}
-                        <div className="flex flex-col gap-2">
-                            <Label htmlFor="password">Nova Senha</Label>
-                            <Input
-                                id="password"
-                                type="password"
-                                placeholder="••••••••"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                            />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-                            <Input
-                                id="confirmPassword"
-                                type="password"
-                                placeholder="••••••••"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                required
-                            />
-                        </div>
+                        <FormInput
+                            id="password"
+                            label="Nova Senha"
+                            type="password"
+                            placeholder="••••••••"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                        <FormInput
+                            id="confirmPassword"
+                            label="Confirmar Senha"
+                            type="password"
+                            placeholder="••••••••"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                        />
                         <Button type="submit" className="w-full" disabled={loading}>
                             {loading ? "Atualizando..." : "Atualizar Senha"}
                         </Button>

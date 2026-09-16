@@ -24,7 +24,7 @@ const RECENT_TX_TABLE_ROW_KEYS = [
 
 function CardSectionShell({ children }: { children: React.ReactNode }) {
     return (
-        <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+        <Card padding="none">
             <CardContent className="relative flex flex-col gap-0 p-0">
                 {children}
             </CardContent>
@@ -41,7 +41,7 @@ function CardSectionHeader() {
 }
 
 function SectionTitleRow({
-    titleClassName = "h-3 w-44 max-w-full",
+    titleClassName = "h-4 w-44 max-w-full",
     cta = "none",
 }: {
     titleClassName?: string
@@ -49,21 +49,21 @@ function SectionTitleRow({
 }) {
     if (cta === "responsive") {
         return (
-            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex h-8 min-w-0 items-end">
+            <div className="flex min-w-0 items-center justify-between gap-4">
+                <div className="flex h-6 min-w-0 items-center">
                     <Skeleton className={titleClassName} />
                 </div>
-                <Skeleton className="h-10 w-full rounded-md sm:h-8 sm:w-40" />
+                <Skeleton className="h-8 w-40 shrink-0 rounded-md pointer-coarse:h-10" />
             </div>
         )
     }
     if (cta === "cycle") {
         return (
-            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex h-8 min-w-0 items-end">
+            <div className="flex min-w-0 items-center justify-between gap-4">
+                <div className="flex h-6 min-w-0 items-center">
                     <Skeleton className={titleClassName} />
                 </div>
-                <div className="flex shrink-0 items-center justify-center gap-1 sm:justify-end">
+                <div className="flex shrink-0 items-center justify-end gap-1">
                     <Skeleton className="size-8 shrink-0 rounded-md" />
                     <Skeleton className="h-8 w-[min(100%,9rem)] rounded-md" />
                     <Skeleton className="size-8 shrink-0 rounded-md" />
@@ -72,7 +72,7 @@ function SectionTitleRow({
         )
     }
     return (
-        <div className="flex h-8 min-w-0 items-end">
+        <div className="flex h-6 min-w-0 items-center">
             <Skeleton className={titleClassName} />
         </div>
     )
@@ -92,7 +92,7 @@ function CategorySpendSectionSkeleton() {
                 {CATEGORY_ROW_KEYS.map((key) => (
                     <li
                         key={key}
-                        className="rounded-lg border border-border/50 bg-muted/15 px-3 py-2.5 dark:bg-muted/10"
+                        className="rounded-lg border border-border/50 px-3 py-2.5"
                     >
                         <div className="flex min-w-0 items-center gap-2">
                             <Skeleton className="size-8 shrink-0 rounded-md sm:size-9" />
@@ -115,10 +115,10 @@ function CategorySpendSectionSkeleton() {
 
 function InvoicePanelSkeleton() {
     return (
-        <div className="min-w-0 max-w-full space-y-2">
-            <SectionTitleRow titleClassName="h-3 w-14 rounded-sm" cta="cycle" />
+        <div className="min-w-0 max-w-full space-y-4">
+            <SectionTitleRow titleClassName="h-4 w-14 rounded-sm" cta="cycle" />
 
-            <Card className="gap-0 overflow-hidden border-border/80 py-0 shadow-sm">
+            <Card variant="elevated" padding="none">
                 <CardToolbar>
                     <Skeleton className="h-5 w-36 max-w-[min(100%,12rem)]" />
                 </CardToolbar>
@@ -187,8 +187,8 @@ function MorePeriodSummarySkeleton() {
 
 function InstallmentsBlockSkeleton() {
     return (
-        <div className="min-w-0 max-w-full space-y-2">
-            <SectionTitleRow titleClassName="h-3 w-44 rounded-sm" />
+        <div className="min-w-0 max-w-full space-y-4">
+            <SectionTitleRow titleClassName="h-4 w-44 rounded-sm" />
             <CardSectionShell>
                 <CardSectionHeader />
                 <div className="space-y-3 px-4 py-4 md:px-5 md:py-5">
@@ -229,8 +229,8 @@ function InstallmentsBlockSkeleton() {
 
 function RecentTransactionsSkeleton() {
     return (
-        <div className="min-w-0 max-w-full space-y-2">
-            <SectionTitleRow titleClassName="h-3 w-36 rounded-sm" cta="responsive" />
+        <div className="min-w-0 max-w-full space-y-4">
+            <SectionTitleRow titleClassName="h-4 w-36 rounded-sm" cta="responsive" />
             <div className="md:hidden">
                 <CardSectionShell>
                     <CardSectionHeader />
@@ -264,7 +264,7 @@ function RecentTransactionsSkeleton() {
                     <div className="overflow-x-auto">
                         <Table className="min-w-[640px] text-sm md:min-w-[700px]">
                             <TableHeader className="bg-muted/50">
-                                <TableRow className="border-0 hover:bg-transparent">
+                                <TableRow className="border-0">
                                     <TableHead className="h-11 px-4 py-0">
                                         <Skeleton className="h-3 w-10 rounded-md" />
                                     </TableHead>
@@ -335,7 +335,7 @@ export function CreditCardDetailSkeleton() {
                 <Skeleton className="h-8 w-[min(100%,16rem)] rounded-md" />
             </div>
 
-            <Card className="gap-0 overflow-hidden py-0">
+            <Card padding="none">
                 <CardHeader className="pb-3 pt-4">
                     <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0 flex-1">

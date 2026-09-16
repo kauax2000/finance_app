@@ -1,6 +1,17 @@
 "use client"
 
 import { paymentMethodOptions } from "@/lib/payment-methods"
+import {
+    EmptyState,
+    EmptyStateDescription,
+} from "@/components/ui/empty-state"
+import {
+    Field,
+    FieldControl,
+    FieldDescription,
+    FieldLabel,
+    FieldTitle,
+} from "@/components/ui/field"
 import { useMemo } from "react"
 import Link from "next/link"
 import type {
@@ -10,8 +21,6 @@ import type {
 } from "@/lib/supabase"
 import type { PaymentMethod } from "@/lib/payment-methods"
 import { FormInput } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
     Select,
     SelectContent,
@@ -88,19 +97,16 @@ export function SubscriptionFormFields({
 
     return (
         <div className="space-y-3 pb-1">
-            <div className="space-y-1.5">
-                <Label htmlFor="sub-form-name" className="text-xs">
-                    Nome
-                </Label>
-                <Input
-                    id="sub-form-name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Ex.: Netflix"
-                    className="text-sm"
-                    required
-                />
-            </div>
+            <FormInput
+                id="sub-form-name"
+                fieldSize="sm"
+                label="Nome"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Ex.: Netflix"
+                className="text-sm"
+                required
+            />
             <div className="grid gap-3 sm:grid-cols-2">
                 <FormInput
                     money
@@ -111,10 +117,8 @@ export function SubscriptionFormFields({
                     placeholder="0,00"
                     required
                 />
-                <div className="space-y-1.5">
-                    <Label htmlFor="sub-form-billing" className="text-xs">
-                        Periodicidade
-                    </Label>
+                <Field size="sm">
+                    <FieldLabel>Periodicidade</FieldLabel>
                     <Select
                         value={billingInterval}
                         onValueChange={(v) =>
@@ -122,12 +126,14 @@ export function SubscriptionFormFields({
                         }
                         disabled={saving}
                     >
-                        <SelectTrigger
-                            id="sub-form-billing"
-                            className="h-9 w-full min-w-0 justify-between gap-2 px-2.5 py-0 text-sm font-normal shadow-none [&>svg]:size-4"
-                        >
-                            <SelectValue />
-                        </SelectTrigger>
+                        <FieldControl>
+                            <SelectTrigger
+                                id="sub-form-billing"
+                                className="h-9 w-full min-w-0 justify-between gap-2 px-2.5 py-0 text-sm font-normal shadow-none [&>svg]:size-4"
+                            >
+                                <SelectValue />
+                            </SelectTrigger>
+                        </FieldControl>
                         <SelectContent
                             align="start"
                             className="min-w-[var(--radix-select-trigger-width)] p-1"
@@ -144,37 +150,37 @@ export function SubscriptionFormFields({
                             ))}
                         </SelectContent>
                     </Select>
-                </div>
+                </Field>
             </div>
-            <div className="space-y-1.5">
-                <Label htmlFor="sub-form-billing-date" className="text-xs">
-                    Data da próxima cobrança
-                </Label>
-                <p className="text-2xs text-muted-foreground">
+            {/* A ajuda fica entre o rótulo e o controle, como antes; como
+                `FieldDescription` ela passa a entrar no `aria-describedby`. */}
+            <Field size="sm">
+                <FieldLabel>Data da próxima cobrança</FieldLabel>
+                <FieldDescription>
                     Usamos esta data como referência do ciclo (cartão, débito,
                     etc.). Ela é salva como início e próxima cobrança.
-                </p>
-                <DatePicker
-                    id="sub-form-billing-date"
-                    className="text-sm"
-                    value={parseYmdLocal(billingDate)}
-                    onChange={(d) =>
-                        setBillingDate(
-                            d ? localYmdFromDate(d) : localYmdFromDate(new Date())
-                        )
-                    }
-                    placeholder="Selecione a data"
-                />
-            </div>
-            <div className="space-y-1.5">
-                <Label htmlFor="sub-form-payment-method" className="text-xs">
-                    Forma de cobrança (opcional)
-                </Label>
-                <p className="text-2xs text-muted-foreground">
+                </FieldDescription>
+                <FieldControl>
+                    <DatePicker
+                        id="sub-form-billing-date"
+                        className="text-sm"
+                        value={parseYmdLocal(billingDate)}
+                        onChange={(d) =>
+                            setBillingDate(
+                                d ? localYmdFromDate(d) : localYmdFromDate(new Date())
+                            )
+                        }
+                        placeholder="Selecione a data"
+                    />
+                </FieldControl>
+            </Field>
+            <Field size="sm">
+                <FieldLabel optional>Forma de cobrança</FieldLabel>
+                <FieldDescription>
                     Define como o lançamento automático será registrado (útil para
                     crédito e fatura). Débito automático costuma ser débito em
                     conta.
-                </p>
+                </FieldDescription>
                 <Select
                     value={
                         paymentMethod === null
@@ -193,12 +199,14 @@ export function SubscriptionFormFields({
                     }}
                     disabled={saving}
                 >
-                    <SelectTrigger
-                        id="sub-form-payment-method"
-                        className="h-9 w-full min-w-0 justify-between gap-2 px-2.5 py-0 text-sm font-normal shadow-none [&>svg]:size-4"
-                    >
-                        <SelectValue placeholder="Não informado" />
-                    </SelectTrigger>
+                    <FieldControl>
+                        <SelectTrigger
+                            id="sub-form-payment-method"
+                            className="h-9 w-full min-w-0 justify-between gap-2 px-2.5 py-0 text-sm font-normal shadow-none [&>svg]:size-4"
+                        >
+                            <SelectValue placeholder="Não informado" />
+                        </SelectTrigger>
+                    </FieldControl>
                     <SelectContent
                         align="start"
                         className="min-w-[var(--radix-select-trigger-width)] p-1"
@@ -221,23 +229,29 @@ export function SubscriptionFormFields({
                         ))}
                     </SelectContent>
                 </Select>
-            </div>
+            </Field>
             {paymentMethod === "credit_card" ? (
-                <div className="space-y-1.5">
-                    <Label htmlFor="sub-form-card" className="text-xs">
-                        Cartão de crédito
-                    </Label>
+                <Field size="sm">
+                    {/* Sem cartões não há controle: o `for` apontava para nada, e
+                        aqui vira título. */}
                     {cardSelectOptions.length === 0 ? (
-                        <p className="rounded-lg border border-dashed border-border/80 bg-muted/20 px-3 py-2.5 text-xs text-muted-foreground">
-                            Cadastre um cartão em{" "}
-                            <Link
-                                href={creditCardsHref}
-                                className="font-medium text-foreground underline-offset-2 hover:underline"
-                            >
-                                Cartões de crédito
-                            </Link>{" "}
-                            para vincular esta assinatura.
-                        </p>
+                        <FieldTitle>Cartão de crédito</FieldTitle>
+                    ) : (
+                        <FieldLabel>Cartão de crédito</FieldLabel>
+                    )}
+                    {cardSelectOptions.length === 0 ? (
+                        <EmptyState size="sm">
+                            <EmptyStateDescription>
+                                Cadastre um cartão em{" "}
+                                <Link
+                                    href={creditCardsHref}
+                                    className="font-medium text-foreground underline-offset-2 hover:underline"
+                                >
+                                    Cartões de crédito
+                                </Link>{" "}
+                                para vincular esta assinatura.
+                            </EmptyStateDescription>
+                        </EmptyState>
                     ) : (
                         <Select
                             value={
@@ -252,12 +266,14 @@ export function SubscriptionFormFields({
                             }
                             disabled={saving}
                         >
-                            <SelectTrigger
-                                id="sub-form-card"
-                                className="h-9 w-full min-w-0 justify-between gap-2 px-2.5 py-0 text-sm font-normal shadow-none [&>svg]:size-4"
-                            >
-                                <SelectValue placeholder="Selecione o cartão" />
-                            </SelectTrigger>
+                            <FieldControl>
+                                <SelectTrigger
+                                    id="sub-form-card"
+                                    className="h-9 w-full min-w-0 justify-between gap-2 px-2.5 py-0 text-sm font-normal shadow-none [&>svg]:size-4"
+                                >
+                                    <SelectValue placeholder="Selecione o cartão" />
+                                </SelectTrigger>
+                            </FieldControl>
                             <SelectContent
                                 align="start"
                                 className="min-w-[var(--radix-select-trigger-width)] p-1"
@@ -281,12 +297,14 @@ export function SubscriptionFormFields({
                             </SelectContent>
                         </Select>
                     )}
-                </div>
+                </Field>
             ) : null}
-            <div className="space-y-1.5">
-                <Label className="text-xs">
-                    Categoria de despesa (opcional)
-                </Label>
+            {/* O seletor não repassa `id`: o gatilho dele tem o seu, fixo, e o
+                rótulo aponta para ele explicitamente. */}
+            <Field size="sm">
+                <FieldLabel htmlFor="subscription-category-picker" optional>
+                    Categoria de despesa
+                </FieldLabel>
                 <SubscriptionCategoryPicker
                     value={categoryId}
                     onChange={setCategoryId}
@@ -294,18 +312,16 @@ export function SubscriptionFormFields({
                     categoriesHref={categoriesHref}
                     disabled={saving}
                 />
-            </div>
-            <div className="space-y-1.5">
-                <Label htmlFor="sub-form-notes" className="text-xs">
-                    Observações (opcional)
-                </Label>
-                <Input
-                    id="sub-form-notes"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    className="text-sm"
-                />
-            </div>
+            </Field>
+            <FormInput
+                id="sub-form-notes"
+                fieldSize="sm"
+                label="Observações"
+                optional
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="text-sm"
+            />
         </div>
     )
 }

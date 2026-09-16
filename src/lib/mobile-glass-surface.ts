@@ -28,12 +28,12 @@ export const MOBILE_GLASS_MENU_INNER_CLASSNAME =
     "flex flex-col gap-0.5 px-2.5 py-2.5"
 
 export const MOBILE_GLASS_MENU_ITEM_CLASSNAME = cn(
-    "relative flex h-10 cursor-default select-none items-center gap-2.5 rounded-lg px-2 text-sm font-normal outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-5 [&_svg]:shrink-0"
+    "relative flex h-11 cursor-default select-none items-center gap-2.5 rounded-lg px-2 text-sm font-normal outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-5 [&_svg]:shrink-0"
 )
 
 export const MOBILE_GLASS_FAB_MENU_ITEM_CLASSNAME = cn(
     MOBILE_GLASS_MENU_ITEM_CLASSNAME,
-    "h-11 w-full px-3"
+    "w-full px-3"
 )
 
 export const MOBILE_GLASS_MENU_ROW_CLASSNAME = cn(

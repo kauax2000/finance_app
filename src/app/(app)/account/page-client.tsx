@@ -1,6 +1,12 @@
 "use client"
-/* eslint-disable @next/next/no-img-element -- profile avatars use data URLs / external metadata URLs */
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
+import { formatDateLongPtBr } from "@/lib/transaction-date"
 import { ROUTES } from "@/config/navigation"
 import { useState } from "react"
 import Link from "next/link"
@@ -35,11 +41,7 @@ export default function AccountPage() {
         user?.email || userName
     )
     const createdAt = user?.created_at
-        ? new Date(user.created_at).toLocaleDateString("pt-BR", {
-              day: "2-digit",
-              month: "long",
-              year: "numeric",
-          })
+        ? formatDateLongPtBr(user.created_at)
         : "N/A"
 
     const currentAvatarUrl = user?.user_metadata?.avatar_url
@@ -50,38 +52,28 @@ export default function AccountPage() {
 
     return (
         <div className="min-w-0 max-w-full space-y-5">
-            <div className="min-w-0 space-y-2">
-                <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Perfil
-                        </p>
-                    </div>
-                </div>
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <PageSection>
+                <PageSectionHeader>
+                    <PageSectionTitle>Perfil</PageSectionTitle>
+                </PageSectionHeader>
+                <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <div className="flex items-center justify-between gap-3 px-4 py-3 sm:py-3.5">
                             <div className="flex min-w-0 flex-1 items-center gap-3">
-                                <div className="relative flex size-12 shrink-0 select-none overflow-hidden rounded-lg bg-muted">
+                                <Avatar size="lg" shape="rounded" className="shrink-0">
                                     {currentAvatarUrl ? (
-                                        <img
-                                            src={currentAvatarUrl}
-                                            alt={userName}
-                                            className="aspect-square size-full object-cover"
-                                            decoding="async"
-                                        />
-                                    ) : (
-                                        <div
-                                            className={cn(
-                                                "flex size-full items-center justify-center text-sm font-semibold",
-                                                avatarTone.surface,
-                                                avatarTone.ink
-                                            )}
-                                        >
-                                            {getInitials(userName)}
-                                        </div>
-                                    )}
-                                </div>
+                                        <AvatarImage src={currentAvatarUrl} alt={userName} />
+                                    ) : null}
+                                    <AvatarFallback
+                                        className={cn(
+                                            "font-semibold",
+                                            avatarTone.surface,
+                                            avatarTone.ink
+                                        )}
+                                    >
+                                        {getInitials(userName)}
+                                    </AvatarFallback>
+                                </Avatar>
                                 <div className="min-w-0">
                                     <p className="truncate text-sm font-medium">{userName}</p>
                                     <p className="truncate text-xs text-muted-foreground">
@@ -96,13 +88,13 @@ export default function AccountPage() {
                                             type="button"
                                             variant="tertiary"
                                             size="icon-lg"
-                                            className="size-9 shrink-0 text-muted-foreground hover:text-foreground"
+                                            className="size-9 shrink-0 text-muted-foreground hover:text-foreground active:text-foreground"
                                             aria-label="Mais opções da conta"
                                         >
                                             <EllipsisVerticalIcon className="size-4" aria-hidden />
                                         </Button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-48">
+                                    <DropdownMenuContent align="end" size="md">
                                         <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
                                             <PencilIcon className="mr-2 h-4 w-4" />
                                             Editar perfil
@@ -125,7 +117,7 @@ export default function AccountPage() {
                                             onClick={() => setDeleteAccountOpen(true)}
                                             className="cursor-pointer gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
                                         >
-                                            <TrashIcon className="h-4 w-4" />
+                                            <TrashIcon />
                                             Excluir conta
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
@@ -138,21 +130,17 @@ export default function AccountPage() {
                         </CardNote>
                     </CardContent>
                 </Card>
-            </div>
+            </PageSection>
 
-            <div className="min-w-0 space-y-2">
-                <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Segurança
-                        </p>
-                    </div>
-                </div>
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <PageSection>
+                <PageSectionHeader>
+                    <PageSectionTitle>Segurança</PageSectionTitle>
+                </PageSectionHeader>
+                <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <Link
                             href={ROUTES.ACCOUNT_SESSIONS}
-                            className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 transition-colors hover:bg-muted/30 sm:py-3.5"
+                            className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 transition-colors hover:bg-muted/30 active:bg-muted/30 sm:py-3.5"
                         >
                             <div className="flex min-w-0 flex-1 items-center gap-3">
                                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40">
@@ -169,7 +157,7 @@ export default function AccountPage() {
                         </Link>
                         <Link
                             href={ROUTES.ACCOUNT_ACTIVITY}
-                            className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted/30 sm:py-3.5"
+                            className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted/30 active:bg-muted/30 sm:py-3.5"
                         >
                             <div className="flex min-w-0 flex-1 items-center gap-3">
                                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40">
@@ -186,7 +174,7 @@ export default function AccountPage() {
                         </Link>
                     </CardContent>
                 </Card>
-            </div>
+            </PageSection>
 
             <EditProfileDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} />
             <ChangePasswordDialog

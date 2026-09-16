@@ -1,6 +1,12 @@
 "use client"
 
 import { currencyBRL } from "@/lib/formatters"
+import {
+    DescriptionDetails,
+    DescriptionList,
+    DescriptionListItem,
+    DescriptionTerm,
+} from "@/components/ui/description-list"
 import Link from "next/link"
 import type { CreditCard } from "@/lib/supabase"
 import type { CardCycleSnapshot } from "@/lib/credit-card-billing"
@@ -50,8 +56,9 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
 
     return (
         <Card
+            padding="none"
             className={cn(
-                "gap-0 overflow-hidden py-0 transition-shadow",
+                "transition-shadow",
                 !card.is_active && "opacity-[0.82]"
             )}
         >
@@ -90,7 +97,7 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                                 showInactiveBadge={false}
                             />
                         </CreditCardFaceTilt>
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors group-hover:text-foreground">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors group-hover:text-foreground active:text-foreground">
                             Ver detalhes
                             <ChevronRightIcon className="size-3.5 shrink-0 opacity-85 transition-transform group-hover:translate-x-0.5" aria-hidden />
                         </span>
@@ -100,28 +107,32 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                     {snapshot ? (
                         <>
                             <div className="flex flex-col gap-2">
-                                <div className="rounded-lg border border-border/60 bg-muted/15 px-2.5 py-2 dark:bg-muted/10">
-                                    <p className="text-2xs font-medium text-muted-foreground">
-                                        Fatura aberta (planejada)
-                                    </p>
-                                    <p className="mt-0.5 text-base font-semibold tabular-nums text-foreground">
-                                        {currencyBRL(
-                                            snapshot.committedOpenTotal
-                                        )}
-                                    </p>
-                                    {(snapshot.projectedOpenInstallmentsTotal ?? 0) >
-                                    0 ? (
-                                        <p className="mt-1 text-2xs leading-snug text-muted-foreground">
-                                            Total registrado{" "}
-                                            {currencyBRL(snapshot.openTotal)}
-                                            {" · "}
-                                            Parcelas previstas{" "}
-                                            {currencyBRL(
-                                                snapshot.projectedOpenInstallmentsTotal
-                                            )}
-                                        </p>
-                                    ) : null}
-                                </div>
+                                <DescriptionList className="gap-0">
+                                    <DescriptionListItem>
+                                        <DescriptionTerm className="text-2xs font-medium text-muted-foreground">
+                                            Fatura aberta (planejada)
+                                        </DescriptionTerm>
+                                        <DescriptionDetails>
+                                            <p className="mt-0.5 text-base font-semibold tabular-nums text-foreground">
+                                                {currencyBRL(
+                                                    snapshot.committedOpenTotal
+                                                )}
+                                            </p>
+                                            {(snapshot.projectedOpenInstallmentsTotal ?? 0) >
+                                            0 ? (
+                                                <p className="mt-1 text-2xs leading-snug text-muted-foreground">
+                                                    Total registrado{" "}
+                                                    {currencyBRL(snapshot.openTotal)}
+                                                    {" · "}
+                                                    Parcelas previstas{" "}
+                                                    {currencyBRL(
+                                                        snapshot.projectedOpenInstallmentsTotal
+                                                    )}
+                                                </p>
+                                            ) : null}
+                                        </DescriptionDetails>
+                                    </DescriptionListItem>
+                                </DescriptionList>
                             </div>
 
                             <div className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-background/80 px-2.5 py-2 text-2xs dark:bg-background/50">
@@ -190,7 +201,7 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
 
 export function CreditCardTileSkeleton() {
     return (
-        <Card className="gap-0 overflow-hidden py-0">
+        <Card padding="none">
             <div className="flex items-start justify-between gap-3 border-b border-border/50 px-4 pb-3 pt-4">
                 <div className="min-w-0 flex-1 pr-2">
                     <Skeleton className="h-4 w-[min(100%,14rem)]" />
@@ -204,7 +215,7 @@ export function CreditCardTileSkeleton() {
                 </div>
                 <CardContent className="min-w-0 flex-1 space-y-3 border-0 p-0">
                     <div className="flex flex-col gap-2">
-                        <div className="rounded-lg border border-border/60 bg-muted/15 px-2.5 py-2 dark:bg-muted/10">
+                        <div>
                             <Skeleton className="h-2.5 w-[min(100%,11rem)] max-w-full" />
                             <Skeleton className="mt-0.5 h-6 w-36 max-w-[min(100%,55%)] tabular-nums" />
                         </div>

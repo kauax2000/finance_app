@@ -9,7 +9,6 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { transactionSegmentContainerClassName } from "@/components/transactions/transaction-type-segment"
 import { cn } from "@/lib/utils"
 
 function ToolbarSkeleton() {
@@ -18,7 +17,7 @@ function ToolbarSkeleton() {
             <div className="flex min-w-0 flex-row items-center gap-2 md:contents">
                 <div
                     className={cn(
-                        transactionSegmentContainerClassName,
+                        "inline-flex h-8 w-full items-stretch gap-0.5 rounded-lg bg-muted p-0.5 pointer-coarse:h-10 md:w-auto",
                         "min-w-0 flex-1 md:flex-initial md:shrink-0"
                     )}
                     aria-hidden
@@ -90,12 +89,12 @@ function TableSkeleton({ rowCount }: { rowCount: number }) {
         bodyRows.push(<DataRowSkeleton key={`row-${i}`} seed={i} />)
     }
     return (
-        <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+        <Card padding="none">
             <CardContent className="relative flex flex-col p-0">
                 <div className="min-w-0 overflow-hidden rounded-t-xl">
                     <Table className="min-w-[720px] text-sm">
                         <TableHeader className="bg-muted/50 [&_tr]:border-b-0">
-                            <TableRow className="border-0 hover:bg-transparent [&>th]:border-b [&>th]:border-border">
+                            <TableRow className="border-0 [&>th]:border-b [&>th]:border-border">
                                 <TableHead className="w-10 px-2 py-0 md:w-11 md:px-3">
                                     <Skeleton className="mx-auto size-4 rounded-sm" />
                                 </TableHead>

@@ -1,7 +1,19 @@
 "use client"
 
-import { currencyBRL } from "@/lib/formatters"
-import { ArrowDownIcon, ArrowUpIcon, ArrowsUpDownIcon, PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
+import {
+    EmptyState,
+    EmptyStateActions,
+    EmptyStateDescription,
+    EmptyStateIcon,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
+import { currencyBRL, numberBR } from "@/lib/formatters"
+import {
+    TablePanel,
+    TablePanelFooter,
+    TablePanelToolbar,
+} from "@/components/ui/table-panel"
+import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ArrowPathRoundedSquareIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
@@ -13,7 +25,10 @@ import {
     type WorkspaceSubscriptionListRow,
 } from "@/lib/supabase"
 import { toastError, toastSuccess } from "@/lib/toast"
-import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
+import {
+    Card,
+    CardContent,
+} from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -70,28 +85,6 @@ type SortDir = SubscriptionSortDir
 type PendingDelete =
     | { mode: "single"; subscription: WorkspaceSubscriptionListRow }
     | { mode: "bulk"; ids: string[] }
-
-function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
-    if (!active) {
-        return (
-            <ArrowsUpDownIcon
-                className="ml-1 size-3.5 shrink-0 text-muted-foreground"
-                aria-hidden
-            />
-        )
-    }
-    return dir === "asc" ? (
-        <ArrowUpIcon
-            className="ml-1 size-3.5 shrink-0 text-foreground"
-            aria-hidden
-        />
-    ) : (
-        <ArrowDownIcon
-            className="ml-1 size-3.5 shrink-0 text-foreground"
-            aria-hidden
-        />
-    )
-}
 
 function compareSubscriptions(
     a: WorkspaceSubscriptionListRow,
@@ -393,7 +386,7 @@ export default function SubscriptionsPageClient() {
         toastSuccess(
             n === 1
                 ? "Assinatura removida."
-                : `${n.toLocaleString("pt-BR")} assinaturas removidas.`
+                : `${numberBR(n)} assinaturas removidas.`
         )
         setPendingDelete(null)
         setSelectedIds(new Set())
@@ -528,26 +521,25 @@ export default function SubscriptionsPageClient() {
             ) : null}
 
             {!hasNoSubscriptions && !hasNoMatches ? (
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
-                    <CardContent className="relative flex flex-col p-0">
-                        {selectedIds.size > 0 ? (
-                            <CardToolbar>
+                <TablePanel
+                    toolbar={
+                        selectedIds.size > 0 ? (
+                            <TablePanelToolbar className="px-0">
                                 <div
                                     className="flex flex-col gap-3 px-3 py-3 sm:hidden"
-                                    role="toolbar"
                                     aria-label="Ações da seleção"
                                 >
                                     <div className="flex items-start justify-between gap-3">
                                         <p className="min-w-0 pt-0.5 text-sm font-medium leading-snug text-foreground">
                                             {selectedIds.size === 1
                                                 ? "1 selecionada"
-                                                : `${selectedIds.size.toLocaleString("pt-BR")} selecionadas`}
+                                                : `${numberBR(selectedIds.size)} selecionadas`}
                                         </p>
                                         <Button
                                             type="button"
                                             variant="tertiary"
                                             size="xl"
-                                            className="shrink-0 px-3 text-xs text-muted-foreground hover:text-foreground"
+                                            className="shrink-0 px-3 text-xs text-muted-foreground hover:text-foreground active:text-foreground"
                                             onClick={() =>
                                                 setSelectedIds(new Set())
                                             }
@@ -597,13 +589,12 @@ export default function SubscriptionsPageClient() {
                                 </div>
                                 <div
                                     className="hidden px-4 py-2 sm:flex sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:gap-2"
-                                    role="toolbar"
                                     aria-label="Ações da seleção"
                                 >
                                     <span className="mr-auto text-xs tabular-nums text-muted-foreground">
                                         {selectedIds.size === 1
                                             ? "1 selecionada"
-                                            : `${selectedIds.size.toLocaleString("pt-BR")} selecionadas`}
+                                            : `${numberBR(selectedIds.size)} selecionadas`}
                                     </span>
                                     <div className="flex flex-wrap items-center justify-end gap-2">
                                         <Button
@@ -649,408 +640,320 @@ export default function SubscriptionsPageClient() {
                                         </Button>
                                     </div>
                                 </div>
-                            </CardToolbar>
-                        ) : null}
-                        <div
-                            className={cn(
-                                "min-w-0 overflow-hidden",
-                                selectedIds.size === 0 && "rounded-t-xl"
-                            )}
-                        >
-                            <Table className="min-w-[720px] text-sm">
-                                <TableHeader className="sticky top-0 z-10 bg-muted/50 [&_tr]:border-b-0">
-                                    <TableRow className="border-0 hover:bg-transparent [&>th]:border-b [&>th]:border-border">
-                                        <TableHead className="w-10 px-2 py-0 md:w-11 md:px-3">
-                                            <Checkbox
-                                                aria-label="Selecionar todas na lista filtrada"
-                                                checked={
-                                                    allPageSelected
-                                                        ? true
-                                                        : somePageSelected
-                                                          ? "indeterminate"
-                                                          : false
-                                                }
-                                                onCheckedChange={(v) => {
-                                                    if (v === true) {
-                                                        setSelectedIds(
-                                                            new Set(pageIds)
-                                                        )
-                                                    } else {
-                                                        setSelectedIds(
-                                                            new Set()
-                                                        )
-                                                    }
-                                                }}
-                                            />
-                                        </TableHead>
-                                        <TableHead
-                                            className="h-11 px-4 py-0 align-middle"
-                                            aria-sort={
-                                                sortKey === "name"
-                                                    ? sortDir === "asc"
-                                                        ? "ascending"
-                                                        : "descending"
-                                                    : "none"
+                            </TablePanelToolbar>
+                        ) : null
+                    }
+                >
+                    <div className="min-w-0 overflow-hidden">
+                        <Table className="min-w-[720px] text-sm">
+                            <TableHeader variant="muted" sticky className="[&_tr]:border-b-0">
+                                <TableRow className="border-0 [&>th]:border-b [&>th]:border-border">
+                                    <TableHead className="w-10 px-2 py-0 md:w-11 md:px-3">
+                                        <Checkbox
+                                            aria-label="Selecionar todas na lista filtrada"
+                                            checked={
+                                                allPageSelected
+                                                    ? true
+                                                    : somePageSelected
+                                                      ? "indeterminate"
+                                                      : false
                                             }
-                                        >
-                                            <button
-                                                type="button"
-                                                className={cn(
-                                                    "-mx-1 inline-flex items-center rounded-md px-1 py-1 text-xs font-semibold tracking-wide outline-none transition-colors hover:bg-muted/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                                                    sortKey === "name"
-                                                        ? "text-foreground"
-                                                        : "text-muted-foreground hover:text-foreground"
-                                                )}
-                                                onClick={() =>
-                                                    toggleSort("name")
-                                                }
-                                            >
-                                                Assinatura
-                                                <SortIndicator
-                                                    active={sortKey === "name"}
-                                                    dir={sortDir}
-                                                />
-                                            </button>
-                                        </TableHead>
-                                        <TableHead
-                                            className="h-11 px-4 py-0 align-middle"
-                                            aria-sort={
-                                                sortKey === "amount"
-                                                    ? sortDir === "asc"
-                                                        ? "ascending"
-                                                        : "descending"
-                                                    : "none"
-                                            }
-                                        >
-                                            <button
-                                                type="button"
-                                                className={cn(
-                                                    "-mx-1 inline-flex items-center rounded-md px-1 py-1 text-xs font-semibold tracking-wide outline-none transition-colors hover:bg-muted/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                                                    sortKey === "amount"
-                                                        ? "text-foreground"
-                                                        : "text-muted-foreground hover:text-foreground"
-                                                )}
-                                                onClick={() =>
-                                                    toggleSort("amount")
-                                                }
-                                            >
-                                                Valor
-                                                <SortIndicator
-                                                    active={
-                                                        sortKey === "amount"
-                                                    }
-                                                    dir={sortDir}
-                                                />
-                                            </button>
-                                        </TableHead>
-                                        <TableHead className="hidden h-11 px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground sm:table-cell">
-                                            Periodicidade
-                                        </TableHead>
-                                        <TableHead
-                                            className="h-11 px-4 py-0 align-middle"
-                                            aria-sort={
-                                                sortKey === "next_billing_date"
-                                                    ? sortDir === "asc"
-                                                        ? "ascending"
-                                                        : "descending"
-                                                    : "none"
-                                            }
-                                        >
-                                            <button
-                                                type="button"
-                                                className={cn(
-                                                    "-mx-1 inline-flex items-center rounded-md px-1 py-1 text-xs font-semibold tracking-wide outline-none transition-colors hover:bg-muted/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                                                    sortKey ===
-                                                        "next_billing_date"
-                                                        ? "text-foreground"
-                                                        : "text-muted-foreground hover:text-foreground"
-                                                )}
-                                                onClick={() =>
-                                                    toggleSort(
-                                                        "next_billing_date"
+                                            onCheckedChange={(v) => {
+                                                if (v === true) {
+                                                    setSelectedIds(
+                                                        new Set(pageIds)
+                                                    )
+                                                } else {
+                                                    setSelectedIds(
+                                                        new Set()
                                                     )
                                                 }
-                                            >
-                                                Próxima
-                                                <SortIndicator
-                                                    active={
-                                                        sortKey ===
-                                                        "next_billing_date"
+                                            }}
+                                        />
+                                    </TableHead>
+                                    <TableHead
+                                        className="h-11 px-4 py-0 align-middle"
+                                        sort={sortKey === "name" ? sortDir : "none"}
+                                        onSort={() => toggleSort("name")}
+                                    >
+                                        Assinatura
+                                    </TableHead>
+                                    <TableHead
+                                        className="h-11 px-4 py-0 align-middle"
+                                        sort={sortKey === "amount" ? sortDir : "none"}
+                                        onSort={() => toggleSort("amount")}
+                                    >
+                                        Valor
+                                    </TableHead>
+                                    <TableHead className="hidden h-11 px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground sm:table-cell">
+                                        Periodicidade
+                                    </TableHead>
+                                    <TableHead
+                                        className="h-11 px-4 py-0 align-middle"
+                                        sort={sortKey === "next_billing_date" ? sortDir : "none"}
+                                        onSort={() => toggleSort("next_billing_date")}
+                                    >
+                                        Próxima
+                                    </TableHead>
+                                    <TableHead className="hidden h-11 px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground md:table-cell">
+                                        Categoria
+                                    </TableHead>
+                                    <TableHead className="h-11 min-w-[4.5rem] px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground">
+                                        Status
+                                    </TableHead>
+                                    <TableHead className="h-11 w-[5.25rem] px-3 py-0 pr-4 text-left text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                        Ações
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody className="[&_tr:last-child]:border-b-0">
+                                {filteredSorted.map((s) => {
+                                    const txLine = formatSubscriptionTxSummary(
+                                        s.id,
+                                        billingStats
+                                    )
+                                    return (
+                                        <TableRow
+                                            key={s.id}
+                                            className={cn(
+                                                "cursor-pointer border-border/80 transition-colors hover:bg-muted/30",
+                                                !s.is_active && "opacity-70"
+                                            )}
+                                            onClick={() => openDetail(s)}
+                                        >
+                                            <TableCell className="w-10 px-2 py-3 md:w-11 md:px-3">
+                                                <Checkbox
+                                                    aria-label={`Selecionar ${s.name}`}
+                                                    checked={selectedIds.has(
+                                                        s.id
+                                                    )}
+                                                    onCheckedChange={(
+                                                        v
+                                                    ) => {
+                                                        setSelectedIds(
+                                                            (prev) => {
+                                                                const next =
+                                                                    new Set(
+                                                                        prev
+                                                                    )
+                                                                if (
+                                                                    v ===
+                                                                    true
+                                                                ) {
+                                                                    next.add(
+                                                                        s.id
+                                                                    )
+                                                                } else {
+                                                                    next.delete(
+                                                                        s.id
+                                                                    )
+                                                                }
+                                                                return next
+                                                            }
+                                                        )
+                                                    }}
+                                                    onClick={(e) =>
+                                                        e.stopPropagation()
                                                     }
-                                                    dir={sortDir}
                                                 />
-                                            </button>
-                                        </TableHead>
-                                        <TableHead className="hidden h-11 px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground md:table-cell">
-                                            Categoria
-                                        </TableHead>
-                                        <TableHead className="h-11 min-w-[4.5rem] px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground">
-                                            Status
-                                        </TableHead>
-                                        <TableHead className="h-11 w-[5.25rem] px-3 py-0 pr-4 text-left text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                            Ações
-                                        </TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody className="[&_tr:last-child]:border-b-0">
-                                    {filteredSorted.map((s) => {
-                                        const txLine = formatSubscriptionTxSummary(
-                                            s.id,
-                                            billingStats
-                                        )
-                                        return (
-                                            <TableRow
-                                                key={s.id}
-                                                className={cn(
-                                                    "cursor-pointer border-border/80 transition-colors hover:bg-muted/30",
-                                                    !s.is_active && "opacity-70"
+                                            </TableCell>
+                                            <TableCell className="max-w-[200px] px-4 py-3 text-left lg:max-w-[280px]">
+                                                <div className="flex min-w-0 flex-col gap-0.5">
+                                                    <span
+                                                        className="font-medium [overflow-wrap:anywhere]"
+                                                        title={s.name}
+                                                    >
+                                                        {s.name}
+                                                    </span>
+                                                    <span className="text-2xs text-muted-foreground">
+                                                        {txLine}
+                                                    </span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="whitespace-nowrap px-4 py-3 tabular-nums">
+                                                {currencyBRL(
+                                                    Number(s.amount)
                                                 )}
-                                                onClick={() => openDetail(s)}
-                                            >
-                                                <TableCell className="w-10 px-2 py-3 md:w-11 md:px-3">
-                                                    <Checkbox
-                                                        aria-label={`Selecionar ${s.name}`}
-                                                        checked={selectedIds.has(
-                                                            s.id
-                                                        )}
-                                                        onCheckedChange={(
-                                                            v
-                                                        ) => {
-                                                            setSelectedIds(
-                                                                (prev) => {
-                                                                    const next =
-                                                                        new Set(
-                                                                            prev
-                                                                        )
-                                                                    if (
-                                                                        v ===
-                                                                        true
-                                                                    ) {
-                                                                        next.add(
-                                                                            s.id
-                                                                        )
-                                                                    } else {
-                                                                        next.delete(
-                                                                            s.id
-                                                                        )
-                                                                    }
-                                                                    return next
+                                            </TableCell>
+                                            <TableCell className="hidden px-4 py-3 text-muted-foreground sm:table-cell">
+                                                {subscriptionBillingIntervalLabel(
+                                                    s.billing_interval
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="whitespace-nowrap px-4 py-3 tabular-nums text-muted-foreground">
+                                                {formatSubscriptionChargeDatePtBr(
+                                                    s.next_billing_date ??
+                                                        s.start_date
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="hidden max-w-[8rem] px-4 py-3 md:table-cell">
+                                                {s.category ? (
+                                                    <span className="inline-flex max-w-full items-center gap-1.5">
+                                                        <span
+                                                            className="size-2 shrink-0 rounded-full"
+                                                            style={{
+                                                                backgroundColor:
+                                                                    s
+                                                                        .category
+                                                                        .color ||
+                                                                    "var(--muted-foreground)",
+                                                            }}
+                                                            aria-hidden
+                                                        />
+                                                        <span className="truncate">
+                                                            {
+                                                                s.category
+                                                                    .name
+                                                            }
+                                                        </span>
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-muted-foreground">
+                                                        —
+                                                    </span>
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="px-4 py-3">
+                                                <span
+                                                    className={cn(
+                                                        "inline-flex items-center justify-center rounded-full border-0 px-2.5 py-0.5 text-xs font-medium",
+                                                        s.is_active
+                                                            ? tagChipSuccess
+                                                            : "bg-muted text-muted-foreground"
+                                                    )}
+                                                >
+                                                    {s.is_active
+                                                        ? "Ativa"
+                                                        : "Pausada"}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="px-3 py-3 pr-4 text-left">
+                                                <div className="flex items-center justify-start gap-1">
+                                                    <Button
+                                                        variant="tertiary"
+                                                        size="icon-sm"
+                                                        type="button"
+                                                        className="size-7"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            openDetail(
+                                                                s,
+                                                                {
+                                                                    edit: true,
                                                                 }
                                                             )
                                                         }}
-                                                        onClick={(e) =>
-                                                            e.stopPropagation()
-                                                        }
-                                                    />
-                                                </TableCell>
-                                                <TableCell className="max-w-[200px] px-4 py-3 text-left lg:max-w-[280px]">
-                                                    <div className="flex min-w-0 flex-col gap-0.5">
-                                                        <span
-                                                            className="font-medium [overflow-wrap:anywhere]"
-                                                            title={s.name}
-                                                        >
-                                                            {s.name}
-                                                        </span>
-                                                        <span className="text-2xs text-muted-foreground">
-                                                            {txLine}
-                                                        </span>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="whitespace-nowrap px-4 py-3 tabular-nums">
-                                                    {currencyBRL(
-                                                        Number(s.amount)
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="hidden px-4 py-3 text-muted-foreground sm:table-cell">
-                                                    {subscriptionBillingIntervalLabel(
-                                                        s.billing_interval
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="whitespace-nowrap px-4 py-3 tabular-nums text-muted-foreground">
-                                                    {formatSubscriptionChargeDatePtBr(
-                                                        s.next_billing_date ??
-                                                            s.start_date
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="hidden max-w-[8rem] px-4 py-3 md:table-cell">
-                                                    {s.category ? (
-                                                        <span className="inline-flex max-w-full items-center gap-1.5">
-                                                            <span
-                                                                className="size-2 shrink-0 rounded-full"
-                                                                style={{
-                                                                    backgroundColor:
-                                                                        s
-                                                                            .category
-                                                                            .color ||
-                                                                        "var(--muted-foreground)",
-                                                                }}
-                                                                aria-hidden
-                                                            />
-                                                            <span className="truncate">
-                                                                {
-                                                                    s.category
-                                                                        .name
-                                                                }
-                                                            </span>
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-muted-foreground">
-                                                            —
-                                                        </span>
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="px-4 py-3">
-                                                    <span
-                                                        className={cn(
-                                                            "inline-flex items-center justify-center rounded-full border-0 px-2.5 py-0.5 text-xs font-medium",
-                                                            s.is_active
-                                                                ? tagChipSuccess
-                                                                : "bg-muted text-muted-foreground"
-                                                        )}
                                                     >
-                                                        {s.is_active
-                                                            ? "Ativa"
-                                                            : "Pausada"}
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell className="px-3 py-3 pr-4 text-left">
-                                                    <div className="flex items-center justify-start gap-1">
-                                                        <Button
-                                                            variant="tertiary"
-                                                            size="icon-sm"
-                                                            type="button"
-                                                            className="size-7"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation()
-                                                                openDetail(
-                                                                    s,
-                                                                    {
-                                                                        edit: true,
-                                                                    }
-                                                                )
-                                                            }}
-                                                        >
-                                                            <PencilIcon className="size-3.5" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="tertiary"
-                                                            size="icon-sm"
-                                                            type="button"
-                                                            className="size-7 text-destructive hover:text-destructive"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation()
-                                                                setPendingDelete(
-                                                                    {
-                                                                        mode: "single",
-                                                                        subscription:
-                                                                            s,
-                                                                    }
-                                                                )
-                                                            }}
-                                                        >
-                                                            <TrashIcon className="size-3.5" />
-                                                        </Button>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
+                                                        <PencilIcon className="size-3.5" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="destructive"
+                                                        size="icon-sm"
+                                                        type="button"
+                                                        className="size-7"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            setPendingDelete(
+                                                                {
+                                                                    mode: "single",
+                                                                    subscription:
+                                                                        s,
+                                                                }
+                                                            )
+                                                        }}
+                                                    >
+                                                        <TrashIcon className="size-3.5" />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    )
+                                })}
+                            </TableBody>
+                        </Table>
+                    </div>
+                    <TablePanelFooter className="px-3 sm:px-4">
+                        <p className="text-xs leading-relaxed text-muted-foreground">
+                            {filteredSorted.length === 0 ? (
+                                "Nenhuma assinatura na lista filtrada."
+                            ) : statusFilter !== "all" ? (
+                                <>
+                                    <span className="text-foreground/90">
+                                        {numberBR(filteredSorted.length)}
+                                    </span>
+                                    <span className="mx-1 text-border">
+                                        ·
+                                    </span>
+                                    <span>
+                                        na lista filtrada (total no espaço:{" "}
+                                        {numberBR(rows.length)}
                                         )
-                                    })}
-                                </TableBody>
-                            </Table>
-                        </div>
-                        <CardNote className="flex-col rounded-b-xl px-3 py-2.5 sm:px-4">
-                            <p className="text-xs leading-relaxed text-muted-foreground">
-                                {filteredSorted.length === 0 ? (
-                                    "Nenhuma assinatura na lista filtrada."
-                                ) : statusFilter !== "all" ? (
-                                    <>
-                                        <span className="text-foreground/90">
-                                            {filteredSorted.length.toLocaleString(
-                                                "pt-BR"
-                                            )}
-                                        </span>
-                                        <span className="mx-1 text-border">
-                                            ·
-                                        </span>
-                                        <span>
-                                            na lista filtrada (total no espaço:{" "}
-                                            {rows.length.toLocaleString(
-                                                "pt-BR"
-                                            )}
-                                            )
-                                        </span>
-                                    </>
-                                ) : (
-                                    <>
-                                        {rows.length.toLocaleString("pt-BR")}{" "}
-                                        {rows.length === 1
-                                            ? "assinatura"
-                                            : "assinaturas"}
-                                    </>
-                                )}
-                            </p>
-                        </CardNote>
-                    </CardContent>
-                </Card>
+                                    </span>
+                                </>
+                            ) : (
+                                <>
+                                    {numberBR(rows.length)}{" "}
+                                    {rows.length === 1
+                                        ? "assinatura"
+                                        : "assinaturas"}
+                                </>
+                            )}
+                        </p>
+                    </TablePanelFooter>
+                </TablePanel>
             ) : hasNoMatches ? (
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent
-                        className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
+                        className="px-4 py-12 md:py-14"
                         role="status"
                         aria-live="polite"
                     >
-                        <div
-                            className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                            aria-hidden
-                        >
-                            <MagnifyingGlassIcon className="size-7 text-muted-foreground" />
-                        </div>
-                        <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                            Nenhuma assinatura com esses filtros
-                        </h2>
-                        <p className="mb-6 max-w-md text-center text-sm text-muted-foreground">
-                            Tente outro status ou ajuste a ordenação.
-                        </p>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="xl"
-                            className="min-w-[10rem] text-xs"
-                            onClick={resetFilters}
-                        >
-                            Limpar filtros
-                        </Button>
+                        <EmptyState variant="plain" size="lg">
+                            <EmptyStateIcon><MagnifyingGlassIcon aria-hidden /></EmptyStateIcon>
+                            <EmptyStateTitle>Nenhuma assinatura com esses filtros</EmptyStateTitle>
+                            <EmptyStateDescription>
+                                Tente outro status ou ajuste a ordenação.
+                            </EmptyStateDescription>
+                            <EmptyStateActions>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="xl"
+                                    className="min-w-[10rem] text-xs"
+                                    onClick={resetFilters}
+                                >
+                                    Limpar filtros
+                                </Button>
+                            </EmptyStateActions>
+                        </EmptyState>
                     </CardContent>
                 </Card>
             ) : (
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent
-                        className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
+                        className="px-4 py-12 md:py-14"
                         role="status"
                         aria-live="polite"
                     >
-                        <div
-                            className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/60"
-                            aria-hidden
-                        >
-                            <ArrowPathRoundedSquareIcon className="size-7 text-muted-foreground" />
-                        </div>
-                        <h2 className="mb-2 text-center text-base font-semibold tracking-tight">
-                            Cadastre suas assinaturas
-                        </h2>
-                        <p className="mb-6 max-w-md text-center text-sm text-muted-foreground">
-                            Registre serviços recorrentes para acompanhar valores,
-                            datas de cobrança e vínculo com transações.
-                        </p>
-                        <Button
-                            type="button"
-                            size="xl"
-                            className="gap-1.5"
-                            onClick={openCreate}
-                        >
-                            <PlusIcon className="size-3.5" />
-                            Nova assinatura
-                        </Button>
+                        <EmptyState variant="plain" size="lg">
+                            <EmptyStateIcon><ArrowPathRoundedSquareIcon aria-hidden /></EmptyStateIcon>
+                            <EmptyStateTitle>Cadastre suas assinaturas</EmptyStateTitle>
+                            <EmptyStateDescription>
+                                Registre serviços recorrentes para acompanhar valores,
+                                datas de cobrança e vínculo com transações.
+                            </EmptyStateDescription>
+                            <EmptyStateActions>
+                                <Button
+                                    type="button"
+                                    size="xl"
+                                    className="gap-1.5"
+                                    onClick={openCreate}
+                                >
+                                    <PlusIcon className="size-3.5" />
+                                    Nova assinatura
+                                </Button>
+                            </EmptyStateActions>
+                        </EmptyState>
                     </CardContent>
                 </Card>
             )}
@@ -1065,7 +968,7 @@ export default function SubscriptionsPageClient() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>
                             {pendingDelete?.mode === "bulk"
-                                ? `Excluir ${pendingDelete.ids.length.toLocaleString("pt-BR")} assinaturas?`
+                                ? `Excluir ${numberBR(pendingDelete.ids.length)} assinaturas?`
                                 : "Excluir assinatura?"}
                         </AlertDialogTitle>
                         <AlertDialogDescription asChild>
@@ -1105,9 +1008,7 @@ export default function SubscriptionsPageClient() {
                                     <>
                                         <p className="text-foreground">
                                             As{" "}
-                                            {pendingDelete.ids.length.toLocaleString(
-                                                "pt-BR"
-                                            )}{" "}
+                                            {numberBR(pendingDelete.ids.length)}{" "}
                                             assinaturas selecionadas serão
                                             removidas.
                                         </p>
@@ -1134,10 +1035,10 @@ export default function SubscriptionsPageClient() {
                                             {pendingDelete.ids.length > 8 ? (
                                                 <li className="text-muted-foreground">
                                                     e mais{" "}
-                                                    {(
+                                                    {numberBR((
                                                         pendingDelete.ids
                                                             .length - 8
-                                                    ).toLocaleString("pt-BR")}{" "}
+                                                    ))}{" "}
                                                     …
                                                 </li>
                                             ) : null}

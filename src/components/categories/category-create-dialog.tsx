@@ -1,6 +1,9 @@
 "use client"
 
 import * as React from "react"
+import {
+    Card,
+} from "@/components/ui/card"
 import { useRouter } from "next/navigation"
 import type { User } from "@supabase/supabase-js"
 import {
@@ -14,10 +17,9 @@ import {
 } from "@/components/transactions/transaction-type-segment"
 import { CustomForm, FormInput } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Dialog,
+  DialogBody,
   DialogCloseButton,
   DialogContent,
   DialogDescription,
@@ -176,18 +178,16 @@ export function CategoryCreateDialog({
 
     const fieldsBlock = (
         <div className="space-y-4 py-4">
-            <div className="space-y-2">
-                <Label htmlFor="global-cat-name">Nome</Label>
-                <Input
-                    id="global-cat-name"
-                    value={name}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setName(e.target.value)
-                    }
-                    placeholder="Ex: Alimentação"
-                    required
-                />
-            </div>
+            <FormInput
+                id="global-cat-name"
+                label="Nome"
+                value={name}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setName(e.target.value)
+                }
+                placeholder="Ex: Alimentação"
+                required
+            />
 
             <TransactionFormTypeSegment
                 value={type}
@@ -202,7 +202,7 @@ export function CategoryCreateDialog({
             />
 
             {type === "expense" ? (
-                <div className="space-y-3 rounded-lg border border-border/60 bg-muted/20 p-3">
+                <Card variant="muted" padding="sm" className="px-3">
                     <p className="text-xs text-muted-foreground">
                         Limite de despesas para {dialogBudgetPeriod.period_start} a{" "}
                         {dialogBudgetPeriod.period_end}.
@@ -214,7 +214,7 @@ export function CategoryCreateDialog({
                         value={editBudgetAmount}
                         onValueChange={setEditBudgetAmount}
                     />
-                </div>
+                </Card>
             ) : null}
         </div>
     )
@@ -236,10 +236,10 @@ export function CategoryCreateDialog({
                         onSubmit={handleSubmit}
                         className="flex min-h-0 flex-1 flex-col"
                     >
-                        <div className="min-h-0 flex-1 overflow-y-auto px-4">
+                        <DialogBody>
                             {fieldsBlock}
-                        </div>
-                        <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
+                        </DialogBody>
+                        <DialogFooter className="flex-col">
                             <Button
                                 type="submit"
                                 disabled={saving}
@@ -258,7 +258,7 @@ export function CategoryCreateDialog({
     return (
         <Dialog open={open} onOpenChange={onSheetOpenChange}>
             <DialogContent layout="fixed">
-                <DialogHeader className="shrink-0 px-6 pt-6 pb-2">
+                <DialogHeader>
                     <DialogTitle>Nova categoria</DialogTitle>
                     <DialogDescription>{description}</DialogDescription>
                 </DialogHeader>
@@ -266,10 +266,10 @@ export function CategoryCreateDialog({
                     onSubmit={handleSubmit}
                     className="flex min-h-0 flex-1 flex-col"
                 >
-                    <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-2">
+                    <DialogBody className="pb-2">
                         {fieldsBlock}
-                    </div>
-                    <DialogFooter className="mx-0 mb-0 mt-0 shrink-0 flex-row flex-wrap justify-end gap-2 rounded-b-xl bg-background px-6 pt-4 pb-5">
+                    </DialogBody>
+                    <DialogFooter>
                         <Button
                             type="button"
                             variant="outline"

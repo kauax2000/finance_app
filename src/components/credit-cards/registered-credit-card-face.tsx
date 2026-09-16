@@ -70,6 +70,9 @@ function BrandMark({
         if (initials.length < 2 && custom.length >= 2) {
             initials = custom.slice(0, 2).toUpperCase()
         }
+        // Cru de propósito: são as iniciais da bandeira pintadas sobre a face do
+        // cartão, cuja cor vem do banco. É material sobre cor de runtime, com
+        // vidro por baixo — não é selo nem superfície do tema.
         return (
             <span
                 className={cn(

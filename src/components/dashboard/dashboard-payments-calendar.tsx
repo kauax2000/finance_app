@@ -1,7 +1,16 @@
 "use client"
 
+import { CalendarDaysIcon } from "@heroicons/react/16/solid"
+import {
+    Item,
+} from "@/components/ui/item"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import * as React from "react"
-import { CalendarDaysIcon } from "@heroicons/react/20/solid"
+
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import {
@@ -98,6 +107,9 @@ function MobilePaymentsCalendarGrid({
                     const hasEvents = list.length > 0
                     const isToday = cell.ymd === todayYmd
                     return (
+                        // Cru de propósito: é a célula da grade do calendário
+                        // (número do dia, "hoje", fora do mês, com ou sem evento),
+                        // e o `Button` impõe altura e alinhamento que a grade não quer.
                         <button
                             key={cell.ymd}
                             type="button"
@@ -269,9 +281,14 @@ function PaymentDayEventsListContent({
                 const meta = paymentEventMetaBadge(e.kind, e.installmentPlanId)
                 return (
                     <li key={e.id}>
+                        <Item
+                            asChild
+                            interactive
+                            size="sm"
+                            className="flex-nowrap justify-between gap-3 rounded-md border-0 px-2 py-2 text-left"
+                        >
                         <button
                             type="button"
-                            className="flex w-full items-center justify-between gap-3 rounded-md px-2 py-2 text-left text-sm hover:bg-muted/50"
                             onClick={() => {
                                 if (postedId) {
                                     onTransactionPostedClick(postedId)
@@ -312,6 +329,7 @@ function PaymentDayEventsListContent({
                                 </span>
                             )}
                         </button>
+                        </Item>
                     </li>
                 )
             })}
@@ -467,16 +485,12 @@ export function DashboardPaymentsCalendar({
     const monthTitle = labelYearMonthPt(calendarYm)
 
     return (
-        <div className="min-w-0 max-w-full space-y-2">
-            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                <div className="flex h-8 min-w-0 items-end">
-                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                        Calendário de pagamentos
-                    </p>
-                </div>
-            </div>
+        <PageSection className="max-w-full">
+            <PageSectionHeader>
+                <PageSectionTitle>Calendário de pagamentos</PageSectionTitle>
+            </PageSectionHeader>
             <div ref={measureRef} className="min-h-0">
-            <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <Card padding="none">
                 <CardContent className="relative flex flex-col gap-0 p-0">
                     <CardToolbar
                         aria-live="polite"
@@ -546,10 +560,16 @@ export function DashboardPaymentsCalendar({
                                         </div>
                                         <div className="space-y-1.5 pl-1">
                                             {list.map((r) => (
-                                                <button
+                                                <Item
                                                     key={r.id}
+                                                    asChild
+                                                    interactive
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="flex-nowrap justify-between gap-2 border-border/60 px-2 py-2 text-left"
+                                                >
+                                                <button
                                                     type="button"
-                                                    className="flex w-full items-center justify-between gap-2 rounded-lg border border-border/60 px-2 py-2 text-left text-sm hover:bg-muted/40"
                                                     onClick={() =>
                                                         onUpcomingPaymentClick(r)
                                                     }
@@ -564,6 +584,7 @@ export function DashboardPaymentsCalendar({
                                                         amountWhenNull="dash"
                                                     />
                                                 </button>
+                                                </Item>
                                             ))}
                                         </div>
                                     </div>
@@ -656,10 +677,16 @@ export function DashboardPaymentsCalendar({
                                         </div>
                                         <div className="space-y-1.5 pl-1">
                                             {list.map((e) => (
-                                                <button
+                                                <Item
                                                     key={e.id}
+                                                    asChild
+                                                    interactive
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="flex-nowrap justify-between gap-2 border-border/60 px-2 py-2 text-left"
+                                                >
+                                                <button
                                                     type="button"
-                                                    className="flex w-full items-center justify-between gap-2 rounded-lg border border-border/60 px-2 py-2 text-left text-sm hover:bg-muted/40"
                                                     onClick={() => {
                                                         const postedId =
                                                             postedTransactionIdFromEvent(
@@ -686,6 +713,7 @@ export function DashboardPaymentsCalendar({
                                                         neutralAmount
                                                     />
                                                 </button>
+                                                </Item>
                                             ))}
                                         </div>
                                     </div>
@@ -711,6 +739,8 @@ export function DashboardPaymentsCalendar({
                                     return (
                                         <Popover key={cell.ymd}>
                                             <PopoverTrigger asChild>
+                                                {/* Cru de propósito, como a célula da grade compacta:
+                                                    é o dia do calendário, não um botão de ação. */}
                                                 <button
                                                     type="button"
                                                     disabled={list.length === 0}
@@ -775,6 +805,6 @@ export function DashboardPaymentsCalendar({
                 </CardContent>
             </Card>
             </div>
-        </div>
+        </PageSection>
     )
 }

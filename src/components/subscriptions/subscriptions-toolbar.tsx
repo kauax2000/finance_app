@@ -1,5 +1,12 @@
 "use client"
 
+import {
+    Toolbar,
+    ToolbarActions,
+    toolbarControlClassName,
+    toolbarIconControlClassName,
+    ToolbarRow,
+} from "@/components/ui/toolbar"
 import { ArrowsUpDownIcon, ChevronDownIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import {
@@ -8,10 +15,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-    transactionSegmentContainerClassName,
-    transactionSegmentTabClassName,
-} from "@/components/transactions/transaction-type-segment"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 
 export type SubscriptionStatusFilter = "all" | "active" | "inactive"
@@ -75,38 +79,23 @@ export function SubscriptionsToolbar({
 }) {
     return (
         <>
-            <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-3">
-                <div className="flex min-w-0 flex-row items-center gap-2 md:contents">
-                    <div
-                        className={cn(
-                            transactionSegmentContainerClassName,
-                            "min-w-0 flex-1 md:flex-initial md:shrink-0"
-                        )}
-                        role="tablist"
-                        aria-label="Status da assinatura"
+            <Toolbar>
+                <ToolbarRow>
+                    <Tabs
+                        value={statusFilter}
+                        onValueChange={(next) =>
+                            onStatusFilterChange(next as typeof statusFilter)
+                        }
+                        className="min-w-0 flex-1 md:flex-initial md:shrink-0"
                     >
-                        {STATUS_TABS.map((tab) => {
-                            const selected = statusFilter === tab.value
-                            return (
-                                <Button
-                                    key={tab.value}
-                                    type="button"
-                                    role="tab"
-                                    aria-selected={selected}
-                                    size="sm"
-                                    variant="tertiary"
-                                    className={transactionSegmentTabClassName(
-                                        selected
-                                    )}
-                                    onClick={() =>
-                                        onStatusFilterChange(tab.value)
-                                    }
-                                >
+                        <TabsList aria-label="Status da assinatura" className="w-full md:w-auto">
+                            {STATUS_TABS.map((tab) => (
+                                <TabsTrigger key={tab.value} value={tab.value}>
                                     {tab.label}
-                                </Button>
-                            )
-                        })}
-                    </div>
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
+                    </Tabs>
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -114,32 +103,32 @@ export function SubscriptionsToolbar({
                                 type="button"
                                 variant="outline"
                                 size="icon-lg"
-                                className="size-10 shrink-0 md:hidden"
+                                className={cn(toolbarIconControlClassName, "shrink-0 md:hidden")}
                                 aria-label="Ordenar"
                             >
                                 <ArrowsUpDownIcon className="size-4 opacity-80" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuContent align="end" size="xl">
                             <SortPresetDropdownItems onPick={onSortChange} />
                         </DropdownMenuContent>
                     </DropdownMenu>
-                </div>
+                </ToolbarRow>
 
-                <div className="hidden shrink-0 md:flex md:flex-wrap md:items-center md:justify-end md:gap-2">
+                <ToolbarActions className="hidden md:flex">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                className="h-8 gap-1.5 text-xs"
+                                className={cn(toolbarControlClassName, "gap-1.5 text-xs")}
                             >
                                 Ordenar
                                 <ChevronDownIcon className="size-3.5 opacity-70" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuContent align="end" size="xl">
                             <SortPresetDropdownItems onPick={onSortChange} />
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -147,14 +136,14 @@ export function SubscriptionsToolbar({
                         type="button"
                         variant="primary"
                         size="sm"
-                        className="h-8 gap-2 text-xs"
+                        className={cn(toolbarControlClassName, "gap-2 text-xs")}
                         onClick={onNewSubscription}
                     >
                         <PlusIcon className="size-4 shrink-0" />
                         Nova assinatura
                     </Button>
-                </div>
-            </div>
+                </ToolbarActions>
+            </Toolbar>
         </>
     )
 }

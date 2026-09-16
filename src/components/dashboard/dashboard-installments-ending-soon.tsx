@@ -1,6 +1,14 @@
 "use client"
 
 import Link from "next/link"
+import {
+    Item,
+} from "@/components/ui/item"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid"
 import { Card, CardContent, CardFooter, CardToolbar } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -119,14 +127,15 @@ function InstallmentPlanCompactRow({
     if (onSelect) {
         return (
             <li className="list-none">
-                <button
-                    type="button"
-                    className={rowClass}
-                    aria-label={aria}
-                    onClick={() => onSelect(plan)}
-                >
-                    {content}
-                </button>
+                <Item asChild interactive className="block rounded-none border-0 px-4 py-3 text-left">
+                    <button
+                        type="button"
+                        aria-label={aria}
+                        onClick={() => onSelect(plan)}
+                    >
+                        {content}
+                    </button>
+                </Item>
             </li>
         )
     }
@@ -160,30 +169,27 @@ export function DashboardInstallmentsEndingSoon({
     const transactionsHref = `${ROUTES.TRANSACTIONS}?type=expense&inst=1`
 
     return (
-        <div className="min-w-0 space-y-2">
-            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0 space-y-0.5">
-                    <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Compras parceladas
-                        </p>
-                    </div>
-                </div>
-                <Button
-                    asChild
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-10 w-full gap-2 px-2 text-xs md:h-8 md:w-auto"
-                >
-                    <Link href={transactionsHref}>
-                        <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />
-                        <span className="truncate">Ver em transações</span>
-                    </Link>
-                </Button>
-            </div>
+        <PageSection>
+            <PageSectionHeader
+                actions={
+                    <Button
+                        asChild
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-2 px-2 text-xs pointer-coarse:h-10"
+                    >
+                        <Link href={transactionsHref}>
+                            <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />
+                            <span className="truncate">Ver em transações</span>
+                        </Link>
+                    </Button>
+                }
+            >
+                <PageSectionTitle>Compras parceladas</PageSectionTitle>
+            </PageSectionHeader>
 
-            <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <Card padding="none">
                     <CardToolbar aria-hidden />
                     <CardContent className="p-0">
                         {endingSoon.length === 0 ? (
@@ -232,6 +238,6 @@ export function DashboardInstallmentsEndingSoon({
                     </CardContent>
                     <CardFooter aria-hidden />
                 </Card>
-        </div>
+        </PageSection>
     )
 }

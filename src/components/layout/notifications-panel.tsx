@@ -4,8 +4,8 @@ import { ROUTES } from "@/config/navigation"
 import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { CheckIcon, EllipsisHorizontalIcon, TrashIcon } from "@heroicons/react/16/solid"
-import { XMarkIcon } from "@heroicons/react/20/solid"
+import { CheckIcon, EllipsisHorizontalIcon, TrashIcon, XMarkIcon } from "@heroicons/react/16/solid"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -34,6 +34,7 @@ import {
     toastPageFetchError,
 } from "@/lib/toast"
 import { cn } from "@/lib/utils"
+import { formatDatePtBr } from "@/lib/transaction-date"
 
 function formatRelativeTime(iso: string): string {
     const t = new Date(iso).getTime()
@@ -47,7 +48,7 @@ function formatRelativeTime(iso: string): string {
     if (h < 24) return `há ${h} h`
     const d = Math.floor(h / 24)
     if (d < 7) return `há ${d} d`
-    return new Date(iso).toLocaleDateString("pt-BR")
+    return formatDatePtBr(iso)
 }
 
 type NotificationsPanelProps = {
@@ -213,7 +214,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                         onClick={() => close()}
                         aria-label="Fechar notificações"
                     >
-                        <XMarkIcon className="h-5 w-5" />
+                        <XMarkIcon />
                     </Button>
                 </div>
             </div>
@@ -247,6 +248,10 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                                                 : "hover:bg-muted/30"
                                         )}
                                     >
+                                        {/* Cru de propósito: é a área clicável da linha, e a linha
+                                            não pode ser o botão — o menu de "Mais opções" é irmão
+                                            dela, e botão dentro de botão é inválido. O realce mora
+                                            na linha, que responde ao cursor e ao toque. */}
                                         <button
                                             type="button"
                                             className="flex min-w-0 flex-1 gap-3 text-left"
@@ -283,10 +288,10 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                                                         className="shrink-0"
                                                         aria-label="Mais opções"
                                                     >
-                                                        <EllipsisHorizontalIcon className="h-4 w-4" />
+                                                        <EllipsisHorizontalIcon />
                                                     </Button>
                                                 </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end" className="w-44">
+                                                <DropdownMenuContent align="end" size="sm">
                                                     {unread ? (
                                                         <DropdownMenuItem
                                                             onClick={() => void onMarkAsRead(notification.id)}
@@ -295,11 +300,10 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                                                             Marcar como lida
                                                         </DropdownMenuItem>
                                                     ) : null}
-                                                    <DropdownMenuItem
-                                                        className="text-destructive focus:text-destructive"
+                                                    <DropdownMenuItem variant="destructive"
                                                         onClick={() => void onDelete(notification.id)}
                                                     >
-                                                        <TrashIcon className="h-4 w-4" />
+                                                        <TrashIcon />
                                                         Excluir
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
@@ -317,8 +321,8 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                 <div className="shrink-0 border-t border-border">
                     <Button
                         type="button"
-                        variant="tertiary"
-                        className="h-12 w-full rounded-none text-destructive hover:text-destructive"
+                        variant="destructive"
+                        className="h-12 w-full rounded-none"
                         onClick={() => void onClearAll()}
                     >
                         <TrashIcon className="mr-2 h-4 w-4" />

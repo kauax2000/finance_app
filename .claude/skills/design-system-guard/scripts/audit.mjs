@@ -33,13 +33,17 @@ const PRIMITIVE_TO_COMPONENT = {
   dialog: "Dialog",
   progress: "Progress",
   hr: "Separator",
+  // Tinham ido para a lista de lacunas quando não havia peça. Hoje há.
+  fieldset: "FieldSet",
+  details: "Collapsible",
+  summary: "CollapsibleTrigger",
 }
 
 /**
  * Primitivos sem equivalente no design system. Sinalizar é útil, mas o veredito
  * é diferente: são lacuna, não correção.
  */
-const PRIMITIVE_WITHOUT_COMPONENT = new Set(["details", "summary", "meter", "fieldset"])
+const PRIMITIVE_WITHOUT_COMPONENT = new Set(["meter"])
 
 /** A paleta padrão do Tailwind. Nenhuma delas acompanha o tema. */
 const TAILWIND_PALETTE =
@@ -65,12 +69,21 @@ const BARE_BW = /\b(?:bg|text|border|ring|fill|stroke|divide|placeholder)-(?:whi
  */
 const RUNTIME_COLOR_FILES = [
   "category-appearance-fields",
+  // A marca do Google no botão de entrar: quatro hexadecimais que são de outra
+  // pessoa e não seguem o tema.
+  "google-icon",
   "workspace-appearance-form-fields",
   "workspace-appearance-edit-dialog",
   "credit-card-brand-logos",
   "registered-credit-card-face",
   "color-tile",
   "src/lib/avatar.ts",
+  // A cor da barra do navegador: `meta[name=theme-color]` não lê `var()`, e os
+  // dois valores são o `--background` de cada tema escritos por extenso.
+  "src/app/layout.tsx",
+  // `hexToRgba` converte a cor que a pessoa gravou; o `rgba(0,0,0,alpha)` é o
+  // que sobra quando o hexadecimal do banco não é válido.
+  "category-detail-utils",
   "manifest.ts",
   "global-error.tsx",
 ]
@@ -107,6 +120,7 @@ const FOREIGN_ICON_PACKAGES =
  */
 const DRAWN_SVG_FILES = [
   "app-logo",
+  "google-icon",
   "app-wordmark",
   "credit-card-brand-logos",
   "registered-credit-card-face",
@@ -226,7 +240,13 @@ function semComentarios(src) {
  * linha seguinte.
  */
 function semEspecimes(src) {
-  return src.replace(/\bcode=\{`[\s\S]*?`\}/g, (m) => m.replace(/[^\n]/g, " "))
+  return (
+    src
+      .replace(/\bcode=\{`[\s\S]*?`\}/g, (m) => m.replace(/[^\n]/g, " "))
+      // A prosa também é citação: `description="É um <fieldset> de verdade…"`
+      // descreve a peça, e o `<fieldset>` dentro da frase não é marcação.
+      .replace(/\b(?:description|title)="[^"]*"/g, (m) => m.replace(/[^\n]/g, " "))
+  )
 }
 
 /** Conta a linha de um índice. */
@@ -318,6 +338,20 @@ function auditFile(absPath, project) {
   if (!isUi) {
     for (const m of src.matchAll(/<([a-z][a-z0-9]*)\b/g)) {
       const tag = m[1]
+      // Filho direto de um componente com `asChild` não é cru: o `Slot` do pai
+      // funde nele as classes, o estado e o foco da peça, e o primitivo só dá o
+      // elemento semântico. É o padrão documentado de `Item asChild` e
+      // `Card interactive asChild`, e sem esta exceção a forma certa de uma
+      // linha clicável contava igual a um `<button>` pintado à mão.
+      //
+      // Gatilho não entra: `PopoverTrigger asChild`, `DropdownMenuTrigger
+      // asChild` e companhia só repassam comportamento, sem estilo nenhum — ali
+      // o filho continua sendo o que está escrito. Medido: sem essa ressalva a
+      // célula do calendário, um `<button>` pintado à mão sob um
+      // `PopoverTrigger`, sumia da contagem.
+      const antes = src.slice(Math.max(0, m.index - 1200), m.index)
+      const pai = antes.match(/<([A-Z][\w.]*)\b[^<>]*\basChild\b[^<>]*>\s*$/)
+      if (pai && !/(Trigger|Close|Anchor)$/.test(pai[1])) continue
       if (PRIMITIVE_TO_COMPONENT[tag]) {
         add(
           "C",
@@ -445,7 +479,14 @@ function auditFile(absPath, project) {
       const declared = heroiconSet.get(m[1])
       if (!declared) continue
       const found = m[2].match(/\bsize-(\d+(?:\.\d+)?)\b/)
-      const n = found ? parseFloat(found[1]) : 4
+      // `EmptyStateIcon` dimensiona o filho: o poço é 36/48/56 e o `svg` é
+      // metade dele, ou seja 18/24/28px. Um ícone ali não declara classe de
+      // tamanho de propósito, e contá-lo como `size-4` acusava o conjunto `24`,
+      // que é justamente o certo.
+      const dentroDeEmptyState = /<EmptyStateIcon\b[^>]*>\s*$/.test(
+        src.slice(Math.max(0, m.index - 200), m.index)
+      )
+      const n = found ? parseFloat(found[1]) : dentroDeEmptyState ? 6 : 4
       const want = heroiconSetForSize(n)
       if (want !== declared) {
         add(

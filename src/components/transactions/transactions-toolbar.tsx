@@ -1,9 +1,17 @@
 "use client"
 
+import {
+    Toolbar,
+    ToolbarActions,
+    toolbarControlClassName,
+    ToolbarFilterIndicator,
+    toolbarIconControlClassName,
+    ToolbarRow,
+} from "@/components/ui/toolbar"
 import { formatYmdPtBr } from "@/lib/transaction-date"
 import * as React from "react"
-import { AdjustmentsHorizontalIcon } from "@heroicons/react/16/solid"
-import { XMarkIcon } from "@heroicons/react/20/solid"
+import { AdjustmentsHorizontalIcon, XMarkIcon } from "@heroicons/react/16/solid"
+
 import {
     TransactionTypeSegment,
     type TransactionFilterType,
@@ -22,6 +30,7 @@ import {
   SheetContent,
 } from "@/components/ui/sheet"
 import {
+  DialogBody,
   DialogDescription,
   DialogFooter,
   DialogTitle,
@@ -131,7 +140,21 @@ export function TransactionsToolbar({
     toolbarTrailing?: () => React.ReactNode
 }) {
     const isMobile = useIsMobile()
-    const [filtersSheetOpen, setFiltersSheetOpen] = React.useState(false)
+    const [filtersSheetOpen, setFiltersSheetOpenLocal] = React.useState(false)
+    // Toda abertura e todo fechamento passam por aqui, e não só os do Radix.
+    // O `onOpenChange` da `Sheet` só dispara quando é ela quem muda o estado —
+    // o botão de filtros, o × e o "Aplicar" do telefone mudavam o estado local
+    // e o pai nunca sabia. O controlador da lista continuava achando a folha
+    // fechada, e com a folha "fechada" ele devolve o rascunho de período ao
+    // filtro aplicado a cada mudança: medido, a cada duas datas escolhidas no
+    // calendário uma era apagada logo depois do `onChange`.
+    const setFiltersSheetOpen = React.useCallback(
+        (open: boolean) => {
+            setFiltersSheetOpenLocal(open)
+            onFiltersSheetOpenChange?.(open)
+        },
+        [onFiltersSheetOpenChange]
+    )
 
     const summary = filtersSummaryLine({
         filterType,
@@ -150,7 +173,7 @@ export function TransactionsToolbar({
 
     const closeMobileSheet = React.useCallback(() => {
         setFiltersSheetOpen(false)
-    }, [])
+    }, [setFiltersSheetOpen])
 
     const panelMobile = (
         <TransactionsFiltersPanel
@@ -182,7 +205,7 @@ export function TransactionsToolbar({
             type="button"
             variant="outline"
             size="icon-lg"
-            className="relative size-10 shrink-0 md:hidden"
+            className={cn(toolbarIconControlClassName, "relative shrink-0 md:hidden")}
             onClick={() => setFiltersSheetOpen(true)}
             aria-label={
                 active
@@ -194,18 +217,15 @@ export function TransactionsToolbar({
         >
             <AdjustmentsHorizontalIcon className="size-4 opacity-80" />
             {active ? (
-                <span
-                    className="pointer-events-none absolute -top-1 -right-1 z-10 size-3 rounded-full border-2 border-background bg-primary"
-                    aria-hidden
-                />
+                <ToolbarFilterIndicator />
             ) : null}
         </Button>
     )
 
     return (
         <>
-            <div className="flex min-w-0 max-w-full flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-3">
-                <div className="flex min-w-0 max-w-full items-center gap-2 md:contents">
+            <Toolbar className="max-w-full flex-col md:flex-row">
+                <ToolbarRow className="max-w-full">
                     {showTransactionTypeSegment ? (
                         <TransactionTypeSegment
                             value={filterType}
@@ -214,7 +234,7 @@ export function TransactionsToolbar({
                         />
                     ) : null}
                     {!stackMobileLeadingRow ? mobileFiltersSheetTrigger : null}
-                </div>
+                </ToolbarRow>
 
                 {(toolbarLeading || toolbarAfterFilters) ? (
                     <div className="min-w-0 w-full md:hidden">
@@ -245,18 +265,15 @@ export function TransactionsToolbar({
                     </div>
                 ) : null}
 
-                <div
-                    className={cn(
-                        "hidden min-w-0 max-w-full flex-1 md:flex md:flex-wrap md:items-center md:gap-2",
-                        toolbarLeading
-                            ? "md:justify-between"
-                            : "md:justify-end"
-                    )}
-                >
+                {/* O `md:justify-between` ↔ `md:justify-end` que alternava aqui em
+                    tempo de execução era a conta que o `ms-auto` do
+                    `ToolbarActions` dispensa: sem o grupo da esquerda, ele
+                    continua na borda direita sozinho. */}
+                <div className="hidden min-w-0 max-w-full flex-1 md:flex md:flex-wrap md:items-center md:gap-2">
                     {toolbarLeading ? (
                         <div className="shrink-0">{toolbarLeading()}</div>
                     ) : null}
-                    <div className="flex min-w-0 max-w-full flex-1 flex-wrap items-center justify-end gap-2 md:flex-nowrap">
+                    <ToolbarActions className="min-w-0 max-w-full flex-1 flex-wrap md:flex-nowrap">
                         {activeFiltersChips ? (
                             <div className="min-w-0 max-w-full flex-1 overflow-hidden">
                                 {activeFiltersChips}
@@ -266,7 +283,7 @@ export function TransactionsToolbar({
                             type="button"
                             variant="outline"
                             size="sm"
-                            className="relative h-8 shrink-0 gap-2 text-xs"
+                            className={cn(toolbarControlClassName, "relative shrink-0 gap-2 text-xs")}
                             onClick={() => setFiltersSheetOpen(true)}
                             aria-label={
                                 advancedFiltersActive
@@ -277,30 +294,24 @@ export function TransactionsToolbar({
                             <AdjustmentsHorizontalIcon className="size-4 opacity-80" />
                             <span className="hidden sm:inline">Filtros</span>
                             {advancedFiltersActive ? (
-                                <span
-                                    className="absolute top-1 right-1 size-2 rounded-full bg-primary sm:top-1.5 sm:right-1.5"
-                                    aria-hidden
-                                />
+                                <ToolbarFilterIndicator />
                             ) : null}
                         </Button>
                         {toolbarAfterFilters ? (
                             <div className="shrink-0">{toolbarAfterFilters()}</div>
                         ) : null}
-                    </div>
+                    </ToolbarActions>
                     {toolbarTrailing ? (
                         <div className="flex shrink-0 items-stretch gap-2">
                             {toolbarTrailing()}
                         </div>
                     ) : null}
                 </div>
-            </div>
+            </Toolbar>
 
             <Sheet
                 open={filtersSheetOpen}
-                onOpenChange={(open) => {
-                    setFiltersSheetOpen(open)
-                    onFiltersSheetOpenChange?.(open)
-                }}
+                onOpenChange={setFiltersSheetOpen}
             >
                 <SheetContent
                     side="right"
@@ -337,15 +348,15 @@ export function TransactionsToolbar({
                                 onClick={() => setFiltersSheetOpen(false)}
                                 aria-label="Fechar"
                             >
-                                <XMarkIcon className="h-5 w-5" aria-hidden />
+                                <XMarkIcon aria-hidden />
                             </Button>
                         </div>
 
-                        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
+                        <DialogBody>
                             <div className="space-y-6">
                                 {isMobile ? panelMobile : panelDesktop}
                             </div>
-                        </div>
+                        </DialogBody>
 
                         <DialogFooter
                             className={cn(

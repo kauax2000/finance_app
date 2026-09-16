@@ -26,7 +26,7 @@ function CardSectionShell({
     children: React.ReactNode
 }) {
     return (
-        <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+        <Card padding="none">
             <CardContent className="relative flex flex-col gap-0 p-0">
                 {children}
             </CardContent>
@@ -43,7 +43,7 @@ function CardSectionHeader() {
 }
 
 function SectionTitleRow({
-    titleClassName = "h-3 w-44 max-w-full",
+    titleClassName = "h-4 w-44 max-w-full",
     cta,
 }: {
     titleClassName?: string
@@ -51,19 +51,17 @@ function SectionTitleRow({
 }) {
     if (cta === "responsive") {
         return (
-            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex h-8 min-w-0 items-end">
+            <div className="flex min-w-0 items-center justify-between gap-4">
+                <div className="flex h-6 min-w-0 items-center">
                     <Skeleton className={titleClassName} />
                 </div>
-                <Skeleton className="h-10 w-full rounded-md md:h-8 md:w-32" />
+                <Skeleton className="h-8 w-32 shrink-0 rounded-md pointer-coarse:h-10" />
             </div>
         )
     }
     return (
-        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div className="flex h-8 min-w-0 items-end">
-                <Skeleton className={titleClassName} />
-            </div>
+        <div className="flex h-6 min-w-0 items-center">
+            <Skeleton className={titleClassName} />
         </div>
     )
 }
@@ -89,7 +87,7 @@ function DashboardKpiSkeleton() {
             {KPI_KEYS.map((key, index) => (
                 <Card
                     key={key}
-                    className="gap-0 overflow-hidden py-0 shadow-none"
+                    padding="none"
                 >
                     <CardToolbar>
                         <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -248,8 +246,8 @@ function CalendarDesktopSkeleton() {
 
 function DashboardCalendarSkeleton() {
     return (
-        <div className="min-h-0 min-w-0 max-w-full space-y-2">
-            <SectionTitleRow titleClassName="h-3 w-52 max-w-full" />
+        <div className="min-h-0 min-w-0 max-w-full space-y-4">
+            <SectionTitleRow titleClassName="h-4 w-52 max-w-full" />
             <div className="min-h-0">
                 <CardSectionShell>
                     <CardSectionHeader />
@@ -269,8 +267,8 @@ function DashboardCalendarSkeleton() {
 
 function DashboardCategoriesSkeleton() {
     return (
-        <div className="min-w-0 max-w-full space-y-2">
-            <SectionTitleRow titleClassName="h-3 w-48" cta="responsive" />
+        <div className="min-w-0 max-w-full space-y-4">
+            <SectionTitleRow titleClassName="h-4 w-48" cta="responsive" />
             <CardSectionShell>
                 <CardSectionHeader />
                 <div className="space-y-4 p-4">
@@ -305,8 +303,8 @@ function DashboardCategoriesSkeleton() {
 
 function DashboardInvoicesSkeleton() {
     return (
-        <div className="min-w-0 max-w-full space-y-2">
-            <SectionTitleRow titleClassName="h-3 w-32" cta="responsive" />
+        <div className="min-w-0 max-w-full space-y-4">
+            <SectionTitleRow titleClassName="h-4 w-32" cta="responsive" />
             <CardSectionShell>
                 <CardSectionHeader />
                 <CardToolbar>
@@ -337,7 +335,7 @@ function DashboardInvoicesSkeleton() {
                                     </div>
                                     <Skeleton className="h-3 w-40 max-w-full rounded-md" />
                                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:items-stretch">
-                                        <div className="space-y-2 rounded-lg border border-border/70 bg-muted/10 p-3 dark:bg-muted/5">
+                                        <div className="space-y-2">
                                             <div className="flex flex-col gap-2 min-[480px]:flex-row min-[480px]:items-baseline min-[480px]:justify-between">
                                                 <Skeleton className="h-3 w-24 rounded-md" />
                                                 <Skeleton className="h-7 w-28 rounded-md min-[480px]:ml-auto" />
@@ -364,8 +362,8 @@ function DashboardInvoicesSkeleton() {
 
 function DashboardInstallmentsSkeleton() {
     return (
-        <div className="min-w-0 max-w-full space-y-2">
-            <SectionTitleRow titleClassName="h-3 w-44" cta="responsive" />
+        <div className="min-w-0 max-w-full space-y-4">
+            <SectionTitleRow titleClassName="h-4 w-44" cta="responsive" />
             <CardSectionShell>
                 <CardToolbar aria-hidden />
                 <div className="divide-y divide-border">

@@ -1,6 +1,12 @@
 "use client"
 
 import { compareYmd } from "@/lib/transaction-date"
+import {
+    DescriptionDetails,
+    DescriptionList,
+    DescriptionListItem,
+    DescriptionTerm,
+} from "@/components/ui/description-list"
 import { billDuePill, billDaysDeltaLabel } from "@/components/bills/bill-status"
 import { CreditCardIcon, EllipsisHorizontalIcon, ForwardIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { CreditCardIcon as CreditCardMiniIcon } from "@heroicons/react/20/solid"
@@ -93,6 +99,10 @@ export function BillPendingCard({
                 row.kind === "regular" && !row.bill.is_active && "opacity-[0.82]"
             )}
         >
+            {/* Cru de propósito: é a área clicável do cartão, e o cartão não pode
+                ser o botão — o rodapé, logo abaixo, tem as próprias ações, e botão
+                dentro de botão é inválido. `Card interactive asChild` só serve a um
+                cartão que é inteiro a ação. */}
             <button
                 type="button"
                 className={cn(
@@ -184,43 +194,47 @@ export function BillPendingCard({
                 </CardToolbar>
 
                 <CardContent className="space-y-3 px-4 pb-4 pt-3">
-                    <div className="rounded-lg border border-border/80 bg-muted/15 px-3 py-2.5">
-                        <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
-                            Valor estimado
-                        </p>
-                        <div className="mt-1 flex flex-wrap items-baseline gap-1 tabular-nums">
-                            {row.amountHint != null ? (
-                                <>
-                                    {isEstimated ? (
+                    <DescriptionList className="gap-0">
+                        <DescriptionListItem>
+                            <DescriptionTerm className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                Valor estimado
+                            </DescriptionTerm>
+                            <DescriptionDetails>
+                                <div className="mt-1 flex flex-wrap items-baseline gap-1 tabular-nums">
+                                    {row.amountHint != null ? (
+                                        <>
+                                            {isEstimated ? (
+                                                <span className="text-sm text-muted-foreground">
+                                                    ~
+                                                </span>
+                                            ) : null}
+                                            <MoneyDisplay
+                                                value={row.amountHint}
+                                                size="lg"
+                                                className="font-semibold tracking-tight"
+                                            />
+                                        </>
+                                    ) : (
                                         <span className="text-sm text-muted-foreground">
-                                            ~
+                                            Definido no pagamento
                                         </span>
-                                    ) : null}
-                                    <MoneyDisplay
-                                        value={row.amountHint}
-                                        size="lg"
-                                        className="font-semibold tracking-tight"
-                                    />
-                                </>
-                            ) : (
-                                <span className="text-sm text-muted-foreground">
-                                    Definido no pagamento
-                                </span>
-                            )}
-                        </div>
-                        <p className="mt-1.5 text-xs text-muted-foreground">
-                            Venc. {dueFmt}
-                            <span className="text-muted-foreground/70"> · </span>
-                            <span
-                                className={cn(
-                                    compareYmd(row.dueYmd, todayYmd) < 0 &&
-                                        "font-medium text-destructive"
-                                )}
-                            >
-                                {delta}
-                            </span>
-                        </p>
-                    </div>
+                                    )}
+                                </div>
+                                <p className="mt-1.5 text-xs text-muted-foreground">
+                                    Venc. {dueFmt}
+                                    <span className="text-muted-foreground/70"> · </span>
+                                    <span
+                                        className={cn(
+                                            compareYmd(row.dueYmd, todayYmd) < 0 &&
+                                                "font-medium text-destructive"
+                                        )}
+                                    >
+                                        {delta}
+                                    </span>
+                                </p>
+                            </DescriptionDetails>
+                        </DescriptionListItem>
+                    </DescriptionList>
                 </CardContent>
             </button>
 
@@ -250,7 +264,7 @@ export function BillPendingCard({
                                 <EllipsisHorizontalIcon className="size-4" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuContent align="end" size="md">
                             <DropdownMenuItem
                                 onClick={(e) => {
                                     e.stopPropagation()
@@ -269,8 +283,7 @@ export function BillPendingCard({
                                 <ForwardIcon className="mr-2 size-4" />
                                 Ignorar parcela
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
+                            <DropdownMenuItem variant="destructive"
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     onDeleteBill()
