@@ -25,12 +25,45 @@ setup("authenticate", async ({ page }) => {
     await mkdir(path.dirname(storageState), { recursive: true })
 
     await page.goto("/login")
+
+    // Espera a hidratação antes de tocar no formulário. Sem isso o passo é
+    // uma corrida que o servidor de desenvolvimento frio perde de dois jeitos:
+    // o `fill` é apagado quando o React assume os campos controlados, e o
+    // clique em "Entrar" vira envio nativo — a página recarrega em `/login?`
+    // e o `waitForURL` abaixo espera um redirecionamento que nunca vem.
+    await page.waitForFunction(() => {
+        const form = document.querySelector("form")
+        return Boolean(
+            form && Object.keys(form).some((k) => k.startsWith("__reactProps$"))
+        )
+    })
+
     await page.locator("#email").fill(email)
     await page.locator("#password").fill(password)
     await page.getByRole("button", { name: "Entrar" }).click()
-    await page.waitForURL((u) => !u.pathname.includes("/login"), {
-        timeout: 60_000,
-    })
+
+    // O redirecionamento e o alerta da tela correm juntos. Esperar só pelo
+    // primeiro transforma qualquer login recusado — senha errada, Supabase
+    // local fora do ar, campo invalidado — em 60s de silêncio seguidos de um
+    // timeout que não diz nada. O `Alert tone="destructive"` e o `FieldError`
+    // são ambos `role="alert"`, então os dois motivos chegam aqui.
+    const alerta = page.getByRole("alert").first()
+    const motivo = await Promise.race([
+        page
+            .waitForURL((u) => !u.pathname.includes("/login"), {
+                timeout: 60_000,
+            })
+            .then(() => null),
+        alerta
+            .waitFor({ state: "visible", timeout: 60_000 })
+            .then(() => alerta.innerText())
+            // Se nenhum alerta aparecer, este ramo some em vez de rejeitar: quem
+            // manda na falha é o timeout do redirecionamento, acima.
+            .catch(() => new Promise<never>(() => {})),
+    ])
+    if (motivo !== null) {
+        throw new Error(`Login recusado pela tela: ${motivo.trim()}`)
+    }
 
     await page.context().storageState({ path: storageState })
 })

@@ -22,6 +22,13 @@ const withSerwist = withSerwistInit({
 });
 
 const nextConfig: NextConfig = {
+  // O servidor de desenvolvimento bloqueia recursos internos pedidos de outra
+  // origem, e `127.0.0.1` conta como outra origem que não `localhost`. O
+  // Playwright usa `127.0.0.1` como base, então o pacote do cliente não descia
+  // e a página nunca hidratava: o clique em "Entrar" virava envio nativo do
+  // formulário e o setup autenticado esperava um redirecionamento que nunca vinha.
+  // Só vale em `next dev`; em produção este campo não existe.
+  allowedDevOrigins: ["127.0.0.1"],
   turbopack: {
     root: projectRoot,
   },
