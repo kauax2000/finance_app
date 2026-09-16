@@ -173,7 +173,7 @@ export function CategoryDetailDialogs({
                             <DialogBody>
                                 {editFields}
                             </DialogBody>
-                            <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
+                            <DialogFooter className="flex-col">
                                 <Button
                                     type="submit"
                                     disabled={editSaving || editBudgetRemoving}

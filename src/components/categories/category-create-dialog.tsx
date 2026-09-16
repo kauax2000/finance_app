@@ -240,7 +240,7 @@ export function CategoryCreateDialog({
                         <DialogBody>
                             {fieldsBlock}
                         </DialogBody>
-                        <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
+                        <DialogFooter className="flex-col">
                             <Button
                                 type="submit"
                                 disabled={saving}
@@ -270,7 +270,7 @@ export function CategoryCreateDialog({
                     <DialogBody className="pb-2">
                         {fieldsBlock}
                     </DialogBody>
-                    <DialogFooter className="mx-0 mb-0 mt-0 shrink-0 flex-row flex-wrap justify-end gap-2 rounded-b-xl bg-background px-6 pt-4 pb-5">
+                    <DialogFooter>
                         <Button
                             type="button"
                             variant="outline"

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import { useAuth } from "@/components/providers"
 import {
   Dialog,
+  DialogBody,
   DialogCloseButton,
   DialogContent,
   DialogDescription,
@@ -424,14 +425,9 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
             onSubmit={handleProfileFormSubmit}
             className="flex min-h-0 flex-1 flex-col"
         >
-            <div
-                className={cn(
-                    "min-h-0 flex-1 overflow-y-auto py-4",
-                    isMobile ? "px-4" : "px-6",
-                )}
-            >
+            <DialogBody>
                 {profileFormFields}
-            </div>
+            </DialogBody>
 
             {isMobile ? (
                 <DialogFooter className="flex-col">

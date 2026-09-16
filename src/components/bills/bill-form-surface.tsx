@@ -4,6 +4,7 @@ import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
+  DialogBody,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -64,7 +65,8 @@ export function BillFormSurface({
         </>
     )
 
-    const scrollClass = "scrollbar-thin min-h-0 flex-1 overflow-y-auto pb-4"
+    // O recuo é do casco (`--dialog-px`); o que fica é a barra fina do desktop.
+    const scrollClass = "scrollbar-thin"
 
     if (variant === "dialog-mobile") {
         return (
@@ -76,10 +78,10 @@ export function BillFormSurface({
                     <DialogTitle>{formTitle}</DialogTitle>
                     <DialogDescription>{formDescription}</DialogDescription>
                 </DialogHeader>
-                <div className={scrollClass}>
+                <DialogBody className={scrollClass}>
                     <BillFormFields {...fieldsProps} />
-                </div>
-                <DialogFooter className="gap-3 shrink-0 px-4 py-4 sm:flex-col sm:px-5">
+                </DialogBody>
+                <DialogFooter className="gap-3 sm:flex-col">
                     {footer}
                     <Button
                         type="button"
@@ -104,10 +106,10 @@ export function BillFormSurface({
                 <DialogTitle className="text-lg">{formTitle}</DialogTitle>
                 <DialogDescription>{formDescription}</DialogDescription>
             </DialogHeader>
-            <div className={scrollClass}>
+            <DialogBody className={scrollClass}>
                 <BillFormFields {...fieldsProps} />
-            </div>
-            <DialogFooter className="shrink-0 gap-3 px-6 py-4 sm:justify-between">
+            </DialogBody>
+            <DialogFooter className="gap-3 sm:justify-between">
                 {footer}
             </DialogFooter>
         </CustomForm>
