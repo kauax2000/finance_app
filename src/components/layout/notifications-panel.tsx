@@ -248,6 +248,10 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                                                 : "hover:bg-muted/30"
                                         )}
                                     >
+                                        {/* Cru de propósito: é a área clicável da linha, e a linha
+                                            não pode ser o botão — o menu de "Mais opções" é irmão
+                                            dela, e botão dentro de botão é inválido. O realce mora
+                                            na linha, que responde ao cursor e ao toque. */}
                                         <button
                                             type="button"
                                             className="flex min-w-0 flex-1 gap-3 text-left"

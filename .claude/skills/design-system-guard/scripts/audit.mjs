@@ -328,6 +328,20 @@ function auditFile(absPath, project) {
   if (!isUi) {
     for (const m of src.matchAll(/<([a-z][a-z0-9]*)\b/g)) {
       const tag = m[1]
+      // Filho direto de um componente com `asChild` não é cru: o `Slot` do pai
+      // funde nele as classes, o estado e o foco da peça, e o primitivo só dá o
+      // elemento semântico. É o padrão documentado de `Item asChild` e
+      // `Card interactive asChild`, e sem esta exceção a forma certa de uma
+      // linha clicável contava igual a um `<button>` pintado à mão.
+      //
+      // Gatilho não entra: `PopoverTrigger asChild`, `DropdownMenuTrigger
+      // asChild` e companhia só repassam comportamento, sem estilo nenhum — ali
+      // o filho continua sendo o que está escrito. Medido: sem essa ressalva a
+      // célula do calendário, um `<button>` pintado à mão sob um
+      // `PopoverTrigger`, sumia da contagem.
+      const antes = src.slice(Math.max(0, m.index - 1200), m.index)
+      const pai = antes.match(/<([A-Z][\w.]*)\b[^<>]*\basChild\b[^<>]*>\s*$/)
+      if (pai && !/(Trigger|Close|Anchor)$/.test(pai[1])) continue
       if (PRIMITIVE_TO_COMPONENT[tag]) {
         add(
           "C",

@@ -2,6 +2,9 @@
 
 import { percentPointsBR } from "@/lib/formatters"
 import {
+    Item,
+} from "@/components/ui/item"
+import {
     Button,
 } from "@/components/ui/button"
 import {
@@ -1053,9 +1056,14 @@ export function CreditCardInvoiceAnalyticsPanel({
                                                     : 0
                                             return (
                                                 <li key={k}>
+                                                    <Item
+                                                        asChild
+                                                        interactive
+                                                        size="sm"
+                                                        className="flex-nowrap justify-between gap-3 rounded-md px-2 py-1.5 text-left"
+                                                    >
                                                     <button
                                                         type="button"
-                                                        className="flex w-full items-center justify-between gap-3 rounded-md border border-transparent px-2 py-1.5 text-left transition-colors hover:border-border/60 hover:bg-muted/30 active:border-border/60 active:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                                         onMouseEnter={() =>
                                                             setActiveSlice(k)
                                                         }
@@ -1096,6 +1104,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                                             </span>
                                                         </span>
                                                     </button>
+                                                    </Item>
                                                 </li>
                                             )
                                         })}
@@ -1283,13 +1292,13 @@ export function CreditCardInvoiceAnalyticsPanel({
                                         )}
                                     >
                                         {onInstallmentPlanPress ? (
+                                            <Item
+                                                asChild
+                                                interactive
+                                                className="block rounded-[inherit] border-0 px-3 py-2.5 text-left"
+                                            >
                                             <button
                                                 type="button"
-                                                className={cn(
-                                                    "w-full rounded-[inherit] px-3 py-2.5 text-left outline-none transition-colors",
-                                                    "hover:bg-muted/25",
-                                                    "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                                                )}
                                                 aria-label={`Abrir detalhes da compra parcelada: ${row.plan.description?.trim() || "sem título"}`}
                                                 onClick={() =>
                                                     onInstallmentPlanPress(row.plan.id)
@@ -1297,6 +1306,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                             >
                                                 {body}
                                             </button>
+                                            </Item>
                                         ) : (
                                             body
                                         )}

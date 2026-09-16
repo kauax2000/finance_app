@@ -2,6 +2,9 @@
 
 import Link from "next/link"
 import {
+    Item,
+} from "@/components/ui/item"
+import {
     PageSection,
     PageSectionHeader,
     PageSectionTitle,
@@ -124,14 +127,15 @@ function InstallmentPlanCompactRow({
     if (onSelect) {
         return (
             <li className="list-none">
-                <button
-                    type="button"
-                    className={rowClass}
-                    aria-label={aria}
-                    onClick={() => onSelect(plan)}
-                >
-                    {content}
-                </button>
+                <Item asChild interactive className="block rounded-none border-0 px-4 py-3 text-left">
+                    <button
+                        type="button"
+                        aria-label={aria}
+                        onClick={() => onSelect(plan)}
+                    >
+                        {content}
+                    </button>
+                </Item>
             </li>
         )
     }

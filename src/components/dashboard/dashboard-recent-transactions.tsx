@@ -7,6 +7,9 @@ import {
 } from "@/components/ui/empty-state"
 import { useMemo } from "react"
 import {
+    Item,
+} from "@/components/ui/item"
+import {
     PageSection,
     PageSectionHeader,
     PageSectionTitle,
@@ -202,15 +205,14 @@ export function DashboardRecentTransactions({
 
                                 return (
                                     <li key={transaction.id}>
+                                        <Item
+                                            asChild
+                                            interactive
+                                            className="flex-nowrap gap-3 rounded-none border-0 px-4 py-3 text-left"
+                                        >
                                         <button
                                             type="button"
                                             aria-label={rowAriaLabel}
-                                            className={cn(
-                                                "flex w-full min-h-[44px] items-center gap-3 px-4 py-3 text-left transition-colors",
-                                                "hover:bg-muted/30 active:bg-muted/45",
-                                                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                                                "md:min-h-0",
-                                            )}
                                             onClick={() =>
                                                 onTransactionClick?.(transaction)
                                             }
@@ -310,6 +312,7 @@ export function DashboardRecentTransactions({
                                                 />
                                             </div>
                                         </button>
+                                        </Item>
                                     </li>
                                 )
                             })}

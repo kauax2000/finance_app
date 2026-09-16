@@ -2,6 +2,9 @@
 
 import { CalendarDaysIcon } from "@heroicons/react/16/solid"
 import {
+    Item,
+} from "@/components/ui/item"
+import {
     PageSection,
     PageSectionHeader,
     PageSectionTitle,
@@ -104,6 +107,9 @@ function MobilePaymentsCalendarGrid({
                     const hasEvents = list.length > 0
                     const isToday = cell.ymd === todayYmd
                     return (
+                        // Cru de propósito: é a célula da grade do calendário
+                        // (número do dia, "hoje", fora do mês, com ou sem evento),
+                        // e o `Button` impõe altura e alinhamento que a grade não quer.
                         <button
                             key={cell.ymd}
                             type="button"
@@ -275,9 +281,14 @@ function PaymentDayEventsListContent({
                 const meta = paymentEventMetaBadge(e.kind, e.installmentPlanId)
                 return (
                     <li key={e.id}>
+                        <Item
+                            asChild
+                            interactive
+                            size="sm"
+                            className="flex-nowrap justify-between gap-3 rounded-md border-0 px-2 py-2 text-left"
+                        >
                         <button
                             type="button"
-                            className="flex w-full items-center justify-between gap-3 rounded-md px-2 py-2 text-left text-sm hover:bg-muted/50 active:bg-muted/50"
                             onClick={() => {
                                 if (postedId) {
                                     onTransactionPostedClick(postedId)
@@ -318,6 +329,7 @@ function PaymentDayEventsListContent({
                                 </span>
                             )}
                         </button>
+                        </Item>
                     </li>
                 )
             })}
@@ -548,10 +560,16 @@ export function DashboardPaymentsCalendar({
                                         </div>
                                         <div className="space-y-1.5 pl-1">
                                             {list.map((r) => (
-                                                <button
+                                                <Item
                                                     key={r.id}
+                                                    asChild
+                                                    interactive
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="flex-nowrap justify-between gap-2 border-border/60 px-2 py-2 text-left"
+                                                >
+                                                <button
                                                     type="button"
-                                                    className="flex w-full items-center justify-between gap-2 rounded-lg border border-border/60 px-2 py-2 text-left text-sm hover:bg-muted/40 active:bg-muted/40"
                                                     onClick={() =>
                                                         onUpcomingPaymentClick(r)
                                                     }
@@ -566,6 +584,7 @@ export function DashboardPaymentsCalendar({
                                                         amountWhenNull="dash"
                                                     />
                                                 </button>
+                                                </Item>
                                             ))}
                                         </div>
                                     </div>
@@ -658,10 +677,16 @@ export function DashboardPaymentsCalendar({
                                         </div>
                                         <div className="space-y-1.5 pl-1">
                                             {list.map((e) => (
-                                                <button
+                                                <Item
                                                     key={e.id}
+                                                    asChild
+                                                    interactive
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="flex-nowrap justify-between gap-2 border-border/60 px-2 py-2 text-left"
+                                                >
+                                                <button
                                                     type="button"
-                                                    className="flex w-full items-center justify-between gap-2 rounded-lg border border-border/60 px-2 py-2 text-left text-sm hover:bg-muted/40 active:bg-muted/40"
                                                     onClick={() => {
                                                         const postedId =
                                                             postedTransactionIdFromEvent(
@@ -688,6 +713,7 @@ export function DashboardPaymentsCalendar({
                                                         neutralAmount
                                                     />
                                                 </button>
+                                                </Item>
                                             ))}
                                         </div>
                                     </div>
@@ -713,6 +739,8 @@ export function DashboardPaymentsCalendar({
                                     return (
                                         <Popover key={cell.ymd}>
                                             <PopoverTrigger asChild>
+                                                {/* Cru de propósito, como a célula da grade compacta:
+                                                    é o dia do calendário, não um botão de ação. */}
                                                 <button
                                                     type="button"
                                                     disabled={list.length === 0}

@@ -11,6 +11,9 @@ import {
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { percentPointsBR } from "@/lib/formatters"
+import {
+    Item,
+} from "@/components/ui/item"
 import { currencyBRL } from "@/lib/formatters"
 import Link from "next/link"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -367,11 +370,12 @@ export function DashboardExpenseCategories({
                                             )
                                         return (
                                             <li key={row.key}>
-                                                <button
-                                                    type="button"
+                                                <Item
+                                                    asChild
+                                                    interactive
+                                                    size="sm"
                                                     className={cn(
-                                                        "w-full rounded-lg border px-2 py-2 text-left transition-colors",
-                                                        "border-transparent hover:border-border/60 hover:bg-muted/30",
+                                                        "block px-2 py-2 text-left",
                                                         isActive &&
                                                             activeKey !== null &&
                                                             "border-border/80 bg-muted/40",
@@ -379,6 +383,9 @@ export function DashboardExpenseCategories({
                                                             activeKey !== null &&
                                                             "opacity-45",
                                                     )}
+                                                >
+                                                <button
+                                                    type="button"
                                                     onMouseEnter={() =>
                                                         setActiveKey(row.key)
                                                     }
@@ -439,6 +446,7 @@ export function DashboardExpenseCategories({
                                                         />
                                                     </div>
                                                 </button>
+                                                </Item>
                                             </li>
                                         )
                                     })}
