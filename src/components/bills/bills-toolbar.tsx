@@ -1,6 +1,14 @@
 "use client"
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+    Toolbar,
+    ToolbarActions,
+    toolbarControlClassName,
+    ToolbarFilterIndicator,
+    ToolbarFilters,
+    toolbarIconControlClassName,
+} from "@/components/ui/toolbar"
 import { AdjustmentsHorizontalIcon, ChevronDownIcon, PlusIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
 import { Badge } from "@/components/ui/badge"
@@ -146,8 +154,8 @@ export function BillsToolbar({
 
     return (
         <>
-            <div className="flex flex-row flex-wrap items-center gap-2 md:gap-3">
-                <div className="flex min-w-0 max-w-full shrink-0 items-center gap-2">
+            <Toolbar>
+                <ToolbarFilters className="max-w-full shrink-0 flex-none">
                     {/* Aba, e não filtro: ela troca o cartão da tela e reseta o
                         eixo de ordenação. `Tabs variant="solid"` é o mesmo
                         desenho do trilho que estava aqui à mão, com foco
@@ -180,14 +188,14 @@ export function BillsToolbar({
                     >
                         Beta
                     </Badge>
-                </div>
+                </ToolbarFilters>
 
-                <div className="ml-auto flex min-w-0 shrink-0 flex-wrap items-center justify-end gap-2">
+                <ToolbarActions className="min-w-0">
                     <div className="flex flex-row items-stretch gap-2 md:hidden">
                         <Button
                             type="button"
                             variant="primary"
-                            className="h-10 min-w-0 flex-1 gap-2 text-sm"
+                            className={cn(toolbarControlClassName, "min-w-0 flex-1 gap-2 text-sm")}
                             onClick={onNewBill}
                             disabled={!hasTable}
                         >
@@ -199,7 +207,8 @@ export function BillsToolbar({
                             variant="outline"
                             size="icon-lg"
                             className={cn(
-                                "relative size-10 shrink-0",
+                                toolbarIconControlClassName,
+                                "relative shrink-0",
                                 mobileFiltersTrigger === "external" && "hidden",
                             )}
                             onClick={() => setSheetOpen(true)}
@@ -212,10 +221,7 @@ export function BillsToolbar({
                         >
                             <AdjustmentsHorizontalIcon className="size-4 opacity-80" />
                             {active ? (
-                                <span
-                                    className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary"
-                                    aria-hidden
-                                />
+                                <ToolbarFilterIndicator />
                             ) : null}
                         </Button>
                     </div>
@@ -227,7 +233,7 @@ export function BillsToolbar({
                                     type="button"
                                     variant="outline"
                                     size="sm"
-                                    className="h-8 gap-1.5 text-xs"
+                                    className={cn(toolbarControlClassName, "gap-1.5 text-xs")}
                                     disabled={!hasTable}
                                 >
                                     Filtrar: {filterLabel(mode, pendingFilter, modelFilter)}
@@ -264,7 +270,7 @@ export function BillsToolbar({
                                     type="button"
                                     variant="outline"
                                     size="sm"
-                                    className="h-8 gap-1.5 text-xs"
+                                    className={cn(toolbarControlClassName, "gap-1.5 text-xs")}
                                     disabled={!hasTable}
                                 >
                                     Ordenar
@@ -294,8 +300,8 @@ export function BillsToolbar({
                             Nova conta
                         </Button>
                     </div>
-                </div>
-            </div>
+                </ToolbarActions>
+            </Toolbar>
 
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetContent
