@@ -8,10 +8,7 @@ import {
     Badge,
 } from "@/components/ui/badge"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import {
-    transactionSegmentContainerClassName,
-    transactionSegmentTabClassName,
-} from "@/components/transactions/transaction-type-segment"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { paymentMethodLabel } from "@/lib/payment-methods"
 import type { BillInstance } from "@/lib/supabase"
 import {
@@ -101,32 +98,25 @@ export function BillDetailHistoryList({
 
     return (
         <div className="space-y-3">
-            <div
-                className={cn(transactionSegmentContainerClassName, "w-full flex-wrap")}
-                role="tablist"
-                aria-label="Filtrar histórico"
+            <Tabs
+                value={tab}
+                onValueChange={(next) => {
+                    setTab(next as BillHistoryTab)
+                    setShown(PAGE)
+                }}
+                className="w-full md:w-fit"
             >
-                {TABS.map((t) => {
-                    const selected = tab === t.value
-                    return (
-                        <Button
-                            key={t.value}
-                            type="button"
-                            role="tab"
-                            aria-selected={selected}
-                            size="sm"
-                            variant="tertiary"
-                            className={transactionSegmentTabClassName(selected)}
-                            onClick={() => {
-                                setTab(t.value)
-                                setShown(PAGE)
-                            }}
-                        >
+                {/* `md:w-fit`, e não `md:w-auto`: aqui o pai é bloco, e uma moldura
+                    `flex` com largura automática ocupa a folha inteira. O trilho
+                    antigo era `inline-flex` e tinha a largura dos rótulos. */}
+                <TabsList aria-label="Filtrar histórico" className="w-full md:w-fit">
+                    {TABS.map((t) => (
+                        <TabsTrigger key={t.value} value={t.value}>
                             {t.label}
-                        </Button>
-                    )
-                })}
-            </div>
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
+            </Tabs>
 
             <div className="space-y-1">
                 {visible.length === 0 ? (

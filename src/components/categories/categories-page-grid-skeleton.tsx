@@ -3,7 +3,6 @@
 import type { ReactNode } from "react"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { transactionSegmentContainerClassName } from "@/components/transactions/transaction-type-segment"
 import { cn } from "@/lib/utils"
 
 const GRID_PLACEHOLDER_COUNT = 6
@@ -61,7 +60,7 @@ function CategoriesToolbarSkeleton({ variant }: { variant: CategoriesPageSkeleto
             )}
         >
             <div
-                className={cn(transactionSegmentContainerClassName, "max-w-full shrink-0")}
+                className={cn("inline-flex h-8 w-full items-stretch gap-0.5 rounded-lg bg-muted p-0.5 pointer-coarse:h-10 md:w-auto", "max-w-full shrink-0")}
                 aria-hidden
             >
                 <div className="flex h-full min-h-0 w-full gap-0.5 md:w-auto">

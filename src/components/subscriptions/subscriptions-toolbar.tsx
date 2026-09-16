@@ -15,10 +15,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-    transactionSegmentContainerClassName,
-    transactionSegmentTabClassName,
-} from "@/components/transactions/transaction-type-segment"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 
 export type SubscriptionStatusFilter = "all" | "active" | "inactive"
@@ -84,36 +81,21 @@ export function SubscriptionsToolbar({
         <>
             <Toolbar>
                 <ToolbarRow>
-                    <div
-                        className={cn(
-                            transactionSegmentContainerClassName,
-                            "min-w-0 flex-1 md:flex-initial md:shrink-0"
-                        )}
-                        role="tablist"
-                        aria-label="Status da assinatura"
+                    <Tabs
+                        value={statusFilter}
+                        onValueChange={(next) =>
+                            onStatusFilterChange(next as typeof statusFilter)
+                        }
+                        className="min-w-0 flex-1 md:flex-initial md:shrink-0"
                     >
-                        {STATUS_TABS.map((tab) => {
-                            const selected = statusFilter === tab.value
-                            return (
-                                <Button
-                                    key={tab.value}
-                                    type="button"
-                                    role="tab"
-                                    aria-selected={selected}
-                                    size="sm"
-                                    variant="tertiary"
-                                    className={transactionSegmentTabClassName(
-                                        selected
-                                    )}
-                                    onClick={() =>
-                                        onStatusFilterChange(tab.value)
-                                    }
-                                >
+                        <TabsList aria-label="Status da assinatura" className="w-full md:w-auto">
+                            {STATUS_TABS.map((tab) => (
+                                <TabsTrigger key={tab.value} value={tab.value}>
                                     {tab.label}
-                                </Button>
-                            )
-                        })}
-                    </div>
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
+                    </Tabs>
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>

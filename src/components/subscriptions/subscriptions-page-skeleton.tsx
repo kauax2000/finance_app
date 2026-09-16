@@ -9,7 +9,6 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { transactionSegmentContainerClassName } from "@/components/transactions/transaction-type-segment"
 import { cn } from "@/lib/utils"
 
 function ToolbarSkeleton() {
@@ -18,7 +17,7 @@ function ToolbarSkeleton() {
             <div className="flex min-w-0 flex-row items-center gap-2 md:contents">
                 <div
                     className={cn(
-                        transactionSegmentContainerClassName,
+                        "inline-flex h-8 w-full items-stretch gap-0.5 rounded-lg bg-muted p-0.5 pointer-coarse:h-10 md:w-auto",
                         "min-w-0 flex-1 md:flex-initial md:shrink-0"
                     )}
                     aria-hidden

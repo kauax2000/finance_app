@@ -12,8 +12,7 @@ function ToolbarSkeleton() {
         >
             <div
                 className={cn(
-                    "inline-flex h-10 w-fit max-w-full shrink-0 items-stretch rounded-lg bg-muted/60 p-0.5 ring-1 ring-border/60 md:h-9",
-                    "dark:bg-muted/40"
+                    "inline-flex h-8 w-fit max-w-full shrink-0 items-stretch gap-0.5 rounded-lg bg-muted p-0.5 pointer-coarse:h-10"
                 )}
             >
                 <div className="flex h-full w-fit min-h-0 items-center gap-0.5 px-0.5">

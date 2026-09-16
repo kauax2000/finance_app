@@ -163,7 +163,7 @@ function TrendsSkeleton() {
                 <div className="flex h-8 min-w-0 items-end gap-2">
                     <Skeleton className="h-3 w-24" />
                 </div>
-                <div className="inline-flex h-8 w-full max-w-full shrink-0 items-stretch rounded-lg bg-muted/60 p-0.5 ring-1 ring-border/60 pointer-coarse:h-10 md:w-[12.5rem] dark:bg-muted/40">
+                <div className="inline-flex h-8 w-full max-w-full shrink-0 items-stretch gap-0.5 rounded-lg bg-muted p-0.5 pointer-coarse:h-10 md:w-[12.5rem]">
                     <div className="flex h-full w-full min-h-0 items-center gap-0.5 px-0.5">
                         <Skeleton className="h-[calc(100%-2px)] flex-1 rounded-md" />
                         <Skeleton className="h-[calc(100%-2px)] flex-1 rounded-md" />

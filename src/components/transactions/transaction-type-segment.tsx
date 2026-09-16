@@ -2,24 +2,11 @@
 
 import * as React from "react"
 
-import { Button } from "@/components/ui/button"
 import { FormRadioGroup } from "@/components/ui/form"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 
 export type TransactionFilterType = "all" | "income" | "expense"
-
-/** Shared chrome for filter + form type segments (matches transaction toolbar). */
-export const transactionSegmentContainerClassName =
-    "inline-flex h-8 w-full items-stretch gap-0.5 rounded-lg bg-muted/60 p-0.5 ring-1 ring-border/60 pointer-coarse:h-10 md:w-auto dark:bg-muted/40"
-
-export function transactionSegmentTabClassName(selected: boolean) {
-    return cn(
-        "h-full min-h-0 min-w-0 flex-1 px-2 text-xs font-medium shadow-none md:min-w-[4.25rem] md:flex-none md:px-2.5",
-        selected
-            ? "relative z-[1] border border-border/80 bg-background text-foreground shadow-sm dark:bg-card dark:shadow-[0_1px_2px_0_rgb(0_0_0/0.35)]"
-            : "border border-transparent text-muted-foreground hover:bg-transparent hover:text-foreground"
-    )
-}
 
 const FILTER_TABS: { value: TransactionFilterType; label: string }[] = [
     { value: "all", label: "Todas" },
@@ -47,9 +34,6 @@ const FORM_KIND_TABS: { value: TransactionFormKind; label: string }[] = [
  * role="tab"` — o padrão ARIA de abas anunciado sem `tabpanel`, sem
  * `aria-controls` e sem foco itinerante, para escolher o valor que vai ser
  * gravado. Escolha única num formulário é rádio, e agora é.
- *
- * A chapa (`transactionSegmentContainerClassName`) fica no arquivo porque os
- * **seis** trilhos que de fato são filtro ou aba de página ainda a importam.
  */
 export function TransactionFormKindSegment({
     value,
@@ -111,6 +95,14 @@ export function TransactionFormTypeSegment({
     )
 }
 
+/**
+ * O filtro de tipo das barras de transações e de categorias.
+ *
+ * Era a última bandeja escrita à mão (`transactionSegmentContainerClassName`),
+ * com `Button role="tab"` sem foco itinerante: cada aba era uma parada de Tab.
+ * Agora é `Tabs` sem `TabsContent`, como as visões de cartões e de contas — o
+ * Radix dá as setas, o `aria-selected` e o indicador que desliza.
+ */
 export function TransactionTypeSegment({
     value,
     onChange,
@@ -124,28 +116,18 @@ export function TransactionTypeSegment({
 }) {
     const tabs = includeAll ? FILTER_TABS : FILTER_TABS.filter((tab) => tab.value !== "all")
     return (
-        <div
-            className={cn(transactionSegmentContainerClassName, className)}
-            role="tablist"
-            aria-label="Filtrar por tipo de lançamento"
+        <Tabs
+            value={value}
+            onValueChange={(next) => onChange(next as TransactionFilterType)}
+            className={cn("w-full md:w-auto", className)}
         >
-            {tabs.map((tab) => {
-                const selected = value === tab.value
-                return (
-                    <Button
-                        key={tab.value}
-                        type="button"
-                        role="tab"
-                        aria-selected={selected}
-                        size="sm"
-                        variant="tertiary"
-                        className={transactionSegmentTabClassName(selected)}
-                        onClick={() => onChange(tab.value)}
-                    >
+            <TabsList aria-label="Filtrar por tipo de lançamento" className="w-full md:w-auto">
+                {tabs.map((tab) => (
+                    <TabsTrigger key={tab.value} value={tab.value}>
                         {tab.label}
-                    </Button>
-                )
-            })}
-        </div>
+                    </TabsTrigger>
+                ))}
+            </TabsList>
+        </Tabs>
     )
 }

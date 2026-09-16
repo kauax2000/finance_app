@@ -2,7 +2,6 @@
 
 import { currencyBRL } from "@/lib/formatters"
 import * as React from "react"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
     Area,
@@ -21,11 +20,7 @@ import {
     buildMonthlySeries,
     hexToRgba,
 } from "@/components/categories/detail/category-detail-utils"
-import {
-    transactionSegmentContainerClassName,
-    transactionSegmentTabClassName,
-} from "@/components/transactions/transaction-type-segment"
-import { cn } from "@/lib/utils"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 type SeriesRow = { date: string; amount: number | string; type: string; category_id: string | null }
 
@@ -81,37 +76,16 @@ export function CategoryDetailTrends({
                         Tendência
                     </h3>
                 </div>
-                <div
-                    className={cn(
-                        transactionSegmentContainerClassName,
-                        "w-full max-w-full shrink-0 md:w-auto",
-                    )}
-                    role="tablist"
-                    aria-label="Período do gráfico"
+                <Tabs
+                    value={tab}
+                    onValueChange={(next) => setTab(next as typeof tab)}
+                    className="w-full max-w-full shrink-0 md:w-auto"
                 >
-                    <Button
-                        type="button"
-                        role="tab"
-                        aria-selected={tab === "daily"}
-                        size="sm"
-                        variant="tertiary"
-                        className={transactionSegmentTabClassName(tab === "daily")}
-                        onClick={() => setTab("daily")}
-                    >
-                        Dia a dia
-                    </Button>
-                    <Button
-                        type="button"
-                        role="tab"
-                        aria-selected={tab === "monthly"}
-                        size="sm"
-                        variant="tertiary"
-                        className={transactionSegmentTabClassName(tab === "monthly")}
-                        onClick={() => setTab("monthly")}
-                    >
-                        12 meses
-                    </Button>
-                </div>
+                    <TabsList aria-label="Período do gráfico" className="w-full md:w-auto">
+                        <TabsTrigger value="daily">Dia a dia</TabsTrigger>
+                        <TabsTrigger value="monthly">12 meses</TabsTrigger>
+                    </TabsList>
+                </Tabs>
             </div>
             <Card padding="none">
                 <CardContent className="p-3">
