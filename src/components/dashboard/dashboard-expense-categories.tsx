@@ -24,6 +24,11 @@ import {
 } from "recharts"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import { ROUTES } from "@/config/navigation"
 import { labelYearMonthPt } from "@/lib/budget-month"
 import { cn } from "@/lib/utils"
@@ -229,26 +234,25 @@ export function DashboardExpenseCategories({
     const totalDisplay = currencyBRL(total)
 
     return (
-        <div className="min-w-0 space-y-2">
-            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex h-8 min-w-0 items-end">
-                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                        Despesas por categoria
-                    </p>
-                </div>
-                <Button
-                    asChild
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 w-full gap-2 px-2 text-xs pointer-coarse:h-10 md:w-auto"
-                >
-                    <Link href={ROUTES.DASHBOARD_CATEGORIES}>
-                        <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />
-                        <span className="truncate">Ver categorias</span>
-                    </Link>
-                </Button>
-            </div>
+        <PageSection>
+            <PageSectionHeader
+                actions={
+                    <Button
+                        asChild
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-2 px-2 text-xs pointer-coarse:h-10"
+                    >
+                        <Link href={ROUTES.DASHBOARD_CATEGORIES}>
+                            <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />
+                            <span className="truncate">Ver categorias</span>
+                        </Link>
+                    </Button>
+                }
+            >
+                <PageSectionTitle>Despesas por categoria</PageSectionTitle>
+            </PageSectionHeader>
 
             <Card padding="none">
                 <CardContent className="relative flex flex-col gap-0 p-0">
@@ -456,6 +460,6 @@ export function DashboardExpenseCategories({
                     </div>
                 </CardContent>
             </Card>
-        </div>
+        </PageSection>
     )
 }

@@ -113,9 +113,9 @@ function BudgetMoMMobileCardSkeleton() {
 function SummaryExpenseSkeleton() {
     return (
         <section className="space-y-3" aria-label="Resumo do mês (skeleton)">
-            <div className="min-w-0 space-y-2 md:col-span-6">
+            <div className="min-w-0 space-y-4 md:col-span-6">
                 <div className="flex min-w-0 flex-col items-start gap-2 md:flex-row md:items-start md:justify-between">
-                    <Skeleton className="h-3 w-32" />
+                    <Skeleton className="h-4 w-32" />
                     <div className="flex w-full min-w-0 flex-col items-start gap-2 md:ml-auto md:w-auto md:min-w-0 md:flex-row md:items-center md:justify-end">
                         <BudgetMoMMobileCardSkeleton />
                         <div className="hidden md:block">
@@ -158,12 +158,12 @@ function SummaryExpenseSkeleton() {
 
 function TrendsSkeleton() {
     return (
-        <section className="min-w-0 space-y-3" aria-label="Tendência (skeleton)">
-            <div className="flex min-w-0 max-w-full flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-3">
-                <div className="flex h-8 min-w-0 items-end gap-2">
-                    <Skeleton className="h-3 w-24" />
+        <section className="min-w-0 space-y-4" aria-label="Tendência (skeleton)">
+            <div className="flex min-w-0 items-center justify-between gap-4">
+                <div className="flex h-6 min-w-0 items-center">
+                    <Skeleton className="h-4 w-24" />
                 </div>
-                <div className="inline-flex h-8 w-full max-w-full shrink-0 items-stretch gap-0.5 rounded-lg bg-muted p-0.5 pointer-coarse:h-10 md:w-[12.5rem]">
+                <div className="inline-flex h-8 w-40 shrink-0 items-stretch gap-0.5 rounded-lg bg-muted p-0.5 pointer-coarse:h-10">
                     <div className="flex h-full w-full min-h-0 items-center gap-0.5 px-0.5">
                         <Skeleton className="h-[calc(100%-2px)] flex-1 rounded-md" />
                         <Skeleton className="h-[calc(100%-2px)] flex-1 rounded-md" />

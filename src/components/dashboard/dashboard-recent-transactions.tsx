@@ -6,6 +6,11 @@ import {
     EmptyStateIcon,
 } from "@/components/ui/empty-state"
 import { useMemo } from "react"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import Link from "next/link"
 import { ArrowTopRightOnSquareIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
 import { ReceiptPercentIcon } from "@heroicons/react/24/outline"
@@ -91,26 +96,25 @@ export function DashboardRecentTransactions({
 }) {
     const monthTitle = useMemo(() => labelYearMonthPt(calendarYm), [calendarYm])
     return (
-        <div className="min-w-0 max-w-full space-y-2">
-            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex h-8 min-w-0 items-end">
-                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                        {sectionTitle}
-                    </p>
-                </div>
-                <Button
-                    asChild
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 w-full gap-2 px-2 text-xs pointer-coarse:h-10 md:w-auto"
-                >
-                    <Link href={viewAllHref}>
-                        <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />
-                        <span className="truncate">{viewAllLabel}</span>
-                    </Link>
-                </Button>
-            </div>
+        <PageSection className="max-w-full">
+            <PageSectionHeader
+                actions={
+                    <Button
+                        asChild
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-2 px-2 text-xs pointer-coarse:h-10"
+                    >
+                        <Link href={viewAllHref}>
+                            <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />
+                            <span className="truncate">{viewAllLabel}</span>
+                        </Link>
+                    </Button>
+                }
+            >
+                <PageSectionTitle>{sectionTitle}</PageSectionTitle>
+            </PageSectionHeader>
 
             {transactions.length === 0 ? (
                 <Card padding="none">
@@ -358,6 +362,6 @@ export function DashboardRecentTransactions({
                     </Button>
                 </div>
             ) : null}
-        </div>
+        </PageSection>
     )
 }

@@ -7,6 +7,11 @@ import {
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { SessionsPageSkeleton } from "@/components/account/sessions-page-skeleton"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import { ROUTES } from "@/config/navigation"
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
@@ -113,31 +118,30 @@ export default function SessionsPage() {
 
     return (
         <div className="min-w-0 max-w-full space-y-5">
-            <div className="min-w-0 space-y-2">
-                <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Sessões ativas
-                        </p>
-                    </div>
-                    {otherSessionsCount > 0 ? (
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-10 w-full gap-1.5 border-dashed text-sm sm:h-7 sm:w-fit sm:shrink-0 sm:self-auto sm:text-control-sm"
-                            onClick={() => void handleRevokeAll()}
-                            disabled={revoking === "all"}
-                        >
-                            {revoking === "all" ? (
-                                <Spinner className="sm:size-3.5" />
-                            ) : (
-                                <ArrowRightStartOnRectangleIcon className="size-4 opacity-70 sm:size-3.5" />
-                            )}
-                            Encerrar todas
-                        </Button>
-                    ) : null}
-                </div>
+            <PageSection>
+                <PageSectionHeader
+                    actions={
+                        otherSessionsCount > 0 ? (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 gap-1.5 border-dashed text-xs pointer-coarse:h-10"
+                                onClick={() => void handleRevokeAll()}
+                                disabled={revoking === "all"}
+                            >
+                                {revoking === "all" ? (
+                                    <Spinner className="size-3.5" />
+                                ) : (
+                                    <ArrowRightStartOnRectangleIcon className="size-3.5 opacity-70" />
+                                )}
+                                Encerrar todas
+                            </Button>
+                        ) : null
+                    }
+                >
+                    <PageSectionTitle>Sessões ativas</PageSectionTitle>
+                </PageSectionHeader>
                 <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <CardToolbar className="justify-end">
@@ -245,7 +249,7 @@ export default function SessionsPage() {
                         />
                     </CardContent>
                 </Card>
-            </div>
+            </PageSection>
         </div>
     )
 }

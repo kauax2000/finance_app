@@ -8,6 +8,11 @@ import {
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { currencyBRL } from "@/lib/formatters"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import { localYmdFromDate } from "@/lib/transaction-date"
 import { useMemo } from "react"
 import Link from "next/link"
@@ -204,28 +209,25 @@ export function DashboardOpenInvoices({
     const monthTitle = useMemo(() => labelYearMonthPt(calendarYm), [calendarYm])
 
     return (
-        <div className="min-w-0 space-y-2">
-            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0 space-y-0.5">
-                    <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Faturas do mês
-                        </p>
-                    </div>
-                </div>
-                <Button
-                    asChild
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 w-full gap-2 px-2 text-xs pointer-coarse:h-10 md:w-auto"
-                >
-                    <Link href={ROUTES.CREDIT_CARDS}>
-                        <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />
-                        <span className="truncate">Ver cartões</span>
-                    </Link>
-                </Button>
-            </div>
+        <PageSection>
+            <PageSectionHeader
+                actions={
+                    <Button
+                        asChild
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-2 px-2 text-xs pointer-coarse:h-10"
+                    >
+                        <Link href={ROUTES.CREDIT_CARDS}>
+                            <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />
+                            <span className="truncate">Ver cartões</span>
+                        </Link>
+                    </Button>
+                }
+            >
+                <PageSectionTitle>Faturas do mês</PageSectionTitle>
+            </PageSectionHeader>
 
             <Card padding="none">
                 <CardContent className="p-0">
@@ -315,6 +317,6 @@ export function DashboardOpenInvoices({
                     )}
                 </CardContent>
             </Card>
-        </div>
+        </PageSection>
     )
 }

@@ -6,6 +6,11 @@ import {
     chartSeriesColor,
 } from "@/components/ui/chart"
 import { CreditCardIcon } from "@heroicons/react/16/solid"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import { formatYearMonthShortPtBr } from "@/lib/transaction-date"
 import { currencyBRL, currencyCompactBRL } from "@/lib/formatters"
 import { useMemo } from "react"
@@ -255,31 +260,27 @@ export function CreditCardsHistoryChart({
     }
 
     return (
-        <div className="min-w-0 space-y-2">
-            <div className="flex min-w-0 flex-row items-center justify-between gap-x-3 gap-y-1">
-                <div className="flex min-h-8 min-w-0 shrink-0 items-center">
-                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                        Histórico de faturas
-                    </p>
-                </div>
+        <PageSection>
+            <PageSectionHeader>
+                <PageSectionTitle>Histórico de faturas</PageSectionTitle>
+                {/* A legenda mora no cabeçalho, fora do gráfico — como a da rosca
+                    —, então o `payload` é montado aqui, com a mesma tinta a 75%
+                    que as barras usam. Ela vem **abaixo** do título, e não como
+                    `actions`: a coluna de ações tem a largura do conteúdo, e com
+                    seis nomes longos a legenda levava o título a 0px no telefone. */}
                 {chartData.length > 0 && hasAnyValue ? (
-                    <div className="min-w-0 flex-1">
-                        {/* A legenda mora no cabeçalho, fora do gráfico — como a da
-                            rosca —, então o `payload` é montado aqui, com a mesma
-                            tinta a 75% que as barras usam. */}
-                        <ChartLegendContent
-                            align="end"
-                            verticalAlign="top"
-                            className="gap-x-3 gap-y-1 pb-0 text-2xs text-muted-foreground"
-                            payload={cards.map((c, idx) => ({
-                                value: c.name,
-                                dataKey: c.id,
-                                color: alpha(chartSeriesColor(idx), 75),
-                            }))}
-                        />
-                    </div>
+                    <ChartLegendContent
+                        align="start"
+                        verticalAlign="top"
+                        className="gap-x-3 gap-y-1 pt-1 pb-0 text-2xs text-muted-foreground"
+                        payload={cards.map((c, idx) => ({
+                            value: c.name,
+                            dataKey: c.id,
+                            color: alpha(chartSeriesColor(idx), 75),
+                        }))}
+                    />
                 ) : null}
-            </div>
+            </PageSectionHeader>
 
             <Card padding="none" className="relative">
                 <CardContent className="relative flex flex-col gap-0 p-0">
@@ -397,6 +398,6 @@ export function CreditCardsHistoryChart({
                     </div>
                 </CardContent>
             </Card>
-        </div>
+        </PageSection>
     )
 }

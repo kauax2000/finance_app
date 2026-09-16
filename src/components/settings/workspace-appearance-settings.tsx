@@ -1,6 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import { ArrowRightStartOnRectangleIcon, EllipsisVerticalIcon, InformationCircleIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
@@ -20,9 +25,9 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 function WorkspaceAppearanceSkeleton() {
     return (
-        <div className="min-w-0 space-y-2">
-            <div className="flex h-8 min-w-0 items-end">
-                <Skeleton className="h-3 w-24" />
+        <div className="min-w-0 space-y-4">
+            <div className="flex h-6 min-w-0 items-center">
+                <Skeleton className="h-4 w-24" />
             </div>
             <Card padding="none">
                 <CardContent className="flex flex-col p-0">
@@ -202,14 +207,10 @@ export function WorkspaceAppearanceSettings() {
             {authLoading || loading ? (
                 <WorkspaceAppearanceSkeleton />
             ) : (
-                <div className="min-w-0 space-y-2">
-                    <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                        <div className="flex h-8 min-w-0 items-end">
-                            <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                                Carteira
-                            </p>
-                        </div>
-                    </div>
+                <PageSection>
+                    <PageSectionHeader>
+                        <PageSectionTitle>Carteira</PageSectionTitle>
+                    </PageSectionHeader>
                     <Card padding="none">
                         <CardContent className="flex flex-col p-0">
                             {!currentWorkspace ? (
@@ -276,7 +277,7 @@ export function WorkspaceAppearanceSettings() {
                             )}
                         </CardContent>
                     </Card>
-                </div>
+                </PageSection>
             )}
         </>
     )

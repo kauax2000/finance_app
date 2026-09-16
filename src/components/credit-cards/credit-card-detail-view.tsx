@@ -359,7 +359,6 @@ export function CreditCardDetailView({
                         onTransactionClick={onTransactionClick}
                         sectionTitle="Últimos lançamentos"
                         viewAllHref={transactionsHref}
-                        viewAllLabel="Ver todas as transações neste cartão"
                         emptyMessage={CC_DETAIL_INVOICE_POSTED_EMPTY_MESSAGE}
                         truncationFooter={
                             invoicePostedListTruncated

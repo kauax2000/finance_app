@@ -7,6 +7,11 @@ import {
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { MembersSectionSkeleton } from "@/components/members/members-section-skeleton"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import { useTimeout } from "@/hooks/use-timeout"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import type { User } from "@supabase/supabase-js"
@@ -122,9 +127,9 @@ function mergeMemberRowsForDisplay(
 const membersPageSkeleton = (
     <div className="min-w-0 max-w-full space-y-5" role="status" aria-busy="true" aria-label="Carregando membros">
         <MembersSectionSkeleton />
-        <div className="min-w-0 space-y-2">
-            <div className="flex h-8 min-w-0 items-end">
-                <Skeleton className="h-3 w-28" />
+        <div className="min-w-0 space-y-4">
+            <div className="flex h-6 min-w-0 items-center">
+                <Skeleton className="h-4 w-28" />
             </div>
             <Card padding="none">
                 <CardContent className="flex flex-col gap-0 p-0">
@@ -620,14 +625,10 @@ export default function MembersPage() {
                 </AlertDialogContent>
             </AlertDialog>
 
-            <div className="min-w-0 space-y-2">
-                <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Membros
-                        </p>
-                    </div>
-                </div>
+            <PageSection>
+                <PageSectionHeader>
+                    <PageSectionTitle>Membros</PageSectionTitle>
+                </PageSectionHeader>
                 <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <CardToolbar className="justify-end">
@@ -753,20 +754,16 @@ export default function MembersPage() {
                         </CardNote>
                     </CardContent>
                 </Card>
-            </div>
+            </PageSection>
 
             <div
                 id="workspace-invites"
                 className="min-w-0 space-y-5 scroll-mt-[calc(var(--mobile-header-offset)+0.5rem)] md:scroll-mt-6"
             >
-                <div className="min-w-0 space-y-2">
-                    <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                        <div className="flex h-8 min-w-0 items-end">
-                            <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                                Convidar
-                            </p>
-                        </div>
-                    </div>
+                <PageSection>
+                    <PageSectionHeader>
+                        <PageSectionTitle>Convidar</PageSectionTitle>
+                    </PageSectionHeader>
                     {!canManageMembers ? (
                         <div className="rounded-xl border border-border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
                             Apenas o proprietário da carteira pode enviar convites.
@@ -915,16 +912,12 @@ export default function MembersPage() {
                             </div>
                         </CardContent>
                     </Card>
-                </div>
+                </PageSection>
 
-                <div className="min-w-0 space-y-2">
-                    <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                        <div className="flex h-8 min-w-0 items-end">
-                            <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                                Convites pendentes
-                            </p>
-                        </div>
-                    </div>
+                <PageSection>
+                    <PageSectionHeader>
+                        <PageSectionTitle>Convites pendentes</PageSectionTitle>
+                    </PageSectionHeader>
                     <Card padding="none">
                         <CardContent className="flex flex-col p-0">
                             <CardToolbar className="justify-end">
@@ -1057,7 +1050,7 @@ export default function MembersPage() {
                             />
                         </CardContent>
                     </Card>
-                </div>
+                </PageSection>
             </div>
         </div>
     )

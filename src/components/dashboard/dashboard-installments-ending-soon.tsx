@@ -1,6 +1,11 @@
 "use client"
 
 import Link from "next/link"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid"
 import { Card, CardContent, CardFooter, CardToolbar } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -160,28 +165,25 @@ export function DashboardInstallmentsEndingSoon({
     const transactionsHref = `${ROUTES.TRANSACTIONS}?type=expense&inst=1`
 
     return (
-        <div className="min-w-0 space-y-2">
-            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0 space-y-0.5">
-                    <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Compras parceladas
-                        </p>
-                    </div>
-                </div>
-                <Button
-                    asChild
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 w-full gap-2 px-2 text-xs pointer-coarse:h-10 md:w-auto"
-                >
-                    <Link href={transactionsHref}>
-                        <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />
-                        <span className="truncate">Ver em transações</span>
-                    </Link>
-                </Button>
-            </div>
+        <PageSection>
+            <PageSectionHeader
+                actions={
+                    <Button
+                        asChild
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-2 px-2 text-xs pointer-coarse:h-10"
+                    >
+                        <Link href={transactionsHref}>
+                            <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />
+                            <span className="truncate">Ver em transações</span>
+                        </Link>
+                    </Button>
+                }
+            >
+                <PageSectionTitle>Compras parceladas</PageSectionTitle>
+            </PageSectionHeader>
 
             <Card padding="none">
                     <CardToolbar aria-hidden />
@@ -232,6 +234,6 @@ export function DashboardInstallmentsEndingSoon({
                     </CardContent>
                     <CardFooter aria-hidden />
                 </Card>
-        </div>
+        </PageSection>
     )
 }

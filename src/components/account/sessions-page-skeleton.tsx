@@ -14,12 +14,12 @@ import { Skeleton } from "@/components/ui/skeleton"
 export function SessionsPageSkeleton() {
     return (
         <div className="min-w-0 max-w-full space-y-5" role="status" aria-busy="true">
-            <div className="min-w-0 space-y-2">
-                <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="flex h-8 min-w-0 items-end">
-                        <Skeleton className="h-3 w-28" />
+            <div className="min-w-0 space-y-4">
+                <div className="flex min-w-0 items-center justify-between gap-4">
+                    <div className="flex h-6 min-w-0 items-center">
+                        <Skeleton className="h-4 w-28" />
                     </div>
-                    <Skeleton className="h-10 w-full rounded-md sm:h-7 sm:w-32 sm:shrink-0 sm:self-auto" />
+                    <Skeleton className="h-8 w-32 shrink-0 rounded-md pointer-coarse:h-10" />
                 </div>
                 <Card padding="none">
                     <CardContent className="flex flex-col p-0">

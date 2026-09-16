@@ -1,6 +1,11 @@
 "use client"
 
 import { useCallback, useState, type ReactNode } from "react"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import { ArrowRightIcon } from "@heroicons/react/16/solid"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -172,24 +177,23 @@ export function NotificationPreferences() {
         !authLoading && !workspaceLoading && !currentWorkspaceId
 
     return (
-        <div className="min-w-0 space-y-2">
-            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                <div className="flex h-8 min-w-0 items-end">
-                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                        Notificações desta carteira
-                    </p>
-                </div>
-                <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-10 w-full gap-1.5 border-dashed text-sm sm:h-7 sm:w-fit sm:shrink-0 sm:self-auto sm:text-control-sm"
-                    onClick={() => openNotifications()}
-                >
-                    Ver histórico
-                    <ArrowRightIcon className="size-4 opacity-70 sm:size-3.5" />
-                </Button>
-            </div>
+        <PageSection>
+            <PageSectionHeader
+                actions={
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-1.5 border-dashed text-xs pointer-coarse:h-10"
+                        onClick={() => openNotifications()}
+                    >
+                        Ver histórico
+                        <ArrowRightIcon className="size-3.5 opacity-70" />
+                    </Button>
+                }
+            >
+                <PageSectionTitle>Notificações desta carteira</PageSectionTitle>
+            </PageSectionHeader>
             <Card padding="none">
                 <CardContent className="flex flex-col p-0">
                     {showNoWorkspaceMessage ? (
@@ -364,6 +368,6 @@ export function NotificationPreferences() {
                     ) : null}
                 </CardContent>
             </Card>
-        </div>
+        </PageSection>
     )
 }

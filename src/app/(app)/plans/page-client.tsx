@@ -7,6 +7,11 @@ import {
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { InformationCircleIcon, WrenchIcon } from "@heroicons/react/16/solid"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import { SparklesIcon } from "@heroicons/react/20/solid"
 import { ReceiptPercentIcon, SparklesIcon as SparklesOutlineIcon } from "@heroicons/react/24/outline"
 import {
@@ -20,14 +25,10 @@ import { cn } from "@/lib/utils"
 export default function PlansPage() {
     return (
         <div className="min-w-0 max-w-full space-y-5">
-            <div className="min-w-0 space-y-2">
-                <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Plano atual
-                        </p>
-                    </div>
-                </div>
+            <PageSection>
+                <PageSectionHeader>
+                    <PageSectionTitle>Plano atual</PageSectionTitle>
+                </PageSectionHeader>
                 <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:py-3.5">
@@ -68,16 +69,12 @@ export default function PlansPage() {
                         </CardNote>
                     </CardContent>
                 </Card>
-            </div>
+            </PageSection>
 
-            <div className="min-w-0 space-y-2">
-                <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Planos disponíveis
-                        </p>
-                    </div>
-                </div>
+            <PageSection>
+                <PageSectionHeader>
+                    <PageSectionTitle>Planos disponíveis</PageSectionTitle>
+                </PageSectionHeader>
                 <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <CardToolbar>
@@ -154,16 +151,12 @@ export default function PlansPage() {
                         </CardNote>
                     </CardContent>
                 </Card>
-            </div>
+            </PageSection>
 
-            <div className="min-w-0 space-y-2">
-                <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Histórico de pagamentos
-                        </p>
-                    </div>
-                </div>
+            <PageSection>
+                <PageSectionHeader>
+                    <PageSectionTitle>Histórico de pagamentos</PageSectionTitle>
+                </PageSectionHeader>
                 <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <CardToolbar className="justify-end">
@@ -190,7 +183,7 @@ export default function PlansPage() {
                         />
                     </CardContent>
                 </Card>
-            </div>
+            </PageSection>
         </div>
     )
 }

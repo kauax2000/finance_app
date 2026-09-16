@@ -1,6 +1,11 @@
 "use client"
 
 import { currencyBRL } from "@/lib/formatters"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import * as React from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -66,27 +71,26 @@ export function CategoryDetailTrends({
     const monthlyTitle = isExpense ? "Despesas por mês" : "Receitas por mês"
 
     return (
-        <section className="min-w-0 space-y-3" aria-labelledby="category-trends-heading">
-            <div className="flex min-w-0 max-w-full flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-3">
-                <div className="flex h-8 min-w-0 items-end gap-2">
-                    <h3
-                        id="category-trends-heading"
-                        className="text-2xs font-medium uppercase tracking-wide text-muted-foreground"
+        <PageSection aria-labelledby="category-trends-heading">
+            <PageSectionHeader
+                actions={
+                    <Tabs
+                        value={tab}
+                        onValueChange={(next) => setTab(next as typeof tab)}
+                        className="w-auto"
                     >
-                        Tendência
-                    </h3>
-                </div>
-                <Tabs
-                    value={tab}
-                    onValueChange={(next) => setTab(next as typeof tab)}
-                    className="w-full max-w-full shrink-0 md:w-auto"
-                >
-                    <TabsList aria-label="Período do gráfico" className="w-full md:w-auto">
-                        <TabsTrigger value="daily">Dia a dia</TabsTrigger>
-                        <TabsTrigger value="monthly">12 meses</TabsTrigger>
-                    </TabsList>
-                </Tabs>
-            </div>
+                        <TabsList aria-label="Período do gráfico" className="w-auto">
+                            <TabsTrigger value="daily">Dia a dia</TabsTrigger>
+                            <TabsTrigger value="monthly">12 meses</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+                }
+            >
+                {/* `h3`: a tendência é um bloco dentro do detalhe da categoria. */}
+                <PageSectionTitle asChild>
+                    <h3 id="category-trends-heading">Tendência</h3>
+                </PageSectionTitle>
+            </PageSectionHeader>
             <Card padding="none">
                 <CardContent className="p-3">
                     <p className="mb-2 w-full text-xs font-medium text-muted-foreground md:min-w-0 md:truncate">
@@ -133,6 +137,6 @@ export function CategoryDetailTrends({
                     </ResponsiveContainer>
                 </CardContent>
             </Card>
-        </section>
+        </PageSection>
     )
 }

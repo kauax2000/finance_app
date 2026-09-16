@@ -1,6 +1,11 @@
 "use client"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import { formatDateLongPtBr } from "@/lib/transaction-date"
 import { ROUTES } from "@/config/navigation"
 import { useState } from "react"
@@ -47,14 +52,10 @@ export default function AccountPage() {
 
     return (
         <div className="min-w-0 max-w-full space-y-5">
-            <div className="min-w-0 space-y-2">
-                <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Perfil
-                        </p>
-                    </div>
-                </div>
+            <PageSection>
+                <PageSectionHeader>
+                    <PageSectionTitle>Perfil</PageSectionTitle>
+                </PageSectionHeader>
                 <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <div className="flex items-center justify-between gap-3 px-4 py-3 sm:py-3.5">
@@ -129,16 +130,12 @@ export default function AccountPage() {
                         </CardNote>
                     </CardContent>
                 </Card>
-            </div>
+            </PageSection>
 
-            <div className="min-w-0 space-y-2">
-                <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Segurança
-                        </p>
-                    </div>
-                </div>
+            <PageSection>
+                <PageSectionHeader>
+                    <PageSectionTitle>Segurança</PageSectionTitle>
+                </PageSectionHeader>
                 <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <Link
@@ -177,7 +174,7 @@ export default function AccountPage() {
                         </Link>
                     </CardContent>
                 </Card>
-            </div>
+            </PageSection>
 
             <EditProfileDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} />
             <ChangePasswordDialog

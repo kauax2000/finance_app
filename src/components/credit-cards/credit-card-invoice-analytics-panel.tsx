@@ -1,6 +1,11 @@
 "use client"
 
 import { percentPointsBR } from "@/lib/formatters"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import { currencyBRL } from "@/lib/formatters"
 import { useCallback, useMemo, useState, type ReactNode } from "react"
 import { useQueryClient } from "@tanstack/react-query"
@@ -774,23 +779,19 @@ export function CreditCardInvoiceAnalyticsPanel({
 
     return (
         <div className="space-y-6">
-            <div className="min-w-0 max-w-full space-y-2">
-                <div className="flex min-w-0 flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                    <div className="flex h-8 min-w-0 items-end">
-                        <h2 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Fatura
-                        </h2>
-                    </div>
-                    <div className="w-full min-w-0 md:flex md:w-auto md:justify-end">
+            <PageSection className="max-w-full">
+                <PageSectionHeader
+                    actions={
                         <InvoiceCycleSwitcher
                             snapshot={snapshot}
                             cycleOffset={cycleOffset}
                             bounds={cycleOffsetBounds}
                             onChange={onCycleOffsetChange}
-                            mobileTriggerFullWidth
                         />
-                    </div>
-                </div>
+                    }
+                >
+                    <PageSectionTitle>Fatura</PageSectionTitle>
+                </PageSectionHeader>
                 <Card variant="elevated" padding="none">
                     <CardToolbar
                         aria-live="polite"
@@ -925,7 +926,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                         </InsightNoticePanel>
                     </CardContent>
                 </Card>
-            </div>
+            </PageSection>
 
             <details className="group rounded-xl border border-border/70 bg-card text-card-foreground shadow-sm open:pb-1">
                 <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium marker:content-none [&::-webkit-details-marker]:hidden">
@@ -1216,14 +1217,10 @@ export function CreditCardInvoiceAnalyticsPanel({
                 </div>
             </details>
 
-            <div className="min-w-0 max-w-full space-y-2">
-                <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex h-8 min-w-0 items-end">
-                        <h2 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Parcelas e compromissos
-                        </h2>
-                    </div>
-                </div>
+            <PageSection className="max-w-full">
+                <PageSectionHeader>
+                    <PageSectionTitle>Parcelas e compromissos</PageSectionTitle>
+                </PageSectionHeader>
                 <Card variant="elevated" padding="none">
                     {committedDetailLine ? (
                         <CardToolbar
@@ -1314,7 +1311,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                     )}
                     </CardContent>
                 </Card>
-            </div>
+            </PageSection>
 
         </div>
     )

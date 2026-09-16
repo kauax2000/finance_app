@@ -2,6 +2,11 @@
 
 import type { ReactNode } from "react"
 import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
+import {
   ArrowTrendingDownIcon,
   ArrowTrendingUpIcon,
   InformationCircleIcon,
@@ -226,26 +231,26 @@ function ExpenseBudgetOverviewCard({
         : undefined
 
     return (
-        <div className="min-w-0 space-y-2 md:col-span-6">
-            <div className="flex min-w-0 items-center justify-between gap-2">
-                <p className="min-w-0 flex-1 truncate text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Orçamento do mês
-                </p>
-
-                <div className="flex shrink-0 items-center gap-2">
-                    {hasBudget ? (
-                        <p className="hidden tabular-nums text-2xs text-muted-foreground md:block">
-                            Limite{" "}
-                            <span className="font-medium text-foreground">{currencyBRL(limit)}</span>
-                        </p>
-                    ) : (
-                        <p className="hidden text-2xs font-medium uppercase tracking-wide text-muted-foreground md:block">
-                            Sem limite
-                        </p>
-                    )}
-                    {budgetHeaderRight ?? null}
-                </div>
-            </div>
+        <PageSection className="md:col-span-6">
+            <PageSectionHeader
+                actions={
+                    <>
+                        {hasBudget ? (
+                            <p className="hidden tabular-nums text-2xs text-muted-foreground md:block">
+                                Limite{" "}
+                                <span className="font-medium text-foreground">{currencyBRL(limit)}</span>
+                            </p>
+                        ) : (
+                            <p className="hidden text-2xs font-medium uppercase tracking-wide text-muted-foreground md:block">
+                                Sem limite
+                            </p>
+                        )}
+                        {budgetHeaderRight ?? null}
+                    </>
+                }
+            >
+                <PageSectionTitle className="truncate">Orçamento do mês</PageSectionTitle>
+            </PageSectionHeader>
 
             <Card padding="none" className="min-w-0">
                 <CardContent className="space-y-4 p-3 md:p-4">
@@ -386,7 +391,7 @@ function ExpenseBudgetOverviewCard({
                     )}
                 </CardContent>
             </Card>
-        </div>
+        </PageSection>
     )
 }
 

@@ -7,6 +7,11 @@ import {
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { ActivityPageSkeleton } from "@/components/account/activity-page-skeleton"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import { formatTransactionDayMonthPtBr } from "@/lib/transaction-date"
 import { ROUTES } from "@/config/navigation"
 import { useState, useEffect, useCallback } from "react"
@@ -216,14 +221,10 @@ export default function ActivityPage() {
 
     return (
         <div className="min-w-0 max-w-full space-y-5">
-            <div className="min-w-0 space-y-2">
-                <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="flex h-8 min-w-0 items-end">
-                        <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Histórico de atividades
-                        </p>
-                    </div>
-                </div>
+            <PageSection>
+                <PageSectionHeader>
+                    <PageSectionTitle>Histórico de atividades</PageSectionTitle>
+                </PageSectionHeader>
                 <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <CardToolbar className="justify-end">
@@ -336,7 +337,7 @@ export default function ActivityPage() {
                         </CardNote>
                     </CardContent>
                 </Card>
-            </div>
+            </PageSection>
         </div>
     )
 }

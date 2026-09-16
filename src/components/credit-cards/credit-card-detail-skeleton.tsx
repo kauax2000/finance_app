@@ -41,7 +41,7 @@ function CardSectionHeader() {
 }
 
 function SectionTitleRow({
-    titleClassName = "h-3 w-44 max-w-full",
+    titleClassName = "h-4 w-44 max-w-full",
     cta = "none",
 }: {
     titleClassName?: string
@@ -49,21 +49,21 @@ function SectionTitleRow({
 }) {
     if (cta === "responsive") {
         return (
-            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex h-8 min-w-0 items-end">
+            <div className="flex min-w-0 items-center justify-between gap-4">
+                <div className="flex h-6 min-w-0 items-center">
                     <Skeleton className={titleClassName} />
                 </div>
-                <Skeleton className="h-10 w-full rounded-md sm:h-8 sm:w-40" />
+                <Skeleton className="h-8 w-40 shrink-0 rounded-md pointer-coarse:h-10" />
             </div>
         )
     }
     if (cta === "cycle") {
         return (
-            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex h-8 min-w-0 items-end">
+            <div className="flex min-w-0 items-center justify-between gap-4">
+                <div className="flex h-6 min-w-0 items-center">
                     <Skeleton className={titleClassName} />
                 </div>
-                <div className="flex shrink-0 items-center justify-center gap-1 sm:justify-end">
+                <div className="flex shrink-0 items-center justify-end gap-1">
                     <Skeleton className="size-8 shrink-0 rounded-md" />
                     <Skeleton className="h-8 w-[min(100%,9rem)] rounded-md" />
                     <Skeleton className="size-8 shrink-0 rounded-md" />
@@ -72,7 +72,7 @@ function SectionTitleRow({
         )
     }
     return (
-        <div className="flex h-8 min-w-0 items-end">
+        <div className="flex h-6 min-w-0 items-center">
             <Skeleton className={titleClassName} />
         </div>
     )
@@ -115,8 +115,8 @@ function CategorySpendSectionSkeleton() {
 
 function InvoicePanelSkeleton() {
     return (
-        <div className="min-w-0 max-w-full space-y-2">
-            <SectionTitleRow titleClassName="h-3 w-14 rounded-sm" cta="cycle" />
+        <div className="min-w-0 max-w-full space-y-4">
+            <SectionTitleRow titleClassName="h-4 w-14 rounded-sm" cta="cycle" />
 
             <Card variant="elevated" padding="none">
                 <CardToolbar>
@@ -187,8 +187,8 @@ function MorePeriodSummarySkeleton() {
 
 function InstallmentsBlockSkeleton() {
     return (
-        <div className="min-w-0 max-w-full space-y-2">
-            <SectionTitleRow titleClassName="h-3 w-44 rounded-sm" />
+        <div className="min-w-0 max-w-full space-y-4">
+            <SectionTitleRow titleClassName="h-4 w-44 rounded-sm" />
             <CardSectionShell>
                 <CardSectionHeader />
                 <div className="space-y-3 px-4 py-4 md:px-5 md:py-5">
@@ -229,8 +229,8 @@ function InstallmentsBlockSkeleton() {
 
 function RecentTransactionsSkeleton() {
     return (
-        <div className="min-w-0 max-w-full space-y-2">
-            <SectionTitleRow titleClassName="h-3 w-36 rounded-sm" cta="responsive" />
+        <div className="min-w-0 max-w-full space-y-4">
+            <SectionTitleRow titleClassName="h-4 w-36 rounded-sm" cta="responsive" />
             <div className="md:hidden">
                 <CardSectionShell>
                     <CardSectionHeader />

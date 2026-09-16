@@ -1,6 +1,11 @@
 "use client"
 
 import { CalendarDaysIcon } from "@heroicons/react/16/solid"
+import {
+    PageSection,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
 import * as React from "react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -468,14 +473,10 @@ export function DashboardPaymentsCalendar({
     const monthTitle = labelYearMonthPt(calendarYm)
 
     return (
-        <div className="min-w-0 max-w-full space-y-2">
-            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                <div className="flex h-8 min-w-0 items-end">
-                    <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                        Calendário de pagamentos
-                    </p>
-                </div>
-            </div>
+        <PageSection className="max-w-full">
+            <PageSectionHeader>
+                <PageSectionTitle>Calendário de pagamentos</PageSectionTitle>
+            </PageSectionHeader>
             <div ref={measureRef} className="min-h-0">
             <Card padding="none">
                 <CardContent className="relative flex flex-col gap-0 p-0">
@@ -776,6 +777,6 @@ export function DashboardPaymentsCalendar({
                 </CardContent>
             </Card>
             </div>
-        </div>
+        </PageSection>
     )
 }

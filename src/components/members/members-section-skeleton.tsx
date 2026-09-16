@@ -13,9 +13,9 @@ import { Skeleton } from "@/components/ui/skeleton"
  */
 export function MembersSectionSkeleton() {
     return (
-        <div className="min-w-0 space-y-2">
-            <div className="flex h-8 min-w-0 items-end">
-                <Skeleton className="h-3 w-24" />
+        <div className="min-w-0 space-y-4">
+            <div className="flex h-6 min-w-0 items-center">
+                <Skeleton className="h-4 w-24" />
             </div>
             <Card padding="none">
                 <CardContent className="flex flex-col p-0">
