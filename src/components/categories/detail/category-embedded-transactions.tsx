@@ -440,30 +440,26 @@ export function CategoryEmbeddedTransactions({
                     ) : null}
 
                     {!displayHasNoTransactions && !displayHasNoMatches ? (
-                        <Card padding="none">
-                            <CardContent className="relative flex flex-col p-0">
-                                <TransactionsTable
-                                    transactions={displayTransactions}
-                                    selectedIds={selectedIds}
-                                    setSelectedIds={setSelectedIds}
-                                    sortKey={sortKey}
-                                    sortDir={sortDir}
-                                    onToggleSort={toggleSort}
-                                    openTransactionDetail={openTransactionDetail}
-                                    onDeleteSingle={(transaction) =>
-                                        setPendingDelete({ mode: "single", transaction })
-                                    }
-                                    onDeleteBulk={(ids) =>
-                                        setPendingDelete({ mode: "bulk", ids })
-                                    }
-                                    page={page}
-                                    setPage={setPage}
-                                    pageSize={PAGE_SIZE}
-                                    totalCount={displayTotalCount}
-                                    invoicePaidByCardClose={invoicePaidByCardClose}
-                                />
-                            </CardContent>
-                        </Card>
+                        <TransactionsTable
+                            transactions={displayTransactions}
+                            selectedIds={selectedIds}
+                            setSelectedIds={setSelectedIds}
+                            sortKey={sortKey}
+                            sortDir={sortDir}
+                            onToggleSort={toggleSort}
+                            openTransactionDetail={openTransactionDetail}
+                            onDeleteSingle={(transaction) =>
+                                setPendingDelete({ mode: "single", transaction })
+                            }
+                            onDeleteBulk={(ids) =>
+                                setPendingDelete({ mode: "bulk", ids })
+                            }
+                            page={page}
+                            setPage={setPage}
+                            pageSize={PAGE_SIZE}
+                            totalCount={displayTotalCount}
+                            invoicePaidByCardClose={invoicePaidByCardClose}
+                        />
                     ) : displayHasNoMatches ? (
                         <Card padding="none">
                             <CardContent

@@ -8,6 +8,11 @@ import {
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { currencyBRL, numberBR } from "@/lib/formatters"
+import {
+    TablePanel,
+    TablePanelFooter,
+    TablePanelToolbar,
+} from "@/components/ui/table-panel"
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ArrowPathRoundedSquareIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -20,7 +25,10 @@ import {
     type WorkspaceSubscriptionListRow,
 } from "@/lib/supabase"
 import { toastError, toastSuccess } from "@/lib/toast"
-import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
+import {
+    Card,
+    CardContent,
+} from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -513,10 +521,10 @@ export default function SubscriptionsPageClient() {
             ) : null}
 
             {!hasNoSubscriptions && !hasNoMatches ? (
-                <Card padding="none">
-                    <CardContent className="relative flex flex-col p-0">
-                        {selectedIds.size > 0 ? (
-                            <CardToolbar>
+                <TablePanel
+                    toolbar={
+                        selectedIds.size > 0 ? (
+                            <TablePanelToolbar className="px-0">
                                 <div
                                     className="flex flex-col gap-3 px-3 py-3 sm:hidden"
                                     aria-label="Ações da seleção"
@@ -632,271 +640,267 @@ export default function SubscriptionsPageClient() {
                                         </Button>
                                     </div>
                                 </div>
-                            </CardToolbar>
-                        ) : null}
-                        <div
-                            className={cn(
-                                "min-w-0 overflow-hidden",
-                                selectedIds.size === 0 && "rounded-t-xl"
-                            )}
-                        >
-                            <Table className="min-w-[720px] text-sm">
-                                <TableHeader variant="muted" sticky className="[&_tr]:border-b-0">
-                                    <TableRow className="border-0 [&>th]:border-b [&>th]:border-border">
-                                        <TableHead className="w-10 px-2 py-0 md:w-11 md:px-3">
-                                            <Checkbox
-                                                aria-label="Selecionar todas na lista filtrada"
-                                                checked={
-                                                    allPageSelected
-                                                        ? true
-                                                        : somePageSelected
-                                                          ? "indeterminate"
-                                                          : false
+                            </TablePanelToolbar>
+                        ) : null
+                    }
+                >
+                    <div className="min-w-0 overflow-hidden">
+                        <Table className="min-w-[720px] text-sm">
+                            <TableHeader variant="muted" sticky className="[&_tr]:border-b-0">
+                                <TableRow className="border-0 [&>th]:border-b [&>th]:border-border">
+                                    <TableHead className="w-10 px-2 py-0 md:w-11 md:px-3">
+                                        <Checkbox
+                                            aria-label="Selecionar todas na lista filtrada"
+                                            checked={
+                                                allPageSelected
+                                                    ? true
+                                                    : somePageSelected
+                                                      ? "indeterminate"
+                                                      : false
+                                            }
+                                            onCheckedChange={(v) => {
+                                                if (v === true) {
+                                                    setSelectedIds(
+                                                        new Set(pageIds)
+                                                    )
+                                                } else {
+                                                    setSelectedIds(
+                                                        new Set()
+                                                    )
                                                 }
-                                                onCheckedChange={(v) => {
-                                                    if (v === true) {
+                                            }}
+                                        />
+                                    </TableHead>
+                                    <TableHead
+                                        className="h-11 px-4 py-0 align-middle"
+                                        sort={sortKey === "name" ? sortDir : "none"}
+                                        onSort={() => toggleSort("name")}
+                                    >
+                                        Assinatura
+                                    </TableHead>
+                                    <TableHead
+                                        className="h-11 px-4 py-0 align-middle"
+                                        sort={sortKey === "amount" ? sortDir : "none"}
+                                        onSort={() => toggleSort("amount")}
+                                    >
+                                        Valor
+                                    </TableHead>
+                                    <TableHead className="hidden h-11 px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground sm:table-cell">
+                                        Periodicidade
+                                    </TableHead>
+                                    <TableHead
+                                        className="h-11 px-4 py-0 align-middle"
+                                        sort={sortKey === "next_billing_date" ? sortDir : "none"}
+                                        onSort={() => toggleSort("next_billing_date")}
+                                    >
+                                        Próxima
+                                    </TableHead>
+                                    <TableHead className="hidden h-11 px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground md:table-cell">
+                                        Categoria
+                                    </TableHead>
+                                    <TableHead className="h-11 min-w-[4.5rem] px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground">
+                                        Status
+                                    </TableHead>
+                                    <TableHead className="h-11 w-[5.25rem] px-3 py-0 pr-4 text-left text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                        Ações
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody className="[&_tr:last-child]:border-b-0">
+                                {filteredSorted.map((s) => {
+                                    const txLine = formatSubscriptionTxSummary(
+                                        s.id,
+                                        billingStats
+                                    )
+                                    return (
+                                        <TableRow
+                                            key={s.id}
+                                            className={cn(
+                                                "cursor-pointer border-border/80 transition-colors hover:bg-muted/30",
+                                                !s.is_active && "opacity-70"
+                                            )}
+                                            onClick={() => openDetail(s)}
+                                        >
+                                            <TableCell className="w-10 px-2 py-3 md:w-11 md:px-3">
+                                                <Checkbox
+                                                    aria-label={`Selecionar ${s.name}`}
+                                                    checked={selectedIds.has(
+                                                        s.id
+                                                    )}
+                                                    onCheckedChange={(
+                                                        v
+                                                    ) => {
                                                         setSelectedIds(
-                                                            new Set(pageIds)
+                                                            (prev) => {
+                                                                const next =
+                                                                    new Set(
+                                                                        prev
+                                                                    )
+                                                                if (
+                                                                    v ===
+                                                                    true
+                                                                ) {
+                                                                    next.add(
+                                                                        s.id
+                                                                    )
+                                                                } else {
+                                                                    next.delete(
+                                                                        s.id
+                                                                    )
+                                                                }
+                                                                return next
+                                                            }
                                                         )
-                                                    } else {
-                                                        setSelectedIds(
-                                                            new Set()
-                                                        )
+                                                    }}
+                                                    onClick={(e) =>
+                                                        e.stopPropagation()
                                                     }
-                                                }}
-                                            />
-                                        </TableHead>
-                                        <TableHead
-                                            className="h-11 px-4 py-0 align-middle"
-                                            sort={sortKey === "name" ? sortDir : "none"}
-                                            onSort={() => toggleSort("name")}
-                                        >
-                                            Assinatura
-                                        </TableHead>
-                                        <TableHead
-                                            className="h-11 px-4 py-0 align-middle"
-                                            sort={sortKey === "amount" ? sortDir : "none"}
-                                            onSort={() => toggleSort("amount")}
-                                        >
-                                            Valor
-                                        </TableHead>
-                                        <TableHead className="hidden h-11 px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground sm:table-cell">
-                                            Periodicidade
-                                        </TableHead>
-                                        <TableHead
-                                            className="h-11 px-4 py-0 align-middle"
-                                            sort={sortKey === "next_billing_date" ? sortDir : "none"}
-                                            onSort={() => toggleSort("next_billing_date")}
-                                        >
-                                            Próxima
-                                        </TableHead>
-                                        <TableHead className="hidden h-11 px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground md:table-cell">
-                                            Categoria
-                                        </TableHead>
-                                        <TableHead className="h-11 min-w-[4.5rem] px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground">
-                                            Status
-                                        </TableHead>
-                                        <TableHead className="h-11 w-[5.25rem] px-3 py-0 pr-4 text-left text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                            Ações
-                                        </TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody className="[&_tr:last-child]:border-b-0">
-                                    {filteredSorted.map((s) => {
-                                        const txLine = formatSubscriptionTxSummary(
-                                            s.id,
-                                            billingStats
-                                        )
-                                        return (
-                                            <TableRow
-                                                key={s.id}
-                                                className={cn(
-                                                    "cursor-pointer border-border/80 transition-colors hover:bg-muted/30",
-                                                    !s.is_active && "opacity-70"
+                                                />
+                                            </TableCell>
+                                            <TableCell className="max-w-[200px] px-4 py-3 text-left lg:max-w-[280px]">
+                                                <div className="flex min-w-0 flex-col gap-0.5">
+                                                    <span
+                                                        className="font-medium [overflow-wrap:anywhere]"
+                                                        title={s.name}
+                                                    >
+                                                        {s.name}
+                                                    </span>
+                                                    <span className="text-2xs text-muted-foreground">
+                                                        {txLine}
+                                                    </span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="whitespace-nowrap px-4 py-3 tabular-nums">
+                                                {currencyBRL(
+                                                    Number(s.amount)
                                                 )}
-                                                onClick={() => openDetail(s)}
-                                            >
-                                                <TableCell className="w-10 px-2 py-3 md:w-11 md:px-3">
-                                                    <Checkbox
-                                                        aria-label={`Selecionar ${s.name}`}
-                                                        checked={selectedIds.has(
-                                                            s.id
-                                                        )}
-                                                        onCheckedChange={(
-                                                            v
-                                                        ) => {
-                                                            setSelectedIds(
-                                                                (prev) => {
-                                                                    const next =
-                                                                        new Set(
-                                                                            prev
-                                                                        )
-                                                                    if (
-                                                                        v ===
-                                                                        true
-                                                                    ) {
-                                                                        next.add(
-                                                                            s.id
-                                                                        )
-                                                                    } else {
-                                                                        next.delete(
-                                                                            s.id
-                                                                        )
-                                                                    }
-                                                                    return next
+                                            </TableCell>
+                                            <TableCell className="hidden px-4 py-3 text-muted-foreground sm:table-cell">
+                                                {subscriptionBillingIntervalLabel(
+                                                    s.billing_interval
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="whitespace-nowrap px-4 py-3 tabular-nums text-muted-foreground">
+                                                {formatSubscriptionChargeDatePtBr(
+                                                    s.next_billing_date ??
+                                                        s.start_date
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="hidden max-w-[8rem] px-4 py-3 md:table-cell">
+                                                {s.category ? (
+                                                    <span className="inline-flex max-w-full items-center gap-1.5">
+                                                        <span
+                                                            className="size-2 shrink-0 rounded-full"
+                                                            style={{
+                                                                backgroundColor:
+                                                                    s
+                                                                        .category
+                                                                        .color ||
+                                                                    "var(--muted-foreground)",
+                                                            }}
+                                                            aria-hidden
+                                                        />
+                                                        <span className="truncate">
+                                                            {
+                                                                s.category
+                                                                    .name
+                                                            }
+                                                        </span>
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-muted-foreground">
+                                                        —
+                                                    </span>
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="px-4 py-3">
+                                                <span
+                                                    className={cn(
+                                                        "inline-flex items-center justify-center rounded-full border-0 px-2.5 py-0.5 text-xs font-medium",
+                                                        s.is_active
+                                                            ? tagChipSuccess
+                                                            : "bg-muted text-muted-foreground"
+                                                    )}
+                                                >
+                                                    {s.is_active
+                                                        ? "Ativa"
+                                                        : "Pausada"}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="px-3 py-3 pr-4 text-left">
+                                                <div className="flex items-center justify-start gap-1">
+                                                    <Button
+                                                        variant="tertiary"
+                                                        size="icon-sm"
+                                                        type="button"
+                                                        className="size-7"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            openDetail(
+                                                                s,
+                                                                {
+                                                                    edit: true,
                                                                 }
                                                             )
                                                         }}
-                                                        onClick={(e) =>
-                                                            e.stopPropagation()
-                                                        }
-                                                    />
-                                                </TableCell>
-                                                <TableCell className="max-w-[200px] px-4 py-3 text-left lg:max-w-[280px]">
-                                                    <div className="flex min-w-0 flex-col gap-0.5">
-                                                        <span
-                                                            className="font-medium [overflow-wrap:anywhere]"
-                                                            title={s.name}
-                                                        >
-                                                            {s.name}
-                                                        </span>
-                                                        <span className="text-2xs text-muted-foreground">
-                                                            {txLine}
-                                                        </span>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="whitespace-nowrap px-4 py-3 tabular-nums">
-                                                    {currencyBRL(
-                                                        Number(s.amount)
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="hidden px-4 py-3 text-muted-foreground sm:table-cell">
-                                                    {subscriptionBillingIntervalLabel(
-                                                        s.billing_interval
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="whitespace-nowrap px-4 py-3 tabular-nums text-muted-foreground">
-                                                    {formatSubscriptionChargeDatePtBr(
-                                                        s.next_billing_date ??
-                                                            s.start_date
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="hidden max-w-[8rem] px-4 py-3 md:table-cell">
-                                                    {s.category ? (
-                                                        <span className="inline-flex max-w-full items-center gap-1.5">
-                                                            <span
-                                                                className="size-2 shrink-0 rounded-full"
-                                                                style={{
-                                                                    backgroundColor:
-                                                                        s
-                                                                            .category
-                                                                            .color ||
-                                                                        "var(--muted-foreground)",
-                                                                }}
-                                                                aria-hidden
-                                                            />
-                                                            <span className="truncate">
-                                                                {
-                                                                    s.category
-                                                                        .name
-                                                                }
-                                                            </span>
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-muted-foreground">
-                                                            —
-                                                        </span>
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="px-4 py-3">
-                                                    <span
-                                                        className={cn(
-                                                            "inline-flex items-center justify-center rounded-full border-0 px-2.5 py-0.5 text-xs font-medium",
-                                                            s.is_active
-                                                                ? tagChipSuccess
-                                                                : "bg-muted text-muted-foreground"
-                                                        )}
                                                     >
-                                                        {s.is_active
-                                                            ? "Ativa"
-                                                            : "Pausada"}
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell className="px-3 py-3 pr-4 text-left">
-                                                    <div className="flex items-center justify-start gap-1">
-                                                        <Button
-                                                            variant="tertiary"
-                                                            size="icon-sm"
-                                                            type="button"
-                                                            className="size-7"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation()
-                                                                openDetail(
-                                                                    s,
-                                                                    {
-                                                                        edit: true,
-                                                                    }
-                                                                )
-                                                            }}
-                                                        >
-                                                            <PencilIcon className="size-3.5" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="destructive"
-                                                            size="icon-sm"
-                                                            type="button"
-                                                            className="size-7"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation()
-                                                                setPendingDelete(
-                                                                    {
-                                                                        mode: "single",
-                                                                        subscription:
-                                                                            s,
-                                                                    }
-                                                                )
-                                                            }}
-                                                        >
-                                                            <TrashIcon className="size-3.5" />
-                                                        </Button>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
+                                                        <PencilIcon className="size-3.5" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="destructive"
+                                                        size="icon-sm"
+                                                        type="button"
+                                                        className="size-7"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            setPendingDelete(
+                                                                {
+                                                                    mode: "single",
+                                                                    subscription:
+                                                                        s,
+                                                                }
+                                                            )
+                                                        }}
+                                                    >
+                                                        <TrashIcon className="size-3.5" />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    )
+                                })}
+                            </TableBody>
+                        </Table>
+                    </div>
+                    <TablePanelFooter className="px-3 sm:px-4">
+                        <p className="text-xs leading-relaxed text-muted-foreground">
+                            {filteredSorted.length === 0 ? (
+                                "Nenhuma assinatura na lista filtrada."
+                            ) : statusFilter !== "all" ? (
+                                <>
+                                    <span className="text-foreground/90">
+                                        {numberBR(filteredSorted.length)}
+                                    </span>
+                                    <span className="mx-1 text-border">
+                                        ·
+                                    </span>
+                                    <span>
+                                        na lista filtrada (total no espaço:{" "}
+                                        {numberBR(rows.length)}
                                         )
-                                    })}
-                                </TableBody>
-                            </Table>
-                        </div>
-                        <CardNote className="flex-col rounded-b-xl px-3 py-2.5 sm:px-4">
-                            <p className="text-xs leading-relaxed text-muted-foreground">
-                                {filteredSorted.length === 0 ? (
-                                    "Nenhuma assinatura na lista filtrada."
-                                ) : statusFilter !== "all" ? (
-                                    <>
-                                        <span className="text-foreground/90">
-                                            {numberBR(filteredSorted.length)}
-                                        </span>
-                                        <span className="mx-1 text-border">
-                                            ·
-                                        </span>
-                                        <span>
-                                            na lista filtrada (total no espaço:{" "}
-                                            {numberBR(rows.length)}
-                                            )
-                                        </span>
-                                    </>
-                                ) : (
-                                    <>
-                                        {numberBR(rows.length)}{" "}
-                                        {rows.length === 1
-                                            ? "assinatura"
-                                            : "assinaturas"}
-                                    </>
-                                )}
-                            </p>
-                        </CardNote>
-                    </CardContent>
-                </Card>
+                                    </span>
+                                </>
+                            ) : (
+                                <>
+                                    {numberBR(rows.length)}{" "}
+                                    {rows.length === 1
+                                        ? "assinatura"
+                                        : "assinaturas"}
+                                </>
+                            )}
+                        </p>
+                    </TablePanelFooter>
+                </TablePanel>
             ) : hasNoMatches ? (
                 <Card padding="none">
                     <CardContent

@@ -325,25 +325,21 @@ export function DashboardRecentTransactions({
                     </div>
 
                     <div className="hidden md:block">
-                        <Card padding="none">
-                            <CardContent className="relative flex flex-col p-0">
-                                <TransactionsTable
-                                    transactions={transactions}
-                                    sortKey="date"
-                                    sortDir="desc"
-                                    openTransactionDetail={(tx) =>
-                                        onTransactionClick?.(tx)
-                                    }
-                                    enableSelection={false}
-                                    enableSort={false}
-                                    enableActions={false}
-                                    showPaginationFooter={false}
-                                    invoicePaidByCardClose={
-                                        invoicePaidByCardClose
-                                    }
-                                />
-                            </CardContent>
-                        </Card>
+                        <TransactionsTable
+                            transactions={transactions}
+                            sortKey="date"
+                            sortDir="desc"
+                            openTransactionDetail={(tx) =>
+                                onTransactionClick?.(tx)
+                            }
+                            enableSelection={false}
+                            enableSort={false}
+                            enableActions={false}
+                            showPaginationFooter={false}
+                            invoicePaidByCardClose={
+                                invoicePaidByCardClose
+                            }
+                        />
                     </div>
                 </>
             )}

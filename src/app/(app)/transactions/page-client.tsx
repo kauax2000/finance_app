@@ -342,30 +342,26 @@ export default function TransactionsPage() {
             ) : null}
 
             {!hasNoTransactions && !hasNoMatches ? (
-                <Card padding="none">
-                    <CardContent className="relative flex flex-col p-0">
-                        <TransactionsTable
-                            transactions={transactions}
-                            selectedIds={selectedIds}
-                            setSelectedIds={setSelectedIds}
-                            sortKey={sortKey}
-                            sortDir={sortDir}
-                            onToggleSort={toggleSort}
-                            openTransactionDetail={openTransactionDetail}
-                            onDeleteSingle={(transaction) =>
-                                setPendingDelete({ mode: "single", transaction })
-                            }
-                            onDeleteBulk={(ids) =>
-                                setPendingDelete({ mode: "bulk", ids })
-                            }
-                            page={page}
-                            setPage={setPage}
-                            pageSize={PAGE_SIZE}
-                            totalCount={totalCount}
-                            invoicePaidByCardClose={invoicePaidByCardClose}
-                        />
-                    </CardContent>
-                </Card>
+                <TransactionsTable
+                    transactions={transactions}
+                    selectedIds={selectedIds}
+                    setSelectedIds={setSelectedIds}
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onToggleSort={toggleSort}
+                    openTransactionDetail={openTransactionDetail}
+                    onDeleteSingle={(transaction) =>
+                        setPendingDelete({ mode: "single", transaction })
+                    }
+                    onDeleteBulk={(ids) =>
+                        setPendingDelete({ mode: "bulk", ids })
+                    }
+                    page={page}
+                    setPage={setPage}
+                    pageSize={PAGE_SIZE}
+                    totalCount={totalCount}
+                    invoicePaidByCardClose={invoicePaidByCardClose}
+                />
             ) : hasNoMatches ? (
                 <Card padding="none">
                     <CardContent

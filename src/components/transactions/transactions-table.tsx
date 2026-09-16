@@ -1,6 +1,11 @@
 "use client"
 
 import { creditInvoiceSlotCompactLabel, creditInvoiceSlotStatusChipClass } from "@/lib/credit-card-display"
+import {
+    TablePanel,
+    TablePanelFooter,
+    TablePanelToolbar,
+} from "@/components/ui/table-panel"
 import * as React from "react"
 import Link from "next/link"
 import { ArrowPathRoundedSquareIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
@@ -13,7 +18,6 @@ import {
 } from "@/lib/transaction-date"
 import { cn } from "@/lib/utils"
 import { ROUTES } from "@/config/navigation"
-import { CardNote, CardToolbar } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -40,15 +44,6 @@ import { numberBR } from "@/lib/formatters"
 export type TransactionsTableSortKey = TransactionsListSortKey
 
 const EMPTY_INVOICE_PAID_KEYS: ReadonlySet<string> = new Set()
-
-function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
-    if (!active) return null
-    return (
-        <span aria-hidden className="ml-1 inline-flex text-2xs leading-none text-muted-foreground">
-            {dir === "asc" ? "▲" : "▼"}
-        </span>
-    )
-}
 
 function formatPaymentCell(t: Transaction): string {
     if (t.type !== "expense" || !t.payment_method) return "—"
@@ -257,122 +252,119 @@ export function TransactionsTable({
     const showFrom = total === 0 ? 0 : page * pageSize + 1
     const showTo = Math.min(total, (page + 1) * pageSize)
 
-    return (
-        <>
-            {enableSelection && selectedIds.size > 0 ? (
-                <CardToolbar>
-                    <div
-                        className="flex flex-col gap-3 px-3 py-3 sm:hidden"
-                        aria-label="Ações da seleção"
-                    >
-                        <div className="flex items-start justify-between gap-3">
-                            <p className="min-w-0 pt-0.5 text-sm font-medium leading-snug text-foreground">
-                                {selectedIds.size === 1
-                                    ? "1 selecionada"
-                                    : `${numberBR(selectedIds.size)} selecionadas`}
-                            </p>
-                            <Button
-                                type="button"
-                                variant="tertiary"
-                                size="xl"
-                                className="shrink-0 px-3 text-xs text-muted-foreground hover:text-foreground active:text-foreground"
-                                onClick={() => setSelectedIds(new Set())}
-                                aria-label="Limpar seleção"
-                            >
-                                Limpar
-                            </Button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="h-11 w-full gap-2 text-xs font-medium"
-                                disabled={selectedIds.size !== 1}
-                                onClick={() => {
-                                    const id = [...selectedIds][0]
-                                    const t = transactions.find((x) => x.id === id)
-                                    if (t) openTransactionDetail(t, { edit: true })
-                                }}
-                            >
-                                <PencilIcon className="size-3.5 shrink-0" />
-                                Editar
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="destructive"
-                                size="sm"
-                                className="h-11 w-full gap-2 text-xs font-medium"
-                                onClick={() => onDeleteBulk?.([...selectedIds])}
-                            >
-                                <TrashIcon className="size-3.5 shrink-0" />
-                                Excluir
-                            </Button>
-                        </div>
-                        {selectedIds.size !== 1 ? (
-                            <p className="-mt-1 text-center text-2xs leading-tight text-muted-foreground">
-                                Editar uma transação por vez
-                            </p>
-                        ) : null}
-                    </div>
-
-                    <div
-                        className="hidden px-4 py-2 sm:flex sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:gap-2"
-                        aria-label="Ações da seleção"
-                    >
-                        <span className="mr-auto text-xs tabular-nums text-muted-foreground">
+    // A barra de seleção mora acima da moldura, na prop `toolbar` do `TablePanel`,
+    // e não dentro do cartão: o recuo é das linhas de dentro, então a barra zera o seu.
+    const selectionToolbar =
+        enableSelection && selectedIds.size > 0 ? (
+            <TablePanelToolbar className="px-0">
+                <div
+                    className="flex flex-col gap-3 px-3 py-3 sm:hidden"
+                    aria-label="Ações da seleção"
+                >
+                    <div className="flex items-start justify-between gap-3">
+                        <p className="min-w-0 pt-0.5 text-sm font-medium leading-snug text-foreground">
                             {selectedIds.size === 1
                                 ? "1 selecionada"
                                 : `${numberBR(selectedIds.size)} selecionadas`}
-                        </span>
-                        <div className="flex flex-wrap items-center justify-end gap-2">
-                            <Button
-                                type="button"
-                                variant="tertiary"
-                                size="sm"
-                                className="h-8 text-xs"
-                                onClick={() => setSelectedIds(new Set())}
-                            >
-                                Limpar seleção
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="h-8 gap-1.5 text-xs"
-                                disabled={selectedIds.size !== 1}
-                                onClick={() => {
-                                    const id = [...selectedIds][0]
-                                    const t = transactions.find((x) => x.id === id)
-                                    if (t) openTransactionDetail(t, { edit: true })
-                                }}
-                            >
-                                <PencilIcon className="size-3.5 shrink-0" />
-                                Editar
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="destructive"
-                                size="sm"
-                                className="h-8 gap-1.5 text-xs"
-                                onClick={() => onDeleteBulk?.([...selectedIds])}
-                            >
-                                <TrashIcon className="size-3.5 shrink-0" />
-                                Excluir
-                            </Button>
-                        </div>
+                        </p>
+                        <Button
+                            type="button"
+                            variant="tertiary"
+                            size="xl"
+                            className="shrink-0 px-3 text-xs text-muted-foreground hover:text-foreground active:text-foreground"
+                            onClick={() => setSelectedIds(new Set())}
+                            aria-label="Limpar seleção"
+                        >
+                            Limpar
+                        </Button>
                     </div>
-                </CardToolbar>
-            ) : null}
+                    <div className="grid grid-cols-2 gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-11 w-full gap-2 text-xs font-medium"
+                            disabled={selectedIds.size !== 1}
+                            onClick={() => {
+                                const id = [...selectedIds][0]
+                                const t = transactions.find((x) => x.id === id)
+                                if (t) openTransactionDetail(t, { edit: true })
+                            }}
+                        >
+                            <PencilIcon className="size-3.5 shrink-0" />
+                            Editar
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="h-11 w-full gap-2 text-xs font-medium"
+                            onClick={() => onDeleteBulk?.([...selectedIds])}
+                        >
+                            <TrashIcon className="size-3.5 shrink-0" />
+                            Excluir
+                        </Button>
+                    </div>
+                    {selectedIds.size !== 1 ? (
+                        <p className="-mt-1 text-center text-2xs leading-tight text-muted-foreground">
+                            Editar uma transação por vez
+                        </p>
+                    ) : null}
+                </div>
 
-            <div
-                className={cn(
-                    "min-w-0",
-                    (!enableSelection || selectedIds.size === 0) &&
-                        "rounded-t-xl",
-                    !showPaginationFooter && "rounded-b-xl"
-                )}
-            >
+                <div
+                    className="hidden px-4 py-2 sm:flex sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:gap-2"
+                    aria-label="Ações da seleção"
+                >
+                    <span className="mr-auto text-xs tabular-nums text-muted-foreground">
+                        {selectedIds.size === 1
+                            ? "1 selecionada"
+                            : `${numberBR(selectedIds.size)} selecionadas`}
+                    </span>
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                        <Button
+                            type="button"
+                            variant="tertiary"
+                            size="sm"
+                            className="h-8 text-xs"
+                            onClick={() => setSelectedIds(new Set())}
+                        >
+                            Limpar seleção
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 gap-1.5 text-xs"
+                            disabled={selectedIds.size !== 1}
+                            onClick={() => {
+                                const id = [...selectedIds][0]
+                                const t = transactions.find((x) => x.id === id)
+                                if (t) openTransactionDetail(t, { edit: true })
+                            }}
+                        >
+                            <PencilIcon className="size-3.5 shrink-0" />
+                            Editar
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="h-8 gap-1.5 text-xs"
+                            onClick={() => onDeleteBulk?.([...selectedIds])}
+                        >
+                            <TrashIcon className="size-3.5 shrink-0" />
+                            Excluir
+                        </Button>
+                    </div>
+                </div>
+            </TablePanelToolbar>
+        ) : null
+
+    return (
+        <TablePanel toolbar={selectionToolbar}>
+
+            <div className="min-w-0">
                 <Table className="min-w-[640px] text-sm md:min-w-[700px]">
                     <TableHeader variant="muted" sticky className="[&_tr]:border-b-0">
                         <TableRow className="border-0 [&>th]:border-b [&>th]:border-border">
@@ -400,95 +392,21 @@ export function TransactionsTable({
                                 </TableHead>
                             ) : null}
                             <TableHead
-                                className="h-11 w-[4.75rem] px-4 py-0 align-middle md:w-[5.5rem]"
-                                aria-sort={
-                                    sortKey === "date"
-                                        ? sortDir === "asc"
-                                            ? "ascending"
-                                            : "descending"
-                                        : "none"
-                                }
+                                className="h-11 w-[4.75rem] px-4 py-0 align-middle text-xs font-semibold tracking-wide md:w-[5.5rem]"
+                                sort={sortKey === "date" ? sortDir : "none"}
+                                onSort={enableSort ? () => onToggleSort?.("date") : undefined}
                             >
-                                {enableSort ? (
-                                    <button
-                                        type="button"
-                                        className={cn(
-                                            "-mx-1 inline-flex items-center rounded-md px-1 py-1 text-xs font-semibold tracking-wide outline-none transition-colors hover:bg-muted/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                                            sortKey === "date"
-                                                ? "text-foreground"
-                                                : "text-muted-foreground hover:text-foreground"
-                                        )}
-                                        onClick={() => onToggleSort?.("date")}
-                                    >
-                                        Data
-                                        <SortIndicator
-                                            active={sortKey === "date"}
-                                            dir={sortDir}
-                                        />
-                                    </button>
-                                ) : (
-                                    <span
-                                        className={cn(
-                                            "inline-flex items-center text-xs font-semibold tracking-wide",
-                                            sortKey === "date"
-                                                ? "text-foreground"
-                                                : "text-muted-foreground"
-                                        )}
-                                    >
-                                        Data
-                                        <SortIndicator
-                                            active={sortKey === "date"}
-                                            dir={sortDir}
-                                        />
-                                    </span>
-                                )}
+                                Data
                             </TableHead>
                             <TableHead className="h-11 px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground">
                                 Descrição
                             </TableHead>
                             <TableHead
-                                className="h-11 px-4 py-0 align-middle"
-                                aria-sort={
-                                    sortKey === "amount"
-                                        ? sortDir === "asc"
-                                            ? "ascending"
-                                            : "descending"
-                                        : "none"
-                                }
+                                className="h-11 px-4 py-0 align-middle text-xs font-semibold tracking-wide"
+                                sort={sortKey === "amount" ? sortDir : "none"}
+                                onSort={enableSort ? () => onToggleSort?.("amount") : undefined}
                             >
-                                {enableSort ? (
-                                    <button
-                                        type="button"
-                                        className={cn(
-                                            "-mx-1 inline-flex items-center rounded-md px-1 py-1 text-xs font-semibold tracking-wide outline-none transition-colors hover:bg-muted/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                                            sortKey === "amount"
-                                                ? "text-foreground"
-                                                : "text-muted-foreground hover:text-foreground"
-                                        )}
-                                        onClick={() => onToggleSort?.("amount")}
-                                    >
-                                        Valor
-                                        <SortIndicator
-                                            active={sortKey === "amount"}
-                                            dir={sortDir}
-                                        />
-                                    </button>
-                                ) : (
-                                    <span
-                                        className={cn(
-                                            "inline-flex items-center text-xs font-semibold tracking-wide",
-                                            sortKey === "amount"
-                                                ? "text-foreground"
-                                                : "text-muted-foreground"
-                                        )}
-                                    >
-                                        Valor
-                                        <SortIndicator
-                                            active={sortKey === "amount"}
-                                            dir={sortDir}
-                                        />
-                                    </span>
-                                )}
+                                Valor
                             </TableHead>
                             <TableHead className="hidden h-11 max-w-[10rem] px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground md:table-cell">
                                 Forma de pagamento
@@ -849,7 +767,7 @@ export function TransactionsTable({
             </div>
 
             {showPaginationFooter ? (
-                <CardNote className="flex-col gap-2.5 rounded-b-xl px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4">
+                <TablePanelFooter className="px-3 sm:gap-4 sm:px-4">
                 <p className="text-xs leading-relaxed text-muted-foreground">
                     {total === 0 ? (
                         "Nenhuma transação nesta página."
@@ -910,9 +828,9 @@ export function TransactionsTable({
                         </Button>
                     </div>
                 </div>
-            </CardNote>
+            </TablePanelFooter>
             ) : null}
-        </>
+        </TablePanel>
     )
 }
 
