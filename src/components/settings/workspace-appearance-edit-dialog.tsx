@@ -6,6 +6,7 @@ import { WorkspaceAppearanceFormFields } from "@/components/workspace/workspace-
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
+  DialogBody,
   DialogCloseButton,
   DialogContent,
   DialogDescription,
@@ -18,7 +19,6 @@ import {
   SheetContent,
 } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { cn } from "@/lib/utils"
 import { CustomForm } from "@/components/ui/form"
 import type { Workspace } from "@/lib/supabase"
 import {
@@ -26,17 +26,11 @@ import {
     type WorkspaceIconKey,
 } from "@/lib/workspace-icons"
 
-const dialogFooterClass =
-    "!mx-0 !mb-0 mt-0 shrink-0 flex flex-row flex-wrap justify-end gap-2 border-t border-border bg-background px-6 py-4 sm:flex-row"
-
 type WorkspaceAppearanceEditDialogProps = {
     open: boolean
     onOpenChange: (open: boolean) => void
     workspace: Workspace | null
 }
-
-const sheetFooterMobileClass =
-    "mt-0 shrink-0 flex-col gap-2 border-t border-border bg-background px-4 py-4"
 
 export function WorkspaceAppearanceEditDialog({
     open,
@@ -108,12 +102,7 @@ export function WorkspaceAppearanceEditDialog({
             onSubmit={(e) => void handleSubmit(e)}
             className="flex min-h-0 flex-1 flex-col"
         >
-            <div
-                className={cn(
-                    "min-h-0 flex-1 overflow-y-auto py-4",
-                    isMobile ? "px-4" : "px-6",
-                )}
-            >
+            <DialogBody>
                 <WorkspaceAppearanceFormFields
                     name={name}
                     onNameChange={setName}
@@ -125,15 +114,15 @@ export function WorkspaceAppearanceEditDialog({
                     idPrefix="settings-workspace-edit-dialog"
                     previewHint="Esta cor identifica esta carteira na barra lateral e nos menus."
                 />
-            </div>
+            </DialogBody>
             {isMobile ? (
-                <DialogFooter className={sheetFooterMobileClass}>
+                <DialogFooter className="flex-col">
                     <Button type="submit" disabled={submitting} size="xl" className="w-full">
                         {submitting ? "Salvando…" : "Salvar alterações"}
                     </Button>
                 </DialogFooter>
             ) : (
-                <DialogFooter className={dialogFooterClass}>
+                <DialogFooter>
                     <Button
                         type="button"
                         variant="outline"

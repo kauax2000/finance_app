@@ -6,6 +6,7 @@ import { WorkspaceAppearanceFormFields } from "@/components/workspace/workspace-
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
+  DialogBody,
   DialogCloseButton,
   DialogContent,
   DialogFooter,
@@ -19,19 +20,12 @@ import {
 } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { CustomForm } from "@/components/ui/form"
-import { cn } from "@/lib/utils"
 import { randomWorkspaceAccentColor, type WorkspaceIconKey } from "@/lib/workspace-icons"
 
 export type ProjectFormDialogProps = {
     open: boolean
     onOpenChange: (open: boolean) => void
 }
-
-const dialogFooterClass =
-    "!mx-0 !mb-0 mt-0 shrink-0 flex flex-row flex-wrap justify-end gap-2 border-t border-border bg-background px-6 py-4 sm:flex-row"
-
-const sheetFooterMobileClass =
-    "mt-0 shrink-0 flex-col gap-2 border-t border-border bg-background px-4 py-4"
 
 
 export function ProjectFormDialog({
@@ -86,12 +80,7 @@ export function ProjectFormDialog({
             onSubmit={(e) => void handleSubmit(e)}
             className="flex min-h-0 flex-1 flex-col"
         >
-            <div
-                className={cn(
-                    "min-h-0 flex-1 overflow-y-auto py-4",
-                    isMobile ? "px-4" : "px-6",
-                )}
-            >
+            <DialogBody>
                 <WorkspaceAppearanceFormFields
                     name={name}
                     onNameChange={setName}
@@ -103,15 +92,15 @@ export function ProjectFormDialog({
                     idPrefix="project-dialog-create"
                     previewHint="Esta cor identifica a carteira na barra lateral e nos menus."
                 />
-            </div>
+            </DialogBody>
             {isMobile ? (
-                <DialogFooter className={sheetFooterMobileClass}>
+                <DialogFooter className="flex-col">
                     <Button type="submit" disabled={submitting} size="xl" className="w-full">
                         {submitting ? "Criando…" : "Criar carteira"}
                     </Button>
                 </DialogFooter>
             ) : (
-                <DialogFooter className={dialogFooterClass}>
+                <DialogFooter>
                     <Button
                         type="button"
                         variant="outline"

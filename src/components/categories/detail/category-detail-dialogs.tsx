@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
   Dialog,
+  DialogBody,
   DialogCloseButton,
   DialogContent,
   DialogDescription,
@@ -169,9 +170,9 @@ export function CategoryDetailDialogs({
                             onSubmit={onEditSubmit}
                             className="flex min-h-0 flex-1 flex-col"
                         >
-                            <div className="min-h-0 flex-1 overflow-y-auto px-4">
+                            <DialogBody>
                                 {editFields}
-                            </div>
+                            </DialogBody>
                             <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
                                 <Button
                                     type="submit"

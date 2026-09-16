@@ -4,6 +4,7 @@ import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
+  DialogBody,
   DialogCloseButton,
   DialogDescription,
   DialogFooter,
@@ -80,15 +81,6 @@ export function SubscriptionFormSurface({
         </>
     ) : null
 
-    const fieldsScrollClass =
-        variant === "detail-sheet"
-            ? cn(
-                  "min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-5",
-                  scrollClassName
-              )
-            : variant === "dialog-mobile"
-              ? cn("min-h-0 flex-1 overflow-y-auto px-4", scrollClassName)
-              : cn("min-h-0 flex-1 overflow-y-auto px-6", scrollClassName)
 
     if (variant === "dialog-mobile") {
         return (
@@ -101,9 +93,9 @@ export function SubscriptionFormSurface({
                     onSubmit={handleSubmit}
                     className="flex min-h-0 flex-1 flex-col"
                 >
-                    <div className={fieldsScrollClass}>
+                    <DialogBody className={scrollClassName}>
                         <SubscriptionFormFields {...fieldsProps} />
-                    </div>
+                    </DialogBody>
                     {showFooter ? (
                         <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
                             {footer}
@@ -126,9 +118,9 @@ export function SubscriptionFormSurface({
                         <DialogDescription>{formDescription}</DialogDescription>
                     </DialogHeaderRow>
                 </DialogHeader>
-                <div className={fieldsScrollClass}>
+                <DialogBody className={scrollClassName}>
                     <SubscriptionFormFields {...fieldsProps} />
-                </div>
+                </DialogBody>
                 {showFooter ? (
                     <DialogFooter className="shrink-0 flex-col gap-2 px-4 py-4 sm:flex-row sm:flex-wrap sm:justify-end sm:px-5">
                         {footer}
@@ -149,9 +141,9 @@ export function SubscriptionFormSurface({
                     <DialogDescription>{formDescription}</DialogDescription>
                 ) : null}
             </DialogHeader>
-            <div className={fieldsScrollClass}>
+            <DialogBody className={scrollClassName}>
                 <SubscriptionFormFields {...fieldsProps} />
-            </div>
+            </DialogBody>
             {showFooter ? (
                 <DialogFooter className="mx-0 mb-0 mt-0 shrink-0 flex-row flex-wrap justify-end gap-2 rounded-b-xl bg-background px-6 pt-4 pb-5">
                     {footer}

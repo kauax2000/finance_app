@@ -29,12 +29,6 @@ import { getInitials, cn } from "@/lib/utils"
 import { createActivity } from "@/lib/activity"
 import { identityToneFor } from "@/lib/avatar"
 
-const dialogFooterClass =
-    "!mx-0 !mb-0 mt-0 shrink-0 flex flex-row flex-wrap justify-end gap-2 border-t border-border bg-background px-6 py-4 sm:flex-row"
-
-const sheetFooterMobileClass =
-    "mt-0 shrink-0 flex-col gap-2 border-t border-border bg-background px-4 py-4"
-
 type EditProfileDialogProps = {
     open: boolean
     onOpenChange: (open: boolean) => void
@@ -437,7 +431,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
             </div>
 
             {isMobile ? (
-                <DialogFooter className={sheetFooterMobileClass}>
+                <DialogFooter className="flex-col">
                     {!successMessage && (
                         <Button type="submit" disabled={saving} size="xl" className="w-full">
                             {saving ? (
@@ -452,7 +446,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                     )}
                 </DialogFooter>
             ) : (
-                <DialogFooter className={dialogFooterClass}>
+                <DialogFooter>
                     <Button
                         type="button"
                         variant="outline"

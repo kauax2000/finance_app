@@ -8,6 +8,7 @@ import { useWorkspace } from "@/components/workspace-provider"
 import { supabase, type WorkspaceDeleteImpact } from "@/lib/supabase"
 import {
   Dialog,
+  DialogBody,
   DialogCloseButton,
   DialogContent,
   DialogDescription,
@@ -30,12 +31,6 @@ import { Label } from "@/components/ui/label"
 import { CheckCircleIcon, ExclamationTriangleIcon, TrashIcon } from "@heroicons/react/16/solid"
 
 import { CheckCircleIcon as CheckCircleOutlineIcon } from "@heroicons/react/24/outline"
-const dialogFooterClass =
-    "!mx-0 !mb-0 mt-0 shrink-0 flex flex-row flex-wrap justify-end gap-2 border-t border-border bg-background px-6 py-4 sm:flex-row"
-
-const sheetFooterMobileClass =
-    "mt-0 shrink-0 flex-col gap-2 border-t border-border bg-background px-4 py-4"
-
 const DATA_LOSS_ITEMS = [
     "Todas as transações",
     "Todas as carteiras",
@@ -195,7 +190,6 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
         </DialogHeader>
     )
 
-    const scrollPadding = cn("min-h-0 flex-1 overflow-y-auto py-4", isMobile ? "px-4" : "px-6")
 
     const headerDesktop = (
         <DialogHeader className="shrink-0 px-6 py-4 text-left">
@@ -220,7 +214,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
     )
 
     const bodySuccess = (
-        <div className={scrollPadding}>
+        <DialogBody>
             <div className="flex flex-col items-center justify-center py-4">
                 <div className="mb-4 rounded-full bg-success-muted p-4">
                     <CheckCircleOutlineIcon className="size-12 text-success" />
@@ -229,11 +223,11 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                     Todos os seus dados foram removidos permanentemente.
                 </p>
             </div>
-        </div>
+        </DialogBody>
     )
 
     const footerSuccess = isMobile ? null : (
-        <DialogFooter className={dialogFooterClass}>
+        <DialogFooter>
             <Button
                 type="button"
                 variant="outline"
@@ -246,7 +240,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
     )
 
     const bodyWarning = (
-        <div className={scrollPadding}>
+        <DialogBody>
             <div className="space-y-3">
                 <Alert tone="destructive" size="sm">
                     <ExclamationTriangleIcon />
@@ -297,17 +291,17 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                     </div>
                 ) : null}
             </div>
-        </div>
+        </DialogBody>
     )
 
     const footerWarning = isMobile ? (
-        <DialogFooter className={sheetFooterMobileClass}>
+        <DialogFooter className="flex-col">
             <Button type="button" variant="destructive" size="xl" className="w-full" onClick={handleContinue}>
                 Continuar
             </Button>
         </DialogFooter>
     ) : (
-        <DialogFooter className={dialogFooterClass}>
+        <DialogFooter>
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
                 Cancelar
             </Button>
@@ -319,7 +313,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
 
     const bodyConfirm = (
         <CustomForm onSubmit={handleDeleteFormSubmit} className="flex min-h-0 flex-1 flex-col">
-            <div className={scrollPadding}>
+            <DialogBody>
                 <div className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="confirm-email">Confirme seu email</Label>
@@ -357,10 +351,10 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                         </Alert>
                     ) : null}
                 </div>
-            </div>
+            </DialogBody>
 
             {isMobile ? (
-                <DialogFooter className={sheetFooterMobileClass}>
+                <DialogFooter className="flex-col">
                     <Button
                         type="submit"
                         variant="destructive"
@@ -393,7 +387,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                     </Button>
                 </DialogFooter>
             ) : (
-                <DialogFooter className={dialogFooterClass}>
+                <DialogFooter>
                     <Button
                         type="button"
                         variant="outline"

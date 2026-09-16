@@ -23,12 +23,6 @@ import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Workspace } from "@/lib/supabase"
 
-const dialogFooterClass =
-    "!mx-0 !mb-0 mt-0 flex flex-row flex-wrap justify-end gap-2 border-t border-border bg-background px-6 py-4 sm:flex-row"
-
-const sheetFooterMobileClass =
-    "mt-0 shrink-0 flex-col gap-2 border-t border-border bg-background px-4 py-4"
-
 type WorkspaceDeleteDialogProps = {
     open: boolean
     onOpenChange: (open: boolean) => void
@@ -204,7 +198,7 @@ export function WorkspaceDeleteDialog({
     )
 
     const footerActions = isMobile ? (
-        <DialogFooter className={sheetFooterMobileClass}>
+        <DialogFooter className="flex-col">
             <Button
                 type="button"
                 variant="destructive"
@@ -216,7 +210,7 @@ export function WorkspaceDeleteDialog({
             </Button>
         </DialogFooter>
     ) : (
-        <DialogFooter className={dialogFooterClass}>
+        <DialogFooter>
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={deleting}>
                 Cancelar
             </Button>

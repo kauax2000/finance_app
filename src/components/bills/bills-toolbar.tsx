@@ -15,6 +15,7 @@ import {
   SheetContent,
 } from "@/components/ui/sheet"
 import {
+  DialogBody,
   DialogCloseButton,
   DialogDescription,
   DialogHeader,
@@ -322,7 +323,7 @@ export function BillsToolbar({
                             Ajuste o que aparece na lista e a ordem dos itens.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                    <DialogBody>
                     <div className="space-y-6 pb-2">
                         <div className="space-y-2">
                             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -399,7 +400,7 @@ export function BillsToolbar({
                             Concluir
                         </Button>
                     </div>
-                    </div>
+                    </DialogBody>
                 <DialogCloseButton />
                 </SheetContent>
             </Sheet>

@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase"
 import { createActivity } from "@/lib/activity"
 import {
   Dialog,
+  DialogBody,
   DialogCloseButton,
   DialogContent,
   DialogFooter,
@@ -32,12 +33,6 @@ import {
 import { Label } from "@/components/ui/label"
 import { CheckCircleIcon, CheckIcon, ExclamationTriangleIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
 import { cn } from "@/lib/utils"
-
-const dialogFooterClass =
-    "!mx-0 !mb-0 mt-0 shrink-0 flex flex-row flex-wrap justify-end gap-2 border-t border-border bg-background px-6 py-4 sm:flex-row"
-
-const sheetFooterMobileClass =
-    "mt-0 shrink-0 flex-col gap-2 border-t border-border bg-background px-4 py-4"
 
 interface ChangePasswordDialogProps {
     open: boolean
@@ -287,17 +282,12 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
 
     const passwordForm = (
         <CustomForm onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-            <div
-                className={cn(
-                    "min-h-0 flex-1 overflow-y-auto py-4",
-                    isMobile ? "px-4" : "px-6",
-                )}
-            >
+            <DialogBody>
                 {passwordFieldsBody}
-            </div>
+            </DialogBody>
 
             {isMobile ? (
-                <DialogFooter className={sheetFooterMobileClass}>
+                <DialogFooter className="flex-col">
                     {!success ? (
                         <Button type="submit" disabled={loading} size="xl" className="w-full">
                             {loading ? "Alterando..." : "Alterar senha"}
@@ -305,7 +295,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                     ) : null}
                 </DialogFooter>
             ) : (
-                <DialogFooter className={dialogFooterClass}>
+                <DialogFooter>
                     <Button
                         type="button"
                         variant="outline"

@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
   Dialog,
+  DialogBody,
   DialogCloseButton,
   DialogContent,
   DialogDescription,
@@ -586,7 +587,7 @@ export function CategoriesOnboardingWizard({
                             className="flex min-h-0 flex-1 flex-col"
                             onSubmit={(ev) => void handleAddSubmit(ev)}
                         >
-                            <div className="min-h-0 flex-1 overflow-y-auto px-4">
+                            <DialogBody>
                                 <div className="space-y-4 py-2">
                                     <div className="space-y-2">
                                         <Label htmlFor="onb-add-name">Nome</Label>
@@ -611,7 +612,7 @@ export function CategoriesOnboardingWizard({
                                         onIconChange={setAddIcon}
                                     />
                                 </div>
-                            </div>
+                            </DialogBody>
                             <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
                                 <Button type="submit" disabled={crudBusy} size="xl" className="w-full">
                                     {crudBusy ? "Salvando…" : "Criar"}
@@ -693,7 +694,7 @@ export function CategoriesOnboardingWizard({
                                 onSubmit={(ev) => void handleEditSubmit(ev)}
                                 className="flex min-h-0 flex-1 flex-col"
                             >
-                                <div className="min-h-0 flex-1 overflow-y-auto px-4">
+                                <DialogBody>
                                     <div className="space-y-3 py-1">
                                         <div className="space-y-2">
                                             <Label htmlFor="onb-edit-name">Nome</Label>
@@ -734,7 +735,7 @@ export function CategoriesOnboardingWizard({
                                             />
                                         ) : null}
                                     </div>
-                                </div>
+                                </DialogBody>
                                 <DialogFooter className="flex-col mt-0 shrink-0 gap-2 px-4 pt-4">
                                     <Button type="submit" disabled={crudBusy} size="xl" className="w-full">
                                         {crudBusy ? "Salvando…" : "Salvar"}
@@ -993,7 +994,7 @@ export function CategoriesOnboardingWizard({
                                 despesas.
                             </p>
                         ) : (
-                            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-0.5">
+                            <DialogBody className="pr-0.5">
                                 <div className="space-y-4 pb-1">
                                     {incomeCategories.length > 0 ? (
                                         <div className="space-y-2">
@@ -1021,7 +1022,7 @@ export function CategoriesOnboardingWizard({
                                         )}
                                     </div>
                                 </div>
-                            </div>
+                            </DialogBody>
                         )}
                     </CustomForm>
                 ) : null}
