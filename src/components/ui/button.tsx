@@ -48,7 +48,7 @@ const buttonVariants = cva(
         // `secondary` recuava para 12px contra os 13px das outras, e os chips
         // que alternam entre `secondary` e `outline` saltavam 2px ao selecionar.
         secondary:
-          "bg-clip-border bg-secondary text-secondary-foreground hover:bg-secondary-hover aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+          "bg-clip-border bg-secondary text-secondary-foreground hover:bg-secondary-hover active:bg-secondary-hover aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
         // O par `active:` não é redundante com o `hover:`: `hover:` compila
         // dentro de `@media (hover: hover)`, então sem ele **o terciário não
         // devolvia nada ao toque** — em nenhuma das telas que o usam. Era um
@@ -63,9 +63,9 @@ const buttonVariants = cva(
         tertiary:
           "hover:bg-muted hover:text-foreground active:bg-muted active:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 dark:active:bg-muted/50",
         outline:
-          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input-fill/30 dark:hover:bg-input-fill/50",
+          "border-border bg-background hover:bg-muted hover:text-foreground active:bg-muted active:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input-fill/30 dark:hover:bg-input-fill/50 dark:active:bg-input-fill/50",
         destructive:
-          "bg-destructive/10 text-destructive-muted-foreground hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
+          "bg-destructive/10 text-destructive-muted-foreground hover:bg-destructive/20 active:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:active:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary-accent underline-offset-4 hover:underline active:underline",
       },
       // Uma escada só, de 24 a 40 em degraus de 4, e a coluna `icon-*` espelha
