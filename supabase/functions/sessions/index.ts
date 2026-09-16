@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
-import { internalError } from '../_shared/http.ts'
+import { internalError, sessionGuardMessage } from '../_shared/http.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import {
   assertCallerSessionAllowed,
@@ -52,7 +52,7 @@ async function guardCallerSession(
   const result = await assertCallerSessionAllowed(supabaseAdmin, userId, token, req)
   if (result.ok) return null
   return new Response(
-    JSON.stringify({ error: internalError('sessions', result) }),
+    JSON.stringify({ error: sessionGuardMessage('sessions', result) }),
     { status: result.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   )
 }
