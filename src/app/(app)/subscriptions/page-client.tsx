@@ -519,7 +519,6 @@ export default function SubscriptionsPageClient() {
                             <CardToolbar>
                                 <div
                                     className="flex flex-col gap-3 px-3 py-3 sm:hidden"
-                                    role="toolbar"
                                     aria-label="Ações da seleção"
                                 >
                                     <div className="flex items-start justify-between gap-3">
@@ -582,7 +581,6 @@ export default function SubscriptionsPageClient() {
                                 </div>
                                 <div
                                     className="hidden px-4 py-2 sm:flex sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:gap-2"
-                                    role="toolbar"
                                     aria-label="Ações da seleção"
                                 >
                                     <span className="mr-auto text-xs tabular-nums text-muted-foreground">
@@ -643,7 +641,7 @@ export default function SubscriptionsPageClient() {
                             )}
                         >
                             <Table className="min-w-[720px] text-sm">
-                                <TableHeader className="sticky top-0 z-10 bg-muted/50 [&_tr]:border-b-0">
+                                <TableHeader variant="muted" sticky className="[&_tr]:border-b-0">
                                     <TableRow className="border-0 [&>th]:border-b [&>th]:border-border">
                                         <TableHead className="w-10 px-2 py-0 md:w-11 md:px-3">
                                             <Checkbox

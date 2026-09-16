@@ -479,83 +479,81 @@ export function SubscriptionDetailSheet({
                             </div>
                         </div>
 
-                        <div className="mt-3 overflow-x-auto rounded-lg border border-border/50 bg-background/40">
-                            <Table className="min-w-[280px] text-xs">
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="h-8 px-2 text-2xs font-semibold uppercase tracking-wide">
-                                            Cobrança
-                                        </TableHead>
-                                        <TableHead className="h-8 px-2 text-right text-2xs font-semibold uppercase tracking-wide">
-                                            Valor
-                                        </TableHead>
-                                        <TableHead className="h-8 px-2 text-2xs font-semibold uppercase tracking-wide">
-                                            Status
-                                        </TableHead>
+                        <Table variant="outline" size="sm" className="mt-3 min-w-[280px]">
+                            <TableHeader labels="caps">
+                                <TableRow>
+                                    <TableHead>
+                                        Cobrança
+                                    </TableHead>
+                                    <TableHead numeric>
+                                        Valor
+                                    </TableHead>
+                                    <TableHead>
+                                        Status
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {latestChargeLoading ? (
+                                    <TableRow className="h-9 border-border/40">
+                                        <TableCell className="px-2 py-1.5">
+                                            <Skeleton className="h-3.5 w-20 rounded-md" />
+                                        </TableCell>
+                                        <TableCell className="px-2 py-1.5">
+                                            <Skeleton className="ml-auto h-3.5 w-16 rounded-md" />
+                                        </TableCell>
+                                        <TableCell className="px-2 py-1.5">
+                                            <Skeleton className="h-5 w-16 rounded-full" />
+                                        </TableCell>
                                     </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {latestChargeLoading ? (
-                                        <TableRow className="h-9 border-border/40">
-                                            <TableCell className="px-2 py-1.5">
-                                                <Skeleton className="h-3.5 w-20 rounded-md" />
+                                ) : subscriptionChargeRows.length > 0 ? (
+                                    subscriptionChargeRows.map((row) => (
+                                        <TableRow
+                                            key={row.key}
+                                            className={cn(
+                                                "h-9 border-border/40",
+                                                row.status !== "pending" &&
+                                                    "bg-muted/50 dark:bg-muted/30"
+                                            )}
+                                        >
+                                            <TableCell className="max-w-[9rem] truncate px-2 py-1.5 tabular-nums text-muted-foreground">
+                                                {row.date
+                                                    ? formatDatePtBr(row.date.slice(0, 10))
+                                                    : "—"}
+                                            </TableCell>
+                                            <TableCell className="px-2 py-1.5 text-right tabular-nums font-medium">
+                                                {currencyBRL(row.amount)}
                                             </TableCell>
                                             <TableCell className="px-2 py-1.5">
-                                                <Skeleton className="ml-auto h-3.5 w-16 rounded-md" />
-                                            </TableCell>
-                                            <TableCell className="px-2 py-1.5">
-                                                <Skeleton className="h-5 w-16 rounded-full" />
+                                                <span
+                                                    className={cn(
+                                                        "inline-flex h-5 w-fit items-center justify-center rounded-full border-0 px-2 py-0 text-2xs font-medium uppercase tracking-wide",
+                                                        subscriptionChargeStatusChipClassName(
+                                                            row.status
+                                                        )
+                                                    )}
+                                                >
+                                                    {row.status === "pending"
+                                                        ? "Próxima"
+                                                        : row.status === "paid"
+                                                          ? "Paga"
+                                                          : "Lançada"}
+                                                </span>
                                             </TableCell>
                                         </TableRow>
-                                    ) : subscriptionChargeRows.length > 0 ? (
-                                        subscriptionChargeRows.map((row) => (
-                                            <TableRow
-                                                key={row.key}
-                                                className={cn(
-                                                    "h-9 border-border/40",
-                                                    row.status !== "pending" &&
-                                                        "bg-muted/50 dark:bg-muted/30"
-                                                )}
-                                            >
-                                                <TableCell className="max-w-[9rem] truncate px-2 py-1.5 tabular-nums text-muted-foreground">
-                                                    {row.date
-                                                        ? formatDatePtBr(row.date.slice(0, 10))
-                                                        : "—"}
-                                                </TableCell>
-                                                <TableCell className="px-2 py-1.5 text-right tabular-nums font-medium">
-                                                    {currencyBRL(row.amount)}
-                                                </TableCell>
-                                                <TableCell className="px-2 py-1.5">
-                                                    <span
-                                                        className={cn(
-                                                            "inline-flex h-5 w-fit items-center justify-center rounded-full border-0 px-2 py-0 text-2xs font-medium uppercase tracking-wide",
-                                                            subscriptionChargeStatusChipClassName(
-                                                                row.status
-                                                            )
-                                                        )}
-                                                    >
-                                                        {row.status === "pending"
-                                                            ? "Próxima"
-                                                            : row.status === "paid"
-                                                              ? "Paga"
-                                                              : "Lançada"}
-                                                    </span>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
-                                    ) : (
-                                        <TableRow>
-                                            <TableCell
-                                                colSpan={3}
-                                                className="h-10 px-2 text-center text-muted-foreground"
-                                            >
-                                                Nenhuma cobrança para exibir.
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </div>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={3}
+                                            className="h-10 px-2 text-center text-muted-foreground"
+                                        >
+                                            Nenhuma cobrança para exibir.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
 
                     </div>
                 </section>

@@ -142,7 +142,7 @@ function TableSkeleton({ rowCount }: { rowCount: number }) {
             <CardContent className="relative flex flex-col p-0">
                 <div className="min-w-0 overflow-hidden rounded-t-xl">
                     <Table className="min-w-[640px] text-sm md:min-w-[700px]">
-                        <TableHeader className="sticky top-0 z-10 bg-muted/50 [&_tr]:border-b-0">
+                        <TableHeader variant="muted" sticky className="[&_tr]:border-b-0">
                             <TableRow className="border-0 [&>th]:border-b [&>th]:border-border">
                                 <TableHead className="w-10 px-2 py-0 md:w-11 md:px-3">
                                     <Skeleton className="mx-auto size-4 rounded-sm" />

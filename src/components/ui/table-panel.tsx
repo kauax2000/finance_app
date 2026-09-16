@@ -116,9 +116,9 @@ function TablePanel({
  *
  * **Nunca `role="toolbar"`.** O papel é um contrato de teclado — foco
  * itinerante entre os controles —, e nenhuma barra de seleção do app o
- * implementa; o app já escreve `role="toolbar"` à mão em 4 lugares sem
- * implementar o contrato, que é exatamente o defeito que `Toolbar` documenta
- * e se recusa a reproduzir.
+ * implementa. O app escrevia o papel à mão em quatro lugares sem cumprir o
+ * contrato; na migração do backlog os quatro o perderam, que é exatamente o
+ * defeito que `Toolbar` documenta e se recusa a reproduzir.
  *
  * **Ela fica acima da moldura, sem fundo e sem borda.** Ela chegou a ter o
  * `bg-muted/50` do cabeçalho da tabela como destaque leve, e o dono o tirou:
