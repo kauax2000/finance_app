@@ -138,7 +138,7 @@ export function ProjectFormDialog({
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent layout="fixed">
-                <DialogHeader className="shrink-0 px-6 py-4 text-left">
+                <DialogHeader>
                     <DialogTitle>Nova carteira</DialogTitle>
                 </DialogHeader>
                 {innerForm}

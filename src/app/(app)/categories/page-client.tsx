@@ -699,7 +699,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             ) : (
                 <Dialog open={dialogOpen} onOpenChange={onSheetOpenChange}>
                     <DialogContent layout="fixed">
-                        <DialogHeader className="shrink-0 px-6 pt-6 pb-2">
+                        <DialogHeader>
                             <DialogTitle>{sheetTitle}</DialogTitle>
                             <DialogDescription>{sheetDescription}</DialogDescription>
                         </DialogHeader>

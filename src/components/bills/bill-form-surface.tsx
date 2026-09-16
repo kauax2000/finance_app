@@ -102,8 +102,8 @@ export function BillFormSurface({
             onSubmit={handleSubmit}
             className="flex min-h-0 flex-col"
         >
-            <DialogHeader className="flex shrink-0 flex-col gap-1 px-6 pt-6 pb-3 text-left sm:px-6">
-                <DialogTitle className="text-lg">{formTitle}</DialogTitle>
+            <DialogHeader>
+                <DialogTitle>{formTitle}</DialogTitle>
                 <DialogDescription>{formDescription}</DialogDescription>
             </DialogHeader>
             <DialogBody className={scrollClass}>

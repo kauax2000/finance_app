@@ -819,7 +819,7 @@ export default function CreditCardDetailPageClient() {
                     onSubmit={handleSaveEdit}
                     className="flex min-h-0 flex-1 flex-col"
                 >
-                    <DialogHeader className="shrink-0 px-6 pt-6 pb-2">
+                    <DialogHeader>
                         <DialogTitle>Editar cartão</DialogTitle>
                         <DialogDescription>
                             Atualize os dados do cartão. O número completo não é armazenado.

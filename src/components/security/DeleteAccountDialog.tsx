@@ -192,7 +192,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
 
 
     const headerDesktop = (
-        <DialogHeader className="shrink-0 px-6 py-4 text-left">
+        <DialogHeader>
             <DialogTitle
                 className={
                     success

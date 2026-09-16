@@ -253,7 +253,7 @@ export function WorkspaceDeleteDialog({
                     size="lg"
                     className="[--dialog-max-h:min(92vh,40rem)]"
                 >
-                <DialogHeader className="px-6 py-4 text-left">
+                <DialogHeader>
                     <DialogTitle>Excluir carteira</DialogTitle>
                     <DialogDescription>Esta ação é permanente e não pode ser desfeita.</DialogDescription>
                     {headerDetailBlock}

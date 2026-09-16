@@ -135,7 +135,7 @@ export function SubscriptionFormSurface({
             onSubmit={handleSubmit}
             className="flex max-h-[min(90dvh,36rem)] flex-col"
         >
-            <DialogHeader className="shrink-0 px-6 pt-6 pb-2">
+            <DialogHeader>
                 <DialogTitle>{formTitle}</DialogTitle>
                 {formDescription ? (
                     <DialogDescription>{formDescription}</DialogDescription>

@@ -259,7 +259,7 @@ export function CategoryCreateDialog({
     return (
         <Dialog open={open} onOpenChange={onSheetOpenChange}>
             <DialogContent layout="fixed">
-                <DialogHeader className="shrink-0 px-6 pt-6 pb-2">
+                <DialogHeader>
                     <DialogTitle>Nova categoria</DialogTitle>
                     <DialogDescription>{description}</DialogDescription>
                 </DialogHeader>

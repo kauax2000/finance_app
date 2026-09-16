@@ -164,7 +164,7 @@ export function WorkspaceAppearanceEditDialog({
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent layout="fixed">
-                <DialogHeader className="shrink-0 px-6 py-4 text-left">
+                <DialogHeader>
                     <DialogTitle>Editar carteira</DialogTitle>
                     <DialogDescription className="text-xs leading-snug">
                         Altere nome, ícone e cor de destaque da carteira.

@@ -501,7 +501,7 @@ export function WorkspaceInviteDialog({
             ) : (
                 <Dialog open={open} onOpenChange={onOpenChange}>
                     <DialogContent className="flex max-h-[min(90dvh,32rem)] flex-col gap-0 overflow-hidden">
-                        <DialogHeader className="shrink-0">
+                        <DialogHeader>
                             <DialogTitle>Novo membro</DialogTitle>
                             <DialogDescription>
                                 Convide por e-mail ou gere um link de convite para esta carteira.

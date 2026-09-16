@@ -307,14 +307,9 @@ export function BillsToolbar({
                 <SheetContent
                     side="bottom"
                     fillMobileViewport
-                    className="flex w-full flex-col rounded-t-2xl px-4 pt-0 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]"
+                    className="flex w-full flex-col rounded-t-2xl pt-0 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]"
                 >
-                    <DialogHeader
-                        className={cn(
-                            "shrink-0 px-0 pt-1 pb-3 text-left",
-                            "mb-3",
-                        )}
-                    >
+                    <DialogHeader>
                         <DialogTitle>Filtros e ordenação</DialogTitle>
                         <DialogDescription>
                             Ajuste o que aparece na lista e a ordem dos itens.

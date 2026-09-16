@@ -120,8 +120,8 @@ export function PayBillDialog({
             <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
     ) : (
-        <DialogHeader className="flex shrink-0 flex-col gap-1 px-6 pt-6 pb-3 text-left sm:px-6">
-            <DialogTitle className="text-lg">{title}</DialogTitle>
+        <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
     )
