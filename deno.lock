@@ -1,0 +1,80 @@
+{
+  "version": "5",
+  "specifiers": {
+    "jsr:@std/assert@1.0.19": "1.0.19",
+    "jsr:@std/internal@^1.0.12": "1.0.14"
+  },
+  "jsr": {
+    "@std/assert@1.0.19": {
+      "integrity": "eaada96ee120cb980bc47e040f82814d786fe8162ecc53c91d8df60b8755991e",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
+    },
+    "@std/internal@1.0.14": {
+      "integrity": "291516b3d4c35024d6ffbc0a9df5bf4c64116e05b50012cf846710152d2ffdf7"
+    }
+  },
+  "redirects": {
+    "https://esm.sh/iceberg-js@^0.8.1?target=denonext": "https://esm.sh/iceberg-js@0.8.1?target=denonext"
+  },
+  "remote": {
+    "https://esm.sh/@supabase/auth-js@2.99.3/denonext/auth-js.mjs": "7221b207de0fcf66b12ab365ce1249f6c822c9c94e90330998f3bd96d42497e2",
+    "https://esm.sh/@supabase/functions-js@2.99.3/denonext/functions-js.mjs": "5f507faa54f4e788c3a3e02b22deb4ef19f5e6366ae2201c52c0417ceb4680fd",
+    "https://esm.sh/@supabase/postgrest-js@2.99.3/denonext/postgrest-js.mjs": "066eb7abbe2bf2f477719afef31dc0038fb996f71ada53c5744f115960e08d05",
+    "https://esm.sh/@supabase/realtime-js@2.99.3/denonext/realtime-js.mjs": "e969533fe09c7ef6e1b961e0c821bd598dace5dd332476e9a4ff38d3a712c258",
+    "https://esm.sh/@supabase/storage-js@2.99.3/denonext/storage-js.mjs": "e96730599fbf773dc50de17ba61478c991c52fdff8f8c308abef428679a44ef3",
+    "https://esm.sh/@supabase/supabase-js@2.99.3": "043625cad1798d7e165a9cfcea145ac7d309c34786e5558023fecbcf565abfc7",
+    "https://esm.sh/@supabase/supabase-js@2.99.3/denonext/supabase-js.mjs": "af4d9b87a8acdeea13eed5905469ba5927d2286fade34fa785c5e8bdd67ff287",
+    "https://esm.sh/iceberg-js@0.8.1/denonext/iceberg-js.mjs": "d839d81a2e3966500ca2cdd0c1cb458e9608bacfc91f7bb67a69b2e878dcdb4f",
+    "https://esm.sh/iceberg-js@0.8.1?target=denonext": "58c849d7fe2bf4eca4a84eb501e83c161a7d8c34ca1bec15a962b3bec3062633",
+    "https://esm.sh/tslib@2.8.1/denonext/tslib.mjs": "c38da5dd6da6281964435002ce204cd586634fe3bdfb24a0ee116f48cf3292e9"
+  },
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:@heroicons/react@^2.2.0",
+        "npm:@next/bundle-analyzer@^16.2.6",
+        "npm:@playwright/test@^1.57.0",
+        "npm:@serwist/next@^9.5.11",
+        "npm:@supabase/supabase-js@^2.99.3",
+        "npm:@tailwindcss/postcss@4",
+        "npm:@tanstack/query-async-storage-persister@^5.100.9",
+        "npm:@tanstack/react-query-persist-client@^5.100.9",
+        "npm:@tanstack/react-query@^5.100.9",
+        "npm:@types/node@20",
+        "npm:@types/react-dom@19",
+        "npm:@types/react@19",
+        "npm:class-variance-authority@~0.7.1",
+        "npm:clsx@^2.1.1",
+        "npm:cmdk@^1.1.1",
+        "npm:date-fns@^4.1.0",
+        "npm:dexie@^4.4.2",
+        "npm:embla-carousel-react@^8.6.0",
+        "npm:eslint-config-next@16.2.1",
+        "npm:eslint@9",
+        "npm:idb-keyval@^6.2.2",
+        "npm:input-otp@^1.5.0",
+        "npm:next-themes@~0.4.6",
+        "npm:next@^16.2.6",
+        "npm:radix-ui@^1.4.3",
+        "npm:react-day-picker@^9.14.0",
+        "npm:react-dom@19.2.4",
+        "npm:react-resizable-panels@^4.12.3",
+        "npm:react@19.2.4",
+        "npm:recharts@^3.8.0",
+        "npm:serwist@^9.5.11",
+        "npm:shadcn@^4.1.0",
+        "npm:sharp@~0.34.5",
+        "npm:sonner@^2.0.7",
+        "npm:supabase@^2.102.0",
+        "npm:tailwind-merge@^3.5.0",
+        "npm:tailwindcss@4",
+        "npm:tw-animate-css@^1.4.0",
+        "npm:typescript@5",
+        "npm:vaul@^1.1.2",
+        "npm:vitest@^4.0.18"
+      ]
+    }
+  }
+}
