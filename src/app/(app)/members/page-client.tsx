@@ -117,7 +117,7 @@ function MembersSectionSkeleton() {
             <div className="flex h-8 min-w-0 items-end">
                 <Skeleton className="h-3 w-24" />
             </div>
-            <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <Card padding="none">
                 <CardContent className="flex flex-col p-0">
                     <CardToolbar>
                         <Skeleton className="h-4 w-32 max-w-[55%]" />
@@ -162,7 +162,7 @@ const membersPageSkeleton = (
             <div className="flex h-8 min-w-0 items-end">
                 <Skeleton className="h-3 w-28" />
             </div>
-            <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <Card padding="none">
                 <CardContent className="flex flex-col gap-0 p-0">
                     <div className="space-y-2 px-4 py-4">
                         <Skeleton className="h-4 w-14" />
@@ -188,7 +188,7 @@ const membersPageSkeleton = (
                 <Skeleton className="h-3 w-40" />
                 <Skeleton className="h-3 w-24 shrink-0" />
             </div>
-            <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <Card padding="none">
                 <CardContent className="flex flex-col p-0">
                     <ul className="divide-y divide-border" role="list">
                         {[1, 2].map((i) => (
@@ -576,7 +576,7 @@ export default function MembersPage() {
 
     if (!currentWorkspaceId) {
         return (
-            <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <Card padding="none">
                 <CardContent
                     className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
                     role="status"
@@ -669,7 +669,7 @@ export default function MembersPage() {
                         </p>
                     </div>
                 </div>
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <CardToolbar className="justify-end">
                             <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
@@ -696,8 +696,9 @@ export default function MembersPage() {
                                 return (
                                     <li key={member.user_id} className="min-w-0">
                                         <Card
+                                            padding="none"
                                             className={cn(
-                                                "gap-0 overflow-hidden rounded-lg border border-border/80 bg-muted/20 py-0 shadow-none ring-0 transition-colors hover:bg-muted/30",
+                                                "rounded-lg border-border/80 bg-muted/20 transition-colors hover:bg-muted/30",
                                                 isMe && "border-primary-accent/30 bg-primary/5 hover:bg-primary/10"
                                             )}
                                         >
@@ -812,7 +813,7 @@ export default function MembersPage() {
                             Apenas o proprietário da carteira pode enviar convites.
                         </div>
                     ) : null}
-                    <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                    <Card padding="none">
                         <CardContent className="flex flex-col p-0">
                             <CardToolbar>
                                 <p className="text-xs leading-snug text-muted-foreground">Por e-mail ou link</p>
@@ -965,7 +966,7 @@ export default function MembersPage() {
                             </p>
                         </div>
                     </div>
-                    <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                    <Card padding="none">
                         <CardContent className="flex flex-col p-0">
                             <CardToolbar className="justify-end">
                                 <p className="shrink-0 text-xs tabular-nums text-muted-foreground">

@@ -113,7 +113,7 @@ export function DashboardRecentTransactions({
             </div>
 
             {transactions.length === 0 ? (
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent className="flex flex-col gap-0 p-0">
                         <CardToolbar
                             aria-live="polite"
@@ -136,7 +136,7 @@ export function DashboardRecentTransactions({
             ) : (
                 <>
                     <div className="md:hidden">
-                        <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                        <Card padding="none">
                             <CardContent className="flex flex-col gap-0 p-0">
                                 <CardToolbar
                                     aria-live="polite"
@@ -313,7 +313,7 @@ export function DashboardRecentTransactions({
                     </div>
 
                     <div className="hidden md:block">
-                        <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                        <Card padding="none">
                             <CardContent className="relative flex flex-col p-0">
                                 <TransactionsTable
                                     transactions={transactions}

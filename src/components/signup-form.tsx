@@ -7,6 +7,7 @@ import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 import { getSafeInternalNextPath } from "@/lib/auth-return-path"
 import { formatAuthErrorMessagePt } from "@/lib/supabase-errors"
+import { Alert, AlertTitle } from "@/components/ui/alert"
 import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -221,9 +222,9 @@ export function SignupForm() {
             <div className="flex flex-col gap-6 p-6">
                 <CustomForm onSubmit={handleSignup} className="flex flex-col gap-4" noValidate>
                     {error && (
-                        <div className="bg-destructive-muted text-destructive-muted-foreground p-3 rounded-md text-sm">
-                            {error}
-                        </div>
+                        <Alert tone="destructive" variant="plain">
+                            <AlertTitle>{error}</AlertTitle>
+                        </Alert>
                     )}
                     <div className="flex flex-col gap-2">
                         <Label htmlFor="fullName">Nome completo</Label>

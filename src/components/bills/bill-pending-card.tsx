@@ -250,7 +250,7 @@ export function BillPendingCard({
                                 <EllipsisHorizontalIcon className="size-4" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuContent align="end" size="md">
                             <DropdownMenuItem
                                 onClick={(e) => {
                                     e.stopPropagation()
@@ -269,8 +269,7 @@ export function BillPendingCard({
                                 <ForwardIcon className="mr-2 size-4" />
                                 Ignorar parcela
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
+                            <DropdownMenuItem variant="destructive"
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     onDeleteBill()

@@ -44,7 +44,7 @@ function CardSkeleton({ seed }: { seed: number }) {
               ? "w-[min(100%,8rem)]"
               : "w-[min(100%,6rem)]"
     return (
-        <Card className="gap-0 overflow-hidden py-0 shadow-none ring-1 ring-border/60">
+        <Card padding="none" className="ring-1 ring-border/60">
             <div className="flex items-start justify-between gap-3 border-b border-border/50 px-4 pb-3 pt-4">
                 <div className="flex min-w-0 flex-1 items-center gap-3">
                     <Skeleton className="size-10 shrink-0 rounded-xl" />

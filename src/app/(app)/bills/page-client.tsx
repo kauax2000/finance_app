@@ -605,7 +605,7 @@ export default function BillsPageClient() {
             />
 
             {globalEmpty ? (
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent
                         className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
                         role="status"
@@ -640,7 +640,7 @@ export default function BillsPageClient() {
                     </CardContent>
                 </Card>
             ) : hasNoMatches ? (
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent
                         className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
                         role="status"
@@ -670,7 +670,7 @@ export default function BillsPageClient() {
                     </CardContent>
                 </Card>
             ) : showPendingEmptyButHasHistory ? (
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent className="mx-auto max-w-md px-4 py-8 text-center text-sm text-muted-foreground md:py-10">
                         <p className="mb-4">
                             Nenhuma conta pendente no momento. Você tem pagamentos recentes

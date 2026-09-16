@@ -401,9 +401,11 @@ function SummaryMetricCard({
 }) {
     return (
         <Card
-            className={cn(
-                "h-full min-w-0 gap-0 overflow-hidden py-0 shadow-none transition-[color,box-shadow] duration-150 hover:ring-foreground/15",
-            )}
+            padding="none"
+            /* O `hover:ring-foreground/15` que morava aqui não desenhava nada: o
+               `Card` só declara largura de anel no `focus-visible`, e este cartão
+               não é clicável. Com ele saiu a transição, que não tinha o que animar. */
+            className="h-full min-w-0"
         >
             <div className={categorySummaryHeaderClassName}>
                 <div className="flex min-w-0 flex-1 items-center justify-between gap-2 md:min-w-0 md:flex-1">

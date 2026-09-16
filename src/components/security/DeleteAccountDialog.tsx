@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { CustomForm } from "@/components/ui/form"
 import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
@@ -247,12 +248,13 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
     const bodyWarning = (
         <div className={scrollPadding}>
             <div className="space-y-3">
-                <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-                    <ExclamationTriangleIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                    <p className="min-w-0 leading-relaxed">
-                        <span className="font-medium">Atenção:</span> não será possível recuperar sua conta nem os dados abaixo.
-                    </p>
-                </div>
+                <Alert tone="destructive" size="sm">
+                    <ExclamationTriangleIcon />
+                    <AlertTitle>Atenção</AlertTitle>
+                    <AlertDescription>
+                        Não será possível recuperar sua conta nem os dados abaixo.
+                    </AlertDescription>
+                </Alert>
                 <p className="text-sm text-muted-foreground">
                     Ao excluir sua conta, os seguintes dados serão removidos permanentemente:
                 </p>
@@ -349,10 +351,10 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                     </div>
 
                     {error ? (
-                        <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-                            <ExclamationTriangleIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                            <span className="min-w-0 break-words">{error}</span>
-                        </div>
+                        <Alert tone="destructive" size="sm">
+                            <ExclamationTriangleIcon />
+                            <AlertTitle className="break-words">{error}</AlertTitle>
+                        </Alert>
                     ) : null}
                 </div>
             </div>

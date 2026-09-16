@@ -5,6 +5,7 @@ import { ArrowRightIcon } from "@heroicons/react/16/solid"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Alert, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import { useAuth } from "@/components/providers"
@@ -189,7 +190,7 @@ export function NotificationPreferences() {
                     <ArrowRightIcon className="size-4 opacity-70 sm:size-3.5" />
                 </Button>
             </div>
-            <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <Card padding="none">
                 <CardContent className="flex flex-col p-0">
                     {showNoWorkspaceMessage ? (
                         <div className="px-4 py-4">
@@ -201,9 +202,9 @@ export function NotificationPreferences() {
                     ) : null}
                     {error ? (
                         <div className="border-b border-border px-4 py-3">
-                            <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-                                {error}
-                            </div>
+                            <Alert tone="destructive" size="sm">
+                                <AlertTitle>{error}</AlertTitle>
+                            </Alert>
                         </div>
                     ) : null}
                     {showSkeleton ? (

@@ -528,7 +528,7 @@ export default function SubscriptionsPageClient() {
             ) : null}
 
             {!hasNoSubscriptions && !hasNoMatches ? (
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent className="relative flex flex-col p-0">
                         {selectedIds.size > 0 ? (
                             <CardToolbar>
@@ -993,7 +993,7 @@ export default function SubscriptionsPageClient() {
                     </CardContent>
                 </Card>
             ) : hasNoMatches ? (
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent
                         className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
                         role="status"
@@ -1023,7 +1023,7 @@ export default function SubscriptionsPageClient() {
                     </CardContent>
                 </Card>
             ) : (
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent
                         className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
                         role="status"

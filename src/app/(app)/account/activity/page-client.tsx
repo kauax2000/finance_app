@@ -151,7 +151,7 @@ function ActivityPageSkeleton() {
                 <div className="flex h-8 min-w-0 items-end">
                     <Skeleton className="h-3 w-36" />
                 </div>
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <CardToolbar className="justify-end">
                             <Skeleton className="h-3 w-28 shrink-0" />
@@ -266,7 +266,7 @@ export default function ActivityPage() {
                         </p>
                     </div>
                 </div>
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <CardToolbar className="justify-end">
                             <p className="shrink-0 text-xs tabular-nums text-muted-foreground">

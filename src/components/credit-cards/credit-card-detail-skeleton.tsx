@@ -24,7 +24,7 @@ const RECENT_TX_TABLE_ROW_KEYS = [
 
 function CardSectionShell({ children }: { children: React.ReactNode }) {
     return (
-        <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+        <Card padding="none">
             <CardContent className="relative flex flex-col gap-0 p-0">
                 {children}
             </CardContent>
@@ -118,7 +118,7 @@ function InvoicePanelSkeleton() {
         <div className="min-w-0 max-w-full space-y-2">
             <SectionTitleRow titleClassName="h-3 w-14 rounded-sm" cta="cycle" />
 
-            <Card className="gap-0 overflow-hidden border-border/80 py-0 shadow-sm">
+            <Card variant="elevated" padding="none">
                 <CardToolbar>
                     <Skeleton className="h-5 w-36 max-w-[min(100%,12rem)]" />
                 </CardToolbar>
@@ -335,7 +335,7 @@ export function CreditCardDetailSkeleton() {
                 <Skeleton className="h-8 w-[min(100%,16rem)] rounded-md" />
             </div>
 
-            <Card className="gap-0 overflow-hidden py-0">
+            <Card padding="none">
                 <CardHeader className="pb-3 pt-4">
                     <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0 flex-1">

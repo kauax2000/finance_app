@@ -6,6 +6,7 @@ import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 import { formatAuthErrorMessagePt } from "@/lib/supabase-errors"
 import { getSafeInternalNextPath } from "@/lib/auth-return-path"
+import { Alert, AlertTitle } from "@/components/ui/alert"
 import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -104,14 +105,9 @@ export function LoginForm() {
         <div className="w-full rounded-xl border bg-card text-card-foreground shadow-sm">
             <div className="flex flex-col gap-6 p-6">
                 {error ? (
-                    <div
-                        id="login-auth-error"
-                        role="alert"
-                        aria-live="polite"
-                        className="bg-destructive/10 text-destructive text-sm p-3 rounded-md"
-                    >
-                        {error}
-                    </div>
+                    <Alert tone="destructive" variant="plain">
+                        <AlertTitle>{error}</AlertTitle>
+                    </Alert>
                 ) : null}
                 <CustomForm onSubmit={handleLogin} className="flex flex-col gap-4" noValidate>
                     <div className="flex flex-col gap-2">

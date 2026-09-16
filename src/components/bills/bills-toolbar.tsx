@@ -242,7 +242,7 @@ export function BillsToolbar({
                                     <ChevronDownIcon className="size-3.5 opacity-70" />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuContent align="end" size="md">
                                 {mode === "pending"
                                     ? PENDING_FILTER.map((f) => (
                                           <DropdownMenuItem
@@ -279,7 +279,7 @@ export function BillsToolbar({
                                     <ChevronDownIcon className="size-3.5 opacity-70" />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuContent align="end" size="xl">
                                 {sortOpts.map(([k, d]) => (
                                     <DropdownMenuItem
                                         key={`${k}-${d}`}

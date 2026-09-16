@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { toast } from "@/lib/toast"
+import { toastPersistentAction } from "@/lib/toast"
 
 function shouldRegisterSw(): boolean {
     if (typeof window === "undefined") return false
@@ -59,10 +59,10 @@ export function SwRegister() {
                 return
             }
             updateReady = true
-            toast.info("Nova versão disponível.", {
+            toastPersistentAction("Nova versão disponível.", {
                 id: "sw-update",
-                duration: Infinity,
-                action: { label: "Atualizar", onClick: reload },
+                label: "Atualizar",
+                onClick: reload,
             })
         }
 

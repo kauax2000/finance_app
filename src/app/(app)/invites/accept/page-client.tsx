@@ -8,6 +8,7 @@ import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { ROUTES } from "@/config/navigation"
 import { supabase } from "@/lib/supabase"
@@ -138,16 +139,16 @@ export default function AcceptInvitePageClient() {
                             </div>
                         </>
                     ) : error ? (
-                        <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive-muted p-3 text-sm text-destructive-muted-foreground">
-                            <ExclamationCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
-                            <span>{error}</span>
-                        </div>
+                        <Alert tone="destructive">
+                            <ExclamationCircleIcon />
+                            <AlertTitle>{error}</AlertTitle>
+                        </Alert>
                     ) : showSuccess ? (
                         <div className="space-y-2">
-                            <div className="flex items-start gap-2 rounded-lg border border-success/30 bg-success-muted p-3 text-sm text-success-muted-foreground">
-                                <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
-                                <div className="space-y-1">
-                                    <p className="font-medium">Convite aceito com sucesso.</p>
+                            <Alert tone="success">
+                                <CheckCircleIcon />
+                                <AlertTitle>Convite aceito com sucesso.</AlertTitle>
+                                <AlertDescription className="space-y-1">
                                     {acceptedWorkspaceName ? (
                                         <p>
                                             Você agora faz parte da carteira <strong>{acceptedWorkspaceName}</strong>.
@@ -155,12 +156,12 @@ export default function AcceptInvitePageClient() {
                                     ) : (
                                         <p>A carteira compartilhada já está disponível na sua conta.</p>
                                     )}
-                                    <p className="text-xs text-muted-foreground">
+                                    <p>
                                         Use o seletor de carteiras no menu lateral (topo) para alternar entre{" "}
                                         <strong>Pessoal</strong> e esta carteira.
                                     </p>
-                                </div>
-                            </div>
+                                </AlertDescription>
+                            </Alert>
                         </div>
                     ) : null}
 

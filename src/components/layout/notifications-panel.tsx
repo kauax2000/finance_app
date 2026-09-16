@@ -286,7 +286,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                                                         <EllipsisHorizontalIcon className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end" className="w-44">
+                                                <DropdownMenuContent align="end" size="sm">
                                                     {unread ? (
                                                         <DropdownMenuItem
                                                             onClick={() => void onMarkAsRead(notification.id)}
@@ -295,8 +295,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                                                             Marcar como lida
                                                         </DropdownMenuItem>
                                                     ) : null}
-                                                    <DropdownMenuItem
-                                                        className="text-destructive focus:text-destructive"
+                                                    <DropdownMenuItem variant="destructive"
                                                         onClick={() => void onDelete(notification.id)}
                                                     >
                                                         <TrashIcon className="h-4 w-4" />

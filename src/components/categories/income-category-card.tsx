@@ -84,15 +84,13 @@ export function IncomeCategoryCard({
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
-                                align="end"
-                                className="w-44"
+                                align="end" size="sm"
                             >
                                 <DropdownMenuItem onSelect={() => onEdit()}>
                                     <PencilIcon className="h-4 w-4" aria-hidden />
                                     Editar
                                 </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    className="text-destructive focus:text-destructive"
+                                <DropdownMenuItem variant="destructive"
                                     onSelect={() => onDelete()}
                                 >
                                     <TrashIcon className="h-4 w-4" aria-hidden />

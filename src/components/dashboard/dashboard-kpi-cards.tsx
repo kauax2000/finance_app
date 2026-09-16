@@ -97,7 +97,7 @@ function KpiCard({
     badge?: ReactNode
 }) {
     return (
-        <Card className="gap-0 overflow-hidden py-0 shadow-none">
+        <Card padding="none">
             <CardToolbar>
                 <div className="flex min-w-0 flex-1 items-center gap-2">
                     <Icon

@@ -18,6 +18,7 @@ import {
   SheetContent,
 } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { Alert, AlertTitle } from "@/components/ui/alert"
 import { CustomForm } from "@/components/ui/form"
 import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
@@ -407,16 +408,16 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
             )}
 
             {errorMessage && (
-                <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-                    <ExclamationTriangleIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                    <span className="min-w-0 break-words">{errorMessage}</span>
-                </div>
+                <Alert tone="destructive" size="sm">
+                    <ExclamationTriangleIcon />
+                    <AlertTitle className="break-words">{errorMessage}</AlertTitle>
+                </Alert>
             )}
             {successMessage && (
-                <div className="flex items-start gap-2 rounded-lg border border-success/30 bg-success-muted px-3 py-2 text-xs text-success-muted-foreground">
-                    <CheckCircleIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                    <span className="min-w-0 break-words">{successMessage}</span>
-                </div>
+                <Alert tone="success" size="sm">
+                    <CheckCircleIcon />
+                    <AlertTitle className="break-words">{successMessage}</AlertTitle>
+                </Alert>
             )}
         </div>
     )

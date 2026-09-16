@@ -31,7 +31,7 @@ function SessionsPageSkeleton() {
                     </div>
                     <Skeleton className="h-10 w-full rounded-md sm:h-7 sm:w-32 sm:shrink-0 sm:self-auto" />
                 </div>
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <CardToolbar className="justify-end">
                             <Skeleton className="h-3 w-24 shrink-0" />
@@ -185,7 +185,7 @@ export default function SessionsPage() {
                         </Button>
                     ) : null}
                 </div>
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <CardToolbar className="justify-end">
                             <p className="shrink-0 text-xs tabular-nums text-muted-foreground">

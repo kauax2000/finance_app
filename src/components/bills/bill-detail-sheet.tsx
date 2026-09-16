@@ -249,13 +249,12 @@ export function BillDetailSheet({
                                                 />
                                             </Button>
                                         </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="w-44">
+                                        <DropdownMenuContent align="end" size="sm">
                                             <DropdownMenuItem onClick={onEditBill}>
                                                 <PencilIcon className="h-4 w-4" aria-hidden />
                                                 Editar modelo
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem
-                                                className="text-destructive focus:text-destructive"
+                                            <DropdownMenuItem variant="destructive"
                                                 onClick={onAskDelete}
                                             >
                                                 <TrashIcon className="h-4 w-4" aria-hidden />

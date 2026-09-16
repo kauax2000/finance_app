@@ -227,7 +227,7 @@ export function DashboardOpenInvoices({
                 </Button>
             </div>
 
-            <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <Card padding="none">
                 <CardContent className="p-0">
                     <CardToolbar
                         aria-live="polite"

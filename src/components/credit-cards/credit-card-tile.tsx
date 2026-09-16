@@ -50,8 +50,9 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
 
     return (
         <Card
+            padding="none"
             className={cn(
-                "gap-0 overflow-hidden py-0 transition-shadow",
+                "transition-shadow",
                 !card.is_active && "opacity-[0.82]"
             )}
         >
@@ -190,7 +191,7 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
 
 export function CreditCardTileSkeleton() {
     return (
-        <Card className="gap-0 overflow-hidden py-0">
+        <Card padding="none">
             <div className="flex items-start justify-between gap-3 border-b border-border/50 px-4 pb-3 pt-4">
                 <div className="min-w-0 flex-1 pr-2">
                     <Skeleton className="h-4 w-[min(100%,14rem)]" />

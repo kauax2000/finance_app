@@ -7,6 +7,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -156,12 +157,12 @@ export function ForgotPasswordForm() {
             <div className="flex flex-col gap-6 p-6">
                 {success ? (
                     <div className="flex flex-col gap-4">
-                        <div className="bg-success-muted text-success-muted-foreground text-sm p-3 rounded-md">
-                            <p className="font-medium">Senha atualizada!</p>
-                            <p className="text-muted-foreground mt-1">
+                        <Alert tone="success" variant="plain">
+                            <AlertTitle>Senha atualizada!</AlertTitle>
+                            <AlertDescription>
                                 Você será redirecionado para o login em breve.
-                            </p>
-                        </div>
+                            </AlertDescription>
+                        </Alert>
                         <Button asChild className="w-full">
                             <Link href={ROUTES.LOGIN}>Voltar ao login</Link>
                         </Button>
@@ -174,14 +175,14 @@ export function ForgotPasswordForm() {
                             </p>
                         </div>
                         {successMessage && (
-                            <div className="bg-success-muted text-success-muted-foreground text-sm p-3 rounded-md">
-                                {successMessage}
-                            </div>
+                            <Alert tone="success" variant="plain">
+                                <AlertTitle>{successMessage}</AlertTitle>
+                            </Alert>
                         )}
                         {error ? (
-                            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                                {error}
-                            </div>
+                            <Alert tone="destructive" variant="plain">
+                                <AlertTitle>{error}</AlertTitle>
+                            </Alert>
                         ) : null}
                         <div className="flex flex-col gap-2">
                             <Label htmlFor="email">Email</Label>
@@ -217,9 +218,9 @@ export function ForgotPasswordForm() {
                             </p>
                         </div>
                         {error ? (
-                            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                                {error}
-                            </div>
+                            <Alert tone="destructive" variant="plain">
+                                <AlertTitle>{error}</AlertTitle>
+                            </Alert>
                         ) : null}
                         <div className="flex flex-col gap-2">
                             <Label htmlFor="token">Token de recuperação</Label>

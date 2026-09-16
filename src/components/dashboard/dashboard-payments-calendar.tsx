@@ -476,7 +476,7 @@ export function DashboardPaymentsCalendar({
                 </div>
             </div>
             <div ref={measureRef} className="min-h-0">
-            <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <Card padding="none">
                 <CardContent className="relative flex flex-col gap-0 p-0">
                     <CardToolbar
                         aria-live="polite"

@@ -120,7 +120,7 @@ export function SubscriptionsToolbar({
                                 <ArrowsUpDownIcon className="size-4 opacity-80" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuContent align="end" size="xl">
                             <SortPresetDropdownItems onPick={onSortChange} />
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -139,7 +139,7 @@ export function SubscriptionsToolbar({
                                 <ChevronDownIcon className="size-3.5 opacity-70" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuContent align="end" size="xl">
                             <SortPresetDropdownItems onPick={onSortChange} />
                         </DropdownMenuContent>
                     </DropdownMenu>

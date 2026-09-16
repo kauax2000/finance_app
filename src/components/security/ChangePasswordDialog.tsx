@@ -20,6 +20,7 @@ import {
   SheetContent,
 } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { Alert, AlertTitle } from "@/components/ui/alert"
 import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -286,16 +287,16 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
             </div>
 
             {error ? (
-                <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-                    <ExclamationTriangleIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                    <span className="min-w-0 break-words">{error}</span>
-                </div>
+                <Alert tone="destructive" size="sm">
+                    <ExclamationTriangleIcon />
+                    <AlertTitle className="break-words">{error}</AlertTitle>
+                </Alert>
             ) : null}
             {success ? (
-                <div className="flex items-start gap-2 rounded-lg border border-success/30 bg-success-muted px-3 py-2 text-xs text-success-muted-foreground">
-                    <CheckCircleIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                    <span>Senha alterada com sucesso!</span>
-                </div>
+                <Alert tone="success" size="sm">
+                    <CheckCircleIcon />
+                    <AlertTitle>Senha alterada com sucesso!</AlertTitle>
+                </Alert>
             ) : null}
         </div>
     )

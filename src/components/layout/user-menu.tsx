@@ -71,8 +71,7 @@ export function UserMenu({ children }: UserMenuProps) {
                     <DropdownMenuSeparator className="mx-0 my-0 bg-border/60" />
 
                     <div className="p-1">
-                        <DropdownMenuItem
-                            className="cursor-pointer gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
+                        <DropdownMenuItem variant="destructive" className="cursor-pointer gap-2"
                             onClick={() => signOut()}
                         >
                             <ArrowRightStartOnRectangleIcon className="h-4 w-4" />

@@ -791,7 +791,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                         />
                     </div>
                 </div>
-                <Card className="gap-0 overflow-hidden border-border/80 py-0 shadow-sm">
+                <Card variant="elevated" padding="none">
                     <CardToolbar
                         aria-live="polite"
                     >
@@ -1224,7 +1224,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                         </h2>
                     </div>
                 </div>
-                <Card className="gap-0 overflow-hidden border-border/80 py-0 shadow-sm">
+                <Card variant="elevated" padding="none">
                     {committedDetailLine ? (
                         <CardToolbar
                             aria-live="polite"

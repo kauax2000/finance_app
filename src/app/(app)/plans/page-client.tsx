@@ -22,7 +22,7 @@ export default function PlansPage() {
                         </p>
                     </div>
                 </div>
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:py-3.5">
                             <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -72,7 +72,7 @@ export default function PlansPage() {
                         </p>
                     </div>
                 </div>
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <CardToolbar>
                             <p className="min-w-0 text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -158,7 +158,7 @@ export default function PlansPage() {
                         </p>
                     </div>
                 </div>
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <CardToolbar className="justify-end">
                             <p className="shrink-0 text-xs tabular-nums text-muted-foreground">

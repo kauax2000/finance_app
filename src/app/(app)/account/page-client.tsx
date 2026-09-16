@@ -58,7 +58,7 @@ export default function AccountPage() {
                         </p>
                     </div>
                 </div>
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <div className="flex items-center justify-between gap-3 px-4 py-3 sm:py-3.5">
                             <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -102,7 +102,7 @@ export default function AccountPage() {
                                             <EllipsisVerticalIcon className="size-4" aria-hidden />
                                         </Button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-48">
+                                    <DropdownMenuContent align="end" size="md">
                                         <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
                                             <PencilIcon className="mr-2 h-4 w-4" />
                                             Editar perfil
@@ -148,7 +148,7 @@ export default function AccountPage() {
                         </p>
                     </div>
                 </div>
-                <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                <Card padding="none">
                     <CardContent className="flex flex-col p-0">
                         <Link
                             href={ROUTES.ACCOUNT_SESSIONS}

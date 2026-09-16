@@ -63,7 +63,7 @@ const metricCardHeaderClassName =
 
 function MetricCardSkeleton({ headerRight }: { headerRight?: ReactNode }) {
     return (
-        <Card className="h-full min-w-0 gap-0 overflow-hidden py-0 shadow-none">
+        <Card padding="none" className="h-full min-w-0">
             <div className={metricCardHeaderClassName}>
                 <div className="flex min-w-0 flex-1 items-center justify-between gap-2 md:min-w-0 md:flex-1">
                     <Skeleton className="h-3 w-28 max-w-full" />
@@ -195,7 +195,7 @@ function EmbeddedTransactionsSkeleton({ rowCount = 8 }: { rowCount?: number }) {
                 </div>
             </div>
 
-            <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <Card padding="none">
                 <CardContent className="relative flex flex-col p-0">
                     <div className="min-w-0 overflow-hidden rounded-t-xl">
                         <Table className="min-w-[700px] text-sm">

@@ -260,7 +260,7 @@ export function CreditCardsHistoryChart({
 
     if (cards.length === 0) {
         return (
-            <Card className="relative gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <Card padding="none" className="relative">
                 <CardContent className="flex min-h-[280px] flex-col items-center justify-center gap-2 px-4 py-10 text-center">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/60">
                         <CreditCardIcon className="h-6 w-6 text-muted-foreground" aria-hidden />
@@ -289,7 +289,7 @@ export function CreditCardsHistoryChart({
                 ) : null}
             </div>
 
-            <Card className="relative gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <Card padding="none" className="relative">
                 <CardContent className="relative flex flex-col gap-0 p-0">
                     <CardToolbar>
                         {chartData.length > 0 && hasAnyValue ? (

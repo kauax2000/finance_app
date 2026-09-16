@@ -148,7 +148,7 @@ export function CreditCardDetailView({
                 </Button>
             </div>
 
-            <Card className="gap-0 overflow-hidden py-0">
+            <Card padding="none">
                 <CardHeader className="pb-3 pt-4">
                     <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0 flex-1">
@@ -181,8 +181,7 @@ export function CreditCardDetailView({
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent
-                                    align="end"
-                                    className="w-52"
+                                    align="end" size="lg"
                                 >
                                     <DropdownMenuItem onClick={() => onEdit()}>
                                         <PencilIcon className="h-4 w-4" aria-hidden />
@@ -213,8 +212,7 @@ export function CreditCardDetailView({
                                             )}
                                         </DropdownMenuItem>
                                     ) : null}
-                                    <DropdownMenuItem
-                                        className="text-destructive focus:text-destructive"
+                                    <DropdownMenuItem variant="destructive"
                                         onClick={() => onDelete()}
                                     >
                                         <TrashIcon className="h-4 w-4" aria-hidden />

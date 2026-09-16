@@ -317,15 +317,14 @@ export function SubscriptionDetailSheet({
                                     />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuContent align="end" size="sm">
                                 <DropdownMenuItem
                                     onClick={() => setDetailMode("edit")}
                                 >
                                     <PencilIcon className="h-4 w-4" aria-hidden />
                                     Editar
                                 </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    className="text-destructive focus:text-destructive"
+                                <DropdownMenuItem variant="destructive"
                                     onClick={() => onDelete(s)}
                                 >
                                     <TrashIcon className="h-4 w-4" aria-hidden />

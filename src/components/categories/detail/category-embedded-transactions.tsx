@@ -431,7 +431,7 @@ export function CategoryEmbeddedTransactions({
                     ) : null}
 
                     {!displayHasNoTransactions && !displayHasNoMatches ? (
-                        <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                        <Card padding="none">
                             <CardContent className="relative flex flex-col p-0">
                                 <TransactionsTable
                                     transactions={displayTransactions}
@@ -456,7 +456,7 @@ export function CategoryEmbeddedTransactions({
                             </CardContent>
                         </Card>
                     ) : displayHasNoMatches ? (
-                        <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                        <Card padding="none">
                             <CardContent
                                 className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
                                 role="status"
@@ -489,7 +489,7 @@ export function CategoryEmbeddedTransactions({
                             </CardContent>
                         </Card>
                     ) : (
-                        <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                        <Card padding="none">
                             <CardContent
                                 className="flex flex-col items-center justify-center px-4 py-12 md:py-14"
                                 role="status"

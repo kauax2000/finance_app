@@ -90,7 +90,7 @@ function TableSkeleton({ rowCount }: { rowCount: number }) {
         bodyRows.push(<DataRowSkeleton key={`row-${i}`} seed={i} />)
     }
     return (
-        <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+        <Card padding="none">
             <CardContent className="relative flex flex-col p-0">
                 <div className="min-w-0 overflow-hidden rounded-t-xl">
                     <Table className="min-w-[720px] text-sm">

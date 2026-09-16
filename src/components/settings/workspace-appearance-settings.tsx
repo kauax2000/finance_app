@@ -24,7 +24,7 @@ function WorkspaceAppearanceSkeleton() {
             <div className="flex h-8 min-w-0 items-end">
                 <Skeleton className="h-3 w-24" />
             </div>
-            <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+            <Card padding="none">
                 <CardContent className="flex flex-col p-0">
                     <div
                         className="flex min-w-0 items-center justify-between gap-3 px-4 py-3 sm:py-3.5"
@@ -64,11 +64,9 @@ function InvitedCarteiraOverflowMenu({
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
-                    align="end"
-                    className="w-48"
+                    align="end" size="md"
                 >
-                    <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
+                    <DropdownMenuItem variant="destructive"
                         onSelect={() => onLeave()}
                     >
                         <ArrowRightStartOnRectangleIcon className="h-4 w-4" aria-hidden />
@@ -106,16 +104,14 @@ function OwnerCarteiraOverflowMenu({
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
-                    align="end"
-                    className="w-48"
+                    align="end" size="md"
                 >
                     <DropdownMenuItem onSelect={() => onEdit()}>
                         <PencilIcon className="h-4 w-4" aria-hidden />
                         Editar
                     </DropdownMenuItem>
                     {canDeleteProject ? (
-                        <DropdownMenuItem
-                            className="text-destructive focus:text-destructive"
+                        <DropdownMenuItem variant="destructive"
                             onSelect={() => onDelete()}
                         >
                             <TrashIcon className="h-4 w-4" aria-hidden />
@@ -214,7 +210,7 @@ export function WorkspaceAppearanceSettings() {
                             </p>
                         </div>
                     </div>
-                    <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+                    <Card padding="none">
                         <CardContent className="flex flex-col p-0">
                             {!currentWorkspace ? (
                                 <div className="px-4 py-3 sm:py-3.5">

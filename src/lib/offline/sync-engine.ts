@@ -13,7 +13,7 @@ import {
     dispatchFinanceTransactionsMutated,
 } from "@/lib/workspace-data-events"
 import type { OfflineEntity } from "@/lib/offline/types"
-import { toast } from "sonner"
+import { toastErrorWithDescription } from "@/lib/toast"
 
 const MAX_RETRIES = 5
 const BACKOFF_MS = [1000, 5000, 30_000, 60_000, 120_000]
@@ -97,9 +97,10 @@ async function drainOutbox(resetStale: boolean): Promise<void> {
                     retryCount,
                     lastError: result.error,
                 })
-                toast.error("Falha ao sincronizar alteração offline", {
-                    description: result.error,
-                })
+                toastErrorWithDescription(
+                    "Falha ao sincronizar alteração offline",
+                    result.error
+                )
             } else {
                 await updateMutation(mutation.id, {
                     status: "pending",
