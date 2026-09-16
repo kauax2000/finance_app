@@ -1,5 +1,6 @@
 "use client"
 
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AdjustmentsHorizontalIcon, ChevronDownIcon, PlusIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
 import { Badge } from "@/components/ui/badge"
@@ -21,10 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-    transactionSegmentContainerClassName,
-    transactionSegmentTabClassName,
-} from "@/components/transactions/transaction-type-segment"
+
 import { cn } from "@/lib/utils"
 
 export type BillsPageMode = "pending" | "bills"
@@ -150,39 +148,32 @@ export function BillsToolbar({
         <>
             <div className="flex flex-row flex-wrap items-center gap-2 md:gap-3">
                 <div className="flex min-w-0 max-w-full shrink-0 items-center gap-2">
-                    <div
+                    {/* Aba, e não filtro: ela troca o cartão da tela e reseta o
+                        eixo de ordenação. `Tabs variant="solid"` é o mesmo
+                        desenho do trilho que estava aqui à mão, com foco
+                        itinerante e o marcador que viaja. */}
+                    <Tabs
+                        value={mode}
+                        onValueChange={(next) =>
+                            onModeChange(next as BillsPageMode)
+                        }
                         className={cn(
-                            transactionSegmentContainerClassName,
                             "w-fit max-w-full shrink-0",
                             !hasTable && "pointer-events-none opacity-50"
                         )}
-                        role="tablist"
-                        aria-label="Modo de visualização"
                     >
-                        {MODE_TABS.map((tab) => {
-                            const selected = mode === tab.value
-                            return (
-                                <Button
+                        <TabsList aria-label="Modo de visualização">
+                            {MODE_TABS.map((tab) => (
+                                <TabsTrigger
                                     key={tab.value}
-                                    type="button"
-                                    role="tab"
-                                    aria-selected={selected}
-                                    size="sm"
-                                    variant="tertiary"
+                                    value={tab.value}
                                     disabled={!hasTable}
-                                    className={cn(
-                                        transactionSegmentTabClassName(
-                                            selected
-                                        ),
-                                        "flex-none"
-                                    )}
-                                    onClick={() => onModeChange(tab.value)}
                                 >
                                     {tab.label}
-                                </Button>
-                            )
-                        })}
-                    </div>
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
+                    </Tabs>
                     <Badge
                         size="xs"
                         className="shrink-0"
