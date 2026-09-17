@@ -10,6 +10,7 @@ import { barSurfaceClassName } from "@/lib/bar-classes"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
+import { useCloseOnScroll } from "@/hooks/use-close-on-scroll"
 import {
   menuIndicatorItemClassName,
   menuIndicatorSlotClassName,
@@ -165,6 +166,9 @@ function Menubar({
   className,
   variant = "outline",
   size = "md",
+  value: valueProp,
+  defaultValue,
+  onValueChange,
   ...props
 }: React.ComponentProps<typeof MenubarPrimitive.Root> &
   VariantProps<typeof menubarVariants> & {
@@ -175,11 +179,21 @@ function Menubar({
     () => ({ size: size ?? "md", variant: variant ?? "outline" }),
     [size, variant]
   )
+  // Os menus do Menubar não são modais: a página rola com um aberto, e ele
+  // fecha — ver `useCloseOnScroll`.
+  const [value, setValue] = useCloseOnScroll({
+    value: valueProp,
+    defaultValue,
+    onChange: onValueChange,
+    closed: "",
+  })
 
   return (
     <MenubarContext.Provider value={ctx}>
       <MenubarPrimitive.Root
         data-slot="menubar"
+        value={value}
+        onValueChange={setValue}
         data-variant={variant}
         data-size={size}
         className={cn(menubarVariants({ variant }), className)}

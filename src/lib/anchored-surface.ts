@@ -3,6 +3,10 @@
  *
  * # Toda superfície ancorada cabe inteira na janela
  *
+ * (E, não modal, ela fecha quando a página rola — `useCloseOnScroll`, em
+ * `hooks/use-close-on-scroll`. Rolar é sair dela, e portalizada em
+ * `--z-popover` ela passaria por cima do header sticky.)
+ *
  * A regra tem **três cláusulas**, e as três precisam valer juntas:
  *
  * 1. Ela **centra no gatilho** quando cabe.

@@ -496,7 +496,7 @@ export default function NavigationMenuDoc() {
       </DocSection>
 
       <DocNote title="Dentro de um contêiner que recorta">
-        Este é o único dropdown do sistema que não é portalizado: o viewport é filho da raiz, então todo ancestral com <code>overflow</code> o recorta. A raiz mede o recorte e o painel desloca e encolhe para caber, com 8px de folga.
+        Este é o único dropdown do sistema que não é portalizado: o viewport é filho da raiz, então todo ancestral com <code>overflow</code> o recorta. A raiz mede o recorte e o painel desloca e encolhe para caber, com 8px de folga. Por não ser portalizado, a raiz fica em <code>--z-raised</code>: o painel passa por baixo do header sticky, nunca por cima. E ele fecha quando a página rola — rolar a própria lista não fecha.
       </DocNote>
 
       <DocSection

@@ -10,6 +10,10 @@ import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface";
 import { Muted } from "@/components/ui/typography";
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes";
 import { useScrollFade } from "@/hooks/use-scroll-fade";
+import {
+  skipFocusAfterScrollClose,
+  useCloseOnScroll,
+} from "@/hooks/use-close-on-scroll";
 
 /**
  * Um popover é um `role="dialog"` — e ele precisa de nome.
@@ -45,10 +49,40 @@ type PopoverLabelContextValue = {
 const PopoverLabelContext =
   React.createContext<PopoverLabelContextValue | null>(null);
 
+/** A marca de "fechou por rolagem", da raiz para o `Content`. */
+const PopoverScrollCloseContext =
+  React.createContext<React.RefObject<boolean> | null>(null);
+
+/**
+ * Não modal, o popover fecha quando a página rola — ver `useCloseOnScroll`.
+ * `Combobox` e `DatePicker` herdam daqui.
+ */
 function Popover({
+  open: openProp,
+  defaultOpen,
+  onOpenChange,
+  modal,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Root>) {
-  return <PopoverPrimitive.Root data-slot="popover" {...props} />;
+  const [open, setOpen, fechouPorRolagem] = useCloseOnScroll({
+    value: openProp,
+    defaultValue: defaultOpen,
+    onChange: onOpenChange,
+    closed: false,
+    enabled: !modal,
+  });
+
+  return (
+    <PopoverScrollCloseContext.Provider value={fechouPorRolagem}>
+      <PopoverPrimitive.Root
+        data-slot="popover"
+        open={open}
+        onOpenChange={setOpen}
+        modal={modal}
+        {...props}
+      />
+    </PopoverScrollCloseContext.Provider>
+  );
 }
 
 function PopoverTrigger({
@@ -126,10 +160,12 @@ function PopoverContent({
   sideOffset = 4,
   collisionPadding = ANCHORED_COLLISION_PADDING,
   padding,
+  onCloseAutoFocus,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content> &
   VariantProps<typeof popoverContentVariants>) {
   const reactId = React.useId();
+  const fechouPorRolagem = React.useContext(PopoverScrollCloseContext);
   const [hasTitle, setHasTitle] = React.useState(false);
   const [hasDescription, setHasDescription] = React.useState(false);
 
@@ -176,6 +212,10 @@ function PopoverContent({
           aria-labelledby={hasTitle ? label.titleId : undefined}
           aria-describedby={hasDescription ? label.descriptionId : undefined}
           data-padding={padding}
+          onCloseAutoFocus={skipFocusAfterScrollClose(
+            fechouPorRolagem,
+            onCloseAutoFocus,
+          )}
           className={cn(popoverContentVariants({ padding }), className)}
           {...props}
         />

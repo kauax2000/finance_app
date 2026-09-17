@@ -8,6 +8,7 @@ import { menuPanelSurfaceClassName } from "@/lib/menu-classes"
 import { cn } from "@/lib/utils"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import { Caption } from "@/components/ui/typography"
+import { useCloseOnScroll } from "@/hooks/use-close-on-scroll"
 
 /**
  * Uma prévia rica ao pousar o cursor — e ela é **sempre redundante**, porque no
@@ -96,13 +97,26 @@ const hoverCardContentVariants = cva(
 function HoverCard({
   openDelay = 400,
   closeDelay = 200,
+  open: openProp,
+  defaultOpen,
+  onOpenChange,
   ...props
 }: React.ComponentProps<typeof HoverCardPrimitive.Root>) {
+  // A prévia fecha quando a página rola — ver `useCloseOnScroll`.
+  const [open, setOpen] = useCloseOnScroll({
+    value: openProp,
+    defaultValue: defaultOpen,
+    onChange: onOpenChange,
+    closed: false,
+  })
+
   return (
     <HoverCardPrimitive.Root
       data-slot="hover-card"
       openDelay={openDelay}
       closeDelay={closeDelay}
+      open={open}
+      onOpenChange={setOpen}
       {...props}
     />
   )

@@ -10,6 +10,10 @@ import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
 import {
+  skipFocusAfterScrollClose,
+  useCloseOnScroll,
+} from "@/hooks/use-close-on-scroll"
+import {
   menuSubSurfaceClassName,
   menuSurfaceClassName,
   menuIndicatorItemClassName,
@@ -61,10 +65,40 @@ const DROPDOWN_POPPER =
  * arquivo era literalmente as duas, 2 espaços no topo e 4 do meio para baixo.
  */
 
+/** A marca de "fechou por rolagem", da raiz para o `Content`. */
+const DropdownMenuScrollCloseContext =
+  React.createContext<React.RefObject<boolean> | null>(null)
+
+/**
+ * Com `modal={false}` a página rola com o menu aberto, e ele fecha — ver
+ * `useCloseOnScroll`. O padrão (modal) já trava a rolagem.
+ */
 function DropdownMenu({
+  open: openProp,
+  defaultOpen,
+  onOpenChange,
+  modal,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
-  return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />
+  const [open, setOpen, fechouPorRolagem] = useCloseOnScroll({
+    value: openProp,
+    defaultValue: defaultOpen,
+    onChange: onOpenChange,
+    closed: false,
+    enabled: modal === false,
+  })
+
+  return (
+    <DropdownMenuScrollCloseContext.Provider value={fechouPorRolagem}>
+      <DropdownMenuPrimitive.Root
+        data-slot="dropdown-menu"
+        open={open}
+        onOpenChange={setOpen}
+        modal={modal}
+        {...props}
+      />
+    </DropdownMenuScrollCloseContext.Provider>
+  )
 }
 
 function DropdownMenuTrigger({
@@ -163,6 +197,7 @@ function DropdownMenuContent({
   collisionPadding = ANCHORED_COLLISION_PADDING,
   variant,
   size,
+  onCloseAutoFocus,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Content> &
   VariantProps<typeof dropdownMenuContentVariants> & {
@@ -184,6 +219,8 @@ function DropdownMenuContent({
     /** A faixa de pé, pelas mesmas razões. */
     footer?: React.ReactNode
   }) {
+  const fechouPorRolagem = React.useContext(DropdownMenuScrollCloseContext)
+
   return (
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.Content
@@ -191,6 +228,10 @@ function DropdownMenuContent({
         data-variant={variant}
         sideOffset={sideOffset}
         collisionPadding={collisionPadding}
+        onCloseAutoFocus={skipFocusAfterScrollClose(
+          fechouPorRolagem,
+          onCloseAutoFocus
+        )}
         className={cn(
           dropdownMenuContentVariants({ variant, size }),
           className

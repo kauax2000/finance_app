@@ -230,9 +230,14 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   para vencer é sempre sintoma**: se um popover precisa passar de
   `--z-popover`, o que está errado é quem o contém. Empilhamento local (`z-0`,
   `z-10`, `z-[1]` dentro de um componente) não é camada e fica como número cru.
-  **Toda superfície ancorada num gatilho vive em `--z-popover`** — `Popover`,
-  `DropdownMenu`, `Select`, `Tooltip`, `HoverCard`, `ContextMenu`, `Menubar` e
-  `NavigationMenu`. Os cinco últimos estavam em `--z-modal`, ou seja, **na mesma
+  **Toda superfície ancorada e portalizada vive em `--z-popover`** — `Popover`,
+  `DropdownMenu`, `Select`, `Tooltip`, `HoverCard`, `ContextMenu` e `Menubar`.
+  O `NavigationMenu` não é portalizado: a raiz dele fica em `--z-raised`, abaixo
+  do header sticky (em `--z-popover` o painel pintava por cima do header), e o
+  empilhamento interno é `z-10` local. **E superfície não modal fecha ao rolar**
+  a página ou um container ancestral (`useCloseOnScroll`); rolar dentro da
+  própria lista não fecha. `Tooltip`, `HoverCard`, `ContextMenu`, `Menubar` e
+  `NavigationMenu` já estiveram em `--z-modal`, ou seja, **na mesma
   camada do `Dialog`**: um tooltip dentro de um diálogo era decidido por ordem
   de DOM, não pela escala. E o `DatePicker` escalava o próprio popover até
   `--z-toast` para vencer uma disputa que `--z-popover` já ganhava — o sintoma

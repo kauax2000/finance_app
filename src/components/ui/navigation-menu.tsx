@@ -15,6 +15,7 @@ import {
 } from "@/lib/menu-classes"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
+import { useCloseOnScroll } from "@/hooks/use-close-on-scroll"
 
 /**
  * A fileira de navegação com painéis suspensos.
@@ -246,7 +247,7 @@ const navigationMenuContentVariants = cva(
       viewport: {
         true: "top-0 left-0 md:absolute md:w-auto",
         false: [
-          "absolute top-full z-(--z-popover) mt-2 overflow-hidden md:w-auto",
+          "absolute top-full z-10 mt-2 overflow-hidden md:w-auto",
           menuPanelSurfaceClassName,
           "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-open:slide-in-from-top-2",
           "data-closed:animate-out data-closed:fade-out-0 data-closed:duration-(--duration-instant)",
@@ -463,6 +464,9 @@ function NavigationMenu({
   orientation = "horizontal",
   indicator = "none",
   viewport = true,
+  value: valueProp,
+  defaultValue,
+  onValueChange,
   ...props
 }: Omit<
   React.ComponentProps<typeof NavigationMenuPrimitive.Root>,
@@ -477,6 +481,13 @@ function NavigationMenu({
 }) {
   const raizRef = React.useRef<HTMLElement | null>(null)
   const [anchored, setAnchored] = React.useState(false)
+  // O painel fecha quando a página rola — ver `useCloseOnScroll`.
+  const [value, setValue] = useCloseOnScroll({
+    value: valueProp,
+    defaultValue,
+    onChange: onValueChange,
+    closed: "",
+  })
   const segueGatilho = align === "trigger"
 
   useIsomorphicLayoutEffect(() => {
@@ -624,8 +635,13 @@ function NavigationMenu({
         data-orientation={orientation}
         data-viewport={viewport}
         orientation={orientation}
+        value={value}
+        onValueChange={setValue}
         className={cn(
-          "relative flex w-fit max-w-full",
+          // `z-(--z-raised)`: o painel não é portalizado, então a raiz é a
+          // camada dele. Acima do conteúdo, **abaixo** do header sticky (20) —
+          // com o `--z-popover` de antes ele pintava por cima do header.
+          "relative z-(--z-raised) flex w-fit max-w-full",
           // O padrão do teto do painel, para o quadro anterior à primeira
           // medição. `medir()` o sobrescreve inline, e o painel o herda.
           "[--navigation-menu-panel-max-w:100vw]",
@@ -795,7 +811,7 @@ function NavigationMenuViewport({
     <div
       data-slot="navigation-menu-viewport-anchor"
       className={cn(
-        "absolute isolate z-(--z-popover) flex",
+        "absolute isolate z-10 flex",
         VIEWPORT_ANCHOR[orientation][ancora]
       )}
     >
