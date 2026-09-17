@@ -1,0 +1,744 @@
+# Jornadas do app
+
+O mapa de tudo o que uma pessoa faz no app, dividido em onze jornadas. Cada
+jornada tem um fluxograma, as regras técnicas que decidem os caminhos e as
+lacunas encontradas no código. Foi escrito lendo o código em 2026-09-17, na
+branch `finance-app-2.0`. Quando uma tela mudar de caminho, atualize o
+diagrama dela.
+
+## Como ler os diagramas
+
+| Forma | Significa |
+|---|---|
+| `["/rota"]` retângulo | Página ou rota |
+| `(["Diálogo"])` cápsula | Modal, folha, popover, menu |
+| `{"Condição"}` losango | Guarda de rota ou decisão |
+| `[("backend")]` cilindro | Supabase: Edge Function, RPC, trigger, tabela |
+| `(("G5 Lançamentos"))` círculo | Saída para outra jornada |
+
+O rótulo da seta é a ação da pessoa ou a condição (`sucesso`, `erro`,
+`cancelar`). Os diagramas usam o tema escuro do Mermaid (`%%{init}%%` no topo
+de cada bloco), em qualquer tema do leitor.
+
+**Tudo o que decide acesso roda no navegador.** Não há `middleware.ts`,
+`proxy.ts` nem rotas em `src/app/api`. A sessão é do `supabase-js`, os
+redirecionamentos são do `AuthGuard` e a segurança real dos dados é a RLS do
+banco.
+
+## Sumário
+
+0. [Mapa geral](#0-mapa-geral)
+1. [Acesso: entrar, criar conta, senha e sair](#1-acesso-entrar-criar-conta-senha-e-sair)
+2. [Carteiras e colaboração](#2-carteiras-e-colaboração)
+3. [Navegação e ações globais](#3-navegação-e-ações-globais)
+4. [Painel](#4-painel)
+5. [Lançamentos](#5-lançamentos)
+6. [Cartões e faturas](#6-cartões-e-faturas)
+7. [Contas a pagar](#7-contas-a-pagar)
+8. [Assinaturas](#8-assinaturas)
+9. [Categorias e orçamentos](#9-categorias-e-orçamentos)
+10. [Conta e segurança](#10-conta-e-segurança)
+11. [Lacunas encontradas](#11-lacunas-encontradas)
+
+---
+
+## 0. Mapa geral
+
+Como as jornadas se ligam. O Painel é o centro; Lançamentos é para onde quase
+tudo desagua, porque assinatura, parcela e conta paga viram lançamento.
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    start(["Abrir o app"]) --> boot{"Tem sessão?"}
+    boot -->|"não"| G1(("G1 Acesso"))
+    boot -->|"sim"| G4(("G4 Painel"))
+    G1 -->|"entrou"| G4
+    G1 -->|"link de convite"| G2(("G2 Carteiras"))
+    G2 -->|"convite aceito"| G4
+
+    G3(("G3 Navegação global")) --- G4
+    G3 --> G5(("G5 Lançamentos"))
+    G3 --> G6(("G6 Cartões"))
+    G3 --> G7(("G7 Contas a pagar"))
+    G3 --> G8(("G8 Assinaturas"))
+    G3 --> G9(("G9 Categorias"))
+    G3 --> G2
+    G3 --> G10(("G10 Conta"))
+
+    G4 -->|"lançamento, parcela, assinatura"| G5
+    G4 -->|"fatura do mês"| G6
+    G4 -->|"conta prevista"| G7
+    G4 -->|"despesas por categoria"| G9
+
+    G6 -->|"ver transações do cartão"| G5
+    G6 -->|"gasto por categoria"| G9
+    G6 <-->|"fatura fechada em aberto"| G7
+    G7 -->|"pagar conta cria despesa"| G5
+    G8 -->|"cobrança vira lançamento"| G5
+    G9 -->|"ver em transações"| G5
+    G5 -->|"gerenciar categorias"| G9
+    G5 -->|"cadastrar cartão"| G6
+
+    G10 -->|"sair ou excluir conta"| G1
+```
+
+---
+
+## 1. Acesso: entrar, criar conta, senha e sair
+
+Tudo o que acontece antes de a pessoa estar dentro do app, e a volta para fora.
+Criar conta e entrar são a mesma jornada: as duas telas se ligam, dividem o
+Google e o parâmetro `next`.
+
+### 1a. Entrada, login e cadastro
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    root["/"] --> loading{"Sessão carregada?"}
+    loading -->|"carregando"| bootscreen(["Tela de abertura"])
+    loading -->|"com usuário"| dash["/dashboard"]
+    loading -->|"sem usuário"| login["/login"]
+
+    protected["Qualquer rota do app"] --> guard{"AuthGuard: tem usuário?"}
+    guard -->|"sim"| page(["Renderiza a página"])
+    guard -->|"não, e é /invites/accept"| page
+    guard -->|"não"| loginNext["/login?next=rota atual"]
+
+    login -->|"email e senha"| signin[("signInWithPassword")]
+    signin -->|"erro"| loginErr(["Alerta em português"]) --> login
+    signin -->|"sucesso"| nextOk{"Tem next seguro?"}
+    nextOk -->|"sim"| back["Rota do next"]
+    nextOk -->|"não"| dash
+    login -->|"Google"| oauth[("OAuth Google")] -->|"tokens no hash da URL"| nextOk
+    login -->|"Esqueceu a senha?"| forgot["/forgot-password"]
+    login -->|"Criar conta"| register["/register?next"]
+
+    register -->|"nome, email, telefone, senha"| valid{"Senha forte e campos válidos?"}
+    valid -->|"não"| register
+    valid -->|"sim"| signup[("signUp")]
+    signup -->|"erro"| regErr(["Alerta"]) --> register
+    signup -->|"sucesso"| trigger[("Trigger handle_new_user: perfil, carteira pessoal, 12 categorias")]
+    trigger --> hasSession{"Voltou com sessão e next?"}
+    hasSession -->|"sim"| back
+    hasSession -->|"não"| confirm(["Confirme seu email"])
+    confirm -->|"Ir para login"| login
+    confirm -.->|"link do email"| nextOk
+    register -->|"Google"| oauth
+    register -->|"Entrar"| login
+```
+
+### 1b. Senha e saída
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    forgot["/forgot-password: passo email"] -->|"Enviar token"| resetMail[("resetPasswordForEmail")]
+    resetMail -->|"erro"| forgotErr(["Mensagem crua do Supabase"]) --> forgot
+    resetMail -->|"sucesso"| code(["Passo reset: código e nova senha"])
+    code -->|"Voltar"| forgot
+    code -->|"Redefinir"| verify[("setSession, senão verifyOtp recovery; depois updateUser")]
+    verify -->|"erro"| code
+    verify -->|"sucesso"| done(["Senha atualizada"]) -->|"3 s"| login["/login"]
+
+    mailLink["Link do email"] --> reset["/reset-password#access_token"]
+    reset --> token{"Token válido no hash?"}
+    token -->|"não"| expired(["Link expirado ou inválido"])
+    expired -->|"Solicitar novo link"| forgot
+    expired -->|"Voltar ao login"| login
+    token -->|"sim"| newPass(["Nova senha"]) --> update[("setSession e updateUser")]
+    update -->|"sucesso"| done
+
+    menus(["Menu do usuário, menu da conta no mobile ou /account"]) -->|"Sair"| signout[("Limpa sessão, React Query, IndexedDB, fila offline, push e caches do SW; signOut")]
+    signout --> guard{"AuthGuard sem usuário"}
+    guard --> loginNext["/login?next=página onde estava"]
+
+    other(["Sessão encerrada em outro aparelho"]) --> check[("Edge sessions: sessão revogada")]
+    check -->|"ao abrir o app"| signout
+```
+
+### Regras técnicas
+
+| Ponto | Regra | Onde |
+|---|---|---|
+| Bootstrap | `/` manda para `/dashboard` ou `/login` depois de a sessão carregar | `src/app/page-client.tsx` |
+| Guarda | Toda rota de `(app)` sem usuário vai para `/login?next=` com `replace`; `/invites/accept` é a exceção | `src/components/layout/auth-guard.tsx` |
+| `next` | Só caminho interno começando com `/`; o padrão é `/dashboard` | `src/lib/auth-return-path.ts` |
+| Rotas `(auth)` | Sem guarda: quem já entrou também abre `/login` e `/register` | `src/app/(auth)/` |
+| Cadastro | Senha com 8+, minúscula, maiúscula, número e símbolo | `src/components/signup-form.tsx` |
+| Primeira conta | Trigger `on_auth_user_created` → `handle_new_user` cria perfil, carteira "Carteira pessoal de Nome" e 7 categorias de despesa + 5 de receita | `supabase/migrations/00000000000000_baseline.sql` |
+| Sessões | Ao entrar registra o aparelho; ao abrir confere se foi revogado | `src/components/providers.tsx`, edge `sessions` |
+| Sair | Não navega: limpa tudo e deixa o `AuthGuard` redirecionar | `src/components/providers.tsx` |
+
+---
+
+## 2. Carteiras e colaboração
+
+A carteira é o espaço onde moram os dados. A pessoa ganha uma pessoal ao criar
+a conta, pode criar carteiras compartilhadas e convidar gente para elas.
+
+### 2a. Trocar, criar e ajustar carteira
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    load[("fetch-workspaces-data: carteiras e convites pendentes")] --> current{"user_settings.current_workspace_id válido?"}
+    current -->|"sim"| use(["Carteira atual"])
+    current -->|"não"| first(["Primeira carteira, a pessoal"]) --> save[("Grava em user_settings")] --> use
+
+    switcher(["Seletor de carteira: lateral ou topo mobile"]) -->|"escolher carteira"| save2[("Grava em user_settings")] --> same(["Continua na mesma página, dados da nova carteira"])
+    switcher -->|"convite pendente"| accept(("G2b Aceitar convite"))
+    switcher -->|"Criar carteira"| createDlg(["Nome, ícone, cor"])
+    createDlg -->|"Salvar"| createRpc[("RPC create_shared_workspace")] --> newCurrent(["Nova carteira vira a atual"])
+    createDlg -->|"Cancelar"| switcher
+
+    settings["/settings"] --> owner{"É dona da carteira?"}
+    owner -->|"sim"| edit(["Editar nome, ícone, cor"])
+    owner -->|"sim, e não é pessoal"| del(["Excluir carteira: digitar o nome"])
+    del --> impact[("RPC get_workspace_delete_impact")]
+    del -->|"Excluir"| delRpc[("RPC delete_workspace")] --> fallback(["Se era a atual, volta para a pessoal"])
+    owner -->|"não"| leave(["Sair da carteira: confirmação"]) -->|"Sair"| fallback
+    settings --> pwa(["Instalar app: folha de instalação"])
+    settings --> notif(["Preferências de notificação: canais e tópicos"])
+    settings -.->|"sem carteira"| empty(["Crie ou entre numa carteira"])
+```
+
+### 2b. Convidar e aceitar convite
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    members["/members"] --> isOwner{"É dona?"}
+    isOwner -->|"não"| readonly(["Alerta e campos desativados"])
+    isOwner -->|"sim"| actions(["Seção Convidar"])
+    actions -->|"convidar por email"| create[("Edge workspace-invites-create")]
+    create -->|"carteira pessoal"| rejected(["Servidor recusa: carteira pessoal não se compartilha"])
+    create -->|"sucesso"| mail(["Email com /invites/accept?token=..."])
+    actions -->|"gerar link"| link(["Link copiável, substitui o anterior"])
+    actions -->|"reenviar"| resend[("Edge workspace-invites-resend")]
+    actions -->|"revogar"| revoke(["Confirmação"])
+    actions -->|"remover membro"| remove(["Confirmação"])
+
+    mail --> acceptPage["/invites/accept?token="]
+    link --> acceptPage
+    picker(["Convite no seletor de carteira"]) --> acceptById["/invites/accept?invite=id"]
+    acceptById --> hasToken
+    acceptPage --> hasToken{"Tem token ou id?"}
+    hasToken -->|"não"| invalid(["Convite inválido"])
+    hasToken -->|"sim"| logged{"Tem sessão?"}
+    logged -->|"não"| gate(["Cartão: Entrar ou Criar conta"])
+    gate -->|"Entrar"| login(("G1 /login?next=convite"))
+    gate -->|"Criar conta"| register(("G1 /register?next=convite"))
+    login -.->|"volta pelo next"| acceptPage
+    register -.->|"volta pelo next"| acceptPage
+    logged -->|"sim"| acceptFn[("Edge workspace-invites-accept")]
+    acceptFn -->|"erro: usado, expirado, outro email"| fail(["Mensagem e Tentar após entrar"])
+    acceptFn -->|"sucesso"| switched(["Atualiza carteiras e troca para a convidada"])
+    switched -->|"Ir para o Dashboard"| dash(("G4 Painel"))
+```
+
+### Regras técnicas
+
+| Ponto | Regra | Onde |
+|---|---|---|
+| Carteira atual | `user_settings.current_workspace_id`; inválida cai na primeira, com a pessoal ordenada antes | `src/lib/queries/fetch-workspaces-data.ts` |
+| Criar e excluir | RPCs `create_shared_workspace`, `get_workspace_delete_impact`, `delete_workspace` | `src/components/workspace-provider.tsx` |
+| Sair da carteira | Diálogo próprio de confirmação | `src/components/settings/workspace-leave-dialog.tsx` |
+| Membros | RPC `workspace_member_directory`; só a dona convida, revoga e remove | `src/app/(app)/members/page-client.tsx` |
+| Convite | Edges `workspace-invites-create`, `-resend`, `-accept`; o email é montado no servidor | `supabase/functions/_shared/workspace-invite-email.ts` |
+| Página de convite | Fica no grupo `(app)` e é pública pelo `AuthGuard` | `src/app/(app)/invites/accept/page-client.tsx` |
+
+---
+
+## 3. Navegação e ações globais
+
+O que está disponível em qualquer tela: a casca, o "+" de adicionar e as
+notificações.
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    shell(["Casca do app"]) --> desktop{"Largura"}
+    desktop -->|"desktop"| sidebar(["Lateral recolhível"])
+    desktop -->|"mobile"| bottom(["Barra inferior: Dashboard, Transações, Categorias, +, conta"])
+
+    sidebar --> nav1["/dashboard"]
+    sidebar --> nav2["/categories"]
+    sidebar --> nav3["/transactions"]
+    sidebar --> nav4["/subscriptions"]
+    sidebar --> nav5["/bills (Beta)"]
+    sidebar --> nav6["/credit-cards"]
+    sidebar --> nav7["/members"]
+    sidebar --> nav8["/settings"]
+    sidebar --> userMenu(["Menu do usuário: tema, Minha conta, Planos, Sair"])
+    bottom --> accountMenu(["Menu da conta: Assinaturas, Contas, Cartões, Membros, Configurações, Conta, Planos, Sair"])
+    userMenu --> G10(("G10 Conta"))
+    accountMenu --> G10
+
+    sidebar -->|"+ Adicionar"| add(["Menu: Despesa, Parcelada, Receita, Assinatura"])
+    bottom -->|"+"| add
+    add -->|"Despesa, Parcelada, Receita"| txForm(("G5b Formulário de transação"))
+    add -->|"Assinatura"| subForm(("G8 Formulário de assinatura"))
+    add -.->|"formulário global indisponível"| fallback["/transactions?new= ou /subscriptions?new=1"]
+
+    bell(["Sino de notificações"]) -->|"clicar"| read[("Marca como lida")] --> dest{"Tipo da notificação"}
+    dest -->|"href explícito"| explicit["Rota do metadata.href"]
+    dest -->|"category_created"| n1["/categories"]
+    dest -->|"invite_accepted"| n2["/members"]
+    dest -->|"cc_*"| n3["/credit-cards/id"]
+    dest -->|"budget_threshold"| n4["/categories/id"]
+    dest -->|"bill_reminder"| n5["/bills"]
+    dest -->|"member_expense_created"| n6["/transactions?txn=id"]
+    dest -->|"outros"| n7["/dashboard"]
+    bell -->|"engrenagem"| nav8
+    bell -->|"marcar lida, excluir, limpar tudo"| bell
+
+    old["Rotas antigas"] -->|"next.config.ts"| redirects["/dashboard/settings → /settings; /wallets → /dashboard; /assets → /credit-cards; /notifications → /dashboard?notifications=1"]
+    unknown["Rota desconhecida"] --> notFound(["404: Ir para o painel ou Página inicial"])
+```
+
+### Regras técnicas
+
+| Ponto | Regra | Onde |
+|---|---|---|
+| Itens de navegação | Lateral e mobile vêm de configuração, não de JSX solto | `src/config/navigation.ts`, `src/config/mobile-navigation.ts` |
+| Formulários globais | Transação e assinatura montados uma vez na casca; salvar invalida as listas abertas | `src/components/layout/global-shell-dialogs-provider.tsx` |
+| Destino da notificação | `metadata.href` seguro vence; senão, o tipo decide. Espelha o servidor para o push | `src/lib/notification-href.ts`, `supabase/functions/_shared/notification-types.ts` |
+| Notificações no servidor | Edges `dispatch-notifications`, `evaluate-budgets`, `evaluate-credit-card-alerts`, `evaluate-bills-reminders`, `credit-card-calendar-alerts`, `notify-transaction-created` | `supabase/functions/` |
+| Push | Edges `push-subscribe` e `push-unsubscribe` | `supabase/functions/` |
+| Redirecionamentos | Os únicos que acontecem no servidor | `next.config.ts` |
+
+---
+
+## 4. Painel
+
+`/dashboard`: o resumo do mês e a porta para o resto. Ao abrir, ele também
+recupera cobranças atrasadas de assinaturas e parcelas.
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    dash["/dashboard"] --> state{"Carteiras carregadas?"}
+    state -->|"erro"| retry(["Tentar novamente"]) --> dash
+    state -->|"sem carteira"| pick(["Escolha uma carteira na lateral"])
+    state -->|"ok"| catchup[("RPC catch_up_recurring_billing")]
+    catchup -->|"gerou lançamentos"| invalidate(["Recarrega transações, assinaturas e parcelas"])
+    state -->|"ok"| blocks(["Seletor de mês, KPIs: despesas, receitas, resultado, faturas abertas"])
+
+    blocks --> calendar(["Calendário de pagamentos"])
+    calendar -->|"dia com eventos"| dayPop(["Popover do dia"])
+    dayPop -->|"evento já lançado"| detail(("G5b Detalhe da transação"))
+    dayPop -->|"evento previsto"| preview(["Prévia do pagamento"])
+    preview -->|"Ver origem: assinatura"| s["/transactions?sub=id"]
+    preview -->|"Ver origem: parcela"| p["/transactions?plan=id"]
+    preview -->|"Ver origem: fechamento ou vencimento"| c["/credit-cards/id"]
+    preview -->|"Ver origem: conta"| b["/bills?detail=id"]
+
+    blocks --> donut(["Despesas por categoria"]) -->|"Ver categorias"| cat(("G9 /categories"))
+    blocks --> invoices(["Faturas do mês"])
+    invoices -->|"linha do cartão"| c
+    invoices -->|"Ver cartões ou Ir para cartões"| cards(("G6 /credit-cards"))
+    blocks --> inst(["Compras parceladas"])
+    inst -->|"linha"| detail
+    inst -->|"Ver em transações"| instList["/transactions?type=expense&inst=1"]
+
+    s --> G5(("G5 Lançamentos"))
+    p --> G5
+    instList --> G5
+    c --> G6(("G6 Cartões"))
+    b --> G7(("G7 Contas a pagar"))
+```
+
+### Regras técnicas
+
+| Ponto | Regra | Onde |
+|---|---|---|
+| Dados | Um hook agrega os blocos por mês e carteira | `src/components/dashboard/use-dashboard-data.ts` |
+| Cobranças atrasadas | `catch_up_recurring_billing` roda uma vez por carteira ao montar; é idempotente com o cron | `src/lib/queries/use-recurring-billing-catchup.ts` |
+| Calendário | Eventos: assinatura, parcela, fechamento, vencimento de cartão, vencimento de conta, receita e despesa lançadas | `src/components/dashboard/dashboard-payments-calendar.tsx` |
+| Prévia | "Ver origem" monta a rota pelo tipo do evento | `src/components/dashboard/dashboard-payment-event-preview-sheet.tsx` |
+
+---
+
+## 5. Lançamentos
+
+`/transactions`: a lista de despesas e receitas, e o formulário que as cria.
+É a jornada para onde as outras mandam a pessoa quando querem mostrar dinheiro
+que já se mexeu.
+
+### 5a. Lista e filtros
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    entry["/transactions?params"] --> parse{"Parâmetros da URL"}
+    parse -->|"type, inst, preset, from, to, pm, card, cats, uncat, min, max, q, plan, sub"| filters(["Filtros aplicados"])
+    parse -->|"new=1, parcelada, receita"| form(("G5b Formulário"))
+    parse -->|"txn=id"| detail(("G5b Detalhe"))
+
+    filters --> list(["Tabela paginada de 100 em 100"])
+    list -->|"Todas, Despesas, Receitas; 7d, 15d, 30d, Mês"| filters
+    list -->|"Filtros"| panel(["Painel: período, forma, cartões, categorias, valor, descrição, origem"]) --> filters
+    filters -->|"chip ✕ ou limpar tudo"| filters
+    filters -.->|"grava de volta"| url["URL"]
+
+    list --> empty{"Vazio?"}
+    empty -->|"sem filtros"| newTx(["Nova transação"]) --> form
+    empty -->|"com filtros"| clear(["Limpar filtros"]) --> filters
+
+    list -->|"Nova"| form
+    list -->|"linha"| detail
+    list -->|"lápis"| detailEdit(("G5b Detalhe em edição"))
+    list -->|"lixeira"| delConfirm(("G5b Confirmação de exclusão"))
+    list -->|"caixas de seleção"| selection(["Barra de seleção"])
+    selection -->|"Editar, só 1"| detailEdit
+    selection -->|"Excluir"| bulk(["Exclusão em lote"])
+    selection -->|"Limpar"| list
+```
+
+### 5b. Criar, editar e excluir
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    open(["Formulário: modal no desktop, folha no mobile"]) --> type{"Tipo"}
+    type -->|"Despesa"| expense(["Valor, descrição, categoria, data, forma de pagamento"])
+    type -->|"Receita"| income(["Valor, descrição, categoria, data"])
+    type -->|"Parcelada"| inst(["Valor total ou por parcela, nº de parcelas, 1ª cobrança"])
+
+    expense --> catPick(["Seletor de categoria"])
+    income --> catPick
+    catPick -->|"Gerenciar categorias"| G9(("G9 /categories"))
+    expense -->|"forma: cartão de crédito"| cardPick(["Seletor de cartão"])
+    cardPick -->|"Cadastrar cartão ou sem cartões"| G6(("G6 /credit-cards"))
+    cardPick -.->|"sem cartão escolhido"| disabled(["Salvar desativado"])
+
+    expense -->|"Salvar"| saveTx[("Insere transação")]
+    income -->|"Salvar"| saveTx
+    inst -->|"Salvar"| savePlan[("RPC create_workspace_installment_plan")]
+    saveTx -->|"offline"| queued(["Salva na fila offline"])
+    saveTx -->|"erro"| keep(["Aviso; formulário continua aberto"])
+    saveTx -->|"sucesso"| after[("Edges notify-transaction-created, evaluate-budgets, evaluate-credit-card-alerts")]
+    after --> toast(["Transação criada; listas recarregam"])
+    savePlan -->|"sucesso"| toastPlan(["Compra parcelada registrada"])
+    open -->|"Cancelar"| closed(["Fecha e descarta"])
+
+    detail(["Detalhe da transação"]) --> view(["Valor, data, categoria, forma, dica da fatura"])
+    view -->|"é parcela"| planInfo(["Parcela k de n, total, lançado, restante"])
+    view -->|"tem assinatura"| G8(("G8 /subscriptions"))
+    view -->|"⋯ Editar"| editWhat{"É parcela?"}
+    editWhat -->|"não"| editForm(["Editar campos"])
+    editWhat -->|"sim"| scope(["O que editar: esta parcela ou plano da compra"]) --> editForm
+    editForm -->|"Salvar"| updated(["Transação ou plano atualizado"]) --> view
+    editForm -->|"Cancelar"| view
+    view -->|"⋯ Excluir"| confirm(["Excluir transação?"])
+    confirm -->|"Cancelar"| view
+    confirm -->|"Excluir"| isInst{"É parcela?"}
+    isInst -->|"não"| delTx[("Remove transação")] --> deleted(["Transação excluída"])
+    isInst -->|"sim"| cascade[("RPC delete_workspace_installment_plan_cascade")] --> cancelled(["Compra parcelada cancelada"])
+    confirm -.->|"offline"| queuedDel(["Exclusão enfileirada"])
+```
+
+### Regras técnicas
+
+| Ponto | Regra | Onde |
+|---|---|---|
+| Parâmetros | Lidos e gravados na URL; `new` e `txn` são consumidos e removidos | `src/lib/transactions-list-search-params.ts` |
+| Formulário | Um componente para criar, e o mesmo campo a campo na edição | `src/components/transactions/transaction-form-dialog.tsx`, `transaction-form-use.tsx` |
+| Parcelada | RPC `create_workspace_installment_plan`; editar o plano não muda parcelas já lançadas | `src/components/transactions/transaction-form-persistence.ts` |
+| Detalhe | Mesmo painel no Painel, em Cartões e em Categorias | `src/components/transactions/transaction-detail-sheet.tsx` |
+| Exclusão | Parcela cancela o plano inteiro por `delete_workspace_installment_plan_cascade` | `src/lib/transactions/mutations.ts` |
+| Offline | Criar e excluir entram na fila; pagar conta exige conexão | `src/lib/offline/` |
+| Enter | O `Enter` na busca do seletor não salva a transação | `shouldDeferEnterToWidget` em `src/components/ui/form.tsx` |
+
+---
+
+## 6. Cartões e faturas
+
+`/credit-cards` e `/credit-cards/[cardId]`: cadastro dos cartões e o ciclo de
+cada fatura.
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    list["/credit-cards"] -->|"aba Cartões"| tiles(["Cartões: fatura, fechamento, vencimento, limite"])
+    list -->|"aba Histórico"| chart(["Faturas dos últimos 12 meses"])
+    list -->|"Novo cartão, estado vazio ou ?new=1"| newCard(["Cadastro: apelido, número, validade, limite, fechamento, vencimento, bandeira"])
+    newCard -->|"Salvar"| valid{"Dias 1 a 31 e validade ok?"}
+    valid -->|"não"| newCard
+    valid -->|"sim"| created(["Cartão cadastrado"]) --> list
+    newCard -->|"Cancelar"| list
+    tiles -->|"cartão"| detail["/credit-cards/id"]
+
+    detail --> found{"Cartão existe?"}
+    found -->|"não"| missing(["Ver todos os cartões"]) --> list
+    found -->|"sim"| top(["Dados do cartão"])
+    top -->|"Ver transações neste cartão"| G5(("G5 /transactions?card=id&preset=last30"))
+    top -->|"⋯ Editar"| editCard(["Editar cartão"]) --> top
+    top -->|"⋯ Desativar ou Ativar"| toggle(["Cartão desativado ou ativado"]) --> top
+    top -->|"⋯ Excluir"| delCard(["Excluir cartão?"])
+    delCard -->|"Excluir"| list
+    delCard -->|"Cancelar"| top
+
+    top --> cycle(["Seletor de ciclo da fatura"]) --> status{"Qual ciclo?"}
+    status -->|"futuro"| future(["Futura"])
+    status -->|"atual"| openInv(["Aberta: período, fechamento, uso do limite"])
+    status -->|"passado sem pagamento"| unpaid(["Não paga; vermelha se venceu"])
+    status -->|"passado pago"| paid(["Paga"])
+    unpaid -->|"Marcar como paga"| payRow[("Grava credit_card_invoice_payments")] --> paid
+    paid -->|"Desmarcar pagamento"| undo(["Confirmação: volta para Contas a pagar"])
+    undo -->|"Desmarcar"| unpaid
+    unpaid -.->|"fechada com valor em aberto"| G7(("G7 Pendentes"))
+
+    top --> byCat(["Gasto por categoria da fatura"]) -->|"linha"| G9(("G9 /categories/id?type=expense&month="))
+    top --> installments(["Parcelas e compromissos"]) -->|"linha"| txDetail(("G5b Detalhe"))
+    top --> recent(["Últimos lançamentos"])
+    recent -->|"linha"| txDetail
+    recent -->|"Ver todas"| G5
+```
+
+### Regras técnicas
+
+| Ponto | Regra | Onde |
+|---|---|---|
+| Status no detalhe | `Futura`, `Aberta`, `Não paga`, `Paga`, pelo ciclo selecionado | `src/app/(app)/credit-cards/[cardId]/page-client.tsx` |
+| Selo na tabela de transações | `Aberta`, `Fechada`, `Anterior`, `Paga`; Aberta é verde, Fechada âmbar, Anterior vermelha | `src/lib/credit-card-display.ts` |
+| Pagamento de fatura | Linha em `credit_card_invoice_payments`, sem criar despesa | `src/lib/bills/pay-bill-flow.ts` |
+| Alertas | Limite, fechamento e vencimento geram notificações `cc_*` | edges `evaluate-credit-card-alerts`, `credit-card-calendar-alerts` |
+
+---
+
+## 7. Contas a pagar
+
+`/bills` (Beta): contas recorrentes e o que está pendente, incluindo as faturas
+de cartão que fecharam em aberto.
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    bills["/bills?detail=id"] -->|"detail presente"| sheet(["Painel da conta"])
+    bills --> tabs{"Aba"}
+    tabs -->|"Contas: todas, ativas, inativas"| summary(["Cartões de conta"])
+    tabs -->|"Pendentes: todas, atrasadas, 30 dias"| pending(["Itens pendentes"])
+    bills -->|"Nova conta"| form(["Formulário: nome, categoria, periodicidade, vencimento, valor, início, fim, forma, cartão, lembretes, ativa"])
+    form -->|"Salvar"| saved(["Conta criada ou atualizada"])
+    form -->|"Cancelar"| bills
+
+    bills --> empty{"Vazio?"}
+    empty -->|"nenhuma conta"| form
+    empty -->|"filtro sem resultado"| clear(["Limpar filtros"])
+    empty -->|"nada pendente, com histórico"| goContas(["Ver contas"]) --> summary
+
+    summary -->|"clique"| sheet
+    pending --> kind{"Tipo do item"}
+    kind -->|"parcela de conta"| regular(["Parcela"])
+    kind -->|"fatura de cartão fechada"| virtual(["Fatura"])
+
+    regular -->|"clique"| sheet
+    regular -->|"Pagar"| payRegular(["Pagar: valor, data, categoria, forma, cartão, descrição"])
+    regular -->|"⋯ Editar modelo"| form
+    regular -->|"⋯ Ignorar parcela"| skip(["Parcela ignorada; próxima gerada"])
+    regular -->|"⋯ Excluir conta"| del(["Excluir conta?"])
+
+    virtual -->|"clique"| G6(("G6 /credit-cards/id"))
+    virtual -->|"Pagar"| payVirtual(["Pagar fatura: Marcar como paga"])
+
+    sheet -->|"Pagar parcela"| payRegular
+    sheet -->|"Editar"| form
+    sheet -->|"Excluir"| del
+    sheet -->|"Ignorar parcela"| skip
+    sheet --> stats(["Total pago 90d, média, atrasos, pendentes, histórico"])
+
+    payRegular -->|"Registrar pagamento"| online{"Online?"}
+    online -->|"não"| needNet(["Requer conexão"])
+    online -->|"sim"| payRpc[("RPC pay_bill_instance: cria despesa")]
+    payRpc --> alerts[("Edges evaluate-budgets e alertas de cartão")] --> G5(("G5 Lançamentos"))
+    payVirtual -->|"Marcar como paga"| invPay[("credit_card_invoice_payments, sem despesa")] --> G6
+    del -->|"Excluir"| removed(["Conta removida com todas as parcelas"])
+    del -->|"Cancelar"| bills
+
+    reminders[("Edge evaluate-bills-reminders")] -.->|"3 dias antes ou no dia"| notif(("G3 Notificação bill_reminder"))
+```
+
+### Regras técnicas
+
+| Ponto | Regra | Onde |
+|---|---|---|
+| Dados | Um RPC traz a página inteira | `rpc_fetch_bills_page_bundle` em `src/lib/queries/fetch-bills-page-bundle.ts` |
+| Fatura como pendência | Projetada no cliente a partir dos ciclos fechados com valor em aberto | `src/lib/bills/credit-card-bill-projector.ts` |
+| Pagar conta | `pay_bill_instance` cria a despesa e avança a recorrência; bloqueado offline | `src/lib/bills/pay-bill-flow.ts` |
+| Pagar fatura | Só marca como paga: as compras já estão lançadas no cartão | `src/lib/bills/pay-bill-flow.ts` |
+| Recorrência | Mensal, Bimestral, Trimestral, Anual, Única | `src/lib/bills/recurrence.ts` |
+
+---
+
+## 8. Assinaturas
+
+`/subscriptions`: cobranças recorrentes que viram lançamentos sozinhas.
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    subs["/subscriptions?new=1"] -->|"new presente"| form(["Formulário: nome, valor, periodicidade, próxima cobrança, forma, cartão, categoria, observações"])
+    subs --> list(["Lista: todas, ativas, inativas; ordenar"])
+    list -->|"Nova assinatura"| form
+    list -->|"vazio"| emptyNew(["Cadastre suas assinaturas"]) --> form
+    list -->|"filtro sem resultado"| clear(["Limpar filtros"]) --> list
+    form -->|"link do cartão"| G6(("G6 /credit-cards"))
+    form -->|"link da categoria"| G9(("G9 /categories"))
+    form -->|"Salvar"| saved(["Assinatura cadastrada ou atualizada"]) --> list
+    form -->|"Cancelar"| list
+
+    list -->|"linha"| sheet(["Painel: resumo, detalhes, cobranças, observações"])
+    sheet -->|"cobrança em transações"| txDetail(("G5b Detalhe"))
+    sheet -->|"⋯ Editar"| editInline(["Edição dentro do painel"]) --> sheet
+    sheet -->|"⋯ Excluir"| del(["Excluir assinatura?"])
+    list -->|"lixeira"| del
+    list -->|"seleção múltipla"| bar(["Barra: Editar só 1, Excluir em lote, Limpar"])
+    bar -->|"Editar"| sheet
+    bar -->|"Excluir"| del
+    del -->|"Excluir"| removed(["Assinatura removida"]) --> list
+
+    cron[("Edge run-recurring-billing, via cron")] --> billed(["Cobrança vira lançamento"])
+    catchup[("RPC catch_up_recurring_billing ao abrir o Painel")] --> billed
+    billed --> G5(("G5 Lançamentos"))
+```
+
+### Regras técnicas
+
+| Ponto | Regra | Onde |
+|---|---|---|
+| Dados | `rpc_fetch_subscriptions_page_bundle` | `src/lib/queries/fetch-subscriptions-page-bundle.ts` |
+| Periodicidade | Semanal, Mensal, Bimestral, Anual | `src/components/subscriptions/subscription-form-dialog.tsx` |
+| Cobrança | `run-recurring-billing` só aceita chamada com `CRON_SECRET`; o Painel recupera o atraso | `supabase/functions/run-recurring-billing/index.ts` |
+| Filtro por assinatura | `/transactions?sub=id` | `src/lib/transactions-list-search-params.ts` |
+
+---
+
+## 9. Categorias e orçamentos
+
+`/categories`: as categorias da carteira e o limite mensal de cada uma. Não há
+tela separada de orçamento: o limite mora na categoria. Na primeira visita de
+cada carteira aparece um assistente.
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    cats["/categories?month="] --> onboarded{"categories_onboarding_completed_at preenchido?"}
+    onboarded -->|"não"| step0(["Assistente 1: renda mensal, opcional"])
+    step0 -->|"Continuar"| step1(["Assistente 2: categorias e limites"])
+    step1 -->|"Voltar"| step0
+    step1 -->|"Sugerir pela renda"| step1
+    step1 -->|"adicionar, editar, excluir"| step1
+    step1 -->|"Revisar, com 1+ categoria de despesa"| step2(["Assistente 3: confirmar"])
+    step2 -->|"Voltar"| step1
+    step2 -->|"Concluir"| complete[("Grava orçamentos; RPC complete_workspace_categories_onboarding")]
+    step1 -->|"Configurar depois"| complete
+    complete --> listView
+    onboarded -->|"sim"| listView(["Lista: Despesas ou Receitas; mês só em Despesas"])
+
+    newRoute["/categories/new"] --> catForm
+    listView -->|"Nova categoria"| catForm(["Formulário: tipo, nome, cor, ícone; limite do mês se despesa"])
+    catForm -->|"Salvar"| savedCat[("Categoria e orçamento do mês")] --> notifCat(("G3 Notificação category_created"))
+    savedCat --> listView
+    catForm -->|"valor inválido"| catForm
+    listView -->|"⋯ Editar"| catForm
+    listView -->|"⋯ Excluir"| delCat(["Excluir categoria?"])
+    delCat -->|"Excluir ou Cancelar"| listView
+
+    listView -->|"cartão de despesa"| detail["/categories/id?type=expense&month="]
+    listView -->|"cartão de receita"| detailIn["/categories/id?type=income"]
+    detailIn --> detail
+
+    detail -->|"voltar"| cats
+    detail --> summary(["Orçamento, restante, estouro, lançado x projetado, média, maior e menor, % do total"])
+    detail --> trend(["Tendências"])
+    detail -->|"⋯ Editar"| catForm
+    detail -->|"⋯ Excluir"| delDetail(["Excluir categoria?"]) -->|"Excluir"| listView
+    detail --> embedded(["Lançamentos do mês com a categoria travada"])
+    embedded -->|"Ver em Transações"| G5(("G5 /transactions?cats=id"))
+    embedded -->|"linha"| txDetail(("G5b Detalhe"))
+    embedded -->|"vazio: Nova transação"| txForm(("G5b Formulário"))
+
+    budget[("Edge evaluate-budgets")] -.->|"limite atingido"| notifBudget(("G3 Notificação budget_threshold"))
+```
+
+### Regras técnicas
+
+| Ponto | Regra | Onde |
+|---|---|---|
+| Assistente | Só em `/categories`, por carteira; nada redireciona para ele | `src/components/categories/categories-onboarding-wizard.tsx` |
+| Detalhe | `rpc_fetch_category_detail_bundle` | `src/lib/queries/fetch-category-detail-bundle.ts` |
+| Entradas no detalhe | Lista de categorias, gasto por categoria do cartão, notificação de orçamento | `src/components/categories/detail/` |
+| Orçamento | Avaliado depois de cada despesa e de cada conta paga | edge `evaluate-budgets` |
+
+---
+
+## 10. Conta e segurança
+
+`/account` e subpáginas: o que é da pessoa, não da carteira.
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    account["/account"] --> card(["Perfil: avatar, nome, email, membro desde"])
+    account -->|"⋯ Editar perfil"| profile(["Nome e avatar"])
+    profile -->|"enviar ou remover avatar, até 5 MB"| storage[("Storage avatars")]
+    profile -->|"Salvar nome e avatar"| profileOk(["Perfil atualizado"])
+    profile -->|"trocar email"| emailPwd{"Senha atual confere?"}
+    emailPwd -->|"não"| profile
+    emailPwd -->|"sim"| emailUpd[("updateUser email")] --> emailSent(["Link de confirmação enviado ao novo email"])
+    profileOk --> log[("Edge activity-logs")]
+    emailSent --> log
+
+    account -->|"⋯ Alterar senha"| pwd(["Senha atual, nova, confirmação"])
+    pwd --> pwdCheck{"Senha atual confere e nova é forte?"}
+    pwdCheck -->|"não"| pwd
+    pwdCheck -->|"sim"| pwdUpd[("updateUser password")] --> pwdOk(["Fecha em 2 s; outras sessões continuam"])
+    pwdOk --> log
+
+    account -->|"⋯ Sair"| G1(("G1 Sair"))
+    account -->|"⋯ Excluir conta"| warn(["Aviso: carteiras compartilhadas que você é dona"])
+    warn -->|"Continuar"| confirmDel(["Digitar email e senha"])
+    confirmDel -->|"Excluir"| delUser[("Edge delete-user, confere a senha")]
+    delUser -->|"erro"| confirmDel
+    delUser -->|"sucesso"| gone(["Conta excluída; limpa caches e signOut"]) -->|"2 s"| root["/"] --> login(("G1 /login"))
+
+    account -->|"Sessões"| sessions["/account/sessions"]
+    sessions -->|"Encerrar ou Encerrar todas"| sessFn[("Edge sessions")]
+    sessions -.->|"sem sessão"| plainLogin["/login sem next"]
+    account -->|"Atividade"| activity["/account/activity"]
+    activity -->|"filtros: todas, família, segurança, perfil"| activity
+    activity -.->|"sem sessão"| plainLogin
+
+    userMenu(("G3 Menu do usuário")) --> plans["/plans"]
+    plans --> placeholder(["Plano padrão, histórico vazio; sem ações"])
+```
+
+### Regras técnicas
+
+| Ponto | Regra | Onde |
+|---|---|---|
+| Troca de email e senha | Confere a senha atual entrando de novo antes de `updateUser` | `src/components/account/edit-profile-dialog.tsx`, `src/components/security/ChangePasswordDialog.tsx` |
+| Excluir conta | Dois passos; a senha é conferida na Edge Function | `src/components/security/DeleteAccountDialog.tsx`, `src/lib/delete-account.ts` |
+| Sessões | Listar e encerrar pela edge `sessions` | `src/lib/sessions.ts` |
+| Atividade | Perfil, email e senha gravam log | edge `activity-logs` |
+
+---
+
+## 11. Lacunas encontradas
+
+Coisas que o mapeamento achou no caminho. Estão aqui para registro; nada foi
+corrigido.
+
+| # | Jornada | Lacuna |
+|---|---|---|
+| 1 | G1 | Se o cadastro volta com sessão e sem `next` (confirmação de email desligada), a pessoa já entrou e ainda vê "Confirme seu email" (`src/components/signup-form.tsx`). |
+| 2 | G1 | `/login` e `/register` não têm guarda: quem já entrou vê o formulário em vez de ir para o Painel. |
+| 3 | G1 | Há dois fluxos de redefinir senha: código em `/forgot-password` e link em `/reset-password`. Nenhuma tela leva ao segundo; qual funciona depende do template de email do Supabase. |
+| 4 | G1 | Erros de esqueci e redefinir senha aparecem na mensagem crua, em inglês, do Supabase. |
+| 5 | G2 | `/invites/accept` está no grupo `(app)`, então quem não entrou vê a lateral e o topo do app em volta do convite. |
+| 6 | G2 | `/members` mostra o formulário de convite numa carteira pessoal, e o servidor recusa só depois do envio. |
+| 7 | G3 | O provider global expõe abrir convite, nova categoria e novo cartão, mas nada chama essas funções. |
+| 8 | G10 | `/account/sessions` e `/account/activity` redirecionam para `/login` sem `next`, então a pessoa não volta para a página depois de entrar. |

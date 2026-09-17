@@ -26,6 +26,48 @@ This version has breaking changes — APIs, conventions, and file structure may 
   lição é geral: todo campo de texto dentro de um portal precisa da regra, mesmo
   parecendo estar longe do formulário.
 
+## Jornadas do app
+
+[`docs/JORNADAS.md`](docs/JORNADAS.md) é o mapa das jornadas: um fluxograma
+por jornada, as regras técnicas que decidem cada caminho e as lacunas
+conhecidas. A página publicada, o **Atlas de Jornadas**
+(https://claude.ai/artifact/1N43LFYP1YSVsWaRMaNTRL), é gerada a partir dele.
+
+**Antes de mexer numa jornada, leia a seção dela.** O fluxograma diz de onde a
+pessoa chega, para onde ela vai e quais outras jornadas dependem daquele
+caminho. Mudar um destino sem olhar o mapa quebra a ponte de outra jornada.
+
+**Uma mudança de jornada inclui atualizar o documento na mesma mudança.**
+Conta como mudança de jornada:
+
+- criar, remover ou renomear rota em `src/app/`, ou mudar um redirecionamento
+  (`next.config.ts`, `AuthGuard`, `router.push`/`replace`, `next`);
+- mudar para onde um botão, link, notificação ou "Ver origem" leva, incluindo
+  os caminhos de sucesso, erro e cancelar;
+- mudar parâmetros de URL que abrem telas ou aplicam filtros;
+- abrir ou tirar um diálogo, folha ou passo de um fluxo (assistente, confirmação);
+- trocar a RPC, a Edge Function ou o trigger que um passo chama;
+- mudar a navegação global (`src/config/navigation.ts`,
+  `src/config/mobile-navigation.ts`, "+ Adicionar").
+
+Estilo, texto e componente que não mudam caminho não contam.
+
+**O que atualizar, nesta ordem:**
+
+1. `docs/JORNADAS.md`: o fluxograma, a tabela de regras técnicas, o mapa geral
+   se a ponte entre jornadas mudou, e a seção 11 se uma lacuna foi corrigida ou
+   criada.
+2. `docs/atlas/template.html`: a explicação da mesma jornada ("Como funciona",
+   resumo, pontos de atenção), as lacunas, os apêndices de rotas e backend, e a
+   data e as contagens da capa.
+3. `python3 docs/atlas/build.py`, que gera `docs/atlas/atlas-jornadas.html`.
+4. Republicar esse arquivo no mesmo URL do Atlas com a ferramenta de Artifact.
+   Sem a ferramenta, diga no fim da tarefa que o Atlas ficou desatualizado.
+
+Os diagramas seguem a legenda do topo do `JORNADAS.md` e o tema escuro
+(`%%{init}%%` em todo bloco). Ids de nó não podem ser palavras reservadas do
+Mermaid (`href` já quebrou um diagrama).
+
 ## Design system
 
 O design system deste projeto tem três partes, e nenhuma delas se presume de

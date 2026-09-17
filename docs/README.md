@@ -4,6 +4,13 @@ As regras do projeto para quem escreve código (humano ou agente) estão em
 [`AGENTS.md`](../AGENTS.md). As operações do banco e das Edge Functions ficam em
 [`supabase/README.md`](../supabase/README.md). O resto está aqui.
 
+## Produto
+
+| Arquivo | Para quê |
+|---|---|
+| [`JORNADAS.md`](JORNADAS.md) | Fluxogramas de todas as jornadas do app, com as regras técnicas e as lacunas de cada uma. Consulte antes de mexer numa jornada e atualize na mesma mudança (regra em `AGENTS.md`) |
+| [`atlas/`](atlas/) | Atlas de Jornadas: a documentação explicativa em HTML, gerada do `JORNADAS.md` por `python3 docs/atlas/build.py` |
+
 ## Runbooks
 
 | Arquivo | Para quê |

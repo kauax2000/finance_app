@@ -1,0 +1,887 @@
+<title>Atlas de Jornadas do Finance App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ledger&family=Inter:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0c1110;
+    --surface: #121917;
+    --raised: #18211f;
+    --line: rgba(214, 235, 228, 0.10);
+    --line-strong: rgba(214, 235, 228, 0.18);
+    --text: #e8efec;
+    --text-2: #a9b5b1;
+    --text-3: #7a8782;
+    --accent: #52c49c;
+    --accent-ink: #0c1110;
+    --accent-soft: rgba(82, 196, 156, 0.12);
+    --backend: #7ab3e6;
+    --decision: #e2b85e;
+    --gap: #eb917f;
+    --gap-soft: rgba(235, 145, 127, 0.10);
+    --display: "Ledger", Georgia, "Times New Roman", serif;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --measure: 68ch;
+  }
+  html { background: var(--bg); scroll-behavior: smooth; scroll-padding-top: 24px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 400 16px/1.65 var(--sans);
+    -webkit-font-smoothing: antialiased;
+    padding-inline: 16px;
+  }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+  code {
+    font-family: var(--mono);
+    font-size: 0.86em;
+    background: var(--raised);
+    border: 1px solid var(--line);
+    padding: 0.05em 0.35em;
+    border-radius: 4px;
+    color: #d4e3dd;
+    overflow-wrap: anywhere;
+  }
+  h1, h2, h3 { text-wrap: balance; font-weight: 400; }
+  p { margin: 0; max-width: var(--measure); }
+  ul, ol { margin: 0; padding-left: 1.2em; max-width: var(--measure); }
+  li + li { margin-top: 0.35em; }
+
+  /* Capa */
+  .cover {
+    max-width: 1180px;
+    margin-inline: auto;
+    padding-block: 72px 56px;
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    gap: 20px;
+  }
+  .eyebrow {
+    font: 500 12px/1 var(--mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .cover h1 {
+    font-family: var(--display);
+    font-size: clamp(2.4rem, 6vw, 4.2rem);
+    line-height: 1.04;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .cover .subtitle { font-size: 1.2rem; color: var(--text-2); max-width: 60ch; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px 28px; margin-top: 8px; }
+  .meta div { display: grid; }
+  .meta dt { font: 500 11px/1.4 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); }
+  .meta dd { margin: 0; font-variant-numeric: tabular-nums; color: var(--text); }
+
+  /* Estrutura */
+  .layout {
+    max-width: 1180px;
+    margin-inline: auto;
+    display: grid;
+    grid-template-columns: 232px minmax(0, 1fr);
+    gap: 56px;
+    padding-block: 40px 96px;
+  }
+  nav.toc {
+    position: sticky;
+    top: calc(env(safe-area-inset-top, 0px) + 24px);
+    align-self: start;
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+    font-size: 14px;
+  }
+  .toc h2 { font: 500 11px/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); margin: 0 0 12px; }
+  .toc ol { list-style: none; padding: 0; margin: 0; }
+  .toc li + li { margin-top: 0; }
+  .toc a { display: block; color: var(--text-2); text-decoration: none; padding: 4px 0 4px 12px; border-left: 1px solid var(--line); }
+  .toc a:hover { color: var(--text); border-left-color: var(--line-strong); }
+  .toc .part { font: 500 11px/1.3 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); padding: 18px 0 6px; }
+  .toc .num { font-family: var(--mono); color: var(--text-3); font-size: 12px; margin-right: 6px; font-variant-numeric: tabular-nums; }
+
+  main { min-width: 0; display: grid; gap: 88px; }
+  section.block { display: grid; gap: 22px; min-width: 0; }
+  section.block > h2, .part-head h2 {
+    font-family: var(--display);
+    font-size: clamp(1.8rem, 3.4vw, 2.4rem);
+    line-height: 1.12;
+    margin: 0;
+  }
+  .lead { font-size: 1.1rem; color: var(--text-2); }
+  h3 { font: 600 0.8rem/1.3 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); margin: 14px 0 0; }
+  .prose { display: grid; gap: 14px; }
+
+  .part-head {
+    display: grid;
+    gap: 10px;
+    padding-block: 28px;
+    border-block: 1px solid var(--line);
+  }
+  .part-head p { color: var(--text-2); }
+
+  /* Resumo da jornada */
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .summary div { background: var(--surface); padding: 14px 16px; display: grid; align-content: start; }
+  .summary dt { font: 500 11px/1.4 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); }
+  .summary dd { margin: 0; font-size: 15px; color: var(--text); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .chip {
+    font: 500 12px/1 var(--mono);
+    padding: 5px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(82, 196, 156, 0.35);
+    background: var(--accent-soft);
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .chip:hover { border-color: var(--accent); }
+
+  ol.steps { counter-reset: step; list-style: none; padding: 0; display: grid; gap: 10px; }
+  ol.steps li { counter-increment: step; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; margin: 0; }
+  ol.steps li::before {
+    content: counter(step);
+    font: 500 12px/26px var(--mono);
+    width: 26px; height: 26px;
+    text-align: center;
+    border-radius: 50%;
+    border: 1px solid var(--line-strong);
+    color: var(--text-2);
+  }
+
+  /* Diagramas */
+  figure { margin: 0; display: grid; gap: 10px; min-width: 0; }
+  .diagram {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .diagram pre.mermaid { margin: 0; background: transparent; color: var(--text-3); font: 12px/1.4 var(--mono); white-space: pre; }
+  .diagram svg { display: block; margin-inline: auto; height: auto; }
+  .zoom-btn {
+    font: 500 13px/1 var(--sans);
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid rgba(82, 196, 156, 0.35);
+    border-radius: 999px;
+    padding: 7px 12px;
+    cursor: pointer;
+  }
+  .zoom-btn:hover { border-color: var(--accent); }
+  .zoom-btn:active { background: rgba(82, 196, 156, 0.22); }
+  .zoom-btn:focus-visible, .viewer button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  figcaption { align-items: center; }
+
+  /* Visualizador em tela cheia */
+  dialog.viewer {
+    width: 100vw; height: 100dvh; max-width: none; max-height: none;
+    margin: 0; padding: 0; border: 0;
+    background: var(--bg); color: var(--text);
+  }
+  dialog.viewer::backdrop { background: rgba(0, 0, 0, 0.7); }
+  .viewer-bar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 12px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+  }
+  .viewer-bar strong { font-weight: 500; margin-right: auto; font-size: 15px; }
+  .viewer-bar button {
+    font: 500 14px/1 var(--sans); color: var(--text);
+    background: var(--raised); border: 1px solid var(--line-strong);
+    border-radius: 8px; min-width: 36px; height: 36px; padding: 0 10px; cursor: pointer;
+  }
+  .viewer-bar button:hover { border-color: var(--accent); }
+  .viewer-bar output { font: 500 13px/1 var(--mono); color: var(--text-2); min-width: 48px; text-align: center; font-variant-numeric: tabular-nums; }
+  .viewer-stage { height: calc(100% - 61px - env(safe-area-inset-top, 0px)); overflow: auto; padding: 24px; }
+  .viewer-stage svg { display: block; margin: 0 auto; max-width: none !important; height: auto; }
+  figcaption { font-size: 14px; color: var(--text-3); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; }
+  figcaption strong { color: var(--text-2); font-weight: 500; }
+
+  /* Tabelas */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.5; }
+  th {
+    text-align: left;
+    font: 500 11px/1.3 var(--mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    background: var(--surface);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line-strong);
+    white-space: nowrap;
+  }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--text-2); }
+  td:first-child { color: var(--text); font-weight: 500; }
+  tr:last-child td { border-bottom: 0; }
+  td code { white-space: normal; }
+
+  /* Legenda */
+  .legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+  .legend div { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 12px; align-items: center; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+  .legend b { display: block; font-weight: 600; font-size: 14px; }
+  .legend span { font-size: 13px; color: var(--text-3); }
+  .shape { height: 28px; border: 1.5px solid; display: block; }
+  .s-route { background: #14231f; border-color: var(--accent); border-radius: 3px; }
+  .s-dialog { background: #1a2220; border-color: #5b6a65; border-radius: 999px; }
+  .s-decision { width: 24px; height: 24px; margin-inline: auto; transform: rotate(45deg); background: #2a2415; border-color: var(--decision); }
+  .s-backend { background: #142130; border-color: var(--backend); border-radius: 50% / 22%; }
+  .s-journey { width: 30px; height: 30px; margin-inline: auto; border-radius: 50%; background: var(--accent); border-color: var(--accent); }
+
+  /* Chamadas */
+  .callout { border: 1px solid var(--line); border-left: 0; background: var(--surface); border-radius: 10px; padding: 14px 16px; display: grid; gap: 6px; }
+  .callout.gap { background: var(--gap-soft); border-color: rgba(235, 145, 127, 0.25); }
+  .callout .label { font: 500 11px/1.3 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--gap); }
+  .callout.note .label { color: var(--accent); }
+  .callout ul { color: var(--text-2); font-size: 15px; }
+
+  .glossary { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin: 0; }
+  .glossary div { background: var(--surface); padding: 14px 16px; }
+  .glossary dt { font-weight: 600; margin-bottom: 2px; }
+  .glossary dd { margin: 0; color: var(--text-2); font-size: 15px; }
+
+  .parts { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+  .parts a { display: grid; gap: 4px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; text-decoration: none; color: var(--text); }
+  .parts a:hover { border-color: var(--line-strong); }
+  .parts small { font: 500 11px/1.3 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+  .parts span { color: var(--text-3); font-size: 14px; }
+
+  footer { max-width: 1180px; margin-inline: auto; padding-block: 28px 48px; border-top: 1px solid var(--line); color: var(--text-3); font-size: 14px; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+    nav.toc { position: static; max-height: none; border: 1px solid var(--line); border-radius: 10px; padding: 16px; background: var(--surface); }
+    .cover { padding-block: 44px 36px; }
+    main { gap: 64px; }
+  }
+</style>
+
+<header class="cover">
+  <p class="eyebrow">Documentação de produto</p>
+  <h1>Atlas de Jornadas do Finance&nbsp;App</h1>
+  <p class="subtitle">Tudo o que uma pessoa faz no app, do cadastro à fatura paga: as dez jornadas, como elas se conectam, as regras técnicas que decidem cada caminho e o que ainda está com problema.</p>
+  <dl class="meta">
+    <div><dt>Base</dt><dd>Leitura do código</dd></div>
+    <div><dt>Branch</dt><dd>finance-app-2.0</dd></div>
+    <div><dt>Data</dt><dd>17 set 2026</dd></div>
+    <div><dt>Conteúdo</dt><dd>10 jornadas · 14 fluxogramas · 8 lacunas</dd></div>
+    <div><dt>Fonte versionada</dt><dd><code>docs/JORNADAS.md</code></dd></div>
+  </dl>
+</header>
+
+<div class="layout">
+  <nav class="toc" aria-label="Sumário">
+    <h2>Sumário</h2>
+    <ol>
+      <li class="part">Introdução</li>
+      <li><a href="#sobre">Sobre este documento</a></li>
+      <li><a href="#app">O app em um minuto</a></li>
+      <li><a href="#conceitos">Conceitos</a></li>
+      <li><a href="#arquitetura">Como o app funciona por dentro</a></li>
+      <li><a href="#leitura">Como ler os fluxogramas</a></li>
+      <li><a href="#mapa">Mapa geral</a></li>
+      <li class="part">I · Entrar e se organizar</li>
+      <li><a href="#j1"><span class="num">01</span>Acesso</a></li>
+      <li><a href="#j2"><span class="num">02</span>Carteiras e colaboração</a></li>
+      <li class="part">II · Circular pelo app</li>
+      <li><a href="#j3"><span class="num">03</span>Navegação global</a></li>
+      <li><a href="#j4"><span class="num">04</span>Painel</a></li>
+      <li class="part">III · Controlar o dinheiro</li>
+      <li><a href="#j5"><span class="num">05</span>Lançamentos</a></li>
+      <li><a href="#j6"><span class="num">06</span>Cartões e faturas</a></li>
+      <li><a href="#j7"><span class="num">07</span>Contas a pagar</a></li>
+      <li><a href="#j8"><span class="num">08</span>Assinaturas</a></li>
+      <li><a href="#j9"><span class="num">09</span>Categorias e orçamentos</a></li>
+      <li class="part">IV · Cuidar da conta</li>
+      <li><a href="#j10"><span class="num">10</span>Conta e segurança</a></li>
+      <li class="part">Fechamento</li>
+      <li><a href="#lacunas">Lacunas encontradas</a></li>
+      <li><a href="#rotas">Apêndice A · Rotas</a></li>
+      <li><a href="#backend">Apêndice B · Backend</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <!-- ============ INTRODUÇÃO ============ -->
+    <section class="block" id="sobre">
+      <p class="eyebrow">Introdução</p>
+      <h2>Sobre este documento</h2>
+      <div class="prose">
+        <p>Este atlas descreve o app do ponto de vista de quem usa: onde cada tarefa começa, que telas atravessa, quais decisões mudam o caminho e onde termina. Cada jornada junta telas que servem a um mesmo objetivo. Criar conta e entrar, por exemplo, formam uma jornada só, porque as duas telas se ligam e dividem o mesmo retorno.</p>
+        <p>Ele serve a quatro leitores. <strong>Produto</strong> enxerga o todo e as lacunas. <strong>Design</strong> sabe de onde a pessoa vem antes de redesenhar uma tela. <strong>Engenharia</strong> encontra o arquivo, a guarda e a função do backend de cada passo. <strong>QA</strong> ganha um roteiro de caminhos para testar, incluindo os de erro e cancelamento.</p>
+      </div>
+      <div class="callout note">
+        <p class="label">Como manter</p>
+        <p>O documento foi escrito lendo o código, não o que as telas deveriam fazer. A fonte versionada dos fluxogramas é <code>docs/JORNADAS.md</code>, no repositório. Quando uma tela mudar de caminho, atualize primeiro o diagrama de lá.</p>
+      </div>
+    </section>
+
+    <section class="block" id="app">
+      <h2>O app em um minuto</h2>
+      <div class="prose">
+        <p>O Finance App é um controle financeiro para uma pessoa ou para um grupo, como uma casa ou um casal. Tudo mora dentro de uma <strong>carteira</strong>. Cada conta nova já nasce com uma carteira pessoal e doze categorias prontas, e pode criar carteiras compartilhadas e convidar outras pessoas.</p>
+        <p>Dentro da carteira, a pessoa registra <strong>lançamentos</strong> (despesas, receitas e compras parceladas), acompanha <strong>cartões</strong> e o ciclo das <strong>faturas</strong>, organiza <strong>contas a pagar</strong> e <strong>assinaturas</strong> recorrentes, e define um <strong>limite mensal por categoria</strong>. O <strong>Painel</strong> resume o mês e leva a cada uma dessas áreas.</p>
+        <p>O app é instalável (PWA), funciona em parte sem conexão, com uma fila de alterações, e avisa por notificação no app, por email e no aparelho.</p>
+      </div>
+      <div class="parts">
+        <a href="#parte-1"><small>Parte I</small>Entrar e se organizar<span>Acesso, carteiras, convites</span></a>
+        <a href="#parte-2"><small>Parte II</small>Circular pelo app<span>Navegação, notificações, Painel</span></a>
+        <a href="#parte-3"><small>Parte III</small>Controlar o dinheiro<span>Lançamentos, cartões, contas, assinaturas, categorias</span></a>
+        <a href="#parte-4"><small>Parte IV</small>Cuidar da conta<span>Perfil, senha, sessões, exclusão</span></a>
+      </div>
+    </section>
+
+    <section class="block" id="conceitos">
+      <h2>Conceitos</h2>
+      <p class="lead">As palavras que aparecem em todas as jornadas, no sentido que o app dá a elas.</p>
+      <dl class="glossary">
+        <div><dt>Carteira</dt><dd>O espaço onde moram os dados. Toda conta tem uma pessoal; as compartilhadas têm uma dona e membros.</dd></div>
+        <div><dt>Dona e membro</dt><dd>A dona edita, exclui e convida. O membro usa os dados e pode sair da carteira.</dd></div>
+        <div><dt>Lançamento</dt><dd>Uma despesa ou receita com valor, data, categoria e forma de pagamento. Na tela, "transação".</dd></div>
+        <div><dt>Compra parcelada</dt><dd>Um plano que gera uma parcela por mês. Excluir uma parcela cancela o plano inteiro.</dd></div>
+        <div><dt>Fatura</dt><dd>O ciclo de um cartão entre dois fechamentos. Pagar a fatura não cria despesa: as compras já foram lançadas.</dd></div>
+        <div><dt>Conta a pagar</dt><dd>Um modelo recorrente (luz, aluguel) que gera parcelas. Pagar uma parcela cria a despesa.</dd></div>
+        <div><dt>Assinatura</dt><dd>Uma cobrança recorrente que vira lançamento sozinha na data certa.</dd></div>
+        <div><dt>Orçamento</dt><dd>O limite mensal de uma categoria de despesa. Não tem tela própria: mora na categoria.</dd></div>
+      </dl>
+    </section>
+
+    <section class="block" id="arquitetura">
+      <h2>Como o app funciona por dentro</h2>
+      <p class="lead">O mínimo de arquitetura para entender por que os fluxos fazem o que fazem.</p>
+      <ol class="steps">
+        <li><div><strong>Tudo o que decide acesso roda no navegador.</strong> Não há <code>middleware.ts</code>, <code>proxy.ts</code> nem rotas em <code>src/app/api</code>. A sessão é do <code>supabase-js</code>, e quem manda para o login é o componente <code>AuthGuard</code>.</div></li>
+        <li><div><strong>A proteção real dos dados é o banco.</strong> As políticas de RLS do Supabase decidem o que cada pessoa lê e grava. O <code>AuthGuard</code> só decide qual tela aparece.</div></li>
+        <li><div><strong>Operações compostas são RPCs.</strong> Criar carteira, pagar conta e criar compra parcelada são funções no Postgres, chamadas com <code>supabase.rpc()</code>.</div></li>
+        <li><div><strong>O que precisa de segredo ou de terceiros é Edge Function.</strong> Convites por email, notificações, push, sessões de aparelho e exclusão de conta.</div></li>
+        <li><div><strong>O que depende do calendário roda duas vezes.</strong> Um cron chama <code>run-recurring-billing</code>, e o Painel recupera o que faltou com <code>catch_up_recurring_billing</code> ao abrir.</div></li>
+      </ol>
+    </section>
+
+    <section class="block" id="leitura">
+      <h2>Como ler os fluxogramas</h2>
+      <p class="lead">A forma e a cor de cada nó dizem o que ele é. O texto da seta é a ação da pessoa ou a condição que escolheu aquele caminho.</p>
+      <div class="legend">
+        <div><i class="shape s-route"></i><p><b>Rota ou página</b><span>Um endereço do app, como <code>/login</code></span></p></div>
+        <div><i class="shape s-dialog"></i><p><b>Diálogo ou estado</b><span>Modal, folha, popover, menu, mensagem</span></p></div>
+        <div><i class="shape s-decision"></i><p><b>Decisão</b><span>Guarda de rota ou condição</span></p></div>
+        <div><i class="shape s-backend"></i><p><b>Backend</b><span>Edge Function, RPC, trigger ou tabela</span></p></div>
+        <div><i class="shape s-journey"></i><p><b>Outra jornada</b><span><code>G5</code> leva à jornada 05</span></p></div>
+      </div>
+      <p>Seta contínua é um caminho que a pessoa percorre. Seta tracejada é um efeito que acontece sem ação direta: um link de email, um cron, uma notificação. Todo diagrama tem um botão <strong>Ampliar</strong>, que abre em tela cheia com zoom.</p>
+    </section>
+
+    <section class="block" id="mapa">
+      <h2>Mapa geral</h2>
+      <p class="lead">As dez jornadas e as pontes entre elas.</p>
+      <div class="prose">
+        <p>O Painel é o centro: é para onde a pessoa vai depois de entrar e de onde saem os atalhos para o resto. Lançamentos é para onde quase tudo desagua, porque assinatura cobrada, parcela e conta paga viram lançamento. Cartões e Contas a pagar se ligam nos dois sentidos pela fatura fechada que ainda não foi paga.</p>
+      </div>
+      <figure>
+        <div class="diagram">@@D0@@</div>
+        <figcaption><strong>Figura 0 · Mapa geral das jornadas</strong></figcaption>
+      </figure>
+    </section>
+
+    <!-- ============ PARTE I ============ -->
+    <div class="part-head" id="parte-1">
+      <p class="eyebrow">Parte I</p>
+      <h2>Entrar e se organizar</h2>
+      <p>Antes de mexer em dinheiro, a pessoa precisa de uma conta e de uma carteira. Esta parte cobre o que acontece do primeiro acesso até ter uma carteira compartilhada com outras pessoas.</p>
+    </div>
+
+    <section class="block" id="j1">
+      <p class="eyebrow">Jornada 01</p>
+      <h2>Acesso</h2>
+      <p class="lead">Entrar, criar conta, recuperar a senha e sair.</p>
+      <dl class="summary">
+        <div><dt>Objetivo</dt><dd>Ter uma sessão válida e chegar à tela certa.</dd></div>
+        <div><dt>Começa em</dt><dd><code>/</code>, <code>/login</code>, <code>/register</code> ou um link de email</dd></div>
+        <div><dt>Termina em</dt><dd>O Painel ou a rota guardada em <code>next</code></dd></div>
+        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j2">02 Carteiras</a><a class="chip" href="#j4">04 Painel</a><a class="chip" href="#j10">10 Conta</a></dd></div>
+      </dl>
+      <h3>Como funciona</h3>
+      <ol class="steps">
+        <li><div><strong>Abertura.</strong> Em <code>/</code>, o app espera a sessão carregar e manda para <code>/dashboard</code> ou para <code>/login</code>.</div></li>
+        <li><div><strong>Guarda.</strong> Qualquer rota do app sem sessão vai para <code>/login?next=rota</code>, e depois de entrar a pessoa volta para onde estava. A única rota pública dentro do app é a do convite.</div></li>
+        <li><div><strong>Login.</strong> Email e senha, ou Google. Erro fica na tela com mensagem em português; sucesso segue o <code>next</code> ou vai ao Painel.</div></li>
+        <li><div><strong>Cadastro.</strong> Nome, email, telefone e uma senha forte, com checklist ao vivo. O banco cria sozinho o perfil, a carteira pessoal e doze categorias. Sem sessão imediata, a pessoa vê "Confirme seu email".</div></li>
+        <li><div><strong>Senha.</strong> Há dois caminhos: um código digitado em <code>/forgot-password</code> e um link que abre <code>/reset-password</code>. Os dois terminam no login.</div></li>
+        <li><div><strong>Saída.</strong> Sair limpa sessão, caches, fila offline e push, e o <code>AuthGuard</code> faz o resto. Uma sessão encerrada em outro aparelho sai do mesmo jeito na próxima abertura.</div></li>
+      </ol>
+      <figure>
+        <div class="diagram">@@D1@@</div>
+        <figcaption><strong>Figura 1a · Entrada, login e cadastro</strong></figcaption>
+      </figure>
+      <figure>
+        <div class="diagram">@@D2@@</div>
+        <figcaption><strong>Figura 1b · Senha e saída</strong></figcaption>
+      </figure>
+      <h3>Regras técnicas</h3>
+      @@T1@@
+      <div class="callout gap">
+        <p class="label">Pontos de atenção</p>
+        <ul>
+          <li><code>/login</code> e <code>/register</code> abrem mesmo para quem já entrou.</li>
+          <li>Quem já voltou do cadastro com sessão ainda pode ver "Confirme seu email".</li>
+          <li>Nenhuma tela leva ao fluxo por link, e os erros de senha aparecem em inglês.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="block" id="j2">
+      <p class="eyebrow">Jornada 02</p>
+      <h2>Carteiras e colaboração</h2>
+      <p class="lead">Escolher onde os dados moram e trazer outras pessoas para dentro.</p>
+      <dl class="summary">
+        <div><dt>Objetivo</dt><dd>Estar na carteira certa, com as pessoas certas.</dd></div>
+        <div><dt>Começa em</dt><dd>Seletor de carteira, <code>/members</code>, <code>/settings</code> ou um link de convite</dd></div>
+        <div><dt>Termina em</dt><dd>Carteira atual trocada ou convite aceito</dd></div>
+        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j1">01 Acesso</a><a class="chip" href="#j3">03 Navegação</a><a class="chip" href="#j4">04 Painel</a></dd></div>
+      </dl>
+      <h3>Como funciona</h3>
+      <ol class="steps">
+        <li><div><strong>Carteira atual.</strong> O app lembra a última escolhida em <code>user_settings</code>. Se ela não vale mais, usa a primeira, que é sempre a pessoal.</div></li>
+        <li><div><strong>Trocar e criar.</strong> O seletor troca de carteira sem sair da página. "Criar carteira" pede nome, ícone e cor, e a nova já vira a atual.</div></li>
+        <li><div><strong>Convidar.</strong> Só a dona convida: por email ou por link copiável. Ela também reenvia, revoga e remove membros.</div></li>
+        <li><div><strong>Aceitar.</strong> O link abre <code>/invites/accept</code>. Sem sessão, a pessoa entra ou cria conta e volta ao convite pelo <code>next</code>. Com sessão, o convite é aceito e a carteira convidada vira a atual.</div></li>
+        <li><div><strong>Configurar.</strong> Em <code>/settings</code>, a dona edita ou exclui a carteira, e o membro pode sair dela. Na mesma tela ficam a instalação do app e as preferências de notificação.</div></li>
+      </ol>
+      <figure>
+        <div class="diagram">@@D3@@</div>
+        <figcaption><strong>Figura 2a · Trocar, criar e ajustar carteira</strong></figcaption>
+      </figure>
+      <figure>
+        <div class="diagram">@@D4@@</div>
+        <figcaption><strong>Figura 2b · Convidar e aceitar convite</strong></figcaption>
+      </figure>
+      <h3>Regras técnicas</h3>
+      @@T2@@
+      <div class="callout gap">
+        <p class="label">Pontos de atenção</p>
+        <ul>
+          <li>Quem abre o convite sem sessão vê a lateral e o topo do app em volta dele.</li>
+          <li>A carteira pessoal mostra o formulário de convite, e o servidor só recusa depois do envio.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ PARTE II ============ -->
+    <div class="part-head" id="parte-2">
+      <p class="eyebrow">Parte II</p>
+      <h2>Circular pelo app</h2>
+      <p>O que está sempre à mão, em qualquer tela, e a tela que resume o mês. É por aqui que a pessoa chega às jornadas da Parte III.</p>
+    </div>
+
+    <section class="block" id="j3">
+      <p class="eyebrow">Jornada 03</p>
+      <h2>Navegação global</h2>
+      <p class="lead">A casca do app, o botão de adicionar e as notificações.</p>
+      <dl class="summary">
+        <div><dt>Objetivo</dt><dd>Chegar a qualquer área e registrar algo sem trocar de tela.</dd></div>
+        <div><dt>Começa em</dt><dd>Qualquer rota do app</dd></div>
+        <div><dt>Termina em</dt><dd>Outra rota, um formulário global ou o destino de uma notificação</dd></div>
+        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j5">05</a><a class="chip" href="#j6">06</a><a class="chip" href="#j7">07</a><a class="chip" href="#j8">08</a><a class="chip" href="#j9">09</a><a class="chip" href="#j10">10</a></dd></div>
+      </dl>
+      <h3>Como funciona</h3>
+      <ol class="steps">
+        <li><div><strong>Casca.</strong> No desktop, uma lateral recolhível lista todas as áreas. No telefone, a barra inferior traz Painel, Transações, Categorias, o botão "+" e o menu da conta com o resto.</div></li>
+        <li><div><strong>Adicionar.</strong> O "+" abre despesa, parcelada, receita ou assinatura por cima da tela atual. Ao salvar, as listas abertas recarregam e a pessoa continua onde estava.</div></li>
+        <li><div><strong>Notificações.</strong> Clicar marca como lida e navega para o lugar do assunto: o cartão, a categoria, a conta, o lançamento de outro membro.</div></li>
+        <li><div><strong>Endereços antigos.</strong> Rotas de versões anteriores redirecionam no servidor, e um endereço desconhecido cai na página 404.</div></li>
+      </ol>
+      <figure>
+        <div class="diagram">@@D5@@</div>
+        <figcaption><strong>Figura 3 · Casca, ações globais e notificações</strong></figcaption>
+      </figure>
+      <h3>Regras técnicas</h3>
+      @@T3@@
+      <div class="callout gap">
+        <p class="label">Ponto de atenção</p>
+        <ul><li>A casca expõe abrir convite, nova categoria e novo cartão, mas nenhum botão chama essas ações.</li></ul>
+      </div>
+    </section>
+
+    <section class="block" id="j4">
+      <p class="eyebrow">Jornada 04</p>
+      <h2>Painel</h2>
+      <p class="lead">O resumo do mês e a porta para cada área.</p>
+      <dl class="summary">
+        <div><dt>Objetivo</dt><dd>Saber como está o mês e o que vence em seguida.</dd></div>
+        <div><dt>Começa em</dt><dd><code>/dashboard</code>, depois de entrar</dd></div>
+        <div><dt>Termina em</dt><dd>O detalhe de um lançamento ou a área de origem de um evento</dd></div>
+        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j5">05 Lançamentos</a><a class="chip" href="#j6">06 Cartões</a><a class="chip" href="#j7">07 Contas</a><a class="chip" href="#j9">09 Categorias</a></dd></div>
+      </dl>
+      <h3>Como funciona</h3>
+      <ol class="steps">
+        <li><div><strong>Ao abrir.</strong> O Painel gera as cobranças de assinaturas e parcelas que ainda não viraram lançamento e recarrega as listas quando encontra alguma.</div></li>
+        <li><div><strong>Indicadores.</strong> Despesas, receitas, resultado e faturas abertas do mês escolhido, comparados ao mês anterior.</div></li>
+        <li><div><strong>Calendário.</strong> Cada dia mostra o que venceu ou vai vencer. Um evento já lançado abre o detalhe; um previsto abre uma prévia com "Ver origem", que leva à assinatura, à parcela, ao cartão ou à conta.</div></li>
+        <li><div><strong>Blocos de atalho.</strong> Despesas por categoria, faturas do mês e compras parceladas, cada um com o caminho para a área completa.</div></li>
+      </ol>
+      <figure>
+        <div class="diagram">@@D6@@</div>
+        <figcaption><strong>Figura 4 · Painel</strong></figcaption>
+      </figure>
+      <h3>Regras técnicas</h3>
+      @@T4@@
+    </section>
+
+    <!-- ============ PARTE III ============ -->
+    <div class="part-head" id="parte-3">
+      <p class="eyebrow">Parte III</p>
+      <h2>Controlar o dinheiro</h2>
+      <p>O coração do app. As cinco jornadas desta parte produzem e organizam lançamentos, e é por isso que quase todas terminam na Jornada 05.</p>
+    </div>
+
+    <section class="block" id="j5">
+      <p class="eyebrow">Jornada 05</p>
+      <h2>Lançamentos</h2>
+      <p class="lead">Registrar, encontrar, corrigir e apagar despesas e receitas.</p>
+      <dl class="summary">
+        <div><dt>Objetivo</dt><dd>Ter cada movimento de dinheiro registrado e fácil de achar.</dd></div>
+        <div><dt>Começa em</dt><dd><code>/transactions</code>, o "+" global ou um atalho de outra área</dd></div>
+        <div><dt>Termina em</dt><dd>Lançamento salvo, editado ou excluído</dd></div>
+        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j6">06 Cartões</a><a class="chip" href="#j8">08 Assinaturas</a><a class="chip" href="#j9">09 Categorias</a></dd></div>
+      </dl>
+      <h3>Como funciona</h3>
+      <ol class="steps">
+        <li><div><strong>A URL é o filtro.</strong> Tipo, período, forma de pagamento, cartão, categoria, valor, texto, plano e assinatura vivem na URL. É assim que outras áreas mandam a pessoa para uma lista já filtrada.</div></li>
+        <li><div><strong>Lista.</strong> Atalhos de período, painel de filtros, chips removíveis, seleção em lote e páginas de 100 lançamentos. A lista vazia oferece criar ou limpar os filtros, conforme o caso.</div></li>
+        <li><div><strong>Criar.</strong> O formulário muda com o tipo. Despesa no crédito exige escolher um cartão; parcelada pede o número de parcelas e se o valor é total ou por parcela.</div></li>
+        <li><div><strong>Depois de salvar.</strong> O backend avisa os outros membros e confere o orçamento da categoria e os alertas do cartão. Sem conexão, o lançamento entra na fila.</div></li>
+        <li><div><strong>Editar e excluir.</strong> Numa parcela, a pessoa escolhe entre editar só ela ou o plano todo. Excluir uma parcela cancela a compra parcelada inteira.</div></li>
+      </ol>
+      <figure>
+        <div class="diagram">@@D7@@</div>
+        <figcaption><strong>Figura 5a · Lista e filtros</strong></figcaption>
+      </figure>
+      <figure>
+        <div class="diagram">@@D8@@</div>
+        <figcaption><strong>Figura 5b · Criar, editar e excluir</strong></figcaption>
+      </figure>
+      <h3>Regras técnicas</h3>
+      @@T5@@
+    </section>
+
+    <section class="block" id="j6">
+      <p class="eyebrow">Jornada 06</p>
+      <h2>Cartões e faturas</h2>
+      <p class="lead">Cadastrar cartões e acompanhar cada fatura até ser paga.</p>
+      <dl class="summary">
+        <div><dt>Objetivo</dt><dd>Saber quanto cada cartão deve, quando fecha e quando vence.</dd></div>
+        <div><dt>Começa em</dt><dd><code>/credit-cards</code>, o Painel ou uma notificação de cartão</dd></div>
+        <div><dt>Termina em</dt><dd>Fatura acompanhada ou marcada como paga</dd></div>
+        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j5">05 Lançamentos</a><a class="chip" href="#j7">07 Contas</a><a class="chip" href="#j9">09 Categorias</a></dd></div>
+      </dl>
+      <h3>Como funciona</h3>
+      <ol class="steps">
+        <li><div><strong>Cadastro.</strong> Apelido, número, validade, limite, dia de fechamento, dia de vencimento e bandeira. Dias fora de 1 a 31 ou validade inválida não salvam.</div></li>
+        <li><div><strong>Detalhe.</strong> Cada cartão mostra a fatura do ciclo escolhido, o gasto por categoria, as parcelas em andamento e os últimos lançamentos. Dá para editar, desativar e excluir.</div></li>
+        <li><div><strong>Ciclo da fatura.</strong> Um ciclo futuro é <em>Futura</em>, o atual é <em>Aberta</em>, e um passado fica <em>Não paga</em> até alguém marcar como <em>Paga</em>. Desmarcar devolve a fatura a Contas a pagar.</div></li>
+      </ol>
+      <figure>
+        <div class="diagram">@@D9@@</div>
+        <figcaption><strong>Figura 6 · Cartões e ciclo da fatura</strong></figcaption>
+      </figure>
+      <h3>Regras técnicas</h3>
+      @@T6@@
+      <div class="callout note">
+        <p class="label">Dois vocabulários de status</p>
+        <p>O detalhe do cartão fala do ciclo (Futura, Aberta, Não paga, Paga). A tabela de lançamentos fala da compra (Aberta, Fechada, Anterior, Paga). As duas escalas existem de propósito e não se misturam.</p>
+      </div>
+    </section>
+
+    <section class="block" id="j7">
+      <p class="eyebrow">Jornada 07</p>
+      <h2>Contas a pagar</h2>
+      <p class="lead">Contas recorrentes e tudo o que está pendente, faturas incluídas. Em beta.</p>
+      <dl class="summary">
+        <div><dt>Objetivo</dt><dd>Não deixar nada vencer sem ser visto.</dd></div>
+        <div><dt>Começa em</dt><dd><code>/bills</code>, o calendário do Painel ou um lembrete</dd></div>
+        <div><dt>Termina em</dt><dd>Parcela paga, ignorada ou conta removida</dd></div>
+        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j5">05 Lançamentos</a><a class="chip" href="#j6">06 Cartões</a><a class="chip" href="#j3">03 Notificações</a></dd></div>
+      </dl>
+      <h3>Como funciona</h3>
+      <ol class="steps">
+        <li><div><strong>Duas abas.</strong> <em>Contas</em> lista os modelos (luz, aluguel), com filtro de ativas. <em>Pendentes</em> lista o que falta pagar, com filtro de atrasadas e próximos 30 dias.</div></li>
+        <li><div><strong>Dois tipos de pendência.</strong> A parcela de uma conta cadastrada e a fatura de cartão que fechou sem ser paga, que aparece aqui sozinha.</div></li>
+        <li><div><strong>Pagar uma conta cria uma despesa.</strong> O pagamento vira lançamento, avança a recorrência e passa pelo orçamento. Exige conexão.</div></li>
+        <li><div><strong>Pagar uma fatura não cria despesa.</strong> As compras já foram lançadas no cartão; a fatura só fica marcada como paga.</div></li>
+        <li><div><strong>Lembretes.</strong> Cada conta pode avisar três dias antes e no dia do vencimento.</div></li>
+      </ol>
+      <figure>
+        <div class="diagram">@@D10@@</div>
+        <figcaption><strong>Figura 7 · Contas a pagar</strong></figcaption>
+      </figure>
+      <h3>Regras técnicas</h3>
+      @@T7@@
+    </section>
+
+    <section class="block" id="j8">
+      <p class="eyebrow">Jornada 08</p>
+      <h2>Assinaturas</h2>
+      <p class="lead">Cobranças recorrentes que viram lançamento sozinhas.</p>
+      <dl class="summary">
+        <div><dt>Objetivo</dt><dd>Registrar uma vez e não lançar à mão todo mês.</dd></div>
+        <div><dt>Começa em</dt><dd><code>/subscriptions</code> ou o "+" global</dd></div>
+        <div><dt>Termina em</dt><dd>Assinatura ativa gerando lançamentos</dd></div>
+        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j5">05 Lançamentos</a><a class="chip" href="#j6">06 Cartões</a><a class="chip" href="#j9">09 Categorias</a></dd></div>
+      </dl>
+      <h3>Como funciona</h3>
+      <ol class="steps">
+        <li><div><strong>Cadastro.</strong> Nome, valor, periodicidade (semanal, mensal, bimestral ou anual), próxima cobrança, forma de pagamento, cartão e categoria.</div></li>
+        <li><div><strong>Acompanhamento.</strong> O painel da assinatura mostra o resumo e as cobranças que já viraram lançamento. A edição acontece ali mesmo.</div></li>
+        <li><div><strong>Cobrança automática.</strong> Um cron gera os lançamentos na data. Se ele atrasar, o Painel completa o que faltou ao abrir.</div></li>
+      </ol>
+      <figure>
+        <div class="diagram">@@D11@@</div>
+        <figcaption><strong>Figura 8 · Assinaturas</strong></figcaption>
+      </figure>
+      <h3>Regras técnicas</h3>
+      @@T8@@
+    </section>
+
+    <section class="block" id="j9">
+      <p class="eyebrow">Jornada 09</p>
+      <h2>Categorias e orçamentos</h2>
+      <p class="lead">Organizar para onde o dinheiro vai e até quanto pode ir.</p>
+      <dl class="summary">
+        <div><dt>Objetivo</dt><dd>Cada gasto com uma categoria, cada categoria com um limite.</dd></div>
+        <div><dt>Começa em</dt><dd><code>/categories</code>, um cartão, o Painel ou um alerta de orçamento</dd></div>
+        <div><dt>Termina em</dt><dd>Categoria e limite salvos, ou o detalhe do mês</dd></div>
+        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j5">05 Lançamentos</a><a class="chip" href="#j3">03 Notificações</a></dd></div>
+      </dl>
+      <h3>Como funciona</h3>
+      <ol class="steps">
+        <li><div><strong>Assistente da primeira visita.</strong> Em cada carteira, a primeira ida a Categorias abre três passos: renda mensal opcional, categorias com limites sugeridos pela renda, e confirmação. "Configurar depois" pula tudo.</div></li>
+        <li><div><strong>Lista.</strong> Despesas mostram o gasto do mês contra o limite; receitas mostram só a categoria. O mês fica na URL.</div></li>
+        <li><div><strong>Limite.</strong> O limite é definido dentro da própria categoria de despesa, para o mês escolhido, e pode ser removido.</div></li>
+        <li><div><strong>Detalhe.</strong> Orçamento restante ou estourado, lançado contra projetado, médias, tendência e os lançamentos do mês, com atalho para a lista completa.</div></li>
+      </ol>
+      <figure>
+        <div class="diagram">@@D12@@</div>
+        <figcaption><strong>Figura 9 · Categorias e orçamentos</strong></figcaption>
+      </figure>
+      <h3>Regras técnicas</h3>
+      @@T9@@
+    </section>
+
+    <!-- ============ PARTE IV ============ -->
+    <div class="part-head" id="parte-4">
+      <p class="eyebrow">Parte IV</p>
+      <h2>Cuidar da conta</h2>
+      <p>O que pertence à pessoa, e não à carteira: identidade, segurança e a saída definitiva.</p>
+    </div>
+
+    <section class="block" id="j10">
+      <p class="eyebrow">Jornada 10</p>
+      <h2>Conta e segurança</h2>
+      <p class="lead">Perfil, senha, aparelhos conectados, histórico e exclusão da conta.</p>
+      <dl class="summary">
+        <div><dt>Objetivo</dt><dd>Manter a conta correta e sob controle.</dd></div>
+        <div><dt>Começa em</dt><dd><code>/account</code>, pelo menu do usuário</dd></div>
+        <div><dt>Termina em</dt><dd>Perfil atualizado, sessões encerradas ou conta excluída</dd></div>
+        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j1">01 Acesso</a><a class="chip" href="#j3">03 Navegação</a></dd></div>
+      </dl>
+      <h3>Como funciona</h3>
+      <ol class="steps">
+        <li><div><strong>Perfil.</strong> Nome e avatar (até 5 MB). Trocar o email pede a senha atual e envia confirmação para o endereço novo.</div></li>
+        <li><div><strong>Senha.</strong> Pede a senha atual e segue as mesmas regras do cadastro. As outras sessões continuam abertas.</div></li>
+        <li><div><strong>Sessões e atividade.</strong> A pessoa vê os aparelhos conectados e encerra um ou todos. O histórico registra as mudanças de perfil, email e senha.</div></li>
+        <li><div><strong>Excluir conta.</strong> Dois passos: um aviso com as carteiras compartilhadas afetadas e a confirmação com email e senha. Depois, tudo é limpo e a pessoa volta ao login.</div></li>
+      </ol>
+      <figure>
+        <div class="diagram">@@D13@@</div>
+        <figcaption><strong>Figura 10 · Conta e segurança</strong></figcaption>
+      </figure>
+      <h3>Regras técnicas</h3>
+      @@T10@@
+      <div class="callout gap">
+        <p class="label">Ponto de atenção</p>
+        <ul><li>Sessões e Atividade mandam para o login sem <code>next</code>, então a pessoa não volta para a página depois de entrar.</li></ul>
+      </div>
+    </section>
+
+    <!-- ============ FECHAMENTO ============ -->
+    <section class="block" id="lacunas">
+      <p class="eyebrow">Fechamento</p>
+      <h2>Lacunas encontradas</h2>
+      <p class="lead">O mapeamento encontrou oito pontos em que o código não faz o que a jornada promete. Estão aqui para registro; nenhum foi corrigido.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Jornada</th><th>Tipo</th><th>O que acontece</th><th>Efeito para a pessoa</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>01 Acesso</td><td>Fluxo</td><td>O cadastro volta com sessão e sem <code>next</code>, e ainda mostra "Confirme seu email".</td><td>Pede uma confirmação de que ela não precisa.</td></tr>
+            <tr><td>2</td><td>01 Acesso</td><td>Guarda</td><td><code>/login</code> e <code>/register</code> não têm guarda.</td><td>Quem já entrou vê o formulário em vez do Painel.</td></tr>
+            <tr><td>3</td><td>01 Acesso</td><td>Fluxo</td><td>Existem dois fluxos de redefinir senha, e nenhuma tela leva ao do link.</td><td>Qual funciona depende do template de email do Supabase.</td></tr>
+            <tr><td>4</td><td>01 Acesso</td><td>Texto</td><td>Os erros de esqueci e redefinir senha são a mensagem crua do Supabase.</td><td>Mensagem em inglês no meio de um app em português.</td></tr>
+            <tr><td>5</td><td>02 Carteiras</td><td>Layout</td><td><code>/invites/accept</code> fica dentro da casca do app.</td><td>Quem não entrou vê menus que não pode usar.</td></tr>
+            <tr><td>6</td><td>02 Carteiras</td><td>Validação</td><td>A carteira pessoal mostra o formulário de convite.</td><td>O erro só aparece depois de enviar.</td></tr>
+            <tr><td>7</td><td>03 Navegação</td><td>Código sem uso</td><td>A casca expõe abrir convite, nova categoria e novo cartão, e nada chama essas ações.</td><td>Nenhum; é manutenção sem retorno.</td></tr>
+            <tr><td>8</td><td>10 Conta</td><td>Guarda</td><td>Sessões e Atividade redirecionam para <code>/login</code> sem <code>next</code>.</td><td>Depois de entrar, cai no Painel e não na página.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="block" id="rotas">
+      <p class="eyebrow">Apêndice A</p>
+      <h2>Rotas</h2>
+      <p class="lead">Todas as rotas do app e a jornada a que cada uma pertence.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Rota</th><th>Tela</th><th>Acesso</th><th>Jornada</th></tr></thead>
+          <tbody>
+            <tr><td><code>/</code></td><td>Abertura, só redireciona</td><td>Pública</td><td>01</td></tr>
+            <tr><td><code>/login</code></td><td>Entrar</td><td>Pública</td><td>01</td></tr>
+            <tr><td><code>/register</code></td><td>Criar conta</td><td>Pública</td><td>01</td></tr>
+            <tr><td><code>/forgot-password</code></td><td>Recuperar senha por código</td><td>Pública</td><td>01</td></tr>
+            <tr><td><code>/reset-password</code></td><td>Redefinir senha por link</td><td>Pública</td><td>01</td></tr>
+            <tr><td><code>/invites/accept</code></td><td>Aceitar convite</td><td>Pública, dentro da casca</td><td>02</td></tr>
+            <tr><td><code>/members</code></td><td>Membros e convites</td><td>Com sessão</td><td>02</td></tr>
+            <tr><td><code>/settings</code></td><td>Carteira, app e notificações</td><td>Com sessão</td><td>02</td></tr>
+            <tr><td><code>/dashboard</code></td><td>Painel</td><td>Com sessão</td><td>04</td></tr>
+            <tr><td><code>/transactions</code></td><td>Lançamentos</td><td>Com sessão</td><td>05</td></tr>
+            <tr><td><code>/credit-cards</code></td><td>Cartões</td><td>Com sessão</td><td>06</td></tr>
+            <tr><td><code>/credit-cards/[cardId]</code></td><td>Detalhe do cartão e fatura</td><td>Com sessão</td><td>06</td></tr>
+            <tr><td><code>/bills</code></td><td>Contas a pagar</td><td>Com sessão</td><td>07</td></tr>
+            <tr><td><code>/subscriptions</code></td><td>Assinaturas</td><td>Com sessão</td><td>08</td></tr>
+            <tr><td><code>/categories</code></td><td>Categorias e assistente</td><td>Com sessão</td><td>09</td></tr>
+            <tr><td><code>/categories/new</code></td><td>Categorias com o formulário aberto</td><td>Com sessão</td><td>09</td></tr>
+            <tr><td><code>/categories/[categoryId]</code></td><td>Detalhe da categoria</td><td>Com sessão</td><td>09</td></tr>
+            <tr><td><code>/account</code></td><td>Minha conta</td><td>Com sessão</td><td>10</td></tr>
+            <tr><td><code>/account/sessions</code></td><td>Aparelhos conectados</td><td>Com sessão</td><td>10</td></tr>
+            <tr><td><code>/account/activity</code></td><td>Histórico de atividade</td><td>Com sessão</td><td>10</td></tr>
+            <tr><td><code>/plans</code></td><td>Planos e pagamentos, sem ações</td><td>Com sessão</td><td>10</td></tr>
+            <tr><td><code>/[...slug]</code></td><td>Página não encontrada</td><td>Pública</td><td>03</td></tr>
+            <tr><td><code>/designsystem</code></td><td>Catálogo interno do design system</td><td>Desenvolvimento</td><td>Fora do escopo</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="block" id="backend">
+      <p class="eyebrow">Apêndice B</p>
+      <h2>Backend</h2>
+      <p class="lead">As funções do Supabase que aparecem nos fluxogramas, e onde cada uma entra.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nome</th><th>Tipo</th><th>O que faz</th><th>Jornadas</th></tr></thead>
+          <tbody>
+            <tr><td><code>handle_new_user</code></td><td>Trigger</td><td>Cria perfil, carteira pessoal e categorias no cadastro</td><td>01</td></tr>
+            <tr><td><code>sessions</code></td><td>Edge</td><td>Registra, lista e encerra sessões de aparelho</td><td>01, 10</td></tr>
+            <tr><td><code>create_shared_workspace</code></td><td>RPC</td><td>Cria carteira compartilhada</td><td>02</td></tr>
+            <tr><td><code>get_workspace_delete_impact</code></td><td>RPC</td><td>Mostra o que some ao excluir uma carteira</td><td>02</td></tr>
+            <tr><td><code>delete_workspace</code></td><td>RPC</td><td>Exclui a carteira</td><td>02</td></tr>
+            <tr><td><code>workspace_member_directory</code></td><td>RPC</td><td>Lista membros com perfil</td><td>02</td></tr>
+            <tr><td><code>workspace-invites-create</code></td><td>Edge</td><td>Cria convite por email ou link</td><td>02</td></tr>
+            <tr><td><code>workspace-invites-resend</code></td><td>Edge</td><td>Reenvia o email do convite</td><td>02</td></tr>
+            <tr><td><code>workspace-invites-accept</code></td><td>Edge</td><td>Aceita o convite e cria o vínculo</td><td>02</td></tr>
+            <tr><td><code>push-subscribe</code> · <code>push-unsubscribe</code></td><td>Edge</td><td>Liga e desliga o push do aparelho</td><td>01, 02</td></tr>
+            <tr><td><code>dispatch-notifications</code></td><td>Edge</td><td>Entrega notificações por canal</td><td>03</td></tr>
+            <tr><td><code>catch_up_recurring_billing</code></td><td>RPC</td><td>Gera cobranças atrasadas ao abrir o Painel</td><td>04, 08</td></tr>
+            <tr><td><code>create_workspace_installment_plan</code></td><td>RPC</td><td>Cria a compra parcelada</td><td>05</td></tr>
+            <tr><td><code>delete_workspace_installment_plan_cascade</code></td><td>RPC</td><td>Cancela o plano e as parcelas</td><td>05</td></tr>
+            <tr><td><code>notify-transaction-created</code></td><td>Edge</td><td>Avisa os membros de um novo lançamento</td><td>05</td></tr>
+            <tr><td><code>evaluate-budgets</code></td><td>Edge</td><td>Confere o limite da categoria depois de uma despesa</td><td>05, 07, 09</td></tr>
+            <tr><td><code>evaluate-credit-card-alerts</code></td><td>Edge</td><td>Confere limite e categoria do cartão</td><td>05, 06</td></tr>
+            <tr><td><code>credit-card-calendar-alerts</code></td><td>Edge</td><td>Avisa fechamento e vencimento de fatura</td><td>06</td></tr>
+            <tr><td><code>pay_bill_instance</code></td><td>RPC</td><td>Paga a parcela de uma conta e cria a despesa</td><td>07</td></tr>
+            <tr><td><code>rpc_fetch_bills_page_bundle</code></td><td>RPC</td><td>Carrega a página de contas a pagar</td><td>07</td></tr>
+            <tr><td><code>evaluate-bills-reminders</code></td><td>Edge</td><td>Envia lembretes de vencimento</td><td>07</td></tr>
+            <tr><td><code>run-recurring-billing</code></td><td>Edge, via cron</td><td>Gera cobranças de assinaturas e parcelas</td><td>08</td></tr>
+            <tr><td><code>rpc_fetch_subscriptions_page_bundle</code></td><td>RPC</td><td>Carrega a página de assinaturas</td><td>08</td></tr>
+            <tr><td><code>complete_workspace_categories_onboarding</code></td><td>RPC</td><td>Marca o assistente de categorias como concluído</td><td>09</td></tr>
+            <tr><td><code>rpc_fetch_category_detail_bundle</code></td><td>RPC</td><td>Carrega o detalhe da categoria</td><td>09</td></tr>
+            <tr><td><code>activity-logs</code></td><td>Edge</td><td>Grava o histórico de atividade</td><td>10</td></tr>
+            <tr><td><code>delete-user</code></td><td>Edge</td><td>Confere a senha e exclui a conta</td><td>10</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer>
+  Atlas de Jornadas do Finance App · escrito a partir do código da branch <code>finance-app-2.0</code> em 17 de setembro de 2026 · fonte dos fluxogramas em <code>docs/JORNADAS.md</code>
+</footer>
+
+<dialog class="viewer" id="viewer" aria-labelledby="viewer-title">
+  <div class="viewer-bar">
+    <strong id="viewer-title"></strong>
+    <button type="button" data-zoom="-0.25" aria-label="Diminuir">−</button>
+    <output id="viewer-scale">100%</output>
+    <button type="button" data-zoom="0.25" aria-label="Aumentar">+</button>
+    <button type="button" data-zoom="fit">Ajustar</button>
+    <button type="button" id="viewer-close">Fechar</button>
+  </div>
+  <div class="viewer-stage" id="viewer-stage"></div>
+</dialog>
+
+<script>
+  (function () {
+    var viewer = document.getElementById("viewer");
+    var stage = document.getElementById("viewer-stage");
+    var label = document.getElementById("viewer-scale");
+    var scale = 1, natural = 0, svg = null;
+
+    function apply() {
+      if (!svg) return;
+      svg.style.width = Math.round(natural * scale) + "px";
+      label.textContent = Math.round(scale * 100) + "%";
+    }
+    function fit() {
+      scale = Math.min(1, (stage.clientWidth - 48) / natural);
+      apply();
+    }
+
+    document.querySelectorAll("figure").forEach(function (fig) {
+      var cap = fig.querySelector("figcaption");
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "zoom-btn";
+      btn.textContent = "Ampliar";
+      btn.addEventListener("click", function () {
+        var source = fig.querySelector(".diagram svg");
+        if (!source) return;
+        svg = source.cloneNode(true);
+        natural = parseFloat(source.style.maxWidth) || source.getBoundingClientRect().width;
+        svg.removeAttribute("width");
+        stage.replaceChildren(svg);
+        document.getElementById("viewer-title").textContent = cap.querySelector("strong").textContent;
+        viewer.showModal();
+        scale = 1;
+        apply();
+      });
+      cap.appendChild(btn);
+    });
+
+    viewer.querySelectorAll("[data-zoom]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var z = b.getAttribute("data-zoom");
+        if (z === "fit") return fit();
+        scale = Math.min(2, Math.max(0.25, scale + parseFloat(z)));
+        apply();
+      });
+    });
+    document.getElementById("viewer-close").addEventListener("click", function () { viewer.close(); });
+    viewer.addEventListener("close", function () { stage.replaceChildren(); svg = null; });
+  })();
+</script>

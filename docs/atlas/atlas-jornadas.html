@@ -1,0 +1,1471 @@
+<title>Atlas de Jornadas do Finance App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ledger&family=Inter:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0c1110;
+    --surface: #121917;
+    --raised: #18211f;
+    --line: rgba(214, 235, 228, 0.10);
+    --line-strong: rgba(214, 235, 228, 0.18);
+    --text: #e8efec;
+    --text-2: #a9b5b1;
+    --text-3: #7a8782;
+    --accent: #52c49c;
+    --accent-ink: #0c1110;
+    --accent-soft: rgba(82, 196, 156, 0.12);
+    --backend: #7ab3e6;
+    --decision: #e2b85e;
+    --gap: #eb917f;
+    --gap-soft: rgba(235, 145, 127, 0.10);
+    --display: "Ledger", Georgia, "Times New Roman", serif;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --measure: 68ch;
+  }
+  html { background: var(--bg); scroll-behavior: smooth; scroll-padding-top: 24px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 400 16px/1.65 var(--sans);
+    -webkit-font-smoothing: antialiased;
+    padding-inline: 16px;
+  }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+  code {
+    font-family: var(--mono);
+    font-size: 0.86em;
+    background: var(--raised);
+    border: 1px solid var(--line);
+    padding: 0.05em 0.35em;
+    border-radius: 4px;
+    color: #d4e3dd;
+    overflow-wrap: anywhere;
+  }
+  h1, h2, h3 { text-wrap: balance; font-weight: 400; }
+  p { margin: 0; max-width: var(--measure); }
+  ul, ol { margin: 0; padding-left: 1.2em; max-width: var(--measure); }
+  li + li { margin-top: 0.35em; }
+
+  /* Capa */
+  .cover {
+    max-width: 1180px;
+    margin-inline: auto;
+    padding-block: 72px 56px;
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    gap: 20px;
+  }
+  .eyebrow {
+    font: 500 12px/1 var(--mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .cover h1 {
+    font-family: var(--display);
+    font-size: clamp(2.4rem, 6vw, 4.2rem);
+    line-height: 1.04;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .cover .subtitle { font-size: 1.2rem; color: var(--text-2); max-width: 60ch; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px 28px; margin-top: 8px; }
+  .meta div { display: grid; }
+  .meta dt { font: 500 11px/1.4 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); }
+  .meta dd { margin: 0; font-variant-numeric: tabular-nums; color: var(--text); }
+
+  /* Estrutura */
+  .layout {
+    max-width: 1180px;
+    margin-inline: auto;
+    display: grid;
+    grid-template-columns: 232px minmax(0, 1fr);
+    gap: 56px;
+    padding-block: 40px 96px;
+  }
+  nav.toc {
+    position: sticky;
+    top: calc(env(safe-area-inset-top, 0px) + 24px);
+    align-self: start;
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+    font-size: 14px;
+  }
+  .toc h2 { font: 500 11px/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); margin: 0 0 12px; }
+  .toc ol { list-style: none; padding: 0; margin: 0; }
+  .toc li + li { margin-top: 0; }
+  .toc a { display: block; color: var(--text-2); text-decoration: none; padding: 4px 0 4px 12px; border-left: 1px solid var(--line); }
+  .toc a:hover { color: var(--text); border-left-color: var(--line-strong); }
+  .toc .part { font: 500 11px/1.3 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); padding: 18px 0 6px; }
+  .toc .num { font-family: var(--mono); color: var(--text-3); font-size: 12px; margin-right: 6px; font-variant-numeric: tabular-nums; }
+
+  main { min-width: 0; display: grid; gap: 88px; }
+  section.block { display: grid; gap: 22px; min-width: 0; }
+  section.block > h2, .part-head h2 {
+    font-family: var(--display);
+    font-size: clamp(1.8rem, 3.4vw, 2.4rem);
+    line-height: 1.12;
+    margin: 0;
+  }
+  .lead { font-size: 1.1rem; color: var(--text-2); }
+  h3 { font: 600 0.8rem/1.3 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); margin: 14px 0 0; }
+  .prose { display: grid; gap: 14px; }
+
+  .part-head {
+    display: grid;
+    gap: 10px;
+    padding-block: 28px;
+    border-block: 1px solid var(--line);
+  }
+  .part-head p { color: var(--text-2); }
+
+  /* Resumo da jornada */
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .summary div { background: var(--surface); padding: 14px 16px; display: grid; align-content: start; }
+  .summary dt { font: 500 11px/1.4 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); }
+  .summary dd { margin: 0; font-size: 15px; color: var(--text); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .chip {
+    font: 500 12px/1 var(--mono);
+    padding: 5px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(82, 196, 156, 0.35);
+    background: var(--accent-soft);
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .chip:hover { border-color: var(--accent); }
+
+  ol.steps { counter-reset: step; list-style: none; padding: 0; display: grid; gap: 10px; }
+  ol.steps li { counter-increment: step; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; margin: 0; }
+  ol.steps li::before {
+    content: counter(step);
+    font: 500 12px/26px var(--mono);
+    width: 26px; height: 26px;
+    text-align: center;
+    border-radius: 50%;
+    border: 1px solid var(--line-strong);
+    color: var(--text-2);
+  }
+
+  /* Diagramas */
+  figure { margin: 0; display: grid; gap: 10px; min-width: 0; }
+  .diagram {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .diagram pre.mermaid { margin: 0; background: transparent; color: var(--text-3); font: 12px/1.4 var(--mono); white-space: pre; }
+  .diagram svg { display: block; margin-inline: auto; height: auto; }
+  .zoom-btn {
+    font: 500 13px/1 var(--sans);
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid rgba(82, 196, 156, 0.35);
+    border-radius: 999px;
+    padding: 7px 12px;
+    cursor: pointer;
+  }
+  .zoom-btn:hover { border-color: var(--accent); }
+  .zoom-btn:active { background: rgba(82, 196, 156, 0.22); }
+  .zoom-btn:focus-visible, .viewer button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  figcaption { align-items: center; }
+
+  /* Visualizador em tela cheia */
+  dialog.viewer {
+    width: 100vw; height: 100dvh; max-width: none; max-height: none;
+    margin: 0; padding: 0; border: 0;
+    background: var(--bg); color: var(--text);
+  }
+  dialog.viewer::backdrop { background: rgba(0, 0, 0, 0.7); }
+  .viewer-bar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 12px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+  }
+  .viewer-bar strong { font-weight: 500; margin-right: auto; font-size: 15px; }
+  .viewer-bar button {
+    font: 500 14px/1 var(--sans); color: var(--text);
+    background: var(--raised); border: 1px solid var(--line-strong);
+    border-radius: 8px; min-width: 36px; height: 36px; padding: 0 10px; cursor: pointer;
+  }
+  .viewer-bar button:hover { border-color: var(--accent); }
+  .viewer-bar output { font: 500 13px/1 var(--mono); color: var(--text-2); min-width: 48px; text-align: center; font-variant-numeric: tabular-nums; }
+  .viewer-stage { height: calc(100% - 61px - env(safe-area-inset-top, 0px)); overflow: auto; padding: 24px; }
+  .viewer-stage svg { display: block; margin: 0 auto; max-width: none !important; height: auto; }
+  figcaption { font-size: 14px; color: var(--text-3); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; }
+  figcaption strong { color: var(--text-2); font-weight: 500; }
+
+  /* Tabelas */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.5; }
+  th {
+    text-align: left;
+    font: 500 11px/1.3 var(--mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    background: var(--surface);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line-strong);
+    white-space: nowrap;
+  }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--text-2); }
+  td:first-child { color: var(--text); font-weight: 500; }
+  tr:last-child td { border-bottom: 0; }
+  td code { white-space: normal; }
+
+  /* Legenda */
+  .legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+  .legend div { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 12px; align-items: center; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+  .legend b { display: block; font-weight: 600; font-size: 14px; }
+  .legend span { font-size: 13px; color: var(--text-3); }
+  .shape { height: 28px; border: 1.5px solid; display: block; }
+  .s-route { background: #14231f; border-color: var(--accent); border-radius: 3px; }
+  .s-dialog { background: #1a2220; border-color: #5b6a65; border-radius: 999px; }
+  .s-decision { width: 24px; height: 24px; margin-inline: auto; transform: rotate(45deg); background: #2a2415; border-color: var(--decision); }
+  .s-backend { background: #142130; border-color: var(--backend); border-radius: 50% / 22%; }
+  .s-journey { width: 30px; height: 30px; margin-inline: auto; border-radius: 50%; background: var(--accent); border-color: var(--accent); }
+
+  /* Chamadas */
+  .callout { border: 1px solid var(--line); border-left: 0; background: var(--surface); border-radius: 10px; padding: 14px 16px; display: grid; gap: 6px; }
+  .callout.gap { background: var(--gap-soft); border-color: rgba(235, 145, 127, 0.25); }
+  .callout .label { font: 500 11px/1.3 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--gap); }
+  .callout.note .label { color: var(--accent); }
+  .callout ul { color: var(--text-2); font-size: 15px; }
+
+  .glossary { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin: 0; }
+  .glossary div { background: var(--surface); padding: 14px 16px; }
+  .glossary dt { font-weight: 600; margin-bottom: 2px; }
+  .glossary dd { margin: 0; color: var(--text-2); font-size: 15px; }
+
+  .parts { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+  .parts a { display: grid; gap: 4px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; text-decoration: none; color: var(--text); }
+  .parts a:hover { border-color: var(--line-strong); }
+  .parts small { font: 500 11px/1.3 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+  .parts span { color: var(--text-3); font-size: 14px; }
+
+  footer { max-width: 1180px; margin-inline: auto; padding-block: 28px 48px; border-top: 1px solid var(--line); color: var(--text-3); font-size: 14px; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+    nav.toc { position: static; max-height: none; border: 1px solid var(--line); border-radius: 10px; padding: 16px; background: var(--surface); }
+    .cover { padding-block: 44px 36px; }
+    main { gap: 64px; }
+  }
+</style>
+
+<header class="cover">
+  <p class="eyebrow">Documentação de produto</p>
+  <h1>Atlas de Jornadas do Finance&nbsp;App</h1>
+  <p class="subtitle">Tudo o que uma pessoa faz no app, do cadastro à fatura paga: as dez jornadas, como elas se conectam, as regras técnicas que decidem cada caminho e o que ainda está com problema.</p>
+  <dl class="meta">
+    <div><dt>Base</dt><dd>Leitura do código</dd></div>
+    <div><dt>Branch</dt><dd>finance-app-2.0</dd></div>
+    <div><dt>Data</dt><dd>17 set 2026</dd></div>
+    <div><dt>Conteúdo</dt><dd>10 jornadas · 14 fluxogramas · 8 lacunas</dd></div>
+    <div><dt>Fonte versionada</dt><dd><code>docs/JORNADAS.md</code></dd></div>
+  </dl>
+</header>
+
+<div class="layout">
+  <nav class="toc" aria-label="Sumário">
+    <h2>Sumário</h2>
+    <ol>
+      <li class="part">Introdução</li>
+      <li><a href="#sobre">Sobre este documento</a></li>
+      <li><a href="#app">O app em um minuto</a></li>
+      <li><a href="#conceitos">Conceitos</a></li>
+      <li><a href="#arquitetura">Como o app funciona por dentro</a></li>
+      <li><a href="#leitura">Como ler os fluxogramas</a></li>
+      <li><a href="#mapa">Mapa geral</a></li>
+      <li class="part">I · Entrar e se organizar</li>
+      <li><a href="#j1"><span class="num">01</span>Acesso</a></li>
+      <li><a href="#j2"><span class="num">02</span>Carteiras e colaboração</a></li>
+      <li class="part">II · Circular pelo app</li>
+      <li><a href="#j3"><span class="num">03</span>Navegação global</a></li>
+      <li><a href="#j4"><span class="num">04</span>Painel</a></li>
+      <li class="part">III · Controlar o dinheiro</li>
+      <li><a href="#j5"><span class="num">05</span>Lançamentos</a></li>
+      <li><a href="#j6"><span class="num">06</span>Cartões e faturas</a></li>
+      <li><a href="#j7"><span class="num">07</span>Contas a pagar</a></li>
+      <li><a href="#j8"><span class="num">08</span>Assinaturas</a></li>
+      <li><a href="#j9"><span class="num">09</span>Categorias e orçamentos</a></li>
+      <li class="part">IV · Cuidar da conta</li>
+      <li><a href="#j10"><span class="num">10</span>Conta e segurança</a></li>
+      <li class="part">Fechamento</li>
+      <li><a href="#lacunas">Lacunas encontradas</a></li>
+      <li><a href="#rotas">Apêndice A · Rotas</a></li>
+      <li><a href="#backend">Apêndice B · Backend</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <!-- ============ INTRODUÇÃO ============ -->
+    <section class="block" id="sobre">
+      <p class="eyebrow">Introdução</p>
+      <h2>Sobre este documento</h2>
+      <div class="prose">
+        <p>Este atlas descreve o app do ponto de vista de quem usa: onde cada tarefa começa, que telas atravessa, quais decisões mudam o caminho e onde termina. Cada jornada junta telas que servem a um mesmo objetivo. Criar conta e entrar, por exemplo, formam uma jornada só, porque as duas telas se ligam e dividem o mesmo retorno.</p>
+        <p>Ele serve a quatro leitores. <strong>Produto</strong> enxerga o todo e as lacunas. <strong>Design</strong> sabe de onde a pessoa vem antes de redesenhar uma tela. <strong>Engenharia</strong> encontra o arquivo, a guarda e a função do backend de cada passo. <strong>QA</strong> ganha um roteiro de caminhos para testar, incluindo os de erro e cancelamento.</p>
+      </div>
+      <div class="callout note">
+        <p class="label">Como manter</p>
+        <p>O documento foi escrito lendo o código, não o que as telas deveriam fazer. A fonte versionada dos fluxogramas é <code>docs/JORNADAS.md</code>, no repositório. Quando uma tela mudar de caminho, atualize primeiro o diagrama de lá.</p>
+      </div>
+    </section>
+
+    <section class="block" id="app">
+      <h2>O app em um minuto</h2>
+      <div class="prose">
+        <p>O Finance App é um controle financeiro para uma pessoa ou para um grupo, como uma casa ou um casal. Tudo mora dentro de uma <strong>carteira</strong>. Cada conta nova já nasce com uma carteira pessoal e doze categorias prontas, e pode criar carteiras compartilhadas e convidar outras pessoas.</p>
+        <p>Dentro da carteira, a pessoa registra <strong>lançamentos</strong> (despesas, receitas e compras parceladas), acompanha <strong>cartões</strong> e o ciclo das <strong>faturas</strong>, organiza <strong>contas a pagar</strong> e <strong>assinaturas</strong> recorrentes, e define um <strong>limite mensal por categoria</strong>. O <strong>Painel</strong> resume o mês e leva a cada uma dessas áreas.</p>
+        <p>O app é instalável (PWA), funciona em parte sem conexão, com uma fila de alterações, e avisa por notificação no app, por email e no aparelho.</p>
+      </div>
+      <div class="parts">
+        <a href="#parte-1"><small>Parte I</small>Entrar e se organizar<span>Acesso, carteiras, convites</span></a>
+        <a href="#parte-2"><small>Parte II</small>Circular pelo app<span>Navegação, notificações, Painel</span></a>
+        <a href="#parte-3"><small>Parte III</small>Controlar o dinheiro<span>Lançamentos, cartões, contas, assinaturas, categorias</span></a>
+        <a href="#parte-4"><small>Parte IV</small>Cuidar da conta<span>Perfil, senha, sessões, exclusão</span></a>
+      </div>
+    </section>
+
+    <section class="block" id="conceitos">
+      <h2>Conceitos</h2>
+      <p class="lead">As palavras que aparecem em todas as jornadas, no sentido que o app dá a elas.</p>
+      <dl class="glossary">
+        <div><dt>Carteira</dt><dd>O espaço onde moram os dados. Toda conta tem uma pessoal; as compartilhadas têm uma dona e membros.</dd></div>
+        <div><dt>Dona e membro</dt><dd>A dona edita, exclui e convida. O membro usa os dados e pode sair da carteira.</dd></div>
+        <div><dt>Lançamento</dt><dd>Uma despesa ou receita com valor, data, categoria e forma de pagamento. Na tela, "transação".</dd></div>
+        <div><dt>Compra parcelada</dt><dd>Um plano que gera uma parcela por mês. Excluir uma parcela cancela o plano inteiro.</dd></div>
+        <div><dt>Fatura</dt><dd>O ciclo de um cartão entre dois fechamentos. Pagar a fatura não cria despesa: as compras já foram lançadas.</dd></div>
+        <div><dt>Conta a pagar</dt><dd>Um modelo recorrente (luz, aluguel) que gera parcelas. Pagar uma parcela cria a despesa.</dd></div>
+        <div><dt>Assinatura</dt><dd>Uma cobrança recorrente que vira lançamento sozinha na data certa.</dd></div>
+        <div><dt>Orçamento</dt><dd>O limite mensal de uma categoria de despesa. Não tem tela própria: mora na categoria.</dd></div>
+      </dl>
+    </section>
+
+    <section class="block" id="arquitetura">
+      <h2>Como o app funciona por dentro</h2>
+      <p class="lead">O mínimo de arquitetura para entender por que os fluxos fazem o que fazem.</p>
+      <ol class="steps">
+        <li><div><strong>Tudo o que decide acesso roda no navegador.</strong> Não há <code>middleware.ts</code>, <code>proxy.ts</code> nem rotas em <code>src/app/api</code>. A sessão é do <code>supabase-js</code>, e quem manda para o login é o componente <code>AuthGuard</code>.</div></li>
+        <li><div><strong>A proteção real dos dados é o banco.</strong> As políticas de RLS do Supabase decidem o que cada pessoa lê e grava. O <code>AuthGuard</code> só decide qual tela aparece.</div></li>
+        <li><div><strong>Operações compostas são RPCs.</strong> Criar carteira, pagar conta e criar compra parcelada são funções no Postgres, chamadas com <code>supabase.rpc()</code>.</div></li>
+        <li><div><strong>O que precisa de segredo ou de terceiros é Edge Function.</strong> Convites por email, notificações, push, sessões de aparelho e exclusão de conta.</div></li>
+        <li><div><strong>O que depende do calendário roda duas vezes.</strong> Um cron chama <code>run-recurring-billing</code>, e o Painel recupera o que faltou com <code>catch_up_recurring_billing</code> ao abrir.</div></li>
+      </ol>
+    </section>
+
+    <section class="block" id="leitura">
+      <h2>Como ler os fluxogramas</h2>
+      <p class="lead">A forma e a cor de cada nó dizem o que ele é. O texto da seta é a ação da pessoa ou a condição que escolheu aquele caminho.</p>
+      <div class="legend">
+        <div><i class="shape s-route"></i><p><b>Rota ou página</b><span>Um endereço do app, como <code>/login</code></span></p></div>
+        <div><i class="shape s-dialog"></i><p><b>Diálogo ou estado</b><span>Modal, folha, popover, menu, mensagem</span></p></div>
+        <div><i class="shape s-decision"></i><p><b>Decisão</b><span>Guarda de rota ou condição</span></p></div>
+        <div><i class="shape s-backend"></i><p><b>Backend</b><span>Edge Function, RPC, trigger ou tabela</span></p></div>
+        <div><i class="shape s-journey"></i><p><b>Outra jornada</b><span><code>G5</code> leva à jornada 05</span></p></div>
+      </div>
+      <p>Seta contínua é um caminho que a pessoa percorre. Seta tracejada é um efeito que acontece sem ação direta: um link de email, um cron, uma notificação. Todo diagrama tem um botão <strong>Ampliar</strong>, que abre em tela cheia com zoom.</p>
+    </section>
+
+    <section class="block" id="mapa">
+      <h2>Mapa geral</h2>
+      <p class="lead">As dez jornadas e as pontes entre elas.</p>
+      <div class="prose">
+        <p>O Painel é o centro: é para onde a pessoa vai depois de entrar e de onde saem os atalhos para o resto. Lançamentos é para onde quase tudo desagua, porque assinatura cobrada, parcela e conta paga viram lançamento. Cartões e Contas a pagar se ligam nos dois sentidos pela fatura fechada que ainda não foi paga.</p>
+      </div>
+      <figure>
+        <div class="diagram"><pre class="mermaid">%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#121917","primaryColor":"#18211f","primaryTextColor":"#e8efec","primaryBorderColor":"#3b4a45","lineColor":"#6c7a75","textColor":"#c9d4d0","edgeLabelBackground":"#121917","fontFamily":"Inter, system-ui, sans-serif","fontSize":"14px"},"flowchart":{"useMaxWidth":true,"curve":"basis","padding":12}}}%%
+flowchart LR
+    start(["Abrir o app"]) --&gt; boot{"Tem sessão?"}
+    boot --&gt;|"não"| G1(("G1 Acesso"))
+    boot --&gt;|"sim"| G4(("G4 Painel"))
+    G1 --&gt;|"entrou"| G4
+    G1 --&gt;|"link de convite"| G2(("G2 Carteiras"))
+    G2 --&gt;|"convite aceito"| G4
+
+    G3(("G3 Navegação global")) --- G4
+    G3 --&gt; G5(("G5 Lançamentos"))
+    G3 --&gt; G6(("G6 Cartões"))
+    G3 --&gt; G7(("G7 Contas a pagar"))
+    G3 --&gt; G8(("G8 Assinaturas"))
+    G3 --&gt; G9(("G9 Categorias"))
+    G3 --&gt; G2
+    G3 --&gt; G10(("G10 Conta"))
+
+    G4 --&gt;|"lançamento, parcela, assinatura"| G5
+    G4 --&gt;|"fatura do mês"| G6
+    G4 --&gt;|"conta prevista"| G7
+    G4 --&gt;|"despesas por categoria"| G9
+
+    G6 --&gt;|"ver transações do cartão"| G5
+    G6 --&gt;|"gasto por categoria"| G9
+    G6 &lt;--&gt;|"fatura fechada em aberto"| G7
+    G7 --&gt;|"pagar conta cria despesa"| G5
+    G8 --&gt;|"cobrança vira lançamento"| G5
+    G9 --&gt;|"ver em transações"| G5
+    G5 --&gt;|"gerenciar categorias"| G9
+    G5 --&gt;|"cadastrar cartão"| G6
+
+    G10 --&gt;|"sair ou excluir conta"| G1
+
+    classDef route fill:#14231f,stroke:#52c49c,color:#e8efec
+    classDef dialog fill:#1a2220,stroke:#5b6a65,color:#dfe7e4
+    classDef decision fill:#2a2415,stroke:#e2b85e,color:#f3e6c6
+    classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
+    classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
+    class start dialog
+    class boot decision
+    class G1,G4,G2,G3,G5,G6,G7,G8,G9,G10 journey</pre></div>
+        <figcaption><strong>Figura 0 · Mapa geral das jornadas</strong></figcaption>
+      </figure>
+    </section>
+
+    <!-- ============ PARTE I ============ -->
+    <div class="part-head" id="parte-1">
+      <p class="eyebrow">Parte I</p>
+      <h2>Entrar e se organizar</h2>
+      <p>Antes de mexer em dinheiro, a pessoa precisa de uma conta e de uma carteira. Esta parte cobre o que acontece do primeiro acesso até ter uma carteira compartilhada com outras pessoas.</p>
+    </div>
+
+    <section class="block" id="j1">
+      <p class="eyebrow">Jornada 01</p>
+      <h2>Acesso</h2>
+      <p class="lead">Entrar, criar conta, recuperar a senha e sair.</p>
+      <dl class="summary">
+        <div><dt>Objetivo</dt><dd>Ter uma sessão válida e chegar à tela certa.</dd></div>
+        <div><dt>Começa em</dt><dd><code>/</code>, <code>/login</code>, <code>/register</code> ou um link de email</dd></div>
+        <div><dt>Termina em</dt><dd>O Painel ou a rota guardada em <code>next</code></dd></div>
+        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j2">02 Carteiras</a><a class="chip" href="#j4">04 Painel</a><a class="chip" href="#j10">10 Conta</a></dd></div>
+      </dl>
+      <h3>Como funciona</h3>
+      <ol class="steps">
+        <li><div><strong>Abertura.</strong> Em <code>/</code>, o app espera a sessão carregar e manda para <code>/dashboard</code> ou para <code>/login</code>.</div></li>
+        <li><div><strong>Guarda.</strong> Qualquer rota do app sem sessão vai para <code>/login?next=rota</code>, e depois de entrar a pessoa volta para onde estava. A única rota pública dentro do app é a do convite.</div></li>
+        <li><div><strong>Login.</strong> Email e senha, ou Google. Erro fica na tela com mensagem em português; sucesso segue o <code>next</code> ou vai ao Painel.</div></li>
+        <li><div><strong>Cadastro.</strong> Nome, email, telefone e uma senha forte, com checklist ao vivo. O banco cria sozinho o perfil, a carteira pessoal e doze categorias. Sem sessão imediata, a pessoa vê "Confirme seu email".</div></li>
+        <li><div><strong>Senha.</strong> Há dois caminhos: um código digitado em <code>/forgot-password</code> e um link que abre <code>/reset-password</code>. Os dois terminam no login.</div></li>
+        <li><div><strong>Saída.</strong> Sair limpa sessão, caches, fila offline e push, e o <code>AuthGuard</code> faz o resto. Uma sessão encerrada em outro aparelho sai do mesmo jeito na próxima abertura.</div></li>
+      </ol>
+      <figure>
+        <div class="diagram"><pre class="mermaid">%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#121917","primaryColor":"#18211f","primaryTextColor":"#e8efec","primaryBorderColor":"#3b4a45","lineColor":"#6c7a75","textColor":"#c9d4d0","edgeLabelBackground":"#121917","fontFamily":"Inter, system-ui, sans-serif","fontSize":"14px"},"flowchart":{"useMaxWidth":true,"curve":"basis","padding":12}}}%%
+flowchart TD
+    root["/"] --&gt; loading{"Sessão carregada?"}
+    loading --&gt;|"carregando"| bootscreen(["Tela de abertura"])
+    loading --&gt;|"com usuário"| dash["/dashboard"]
+    loading --&gt;|"sem usuário"| login["/login"]
+
+    protected["Qualquer rota do app"] --&gt; guard{"AuthGuard: tem usuário?"}
+    guard --&gt;|"sim"| page(["Renderiza a página"])
+    guard --&gt;|"não, e é /invites/accept"| page
+    guard --&gt;|"não"| loginNext["/login?next=rota atual"]
+
+    login --&gt;|"email e senha"| signin[("signInWithPassword")]
+    signin --&gt;|"erro"| loginErr(["Alerta em português"]) --&gt; login
+    signin --&gt;|"sucesso"| nextOk{"Tem next seguro?"}
+    nextOk --&gt;|"sim"| back["Rota do next"]
+    nextOk --&gt;|"não"| dash
+    login --&gt;|"Google"| oauth[("OAuth Google")] --&gt;|"tokens no hash da URL"| nextOk
+    login --&gt;|"Esqueceu a senha?"| forgot["/forgot-password"]
+    login --&gt;|"Criar conta"| register["/register?next"]
+
+    register --&gt;|"nome, email, telefone, senha"| valid{"Senha forte e campos válidos?"}
+    valid --&gt;|"não"| register
+    valid --&gt;|"sim"| signup[("signUp")]
+    signup --&gt;|"erro"| regErr(["Alerta"]) --&gt; register
+    signup --&gt;|"sucesso"| trigger[("Trigger handle_new_user: perfil, carteira pessoal, 12 categorias")]
+    trigger --&gt; hasSession{"Voltou com sessão e next?"}
+    hasSession --&gt;|"sim"| back
+    hasSession --&gt;|"não"| confirm(["Confirme seu email"])
+    confirm --&gt;|"Ir para login"| login
+    confirm -.-&gt;|"link do email"| nextOk
+    register --&gt;|"Google"| oauth
+    register --&gt;|"Entrar"| login
+
+    classDef route fill:#14231f,stroke:#52c49c,color:#e8efec
+    classDef dialog fill:#1a2220,stroke:#5b6a65,color:#dfe7e4
+    classDef decision fill:#2a2415,stroke:#e2b85e,color:#f3e6c6
+    classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
+    classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
+    class root,dash,login,protected,loginNext,back,forgot,register route
+    class bootscreen,page,loginErr,regErr,confirm dialog
+    class loading,guard,nextOk,valid,hasSession decision
+    class signin,oauth,signup,trigger backend</pre></div>
+        <figcaption><strong>Figura 1a · Entrada, login e cadastro</strong></figcaption>
+      </figure>
+      <figure>
+        <div class="diagram"><pre class="mermaid">%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#121917","primaryColor":"#18211f","primaryTextColor":"#e8efec","primaryBorderColor":"#3b4a45","lineColor":"#6c7a75","textColor":"#c9d4d0","edgeLabelBackground":"#121917","fontFamily":"Inter, system-ui, sans-serif","fontSize":"14px"},"flowchart":{"useMaxWidth":true,"curve":"basis","padding":12}}}%%
+flowchart TD
+    forgot["/forgot-password: passo email"] --&gt;|"Enviar token"| resetMail[("resetPasswordForEmail")]
+    resetMail --&gt;|"erro"| forgotErr(["Mensagem crua do Supabase"]) --&gt; forgot
+    resetMail --&gt;|"sucesso"| code(["Passo reset: código e nova senha"])
+    code --&gt;|"Voltar"| forgot
+    code --&gt;|"Redefinir"| verify[("setSession, senão verifyOtp recovery; depois updateUser")]
+    verify --&gt;|"erro"| code
+    verify --&gt;|"sucesso"| done(["Senha atualizada"]) --&gt;|"3 s"| login["/login"]
+
+    mailLink["Link do email"] --&gt; reset["/reset-password#access_token"]
+    reset --&gt; token{"Token válido no hash?"}
+    token --&gt;|"não"| expired(["Link expirado ou inválido"])
+    expired --&gt;|"Solicitar novo link"| forgot
+    expired --&gt;|"Voltar ao login"| login
+    token --&gt;|"sim"| newPass(["Nova senha"]) --&gt; update[("setSession e updateUser")]
+    update --&gt;|"sucesso"| done
+
+    menus(["Menu do usuário, menu da conta no mobile ou /account"]) --&gt;|"Sair"| signout[("Limpa sessão, React Query, IndexedDB, fila offline, push e caches do SW; signOut")]
+    signout --&gt; guard{"AuthGuard sem usuário"}
+    guard --&gt; loginNext["/login?next=página onde estava"]
+
+    other(["Sessão encerrada em outro aparelho"]) --&gt; check[("Edge sessions: sessão revogada")]
+    check --&gt;|"ao abrir o app"| signout
+
+    classDef route fill:#14231f,stroke:#52c49c,color:#e8efec
+    classDef dialog fill:#1a2220,stroke:#5b6a65,color:#dfe7e4
+    classDef decision fill:#2a2415,stroke:#e2b85e,color:#f3e6c6
+    classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
+    classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
+    class forgot,login,mailLink,reset,loginNext route
+    class forgotErr,code,done,expired,newPass,menus,other dialog
+    class token,guard decision
+    class resetMail,verify,update,signout,check backend</pre></div>
+        <figcaption><strong>Figura 1b · Senha e saída</strong></figcaption>
+      </figure>
+      <h3>Regras técnicas</h3>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Bootstrap</td><td><code>/</code> manda para <code>/dashboard</code> ou <code>/login</code> depois de a sessão carregar</td><td><code>src/app/page-client.tsx</code></td></tr><tr><td>Guarda</td><td>Toda rota de <code>(app)</code> sem usuário vai para <code>/login?next=</code> com <code>replace</code>; <code>/invites/accept</code> é a exceção</td><td><code>src/components/layout/auth-guard.tsx</code></td></tr><tr><td><code>next</code></td><td>Só caminho interno começando com <code>/</code>; o padrão é <code>/dashboard</code></td><td><code>src/lib/auth-return-path.ts</code></td></tr><tr><td>Rotas <code>(auth)</code></td><td>Sem guarda: quem já entrou também abre <code>/login</code> e <code>/register</code></td><td><code>src/app/(auth)/</code></td></tr><tr><td>Cadastro</td><td>Senha com 8+, minúscula, maiúscula, número e símbolo</td><td><code>src/components/signup-form.tsx</code></td></tr><tr><td>Primeira conta</td><td>Trigger <code>on_auth_user_created</code> → <code>handle_new_user</code> cria perfil, carteira "Carteira pessoal de Nome" e 7 categorias de despesa + 5 de receita</td><td><code>supabase/migrations/00000000000000_baseline.sql</code></td></tr><tr><td>Sessões</td><td>Ao entrar registra o aparelho; ao abrir confere se foi revogado</td><td><code>src/components/providers.tsx</code>, edge <code>sessions</code></td></tr><tr><td>Sair</td><td>Não navega: limpa tudo e deixa o <code>AuthGuard</code> redirecionar</td><td><code>src/components/providers.tsx</code></td></tr></tbody></table></div>
+      <div class="callout gap">
+        <p class="label">Pontos de atenção</p>
+        <ul>
+          <li><code>/login</code> e <code>/register</code> abrem mesmo para quem já entrou.</li>
+          <li>Quem já voltou do cadastro com sessão ainda pode ver "Confirme seu email".</li>
+          <li>Nenhuma tela leva ao fluxo por link, e os erros de senha aparecem em inglês.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="block" id="j2">
+      <p class="eyebrow">Jornada 02</p>
+      <h2>Carteiras e colaboração</h2>
+      <p class="lead">Escolher onde os dados moram e trazer outras pessoas para dentro.</p>
+      <dl class="summary">
+        <div><dt>Objetivo</dt><dd>Estar na carteira certa, com as pessoas certas.</dd></div>
+        <div><dt>Começa em</dt><dd>Seletor de carteira, <code>/members</code>, <code>/settings</code> ou um link de convite</dd></div>
+        <div><dt>Termina em</dt><dd>Carteira atual trocada ou convite aceito</dd></div>
+        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j1">01 Acesso</a><a class="chip" href="#j3">03 Navegação</a><a class="chip" href="#j4">04 Painel</a></dd></div>
+      </dl>
+      <h3>Como funciona</h3>
+      <ol class="steps">
+        <li><div><strong>Carteira atual.</strong> O app lembra a última escolhida em <code>user_settings</code>. Se ela não vale mais, usa a primeira, que é sempre a pessoal.</div></li>
+        <li><div><strong>Trocar e criar.</strong> O seletor troca de carteira sem sair da página. "Criar carteira" pede nome, ícone e cor, e a nova já vira a atual.</div></li>
+        <li><div><strong>Convidar.</strong> Só a dona convida: por email ou por link copiável. Ela também reenvia, revoga e remove membros.</div></li>
+        <li><div><strong>Aceitar.</strong> O link abre <code>/invites/accept</code>. Sem sessão, a pessoa entra ou cria conta e volta ao convite pelo <code>next</code>. Com sessão, o convite é aceito e a carteira convidada vira a atual.</div></li>
+        <li><div><strong>Configurar.</strong> Em <code>/settings</code>, a dona edita ou exclui a carteira, e o membro pode sair dela. Na mesma tela ficam a instalação do app e as preferências de notificação.</div></li>
+      </ol>
+      <figure>
+        <div class="diagram"><pre class="mermaid">%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#121917","primaryColor":"#18211f","primaryTextColor":"#e8efec","primaryBorderColor":"#3b4a45","lineColor":"#6c7a75","textColor":"#c9d4d0","edgeLabelBackground":"#121917","fontFamily":"Inter, system-ui, sans-serif","fontSize":"14px"},"flowchart":{"useMaxWidth":true,"curve":"basis","padding":12}}}%%
+flowchart TD
+    load[("fetch-workspaces-data: carteiras e convites pendentes")] --&gt; current{"user_settings.current_workspace_id válido?"}
+    current --&gt;|"sim"| use(["Carteira atual"])
+    current --&gt;|"não"| first(["Primeira carteira, a pessoal"]) --&gt; save[("Grava em user_settings")] --&gt; use
+
+    switcher(["Seletor de carteira: lateral ou topo mobile"]) --&gt;|"escolher carteira"| save2[("Grava em user_settings")] --&gt; same(["Continua na mesma página, dados da nova carteira"])
+    switcher --&gt;|"convite pendente"| accept(("G2b Aceitar convite"))
+    switcher --&gt;|"Criar carteira"| createDlg(["Nome, ícone, cor"])
+    createDlg --&gt;|"Salvar"| createRpc[("RPC create_shared_workspace")] --&gt; newCurrent(["Nova carteira vira a atual"])
+    createDlg --&gt;|"Cancelar"| switcher
+
+    settings["/settings"] --&gt; owner{"É dona da carteira?"}
+    owner --&gt;|"sim"| edit(["Editar nome, ícone, cor"])
+    owner --&gt;|"sim, e não é pessoal"| del(["Excluir carteira: digitar o nome"])
+    del --&gt; impact[("RPC get_workspace_delete_impact")]
+    del --&gt;|"Excluir"| delRpc[("RPC delete_workspace")] --&gt; fallback(["Se era a atual, volta para a pessoal"])
+    owner --&gt;|"não"| leave(["Sair da carteira: confirmação"]) --&gt;|"Sair"| fallback
+    settings --&gt; pwa(["Instalar app: folha de instalação"])
+    settings --&gt; notif(["Preferências de notificação: canais e tópicos"])
+    settings -.-&gt;|"sem carteira"| empty(["Crie ou entre numa carteira"])
+
+    classDef route fill:#14231f,stroke:#52c49c,color:#e8efec
+    classDef dialog fill:#1a2220,stroke:#5b6a65,color:#dfe7e4
+    classDef decision fill:#2a2415,stroke:#e2b85e,color:#f3e6c6
+    classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
+    classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
+    class settings route
+    class use,first,switcher,same,createDlg,newCurrent,edit,del,fallback,leave,pwa,notif,empty dialog
+    class current,owner decision
+    class load,save,save2,createRpc,impact,delRpc backend
+    class accept journey</pre></div>
+        <figcaption><strong>Figura 2a · Trocar, criar e ajustar carteira</strong></figcaption>
+      </figure>
+      <figure>
+        <div class="diagram"><pre class="mermaid">%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#121917","primaryColor":"#18211f","primaryTextColor":"#e8efec","primaryBorderColor":"#3b4a45","lineColor":"#6c7a75","textColor":"#c9d4d0","edgeLabelBackground":"#121917","fontFamily":"Inter, system-ui, sans-serif","fontSize":"14px"},"flowchart":{"useMaxWidth":true,"curve":"basis","padding":12}}}%%
+flowchart TD
+    members["/members"] --&gt; isOwner{"É dona?"}
+    isOwner --&gt;|"não"| readonly(["Alerta e campos desativados"])
+    isOwner --&gt;|"sim"| actions(["Seção Convidar"])
+    actions --&gt;|"convidar por email"| create[("Edge workspace-invites-create")]
+    create --&gt;|"carteira pessoal"| rejected(["Servidor recusa: carteira pessoal não se compartilha"])
+    create --&gt;|"sucesso"| mail(["Email com /invites/accept?token=..."])
+    actions --&gt;|"gerar link"| link(["Link copiável, substitui o anterior"])
+    actions --&gt;|"reenviar"| resend[("Edge workspace-invites-resend")]
+    actions --&gt;|"revogar"| revoke(["Confirmação"])
+    actions --&gt;|"remover membro"| remove(["Confirmação"])
+
+    mail --&gt; acceptPage["/invites/accept?token="]
+    link --&gt; acceptPage
+    picker(["Convite no seletor de carteira"]) --&gt; acceptById["/invites/accept?invite=id"]
+    acceptById --&gt; hasToken
+    acceptPage --&gt; hasToken{"Tem token ou id?"}
+    hasToken --&gt;|"não"| invalid(["Convite inválido"])
+    hasToken --&gt;|"sim"| logged{"Tem sessão?"}
+    logged --&gt;|"não"| gate(["Cartão: Entrar ou Criar conta"])
+    gate --&gt;|"Entrar"| login(("G1 /login?next=convite"))
+    gate --&gt;|"Criar conta"| register(("G1 /register?next=convite"))
+    login -.-&gt;|"volta pelo next"| acceptPage
+    register -.-&gt;|"volta pelo next"| acceptPage
+    logged --&gt;|"sim"| acceptFn[("Edge workspace-invites-accept")]
+    acceptFn --&gt;|"erro: usado, expirado, outro email"| fail(["Mensagem e Tentar após entrar"])
+    acceptFn --&gt;|"sucesso"| switched(["Atualiza carteiras e troca para a convidada"])
+    switched --&gt;|"Ir para o Dashboard"| dash(("G4 Painel"))
+
+    classDef route fill:#14231f,stroke:#52c49c,color:#e8efec
+    classDef dialog fill:#1a2220,stroke:#5b6a65,color:#dfe7e4
+    classDef decision fill:#2a2415,stroke:#e2b85e,color:#f3e6c6
+    classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
+    classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
+    class members,acceptPage,acceptById route
+    class readonly,actions,rejected,mail,link,revoke,remove,picker,invalid,gate,fail,switched dialog
+    class isOwner,hasToken,logged decision
+    class create,resend,acceptFn backend
+    class login,register,dash journey</pre></div>
+        <figcaption><strong>Figura 2b · Convidar e aceitar convite</strong></figcaption>
+      </figure>
+      <h3>Regras técnicas</h3>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Carteira atual</td><td><code>user_settings.current_workspace_id</code>; inválida cai na primeira, com a pessoal ordenada antes</td><td><code>src/lib/queries/fetch-workspaces-data.ts</code></td></tr><tr><td>Criar e excluir</td><td>RPCs <code>create_shared_workspace</code>, <code>get_workspace_delete_impact</code>, <code>delete_workspace</code></td><td><code>src/components/workspace-provider.tsx</code></td></tr><tr><td>Sair da carteira</td><td>Diálogo próprio de confirmação</td><td><code>src/components/settings/workspace-leave-dialog.tsx</code></td></tr><tr><td>Membros</td><td>RPC <code>workspace_member_directory</code>; só a dona convida, revoga e remove</td><td><code>src/app/(app)/members/page-client.tsx</code></td></tr><tr><td>Convite</td><td>Edges <code>workspace-invites-create</code>, <code>-resend</code>, <code>-accept</code>; o email é montado no servidor</td><td><code>supabase/functions/_shared/workspace-invite-email.ts</code></td></tr><tr><td>Página de convite</td><td>Fica no grupo <code>(app)</code> e é pública pelo <code>AuthGuard</code></td><td><code>src/app/(app)/invites/accept/page-client.tsx</code></td></tr></tbody></table></div>
+      <div class="callout gap">
+        <p class="label">Pontos de atenção</p>
+        <ul>
+          <li>Quem abre o convite sem sessão vê a lateral e o topo do app em volta dele.</li>
+          <li>A carteira pessoal mostra o formulário de convite, e o servidor só recusa depois do envio.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ PARTE II ============ -->
+    <div class="part-head" id="parte-2">
+      <p class="eyebrow">Parte II</p>
+      <h2>Circular pelo app</h2>
+      <p>O que está sempre à mão, em qualquer tela, e a tela que resume o mês. É por aqui que a pessoa chega às jornadas da Parte III.</p>
+    </div>
+
+    <section class="block" id="j3">
+      <p class="eyebrow">Jornada 03</p>
+      <h2>Navegação global</h2>
+      <p class="lead">A casca do app, o botão de adicionar e as notificações.</p>
+      <dl class="summary">
+        <div><dt>Objetivo</dt><dd>Chegar a qualquer área e registrar algo sem trocar de tela.</dd></div>
+        <div><dt>Começa em</dt><dd>Qualquer rota do app</dd></div>
+        <div><dt>Termina em</dt><dd>Outra rota, um formulário global ou o destino de uma notificação</dd></div>
+        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j5">05</a><a class="chip" href="#j6">06</a><a class="chip" href="#j7">07</a><a class="chip" href="#j8">08</a><a class="chip" href="#j9">09</a><a class="chip" href="#j10">10</a></dd></div>
+      </dl>
+      <h3>Como funciona</h3>
+      <ol class="steps">
+        <li><div><strong>Casca.</strong> No desktop, uma lateral recolhível lista todas as áreas. No telefone, a barra inferior traz Painel, Transações, Categorias, o botão "+" e o menu da conta com o resto.</div></li>
+        <li><div><strong>Adicionar.</strong> O "+" abre despesa, parcelada, receita ou assinatura por cima da tela atual. Ao salvar, as listas abertas recarregam e a pessoa continua onde estava.</div></li>
+        <li><div><strong>Notificações.</strong> Clicar marca como lida e navega para o lugar do assunto: o cartão, a categoria, a conta, o lançamento de outro membro.</div></li>
+        <li><div><strong>Endereços antigos.</strong> Rotas de versões anteriores redirecionam no servidor, e um endereço desconhecido cai na página 404.</div></li>
+      </ol>
+      <figure>
+        <div class="diagram"><pre class="mermaid">%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#121917","primaryColor":"#18211f","primaryTextColor":"#e8efec","primaryBorderColor":"#3b4a45","lineColor":"#6c7a75","textColor":"#c9d4d0","edgeLabelBackground":"#121917","fontFamily":"Inter, system-ui, sans-serif","fontSize":"14px"},"flowchart":{"useMaxWidth":true,"curve":"basis","padding":12}}}%%
+flowchart TD
+    shell(["Casca do app"]) --&gt; desktop{"Largura"}
+    desktop --&gt;|"desktop"| sidebar(["Lateral recolhível"])
+    desktop --&gt;|"mobile"| bottom(["Barra inferior: Dashboard, Transações, Categorias, +, conta"])
+
+    sidebar --&gt; nav1["/dashboard"]
+    sidebar --&gt; nav2["/categories"]
+    sidebar --&gt; nav3["/transactions"]
+    sidebar --&gt; nav4["/subscriptions"]
+    sidebar --&gt; nav5["/bills (Beta)"]
+    sidebar --&gt; nav6["/credit-cards"]
+    sidebar --&gt; nav7["/members"]
+    sidebar --&gt; nav8["/settings"]
+    sidebar --&gt; userMenu(["Menu do usuário: tema, Minha conta, Planos, Sair"])
+    bottom --&gt; accountMenu(["Menu da conta: Assinaturas, Contas, Cartões, Membros, Configurações, Conta, Planos, Sair"])
+    userMenu --&gt; G10(("G10 Conta"))
+    accountMenu --&gt; G10
+
+    sidebar --&gt;|"+ Adicionar"| add(["Menu: Despesa, Parcelada, Receita, Assinatura"])
+    bottom --&gt;|"+"| add
+    add --&gt;|"Despesa, Parcelada, Receita"| txForm(("G5b Formulário de transação"))
+    add --&gt;|"Assinatura"| subForm(("G8 Formulário de assinatura"))
+    add -.-&gt;|"formulário global indisponível"| fallback["/transactions?new= ou /subscriptions?new=1"]
+
+    bell(["Sino de notificações"]) --&gt;|"clicar"| read[("Marca como lida")] --&gt; dest{"Tipo da notificação"}
+    dest --&gt;|"href explícito"| explicit["Rota do metadata.href"]
+    dest --&gt;|"category_created"| n1["/categories"]
+    dest --&gt;|"invite_accepted"| n2["/members"]
+    dest --&gt;|"cc_*"| n3["/credit-cards/id"]
+    dest --&gt;|"budget_threshold"| n4["/categories/id"]
+    dest --&gt;|"bill_reminder"| n5["/bills"]
+    dest --&gt;|"member_expense_created"| n6["/transactions?txn=id"]
+    dest --&gt;|"outros"| n7["/dashboard"]
+    bell --&gt;|"engrenagem"| nav8
+    bell --&gt;|"marcar lida, excluir, limpar tudo"| bell
+
+    old["Rotas antigas"] --&gt;|"next.config.ts"| redirects["/dashboard/settings → /settings; /wallets → /dashboard; /assets → /credit-cards; /notifications → /dashboard?notifications=1"]
+    unknown["Rota desconhecida"] --&gt; notFound(["404: Ir para o painel ou Página inicial"])
+
+    classDef route fill:#14231f,stroke:#52c49c,color:#e8efec
+    classDef dialog fill:#1a2220,stroke:#5b6a65,color:#dfe7e4
+    classDef decision fill:#2a2415,stroke:#e2b85e,color:#f3e6c6
+    classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
+    classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
+    class nav1,nav2,nav3,nav4,nav5,nav6,nav7,nav8,fallback,explicit,n1,n2,n3,n4,n5,n6,n7,old,redirects,unknown route
+    class shell,sidebar,bottom,userMenu,accountMenu,add,bell,notFound dialog
+    class desktop,dest decision
+    class read backend
+    class G10,txForm,subForm journey</pre></div>
+        <figcaption><strong>Figura 3 · Casca, ações globais e notificações</strong></figcaption>
+      </figure>
+      <h3>Regras técnicas</h3>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Itens de navegação</td><td>Lateral e mobile vêm de configuração, não de JSX solto</td><td><code>src/config/navigation.ts</code>, <code>src/config/mobile-navigation.ts</code></td></tr><tr><td>Formulários globais</td><td>Transação e assinatura montados uma vez na casca; salvar invalida as listas abertas</td><td><code>src/components/layout/global-shell-dialogs-provider.tsx</code></td></tr><tr><td>Destino da notificação</td><td><code>metadata.href</code> seguro vence; senão, o tipo decide. Espelha o servidor para o push</td><td><code>src/lib/notification-href.ts</code>, <code>supabase/functions/_shared/notification-types.ts</code></td></tr><tr><td>Notificações no servidor</td><td>Edges <code>dispatch-notifications</code>, <code>evaluate-budgets</code>, <code>evaluate-credit-card-alerts</code>, <code>evaluate-bills-reminders</code>, <code>credit-card-calendar-alerts</code>, <code>notify-transaction-created</code></td><td><code>supabase/functions/</code></td></tr><tr><td>Push</td><td>Edges <code>push-subscribe</code> e <code>push-unsubscribe</code></td><td><code>supabase/functions/</code></td></tr><tr><td>Redirecionamentos</td><td>Os únicos que acontecem no servidor</td><td><code>next.config.ts</code></td></tr></tbody></table></div>
+      <div class="callout gap">
+        <p class="label">Ponto de atenção</p>
+        <ul><li>A casca expõe abrir convite, nova categoria e novo cartão, mas nenhum botão chama essas ações.</li></ul>
+      </div>
+    </section>
+
+    <section class="block" id="j4">
+      <p class="eyebrow">Jornada 04</p>
+      <h2>Painel</h2>
+      <p class="lead">O resumo do mês e a porta para cada área.</p>
+      <dl class="summary">
+        <div><dt>Objetivo</dt><dd>Saber como está o mês e o que vence em seguida.</dd></div>
+        <div><dt>Começa em</dt><dd><code>/dashboard</code>, depois de entrar</dd></div>
+        <div><dt>Termina em</dt><dd>O detalhe de um lançamento ou a área de origem de um evento</dd></div>
+        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j5">05 Lançamentos</a><a class="chip" href="#j6">06 Cartões</a><a class="chip" href="#j7">07 Contas</a><a class="chip" href="#j9">09 Categorias</a></dd></div>
+      </dl>
+      <h3>Como funciona</h3>
+      <ol class="steps">
+        <li><div><strong>Ao abrir.</strong> O Painel gera as cobranças de assinaturas e parcelas que ainda não viraram lançamento e recarrega as listas quando encontra alguma.</div></li>
+        <li><div><strong>Indicadores.</strong> Despesas, receitas, resultado e faturas abertas do mês escolhido, comparados ao mês anterior.</div></li>
+        <li><div><strong>Calendário.</strong> Cada dia mostra o que venceu ou vai vencer. Um evento já lançado abre o detalhe; um previsto abre uma prévia com "Ver origem", que leva à assinatura, à parcela, ao cartão ou à conta.</div></li>
+        <li><div><strong>Blocos de atalho.</strong> Despesas por categoria, faturas do mês e compras parceladas, cada um com o caminho para a área completa.</div></li>
+      </ol>
+      <figure>
+        <div class="diagram"><pre class="mermaid">%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#121917","primaryColor":"#18211f","primaryTextColor":"#e8efec","primaryBorderColor":"#3b4a45","lineColor":"#6c7a75","textColor":"#c9d4d0","edgeLabelBackground":"#121917","fontFamily":"Inter, system-ui, sans-serif","fontSize":"14px"},"flowchart":{"useMaxWidth":true,"curve":"basis","padding":12}}}%%
+flowchart TD
+    dash["/dashboard"] --&gt; state{"Carteiras carregadas?"}
+    state --&gt;|"erro"| retry(["Tentar novamente"]) --&gt; dash
+    state --&gt;|"sem carteira"| pick(["Escolha uma carteira na lateral"])
+    state --&gt;|"ok"| catchup[("RPC catch_up_recurring_billing")]
+    catchup --&gt;|"gerou lançamentos"| invalidate(["Recarrega transações, assinaturas e parcelas"])
+    state --&gt;|"ok"| blocks(["Seletor de mês, KPIs: despesas, receitas, resultado, faturas abertas"])
+
+    blocks --&gt; calendar(["Calendário de pagamentos"])
+    calendar --&gt;|"dia com eventos"| dayPop(["Popover do dia"])
+    dayPop --&gt;|"evento já lançado"| detail(("G5b Detalhe da transação"))
+    dayPop --&gt;|"evento previsto"| preview(["Prévia do pagamento"])
+    preview --&gt;|"Ver origem: assinatura"| s["/transactions?sub=id"]
+    preview --&gt;|"Ver origem: parcela"| p["/transactions?plan=id"]
+    preview --&gt;|"Ver origem: fechamento ou vencimento"| c["/credit-cards/id"]
+    preview --&gt;|"Ver origem: conta"| b["/bills?detail=id"]
+
+    blocks --&gt; donut(["Despesas por categoria"]) --&gt;|"Ver categorias"| cat(("G9 /categories"))
+    blocks --&gt; invoices(["Faturas do mês"])
+    invoices --&gt;|"linha do cartão"| c
+    invoices --&gt;|"Ver cartões ou Ir para cartões"| cards(("G6 /credit-cards"))
+    blocks --&gt; inst(["Compras parceladas"])
+    inst --&gt;|"linha"| detail
+    inst --&gt;|"Ver em transações"| instList["/transactions?type=expense&amp;inst=1"]
+
+    s --&gt; G5(("G5 Lançamentos"))
+    p --&gt; G5
+    instList --&gt; G5
+    c --&gt; G6(("G6 Cartões"))
+    b --&gt; G7(("G7 Contas a pagar"))
+
+    classDef route fill:#14231f,stroke:#52c49c,color:#e8efec
+    classDef dialog fill:#1a2220,stroke:#5b6a65,color:#dfe7e4
+    classDef decision fill:#2a2415,stroke:#e2b85e,color:#f3e6c6
+    classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
+    classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
+    class dash,s,p,c,b,instList route
+    class retry,pick,invalidate,blocks,calendar,dayPop,preview,donut,invoices,inst dialog
+    class state decision
+    class catchup backend
+    class detail,cat,cards,G5,G6,G7 journey</pre></div>
+        <figcaption><strong>Figura 4 · Painel</strong></figcaption>
+      </figure>
+      <h3>Regras técnicas</h3>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Dados</td><td>Um hook agrega os blocos por mês e carteira</td><td><code>src/components/dashboard/use-dashboard-data.ts</code></td></tr><tr><td>Cobranças atrasadas</td><td><code>catch_up_recurring_billing</code> roda uma vez por carteira ao montar; é idempotente com o cron</td><td><code>src/lib/queries/use-recurring-billing-catchup.ts</code></td></tr><tr><td>Calendário</td><td>Eventos: assinatura, parcela, fechamento, vencimento de cartão, vencimento de conta, receita e despesa lançadas</td><td><code>src/components/dashboard/dashboard-payments-calendar.tsx</code></td></tr><tr><td>Prévia</td><td>"Ver origem" monta a rota pelo tipo do evento</td><td><code>src/components/dashboard/dashboard-payment-event-preview-sheet.tsx</code></td></tr></tbody></table></div>
+    </section>
+
+    <!-- ============ PARTE III ============ -->
+    <div class="part-head" id="parte-3">
+      <p class="eyebrow">Parte III</p>
+      <h2>Controlar o dinheiro</h2>
+      <p>O coração do app. As cinco jornadas desta parte produzem e organizam lançamentos, e é por isso que quase todas terminam na Jornada 05.</p>
+    </div>
+
+    <section class="block" id="j5">
+      <p class="eyebrow">Jornada 05</p>
+      <h2>Lançamentos</h2>
+      <p class="lead">Registrar, encontrar, corrigir e apagar despesas e receitas.</p>
+      <dl class="summary">
+        <div><dt>Objetivo</dt><dd>Ter cada movimento de dinheiro registrado e fácil de achar.</dd></div>
+        <div><dt>Começa em</dt><dd><code>/transactions</code>, o "+" global ou um atalho de outra área</dd></div>
+        <div><dt>Termina em</dt><dd>Lançamento salvo, editado ou excluído</dd></div>
+        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j6">06 Cartões</a><a class="chip" href="#j8">08 Assinaturas</a><a class="chip" href="#j9">09 Categorias</a></dd></div>
+      </dl>
+      <h3>Como funciona</h3>
+      <ol class="steps">
+        <li><div><strong>A URL é o filtro.</strong> Tipo, período, forma de pagamento, cartão, categoria, valor, texto, plano e assinatura vivem na URL. É assim que outras áreas mandam a pessoa para uma lista já filtrada.</div></li>
+        <li><div><strong>Lista.</strong> Atalhos de período, painel de filtros, chips removíveis, seleção em lote e páginas de 100 lançamentos. A lista vazia oferece criar ou limpar os filtros, conforme o caso.</div></li>
+        <li><div><strong>Criar.</strong> O formulário muda com o tipo. Despesa no crédito exige escolher um cartão; parcelada pede o número de parcelas e se o valor é total ou por parcela.</div></li>
+        <li><div><strong>Depois de salvar.</strong> O backend avisa os outros membros e confere o orçamento da categoria e os alertas do cartão. Sem conexão, o lançamento entra na fila.</div></li>
+        <li><div><strong>Editar e excluir.</strong> Numa parcela, a pessoa escolhe entre editar só ela ou o plano todo. Excluir uma parcela cancela a compra parcelada inteira.</div></li>
+      </ol>
+      <figure>
+        <div class="diagram"><pre class="mermaid">%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#121917","primaryColor":"#18211f","primaryTextColor":"#e8efec","primaryBorderColor":"#3b4a45","lineColor":"#6c7a75","textColor":"#c9d4d0","edgeLabelBackground":"#121917","fontFamily":"Inter, system-ui, sans-serif","fontSize":"14px"},"flowchart":{"useMaxWidth":true,"curve":"basis","padding":12}}}%%
+flowchart TD
+    entry["/transactions?params"] --&gt; parse{"Parâmetros da URL"}
+    parse --&gt;|"type, inst, preset, from, to, pm, card, cats, uncat, min, max, q, plan, sub"| filters(["Filtros aplicados"])
+    parse --&gt;|"new=1, parcelada, receita"| form(("G5b Formulário"))
+    parse --&gt;|"txn=id"| detail(("G5b Detalhe"))
+
+    filters --&gt; list(["Tabela paginada de 100 em 100"])
+    list --&gt;|"Todas, Despesas, Receitas; 7d, 15d, 30d, Mês"| filters
+    list --&gt;|"Filtros"| panel(["Painel: período, forma, cartões, categorias, valor, descrição, origem"]) --&gt; filters
+    filters --&gt;|"chip ✕ ou limpar tudo"| filters
+    filters -.-&gt;|"grava de volta"| url["URL"]
+
+    list --&gt; empty{"Vazio?"}
+    empty --&gt;|"sem filtros"| newTx(["Nova transação"]) --&gt; form
+    empty --&gt;|"com filtros"| clear(["Limpar filtros"]) --&gt; filters
+
+    list --&gt;|"Nova"| form
+    list --&gt;|"linha"| detail
+    list --&gt;|"lápis"| detailEdit(("G5b Detalhe em edição"))
+    list --&gt;|"lixeira"| delConfirm(("G5b Confirmação de exclusão"))
+    list --&gt;|"caixas de seleção"| selection(["Barra de seleção"])
+    selection --&gt;|"Editar, só 1"| detailEdit
+    selection --&gt;|"Excluir"| bulk(["Exclusão em lote"])
+    selection --&gt;|"Limpar"| list
+
+    classDef route fill:#14231f,stroke:#52c49c,color:#e8efec
+    classDef dialog fill:#1a2220,stroke:#5b6a65,color:#dfe7e4
+    classDef decision fill:#2a2415,stroke:#e2b85e,color:#f3e6c6
+    classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
+    classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
+    class entry,url route
+    class filters,list,panel,newTx,clear,selection,bulk dialog
+    class parse,empty decision
+    class form,detail,detailEdit,delConfirm journey</pre></div>
+        <figcaption><strong>Figura 5a · Lista e filtros</strong></figcaption>
+      </figure>
+      <figure>
+        <div class="diagram"><pre class="mermaid">%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#121917","primaryColor":"#18211f","primaryTextColor":"#e8efec","primaryBorderColor":"#3b4a45","lineColor":"#6c7a75","textColor":"#c9d4d0","edgeLabelBackground":"#121917","fontFamily":"Inter, system-ui, sans-serif","fontSize":"14px"},"flowchart":{"useMaxWidth":true,"curve":"basis","padding":12}}}%%
+flowchart TD
+    open(["Formulário: modal no desktop, folha no mobile"]) --&gt; type{"Tipo"}
+    type --&gt;|"Despesa"| expense(["Valor, descrição, categoria, data, forma de pagamento"])
+    type --&gt;|"Receita"| income(["Valor, descrição, categoria, data"])
+    type --&gt;|"Parcelada"| inst(["Valor total ou por parcela, nº de parcelas, 1ª cobrança"])
+
+    expense --&gt; catPick(["Seletor de categoria"])
+    income --&gt; catPick
+    catPick --&gt;|"Gerenciar categorias"| G9(("G9 /categories"))
+    expense --&gt;|"forma: cartão de crédito"| cardPick(["Seletor de cartão"])
+    cardPick --&gt;|"Cadastrar cartão ou sem cartões"| G6(("G6 /credit-cards"))
+    cardPick -.-&gt;|"sem cartão escolhido"| disabled(["Salvar desativado"])
+
+    expense --&gt;|"Salvar"| saveTx[("Insere transação")]
+    income --&gt;|"Salvar"| saveTx
+    inst --&gt;|"Salvar"| savePlan[("RPC create_workspace_installment_plan")]
+    saveTx --&gt;|"offline"| queued(["Salva na fila offline"])
+    saveTx --&gt;|"erro"| keep(["Aviso; formulário continua aberto"])
+    saveTx --&gt;|"sucesso"| after[("Edges notify-transaction-created, evaluate-budgets, evaluate-credit-card-alerts")]
+    after --&gt; toast(["Transação criada; listas recarregam"])
+    savePlan --&gt;|"sucesso"| toastPlan(["Compra parcelada registrada"])
+    open --&gt;|"Cancelar"| closed(["Fecha e descarta"])
+
+    detail(["Detalhe da transação"]) --&gt; view(["Valor, data, categoria, forma, dica da fatura"])
+    view --&gt;|"é parcela"| planInfo(["Parcela k de n, total, lançado, restante"])
+    view --&gt;|"tem assinatura"| G8(("G8 /subscriptions"))
+    view --&gt;|"⋯ Editar"| editWhat{"É parcela?"}
+    editWhat --&gt;|"não"| editForm(["Editar campos"])
+    editWhat --&gt;|"sim"| scope(["O que editar: esta parcela ou plano da compra"]) --&gt; editForm
+    editForm --&gt;|"Salvar"| updated(["Transação ou plano atualizado"]) --&gt; view
+    editForm --&gt;|"Cancelar"| view
+    view --&gt;|"⋯ Excluir"| confirm(["Excluir transação?"])
+    confirm --&gt;|"Cancelar"| view
+    confirm --&gt;|"Excluir"| isInst{"É parcela?"}
+    isInst --&gt;|"não"| delTx[("Remove transação")] --&gt; deleted(["Transação excluída"])
+    isInst --&gt;|"sim"| cascade[("RPC delete_workspace_installment_plan_cascade")] --&gt; cancelled(["Compra parcelada cancelada"])
+    confirm -.-&gt;|"offline"| queuedDel(["Exclusão enfileirada"])
+
+    classDef route fill:#14231f,stroke:#52c49c,color:#e8efec
+    classDef dialog fill:#1a2220,stroke:#5b6a65,color:#dfe7e4
+    classDef decision fill:#2a2415,stroke:#e2b85e,color:#f3e6c6
+    classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
+    classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
+    class open,expense,income,inst,catPick,cardPick,disabled,queued,keep,toast,toastPlan,closed,detail,view,planInfo,editForm,scope,updated,confirm,deleted,cancelled,queuedDel dialog
+    class type,editWhat,isInst decision
+    class saveTx,savePlan,after,delTx,cascade backend
+    class G9,G6,G8 journey</pre></div>
+        <figcaption><strong>Figura 5b · Criar, editar e excluir</strong></figcaption>
+      </figure>
+      <h3>Regras técnicas</h3>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Parâmetros</td><td>Lidos e gravados na URL; <code>new</code> e <code>txn</code> são consumidos e removidos</td><td><code>src/lib/transactions-list-search-params.ts</code></td></tr><tr><td>Formulário</td><td>Um componente para criar, e o mesmo campo a campo na edição</td><td><code>src/components/transactions/transaction-form-dialog.tsx</code>, <code>transaction-form-use.tsx</code></td></tr><tr><td>Parcelada</td><td>RPC <code>create_workspace_installment_plan</code>; editar o plano não muda parcelas já lançadas</td><td><code>src/components/transactions/transaction-form-persistence.ts</code></td></tr><tr><td>Detalhe</td><td>Mesmo painel no Painel, em Cartões e em Categorias</td><td><code>src/components/transactions/transaction-detail-sheet.tsx</code></td></tr><tr><td>Exclusão</td><td>Parcela cancela o plano inteiro por <code>delete_workspace_installment_plan_cascade</code></td><td><code>src/lib/transactions/mutations.ts</code></td></tr><tr><td>Offline</td><td>Criar e excluir entram na fila; pagar conta exige conexão</td><td><code>src/lib/offline/</code></td></tr><tr><td>Enter</td><td>O <code>Enter</code> na busca do seletor não salva a transação</td><td><code>shouldDeferEnterToWidget</code> em <code>src/components/ui/form.tsx</code></td></tr></tbody></table></div>
+    </section>
+
+    <section class="block" id="j6">
+      <p class="eyebrow">Jornada 06</p>
+      <h2>Cartões e faturas</h2>
+      <p class="lead">Cadastrar cartões e acompanhar cada fatura até ser paga.</p>
+      <dl class="summary">
+        <div><dt>Objetivo</dt><dd>Saber quanto cada cartão deve, quando fecha e quando vence.</dd></div>
+        <div><dt>Começa em</dt><dd><code>/credit-cards</code>, o Painel ou uma notificação de cartão</dd></div>
+        <div><dt>Termina em</dt><dd>Fatura acompanhada ou marcada como paga</dd></div>
+        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j5">05 Lançamentos</a><a class="chip" href="#j7">07 Contas</a><a class="chip" href="#j9">09 Categorias</a></dd></div>
+      </dl>
+      <h3>Como funciona</h3>
+      <ol class="steps">
+        <li><div><strong>Cadastro.</strong> Apelido, número, validade, limite, dia de fechamento, dia de vencimento e bandeira. Dias fora de 1 a 31 ou validade inválida não salvam.</div></li>
+        <li><div><strong>Detalhe.</strong> Cada cartão mostra a fatura do ciclo escolhido, o gasto por categoria, as parcelas em andamento e os últimos lançamentos. Dá para editar, desativar e excluir.</div></li>
+        <li><div><strong>Ciclo da fatura.</strong> Um ciclo futuro é <em>Futura</em>, o atual é <em>Aberta</em>, e um passado fica <em>Não paga</em> até alguém marcar como <em>Paga</em>. Desmarcar devolve a fatura a Contas a pagar.</div></li>
+      </ol>
+      <figure>
+        <div class="diagram"><pre class="mermaid">%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#121917","primaryColor":"#18211f","primaryTextColor":"#e8efec","primaryBorderColor":"#3b4a45","lineColor":"#6c7a75","textColor":"#c9d4d0","edgeLabelBackground":"#121917","fontFamily":"Inter, system-ui, sans-serif","fontSize":"14px"},"flowchart":{"useMaxWidth":true,"curve":"basis","padding":12}}}%%
+flowchart TD
+    list["/credit-cards"] --&gt;|"aba Cartões"| tiles(["Cartões: fatura, fechamento, vencimento, limite"])
+    list --&gt;|"aba Histórico"| chart(["Faturas dos últimos 12 meses"])
+    list --&gt;|"Novo cartão, estado vazio ou ?new=1"| newCard(["Cadastro: apelido, número, validade, limite, fechamento, vencimento, bandeira"])
+    newCard --&gt;|"Salvar"| valid{"Dias 1 a 31 e validade ok?"}
+    valid --&gt;|"não"| newCard
+    valid --&gt;|"sim"| created(["Cartão cadastrado"]) --&gt; list
+    newCard --&gt;|"Cancelar"| list
+    tiles --&gt;|"cartão"| detail["/credit-cards/id"]
+
+    detail --&gt; found{"Cartão existe?"}
+    found --&gt;|"não"| missing(["Ver todos os cartões"]) --&gt; list
+    found --&gt;|"sim"| top(["Dados do cartão"])
+    top --&gt;|"Ver transações neste cartão"| G5(("G5 /transactions?card=id&amp;preset=last30"))
+    top --&gt;|"⋯ Editar"| editCard(["Editar cartão"]) --&gt; top
+    top --&gt;|"⋯ Desativar ou Ativar"| toggle(["Cartão desativado ou ativado"]) --&gt; top
+    top --&gt;|"⋯ Excluir"| delCard(["Excluir cartão?"])
+    delCard --&gt;|"Excluir"| list
+    delCard --&gt;|"Cancelar"| top
+
+    top --&gt; cycle(["Seletor de ciclo da fatura"]) --&gt; status{"Qual ciclo?"}
+    status --&gt;|"futuro"| future(["Futura"])
+    status --&gt;|"atual"| openInv(["Aberta: período, fechamento, uso do limite"])
+    status --&gt;|"passado sem pagamento"| unpaid(["Não paga; vermelha se venceu"])
+    status --&gt;|"passado pago"| paid(["Paga"])
+    unpaid --&gt;|"Marcar como paga"| payRow[("Grava credit_card_invoice_payments")] --&gt; paid
+    paid --&gt;|"Desmarcar pagamento"| undo(["Confirmação: volta para Contas a pagar"])
+    undo --&gt;|"Desmarcar"| unpaid
+    unpaid -.-&gt;|"fechada com valor em aberto"| G7(("G7 Pendentes"))
+
+    top --&gt; byCat(["Gasto por categoria da fatura"]) --&gt;|"linha"| G9(("G9 /categories/id?type=expense&amp;month="))
+    top --&gt; installments(["Parcelas e compromissos"]) --&gt;|"linha"| txDetail(("G5b Detalhe"))
+    top --&gt; recent(["Últimos lançamentos"])
+    recent --&gt;|"linha"| txDetail
+    recent --&gt;|"Ver todas"| G5
+
+    classDef route fill:#14231f,stroke:#52c49c,color:#e8efec
+    classDef dialog fill:#1a2220,stroke:#5b6a65,color:#dfe7e4
+    classDef decision fill:#2a2415,stroke:#e2b85e,color:#f3e6c6
+    classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
+    classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
+    class list,detail route
+    class tiles,chart,newCard,created,missing,top,editCard,toggle,delCard,cycle,future,openInv,unpaid,paid,undo,byCat,installments,recent dialog
+    class valid,found,status decision
+    class payRow backend
+    class G5,G7,G9,txDetail journey</pre></div>
+        <figcaption><strong>Figura 6 · Cartões e ciclo da fatura</strong></figcaption>
+      </figure>
+      <h3>Regras técnicas</h3>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Status no detalhe</td><td><code>Futura</code>, <code>Aberta</code>, <code>Não paga</code>, <code>Paga</code>, pelo ciclo selecionado</td><td><code>src/app/(app)/credit-cards/[cardId]/page-client.tsx</code></td></tr><tr><td>Selo na tabela de transações</td><td><code>Aberta</code>, <code>Fechada</code>, <code>Anterior</code>, <code>Paga</code>; Aberta é verde, Fechada âmbar, Anterior vermelha</td><td><code>src/lib/credit-card-display.ts</code></td></tr><tr><td>Pagamento de fatura</td><td>Linha em <code>credit_card_invoice_payments</code>, sem criar despesa</td><td><code>src/lib/bills/pay-bill-flow.ts</code></td></tr><tr><td>Alertas</td><td>Limite, fechamento e vencimento geram notificações <code>cc_*</code></td><td>edges <code>evaluate-credit-card-alerts</code>, <code>credit-card-calendar-alerts</code></td></tr></tbody></table></div>
+      <div class="callout note">
+        <p class="label">Dois vocabulários de status</p>
+        <p>O detalhe do cartão fala do ciclo (Futura, Aberta, Não paga, Paga). A tabela de lançamentos fala da compra (Aberta, Fechada, Anterior, Paga). As duas escalas existem de propósito e não se misturam.</p>
+      </div>
+    </section>
+
+    <section class="block" id="j7">
+      <p class="eyebrow">Jornada 07</p>
+      <h2>Contas a pagar</h2>
+      <p class="lead">Contas recorrentes e tudo o que está pendente, faturas incluídas. Em beta.</p>
+      <dl class="summary">
+        <div><dt>Objetivo</dt><dd>Não deixar nada vencer sem ser visto.</dd></div>
+        <div><dt>Começa em</dt><dd><code>/bills</code>, o calendário do Painel ou um lembrete</dd></div>
+        <div><dt>Termina em</dt><dd>Parcela paga, ignorada ou conta removida</dd></div>
+        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j5">05 Lançamentos</a><a class="chip" href="#j6">06 Cartões</a><a class="chip" href="#j3">03 Notificações</a></dd></div>
+      </dl>
+      <h3>Como funciona</h3>
+      <ol class="steps">
+        <li><div><strong>Duas abas.</strong> <em>Contas</em> lista os modelos (luz, aluguel), com filtro de ativas. <em>Pendentes</em> lista o que falta pagar, com filtro de atrasadas e próximos 30 dias.</div></li>
+        <li><div><strong>Dois tipos de pendência.</strong> A parcela de uma conta cadastrada e a fatura de cartão que fechou sem ser paga, que aparece aqui sozinha.</div></li>
+        <li><div><strong>Pagar uma conta cria uma despesa.</strong> O pagamento vira lançamento, avança a recorrência e passa pelo orçamento. Exige conexão.</div></li>
+        <li><div><strong>Pagar uma fatura não cria despesa.</strong> As compras já foram lançadas no cartão; a fatura só fica marcada como paga.</div></li>
+        <li><div><strong>Lembretes.</strong> Cada conta pode avisar três dias antes e no dia do vencimento.</div></li>
+      </ol>
+      <figure>
+        <div class="diagram"><pre class="mermaid">%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#121917","primaryColor":"#18211f","primaryTextColor":"#e8efec","primaryBorderColor":"#3b4a45","lineColor":"#6c7a75","textColor":"#c9d4d0","edgeLabelBackground":"#121917","fontFamily":"Inter, system-ui, sans-serif","fontSize":"14px"},"flowchart":{"useMaxWidth":true,"curve":"basis","padding":12}}}%%
+flowchart TD
+    bills["/bills?detail=id"] --&gt;|"detail presente"| sheet(["Painel da conta"])
+    bills --&gt; tabs{"Aba"}
+    tabs --&gt;|"Contas: todas, ativas, inativas"| summary(["Cartões de conta"])
+    tabs --&gt;|"Pendentes: todas, atrasadas, 30 dias"| pending(["Itens pendentes"])
+    bills --&gt;|"Nova conta"| form(["Formulário: nome, categoria, periodicidade, vencimento, valor, início, fim, forma, cartão, lembretes, ativa"])
+    form --&gt;|"Salvar"| saved(["Conta criada ou atualizada"])
+    form --&gt;|"Cancelar"| bills
+
+    bills --&gt; empty{"Vazio?"}
+    empty --&gt;|"nenhuma conta"| form
+    empty --&gt;|"filtro sem resultado"| clear(["Limpar filtros"])
+    empty --&gt;|"nada pendente, com histórico"| goContas(["Ver contas"]) --&gt; summary
+
+    summary --&gt;|"clique"| sheet
+    pending --&gt; kind{"Tipo do item"}
+    kind --&gt;|"parcela de conta"| regular(["Parcela"])
+    kind --&gt;|"fatura de cartão fechada"| virtual(["Fatura"])
+
+    regular --&gt;|"clique"| sheet
+    regular --&gt;|"Pagar"| payRegular(["Pagar: valor, data, categoria, forma, cartão, descrição"])
+    regular --&gt;|"⋯ Editar modelo"| form
+    regular --&gt;|"⋯ Ignorar parcela"| skip(["Parcela ignorada; próxima gerada"])
+    regular --&gt;|"⋯ Excluir conta"| del(["Excluir conta?"])
+
+    virtual --&gt;|"clique"| G6(("G6 /credit-cards/id"))
+    virtual --&gt;|"Pagar"| payVirtual(["Pagar fatura: Marcar como paga"])
+
+    sheet --&gt;|"Pagar parcela"| payRegular
+    sheet --&gt;|"Editar"| form
+    sheet --&gt;|"Excluir"| del
+    sheet --&gt;|"Ignorar parcela"| skip
+    sheet --&gt; stats(["Total pago 90d, média, atrasos, pendentes, histórico"])
+
+    payRegular --&gt;|"Registrar pagamento"| online{"Online?"}
+    online --&gt;|"não"| needNet(["Requer conexão"])
+    online --&gt;|"sim"| payRpc[("RPC pay_bill_instance: cria despesa")]
+    payRpc --&gt; alerts[("Edges evaluate-budgets e alertas de cartão")] --&gt; G5(("G5 Lançamentos"))
+    payVirtual --&gt;|"Marcar como paga"| invPay[("credit_card_invoice_payments, sem despesa")] --&gt; G6
+    del --&gt;|"Excluir"| removed(["Conta removida com todas as parcelas"])
+    del --&gt;|"Cancelar"| bills
+
+    reminders[("Edge evaluate-bills-reminders")] -.-&gt;|"3 dias antes ou no dia"| notif(("G3 Notificação bill_reminder"))
+
+    classDef route fill:#14231f,stroke:#52c49c,color:#e8efec
+    classDef dialog fill:#1a2220,stroke:#5b6a65,color:#dfe7e4
+    classDef decision fill:#2a2415,stroke:#e2b85e,color:#f3e6c6
+    classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
+    classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
+    class bills route
+    class sheet,summary,pending,form,saved,clear,goContas,regular,virtual,payRegular,skip,del,payVirtual,stats,needNet,removed dialog
+    class tabs,empty,kind,online decision
+    class payRpc,alerts,invPay,reminders backend
+    class G6,G5,notif journey</pre></div>
+        <figcaption><strong>Figura 7 · Contas a pagar</strong></figcaption>
+      </figure>
+      <h3>Regras técnicas</h3>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Dados</td><td>Um RPC traz a página inteira</td><td><code>rpc_fetch_bills_page_bundle</code> em <code>src/lib/queries/fetch-bills-page-bundle.ts</code></td></tr><tr><td>Fatura como pendência</td><td>Projetada no cliente a partir dos ciclos fechados com valor em aberto</td><td><code>src/lib/bills/credit-card-bill-projector.ts</code></td></tr><tr><td>Pagar conta</td><td><code>pay_bill_instance</code> cria a despesa e avança a recorrência; bloqueado offline</td><td><code>src/lib/bills/pay-bill-flow.ts</code></td></tr><tr><td>Pagar fatura</td><td>Só marca como paga: as compras já estão lançadas no cartão</td><td><code>src/lib/bills/pay-bill-flow.ts</code></td></tr><tr><td>Recorrência</td><td>Mensal, Bimestral, Trimestral, Anual, Única</td><td><code>src/lib/bills/recurrence.ts</code></td></tr></tbody></table></div>
+    </section>
+
+    <section class="block" id="j8">
+      <p class="eyebrow">Jornada 08</p>
+      <h2>Assinaturas</h2>
+      <p class="lead">Cobranças recorrentes que viram lançamento sozinhas.</p>
+      <dl class="summary">
+        <div><dt>Objetivo</dt><dd>Registrar uma vez e não lançar à mão todo mês.</dd></div>
+        <div><dt>Começa em</dt><dd><code>/subscriptions</code> ou o "+" global</dd></div>
+        <div><dt>Termina em</dt><dd>Assinatura ativa gerando lançamentos</dd></div>
+        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j5">05 Lançamentos</a><a class="chip" href="#j6">06 Cartões</a><a class="chip" href="#j9">09 Categorias</a></dd></div>
+      </dl>
+      <h3>Como funciona</h3>
+      <ol class="steps">
+        <li><div><strong>Cadastro.</strong> Nome, valor, periodicidade (semanal, mensal, bimestral ou anual), próxima cobrança, forma de pagamento, cartão e categoria.</div></li>
+        <li><div><strong>Acompanhamento.</strong> O painel da assinatura mostra o resumo e as cobranças que já viraram lançamento. A edição acontece ali mesmo.</div></li>
+        <li><div><strong>Cobrança automática.</strong> Um cron gera os lançamentos na data. Se ele atrasar, o Painel completa o que faltou ao abrir.</div></li>
+      </ol>
+      <figure>
+        <div class="diagram"><pre class="mermaid">%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#121917","primaryColor":"#18211f","primaryTextColor":"#e8efec","primaryBorderColor":"#3b4a45","lineColor":"#6c7a75","textColor":"#c9d4d0","edgeLabelBackground":"#121917","fontFamily":"Inter, system-ui, sans-serif","fontSize":"14px"},"flowchart":{"useMaxWidth":true,"curve":"basis","padding":12}}}%%
+flowchart TD
+    subs["/subscriptions?new=1"] --&gt;|"new presente"| form(["Formulário: nome, valor, periodicidade, próxima cobrança, forma, cartão, categoria, observações"])
+    subs --&gt; list(["Lista: todas, ativas, inativas; ordenar"])
+    list --&gt;|"Nova assinatura"| form
+    list --&gt;|"vazio"| emptyNew(["Cadastre suas assinaturas"]) --&gt; form
+    list --&gt;|"filtro sem resultado"| clear(["Limpar filtros"]) --&gt; list
+    form --&gt;|"link do cartão"| G6(("G6 /credit-cards"))
+    form --&gt;|"link da categoria"| G9(("G9 /categories"))
+    form --&gt;|"Salvar"| saved(["Assinatura cadastrada ou atualizada"]) --&gt; list
+    form --&gt;|"Cancelar"| list
+
+    list --&gt;|"linha"| sheet(["Painel: resumo, detalhes, cobranças, observações"])
+    sheet --&gt;|"cobrança em transações"| txDetail(("G5b Detalhe"))
+    sheet --&gt;|"⋯ Editar"| editInline(["Edição dentro do painel"]) --&gt; sheet
+    sheet --&gt;|"⋯ Excluir"| del(["Excluir assinatura?"])
+    list --&gt;|"lixeira"| del
+    list --&gt;|"seleção múltipla"| bar(["Barra: Editar só 1, Excluir em lote, Limpar"])
+    bar --&gt;|"Editar"| sheet
+    bar --&gt;|"Excluir"| del
+    del --&gt;|"Excluir"| removed(["Assinatura removida"]) --&gt; list
+
+    cron[("Edge run-recurring-billing, via cron")] --&gt; billed(["Cobrança vira lançamento"])
+    catchup[("RPC catch_up_recurring_billing ao abrir o Painel")] --&gt; billed
+    billed --&gt; G5(("G5 Lançamentos"))
+
+    classDef route fill:#14231f,stroke:#52c49c,color:#e8efec
+    classDef dialog fill:#1a2220,stroke:#5b6a65,color:#dfe7e4
+    classDef decision fill:#2a2415,stroke:#e2b85e,color:#f3e6c6
+    classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
+    classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
+    class subs route
+    class form,list,emptyNew,clear,saved,sheet,editInline,del,bar,removed,billed dialog
+    class cron,catchup backend
+    class G6,G9,txDetail,G5 journey</pre></div>
+        <figcaption><strong>Figura 8 · Assinaturas</strong></figcaption>
+      </figure>
+      <h3>Regras técnicas</h3>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Dados</td><td><code>rpc_fetch_subscriptions_page_bundle</code></td><td><code>src/lib/queries/fetch-subscriptions-page-bundle.ts</code></td></tr><tr><td>Periodicidade</td><td>Semanal, Mensal, Bimestral, Anual</td><td><code>src/components/subscriptions/subscription-form-dialog.tsx</code></td></tr><tr><td>Cobrança</td><td><code>run-recurring-billing</code> só aceita chamada com <code>CRON_SECRET</code>; o Painel recupera o atraso</td><td><code>supabase/functions/run-recurring-billing/index.ts</code></td></tr><tr><td>Filtro por assinatura</td><td><code>/transactions?sub=id</code></td><td><code>src/lib/transactions-list-search-params.ts</code></td></tr></tbody></table></div>
+    </section>
+
+    <section class="block" id="j9">
+      <p class="eyebrow">Jornada 09</p>
+      <h2>Categorias e orçamentos</h2>
+      <p class="lead">Organizar para onde o dinheiro vai e até quanto pode ir.</p>
+      <dl class="summary">
+        <div><dt>Objetivo</dt><dd>Cada gasto com uma categoria, cada categoria com um limite.</dd></div>
+        <div><dt>Começa em</dt><dd><code>/categories</code>, um cartão, o Painel ou um alerta de orçamento</dd></div>
+        <div><dt>Termina em</dt><dd>Categoria e limite salvos, ou o detalhe do mês</dd></div>
+        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j5">05 Lançamentos</a><a class="chip" href="#j3">03 Notificações</a></dd></div>
+      </dl>
+      <h3>Como funciona</h3>
+      <ol class="steps">
+        <li><div><strong>Assistente da primeira visita.</strong> Em cada carteira, a primeira ida a Categorias abre três passos: renda mensal opcional, categorias com limites sugeridos pela renda, e confirmação. "Configurar depois" pula tudo.</div></li>
+        <li><div><strong>Lista.</strong> Despesas mostram o gasto do mês contra o limite; receitas mostram só a categoria. O mês fica na URL.</div></li>
+        <li><div><strong>Limite.</strong> O limite é definido dentro da própria categoria de despesa, para o mês escolhido, e pode ser removido.</div></li>
+        <li><div><strong>Detalhe.</strong> Orçamento restante ou estourado, lançado contra projetado, médias, tendência e os lançamentos do mês, com atalho para a lista completa.</div></li>
+      </ol>
+      <figure>
+        <div class="diagram"><pre class="mermaid">%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#121917","primaryColor":"#18211f","primaryTextColor":"#e8efec","primaryBorderColor":"#3b4a45","lineColor":"#6c7a75","textColor":"#c9d4d0","edgeLabelBackground":"#121917","fontFamily":"Inter, system-ui, sans-serif","fontSize":"14px"},"flowchart":{"useMaxWidth":true,"curve":"basis","padding":12}}}%%
+flowchart TD
+    cats["/categories?month="] --&gt; onboarded{"categories_onboarding_completed_at preenchido?"}
+    onboarded --&gt;|"não"| step0(["Assistente 1: renda mensal, opcional"])
+    step0 --&gt;|"Continuar"| step1(["Assistente 2: categorias e limites"])
+    step1 --&gt;|"Voltar"| step0
+    step1 --&gt;|"Sugerir pela renda"| step1
+    step1 --&gt;|"adicionar, editar, excluir"| step1
+    step1 --&gt;|"Revisar, com 1+ categoria de despesa"| step2(["Assistente 3: confirmar"])
+    step2 --&gt;|"Voltar"| step1
+    step2 --&gt;|"Concluir"| complete[("Grava orçamentos; RPC complete_workspace_categories_onboarding")]
+    step1 --&gt;|"Configurar depois"| complete
+    complete --&gt; listView
+    onboarded --&gt;|"sim"| listView(["Lista: Despesas ou Receitas; mês só em Despesas"])
+
+    newRoute["/categories/new"] --&gt; catForm
+    listView --&gt;|"Nova categoria"| catForm(["Formulário: tipo, nome, cor, ícone; limite do mês se despesa"])
+    catForm --&gt;|"Salvar"| savedCat[("Categoria e orçamento do mês")] --&gt; notifCat(("G3 Notificação category_created"))
+    savedCat --&gt; listView
+    catForm --&gt;|"valor inválido"| catForm
+    listView --&gt;|"⋯ Editar"| catForm
+    listView --&gt;|"⋯ Excluir"| delCat(["Excluir categoria?"])
+    delCat --&gt;|"Excluir ou Cancelar"| listView
+
+    listView --&gt;|"cartão de despesa"| detail["/categories/id?type=expense&amp;month="]
+    listView --&gt;|"cartão de receita"| detailIn["/categories/id?type=income"]
+    detailIn --&gt; detail
+
+    detail --&gt;|"voltar"| cats
+    detail --&gt; summary(["Orçamento, restante, estouro, lançado x projetado, média, maior e menor, % do total"])
+    detail --&gt; trend(["Tendências"])
+    detail --&gt;|"⋯ Editar"| catForm
+    detail --&gt;|"⋯ Excluir"| delDetail(["Excluir categoria?"]) --&gt;|"Excluir"| listView
+    detail --&gt; embedded(["Lançamentos do mês com a categoria travada"])
+    embedded --&gt;|"Ver em Transações"| G5(("G5 /transactions?cats=id"))
+    embedded --&gt;|"linha"| txDetail(("G5b Detalhe"))
+    embedded --&gt;|"vazio: Nova transação"| txForm(("G5b Formulário"))
+
+    budget[("Edge evaluate-budgets")] -.-&gt;|"limite atingido"| notifBudget(("G3 Notificação budget_threshold"))
+
+    classDef route fill:#14231f,stroke:#52c49c,color:#e8efec
+    classDef dialog fill:#1a2220,stroke:#5b6a65,color:#dfe7e4
+    classDef decision fill:#2a2415,stroke:#e2b85e,color:#f3e6c6
+    classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
+    classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
+    class cats,newRoute,detail,detailIn route
+    class step0,step1,step2,listView,catForm,delCat,summary,trend,delDetail,embedded dialog
+    class onboarded decision
+    class complete,savedCat,budget backend
+    class notifCat,G5,txDetail,txForm,notifBudget journey</pre></div>
+        <figcaption><strong>Figura 9 · Categorias e orçamentos</strong></figcaption>
+      </figure>
+      <h3>Regras técnicas</h3>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Assistente</td><td>Só em <code>/categories</code>, por carteira; nada redireciona para ele</td><td><code>src/components/categories/categories-onboarding-wizard.tsx</code></td></tr><tr><td>Detalhe</td><td><code>rpc_fetch_category_detail_bundle</code></td><td><code>src/lib/queries/fetch-category-detail-bundle.ts</code></td></tr><tr><td>Entradas no detalhe</td><td>Lista de categorias, gasto por categoria do cartão, notificação de orçamento</td><td><code>src/components/categories/detail/</code></td></tr><tr><td>Orçamento</td><td>Avaliado depois de cada despesa e de cada conta paga</td><td>edge <code>evaluate-budgets</code></td></tr></tbody></table></div>
+    </section>
+
+    <!-- ============ PARTE IV ============ -->
+    <div class="part-head" id="parte-4">
+      <p class="eyebrow">Parte IV</p>
+      <h2>Cuidar da conta</h2>
+      <p>O que pertence à pessoa, e não à carteira: identidade, segurança e a saída definitiva.</p>
+    </div>
+
+    <section class="block" id="j10">
+      <p class="eyebrow">Jornada 10</p>
+      <h2>Conta e segurança</h2>
+      <p class="lead">Perfil, senha, aparelhos conectados, histórico e exclusão da conta.</p>
+      <dl class="summary">
+        <div><dt>Objetivo</dt><dd>Manter a conta correta e sob controle.</dd></div>
+        <div><dt>Começa em</dt><dd><code>/account</code>, pelo menu do usuário</dd></div>
+        <div><dt>Termina em</dt><dd>Perfil atualizado, sessões encerradas ou conta excluída</dd></div>
+        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j1">01 Acesso</a><a class="chip" href="#j3">03 Navegação</a></dd></div>
+      </dl>
+      <h3>Como funciona</h3>
+      <ol class="steps">
+        <li><div><strong>Perfil.</strong> Nome e avatar (até 5 MB). Trocar o email pede a senha atual e envia confirmação para o endereço novo.</div></li>
+        <li><div><strong>Senha.</strong> Pede a senha atual e segue as mesmas regras do cadastro. As outras sessões continuam abertas.</div></li>
+        <li><div><strong>Sessões e atividade.</strong> A pessoa vê os aparelhos conectados e encerra um ou todos. O histórico registra as mudanças de perfil, email e senha.</div></li>
+        <li><div><strong>Excluir conta.</strong> Dois passos: um aviso com as carteiras compartilhadas afetadas e a confirmação com email e senha. Depois, tudo é limpo e a pessoa volta ao login.</div></li>
+      </ol>
+      <figure>
+        <div class="diagram"><pre class="mermaid">%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#121917","primaryColor":"#18211f","primaryTextColor":"#e8efec","primaryBorderColor":"#3b4a45","lineColor":"#6c7a75","textColor":"#c9d4d0","edgeLabelBackground":"#121917","fontFamily":"Inter, system-ui, sans-serif","fontSize":"14px"},"flowchart":{"useMaxWidth":true,"curve":"basis","padding":12}}}%%
+flowchart TD
+    account["/account"] --&gt; card(["Perfil: avatar, nome, email, membro desde"])
+    account --&gt;|"⋯ Editar perfil"| profile(["Nome e avatar"])
+    profile --&gt;|"enviar ou remover avatar, até 5 MB"| storage[("Storage avatars")]
+    profile --&gt;|"Salvar nome e avatar"| profileOk(["Perfil atualizado"])
+    profile --&gt;|"trocar email"| emailPwd{"Senha atual confere?"}
+    emailPwd --&gt;|"não"| profile
+    emailPwd --&gt;|"sim"| emailUpd[("updateUser email")] --&gt; emailSent(["Link de confirmação enviado ao novo email"])
+    profileOk --&gt; log[("Edge activity-logs")]
+    emailSent --&gt; log
+
+    account --&gt;|"⋯ Alterar senha"| pwd(["Senha atual, nova, confirmação"])
+    pwd --&gt; pwdCheck{"Senha atual confere e nova é forte?"}
+    pwdCheck --&gt;|"não"| pwd
+    pwdCheck --&gt;|"sim"| pwdUpd[("updateUser password")] --&gt; pwdOk(["Fecha em 2 s; outras sessões continuam"])
+    pwdOk --&gt; log
+
+    account --&gt;|"⋯ Sair"| G1(("G1 Sair"))
+    account --&gt;|"⋯ Excluir conta"| warn(["Aviso: carteiras compartilhadas que você é dona"])
+    warn --&gt;|"Continuar"| confirmDel(["Digitar email e senha"])
+    confirmDel --&gt;|"Excluir"| delUser[("Edge delete-user, confere a senha")]
+    delUser --&gt;|"erro"| confirmDel
+    delUser --&gt;|"sucesso"| gone(["Conta excluída; limpa caches e signOut"]) --&gt;|"2 s"| root["/"] --&gt; login(("G1 /login"))
+
+    account --&gt;|"Sessões"| sessions["/account/sessions"]
+    sessions --&gt;|"Encerrar ou Encerrar todas"| sessFn[("Edge sessions")]
+    sessions -.-&gt;|"sem sessão"| plainLogin["/login sem next"]
+    account --&gt;|"Atividade"| activity["/account/activity"]
+    activity --&gt;|"filtros: todas, família, segurança, perfil"| activity
+    activity -.-&gt;|"sem sessão"| plainLogin
+
+    userMenu(("G3 Menu do usuário")) --&gt; plans["/plans"]
+    plans --&gt; placeholder(["Plano padrão, histórico vazio; sem ações"])
+
+    classDef route fill:#14231f,stroke:#52c49c,color:#e8efec
+    classDef dialog fill:#1a2220,stroke:#5b6a65,color:#dfe7e4
+    classDef decision fill:#2a2415,stroke:#e2b85e,color:#f3e6c6
+    classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
+    classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
+    class account,root,sessions,plainLogin,activity,plans route
+    class card,profile,profileOk,emailSent,pwd,pwdOk,warn,confirmDel,gone,placeholder dialog
+    class emailPwd,pwdCheck decision
+    class storage,emailUpd,log,pwdUpd,delUser,sessFn backend
+    class G1,login,userMenu journey</pre></div>
+        <figcaption><strong>Figura 10 · Conta e segurança</strong></figcaption>
+      </figure>
+      <h3>Regras técnicas</h3>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Troca de email e senha</td><td>Confere a senha atual entrando de novo antes de <code>updateUser</code></td><td><code>src/components/account/edit-profile-dialog.tsx</code>, <code>src/components/security/ChangePasswordDialog.tsx</code></td></tr><tr><td>Excluir conta</td><td>Dois passos; a senha é conferida na Edge Function</td><td><code>src/components/security/DeleteAccountDialog.tsx</code>, <code>src/lib/delete-account.ts</code></td></tr><tr><td>Sessões</td><td>Listar e encerrar pela edge <code>sessions</code></td><td><code>src/lib/sessions.ts</code></td></tr><tr><td>Atividade</td><td>Perfil, email e senha gravam log</td><td>edge <code>activity-logs</code></td></tr></tbody></table></div>
+      <div class="callout gap">
+        <p class="label">Ponto de atenção</p>
+        <ul><li>Sessões e Atividade mandam para o login sem <code>next</code>, então a pessoa não volta para a página depois de entrar.</li></ul>
+      </div>
+    </section>
+
+    <!-- ============ FECHAMENTO ============ -->
+    <section class="block" id="lacunas">
+      <p class="eyebrow">Fechamento</p>
+      <h2>Lacunas encontradas</h2>
+      <p class="lead">O mapeamento encontrou oito pontos em que o código não faz o que a jornada promete. Estão aqui para registro; nenhum foi corrigido.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Jornada</th><th>Tipo</th><th>O que acontece</th><th>Efeito para a pessoa</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>01 Acesso</td><td>Fluxo</td><td>O cadastro volta com sessão e sem <code>next</code>, e ainda mostra "Confirme seu email".</td><td>Pede uma confirmação de que ela não precisa.</td></tr>
+            <tr><td>2</td><td>01 Acesso</td><td>Guarda</td><td><code>/login</code> e <code>/register</code> não têm guarda.</td><td>Quem já entrou vê o formulário em vez do Painel.</td></tr>
+            <tr><td>3</td><td>01 Acesso</td><td>Fluxo</td><td>Existem dois fluxos de redefinir senha, e nenhuma tela leva ao do link.</td><td>Qual funciona depende do template de email do Supabase.</td></tr>
+            <tr><td>4</td><td>01 Acesso</td><td>Texto</td><td>Os erros de esqueci e redefinir senha são a mensagem crua do Supabase.</td><td>Mensagem em inglês no meio de um app em português.</td></tr>
+            <tr><td>5</td><td>02 Carteiras</td><td>Layout</td><td><code>/invites/accept</code> fica dentro da casca do app.</td><td>Quem não entrou vê menus que não pode usar.</td></tr>
+            <tr><td>6</td><td>02 Carteiras</td><td>Validação</td><td>A carteira pessoal mostra o formulário de convite.</td><td>O erro só aparece depois de enviar.</td></tr>
+            <tr><td>7</td><td>03 Navegação</td><td>Código sem uso</td><td>A casca expõe abrir convite, nova categoria e novo cartão, e nada chama essas ações.</td><td>Nenhum; é manutenção sem retorno.</td></tr>
+            <tr><td>8</td><td>10 Conta</td><td>Guarda</td><td>Sessões e Atividade redirecionam para <code>/login</code> sem <code>next</code>.</td><td>Depois de entrar, cai no Painel e não na página.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="block" id="rotas">
+      <p class="eyebrow">Apêndice A</p>
+      <h2>Rotas</h2>
+      <p class="lead">Todas as rotas do app e a jornada a que cada uma pertence.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Rota</th><th>Tela</th><th>Acesso</th><th>Jornada</th></tr></thead>
+          <tbody>
+            <tr><td><code>/</code></td><td>Abertura, só redireciona</td><td>Pública</td><td>01</td></tr>
+            <tr><td><code>/login</code></td><td>Entrar</td><td>Pública</td><td>01</td></tr>
+            <tr><td><code>/register</code></td><td>Criar conta</td><td>Pública</td><td>01</td></tr>
+            <tr><td><code>/forgot-password</code></td><td>Recuperar senha por código</td><td>Pública</td><td>01</td></tr>
+            <tr><td><code>/reset-password</code></td><td>Redefinir senha por link</td><td>Pública</td><td>01</td></tr>
+            <tr><td><code>/invites/accept</code></td><td>Aceitar convite</td><td>Pública, dentro da casca</td><td>02</td></tr>
+            <tr><td><code>/members</code></td><td>Membros e convites</td><td>Com sessão</td><td>02</td></tr>
+            <tr><td><code>/settings</code></td><td>Carteira, app e notificações</td><td>Com sessão</td><td>02</td></tr>
+            <tr><td><code>/dashboard</code></td><td>Painel</td><td>Com sessão</td><td>04</td></tr>
+            <tr><td><code>/transactions</code></td><td>Lançamentos</td><td>Com sessão</td><td>05</td></tr>
+            <tr><td><code>/credit-cards</code></td><td>Cartões</td><td>Com sessão</td><td>06</td></tr>
+            <tr><td><code>/credit-cards/[cardId]</code></td><td>Detalhe do cartão e fatura</td><td>Com sessão</td><td>06</td></tr>
+            <tr><td><code>/bills</code></td><td>Contas a pagar</td><td>Com sessão</td><td>07</td></tr>
+            <tr><td><code>/subscriptions</code></td><td>Assinaturas</td><td>Com sessão</td><td>08</td></tr>
+            <tr><td><code>/categories</code></td><td>Categorias e assistente</td><td>Com sessão</td><td>09</td></tr>
+            <tr><td><code>/categories/new</code></td><td>Categorias com o formulário aberto</td><td>Com sessão</td><td>09</td></tr>
+            <tr><td><code>/categories/[categoryId]</code></td><td>Detalhe da categoria</td><td>Com sessão</td><td>09</td></tr>
+            <tr><td><code>/account</code></td><td>Minha conta</td><td>Com sessão</td><td>10</td></tr>
+            <tr><td><code>/account/sessions</code></td><td>Aparelhos conectados</td><td>Com sessão</td><td>10</td></tr>
+            <tr><td><code>/account/activity</code></td><td>Histórico de atividade</td><td>Com sessão</td><td>10</td></tr>
+            <tr><td><code>/plans</code></td><td>Planos e pagamentos, sem ações</td><td>Com sessão</td><td>10</td></tr>
+            <tr><td><code>/[...slug]</code></td><td>Página não encontrada</td><td>Pública</td><td>03</td></tr>
+            <tr><td><code>/designsystem</code></td><td>Catálogo interno do design system</td><td>Desenvolvimento</td><td>Fora do escopo</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="block" id="backend">
+      <p class="eyebrow">Apêndice B</p>
+      <h2>Backend</h2>
+      <p class="lead">As funções do Supabase que aparecem nos fluxogramas, e onde cada uma entra.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nome</th><th>Tipo</th><th>O que faz</th><th>Jornadas</th></tr></thead>
+          <tbody>
+            <tr><td><code>handle_new_user</code></td><td>Trigger</td><td>Cria perfil, carteira pessoal e categorias no cadastro</td><td>01</td></tr>
+            <tr><td><code>sessions</code></td><td>Edge</td><td>Registra, lista e encerra sessões de aparelho</td><td>01, 10</td></tr>
+            <tr><td><code>create_shared_workspace</code></td><td>RPC</td><td>Cria carteira compartilhada</td><td>02</td></tr>
+            <tr><td><code>get_workspace_delete_impact</code></td><td>RPC</td><td>Mostra o que some ao excluir uma carteira</td><td>02</td></tr>
+            <tr><td><code>delete_workspace</code></td><td>RPC</td><td>Exclui a carteira</td><td>02</td></tr>
+            <tr><td><code>workspace_member_directory</code></td><td>RPC</td><td>Lista membros com perfil</td><td>02</td></tr>
+            <tr><td><code>workspace-invites-create</code></td><td>Edge</td><td>Cria convite por email ou link</td><td>02</td></tr>
+            <tr><td><code>workspace-invites-resend</code></td><td>Edge</td><td>Reenvia o email do convite</td><td>02</td></tr>
+            <tr><td><code>workspace-invites-accept</code></td><td>Edge</td><td>Aceita o convite e cria o vínculo</td><td>02</td></tr>
+            <tr><td><code>push-subscribe</code> · <code>push-unsubscribe</code></td><td>Edge</td><td>Liga e desliga o push do aparelho</td><td>01, 02</td></tr>
+            <tr><td><code>dispatch-notifications</code></td><td>Edge</td><td>Entrega notificações por canal</td><td>03</td></tr>
+            <tr><td><code>catch_up_recurring_billing</code></td><td>RPC</td><td>Gera cobranças atrasadas ao abrir o Painel</td><td>04, 08</td></tr>
+            <tr><td><code>create_workspace_installment_plan</code></td><td>RPC</td><td>Cria a compra parcelada</td><td>05</td></tr>
+            <tr><td><code>delete_workspace_installment_plan_cascade</code></td><td>RPC</td><td>Cancela o plano e as parcelas</td><td>05</td></tr>
+            <tr><td><code>notify-transaction-created</code></td><td>Edge</td><td>Avisa os membros de um novo lançamento</td><td>05</td></tr>
+            <tr><td><code>evaluate-budgets</code></td><td>Edge</td><td>Confere o limite da categoria depois de uma despesa</td><td>05, 07, 09</td></tr>
+            <tr><td><code>evaluate-credit-card-alerts</code></td><td>Edge</td><td>Confere limite e categoria do cartão</td><td>05, 06</td></tr>
+            <tr><td><code>credit-card-calendar-alerts</code></td><td>Edge</td><td>Avisa fechamento e vencimento de fatura</td><td>06</td></tr>
+            <tr><td><code>pay_bill_instance</code></td><td>RPC</td><td>Paga a parcela de uma conta e cria a despesa</td><td>07</td></tr>
+            <tr><td><code>rpc_fetch_bills_page_bundle</code></td><td>RPC</td><td>Carrega a página de contas a pagar</td><td>07</td></tr>
+            <tr><td><code>evaluate-bills-reminders</code></td><td>Edge</td><td>Envia lembretes de vencimento</td><td>07</td></tr>
+            <tr><td><code>run-recurring-billing</code></td><td>Edge, via cron</td><td>Gera cobranças de assinaturas e parcelas</td><td>08</td></tr>
+            <tr><td><code>rpc_fetch_subscriptions_page_bundle</code></td><td>RPC</td><td>Carrega a página de assinaturas</td><td>08</td></tr>
+            <tr><td><code>complete_workspace_categories_onboarding</code></td><td>RPC</td><td>Marca o assistente de categorias como concluído</td><td>09</td></tr>
+            <tr><td><code>rpc_fetch_category_detail_bundle</code></td><td>RPC</td><td>Carrega o detalhe da categoria</td><td>09</td></tr>
+            <tr><td><code>activity-logs</code></td><td>Edge</td><td>Grava o histórico de atividade</td><td>10</td></tr>
+            <tr><td><code>delete-user</code></td><td>Edge</td><td>Confere a senha e exclui a conta</td><td>10</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer>
+  Atlas de Jornadas do Finance App · escrito a partir do código da branch <code>finance-app-2.0</code> em 17 de setembro de 2026 · fonte dos fluxogramas em <code>docs/JORNADAS.md</code>
+</footer>
+
+<dialog class="viewer" id="viewer" aria-labelledby="viewer-title">
+  <div class="viewer-bar">
+    <strong id="viewer-title"></strong>
+    <button type="button" data-zoom="-0.25" aria-label="Diminuir">−</button>
+    <output id="viewer-scale">100%</output>
+    <button type="button" data-zoom="0.25" aria-label="Aumentar">+</button>
+    <button type="button" data-zoom="fit">Ajustar</button>
+    <button type="button" id="viewer-close">Fechar</button>
+  </div>
+  <div class="viewer-stage" id="viewer-stage"></div>
+</dialog>
+
+<script>
+  (function () {
+    var viewer = document.getElementById("viewer");
+    var stage = document.getElementById("viewer-stage");
+    var label = document.getElementById("viewer-scale");
+    var scale = 1, natural = 0, svg = null;
+
+    function apply() {
+      if (!svg) return;
+      svg.style.width = Math.round(natural * scale) + "px";
+      label.textContent = Math.round(scale * 100) + "%";
+    }
+    function fit() {
+      scale = Math.min(1, (stage.clientWidth - 48) / natural);
+      apply();
+    }
+
+    document.querySelectorAll("figure").forEach(function (fig) {
+      var cap = fig.querySelector("figcaption");
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "zoom-btn";
+      btn.textContent = "Ampliar";
+      btn.addEventListener("click", function () {
+        var source = fig.querySelector(".diagram svg");
+        if (!source) return;
+        svg = source.cloneNode(true);
+        natural = parseFloat(source.style.maxWidth) || source.getBoundingClientRect().width;
+        svg.removeAttribute("width");
+        stage.replaceChildren(svg);
+        document.getElementById("viewer-title").textContent = cap.querySelector("strong").textContent;
+        viewer.showModal();
+        scale = 1;
+        apply();
+      });
+      cap.appendChild(btn);
+    });
+
+    viewer.querySelectorAll("[data-zoom]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var z = b.getAttribute("data-zoom");
+        if (z === "fit") return fit();
+        scale = Math.min(2, Math.max(0.25, scale + parseFloat(z)));
+        apply();
+      });
+    });
+    document.getElementById("viewer-close").addEventListener("click", function () { viewer.close(); });
+    viewer.addEventListener("close", function () { stage.replaceChildren(); svg = null; });
+  })();
+</script>
