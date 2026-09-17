@@ -14,7 +14,7 @@
 > - Smoke de guards: `sessions` → 401 sem auth; funções de cron → 401 sem
 >   `x-cron-secret`.
 >
-> - Passo 4 (2ª leva): pré-checagem `docs/PRE_PUSH_VERDICT.sql` rodada em prod
+> - Passo 4 (2ª leva): pré-checagem `docs/arquivo/revisao-backend-2026-08/PRE_PUSH_VERDICT.sql` rodada em prod
 >   → **todos os contadores zero** ("SEGURO: nenhuma transacao sera apagada").
 >   Com isso, aplicadas as 5 migrações de correção de billing:
 >   `130000`, `131000`, `140000`, `141000`, `142000`. Nenhum `RAISE NOTICE`

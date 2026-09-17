@@ -4,10 +4,17 @@ Use this when wiring **project sharing** (email + link invites) in a Supabase pr
 
 ## Edge Functions
 
-Deploy and configure these functions (folder `supabase/functions/`):
+Folder `supabase/functions/`:
 
 - **`workspace-invites-create`** — creates `workspace_invites`, sends email (optional), returns link URL.
 - **`workspace-invites-accept`** — validates token, inserts into `workspace_members`, records notifications.
+- **`workspace-invites-resend`** — resends an email invite with a new token.
+
+Deploy (all functions, invites included):
+
+```bash
+npm run supabase:deploy:functions
+```
 
 Secrets / env in Supabase (Edge Functions → *Secrets*):
 
@@ -16,26 +23,16 @@ Secrets / env in Supabase (Edge Functions → *Secrets*):
 | `SUPABASE_URL` | Usually injected by Supabase |
 | `SUPABASE_ANON_KEY` | JWT validation in functions |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-side DB updates inside functions |
-| `RESEND_API_KEY` | Required for **email** invites (`workspace-invites-create`) |
-| `RESEND_FROM` | Sender on a [verified domain](https://resend.com/domains) (production) |
+| `RESEND_API_KEY` | Required for **email** invites (`workspace-invites-create`, `workspace-invites-resend`) |
+| `RESEND_FROM` | Sender on a [verified domain](https://resend.com/domains) (production), e.g. `Finance App <no-reply@example.com>` |
 | `APP_BASE_URL` | **Production** public app origin, no trailing slash (e.g. `https://app.example.com`). Used when the HTTP `Origin` header is missing (e.g. some server-side invokes). Ensures invite links point at the real site. |
 
-After schema changes, apply migrations with **`supabase db push`** (recommended). Key migrations for sharing:
+## Schema
 
-| Migration | Purpose |
-|-----------|---------|
-| `20260331120000_workspace_invites_token_raw.sql` | `token_raw` on invites + invitee SELECT RLS |
-| **`20260518180000_workspace_core_data_rls.sql`** | **Transactions, categories, splits, budgets** visible/editable by all `workspace_members` (fixes empty lists for invited users) |
+The consolidated baseline (`supabase/migrations/00000000000000_baseline.sql`) plus the incremental migrations create all invite/workspace objects — `supabase db push` (or `supabase start` locally) is all you need.
 
-For greenfield setup, the consolidated baseline migration (`supabase/migrations/00000000000000_baseline.sql`) creates all invite/workspace objects — `supabase db push` (or `supabase start` locally) is all you need. The loose SQL files previously listed here were removed.
-
-After any SQL change, **Settings → API → Reload schema** if PostgREST caches old policies (the core-data migration also runs `NOTIFY pgrst, 'reload schema'`).
-
-### Erro: `Could not find the 'token_raw' column ... in the schema cache`
-
-1. Garanta que as migrações foram aplicadas (`npx supabase db push`) — a coluna vem do baseline.
-2. Recarregue o schema do PostgREST: **Settings → API → Reload schema** (ou `NOTIFY pgrst, 'reload schema'`).
-3. Gere o link de convite de novo na página **Membros**.
+- The invite token is **not stored in plain text** (`20260915120000_invite_token_not_stored.sql` dropped `token_raw`; validation uses `token_hash`). Publish the invite Edge Functions **before** that migration — the old `workspace-invites-create` writes the column.
+- After any SQL change, **Settings → API → Reload schema** if PostgREST caches old policies (or `NOTIFY pgrst, 'reload schema'`).
 
 ## Auth redirect URLs (Supabase Dashboard)
 
@@ -54,17 +51,14 @@ Invite flows depend on:
 
 If a redirect URL is not allowlisted, Supabase will block the redirect after login or confirm email.
 
-## SQL: member directory (optional UI)
+## Smoke test
 
-Run [`workspace-member-directory.sql`](workspace-member-directory.sql) so the **Membros** page can show co-worker emails/names without loosening global `profiles` RLS.
-
-## smoke-test
-
-1. Owner creates link invite → open `invite_url` in incognito.
-2. **Criar conta** or **Entrar**; confirm the URL still contains `token` when returning to `/invites/accept`.
-3. Success message → **Dashboard** → sidebar switcher shows the shared workspace.
-4. **Convidado(a):** com a carteira compartilhada selecionada, **Transações** e **Categorias** listam os dados do dono (não vazios).
-5. **Convidado(a):** cria uma despesa e uma categoria → o dono vê os mesmos registros na mesma carteira.
+1. Owner opens **Membros** and sends an email invite → the pending invite appears.
+2. Owner creates a link invite → open `invite_url` in incognito.
+3. **Criar conta** or **Entrar**; confirm the URL still contains `token` when returning to `/invites/accept`.
+4. Success message → **Dashboard** → sidebar switcher shows the shared workspace.
+5. **Convidado(a):** com a carteira compartilhada selecionada, **Transações** e **Categorias** listam os dados do dono (não vazios).
+6. **Convidado(a):** cria uma despesa e uma categoria → o dono vê os mesmos registros na mesma carteira.
 
 Automated policy check (local): `npm run test:db` includes `workspace_core_data_rls.test.sql`.
 

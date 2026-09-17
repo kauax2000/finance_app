@@ -83,35 +83,36 @@ Abra [http://localhost:3000](http://localhost:3000) no seu navegador.
 ```
 src/
 ├── app/
-│   ├── (auth)/          # Páginas de autenticação
-│   │   ├── login/
-│   │   ├── register/
-│   │   ├── forgot-password/
-│   │   └── reset-password/
-│   ├── (dashboard)/     # Páginas do dashboard
-│   │   ├── dashboard/
-│   │   ├── wallets/
-│   │   ├── transactions/
-│   │   ├── categories/
-│   │   └── settings/
-│   ├── (app)/          # Páginas da conta do usuário
-│   │   ├── account/
-│   │   │   ├── sessions/
-│   │   │   └── activity/
-│   │   ├── notifications/
-│   │   └── plans/
-│   └── page.tsx        # Redirecionamento
+│   ├── (auth)/          # login, register, forgot-password, reset-password
+│   ├── (app)/           # Telas autenticadas: dashboard, transactions, categories,
+│   │                    # bills, credit-cards, subscriptions, members, invites,
+│   │                    # account (sessions, activity), settings, plans
+│   ├── [...slug]/       # Rota desconhecida → 404
+│   ├── designsystem/    # Catálogo vivo do design system (/designsystem)
+│   └── page.tsx         # Redirecionamento
 ├── components/
-│   ├── ui/             # Componentes shadcn
-│   ├── security/       # Componentes de segurança
-│   ├── skeletons/      # Skeletons de carregamento
-│   └── providers.tsx   # Provider de autenticação
-├── hooks/              # Custom hooks
-├── lib/
-│   ├── supabase.ts     # Cliente Supabase
-│   └── utils.ts       # Utilitários
-└── templates/          # Templates reutilizáveis
+│   ├── ui/              # Componentes do design system
+│   ├── layout/          # Casca do app (barras, navegação)
+│   └── <domínio>/       # account, bills, categories, credit-cards, dashboard,
+│                        # members, push, pwa, security, settings, subscriptions,
+│                        # transactions, workspace, icons
+├── config/              # Navegação (desktop e mobile)
+├── hooks/               # Custom hooks
+├── lib/                 # Regras de negócio, Supabase, formatadores (com *.test.ts ao lado)
+├── templates/           # Templates de página
+└── types/               # Tipos do banco (gerados) e de rotas
+
+supabase/                # Migrações, Edge Functions, testes pgTAP, relatórios SQL
+e2e/                     # Testes Playwright
+scripts/                 # Scripts de build/teste (ícones PWA, docs-map do DS, pré-checagens)
+docs/                    # Runbooks, histórico do design system e arquivo
 ```
+
+## 📚 Documentação
+
+- [`AGENTS.md`](AGENTS.md) — regras do projeto (formulários, design system, componentes). Leia antes de escrever código.
+- [`docs/README.md`](docs/README.md) — índice de runbooks, histórico do design system e arquivo.
+- [`supabase/README.md`](supabase/README.md) — regras de migração, Edge Functions e docs de deploy.
 
 ## 📲 PWA (iPhone e offline)
 

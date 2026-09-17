@@ -58,7 +58,7 @@ A auditoria encontrou três falhas exploráveis e uma corrida que cobrava o usu�
 
 Pendente apenas `20260824180000_drop_legacy_constraints.sql` — a fase *contract*. As migrações que trocam alvos de `onConflict` do cliente seguem **expand/contract**: as constraints novas entraram mantendo as legadas, então o cliente atualmente em produção continua funcionando. **Aplicar a 180000 só depois do merge e do deploy deste PR**, senão salvar orçamento e o replay offline quebram.
 
-Antes de aplicar as migrações destrutivas, `docs/PRE_PUSH_VERDICT.sql` foi rodado em produção: **todos os contadores zero** — nenhuma transação, assinatura ou compra parcelada foi apagada (confirmado também pela ausência de `RAISE NOTICE` no push).
+Antes de aplicar as migrações destrutivas, `docs/arquivo/revisao-backend-2026-08/PRE_PUSH_VERDICT.sql` foi rodado em produção: **todos os contadores zero** — nenhuma transação, assinatura ou compra parcelada foi apagada (confirmado também pela ausência de `RAISE NOTICE` no push).
 
 ## Ação necessária do mantenedor
 

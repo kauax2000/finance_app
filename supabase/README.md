@@ -33,3 +33,10 @@ npm run test:edge     # Deno tests de supabase/functions/_shared (requer deno)
 - Helpers compartilhados em `_shared/` (session-guard, token-hash,
   timing-safe-equal, deliver-notification, supabase-admin).
 - Deploy: `npm run supabase:deploy:functions`.
+
+## Documentação
+
+- [`LOCAL_EDGE_FUNCTIONS.md`](LOCAL_EDGE_FUNCTIONS.md) — servir as Edge Functions com o Supabase local.
+- [`INVITE_DEPLOYMENT.md`](INVITE_DEPLOYMENT.md) — convites de carteira: funções, secrets, redirects e smoke test.
+- [`NOTIFICATION_DEPLOYMENT.md`](NOTIFICATION_DEPLOYMENT.md) — Web Push e alertas de despesa entre membros.
+- [`reports/`](reports/) — relatórios SQL só de leitura, para rodar em produção quando um runbook pedir.
