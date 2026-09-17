@@ -45,9 +45,18 @@ setup("authenticate", async ({ page }) => {
     // O redirecionamento e o alerta da tela correm juntos. Esperar só pelo
     // primeiro transforma qualquer login recusado — senha errada, Supabase
     // local fora do ar, campo invalidado — em 60s de silêncio seguidos de um
-    // timeout que não diz nada. O `Alert tone="destructive"` e o `FieldError`
-    // são ambos `role="alert"`, então os dois motivos chegam aqui.
-    const alerta = page.getByRole("alert").first()
+    // timeout que não diz nada.
+    //
+    // O alerta é procurado pelas peças do app (`Alert`, `FieldError`,
+    // `FormError`), e não por `role="alert"`: o Next põe em toda página um
+    // anunciador de rota com esse papel, vazio. Ele ganhava a corrida com o
+    // botão ainda em "Entrando…" e o setup falhava com mensagem em branco — e,
+    // num login certo, ele recebe o título da página nova. O `hasText` descarta
+    // uma peça que monte antes do texto.
+    const alerta = page
+        .locator('[data-slot="alert"], [data-slot="field-error"], [data-slot="form-error"]')
+        .filter({ hasText: /\S/ })
+        .first()
     const motivo = await Promise.race([
         page
             .waitForURL((u) => !u.pathname.includes("/login"), {
