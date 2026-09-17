@@ -189,7 +189,15 @@ function InvoiceFaturaHeaderStatus({
 
     // A pílula que abre o menu da fatura: um `Button outline xs` redondo, com o
     // selo de status dentro. Era um `<button>` cru com as mesmas intenções.
-    const invoiceMenuTriggerButtonClass = "shrink-0 rounded-full px-2 data-[state=open]:bg-muted/60"
+    //
+    // O `xs` mede 24px, e a pílula crua media ~30: a troca encolheu o alvo e
+    // ninguém registrou. No toque, um `::after` estende a área clicável 12px
+    // para cima e para baixo sem mudar o desenho — o mesmo recurso do
+    // `Breadcrumb` —, e o `relative` é o que o ancora na pílula.
+    const invoiceMenuTriggerButtonClass = cn(
+        "relative shrink-0 rounded-full px-2 data-[state=open]:bg-muted/60",
+        "pointer-coarse:after:absolute pointer-coarse:after:-inset-x-1 pointer-coarse:after:-inset-y-3 pointer-coarse:after:content-['']"
+    )
 
     if (status === "paid") {
         if (!showPaymentMenu) return paidBadge

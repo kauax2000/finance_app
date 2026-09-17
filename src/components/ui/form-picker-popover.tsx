@@ -3,8 +3,6 @@
 import * as React from "react"
 import {
   ChevronDownIcon,
-  MagnifyingGlassIcon,
-  XMarkIcon,
 } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
@@ -19,12 +17,7 @@ import {
 } from "@/lib/field-classes"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from "@/components/ui/input-group"
+import { SearchInput } from "@/components/ui/search-input"
 import {
   Popover,
   PopoverContent,
@@ -234,26 +227,25 @@ function FormPickerPopoverContent({
 /**
  * A faixa de busca.
  *
- * Sobre `InputGroup`, não sobre uma lupa `absolute` mais `pl-9`: o addon é um
- * `<label>` de verdade ligado ao campo, então tocar no ícone foca o campo e o
- * leitor de tela para de encontrar um ícone mudo antes do controle.
+ * O campo é o `SearchInput`, e a faixa só o posiciona. Esta peça reimplementava
+ * o mesmo campo — `InputGroup`, lupa, supressão do × do WebKit, × nosso — e a
+ * cópia tinha ficado para trás: limpar a busca soltava o foco no `<body>`,
+ * dentro de um diálogo modal, e quem estava no teclado perdia o lugar. Medido
+ * no seletor de categoria da nova transação. O `SearchInput` devolve o foco ao
+ * campo.
  *
- * O `data-slot` não é enfeite — é por ele que o `CustomForm` sabe que o Enter
- * aqui não é "salvar". Ver `shouldDeferEnterToWidget` em `form.tsx`.
+ * `className` continua indo para o `<input>`, como sempre foi aqui — por isso
+ * ele chega como `inputClassName`.
+ *
+ * O `data-slot` da faixa não é enfeite — é por ele que o `CustomForm` sabe que
+ * o Enter aqui não é "salvar". Ver `shouldDeferEnterToWidget` em `form.tsx`.
  */
 function FormPickerPopoverSearch({
   className,
   size = "lg",
   placeholder = "Buscar…",
-  onClear,
   ...props
-}: React.ComponentProps<typeof InputGroupInput> & {
-  size?: React.ComponentProps<typeof InputGroup>["size"]
-  /** Mostra o botão de limpar quando há texto. Sem ele, não há botão. */
-  onClear?: () => void
-}) {
-  const temTexto = props.value != null && String(props.value).length > 0
-
+}: React.ComponentProps<typeof SearchInput>) {
   return (
     <div
       data-slot="form-picker-popover-search"
@@ -262,33 +254,12 @@ function FormPickerPopoverSearch({
       // vez de ao lado dela: o conteúdo passa por trás.
       className="relative z-10 shrink-0 p-3 pb-2"
     >
-      <InputGroup size={size}>
-        <InputGroupAddon>
-          <MagnifyingGlassIcon aria-hidden />
-        </InputGroupAddon>
-        <InputGroupInput
-          type="search"
-          autoComplete="off"
-          placeholder={placeholder}
-          className={cn(
-            // O × que o WebKit desenha sozinho em `type="search"` é chrome do
-            // navegador: azul do sistema, medida do sistema, e ele não conhece
-            // o tema escuro nem a escada de controles. A semântica de busca
-            // fica — é ela que dá a tecla "Buscar" no teclado do iOS —, mas o
-            // desenho é nosso, logo abaixo.
-            "[&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none",
-            className
-          )}
-          {...props}
-        />
-        {onClear && temTexto ? (
-          <InputGroupAddon align="inline-end">
-            <InputGroupButton aria-label="Limpar busca" onClick={onClear}>
-              <XMarkIcon aria-hidden />
-            </InputGroupButton>
-          </InputGroupAddon>
-        ) : null}
-      </InputGroup>
+      <SearchInput
+        size={size}
+        placeholder={placeholder}
+        inputClassName={className}
+        {...props}
+      />
     </div>
   )
 }
