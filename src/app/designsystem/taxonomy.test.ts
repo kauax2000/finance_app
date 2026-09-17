@@ -160,6 +160,12 @@ describe("taxonomia", () => {
       "bottom-bar",
       "page-header",
       "page-section",
+      // Casco de página inteira, fora da casca do app. Ele entrou com
+      // autorização humana, como manda a invariante 6, e recebe o campo por
+      // **slot**: o que o campo mostra é conteúdo de produto, e conteúdo de
+      // produto não mora em `ui/`. É o que separa este Template do
+      // `AuthShell`, que fica em `components/layout/` amarrando os dois.
+      "split-shell",
       "table-panel",
       "top-bar",
     ])

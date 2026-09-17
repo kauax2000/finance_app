@@ -3,29 +3,29 @@
 import { useMemo, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
+
 import { supabase } from "@/lib/supabase"
 import { formatAuthErrorMessagePt } from "@/lib/supabase-errors"
 import { getSafeInternalNextPath } from "@/lib/auth-return-path"
+import { isValidEmail } from "@/lib/email"
+import { ROUTES } from "@/config/navigation"
+import { AuthShell } from "@/components/layout/auth-shell"
 import { Alert, AlertTitle } from "@/components/ui/alert"
-import { CustomForm, FormInput } from "@/components/ui/form"
-import { GoogleIcon } from "@/components/icons/google-icon"
-import { Button } from "@/components/ui/button"
+import { Form, FormInput, FormSubmit } from "@/components/ui/form"
+import { Muted } from "@/components/ui/typography"
 import {
     InputGroup,
     InputGroupAddon,
     InputGroupButton,
     InputGroupInput,
 } from "@/components/ui/input-group"
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
 import {
     Field,
     FieldControl,
     FieldError,
     FieldLabel,
 } from "@/components/ui/field"
-
-// Email validation regex
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 interface FieldErrors {
     email?: string
@@ -37,9 +37,9 @@ function getFieldErrors(email: string, password: string): FieldErrors {
     const trimmedEmail = email.trim()
 
     if (!trimmedEmail) {
-        errors.email = "Email é obrigatório"
-    } else if (!emailRegex.test(trimmedEmail)) {
-        errors.email = "Digite um email válido"
+        errors.email = "E-mail é obrigatório"
+    } else if (!isValidEmail(trimmedEmail)) {
+        errors.email = "Digite um e-mail válido"
     }
 
     if (!password.trim()) {
@@ -47,6 +47,19 @@ function getFieldErrors(email: string, password: string): FieldErrors {
     }
 
     return errors
+}
+
+/**
+ * O motivo pelo qual a pessoa caiu aqui, quando não foi ela que pediu.
+ *
+ * A sessão encerrada em outro aparelho limpa tudo e deixa o `AuthGuard`
+ * redirecionar — o que funcionava, mas devolvia uma tela de login sem
+ * explicação nenhuma no lugar da página em que a pessoa estava.
+ */
+const REASONS: Record<string, string> = {
+    "session-expired":
+        "Sua sessão foi encerrada. Entre de novo para continuar de onde parou.",
+    "password-updated": "Senha atualizada. Entre com a senha nova.",
 }
 
 export function LoginForm() {
@@ -57,13 +70,23 @@ export function LoginForm() {
     const nextRoute = useMemo(() => {
         const raw = searchParams.get("next")
         const safe = getSafeInternalNextPath(raw)
-        return safe ?? "/dashboard"
+        return safe ?? ROUTES.DASHBOARD
+    }, [searchParams])
+    const forgotHref = useMemo(() => {
+        const raw = searchParams.get("next")
+        const safe = getSafeInternalNextPath(raw)
+        return safe
+            ? `${ROUTES.FORGOT_PASSWORD}?next=${encodeURIComponent(safe)}`
+            : ROUTES.FORGOT_PASSWORD
     }, [searchParams])
     const registerHref = useMemo(() => {
         const raw = searchParams.get("next")
         const safe = getSafeInternalNextPath(raw)
-        return safe ? `/register?next=${encodeURIComponent(safe)}` : "/register"
+        return safe
+            ? `${ROUTES.REGISTER}?next=${encodeURIComponent(safe)}`
+            : ROUTES.REGISTER
     }, [searchParams])
+    const reason = REASONS[searchParams.get("reason") ?? ""]
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [showPassword, setShowPassword] = useState(false)
@@ -101,36 +124,38 @@ export function LoginForm() {
         }
     }
 
-    const handleGoogleLogin = async () => {
-        const { error: oauthError } = await supabase.auth.signInWithOAuth({
-            provider: "google",
-            options: {
-                redirectTo: `${window.location.origin}${nextRoute}`,
-            },
-        })
-        if (oauthError) {
-            setError(formatAuthErrorMessagePt(oauthError.message))
-        }
-    }
-
     return (
-        <div className="w-full rounded-xl border bg-card text-card-foreground shadow-sm">
-            <div className="flex flex-col gap-6 p-6">
+        <AuthShell
+            title="Entrar"
+            description="Uma conta, todas as suas carteiras."
+        >
+            <div className="flex flex-col gap-(--space-block)">
+                {reason && !error ? (
+                    <Alert tone="info" variant="plain">
+                        <AlertTitle>{reason}</AlertTitle>
+                    </Alert>
+                ) : null}
                 {error ? (
                     <Alert tone="destructive" variant="plain">
                         <AlertTitle>{error}</AlertTitle>
                     </Alert>
                 ) : null}
-                <CustomForm onSubmit={handleLogin} className="flex flex-col gap-4" noValidate>
-                    {/* `FormInput` liga rótulo, erro e `aria-describedby` sozinho:
-                        o `id` e o `aria-invalid` que estavam aqui à mão saem, e o
-                        erro deixa de ser um `<p>` solto que ninguém anunciava. */}
+                {/* `Form` com `pending` é a forma curta: o `FormSubmit` lá
+                    embaixo desabilita, marca `aria-busy` e troca o rótulo
+                    sozinho. Antes isso era `CustomForm` mais um `Button` com
+                    `disabled={loading}` e um ternário no texto. */}
+                <Form onSubmit={handleLogin} pending={loading} noValidate>
+                    {/* `FormInput` liga rótulo, erro e `aria-describedby`
+                        sozinho. O `id="email"` é contrato: `e2e/auth.setup.ts`
+                        seleciona por ele. */}
                     <FormInput
                         id="email"
                         ref={emailInputRef}
-                        label="Email"
+                        size="xl"
+                        label="E-mail"
                         type="email"
-                        placeholder="seu@email.com"
+                        autoComplete="email"
+                        placeholder="voce@email.com"
                         value={email}
                         onChange={(e) => {
                             setEmail(e.target.value)
@@ -149,19 +174,26 @@ export function LoginForm() {
                     <Field>
                         <div className="flex items-center justify-between gap-2">
                             <FieldLabel>Senha</FieldLabel>
+                            {/* Sublinhado **sempre**, não só no cursor: é o
+                                link que alguém procura justamente por estar
+                                travado, e sem traço ele era a coisa menos
+                                visível da tela. E ele carrega o `next`, como
+                                todos os outros — quem redefine a senha também
+                                está voltando para algum lugar. */}
                             <Link
-                                href="/forgot-password"
-                                className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+                                href={forgotHref}
+                                className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground active:text-foreground"
                             >
                                 Esqueceu a senha?
                             </Link>
                         </div>
-                        <InputGroup>
+                        <InputGroup size="xl">
                             <FieldControl>
                                 <InputGroupInput
                                     id="password"
                                     ref={passwordInputRef}
                                     type={showPassword ? "text" : "password"}
+                                    autoComplete="current-password"
                                     placeholder="Digite sua senha"
                                     value={password}
                                     onChange={(e) => {
@@ -187,37 +219,21 @@ export function LoginForm() {
                             <FieldError>{fieldErrors.password}</FieldError>
                         ) : null}
                     </Field>
-                    <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? "Entrando..." : "Entrar"}
-                    </Button>
-                </CustomForm>
-
-                <div className="relative flex items-center gap-3 text-sm">
-                    <div className="h-px flex-1 bg-border" />
-                    <span className="text-muted-foreground">ou continue com</span>
-                    <div className="h-px flex-1 bg-border" />
-                </div>
-
-                <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleGoogleLogin}
-                    type="button"
-                >
-                    <GoogleIcon />
-                    Google
-                </Button>
-
-                <p className="text-center text-sm text-muted-foreground">
-                    Não tem uma conta?{" "}
-                    <Link
-                        href={registerHref}
-                        className="text-primary-accent font-medium underline-offset-4 hover:underline"
-                    >
-                        Criar conta
-                    </Link>
-                </p>
+                    <FormSubmit size="xl" className="w-full" pendingLabel="Entrando…">
+                        Entrar
+                    </FormSubmit>
+                </Form>
             </div>
-        </div>
+
+            <Muted>
+                Não tem uma conta?{" "}
+                <Link
+                    href={registerHref}
+                    className="font-medium text-primary-accent underline-offset-4 hover:underline active:underline"
+                >
+                    Criar conta
+                </Link>
+            </Muted>
+        </AuthShell>
     )
 }

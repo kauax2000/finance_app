@@ -1,15 +1,13 @@
-import { AppWordmark } from "@/components/layout/app-wordmark"
-import { ResetPasswordForm } from "@/components/reset-password-form"
+import { PasswordRecoveryForm } from "@/components/password-recovery-form"
 
+/**
+ * A porta do **link de e-mail**. Ela monta o mesmo formulário de
+ * `/forgot-password`, já no passo da senha nova, lendo os tokens do hash.
+ *
+ * Ela existe porque o template de e-mail do Supabase vive fora deste
+ * repositório e pode mandar link em vez de código. Antes eram duas
+ * implementações divergentes desta mesma tela; agora é uma, com duas entradas.
+ */
 export default function ResetPasswordPage() {
-    return (
-        <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
-            <div className="flex w-full max-w-sm flex-col gap-6">
-                <div className="flex items-center gap-2 self-center">
-                    <AppWordmark size="lg" />
-                </div>
-                <ResetPasswordForm />
-            </div>
-        </div>
-    )
+    return <PasswordRecoveryForm entry="link" />
 }

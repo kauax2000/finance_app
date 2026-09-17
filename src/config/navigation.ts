@@ -18,6 +18,10 @@ export const ROUTES = {
     MEMBERS: "/members",
     PLANS: "/plans",
     LOGIN: "/login",
+    REGISTER: "/register",
+    FORGOT_PASSWORD: "/forgot-password",
+    RESET_PASSWORD: "/reset-password",
+    INVITE_ACCEPT: "/invites/accept",
 } as const
 
 export function creditCardDetailPath(id: string): string {

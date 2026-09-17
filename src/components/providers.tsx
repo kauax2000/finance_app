@@ -16,6 +16,7 @@ import { supabase, type Profile } from "@/lib/supabase"
 import { clearCurrentSession, createSession, validateCurrentSession } from "@/lib/sessions"
 import { callDeleteUserAccount } from "@/lib/delete-account"
 import { formatAuthErrorMessagePt } from "@/lib/supabase-errors"
+import { setAuthSignOutReason } from "@/lib/auth-signout-reason"
 import { ThemeProvider } from "@/components/theme-provider"
 import { PwaShellProvider } from "@/components/pwa/pwa-shell-provider"
 import { Toaster } from "@/components/ui/sonner"
@@ -130,6 +131,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     if (!ok) {
                         // Sessão revogada em outro aparelho: além de sair da tela, some com
                         // os dados em cache e o login local (o SIGNED_OUT zera o estado).
+                        // O motivo viaja junto para o `AuthGuard` poder dizer o
+                        // que aconteceu, em vez de devolver um login mudo.
+                        setAuthSignOutReason("session-expired")
                         void clearClientCaches().finally(() =>
                             supabase.auth.signOut({ scope: "local" }),
                         )
@@ -160,6 +164,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     if (!ok) {
                         // Sessão revogada em outro aparelho: além de sair da tela, some com
                         // os dados em cache e o login local (o SIGNED_OUT zera o estado).
+                        // O motivo viaja junto para o `AuthGuard` poder dizer o
+                        // que aconteceu, em vez de devolver um login mudo.
+                        setAuthSignOutReason("session-expired")
                         void clearClientCaches().finally(() =>
                             supabase.auth.signOut({ scope: "local" }),
                         )

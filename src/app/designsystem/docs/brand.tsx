@@ -146,6 +146,67 @@ export default function BrandDoc() {
         <span className="wordmark text-lg text-foreground">Finance</span>
       </DocSection>
 
+      <DocSection
+        title="O campo de marca"
+        description="O verde ocupando uma região inteira, e não um controle. A @utility brand-field carrega o material — vinheta e grão — e inverte a paleta local, então quem entra nela chega com a tinta certa sem declarar cor nenhuma."
+        code={`// A casca das telas de acesso
+<aside className="brand-field flex flex-col px-10 py-12">
+  <AppWordmark className="self-start text-primary-foreground" />
+  {/* Item, MoneyDisplay, Muted e Caption não declaram cor:
+      a utility redefine --foreground e --muted-foreground */}
+</aside>`}
+        previewClassName="flex-col items-stretch"
+      >
+        <div className="brand-field flex min-h-40 flex-col justify-between rounded-xl p-6">
+          <AppWordmark className="self-start text-primary-foreground" />
+          <div>
+            <p className="text-sm text-foreground">Carteira</p>
+            <p className="text-sm text-muted-foreground">saldo deste mês</p>
+          </div>
+        </div>
+      </DocSection>
+
+      <DocNote title="Por que a utility redefine tokens em vez de pintar os filhos">
+        <p>
+          A superfície é <strong>invertida</strong>. Sem os quatro tokens locais,
+          todo componente do sistema chega com a tinta do tema:{" "}
+          <code>ItemDescription</code> é <code>Muted</code>, ou seja cinza, e{" "}
+          <code>MoneyDisplay tone=&quot;default&quot;</code> é quase preto no tema
+          claro. Os dois somem sobre o verde, e o conserto por fora seria um{" "}
+          <code>text-primary-foreground</code> repetido em cada filho — a tela
+          reimportando a paleta, uma classe por vez.
+        </p>
+        <p>
+          O texto secundário é <code>--brand-field-muted-foreground</code>, um
+          verde pálido, e não branco com alfa: sobre o <code>--primary</code> do
+          tema escuro o <strong>branco puro</strong> só alcança 5,22:1, então
+          qualquer alfa que devolva os 4,5:1 da norma fica em ~92% — e a 92% o
+          secundário é indistinguível do título. A hierarquia morria para a norma
+          sobreviver.
+        </p>
+      </DocNote>
+
+      <DocNote title="Os números do grão são medidos">
+        <p>
+          <code>overlay</code> foi comparado com <code>soft-light</code>,{" "}
+          <code>multiply</code> e com pintar o ruído direto: ele rende mais
+          textura por unidade de desvio de cor. O <code>feComponentTransfer</code>{" "}
+          com <code>slope</code> 0,6 existe porque <code>feTurbulence</code> em
+          amplitude cheia, sob <code>overlay</code> numa base escura, clareava o
+          painel em 10 unidades de luminância — exatamente a folga de contraste
+          do tema escuro.
+        </p>
+        <p>
+          O alfa é diferente por tema (60% no claro, 45% no escuro) porque a base
+          é: 0,42 e 0,50. A amplitude foi medida na captura real, não em modelo,
+          como desvio-padrão de luminância num retalho sem texto, com a versão
+          antiga e a nova no mesmo retalho — os números e a fórmula estão no
+          comentário do token, em <code>globals.css</code>. Eles moram só lá:{" "}
+          <strong>σ sem método não compara</strong>, e duas casas para o mesmo
+          número já tinham divergido uma vez.
+        </p>
+      </DocNote>
+
       <DocNote title="O que não fazer">
         <p>
           Recolorir o lockup: a cor já responde ao tema. Colar o <code>AppLogo</code> ao lado dele, escrevendo a inicial duas vezes. Escrever &ldquo;Finance&rdquo; em Inter ao lado da arte. Declarar <code>width</code> junto de <code>height</code>: a proporção é do traçado.

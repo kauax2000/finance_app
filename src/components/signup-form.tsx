@@ -1,84 +1,38 @@
 "use client"
 
-import {
-    Field,
-    FieldControl,
-    FieldError,
-    FieldLabel,
-} from "@/components/ui/field"
-import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy"
 import { useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
+
 import { supabase } from "@/lib/supabase"
 import { getSafeInternalNextPath } from "@/lib/auth-return-path"
+import { isValidEmail } from "@/lib/email"
 import { formatAuthErrorMessagePt } from "@/lib/supabase-errors"
+import { isPasswordValid, passwordErrorMessage } from "@/lib/password-policy"
+import { ROUTES } from "@/config/navigation"
+import { PasswordRequirements } from "@/components/auth/password-requirements"
+import { AuthShell } from "@/components/layout/auth-shell"
 import { Alert, AlertTitle } from "@/components/ui/alert"
-import { CustomForm, FormInput } from "@/components/ui/form"
-import { GoogleIcon } from "@/components/icons/google-icon"
 import { Button } from "@/components/ui/button"
+import { Muted } from "@/components/ui/typography"
+import { Form, FormInput, FormSubmit } from "@/components/ui/form"
 import {
     InputGroup,
     InputGroupAddon,
     InputGroupButton,
     InputGroupInput,
 } from "@/components/ui/input-group"
-import { CheckIcon, EyeIcon, EyeSlashIcon, MinusIcon } from "@heroicons/react/16/solid"
-
-// Email validation regex
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-// Phone validation regex (Brazilian format)
-const phoneRegex = /^\(?\d{2}\)?\s?\d{5}-?\d{4}$/
-
-// Password validation regex - requires lowercase, uppercase, digit, and symbol
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).+$/
-
-interface PasswordRequirements {
-    hasMinLength: boolean
-    hasLowercase: boolean
-    hasUppercase: boolean
-    hasDigit: boolean
-    hasSymbol: boolean
-}
-
-// Helper function to check all password requirements
-function checkPasswordRequirements(password: string): PasswordRequirements {
-    return {
-        hasMinLength: password.length >= MIN_PASSWORD_LENGTH,
-        hasLowercase: /[a-z]/.test(password),
-        hasUppercase: /[A-Z]/.test(password),
-        hasDigit: /\d/.test(password),
-        hasSymbol: /[!@#$%^&*(),.?":{}|<>]/.test(password),
-    }
-}
-
-// Helper to check if all requirements are met
-function isPasswordValid(requirements: PasswordRequirements): boolean {
-    return Object.values(requirements).every(Boolean)
-}
-
-// Format phone number as user types
-function formatPhoneNumber(value: string): string {
-    const digits = value.replace(/\D/g, "")
-
-    if (digits.length <= 2) {
-        return `(${digits}`
-    }
-    if (digits.length <= 7) {
-        return `(${digits.slice(0, 2)}) ${digits.slice(2)}`
-    }
-    if (digits.length <= 11) {
-        return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
-    }
-    // Limit to 11 digits
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`
-}
+import {
+    Field,
+    FieldControl,
+    FieldError,
+    FieldLabel,
+} from "@/components/ui/field"
 
 interface FieldErrors {
     fullName?: string
     email?: string
-    phone?: string
     password?: string
 }
 
@@ -92,32 +46,18 @@ export function SignupForm() {
     const loginHref = useMemo(
         () =>
             nextPath
-                ? `/login?next=${encodeURIComponent(nextPath)}`
-                : "/login",
+                ? `${ROUTES.LOGIN}?next=${encodeURIComponent(nextPath)}`
+                : ROUTES.LOGIN,
         [nextPath]
     )
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [fullName, setFullName] = useState("")
-    const [phone, setPhone] = useState("")
     const [showPassword, setShowPassword] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
     const [success, setSuccess] = useState(false)
     const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
-
-    // Password requirements check
-    const passwordRequirements = checkPasswordRequirements(password)
-    const passwordIsValid = isPasswordValid(passwordRequirements)
-
-    // Phone handler with formatting
-    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const formatted = formatPhoneNumber(e.target.value)
-        setPhone(formatted)
-        if (fieldErrors.phone) {
-            setFieldErrors(prev => ({ ...prev, phone: undefined }))
-        }
-    }
 
     const validateFields = (): boolean => {
         const errors: FieldErrors = {}
@@ -127,27 +67,21 @@ export function SignupForm() {
         }
 
         if (!email.trim()) {
-            errors.email = "Email é obrigatório"
-        } else if (!emailRegex.test(email)) {
-            errors.email = "Digite um email válido"
+            errors.email = "E-mail é obrigatório"
+        } else if (!isValidEmail(email)) {
+            errors.email = "Digite um e-mail válido"
         }
 
-        if (!phone.trim()) {
-            errors.phone = "Telefone celular é obrigatório"
-        } else if (!phoneRegex.test(phone)) {
-            errors.phone = "Digite um telefone válido"
-        }
+        // A política inteira mora em `lib/password-policy`, e a redefinição de
+        // senha aplica exatamente a mesma — era o furo que deixava recuperar a
+        // senha para uma que o cadastro teria recusado.
+        errors.password = passwordErrorMessage(password)
 
-        if (!password) {
-            errors.password = "Senha é obrigatória"
-        } else if (password.length < MIN_PASSWORD_LENGTH) {
-            errors.password = `A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres`
-        } else if (!passwordRegex.test(password)) {
-            errors.password = "Use letras maiúsculas, minúsculas, números e símbolos"
-        }
-
-        setFieldErrors(errors)
-        return Object.keys(errors).length === 0
+        const cleaned = Object.fromEntries(
+            Object.entries(errors).filter(([, value]) => value)
+        ) as FieldErrors
+        setFieldErrors(cleaned)
+        return Object.keys(cleaned).length === 0
     }
 
     const handleSignup = async (e: React.FormEvent) => {
@@ -162,16 +96,21 @@ export function SignupForm() {
         setLoading(true)
 
         const origin = typeof window !== "undefined" ? window.location.origin : ""
-        const emailRedirectTo = nextPath ? `${origin}${nextPath}` : `${origin}/dashboard`
+        const emailRedirectTo = `${origin}${nextPath ?? ROUTES.DASHBOARD}`
 
         const { data, error } = await supabase.auth.signUp({
-            email,
+            // Aparado, como no login. Sem isto dava para criar a conta num
+            // endereço com espaço na ponta e depois não entrar nele, porque
+            // o login manda a versão aparada.
+            email: email.trim(),
             password,
             options: {
-                data: {
-                    full_name: fullName,
-                    phone: phone,
-                },
+                // O telefone saiu daqui. Ele era obrigatório no formulário,
+                // vinha com máscara brasileira e regex própria — e **nenhum
+                // consumidor**: o trigger `handle_new_user` não o lê e nada em
+                // `src/` o busca. Era atrito no cadastro em troca de um campo
+                // que morria no metadata.
+                data: { full_name: fullName },
                 emailRedirectTo,
             },
         })
@@ -179,73 +118,78 @@ export function SignupForm() {
         if (error) {
             setError(formatAuthErrorMessagePt(error.message))
             setLoading(false)
-        } else if (data.session && nextPath) {
+        } else if (data.session) {
+            // Lacuna 1 de `docs/JORNADAS.md`: com a confirmação de e-mail
+            // desligada o `signUp` já volta com sessão — a pessoa **está
+            // dentro**. A condição antes exigia também um `next`, então quem
+            // chegava pelo caminho comum via "Confirme seu e-mail" depois de
+            // já ter entrado.
             setLoading(false)
-            router.push(nextPath)
+            router.push(nextPath ?? ROUTES.DASHBOARD)
         } else {
             setSuccess(true)
             setLoading(false)
         }
     }
 
-    const handleGoogleSignup = async () => {
-        const path = nextPath ?? "/dashboard"
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: "google",
-            options: {
-                redirectTo: `${window.location.origin}${path}`,
-            },
-        })
-        if (error) {
-            setError(formatAuthErrorMessagePt(error.message))
-        }
-    }
-
+    // O sucesso é **outra tela**, e por isso ele troca o título do casco em vez
+    // de empilhar um segundo `<h1>` embaixo de "Criar conta". É o motivo de o
+    // formulário, e não a página, montar o `AuthShell`: só ele sabe em que
+    // estado está.
     if (success) {
         return (
-            <div className="w-full rounded-xl border bg-card text-card-foreground shadow-sm">
-                <div className="flex flex-col gap-6 p-6">
-                    <div className="flex flex-col gap-2 text-center">
-                        <h3 className="text-2xl font-bold">Confirme seu email</h3>
-                        <p className="text-sm text-muted-foreground">
-                            Enviamos um link de confirmação para <strong>{email}</strong>.
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                            Clique no link para ativar sua conta.
-                        </p>
-                        {nextPath ? (
-                            <p className="text-xs text-muted-foreground text-pretty">
-                                Depois de confirmar o e-mail, você será encaminhado para concluir o convite. Se isso não
-                                acontecer, use &quot;Ir para login&quot; abaixo e entre com o mesmo e-mail — você voltará ao
-                                convite automaticamente.
-                            </p>
-                        ) : null}
-                    </div>
-                    <Button asChild variant="outline" className="w-full">
-                        <Link href={loginHref}>Ir para login</Link>
-                    </Button>
-                </div>
-            </div>
+            <AuthShell
+                title="Confirme seu e-mail"
+                description={
+                    <>
+                        Enviamos um link de confirmação para{" "}
+                        <strong className="font-medium text-foreground">
+                            {email}
+                        </strong>
+                        . Clique nele para ativar a conta.
+                    </>
+                }
+            >
+                {nextPath ? (
+                    <Alert tone="info" variant="plain">
+                        <AlertTitle>
+                            Depois de confirmar, você volta para concluir o
+                            convite. Se isso não acontecer, entre com o mesmo
+                            e-mail — o convite continua esperando.
+                        </AlertTitle>
+                    </Alert>
+                ) : null}
+
+                <Button asChild variant="secondary" size="xl" className="w-full">
+                    <Link href={loginHref}>Ir para o login</Link>
+                </Button>
+            </AuthShell>
         )
     }
 
     return (
-        <div className="w-full rounded-xl border bg-card text-card-foreground shadow-sm">
-            <div className="flex flex-col gap-6 p-6">
-                <CustomForm onSubmit={handleSignup} className="flex flex-col gap-4" noValidate>
-                    {error && (
-                        <Alert tone="destructive" variant="plain">
-                            <AlertTitle>{error}</AlertTitle>
-                        </Alert>
-                    )}
+        <AuthShell
+            title="Criar conta"
+            description="A carteira pessoal e as categorias já vêm prontas."
+        >
+            <div className="flex flex-col gap-(--space-block)">
+                {error ? (
+                    <Alert tone="destructive" variant="plain">
+                        <AlertTitle>{error}</AlertTitle>
+                    </Alert>
+                ) : null}
+                <Form onSubmit={handleSignup} pending={loading} noValidate>
                     <FormInput
                         id="fullName"
+                        size="xl"
                         label="Nome completo"
                         type="text"
-                        placeholder="João Silva"
+                        autoComplete="name"
+                        placeholder="Como você quer ser chamado"
                         value={fullName}
                         onChange={(e) => {
                             setFullName(e.target.value)
+                            setError("")
                             if (fieldErrors.fullName) {
                                 setFieldErrors(prev => ({ ...prev, fullName: undefined }))
                             }
@@ -254,39 +198,37 @@ export function SignupForm() {
                     />
                     <FormInput
                         id="email"
-                        label="Email"
+                        size="xl"
+                        label="E-mail"
                         type="email"
-                        placeholder="seu@email.com"
+                        autoComplete="email"
+                        placeholder="voce@email.com"
                         value={email}
                         onChange={(e) => {
                             setEmail(e.target.value)
+                            setError("")
                             if (fieldErrors.email) {
                                 setFieldErrors(prev => ({ ...prev, email: undefined }))
                             }
                         }}
                         error={fieldErrors.email}
                     />
-                    <FormInput
-                        id="phone"
-                        label="Telefone celular"
-                        type="tel"
-                        placeholder="(11) 99999-9999"
-                        value={phone}
-                        onChange={handlePhoneChange}
-                        maxLength={15}
-                        error={fieldErrors.phone}
-                    />
+                    {/* `Field` composto, e não `FormInput`: o campo carrega o
+                        botão de mostrar/ocultar e a lista viva de requisitos.
+                        O `id` vai no `InputGroupInput`, nunca no grupo. */}
                     <Field>
                         <FieldLabel>Senha</FieldLabel>
-                        <InputGroup>
+                        <InputGroup size="xl">
                             <FieldControl>
-    <InputGroupInput
+                                <InputGroupInput
                                     id="password"
                                     type={showPassword ? "text" : "password"}
-                                    placeholder="Digite sua senha"
+                                    autoComplete="new-password"
+                                    placeholder="Crie uma senha"
                                     value={password}
                                     onChange={(e) => {
                                         setPassword(e.target.value)
+                                        setError("")
                                         if (fieldErrors.password) {
                                             setFieldErrors(prev => ({ ...prev, password: undefined }))
                                         }
@@ -303,100 +245,31 @@ export function SignupForm() {
                                 </InputGroupButton>
                             </InputGroupAddon>
                         </InputGroup>
+                        {/* O erro só aparece depois do envio; enquanto a pessoa
+                            digita, quem fala é a lista — dizer "falta símbolo"
+                            em vermelho na terceira tecla é ruído. */}
                         {fieldErrors.password ? (
                             <FieldError>{fieldErrors.password}</FieldError>
                         ) : null}
-
-                        {/* Password Requirements Visual Indicator */}
-                        {password.length > 0 && (
-                            <div className="space-y-1 mt-2">
-                                <p className="text-xs text-muted-foreground mb-2">
-                                    Requisitos da senha:
-                                </p>
-                                <div className="grid grid-cols-2 gap-1 text-xs">
-                                    <div className={`flex items-center gap-1 ${passwordRequirements.hasMinLength ? "text-success" : "text-muted-foreground"}`}>
-                                        {passwordRequirements.hasMinLength ? (
-                                            <CheckIcon className="size-3 shrink-0" />
-                                        ) : (
-                                            <MinusIcon className="size-3 shrink-0" />
-                                        )}
-                                        8+ caracteres
-                                    </div>
-                                    <div className={`flex items-center gap-1 ${passwordRequirements.hasLowercase ? "text-success" : "text-muted-foreground"}`}>
-                                        {passwordRequirements.hasLowercase ? (
-                                            <CheckIcon className="size-3 shrink-0" />
-                                        ) : (
-                                            <MinusIcon className="size-3 shrink-0" />
-                                        )}
-                                        minúscula
-                                    </div>
-                                    <div className={`flex items-center gap-1 ${passwordRequirements.hasUppercase ? "text-success" : "text-muted-foreground"}`}>
-                                        {passwordRequirements.hasUppercase ? (
-                                            <CheckIcon className="size-3 shrink-0" />
-                                        ) : (
-                                            <MinusIcon className="size-3 shrink-0" />
-                                        )}
-                                        maiúscula
-                                    </div>
-                                    <div className={`flex items-center gap-1 ${passwordRequirements.hasDigit ? "text-success" : "text-muted-foreground"}`}>
-                                        {passwordRequirements.hasDigit ? (
-                                            <CheckIcon className="size-3 shrink-0" />
-                                        ) : (
-                                            <MinusIcon className="size-3 shrink-0" />
-                                        )}
-                                        número
-                                    </div>
-                                    <div className={`flex items-center gap-1 ${passwordRequirements.hasSymbol ? "text-success" : "text-muted-foreground"}`}>
-                                        {passwordRequirements.hasSymbol ? (
-                                            <CheckIcon className="size-3 shrink-0" />
-                                        ) : (
-                                            <MinusIcon className="size-3 shrink-0" />
-                                        )}
-                                        símbolo
-                                    </div>
-                                    <div className={`flex items-center gap-1 ${passwordIsValid ? "text-success" : "text-muted-foreground"}`}>
-                                        {passwordIsValid ? (
-                                            <CheckIcon className="size-3 shrink-0" />
-                                        ) : (
-                                            <MinusIcon className="size-3 shrink-0" />
-                                        )}
-                                        senha forte
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                        {!fieldErrors.password && !isPasswordValid(password) ? (
+                            <PasswordRequirements password={password} />
+                        ) : null}
                     </Field>
-                    <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? "Criando conta..." : "Criar conta"}
-                    </Button>
-                </CustomForm>
-
-                <div className="relative flex items-center gap-3 text-sm">
-                    <div className="h-px flex-1 bg-border" />
-                    <span className="text-muted-foreground">ou continue com</span>
-                    <div className="h-px flex-1 bg-border" />
-                </div>
-
-                <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleGoogleSignup}
-                    type="button"
-                >
-                    <GoogleIcon />
-                    Google
-                </Button>
-
-                <p className="text-center text-sm text-muted-foreground">
-                    Já tem uma conta?{" "}
-                    <Link
-                        href={loginHref}
-                        className="text-primary-accent font-medium underline-offset-4 hover:underline"
-                    >
-                        Entrar
-                    </Link>
-                </p>
+                    <FormSubmit size="xl" className="w-full" pendingLabel="Criando conta…">
+                        Criar conta
+                    </FormSubmit>
+                </Form>
             </div>
-        </div>
+
+            <Muted>
+                Já tem uma conta?{" "}
+                <Link
+                    href={loginHref}
+                    className="font-medium text-primary-accent underline-offset-4 hover:underline active:underline"
+                >
+                    Entrar
+                </Link>
+            </Muted>
+        </AuthShell>
     )
 }

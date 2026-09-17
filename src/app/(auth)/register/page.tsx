@@ -1,25 +1,21 @@
 import { Suspense } from "react"
-import { AppWordmark } from "@/components/layout/app-wordmark"
+
+import { AuthFormSkeleton, AuthShell } from "@/components/layout/auth-shell"
 import { SignupForm } from "@/components/signup-form"
 
-export default function SignupPage() {
+export default function RegisterPage() {
     return (
-        <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
-            <div className="flex w-full max-w-sm flex-col gap-6">
-                <div className="flex items-center gap-2 self-center">
-                    <AppWordmark size="lg" />
-                </div>
-                <Suspense
-                    fallback={
-                        <div
-                            className="h-[28rem] w-full animate-pulse rounded-xl border bg-card"
-                            aria-hidden
-                        />
-                    }
+        <Suspense
+            fallback={
+                <AuthShell
+                    title="Criar conta"
+                    description="A carteira pessoal e as categorias já vêm prontas."
                 >
-                    <SignupForm />
-                </Suspense>
-            </div>
-        </div>
+                    <AuthFormSkeleton fields={3} />
+                </AuthShell>
+            }
+        >
+            <SignupForm />
+        </Suspense>
     )
 }

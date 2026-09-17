@@ -72,6 +72,7 @@ import SkeletonDoc from "./docs/skeleton"
 import SliderDoc from "./docs/slider"
 import SonnerDoc from "./docs/sonner"
 import SpinnerDoc from "./docs/spinner"
+import SplitShellDoc from "./docs/split-shell"
 import StatCardDoc from "./docs/stat-card"
 import StepperDoc from "./docs/stepper"
 import SwitchDoc from "./docs/switch"
@@ -160,6 +161,7 @@ export const DOCS: Record<string, ComponentType> = {
   "slider": SliderDoc,
   "sonner": SonnerDoc,
   "spinner": SpinnerDoc,
+  "split-shell": SplitShellDoc,
   "stat-card": StatCardDoc,
   "stepper": StepperDoc,
   "switch": SwitchDoc,

@@ -313,6 +313,26 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   `--duration-*` / `--ease-*`. Prefira utilitários como `bg-success-muted`,
   `text-expense-muted-foreground`, `z-(--z-sheet)` — **não** adicione classes
   cruas da paleta do Tailwind (`text-green-600`, `bg-rose-100`).
+- **O campo de marca**: `@utility brand-field` é o verde ocupando uma **região**
+  — hoje, o painel das telas de acesso. Ela traz o material (a vinheta lendo
+  `--primary-edge`, e o grão em `--brand-field-grain`, com alfa diferente por
+  tema) e **inverte a paleta local**: dentro dela, `--foreground`,
+  `--muted-foreground` e `--border` são redefinidos, e o secundário é
+  `--brand-field-muted-foreground`, um verde pálido. É isso que faz `Item`,
+  `MoneyDisplay`, `Muted` e `Caption` chegarem com a tinta certa **sem nenhum
+  `text-primary-foreground` na tela** — pintar os filhos seria reimportar a
+  paleta uma classe por vez. A posição dela no arquivo é carga estrutural:
+  `glass.test.ts` fatia o CSS de `@utility glass-material` até
+  `@utility no-scrollbar`, e uma utility nova dentro desse intervalo entra na
+  fatia e reprova asserções de outro componente. As medições estão em
+  `/designsystem/brand`.
+- **A seleção de texto** é tingida em `@layer base`: `--primary-muted` atrás,
+  `--primary-muted-foreground` na frente, e o par invertido dentro de
+  `.brand-field`. Sem regra, o app inteiro seleciona no azul do sistema
+  operacional, que não conhece o tema escuro nem a marca. O preenchimento é o
+  par **tingido** e não `--primary` cheio, porque a seleção não pode trocar a
+  cor do texto que cobre — um valor em `--expense` continua vermelho por baixo
+  dela.
 - **Camadas**: `--z-base` 0, `--z-raised` 10, `--z-sticky` 20, `--z-banner` 30,
   `--z-header` 40, `--z-modal` 50, `--z-sheet` 70, `--z-popover` 80, `--z-toast`
   100. Os números são os que o app usa — a rodada 02 corrigiu a escala, que
@@ -416,6 +436,12 @@ tema.
   popover é `BottomBarSlot`, e a ação primária veste `bottomBarActionClassName`,
   que lê a altura da barra e **não declara cor**. O realce viaja sozinho, e a
   área segura mora dentro da caixa. Ver a rodada 82.
+- **A página que existe fora da casca do app**:
+  [`SplitShell`](src/components/ui/split-shell.tsx) — campo de um lado, coluna
+  de conteúdo do outro, sem cartão, empilhando abaixo de `lg`. O campo entra por
+  **slot**, porque o que ele mostra é conteúdo de produto. Quem amarra os dois
+  neste app é o `AuthShell`, em `components/layout/`, e as cinco telas de acesso
+  o vestem. Dentro do app, o topo de tela continua sendo o `PageHeader`.
 - **Page chrome**: [`PageHeader`](src/components/ui/page-header.tsx) +
   [`PageSection`](src/components/ui/page-section.tsx) +
   [`Container`](src/components/ui/container.tsx). Os três têm `size` (`sm` |

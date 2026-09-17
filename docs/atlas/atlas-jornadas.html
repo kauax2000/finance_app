@@ -275,12 +275,12 @@
 <header class="cover">
   <p class="eyebrow">Documentação de produto</p>
   <h1>Atlas de Jornadas do Finance&nbsp;App</h1>
-  <p class="subtitle">Tudo o que uma pessoa faz no app, do cadastro à fatura paga: as dez jornadas, como elas se conectam, as regras técnicas que decidem cada caminho e o que ainda está com problema.</p>
+  <p class="subtitle">Tudo o que uma pessoa faz no app, do cadastro à fatura paga: as dez jornadas, como elas se conectam, as regras técnicas que decidem cada caminho e o que ainda está com problema. A jornada de acesso foi redesenhada e suas cinco lacunas, fechadas.</p>
   <dl class="meta">
     <div><dt>Base</dt><dd>Leitura do código</dd></div>
     <div><dt>Branch</dt><dd>finance-app-2.0</dd></div>
-    <div><dt>Data</dt><dd>17 set 2026</dd></div>
-    <div><dt>Conteúdo</dt><dd>10 jornadas · 14 fluxogramas · 8 lacunas</dd></div>
+    <div><dt>Data</dt><dd>17 set 2026 · acesso revisado</dd></div>
+    <div><dt>Conteúdo</dt><dd>10 jornadas · 14 fluxogramas · 4 lacunas</dd></div>
     <div><dt>Fonte versionada</dt><dd><code>docs/JORNADAS.md</code></dd></div>
   </dl>
 </header>
@@ -453,18 +453,18 @@ flowchart LR
       <p class="lead">Entrar, criar conta, recuperar a senha e sair.</p>
       <dl class="summary">
         <div><dt>Objetivo</dt><dd>Ter uma sessão válida e chegar à tela certa.</dd></div>
-        <div><dt>Começa em</dt><dd><code>/</code>, <code>/login</code>, <code>/register</code> ou um link de email</dd></div>
+        <div><dt>Começa em</dt><dd><code>/</code>, <code>/login</code>, <code>/register</code>, um convite ou um link de e-mail</dd></div>
         <div><dt>Termina em</dt><dd>O Painel ou a rota guardada em <code>next</code></dd></div>
         <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j2">02 Carteiras</a><a class="chip" href="#j4">04 Painel</a><a class="chip" href="#j10">10 Conta</a></dd></div>
       </dl>
       <h3>Como funciona</h3>
       <ol class="steps">
         <li><div><strong>Abertura.</strong> Em <code>/</code>, o app espera a sessão carregar e manda para <code>/dashboard</code> ou para <code>/login</code>.</div></li>
-        <li><div><strong>Guarda.</strong> Qualquer rota do app sem sessão vai para <code>/login?next=rota</code>, e depois de entrar a pessoa volta para onde estava. A única rota pública dentro do app é a do convite.</div></li>
-        <li><div><strong>Login.</strong> Email e senha, ou Google. Erro fica na tela com mensagem em português; sucesso segue o <code>next</code> ou vai ao Painel.</div></li>
-        <li><div><strong>Cadastro.</strong> Nome, email, telefone e uma senha forte, com checklist ao vivo. O banco cria sozinho o perfil, a carteira pessoal e doze categorias. Sem sessão imediata, a pessoa vê "Confirme seu email".</div></li>
-        <li><div><strong>Senha.</strong> Há dois caminhos: um código digitado em <code>/forgot-password</code> e um link que abre <code>/reset-password</code>. Os dois terminam no login.</div></li>
-        <li><div><strong>Saída.</strong> Sair limpa sessão, caches, fila offline e push, e o <code>AuthGuard</code> faz o resto. Uma sessão encerrada em outro aparelho sai do mesmo jeito na próxima abertura.</div></li>
+        <li><div><strong>Guarda, nas duas direções.</strong> Rota do app sem sessão vai para <code>/login?next=rota</code>, e depois de entrar a pessoa volta para onde estava. E quem <em>já</em> entrou não vê mais o formulário: as rotas de acesso mandam para o Painel, com três isentas — as duas de senha, porque a conferência do código cria sessão antes da troca, e a do convite, que serve os dois estados.</div></li>
+        <li><div><strong>Login.</strong> E-mail e senha. O login social saiu. Erro fica na tela em português; sucesso segue o <code>next</code> ou vai ao Painel. Quando a saída não foi a pessoa que pediu — sessão encerrada em outro aparelho — o login diz isso no topo.</div></li>
+        <li><div><strong>Cadastro.</strong> Nome, e-mail e senha; o telefone saiu, porque era obrigatório e nenhuma parte do app o lia. A senha tem checklist ao vivo. O banco cria sozinho o perfil, a carteira pessoal e doze categorias. Se o cadastro já volta com sessão, a pessoa entra direto — "Confirme seu e-mail" só aparece quando há mesmo um e-mail a confirmar.</div></li>
+        <li><div><strong>Senha.</strong> Um fluxo só: código de seis dígitos pedido em <code>/forgot-password</code>, conferido, e a senha nova na sequência — com a mesma política do cadastro, que antes valia só lá. <code>/reset-password</code> continua existindo como a porta do link de e-mail e monta o mesmo formulário no passo da senha, porque o template de e-mail do Supabase mora fora do repositório.</div></li>
+        <li><div><strong>Saída.</strong> Sair limpa sessão, caches, fila offline e push, e o <code>AuthGuard</code> faz o resto. Uma sessão encerrada em outro aparelho sai do mesmo jeito na próxima abertura, e agora leva o motivo junto.</div></li>
       </ol>
       <figure>
         <div class="diagram"><pre class="mermaid">%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#121917","primaryColor":"#18211f","primaryTextColor":"#e8efec","primaryBorderColor":"#3b4a45","lineColor":"#6c7a75","textColor":"#c9d4d0","edgeLabelBackground":"#121917","fontFamily":"Inter, system-ui, sans-serif","fontSize":"14px"},"flowchart":{"useMaxWidth":true,"curve":"basis","padding":12}}}%%
@@ -476,29 +476,32 @@ flowchart TD
 
     protected["Qualquer rota do app"] --&gt; guard{"AuthGuard: tem usuário?"}
     guard --&gt;|"sim"| page(["Renderiza a página"])
-    guard --&gt;|"não, e é /invites/accept"| page
     guard --&gt;|"não"| loginNext["/login?next=rota atual"]
 
-    login --&gt;|"email e senha"| signin[("signInWithPassword")]
+    authRoute["Rota de (auth)"] --&gt; backGuard{"AuthSignedInRedirect: já entrou?"}
+    backGuard --&gt;|"não"| form(["Renderiza o formulário"])
+    backGuard --&gt;|"sim, e a rota é isenta"| form
+    backGuard --&gt;|"sim"| dash
+
+    login --&gt;|"e-mail e senha"| signin[("signInWithPassword")]
     signin --&gt;|"erro"| loginErr(["Alerta em português"]) --&gt; login
     signin --&gt;|"sucesso"| nextOk{"Tem next seguro?"}
     nextOk --&gt;|"sim"| back["Rota do next"]
     nextOk --&gt;|"não"| dash
-    login --&gt;|"Google"| oauth[("OAuth Google")] --&gt;|"tokens no hash da URL"| nextOk
     login --&gt;|"Esqueceu a senha?"| forgot["/forgot-password"]
     login --&gt;|"Criar conta"| register["/register?next"]
+    revoked(["reason=session-expired"]) -.-&gt;|"aviso no topo"| login
 
-    register --&gt;|"nome, email, telefone, senha"| valid{"Senha forte e campos válidos?"}
+    register --&gt;|"nome, e-mail, senha"| valid{"Senha cumpre a política e campos válidos?"}
     valid --&gt;|"não"| register
     valid --&gt;|"sim"| signup[("signUp")]
     signup --&gt;|"erro"| regErr(["Alerta"]) --&gt; register
     signup --&gt;|"sucesso"| trigger[("Trigger handle_new_user: perfil, carteira pessoal, 12 categorias")]
-    trigger --&gt; hasSession{"Voltou com sessão e next?"}
+    trigger --&gt; hasSession{"Voltou com sessão?"}
     hasSession --&gt;|"sim"| back
-    hasSession --&gt;|"não"| confirm(["Confirme seu email"])
-    confirm --&gt;|"Ir para login"| login
-    confirm -.-&gt;|"link do email"| nextOk
-    register --&gt;|"Google"| oauth
+    hasSession --&gt;|"não"| confirm(["Confirme seu e-mail"])
+    confirm --&gt;|"Ir para o login"| login
+    confirm -.-&gt;|"link do e-mail"| nextOk
     register --&gt;|"Entrar"| login
 
     classDef route fill:#14231f,stroke:#52c49c,color:#e8efec
@@ -506,57 +509,67 @@ flowchart TD
     classDef decision fill:#2a2415,stroke:#e2b85e,color:#f3e6c6
     classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
     classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
-    class root,dash,login,protected,loginNext,back,forgot,register route
-    class bootscreen,page,loginErr,regErr,confirm dialog
-    class loading,guard,nextOk,valid,hasSession decision
-    class signin,oauth,signup,trigger backend</pre></div>
+    class root,dash,login,protected,loginNext,authRoute,back,forgot,register route
+    class bootscreen,page,form,loginErr,revoked,regErr,confirm dialog
+    class loading,guard,backGuard,nextOk,valid,hasSession decision
+    class signin,signup,trigger backend</pre></div>
         <figcaption><strong>Figura 1a · Entrada, login e cadastro</strong></figcaption>
       </figure>
       <figure>
         <div class="diagram"><pre class="mermaid">%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#121917","primaryColor":"#18211f","primaryTextColor":"#e8efec","primaryBorderColor":"#3b4a45","lineColor":"#6c7a75","textColor":"#c9d4d0","edgeLabelBackground":"#121917","fontFamily":"Inter, system-ui, sans-serif","fontSize":"14px"},"flowchart":{"useMaxWidth":true,"curve":"basis","padding":12}}}%%
 flowchart TD
-    forgot["/forgot-password: passo email"] --&gt;|"Enviar token"| resetMail[("resetPasswordForEmail")]
-    resetMail --&gt;|"erro"| forgotErr(["Mensagem crua do Supabase"]) --&gt; forgot
-    resetMail --&gt;|"sucesso"| code(["Passo reset: código e nova senha"])
-    code --&gt;|"Voltar"| forgot
-    code --&gt;|"Redefinir"| verify[("setSession, senão verifyOtp recovery; depois updateUser")]
+    forgot["/forgot-password: passo e-mail"] --&gt;|"Enviar código"| resetMail[("resetPasswordForEmail")]
+    resetMail --&gt;|"erro"| forgotErr(["Alerta em português"]) --&gt; forgot
+    resetMail --&gt;|"sucesso"| code(["Passo código: 6 dígitos"])
+    code --&gt;|"Usar outro e-mail"| forgot
+    code --&gt;|"Continuar"| verify[("verifyOtp recovery")]
     verify --&gt;|"erro"| code
-    verify --&gt;|"sucesso"| done(["Senha atualizada"]) --&gt;|"3 s"| login["/login"]
+    verify --&gt;|"sucesso"| newPass(["Passo senha nova"])
+    newPass --&gt;|"Salvar senha"| update[("updateUser; depois signOut")]
+    update --&gt;|"erro"| newPass
+    update --&gt;|"sucesso"| done(["Senha atualizada"]) --&gt;|"3 s"| loginPwd["/login?reason=password-updated"]
 
-    mailLink["Link do email"] --&gt; reset["/reset-password#access_token"]
-    reset --&gt; token{"Token válido no hash?"}
-    token --&gt;|"não"| expired(["Link expirado ou inválido"])
-    expired --&gt;|"Solicitar novo link"| forgot
-    expired --&gt;|"Voltar ao login"| login
-    token --&gt;|"sim"| newPass(["Nova senha"]) --&gt; update[("setSession e updateUser")]
-    update --&gt;|"sucesso"| done
+    mailLink["Link do e-mail"] --&gt; reset["/reset-password#access_token"]
+    reset --&gt; token{"Token no hash ou sessão de recuperação?"}
+    token --&gt;|"não"| expired(["Link expirado"])
+    expired --&gt;|"Pedir um novo código"| forgot
+    expired --&gt;|"Entrar"| loginPlain["/login"]
+    token --&gt;|"sim"| newPass
 
     menus(["Menu do usuário, menu da conta no mobile ou /account"]) --&gt;|"Sair"| signout[("Limpa sessão, React Query, IndexedDB, fila offline, push e caches do SW; signOut")]
-    signout --&gt; guard{"AuthGuard sem usuário"}
-    guard --&gt; loginNext["/login?next=página onde estava"]
+    signout --&gt; guardOut{"AuthGuard sem usuário"}
+    guardOut --&gt; loginNext["/login?next=página onde estava"]
 
     other(["Sessão encerrada em outro aparelho"]) --&gt; check[("Edge sessions: sessão revogada")]
-    check --&gt;|"ao abrir o app"| signout
+    check --&gt;|"ao abrir o app"| reason[("setAuthSignOutReason")] --&gt; signout
+    guardOut -.-&gt;|"com motivo"| loginReason["/login?next=…&amp;reason=session-expired"]
 
     classDef route fill:#14231f,stroke:#52c49c,color:#e8efec
     classDef dialog fill:#1a2220,stroke:#5b6a65,color:#dfe7e4
     classDef decision fill:#2a2415,stroke:#e2b85e,color:#f3e6c6
     classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
     classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
-    class forgot,login,mailLink,reset,loginNext route
-    class forgotErr,code,done,expired,newPass,menus,other dialog
-    class token,guard decision
-    class resetMail,verify,update,signout,check backend</pre></div>
+    class forgot,loginPwd,mailLink,reset,loginPlain,loginNext,loginReason route
+    class forgotErr,code,newPass,done,expired,menus,other dialog
+    class token,guardOut decision
+    class resetMail,verify,update,signout,check,reason backend</pre></div>
         <figcaption><strong>Figura 1b · Senha e saída</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
-      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Bootstrap</td><td><code>/</code> manda para <code>/dashboard</code> ou <code>/login</code> depois de a sessão carregar</td><td><code>src/app/page-client.tsx</code></td></tr><tr><td>Guarda</td><td>Toda rota de <code>(app)</code> sem usuário vai para <code>/login?next=</code> com <code>replace</code>; <code>/invites/accept</code> é a exceção</td><td><code>src/components/layout/auth-guard.tsx</code></td></tr><tr><td><code>next</code></td><td>Só caminho interno começando com <code>/</code>; o padrão é <code>/dashboard</code></td><td><code>src/lib/auth-return-path.ts</code></td></tr><tr><td>Rotas <code>(auth)</code></td><td>Sem guarda: quem já entrou também abre <code>/login</code> e <code>/register</code></td><td><code>src/app/(auth)/</code></td></tr><tr><td>Cadastro</td><td>Senha com 8+, minúscula, maiúscula, número e símbolo</td><td><code>src/components/signup-form.tsx</code></td></tr><tr><td>Primeira conta</td><td>Trigger <code>on_auth_user_created</code> → <code>handle_new_user</code> cria perfil, carteira "Carteira pessoal de Nome" e 7 categorias de despesa + 5 de receita</td><td><code>supabase/migrations/00000000000000_baseline.sql</code></td></tr><tr><td>Sessões</td><td>Ao entrar registra o aparelho; ao abrir confere se foi revogado</td><td><code>src/components/providers.tsx</code>, edge <code>sessions</code></td></tr><tr><td>Sair</td><td>Não navega: limpa tudo e deixa o <code>AuthGuard</code> redirecionar</td><td><code>src/components/providers.tsx</code></td></tr></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Bootstrap</td><td><code>/</code> manda para <code>/dashboard</code> ou <code>/login</code> depois de a sessão carregar; o sinal de carregando só aparece depois de 600 ms</td><td><code>src/app/page-client.tsx</code>, <code>src/components/layout/app-bootstrap-screen.tsx</code></td></tr><tr><td>Guarda</td><td>Toda rota de <code>(app)</code> sem usuário vai para <code>/login?next=</code> com <code>replace</code>. Sem exceções: <code>/invites/accept</code> saiu do grupo</td><td><code>src/components/layout/auth-guard.tsx</code></td></tr><tr><td>Guarda invertida</td><td>Quem já entrou em <code>(auth)</code> vai para o <code>next</code> ou o Painel. Isentas: <code>/forgot-password</code> e <code>/reset-password</code> (o <code>verifyOtp</code> cria sessão antes da troca de senha) e <code>/invites/accept</code></td><td><code>src/components/layout/auth-signed-in-redirect.tsx</code></td></tr><tr><td><code>next</code></td><td>Só caminho interno começando com <code>/</code>; o padrão é <code>/dashboard</code></td><td><code>src/lib/auth-return-path.ts</code></td></tr><tr><td>Casca</td><td>As cinco telas vestem o <code>AuthShell</code>; quem o monta é o formulário, porque o título depende do estado</td><td><code>src/components/layout/auth-shell.tsx</code></td></tr><tr><td>Senha</td><td>Uma política só — 8+, minúscula, maiúscula, número e símbolo — aplicada no cadastro e na redefinição</td><td><code>src/lib/password-policy.ts</code></td></tr><tr><td>Recuperação</td><td>Um formulário, duas portas: <code>/forgot-password</code> começa no código de 6 dígitos, <code>/reset-password</code> entra no passo da senha lendo o token do hash. O <code>resetPasswordForEmail</code> manda <code>redirectTo</code> para <code>/reset-password</code>, senão o link do e-mail cai na Site URL do projeto, que mora fora deste repositório</td><td><code>src/components/password-recovery-form.tsx</code></td></tr><tr><td>Erros</td><td>Tudo passa por <code>formatAuthErrorMessagePt</code>, inclusive esqueci e redefinir senha</td><td><code>src/lib/supabase-errors.ts</code></td></tr><tr><td>Primeira conta</td><td>Trigger <code>on_auth_user_created</code> → <code>handle_new_user</code> cria perfil, carteira "Carteira pessoal de Nome" e 7 categorias de despesa + 5 de receita</td><td><code>supabase/migrations/00000000000000_baseline.sql</code></td></tr><tr><td>Sessões</td><td>Ao entrar registra o aparelho; ao abrir confere se foi revogado</td><td><code>src/components/providers.tsx</code>, edge <code>sessions</code></td></tr><tr><td>Sair</td><td>Não navega: limpa tudo e deixa o <code>AuthGuard</code> redirecionar</td><td><code>src/components/providers.tsx</code></td></tr><tr><td>Motivo da saída</td><td>Sessão revogada grava o motivo em memória; o <code>AuthGuard</code> o anexa como <code>reason=</code> e o login o mostra</td><td><code>src/lib/auth-signout-reason.ts</code></td></tr></tbody></table></div>
+      <div class="callout">
+        <p class="label">A forma da tela</p>
+        <ul>
+          <li>As cinco telas dividem uma casca só: campo da cor da marca à esquerda a partir de 1024px, faixa de marca no topo no telefone, coluna de formulário à direita. Não há cartão — o painel já é a moldura.</li>
+          <li>O painel mostra o escopo do produto antes de pedir a senha: carteira, cartões, contas a pagar e assinaturas, cada um com o número que teria. Os números são de exemplo, e a tela diz isso.</li>
+          <li>Quem monta a casca é o formulário, não a página, porque o título depende do estado — o cadastro vira "Confirme seu e-mail" e a recuperação troca a cada passo.</li>
+        </ul>
+      </div>
       <div class="callout gap">
         <p class="label">Pontos de atenção</p>
         <ul>
-          <li><code>/login</code> e <code>/register</code> abrem mesmo para quem já entrou.</li>
-          <li>Quem já voltou do cadastro com sessão ainda pode ver "Confirme seu email".</li>
-          <li>Nenhuma tela leva ao fluxo por link, e os erros de senha aparecem em inglês.</li>
+          <li>A política de senha ainda não alcança a troca de senha de dentro do app, que confere só o comprimento.</li>
+          <li>O template de e-mail do Supabase não está no repositório, então daqui não dá para saber se ele manda código ou link. É por isso que as duas portas continuam abertas — e por isso o pedido de recuperação diz explicitamente para onde o link deve voltar, em vez de confiar na configuração de fora.</li>
         </ul>
       </div>
     </section>
@@ -658,7 +671,7 @@ flowchart TD
         <figcaption><strong>Figura 2b · Convidar e aceitar convite</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
-      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Carteira atual</td><td><code>user_settings.current_workspace_id</code>; inválida cai na primeira, com a pessoal ordenada antes</td><td><code>src/lib/queries/fetch-workspaces-data.ts</code></td></tr><tr><td>Criar e excluir</td><td>RPCs <code>create_shared_workspace</code>, <code>get_workspace_delete_impact</code>, <code>delete_workspace</code></td><td><code>src/components/workspace-provider.tsx</code></td></tr><tr><td>Sair da carteira</td><td>Diálogo próprio de confirmação</td><td><code>src/components/settings/workspace-leave-dialog.tsx</code></td></tr><tr><td>Membros</td><td>RPC <code>workspace_member_directory</code>; só a dona convida, revoga e remove</td><td><code>src/app/(app)/members/page-client.tsx</code></td></tr><tr><td>Convite</td><td>Edges <code>workspace-invites-create</code>, <code>-resend</code>, <code>-accept</code>; o email é montado no servidor</td><td><code>supabase/functions/_shared/workspace-invite-email.ts</code></td></tr><tr><td>Página de convite</td><td>Fica no grupo <code>(app)</code> e é pública pelo <code>AuthGuard</code></td><td><code>src/app/(app)/invites/accept/page-client.tsx</code></td></tr></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Carteira atual</td><td><code>user_settings.current_workspace_id</code>; inválida cai na primeira, com a pessoal ordenada antes</td><td><code>src/lib/queries/fetch-workspaces-data.ts</code></td></tr><tr><td>Criar e excluir</td><td>RPCs <code>create_shared_workspace</code>, <code>get_workspace_delete_impact</code>, <code>delete_workspace</code></td><td><code>src/components/workspace-provider.tsx</code></td></tr><tr><td>Sair da carteira</td><td>Diálogo próprio de confirmação</td><td><code>src/components/settings/workspace-leave-dialog.tsx</code></td></tr><tr><td>Membros</td><td>RPC <code>workspace_member_directory</code>; só a dona convida, revoga e remove</td><td><code>src/app/(app)/members/page-client.tsx</code></td></tr><tr><td>Convite</td><td>Edges <code>workspace-invites-create</code>, <code>-resend</code>, <code>-accept</code>; o email é montado no servidor</td><td><code>supabase/functions/_shared/workspace-invite-email.ts</code></td></tr><tr><td>Página de convite</td><td>Fica no grupo <code>(auth)</code>: veste o <code>AuthShell</code> e não atravessa a casca do app. O <code>WorkspaceProvider</code> é global, então a mudança de grupo não custou nada</td><td><code>src/app/(auth)/invites/accept/page-client.tsx</code></td></tr></tbody></table></div>
       <div class="callout gap">
         <p class="label">Pontos de atenção</p>
         <ul>
@@ -1307,19 +1320,30 @@ flowchart TD
     <section class="block" id="lacunas">
       <p class="eyebrow">Fechamento</p>
       <h2>Lacunas encontradas</h2>
-      <p class="lead">O mapeamento encontrou oito pontos em que o código não faz o que a jornada promete. Estão aqui para registro; nenhum foi corrigido.</p>
+      <p class="lead">Restam quatro pontos em que o código não faz o que a jornada promete. Os cinco de acesso saíram na rodada de setembro de 2026 e estão listados logo abaixo.</p>
       <div class="table-wrap">
         <table>
           <thead><tr><th>#</th><th>Jornada</th><th>Tipo</th><th>O que acontece</th><th>Efeito para a pessoa</th></tr></thead>
           <tbody>
-            <tr><td>1</td><td>01 Acesso</td><td>Fluxo</td><td>O cadastro volta com sessão e sem <code>next</code>, e ainda mostra "Confirme seu email".</td><td>Pede uma confirmação de que ela não precisa.</td></tr>
-            <tr><td>2</td><td>01 Acesso</td><td>Guarda</td><td><code>/login</code> e <code>/register</code> não têm guarda.</td><td>Quem já entrou vê o formulário em vez do Painel.</td></tr>
-            <tr><td>3</td><td>01 Acesso</td><td>Fluxo</td><td>Existem dois fluxos de redefinir senha, e nenhuma tela leva ao do link.</td><td>Qual funciona depende do template de email do Supabase.</td></tr>
-            <tr><td>4</td><td>01 Acesso</td><td>Texto</td><td>Os erros de esqueci e redefinir senha são a mensagem crua do Supabase.</td><td>Mensagem em inglês no meio de um app em português.</td></tr>
-            <tr><td>5</td><td>02 Carteiras</td><td>Layout</td><td><code>/invites/accept</code> fica dentro da casca do app.</td><td>Quem não entrou vê menus que não pode usar.</td></tr>
-            <tr><td>6</td><td>02 Carteiras</td><td>Validação</td><td>A carteira pessoal mostra o formulário de convite.</td><td>O erro só aparece depois de enviar.</td></tr>
-            <tr><td>7</td><td>03 Navegação</td><td>Código sem uso</td><td>A casca expõe abrir convite, nova categoria e novo cartão, e nada chama essas ações.</td><td>Nenhum; é manutenção sem retorno.</td></tr>
-            <tr><td>8</td><td>10 Conta</td><td>Guarda</td><td>Sessões e Atividade redirecionam para <code>/login</code> sem <code>next</code>.</td><td>Depois de entrar, cai no Painel e não na página.</td></tr>
+            <tr><td>1</td><td>02 Carteiras</td><td>Validação</td><td>A carteira pessoal mostra o formulário de convite.</td><td>O erro só aparece depois de enviar.</td></tr>
+            <tr><td>2</td><td>03 Navegação</td><td>Código sem uso</td><td>A casca expõe abrir convite, nova categoria e novo cartão, e nada chama essas ações.</td><td>Nenhum; é manutenção sem retorno.</td></tr>
+            <tr><td>3</td><td>10 Conta</td><td>Guarda</td><td>Sessões e Atividade redirecionam para <code>/login</code> sem <code>next</code>.</td><td>Depois de entrar, cai no Painel e não na página.</td></tr>
+            <tr><td>4</td><td>01 Acesso</td><td>Validação</td><td>A política de senha não alcança a troca de senha de dentro do app.</td><td>Dá para trocar por uma senha que o cadastro recusaria.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Fechadas na rodada de acesso</h3>
+      <p>Cinco lacunas saíram junto com o redesenho das telas de acesso, em setembro de 2026.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Era</th><th>Lacuna</th><th>O que fechou</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>"Confirme seu e-mail" aparecia mesmo quando o cadastro já voltava com sessão</td><td>A condição passou a olhar só a sessão, sem exigir <code>next</code></td></tr>
+            <tr><td>2</td><td><code>/login</code> e <code>/register</code> sem guarda para quem já entrou</td><td>Uma guarda invertida, com as duas rotas de senha e a do convite isentas</td></tr>
+            <tr><td>3</td><td>Dois fluxos de redefinir senha que não se conversavam</td><td>Um formulário só, com duas portas de entrada</td></tr>
+            <tr><td>4</td><td>Erro de esqueci e redefinir senha em inglês</td><td>Tudo passa pelo tradutor de erros do Supabase</td></tr>
+            <tr><td>5</td><td><code>/invites/accept</code> cercada pela casca do app para quem não entrou</td><td>A rota saiu do grupo <code>(app)</code> e foi para o de acesso</td></tr>
           </tbody>
         </table>
       </div>
@@ -1336,9 +1360,9 @@ flowchart TD
             <tr><td><code>/</code></td><td>Abertura, só redireciona</td><td>Pública</td><td>01</td></tr>
             <tr><td><code>/login</code></td><td>Entrar</td><td>Pública</td><td>01</td></tr>
             <tr><td><code>/register</code></td><td>Criar conta</td><td>Pública</td><td>01</td></tr>
-            <tr><td><code>/forgot-password</code></td><td>Recuperar senha por código</td><td>Pública</td><td>01</td></tr>
-            <tr><td><code>/reset-password</code></td><td>Redefinir senha por link</td><td>Pública</td><td>01</td></tr>
-            <tr><td><code>/invites/accept</code></td><td>Aceitar convite</td><td>Pública, dentro da casca</td><td>02</td></tr>
+            <tr><td><code>/forgot-password</code></td><td>Recuperar senha: código, conferência e senha nova</td><td>Pública</td><td>01</td></tr>
+            <tr><td><code>/reset-password</code></td><td>A mesma recuperação, entrando pelo link do e-mail</td><td>Pública</td><td>01</td></tr>
+            <tr><td><code>/invites/accept</code></td><td>Aceitar convite</td><td>Pública, fora da casca do app</td><td>02</td></tr>
             <tr><td><code>/members</code></td><td>Membros e convites</td><td>Com sessão</td><td>02</td></tr>
             <tr><td><code>/settings</code></td><td>Carteira, app e notificações</td><td>Com sessão</td><td>02</td></tr>
             <tr><td><code>/dashboard</code></td><td>Painel</td><td>Com sessão</td><td>04</td></tr>

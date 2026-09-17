@@ -275,6 +275,10 @@ const LAYER: Record<string, Layer> = {
   "bottom-bar": "Templates",
   "page-header": "Templates",
   "page-section": "Templates",
+  /** A página dividida: campo de um lado, coluna de conteúdo do outro.
+   *  Compõe `Container` e a tipografia, e recebe o campo por slot — o que ele
+   *  mostra é conteúdo de produto, e conteúdo de produto não mora em `ui/`. */
+  "split-shell": "Templates",
   /**
    * `TablePanel` compõe `Card`, `Table` e (no uso real) `Pagination` — dois ou
    * mais organismos, dispostos num layout de página. É a definição do
@@ -477,6 +481,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("bottom-bar", "Bottom Bar", "A barra de abas do telefone.", ui("bottom-bar"), "BottomBar, BottomBarRow, BottomBarTabs, BottomBarTab, BottomBarSlot, bottomBarActionClassName"),
   entry("page-header", "Page Header", "O topo de uma tela.", ui("page-header"), "PageHeader, PageHeaderTitleRow, PageHeaderTitle, PageHeaderDescription, PageHeaderEyebrow, PageHeaderMeta, PageHeaderActions"),
   entry("page-section", "Page Section", "Bloco de uma tela, com título e ação.", ui("page-section"), "PageSection, PageSectionHeader, PageSectionTitle, PageSectionDescription"),
+  entry("split-shell", "Split Shell", "Campo de um lado, coluna de conteúdo do outro.", ui("split-shell"), "SplitShell"),
   entry("table-panel", "Table Panel", "Tabela com moldura, ações e paginação.", ui("table-panel"), "TablePanel, TablePanelToolbar, TablePanelFooter"),
   entry("top-bar", "Top Bar", "A barra do topo da janela.", ui("top-bar"), "TopBar, TopBarStart, TopBarTitle, TopBarContent, TopBarActions"),
 ]

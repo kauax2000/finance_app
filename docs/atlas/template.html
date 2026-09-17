@@ -275,12 +275,12 @@
 <header class="cover">
   <p class="eyebrow">Documentação de produto</p>
   <h1>Atlas de Jornadas do Finance&nbsp;App</h1>
-  <p class="subtitle">Tudo o que uma pessoa faz no app, do cadastro à fatura paga: as dez jornadas, como elas se conectam, as regras técnicas que decidem cada caminho e o que ainda está com problema.</p>
+  <p class="subtitle">Tudo o que uma pessoa faz no app, do cadastro à fatura paga: as dez jornadas, como elas se conectam, as regras técnicas que decidem cada caminho e o que ainda está com problema. A jornada de acesso foi redesenhada e suas cinco lacunas, fechadas.</p>
   <dl class="meta">
     <div><dt>Base</dt><dd>Leitura do código</dd></div>
     <div><dt>Branch</dt><dd>finance-app-2.0</dd></div>
-    <div><dt>Data</dt><dd>17 set 2026</dd></div>
-    <div><dt>Conteúdo</dt><dd>10 jornadas · 14 fluxogramas · 8 lacunas</dd></div>
+    <div><dt>Data</dt><dd>17 set 2026 · acesso revisado</dd></div>
+    <div><dt>Conteúdo</dt><dd>10 jornadas · 14 fluxogramas · 4 lacunas</dd></div>
     <div><dt>Fonte versionada</dt><dd><code>docs/JORNADAS.md</code></dd></div>
   </dl>
 </header>
@@ -412,18 +412,18 @@
       <p class="lead">Entrar, criar conta, recuperar a senha e sair.</p>
       <dl class="summary">
         <div><dt>Objetivo</dt><dd>Ter uma sessão válida e chegar à tela certa.</dd></div>
-        <div><dt>Começa em</dt><dd><code>/</code>, <code>/login</code>, <code>/register</code> ou um link de email</dd></div>
+        <div><dt>Começa em</dt><dd><code>/</code>, <code>/login</code>, <code>/register</code>, um convite ou um link de e-mail</dd></div>
         <div><dt>Termina em</dt><dd>O Painel ou a rota guardada em <code>next</code></dd></div>
         <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j2">02 Carteiras</a><a class="chip" href="#j4">04 Painel</a><a class="chip" href="#j10">10 Conta</a></dd></div>
       </dl>
       <h3>Como funciona</h3>
       <ol class="steps">
         <li><div><strong>Abertura.</strong> Em <code>/</code>, o app espera a sessão carregar e manda para <code>/dashboard</code> ou para <code>/login</code>.</div></li>
-        <li><div><strong>Guarda.</strong> Qualquer rota do app sem sessão vai para <code>/login?next=rota</code>, e depois de entrar a pessoa volta para onde estava. A única rota pública dentro do app é a do convite.</div></li>
-        <li><div><strong>Login.</strong> Email e senha, ou Google. Erro fica na tela com mensagem em português; sucesso segue o <code>next</code> ou vai ao Painel.</div></li>
-        <li><div><strong>Cadastro.</strong> Nome, email, telefone e uma senha forte, com checklist ao vivo. O banco cria sozinho o perfil, a carteira pessoal e doze categorias. Sem sessão imediata, a pessoa vê "Confirme seu email".</div></li>
-        <li><div><strong>Senha.</strong> Há dois caminhos: um código digitado em <code>/forgot-password</code> e um link que abre <code>/reset-password</code>. Os dois terminam no login.</div></li>
-        <li><div><strong>Saída.</strong> Sair limpa sessão, caches, fila offline e push, e o <code>AuthGuard</code> faz o resto. Uma sessão encerrada em outro aparelho sai do mesmo jeito na próxima abertura.</div></li>
+        <li><div><strong>Guarda, nas duas direções.</strong> Rota do app sem sessão vai para <code>/login?next=rota</code>, e depois de entrar a pessoa volta para onde estava. E quem <em>já</em> entrou não vê mais o formulário: as rotas de acesso mandam para o Painel, com três isentas — as duas de senha, porque a conferência do código cria sessão antes da troca, e a do convite, que serve os dois estados.</div></li>
+        <li><div><strong>Login.</strong> E-mail e senha. O login social saiu. Erro fica na tela em português; sucesso segue o <code>next</code> ou vai ao Painel. Quando a saída não foi a pessoa que pediu — sessão encerrada em outro aparelho — o login diz isso no topo.</div></li>
+        <li><div><strong>Cadastro.</strong> Nome, e-mail e senha; o telefone saiu, porque era obrigatório e nenhuma parte do app o lia. A senha tem checklist ao vivo. O banco cria sozinho o perfil, a carteira pessoal e doze categorias. Se o cadastro já volta com sessão, a pessoa entra direto — "Confirme seu e-mail" só aparece quando há mesmo um e-mail a confirmar.</div></li>
+        <li><div><strong>Senha.</strong> Um fluxo só: código de seis dígitos pedido em <code>/forgot-password</code>, conferido, e a senha nova na sequência — com a mesma política do cadastro, que antes valia só lá. <code>/reset-password</code> continua existindo como a porta do link de e-mail e monta o mesmo formulário no passo da senha, porque o template de e-mail do Supabase mora fora do repositório.</div></li>
+        <li><div><strong>Saída.</strong> Sair limpa sessão, caches, fila offline e push, e o <code>AuthGuard</code> faz o resto. Uma sessão encerrada em outro aparelho sai do mesmo jeito na próxima abertura, e agora leva o motivo junto.</div></li>
       </ol>
       <figure>
         <div class="diagram">@@D1@@</div>
@@ -435,12 +435,19 @@
       </figure>
       <h3>Regras técnicas</h3>
       @@T1@@
+      <div class="callout">
+        <p class="label">A forma da tela</p>
+        <ul>
+          <li>As cinco telas dividem uma casca só: campo da cor da marca à esquerda a partir de 1024px, faixa de marca no topo no telefone, coluna de formulário à direita. Não há cartão — o painel já é a moldura.</li>
+          <li>O painel mostra o escopo do produto antes de pedir a senha: carteira, cartões, contas a pagar e assinaturas, cada um com o número que teria. Os números são de exemplo, e a tela diz isso.</li>
+          <li>Quem monta a casca é o formulário, não a página, porque o título depende do estado — o cadastro vira "Confirme seu e-mail" e a recuperação troca a cada passo.</li>
+        </ul>
+      </div>
       <div class="callout gap">
         <p class="label">Pontos de atenção</p>
         <ul>
-          <li><code>/login</code> e <code>/register</code> abrem mesmo para quem já entrou.</li>
-          <li>Quem já voltou do cadastro com sessão ainda pode ver "Confirme seu email".</li>
-          <li>Nenhuma tela leva ao fluxo por link, e os erros de senha aparecem em inglês.</li>
+          <li>A política de senha ainda não alcança a troca de senha de dentro do app, que confere só o comprimento.</li>
+          <li>O template de e-mail do Supabase não está no repositório, então daqui não dá para saber se ele manda código ou link. É por isso que as duas portas continuam abertas — e por isso o pedido de recuperação diz explicitamente para onde o link deve voltar, em vez de confiar na configuração de fora.</li>
         </ul>
       </div>
     </section>
@@ -723,19 +730,30 @@
     <section class="block" id="lacunas">
       <p class="eyebrow">Fechamento</p>
       <h2>Lacunas encontradas</h2>
-      <p class="lead">O mapeamento encontrou oito pontos em que o código não faz o que a jornada promete. Estão aqui para registro; nenhum foi corrigido.</p>
+      <p class="lead">Restam quatro pontos em que o código não faz o que a jornada promete. Os cinco de acesso saíram na rodada de setembro de 2026 e estão listados logo abaixo.</p>
       <div class="table-wrap">
         <table>
           <thead><tr><th>#</th><th>Jornada</th><th>Tipo</th><th>O que acontece</th><th>Efeito para a pessoa</th></tr></thead>
           <tbody>
-            <tr><td>1</td><td>01 Acesso</td><td>Fluxo</td><td>O cadastro volta com sessão e sem <code>next</code>, e ainda mostra "Confirme seu email".</td><td>Pede uma confirmação de que ela não precisa.</td></tr>
-            <tr><td>2</td><td>01 Acesso</td><td>Guarda</td><td><code>/login</code> e <code>/register</code> não têm guarda.</td><td>Quem já entrou vê o formulário em vez do Painel.</td></tr>
-            <tr><td>3</td><td>01 Acesso</td><td>Fluxo</td><td>Existem dois fluxos de redefinir senha, e nenhuma tela leva ao do link.</td><td>Qual funciona depende do template de email do Supabase.</td></tr>
-            <tr><td>4</td><td>01 Acesso</td><td>Texto</td><td>Os erros de esqueci e redefinir senha são a mensagem crua do Supabase.</td><td>Mensagem em inglês no meio de um app em português.</td></tr>
-            <tr><td>5</td><td>02 Carteiras</td><td>Layout</td><td><code>/invites/accept</code> fica dentro da casca do app.</td><td>Quem não entrou vê menus que não pode usar.</td></tr>
-            <tr><td>6</td><td>02 Carteiras</td><td>Validação</td><td>A carteira pessoal mostra o formulário de convite.</td><td>O erro só aparece depois de enviar.</td></tr>
-            <tr><td>7</td><td>03 Navegação</td><td>Código sem uso</td><td>A casca expõe abrir convite, nova categoria e novo cartão, e nada chama essas ações.</td><td>Nenhum; é manutenção sem retorno.</td></tr>
-            <tr><td>8</td><td>10 Conta</td><td>Guarda</td><td>Sessões e Atividade redirecionam para <code>/login</code> sem <code>next</code>.</td><td>Depois de entrar, cai no Painel e não na página.</td></tr>
+            <tr><td>1</td><td>02 Carteiras</td><td>Validação</td><td>A carteira pessoal mostra o formulário de convite.</td><td>O erro só aparece depois de enviar.</td></tr>
+            <tr><td>2</td><td>03 Navegação</td><td>Código sem uso</td><td>A casca expõe abrir convite, nova categoria e novo cartão, e nada chama essas ações.</td><td>Nenhum; é manutenção sem retorno.</td></tr>
+            <tr><td>3</td><td>10 Conta</td><td>Guarda</td><td>Sessões e Atividade redirecionam para <code>/login</code> sem <code>next</code>.</td><td>Depois de entrar, cai no Painel e não na página.</td></tr>
+            <tr><td>4</td><td>01 Acesso</td><td>Validação</td><td>A política de senha não alcança a troca de senha de dentro do app.</td><td>Dá para trocar por uma senha que o cadastro recusaria.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Fechadas na rodada de acesso</h3>
+      <p>Cinco lacunas saíram junto com o redesenho das telas de acesso, em setembro de 2026.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Era</th><th>Lacuna</th><th>O que fechou</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>"Confirme seu e-mail" aparecia mesmo quando o cadastro já voltava com sessão</td><td>A condição passou a olhar só a sessão, sem exigir <code>next</code></td></tr>
+            <tr><td>2</td><td><code>/login</code> e <code>/register</code> sem guarda para quem já entrou</td><td>Uma guarda invertida, com as duas rotas de senha e a do convite isentas</td></tr>
+            <tr><td>3</td><td>Dois fluxos de redefinir senha que não se conversavam</td><td>Um formulário só, com duas portas de entrada</td></tr>
+            <tr><td>4</td><td>Erro de esqueci e redefinir senha em inglês</td><td>Tudo passa pelo tradutor de erros do Supabase</td></tr>
+            <tr><td>5</td><td><code>/invites/accept</code> cercada pela casca do app para quem não entrou</td><td>A rota saiu do grupo <code>(app)</code> e foi para o de acesso</td></tr>
           </tbody>
         </table>
       </div>
@@ -752,9 +770,9 @@
             <tr><td><code>/</code></td><td>Abertura, só redireciona</td><td>Pública</td><td>01</td></tr>
             <tr><td><code>/login</code></td><td>Entrar</td><td>Pública</td><td>01</td></tr>
             <tr><td><code>/register</code></td><td>Criar conta</td><td>Pública</td><td>01</td></tr>
-            <tr><td><code>/forgot-password</code></td><td>Recuperar senha por código</td><td>Pública</td><td>01</td></tr>
-            <tr><td><code>/reset-password</code></td><td>Redefinir senha por link</td><td>Pública</td><td>01</td></tr>
-            <tr><td><code>/invites/accept</code></td><td>Aceitar convite</td><td>Pública, dentro da casca</td><td>02</td></tr>
+            <tr><td><code>/forgot-password</code></td><td>Recuperar senha: código, conferência e senha nova</td><td>Pública</td><td>01</td></tr>
+            <tr><td><code>/reset-password</code></td><td>A mesma recuperação, entrando pelo link do e-mail</td><td>Pública</td><td>01</td></tr>
+            <tr><td><code>/invites/accept</code></td><td>Aceitar convite</td><td>Pública, fora da casca do app</td><td>02</td></tr>
             <tr><td><code>/members</code></td><td>Membros e convites</td><td>Com sessão</td><td>02</td></tr>
             <tr><td><code>/settings</code></td><td>Carteira, app e notificações</td><td>Com sessão</td><td>02</td></tr>
             <tr><td><code>/dashboard</code></td><td>Painel</td><td>Com sessão</td><td>04</td></tr>

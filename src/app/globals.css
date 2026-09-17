@@ -184,6 +184,85 @@
      azul, num sistema onde `primary` significa o verde em todo o resto. */
   --primary-muted: oklch(0.96 0.03 166);
   --primary-muted-foreground: oklch(0.32 0.1 166);
+
+  /* O campo de marca: o verde ocupando uma região inteira, e não um controle.
+     Ele existe porque `--primary` chapado numa metade de tela lê como um
+     swatch gigante — a mesma cor que convence num botão de 40px vira tinta
+     quando cobre 45% da página.
+
+     São dois materiais, e os dois moram aqui porque nenhuma tela pode
+     escrevê-los: um degradê e um `data:` numa classe de tela seriam literais,
+     e a invariante 2 os proíbe.
+
+     A vinheta escurece **na direção de `--primary-edge`** — o token que já
+     significa "este mesmo verde, um degrau mais fundo", e que a tecla do
+     `Button` usa como plinto. Nenhuma cor nova entra no sistema por causa
+     disto. A luz vem de cima, então o topo fica limpo e o peso desce para os
+     cantos de baixo, que é onde o olho quer apoio.
+
+     O grão é `feTurbulence` em `overlay`, e os três números dele são medidos,
+     não escolhidos.
+
+     **`overlay` foi comparado**: por unidade de desvio de cor ele rende mais
+     textura que `soft-light`, que `multiply` e que pintar o ruído direto
+     (`normal`) — a 8% de alfa, o direto dava σ 1,34 contra σ 4,32 do `overlay`
+     a 60%, com desvio parecido.
+
+     **O `feComponentTransfer` com `slope` 0,6 não é enfeite.** `feTurbulence`
+     sai com amplitude cheia, e `overlay` sobre uma base escura amplifica só um
+     lado da curva: o painel **clareava** 10 unidades de luminância, o que come
+     exatamente a folga de contraste do tema escuro. Comprimindo o ruído para
+     60% da amplitude, o desvio cai para 3,3 e a textura continua legível.
+
+     **O alfa está dentro do SVG, e é diferente por tema**, porque a base é:
+     0,42 no claro e 0,50 no escuro. A 60% nos dois, o escuro clareava 4,2 e o
+     texto secundário caía para 4,38:1. Com 60% no claro e 45% no escuro o
+     contraste se mantém e a textura sobe.
+
+     **Os números, e o método — porque σ sem método não compara.** Desvio-padrão
+     da **luminância** (0,2126R + 0,7152G + 0,0722B) sobre um retalho de
+     220×140 sem texto do painel, na captura real a 1440×900, com a versão
+     antiga e a nova medidas no mesmo retalho e na mesma passada:
+
+       claro  2,07 → 3,21     escuro  2,38 → 3,36
+
+     Cerca de uma vez e meia, e não o triplo: uma primeira redação daqui disse
+     "triplo" comparando contra 0,96, que é a **média de RGB** — outra métrica.
+     Quem for mexer nisto remede os dois lados com a mesma fórmula antes de
+     escrever qualquer razão. */
+  --brand-field-vignette: radial-gradient(
+    120% 100% at 50% 0%,
+    transparent 30%,
+    var(--primary-edge) 100%
+  );
+  --brand-field-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='0.6' intercept='0'/%3E%3CfeFuncG type='linear' slope='0.6' intercept='0'/%3E%3CfeFuncB type='linear' slope='0.6' intercept='0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.6'/%3E%3C/svg%3E");
+  --brand-field-grain-size: 180px 180px;
+
+  /* O texto secundário **dentro** do campo de marca.
+
+     Ele não é branco com alfa, e a razão é medida: sobre o `--primary` do tema
+     escuro (0,50 de luminosidade) o **branco puro** já só alcança 5,22:1, então
+     qualquer alfa que devolva os 4,5:1 da norma tem de ficar em ~92% — e a 92%
+     o "secundário" é indistinguível do título. A hierarquia morria para a
+     norma sobreviver.
+
+     Um tom da **própria matiz** resolve os dois: medido **sobre o painel já
+     granulado** (que é a superfície real, e não o `--primary` chapado), ele dá
+     4,66:1 no escuro e 6,54:1 no claro, e o olho lê o verde pálido como outra
+     camada, não como branco apagado. A luminosidade subiu de 0,94 para 0,96
+     quando o grão ganhou amplitude: o `overlay` clareia a base, e a folga do
+     tema escuro é estreita o bastante para 0,02 decidirem entre 4,38 e 4,66. É o que o piso de craft pede para superfície colorida — tingir a
+     partir da matiz, nunca cinza.
+
+     `color-mix(in oklch, branco, verde)` foi tentado e **sai rosa**:
+     `oklch(0.985 0 0)` tem matiz 0 explícita (não `none`), então a
+     interpolação até 166 passa pelo laranja. Medido: `[240, 211, 196]`.
+
+     Um valor só nos dois temas, de propósito: o fundo dele é `--primary`, que
+     já troca. Ele está declarado nos dois blocos porque o `ds:catalog` cobra
+     par para todo token de cor, e ter o mesmo número escrito duas vezes é mais
+     honesto do que uma exceção. */
+  --brand-field-muted-foreground: oklch(0.96 0.035 166);
   /* ── A camada de chão do tema claro ──────────────────────────────────────
 
      `--secondary`, `--muted` e `--accent` são os cinzas que ficam *sobre* uma
@@ -635,6 +714,15 @@
   --primary-accent: oklch(0.66 0.13 166);
   --primary-muted: oklch(0.27 0.06 166);
   --primary-muted-foreground: oklch(0.88 0.06 166);
+
+  /* Ver a nota no tema claro. A vinheta troca sozinha, porque ela lê
+     `--primary-edge`; o grão é redeclarado porque o alfa é o que não atravessa
+     os temas. 45% aqui contra 60% lá: a base do escuro é mais clara (0,50), o
+     `overlay` clareia mais sobre ela, e este tema tem menos folga de contraste
+     para gastar. */
+  --brand-field-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='0.6' intercept='0'/%3E%3CfeFuncG type='linear' slope='0.6' intercept='0'/%3E%3CfeFuncB type='linear' slope='0.6' intercept='0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.45'/%3E%3C/svg%3E");
+  /* Mesmo valor do tema claro — ver a nota lá. O fundo é que troca. */
+  --brand-field-muted-foreground: oklch(0.96 0.035 166);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --secondary-hover: oklch(0.36 0 0);
@@ -802,6 +890,32 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* A seleção de texto.
+
+     É uma das superfícies que o navegador desenha e que não pertence a design
+     system nenhum: sem regra, o app inteiro seleciona no azul do sistema
+     operacional, que não conhece o tema escuro nem a marca. É o sinal mais
+     barato de que uma página foi desenhada em vez de montada.
+
+     `--primary-muted` e não `--primary`: a seleção fica **atrás** do texto, e
+     o texto que ela cobre é `--foreground`. Preencher com o verde cheio
+     obrigaria a trocar a cor do texto junto, o que a seleção não pode fazer
+     sem apagar a cor que a tela escolheu — um valor em `--expense`, por
+     exemplo. O par tingido mantém o texto legível seja ele qual for. */
+  ::selection {
+    background-color: var(--primary-muted);
+    color: var(--primary-muted-foreground);
+  }
+
+  /* Dentro do campo de marca a regra acima ficaria clara sobre clara: ali
+     `--foreground` já é quase branco. A seleção inverte junto com a
+     superfície. */
+  .brand-field ::selection,
+  .brand-field::selection {
+    background-color: var(--primary-foreground);
+    color: var(--primary);
   }
 
   html {
@@ -1618,6 +1732,61 @@
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* A superfície de marca: `--primary` como **região**, com material.
+
+   Ela é uma só e mora aqui pela mesma razão que `menu-classes`, `bar-classes` e
+   `field-classes` existem — a receita de uma superfície não se copia para
+   dentro de cada tela que a veste. Quem a usa hoje é o painel das telas de
+   acesso; quem a usar amanhã herda a mesma decisão.
+
+   **`background-blend-mode` em vez de pseudo-elementos**: um `::before` e um
+   `::after` absolutos precisariam de `isolation` e de `z-index` negativo para
+   ficarem atrás do conteúdo, e aí a superfície passaria a disputar o
+   empilhamento com quem ela contém. Duas camadas de `background-image` sobre a
+   cor não disputam nada, e liberam os dois pseudo-elementos para quem chama.
+
+   A ordem importa: a vinheta pinta **por cima** do grão (é a primeira camada),
+   então os cantos escurecem o material em vez de o material texturizar a
+   vinheta.
+
+   **A posição no arquivo é carga estrutural.** `glass.test.ts` fatia este CSS
+   de `@utility glass-material` até `@utility no-scrollbar` e prova que o vidro
+   não declara `background` nem `background-blend-mode`. Escrita dentro desse
+   intervalo, esta utility entrava na fatia e reprovava três asserções que
+   falam de outro componente. Ela mora depois de `no-scrollbar` por isso. */
+@utility brand-field {
+  background-color: var(--primary);
+  background-image: var(--brand-field-vignette), var(--brand-field-grain);
+  background-size: cover, var(--brand-field-grain-size);
+  background-repeat: no-repeat, repeat;
+  background-blend-mode: normal, overlay;
+
+  /* **A superfície é invertida, e quem resolve isso é ela.**
+
+     Sem estas quatro linhas, todo componente do sistema que entra aqui chega
+     com a tinta do tema: `ItemDescription` é `Muted`, ou seja
+     `text-muted-foreground`, que é **cinza**; `MoneyDisplay tone="default"` é
+     `text-foreground`, que no tema claro é quase preto. Os dois somem sobre o
+     verde, e o conserto por fora seria um `text-primary-foreground` repetido em
+     cada filho — a tela reimportando a paleta, que é a invariante 2 sendo
+     violada uma classe por vez.
+
+     Redefinir os tokens **no contêiner** faz o contrário: `Item`,
+     `MoneyDisplay`, `Muted`, `Separator` e qualquer peça futura funcionam aqui
+     sem saber que estão sobre verde. É a mesma jogada que o `AlertAction` faz
+     com `currentColor` para servir os cinco tons com uma peça só.
+
+     O secundário é `--brand-field-muted-foreground`, um verde pálido, e não
+     branco com alfa: a medição está na nota do token. A borda continua sendo
+     alfa porque ela é traço e não texto, e `color-mix` é o caminho porque
+     `--primary-foreground` é um token — `var(--x / 22%)` não é sintaxe
+     válida. */
+  color: var(--primary-foreground);
+  --foreground: var(--primary-foreground);
+  --muted-foreground: var(--brand-field-muted-foreground);
+  --border: color-mix(in oklch, var(--primary-foreground) 22%, transparent);
 }
 
 @utility scroll-fade-y {

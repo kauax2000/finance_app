@@ -1,25 +1,30 @@
 import { Suspense } from "react"
-import { AppWordmark } from "@/components/layout/app-wordmark"
+
+import { AuthFormSkeleton, AuthShell } from "@/components/layout/auth-shell"
 import { LoginForm } from "@/components/login-form"
 
+/**
+ * A página é fina de propósito: quem monta o `AuthShell` é o formulário, que é
+ * o único que sabe em que estado está — o cadastro troca o título ao mostrar
+ * "Confirme seu e-mail", e a recuperação troca a cada passo.
+ *
+ * O `Suspense` continua obrigatório porque os formulários leem
+ * `useSearchParams` (o parâmetro `next`), e sem ele a rota deixa de ser
+ * pré-renderizável.
+ */
 export default function LoginPage() {
     return (
-        <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
-            <div className="flex w-full max-w-sm flex-col gap-6">
-                <div className="flex items-center gap-2 self-center">
-                    <AppWordmark size="lg" />
-                </div>
-                <Suspense
-                    fallback={
-                        <div
-                            className="h-80 w-full animate-pulse rounded-xl border bg-card"
-                            aria-hidden
-                        />
-                    }
+        <Suspense
+            fallback={
+                <AuthShell
+                    title="Entrar"
+                    description="Uma conta, todas as suas carteiras."
                 >
-                    <LoginForm />
-                </Suspense>
-            </div>
-        </div>
+                    <AuthFormSkeleton />
+                </AuthShell>
+            }
+        >
+            <LoginForm />
+        </Suspense>
     )
 }
