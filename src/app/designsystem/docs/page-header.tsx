@@ -125,7 +125,7 @@ export default function PageHeaderDoc() {
         title="Tela de detalhe"
         description="back põe o voltar compacto na linha do título. No desktop quem costuma cumprir esse papel é a trilha."
         code={`<PageHeaderTitleRow
-  back="/cartoes"
+  back="/credit-cards"
   endAdornment={<Badge tone="success">Aberta</Badge>}
 >
   <PageHeaderTitle>Nubank</PageHeaderTitle>

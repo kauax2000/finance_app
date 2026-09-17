@@ -98,7 +98,7 @@ export default function StatCardDoc() {
 </StatCard>
 
 <StatCard interactive asChild>
-  <a href="/transacoes?categoria=mercado">…</a>
+  <a href="/transactions?category=mercado">…</a>
 </StatCard>`}
         previewClassName="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2"
       >

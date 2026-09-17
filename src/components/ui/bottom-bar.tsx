@@ -63,7 +63,7 @@ import { cn } from "@/lib/utils"
  *
  * ## A camada é `--z-modal`, e é decisão registrada
  *
- * `docs/camadas.tsx` diz com todas as letras que `--z-nav-island` (30)
+ * `docs/layers.tsx` diz com todas as letras que `--z-nav-island` (30)
  * *"nomeava a ilha, **que está no 50**"*. Ela empata com o `Dialog` e vence por
  * ordem de DOM — o diálogo é portalizado ao `body`, depois dela. Está medido, e
  * não se mexe aqui.

@@ -34,18 +34,18 @@ import {
  * reais, o formulário, o toque e a página que governa todas as cores.
  */
 const START_HERE = [
-    { slug: "cores", Icon: SwatchIcon },
+    { slug: "colors", Icon: SwatchIcon },
     { slug: "money-display", Icon: BanknotesIcon },
     // A própria glifa da tecla Enter: o contrato dela mora no Form.
     { slug: "form", Icon: ArrowUturnLeftIcon },
-    { slug: "mobile-toque", Icon: CursorArrowRaysIcon },
+    { slug: "touch-safe-area", Icon: CursorArrowRaysIcon },
 ]
 
 const CATEGORY_BLURB: Record<string, string> = {
-    Fundações: "As decisões que todo o resto herda: cor, tipo, forma, movimento, camada.",
-    Átomos: "Indivisíveis: um controle, um elemento, uma casca. A anatomia interna não é composição.",
-    Moléculas: "Feitas de átomos: um grupo pequeno que resolve uma tarefa e lê como uma unidade.",
-    Organismos: "Feitos de moléculas: seções com faixas, grupos, submenus ou linhas próprias.",
+    Foundations: "As decisões que todo o resto herda: cor, tipo, forma, movimento, camada.",
+    Atoms: "Indivisíveis: um controle, um elemento, uma casca. A anatomia interna não é composição.",
+    Molecules: "Feitas de átomos: um grupo pequeno que resolve uma tarefa e lê como uma unidade.",
+    Organisms: "Feitos de moléculas: seções com faixas, grupos, submenus ou linhas próprias.",
     Templates: "O que estrutura a página, e não o que ela contém.",
 }
 

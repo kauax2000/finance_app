@@ -74,7 +74,7 @@ function InputOTP({
           // O campo real é um `<input>` só, esticado por cima do contêiner
           // inteiro — então o alvo de toque é este retângulo, e não cada casa.
           // A 32px de altura ele fica 12px abaixo do piso de
-          // /designsystem/mobile-toque, e mesmo o degrau `xl` para em 40.
+          // /designsystem/touch-safe-area, e mesmo o degrau `xl` para em 40.
           //
           // Em ponteiro grosso o contêiner cresce para 44 sem crescer o
           // desenho: as casas continuam na altura do degrau, centradas na

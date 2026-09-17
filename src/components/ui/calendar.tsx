@@ -50,7 +50,7 @@ import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/r
  * atributo nenhum.
  *
  * O salto para 44px em ponteiro grosso continua, e ali o piso é o que importa:
- * são os 44 que a página /designsystem/mobile-toque documenta, e sete deles
+ * são os 44 que a página /designsystem/touch-safe-area documenta, e sete deles
  * cabem em 320px.
  */
 /**
@@ -205,7 +205,7 @@ function Calendar({
       showOutsideDays={showOutsideDays}
       // A grade inteira sai de `--cell-size`. Em ponteiro grosso ela vai de
       // 28px para 44px, o mínimo de alvo de dedo que a página
-      // /designsystem/mobile-toque documenta — 7 células de 44px cabem em
+      // /designsystem/touch-safe-area documenta — 7 células de 44px cabem em
       // 320px. Um ponto de mudança para as 42 células e a navegação de mês.
       className={cn(
         "group/calendar bg-background p-2 [--cell-radius:var(--radius-md)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",

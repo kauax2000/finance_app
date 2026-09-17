@@ -64,8 +64,14 @@ de "isso some no tema escuro".
 Não há páginas de "padrão": toda decisão que atravessa telas mora na página de
 quem a implementa — o dinheiro em `/designsystem/money-display`, o Enter em
 `form`, a paleta de gráfico em `chart` e `cores`, os chips em `badge`, as datas
-em `typography`, o toque e a área segura em `mobile-toque` (Fundação). Ver a
+em `typography`, o toque e a área segura em `touch-safe-area` (Foundation). Ver a
 rodada 77.
+
+O catálogo fala inglês na navegação: as seções são **Foundations · Atoms ·
+Molecules · Organisms · Templates**, e todo nome e toda URL de página
+(`/designsystem/colors`, `/designsystem/touch-safe-area`…) está em inglês, como
+os componentes. O conteúdo das páginas continua em português. As menções a
+Fundações, Átomos, `cores` ou `mobile-toque` nas rodadas abaixo são histórico.
 
 ### Invariantes
 
@@ -290,7 +296,7 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
 `--input` vale o mesmo que `--border`, e o campo ganhou preenchimento
 (`bg-input-fill/30`) nos dois temas em vez de só no escuro. Foi escolha de
 design, tomada com o custo medido na mesa: **o conjunto identifica o controle a
-1,3:1, e a WCAG 1.4.11 pede 3:1.** A página `/designsystem/cores` mantém a régua
+1,3:1, e a WCAG 1.4.11 pede 3:1.** A página `/designsystem/colors` mantém a régua
 acesa no ladrilho `--input` — ele aparece reprovando nos dois temas de
 propósito, para a decisão ficar visível em vez de silenciada.
 
@@ -10411,7 +10417,7 @@ E o que a rodada da trilha, da paginação e das duas listas deixou:
   nomeados: linha de transação → `Item variant="divided"`; detalhe de fatura e
   de cartão → `DescriptionList` (`divided` para o extrato, `grid` para os seis
   campos, `size="lg"` na linha do total); as telas de três níveis
-  (`/cartoes/[id]/faturas/[mes]`, `/categorias/[id]`) → `Breadcrumb` dentro de
+  (`/credit-cards/[cardId]`, `/categories/[categoryId]`) → `Breadcrumb` dentro de
   `PageHeaderBreadcrumb`; a lista de transações → `Pagination align="between"`
   com `PaginationStatus`.
 - **A regra H do auditor não enxerga `cva()` nem `cn()`.** Ela varre

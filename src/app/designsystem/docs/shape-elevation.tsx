@@ -21,7 +21,7 @@ const SHADOWS = [
   ["shadow-xl", "ilha flutuante sobre o conteúdo"],
 ]
 
-export default function FormaElevacaoDoc() {
+export default function ShapeElevationDoc() {
   return (
     <>
       <Usage>

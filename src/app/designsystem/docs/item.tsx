@@ -132,7 +132,7 @@ export default function ItemDoc() {
         title="Linha que navega"
         description="interactive liga realce, par de toque e anel de foco. Com asChild a linha inteira vira o link, com 44px de alvo no toque."
         code={`<Item interactive asChild>
-  <a href="/cartoes/nubank">
+  <a href="/credit-cards/nubank">
     <ItemContent>…</ItemContent>
   </a>
 </Item>`}

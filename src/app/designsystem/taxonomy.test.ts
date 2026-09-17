@@ -11,7 +11,7 @@ import { CATEGORY_ORDER, REGISTRY } from "./registry"
  * Este teste existe por causa de um defeito medido: **32 dos 75 componentes
  * estavam na camada errada**, 43% do catálogo. A causa não foi desatenção — foi
  * mecânica. A categoria saía de dois `Set` escritos à mão, e o que não estava em
- * nenhum dos dois caía em "Organismos" por *fall-through* silencioso. Foi assim
+ * nenhum dos dois caía em "Organisms" por *fall-through* silencioso. Foi assim
  * que `Typography` (nove átomos de texto que não compõem nada) foi parar ao lado
  * da `Sidebar`.
  *
@@ -60,7 +60,7 @@ const componentes = REGISTRY.filter((e) => arquivos.has(e.slug))
  * um "não-átomo".
  */
 const camadaNoGrafo = (slug: string) =>
-  slug === "typography" ? "Átomos" : camadaDe.get(slug)
+  slug === "typography" ? "Atoms" : camadaDe.get(slug)
 
 /** A mesma collation para todo mundo: `sort` sem locale põe "Ã" depois de "Z". */
 const porNome = (a: string, b: string) =>
@@ -109,12 +109,12 @@ describe("taxonomia", () => {
    */
   it("2. um átomo importa no máximo um componente de ui/, e ele é átomo", () => {
     const violando = componentes
-      .filter((e) => e.category === "Átomos")
+      .filter((e) => e.category === "Atoms")
       .map((e) => ({ slug: e.slug, deps: deps(e.slug) }))
       .filter(
         (x) =>
           x.deps.length > 1 ||
-          x.deps.some((d) => camadaNoGrafo(d) !== "Átomos")
+          x.deps.some((d) => camadaNoGrafo(d) !== "Atoms")
       )
     expect(violando).toEqual([])
   })
@@ -127,17 +127,17 @@ describe("taxonomia", () => {
    */
   it("3. nenhuma molécula compõe duas peças que não são átomos, nem um organismo", () => {
     const violando = componentes
-      .filter((e) => e.category === "Moléculas")
+      .filter((e) => e.category === "Molecules")
       .map((e) => ({
         slug: e.slug,
         naoAtomos: deps(e.slug).filter(
-          (d) => camadaDe.has(d) && camadaNoGrafo(d) !== "Átomos"
+          (d) => camadaDe.has(d) && camadaNoGrafo(d) !== "Atoms"
         ),
       }))
       .filter(
         (x) =>
           x.naoAtomos.length >= 2 ||
-          x.naoAtomos.some((d) => camadaDe.get(d) === "Organismos")
+          x.naoAtomos.some((d) => camadaDe.get(d) === "Organisms")
       )
     expect(violando).toEqual([])
   })
@@ -194,7 +194,7 @@ describe("taxonomia", () => {
   /**
    * A ordem dentro de cada categoria era a ordem em que cada `entry()` foi
    * escrita — 75 chamadas acumuladas em rodadas —, e os comentários
-   * `// ── Átomos ──` do array já apontavam para um bloco com doze moléculas
+   * `// ── Atoms ──` do array já apontavam para um bloco com doze moléculas
    * dentro. Alfabética pelo `name` exibido, e não pelo slug (`sonner` é
    * "Toast"), porque é o nome que a lateral e o índice mostram, e é por ele
    * que se procura. A ordem é literal no array e só trancada aqui: o app não

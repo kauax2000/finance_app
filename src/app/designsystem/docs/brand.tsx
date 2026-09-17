@@ -14,7 +14,7 @@ const ESCALA = [
   ["xl", "h-10 md:h-11", "40 → 44px", "168 → 185px", "a marca sozinha numa tela inteira — o splash"],
 ]
 
-export default function MarcaDoc() {
+export default function BrandDoc() {
   return (
     <>
       <Usage>

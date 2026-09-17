@@ -9,11 +9,11 @@ import AnnouncementBarDoc from "./docs/announcement-bar"
 import AvatarDoc from "./docs/avatar"
 import BadgeDoc from "./docs/badge"
 import BottomBarDoc from "./docs/bottom-bar"
+import BrandDoc from "./docs/brand"
 import BreadcrumbDoc from "./docs/breadcrumb"
 import ButtonDoc from "./docs/button"
 import ButtonGroupDoc from "./docs/button-group"
 import CalendarDoc from "./docs/calendar"
-import CamadasDoc from "./docs/camadas"
 import CardDoc from "./docs/card"
 import CarouselDoc from "./docs/carousel"
 import ChartDoc from "./docs/chart"
@@ -21,11 +21,11 @@ import CheckboxDoc from "./docs/checkbox"
 import CodeDoc from "./docs/code"
 import CollapsibleDoc from "./docs/collapsible"
 import ColorTileDoc from "./docs/color-tile"
+import ColorsDoc from "./docs/colors"
 import ComboboxDoc from "./docs/combobox"
 import CommandDoc from "./docs/command"
 import ContainerDoc from "./docs/container"
 import ContextMenuDoc from "./docs/context-menu"
-import CoresDoc from "./docs/cores"
 import DatePickerDoc from "./docs/date-picker"
 import DescriptionListDoc from "./docs/description-list"
 import DialogDoc from "./docs/dialog"
@@ -36,10 +36,9 @@ import EmptyStateDoc from "./docs/empty-state"
 import FieldDoc from "./docs/field"
 import FormDoc from "./docs/form"
 import FormPickerPopoverDoc from "./docs/form-picker-popover"
-import FormaElevacaoDoc from "./docs/forma-elevacao"
 import GlassDoc from "./docs/glass"
 import HoverCardDoc from "./docs/hover-card"
-import IconografiaDoc from "./docs/iconografia"
+import IconographyDoc from "./docs/iconography"
 import InputDoc from "./docs/input"
 import InputGroupDoc from "./docs/input-group"
 import InputOtpDoc from "./docs/input-otp"
@@ -47,11 +46,10 @@ import ItemDoc from "./docs/item"
 import KbdDoc from "./docs/kbd"
 import KbdGroupDoc from "./docs/kbd-group"
 import LabelDoc from "./docs/label"
-import MarcaDoc from "./docs/marca"
+import LayersDoc from "./docs/layers"
 import MenubarDoc from "./docs/menubar"
-import MobileToqueDoc from "./docs/mobile-toque"
 import MoneyDisplayDoc from "./docs/money-display"
-import MovimentoDoc from "./docs/movimento"
+import MotionDoc from "./docs/motion"
 import NativeSelectDoc from "./docs/native-select"
 import NavigationMenuDoc from "./docs/navigation-menu"
 import PageHeaderDoc from "./docs/page-header"
@@ -67,6 +65,7 @@ import ScrollFadeDoc from "./docs/scroll-fade"
 import SearchInputDoc from "./docs/search-input"
 import SelectDoc from "./docs/select"
 import SeparatorDoc from "./docs/separator"
+import ShapeElevationDoc from "./docs/shape-elevation"
 import SheetDoc from "./docs/sheet"
 import SidebarDoc from "./docs/sidebar"
 import SkeletonDoc from "./docs/skeleton"
@@ -87,6 +86,7 @@ import ToggleGroupDoc from "./docs/toggle-group"
 import ToolbarDoc from "./docs/toolbar"
 import TooltipDoc from "./docs/tooltip"
 import TopBarDoc from "./docs/top-bar"
+import TouchSafeAreaDoc from "./docs/touch-safe-area"
 import TypographyDoc from "./docs/typography"
 
 export const DOCS: Record<string, ComponentType> = {
@@ -97,11 +97,11 @@ export const DOCS: Record<string, ComponentType> = {
   "avatar": AvatarDoc,
   "badge": BadgeDoc,
   "bottom-bar": BottomBarDoc,
+  "brand": BrandDoc,
   "breadcrumb": BreadcrumbDoc,
   "button": ButtonDoc,
   "button-group": ButtonGroupDoc,
   "calendar": CalendarDoc,
-  "camadas": CamadasDoc,
   "card": CardDoc,
   "carousel": CarouselDoc,
   "chart": ChartDoc,
@@ -109,11 +109,11 @@ export const DOCS: Record<string, ComponentType> = {
   "code": CodeDoc,
   "collapsible": CollapsibleDoc,
   "color-tile": ColorTileDoc,
+  "colors": ColorsDoc,
   "combobox": ComboboxDoc,
   "command": CommandDoc,
   "container": ContainerDoc,
   "context-menu": ContextMenuDoc,
-  "cores": CoresDoc,
   "date-picker": DatePickerDoc,
   "description-list": DescriptionListDoc,
   "dialog": DialogDoc,
@@ -124,10 +124,9 @@ export const DOCS: Record<string, ComponentType> = {
   "field": FieldDoc,
   "form": FormDoc,
   "form-picker-popover": FormPickerPopoverDoc,
-  "forma-elevacao": FormaElevacaoDoc,
   "glass": GlassDoc,
   "hover-card": HoverCardDoc,
-  "iconografia": IconografiaDoc,
+  "iconography": IconographyDoc,
   "input": InputDoc,
   "input-group": InputGroupDoc,
   "input-otp": InputOtpDoc,
@@ -135,11 +134,10 @@ export const DOCS: Record<string, ComponentType> = {
   "kbd": KbdDoc,
   "kbd-group": KbdGroupDoc,
   "label": LabelDoc,
-  "marca": MarcaDoc,
+  "layers": LayersDoc,
   "menubar": MenubarDoc,
-  "mobile-toque": MobileToqueDoc,
   "money-display": MoneyDisplayDoc,
-  "movimento": MovimentoDoc,
+  "motion": MotionDoc,
   "native-select": NativeSelectDoc,
   "navigation-menu": NavigationMenuDoc,
   "page-header": PageHeaderDoc,
@@ -155,6 +153,7 @@ export const DOCS: Record<string, ComponentType> = {
   "search-input": SearchInputDoc,
   "select": SelectDoc,
   "separator": SeparatorDoc,
+  "shape-elevation": ShapeElevationDoc,
   "sheet": SheetDoc,
   "sidebar": SidebarDoc,
   "skeleton": SkeletonDoc,
@@ -175,5 +174,6 @@ export const DOCS: Record<string, ComponentType> = {
   "toolbar": ToolbarDoc,
   "tooltip": TooltipDoc,
   "top-bar": TopBarDoc,
+  "touch-safe-area": TouchSafeAreaDoc,
   "typography": TypographyDoc,
 }

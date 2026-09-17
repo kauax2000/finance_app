@@ -375,7 +375,7 @@ export default function TopBarDoc() {
         description="Voltar, título e uma ação. O voltar é o PageHeaderBack, e todo botão da barra fica no degrau padrão, md."
         previewClassName="p-4"
         code={`<TopBar>
-  <TopBarStart><PageHeaderBack href="/cartoes" /></TopBarStart>
+  <TopBarStart><PageHeaderBack href="/credit-cards" /></TopBarStart>
   <TopBarTitle>Nubank Ultravioleta</TopBarTitle>
   <TopBarActions>
     <Button variant="tertiary" size="icon-md" aria-label="Mais ações">…</Button>

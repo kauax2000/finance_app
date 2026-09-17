@@ -15,7 +15,7 @@ const LAYERS = [
   ["--z-toast", "100", "o toast, sempre por último"],
 ]
 
-export default function CamadasDoc() {
+export default function LayersDoc() {
   return (
     <>
       <Usage>

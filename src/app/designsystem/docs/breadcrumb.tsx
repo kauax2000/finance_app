@@ -22,7 +22,7 @@ export default function BreadcrumbDoc() {
         description="A lista recebe só itens e põe os separadores. O último é BreadcrumbPage, não link: é a página atual."
         code={`<Breadcrumb>
   <BreadcrumbList>
-    <BreadcrumbItem><BreadcrumbLink href="/categorias">Categorias</BreadcrumbLink></BreadcrumbItem>
+    <BreadcrumbItem><BreadcrumbLink href="/categories">Categorias</BreadcrumbLink></BreadcrumbItem>
     <BreadcrumbItem><BreadcrumbPage>Mercado</BreadcrumbPage></BreadcrumbItem>
   </BreadcrumbList>
 </Breadcrumb>`}
@@ -45,8 +45,8 @@ export default function BreadcrumbDoc() {
         description="Passando de maxItems ficam a raiz e os dois últimos degraus, e o miolo vira um menu — o que dobrou continua alcançável."
         code={`<BreadcrumbList maxItems={4}>
   <BreadcrumbItem><BreadcrumbLink href="/">Início</BreadcrumbLink></BreadcrumbItem>
-  <BreadcrumbItem><BreadcrumbLink href="/cartoes">Cartões</BreadcrumbLink></BreadcrumbItem>
-  <BreadcrumbItem><BreadcrumbLink href="/cartoes/nubank">Nubank</BreadcrumbLink></BreadcrumbItem>
+  <BreadcrumbItem><BreadcrumbLink href="/credit-cards">Cartões</BreadcrumbLink></BreadcrumbItem>
+  <BreadcrumbItem><BreadcrumbLink href="/credit-cards/nubank">Nubank</BreadcrumbLink></BreadcrumbItem>
   <BreadcrumbItem><BreadcrumbLink href="…">Faturas</BreadcrumbLink></BreadcrumbItem>
   <BreadcrumbItem><BreadcrumbPage>Março de 2026</BreadcrumbPage></BreadcrumbItem>
 </BreadcrumbList>`}

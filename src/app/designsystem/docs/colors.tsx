@@ -16,7 +16,7 @@ import {
  * medição descem para uma legenda quieta. Superfícies e rampa abrem com um
  * espécime maior, porque hierarquia e distinção só se julgam lado a lado.
  */
-export default function CoresDoc() {
+export default function ColorsDoc() {
   return (
     <>
       <Usage>

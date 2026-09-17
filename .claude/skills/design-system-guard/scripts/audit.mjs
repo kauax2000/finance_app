@@ -236,7 +236,7 @@ function semComentarios(src) {
  * No catálogo, `` code={`…`} `` é o espécime: código **citado**, não escrito.
  *
  * A página que ensina "não escreva `hover:` sem `active:`" precisa mostrar o
- * exemplo errado — e é o que `docs/mobile-toque.tsx` faz, com a versão certa na
+ * exemplo errado — e é o que `docs/touch-safe-area.tsx` faz, com a versão certa na
  * linha seguinte.
  */
 function semEspecimes(src) {
@@ -414,7 +414,7 @@ function auditFile(absPath, project) {
   }
 
   // ── D2. Valor arbitrário ──────────────────────────────────────────────────
-  // (Calada no catálogo: `docs/camadas.tsx` escreve `z-[1]` porque documenta a
+  // (Calada no catálogo: `docs/layers.tsx` escreve `z-[1]` porque documenta a
   //  escala, e `docs/typography.tsx` cita `text-[10px]` porque foi o que os dois
   //  degraus de token substituíram.)
   for (const m of isCatalog
@@ -508,7 +508,7 @@ function auditFile(absPath, project) {
   //
   // O bloco acima só enxerga `<NomeImportado …>`. Estes três escapavam:
   //   const Chevron = isNext ? ChevronRightIcon : ChevronLeftIcon  ->  <Chevron>
-  //   { slug: "cores", Icon: SwatchIcon }                          ->  <Icon>
+  //   { slug: "colors", Icon: SwatchIcon }                          ->  <Icon>
   //   { label: "Carteiras", icon: WalletIcon }                     ->  <item.icon>
   //
   // Foi assim que as duas setas do paginador do catálogo — uma de `24/outline`,
@@ -516,7 +516,7 @@ function auditFile(absPath, project) {
   //
   // Ela **erra para menos**: se qualquer sítio indireto tiver o corpo ilegível
   // (`${…}` sem `size-`/`h-` literal), o arquivo inteiro se cala. É o que mantém
-  // `docs/iconografia.tsx`, que escolhe o conjunto por px, fora do relatório.
+  // `docs/iconography.tsx`, que escolhe o conjunto por px, fora do relatório.
   if (heroiconSet.size && !isDrawnSvg && !isHeroiconException) {
     const faixasDeImport = [...bruto.matchAll(
       /import\s*(?:type\s*)?\{[^}]+\}\s*from\s*["']@heroicons\/react\/(?:16|20|24)\/(?:solid|outline)["']/g
@@ -623,7 +623,7 @@ function auditFile(absPath, project) {
   // `hover: none`. A resposta não é remover o hover: é somar `active:`.
   // Ver src/lib/tailwind-hover-policy.test.ts.
   //
-  // Calada no catálogo: `docs/mobile-toque.tsx` mostra o exemplo **errado de
+  // Calada no catálogo: `docs/touch-safe-area.tsx` mostra o exemplo **errado de
   // propósito**, com a versão certa na linha seguinte — é a página que ensina
   // esta regra.
   for (const m of isCatalog

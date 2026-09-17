@@ -82,7 +82,7 @@ export default function NavigationMenuDoc() {
       <NavigationMenuContent>
         <NavigationMenuPanel>
           <NavigationMenuLink asChild>
-            <Link href="/carteiras">Carteiras</Link>
+            <Link href="/wallets">Carteiras</Link>
           </NavigationMenuLink>
         </NavigationMenuPanel>
       </NavigationMenuContent>
@@ -383,7 +383,7 @@ export default function NavigationMenuDoc() {
         title="Link em linha e link em cartão"
         description="row é a linha de menu. card carrega o que aquilo é: use num mega-menu de duas ou três colunas, onde a largura sobra e o nome sozinho não decide."
         code={`<NavigationMenuLink variant="card" asChild>
-  <Link href="/cartoes">
+  <Link href="/credit-cards">
     <CreditCardIcon />
     <NavigationMenuLinkTitle>Cartões</NavigationMenuLinkTitle>
     <NavigationMenuLinkDescription>Limite, fechamento e a fatura aberta.</NavigationMenuLinkDescription>

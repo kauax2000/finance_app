@@ -10,7 +10,7 @@ const SAFE_AREA = [
   ["--bottom-bar-pad", "barra + 2× folga + safe-area", "quanto o conteúdo precisa reservar embaixo"],
 ]
 
-export default function MobileToqueDoc() {
+export default function TouchSafeAreaDoc() {
   return (
     <>
       <Usage>

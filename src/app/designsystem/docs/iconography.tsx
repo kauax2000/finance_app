@@ -19,7 +19,7 @@ const SIZES = [
   ["size-6", "24px", "estado vazio, destaque"],
 ]
 
-export default function IconografiaDoc() {
+export default function IconographyDoc() {
   return (
     <>
       <Usage>

@@ -198,11 +198,11 @@ export default function BottomBarDoc() {
       </DocNote>
 
       <DocNote title="A aba ativa preenche, e isso não contraria a regra do conjunto">
-        <code>iconActive</code> é o par sólido, a convenção de tab bar do iOS. Não fere a <Link href="/designsystem/iconografia">regra do conjunto</Link>: a grade é 24 dos dois lados, e muda só o preenchimento. É prop porque a peça não tem como adivinhar o sólido de um ícone.
+        <code>iconActive</code> é o par sólido, a convenção de tab bar do iOS. Não fere a <Link href="/designsystem/iconography">regra do conjunto</Link>: a grade é 24 dos dois lados, e muda só o preenchimento. É prop porque a peça não tem como adivinhar o sólido de um ícone.
       </DocNote>
 
       <DocNote title="O alvo é a caixa, e não um pseudo-elemento">
-        O controle <strong>é</strong> a área, com o glifo centralizado: um <code>::after</code> de 44px em cada item engoliria o vizinho. Cada item fica acima dos 44px de <Link href="/designsystem/mobile-toque">Toque e área segura</Link>.
+        O controle <strong>é</strong> a área, com o glifo centralizado: um <code>::after</code> de 44px em cada item engoliria o vizinho. Cada item fica acima dos 44px de <Link href="/designsystem/touch-safe-area">Touch & safe area</Link>.
       </DocNote>
 
       <DocNote title="O vidro é o da folha, e não o da barra">

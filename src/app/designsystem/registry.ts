@@ -13,10 +13,10 @@ export type RegistryEntry = {
 }
 
 export const CATEGORY_ORDER: Category[] = [
-  "Fundações",
-  "Átomos",
-  "Moléculas",
-  "Organismos",
+  "Foundations",
+  "Atoms",
+  "Molecules",
+  "Organisms",
   "Templates",
 ]
 
@@ -78,7 +78,7 @@ const ui = (name: string) => `@/components/ui/${name}`
  * anatomia de um `Select`, a diferença entre especializar e compor — é decisão,
  * e mora nos comentários do mapa abaixo.
  */
-type Layer = Exclude<Category, "Fundações">
+type Layer = Exclude<Category, "Foundations">
 
 /**
  * A camada de cada componente. Sem padrão: o tipo obriga a listar todos.
@@ -88,25 +88,25 @@ type Layer = Exclude<Category, "Fundações">
 const LAYER: Record<string, Layer> = {
   // ── Átomos: indivisíveis — anatomia interna e especialização não contam ──
   /** Um objeto. Imagem e fallback são estados dele, não partes. */
-  avatar: "Átomos",
-  badge: "Átomos",
-  button: "Átomos",
-  checkbox: "Átomos",
-  code: "Átomos",
-  "color-tile": "Átomos",
+  avatar: "Atoms",
+  badge: "Atoms",
+  button: "Atoms",
+  checkbox: "Atoms",
+  code: "Atoms",
+  "color-tile": "Atoms",
   /** Uma `div` com largura e calha. Indivisível — átomo por decisão do dono. */
-  container: "Átomos",
+  container: "Atoms",
   /** Uma barra e o alvo de acerto dela. O `<span data-vaul-handle-hitarea>` que
    *  o vaul injeta é anatomia interna, e não composição — a mesma régua que faz
    *  o `Slider` átomo com quatro primitivas Radix por dentro. Era Organismo
    *  enquanto consumia o contexto do `Sheet` para devolver `null`; parou de
    *  consumir quando voltou a desenhar. */
-  "drag-handle": "Átomos",
+  "drag-handle": "Atoms",
   /** Uma superfície e a luz dela. Importa zero componentes e renderiza um
    *  elemento — o mesmo caso do `scroll-fade`, que também é uma casca mais uma
    *  camada de composição. As quatro camadas de `background` são anatomia
    *  interna, não peças que alguém compõe de fora. */
-  glass: "Átomos",
+  glass: "Atoms",
   /** **O vidro é modo, e não peça.** Houve cinco entradas aqui —
    *  `glass-button`, `glass-badge`, `glass-avatar`, `glass-checkbox` e
    *  `glass-color-tile` —, cada uma importando **um** átomo e renderizando
@@ -119,17 +119,17 @@ const LAYER: Record<string, Layer> = {
    *  "componente ou modo?" **não é haver tradução** — é a tradução precisar de
    *  uma peça para existir. Aqui ela cabia num eixo, e coube melhor: como
    *  eixo, a superfície que o vidro apagaria simplesmente não é emitida. */
-  input: "Átomos",
-  "input-otp": "Átomos",
+  input: "Atoms",
+  "input-otp": "Atoms",
   /** Uma tecla, ou o acorde inteiro numa pastilha só. As partes do acorde são
    *  anatomia dele — a mesma conta pela qual o `Slider` é átomo com quatro
    *  peças por dentro. A **sequência** junta átomos, e é o `kbd-group`. */
-  kbd: "Átomos",
-  label: "Átomos",
-  "money-display": "Átomos",
+  kbd: "Atoms",
+  label: "Atoms",
+  "money-display": "Atoms",
   /** Um `<select>`. `<option>` e `<optgroup>` são o conteúdo dele. */
-  "native-select": "Átomos",
-  progress: "Átomos",
+  "native-select": "Atoms",
+  progress: "Atoms",
   /** O controle inteiro — o anel e o ponto. **Não é especialização de nada**:
    *  ele é a unidade, e quem compõe é o `radio-group`, uma camada acima. É o
    *  par `kbd` / `kbd-group` outra vez. Com uma diferença que fica escrita:
@@ -137,34 +137,34 @@ const LAYER: Record<string, Layer> = {
    *  não exporta rádio independente, e `RadioGroup.Item` lança fora do `Root`.
    *  Contexto de primitiva não é composição, pela mesma conta que faz o
    *  `Slider` átomo com quatro peças Radix por dentro. */
-  radio: "Átomos",
+  radio: "Atoms",
   /** Group, Panel e Separator são a anatomia de **uma** coisa — a mesma conta
    *  que devolveu o `Select` a Átomos, e que faz o `Slider` átomo com quatro
    *  peças Radix por dentro. Ele não compõe nenhum átomo: um painel
    *  redimensionável não é um grupo de peças menores, é um controle de
    *  proporção com regiões dentro. O `Button` do gatilho de colapso é o único
    *  import de `ui/`, e a asserção 2 deixa exatamente um. */
-  resizable: "Átomos",
+  resizable: "Atoms",
   /** Uma casca rolável, e uma máscara. */
-  "scroll-area": "Átomos",
-  "scroll-fade": "Átomos",
+  "scroll-area": "Atoms",
+  "scroll-fade": "Atoms",
   /** Um controle. Trigger, content e item são a anatomia dele, não composição
    *  — a mesma conta pela qual o `Slider` é átomo com quatro peças por dentro. */
-  select: "Átomos",
-  separator: "Átomos",
-  skeleton: "Átomos",
-  slider: "Átomos",
-  spinner: "Átomos",
-  switch: "Átomos",
-  textarea: "Átomos",
+  select: "Atoms",
+  separator: "Atoms",
+  skeleton: "Atoms",
+  slider: "Atoms",
+  spinner: "Atoms",
+  switch: "Atoms",
+  textarea: "Atoms",
   /**
    * Um controle. Trilho, polegar e as duas faces são anatomia de um `Switch`
    * do Radix, e o único import de `ui/` é o `Skeleton` do gate de montagem.
    */
-  "theme-toggle": "Átomos",
-  toggle: "Átomos",
+  "theme-toggle": "Atoms",
+  toggle: "Atoms",
   /** Um rótulo que aparece. Carrega só texto. */
-  tooltip: "Átomos",
+  tooltip: "Atoms",
 
   // ── Moléculas: feitas de átomos, um grupo pequeno que lê como unidade ───
   /** O aviso e a ação dele. Ele entrou aqui **sem argumento** e por um tempo
@@ -174,35 +174,35 @@ const LAYER: Record<string, Layer> = {
    *  linha de ação alcançava o `Button` por seletor descendente e *pedia* que
    *  quem chamasse escrevesse `variant="tertiary"`. Compondo o átomo de fato,
    *  a camada deixa de ser herdada. */
-  alert: "Moléculas",
+  alert: "Molecules",
   /** A faixa de estado global, e as peças dela. Ela sempre compôs o átomo — o
    *  × de dispensar é um `Button` —, então esta camada nunca foi herdada; o que
    *  faltava era a **ação** ser peça também, e não um seletor descendente
    *  pedindo `variant="tertiary"` a quem chamasse. */
-  "announcement-bar": "Moléculas",
-  "button-group": "Moléculas",
-  collapsible: "Moléculas",
-  "description-list": "Moléculas",
-  "empty-state": "Moléculas",
+  "announcement-bar": "Molecules",
+  "button-group": "Molecules",
+  collapsible: "Molecules",
+  "description-list": "Molecules",
+  "empty-state": "Molecules",
   /** O exemplo canônico do Frost: rótulo + controle + erro. */
-  field: "Moléculas",
+  field: "Molecules",
   /** Era átomo — só o `<form>` com a política do Enter, sem input e sem botão.
    *  Virou molécula ao ganhar as peças: `FormInput` sobre `Field`, `FormSubmit`
    *  sobre `Button` + `Spinner`. Inversão registrada, e a régua é a mesma. */
-  "input-group": "Moléculas",
-  item: "Moléculas",
+  "input-group": "Molecules",
+  item: "Molecules",
   /** A sequência: um `Kbd` por tecla. É a junção dos átomos, e importa o átomo
    *  de fato — o `keys` existe justamente para isso ser verdade. */
-  "kbd-group": "Moléculas",
-  pagination: "Moléculas",
+  "kbd-group": "Molecules",
+  pagination: "Molecules",
   /** A junção: `Radio` + `Label`, e o cartão. Ele importa os átomos de fato — o
    *  `children` da opção existe justamente para isso ser verdade, e não para o
    *  rótulo continuar do lado de fora, escrito à mão por quem chama, como
    *  estava. */
-  "radio-group": "Moléculas",
+  "radio-group": "Molecules",
   /** Especializa o `InputGroup` — lupa e ×. Molécula sobre molécula. */
-  "search-input": "Moléculas",
-  "toggle-group": "Moléculas",
+  "search-input": "Molecules",
+  "toggle-group": "Molecules",
 
   // ── Organismos: feitos de moléculas — faixas, grupos, submenus, linhas ──
   /** A unidade é um `Collapsible` — uma molécula. */
@@ -214,7 +214,7 @@ const LAYER: Record<string, Layer> = {
    *  mecânico da asserção 3 ser cruzado, e com ele a classificação deixar de
    *  poder mentir. É a mesma inversão que o próprio `form` já registra uma vez
    *  — de átomo para molécula, quando ganhou as peças. */
-  form: "Organismos",
+  form: "Organisms",
   /** Lista cuja **unidade** é uma molécula, que é a segunda forma do nível.
    *  E não por analogia: `AccordionItem` + `Trigger` + `Content` **é** um
    *  `Collapsible`, que está em Moléculas — os dois arquivos importam a mesma
@@ -228,43 +228,43 @@ const LAYER: Record<string, Layer> = {
    *  é uma **escolha entre valores** de um controle só; aqui cada item é uma
    *  divulgação **operável sozinha e com estado próprio**. Item que é dado não
    *  é item que tem estado. */
-  accordion: "Organismos",
-  "alert-dialog": "Organismos",
+  accordion: "Organisms",
+  "alert-dialog": "Organisms",
   /** Contém um `DropdownMenu` no miolo dobrado — quem contém organismo é
    *  organismo. */
-  breadcrumb: "Organismos",
-  calendar: "Organismos",
+  breadcrumb: "Organisms",
+  calendar: "Organisms",
   /** Superfície com faixas: barra, cabeçalho, corpo, rodapé, nota. A mesma
    *  anatomia do `Dialog`. */
-  card: "Organismos",
-  carousel: "Organismos",
-  chart: "Organismos",
-  combobox: "Organismos",
-  command: "Organismos",
-  "context-menu": "Organismos",
-  "date-picker": "Organismos",
-  dialog: "Organismos",
-  drawer: "Organismos",
-  "dropdown-menu": "Organismos",
-  "form-picker-popover": "Organismos",
-  "hover-card": "Organismos",
-  menubar: "Organismos",
-  "navigation-menu": "Organismos",
-  popover: "Organismos",
-  sheet: "Organismos",
+  card: "Organisms",
+  carousel: "Organisms",
+  chart: "Organisms",
+  combobox: "Organisms",
+  command: "Organisms",
+  "context-menu": "Organisms",
+  "date-picker": "Organisms",
+  dialog: "Organisms",
+  drawer: "Organisms",
+  "dropdown-menu": "Organisms",
+  "form-picker-popover": "Organisms",
+  "hover-card": "Organisms",
+  menubar: "Organisms",
+  "navigation-menu": "Organisms",
+  popover: "Organisms",
+  sheet: "Organisms",
   /** Faixas, grupos, submenus e um estado próprio que atravessa a tela — e ela
    *  contém organismos (o painel de borda no telefone). */
-  sidebar: "Organismos",
+  sidebar: "Organisms",
   /** Especializa o `Card`; especializar mantém o degrau. */
-  "stat-card": "Organismos",
-  stepper: "Organismos",
+  "stat-card": "Organisms",
+  stepper: "Organisms",
   /** A linha (células = átomos) é a molécula; a tabela é feita de linhas. */
-  table: "Organismos",
-  tabs: "Organismos",
-  timeline: "Organismos",
+  table: "Organisms",
+  tabs: "Organisms",
+  timeline: "Organisms",
   /** Uma pilha de toasts, cada um ícone + título + texto + ação. */
-  sonner: "Organismos",
-  toolbar: "Organismos",
+  sonner: "Organisms",
+  toolbar: "Organisms",
 
   // ── Templates: o que estrutura a página ─────────────────────────────────
   /**
@@ -326,78 +326,75 @@ function entry(
 }
 
 export const REGISTRY: RegistryEntry[] = [
-  // ── Fundações ───────────────────────────────────────────────────────────
+  // ── Foundations ───────────────────────────────────────────────────────────
   {
-    slug: "camadas",
-    name: "Camadas (z-index)",
-    category: "Fundações",
-    description: "A ordem de empilhamento, do conteúdo ao toast.",
-    source: "src/app/globals.css",
-  },
-  {
-    slug: "cores",
-    name: "Cores",
-    category: "Fundações",
-    description: "Tokens de superfície, status, dinheiro e gráficos.",
-    source: "src/app/globals.css",
-  },
-  {
-    slug: "forma-elevacao",
-    name: "Forma e elevação",
-    category: "Fundações",
-    description: "Degraus de raio de canto e de sombra.",
-    source: "src/app/globals.css",
-  },
-  {
-    slug: "iconografia",
-    name: "Iconografia",
-    category: "Fundações",
-    description: "Heroicons: conjunto, tamanho e rótulo.",
-    source: "@heroicons/react/24/outline",
-    importLine: 'import { WalletIcon } from "@heroicons/react/24/outline"',
-  },
-  {
-    slug: "marca",
-    name: "Marca",
-    category: "Fundações",
+    slug: "brand",
+    name: "Brand",
+    category: "Foundations",
     description: "O símbolo, o lockup e onde usar cada um.",
     source: "src/components/layout/app-wordmark.tsx",
     importLine: 'import { AppWordmark } from "@/components/layout/app-wordmark"',
   },
   {
-    slug: "movimento",
-    name: "Movimento",
-    category: "Fundações",
+    slug: "colors",
+    name: "Colors",
+    category: "Foundations",
+    description: "Tokens de superfície, status, dinheiro e gráficos.",
+    source: "src/app/globals.css",
+  },
+  {
+    slug: "iconography",
+    name: "Iconography",
+    category: "Foundations",
+    description: "Heroicons: conjunto, tamanho e rótulo.",
+    source: "@heroicons/react/24/outline",
+    importLine: 'import { WalletIcon } from "@heroicons/react/24/outline"',
+  },
+  {
+    slug: "layers",
+    name: "Layers (z-index)",
+    category: "Foundations",
+    description: "A ordem de empilhamento, do conteúdo ao toast.",
+    source: "src/app/globals.css",
+  },
+  {
+    slug: "motion",
+    name: "Motion",
+    category: "Foundations",
     description: "Durações, curvas e movimento reduzido.",
+    source: "src/app/globals.css",
+  },
+  {
+    slug: "shape-elevation",
+    name: "Shape & elevation",
+    category: "Foundations",
+    description: "Degraus de raio de canto e de sombra.",
+    source: "src/app/globals.css",
+  },
+  {
+    // Era um Padrão, e o conteúdo é token e política de variante — os
+    // `--mobile-*` da área segura e o `@custom-variant` de hover, todos em
+    // `globals.css`. É a definição de Fundação.
+    slug: "touch-safe-area",
+    name: "Touch & safe area",
+    category: "Foundations",
+    description: "Alvo de 44px, hover e área segura.",
     source: "src/app/globals.css",
   },
   {
     // O slug é o do **arquivo**, e não o do nome exibido: a asserção 1 de
     // `taxonomy.test.ts` exige que todo `.tsx` de `ui/` tenha entrada com o
-    // slug do arquivo, e o arquivo é `typography.tsx`. É a única Fundação com
-    // slug em inglês, e a assimetria é o preço de a taxonomia ser trancada por
-    // mecanismo em vez de combinada.
+    // slug do arquivo, e o arquivo é `typography.tsx`.
     slug: "typography",
-    name: "Tipografia",
-    category: "Fundações",
+    name: "Typography",
+    category: "Foundations",
     description: "Famílias, componentes de texto e formatos de data.",
     source: "src/components/ui/typography.tsx",
     importLine:
       'import { H1, H2, H3, H4, Lead, P, Muted, Small, Caption } from "@/components/ui/typography"',
   },
-  {
-    // Era um Padrão, e o conteúdo é token e política de variante — os
-    // `--mobile-*` da área segura e o `@custom-variant` de hover, todos em
-    // `globals.css`. É a definição de Fundação. O slug ficou porque quatro
-    // comentários de `ui/` apontam para ele.
-    slug: "mobile-toque",
-    name: "Toque e área segura",
-    category: "Fundações",
-    description: "Alvo de 44px, hover e área segura.",
-    source: "src/app/globals.css",
-  },
 
-  // ── Átomos ──────────────────────────────────────────────────────────────
+  // ── Atoms ──────────────────────────────────────────────────────────────
   entry("avatar", "Avatar", "Imagem ou iniciais, em cinco tamanhos.", ui("avatar"), "Avatar, AvatarImage, AvatarFallback"),
   entry("badge", "Badge", "Rótulo compacto de status ou contagem.", ui("badge"), "Badge"),
   entry("button", "Button", "A ação clicável.", ui("button"), "Button"),
@@ -429,7 +426,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("toggle", "Toggle", "Botão de dois estados.", ui("toggle"), "Toggle"),
   entry("tooltip", "Tooltip", "Dica curta ancorada a um gatilho.", ui("tooltip"), "Tooltip, TooltipTrigger, TooltipContent"),
 
-  // ── Moléculas ───────────────────────────────────────────────────────────
+  // ── Molecules ───────────────────────────────────────────────────────────
   entry("alert", "Alert", "Aviso dentro do conteúdo.", ui("alert"), "Alert, AlertTitle, AlertDescription, AlertActions"),
   entry("announcement-bar", "Announcement Bar", "Aviso de largura total sobre o app.", ui("announcement-bar"), "AnnouncementBar, AnnouncementBarContent, AnnouncementBarActions"),
   entry("button-group", "Button Group", "Botões colados que agem como uma unidade.", ui("button-group"), "ButtonGroup"),
@@ -445,7 +442,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("search-input", "Search Input", "O campo de busca.", ui("search-input"), "SearchInput"),
   entry("toggle-group", "Toggle Group", "Conjunto de toggles: seleção única ou múltipla.", ui("toggle-group"), "ToggleGroup, ToggleGroupItem"),
 
-  // ── Organismos ──────────────────────────────────────────────────────────
+  // ── Organisms ──────────────────────────────────────────────────────────
   entry("accordion", "Accordion", "Seções expansíveis.", ui("accordion"), "Accordion, AccordionItem, AccordionTrigger, AccordionContent"),
   entry("alert-dialog", "Alert Dialog", "Confirmação de uma ação sem volta.", ui("alert-dialog"), "AlertDialog, AlertDialogAction, AlertDialogCancel"),
   entry("breadcrumb", "Breadcrumb", "A trilha até a tela atual.", ui("breadcrumb"), "Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbMenu"),

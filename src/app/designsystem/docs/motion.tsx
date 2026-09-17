@@ -17,7 +17,7 @@ const EASINGS = [
   ["--ease-emphasized", "cubic-bezier(0.32, 0.72, 0, 1)", "a curva das folhas, com peso de iOS"],
 ]
 
-export default function MovimentoDoc() {
+export default function MotionDoc() {
   const [on, setOn] = React.useState(false)
 
   return (

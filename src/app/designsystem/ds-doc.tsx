@@ -40,10 +40,10 @@ import {
 } from "@/components/ui/page-section"
 
 export type Category =
-  | "Fundações"
-  | "Átomos"
-  | "Moléculas"
-  | "Organismos"
+  | "Foundations"
+  | "Atoms"
+  | "Molecules"
+  | "Organisms"
   // O nível que faltava para o modelo ficar completo: objetos de nível de
   // página, que dispõem componentes num layout em vez de serem o conteúdo.
   | "Templates"
@@ -310,7 +310,7 @@ function DocPagerLink({
         "min-w-0 px-2.5 text-muted-foreground",
         "transition-colors duration-(--duration-fast) ease-(--ease-out)",
         // Em ponteiro grosso o alvo vai aos 44px que a própria página
-        // /designsystem/mobile-toque exige. É a mesma cortesia da lateral.
+        // /designsystem/touch-safe-area exige. É a mesma cortesia da lateral.
         "pointer-coarse:min-h-11",
         // O recuo tira o padding do controle da margem do conteúdo: o nome
         // alinha com o texto acima, e a superfície de hover é que avança.
@@ -464,7 +464,7 @@ function PreviewCode({ code }: { code: string }) {
             "hover:text-foreground active:text-foreground",
             "focus-visible:ring-3 focus-visible:ring-ring/70 focus-visible:outline-none",
             // A mesma cortesia da navegação lateral: em ponteiro grosso o alvo
-            // vai aos 44px que a página /designsystem/mobile-toque exige.
+            // vai aos 44px que a página /designsystem/touch-safe-area exige.
             "pointer-coarse:min-h-11"
           )}
         >

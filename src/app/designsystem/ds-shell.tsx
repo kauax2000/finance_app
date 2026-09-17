@@ -473,7 +473,7 @@ function DsNavLink({
         "min-w-0",
         "rounded-md px-2 text-sm transition-colors",
         // Em ponteiro grosso o link vai aos 44px que a página
-        // /designsystem/mobile-toque exige. Um catálogo que reprova na própria
+        // /designsystem/touch-safe-area exige. Um catálogo que reprova na própria
         // regra não é fonte de verdade de nada.
         "pointer-coarse:min-h-11",
         active
