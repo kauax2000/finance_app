@@ -12,7 +12,7 @@ export default function ProgressDoc() {
 
       <DocSection
         title="Tons"
-        description="O tom vem do estado, não do desenho: um orçamento em 45% é default, em 85% é warning, estourado é destructive. A tela decide o limiar; o componente só pinta."
+        description="O tom vem do estado: 45% é default, 85% é warning, estourado é destructive. A tela decide o limiar; o componente só pinta."
         code={`<Progress value={45} />
 <Progress value={72} tone="success" />
 <Progress value={88} tone="warning" />
@@ -51,7 +51,7 @@ export default function ProgressDoc() {
 
       <DocSection
         title="Dinheiro"
-        description="Orçamento consumido é gasto, não erro do sistema: os tons de dinheiro existem para a barra não ter que pedir emprestado o vermelho de destructive."
+        description="Orçamento consumido é gasto, não erro: use os tons de dinheiro em vez do vermelho de destructive."
         code={`<Progress value={62} tone="expense" />
 <Progress value={38} tone="income" />`}
         previewClassName="flex-col items-stretch gap-4"
@@ -74,7 +74,7 @@ export default function ProgressDoc() {
 
       <DocSection
         title="Tamanho"
-        description="Dois degraus: sm para barra dentro de linha de lista, md — o padrão — para a barra que é o assunto do bloco. A altura é do componente; nenhuma tela declara h-* por fora."
+        description="sm dentro de linha de lista; md, o padrão, quando a barra é o assunto do bloco. Nenhuma tela declara h-* por fora."
         code={`<Progress value={70} size="sm" />
 <Progress value={70} />`}
         previewClassName="flex-col items-stretch gap-4"
@@ -115,22 +115,15 @@ export default function ProgressDoc() {
       </DocSection>
 
       <DocNote title="Um por cento ainda desenha alguma coisa">
-        Numa barra de 300px, 1% são 3px — sob <code>rounded-full</code>{" "}
-        uma lasca que some. O preenchimento tem piso de largura igual à altura
-        da barra, então valor pequeno e diferente de zero chega como um ponto
-        redondo: &ldquo;mal começou&rdquo; deixa de desenhar igual a
-        &ldquo;não começou&rdquo;.
+          O preenchimento tem piso de largura igual à altura da barra, então um valor pequeno e diferente de zero aparece como ponto: &ldquo;mal começou&rdquo; não desenha igual a &ldquo;não começou&rdquo;.
       </DocNote>
 
       <DocNote title="value acima de max não estoura a barra">
-        Um orçamento em 130% desenha a barra cheia em vez de vazar do trilho, e o
-        elemento ganha <code>data-over</code>. O número que acompanha a barra é
-        quem conta a história inteira, e por isso ele é obrigatório: sem ele, 104%
-        e 400% desenham igual.
+          Acima do total a barra fica cheia e ganha <code>data-over</code>. Por isso o número ao lado é obrigatório: sem ele, 104% e 400% desenham igual.
       </DocNote>
 
       <DocNote title="O valor real continua sendo anunciado">
-        O Radix rejeita <code>value</code> acima de <code>max</code>: trata o progresso como indeterminado e zera o <code>aria-valuenow</code> — quem usa leitor de tela perdia o número justamente na categoria que estourou. O componente limita o valor enviado e manda a porcentagem verdadeira em <code>aria-valuetext</code>.
+          O Radix trata <code>value</code> acima de <code>max</code> como indeterminado; o componente limita o valor enviado e manda a porcentagem verdadeira em <code>aria-valuetext</code>, para o leitor de tela não perder o número da categoria que estourou.
       </DocNote>
 
       <PropsTable

@@ -57,20 +57,12 @@ export default function CamadasDoc() {
         </div>
       </DocSection>
 
-      <DocNote title="A escala foi corrigida para descrever a produção">
-        A primeira versão inventou os números: dizia <code>--z-sheet: 50</code> e <code>--z-popover: 60</code> enquanto o app rodava 70 e 80, e não tinha degrau para o 50, onde moram Dialog, Drawer e os menus do Radix. Migrar teria empilhado a folha no nível do diálogo.
-      </DocNote>
-
-      <DocNote title="Dois tokens foram renomeados pelo que está neles">
-        <code>--z-overlay</code> (40) não tinha uso: escurecimento e conteúdo sempre compartilham o mesmo z. Quem mora no 40 é o cabeçalho fixo, e virou <code>--z-header</code>. <code>--z-nav-island</code> (30) nomeava a ilha, que está no 50; o 30 é a faixa de offline, e virou <code>--z-banner</code>. Token cujo nome não bate com o ocupante é pior que número cru.
-      </DocNote>
-
       <DocNote title="Empilhamento local não é camada">
         <code>z-0</code>, <code>z-10</code> e <code>z-[1]</code> dentro de um componente são ordem entre irmãos, e continuam números crus. A escala nomeia o que atravessa telas: se a decisão se toma olhando um arquivo só, não é camada.
       </DocNote>
 
       <DocNote title="Escalar para vencer é sempre o sintoma">
-        A toolbar de categorias tinha um <code>PopoverContent</code> em <code>z-[100]</code> — o nível do toast — e um <code>Select</code> em <code>z-[220]</code> para vencer o popover que o continha. O efeito era o popover cobrir os toasts do app inteiro. Dois portais no mesmo z se resolvem por ordem no DOM.
+        Se um popover precisa passar de <code>--z-popover</code>, o errado é quem o contém — subir o número faz ele cobrir os toasts do app inteiro. Dois portais no mesmo z se resolvem pela ordem no DOM.
       </DocNote>
     </>
   )

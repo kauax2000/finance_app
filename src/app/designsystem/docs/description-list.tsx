@@ -13,9 +13,7 @@ export default function DescriptionListDoc() {
   return (
     <>
       <Usage>
-        Pares rótulo/valor numa tela de detalhe. É um <code>&lt;dl&gt;</code> de
-        verdade, então o leitor de tela associa cada valor ao seu rótulo — duas{" "}
-        <code>&lt;div&gt;</code> lado a lado não fazem isso.
+          Pares rótulo/valor numa tela de detalhe. É um <code>&lt;dl&gt;</code> de verdade, então o leitor de tela associa cada valor ao rótulo. Para linhas com mídia e ações é <code>Item</code>; para várias colunas comparáveis, <code>Table</code>.
       </Usage>
 
       <DocSection
@@ -49,7 +47,7 @@ export default function DescriptionListDoc() {
 
       <DocSection
         title="Em linha"
-        description="Rótulo à esquerda e valor à direita a partir de sm. Abaixo disso ele volta a empilhar sozinho — e o layout é declarado uma vez, na lista."
+        description="Rótulo à esquerda e valor à direita a partir de sm; abaixo disso, empilha. O layout se declara uma vez, na lista."
         code={`<DescriptionList layout="inline">
   <DescriptionListItem>
     <DescriptionTerm>Limite total</DescriptionTerm>
@@ -78,7 +76,7 @@ export default function DescriptionListDoc() {
 
       <DocSection
         title="Extrato"
-        description="divided põe o fio entre os pares. É o desenho de fatura, e a mesma categoria de fio do ItemGroup: separador de itens repetidos, que é o que torna a lista varrível. A última linha usa size='lg' no valor — o total pesa, e o rótulo dele não."
+        description="divided põe o fio entre os pares, como numa fatura. A linha do total usa size='lg' no valor — o total pesa, o rótulo não."
         code={`<DescriptionList layout="inline" divided>
   …
   <DescriptionListItem>
@@ -118,7 +116,7 @@ export default function DescriptionListDoc() {
 
       <DocSection
         title="Em grade"
-        description="Duas colunas a partir de sm. Um detalhe com seis campos, empilhado, é uma coluna alta com a metade direita da tela vazia."
+        description="Duas colunas a partir de sm, para detalhes com muitos campos."
         code={`<DescriptionList layout="grid">…</DescriptionList>`}
         previewClassName="items-stretch"
       >
@@ -142,21 +140,11 @@ export default function DescriptionListDoc() {
       </DocSection>
 
       <DocNote title="O layout se declara uma vez">
-        Ele precisava ser passado <strong>duas</strong> vezes — na lista e em
-        cada item —, e a versão anterior desta página documentava isso como se
-        fosse regra. Não era: <code>&lt;DescriptionList layout=&quot;inline&quot;&gt;</code>{" "}
-        sozinho não fazia nada, calado. Hoje o item lê o do pai por{" "}
-        <code>data-layout</code>, e o prop local vira o que devia ser — uma
-        sobrescrita para a linha que foge do padrão.
+          <code>&lt;DescriptionList layout=&quot;inline&quot;&gt;</code> desce para os itens por <code>data-layout</code>. O prop no item é só a sobrescrita para a linha que foge do padrão.
       </DocNote>
 
-      <DocNote title="A armadilha que isso custa">
-        <code>in-*</code> compila com <code>:where()</code>, que não soma
-        especificidade — uma classe sob esse variante perde para uma classe base
-        no mesmo elemento. Funciona aqui porque a base do item é{" "}
-        <code>min-w-0</code> e mais nada. Quem acrescentar uma base que colida
-        (um <code>flex-col</code> fixo, um <code>text-*</code>) reabre o
-        problema.
+      <DocNote title="Não dê ao item uma base que colida com o layout">
+          <code>in-*</code> compila com <code>:where()</code> e perde para uma classe base no mesmo elemento. Funciona porque a base do item é só <code>min-w-0</code>; um <code>flex-col</code> ou <code>text-*</code> fixo quebraria a herança.
       </DocNote>
 
       <DocNote title="Sem gap entre termo e valor">
@@ -166,10 +154,7 @@ export default function DescriptionListDoc() {
       </DocNote>
 
       <DocNote title="Figuras tabulares de fábrica">
-        <code>.nums</code> sai em todo <code>DescriptionDetails</code>. Dígito em
-        lista de detalhe é sempre dado — valor, limite, data, contagem —, e sem
-        figuras tabulares uma coluna de números não alinha. Esta página escrevia{" "}
-        <code>className=&quot;nums&quot;</code> à mão em três linhas seguidas.
+          <code>.nums</code> sai em todo <code>DescriptionDetails</code>: dígito em lista de detalhe é dado, e sem figuras tabulares a coluna não alinha. Não escreva <code>className=&quot;nums&quot;</code> à mão.
       </DocNote>
 
       <PropsTable
@@ -193,7 +178,7 @@ export default function DescriptionListDoc() {
             type: "boolean",
             default: "false",
             description:
-              "Fio entre os pares. Ignorado em grid, onde ele seguiria a ordem do DOM e não a das colunas.",
+              "Fio entre os pares; ignorado em grid.",
           },
         ]}
       />
@@ -217,7 +202,7 @@ export default function DescriptionListDoc() {
             type: 'size?: "sm" | "lg"',
             default: '"sm"',
             description:
-              "O valor, com .nums. lg é a linha do total — o eixo mora no <dd> porque só ele pesa.",
+              "O valor, com .nums; lg é a linha do total.",
           },
         ]}
       />

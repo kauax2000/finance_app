@@ -107,36 +107,24 @@ export default function IconografiaDoc() {
       </Group>
 
       <DocNote title="O conjunto muda com o tamanho, não a escala">
-        Os conjuntos menores do Heroicons não são o de 24 reduzido: são{" "}
-        <strong>redesenhos</strong>, e só existem em solid.{" "}
-        <code>size-6</code> e acima usam <code>24/outline</code>;{" "}
-        <code>size-5</code> usa o <strong>mini</strong> (<code>20/solid</code>);
-        e de <code>size-4</code> para baixo é o <strong>micro</strong>{" "}
-        (<code>16/solid</code>). Um ícone sem classe de tamanho também é micro —
-        o componente que o contém aplica <code>size-4</code>.
-      </DocNote>
-
-      <DocNote title="Por que não dá para só encolher o outline">
-        O traço do <code>24/outline</code>{" "}
-        é 1,5 desenhado para 24px. A 16 ele vira 1px sobre detalhe que foi
-        construído para caber em 24 — o desenho embola e o ícone fica lavado ao
-        lado do texto. O micro tem menos detalhe e peso sólido justamente para
-        sobreviver ali.
+        Os conjuntos menores do Heroicons são <strong>redesenhos</strong>, só em
+        solid: <code>size-6</code> e acima usam <code>24/outline</code>;{" "}
+        <code>size-5</code>, o <strong>mini</strong> (<code>20/solid</code>); de{" "}
+        <code>size-4</code> para baixo, o <strong>micro</strong>{" "}
+        (<code>16/solid</code>). O outline encolhido a 16 embola o traço e fica
+        lavado ao lado do texto. Ícone sem classe de tamanho é micro.
       </DocNote>
 
       <DocNote title="Ícone como valor fica no outline">
         Mapa de ícone e config de navegação — <code>CATEGORY_ICONS</code>,{" "}
-        <code>WORKSPACE_ICON_MAP</code>, <code>NAVIGATION</code>{" "}
-        — não sabem em que tamanho serão desenhados: quem renderiza decide. Esses
-        ficam em <code>24/outline</code>, que é o único conjunto que se comporta
-        bem em qualquer corpo.
+        <code>WORKSPACE_ICON_MAP</code>, <code>NAVIGATION</code> — não sabem em
+        que tamanho serão desenhados. Ficam em <code>24/outline</code>, o único
+        conjunto que se comporta bem em qualquer corpo.
       </DocNote>
 
       <DocNote title="Círculo puro não é ícone">
-        O ponto do <code>RadioGroup</code>{" "}
-        e o marcador de regra de senha eram um SVG de círculo. Heroicons não traz
-        círculo puro — e nem deveria: <code>rounded-full</code>{" "}
-        com cor de fundo desenha a mesma coisa sem uma requisição.
+        Para ponto ou marcador, <code>rounded-full</code> com cor de fundo
+        desenha o mesmo sem SVG.
       </DocNote>
 
     </>

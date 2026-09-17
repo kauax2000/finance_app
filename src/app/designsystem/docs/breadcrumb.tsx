@@ -19,7 +19,7 @@ export default function BreadcrumbDoc() {
 
       <DocSection
         title="Padrão"
-        description="A lista recebe só itens — ela mesma põe os separadores. O último é BreadcrumbPage, não um link: é a página atual, e clicar nela não leva a lugar nenhum."
+        description="A lista recebe só itens e põe os separadores. O último é BreadcrumbPage, não link: é a página atual."
         code={`<Breadcrumb>
   <BreadcrumbList>
     <BreadcrumbItem><BreadcrumbLink href="/categorias">Categorias</BreadcrumbLink></BreadcrumbItem>
@@ -42,7 +42,7 @@ export default function BreadcrumbDoc() {
 
       <DocSection
         title="Trilha longa"
-        description="Passando de maxItems, ficam a raiz e os dois últimos degraus, e o miolo vira um menu. Abra as reticências: o que foi dobrado continua alcançável."
+        description="Passando de maxItems ficam a raiz e os dois últimos degraus, e o miolo vira um menu — o que dobrou continua alcançável."
         code={`<BreadcrumbList maxItems={4}>
   <BreadcrumbItem><BreadcrumbLink href="/">Início</BreadcrumbLink></BreadcrumbItem>
   <BreadcrumbItem><BreadcrumbLink href="/cartoes">Cartões</BreadcrumbLink></BreadcrumbItem>
@@ -75,7 +75,7 @@ export default function BreadcrumbDoc() {
 
       <DocSection
         title="Rótulo longo"
-        description="Contagem nenhuma resolve um nome grande. Os ancestrais truncam; a página atual é a última a ceder, porque quem cede é o caminho e nunca o destino."
+        description="Para nome grande, os ancestrais truncam e a página atual é a última a ceder: cede o caminho, nunca o destino."
         code={`{/* a 240px de largura, com a trilha inteira dentro do limite */}`}
         previewClassName="items-start"
       >
@@ -122,42 +122,23 @@ export default function BreadcrumbDoc() {
       </DocSection>
 
       <DocNote title="A lista é dona dos separadores">
-        Não se dobra um miolo que não se possui. Enquanto o{" "}
-        <code>&lt;BreadcrumbSeparator /&gt;</code> era escrito à mão entre os
-        itens, a lista não sabia quais filhos eram degraus e quais eram enfeite
-        — e o colapso ficava impossível. Para trocar o glifo, o ponto de extensão
-        é <code>separator</code>, uma vez, e não n−1 vezes.
+        Não escreva <code>&lt;BreadcrumbSeparator /&gt;</code> à mão: é por pôr os separadores que a lista sabe quais filhos são degraus e consegue dobrar o miolo. Para trocar o glifo, passe <code>separator</code> uma vez.
       </DocNote>
 
       <DocNote title="Ela nunca vira duas linhas">
-        O <code>flex-wrap</code> que vinha do shadcn quebrava a trilha logo acima
-        do título. Medido a 375px, com 293px disponíveis: quatro níveis saíam com{" "}
-        <strong>46px de altura, em duas linhas</strong>. Hoje são{" "}
-        <code>flex-nowrap</code> mais duas defesas — <code>maxItems</code> para a
-        trilha profunda, <code>truncate</code> para o rótulo longo.
+        A lista é <code>flex-nowrap</code>, com duas defesas: <code>maxItems</code> para a trilha profunda e <code>truncate</code> para o rótulo longo. Trilha em duas linhas empurra o título para baixo.
       </DocNote>
 
       <DocNote title="A página atual não é um link">
-        <code>BreadcrumbPage</code> vinha do shadcn com{" "}
-        <code>role=&quot;link&quot;</code> e{" "}
-        <code>aria-disabled=&quot;true&quot;</code>: um papel de link num
-        elemento que não navega faz o leitor de tela anunciar um link e convidar
-        à ativação. <code>aria-current=&quot;page&quot;</code> num{" "}
-        <code>span</code> é o que a APG prescreve, e é o suficiente.
+        <code>BreadcrumbPage</code> é um <code>span</code> com <code>aria-current=&quot;page&quot;</code>. Papel de link num elemento que não navega faz o leitor anunciar um link e convidar à ativação.
       </DocNote>
 
       <DocNote title="O alvo de dedo cresce por pseudo-elemento">
-        Crescer de verdade empurraria a linha do cabeçalho para 44px. O{" "}
-        <code>::after</code> só existe em ponteiro grosso. Ele cresce 12px na
-        vertical, onde não há nada — <strong>20 + 24 = 44px medidos</strong> — e
-        4px na horizontal, que é metade do <code>gap</code> da lista: dois
-        ancestrais vizinhos encostam sem se sobrepor.
+        Crescer de verdade empurraria a linha do cabeçalho. Em ponteiro grosso o <code>::after</code> soma 12px na vertical e 4px na horizontal — metade do <code>gap</code>, para vizinhos encostarem sem se sobrepor.
       </DocNote>
 
       <DocNote title="Ele vai dentro do PageHeader">
-        <code>PageHeaderBreadcrumb</code> é o slot que o coloca acima do título e
-        ocupando a largura inteira. Fora dali, a trilha acaba competindo com o
-        título pela primeira linha.
+        <code>PageHeaderBreadcrumb</code> o põe acima do título, na largura inteira. Fora dali, a trilha disputa a primeira linha com o título.
       </DocNote>
 
       <PropsTable
@@ -168,7 +149,7 @@ export default function BreadcrumbDoc() {
             type: "number",
             default: "4",
             description:
-              "Degraus visíveis antes de o miolo virar menu. O piso é 3; 0 desliga o colapso.",
+              "Degraus visíveis antes de o miolo virar menu; piso 3, e 0 desliga.",
           },
           {
             prop: "separator",
@@ -181,7 +162,7 @@ export default function BreadcrumbDoc() {
             type: '"sm" | "md"',
             default: '"md"',
             description:
-              "Corpo do texto, chevron e reticências. Desce por contexto até as peças.",
+              "Corpo do texto, chevron e reticências, por contexto.",
           },
         ]}
       />
@@ -198,7 +179,7 @@ export default function BreadcrumbDoc() {
             prop: "BreadcrumbItem",
             type: "ComponentProps<'li'>",
             description:
-              "Um degrau. O último é shrink-0: quem cede na falta de espaço é o caminho.",
+              "Um degrau; o último é shrink-0.",
           },
           {
             prop: "BreadcrumbLink",
@@ -214,13 +195,13 @@ export default function BreadcrumbDoc() {
             prop: "BreadcrumbMenu",
             type: "{ children, label }",
             description:
-              "As reticências como gatilho dos degraus dobrados. A lista o monta sozinha.",
+              "As reticências com o menu dos degraus dobrados; a lista o monta.",
           },
           {
             prop: "BreadcrumbEllipsis",
             type: "ComponentProps<'span'>",
             description:
-              "O marcador estático, sem menu. Decoração — aria-hidden e sem nome.",
+              "O marcador estático, sem menu; aria-hidden.",
           },
         ]}
       />

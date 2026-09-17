@@ -36,7 +36,7 @@ export default function BadgeDoc() {
 
       <DocSection
         title="Tamanhos"
-        description="Três degraus: 14, 18 e 22 de altura. Todos aqui na mesma variante de propósito — a única coisa que muda de um para o outro é o tamanho. Quem manda na altura é a entrelinha, não o padding: cada degrau declara a sua, senão xs e sm saem idênticos."
+        description="Três degraus: 14, 18 e 22 de altura. Quem manda na altura é a entrelinha, e cada degrau declara a sua — senão xs e sm saem idênticos."
         code={`<Badge size="xs">xs</Badge>
 <Badge size="sm">sm</Badge>
 <Badge>md</Badge>
@@ -59,7 +59,7 @@ export default function BadgeDoc() {
 
       <DocSection
         title="Coloração e estado"
-        description="Todas tonais: fundo suave e texto escuro do mesmo matiz. Aqui o tamanho é o mesmo em todas — o que muda é só a cor, e com ela o estado que o rótulo comunica."
+        description="Todas tonais: fundo suave e texto do mesmo matiz. A cor é o estado que o rótulo comunica."
         code={`<Badge>Padrão</Badge>
 <Badge tone="neutral">Neutro</Badge>
 <Badge tone="success">Pago</Badge>
@@ -81,7 +81,7 @@ export default function BadgeDoc() {
 
       <DocSection
         title="Os dois eixos se cruzam"
-        description="variant é a forma, tone é a cor. Separá-los criou uma combinação que antes não existia: contorno na cor do tom."
+        description="variant é a forma, tone é a cor, e os dois se combinam — inclusive contorno na cor do tom."
         code={`<Badge variant="outline" tone="success">Ativa</Badge>`}
       >
         <div className="flex flex-col gap-3">
@@ -110,36 +110,17 @@ export default function BadgeDoc() {
         </div>
       </DocSection>
 
-      <DocNote title="Ele misturava três coisas num nome só">
-        <code>variant</code> carregava peso (<code>primary</code>,{" "}
-        <code>secondary</code>), forma (<code>outline</code>) e{" "}
-        <strong>tom</strong> (<code>success</code>, <code>warning</code>,{" "}
-        <code>income</code>, <code>expense</code>) — e tom é o que{" "}
-        <code>Alert</code>, <code>StatCard</code>, <code>Timeline</code>,{" "}
-        <code>Progress</code>, <code>Separator</code> e{" "}
-        <code>AnnouncementBar</code> chamam de <code>tone</code>. O{" "}
-        <code>Badge</code> era o único a discordar, que é palavra por palavra a
-        correção que a rodada do <code>Alert</code> já tinha feito quando{" "}
-        <em>ele</em> era o único.
-        <br />
-        Foram 71 chamadas reescritas. As que sobraram eram ternários que
-        misturavam os dois eixos — <code>
-          variant={"{"}bill.is_active ? &quot;success&quot; : &quot;outline&quot;{"}"}
-        </code> —, e o compilador as isolou uma a uma: um codemod não sabe que
-        &ldquo;ativa&rdquo; é cor e &ldquo;inativa&rdquo; era forma.
+      <DocNote title="tone é a cor; variant é só a forma">
+        O eixo de cor se chama <code>tone</code>, como no <code>Alert</code>, <code>StatCard</code>, <code>Timeline</code>, <code>Progress</code> e <code>AnnouncementBar</code>. Não misture os dois num ternário: &ldquo;ativa&rdquo; e &ldquo;inativa&rdquo; são tons, não uma cor contra um contorno.
       </DocNote>
 
       <DocNote title="Dinheiro não é aviso">
-        <code>income</code> e <code>expense</code> são mais saturadas que{" "}
-        <code>success</code> e <code>destructive</code> de propósito. Num
-        extrato, verde e vermelho são <em>o dado</em> — quanto entrou e quanto
-        saiu — e não um juízo sobre ele. Usar o verde de &ldquo;deu certo&rdquo;
-        para uma receita faz o extrato parecer um painel de alertas.
+        <code>income</code> e <code>expense</code> são mais saturadas que <code>success</code> e <code>destructive</code> de propósito: num extrato, verde e vermelho são o dado, não um juízo. Receita com o verde de &ldquo;deu certo&rdquo; faz o extrato parecer um painel de alertas.
       </DocNote>
 
       <Group
         title="A mesma superfície fora do Badge"
-        description="Quando a tinta tonal precisa entrar num elemento que já é outro componente — gatilho de menu, botão de filtro, pílula de linha de tabela —, as constantes tagChip* saem deste mesmo arquivo. As tintas soft acima leem estas mesmas strings. Quando o rótulo é só rótulo, é Badge."
+        description="Quando a tinta tonal entra num elemento que já é outro componente — gatilho de menu, botão de filtro, pílula de linha —, use as constantes tagChip* deste arquivo, as mesmas strings das tintas soft. Rótulo que é só rótulo é Badge."
       >
         <Spec title="Estado" meta="ui/badge.tsx">
           <Stack className="gap-2.5">
@@ -201,19 +182,12 @@ export default function BadgeDoc() {
         </Spec>
       </Group>
 
-      <DocNote title="Uma fonte só, e o Badge já foi a segunda">
-        As constantes moravam em <code>lib/tag-chip-classes.ts</code>, e as
-        tintas <code>soft</code> do <code>Badge</code> eram uma segunda cópia
-        das mesmas sete strings — já divergente, sem o par{" "}
-        <code>dark:hover:</code>. Hoje as duas coisas são uma. Uma tela que
-        escreve <code>bg-success-muted text-success-muted-foreground</code> à
-        mão fica de fora quando o vocabulário mudar.
+      <DocNote title="Uma fonte só para a tinta dos chips">
+        As tintas <code>soft</code> do <code>Badge</code> e as constantes <code>tagChip*</code> são as mesmas strings, em <code>badge.tsx</code>. Não escreva <code>bg-success-muted text-success-muted-foreground</code> à mão: a tela fica de fora quando o vocabulário mudar.
       </DocNote>
 
       <DocNote title="tagChipViolet e tagChipSky são apelidos, não cores novas">
-        Os dois apontam para os tokens de <code>info</code>. Ficaram dos tempos
-        em que as telas escolhiam a cor pelo tom, e continuam existindo só para
-        não quebrar quem os importa. Não use em código novo.
+        Os dois apontam para os tokens de <code>info</code> e existem só para não quebrar quem os importa. Não use em código novo.
       </DocNote>
 
       <PropsTable

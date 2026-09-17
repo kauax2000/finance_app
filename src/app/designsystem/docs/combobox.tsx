@@ -38,16 +38,15 @@ export default function ComboboxDoc() {
   return (
     <>
       <Usage>
-        Um <code>Select</code> com busca. A partir de umas dez opções, rolar
-        procurando um nome é pior que digitar três letras: categoria, cartão,
-        membro. Abaixo disso é <code>Select</code>; quando a lista é longa{" "}
-        <em>e</em> o painel precisa de rodapé próprio, é{" "}
+        Um <code>Select</code> com busca, a partir de umas dez opções: digitar
+        três letras vence rolar procurando. Abaixo disso, <code>Select</code>;
+        lista longa <em>e</em> painel com rodapé próprio,{" "}
         <code>FormPickerPopover</code>.
       </Usage>
 
       <DocSection
         title="Padrão"
-        description="O gatilho é o campo. Ao lado de um Select ele tem de ser indistinguível — até abrir."
+        description="O gatilho é um campo, não um botão: ao lado de um Select ele é indistinguível até abrir."
         code={`<Combobox value={value} onValueChange={setValue}>
   <ComboboxField>
     <ComboboxTrigger>
@@ -89,7 +88,7 @@ export default function ComboboxDoc() {
 
       <DocSection
         title="Uma escolha e várias"
-        description="Com multiple o valor é uma lista, o painel não fecha ao escolher e o tique fica aceso. ComboboxValue resume o excesso em vez de deixar a tela inventar o formato."
+        description="Com multiple o valor é uma lista, o painel não fecha ao escolher e o tique fica aceso. ComboboxValue resume o excesso em +N."
         code={`<Combobox multiple value={values} onValueChange={setValues}>
   <ComboboxField>
     <ComboboxTrigger>
@@ -142,7 +141,7 @@ export default function ComboboxDoc() {
 
       <DocSection
         title="Busca em português"
-        description="Digite saude, educacao ou lazer sem acento: a lista acha assim mesmo. O padrão do cmdk casa por subsequência difusa e não conhece acento — cor traria Carousel antes de Cores."
+        description="Digite saude, educacao ou lazer sem acento: a lista acha assim mesmo. O filtro do projeto ignora acento, que o padrão do cmdk não conhece."
         code={`// nada a declarar: o filtro do projeto já vem montado
 <ComboboxContent>…</ComboboxContent>
 
@@ -165,8 +164,7 @@ export default function ComboboxDoc() {
           {
             prop: "onValueChange",
             type: "(v: string) => void | (v: string[]) => void",
-            description:
-              "Chamado ao escolher. Fecha o popover sozinho — exceto em multiple.",
+            description: "Chamado ao escolher; fecha o popover, exceto em multiple.",
           },
           {
             prop: "multiple",
@@ -184,8 +182,7 @@ export default function ComboboxDoc() {
             prop: "modal",
             type: "boolean",
             default: "no telefone",
-            description:
-              "Trava a rolagem de trás. Sem isso, rolar a lista arrasta a folha que a contém.",
+            description: "Trava a rolagem de trás, para rolar a lista não arrastar a folha.",
           },
           {
             prop: "size",
@@ -202,14 +199,12 @@ export default function ComboboxDoc() {
           {
             prop: "ComboboxField",
             type: "div · PopoverAnchor",
-            description:
-              "A casca do campo. Obrigatória quando há ComboboxClear — é ela que ancora a largura do painel.",
+            description: "A casca do campo; obrigatória com ComboboxClear, ancora a largura do painel.",
           },
           {
             prop: "ComboboxTrigger",
             type: "button",
-            description:
-              "O campo. Veste a régua de lib/field-classes, a mesma do Input e do SelectTrigger.",
+            description: "O campo, com a régua de lib/field-classes do Input e do SelectTrigger.",
           },
           {
             prop: "ComboboxValue",
@@ -236,53 +231,34 @@ export default function ComboboxDoc() {
         ]}
       />
 
-      <DocNote title="O gatilho era um botão, e parecia um botão">
-        Ele nascia de <code>{'Button variant="outline"'}</code> —{" "}
-        <code>border-border</code> + <code>bg-background</code> no tema claro —,
-        enquanto <code>Select</code> e <code>Input</code> são{" "}
-        <code>border-input</code> + <code>bg-input-fill/30</code>. Os dois só
-        convergiam sob <code>dark:</code>: no tema claro um combobox ao lado de
-        um select eram duas superfícies visivelmente diferentes fazendo o mesmo
-        trabalho. A comparação está viva na primeira demonstração desta página.
-      </DocNote>
-
-      <DocNote title="Por que o rótulo não se registra sozinho">
-        Seria a API mais curta — cada <code>ComboboxItem</code> anunciando o
-        próprio rótulo, e <code>ComboboxValue</code> lendo o do valor atual. Ela
-        não funciona: o conteúdo do popover só <strong>monta quando ele abre</strong>,
-        então um combobox que nunca foi aberto não teria rótulo nenhum para
-        mostrar. Quem tem os dados antes de abrir é quem chama.
+      <DocNote title="Quem chama fornece o rótulo">
+        O conteúdo do popover só <strong>monta quando ele abre</strong>, então
+        um item não pode registrar o próprio rótulo: um combobox nunca aberto
+        não teria o que mostrar em <code>ComboboxValue</code>.
       </DocNote>
 
       <DocNote title="multiple precisa de um literal">
-        <code>{"<Combobox multiple={umBooleano}>"}</code> não estreita o tipo — a
-        união discriminada exige <code>multiple</code> ou{" "}
-        <code>{"multiple={true}"}</code> escrito, ou duas chamadas. É o custo
-        padrão do padrão, e a alternativa seria um <code>as</code> escondido
-        dentro do componente.
+        <code>{"<Combobox multiple={umBooleano}>"}</code> não estreita a união
+        discriminada. Escreva <code>multiple</code> ou{" "}
+        <code>{"multiple={true}"}</code>, ou faça duas chamadas.
       </DocNote>
 
       <DocNote title="O tique não escreve aria-selected">
         O cmdk usa <code>aria-selected</code> para a linha <em>realçada</em> pela
         seta, não para a escolhida. Sobrescrevê-lo apagaria o cursor de teclado
-        do leitor de tela, então quem diz “este é o escolhido” é um rótulo{" "}
+        do leitor de tela; quem diz “escolhido” é um rótulo{" "}
         <code>sr-only</code> ao lado do ícone.
       </DocNote>
 
       <DocNote title="O Enter já está resolvido">
-        O campo de busca do cmdk renderiza <code>{'role="combobox"'}</code>, e o{" "}
-        <code>shouldDeferEnterToWidget</code> do <code>Form</code> já trata
-        esse papel. Não é preciso somar uma regra nova — o caso do{" "}
-        <code>FormPickerPopover</code> foi diferente porque a busca dele é um{" "}
-        <code>input</code> cru.
+        A busca do cmdk é <code>{'role="combobox"'}</code>, e o{" "}
+        <code>shouldDeferEnterToWidget</code> do <code>Form</code> já trata esse
+        papel: o Enter fica com a lista e não envia o formulário.
       </DocNote>
 
       <DocNote title="Não confundir com FormPickerPopover">
         Aquele resolve <em>onde</em> o painel aparece; este resolve busca,
-        teclado e a semântica de listbox. O gatilho daquele continua sendo{" "}
-        <code>{'Button variant="outline"'}</code> por decisão registrada — são três
-        gatilhos de campo em duas aparências, e a convergência é a próxima
-        rodada, não esta.
+        teclado e a semântica de listbox.
       </DocNote>
     </>
   )

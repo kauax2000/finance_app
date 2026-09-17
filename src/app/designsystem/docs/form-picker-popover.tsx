@@ -34,12 +34,7 @@ export default function FormPickerPopoverDoc() {
   return (
     <>
       <Usage>
-        Um seletor ancorado num campo, com a largura do gatilho, folga de
-        colisão e altura limitada — e as três faixas que sempre vão dentro
-        dele: busca, lista rolável e um pé com a saída para gerenciar o que a
-        lista mostra. Quando a lista é curta e não precisa de busca, o certo é{" "}
-        <code>Select</code>; quando ela é longa mas cabe numa palavra, é{" "}
-        <code>Combobox</code>.
+          Um seletor ancorado num campo, com a largura do gatilho e altura limitada, e três faixas: busca, lista rolável e um pé com a saída para gerenciar o que a lista mostra. Lista curta sem busca é <code>Select</code>; longa mas que cabe numa palavra é <code>Combobox</code>.
       </Usage>
 
       <DocSection
@@ -79,67 +74,28 @@ export default function FormPickerPopoverDoc() {
         <PickerDemo />
       </DocSection>
 
-      <DocNote title="A demo está dentro de um CustomForm, e é de propósito">
-        Este seletor só existe dentro de formulário, e é lá que ele encontra o{" "}
-        <code>Enter</code>. O popover é portalizado para fora do{" "}
-        <code>&lt;form&gt;</code> no DOM, mas eventos de portal do React sobem
-        pela árvore do <strong>React</strong> — então o teclado do campo de
-        busca alcança o <code>CustomForm</code> assim mesmo. Demonstrar o
-        componente fora de um formulário era esconder justamente o caso que
-        importa.
+      <DocNote title="Ele vive dentro de formulário, e o Enter o alcança">
+          O popover é portalizado para fora do <code>&lt;form&gt;</code> no DOM, mas eventos de portal sobem pela árvore do React: o teclado da busca chega ao formulário. Por isso a demonstração fica dentro de um <code>CustomForm</code>, e a regra do Enter para a busca mora em <code>form.tsx</code>.
       </DocNote>
 
       <DocNote title="O gatilho veste a superfície de campo">
-        Ele era <code>Button variant=&quot;outline&quot;</code>, e a nota daqui
-        dizia que &ldquo;parece um campo e não um botão&rdquo;. Parecia só sob{" "}
-        <code>dark:</code>: no tema claro <code>outline</code> é{" "}
-        <code>border-border</code> + <code>bg-background</code> <strong>opaco</strong>,
-        enquanto <code>Input</code> e <code>SelectTrigger</code> são{" "}
-        <code>border-input</code> + <code>bg-input-fill/30</code> translúcido —
-        duas superfícies visivelmente diferentes fazendo o mesmo trabalho. Hoje
-        ele compõe <code>field-classes</code>, como <code>Select</code>,{" "}
-        <code>Combobox</code> e <code>DatePicker</code>. A altura não mudou:{" "}
-        <code>xl</code> (40) é a que ele já tinha, e a conversão é de superfície.
+          Ele compõe <code>field-classes</code>, como <code>Input</code>, <code>Select</code> e <code>DatePicker</code>, na altura <code>xl</code>. Não o troque por <code>Button variant=&quot;outline&quot;</code>: no tema claro seria uma superfície diferente fazendo o mesmo trabalho.
       </DocNote>
 
-      <DocNote title="O foco volta ao gatilho ao fechar">
-        <code>onOpenAutoFocus</code> continua com <code>preventDefault()</code>:
-        roubar o foco ao abrir fecha o teclado do telefone e faz a folha inteira
-        saltar. <code>onCloseAutoFocus</code> <strong>não</strong> — ele vinha
-        prevenido também, e como o campo de busca fica dentro do popover, fechar
-        pelo teclado deixava o foco no <code>&lt;body&gt;</code>. A justificativa
-        era o salto de rolagem, mas o Radix já devolve o foco com{" "}
-        <code>preventScroll: true</code>: o <code>preventDefault</code> não
-        comprava nada e custava a volta.
+      <DocNote title="Não rouba o foco ao abrir; devolve ao fechar">
+          Abrir sem roubar o foco evita fechar o teclado do telefone e saltar a folha. Ao fechar o foco volta ao gatilho — o Radix já usa <code>preventScroll</code> —, senão quem fecha pelo teclado fica no <code>&lt;body&gt;</code>.
       </DocNote>
 
-      <DocNote title="As faixas, e por que elas não moram na tela">
-        Busca, lista e pé são as mesmas três faixas que o <code>Card</code> chama
-        de <code>CardToolbar</code> / corpo / <code>CardFooter</code>. Antes
-        desta revisão as três telas que usam o seletor escreviam cada faixa à
-        mão — <code>shrink-0 border-t border-border/50 bg-muted/25 p-2</code>{" "}
-        aparecia três vezes, idêntico. <code>FormPickerPopoverList</code> traz
-        junto o <code>onWheel</code> que para a propagação, que uma string de
-        classes nunca conseguiu carregar.
+      <DocNote title="Use as faixas, não escreva a anatomia na tela">
+          Busca, lista e pé são as faixas do <code>Card</code>. <code>FormPickerPopoverList</code> traz junto o <code>onWheel</code> que para a propagação, que uma string de classes não carrega.
       </DocNote>
 
-      <DocNote title="O vazio também é do componente">
-        Três telas escrevem a mensagem de lista vazia à mão, em duas grafias —{" "}
-        <code>px-1 py-6 text-center</code> nos seletores de categoria e{" "}
-        <code>py-4 text-center</code> no de cartão —, e esta demonstração tinha
-        inventado uma terceira. <code>FormPickerPopoverEmpty</code> fixa o
-        respiro e a tinta; o texto continua de quem chama, porque
-        &ldquo;nenhuma categoria encontrada&rdquo; (busca sem resultado) e
-        &ldquo;nenhum cartão cadastrado&rdquo; (ausência de dado) não são a
-        mesma frase.
+      <DocNote title="O vazio é do componente; o texto, de quem chama">
+          <code>FormPickerPopoverEmpty</code> fixa respiro e tinta. A frase muda: &ldquo;nenhuma categoria encontrada&rdquo; é busca sem resultado, &ldquo;nenhum cartão cadastrado&rdquo; é ausência de dado.
       </DocNote>
 
       <DocNote title="A linha responde ao dedo">
-        <code>FormPickerPopoverItem</code> tem <code>min-h-11</code> — os 44px de
-        alvo — e o realce vem com o par <code>active:</code>. As linhas escritas
-        à mão nas telas acendem no cursor e não respondem ao toque, num seletor
-        que existe para o toque. É a regra <strong>H</strong> do auditor, e as
-        quatro ocorrências continuam lá até as telas migrarem.
+          <code>FormPickerPopoverItem</code> tem 44px de alvo e o par <code>active:</code> junto do realce. Linha escrita à mão que só acende no cursor fica inerte no toque.
       </DocNote>
 
       <PropsTable
@@ -149,21 +105,21 @@ export default function FormPickerPopoverDoc() {
             type: "ComponentProps<typeof Popover>",
             default: "modal={isMobile}",
             description:
-              "A raiz. No telefone tranca a rolagem do documento, senão rolar a lista arrasta a folha que a contém.",
+              "A raiz; no telefone tranca a rolagem para a lista não arrastar a folha.",
           },
           {
             prop: "FormPickerPopoverTrigger",
             type: 'Omit<ComponentProps<"button">, "size"> & { size?: "sm" | "md" | "lg" | "xl" }',
             default: 'size="xl"',
             description:
-              "O gatilho é o campo: veste field-classes (não é mais Button), altura da escada, peso normal, e o chevron que gira ao abrir.",
+              "O gatilho é o campo: field-classes, altura da escada e chevron que gira.",
           },
           {
             prop: "FormPickerPopoverSearch",
             type: "ComponentProps<typeof InputGroupInput>",
             default: 'size="lg"',
             description:
-              "Sobre InputGroup — a lupa é um rótulo de verdade, ligado ao campo por htmlFor, e não um ícone absolute com pl-9.",
+              "Sobre InputGroup, com a lupa como rótulo ligado ao campo.",
           },
           {
             prop: "FormPickerPopoverList",
@@ -188,7 +144,7 @@ export default function FormPickerPopoverDoc() {
             prop: "formPickerListScrollClassName",
             type: "string",
             description:
-              "As classes soltas da região rolável. Sobrevive porque três telas ainda a importam; o destino é FormPickerPopoverList.",
+              "As classes soltas da região rolável; prefira FormPickerPopoverList.",
           },
         ]}
       />

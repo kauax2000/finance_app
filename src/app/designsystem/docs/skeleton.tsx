@@ -7,7 +7,7 @@ export default function SkeletonDoc() {
   return (
     <>
       <Usage>
-        O osso da tela enquanto o dado não chegou. Precisa ter <strong>a forma do conteúdo que vai substituí-lo</strong> — um retângulo genérico não prepara ninguém e ainda provoca salto de layout.
+        O osso da tela enquanto o dado não chegou. Precisa ter <strong>a forma do conteúdo que vai substituí-lo</strong>: um retângulo genérico não prepara ninguém e provoca salto de layout.
       </Usage>
 
       <DocSection
@@ -25,7 +25,7 @@ export default function SkeletonDoc() {
 
       <DocSection
         title="Com a forma do conteúdo"
-        description="Este é o esqueleto de uma linha de transação: avatar, descrição sobre categoria, valor à direita. Compare com a linha real e o salto some."
+        description="O esqueleto de uma linha de transação: avatar, descrição sobre categoria, valor à direita. Com a forma da linha real, não há salto."
         code={`<div className="flex items-center gap-3">
   <Skeleton className="size-10 shrink-0 rounded-full" />
   <div className="flex-1">
@@ -48,16 +48,10 @@ export default function SkeletonDoc() {
         ))}
       </DocSection>
 
-      <DocNote title="A animação é pulse, e o shimmer não existe mais">
-        O <code>globals.css</code>{" "}
-        carregava <code>@keyframes shimmer</code>{" "}
-        e uma classe <code>.animate-shimmer</code>{" "}
-        que <strong>nenhum arquivo usava</strong> — nem o Skeleton, nem tela
-        alguma. Ela ainda ocupava lugar na lista de exceções do{" "}
-        <code>prefers-reduced-motion</code>, protegendo algo que não existia.
-        Saiu. O osso pulsa, e pulso é animação que se repete: ela continua
-        rodando mesmo com movimento reduzido, porque é ela que comunica que a
-        tela está viva.
+      <DocNote title="O osso pulsa, inclusive com movimento reduzido">
+        A animação é <code>pulse</code>, e continua com{" "}
+        <code>prefers-reduced-motion</code>: é ela que comunica que a tela está
+        viva.
       </DocNote>
 
       <DocNote title="Ele tem token próprio">

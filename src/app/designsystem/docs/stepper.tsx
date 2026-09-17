@@ -15,9 +15,7 @@ export default function StepperDoc() {
   return (
     <>
       <Usage>
-        Um fluxo com começo e fim conhecidos. Ele responde &ldquo;quanto
-        falta&rdquo;, que é a pergunta que faz alguém desistir no meio. Se o
-        número de etapas varia, ele mente.
+        Um fluxo com começo e fim conhecidos: ele responde &ldquo;quanto falta&rdquo;. Se o número de etapas varia, ele mente. Histórico de eventos é <code>Timeline</code>.
       </Usage>
 
       <DocSection
@@ -37,7 +35,7 @@ export default function StepperDoc() {
 
       <DocSection
         title="Vertical"
-        description="A forma que serve o telefone sem esconder nada. Na horizontal o rótulo some abaixo de sm porque quatro palavras lado a lado não cabem em 360px — aqui ele fica."
+        description="A forma do telefone, sem esconder nada: na horizontal o rótulo some abaixo de sm, e aqui ele fica."
         code={`<Stepper orientation="vertical">…</Stepper>`}
         previewClassName="items-start"
       >
@@ -81,55 +79,23 @@ export default function StepperDoc() {
       </DocSection>
 
       <DocNote title="A lista assume o número e o fim">
-        <code>StepperItem</code> recebia <code>step</code> e{" "}
-        <code>isLast</code> como props, com <code>Omit&lt;…, &quot;children&quot;&gt;</code>.
-        Os dois são exatamente o que o <strong>pai</strong> sabe e o filho não —
-        o índice e o fim da lista —, e quem chamava tinha de escrever{" "}
-        <code>isLast=&#123;i === ETAPAS.length - 1&#125;</code> toda vez. Errar
-        isso desenhava um conector para lugar nenhum. É a mesma correção que a{" "}
-        <code>BreadcrumbList</code> recebeu ao assumir os separadores.
+        A <code>Stepper</code> deriva <code>step</code> e <code>isLast</code> do índice; quem chama passa só o estado e o rótulo. Escrever <code>isLast</code> à mão é o que desenha um conector para lugar nenhum.
       </DocNote>
 
       <DocNote title="A trilha alcança a borda">
-        Todos os itens eram <code>flex-1</code>, inclusive o último — que não
-        desenha conector. Medido: quatro itens de 218px, com o último ocupando os
-        mesmos 218 para mostrar um marcador de 24. Sobravam{" "}
-        <strong>~192px de vão morto</strong>, e a trilha parava a{" "}
-        <strong>78%</strong> da largura. Hoje o último é <code>flex-none</code>{" "}
-        e os conectores absorvem a sobra.
+        O último item é <code>flex-none</code> e não desenha conector, então os conectores absorvem a sobra. Com todos <code>flex-1</code>, a trilha pararia antes da borda.
       </DocNote>
 
       <DocNote title="O rótulo é centrado no marcador">
-        Ele era <code>block</code> e ocupava a <strong>célula inteira</strong> —
-        278px medidos — com o texto rente à esquerda: flush com a borda do
-        marcador, mas com o centro da caixa a <strong>127px</strong> do centro
-        dele. Hoje é <code>w-max</code> deslocado por meia largura do marcador,
-        que é variável para não virar um número repetido em dois lugares.
-        <br />
-        <br />
-        <strong>A primeira etapa é a exceção</strong>, e é geometria: o marcador
-        dela encosta na borda esquerda da trilha, então centrar a palavra a faria
-        sair para fora. A última não precisa da exceção — ali a trilha deixa
-        folga.
+        Ele é <code>w-max</code>, deslocado por meia largura do marcador (<code>--stepper-marker</code>). A primeira etapa é a exceção: o marcador dela encosta na borda, e centrar a palavra a faria sair da trilha.
       </DocNote>
 
-      <DocNote title="Na vertical, o mesmo defeito nos dois eixos">
-        O rótulo fica ao lado do marcador com <code>items-start</code>, e o
-        marcador (24) é mais alto que a caixa de uma linha de texto (20): os
-        topos coincidiam e os <strong>centros ficavam a 2px</strong> um do outro
-        — igual nos quatro degraus, que é a assinatura de um desalinhamento
-        sistemático. E o conector recuava por meia largura escrita à mão por
-        degrau, sem descontar a espessura do próprio fio, então o traço de 1px
-        caía <strong>1px à direita</strong> do centro do marcador. Hoje os dois
-        derivam de <code>--stepper-marker</code>: medido, 0 e 0.
+      <DocNote title="Na vertical, rótulo e conector derivam do marcador">
+        O rótulo tem a altura mínima do marcador com <code>items-center</code>, e o conector recua <code>(--stepper-marker − 1px) / 2</code>. Com meia largura escrita à mão, o fio de 1px sai do centro.
       </DocNote>
 
-      <DocNote title="O estado deixou de existir só em cor">
-        <code>data-state</code> não é lido por tecnologia assistiva, e o tique é{" "}
-        <code>aria-hidden</code>: uma etapa concluída e uma futura soavam
-        idênticas. Cada item passa a carregar &ldquo;concluída&rdquo;,
-        &ldquo;etapa atual&rdquo; ou &ldquo;não iniciada&rdquo; em{" "}
-        <code>sr-only</code>, ao lado do <code>aria-current=&quot;step&quot;</code>.
+      <DocNote title="O estado não existe só em cor">
+        <code>data-state</code> não é lido por tecnologia assistiva e o tique é <code>aria-hidden</code>. Cada item carrega &ldquo;concluída&rdquo;, &ldquo;etapa atual&rdquo; ou &ldquo;não iniciada&rdquo; em <code>sr-only</code>, junto do <code>aria-current=&quot;step&quot;</code>.
       </DocNote>
 
       <PropsTable

@@ -35,11 +35,7 @@ export default function ToolbarDoc() {
   return (
     <>
       <Usage>
-        A linha entre o título e a lista: os filtros de um lado, as ações do
-        outro. Existe porque esse bloco é desenhado à mão em seis telas —
-        transações, faturas, categorias, assinaturas, cartões e o painel —, cada
-        uma com um espaçamento diferente, e cada uma clonada mais uma vez num
-        arquivo de esqueleto.
+        A linha entre o título da página e a lista: filtros de um lado, ações do outro. Não é a barra do topo da janela (<code>TopBar</code>) nem a tira de um cartão (<code>CardToolbar</code>).
       </Usage>
 
       <DocSection
@@ -95,18 +91,8 @@ export default function ToolbarDoc() {
         </Toolbar>
       </DocSection>
 
-      <DocNote title="No botão com rótulo, a marca é o número — não um ponto">
-        Um ponto diz que <em>há</em> filtro; o número diz <em>quantos</em>. E
-        ele é <strong>verde da marca</strong>, porque é essa a linguagem de
-        &quot;filtro ativo&quot; que o app já fala — as três grafias da bolinha
-        usam <code>bg-primary</code>. Trocar o ponto por um badge cinza mantinha
-        a informação e perdia o sinal; medido, o cinza dava{" "}
-        <strong>1,19</strong> contra o botão no tema claro. Ele entra no fluxo
-        do flex, então não sobrepõe nada: a bolinha absoluta que
-        estava aqui encostava no &quot;s&quot; de &quot;Filtros&quot; — 2px, nos
-        dois eixos, medidos. (Ela <strong>não</strong> ficava em cima da borda:
-        a folga até a curva era de 4,59px. O defeito era o texto.) O ponto fica
-        para o botão sem rótulo, logo abaixo.
+      <DocNote title="Com rótulo, a marca é a contagem">
+        Num botão com rótulo, o filtro ativo é um <code>Badge</code> com o número, no verde da marca — diz quantos, não só que há. O ponto fica para o botão só de ícone.
       </DocNote>
 
       <DocSection
@@ -129,19 +115,13 @@ export default function ToolbarDoc() {
         <BuscaDemo />
       </DocSection>
 
-      <DocNote title="Nenhuma tela do app faz isto — e provavelmente devia">
-        A busca de transações mora dentro da folha de filtros. No telefone isso
-        se defende; no desktop é caro, porque a busca é o filtro de maior
-        frequência de uma lista de transações e cada uso custa um clique a mais.
-        A página mostra a forma porque o catálogo desta casa também propõe, não
-        só espelha — <code>Drawer</code>, <code>ContextMenu</code>,{" "}
-        <code>Menubar</code>, <code>HoverCard</code> e <code>Stepper</code>{" "}
-        entraram sem consumidor pela mesma razão.
+      <DocNote title="O app ainda não tem busca na barra">
+        A busca de transações mora na folha de filtros; a forma fica aqui como proposta.
       </DocNote>
 
       <DocSection
         title="As duas árvores"
-        description="No telefone o comando é um botão de ícone; no desktop, o mesmo comando rotulado. ToolbarRow segura a linha do telefone e se dissolve no md, quando os filhos passam a ser medidos pela própria barra."
+        description="No telefone o comando é um botão de ícone; no desktop, o mesmo comando rotulado. ToolbarRow segura a linha do telefone e se dissolve no md."
         code={`<Toolbar>
   {/* uma árvore só: no md a linha desaparece e os filhos sobem */}
   <ToolbarRow>
@@ -189,20 +169,13 @@ export default function ToolbarDoc() {
         </Toolbar>
       </DocSection>
 
-      <DocNote title="A dissolução leva a caixa junto">
-        Em <code>md</code> a <code>div</code> do <code>ToolbarRow</code> não
-        existe: o <code>min-w-0</code>, o <code>gap</code> e qualquer{" "}
-        <code>flex-1</code> dela deixam de valer, e um filho com{" "}
-        <code>flex-1</code> passa a disputar a largura da barra inteira — é por
-        isso que o trilho acima desfaz o dele com <code>md:flex-none</code>.
-        Pela mesma razão, não ponha <code>role</code> nem{" "}
-        <code>aria-label</code> aqui: para nomear o grupo existe o{" "}
-        <code>ToolbarFilters</code>.
+      <DocNote title="Em md, ToolbarRow não tem caixa">
+        Com <code>display: contents</code>, o <code>gap</code> e o <code>flex-1</code> dele deixam de valer, e um filho com <code>flex-1</code> disputa a barra inteira — desfaça com <code>md:flex-none</code>. Para nomear o grupo, use o <code>ToolbarFilters</code>, não a linha.
       </DocNote>
 
       <DocSection
         title="Aba, e não filtro"
-        description="Quando o trilho troca de painel — e não filtra o mesmo painel — ele leva TabsContent junto, e é aí que role=&quot;tab&quot; passa a dizer a verdade."
+        description="Quando o trilho troca de painel, ele leva TabsContent junto — só aí role=&quot;tab&quot; diz a verdade."
         code={`<Tabs defaultValue="contas">
   <Toolbar>
     <ToolbarFilters>
@@ -248,30 +221,7 @@ export default function ToolbarDoc() {
       </DocSection>
 
       <DocNote title="Aba troca de painel; filtro troca o conteúdo do mesmo painel">
-        A conta do app, medida: dos <strong>11</strong> trilhos escritos à mão,{" "}
-        <strong>4 são abas</strong> (faturas <code>Contas/Pendentes</code>, que
-        ainda reseta o eixo de ordenação; cartões{" "}
-        <code>Cartões/Histórico</code>, que troca uma grade por um gráfico;
-        categorias; tendências), <strong>3 são filtros</strong> (transações, que
-        vira <code>qb.eq(&quot;type&quot;, …)</code> na mesma tabela;
-        assinaturas; histórico de fatura) e <strong>4 são controles de
-        formulário</strong> — um deles debaixo de um{" "}
-        <code>&lt;Label&gt;Como informar os valores?&lt;/Label&gt;</code>, que é
-        rádio vestido de aba e o pior dos onze. E{" "}
-        <code>TransactionTypeSegment</code> é <strong>aba numa tela e filtro na
-        outra</strong>: o mesmo componente, semânticas opostas.
-      </DocNote>
-
-      <DocNote title="Os três filtros usam role=&quot;tab&quot; sem painel, e é dívida conhecida">
-        O destino deles é <code>ToggleGroup</code>, que hoje não segura o
-        invariante: medido, clicar no item já ativo de um{" "}
-        <code>type=&quot;single&quot;</code> <strong>desmarca tudo</strong> — os
-        três vão para <code>off</code>, zero selecionados —, e num filtro que já
-        tem &quot;Todas&quot; como neutro isso é um quarto estado que ninguém
-        pediu. Ele também emite <code>role=&quot;radio&quot;</code> dentro de{" "}
-        <code>role=&quot;group&quot;</code>, e não de{" "}
-        <code>radiogroup</code>. Enquanto isso não se conserta,{" "}
-        <code>Tabs</code> é a escolha — ela garante sempre exatamente um ativo.
+        Os dois são <code>Tabs variant=&quot;solid&quot;</code>: a aba leva <code>TabsContent</code>, o filtro fica sem painel. Um filtro com &quot;Todas&quot; não é <code>ToggleGroup</code>: no <code>type=&quot;single&quot;</code>, clicar no item ativo desmarca tudo, e ali precisa haver sempre um ativo. Valor que vai ser gravado é rádio, não aba.
       </DocNote>
 
       <DocSection
@@ -301,7 +251,7 @@ export default function ToolbarDoc() {
 
       <DocSection
         title="A densidade"
-        description="A barra publica --toolbar-control; o controle a lê. md 32 com o ponteiro fino, xl 40 com o grosso — os nomes da escada do sistema, e não dois números soltos."
+        description="A barra publica --toolbar-control e o controle a lê: md 32 no ponteiro fino, xl 40 no grosso."
         code={`// na raiz, de fábrica
 "[--toolbar-control:--spacing(8)] pointer-coarse:[--toolbar-control:--spacing(10)]"
 
@@ -326,66 +276,26 @@ export default function ToolbarDoc() {
         </Toolbar>
       </DocSection>
 
-      <DocNote title="Numa barra, o trilho é o Tabs no padrão">
-        Quem fica lado a lado com o <code>Button</code> não é o gatilho — é a{" "}
-        <strong>bandeja</strong>, e é ela que o <code>size</code> do{" "}
-        <code>Tabs</code> nomeia. O padrão do <code>solid</code> é{" "}
-        <code>md</code>: bandeja de <strong>32</strong>, rente aos controles de 32
-        da barra, com o gatilho em 28. Não há eixo de recuo para acertar.
-        <br />
-        No ponteiro grosso a bandeja tem piso de <strong>40</strong>, o mesmo
-        degrau que <code>--toolbar-control</code> publica, e o gatilho vai a 36 —
-        a geometria que o app já renderiza no telefone.
+      <DocNote title="Na barra, o trilho é o Tabs no tamanho padrão">
+        O <code>size</code> do <code>Tabs</code> nomeia a bandeja, e é ela que fica ao lado do <code>Button</code>: <code>md</code> dá bandeja de 32, rente aos controles, com gatilho de 28. No ponteiro grosso a bandeja vai a 40, o degrau de <code>--toolbar-control</code>.
       </DocNote>
 
-      <DocNote title="Nada quebra em linhas — o conteúdo troca">
-        Este componente dizia que no telefone os itens quebram em linhas em vez
-        de encolher. <strong>Nenhuma das seis barras faz isso.</strong> Todas
-        renderizam duas árvores e trocam o conteúdo: um botão só de ícone no
-        telefone, o mesmo comando rotulado no desktop. O <code>flex-wrap</code>{" "}
-        ficou porque a barra de faturas de fato quebra; o que saiu foi a
-        afirmação de que essa é a forma do padrão.
+      <DocNote title="No telefone o conteúdo troca, não quebra">
+        As barras renderizam duas árvores — ícone no telefone, comando rotulado no desktop — em vez de quebrar em linhas.
       </DocNote>
 
-      <DocNote title="A pergunta é o dedo, não a largura">
-        As seis barras perguntam <code>md:</code>. Com isso, um desktop com a
-        janela em 700px recebe controles de 40px que ninguém pede, e um tablet em
-        paisagem recebe 32px que o dedo não acerta. A regra desta casa já está
-        escrita no item de menu — <em>a linha cresce no toque, não no
-        telefone</em> — e o <code>Calendar</code> já a aplica assim. Esta barra
-        faz igual, e não custou migração nenhuma: ela não tinha consumidor.
+      <DocNote title="A densidade segue o dedo, não a largura">
+        Use <code>pointer-coarse:</code>, nunca <code>md:</code>. Com <code>md:</code>, um desktop estreito ganha controles de 40px sem pedir e um tablet em paisagem fica com 32px que o dedo não acerta.
       </DocNote>
 
-      <DocNote title="Por que a régua chega por className">
-        Um seletor descendente não serviria: <code>in-*</code> e{" "}
-        <code>group-*</code> compilam com <code>:where()</code>, que{" "}
-        <strong>não soma especificidade</strong> — um{" "}
-        <code>in-data-[size=xl]:h-10</code> empata com o <code>h-8</code> que o
-        próprio <code>Button</code> traz, e perde por ordem de emissão. Por{" "}
-        <code>className</code> quem decide é o <code>twMerge</code>, que{" "}
-        <strong>remove</strong> o degrau conflitante em vez de disputar com ele.
-        A régua só vale dentro de um <code>Toolbar</code>: fora dele a variável
-        não existe e a altura cai para o conteúdo.
+      <DocNote title="A régua chega por className, não por seletor">
+        <code>in-*</code> e <code>group-*</code> compilam com <code>:where()</code>, sem especificidade, e empatariam com o <code>h-8</code> do <code>Button</code>. Por <code>className</code>, o <code>twMerge</code> remove o degrau conflitante. Fora de um <code>Toolbar</code> a variável não existe.
       </DocNote>
 
       <DocNote title="Sem role=&quot;toolbar&quot;, de propósito">
-        Esse papel é um contrato de teclado: o grupo inteiro ocupa uma parada de
-        tabulação e as setas andam entre os controles. Aqui cada controle é
-        tabulável por conta própria, então o papel anunciaria um widget que não
-        existe — pior que não anunciar nada. Para nomear o grupo, passe{" "}
-        <code>role=&quot;group&quot;</code> com <code>aria-label</code>. A regra
-        existe porque foi violada: o app o escreve à mão em quatro barras de
-        seleção, nenhuma com foco itinerante, e duas delas são cópia literal das
-        outras duas.
+        O papel promete uma só parada de tabulação com setas entre os controles; aqui cada controle é tabulável, e anunciar um widget que não existe é pior que nada. Para nomear o grupo, use <code>role=&quot;group&quot;</code> com <code>aria-label</code>.
       </DocNote>
 
-      <DocNote title="Isto não é o CardToolbar">
-        <code>CardToolbar</code> é a <strong>tira de um Card</strong>: sangra até
-        a borda e vive dentro do respiro do cartão. <code>Toolbar</code> é a
-        linha <strong>da página</strong>, entre o <code>PageHeader</code> e a
-        lista. Os dois têm 113 e zero consumidores, nessa ordem — quem digita
-        &quot;Toolbar&quot; costuma encontrar o outro primeiro.
-      </DocNote>
 
       <PropsTable
         title="Peças"
@@ -394,31 +304,31 @@ export default function ToolbarDoc() {
             prop: "Toolbar",
             type: "div",
             description:
-              "A raiz. Publica --toolbar-control e não declara altura nenhuma. Sem eixos: nenhum candidato passou na contagem.",
+              "A raiz; publica --toolbar-control e não declara altura.",
           },
           {
             prop: "ToolbarRow",
             type: "div",
             description:
-              "A linha do telefone que se dissolve no md (display: contents). Escrita à mão 5× no app.",
+              "A linha do telefone, que vira display: contents no md.",
           },
           {
             prop: "ToolbarFilters",
             type: "div",
             description:
-              "O grupo da esquerda: o trilho e a busca. Cresce e encolhe — é min-w-0 flex-1.",
+              "O grupo da esquerda — trilho e busca —, min-w-0 flex-1.",
           },
           {
             prop: "ToolbarActions",
             type: "div",
             description:
-              "O grupo da direita. Nunca encolhe, e traz a única ms-auto — duas dividiriam a sobra em partes iguais.",
+              "O grupo da direita; não encolhe e traz a única ms-auto.",
           },
           {
             prop: "ToolbarFilterIndicator",
             type: "span",
             description:
-              "O ponto de filtro ativo, e só para botão SEM rótulo. Filho de um controle relative; aria-hidden de fábrica, porque o estado já está no aria-label. Com rótulo, use um Badge com a contagem.",
+              "O ponto de filtro ativo, só para botão sem rótulo; aria-hidden, porque o estado está no aria-label.",
           },
         ]}
       />

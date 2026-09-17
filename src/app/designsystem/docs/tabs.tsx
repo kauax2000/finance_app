@@ -29,10 +29,9 @@ export default function TabsDoc() {
   return (
     <>
       <Usage>
-        Painéis irmãos do mesmo nível, dos quais só um aparece por vez. Se as
-        opções <em>filtram</em> a mesma lista em vez de trocar o conteúdo, o
-        componente é <code>ToggleGroup</code> — e o app quebra essa regra em
-        quatro lugares hoje. Se elas <em>navegam</em> para outra rota, é um link.
+        Painéis irmãos do mesmo nível, um visível por vez. Se as opções{" "}
+        <em>filtram</em> a mesma lista, é <code>ToggleGroup</code>; se{" "}
+        <em>navegam</em> para outra rota, é um link.
       </Usage>
 
       <DocSection
@@ -73,7 +72,7 @@ export default function TabsDoc() {
 
       <DocSection
         title="Solid — o controle segmentado"
-        description="A bandeja preenchida, e a forma que o app já usa. Ela vive numa linha de controles: a bandeja mede 32 para ficar rente ao Button e ao Input ao lado, e por isso o padrão dela é md. O marcador corre dentro da bandeja."
+        description="A bandeja preenchida, para uma linha de controles: mede 32, rente ao Button e ao Input ao lado, por isso o padrão é md."
         code={`<TabsList>…</TabsList>  {/* variant="solid" size="md", os dois de fábrica */}`}
         previewClassName="flex-col flex-nowrap items-stretch gap-6 p-6"
       >
@@ -92,15 +91,10 @@ export default function TabsDoc() {
         </div>
       </DocSection>
 
-      <DocNote title="Ele é o único que nasce esticado">
-        <code>stretch</code> vem ligado aqui e desligado nas outras duas, porque
-        uma bandeja lê como <strong>controle segmentado</strong> — e um controle
-        segmentado divide a largura que tem. Uma fileira de abas de página não.
-      </DocNote>
 
       <DocSection
         title="O marcador de vidro"
-        description="glass troca a superfície do marcador pelo vidro do sistema — o thumb que viaja, que é o que um controle segmentado do iOS faz. Só em solid: no underline o marcador é um fio de 2px, sem corpo onde um aro more, e no plain ele nem é montado."
+        description="glass troca o marcador que viaja pelo vidro do sistema, como o controle segmentado do iOS. Só em solid."
         code={`<TabsList glass stretch={false}>…</TabsList>`}
         previewClassName="flex-col flex-nowrap items-stretch gap-6 p-6"
       >
@@ -125,34 +119,17 @@ export default function TabsDoc() {
         ))}
       </DocSection>
 
-      <DocNote title="O corpo é o mesmo; o que entra é o aro">
-        O tom do marcador de vidro é <code>--background</code> <strong>opaco</strong>
-        — exatamente a cor que o marcador chapado já pintava. Por construção,
-        então, nada de contraste se move: o rótulo ativo continua sobre a mesma
-        superfície. O que entra é a <strong>aresta</strong>, e é ela sozinha que
-        faz o material — numa peça com tom as nuvens já chegam a 3,6%.
-        <br />
-        <br />
-        A borda também já estava lá (<code>border-border/80</code> no chapado), e
-        é isso que faz a armadilha da régua não morder: o aro é pintado no{" "}
-        <code>border-box</code>, e a peça já reservava 1px para ele. Numa bandeja{" "}
-        <code>h-8</code> a mesma troca custaria 2px do conteúdo — 26 para um
-        gatilho de 28.
-      </DocNote>
-
-      <DocNote title="É o vidro pintado, e não o material do iOS">
-        <code>backdrop-filter</code> sobre cor chapada não desenha nada, e
-        nenhum trilho deste app é fixo — não há conteúdo passando por baixo de
-        uma fileira de abas. É a régua de premissa que separa os dois vidros da
-        casa. E a <strong>bandeja</strong> com material já foi medida numa
-        fileira idêntica a esta: a 60% no escuro ela cai de rgb 38 para 27, e
-        deixa de ler como bandeja. Por isso o vidro entra na peça que se move, e
-        nunca na que a contém.
+      <DocNote title="Vidro no marcador, nunca na bandeja">
+        O marcador de vidro usa <code>--background</code> opaco, a mesma cor do
+        chapado, então o contraste do rótulo não muda; o que entra é só o aro,
+        no 1px de borda que já existia. É vidro pintado, sem{" "}
+        <code>backdrop-filter</code>: nada passa por baixo de uma fileira de
+        abas. Com material na bandeja, ela escurece e deixa de ler como bandeja.
       </DocNote>
 
       <DocSection
         title="Underline — as abas de página"
-        description="Um fio sob a fileira, e o marcador pousa nele. Aqui não há bandeja para caber em linha de controle nenhuma: são abas que dividem a página com título e texto corrido, então o padrão é lg — o degrau em que o rótulo volta aos 14px."
+        description="Um fio sob a fileira, e o marcador pousa nele. São abas que dividem a página com título e texto corrido, então o padrão é lg, o degrau em que o rótulo volta aos 14px."
         code={`<TabsList variant="underline">…</TabsList>  {/* size="lg" de fábrica */}`}
         previewClassName="flex-col flex-nowrap items-stretch gap-6 p-6"
       >
@@ -171,15 +148,13 @@ export default function TabsDoc() {
       </DocSection>
 
       <DocNote title="O fio sempre atravessa a largura toda">
-        Ele é a fronteira entre a fileira e o painel de baixo. Um fio que
-        <strong> para depois da última aba</strong> lê como sublinhado do grupo,
-        não como base da página — por isso a moldura do <code>underline</code>{" "}
-        ocupa a largura toda mesmo com as abas do tamanho do rótulo.
+        Ele é a fronteira entre a fileira e o painel. Um fio que para depois da
+        última aba lê como sublinhado do grupo, não como base da página.
       </DocNote>
 
       <DocSection
         title="Plain — dentro de uma moldura que já existe"
-        description="Nem bandeja nem fio: para dentro de um cartão ou de um diálogo que já tem contorno próprio. Também é abas de página, então também nasce lg."
+        description="Nem bandeja nem fio: para dentro de um cartão ou diálogo com contorno próprio. Também são abas de página, então nasce lg."
         code={`<TabsList variant="plain">…</TabsList>  {/* size="lg" de fábrica */}`}
         previewClassName="flex-col flex-nowrap items-stretch gap-6 p-6"
       >
@@ -197,33 +172,15 @@ export default function TabsDoc() {
         </div>
       </DocSection>
 
-      <DocNote title="plain não viaja, e a razão é o trilho">
-        O marcador viaja <em>ao longo de alguma coisa</em>: a bandeja do{" "}
-        <code>solid</code> e o fio do <code>underline</code> são o trilho que dá
-        sentido ao deslocamento. O <code>plain</code> não desenha nem um nem
-        outro, então ali o mesmo movimento deixa de ser um realce correndo por um
-        trilho e vira um bloco preenchido deslizando sozinho sobre o fundo — na
-        variante escolhida justamente para uma fileira que <strong>não</strong>{" "}
-        deve chamar atenção. A mais silenciosa das três não pode ficar com o
-        marcador mais barulhento. Sem marcador ela cai no mesmo caminho de antes
-        da hidratação: cada gatilho pinta o próprio realce, e a tinta troca com{" "}
-        <code>transition-colors</code> — mudança de cor, não deslocamento.
-      </DocNote>
-
-      <DocNote title="As três não compartilham um padrão, e é de propósito">
-        Antes desta rodada elas saíam idênticas — moldura 32, gatilho 28 e fonte
-        de 12,8px nas três, medidas —, diferindo só no que a moldura pintava.
-        Hoje <code>solid</code> nasce <code>md</code> porque a bandeja dele tem
-        de ficar rente a um <code>Button</code>, e as outras duas nascem{" "}
-        <code>lg</code> porque <strong>é ali que o rótulo volta ao corpo de
-        texto da página</strong>: só <code>sm</code> e <code>md</code> carregam{" "}
-        <code>text-control-sm</code>. Um <code>size</code> explícito continua
-        vencendo.
+      <DocNote title="plain não tem marcador que viaja">
+        O marcador viaja ao longo de um trilho — a bandeja ou o fio. Sem trilho,
+        vira um bloco deslizando sozinho, barulhento demais para a variante mais
+        silenciosa.
       </DocNote>
 
       <DocSection
         title="Altura da bandeja"
-        description="size mede a bandeja — a caixa que um layout posiciona —, e o gatilho deriva dela. Os mesmos nomes e os mesmos números do Button, do Input e do SelectTrigger: botão ao lado de aba alinha sem ninguém dizer size."
+        description="size mede a bandeja, e o gatilho deriva dela. Mesmos nomes e números do Button, do Input e do SelectTrigger: aba ao lado de botão alinha sem declarar size."
         code={`<TabsList size="sm">…</TabsList>  {/* bandeja 28 */}
 <TabsList size="md">…</TabsList>  {/* bandeja 32 — o padrão */}
 <TabsList size="lg">…</TabsList>  {/* bandeja 36 */}
@@ -247,7 +204,7 @@ export default function TabsDoc() {
 
       <DocSection
         title="Distribuição"
-        description="stretch divide a linha em partes iguais. Ele nasce ligado em solid e desligado nas outras duas, porque uma bandeja lê como controle segmentado e uma fileira de abas de página não."
+        description="stretch divide a linha em partes iguais. Nasce ligado em solid, que lê como controle segmentado, e desligado nas abas de página."
         code={`{/* padrão em solid */}
 <TabsList stretch>…</TabsList>
 
@@ -285,7 +242,7 @@ export default function TabsDoc() {
 
       <DocSection
         title="Excesso horizontal"
-        description="scrollable rola a fileira quando ela não cabe, dissolvendo nas pontas com a mesma primitiva da paleta de comandos e da tabela. Arraste a fileira abaixo para ver as bordas acenderem. A moldura tracejada é a largura de um telefone: doze meses medem ~690px e caberiam inteiros na largura desta página, então sem ela a demonstração não demonstra nada no desktop."
+        description="scrollable rola a fileira quando ela não cabe, dissolvendo nas pontas como a paleta de comandos e a tabela. A moldura tracejada tem a largura de um telefone."
         code={`<TabsList scrollable>
   {MESES.map((mes) => (
     <TabsTrigger key={mes} value={mes}>{mes}</TabsTrigger>
@@ -304,8 +261,7 @@ export default function TabsDoc() {
             </TabsList>
             <TabsContent value="Janeiro">
               <p className="text-sm text-muted-foreground">
-                Doze meses não cabem em 384px. Antes disso, a resposta escrita
-                aqui era “ou são três abas, ou a navegação é outra coisa”.
+                Doze meses não cabem em 384px.
               </p>
             </TabsContent>
           </Tabs>
@@ -352,14 +308,14 @@ export default function TabsDoc() {
             type: '"sm" | "md" | "lg" | "xl"',
             default: '"md" em solid · "lg" em underline e plain',
             description:
-              "A altura da bandeja — 28, 32, 36, 40 —, que é a caixa que um layout posiciona. O gatilho deriva (bandeja − 4): 24, 28, 32, 36. Os oito números são degraus da escada. No ponteiro grosso a bandeja tem piso de 40.",
+              "Altura da bandeja (28, 32, 36, 40); o gatilho mede bandeja − 4, e no ponteiro grosso a bandeja tem piso de 40.",
           },
           {
             prop: "variant",
             type: '"solid" | "underline" | "plain"',
             default: '"solid"',
             description:
-              "O tipo de aba, e não só o que a moldura desenha: ele decide também o padrão de size e o de stretch. solid é controle segmentado; underline e plain são abas de página.",
+              "O tipo de aba: solid é controle segmentado, underline e plain são abas de página. Decide os padrões de size e stretch.",
           },
           {
             prop: "stretch",
@@ -379,15 +335,13 @@ export default function TabsDoc() {
             prop: "scrollable",
             type: "boolean",
             default: "false",
-            description:
-              "A fileira rola e dissolve nas pontas. Vence stretch, porque os dois juntos não fazem nada.",
+            description: "A fileira rola e dissolve nas pontas; vence stretch.",
           },
           {
             prop: "orientation",
             type: '"horizontal" | "vertical"',
             default: '"horizontal"',
-            description:
-              "Declarado no Tabs, não na lista. Troca as setas de navegação junto.",
+            description: "Declarado no Tabs; troca as setas de navegação junto.",
           },
         ]}
       />
@@ -398,14 +352,12 @@ export default function TabsDoc() {
           {
             prop: "TabsList",
             type: "div + Tabs.List",
-            description:
-              "A moldura mais a fileira. O className cai na moldura, que é a caixa que um layout posiciona.",
+            description: "Moldura mais fileira; o className cai na moldura.",
           },
           {
             prop: "TabsTrigger",
             type: "Tabs.Trigger",
-            description:
-              "Lê tamanho, superfície e distribuição do contexto da lista. Não precisa repeti-los.",
+            description: "Lê tamanho, superfície e distribuição da lista.",
           },
           {
             prop: "TabsContent",
@@ -415,96 +367,32 @@ export default function TabsDoc() {
         ]}
       />
 
-      <DocNote title="O gatilho media 27px, e a conta escrita não fechava">
-        A lista era <code>h-9</code> (36) com <code>p-1</code> (8), o que deixa
-        28 de caixa; o gatilho era <code>h-[calc(100%-1px)]</code>, ou seja{" "}
-        <strong>27</strong> — abaixo do piso de 28 da escada. A justificativa
-        registrada dizia que “a 32 o gatilho cairia a 24”, uma conta que faz 36 −
-        8 = 28 e para, sem nunca subtrair o <code>-1px</code> que o próprio
-        componente escrevia. A raiz é ancorar a escada no contêiner, o mesmo
-        defeito que o <code>Menubar</code> já teve e já corrigiu.
-      </DocNote>
-
-      <DocNote title="size nomeia a bandeja, e o gatilho deriva">
-        Houve uma rodada em que <code>size</code> media o gatilho e a bandeja
-        saía 8px maior — uma linha de controles de 32 recebia um{" "}
-        <code>Tabs</code> de 40. Hoje a bandeja <strong>é</strong> o degrau do{" "}
-        <code>Button</code> de mesmo nome (<code>md</code> 32) e o gatilho mede
-        bandeja − 4; o eixo de recuo que existiu no meio do caminho saiu.
-      </DocNote>
-
-      <DocNote title="flex-1 nas abas era decorativo">
-        A lista era <code>w-fit</code>, e <code>flex-1</code> dentro de um
-        contêiner que encolhe para o conteúdo distribui sobra zero. As abas
-        nunca esticaram — o que derruba a premissa que sustentava a exceção da
-        escada. Hoje esticar é <code>stretch</code>, e ele traz a largura de que
-        precisa.
-      </DocNote>
-
-      <DocNote title="Por que scrollable não vem ligado">
+      <DocNote title="scrollable é opt-in">
         <code>scroll-fade-x</code> declara 36px de{" "}
-        <code>scroll-padding-inline</code>. Ligá-la sempre mudaria o{" "}
-        <code>scrollIntoView</code> de toda barra de abas do app, inclusive das
-        que nunca transbordam — então o eixo é opt-in. Em{" "}
-        <code>underline</code> a fileira precisa de <code>pb-0</code> para o
-        marcador encontrar o fio, e ali o anel de foco perde 3px na base:
-        medido, aceito, e visível nos outros três lados.
+        <code>scroll-padding-inline</code>; ligado sempre, mudaria o{" "}
+        <code>scrollIntoView</code> de toda barra de abas, inclusive das que
+        não transbordam. Em <code>underline</code> o anel de foco perde 3px na
+        base para o marcador encontrar o fio.
       </DocNote>
 
-      <DocNote title="A moldura fica fora da fileira">
-        A dissolução recorta o alfa do elemento inteiro — fundo, anel e sombra
-        junto. Uma bandeja mascarada sairia com os quatro cantos apagados e os
-        lados opacos, que lê como falha de renderização. Por isso quem pinta é a
-        moldura e quem rola é a fileira, que não desenha nada. E ela fica{" "}
-        <em>fora</em>: um nó entre um <code>{'role="tablist"'}</code> e as suas{" "}
-        <code>{'role="tab"'}</code> mexe na posse ARIA.
+      <DocNote title="A moldura pinta, a fileira rola">
+        A dissolução recorta o alfa do elemento inteiro: uma bandeja mascarada
+        sairia com os cantos apagados. A moldura fica <em>fora</em> da fileira
+        porque um nó entre <code>{'role="tablist"'}</code> e{" "}
+        <code>{'role="tab"'}</code> quebra a posse ARIA.
       </DocNote>
 
-      <DocNote title="Por que o marcador é um nó só, e não o gatilho">
-        Um realce que acende e apaga em elementos diferentes não tem como
-        viajar — não há objeto que se mova, só dois que trocam de estado. Então
-        a pintura saiu do gatilho e virou <code>{'tabs-indicator'}</code>,
-        absoluto dentro da fileira, posicionado por quatro variáveis que a
-        trilha publica. Ele está fora do fluxo, então animar largura e altura
-        nele não recalcula o layout de irmão nenhum. A alternativa
-        transform-only (<code>scaleX</code>) foi rejeitada porque distorce o raio
-        e a borda de 1px do <code>solid</code>: uma pílula esticada lê como bug,
-        não como movimento.
+      <DocNote title="O marcador é um nó só">
+        Um realce que troca de elemento não tem como viajar:{" "}
+        <code>{'tabs-indicator'}</code> é absoluto na fileira e anima largura e
+        altura, porque <code>scaleX</code> distorceria o raio e a borda. Antes
+        da hidratação, o gatilho pinta o próprio realce.
       </DocNote>
 
-      <DocNote title="200ms, e o rótulo anda no mesmo relógio">
-        <code>{'--duration-base'}</code> com <code>{'--ease-out'}</code>. A 300 o
-        marcador arrasta e a interface parece lenta; a 100 ele pisca e não se lê
-        como deslocamento. A cor do rótulo usa a mesma duração e a mesma curva de
-        propósito: com relógios diferentes a aba acenderia antes de o realce
-        chegar, e o que é um evento pareceriam dois.
-      </DocNote>
-
-      <DocNote title="Sem JavaScript o gatilho ainda se pinta">
-        Não há caixa para medir antes da hidratação, e um marcador sem posição
-        deixaria a aba ativa sem marca nenhuma na primeira pintura. Então o
-        gatilho mantém o próprio realce e só o larga quando o marcador está
-        vivo — a troca é decidida em React, e não por seletor, porque{" "}
-        <code>{'in-*'}</code> e <code>{'group-*'}</code> compilam com{" "}
-        <code>{':where()'}</code>, que não soma especificidade. Um booleano não
-        disputa.
-      </DocNote>
-
-      <DocNote title="Movimento reduzido não precisou de regra própria">
-        O bloco global de <code>{'prefers-reduced-motion'}</code> encurta
-        transições para 0,01ms, então o marcador <strong>salta</strong> em vez de
-        viajar e o estado final chega igual. É o que a regra do sistema já
-        prometia: menos movimento, mesmo significado.
-      </DocNote>
-
-      <DocNote title="O app ainda não usa este componente">
-        São 10 <code>{'role="tablist"'}</code> escritos à mão em 7 arquivos, a
-        partir de duas strings exportadas de uma pasta de feature — sem foco
-        itinerante, sem setas, sem <code>aria-controls</code> e sem{" "}
-        <code>{'role="tabpanel"'}</code>. Eles anunciam o padrão ARIA de abas e
-        entregam botões soltos. Quatro deles são filtros e querem{" "}
-        <code>ToggleGroup</code>; os outros seis são{" "}
-        <code>{'variant="solid" stretch'}</code>.
+      <DocNote title="Marcador e rótulo no mesmo relógio">
+        Os dois usam <code>{'--duration-base'}</code> com{" "}
+        <code>{'--ease-out'}</code>. Com relógios diferentes, a aba acende antes
+        de o realce chegar e um evento parece dois.
       </DocNote>
     </>
   )

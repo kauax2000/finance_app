@@ -177,59 +177,40 @@ export default function DropdownMenuDoc() {
         </DropdownMenu>
       </DocSection>
 
-      <DocNote title="As larguras já existiam — só não tinham nome">
-        Das 25 chamadas do app, <strong>18 declaram só uma largura</strong>, e
-        sempre uma destas quatro: <code>w-44</code> (8×), <code>w-48</code> (5×),{" "}
-        <code>w-56</code> (3×), <code>w-52</code> (2×). Quatro valores repetidos
-        dezoito vezes é uma escala; o eixo <code>size</code> apenas a nomeia.{" "}
-        <code>auto</code> continua o padrão, então nada muda para quem não pede.
+      <DocNote title="size nomeia as larguras que o app repete">
+        <code>sm</code> 176, <code>md</code> 192, <code>lg</code> 208,{" "}
+        <code>xl</code> 224. Use o degrau em vez de <code>w-*</code> solto;{" "}
+        <code>auto</code> continua o padrão.
       </DocNote>
 
       <DocNote title="O painel tem faixas, e não é quem chama que as desenha">
         <code>DropdownMenuHeader</code> sangra até a borda;{" "}
-        <code>DropdownMenuSection</code> devolve o recuo onde há comandos. A
-        segunda não é enfeite: o <code>-mx-1</code> do{" "}
-        <code>DropdownMenuSeparator</code> sangra exatamente esse{" "}
-        <code>p-1</code>. Sem ela o painel ficava com{" "}
-        <strong>dois traços horizontais de larguras diferentes</strong> — 224px
-        o do cabeçalho, 216px o do meio —, que é o mesmo defeito que o{" "}
-        <code>DialogHeader</code> já tinha corrigido com{" "}
-        <code>--dialog-bleed</code>.
+        <code>DropdownMenuSection</code> devolve o <code>p-1</code> onde há
+        comandos, o mesmo que o <code>-mx-1</code> do{" "}
+        <code>DropdownMenuSeparator</code> sangra. Sem ela, os fios do cabeçalho
+        e do meio saem com larguras diferentes.
       </DocNote>
 
       <DocNote title="O fio entre a identidade e os comandos é do slot, não da faixa">
-        A faixa de identidade não rotula os comandos abaixo dela — ela é{" "}
-        <strong>um bloco de outra natureza</strong> empilhado sobre uma lista.
-        A fronteira entre os dois é a mesma que o painel já marca entre grupos
-        com <code>DropdownMenuSeparator</code>, e por isso ela mantém o fio, no
-        mesmo peso: é o traço que divide <strong>itens</strong>, não
-        superfícies — a categoria que nunca perdeu o fio. A dissolução do
-        viewport continua e não disputa com ele: ela diz &quot;há mais conteúdo
-        acima&quot;, que é outra informação.
-        <br />
-        Ele mora no <em>slot</em> <code>header</code> e não em{" "}
-        <code>DropdownMenuHeader</code> porque o consumidor real do padrão não
-        usa aquela peça: o <code>UserMenu</code> passa um{" "}
-        <code>DropdownMenuLabel</code> com um <code>AccountMenuUserSummary</code>{" "}
-        dentro. Uma regra escrita na faixa alcançaria este catálogo e deixaria
-        o app de fora — que é como o <code>border-t</code> do{" "}
-        <code>DialogFooter</code> já enganou este projeto uma vez.
+        A identidade é um bloco de outra natureza sobre a lista, então leva o
+        mesmo fio que separa grupos. Ele mora no slot <code>header</code>, e
+        não em <code>DropdownMenuHeader</code>, porque o <code>UserMenu</code>{" "}
+        passa um <code>DropdownMenuLabel</code> ali; regra na peça deixaria o app
+        de fora.
       </DocNote>
 
       <DocNote title="Painel não é lista de comandos">
-        <code>variant=&quot;panel&quot;</code> é o que o{" "}
-        <code>UserMenu</code> e o <code>WorkspaceSwitcher</code> montavam à mão
-        com <code>rounded-xl</code> e recuo zero: ali dentro não há comandos, e
-        sim um cabeçalho de conta, um avatar, blocos. A casca cede o recuo para
-        o conteúdo sangrar — a mesma decisão que o <code>Card</code> chama de{" "}
+        <code>variant=&quot;panel&quot;</code> é para cabeçalho de conta, avatar
+        e blocos, como no <code>UserMenu</code> e no{" "}
+        <code>WorkspaceSwitcher</code>. A casca cede o recuo para o conteúdo
+        sangrar, como o <code>Card</code> com{" "}
         <code>padding=&quot;none&quot;</code>.
       </DocNote>
 
       <DocNote title="O gatilho de três pontos precisa de rótulo">
         <code>aria-label=&quot;Ações da transação&quot;</code>, não
-        &ldquo;Menu&rdquo;. Numa lista de vinte linhas, vinte botões chamados
-        &ldquo;Menu&rdquo; são indistinguíveis para quem navega por lista de
-        controles.
+        &ldquo;Menu&rdquo;: vinte botões chamados &ldquo;Menu&rdquo; são
+        indistinguíveis para quem navega por lista de controles.
       </DocNote>
 
       <PropsTable
@@ -238,8 +219,7 @@ export default function DropdownMenuDoc() {
             prop: "size",
             type: '"auto" | "sm" | "md" | "lg" | "xl"',
             default: '"auto"',
-            description:
-              "A largura do painel: auto, 176, 192, 208, 224. É largura como no Dialog, não altura de controle.",
+            description: "A largura do painel: auto, 176, 192, 208, 224.",
           },
           {
             prop: "variant",
@@ -257,15 +237,13 @@ export default function DropdownMenuDoc() {
           {
             prop: "DropdownMenuSection",
             type: 'ComponentProps<"div">',
-            description:
-              "A região de comandos dentro de um painel — devolve o recuo que o casco cedeu.",
+            description: "A região de comandos dentro de um painel; devolve o recuo.",
           },
           {
             prop: "DropdownMenuItem variant",
             type: '"default" | "destructive"',
             default: '"default"',
-            description:
-              "Traz a tinta, o realce de foco e o par escuro juntos — 14 telas ainda escrevem isso à mão.",
+            description: "Traz a tinta, o realce de foco e o par escuro juntos.",
           },
         ]}
       />

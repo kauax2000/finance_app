@@ -56,7 +56,7 @@ export default function AnnouncementBarDoc() {
 
       <DocSection
         title="Com ação"
-        description="O caso canônico — “você está offline, tentar de novo” — não tinha lugar. O botão de dentro não declara cor: tertiary mais currentColor serve os cinco tons."
+        description="Para o caso canônico — “você está offline, tentar de novo”. O botão não declara cor: tertiary com currentColor serve os cinco tons."
         code={`<AnnouncementBar tone="warning">
   <SignalSlashIcon aria-hidden />
   <AnnouncementBarContent>Você está offline.</AnnouncementBarContent>
@@ -95,80 +95,32 @@ export default function AnnouncementBarDoc() {
         ))}
       </DocSection>
 
-      <DocNote title="A altura não depende mais do botão de fechar">
-        Medido antes: <strong>40px sem o ×, 44px com</strong>. O{" "}
-        <code>Button size=&quot;xs&quot;</code> (24) é mais alto que a linha de
-        texto, então era ele quem passava a mandar na altura — e uma barra que
-        ganha o × ao mudar de estado saltava 4px. Hoje a linha declara a própria
-        altura mínima, o × cabe dentro dela, e o alvo de toque cresce por
-        pseudo-elemento em vez de por medida.
+      <DocNote title="A altura não depende do botão de fechar">
+        A linha declara a própria altura mínima e o × cabe dentro dela; o alvo de toque cresce por pseudo-elemento. Assim a barra não salta ao ganhar ou perder o ×.
       </DocNote>
 
-      <DocNote title="Os quatro tons já eram os do Alert; o neutro não">
-        Medida a cor resolvida dos cinco, <code>info</code>,{" "}
-        <code>success</code>, <code>warning</code> e <code>destructive</code>{" "}
-        batem com o <code>Alert</code> em <strong>distância 0</strong>, nos dois
-        temas — a barra sempre leu os tokens <code>-muted</code>.
-        <br />
-        <br />
-        O <code>default</code> diverge de propósito no <strong>fundo</strong>: o
-        Alert usa <code>bg-card</code>, que ali já o separa da página, e uma
-        faixa de topo com <code>--card</code> ficaria quase invisível — medido no
-        escuro, 23 de distância da página contra os 48 do <code>--muted</code>.
-        <br />
-        <br />
-        Mas o <strong>texto</strong> era divergência de verdade. Com{" "}
-        <code>text-muted-foreground</code>, o tom neutro era o que se lia{" "}
-        <strong>pior</strong> de todos: 5,04 no claro e 5,86 no escuro, contra
-        6,9–10,8 dos quatro tonais. O <code>Alert default</code> usa o
-        foreground cheio, e a barra passou a usá-lo também: 16,61 e 14,50.
-        Justamente o tom que não tem cor para ajudar a ler não podia ter o texto
-        mais fraco.
+      <DocNote title="Tons do Alert; o neutro pinta muted">
+        Os quatro tons leem os mesmos tokens <code>-muted</code> do <code>Alert</code>. O <code>default</code> usa fundo <code>--muted</code>, porque <code>--card</code> numa faixa de topo quase some contra a página, e texto no foreground cheio — o tom sem cor não pode ter o texto mais fraco.
       </DocNote>
 
       <DocNote title="O fio do sticky herda o tom">
-        Ele era <code>border-border/50</code> — cinza sobre superfície colorida,
-        a mesma família do texto cinza que o <code>Alert</code> documenta e
-        reverteu. <code>current/20</code> é uma linha só para os cinco tons.
+        É <code>current/20</code>, uma linha para os cinco tons: fio cinza sobre superfície colorida lê como acidente.
       </DocNote>
 
       <DocNote title="O realce do × é mais forte que o do botão de ação">
-        E não é capricho. Medido no escuro, <code>current/10</code> dava
-        contraste 1,28–1,35 contra o fundo — o hover do{" "}
-        <code>Button tertiary</code> do app dá <strong>1,11</strong> e o do menu{" "}
-        <strong>1,14</strong>, então o delta já era maior que o da casa. O que
-        faltava não era delta: era <strong>área</strong>. Um ícone de 12px numa
-        caixa de 24 sem contorno tem um quarto da superfície de um botão de
-        texto, e a mesma diferença de cor lê como menos.
-        <br />
-        <br />
-        Daí as duas alavancas: 15% em vez de 10%, e o <strong>contorno
-        aparecendo</strong> — é ele que delimita os 24px e diz onde o alvo
-        começa. Medido depois: preenchimento em 1,26–1,39 no claro e 1,46–1,58
-        no escuro, com a borda somando 1,50–1,76 e 1,93–2,23. No hover o × passa
-        a falar exatamente a língua do botão de ação ao lado.
+        O × é um ícone de 12px numa caixa de 24 sem contorno, e a mesma diferença de cor em área menor lê como menos. Por isso ele sobe a 15% e mostra o contorno no cursor, enquanto a ação fica em 10%.
       </DocNote>
 
       <DocNote title="O papel segue o tom">
-        <code>role=&quot;status&quot;</code> era cravado, inclusive em{" "}
-        <code>destructive</code> — um erro bloqueante anunciado com polidez,
-        quando ali o papel é <code>alert</code>, que interrompe. Os outros quatro
-        seguem <code>status</code>. Quem precisar de outro passa{" "}
-        <code>role</code> por fora.
+        <code>destructive</code> é <code>role=&quot;alert&quot;</code>, que interrompe; os outros quatro são <code>status</code>. Para outro papel, passe <code>role</code>.
       </DocNote>
 
       <DocNote title="Dispensável por padrão">
-        Um aviso permanente que não se pode fechar vira cenário em uma semana, e
-        deixa de avisar. Se o estado é bloqueante, não passe{" "}
-        <code>onDismiss</code> — mas então ele precisa sumir sozinho quando o
-        estado mudar, que é o que o <code>OfflineBanner</code> faz.
+        Aviso permanente que não se fecha vira cenário e deixa de avisar. Se o estado é bloqueante, omita <code>onDismiss</code> — e a barra precisa sumir sozinha quando o estado mudar, como faz o <code>OfflineBanner</code>.
       </DocNote>
 
       <DocNote title="Offline é um quinto estado, e este app tem">
-        Com fila de mutações local, existe &ldquo;salvo aqui, ainda não
-        sincronizado&rdquo;. Ele não é erro e não é sucesso, e a tela precisa
-        dizer isso — é o que o <code>offline-banner</code>, que é esta barra, e
-        o <code>sync-status-chip</code> fazem.
+        Com a fila de mutações local existe &ldquo;salvo aqui, ainda não sincronizado&rdquo;: não é erro nem sucesso, e a tela precisa dizer. Quem diz é esta barra, no <code>offline-banner</code>, e o <code>sync-status-chip</code>.
       </DocNote>
 
       <PropsTable
@@ -178,7 +130,7 @@ export default function AnnouncementBarDoc() {
             type: '"default" | "info" | "success" | "warning" | "destructive"',
             default: '"info"',
             description:
-              "A gravidade. default é o aviso sem gravidade, que antes era obrigado a se pintar de info.",
+              "A gravidade; default é o aviso sem gravidade.",
           },
           {
             prop: "size",
@@ -191,7 +143,7 @@ export default function AnnouncementBarDoc() {
             type: "boolean",
             default: "false",
             description:
-              "Prende no topo em --z-banner, a camada que a escala reserva para isto.",
+              "Prende no topo, na camada --z-banner.",
           },
           {
             prop: "onDismiss",
@@ -214,19 +166,19 @@ export default function AnnouncementBarDoc() {
             prop: "AnnouncementBarContent",
             type: "ComponentProps<'div'>",
             description:
-              "O texto que ocupa a sobra. Opcional — um texto solto como filho também funciona.",
+              "O texto que ocupa a sobra; opcional.",
           },
           {
             prop: "AnnouncementBarActions",
             type: "ComponentProps<'div'>",
             description:
-              "A fileira, na borda. Só a fileira — quem veste o botão é o AnnouncementBarAction.",
+              "A fileira de ações, na borda.",
           },
           {
             prop: "AnnouncementBarAction",
             type: "Button",
             description:
-              "A ação. Button tertiary size=\"xs\" que herda a tinta do tom por currentColor. Irmão do AlertAction, um degrau mais baixo porque a barra é mais densa.",
+              "Button tertiary size=\"xs\" com a tinta do tom por currentColor — o AlertAction, um degrau abaixo.",
           },
         ]}
       />

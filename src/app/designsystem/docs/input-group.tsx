@@ -15,7 +15,7 @@ export default function InputGroupDoc() {
   return (
     <>
       <Usage>
-        Um campo com algo acoplado: ícone, unidade, botão. O conjunto se comporta como um controle só — o foco desenha o anel em volta do grupo inteiro.
+        Um campo com algo acoplado: ícone, unidade, botão. O conjunto se comporta como um controle só — o foco desenha o anel em volta do grupo inteiro. Para dinheiro, use <code>Input money</code>; rótulo e erro vêm do <code>Field</code>.
       </Usage>
 
       <DocSection
@@ -62,7 +62,7 @@ export default function InputGroupDoc() {
 
       <DocSection
         title="Tamanhos"
-        description="A mesma escada do Input e do Button: 28, 32, 36 e 40. O degrau desce para dentro — o campo pega o corpo de texto dele e o botão acoplado desce um degrau sozinho, então ninguém escreve size duas vezes."
+        description="A escada do Input e do Button: 28, 32, 36 e 40. O degrau desce para dentro — o botão acoplado desce um degrau sozinho, sem repetir size."
         code={`<InputGroup size="lg">
   <InputGroupInput placeholder="Buscar" />
   <InputGroupAddon align="inline-end">
@@ -92,17 +92,13 @@ export default function InputGroupDoc() {
         ))}
       </DocSection>
 
-      <DocNote title="O grupo alinha com o campo ao lado sem ninguém dizer altura">
-        <code>InputGroup</code>, <code>Input</code>, <code>SelectTrigger</code>,{" "}
-        <code>NativeSelect</code> e <code>Button</code>{" "}
-        usam os mesmos quatro nomes para as mesmas quatro alturas. Numa barra de
-        filtros, trocar o degrau move todos pelo mesmo nome — antes o grupo era
-        preso a 32 e a linha saía torta quando o vizinho era <code>lg</code>.
+      <DocNote title="O grupo alinha com o campo ao lado pelo nome do degrau">
+        <code>InputGroup</code>, <code>Input</code>, <code>SelectTrigger</code>, <code>NativeSelect</code> e <code>Button</code> usam os mesmos quatro nomes para as mesmas alturas; numa barra de filtros, trocar o degrau move todos juntos.
       </DocNote>
 
       <DocSection
         title="Acoplado acima e abaixo"
-        description="align aceita quatro valores, e os dois de bloco ocupam a largura toda: block-start entra acima do controle, block-end abaixo. Servem para o que acompanha o campo sem disputar a linha dele — uma contagem, uma barra de ação sob um textarea."
+        description="block-start entra acima do controle e block-end abaixo, na largura toda. Para o que acompanha o campo sem disputar a linha: uma contagem, uma barra de ação."
         code={`<InputGroup>
   <InputGroupTextarea placeholder="Observação" />
   <InputGroupAddon align="block-end">
@@ -128,19 +124,8 @@ export default function InputGroupDoc() {
         </InputGroup>
       </DocSection>
 
-      <DocNote title="Para valor em reais, o modo é <Input money>">
-        O prefixo &ldquo;R$&rdquo; acima é um exemplo de addon, não a forma de
-        pedir dinheiro neste app. <code>&lt;Input money&gt;</code>{" "}
-        resolve máscara,
-        teclado e conversão; um <code>InputGroup</code>{" "}
-        com R$ na frente deixa
-        tudo isso para a tela.
-        <br />
-        <br />
-        E <code>InputGroupInput</code> é fixado no <strong>ramo base</strong> da
-        união (<code>InputBaseProps</code>), então <code>money</code> não passa
-        por aqui: a moldura existe para addon, e o campo de dinheiro se pede
-        direto.
+      <DocNote title="Para valor em reais, use Input money">
+        O &ldquo;R$&rdquo; acima é exemplo de addon. <code>&lt;Input money&gt;</code> resolve máscara, teclado e conversão; um <code>InputGroup</code> com R$ deixa tudo isso para a tela. Por isso <code>InputGroupInput</code> não aceita <code>money</code>.
       </DocNote>
     </>
   )

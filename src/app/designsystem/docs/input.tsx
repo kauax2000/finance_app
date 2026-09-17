@@ -11,16 +11,15 @@ export default function InputDoc() {
   return (
     <>
       <Usage>
-        Todo campo de uma linha — e, com <code>money</code>, todo valor em reais
-        que o app <strong>recebe</strong>. Todo campo precisa de{" "}
-        <code>Label</code> associado: <code>placeholder</code> não é rótulo, ele
-        some ao digitar. A forma curta de pedir rótulo, ajuda e erro já ligados é{" "}
-        <code>FormInput</code>.
+        Todo campo de uma linha e, com <code>money</code>, todo valor em reais
+        que o app <strong>recebe</strong>. Sempre com <code>Label</code>:{" "}
+        <code>placeholder</code> some ao digitar. Rótulo, ajuda e erro já
+        ligados: <code>FormInput</code>.
       </Usage>
 
       <DocSection
         title="Tamanhos"
-        description="Mesma escada do Button, mesmos nomes e mesmas alturas: sm 28, md 32, lg 36, xl 40. O padrão é md, então <Input> e <Button> alinham sem ninguém dizer size."
+        description="A escada do Button: sm 28, md 32, lg 36, xl 40. O padrão é md, então Input e Button alinham sem declarar size."
         code={`<Input size="sm" placeholder="sm · 28" />
 <Input placeholder="md · 32" />
 <Input size="lg" placeholder="lg · 36" />
@@ -56,7 +55,7 @@ export default function InputDoc() {
 
       <DocSection
         title="Dinheiro"
-        description="O modo é controlado por duas coisas ao mesmo tempo: a string mascarada, que é o que aparece no campo, e o número em reais, que é o que vai para o banco. onValueChange entrega as duas. Aqui ele vem dentro de FormInput, que é como as telas o escrevem."
+        description="money trabalha com dois valores: a string mascarada, que aparece no campo, e o número em reais, que vai para o banco. onValueChange entrega os dois; nas telas, ele vem dentro de FormInput."
         code={`const [texto, setTexto] = React.useState("")
 const [reais, setReais] = React.useState<number | null>(null)
 
@@ -76,68 +75,41 @@ const [reais, setReais] = React.useState<number | null>(null)
       </DocSection>
 
       <DocNote title="A máscara digita da direita para a esquerda">
-        <code>formatMoneyBrlTyping</code> trata cada tecla como centavo: digitar{" "}
-        <code>4</code>, <code>2</code>, <code>9</code>, <code>0</code> produz{" "}
-        <code>42,90</code>. É como todo app bancário se comporta, e evita a
-        pergunta de onde fica a vírgula.
+        Cada tecla entra como centavo: digitar <code>4</code>, <code>2</code>,{" "}
+        <code>9</code>, <code>0</code> produz <code>42,90</code>. É como app
+        bancário se comporta, e ninguém pergunta onde fica a vírgula.
       </DocNote>
 
       <DocNote title="A figura tabular é obrigatória; a Geist Mono é opcional">
-        Com largura de dígito variável o número inteiro se desloca a cada
-        centavo digitado, e o olho perde o dígito que estava conferindo — por
-        isso a figura tabular está sempre ligada. A <strong>face</strong>{" "}
-        é outra conversa: <code>mono</code>{" "}
-        existe para quem quer o registro de livro-caixa, e vem desligado.
-        <br />
-        <br />
-        Ela vinha cravada, e era a única decisão do componente que era de
-        desenho e não de comportamento — provavelmente o motivo de{" "}
-        <strong>dez campos de dinheiro do app</strong>{" "}
-        terem sido escritos à mão em vez de usá-lo: adotar mudava a cara da
-        tela.
+        Com largura de dígito variável, o número se desloca a cada centavo e o
+        olho perde o dígito que conferia. <code>mono</code> liga a Geist Mono,
+        para o registro de livro-caixa, e vem desligado.
       </DocNote>
 
-      <DocNote title="Três armadilhas, resolvidas de uma vez">
-        <code>type=&quot;text&quot;</code>{" "}
-        e nunca <code>number</code>, que aceita <code>e</code> e <code>+</code>{" "}
-        e briga com a vírgula do teclado pt-BR;{" "}
-        <code>inputMode=&quot;decimal&quot;</code>, sem o qual o telefone abre o
-        teclado de texto; e a renormalização no <code>onBlur</code>. Os dez
-        campos à mão tinham a máscara e{" "}
-        <strong>nenhum tinha o blur</strong> — um valor colado ou meio digitado
-        saía do campo como estava.
+      <DocNote title="Três armadilhas que money já resolve">
+        <code>type=&quot;text&quot;</code> e nunca <code>number</code>, que
+        aceita <code>e</code> e <code>+</code> e briga com a vírgula pt-BR;{" "}
+        <code>inputMode=&quot;decimal&quot;</code>, ou o telefone abre o teclado
+        de texto; e renormalização no <code>onBlur</code>, para valor colado ou
+        meio digitado sair limpo. Não escreva campo de dinheiro à mão.
       </DocNote>
 
-      <DocNote title="Por que um modo, e não um componente">
-        Havia um <code>MoneyInput</code>, e ele importava{" "}
-        <strong>só o <code>Input</code></strong> e renderizava{" "}
-        <strong>só um <code>&lt;Input&gt;</code></strong>: era este átomo com
-        outro nome, e o catálogo pagava duas páginas por um controle. É o mesmo
-        movimento que o <code>Kbd</code> fez ao absorver o acorde em{" "}
-        <code>keys</code>.
-        <br />
-        <br />
-        O modo é uma <strong>união discriminada</strong>: com{" "}
-        <code>money</code>, <code>value</code> e <code>onValueChange</code> são
-        obrigatórios e <code>onChange</code> não existe. Como toda união neste
-        projeto, ela <strong>não estreita por variável</strong> —{" "}
-        <code>&lt;Input money={"{"}x{"}"}&gt;</code> com um booleano não compila,
-        e o literal é obrigatório. Quem só quer a moldura —{" "}
-        <code>InputGroupInput</code>, <code>SidebarInput</code> — é fixado no
-        ramo base por <code>InputBaseProps</code>.
+      <DocNote title="money é uma união discriminada">
+        Com <code>money</code>, <code>value</code> e <code>onValueChange</code>{" "}
+        são obrigatórios e <code>onChange</code> não existe. O literal é
+        obrigatório: <code>&lt;Input money={"{"}x{"}"}&gt;</code> com um booleano
+        não compila. <code>InputGroupInput</code> e <code>SidebarInput</code>{" "}
+        ficam no ramo base por <code>InputBaseProps</code>.
       </DocNote>
 
       <DocNote title="No telefone o campo é 16px, e não é escolha de design">
-        Safari do iOS dá zoom em qualquer campo com fonte abaixo de 16px, e o zoom costuma não voltar. Uma regra em <code>@layer base</code> força <code>1rem</code> abaixo de 768px — por isso o campo parece maior no telefone.
+        Safari do iOS dá zoom em campo com fonte abaixo de 16px, e o zoom costuma não voltar. Uma regra em <code>@layer base</code> força <code>1rem</code> abaixo de 768px.
       </DocNote>
 
       <DocNote title="size aqui não é o size do HTML">
-        O <code>size</code> nativo de <code>&lt;input&gt;</code>{" "}
-        é largura em
-        caracteres, e nunca foi usado neste projeto. O tipo do componente o
-        remove com <code>Omit</code> para o <code>size</code>{" "}
-        de design não
-        colidir com ele.
+        O <code>size</code> nativo de <code>&lt;input&gt;</code> é largura em
+        caracteres; o tipo o remove com <code>Omit</code> para não colidir com o{" "}
+        <code>size</code> de design.
       </DocNote>
 
       <PropsTable

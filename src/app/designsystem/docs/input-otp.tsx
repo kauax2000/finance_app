@@ -42,7 +42,7 @@ export default function InputOtpDoc() {
 
       <DocSection
         title="Tamanhos"
-        description="A escada do projeto, com os mesmos nomes e as mesmas alturas: 28, 32, 36 e 40. O degrau move a casa, o corpo do dígito, o cursor e o traço entre os blocos de uma vez."
+        description="A escada do projeto: 28, 32, 36 e 40. O degrau move casa, dígito, cursor e traço de uma vez."
         code={`<InputOTP maxLength={6} size="lg">…</InputOTP>`}
         previewClassName="flex-col items-start gap-4"
       >
@@ -73,26 +73,15 @@ export default function InputOtpDoc() {
       </DocSection>
 
       <DocNote title="No telefone o alvo cresce, o desenho não">
-        O campo real é um <code>&lt;input&gt;</code>{" "}
-        só, esticado por cima do contêiner inteiro — o alvo de toque é o
-        retângulo, não cada casa. A 32px ele fica 12px abaixo do piso de{" "}
-        <strong>Mobile e toque</strong>, e mesmo o degrau <code>xl</code>{" "}
-        para em 40. Em ponteiro grosso o contêiner vai a 44 e as casas
-        continuam na altura do degrau, centradas na faixa.
+        O campo real é um input só, esticado sobre o contêiner: o alvo é o retângulo, não cada casa. Em ponteiro grosso o contêiner vai a 44px e as casas ficam na altura do degrau, centradas.
       </DocNote>
 
       <DocNote title="Os dígitos são tabulares">
-        Sem figuras de largura fixa o &ldquo;1&rdquo; é mais estreito que o
-        &ldquo;8&rdquo;, e cada casa centra o próprio glifo num ponto
-        ligeiramente diferente. A 32px passa despercebido; a 40 a fileira treme
-        enquanto se digita.
+        Sem largura fixa, cada casa centra o glifo num ponto diferente e a fileira treme enquanto se digita.
       </DocNote>
 
-      <DocNote title="Ele espera dígitos, e o teclado precisa saber disso">
-        Sem <code>inputMode=&quot;numeric&quot;</code> e{" "}
-        <code>autoComplete=&quot;one-time-code&quot;</code>, o telefone abre o
-        teclado de texto e o iOS não oferece o preenchimento automático do código
-        que acabou de chegar por SMS.
+      <DocNote title="Passe inputMode e autoComplete">
+        Sem <code>inputMode=&quot;numeric&quot;</code> e <code>autoComplete=&quot;one-time-code&quot;</code>, o telefone abre o teclado de texto e o iOS não oferece o código que chegou por SMS.
       </DocNote>
     </>
   )

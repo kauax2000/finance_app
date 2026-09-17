@@ -23,7 +23,7 @@ export default function SpinnerDoc() {
 
       <DocSection
         title="Dentro de um botão"
-        description="O botão fica desabilitado durante a ação, e o rótulo muda para o gerúndio. Trocar só o ícone deixa o botão parecendo clicável de novo."
+        description="O botão fica desabilitado e o rótulo vai para o gerúndio. Trocar só o ícone deixa o botão parecendo clicável."
         code={`<Button disabled>
   <Spinner />
   Salvando…
@@ -41,28 +41,14 @@ export default function SpinnerDoc() {
 
       <DocSection
         title="Sozinho, sem texto ao lado"
-        description="Aí ele precisa de label. Sem isso o spinner é invisível para o leitor de tela — de propósito, porque na esmagadora maioria dos casos o rótulo já está do lado e ouvir “Carregando” depois de “Salvando…” é dizer a mesma coisa duas vezes."
+        description="Aí ele precisa de label. Sem ele o spinner é invisível ao leitor de tela, de propósito: quase sempre o rótulo já está ao lado."
         code={`<Spinner className="size-6" label="Carregando transações" />`}
       >
         <Spinner className="size-6" label="Carregando transações" />
       </DocSection>
 
-      <DocNote title="A ARIA dele estava morta">
-        O componente declarava <code>role=&quot;status&quot;</code>{" "}
-        e <code>aria-label</code>, mas o Heroicons põe{" "}
-        <code>aria-hidden=&quot;true&quot;</code>{" "}
-        no próprio <code>&lt;svg&gt;</code>{" "}
-        e o spread não o derrubava. Os três atributos conviviam no mesmo
-        elemento, e <code>aria-hidden</code>{" "}
-        vence sempre: o role e o rótulo não faziam nada. Justamente o spinner
-        solto — o caso para o qual o role existia — não anunciava coisa alguma.
-      </DocNote>
-
       <DocNote title="Ele para quando o sistema pede menos animação">
-        A regra global de <code>prefers-reduced-motion</code>{" "}
-        reduz a rotação a
-        0,01ms. O spinner deixa de girar, o que significa que ele sozinho não
-        comunica mais nada: por isso o rótulo ao lado é obrigatório.
+        Com <code>prefers-reduced-motion</code> ele para de girar e não comunica nada sozinho: por isso o rótulo ao lado é obrigatório.
       </DocNote>
     </>
   )

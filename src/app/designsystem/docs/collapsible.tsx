@@ -73,12 +73,7 @@ export default function CollapsibleDoc() {
         title="A espiada"
         description={
           <>
-            Com <code>peek</code>, o fechado deixa de ser altura zero e passa a
-            ser uma amostra com a base <strong>dissolvendo</strong> — o
-            &ldquo;mostrar mais&rdquo;. O que diz que há mais texto é o texto
-            sumindo, e não um véu
-            pintado por cima: máscara é alfa, e alfa não precisa saber de que cor
-            é o fundo.
+            Com <code>peek</code>, o fechado vira uma amostra com a base <strong>dissolvendo</strong> — o &ldquo;mostrar mais&rdquo;. É máscara, não véu pintado: alfa não precisa saber a cor do fundo.
           </>
         }
         code={`<Collapsible>
@@ -94,7 +89,7 @@ export default function CollapsibleDoc() {
 
       <DocSection
         title="Os três degraus"
-        description="São alturas de leitura, e não da escada de controles: abaixo de três linhas a espiada não informa nada que o rótulo do gatilho já não informe."
+        description="São alturas de leitura, não da escada de controles: abaixo de três linhas a espiada não informa nada além do rótulo do gatilho."
         previewClassName="flex-col items-stretch gap-8"
       >
         {ESPIADAS.map(([degrau, nota]) => (
@@ -135,77 +130,27 @@ export default function CollapsibleDoc() {
             type: '"none" | "sm" | "md" | "lg"',
             default: '"none"',
             description:
-              "A altura do estado fechado. Em none o conteúdo desmonta e a altura anima de zero; nos três degraus ele fica montado e dissolve na base.",
+              "A altura do fechado: em none o conteúdo desmonta e anima de zero; nos degraus ele fica montado e dissolve na base.",
           },
           {
             prop: "forceMount",
             type: "boolean",
             description:
-              "Consequência de peek, não uma segunda decisão: sem ele o nó fechado não existe. Quem passar o seu continua ganhando.",
+              "Consequência de peek, não uma segunda decisão; quem passar o seu continua ganhando.",
           },
         ]}
       />
 
       <DocNote title="O que está fechado ainda existe para a busca do navegador?">
-        Sem <code>peek</code>, não — o conteúdo recolhido sai do DOM, e{" "}
-        <Kbd keys="mod+f" /> não o encontra. Se o que está lá dentro precisa ser
-        localizável, ele não deveria estar escondido — <strong>ou</strong> ele
-        quer <code>peek</code>, que mantém o nó montado e o texto na árvore de
-        acessibilidade.
-      </DocNote>
-
-      <DocNote title="Quem mede não pode ser quem é medido">
-        A primeira versão do <code>peek</code> abria e continuava recortada, e a
-        causa é boa de guardar: o Radix descobre a altura do conteúdo lendo a
-        caixa da <strong>própria</strong> <code>Content</code> — que em{" "}
-        <code>peek</code> é justamente o nó preso à espiada. Ele publicava{" "}
-        <strong>100px</strong> como &ldquo;altura do conteúdo&rdquo; contra um{" "}
-        <code>scrollHeight</code> de 206, e abrir levava de 100 a 100. É a mesma
-        forma do defeito que o <code>Accordion</code> tinha: um elemento
-        declarando como altura uma medida que ele próprio produz. A saída é a que
-        o resto da casa já usa — um observador escreve a medida de um envelope
-        interno, livre, numa variável.
-      </DocNote>
-
-      <DocNote title="As três armadilhas do peek">
-        <strong>Uma:</strong> o Radix escreve o atributo <code>hidden</code> no
-        nó fechado mesmo sob <code>forceMount</code>, e{" "}
-        <code>hidden</code> é <code>display: none</code> na folha do agente —
-        qualquer declaração de autor vence, e é o que <code>data-closed:block</code>{" "}
-        faz. <strong>Duas:</strong> os keyframes{" "}
-        <code>collapsible-down/up</code> saem de cena, porque em{" "}
-        <code>peek</code> o trajeto não parte de zero — e a espiada{" "}
-        <strong>abre de uma vez</strong>, por um limite medido que a nota abaixo
-        conta.{" "}
-        <strong>Três:</strong> todo <code>-</code> binário dentro de um{" "}
-        <code>calc()</code> arbitrário se escreve <code>_-_</code>, ou a classe é
-        cortada no meio e a máscara cai para <code>none</code>, em silêncio.
+        Sem <code>peek</code>, não: o conteúdo recolhido sai do DOM, e <Kbd keys="mod+f" /> não o encontra. Se precisa ser localizável, não esconda — ou use <code>peek</code>, que mantém o texto montado e na árvore de acessibilidade.
       </DocNote>
 
       <DocNote title="A espiada abre de uma vez, e isso é um limite conhecido">
-        A altura não anima, e a causa é a outra metade do problema de medida: o
-        Radix envolve a troca de estado num par &ldquo;carimba{" "}
-        <code>transition-duration: 0s</code>, força um{" "}
-        <code>getBoundingClientRect()</code>, devolve o valor&rdquo;, e o
-        recálculo forçado acontece <strong>na mesma passagem</strong> em que o
-        estado vira aberto. O navegador nunca vê as duas alturas em recálculos
-        diferentes, então não há transição para começar. Quatro consertos foram
-        tentados — <code>!important</code> na duração, um envelope externo que o
-        Radix não manipula, o <code>data-medido</code> do <code>Command</code>, e
-        animar por Web Animations API a partir de um observador — e o quarto
-        chegou a funcionar na abertura, mas não no fechamento. Um trajeto que só
-        existe num sentido é pior que nenhum. O que diz &ldquo;tem mais&rdquo; é
-        a dissolução, e ela não depende de movimento.
+        Em <code>peek</code> a altura não anima: o Radix mede na mesma passagem em que o estado vira aberto, e não sobra transição para começar. O que diz &ldquo;tem mais&rdquo; é a dissolução, que não depende de movimento.
       </DocNote>
 
-      <DocNote title="Um marcador para a casa toda">
-        Este componente não desenhava marcador nenhum, e por isso os{" "}
-        <strong>dois de dois</strong> consumidores reais o montaram por conta
-        própria — e montaram diferente: uma seta para baixo girando 180° num
-        corpo <code>size-3.5</code> de um lado, uma seta para a direita girando
-        90° no corpo padrão do outro. É o invariante 1 acontecendo dentro do
-        próprio design system. <code>CollapsibleMarker</code> não tem opinião
-        nenhuma além da que já está na régua que o <code>Accordion</code> veste.
+      <DocNote title="Use CollapsibleMarker">
+        O marcador que gira é o mesmo do <code>Accordion</code>. Não monte seta à mão no gatilho: cada consumidor que fez isso fez diferente.
       </DocNote>
     </>
   )

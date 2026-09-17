@@ -27,9 +27,7 @@ export default function PageHeaderDoc() {
   return (
     <>
       <Usage>
-        O topo de uma tela: de onde ela veio, como ela se chama, o que ela é, e a
-        ação que ela oferece. É composição porque metade das telas precisa de
-        algo no meio — a trilha, um chip de estado, um período, uma contagem.
+        O topo de uma tela: de onde ela veio, como se chama, o que é e a ação que oferece. É composição porque metade das telas precisa de algo no meio — trilha, chip de estado, período. O bloco dentro da tela é <code>PageSection</code>; a barra da janela é <code>TopBar</code>.
       </Usage>
 
       <DocSection
@@ -78,21 +76,9 @@ export default function PageHeaderDoc() {
         </PageHeader>
       </DocSection>
 
-      <DocNote title="Ele era uma linha de flex, e a trilha caía dentro dela">
-        Medido a 1280px, nesta mesma demonstração:{" "}
-        <code>sm:flex-row</code> sem <code>flex-wrap</code> punha a trilha
-        (618px) <strong>à esquerda</strong> do título, a coluna do título saía
-        com <strong>largura zero</strong> e 362px de altura — a descrição
-        quebrando uma palavra por linha — e o título passava por baixo do botão
-        de ação. O <code>sm:col-span-full</code> que a trilha carregava não era
-        classe morta por acaso: era o fóssil da grade correta, escrita para uma
-        implementação que nunca existiu. Hoje é grade, e a classe finalmente
-        significa alguma coisa.
-      </DocNote>
-
       <DocSection
         title="A escada"
-        description="Três degraus de título, e o de baixo cresce em sm. Eles não foram inventados: md é o que a página de componente deste catálogo renderiza, lg é o que o índice renderiza, e sm é a tela de detalhe."
+        description="Três degraus de título, que crescem a partir de sm: md para a página comum, lg para um índice, sm para tela de detalhe."
         code={`<PageHeader size="sm">…</PageHeader>   {/* 20 → 24 */}
 <PageHeader size="md">…</PageHeader>   {/* 24 → 30 · o padrão */}
 <PageHeader size="lg">…</PageHeader>   {/* 30 → 36 */}`}
@@ -137,7 +123,7 @@ export default function PageHeaderDoc() {
 
       <DocSection
         title="Tela de detalhe"
-        description="back rende o voltar compacto na linha do título. No desktop quem cumpre esse papel é a trilha, então ele costuma vir junto de uma largura pequena — mas a decisão é de quem chama."
+        description="back põe o voltar compacto na linha do título. No desktop quem costuma cumprir esse papel é a trilha."
         code={`<PageHeaderTitleRow
   back="/cartoes"
   endAdornment={<Badge tone="success">Aberta</Badge>}
@@ -161,19 +147,12 @@ export default function PageHeaderDoc() {
       </DocSection>
 
       <DocNote title="O voltar e o adorno se alinham por mecânicas diferentes">
-        O adorno é <strong>texto</strong>, e alinha pela linha de base — é o que
-        o prende à primeira linha do título mesmo quando o nome quebra em duas.
-        O voltar é um <strong>controle sem texto</strong>: numa caixa de{" "}
-        <code>items-baseline</code> a linha de base dele seria sintetizada na
-        borda de baixo, e a fileira inteira afundaria. Ele sai do alinhamento
-        com <code>self-start</code> e se centra dentro de uma caixa de
-        exatamente uma linha de título (<code>--page-title-line</code>) — sem
-        número mágico, e acompanhando o degrau.
+        O adorno é <strong>texto</strong> e alinha pela linha de base, preso à primeira linha do título. O voltar não tem texto: sai do alinhamento com <code>self-start</code> e se centra numa caixa de uma linha de título (<code>--page-title-line</code>), acompanhando o degrau.
       </DocNote>
 
       <DocSection
         title="Sobrancelha e faixa de fatos"
-        description="A sobrancelha nomeia o pai da tela; a faixa carrega os números que a pessoa veio conferir. As duas são opcionais, e a maioria das telas não usa nenhuma."
+        description="A sobrancelha nomeia o pai da tela; a faixa carrega os números que a pessoa veio conferir. As duas são opcionais."
         code={`<PageHeader size="lg" variant="plain">
   <PageHeaderTitleRow>
     <PageHeaderEyebrow>Nubank · Ultravioleta</PageHeaderEyebrow>
@@ -217,29 +196,15 @@ export default function PageHeaderDoc() {
       </DocSection>
 
       <DocNote title="A sobrancelha não é enfeite acima de todo título">
-        Ela só se paga quando há um pai de verdade a nomear — a carteira de onde
-        a tela veio, o cartão de uma fatura, a marca no índice deste catálogo.
-        Um título que precisa de uma palavra pequena em cima para se explicar
-        está mal escrito, e a correção é o título.
+        Só quando há um pai de verdade a nomear — a carteira, o cartão de uma fatura. Título que precisa de uma palavra em cima para se explicar está mal escrito, e a correção é o título.
       </DocNote>
 
       <DocNote title="Título e descrição não levam gap">
-        Eles são o mesmo dado em duas linhas, e quem os separa é a entrelinha.
-        Esta página <em>já afirmava isso</em> enquanto o componente declarava{" "}
-        <code>gap-1</code> — o mesmo defeito de <code>ItemContent</code>, de{" "}
-        <code>StatCard</code> e de <code>FieldContent</code>, e a quarta vez que
-        ele foi encontrado com a documentação certa e o código discordando.
-        Agora quem garante é o componente. Só a sobrancelha abre um bloco, e é o
-        contêiner que declara isso.
+        São o mesmo dado em duas linhas, e quem os separa é a entrelinha — o componente garante. Só a sobrancelha abre um bloco, e é o contêiner que declara isso.
       </DocNote>
 
       <DocNote title="A escada desce por variável, não por contexto">
-        <code>--page-title</code> é declarada no <code>PageHeader</code> e lida
-        pelo título. Contexto React exigiria <code>&quot;use client&quot;</code>{" "}
-        — e este é um dos poucos componentes de <code>ui/</code> que ainda é
-        servidor. <code>in-*</code> e <code>group-*</code> compilam com{" "}
-        <code>:where()</code>, que não soma especificidade e perderia para a
-        classe base no mesmo elemento. Variável herda e não disputa.
+        <code>--page-title</code> é declarada no <code>PageHeader</code> e lida pelo título. Contexto React exigiria <code>&quot;use client&quot;</code> neste componente de servidor, e <code>in-*</code>/<code>group-*</code> compilam com <code>:where()</code> e perderiam para a classe base.
       </DocNote>
 
       <DocNote title="Uma ação principal por tela">

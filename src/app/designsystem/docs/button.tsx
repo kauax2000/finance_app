@@ -10,12 +10,12 @@ export default function ButtonDoc() {
   return (
     <>
       <Usage>
-        Toda ação clicável. Se navega, é um link dentro de <code>asChild</code>. Um <code>&lt;div onClick&gt;</code> não recebe foco, não responde ao Enter e não é anunciado como controle.
+        Toda ação clicável. Se navega, é um link dentro de <code>asChild</code>. Nunca um <code>&lt;div onClick&gt;</code>: ele não recebe foco, não responde ao Enter e não é anunciado como controle.
       </Usage>
 
       <DocSection
         title="Hierarquia"
-        description="Três degraus, e eles descem em peso visual, não só em nome: primary preenche de verde, secondary preenche de cinza, tertiary não preenche nada. Uma tela tem um primary só — se dois competem, nenhum é a ação da tela."
+        description="Três degraus que descem em peso visual: primary preenche de verde, secondary de cinza, tertiary não preenche. Uma tela tem um primary só — se dois competem, nenhum é a ação da tela."
         code={`<Button>primary</Button>
 <Button variant="secondary">secondary</Button>
 <Button variant="tertiary">tertiary</Button>`}
@@ -27,7 +27,7 @@ export default function ButtonDoc() {
 
       <DocSection
         title="Fora da escada"
-        description="outline é a exceção: para quando o controle precisa de contorno próprio e nenhum dos três degraus serve. destructive é o que não tem volta, e é o único que carrega cor de alerta. link é ação que se comporta como texto."
+        description="outline quando o controle precisa de contorno, destructive para o que não tem volta, link para ação que se comporta como texto."
         code={`<Button variant="outline">outline</Button>
 <Button variant="destructive">destructive</Button>
 <Button variant="link">link</Button>`}
@@ -39,7 +39,7 @@ export default function ButtonDoc() {
 
       <DocSection
         title="Tamanhos"
-        description="Uma escada só, de 24 a 40 em degraus de 4. O padrão é md (32): é o corpo da ação comum, e o que você recebe ao escrever <Button> sem size."
+        description="De 24 a 40 em degraus de 4. O padrão é md (32), o corpo da ação comum."
         code={`<Button size="xs">24 · xs</Button>
 <Button size="sm">28 · sm</Button>
 <Button>32 · md</Button>
@@ -55,7 +55,7 @@ export default function ButtonDoc() {
 
       <DocSection
         title="Só ícone"
-        description="Na ordem, do menor ao maior: icon-xs 24, icon-sm 28, icon-md 32, icon-lg 36, icon-xl 40. A coluna espelha a de texto degrau a degrau — md casa com icon-md, lg com icon-lg — então botão de ícone ao lado de botão de texto usa o par, não o vizinho."
+        description="icon-xs a icon-xl espelham a escada de texto; ao lado de um botão de texto, use o par (md com icon-md)."
         code={`<Button size="icon-xs" aria-label="icon-xs"><PlusIcon /></Button>
 <Button size="icon-sm" aria-label="icon-sm"><PlusIcon /></Button>
 <Button size="icon-md" aria-label="icon-md"><PlusIcon /></Button>
@@ -81,7 +81,7 @@ export default function ButtonDoc() {
 
       <DocSection
         title="Colado a um campo"
-        description="Input, SelectTrigger, NativeSelect e ComboboxTrigger usam a mesma escada, com os mesmos nomes e o mesmo padrão. Botão ao lado de campo alinha sem ninguém dizer size — e se um dos dois mudar de degrau, o outro muda pelo mesmo nome."
+        description="Input, SelectTrigger, NativeSelect e ComboboxTrigger falam a mesma escada, então alinham sem declarar size."
         code={`<Input placeholder="Input · md" />
 <Button>Button · md</Button>`}
       >
@@ -110,7 +110,7 @@ export default function ButtonDoc() {
 
       <DocSection
         title="O primário é uma tecla"
-        description="Corpo chapado, contorno e plinto mais escuros e um fio de luz de 1px no topo. Ao apertar, a tecla afunda: o plinto e a sombra somem e entra uma sombra interna no topo. Enviando, ela fica afundada com opacidade cheia, porque salvando não é o mesmo que desabilitado."
+        description="Contorno e plinto escuros com um fio de luz no topo. Ao apertar, a tecla afunda; enviando, ela fica afundada com opacidade cheia, porque salvando não é o mesmo que desabilitado."
         code={`<Button>salvar</Button>
 <Button disabled>desabilitado</Button>
 <FormSubmit pending pendingLabel="salvando">salvar</FormSubmit>`}
@@ -122,62 +122,40 @@ export default function ButtonDoc() {
         </FormSubmit>
       </DocSection>
 
-      <DocNote title="O realce é token, não alfa">
-        O hover era <code>bg-primary/90</code>, e um alfa único troca de
-        direção por tema: clareava no claro, onde o rótulo caía de 7,31 para
-        5,81, e escurecia no escuro — com uma força diferente para cada
-        superfície embaixo. <code>--primary-hover</code> é opaco e escurece nos
-        dois temas, porque o contato do primário é o rótulo branco e escurecer é
-        o único sentido que sobe o contraste dele: 9,01 no claro e 6,21 no
-        escuro. O toque pinta o mesmo que o cursor.
+      <DocNote title="Hover usa --primary-hover, nunca alfa">
+        <code>--primary-hover</code> é opaco e escurece nos dois temas. Um alfa
+        como <code>bg-primary/90</code> clareava no tema claro e derrubava o
+        contraste do rótulo branco; escurecer é o único sentido que o sobe.
       </DocNote>
 
       <DocNote title="Elevação escura, não luz">
-        Este botão já vestiu vidro quatro vezes, e as quatro saíram na tela:
-        luz clara no corpo ou na borda faz o botão inteiro ler mais claro. A
-        elevação daqui é escura — contorno e plinto em{" "}
-        <code>--primary-edge</code>, sombra preta por fora —, e a única luz é
-        um fio de 1px no topo, acima da faixa do texto. O plinto é sombra
-        interna: a caixa mantém a altura do degrau e continua alinhada ao{" "}
-        <code>Input</code> do lado.
+        Contorno e plinto em <code>--primary-edge</code>, e a única luz é o fio
+        de 1px no topo. Luz no corpo ou na borda faz o botão inteiro ler mais
+        claro. O plinto é sombra interna, então a altura continua alinhada ao
+        <code>Input</code>.
       </DocNote>
 
       <DocNote title="A maiúscula inicial é do sistema">
-        O rótulo de um CTA não depende de quem o escreve: o botão embrulha texto
-        cru num <code>span</code> e aplica <code>::first-letter</code> nele —{" "}
-        <code>salvar</code> sai <strong>Salvar</strong>. O embrulho existe
-        porque <code>::first-letter</code> não vale em <code>inline-flex</code>,
-        e o botão precisa ser flex para alinhar ícone.
-        <br />
-        <br />
-        Repare que os rótulos acima aparecem capitalizados mesmo estando em
-        minúscula no código — é a regra agindo, e é assim que ela se comporta em
-        qualquer tela. Se um rótulo precisa mesmo de minúscula, passe um
-        elemento em vez de texto: <code>&lt;Button&gt;&lt;span&gt;git
-        push&lt;/span&gt;&lt;/Button&gt;</code> sai intacto, porque o botão só
-        embrulha texto cru.
+        O botão embrulha texto cru num <code>span</code> com{" "}
+        <code>::first-letter</code>: <code>salvar</code> sai{" "}
+        <strong>Salvar</strong>. Para manter minúscula, passe um elemento —{" "}
+        <code>&lt;Button&gt;&lt;span&gt;git push&lt;/span&gt;&lt;/Button&gt;</code>{" "}
+        sai intacto.
       </DocNote>
 
       <DocNote title="Não existe size=&quot;default&quot;">
-        A escala do botão é só <code>xs</code> · <code>sm</code> ·{" "}
-        <code>md</code> · <code>lg</code> · <code>xl</code>. O nome{" "}
-        <code>default</code> dizia &ldquo;o padrão&rdquo; e apontava para 36, que
-        deixou de ser o padrão quando <code>md</code> assumiu — e um rótulo que
-        promete uma coisa e entrega outra custa mais caro que um degrau a mais.{" "}
-        <code>size=&quot;default&quot;</code> e <code>size=&quot;icon&quot;</code>{" "}
-        não compilam mais: use <code>lg</code> e <code>icon-lg</code>. O mesmo
-        vale para <code>Input</code> e <code>SelectTrigger</code>, que passaram a
-        falar essa escada. Nos <em>variants</em> a regra é a mesma:{" "}
+        O nome dizia &ldquo;o padrão&rdquo; e apontava para 36, que deixou de ser
+        o padrão. Use <code>lg</code> e <code>icon-lg</code>; nos variants,{" "}
         <code>default</code> virou <code>primary</code> e <code>ghost</code>{" "}
-        virou <code>tertiary</code>, porque o nome agora diz o degrau.
+        virou <code>tertiary</code>, para o nome dizer o degrau.
       </DocNote>
 
       <DocNote title="Rodapé de diálogo: uma hierarquia só">
-        Todo rodapé de <code>Dialog</code> e <code>AlertDialog</code> tem a mesma forma, e ela não se escolhe por tela: sair sem fazer nada é <code>tertiary</code>, a ação que o diálogo veio propor é <code>primary</code>, <code>destructive</code> quando não tem volta. Cancelar vem antes.
+        Vale para todo <code>Dialog</code> e <code>AlertDialog</code>: cancelar vem antes e é <code>tertiary</code>; a ação é <code>primary</code>, ou <code>destructive</code> quando não tem volta. Dois botões de contorno lado a lado pesam igual.
       </DocNote>
 
       <DocNote title="type=&quot;submit&quot; é só da ação principal">
-        Dentro de um <code>Form</code>, o Enter aciona o <code>type=&quot;submit&quot;</code>. Cancelar, dispensar e alternar levam <code>type=&quot;button&quot;</code> — sem isso, cancelar vira o alvo do Enter e o formulário fecha em vez de salvar.
+        Dentro de um <code>Form</code> o Enter aciona o submit. Cancelar, dispensar e alternar levam <code>type=&quot;button&quot;</code> — sem isso, cancelar vira o alvo do Enter e o formulário fecha em vez de salvar.
       </DocNote>
 
       <PropsTable
@@ -186,15 +164,13 @@ export default function ButtonDoc() {
             prop: "variant",
             type: '"primary" | "secondary" | "tertiary" | "outline" | "destructive" | "link"',
             default: '"primary"',
-            description:
-              "O degrau da hierarquia. primary, secondary e tertiary descem em peso; outline, destructive e link ficam fora da escada.",
+            description: "O degrau da hierarquia; outline, destructive e link ficam fora da escada.",
           },
           {
             prop: "size",
             type: '"xs" | "sm" | "md" | "lg" | "xl" | "icon-xs" | "icon-sm" | "icon-md" | "icon-lg" | "icon-xl"',
             default: '"md"',
-            description:
-              "Altura: xs 24, sm 28, md 32, lg 36, xl 40. As variantes icon são quadradas na mesma escala.",
+            description: "Altura de 24 a 40; icon-* é quadrado.",
           },
           {
             prop: "asChild",

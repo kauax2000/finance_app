@@ -76,15 +76,8 @@ export default function MovimentoDoc() {
         </div>
       </DocSection>
 
-      <DocNote title="Ainda não migrado">
-        Fora deste catálogo e das animações de folha em <code>globals.css</code>,
-        o produto ainda escreve a duração à mão: <code>duration-300</code> em 15
-        lugares, <code>duration-200</code> em nove, <code>duration-100</code> em
-        nove. Os tokens são o destino, não uma descrição do presente.
-      </DocNote>
-
-      <DocNote title="Quando o sistema pede menos animação">
-        A regra encurta transições e desliga animações de uma passada, mas <strong>preserva</strong> as que se repetem — <code>animate-spin</code>, <code>animate-pulse</code>, shimmer. Elas comunicam &ldquo;está carregando&rdquo;, que é estado: um spinner congelado não informa nada.
+      <DocNote title="Movimento reduzido preserva o que é estado">
+          A regra encurta transições e desliga animações de uma passada, mas preserva as que se repetem — <code>animate-spin</code>, <code>animate-pulse</code>, shimmer. Elas dizem &ldquo;está carregando&rdquo;, e um spinner congelado não informa nada.
       </DocNote>
     </>
   )

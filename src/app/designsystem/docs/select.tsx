@@ -82,7 +82,7 @@ export default function SelectDoc() {
 
       <DocSection
         title="Com ícone na opção"
-        description="O ícone entra dentro do SelectItem, antes do texto, e sobe junto para o gatilho quando a opção é escolhida — o Radix leva o conteúdo inteiro do item para o valor. Ícone aqui identifica a categoria de relance; se ele não diz nada que o texto já não diga, é ruído."
+        description="O ícone entra no SelectItem, antes do texto, e sobe junto para o gatilho quando a opção é escolhida. Use só se ele identifica de relance o que o texto não diz."
         code={`<SelectItem value="mercado">
   <ShoppingCartIcon aria-hidden />
   Mercado
@@ -111,7 +111,7 @@ export default function SelectDoc() {
 
       <DocSection
         title="Opção destrutiva"
-        description="Uma escolha que apaga alguma coisa fica em vermelho na lista, como no DropdownMenu e no ContextMenu. É a mesma variant nos três, para escolher uma opção se comportar igual em qualquer um deles."
+        description="Uma escolha que apaga alguma coisa fica em vermelho, com a mesma variant do DropdownMenu e do ContextMenu."
         code={`<SelectItem value="excluir" variant="destructive">
   Excluir categoria
 </SelectItem>`}
@@ -166,7 +166,7 @@ export default function SelectDoc() {
 
       <DocSection
         title="Opção desabilitada"
-        description="Uma opção que existe mas não pode ser escolhida agora fica na lista, esmaecida e sem foco. Some da lista só o que não existe — o que existe e está indisponível ensina mais ficando visível."
+        description="Opção que existe mas está indisponível fica na lista, esmaecida e sem foco; some só o que não existe."
         code={`<SelectItem value="anual" disabled>
   Anual — só no plano pago
 </SelectItem>`}
@@ -186,7 +186,7 @@ export default function SelectDoc() {
 
       <DocSection
         title="Lista longa rola sozinha"
-        description="Passando da altura disponível, o conteúdo ganha os botões de rolagem no topo e no rodapé. Mas lista longa é sinal: acima de umas dez opções quem resolve é o Combobox, que tem busca."
+        description="Passando da altura disponível, o conteúdo ganha botões de rolagem. Acima de umas dez opções, use o Combobox, que tem busca."
         code={`<SelectContent>
   {meses.map((m) => (
     <SelectItem key={m} value={m}>{m}</SelectItem>
@@ -210,52 +210,12 @@ export default function SelectDoc() {
         </Select>
       </DocSection>
 
-      <DocNote title="A superfície flutua, então ela é vidro de verdade">
-        O dropdown tem <strong>conteúdo passando por baixo</strong>, e a régua da
-        casa diz que aí o certo é <code>backdrop-filter</code> — não luz pintada.
-        Ele veste a mesma <code>glass-surface</code> do cabeçalho: 24px de borrão
-        e <code>saturate(1.5)</code>, com o guarda de{" "}
-        <code>prefers-reduced-transparency</code>. O alfa é calibrado pelo{" "}
-        <code>--muted-foreground</code> sobre o pior fundo real: 60% no escuro,
-        85% no claro.
-        <br />
-        <br />
-        <strong>Uma placa por superfície.</strong> O Combobox chegou a empilhar
-        duas — o popover e o <code>Command</code> de dentro, 84% no escuro — e
-        saía visivelmente mais claro que o DatePicker, que é o mesmo popover com
-        uma placa. Quem hospeda pinta; o <code>Command</code> hospedado é
-        transparente. O material nunca foi o problema: uma rodada concluiu que
-        o borrão &quot;não renderizava dentro de popper&quot; a partir de
-        capturas cedo demais, e a medição refeita disse o contrário.
+      <DocNote title="A superfície flutuante é vidro de verdade">
+        O dropdown tem conteúdo passando por baixo, então veste a <code>glass-surface</code>: 24px de borrão, <code>saturate(1.5)</code> e o guarda de <code>prefers-reduced-transparency</code>, com alfa de 60% no escuro e 85% no claro. Uma placa por superfície: quem hospeda pinta, e o <code>Command</code> hospedado num popover é transparente.
       </DocNote>
 
-      <DocNote title="Ele abre abaixo do gatilho, e antes ignorava a borda da tela">
-        O padrão do Radix é <code>position=&quot;item-aligned&quot;</code>: o
-        painel sobrepõe o gatilho, alinhando o item já escolhido sobre ele. É
-        bonito e <strong>não faz colisão nenhuma</strong> — naquele modo{" "}
-        <code>collisionPadding</code>, <code>avoidCollisions</code>,{" "}
-        <code>side</code> e <code>sideOffset</code> simplesmente não existem, e o
-        painel sai da tela sem nada o impedir.
-        <br />
-        O app já tinha votado contra: <strong>9 das 36</strong> chamadas de{" "}
-        <code>SelectContent</code> escreviam <code>position=&quot;popper&quot;</code>{" "}
-        à mão — e eram <em>as mesmas nove</em> que cravavam um{" "}
-        <code>collisionPadding</code> próprio. Duas props escritas duas vezes,
-        nove vezes, para conseguir o que o padrão devia dar. Hoje{" "}
-        <code>popper</code> é o padrão e as dezoito linhas saíram.
-      </DocNote>
-
-      <DocNote title="A altura do viewport era a altura do gatilho">
-        O modo <code>popper</code> trazia do shadcn uma classe que declarava como
-        altura do viewport a medida do <strong>gatilho</strong> — a família do
-        &quot;envelope que declara como altura a medida que ele próprio
-        produz&quot;, que o <code>AccordionContent</code> já pagou. Ela nunca
-        aparecia porque o padrão era o outro modo; com a troca, ela passaria a
-        valer em toda tela.
-        <br />
-        Medido antes de sair: o painel abria com <strong>36px</strong> — a caixa
-        do gatilho —, com <code>scrollHeight</code> 36. Depois:{" "}
-        <strong>92px</strong> para três opções.
+      <DocNote title="Abre abaixo do gatilho, com colisão">
+        O padrão é <code>position=&quot;popper&quot;</code>. O <code>item-aligned</code> do Radix sobrepõe o gatilho e ignora <code>collisionPadding</code>, <code>side</code> e <code>sideOffset</code> — o painel sai da tela sem nada o impedir.
       </DocNote>
 
       <DocNote title="O Enter não é do formulário aqui">

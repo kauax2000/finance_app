@@ -30,7 +30,7 @@ export default function CommandDoc() {
   return (
     <>
       <Usage>
-        A paleta de comandos: uma busca que encontra telas, ações e registros ao mesmo tempo. É o atalho de quem usa o app todo dia.
+        A paleta de comandos: uma busca que encontra telas, ações e registros ao mesmo tempo. Para escolher o valor de um campo, use <code>Combobox</code>; para as ações de um objeto, <code>DropdownMenu</code>.
       </Usage>
 
       <DocSection
@@ -164,56 +164,12 @@ React.useEffect(() => {
         </div>
       </DocSection>
 
-      <DocNote title="O grupo se separa por respiro e por rótulo, nunca por fio">
-        Duas coisas faziam os grupos se dissolverem numa fileira só. O
-        cabeçalho era <code>text-xs font-medium</code> — <strong>o mesmo peso
-        das linhas</strong>, um degrau menor e mais claro, que é a receita de
-        &quot;linha desabilitada&quot; e não de rótulo. E o{" "}
-        <code>py-1</code> simétrico o deixava equidistante dos dois grupos,
-        pertencendo a nenhum. Agora ele é caixa alta com{" "}
-        <code>tracking-wider</code>, a mesma régua do cabeçalho da{" "}
-        <code>Table</code>, e o respiro é assimétrico: 10px de margem acima do
-        grupo contra 2px abaixo do rótulo, então ele pertence à lista que
-        encima. Ficou visível quando a busca deste catálogo perdeu as
-        descrições e todo item virou uma linha só.
-        <br />
-        <strong>
-          A folga é margem no grupo, não recuo no cabeçalho
-        </strong>{" "}
-        — duas propriedades diferentes não disputam, enquanto um{" "}
-        <code>pt</code> base mais um <code>pt</code> sob variante seriam a mesma
-        propriedade duas vezes, decidida por ordem de emissão do Tailwind. E o
-        primeiro grupo <em>visível</em> não recebe a folga por{" "}
-        <code>[cmdk-group]:not([hidden])~&amp;</code>: o cmdk esconde os grupos
-        sem resultado com o atributo <code>hidden</code>{" "}
-        <strong>sem os tirar do DOM</strong>, então eles ficam no meio da
-        fileira. Medido buscando &quot;card&quot;: <code>Átomos</code> sai
-        escondido entre <code>Fundações</code> e <code>Moléculas</code>, e um
-        seletor de adjacência (<code>+</code>) perderia o segundo grupo
-        visível.
-      </DocNote>
-
-      <DocNote title="O tique que nunca acendia">
-        A linha renderizava um <code>CheckIcon</code> escondido por{" "}
-        <code>opacity-0</code> e revelado por{" "}
-        <code>group-data-[checked=true]</code>. <strong>O cmdk não emite{" "}
-        <code>data-checked</code></strong> — medido no DOM, os atributos de um
-        item são <code>data-slot</code>, <code>data-disabled</code>,{" "}
-        <code>data-selected</code> e <code>data-value</code>. O ícone nunca
-        aparecia. E no <code>Combobox</code>, que desenha o próprio check, cada
-        linha saía com <strong>dois ícones</strong> — um funcionando e um
-        permanentemente invisível. Quem marca seleção é quem sabe o que está
-        selecionado, e isso não é a paleta.
+      <DocNote title="Grupos se separam por respiro e rótulo, nunca por fio">
+        O rótulo é caixa alta com <code>tracking-wider</code>, como o cabeçalho da <code>Table</code>, e fica mais perto da lista que encima. A folga é margem no grupo e pula o primeiro grupo <em>visível</em>: o cmdk esconde grupos sem resultado com <code>hidden</code>, sem tirá-los do DOM.
       </DocNote>
 
       <DocNote title="O corpo é o dos menus, os estados não">
-        A geometria vem de <code>menuItemGeometryClassName</code>: o{" "}
-        <code>Command</code> é a quarta superfície de comandos do projeto e era
-        a única fora da régua. Os <strong>estados</strong> ficam aqui porque o
-        cmdk os escreve diferente: a linha ativa é <code>data-selected</code> e
-        não <code>:focus</code>, e <code>data-disabled=&quot;false&quot;</code>{" "}
-        fica <em>sempre presente</em> no elemento — a regra por presença dos
-        menus apagaria toda linha.
+        A geometria vem de <code>menuItemGeometryClassName</code>. Os estados ficam aqui porque o cmdk os escreve diferente: a linha ativa é <code>data-selected</code>, e <code>data-disabled=&quot;false&quot;</code> está sempre presente, então a regra por presença dos menus apagaria toda linha.
       </DocNote>
 
       <DocSection
@@ -248,211 +204,40 @@ React.useEffect(() => {
         </Command>
       </DocSection>
 
-      <DocNote title="A superfície é uma só, e o que separa as faixas é a dissolução">
-        A cor é declarada <strong>uma vez</strong>, na casca — a placa da régua
-        flutuante, <code>--popover</code> com o material do iOS. Houve uma
-        versão com vidro só nas pontas (<code>bg-background/85</code>, o do{" "}
-        <code>&lt;header&gt;</code>) e ela ficava{" "}
-        <strong>mais escura que o meio</strong>: <code>oklch(0.145)</code> nas
-        faixas contra <code>oklch(0.205)</code> na lista, no tema escuro. Tom
-        igual só é garantido quando a cor é declarada uma vez.
-        <br />
-        <br />
-        <strong>Nenhuma das três faixas pinta</strong>, e o que marca os limites
-        é o conteúdo sumindo, não uma superfície cobrindo. O rodapé sempre foi
-        assim: transparente, só reservando altura, com uma{" "}
-        <code>mask-image</code> na própria lista fazendo o trabalho. A faixa de
-        busca passou a ser também.
-        <br />
-        <br />
-        Tirar dela só o fio não bastava, e o motivo era aritmético: ela
-        repintava a placa (<code>bg-popover/85</code>) sobre um casco que já a
-        tinha, e dois 85% empilhados dão <strong>97,75%</strong>. É a mesma
-        aritmética que tirou a placa do <code>Command</code> hospedado — tinta
-        sobre a casca é uma segunda superfície. No tema escuro <code>--popover</code> é mais
-        claro que a página, então a faixa era um retângulo <em>mais claro</em>{" "}
-        com uma aresta na base — o mesmo bloco aceso que o rodapé já tinha
-        registrado ao tentar pintar um gradiente. O <code>backdrop-blur</code>{" "}
-        saiu junto: a borda do borrão desenha a linha sozinha. Quem esconde o
-        conteúdo sob o campo é a rampa, não uma tinta.
+      <DocNote title="Uma superfície só, pintada pela casca">
+        O <code>CommandDialog</code> veste a placa e o <code>Command</code> de dentro é transparente; só <code>panel</code> pinta a própria. Nenhuma faixa pinta nem borra: o limite é o conteúdo se dissolvendo sob a <code>mask-image</code> da lista. Tinta numa faixa vira uma segunda superfície, um retângulo mais claro no tema escuro.
       </DocNote>
 
-      <DocNote title="Uma curva só, e ela cresce com a rolagem nos dois lados">
-        Cada ponta dá <strong>44px</strong> ao conteúdo para se dissolver, com a
-        mesma curva espelhada e o mesmo piso (0,06). E a zona{" "}
-        <strong>cresce no passo em que a ponta consome o conteúdo</strong> — em
-        cima com o <code>scrollTop</code>, embaixo com o que falta rolar.
-        <br />
-        <br />
-        Um interruptor seria um pop severo, e a conta explica: o item da ponta
-        nasce a 4px da faixa e mede 28px, então ele cabe <em>inteiro</em> dentro
-        da zona — ligá-la de uma vez o levaria de chapado a um degradê de
-        15%→80% em 1px de rolagem. Crescendo junto, nos dois extremos não há
-        zona e o item da ponta fica nítido.
-        <br />
-        <br />
-        A curva é <strong>sigmoide</strong>, e isso não é preciosismo: uma
-        ease-out sai do chapado com inclinação máxima, e descontinuidade de
-        derivada contra uma superfície lisa é o que o olho mais detecta — banda
-        de Mach, numa linha horizontal que atravessa a paleta inteira. Vê-se o{" "}
-        <em>começo</em> do fade, não um fade.
+      <DocNote title="A dissolução cresce com a rolagem">
+        Cada ponta dá <strong>44px</strong> de dissolução com a mesma curva sigmoide, e a zona cresce à medida que a rolagem consome o conteúdo — ligada de uma vez, o item da ponta saltaria de nítido a degradê.
       </DocNote>
 
-      <DocNote title="O rodapé mede só a legenda, e é por isso que não sobra branco">
-        <code>--command-footer-h</code> já embutiu a pista de dissolução (72px =
-        28 da legenda + 44 de pista), e era o que produzia{" "}
-        <strong>~44px de branco</strong> entre o último item e o texto sempre
-        que se rolava até o fim: no fim não há conteúdo para dissolver ali. A
-        pista virou <code>--command-foot-fade</code>, que é máscara e não ocupa
-        espaço. Hoje o vão é de 4px, medido.
-        <br />
-        <br />
-        A altura depende da <strong>presença do rodapé</strong> — nunca da
-        rolagem —, como a da faixa de busca depende da presença do campo. Ela já
-        dependeu de <code>data-scrollable</code>, e isso era um laço:{" "}
-        <code>pb</code> é <code>footer-h + 4</code>, então declarar “esta lista
-        rola” <em>acrescentava 36px ao próprio conteúdo</em> e realimentava a
-        condição que produziu a decisão. Uma lista que transbordava 20px virava
-        rolável, ganhava <code>pb</code> 76, passava a transbordar 56, e nunca
-        mais era reavaliada — <strong>histerese</strong>, não laço divergente, e
-        por isso passou despercebida. Medido: uma demo desta página com 288 de
-        altura e 297 de conteúdo estava marcada como rolável quando, com{" "}
-        <code>pb</code> de 40, ela não rolaria.
-        <br />
-        <br />
-        O <code>Combobox</code> pagava o mesmo sem nunca ter rodapé: 76px de
-        calha vazia no fim de cada popover, e uma lista que só rolava por causa
-        do próprio recuo. Agora <code>footer-h</code> é 0 lá.
-      </DocNote>
-
-      <DocNote title="scroll-pb é carga estrutural, não simetria">
-        Ele conta a zona <em>inteira</em> (
-        <code>footer-h + fade-h + 4</code> = 84), e sem isso a navegação por
-        seta quebra: o <code>scrollIntoView</code> do cmdk depositaria o item
-        selecionado a 40px do fundo enquanto a zona de baixo chega a 80 — item
-        ativo renderizado a 0,05 de alfa. Medido depois: o item ativo para a
-        4px da zona, fora dela. A margem já existia antes (76 contra 72), mas
-        por acidente, e ninguém a tinha registrado.
-      </DocNote>
-
-      <DocNote title="O recuo é da lista, e quem pinta é a casca">
-        O recuo saiu da casca e foi para o <code>CommandList</code>, que é onde
-        há linhas — e com isso o <code>-mx-1</code> do separador volta a sangrar
-        exatamente ele. E a placa é da <strong>casca</strong>: o{" "}
-        <code>CommandDialog</code> veste a placa modal e o <code>Command</code>{" "}
-        de dentro é transparente, para haver <strong>uma</strong> superfície. Só
-        a variante <code>panel</code>, solta numa página, pinta a própria.
+      <DocNote title="O rodapé mede só a legenda">
+        A pista de dissolução é <code>--command-foot-fade</code>, máscara que não ocupa espaço. A altura depende da presença do rodapé, nunca da rolagem: depender de <code>data-scrollable</code> soma recuo ao conteúdo e a lista fica presa como rolável. <code>scroll-pb</code> cobre a zona inteira, senão a seta deixa o item ativo dentro da dissolução.
       </DocNote>
 
       <DocNote title="O campo é o mesmo do cabeçalho do catálogo">
-        <code>h-8</code> (o degrau <code>md</code>), <code>rounded-lg</code>,{" "}
-        <code>border-border</code> e <code>bg-input-fill/30</code> — as mesmas
-        medidas do gatilho de busca lá em cima. Quem abre a paleta vem de clicar
-        naquele campo: encontrar outro desenho do outro lado do gesto quebra a
-        continuidade.
+        Mesmas medidas do gatilho de busca: quem abre a paleta vem daquele campo, e outro desenho do outro lado do gesto quebra a continuidade.
       </DocNote>
 
-      <DocNote title="O topo não se mexe enquanto a lista encolhe">
-        Um diálogo comum centraliza pela altura <strong>real</strong>. Numa
-        paleta isso faz o campo de busca subir e descer sob o cursor a cada
-        tecla, conforme os resultados diminuem. Aqui o topo é fixado onde a
-        caixa <em>cheia</em> começaria —{" "}
-        <code>calc(50% - altura-máxima / 2)</code> — e o que encolhe é a borda
-        de baixo. Medido: com 89, 8, 3, 1 e zero resultados, o topo fica em
-        178px e só a base se move (690 → 476 → 340).
-        <br />
-        <br />
-        O <code>top-1/3</code> que o shadcn usa resolve o mesmo sintoma
-        chutando um terço da tela; esta conta acerta o centro de verdade quando
-        a lista está cheia, que é como a paleta abre.
+      <DocNote title="O topo fica fixo; a base desliza">
+        O topo é fixado onde a caixa <em>cheia</em> começaria, senão o campo pula sob o cursor a cada tecla. A base desliza pela <code>--cmdk-list-height</code> que o cmdk publica, e a transição só liga depois da primeira medida, para a paleta não abrir deslizando.
       </DocNote>
 
-      <DocNote title="E a base desce deslizando, com a medida que o cmdk já publicava">
-        O topo estava resolvido, mas a borda de baixo <strong>saltava</strong> —
-        medido, digitando na busca: 626 → 584 → 478, em degraus instantâneos.
-        <br />
-        <br />
-        A régua para consertar já existia e ninguém a lia:{" "}
-        <code>Command.List</code> do cmdk envolve os filhos num{" "}
-        <code>[cmdk-list-sizer]</code>, observa esse wrapper e publica a altura
-        do conteúdo em <code>--cmdk-list-height</code>. A lista passou a derivar
-        a própria <code>height</code> dela e a transicionar em{" "}
-        <code>--duration-base</code>.
-        <br />
-        <br />
-        <strong>O teto é o do casco inteiro, e não o que sobra das faixas</strong>{" "}
-        — o que parece errado até a conta fechar. A lista mede em{" "}
-        <code>border-box</code> e carrega o recuo das duas faixas, mas a
-        dissolução cancela os dois com margem negativa: uma caixa de altura{" "}
-        <code>H</code> ocupa <code>H − 84</code> no fluxo, e somando as faixas de
-        volta dá <code>H</code>. Descontá-las aqui as descontaria duas vezes — foi
-        o que a primeira versão fez, e a paleta com 7 resultados travava em 300
-        onde antes media 342.
-        <br />
-        <br />
-        <strong>A transição só liga depois da primeira medida.</strong> A
-        variável do cmdk chega dois quadros depois de montar; sem a espera, a
-        lista nasceria no teto e deslizaria até o tamanho certo <em>toda vez</em>{" "}
-        que a paleta abrisse. É o mesmo cuidado que o marcador do{" "}
-        <code>Tabs</code> toma com <code>indicatorReady</code>.
+      <DocNote title="A paleta abre sem nada selecionado">
+        <code>autoSelectFirst={"{false}"}</code>, que o <code>CommandDialog</code> liga sozinho: a seta para baixo entra na primeira linha e a de cima vai para a última. Não esconda o realce com CSS — o leitor de tela anunciaria uma linha que ninguém vê. O <code>Combobox</code> abre com o primeiro realçado, como um select.
       </DocNote>
 
-      <DocNote title="Ela abre sem nada selecionado, e a primeira seta entra na lista">
-        O cmdk marca a primeira linha assim que os itens se registram, e de novo
-        a cada tecla. Numa paleta isso lê como se o cursor já estivesse na lista
-        — mas o foco está no campo, e ninguém escolheu nada. É{" "}
-        <code>autoSelectFirst={"{false}"}</code>, que o{" "}
-        <code>CommandDialog</code> liga sozinho. O <code>Combobox</code> fica
-        como está: ali a lista é um seletor de valor, e abrir com o primeiro
-        item realçado é o que se espera de um select.
-        <br />
-        <br />
-        <strong>Esconder o realce com CSS seria o caminho errado.</strong> O cmdk
-        escreve <code>aria-selected</code> no item e alimenta o{" "}
-        <code>aria-activedescendant</code> da lista: um leitor de tela
-        continuaria anunciando uma linha ativa que ninguém vê. A seleção precisa
-        não existir, e não ficar invisível.
-        <br />
-        <br />
-        <strong>A seta para baixo sai de graça.</strong> Sem seleção, o cmdk
-        procura o item seguinte a um índice <code>-1</code> e acha o{" "}
-        <strong>primeiro</strong> — não há tecla a interceptar. Só a de cima
-        precisou de código, porque <code>itens[-1]</code> não existe e a tecla
-        ficaria morta; ela salta para a última linha. E o Enter sem seleção não
-        faz nada, porque não há item que o cmdk possa disparar.
+      <DocNote title="plain herda a moldura; panel desenha a própria">
+        <code>plain</code> não tem borda nem canto e herda o raio de quem o contém (<code>Popover</code>, <code>CommandDialog</code>). <code>panel</code> é a paleta solta numa página. Não crave o raio do contêiner dentro do componente.
       </DocNote>
 
-      <DocNote title="Duas variantes, e a pergunta é quem desenha a moldura">
-        <code>plain</code> não desenha nada — nem borda, nem canto: ele{" "}
-        <strong>herda o raio de quem o contém</strong>. Dentro de um{" "}
-        <code>Popover</code> ele fica com os 10px do popover; dentro de um{" "}
-        <code>CommandDialog</code>, com os 14px do diálogo. <code>panel</code> é
-        o oposto: a paleta solta numa página, que precisa da própria moldura.
-        <br />
-        <br />
-        Houve uma terceira, <code>dialog</code>, e ela foi apagada. Existia só
-        para cravar <code>rounded-xl</code> e bater com o casco — um número que
-        pertence ao <em>contêiner</em>, copiado para dentro do componente.
-        Herdando, a paleta acerta qualquer superfície sem saber de nenhuma. E
-        antes dela houve <code>inline | dialog</code>, que decidia só o
-        arredondamento e deixava <strong>as quatro demonstrações desta página
-        escrevendo <code>border border-border</code> à mão</strong>.
+      <DocNote title="A busca deste catálogo é a referência">
+        O cabeçalho usa um <code>CommandDialog</code> (<Kbd keys="mod+k" />); <code>src/app/designsystem/ds-search.tsx</code> decide o que entra na lista e como filtrar. O filtro padrão do cmdk é difuso — &ldquo;cor&rdquo; devolve Carousel —, então passe um <code>filter</code> por substring, sem acentos dos dois lados.
       </DocNote>
 
-      <DocNote title="O primeiro consumidor é este catálogo">
-        A busca do cabeçalho aqui em cima é um <code>CommandDialog</code>{" "}
-        — abra com <Kbd keys="mod+k" />. O código está em{" "}
-        <code>src/app/designsystem/ds-search.tsx</code> e serve de referência
-        para as duas decisões que o componente não toma: o que entra na lista e
-        como se filtra.
-      </DocNote>
-
-      <DocNote title="O filtro padrão do cmdk é difuso, e isto é em português">
-        O padrão pontua por aproximação, então &ldquo;cor&rdquo; devolve Carousel e Combobox junto com Cores. A busca do catálogo passa um <code>filter</code> por substring, com acentos removidos dos dois lados.
-      </DocNote>
-
-      <DocNote title="O atalho precisa de um gatilho visível também">
-        Um atalho que só existe no teclado não existe no telefone e ninguém descobre. O botão no cabeçalho é o que torna a paleta encontrável; o <Kbd keys="mod+k" /> desenhado dentro dele ensina o atalho — ⌘K no Apple, Ctrl+K no resto.
+      <DocNote title="O atalho precisa de um gatilho visível">
+        Atalho só de teclado não existe no telefone e ninguém descobre. O botão torna a paleta encontrável, e o <Kbd keys="mod+k" /> dentro dele ensina o atalho — ⌘K no Apple, Ctrl+K no resto.
       </DocNote>
       <PropsTable
         rows={[
@@ -468,7 +253,7 @@ React.useEffect(() => {
             type: "boolean",
             default: "true",
             description:
-              "false abre sem nada selecionado: a primeira seta para baixo entra na primeira linha, a de cima vai para a última, e o Enter sem seleção não dispara nada. O CommandDialog já liga. Ele é dono do value — não combine com um value controlado por fora.",
+              "false abre sem seleção (o CommandDialog já liga); não combine com um value controlado por fora.",
           },
           {
             prop: "CommandItemContent",
@@ -486,13 +271,13 @@ React.useEffect(() => {
             prop: "CommandFooter / CommandHint",
             type: 'ComponentProps<"div"> / <"span">',
             description:
-              "A terceira faixa: sangra até as bordas, traz o fio e a tinta quieta. Hint é a dupla tecla + o que ela faz.",
+              "A faixa do rodapé, com tinta quieta; Hint é o par tecla + o que ela faz.",
           },
           {
             prop: "CommandLoading",
             type: "ComponentProps<typeof Command.Loading>",
             description:
-              "Busca assíncrona. O cmdk sempre teve; o projeto não expunha.",
+              "O estado de busca assíncrona.",
           },
         ]}
       />

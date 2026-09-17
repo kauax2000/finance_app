@@ -21,16 +21,12 @@ export default function AlertDoc() {
   return (
     <>
       <Usage>
-        Mensagem que fica na tela porque é sobre <strong>o conteúdo dela</strong>
-        . Confirmação do que acabou de acontecer é <code>toast</code>; aviso
-        sobre o app inteiro é <code>AnnouncementBar</code>. Três eixos, e eles
-        não se misturam: <code>tone</code> é a cor, <code>variant</code> é a
-        forma, <code>size</code> é o corpo.
+          Mensagem que fica na tela porque é sobre <strong>o conteúdo dela</strong>. Confirmação do que acabou de acontecer é <code>toast</code>; aviso sobre o app inteiro é <code>AnnouncementBar</code>. Três eixos que não se misturam: <code>tone</code> é a cor, <code>variant</code> a forma, <code>size</code> o corpo.
       </Usage>
 
       <DocSection
         title="Tom"
-        description="Cinco tons, todos tonais e nunca sólidos — o alerta explica, não interrompe. E o tom chega ao texto: título e descrição são dois níveis de uma tinta só, em vez de branco e cinza sobre uma superfície colorida. O default é o único com descrição cinza, porque ali a superfície é neutra."
+        description="Cinco tons, tonais e nunca sólidos — o alerta explica, não interrompe. Título e descrição levam a tinta do tom; só o default tem descrição cinza, porque a superfície é neutra."
         code={`<Alert tone="warning">
   <ExclamationTriangleIcon />
   <AlertTitle>Orçamento perto do limite</AlertTitle>
@@ -76,7 +72,7 @@ export default function AlertDoc() {
 
       <DocSection
         title="Forma"
-        description="soft tem moldura própria e é o padrão: o aviso solto no conteúdo precisa de uma aresta que o separe do que vem antes. plain é o mesmo tingido sem borda, para dentro de um formulário ou de um diálogo — onde a moldura já é de outro, e mais uma só acrescenta um retângulo à pilha. Quatro formulários de autenticação do app já desenhavam essa forma à mão."
+        description="soft, o padrão, tem moldura para se separar do conteúdo. plain é o mesmo tingido sem borda, para dentro de formulário ou diálogo, onde a moldura já é de outro."
         code={`<Alert tone="success">…</Alert>                  {/* soft */}
 <Alert tone="success" variant="plain">…</Alert>`}
         previewClassName="grid grid-cols-1 items-start gap-4 sm:grid-cols-2"
@@ -111,7 +107,7 @@ export default function AlertDoc() {
 
       <DocSection
         title="Corpo"
-        description="Dois degraus. md é o aviso que fala com a tela. sm é o aviso que fala com um campo: dentro de um formulário, sob um controle, colado ao que explica. Ele encolhe o texto, o respiro e o ícone juntos — e o ícone encolhe porque a largura da coluna e o corpo do svg saem da mesma variável."
+        description="md fala com a tela; sm fala com um campo, colado ao controle que explica. O degrau encolhe texto, respiro e ícone juntos."
         code={`<Alert tone="info">…</Alert>            {/* md */}
 <Alert tone="info" size="sm">…</Alert>`}
         previewClassName="flex-col items-stretch gap-3"
@@ -134,7 +130,7 @@ export default function AlertDoc() {
 
       <DocSection
         title="Com ação"
-        description="Quando o aviso tem saída, ela fica em AlertActions, no pé e alinhada ao texto. O botão é tertiary e não declara cor nenhuma: a pele sai de currentColor, então serve os cinco tons sem nomear nenhum, e o par active: que o toque exige vem junto. É o que o dashboard escrevia à mão em cinco classes que só valiam para destructive."
+        description="A saída fica em AlertActions, no pé e alinhada ao texto. AlertAction não declara cor: sai de currentColor e serve os cinco tons."
         code={`<Alert tone="destructive">
   <XCircleIcon />
   <AlertTitle>Não foi possível carregar as carteiras</AlertTitle>
@@ -176,7 +172,7 @@ export default function AlertDoc() {
 
       <DocSection
         title="Sem ícone"
-        description="O ícone é opcional, e a grade sabe disso: sem svg o alerta é de uma coluna só, e o texto começa na borda do respiro em vez de num recuo que não tem dono."
+        description="O ícone é opcional: sem svg o alerta é de uma coluna só, e o texto começa na borda do respiro."
         code={`<Alert tone="info">
   <AlertTitle>Sem ícone</AlertTitle>
   <AlertDescription>…</AlertDescription>
@@ -201,28 +197,28 @@ export default function AlertDoc() {
             type: '"default" | "info" | "success" | "warning" | "destructive"',
             default: '"default"',
             description:
-              "A cor do aviso, e ela pinta superfície, borda, ícone e texto. Todos tonais, nunca sólidos. Era variant, e o nome mudou para o mesmo que StatCard, Progress, Timeline e AnnouncementBar já usavam.",
+              "A cor: pinta superfície, borda, ícone e texto, sempre tonal.",
           },
           {
             prop: "variant",
             type: '"soft" | "plain"',
             default: '"soft"',
             description:
-              "A forma. soft tem moldura própria; plain é o tingido sem borda, para dentro de algo que já tem moldura.",
+              "A forma: soft com moldura; plain sem borda, para dentro de algo que já tem moldura.",
           },
           {
             prop: "size",
             type: '"sm" | "md"',
             default: '"md"',
             description:
-              "O corpo. sm encolhe texto, respiro e ícone juntos — é o aviso que fala com um campo, não com a tela.",
+              "O corpo; sm é o aviso que fala com um campo.",
           },
           {
             prop: "role",
             type: '"alert" | "status" | string',
             default: "derivado do tom",
             description:
-              "destructive e warning saem como alert (região viva assertiva, que interrompe o leitor de tela); o resto sai como status. Sobrescrevível.",
+              "destructive e warning saem como alert (assertivo); o resto, status.",
           },
         ]}
       />
@@ -234,65 +230,39 @@ export default function AlertDoc() {
             prop: "AlertTitle",
             type: "div",
             description:
-              "O resumo — a linha que o olho lê para decidir se continua, e a primeira que o leitor de tela anuncia.",
+              "O resumo, a primeira linha que o leitor de tela anuncia.",
           },
           {
             prop: "AlertDescription",
             type: "div",
             description:
-              "O detalhe, na tinta do alerta a 85%. No tom default é cinza, porque ali a superfície é neutra.",
+              "O detalhe, na tinta do alerta a 85%.",
           },
           {
             prop: "AlertActions",
             type: "div",
             description:
-              "A linha da saída, no pé e alinhada ao texto. Só a linha — quem veste o botão é o AlertAction.",
+              "A linha da saída, no pé e alinhada ao texto.",
           },
           {
             prop: "AlertAction",
             type: "Button",
             description:
-              "A ação. É um Button tertiary size=\"sm\" que herda a tinta do tom por currentColor. Aceita asChild para virar link.",
+              "A ação: Button tertiary que herda a tinta do tom; aceita asChild.",
           },
         ]}
       />
 
       <DocNote title="Título sem descrição é permitido; descrição sem título não">
-        Um alerta de uma linha só precisa do <code>AlertTitle</code>. Já uma
-        descrição solta perde o resumo que faz o olho decidir se vale ler — e é
-        o resumo que o leitor de tela anuncia primeiro. Ela também é a tinta
-        secundária do par, e uma linha secundária sozinha não tem a que ser
-        secundária.
+          O título é o resumo que faz o olho decidir se vale ler, e o que o leitor de tela anuncia primeiro. Uma descrição solta perde esse resumo.
       </DocNote>
 
-      <DocNote title="A ação não declara cor, e agora não precisa lembrar disso">
-        <code>AlertAction</code> é um <code>Button</code>{" "}
-        <code>tertiary</code> <code>size=&quot;sm&quot;</code>: a borda, a tinta
-        e o realce saem de <code>currentColor</code>, que é a cor do próprio
-        alerta — então a mesma linha serve os cinco tons, e trocar o tom do
-        aviso troca o botão junto. Escrever <code>border-destructive/40</code>
-        ali é reimportar a paleta para dentro da tela.
-        <br />
-        <br />
-        <strong>Ele é uma peça porque antes era um pedido.</strong>{" "}
-        <code>AlertActions</code> alcançava o botão por <em>seletor
-        descendente</em> — cinco regras <code>[&amp;_[data-slot=button]]:</code>{" "}
-        — e esta nota mandava quem chamasse escrever <code>tertiary</code> à
-        mão. As <strong>seis</strong> chamadas escreviam a mesma string, o que é
-        o sinal de sempre: quando o catálogo escreve a anatomia, falta uma peça.
-        E faltava a de baixo — <code>alert.tsx</code> importava{" "}
-        <strong>zero</strong> componentes e se dizia molécula.
+      <DocNote title="Use AlertAction, e não pinte o botão">
+          <code>AlertAction</code> é um <code>Button</code> <code>tertiary</code> <code>size=&quot;sm&quot;</code> cuja borda, tinta e realce saem de <code>currentColor</code>: trocar o tom do aviso troca o botão junto. Escrever <code>border-destructive/40</code> ali é reimportar a paleta para dentro da tela.
       </DocNote>
 
       <DocNote title="Alert, AnnouncementBar e toast não se substituem">
-        <code>Alert</code> fica <strong>dentro</strong> do conteúdo e fala de
-        uma coisa daquela tela. <code>AnnouncementBar</code> atravessa o topo do
-        app e fala de estado global — offline, convite pendente, manutenção —, e
-        é dispensável, porque aviso permanente que não se fecha vira ruído em
-        uma semana. <code>toast</code> confirma o que acabou de acontecer e vai
-        embora sozinho. Um <code>Alert</code> fixado no topo da janela com{" "}
-        <code>rounded-none border-x-0</code> é uma <code>AnnouncementBar</code>{" "}
-        escrita com o componente errado.
+          <code>Alert</code> fica dentro do conteúdo e fala daquela tela. <code>AnnouncementBar</code> atravessa o topo e fala de estado global — offline, convite, manutenção —, e é dispensável. <code>toast</code> confirma o que acabou de acontecer e some. Um <code>Alert</code> fixado no topo com <code>rounded-none border-x-0</code> é uma <code>AnnouncementBar</code> escrita com o componente errado.
       </DocNote>
     </>
   )

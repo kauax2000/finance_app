@@ -107,9 +107,8 @@ export default function TableDoc() {
     <>
       <Usage>
         Dados que se comparam <strong>coluna a coluna</strong>. Se ninguém
-        compara os valores entre linhas, a informação é uma lista, e o
-        componente é <code>Item</code>. Se o que falta é a moldura, a barra de
-        ações e o rodapé de paginação que o app desenha em volta dela, é{" "}
+        compara valores entre linhas, é uma lista: <code>Item</code>. Com
+        moldura, barra de ações e rodapé de paginação, é{" "}
         <Link href="/designsystem/table-panel" className="underline">
           Table Panel
         </Link>
@@ -118,7 +117,7 @@ export default function TableDoc() {
 
       <DocSection
         title="Padrão"
-        description="Valores numéricos alinham à direita com numeric — sem isso a coluna dança a cada dígito e some justamente a vantagem da tabela."
+        description="Valores numéricos alinham à direita com numeric; sem isso a coluna dança a cada dígito e a tabela perde a vantagem."
         code={`<Table>
   <TableHeader>
     <TableRow><TableHead>Descrição</TableHead><TableHead numeric>Valor</TableHead></TableRow>
@@ -159,7 +158,7 @@ export default function TableDoc() {
 
       <DocSection
         title="A escada"
-        description="sm é a densidade das mini-tabelas de folha (parcelas, faturas). md é o padrão — a mesma densidade que PropsTable, logo abaixo desta página, já renderiza. lg é o painel de transações e assinaturas: o px dele (16) é o mesmo --card-strip-px do Card padding='none', o que alinha a coluna com a barra de topo de um Table Panel."
+        description="sm para as mini-tabelas de folha (parcelas, faturas); md é o padrão; lg para painéis de transações, com px de 16 (o --card-strip-px), que alinha a coluna com a barra de topo de um Table Panel."
         code={`<Table size="sm">…</Table>
 <Table>…</Table>       {/* md, o padrão */}
 <Table size="lg">…</Table>`}
@@ -192,7 +191,7 @@ export default function TableDoc() {
 
       <DocSection
         title="O cabeçalho"
-        description="labels='text' é o rótulo comum. labels='caps' é a régua versalete — caixa alta, tracking-wider, sempre text-2xs — que as mini-tabelas de folha e a coluna de ações já escreviam à mão. variant='muted' tinge o fundo, com o mesmo bg-muted/50 que 4 painéis do app já usavam."
+        description="labels='text' é o rótulo comum; labels='caps' é a régua versalete: caixa alta, tracking-wider, sempre text-2xs. variant='muted' tinge o fundo."
         code={`<TableHeader>…</TableHeader>                           {/* text, o padrão */}
 <TableHeader labels="caps">…</TableHeader>
 <TableHeader variant="muted" labels="caps">…</TableHeader>`}
@@ -227,18 +226,10 @@ export default function TableDoc() {
         ))}
       </DocSection>
 
-      <DocNote title="A régua da Table não é a do Command, e o comentário de lá estava errado">
-        O cabeçalho de grupo da paleta de comandos (<code>command.tsx</code>)
-        afirmava que já seguia &ldquo;a mesma régua que o cabeçalho da{" "}
-        <code>Table</code> já usa neste projeto&rdquo; — e não seguia:{" "}
-        <code>TableHead</code> sempre foi <code>text-xs font-medium</code>, sem
-        versalete nenhum. O comentário passou a apontar para{" "}
-        <code>labels=&quot;caps&quot;</code>, que agora existe de verdade.
-      </DocNote>
 
       <DocSection
         title="Cabeçalho fixo"
-        description="sticky gruda o cabeçalho no topo do viewport. Como o viewport rola nos dois eixos (overflow-x-auto promove overflow-y a auto), ele só cola de verdade com um teto — viewportClassName='max-h-*' no Table pai. Com fade='bottom' ele é vidro: as linhas passam por trás borradas; com fade='sides', opaco."
+        description="sticky gruda o cabeçalho no topo do viewport, mas só com um teto — viewportClassName='max-h-*' no Table —, porque o viewport rola nos dois eixos. Com fade='bottom' ele é vidro; com fade='sides', opaco."
         code={`<Table variant="outline" viewportClassName="max-h-40">
   <TableHeader variant="muted" sticky>…</TableHeader>
   <TableBody>…</TableBody>
@@ -267,7 +258,7 @@ export default function TableDoc() {
 
       <DocSection
         title="Moldura"
-        description="plain (o padrão) não desenha nada — é a forma para dentro de um Card padding='none' ou de um Table Panel, onde quem fecha a borda é o contêiner. outline monta a própria caixa, para uma tabela solta — as 3 mini-tabelas de folha (parcelas, faturas, eventos de pagamento) escreviam essa moldura à mão, byte a byte."
+        description="plain (o padrão) não desenha nada: para dentro de um Card padding='none' ou de um Table Panel, onde o contêiner fecha a borda. outline monta a própria caixa, para uma tabela solta."
         code={`<Table>…</Table>                    {/* plain — dentro de um Card padding="none" */}
 <Table variant="outline" size="sm">…</Table>`}
         previewClassName="items-stretch"
@@ -293,17 +284,17 @@ export default function TableDoc() {
       </DocSection>
 
       <DocNote title="A moldura mora fora do viewport que a dissolução mascara">
-        O nó que rola na horizontal (<code>data-slot=&quot;table-viewport&quot;</code>) não
-        pode desenhar <code>bg</code>, <code>border</code>, <code>rounded</code> nem{" "}
-        <code>shadow</code> — é a invariante 2 da dissolução: a máscara recorta
-        o alfa do elemento inteiro, e uma caixa com os quatro cantos apagados
-        lê como bug. Por isso <code>variant=&quot;outline&quot;</code> é um nó{" "}
-        <strong>irmão</strong> do viewport, nunca ele.
+        O viewport que rola (<code>data-slot=&quot;table-viewport&quot;</code>)
+        não pode desenhar <code>bg</code>, <code>border</code>,{" "}
+        <code>rounded</code> nem <code>shadow</code>: a máscara recorta o alfa
+        do elemento inteiro e apagaria os cantos. Por isso{" "}
+        <code>variant=&quot;outline&quot;</code> é um nó <strong>irmão</strong>{" "}
+        do viewport.
       </DocNote>
 
       <DocSection
         title="Linha interativa"
-        description="interactive é opt-in. O hover ligado sempre foi uma promessa falsa em toda tabela de referência — nada acontece ao clicar. Sem ele, só o fio e o estado selecionado, que é estado e não resposta ao cursor. A célula primary é o nome da linha: sublinha junto do realce, e só numa linha interativa — a de baixo tem primary e não acende."
+        description="interactive é opt-in: realce ao cursor onde clicar não faz nada é promessa falsa. Selecionado é estado, e vale sem ele. A célula primary é o nome da linha e sublinha junto do realce, só em linha interativa."
         code={`<TableRow interactive onClick={…}>
   <TableCell primary>Mercado</TableCell>
   <TableCell numeric>…</TableCell>
@@ -331,7 +322,7 @@ export default function TableDoc() {
 
       <DocSection
         title="Linha de grupo"
-        description="A faixa de seção — a linha de mês que a tabela de transações já pinta à mão. Nunca interativa; a célula que abre o grupo leva colSpan."
+        description="A faixa de seção, como a linha de mês. Nunca interativa; a célula que abre o grupo leva colSpan."
         code={`<TableRow variant="group">
   <TableCell colSpan={2}>Março de 2026</TableCell>
 </TableRow>`}
@@ -369,7 +360,7 @@ export default function TableDoc() {
 
       <DocSection
         title="Vazia"
-        description="TableEmpty é a linha de largura total — 6 telas escreviam o <td colSpan> à mão. Aceita texto simples, que vira Muted, ou um EmptyState inteiro para o caso que precisa de ícone e ação."
+        description="TableEmpty é a linha de largura total. Aceita texto simples, que vira Muted, ou um EmptyState com ícone e ação."
         code={`<TableEmpty colSpan={2}>Nenhuma transação neste período.</TableEmpty>
 
 <TableEmpty colSpan={2}>
@@ -403,7 +394,7 @@ export default function TableDoc() {
 
       <DocSection
         title="A mesma tabela no telefone"
-        description="Cada linha vira um cartão. A troca é por CSS, com dois gêmeos e hidden — nunca por um hook de largura, que devolve o valor errado no servidor e no primeiro quadro, e faz a tela piscar."
+        description="Cada linha vira um cartão. A troca é por CSS, com dois gêmeos e hidden — nunca por hook de largura, que erra no servidor e no primeiro quadro e faz a tela piscar."
         code={`{/* desktop */}
 <div className="hidden md:block"><Table>…</Table></div>
 
@@ -434,9 +425,8 @@ export default function TableDoc() {
       </DocSection>
 
       <DocNote title="Lista mista pede signed, e este exemplo é normativo">
-        Entrada e saída na mesma coluna: por isso o <code>signed</code>. Sem
-        ele, quem não distingue verde de vermelho lê as duas linhas como
-        idênticas — é o argumento de{" "}
+        Entrada e saída na mesma coluna pedem <code>signed</code>: sem ele, quem
+        não distingue verde de vermelho lê as duas linhas como idênticas. Ver{" "}
         <Link href="/designsystem/money-display" className="underline">
           Money Display
         </Link>
@@ -444,16 +434,15 @@ export default function TableDoc() {
       </DocNote>
 
       <DocNote title="O cartão perde o &lt;th&gt;, então rotula o dado">
-        No cartão a coluna não existe, então o rótulo vai junto do valor — e
-        com a <strong>mesma palavra</strong> do cabeçalho da tabela irmã. Duas
-        palavras para o mesmo dado são duas coisas diferentes para quem lê.
+        No cartão a coluna não existe, então o rótulo vai junto do valor, com a{" "}
+        <strong>mesma palavra</strong> do cabeçalho da tabela irmã. Duas
+        palavras para o mesmo dado leem como duas coisas.
       </DocNote>
 
       <DocNote title="Não existe DataTable neste catálogo">
-        A versão com ordenação e filtro embutidos depende de{" "}
-        <code>@tanstack/react-table</code>, que o projeto não tem. O que{" "}
-        <code>sort</code>/<code>onSort</code> entregam é ordenação de estado
-        local — a seção acima é a demonstração inteira do que existe.
+        Ordenação e filtro embutidos dependeriam de{" "}
+        <code>@tanstack/react-table</code>, que o projeto não tem.{" "}
+        <code>sort</code>/<code>onSort</code> cobrem a ordenação de estado local.
       </DocNote>
 
       <PropsTable
@@ -463,13 +452,13 @@ export default function TableDoc() {
             prop: "variant",
             type: '"plain" | "outline"',
             default: '"plain"',
-            description: "plain não desenha moldura; outline monta a própria caixa, fora do viewport que a dissolução mascara.",
+            description: "plain não desenha moldura; outline monta a própria caixa, fora do viewport.",
           },
           {
             prop: "size",
             type: '"sm" | "md" | "lg"',
             default: '"md"',
-            description: "A densidade — herdada de Table Panel quando existe, e sobrescrevível aqui.",
+            description: "A densidade; herdada do Table Panel quando existe.",
           },
           {
             prop: "viewportClassName",
@@ -480,8 +469,7 @@ export default function TableDoc() {
             prop: "fade",
             type: '"sides" | "bottom"',
             default: '"sides"',
-            description:
-              "A borda que dissolve. bottom é para o corpo com teto de altura: as linhas passam por trás do rodapé do TablePanel e dissolvem, como no Command, e substitui a lateral (um gradiente por elemento).",
+            description: "A borda que dissolve; bottom é para corpo com teto de altura e substitui a lateral.",
           },
         ]}
       />
@@ -493,7 +481,7 @@ export default function TableDoc() {
             prop: "TableHeader.variant",
             type: '"plain" | "muted"',
             default: '"plain"',
-            description: "muted tinge o fundo — o bg-muted/50 que 4 painéis já escreviam à mão.",
+            description: "muted tinge o fundo com bg-muted/50.",
           },
           {
             prop: "TableHeader.labels",
@@ -505,20 +493,19 @@ export default function TableDoc() {
             prop: "TableHeader.sticky",
             type: "boolean",
             default: "false",
-            description: "Gruda no topo do viewport — precisa de viewportClassName com um teto. Vidro sob fade='bottom' (as linhas passam por trás borradas); opaco sob fade='sides'.",
+            description: "Gruda no topo do viewport; precisa de teto em viewportClassName.",
           },
           {
             prop: "TableRow.interactive",
             type: "boolean",
             default: "false",
-            description: "Liga hover/active e o anel de foco. Sem ele, a linha não responde ao cursor.",
+            description: "Liga o realce ao cursor, o active e o anel de foco.",
           },
           {
             prop: "TableCell.primary",
             type: "boolean",
             default: "false",
-            description:
-              "O nome da linha. Numa linha interactive sublinha junto do bg-muted/30 — o traço fica no nome, nunca no valor. Sem interactive, não acende.",
+            description: "O nome da linha; numa linha interactive sublinha junto do realce, nunca no valor.",
           },
           {
             prop: "TableRow.variant",
@@ -549,7 +536,7 @@ export default function TableDoc() {
             type: "boolean",
             default: "false",
             description:
-              "A última coluna: encolhe até os botões, alinha à direita e monta a fileira. O recuo horizontal é o do degrau; o vertical sai, para o botão não esticar a linha. No cabeçalho o rótulo é só do leitor de tela (sr-only, padrão “Ações”; children troca). Cada botão com aria-label ganha um tooltip sm com o mesmo texto, e todos ganham o realce bg-current/10 — o do tertiary sumia sobre a linha acesa. A ação com variant=\"destructive\" fica neutra em repouso e vira o botão destructive no cursor e no toque.",
+              "A última coluna: encolhe até os botões e alinha à direita. No cabeçalho o rótulo é sr-only (padrão “Ações”); cada botão com aria-label ganha tooltip, e o destructive fica neutro até o cursor ou o toque.",
           },
           {
             prop: "TableHead.sort",

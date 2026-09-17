@@ -38,22 +38,12 @@ export default function CheckboxDoc() {
       </DocSection>
 
       <DocNote title="O parcial é um terceiro estado, e não um marcado meio apagado">
-        <code>checked=&quot;indeterminate&quot;</code>{" "}
-        troca o tique por um traço, com o mesmo preenchimento e o mesmo
-        contorno do marcado. Ele é o cabeçalho de uma lista em que{" "}
-        <strong>parte</strong>{" "}
-        dos itens está marcada — quem o desenha como um marcado mais claro está
-        dizendo &ldquo;meio ligado&rdquo;, que não é o que ele significa.
-        <br />
-        <br />
-        Ele não sai de <code>defaultChecked</code>: é um valor de{" "}
-        <code>checked</code>, ou seja o controle passa a ser{" "}
-        <strong>controlado</strong>, e quem o usa gerencia o estado.
+        <code>checked=&quot;indeterminate&quot;</code> troca o tique por um traço, com o preenchimento do marcado: é o cabeçalho de uma lista com parte dos itens marcada, não um &ldquo;meio ligado&rdquo;. Ele só existe como valor de <code>checked</code>, então o controle passa a ser controlado.
       </DocNote>
 
       <DocSection
         title="Lista de seleção"
-        description="Numa lista, o rótulo inteiro é o alvo do toque. O checkbox sozinho tem 16px, muito abaixo dos 44px que um dedo pede."
+        description="Numa lista, o rótulo inteiro é o alvo do toque."
         code={`<Label className="flex items-center gap-3 rounded-lg border p-3">
   <Checkbox />
   <span>Mercado</span>
@@ -71,29 +61,11 @@ export default function CheckboxDoc() {
         ))}
       </DocSection>
       <DocNote title="A área de toque é 44px, e ela cresce por pseudo-elemento">
-        O controle desenhado tem <strong>16px</strong>{" "}
-        — muito abaixo dos 44 que um dedo pede. Um{" "}
-        <code>::after</code> com <code>-inset-3.5</code>{" "}
-        leva o alvo aos 44 <strong>sem mexer no layout</strong>: crescer de
-        verdade mudaria a caixa que a linha de formulário posiciona. É a mesma
-        técnica do <code>Switch</code>.
-        <br />
-        <br />
-        <strong>E ela não substitui o rótulo clicável — soma a ele.</strong>{" "}
-        Numa lista, quem deve receber o toque é a linha inteira, e é por isso
-        que a seção acima envolve cada item num <code>Label</code>.
+        A caixa desenhada tem 16px; um <code>::after</code> com <code>-inset-3.5</code> leva o alvo a 44 sem mexer no layout, como no <code>Switch</code>. Ele soma ao rótulo clicável, não o substitui.
       </DocNote>
 
-      <DocNote title="Se a mudança vale no instante do toque, o componente é outro">
-        A caixa de marcar existe para escolha que só se efetiva quando o
-        formulário é <strong>enviado</strong>. Uma preferência que liga na hora,
-        um filtro que já aplica — isso é <code>Switch</code>, e a diferença não
-        é de aparência: é de quando o efeito acontece.
-        <br />
-        <br />
-        Para escolher <strong>uma</strong>{" "}
-        opção entre várias, o componente é o <code>RadioGroup</code>: rádio é
-        ponto, caixa é tique, e o par diz sozinho se dá para marcar mais de uma.
+      <DocNote title="Switch e RadioGroup são outra escolha">
+        A diferença para o <code>Switch</code> é quando o efeito acontece, não a aparência. Para uma opção entre várias, é <code>RadioGroup</code>: rádio é ponto, caixa é tique.
       </DocNote>
 
       <PropsTable
@@ -102,7 +74,7 @@ export default function CheckboxDoc() {
             prop: "checked",
             type: 'boolean | "indeterminate"',
             description:
-              "O estado, no modo controlado. É por aqui que entra o parcial — ele não existe como valor inicial.",
+              "O estado controlado; o parcial só entra por aqui.",
           },
           {
             prop: "defaultChecked",
@@ -127,7 +99,7 @@ export default function CheckboxDoc() {
             prop: "required / name / value",
             type: "props de formulário",
             description:
-              "Vão para o input espelho que o Radix renderiza, e é o que faz a caixa participar de um <form> nativo.",
+              "Vão para o input espelho do Radix, que faz a caixa participar de um form nativo.",
           },
         ]}
       />

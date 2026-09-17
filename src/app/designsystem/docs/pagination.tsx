@@ -16,9 +16,7 @@ export default function PaginationDoc() {
   return (
     <>
       <Usage>
-        Divide uma lista longa em páginas endereçáveis. Vale quando é preciso
-        voltar ao mesmo ponto ou compartilhar o link. Para uma lista que só se
-        percorre, rolagem infinita cansa menos.
+        Divide uma lista longa em páginas endereçáveis — vale quando é preciso voltar ao mesmo ponto ou compartilhar o link. Para uma lista que só se percorre, rolagem infinita cansa menos.
       </Usage>
 
       <DocSection
@@ -63,7 +61,7 @@ export default function PaginationDoc() {
 
       <DocSection
         title="Posição e controles"
-        description="align='between' põe a contagem à esquerda e os controles à direita. É a forma de uma lista de app, e a que o mx-auto cravado de antes impedia."
+        description="align='between' põe a contagem à esquerda e os controles à direita: a forma de uma lista de app."
         code={`<Pagination align="between">
   <PaginationStatus>1–20 de 342 transações</PaginationStatus>
   <PaginationContent>…</PaginationContent>
@@ -93,7 +91,7 @@ export default function PaginationDoc() {
 
       <DocSection
         title="Escada"
-        description="Quatro degraus, e o tipo desce junto com a caixa. xs é o padrão: 24 com 12px — entrou contra a régua da escada, que reserva o xs para dentro de outro controle, por decisão do dono. md mantém a caixa de 32 e desce o tipo. lg volta ao corpo da página, para um paginador que é a própria navegação da tela."
+        description="Quatro degraus, e o tipo desce junto com a caixa. xs (24, 12px) é o padrão, por decisão do dono — exceção nomeada à régua que reserva o xs para dentro de outro controle. lg volta ao corpo da página, para um paginador que é a navegação da tela."
         code={`<Pagination size="xs" align="between">   {/* o padrão */}
   <PaginationStatus>1–20 de 342</PaginationStatus>
   <PaginationContent>…</PaginationContent>
@@ -140,7 +138,7 @@ export default function PaginationDoc() {
 
       <DocSection
         title="Nas pontas da lista"
-        description="Na primeira página não há anterior, e na última não há próxima. disabled troca o link por um span sem href, com aria-disabled — um <a> não desabilita."
+        description="Na primeira página não há anterior, e na última não há próxima. disabled troca o link por um span sem href com aria-disabled, porque link não desabilita."
         code={`<PaginationPrevious href="?page=1" disabled />
 <PaginationNext href="?page=2" />`}
         previewClassName="flex-col items-start gap-3"
@@ -167,57 +165,24 @@ export default function PaginationDoc() {
         </Pagination>
       </DocSection>
 
-      <DocNote title="O número estava no corpo de um parágrafo">
-        Antes da escada, número, extremo e status saíam em <strong>14px</strong>{" "}
-        — o mesmo corpo do texto da página —, com as caixas em 32. E encolher só
-        a caixa não resolveria: os degraus <code>icon-*</code> do{" "}
-        <code>Button</code> <strong>não declaram tamanho de fonte</strong>, então{" "}
-        <code>icon-sm</code> sozinho daria um dígito de 14px numa caixa de 28. A
-        coluna de ícone espelha a de texto na caixa, não no tipo — e esta é a
-        única peça do sistema que põe texto num botão de ícone. Por isso cada
-        degrau declara o tipo junto com a caixa, como o <code>Tabs</code> faz.
+      <DocNote title="Cada degrau declara o tipo junto com a caixa">
+        Os degraus <code>icon-*</code> do <code>Button</code> não declaram tamanho de fonte, e esta é a única peça que põe texto num botão de ícone. Por isso a escada da paginação fixa caixa e corpo juntos, como o <code>Tabs</code> — senão o número sai no corpo de um parágrafo.
       </DocNote>
 
       <DocNote title="São links, e é de propósito">
-        Cada página tem URL própria, então o botão voltar do navegador funciona e
-        o link pode ser compartilhado. Trocar por <code>&lt;button&gt;</code> com
-        estado local quebra as duas coisas de uma vez. É também por isso que{" "}
-        <code>disabled</code> precisa existir como prop: um <code>&lt;a&gt;</code>{" "}
-        não tem o atributo.
+        Cada página tem URL própria, então o voltar do navegador funciona e o link pode ser compartilhado. Trocar por <code>&lt;button&gt;</code> com estado local quebra as duas coisas.
       </DocNote>
 
       <DocNote title="A página atual preenche, não contorna">
-        Ela era <code>variant=&quot;outline&quot;</code>. Medido no tema claro,
-        isso dá <code>oklch(0.985)</code> de preenchimento contra uma página de{" "}
-        <code>oklch(1)</code> — 1,03:1. Numa fileira de links transparentes,
-        &ldquo;você está aqui&rdquo; era um contorno de 1px. Hoje ela é{" "}
-        <code>secondary</code>, que é a língua de &ldquo;selecionado&rdquo; que{" "}
-        <code>Button</code>, <code>Toggle</code> e a bandeja do <code>Tabs</code>{" "}
-        já falam.
+        Ela é <code>secondary</code>, a língua de &ldquo;selecionado&rdquo; que <code>Button</code>, <code>Toggle</code> e a bandeja do <code>Tabs</code> já falam. Um contorno de 1px entre links transparentes quase não se distingue.
       </DocNote>
 
-      <DocNote title="No telefone a numeração ainda não some — e devia">
-        Esta nota afirmava que a numeração some abaixo de <code>sm</code>.
-        Medido a 375px, <strong>ela não some</strong>: nenhuma peça esconde o
-        número, e no toque cada controle cresce a 44 — então a fileira de sete
-        peças <strong>transborda</strong> em quatro das cinco demonstrações
-        desta página. O desenho que a nota descrevia continua sendo o certo: no
-        telefone quem orienta é o <code>PaginationStatus</code> ao lado, que foi
-        para isso que ele deixou de ser um texto que cada tela escrevia à mão.
-        Falta o código.
-        <br />
-        <br />
-        Abaixo de <code>sm</code> os extremos ficam <strong>quadrados</strong>,
-        na medida do número do mesmo degrau. Antes saíam 40×32, com 10px de
-        recuo à esquerda e 12 à direita — um retângulo torto numa fileira de
-        quadrados.
+      <DocNote title="No telefone quem orienta é o status">
+        No toque cada controle cresce a 44, e a fileira de sete peças transborda a 375px — a numeração ainda não some abaixo de <code>sm</code>, e é defeito aberto. O desenho certo é o <code>PaginationStatus</code> ao lado orientando; abaixo de <code>sm</code> os extremos já ficam quadrados, na medida do número.
       </DocNote>
 
       <DocNote title="Figuras tabulares">
-        <code>.nums</code> em toda <code>PaginationLink</code> e no{" "}
-        <code>PaginationStatus</code>. Sem elas, 1, 10 e 100 têm larguras
-        diferentes, e a fileira inteira se reacomoda ao virar a página — o olho
-        lê isso como a interface se mexendo, não como o dado mudando.
+        <code>.nums</code> em todo <code>PaginationLink</code> e no <code>PaginationStatus</code>: sem elas 1, 10 e 100 têm larguras diferentes, e a fileira se reacomoda ao virar a página.
       </DocNote>
 
       <PropsTable
@@ -227,15 +192,13 @@ export default function PaginationDoc() {
             prop: "align",
             type: '"center" | "between" | "end"',
             default: '"center"',
-            description:
-              "between é contagem à esquerda e controles à direita — a forma de uma lista de app.",
+            description: "between é contagem à esquerda e controles à direita — a forma de uma lista de app.",
           },
           {
             prop: "size",
             type: '"xs" | "sm" | "md" | "lg"',
             default: '"xs"',
-            description:
-              "O degrau da fileira inteira: caixa 24/28/32/36 e corpo 12/12,8/12,8/14px. As peças herdam; size numa peça sobrescreve só ela.",
+            description: "O degrau da fileira: caixa 24/28/32/36 e corpo 12/12,8/12,8/14px. As peças herdam; size numa peça sobrescreve só ela.",
           },
         ]}
       />
@@ -246,8 +209,7 @@ export default function PaginationDoc() {
           {
             prop: "PaginationStatus",
             type: "{ size } & ComponentProps<'p'>",
-            description:
-              "A posição em palavras: “1–20 de 342”. Com .nums. Fora da raiz — como no rodapé de tabela — não há o que herdar: ela nasce xs e aceita size próprio.",
+            description: "A posição em palavras, “1–20 de 342”, com .nums. Fora da raiz, como no rodapé de tabela, nasce xs e aceita size próprio.",
           },
           {
             prop: "PaginationContent",
@@ -258,21 +220,18 @@ export default function PaginationDoc() {
             prop: "PaginationLink",
             type: "{ isActive, size } & ComponentProps<'a'>",
             default: "herda da raiz",
-            description:
-              "Um número. isActive preenche — o peso é o mesmo em todos, font-medium já é a base.",
+            description: "Um número. isActive preenche.",
           },
           {
             prop: "PaginationPrevious / Next",
             type: "{ disabled, size } & ComponentProps<'a'>",
             default: "herda da raiz",
-            description:
-              "Os extremos. disabled vira span com aria-disabled; abaixo de sm ficam quadrados, na medida do número do mesmo degrau.",
+            description: "Os extremos. disabled vira span com aria-disabled; abaixo de sm ficam quadrados.",
           },
           {
             prop: "PaginationEdge",
             type: "{ disabled, size } & ComponentProps<'a'>",
-            description:
-              "A base dos dois acima, exposta para um extremo com outro rótulo.",
+            description: "A base dos dois acima, para um extremo com outro rótulo.",
           },
           {
             prop: "PaginationEllipsis",

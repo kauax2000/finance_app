@@ -53,16 +53,12 @@ export default function FormDoc() {
   return (
     <>
       <Usage>
-        O formulário do projeto: o <code>&lt;form&gt;</code>, o contrato do{" "}
-        <Kbd>Enter</Kbd> e as peças que compõem os átomos — <code>FormInput</code>{" "}
-        sobre o <code>Field</code>, <code>FormSubmit</code> sobre o{" "}
-        <code>Button</code> e o <code>Spinner</code>. As regras do Enter
-        estão mais abaixo, lidas da fonte.
+          O formulário do projeto: o <code>&lt;form&gt;</code>, o contrato do <Kbd>Enter</Kbd> e as peças curtas sobre <code>Field</code>, <code>Button</code> e <code>Spinner</code>. Use em todo fluxo que salva ou confirma com uma ação principal, nunca <code>&lt;form&gt;</code> cru. Rótulo e erro sem formulário são o <code>Field</code>.
       </Usage>
 
       <DocSection
         title="Empilhado"
-        description="A forma de uma tela de autenticação ou de configurações. layout='stack' lê --space-block, o mesmo token de 16px que o PageSection usa entre blocos — o formulário não inventa um respiro próprio."
+        description="A forma de autenticação e configurações. layout='stack' lê --space-block, o mesmo respiro do PageSection."
         code={`<Form onSubmit={handleSubmit}>
   <FormInput label="E-mail" name="email" type="email" description="Usamos para o aviso de fatura." />
   <FormInput label="Apelido" name="nick" optional />
@@ -77,27 +73,16 @@ export default function FormDoc() {
       </DocSection>
 
       <DocNote title="Um campo é uma linha, e a ligação vem junto">
-        <code>FormInput</code> monta <code>Field</code> + <code>FieldLabel</code>{" "}
-        + <code>FieldControl</code> + <code>Input</code> +{" "}
-        <code>FieldDescription</code> + <code>FieldError</code>, com{" "}
-        <code>htmlFor</code>, <code>aria-describedby</code> e{" "}
-        <code>aria-invalid</code> ligados pelo <code>Field</code>. O app tem{" "}
-        <strong>104 campos escritos à mão</strong> em cinco dialetos de
-        espaçamento, e o <code>Field</code> tinha zero consumidores fora deste
-        catálogo — a ligação já existia; faltava uma forma curta de pedi-la.
+          <code>FormInput</code> monta rótulo, controle, ajuda e erro com <code>htmlFor</code>, <code>aria-describedby</code> e <code>aria-invalid</code> ligados. Não monte <code>Label</code> + <code>Input</code> à mão.
       </DocNote>
 
       <DocNote title="size é o controle; fieldSize é o andaime">
-        <code>size</code> vai para o <code>Input</code> — é a escada de altura{" "}
-        <code>sm…xl</code>. <code>fieldSize</code> é o degrau do rótulo, da ajuda
-        e do erro, e por padrão herda do <code>FieldGroup</code> em volta. São
-        dois eixos porque um <code>Field</code> não sabe que controle carrega:
-        ancorar um no outro é o defeito que <code>field.tsx</code> registra.
+          <code>size</code> é a altura do <code>Input</code>; <code>fieldSize</code>, o degrau de rótulo, ajuda e erro, herdado do <code>FieldGroup</code>. Um <code>Field</code> não sabe que controle carrega.
       </DocNote>
 
       <DocSection
         title="Em linha"
-        description="Campo e botão na mesma linha — o formulário de busca. items-end alinha o botão pela base do campo, e não pela do rótulo."
+        description="Campo e botão na mesma linha, como numa busca. O botão alinha pela base do campo, não do rótulo."
         code={`<Form layout="inline" onSubmit={buscar}>
   <FormInput label="Buscar" name="q" className="flex-1" />
   <FormSubmit>Buscar</FormSubmit>
@@ -109,7 +94,7 @@ export default function FormDoc() {
 
       <DocSection
         title="Em diálogo"
-        description="O Form embrulha cabeçalho, corpo e rodapé; o DialogFooter é quem dá a fileira, com FormCancel e FormSubmit dentro. FormActions é para o formulário que não está num diálogo."
+        description="O Form embrulha cabeçalho, corpo e rodapé; a fileira é do DialogFooter. FormActions é para formulário fora de diálogo."
         code={`<DialogContent layout="fixed">
   <Form pending={saving} layout="none" className="flex min-h-0 flex-1 flex-col">
     <DialogHeader>…</DialogHeader>
@@ -126,21 +111,13 @@ export default function FormDoc() {
         <EmDialogoDemo />
       </DocSection>
 
-      <DocNote title="O botão fora do form, e até onde o contexto chega">
-        <code>FormSubmit</code> escreve <code>form={"{id}"}</code> sempre. Dentro
-        do <code>&lt;form&gt;</code> isso é inócuo — o Enter acha o botão na
-        primeira busca. <strong>Fora dele é o que faz o Enter funcionar</strong>:
-        um <code>DialogFooter</code> é portalizado, e contexto do React atravessa
-        portal. O que ele <em>não</em> atravessa é <strong>slot irmão</strong> —
-        quando outro componente renderiza o rodapé ao lado do formulário, como o{" "}
-        <code>footer=</code> do assistente de categorias, não há contexto a
-        herdar, e ali <code>form=&quot;um-id&quot;</code> explícito continua sendo
-        a resposta.
+      <DocNote title="O botão fora do form usa o id">
+          <code>FormSubmit</code> sempre escreve <code>form={"{id}"}</code>, e o contexto atravessa portal: o Enter num <code>DialogBody</code> aciona o botão do <code>DialogFooter</code>. Contexto não atravessa <strong>slot irmão</strong> — quando outro componente renderiza o rodapé ao lado, passe <code>form=&quot;um-id&quot;</code> explícito.
       </DocNote>
 
       <DocSection
         title="Em folha no telefone"
-        description="Cabeçalho fixo, corpo rolável e FormActions variant='sticky' — o rodapé que o chrome de folha não tinha, e que cinco arquivos do app derivavam à mão com três !important. A folha é de verdade: dentro da moldura de 375px o Sheet toma o ramo gaveta sozinho, então o que se abre aqui é o mesmo vaul da produção, com alça e arraste."
+        description="Cabeçalho fixo, corpo rolável e FormActions variant='sticky'. Na moldura de 375px o Sheet vira gaveta."
         code={`<Sheet>
   <SheetTrigger asChild><Button>Nova transação</Button></SheetTrigger>
   <SheetContent side="bottom" fillMobileViewport>
@@ -162,34 +139,13 @@ export default function FormDoc() {
         <EmFolhaDemo />
       </DocSection>
 
-      <DocNote title="O rodapé fixo não desenha fio — nem tinta">
-        Quem marca a fronteira é o conteúdo dissolvendo na borda do{" "}
-        <code>DialogBody</code> logo acima, nos mesmos 44px de todo
-        componente da casa. A tira não pinta nada: ela é irmã do corpo, que se
-        mascara sozinho, então o fundo dela <strong>já é</strong> a placa da
-        folha. Ela chegou a pintar um degradê — cor cheia na ponta de fora,
-        transparente encostando no fade — e isso saía como uma{" "}
-        <strong>banda</strong>: a placa é <code>--background</code> translúcida
-        (40% no escuro), e a cor cheia no topo da tira não é a cor dela. Cor
-        com alfa não tem cor cheia pintável sem empilhar. E ele não traz área
-        segura — ela é da <strong>superfície</strong>, e o casco da folha já a
-        carrega.
-      </DocNote>
-
-      <DocNote title="Sem o borrão do iOS, e é medido">
-        Três rodadas tentaram somar as camadas de borrão a estas tiras — com
-        sobra, com faixa medida, com faixa e modo material — e as três viraram um
-        retângulo de tom no meio da folha. A causa é a mesma nas três: a camada é
-        um <code>backdrop-filter</code>, e ou a aresta dela cai exposta contra a
-        tira transparente, ou a máscara já levou o conteúdo ao piso e o borrão
-        fica sem o que borrar. Onde a tira tem altura desconhecida, a resposta é a
-        máscara sozinha. A paleta de comandos, com faixa escrita à
-        mão e conteúdo denso, é quem fica com o borrão.
+      <DocNote title="O rodapé fixo não desenha fio, tinta nem borrão">
+          Quem marca a fronteira é o conteúdo dissolvendo na borda do <code>DialogBody</code>; pintar ou borrar a tira vira banda sobre a placa translúcida. A área segura é da superfície.
       </DocNote>
 
       <DocSection
         title="Enviando, e o erro que não é de campo"
-        description="pending desce por contexto: desabilita o cancelar, e no enviar troca o rótulo, mostra o Spinner e marca aria-busy. O Enter durante o envio não duplica — o botão está desabilitado, e é isso que a busca do Enter filtra."
+        description="pending desce por contexto: desabilita o cancelar e, no enviar, troca o rótulo, mostra o Spinner e marca aria-busy. O Enter durante o envio não duplica, porque o botão está desabilitado."
         code={`<Form pending={saving} onSubmit={handleSubmit}>
   <FormError>{erroGeral}</FormError>
   <FormTextarea label="Observação" description="Enter quebra linha; ⌘/Ctrl+Enter envia." />
@@ -203,53 +159,29 @@ export default function FormDoc() {
         <EstadoDemo />
       </DocSection>
 
-      <DocNote title="FormError não é um Alert">
-        Ele é uma frase, com <code>role=&quot;alert&quot;</code> e nada mais. O
-        papel já implica <code>aria-live=&quot;assertive&quot;</code>, e um{" "}
-        <code>aria-live=&quot;polite&quot;</code> explícito <strong>vence</strong>{" "}
-        o implícito — <code>role=&quot;alert&quot; aria-live=&quot;polite&quot;</code>,
-        que uma tela do app escreve, é uma região polida chamada de alerta. Não é
-        redundância, é contradição. O app tem três contratos diferentes para a
-        mesma coisa; aqui é um. Quem quer a caixa compõe{" "}
-        <code>&lt;Alert tone=&quot;destructive&quot; variant=&quot;plain&quot;&gt;</code>{" "}
-        na tela — compor a molécula dentro da molécula reprovaria a taxonomia.
+      <DocNote title="FormError é role=&quot;alert&quot; e nada mais">
+          O papel já implica <code>aria-live=&quot;assertive&quot;</code>; um <code>aria-live=&quot;polite&quot;</code> explícito o contradiz. Quem quer a caixa compõe <code>&lt;Alert tone=&quot;destructive&quot; variant=&quot;plain&quot;&gt;</code> na tela.
       </DocNote>
 
       <DocNote title="A tecla morta não envia o formulário">
-        Enquanto um acento está sendo composto, o <Kbd>Enter</Kbd> confirma o
-        caractere — ele pertence ao editor de método de entrada, não ao
-        formulário. Sem essa guarda, digitar <code>ç</code> ou <code>ã</code> num
-        teclado que compõe enviava o formulário no meio da palavra.{" "}
-        <code>isComposing</code> não existia em lugar nenhum deste repositório.
+          Durante a composição de um acento o <Kbd>Enter</Kbd> é do editor de entrada, e a guarda de <code>isComposing</code> não envia.
       </DocNote>
 
       <DocNote title="Um controle novo que use o Enter">
-        Ou ganha um <code>data-slot</code> estável e uma linha em{" "}
-        <code>shouldDeferEnterToWidget</code> — que é exportada, e tem teste —,
-        ou a exceção fica documentada no próprio componente. O que não vale é
-        descobrir em produção.
+          Ganha um <code>data-slot</code> e uma linha em <code>shouldDeferEnterToWidget</code>, ou a exceção fica documentada no componente.
       </DocNote>
 
       <DocNote title="CustomForm continua válido">
-        Ele é <code>Form</code> com <code>layout=&quot;none&quot;</code>. São 54
-        chamadas em 29 arquivos, todas trazendo o próprio <code>gap</code> —
-        trocar o nome sem trocar o conteúdo seria diff sem ganho. Elas migram
-        quando a tela migrar os campos e os botões.
+          É <code>Form</code> com <code>layout=&quot;none&quot;</code>.
       </DocNote>
 
       <DocNote title="A ação principal é a única type=&quot;submit&quot;">
-        Cancelar, alternar e todo o resto levam{" "}
-        <code>type=&quot;button&quot;</code>. Sem isso, o botão de cancelar vira
-        o alvo do <Kbd>Enter</Kbd> e o formulário fecha em vez de salvar. E dois{" "}
-        <code>type=&quot;submit&quot;</code> no mesmo formulário fazem o{" "}
-        <Kbd>Enter</Kbd> escolher o primeiro do DOM, que raramente é o que a
-        pessoa quer: se há duas ações que salvam de formas diferentes, uma delas
-        é <code>type=&quot;button&quot;</code> com <code>onClick</code> próprio.
+          Cancelar, alternar e todo o resto levam <code>type=&quot;button&quot;</code> — senão o cancelar vira o alvo do <Kbd>Enter</Kbd> e o formulário fecha em vez de salvar. Com dois <code>type=&quot;submit&quot;</code>, o Enter escolhe o primeiro do DOM; a segunda ação vira <code>type=&quot;button&quot;</code> com <code>onClick</code>.
       </DocNote>
 
       <Group
         title="Onde o Enter não é sequestrado"
-        description="shouldDeferEnterToWidget, em ui/form.tsx. A lista é lida da fonte: redigitada aqui, ela já tinha divergido — seis regras na documentação contra sete no código, e a que faltava era a do seletor ancorado num campo."
+        description="shouldDeferEnterToWidget, em ui/form.tsx, lida da fonte para não divergir do código."
       >
         <Spec title="As regras" meta="ENTER_DEFERRAL_RULES">
           <Stack className="gap-2">
@@ -275,14 +207,8 @@ export default function FormDoc() {
         <EnterDeferDemo />
       </DocSection>
 
-      <DocNote title="O portal não protege ninguém">
-        Um popover é portalizado para o <code>body</code>, mas{" "}
-        <strong>eventos de portal do React sobem pela árvore do React</strong>, e
-        a raiz do seletor é filha do formulário. Medido: o <Kbd>Enter</Kbd> no
-        campo de busca de um seletor ancorado{" "}
-        <strong>salvava a transação</strong>, com o conteúdo comprovadamente
-        fora do <code>&lt;form&gt;</code> no DOM. Todo campo de texto dentro de
-        um portal precisa da regra, mesmo parecendo estar longe do formulário.
+      <DocNote title="Todo campo de texto num portal precisa da regra">
+          Eventos de portal sobem pela árvore do React: sem a regra, o <Kbd>Enter</Kbd> na busca de um seletor ancorado salva a transação, mesmo fora do <code>&lt;form&gt;</code> no DOM.
       </DocNote>
 
       <PropsTable
@@ -292,7 +218,7 @@ export default function FormDoc() {
             prop: "layout",
             type: '"stack" | "inline" | "none"',
             description:
-              "stack (padrão) empilha com --space-block; inline põe campo e botão na mesma linha; none é o que o CustomForm sempre foi.",
+              "stack (padrão) empilha; inline põe campo e botão na mesma linha; none não aplica layout.",
           },
           {
             prop: "pending",
@@ -304,7 +230,7 @@ export default function FormDoc() {
             prop: "id",
             type: "string",
             description:
-              "Gerado por useId quando não vem. É o que liga um botão que vive fora do <form>, pelo atributo form.",
+              "Gerado por useId; liga um botão que vive fora do <form>.",
           },
           {
             prop: "onSubmit",
@@ -315,7 +241,7 @@ export default function FormDoc() {
             prop: "onKeyDown",
             type: "React.KeyboardEventHandler<HTMLFormElement>",
             description:
-              "Chamado sempre, depois da normalização. O evento pode chegar com defaultPrevented.",
+              "Chamado depois da normalização; pode chegar com defaultPrevented.",
           },
         ]}
       />
@@ -332,25 +258,25 @@ export default function FormDoc() {
             prop: "description",
             type: "React.ReactNode",
             description:
-              "A ajuda. Só renderiza quando existe — FieldDescription se registra mesmo vazia, e um aria-describedby apontando para um parágrafo vazio é pior que nenhum.",
+              "A ajuda; só renderiza quando existe.",
           },
           {
             prop: "error",
             type: "React.ReactNode",
             description:
-              "A mensagem. Renderizá-la é o que torna o campo inválido — o Field percebe sozinho.",
+              "A mensagem; renderizá-la torna o campo inválido.",
           },
           {
             prop: "optional",
             type: "boolean",
             description:
-              "Marca o campo como opcional. A convenção do app é marcar o opcional, não o obrigatório.",
+              "Marca o campo como opcional — o app marca o opcional, não o obrigatório.",
           },
           {
             prop: "fieldSize",
             type: '"sm" | "md"',
             description:
-              "O degrau do andaime. Não é a altura do controle — essa é o size, que vai para o Input.",
+              "O degrau do rótulo, ajuda e erro; a altura do controle é o size.",
           },
           {
             prop: "…resto",
@@ -367,7 +293,7 @@ export default function FormDoc() {
             prop: "FormActions variant",
             type: '"inline" | "sticky"',
             description:
-              "inline é a fileira comum; sticky é o rodapé fixo de uma folha: sem fio, sem tinta (o fundo já é a placa), e sem área segura.",
+              "inline é a fileira comum; sticky é o rodapé fixo de uma folha, sem fio nem tinta.",
           },
           {
             prop: "FormActions align",
@@ -378,25 +304,25 @@ export default function FormDoc() {
             prop: "FormSubmit pendingLabel",
             type: "React.ReactNode",
             description:
-              "O rótulo enquanto envia. Sem ele o rótulo não muda — só o Spinner entra.",
+              "O rótulo enquanto envia; sem ele, só o Spinner entra.",
           },
           {
             prop: "FormSubmit pending",
             type: "boolean",
             description:
-              "Sobrescreve o pending do formulário, para um botão que envia outra coisa.",
+              "Sobrescreve o pending do formulário para este botão.",
           },
           {
             prop: "FormCancel",
             type: "ComponentProps<typeof Button>",
             description:
-              "type='button' e variant='tertiary' são da peça, não de quem chama: é a tabela do rodapé.",
+              "type='button' e variant='tertiary' já vêm da peça.",
           },
           {
             prop: "FormError",
             type: "ComponentProps<typeof P>",
             description:
-              "O erro do formulário inteiro. role='alert' e nada mais; some quando não há mensagem.",
+              "O erro do formulário inteiro; some quando não há mensagem.",
           },
         ]}
       />

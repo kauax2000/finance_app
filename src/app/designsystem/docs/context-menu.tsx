@@ -7,7 +7,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
-import { DocNote, DocSection, Usage } from "../ds-doc"
+import { DocSection, Usage } from "../ds-doc"
 
 export default function ContextMenuDoc() {
   return (
@@ -39,10 +39,6 @@ export default function ContextMenuDoc() {
           </ContextMenuContent>
         </ContextMenu>
       </DocSection>
-
-      <DocNote title="Ainda não há consumidor no produto">
-        Nenhuma tela o usa. Enquanto isso, a regra acima é o que decide se ele deve mesmo aparecer numa.
-      </DocNote>
     </>
   )
 }

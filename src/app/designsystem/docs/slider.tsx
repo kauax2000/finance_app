@@ -57,11 +57,7 @@ export default function SliderDoc() {
       </DocSection>
 
       <DocNote title="O punho é 14px, e o alvo é 44">
-        Um punho grande o bastante para o dedo seria grande demais para o olho: a
-        14px sobre um trilho de 8 ele lê como a ponta do preenchimento, e não
-        como um disco pousado em cima. O alvo de toque cresce por baixo, num
-        pseudo-elemento de 44px — a mesma saída do <code>Switch</code>. Cresce a
-        área de contato sem crescer o desenho.
+        A 14px sobre um trilho de 8 o punho lê como a ponta do preenchimento; o alvo de toque cresce num pseudo-elemento de 44px, como no <code>Switch</code>. Cresce o contato sem crescer o desenho.
       </DocNote>
 
       <DocNote title="O valor precisa aparecer em algum lugar">

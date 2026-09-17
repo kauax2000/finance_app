@@ -25,14 +25,12 @@ export default function ItemDoc() {
   return (
     <>
       <Usage>
-        A linha de uma lista: mídia, conteúdo, ações. É a forma que uma{" "}
-        <code>Table</code> assume no telefone, e a de qualquer lista que não seja
-        tabular.
+          A linha de uma lista: mídia, conteúdo, ações. É a forma que uma <code>Table</code> assume no telefone e a de toda lista não tabular. Pares rótulo/valor são <code>DescriptionList</code>; histórico é <code>Timeline</code>.
       </Usage>
 
       <DocSection
         title="Lista dividida"
-        description="O fio entre linhas repetidas é o que torna a lista varrível. variant='divided' entrega isso sem ninguém posicionar n−1 separadores à mão."
+        description="O fio entre linhas repetidas torna a lista varrível. variant='divided' o põe sem separadores à mão."
         code={`<ItemGroup variant="divided">
   <Item>
     <ItemMedia variant="icon"><ShoppingCartIcon /></ItemMedia>
@@ -68,7 +66,7 @@ export default function ItemDoc() {
 
       <DocSection
         title="Lista espaçada"
-        description="O padrão. Linhas que são cartões, separadas por respiro em vez de fio — para quando cada uma é um objeto e não um registro de uma série."
+        description="O padrão: linhas que são cartões, separadas por respiro — quando cada uma é um objeto, não um registro de série."
         code={`<ItemGroup>
   <Item variant="outline">…</Item>
 </ItemGroup>`}
@@ -132,7 +130,7 @@ export default function ItemDoc() {
 
       <DocSection
         title="Linha que navega"
-        description="interactive liga realce, par de toque e anel de foco. Com asChild, a linha inteira vira o link — e o alvo de dedo sobe para 44px em ponteiro grosso."
+        description="interactive liga realce, par de toque e anel de foco. Com asChild a linha inteira vira o link, com 44px de alvo no toque."
         code={`<Item interactive asChild>
   <a href="/cartoes/nubank">
     <ItemContent>…</ItemContent>
@@ -159,51 +157,23 @@ export default function ItemDoc() {
       </DocSection>
 
       <DocNote title="Título e descrição não levam gap">
-        <code>ItemContent</code> entrega a entrelinha, e nada mais — eles são o
-        mesmo dado em duas linhas. Esta nota já estava aqui, e o componente
-        discordava dela: <code>ItemContent</code> declarava <code>gap-1</code>,{" "}
-        <strong>4px medidos</strong> entre &ldquo;Mercado&rdquo; e &ldquo;Hoje ·
-        Cartão Nubank&rdquo;. A documentação estava certa.
+          <code>ItemContent</code> entrega a entrelinha e nada mais: título e descrição são o mesmo dado em duas linhas. Um <code>gap</code> ali os separa.
       </DocNote>
 
       <DocNote title="Linha dividida não tem canto">
-        O fio é <code>border-b</code> do próprio <code>Item</code>, e o{" "}
-        <code>Item</code> traz <code>rounded-lg</code> — uma borda de baixo num
-        elemento arredondado curva nas duas pontas (<strong>10px neste tema</strong>),
-        então o traço saía arqueado no meio da lista. Em{" "}
-        <code>divided</code> o raio sai, porque{" "}
-        <strong>uma linha de lista dividida não é um cartão</strong>. É o que{" "}
-        <code>TableRow</code> e <code>AccordionItem</code> já fazem: os dois
-        desenham o fio na linha, e nenhum dos dois carrega raio — no{" "}
-        <code>Accordion</code> ele mora no contêiner. Em <code>spaced</code> o
-        raio fica, porque ali a linha <em>é</em> um cartão. O segundo ganho não
-        é o fio: com <code>interactive</code>, o realce vira uma faixa de
-        largura inteira em vez de uma pílula flutuando dentro da lista.
+          Em <code>divided</code> o raio sai: uma borda de baixo num elemento arredondado curva nas pontas, e uma linha dividida não é cartão. O raio das pontas é do contêiner, como em <code>TableRow</code> e <code>AccordionItem</code>. Em <code>spaced</code> ele fica, porque ali a linha é um cartão.
       </DocNote>
 
-      <DocNote title="O realce é explícito">
-        Antes ele era <code>[a]:hover:bg-muted</code> — implícito, e só quando o
-        próprio <code>Item</code> fosse um <code>&lt;a&gt;</code>. Uma linha que
-        navega por causa de um <code>&lt;Link&gt;</code> dentro, ou que é{" "}
-        <code>&lt;button&gt;</code>, não respondia. E não havia par{" "}
-        <code>active:</code>: o realce compila dentro de{" "}
-        <code>@media (hover: hover)</code>, verificado no CSS emitido, então{" "}
-        <strong>no telefone ele não existia em caso nenhum</strong>.
+      <DocNote title="O realce é explícito, e responde ao toque">
+          Use <code>interactive</code> em vez de depender do elemento ser um <code>&lt;a&gt;</code>: ele traz o par <code>active:</code>, sem o qual o realce, que compila dentro de <code>@media (hover: hover)</code>, não existe no telefone.
       </DocNote>
 
-      <DocNote title="Linha inteira clicável, ou o botão?">
-        As duas coisas juntas não: um botão dentro de uma linha clicável cria
-        dois alvos sobrepostos, e no toque a pessoa acerta o errado. Escolha — ou
-        a linha navega e a ação vai para um menu, ou a linha não navega.
+      <DocNote title="Linha inteira clicável, ou o botão">
+          As duas coisas juntas não: um botão dentro de uma linha clicável cria dois alvos sobrepostos, e no toque a pessoa acerta o errado. Ou a linha navega e a ação vai para um menu, ou a linha não navega.
       </DocNote>
 
       <DocNote title="Não existe size='default' nem 'xs'">
-        <code>default</code> dizia &ldquo;o padrão&rdquo; e apontava para uma
-        string <strong>idêntica</strong> à de <code>sm</code> — duas variantes,
-        uma medida. <code>xs</code> saiu por outro motivo: a única coisa que o
-        distinguia era <code>in-data-[slot=dropdown-menu-content]:p-0</code>, um
-        componente conhecendo o contêiner de outro. Os dois saíram do tipo,
-        então o compilador acusa quem os escrever.
+          Use <code>sm</code>, <code>md</code> ou <code>lg</code>; os dois nomes saíram do tipo e o compilador acusa quem os escrever.
       </DocNote>
 
       <PropsTable

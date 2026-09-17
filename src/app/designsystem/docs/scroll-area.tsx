@@ -29,11 +29,7 @@ export default function ScrollAreaDoc() {
       </DocSection>
 
       <DocNote title="ScrollArea ou ScrollFade?">
-        <code>ScrollArea</code> mostra <em>onde</em> a rolagem está, com a barra.{" "}
-        <code>ScrollFade</code> mostra <em>que existe mais</em>, dissolvendo o
-        conteúdo nas bordas. No telefone a barra some sozinha, então ali o
-        segundo é quase sempre o que comunica. Os dois se somam: a barra diz
-        onde você está, a dissolução diz que continua.
+        <code>ScrollArea</code> mostra <em>onde</em> a rolagem está; <code>ScrollFade</code> mostra <em>que existe mais</em>, dissolvendo as bordas. No telefone a barra some, então ali o segundo é o que comunica. Os dois se somam.
       </DocNote>
     </>
   )

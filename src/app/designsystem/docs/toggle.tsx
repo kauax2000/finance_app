@@ -8,12 +8,12 @@ export default function ToggleDoc() {
   return (
     <>
       <Usage>
-        Um <strong>estado</strong> que se liga e desliga: esconder valores, fixar uma coluna. Não é um botão — botão faz algo acontecer e volta ao que era; o toggle passa a valer e fica. Se a opção pertence a um conjunto onde só uma vale por vez, use <code>ToggleGroup</code>.
+        Um <strong>estado</strong> que liga e desliga: esconder valores, fixar uma coluna. Botão faz algo acontecer e volta; o toggle passa a valer e fica. Se só uma opção de um conjunto vale por vez, use <code>ToggleGroup</code>.
       </Usage>
 
       <DocSection
         title="Variantes"
-        description="plain — o padrão — não tem cromo nenhum em repouso: nem borda, nem preenchimento, nem sombra. outline mostra a borda desde o repouso, para o toggle que aparece sozinho numa superfície sem outra pista de que ali se clica. Clique nos dois para ver o estado ligado."
+        description="plain, o padrão, não tem cromo em repouso. outline mostra a borda desde o repouso, para o toggle sozinho numa superfície sem outra pista de que ali se clica."
         code={`<Toggle>Ocultar</Toggle>
 <Toggle variant="outline">Ocultar</Toggle>`}
       >
@@ -29,7 +29,7 @@ export default function ToggleDoc() {
 
       <DocSection
         title="Desligado e ligado"
-        description="Desligado é tinta apagada sobre nada. Ligado é tinta cheia sobre o cinza do secondary — quem carrega o sinal é o salto de tinta, e o chão só confirma. Os dois pares aqui estão fixos para a diferença ficar lado a lado."
+        description="Desligado é tinta apagada sobre nada; ligado é tinta cheia sobre o secondary. Quem carrega o sinal é o salto de tinta."
         code={`<Toggle>Em repouso</Toggle>
 <Toggle defaultPressed>Ligado</Toggle>`}
       >
@@ -53,7 +53,7 @@ export default function ToggleDoc() {
 
       <DocSection
         title="Tamanhos"
-        description="28, 32 e 36 — os mesmos degraus e os mesmos nomes do Button e do Input, então toggle ao lado de campo alinha sem ninguém dizer size. O degrau do meio já media 32; ele só se chamava default."
+        description="28, 32 e 36 — os degraus e nomes do Button e do Input, então toggle ao lado de campo alinha sem ninguém dizer size."
         code={`<Toggle size="sm">sm</Toggle>
 <Toggle>md</Toggle>
 <Toggle size="lg">lg</Toggle>`}
@@ -69,7 +69,7 @@ export default function ToggleDoc() {
 
       <DocSection
         title="Desabilitado"
-        description="Continua visível — o que existe e está indisponível ensina mais ficando na tela. O leitor de tela anuncia aria-pressed nos dois casos."
+        description="Continua visível: o que existe e está indisponível ensina mais ficando na tela. O leitor de tela anuncia aria-pressed nos dois casos."
         code={`<Toggle disabled>Desabilitado</Toggle>
 <Toggle disabled defaultPressed>Ligado e travado</Toggle>`}
       >
@@ -79,20 +79,12 @@ export default function ToggleDoc() {
         </Toggle>
       </DocSection>
 
-      <DocNote title="Ele não afunda quando é clicado">
-        O <code>Button</code> tem <code>active:translate-y-px</code>: foi
-        pressionado, algo aconteceu, e a peça volta. O toggle não volta — ele
-        passa a valer. O deslocamento prometia um retorno que não existe, e é a
-        razão de o controle ler como botão mesmo depois de perder o
-        preenchimento.
+      <DocNote title="Ele não afunda ao clicar">
+        O <code>active:translate-y-px</code> do <code>Button</code> promete que a peça volta. O toggle não volta — passa a valer —, então não afunda.
       </DocNote>
 
       <DocNote title="plain aqui, tertiary lá">
-        No <code>Button</code> o nome <code>plain</code>{" "}
-        foi trocado por <code>tertiary</code>{" "}
-        porque precisava dizer um degrau de uma escada de três pesos. O toggle
-        não tem escada: tem duas peles, com e sem contorno. Aí o nome pode
-        descrever o cromo em vez de uma posição que não existe.
+        No <code>Button</code> o nome é <code>tertiary</code> porque diz um degrau de uma escada de três pesos. O toggle não tem escada, só duas peles, e o nome descreve o cromo.
       </DocNote>
 
       <PropsTable

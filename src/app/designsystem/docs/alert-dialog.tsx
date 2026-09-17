@@ -18,17 +18,12 @@ export default function AlertDialogDoc() {
   return (
     <>
       <Usage>
-        Confirmação de uma ação <strong>sem volta</strong>: excluir uma
-        transação, sair de uma carteira. Não use para perguntas comuns — um
-        diálogo que aparece sempre deixa de ser lido. Ele mede pela mesma régua
-        do <code>Dialog</code> (<code>size</code>, padrão <code>md</code>) e não
-        oferece <code>layout=&quot;fixed&quot;</code>: uma confirmação que
-        precisa de corpo rolável não é uma confirmação.
+        Confirmação de uma ação <strong>sem volta</strong>: excluir uma transação, sair de uma carteira. Não use para perguntas comuns — um diálogo que aparece sempre deixa de ser lido. Para uma tarefa, como preencher um formulário, use <code>Dialog</code>.
       </Usage>
 
       <DocSection
         title="Padrão"
-        description="A descrição diz o que acontece, não pergunta de novo. O rótulo da ação repete o verbo — “Excluir”, não “Confirmar” —, porque é o texto do botão que a pessoa lê antes de clicar. A ação já vem destructive: um AlertDialog existe para o que não tem volta, e foi o que oito de oito confirmações do app pediram."
+        description="A descrição diz o que acontece, não pergunta de novo. A ação repete o verbo — “Excluir”, não “Confirmar” — e já vem destructive."
         code={`<AlertDialog>
   <AlertDialogTrigger asChild>
     <Button variant="destructive">Excluir</Button>
@@ -68,7 +63,7 @@ export default function AlertDialogDoc() {
 
       <DocSection
         title="Confirmação que não destrói"
-        description="Nem toda ação sem volta apaga alguma coisa. Quando a consequência é definitiva mas não destrutiva — fechar uma fatura, enviar um convite —, a ação é primary. É o único caso em que AlertDialogAction recebe variant, e o nome passa a dizer o que a tela quis."
+        description="Quando a consequência é definitiva mas não destrutiva — fechar uma fatura, enviar um convite —, a ação é primary. É o único caso em que AlertDialogAction recebe variant."
         code={`<AlertDialogAction variant="primary">Fechar fatura</AlertDialogAction>`}
       >
         <AlertDialog>
@@ -95,7 +90,7 @@ export default function AlertDialogDoc() {
 
       <DocSection
         title="Ação em andamento"
-        description="Como AlertDialogAction é um Button de verdade, disabled, o rótulo que muda e o size vêm de graça — sem className, sem repintar o botão. Cancelar desabilita junto: sair no meio de uma exclusão que já começou deixa a tela mentindo sobre o que aconteceu."
+        description="AlertDialogAction é um Button: disabled e rótulo que muda saem sem className. Cancelar desabilita junto — sair no meio da exclusão deixa a tela mentindo."
         code={`<AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
 <AlertDialogAction
   disabled={deleting}
@@ -131,7 +126,7 @@ export default function AlertDialogDoc() {
             type: "as variantes do Button",
             default: '"destructive" na ação, "tertiary" no cancelar',
             description:
-              "Os dois são Button de verdade, e aceitam tudo o que ele aceita — variant, size, disabled, asChild. Antes eram as classes carimbadas num primitivo do Radix, sem prop nenhuma.",
+              "Os dois são Button e aceitam variant, size, disabled e asChild.",
           },
           {
             prop: "type",
@@ -144,42 +139,19 @@ export default function AlertDialogDoc() {
       />
 
       <DocNote title="O rodapé tem uma hierarquia só">
-        <code>AlertDialogCancel</code> é <code>tertiary</code> e vem primeiro;{" "}
-        <code>AlertDialogAction</code> é <code>destructive</code>, ou{" "}
-        <code>primary</code> quando a confirmação não destrói nada. Dois botões
-        de contorno lado a lado pesam igual, e o olho tem que ler os dois para
-        descobrir qual é a saída.
+        <code>AlertDialogCancel</code> é <code>tertiary</code> e vem primeiro; <code>AlertDialogAction</code> é <code>destructive</code>, ou <code>primary</code> quando não destrói nada. Dois botões de contorno pesam igual e obrigam a ler os dois para achar a saída.
       </DocNote>
 
-      <DocNote title="A ação é um Button, e isso tem consequência">
-        Antes eram <code>buttonVariants()</code> carimbado num primitivo do
-        Radix — e é o caso que o próprio design system já registrava: a
-        maiúscula inicial do CTA vem do <code>&lt;span&gt;</code> que o{" "}
-        <code>Button</code> embrulha, e ali não havia <code>span</code>. Sem{" "}
-        <code>variant</code>, as oito confirmações do app repintaram o botão à
-        mão: cinco com <code>buttonVariants(&#123; variant: &quot;destructive&quot; &#125;)</code> e
-        três com um vermelho sólido inventado na tela. Nessas três,{" "}
-        <code>tailwind-merge</code> resolvia o fundo mas não tinha o que fazer
-        com a borda — o <code>border-primary</code> do <code>primary</code>{" "}
-        sobrevivia embaixo, e o botão de excluir saía vermelho com um fio verde
-        em volta.
+      <DocNote title="Não repinte a ação">
+        Use <code>variant</code>, nunca <code>buttonVariants()</code> ou cor na <code>className</code>: o <code>tailwind-merge</code> troca o fundo mas deixa a borda da variante antiga, e o botão sai com um fio da cor errada.
       </DocNote>
 
-      <DocNote title="A superfície é a do Dialog, e ela é de vidro">
-        Ele não desenha placa própria: veste{" "}
-        <code>dialogContentVariants</code>, e com ela veio o material do
-        cabeçalho — <code>blur(24px) saturate(1.5)</code>{" "}
-        com o guarda de transparência reduzida. A página do{" "}
-        <code>Dialog</code>{" "}
-        explica o teto: o que o borrão vê é o véu, e não a tela, então no tema
-        escuro o vidro só registra quando há cor cheia atrás.
+      <DocNote title="A superfície é a do Dialog">
+        Veste <code>dialogContentVariants</code>, com o mesmo <code>size</code> (padrão <code>md</code>) e o vidro do cabeçalho. Não há <code>layout=&quot;fixed&quot;</code>: confirmação com corpo rolável não é confirmação.
       </DocNote>
 
-      <DocNote title="AlertDialog ou Dialog?">
-        AlertDialog interrompe: ele não fecha clicando fora, e o foco vai para a
-        opção mais segura. Use-o só quando a resposta importa. Para uma tarefa —
-        preencher um formulário, escolher uma categoria — o componente é{" "}
-        <code>Dialog</code>.
+      <DocNote title="AlertDialog interrompe">
+        Ele não fecha clicando fora, e o foco vai para a opção mais segura. Use-o só quando a resposta importa.
       </DocNote>
     </>
   )

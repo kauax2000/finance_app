@@ -111,11 +111,7 @@ export default function HoverCardDoc() {
         title="A seta"
         description={
           <>
-            Este é o único lugar do sistema onde ela se paga. Um menu abre a
-            partir de um controle que a pessoa acabou de clicar; uma prévia
-            dispara sobre <strong>uma palavra dentro de um parágrafo</strong>, e
-            aí a seta é a única coisa que diz de qual das quatro o cartão está
-            falando.
+            O único lugar do sistema onde a seta se paga: a prévia dispara sobre <strong>uma palavra dentro de um parágrafo</strong>, e a seta diz de qual.
           </>
         }
         code={`<HoverCardContent>
@@ -135,14 +131,7 @@ export default function HoverCardDoc() {
 
       <DocSection
         title="A largura"
-        description={
-          <>
-            Três degraus, e eles saem de contagem: o componente nascia{" "}
-            <code>w-64</code> e a única demonstração que existia dele já o
-            sobrescrevia para <code>w-72</code>. Um padrão que o seu único
-            consumidor anula não é padrão.
-          </>
-        }
+        description="Três degraus; lg é o teto."
         code={`<HoverCardContent size="lg">…</HoverCardContent>`}
       >
         {LARGURAS.map(([tamanho, nota]) => (
@@ -170,11 +159,7 @@ export default function HoverCardDoc() {
         title="As três faixas"
         description={
           <>
-            <code>padding=&quot;none&quot;</code> é o mesmo eixo, com o mesmo
-            nome e a mesma razão do <code>PopoverContent</code>: o casco cede o
-            respiro, e <strong>cada faixa passa a ser dona do seu</strong>.
-            Cabeçalho, corpo e pé — com o estado no <code>endAdornment</code>, no
-            canto superior direito.
+            <code>padding=&quot;none&quot;</code>, como no <code>PopoverContent</code>: o casco cede o respiro e <strong>cada faixa passa a ser dona do seu</strong>. O estado vai no <code>endAdornment</code>.
           </>
         }
         code={CODIGO_FATURA}
@@ -236,7 +221,7 @@ export default function HoverCardDoc() {
             type: '"sm" | "md" | "lg"',
             default: '"md"',
             description:
-              "A largura — 224, 256, 320. Acima de 320 a prévia deixa de ser prévia e vira a página que ela deveria adiar.",
+              "A largura — 224, 256, 320. Acima disso a prévia vira a página que ela deveria adiar.",
           },
           {
             prop: "padding",
@@ -250,7 +235,7 @@ export default function HoverCardDoc() {
             type: "number",
             default: "ANCHORED_COLLISION_PADDING (8)",
             description:
-              "A folga da borda da janela, vinda de lib/anchored-surface — a mesma de toda superfície ancorada. O cartão também encolhe pelo max-w-…-available-width quando a janela é mais estreita que o size escolhido.",
+              "A folga da borda da janela, a mesma de toda superfície ancorada; o cartão também encolhe em janela estreita.",
           },
         ]}
       />
@@ -262,7 +247,7 @@ export default function HoverCardDoc() {
             prop: "endAdornment",
             type: "React.ReactNode",
             description:
-              "O que fica no canto superior direito: Badge de estado, contagem, ícone. A grade é items-start, então ele fica preso ao topo mesmo quando a descrição quebra em duas linhas.",
+              "O canto superior direito — Badge de estado, contagem —, preso ao topo mesmo com a descrição em duas linhas.",
           },
         ]}
       />
@@ -275,14 +260,14 @@ export default function HoverCardDoc() {
             type: "number",
             default: "400",
             description:
-              "Acima do limiar de pausa intencional (~300ms) e abaixo do ponto em que a espera vira dúvida. O padrão do Radix é 700, que lê como componente quebrado.",
+              "Acima de uma pausa intencional e abaixo do ponto em que a espera vira dúvida; os 700 do Radix leem como quebrado.",
           },
           {
             prop: "closeDelay",
             type: "number",
             default: "200",
             description:
-              "O que dá tempo de o cursor atravessar o vão entre o gatilho e o cartão.",
+              "Dá tempo de o cursor atravessar o vão até o cartão.",
           },
         ]}
       />
@@ -293,42 +278,16 @@ export default function HoverCardDoc() {
         linha, é tooltip.
       </DocNote>
 
-      <DocNote title="Um número sem rótulo é ambíguo, e num app de finanças isso custa caro">
-        Esta demonstração já mostrou <code>−R$ 1.284,60</code> sozinho no meio do
-        cartão. Sozinho, ele pode ser o total da fatura, o pagamento mínimo ou o
-        que falta pagar — três coisas diferentes, e quem lê não tem como
-        escolher. O par termo/valor do <code>DescriptionList</code> é o que
-        resolve, e ele existe para exatamente isto: a documentação dele nomeia
-        &ldquo;a fatura&rdquo; como caso de uso.
+      <DocNote title="Um número sem rótulo é ambíguo">
+        Sozinho, <code>−R$ 1.284,60</code> pode ser o total da fatura, o mínimo ou o que falta pagar. Use o par termo/valor do <code>DescriptionList</code>.
       </DocNote>
 
       <DocNote title="O rótulo e a cor do estado saem do produto, não da demonstração">
-        Esta página já escreveu <code>Em aberto</code> num{" "}
-        <code>Badge variant=&quot;warning&quot;</code>. O app não fala assim: em{" "}
-        <code>credit-card-display.ts</code> o ciclo aberto se chama{" "}
-        <strong>Aberta</strong> e é <strong>verde</strong> (
-        <code>tagChipSuccess</code>), com o âmbar reservado para{" "}
-        <code>Fechada</code> e o vermelho para <code>Anterior</code>. Um catálogo
-        que inventa vocabulário e semântica próprios ensina a divergir do
-        produto.
-      </DocNote>
-
-      <DocNote title="A superfície era uma cópia incompleta da do popover">
-        Copiar não era o defeito — as classes que carregam o nome da primitiva (
-        <code>origin-</code>, <code>max-h-</code>) <strong>têm</strong> que ser
-        literais em cada arquivo, porque o Tailwind varre o código como texto. O
-        defeito é que faltavam três coisas: o teto de altura, a rolagem que ele
-        exige, e a folga da borda da janela. Uma prévia alta perto da borda de
-        baixo simplesmente saía da tela, com o Radix já publicando a variável que
-        ninguém lia.
+        O ciclo aberto se chama <strong>Aberta</strong> e é <strong>verde</strong> (<code>tagChipSuccess</code>); âmbar é <code>Fechada</code> e vermelho é <code>Anterior</code>. Catálogo que inventa palavra e cor ensina a divergir do produto.
       </DocNote>
 
       <DocNote title="O corpo não rola, e o botão de fechar não existe">
-        As duas coisas dizem o mesmo sobre este componente.{" "}
-        <code>HoverCardBody</code> não rola porque uma prévia que precisa rolar
-        não é mais uma prévia; e não há <code>Close</code> porque um hover card
-        não se retém — sai o cursor, sai o cartão. Nos dois casos o componente
-        certo passa a ser o <code>Popover</code>, que abre no clique.
+        Uma prévia que precisa rolar ou se reter não é mais prévia: sai o cursor, sai o cartão. Nesses casos o componente é o <code>Popover</code>, que abre no clique.
       </DocNote>
     </>
   )

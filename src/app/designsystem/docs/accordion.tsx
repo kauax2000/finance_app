@@ -48,9 +48,8 @@ export default function AccordionDoc() {
         title="Um por vez"
         description={
           <>
-            <code>collapsible</code> é o que permite fechar tudo. A linha inteira
-            é o alvo — inclusive o espaço vazio à direita do rótulo, que é metade
-            dele.
+            <code>collapsible</code> permite fechar tudo. A linha inteira é o
+            alvo, inclusive o espaço vazio à direita do rótulo.
           </>
         }
         code={`<Accordion type="single" collapsible>
@@ -113,11 +112,9 @@ export default function AccordionDoc() {
         title="A escada"
         description={
           <>
-            <code>md</code> 32, <code>lg</code> 36, <code>xl</code> 40 — os
-            mesmos números que esses nomes têm no <code>Button</code>, no{" "}
-            <code>Input</code> e no <code>Tabs</code>. A medida é piso, e não
-            altura fixa: um rótulo que quebra em duas linhas faz a linha crescer,
-            e não ser recortada.
+            <code>md</code> 32, <code>lg</code> 36, <code>xl</code> 40, como no{" "}
+            <code>Button</code>, no <code>Input</code> e no <code>Tabs</code>. É
+            piso, não altura fixa: um rótulo em duas linhas faz a linha crescer.
           </>
         }
         code={`<Accordion size="lg" type="single" collapsible>…</Accordion>`}
@@ -149,9 +146,9 @@ export default function AccordionDoc() {
         description={
           <>
             <code>markerSide=&quot;start&quot;</code> é o acordeão de{" "}
-            <strong>estrutura</strong>: com todas as setas na mesma coluna, a
-            hierarquia fica legível numa varredura vertical. Para perguntas, o
-            marcador continua na outra ponta.
+            <strong>estrutura</strong>: setas na mesma coluna deixam a
+            hierarquia legível numa varredura. Para perguntas, o marcador fica
+            na outra ponta.
           </>
         }
         code={`<Accordion markerSide="start" type="multiple">…</Accordion>`}
@@ -181,8 +178,7 @@ export default function AccordionDoc() {
         description={
           <>
             <code>trailing</code> é a contagem, o total ou o <code>Badge</code>{" "}
-            que acompanha o rótulo. É prop e não peça componível — a razão está
-            na nota abaixo.
+            que acompanha o rótulo.
           </>
         }
         code={`<AccordionTrigger trailing={<MoneyDisplay value={-612.4} tone="expense" />}>
@@ -233,8 +229,7 @@ export default function AccordionDoc() {
             prop: "size",
             type: '"md" | "lg" | "xl"',
             default: '"md"',
-            description:
-              "O piso de altura da linha — 32, 36, 40. Os mesmos números que esses nomes têm no resto do sistema.",
+            description: "O piso de altura da linha: 32, 36, 40.",
           },
           {
             prop: "markerSide",
@@ -253,7 +248,7 @@ export default function AccordionDoc() {
             type: "boolean",
             default: "false",
             description:
-              "Só em single. Sem ele, um item fica sempre aberto — certo quando o acordeão é a navegação do conteúdo, errado quando ele é opcional.",
+              "Só em single. Sem ele, um item fica sempre aberto: certo quando o acordeão é a navegação do conteúdo.",
           },
         ]}
       />
@@ -264,83 +259,54 @@ export default function AccordionDoc() {
           {
             prop: "trailing",
             type: "React.ReactNode",
-            description:
-              "O que acompanha o rótulo na outra ponta: contagem, total, Badge. Continua correto com o marcador dos dois lados.",
+            description: "O que acompanha o rótulo na outra ponta: contagem, total, Badge.",
           },
         ]}
       />
 
-      <DocNote title="O realce não troca a cor de fundo, e a razão é de sistema">
-        Um acordeão <strong>não sabe sobre o que está pousado</strong>: ele mora
-        dentro de <code>Card</code>, dentro de <code>muted</code>, dentro de
-        diálogo e direto na página. Um realce que pinta fundo precisa combinar
-        com a superfície de baixo — sobre <code>bg-muted</code> o{" "}
-        <code>accent</code> quase some, e sobre <code>bg-card</code> num dos
-        temas ele é quase o próprio cartão. Realce não pode depender de uma
-        informação que o componente não tem.
-        <br />
-        <br />
-        Então são dois sinais, e nenhum toca no fundo: o <strong>rótulo</strong>{" "}
-        sublinha, e o <strong>marcador</strong> tinge e{" "}
-        <strong>se desloca no sentido em que o clique vai levar</strong> — dois
-        pixels para baixo quando o bloco vai abrir, dois para cima quando vai
-        fechar.
+      <DocNote title="O realce não pinta fundo">
+        O acordeão não sabe sobre que superfície está — <code>Card</code>,{" "}
+        <code>muted</code>, diálogo, página —, e um fundo de realce some sobre
+        algumas delas. São dois sinais: o <strong>rótulo</strong> sublinha, e o{" "}
+        <strong>marcador</strong> tinge e se desloca 2px no sentido em que o
+        clique vai levar.
       </DocNote>
 
       <DocNote title="O sublinhado é do rótulo, não da linha">
-        O componente já teve um <code>hover:underline</code> no botão inteiro, e{" "}
-        <code>text-decoration</code> desce para todo descendente em linha: o
-        valor da direita — o total do slot <code>trailing</code> — vinha
-        sublinhado junto. <strong>Traço sob número lê como rasura</strong>, e num
-        app de finanças essa é a pior leitura possível. Escopado ao rótulo, o
-        traço marca a palavra que responde ao clique, e a linha inteira continua
-        sendo o alvo.
+        <code>text-decoration</code> desce para os descendentes: sublinhar a
+        linha inteira sublinharia o total do <code>trailing</code>.{" "}
+        <strong>Traço sob número lê como rasura.</strong>
       </DocNote>
 
       <DocNote title="A direção do empurrão vem de uma variável, e não de duas variantes">
-        O deslocamento depende de dois estados ao mesmo tempo: de a linha estar
-        sob o cursor <strong>e</strong> de ela estar aberta. Escrito como
-        variante empilhada, o Tailwind compila uma{" "}
-        <strong>cadeia de descendente</strong> — e quando as duas apontam para o
-        mesmo elemento o seletor não casa com nada. Este projeto já pagou essa
-        medição no <code>ThemeToggle</code>: o estado mora numa variável na
-        raiz, e o cursor só troca qual variável o filho lê.
+        O deslocamento depende de cursor <strong>e</strong> de aberto ao mesmo
+        tempo; variantes empilhadas compilam uma cadeia de descendente que não
+        casa no mesmo elemento. O estado mora numa variável na raiz, como no{" "}
+        <code>ThemeToggle</code>.
       </DocNote>
 
       <DocNote title="O marcador não teleporta">
-        Havia dois ícones aqui — uma seta para baixo e uma para cima —, um
-        escondendo o outro conforme o estado. É a mesma decisão que a rodada do{" "}
-        <code>Tabs</code> julgou e reverteu: dois marcadores piscando não dizem o
-        que um marcador se movendo diz. Aqui o conserto era de graça, porque a
-        seta para baixo girada em 180° <strong>é</strong> a seta para cima.
+        Um ícone só, girado 180° ao abrir. Dois ícones trocando piscam; um
+        marcador que se move diz a transição.
       </DocNote>
 
-      <DocNote title="Por que trailing é prop, e não uma peça">
-        A alternativa componível exigia duas margens automáticas na mesma linha
-        de flex — uma para empurrar o valor e outra para o marcador. E{" "}
-        <strong>duas <code>ml-auto</code> dividem a sobra em partes iguais</strong>{" "}
-        em vez de empurrar a segunda para a borda: o valor terminaria flutuando
-        no meio da linha. Com um slot nomeado, a ordem é declarada.
+      <DocNote title="trailing é prop, e não uma peça">
+        Duas <code>ml-auto</code> na mesma linha dividem a sobra em partes
+        iguais, e o valor flutuaria no meio. Com um slot nomeado, a ordem é
+        declarada.
       </DocNote>
 
-      <DocNote title="O anel de foco é interno, e é a única divergência do sistema">
-        O resto da casa usa <code>ring-3</code> por fora. Aqui a linha sangra até
-        a borda do bloco, e um anel externo tem só dois destinos: dentro de{" "}
-        <code>contained</code> a casca é <code>overflow-hidden</code> e ele some
-        nos quatro lados da primeira e da última linha; em <code>plain</code>,
-        ele cavalga o fio da linha vizinha e vira um traço duplo de 4px.{" "}
-        <code>inset-ring</code> resolve os dois sem exceção por variante.
+      <DocNote title="O anel de foco é interno">
+        A linha sangra até a borda: um <code>ring-3</code> externo some no{" "}
+        <code>overflow-hidden</code> de <code>contained</code> e vira traço
+        duplo sobre o fio vizinho em <code>plain</code>. <code>inset-ring</code>{" "}
+        resolve os dois; é a única divergência do sistema.
       </DocNote>
 
-      <DocNote title="A altura do conteúdo era circular">
-        O envelope interno declarava{" "}
-        <code>h-(--radix-accordion-content-height)</code> — a variável que o
-        Radix escreve a partir do <code>offsetHeight</code> desse mesmo nó. Ele
-        declarava como altura a medida que ele próprio produz, e por isso ela
-        congelava na primeira medição: um parágrafo que reflui, porque a janela
-        estreitou ou a tradução é mais longa, passava a ser{" "}
-        <strong>recortado</strong>. O envelope não precisa de altura nenhuma —
-        quem anima é a <code>Content</code>, por keyframes, contra a variável.
+      <DocNote title="O envelope do conteúdo não declara altura">
+        Quem anima é a <code>Content</code>, por keyframes, contra{" "}
+        <code>--radix-accordion-content-height</code>. Altura no envelope
+        congelaria a primeira medição e recortaria o texto que reflui.
       </DocNote>
     </>
   )

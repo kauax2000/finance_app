@@ -16,9 +16,7 @@ export default function PopoverDoc() {
   return (
     <>
       <Usage>
-        Uma camada ancorada a um gatilho, aberta por clique. Diferente do
-        tooltip, funciona no toque; diferente do diálogo, não bloqueia a tela —
-        certo para um ajuste rápido, errado para uma decisão.
+        Uma camada ancorada a um gatilho, aberta por clique. Diferente do <code>Tooltip</code>, funciona no toque; diferente do <code>Dialog</code>, não bloqueia a tela — certo para um ajuste rápido, errado para uma decisão. Seletor que sai de um campo é <code>FormPickerPopover</code>.
       </Usage>
 
       <DocSection
@@ -115,101 +113,28 @@ export default function PopoverDoc() {
         </Popover>
       </DocSection>
 
-      <DocNote title="O recuo é um eixo, e cinco chamadas já o anulavam">
-        <code>padding=&quot;none&quot;</code> tira o recuo <strong>e</strong> o{" "}
-        <code>gap</code>, porque as chamadas escreviam <code>gap-0 p-0</code> —
-        as duas coisas andam juntas. É para quando o popover hospeda um
-        componente inteiro (um calendário, uma lista, um{" "}
-        <code>Command</code>) e quem manda no respiro é o conteúdo. Mesma
-        decisão que o <code>Card</code> chama de <code>padding=&quot;none&quot;</code>.
+      <DocNote title="padding=&quot;none&quot; tira recuo e gap juntos">
+        Para quando o popover hospeda um componente inteiro — calendário, lista, <code>Command</code> — e quem manda no respiro é o conteúdo. É a mesma decisão do <code>Card</code>.
       </DocNote>
 
-      <DocNote title="O título é o que dá nome ao popover — e ele precisa existir">
-        O <code>Popover.Content</code> do Radix renderiza{" "}
-        <code>role=&quot;dialog&quot;</code> e nunca escreve{" "}
-        <code>aria-labelledby</code>. Um papel de diálogo sem nome é anunciado
-        como &quot;diálogo&quot;, e nada mais. <code>PopoverTitle</code> e{" "}
-        <code>PopoverDescription</code> agora se registram no conteúdo e viram o{" "}
-        <code>aria-labelledby</code> e o <code>aria-describedby</code> dele —
-        mas só quando existem, porque apontar para um <code>id</code> ausente
-        deixa o nome vazio, que era exatamente o estado anterior. Popover sem
-        rótulo visível leva o par em <code>className=&quot;sr-only&quot;</code>.
+      <DocNote title="Todo popover tem PopoverTitle">
+        O conteúdo é <code>role=&quot;dialog&quot;</code>, e sem nome o leitor de tela anuncia só &quot;diálogo&quot;. <code>PopoverTitle</code> e <code>PopoverDescription</code> viram o <code>aria-labelledby</code> e o <code>aria-describedby</code> quando existem. Sem rótulo visível, use o par em <code>className=&quot;sr-only&quot;</code>.
       </DocNote>
 
-      <DocNote title="Ele cabe inteiro na janela, e são três cláusulas">
-        <strong>Centra no gatilho quando cabe</strong>; quando não cabe,{" "}
-        <strong>desloca para dentro</strong> com a folga do sistema; e quando é{" "}
-        <strong>maior que o espaço</strong>, encolhe — os dois tetos{" "}
-        <code>max-h-…-available-height</code> e{" "}
-        <code>max-w-…-available-width</code>. A terceira é a que sempre falta, e
-        sem ela as outras duas não fecham: deslocar não torna visível o que não
-        cabe. Antes desta régua o teto de largura existia em{" "}
-        <strong>3 arquivos de 11</strong>.
-        <br />
-        Medido numa janela de <strong>280px</strong>: este popover, que é{" "}
-        <code>w-72</code> (288), abre com <strong>264</strong> — a janela menos
-        a folga dos dois lados — em <code>left: 8</code>, cabendo inteiro. A
-        folga mora em <code>lib/anchored-surface</code> e a regra{" "}
-        <strong>K</strong> do <code>ds:audit</code> impede que uma tela decida a
-        dela.
+      <DocNote title="Ele cabe inteiro na janela">
+        Centra no gatilho quando cabe, desloca para dentro com a folga de 8px quando não cabe, e encolhe pelos tetos <code>max-h-…-available-height</code> e <code>max-w-…-available-width</code> quando é maior que o espaço — deslocar não torna visível o que não cabe. A folga mora em <code>lib/anchored-surface</code>, e a regra <strong>K</strong> do <code>ds:audit</code> impede uma tela de decidir a dela.
       </DocNote>
 
-      <DocNote title="A saída nunca tinha rodado, e o culpado era um Provider no meio do caminho">
-        O casco declarava <code>data-closed:animate-out</code>,{" "}
-        <code>fade-out-0</code> e <code>zoom-out-95</code> desde sempre, e as
-        três eram <strong>código morto</strong>: o popover não esmaecia, ele
-        sumia. Medido com um <code>MutationObserver</code> lendo{" "}
-        <code>getComputedStyle</code> de forma síncrona no instante do{" "}
-        <code>data-state=&quot;closed&quot;</code>, o retorno vinha{" "}
-        <strong>vazio</strong> — e estilo computado vazio é o que se obtém de um
-        nó <em>já destacado do documento</em>. Nenhum{" "}
-        <code>animationstart</code> de <code>exit</code> chegava a disparar.
-        <br />
-        O <code>Portal</code> do Radix é um <code>Presence</code> em volta de um{" "}
-        <code>PortalPrimitive asChild</code>, e o <code>Presence</code> decide se
-        espera a animação lendo o estilo do <strong>ref do filho</strong>. Havia
-        um <code>PopoverLabelContext.Provider</code> entre o Portal e o Content:
-        o <code>Slot</code> do <code>asChild</code> tentava pôr o ref num context
-        provider, que não é elemento, o ref se perdia,{" "}
-        <code>getAnimationName(undefined)</code> devolvia <code>&quot;none&quot;</code>{" "}
-        e o Radix desmontava no mesmo commit. O <code>DropdownMenu</code>, que
-        tem <code>Portal → Content</code> direto, sempre animou — foi a
-        comparação entre os dois que isolou a causa.
-        <br />O Provider passou para <strong>fora</strong> do Portal. O contexto
-        continua chegando ao título e à descrição, porque ele está acima na
-        árvore do React e contexto atravessa portal. Medido depois:{" "}
-        <code>animationstart exit @21ms</code>,{" "}
-        <code>animationend exit @116ms</code>, e o nó desmontando limpo.
+      <DocNote title="Nada entre o Portal e o Content">
+        O <code>Presence</code> do Radix lê a animação pelo ref do filho do <code>Portal</code>. Um Provider no meio perde o ref e o popover some sem animar a saída. Contexto atravessa portal, então providers ficam por fora.
       </DocNote>
 
-      <DocNote title="A curva da casa não chegava aqui, e duration-* transicionava tudo">
-        A entrada abria com <code>animation: enter 0.1s ease</code> — a curva{" "}
-        <em>do navegador</em>. O <code>animate-in</code> lê{" "}
-        <code>--tw-ease</code>, e quem a escreve é a classe <code>ease-*</code>;
-        sem ela, medido, <code>--tw-ease</code> saía <strong>vazio</strong>. É o
-        mesmo defeito que o <code>NavigationMenu</code> tinha, e a correção é a
-        mesma: <code>ease-(--ease-out)</code>, em{" "}
-        <code>--duration-base</code>. A forma não mudou — fade, 8px do lado de
-        onde veio e <code>zoom-95</code> são a língua de toda superfície ancorada
-        da casa.
-        <br />
-        <strong>E a duração passou a ser da animação, não da transição.</strong>{" "}
-        <code>duration-*</code> escreve <code>transition-duration</code> junto, e
-        sem nenhum <code>transition-property</code> isso deixa{" "}
-        <code>transition: all</code> — medido aqui, <code>all 0.1s</code>: toda
-        propriedade do popover transicionava, calada. Numa superfície que só
-        anima, o utilitário certo é <code>animation-duration-*</code>, que não
-        toca a transição. Medido depois: <code>transition-duration: 0s</code>.
-        <br />A saída é mais curta que a entrada e não se move — só fade, em{" "}
-        <code>--duration-instant</code>. Um popover que se fecha some; recuar
-        seria pedir atenção para o que está saindo de cena.
+      <DocNote title="Entrada com a curva da casa; saída só fade">
+        A entrada usa <code>ease-(--ease-out)</code> em <code>--duration-base</code> — sem a classe <code>ease-*</code>, vale a curva do navegador — com fade, 8px do lado de onde veio e <code>zoom-95</code>. A duração é <code>animation-duration-*</code>, não <code>duration-*</code>, que liga <code>transition: all</code>. A saída é só fade em <code>--duration-instant</code>: o que sai de cena não pede atenção.
       </DocNote>
 
       <DocNote title="Para seletor ancorado num campo, use FormPickerPopover">
-        Um popover que sai de um campo precisa de largura igual à do gatilho,
-        folga de colisão maior e não roubar o foco.{" "}
-        <code>FormPickerPopoverContent</code> resolve os três; repetir à mão é
-        como cada seletor acaba diferente.
+        Ele iguala a largura ao gatilho, aumenta a folga de colisão e não rouba o foco; repetir isso à mão é como cada seletor acaba diferente.
       </DocNote>
 
       <PropsTable
@@ -238,7 +163,7 @@ export default function PopoverDoc() {
             type: "number | Padding",
             default: "ANCHORED_COLLISION_PADDING (8)",
             description:
-              "A folga até a borda da janela, vinda de lib/anchored-surface — a mesma para toda superfície ancorada do sistema. Não a suba na tela: a regra K do auditor reprova, e o teto de largura já resolve o popover largo em tela estreita.",
+              "A folga até a borda da janela, de lib/anchored-surface; não a mude na tela — a regra K do auditor reprova.",
           },
         ]}
       />

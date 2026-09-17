@@ -258,15 +258,12 @@ export default function TablePanelDoc() {
   return (
     <>
       <Usage>
-        A tabela como o app a mostra: moldura, barra de ações, cabeçalho e
-        rodapé de paginação. Se o conteúdo é só a tabela — sem contagem, sem
-        seleção, sem página — o componente é{" "}
-        <code>Table</code>, dentro de um <code>Card padding=&quot;none&quot;</code> comum.
+        A tabela como o app a mostra: moldura, barra de topo, cabeçalho e rodapé de paginação. Se o conteúdo é só a tabela — sem contagem, seleção nem página —, é <code>Table</code> num <code>Card padding=&quot;none&quot;</code>.
       </Usage>
 
       <DocSection
         title="Padrão"
-        description="Card padding='none' variant='outline' com a densidade lg herdada — nenhuma tela dentro do painel escreve size. A barra de topo fica fora da moldura, acima dela, sem fundo e sem borda; o rodapé é CardNote com outro nome."
+        description="Card padding='none' variant='outline' com densidade lg herdada — ninguém dentro do painel escreve size. A barra de topo fica fora da moldura, sem fundo nem borda."
         code={`<TablePanel toolbar={<TablePanelToolbar>3 transações</TablePanelToolbar>}>
   <Table>…</Table>
   <TablePanelFooter>
@@ -323,17 +320,13 @@ export default function TablePanelDoc() {
         </TablePanel>
       </DocSection>
 
-      <DocNote title="O rodapé é align='between', não um número escrito à mão">
-        <code>TablePanelFooter</code> empilha no telefone e vira linha no
-        desktop (<code>sm:flex-row sm:justify-between</code>) — a mesma forma
-        que 5 arquivos do app escreviam como{" "}
-        <code>flex-col gap-2.5 rounded-b-xl px-3 py-2.5 sm:flex-row …</code>,
-        com o arredondamento repetido à mão porque a moldura não existia.
+      <DocNote title="O rodapé empilha no telefone">
+        <code>TablePanelFooter</code> empilha no telefone e vira linha no desktop, com o status à esquerda e a paginação à direita. Não escreva essa forma à mão.
       </DocNote>
 
       <DocSection
         title="Seleção"
-        description="A coluna de checkbox (selection) e a barra que troca de conteúdo conforme a contagem. Sem role='toolbar': o app já escreve esse papel em 4 lugares sem implementar foco itinerante, e Toolbar se recusa a repetir."
+        description="A coluna selection e a barra que troca de conteúdo conforme a contagem. Sem role='toolbar': sem foco itinerante, o papel promete o que não entrega."
         code={`<TableHead selection><Checkbox … /></TableHead>
 <TableCell selection><Checkbox … /></TableCell>
 <TableRow data-state={marcado ? "selected" : undefined}>…</TableRow>`}
@@ -344,7 +337,7 @@ export default function TablePanelDoc() {
 
       <DocSection
         title="Ações por linha"
-        description="A última coluna é actions: encolhe até o par de botões, alinha à direita e monta a fileira sozinha. O cabeçalho não mostra rótulo — o nome fica só para o leitor de tela. A lixeira é neutra, e cada botão diz o objeto — no aria-label e num tooltip sm que a célula monta sozinha. No telefone a tabela troca por CSS pelas linhas de uma lista."
+        description="actions encolhe até os botões, alinha à direita e monta a fileira. O cabeçalho não mostra rótulo, só o nome para leitor de tela. Cada botão diz o objeto no aria-label e num tooltip que a célula monta; no telefone a tabela vira lista."
         code={`<TableHead actions />
 
 <TableCell actions>
@@ -365,7 +358,7 @@ export default function TablePanelDoc() {
 
       <DocSection
         title="Rolagem com cabeçalho fixo"
-        description="O corpo rola; o cabeçalho e o rodapé ficam parados. O teto de altura é do viewport, e o cabeçalho fixo é de vidro: as linhas passam por trás dele borradas, e em repouso ele tem a tinta do muted parado. Embaixo, fade='bottom' faz as linhas passarem por trás do rodapé e se dissolverem, como no Command — o rodapé não pinta nada. No telefone não há teto: quem rola é a página."
+        description="O corpo rola sob cabeçalho e rodapé parados. O cabeçalho fixo é de vidro, e com fade='bottom' as linhas dissolvem atrás do rodapé. No telefone não há teto: quem rola é a página."
         code={`<TablePanel toolbar={<TablePanelToolbar>12 transações</TablePanelToolbar>}>
   <Table viewportClassName="max-h-72" fade="bottom">
     <TableHeader variant="muted" sticky>…</TableHeader>
@@ -434,69 +427,24 @@ export default function TablePanelDoc() {
         </TablePanel>
       </DocSection>
 
-      <DocNote title="A lixeira é neutra, e é invariante">
-        As duas tabelas do app pintam a lixeira de <code>--destructive</code>, e
-        ela se repete em toda linha — ao lado de valores de saída que também são
-        vermelhos. <code>destructive</code> não é <code>expense</code>: uma cor
-        de ação e uma cor de dinheiro na mesma fileira deixam de dizer qualquer
-        uma das duas coisas. Quem avisa que excluir não tem volta é a
-        confirmação, não a cor do ícone. No cursor e no toque ela vira o botão <code>destructive</code>: quem
-        escreve <code>variant=&quot;destructive&quot;</code> numa ação declara a
-        intenção, e a célula a mantém neutra em repouso e acende o vermelho só
-        quando a pessoa aponta — o sinal de perigo chega na hora da decisão, e
-        não em toda linha.
+      <DocNote title="A lixeira é neutra em repouso">
+        <code>destructive</code> não é <code>expense</code>: vermelho de ação ao lado de vermelho de saída, em toda linha, deixa de dizer as duas coisas. Com <code>variant=&quot;destructive&quot;</code> a célula mantém o ícone neutro e acende o vermelho só no cursor e no toque; quem avisa que não tem volta é a confirmação.
       </DocNote>
 
       <DocNote title="Cada botão diz o objeto">
-        Nas duas telas do app, os quatro botões por linha não têm nome acessível
-        — o leitor de tela ouve &ldquo;botão&rdquo;, e mais nada, doze vezes numa
-        tabela de três linhas. Aqui o rótulo carrega o objeto:{" "}
-        <code>Editar Mercado</code>, <code>Excluir Mercado</code>. E o clique no
-        botão não abre a linha: ele para a propagação, e a barra de topo mostra
-        qual dos dois disparou.
+        O <code>aria-label</code> carrega o objeto — <code>Editar Mercado</code>, <code>Excluir Mercado</code> —, senão o leitor de tela ouve só &ldquo;botão&rdquo;. O clique no botão para a propagação e não abre a linha.
       </DocNote>
 
       <DocNote title="No telefone, linhas — não cartões">
-        A tabela troca pelo gêmeo <code>md:hidden</code> por CSS, como em{" "}
-        <code>Table</code>. Mas lá os itens são cartões com contorno, e aqui
-        estariam dentro de outro cartão: dentro do painel a lista é{" "}
-        <code>ItemGroup variant=&quot;divided&quot;</code>, e o item é{" "}
-        <code>lg</code>, cujo recuo de 16px é o mesmo das tiras do painel. Com o
-        par de botões, o valor desce para uma linha própria: ao lado de dois
-        alvos de 44 ele não cabia, e a mesma lista saía com dois layouts —
-        duas linhas quebravam as ações para baixo e a terceira espremia o
-        título em 48px.
+        O gêmeo <code>md:hidden</code> é <code>ItemGroup variant=&quot;divided&quot;</code> com item <code>lg</code>: cartão com contorno dentro do painel seria cartão dentro de cartão. Com botões, o valor desce para linha própria, senão a lista sai com dois layouts.
       </DocNote>
 
-      <DocNote title="O cabeçalho fixo é de vidro, e o fade de baixo virou véu">
-        Sob <code>fade=&quot;bottom&quot;</code> o <code>TableHeader sticky</code>{" "}
-        veste o material do cabeçalho do catálogo: as linhas passam por trás
-        dele borradas, e em repouso ele tem a mesma cor do cabeçalho parado.
-        Para isso a área que rola não pode ter máscara — medido, um{" "}
-        <code>backdrop-filter</code> dentro de um elemento mascarado não borra.
-        A borda de baixo passou a ser um véu na cor do cartão, por cima das
-        linhas e por baixo do rodapé: sobre o cartão, véu de 94% e máscara de
-        6% dão a mesma cor. Em <code>fade=&quot;sides&quot;</code> o cabeçalho
-        fixo segue opaco.
-      </DocNote>
-
-      <DocNote title="O corpo dissolve no rodapé, e o rodapé não pinta">
-        É o que o <code>CommandFooter</code> faz: quem some é o conteúdo, e a
-        faixa continua sem fundo — uma tira pintada seria uma segunda
-        superfície. As linhas passam por trás do rodapé, que mede a própria
-        altura e a publica no painel, e ali ficam a 6%, como um fantasma. <code>fade=&quot;bottom&quot;</code> troca
-        a dissolução lateral pela de baixo, porque é um gradiente por elemento; a
-        rolagem horizontal continua, com a barra. Só a ponta de baixo dissolve: o
-        cabeçalho fixo mora dentro do mesmo viewport e sairia apagado. E sem
-        borrão — nas três vezes em que ele foi tentado num corpo com rodapé,
-        virou um retângulo de tom.
+      <DocNote title="Cabeçalho de vidro e véu no rodapé">
+        Sob <code>fade=&quot;bottom&quot;</code> o <code>TableHeader sticky</code> veste o material borrado, e a área que rola não pode ter máscara: <code>backdrop-filter</code> dentro de elemento mascarado não borra. A borda de baixo é um véu na cor do cartão, por cima das linhas e por baixo do rodapé, que não pinta nada — e sem borrão, que ali vira retângulo de tom. Em <code>fade=&quot;sides&quot;</code> o cabeçalho fixo segue opaco.
       </DocNote>
 
       <DocNote title="size vem do contexto, e ninguém dentro do painel escreve">
-        <code>TablePanel</code> publica <code>lg</code> em{" "}
-        <code>TableSizeContext</code> — a mesma densidade que os 7 painéis do
-        app já usam. Uma tabela fora dele continua em <code>md</code>, o
-        padrão.
+        <code>TablePanel</code> publica <code>lg</code> em <code>TableSizeContext</code>; fora dele a tabela fica em <code>md</code>, o padrão.
       </DocNote>
 
       <PropsTable
@@ -505,13 +453,13 @@ export default function TablePanelDoc() {
           {
             prop: "TablePanel",
             type: "ComponentProps<typeof Card> & { toolbar?: ReactNode }",
-            description: "Card padding=\"none\" variant=\"outline\", publicando lg em TableSizeContext. toolbar recebe a barra de topo, que fica fora da moldura.",
+            description: "Card padding=\"none\" variant=\"outline\" que publica lg; toolbar recebe a barra de topo, fora da moldura.",
           },
           {
             prop: "TablePanelToolbar",
             type: 'ComponentProps<typeof CardToolbar> · variant: "label" | "title"',
             default: '"label"',
-            description: "A barra de topo — CardToolbar com o nome do painel. Vai na prop toolbar do TablePanel, nunca como filho: fica fora da moldura, acima dela, sem fundo e sem borda. Como filho ela cairia dentro, e avisa no console.",
+            description: "A barra de topo; vai na prop toolbar, nunca como filho — como filho cairia dentro da moldura, e avisa no console.",
           },
           {
             prop: "TablePanelFooter",

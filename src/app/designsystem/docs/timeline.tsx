@@ -70,8 +70,7 @@ export default function TimelineDoc() {
   return (
     <>
       <Usage>
-        Histórico em ordem cronológica, do mais recente para o mais antigo: quem
-        abre um histórico quer saber o que mudou agora.
+          Histórico em ordem cronológica, do mais recente para o mais antigo: quem abre um histórico quer saber o que mudou agora. Para progresso em etapas é o <code>Stepper</code>; para eventos com valores e ações por linha, a <code>Table</code>.
       </Usage>
 
       <DocSection
@@ -100,7 +99,7 @@ export default function TimelineDoc() {
 
       <DocSection
         title="Marcador"
-        description="A forma é da lista, não do evento: uma trilha tem uma calha só, e é ela que faz a faixa de data alinhar com os eventos. O poço de md mede 32px — a medida que a tela de atividade já renderiza à mão."
+        description="A forma é da lista, não do evento: uma trilha tem uma calha só, e é ela que alinha a faixa de data com os eventos."
         code={`<Timeline marker="icon">
   <TimelineItem tone="income" icon={<BanknotesIcon />}>…</TimelineItem>
 </Timeline>
@@ -147,7 +146,7 @@ export default function TimelineDoc() {
 
       <DocSection
         title="Vidro"
-        description="O acabamento é da lista inteira, e não do evento. Se é vidro, é vidro em todo marcador — ponto, poço e avatar. Não há como escrever a trilha com metade de cada."
+        description="O acabamento é da lista inteira: se é vidro, é vidro em todo marcador — ponto, poço e avatar."
         code={`<Timeline glass marker="icon">
   <TimelineItem tone="income" icon={<BanknotesIcon />}>…</TimelineItem>
   {/* mesmo trocando de forma, o acabamento acompanha */}
@@ -179,7 +178,7 @@ export default function TimelineDoc() {
 
       <DocSection
         title="Vidro, com as formas misturadas"
-        description="A trilha é de ícone e um dos eventos é de avatar. O acabamento não se parte: o eixo é da raiz e sobrescreve o item, então a forma pode variar e o material não."
+        description="Um evento de avatar numa trilha de ícone: a forma pode variar por item, o material não."
         code={`<Timeline glass marker="icon">
   <TimelineItem tone="income" icon={<BanknotesIcon />}>…</TimelineItem>
   <TimelineItem marker="avatar" avatar={<Avatar …/>}>…</TimelineItem>
@@ -214,7 +213,7 @@ export default function TimelineDoc() {
 
       <DocSection
         title="Escada"
-        description="Três degraus. O ponto vai de 8 a 12, o poço de 24 a 40, e o deslocamento do marcador deriva da entrelinha do título em cada um — não é um mt cravado."
+        description="Três degraus: ponto de 8 a 12, poço de 24 a 40. O deslocamento do marcador deriva da entrelinha do título, nunca de um mt cravado."
         code={`<Timeline size="sm" marker="icon">…</Timeline>`}
         previewClassName="items-stretch"
       >
@@ -234,7 +233,7 @@ export default function TimelineDoc() {
 
       <DocSection
         title="Faixa de data"
-        description="Hoje, ontem, março. O fio continua através dela — a data rotula a cronologia, não a interrompe — e ela não desenha traço nem tinta próprios: quem separa é o respiro."
+        description="Hoje, ontem, março. O fio continua através dela — a data rotula a cronologia, não a interrompe — e quem separa é o respiro, sem traço nem tinta."
         code={`<Timeline marker="icon">
   <TimelineSeparator>Hoje</TimelineSeparator>
   <TimelineItem tone="income" icon={<BanknotesIcon />}>…</TimelineItem>
@@ -268,7 +267,7 @@ export default function TimelineDoc() {
 
       <DocSection
         title="Horizontal"
-        description="A mesma trilha deitada, com o texto centrado no marcador. O último item é flex-none: com todos esticando, ele reservaria a largura de um evento inteiro para mostrar um marcador — foi o vão morto que o Stepper mediu."
+        description="A mesma trilha deitada, com o texto centrado no marcador. O último item é flex-none, para não reservar a largura de um evento inteiro."
         code={`<Timeline orientation="horizontal" marker="icon">…</Timeline>`}
         previewClassName="items-stretch"
       >
@@ -288,7 +287,7 @@ export default function TimelineDoc() {
 
       <DocSection
         title="Tons"
-        description="Sete tons. No ponto eles rendem cinco cores; no poço, sete — e é por isso que o poço não é enfeite."
+        description="Sete tons. No ponto eles rendem cinco cores; no poço, sete."
         previewClassName="items-stretch"
       >
         <div className="flex w-full flex-col gap-8 sm:flex-row sm:gap-6">
@@ -311,98 +310,28 @@ export default function TimelineDoc() {
         </div>
       </DocSection>
 
-      <DocNote title="O poço é onde os sete tons viram sete cores">
-        <code>--income</code> é declarado como <code>var(--success)</code> e{" "}
-        <code>--expense</code> como <code>var(--destructive)</code>, nos dois
-        temas. No <strong>ponto</strong>, que usa a cor na força cheia, os dois
-        pares saem idênticos — medido: <code>oklch(0.542 0.14 152)</code> nos
-        dois verdes. Na família <code>-muted</code> eles divergem —{" "}
-        <code>oklch(0.93 0.07 152)</code> contra <code>oklch(0.96 0.03 152)</code>{" "}
-        —, e o comentário do <code>globals.css</code> chama essa família, com
-        estas palavras, de &ldquo;chips, badges, <strong>icon wells</strong>
-        &rdquo;. O marcador <code>icon</code> lê dela.
+      <DocNote title="No poço, os sete tons viram sete cores">
+          <code>--income</code> e <code>--expense</code> apontam para <code>--success</code> e <code>--destructive</code>, então no ponto, em cor cheia, os pares saem idênticos. O marcador <code>icon</code> lê a família <code>-muted</code>, onde eles divergem — use-o quando entrada e saída precisarem se distinguir.
       </DocNote>
 
-      <DocNote title="A lista deriva o fim, e o catálogo afirmava isso sem que fosse verdade">
-        Esta página dizia que &ldquo;o conector é responsabilidade do item, não
-        do consumidor&rdquo; — enquanto a demonstração logo acima escrevia{" "}
-        <code>isLast=&#123;i === EVENTOS.length - 1&#125;</code> em toda chamada.
-        Hoje a <code>Timeline</code> deriva do índice e injeta por clone, como o{" "}
-        <code>Stepper</code> e a <code>BreadcrumbList</code>. A prop continua
-        existindo para a exceção: a lista que continua depois do último item
-        renderizado.
+      <DocNote title="A lista deriva o fim">
+          A <code>Timeline</code> injeta <code>isLast</code> a partir do índice, como o <code>Stepper</code> e a <code>BreadcrumbList</code>. Passe a prop à mão só na lista que continua depois do último item renderizado.
       </DocNote>
 
-      <DocNote title="O ponto está no centro da primeira linha, e não estava">
-        Era <code>mt-0.5</code> — 2px — mais metade de <code>size-2.5</code>:
-        centro a 7px do topo, contra os 11,375 do centro de uma caixa de 22,75px.{" "}
-        <strong>4,4px de desalinho.</strong> A conta é{" "}
-        <code>(entrelinha − marcador) / 2</code>, deriva do degrau, e o{" "}
-        <code>max(0px, …)</code> é o que faz o poço — maior que uma linha —
-        alinhar pelo topo do bloco em vez de subir para fora dele.
+      <DocNote title="O marcador alinha por fórmula, nunca por mt ou justify">
+          O deslocamento é <code>(entrelinha − marcador) / 2</code> com <code>max(0px, …)</code>, derivado do degrau e da medida do marcador renderizado — um item que troca de forma alinha pela dele, e a calha continua da lista. A calha é <code>justify-start</code>: no último evento, sem conector, um <code>center</code> desalinharia o marcador.
       </DocNote>
 
       <DocNote title="Na horizontal o texto se centra no marcador">
-        Rente à esquerda, o centro da caixa de texto ficava a{" "}
-        <strong>161,4px</strong> do centro do marcador — o olho lia a palavra
-        pendurada na trilha em vez de presa ao evento. Hoje a caixa é{" "}
-        <code>max-content</code> e se desloca meia medida do marcador:
-        desalinho <strong>0</strong> nos três.
-        <br />
-        <br />
-        <strong>Isto inverte a escolha do <code>Stepper</code></strong> para a
-        mesma geometria — lá o primeiro rótulo fica rente à esquerda, porque
-        centrá-lo o levaria para fora da trilha. Aqui os três se centram, e o
-        custo está medido: o texto do primeiro passa 6,62px da borda esquerda
-        da lista. Qualquer contêiner com respiro absorve — no catálogo sobram
-        18,4px dos 25 —, mas uma trilha rente à borda corta ~7px.
-      </DocNote>
-
-      <DocNote title="Todo marcador alinha pelo topo, inclusive o último">
-        A calha é <code>justify-start</code>, e nunca <code>center</code>. O
-        conector é <code>flex-1</code>, então com ele não sobra espaço livre e o
-        <code>justify</code> não decide nada — mas no <strong>último</strong>{" "}
-        evento não há conector, e ali um <code>center</code> centrava o marcador
-        sozinho na altura da calha: <strong>23,44px</strong> abaixo do centro do
-        título, contra 0 nos outros. Quem alinha é a fórmula do deslocamento, e
-        um <code>justify</code> que só age quando falta um irmão a sobrescreve
-        pelas costas.
-      </DocNote>
-
-      <DocNote title="O item que troca de forma alinha pela forma dele">
-        A largura da calha é da <strong>lista</strong> — é ela que faz a faixa
-        de data alinhar com os eventos. Já o deslocamento usa a medida do
-        marcador <strong>renderizado</strong>: sem isso, um ponto de 10px numa
-        trilha de poço lia os 32 da calha e saía 6,38px acima do centro. Cada
-        forma republica a própria medida, então a calha continua uniforme e o
-        alinhamento acompanha a exceção.
+          O primeiro texto passa ~7px da borda esquerda da lista: deixe respiro no contêiner, ou uma trilha rente à borda o corta.
       </DocNote>
 
       <DocNote title="Passe dateTime">
-        Um <code>&lt;time&gt;</code> sem <code>dateTime</code> não é data para
-        máquina nenhuma. Esta página demonstrava <code>&ldquo;05/04 ·
-        09:12&rdquo;</code> como texto puro; hoje toda demonstração escreve o
-        atributo.
+          Um <code>&lt;time&gt;</code> sem <code>dateTime</code> não é data para máquina nenhuma.
       </DocNote>
 
-      <DocNote title="O vidro é da trilha, e não do evento">
-        Numa <code>Timeline</code> o estilo é um só. Como <code>marker</code> é
-        sobrescrevível por item, um eixo por evento deixaria escrever a lista
-        inconsistente — um poço de vidro ao lado de um avatar chapado. Por isso
-        o clone da raiz <strong>sobrescreve</strong> o <code>glass</code> do
-        item em vez de preenchê-lo: a uniformidade é mecânica, não uma regra que
-        alguém precisa lembrar.
-      </DocNote>
-
-      <DocNote title="O corpo não muda; o que entra é aresta">
-        Com um tom <strong>opaco</strong> a lâmina e as duas nuvens ficam por
-        baixo dele e não pintam nada. O que o vidro acrescenta ao ponto e ao
-        poço é o <strong>aro cônico</strong> e o especular — o corpo continua
-        sendo exatamente <code>--{"{tom}"}-muted</code>, e o contraste da tinta
-        não se move. O <strong>avatar é a exceção</strong>: ele não declara tom,
-        porque a cor daquele marcador é a identidade da pessoa e mora dentro do
-        avatar. Sem tom a lâmina volta a pintar, e é isso que dá corpo de vidro
-        ao bisel.
+      <DocNote title="O vidro é da trilha, e acrescenta só aresta">
+          O clone da raiz <strong>sobrescreve</strong> o <code>glass</code> do item: não há poço de vidro ao lado de avatar chapado. Com tom opaco entram o aro cônico e o especular, e o corpo e o contraste não mudam; o avatar não declara tom, porque a cor dele é a identidade da pessoa.
       </DocNote>
 
       <PropsTable
@@ -413,7 +342,7 @@ export default function TimelineDoc() {
             type: '"dot" | "icon" | "avatar" | "none"',
             default: '"dot"',
             description:
-              "A forma do marcador e a largura da calha. É da lista porque uma trilha tem uma calha só; o item pode sobrescrever para a exceção.",
+              "A forma do marcador e a largura da calha; o item pode sobrescrever.",
           },
           {
             prop: "size",
@@ -427,7 +356,7 @@ export default function TimelineDoc() {
             type: "boolean",
             default: "false",
             description:
-              "Veste a lâmina de vidro do sistema em todo marcador da trilha. Sobrescreve o item — o acabamento é da lista. Não aparece no ds:catalog porque o eixo mora no cva do marcador, a mesma lacuna do glass do Tabs.",
+              "Vidro em todo marcador da trilha; sobrescreve o item.",
           },
           {
             prop: "orientation",
@@ -458,14 +387,14 @@ export default function TimelineDoc() {
             type: "ReactNode",
             default: "—",
             description:
-              'Um <Avatar> de quem chama — vem como nó para não acoplar a camada. Só aparece com marker="avatar".',
+              'Um <Avatar> de quem chama. Só aparece com marker="avatar".',
           },
           {
             prop: "isLast",
             type: "boolean",
             default: "derivado",
             description:
-              "Preenchido pela Timeline a partir do índice. Passe à mão só na lista que continua depois do último item renderizado.",
+              "Derivado do índice; passe à mão só quando a lista continua além do renderizado.",
           },
         ]}
       />

@@ -114,35 +114,12 @@ export default function GlassDoc() {
     return (
         <>
             <Usage>
-                A superfície de vidro do sistema: uma lâmina translúcida que puxa
-                para o chão do próprio tema, duas nuvens de luz nos cantos
-                opostos da diagonal, e um aro inclinado que é a aresta pegando
-                luz. Ela nasceu na placa flutuante da barra lateral e saiu de lá
-                para poder vestir qualquer peça.
-                <br />
-                <br />
-                <strong>Existem dois vidros nesta casa, e a escolha é pela
-                premissa.</strong> Este é o <strong>pintado</strong>: ele não
-                borra nada, porque conta com <em>não haver conteúdo atrás</em> —
-                um painel que reserva a própria calha, um controle sobre cor
-                chapada. Quando há algo passando por baixo, o certo é a{" "}
-                <code>.mobile-glass-surface</code>, que tem{" "}
-                <code>backdrop-filter</code> de verdade e o{" "}
-                <code>prefers-reduced-transparency</code> que um blur obriga.
-                Borrar cor chapada não desenha nada.
-                <br />
-                <br />
-                <strong>E toda superfície elevada é uma placa só.</strong> Um{" "}
-                <code>Command</code> dentro de um popover chegou a empilhar duas
-                placas translúcidas — 84% no escuro — e saía mais claro que o
-                DatePicker. Quem hospeda pinta; o hospedado não. Menus, popovers e
-                selects vestem <code>--popover</code>; os modais, <code>--background</code>
-                — o mesmo material, e o token que cada escala pede.
+                A superfície de vidro <strong>pintada</strong>: lâmina translúcida, nuvens de luz nos cantos e um aro inclinado. Ela supõe que <em>não há conteúdo atrás</em>; quando algo passa por baixo, use <code>material</code> ou a <code>.mobile-glass-surface</code>, que borram de verdade. Toda superfície elevada é uma placa só: quem hospeda pinta, o hospedado não.
             </Usage>
 
             <DocSection
                 title="A superfície"
-                description="O degrau `panel`, que é o padrão. A lâmina é o corpo; as duas nuvens moram nos cantos superior-esquerdo e inferior-direito; o aro corre na diagonal entre eles."
+                description="O degrau `panel`, o padrão: lâmina no corpo, nuvens nos cantos superior-esquerdo e inferior-direito, aro na diagonal."
                 code={`<Glass className="w-60 rounded-xl shadow-sm">
   …
 </Glass>`}
@@ -154,7 +131,7 @@ export default function GlassDoc() {
 
             <DocSection
                 title="Numa caixa pequena"
-                description="O degrau `control`. Porcentagem escala e percepção não: a nuvem de `panel` vira 5,7px de luz num controle de 32px, e isso lê como aresta dura em vez de nuvem."
+                description="O degrau `control`, para controles pequenos. Numa caixa de 32px a nuvem de `panel` leria como aresta dura."
                 code={`<Glass size="control" className="h-8 w-18 rounded-full" />`}
             >
                 <div className="flex items-center gap-8">
@@ -171,7 +148,7 @@ export default function GlassDoc() {
 
             <DocSection
                 title="Vestindo uma peça que já existe"
-                description="Com `asChild` nenhum nó é criado — o `Slot` mescla as classes no filho. É a forma de dar vidro a um controle sem tocar na `className` dele."
+                description="Com `asChild` o `Slot` mescla as classes no filho, sem criar nó: dá vidro a um controle sem tocar na `className` dele."
                 code={`<Glass asChild size="control">
   <ThemeToggle />
 </Glass>`}
@@ -183,7 +160,7 @@ export default function GlassDoc() {
 
             <DocSection
                 title="Os três degraus do material"
-                description="Com `material` a peça deixa de pintar a luz e passa a borrar o que está atrás. O que separa os degraus é a opacidade da lâmina, nunca o raio — um material mais fino mostra mais do que passa por baixo, como no iOS. Ao lado, o pintado, que não tem borrão nenhum."
+                description="Com `material` a peça borra o que está atrás. Os degraus diferem na opacidade da lâmina, nunca no raio. Ao lado, o pintado, sem borrão."
                 code={`<Glass material="thin" />
 <Glass material="regular" />
 <Glass material="thick" />`}
@@ -195,46 +172,16 @@ export default function GlassDoc() {
                 <PalcoDeMaterial material="thick" rotulo="thick" />
             </DocSection>
 
-            <DocNote title="O modo tem premissa, e ligá-lo no lugar errado piora a peça">
-                O pintado parte de que <strong>não há conteúdo atrás</strong> — ele
-                desenha a luz porque não há o que revelar. O material parte do
-                oposto. Numa superfície que reserva a própria calha, como a placa
-                flutuante da barra, o borrão não tem o que borrar{" "}
-                <strong>e</strong> a lâmina abriu à toa: a peça fica pior do que
-                seria sem o modo.
-                <br />
-                <br />
-                As nuvens <strong>saem</strong> no material, e isso é o argumento e
-                não uma economia. Elas simulam luz atrás de uma placa que não tem
-                nada atrás; com conteúdo real e borrado ali, o simulacro disputa
-                com a coisa. Quem mantém a peça lendo como vidro é o aro — a mesma
-                conclusão a que a rodada do tingimento chegou por outro caminho.
+            <DocNote title="`material` só onde há conteúdo atrás">
+                Numa superfície que reserva a própria calha o borrão não tem o que borrar. No material as nuvens saem, porque disputariam com o conteúdo real; quem mantém a leitura de vidro é o aro.
             </DocNote>
 
-            <DocNote title="A ordem das camadas é o mecanismo, e não um detalhe">
-                A lâmina é pintada <strong>por cima</strong> das nuvens, e é a
-                atenuação dela que constrói o &ldquo;atrás&rdquo;. Medido no tema
-                escuro: 48% de branco sobre a página dá rgb 128, e a lâmina a 82%
-                o leva a <strong>23</strong> contra um corpo de{" "}
-                <strong>2</strong>. Pintadas por cima, as mesmas nuvens dariam
-                128 e leriam como manchas <em>na</em> placa. Alfa alto, resultado
-                baixo.
-                <br />
-                <br />
-                Consequência prática: os dois alfas andam juntos. Escurecer a
-                lâmina sem subir a nuvem apaga a luz na mesma proporção — 17%
-                atrás de 55% de preto e 48% atrás de 82% rendem o mesmo pico.
+            <DocNote title="A lâmina vai por cima das nuvens">
+                É a atenuação da lâmina que faz a luz ler como <em>atrás</em>. Os dois alfas andam juntos: escurecer a lâmina sem subir a nuvem apaga a luz.
             </DocNote>
 
-            <DocNote title="A polaridade se inverte entre os temas, e a distância não">
-                A régua é uma só: <strong>a lâmina se afasta da página na direção
-                do chão daquele tema</strong>. No escuro esse chão é o preto; no
-                claro é a família neutra própria dele — que é acromática, com a
-                página em <code>oklch(0.985)</code> e o branco de verdade morando
-                no <code>--card</code>. Preto com alfa ali introduziria um cinza
-                que o tema não tem em lugar nenhum.
-                <br />
-                <br />
+            <DocNote title="A lâmina puxa para o chão do próprio tema">
+                Preto no escuro, a família neutra no claro — preto com alfa ali seria um cinza que o tema não tem.
                 <Table className="mt-2">
                     <TableHeader>
                         <TableRow>
@@ -267,164 +214,31 @@ export default function GlassDoc() {
                     </TableBody>
                 </Table>
                 <br />
-                <strong>As nuvens não registram no claro por aritmética, e não
-                por timidez.</strong> A página é rgb 250 de 255 e a lâmina já a
-                levou a 255: não sobra nenhuma unidade acima do corpo. Quem
-                quiser luz de verdade no claro precisa baixar{" "}
-                <code>--background</code>, o que é decisão de sistema.
+                Luz de verdade no claro exige baixar <code>--background</code>, que é decisão de sistema.
             </DocNote>
 
-            <DocNote title="O que faz brilhar não é o realce sozinho — é o par">
-                O extremo <code>100%</code> do aro já foi derivado do pico
-                (<code>color-mix(--glass-rim 45%, transparent)</code>), sob a
-                lógica de que a base não tem luz própria, tem menos da mesma.
-                Isso vale enquanto os dois extremos são da{" "}
-                <strong>mesma natureza</strong> — e no escuro são, os dois são
-                luz.
-                <br />
-                <br />
-                <strong>No claro não são.</strong> Ali o pico é sombra, e
-                derivado o outro extremo só podia ser uma sombra mais fraca.
-                Medido: os quatro cantos saíam em 210, 232, 232 e 235 contra uma
-                placa de 255 — <strong>todos abaixo dela</strong>. Isso é um
-                contorno, não um bisel: a peça não tinha lado aceso.
-                <br />
-                <br />
-                Com <code>--glass-rim-far</code> como token próprio, o claro
-                ganha realce branco puro no canto superior-esquerdo e a lâmina
-                cede três unidades (255 → <strong>252</strong>) para o realce ter
-                onde existir — sem descer abaixo da página, que continua em 250.
-                O par vai de <strong>205 a 255</strong>: amplitude 50 contra as
-                25 de antes, e razão <strong>1,591</strong> entre os dois lados.
-                Cada lado sozinho mal se separa da placa; o par é o que lê.
-                <br />
-                <br />
-                No escuro o token vale <code>15%</code> — os mesmos 45% de 34%
-                que o derivado valia —, então aquele lado não se mexeu: corpo 2,
-                aro 94, vestígio 47.
+            <DocNote title="O aro é um eixo só, e o claro tem par próprio">
+                <code>--glass-rim-angle</code> vale 165° no escuro e 345° no claro — a mesma geometria, sombra no canto oposto ao brilho. No claro o pico é sombra, e <code>--glass-rim-far</code> é token próprio para o outro extremo ser luz: é o par que lê como bisel.
             </DocNote>
 
-            <DocNote title="É um eixo só de aro, girado 180° entre os temas">
-                <code>--glass-rim-angle</code> vale 165° no escuro e 345° no
-                claro — o mesmo eixo pela outra ponta. A geometria é idêntica e
-                só a polaridade inverte: sombra de uma placa acesa por
-                cima-à-esquerda mora no canto oposto ao brilho. Com dois valores
-                soltos, os dois biséis podiam apontar para direções diferentes
-                sem ninguém perceber, e o teste tranca a soma.
-                <br />
-                <br />
-                Isto reverte uma decisão anterior que pusera o aro em 180° reto,
-                e a reversão é legítima porque <strong>a peça mudou</strong>:
-                naquela versão o corpo era uma rampa vertical com que um aro
-                diagonal brigava; hoje o corpo é chapado e a luz mora nos cantos.
-            </DocNote>
-
-            <DocNote title="A pegada das nuvens é o espelho da do aro">
-                Os números saem de medir a caixa real (240×424), não de
-                estimativa. O aro chega ao vale em 16% de um eixo de 471,7px — ou
-                seja 75,5px —, então a zona clara dele cobre a largura toda do
-                topo e desce <strong>18,4% da altura</strong> pela borda
-                esquerda. Refletido pelo centro: a largura toda de baixo, subindo
-                18,4% pela direita. Daí <code>100% 18%</code> em{" "}
-                <code>0% 0%</code> e <code>100% 100%</code>.
-                <br />
-                <br />
-                <strong>O que não dá para espelhar é a inclinação.</strong>{" "}
-                <code>radial-gradient</code> não rotaciona os eixos da elipse em
-                CSS — não existe sintaxe para isso. O que se iguala é a pegada; o
-                tombo de 15° fica só no aro, e é ele que carrega a direção.
+            <DocNote title="A pegada das nuvens espelha a do aro">
+                <code>100% 18%</code> nos cantos opostos reflete a zona clara do aro; a inclinação fica só no aro, porque <code>radial-gradient</code> não rotaciona a elipse.
             </DocNote>
 
             <DocNote title="`asChild` só funciona se o filho repassar props">
-                O <code>Slot</code> entrega <code>className</code> ao filho; quem
-                a aplica no elemento certo é o filho. Um componente que aceita só{" "}
-                <code>children</code> recebe a classe e a descarta — e o defeito é{" "}
-                <strong>calado</strong>: nada quebra, a peça simplesmente sai sem
-                vidro. Aconteceu na primeira escrita desta página.
-                <br />
-                <br />
-                Antes de vestir alguma coisa, confira que ela faz{" "}
-                <code>className={"{cn(…, className)}"}</code> na raiz. O{" "}
-                <code>ThemeToggle</code> faz, nos dois ramos.
-                <br />
-                <br />
-                E o <code>data-slot</code> do filho <strong>vence</strong> o da
-                peça — dentro de <code>{"<Glass asChild>"}</code> um toggle
-                continua se anunciando como <code>theme-toggle</code>. É a
-                resolução do <code>Slot</code>, e é o nome certo: naquele lugar
-                aquilo é um toggle que por acaso está de vidro.
+                O <code>Slot</code> entrega a <code>className</code>; se o filho não a aplica na raiz, a peça sai sem vidro e nada avisa. Antes de vestir, confira <code>className={"{cn(…, className)}"}</code>. O <code>data-slot</code> do filho vence o da peça.
             </DocNote>
 
-            <DocNote title="Três coisas que mordem quem veste isto numa peça existente">
-                <strong>1. O shorthand `background` apaga o `background-color`.</strong>{" "}
-                Medido na barra: o <code>bg-sidebar</code> que continuava na
-                string resolvia <code>rgba(0, 0, 0, 0)</code> sob a utility.
-                Vestir vidro <em>substitui</em> o preenchimento; não soma a ele.
-                <br />
-                <br />
-                <strong>2. A borda transparente de 1px toma a borda.</strong> O
-                aro é pintado no <code>border-box</code>, então a peça precisa de
-                uma borda onde ele more. Com <code>box-sizing: border-box</code>{" "}
-                a caixa externa não cresce — o conteúdo encolhe 2px, e num
-                controle com filho absoluto calibrado isso desloca 1px.
-                <br />
-                <br />
-                <strong>3. O raio é herdado, e é isso que a torna portátil.</strong>{" "}
-                A utility não declara <code>border-radius</code>. É o que faz{" "}
-                <code>rounded-full</code> num controle e <code>rounded-xl</code>{" "}
-                num painel funcionarem sem eixo nenhum.
+            <DocNote title="Vestir vidro substitui o preenchimento">
+                O shorthand <code>background</code> apaga o <code>background-color</code> da peça. A borda transparente de 1px é onde o aro mora, e encolhe o conteúdo 2px. O raio é herdado: a utility não declara <code>border-radius</code>.
             </DocNote>
 
-            <DocNote title="Porcentagem escala; percepção não">
-                É a razão de o eixo <code>size</code> existir, e a única. A nuvem
-                de <code>panel</code> é <code>100% 18%</code>: numa placa de
-                424px são 76px de luz difusa, e num controle de 32px são{" "}
-                <strong>5,7px</strong>. A fração óptica é idêntica nos dois e o
-                resultado não é — 5,7px de gradiente lê como aresta dura. O
-                preset corrige a <em>medida absoluta</em>, não a proporção.
-                <br />
-                <br />
-                Ele sobrescreve <strong>só a variável</strong>, e nunca a
-                propriedade: <code>glass</code> lê{" "}
-                <code>var(--glass-cloud-ry, 18%)</code> e não declara a variável
-                em lugar nenhum. Duas utilities escrevendo{" "}
-                <code>background</code> seriam decididas por ordem de emissão do
-                Tailwind e não pelo que se escreveu.
-            </DocNote>
-
-            <DocNote title="O que foi tentado e rejeitado, que vale tanto quanto o que ficou">
-                <strong>Uma lavagem vertical de altura inteira</strong>, chegando
-                a rgb 62 no topo. Trocar linear por radial não resolvia nada
-                porque o radial cobria a placa toda: o que importa não é a
-                família da curva, é a <strong>escala</strong>. Luz que ocupa a
-                peça inteira é fundo, não é luz.
-                <br />
-                <br />
-                <strong>O aro baixado de 34% para 18%</strong>, sob o argumento
-                de que contraluz não tem especular. Errado: o aro não descreve de
-                onde vem a luz do corpo — ele é a aresta pegando luz, e sem ele a
-                peça vira um retângulo escuro.
-                <br />
-                <br />
-                <strong>Três focos, depois dois, depois um.</strong> O do meio da
-                borda direita disputava com a lista de links; o do topo-esquerdo
-                disputava com o cabeçalho. A régua que sobrou é{" "}
-                <em>luz vai onde não há conteúdo</em> — e ela foi depois
-                revertida de propósito, com o custo medido na mesa, quando o par
-                da diagonal ficou mais equilibrado que um foco só.
-                <br />
-                <br />
-                <strong>A placa clara em 244</strong>, mais escura que a página
-                em 250. Ela fazia a navegação recuar num tema em que ela deve
-                avançar.
+            <DocNote title="`size` move só a variável">
+                O preset <code>control</code> sobrescreve só <code>--glass-cloud-ry</code>, lida com fallback; duas utilities escrevendo <code>background</code> seriam decididas pela ordem de emissão.
             </DocNote>
 
             <DocNote title="Sem eixo de intensidade">
-                Zero contagem. Quem precisar de um vidro mais forte ou mais fraco
-                sobrescreve os cinco tokens no próprio elemento — eles são
-                variáveis, e variável herda. Um eixo com um caso só medido é
-                ficção, e este projeto já removeu dois que eram constante
-                disfarçada.
+                Para mais ou menos vidro, sobrescreva os tokens no próprio elemento — são variáveis e herdam.
             </DocNote>
 
             <PropsTable
@@ -434,27 +248,27 @@ export default function GlassDoc() {
                         type: `"panel" | "control"`,
                         default: `"panel"`,
                         description:
-                            "A medida da caixa. Existe porque a nuvem de `panel` vira 5,7px de luz num controle de 32px — a proporção é a mesma e a percepção não.",
+                            "A medida da caixa; `control` para controles pequenos.",
                     },
                     {
                         prop: "material",
                         type: '"thin" | "regular" | "thick"',
                         default: "—",
                         description:
-                            "Liga o borrão de verdade. Ausência é o pintado. Os degraus diferem na opacidade da lâmina, nunca no raio.",
+                            "Liga o borrão; ausente, é o pintado.",
                     },
                     {
                         prop: "asChild",
                         type: "boolean",
                         default: "false",
                         description:
-                            "Veste a peça de quem chama em vez de renderizar um `div`. Nenhum nó é criado; o `Slot` mescla as classes no filho.",
+                            "Veste o filho em vez de renderizar um `div`.",
                     },
                     {
                         prop: "className",
                         type: "string",
                         description:
-                            "O raio, a sombra e a caixa são de quem chama — a utility não declara nenhum dos três.",
+                            "Raio, sombra e caixa são de quem chama.",
                     },
                 ]}
             />
@@ -466,19 +280,19 @@ export default function GlassDoc() {
                         prop: "--glass-tint",
                         type: "cor com alfa",
                         description:
-                            "A lâmina. Preto no escuro, branco no claro — ela se afasta da página na direção do chão daquele tema.",
+                            "A lâmina: preto no escuro, branco no claro.",
                     },
                     {
                         prop: "--glass-cloud",
                         type: "cor com alfa",
                         description:
-                            "A luz atrás. Branca nos dois temas, e lida através da lâmina — daí o alfa alto para um resultado baixo.",
+                            "A luz atrás, branca, lida através da lâmina — daí o alfa alto.",
                     },
                     {
                         prop: "--glass-rim",
                         type: "cor com alfa",
                         description:
-                            "O pico do aro. Luz no escuro, sombra no claro. Piso de 28% no escuro: abaixo disso a peça deixa de ler como vidro.",
+                            "O pico do aro: luz no escuro, sombra no claro. Piso de 28% no escuro.",
                     },
                     {
                         prop: "--glass-rim-shade",
@@ -489,63 +303,63 @@ export default function GlassDoc() {
                         prop: "--glass-rim-angle",
                         type: "ângulo",
                         description:
-                            "O eixo. 165° no escuro e 345° no claro — o mesmo eixo pela outra ponta.",
+                            "O eixo: 165° no escuro, 345° no claro.",
                     },
                     {
                         prop: "--glass-material-thin / -regular / -thick",
                         type: "cor com alfa",
                         default: "—",
                         description:
-                            "A lâmina de cada degrau do modo material. Escuro 40 / 55 / 70%; claro 60 / 72 / 84%. Quem muda é a opacidade — o raio é um só.",
+                            "A lâmina de cada degrau do material: escuro 40 / 55 / 70%, claro 60 / 72 / 84%.",
                     },
                     {
                         prop: "--glass-tone",
                         type: "cor",
                         default: "transparent",
                         description:
-                            "O vidro colorido, acima da lâmina. Contrato lido com fallback: quem não pede não paga camada.",
+                            "O vidro colorido, acima da lâmina; sem valor, não pinta nada.",
                     },
                     {
                         prop: "--glass-ink / -amount / -boost",
                         type: "cor / % / número",
                         default: "— / 0% / 4",
                         description:
-                            "A cor que o aro e as nuvens puxam. Sem tinta a mistura é o neutro consigo mesmo — o no-op é estrutural.",
+                            "A cor que o aro e as nuvens puxam; sem tinta, nada muda.",
                     },
                     {
                         prop: "--glass-rim-far",
                         type: "cor com alfa",
                         default: "—",
                         description:
-                            "O outro extremo do bisel, e token próprio: no claro o pico é sombra e este lado precisa ser luz.",
+                            "O outro extremo do bisel; no claro é luz, contra o pico de sombra.",
                     },
                     {
                         prop: "--glass-sheen",
                         type: "cor",
                         default: "transparent",
                         description:
-                            "O realce de estado, a camada mais de cima. Hoje sem produtor — ponto de contrato para a primeira peça de vidro clicável.",
+                            "O realce de estado, na camada mais de cima.",
                     },
                     {
                         prop: "--glass-rim-image / --glass-sheen-image",
                         type: "imagem",
                         default: "o linear do aro / o chapado do realce",
                         description:
-                            "O aro e o realce como contrato. glass-round os troca por um cônico e um especular — num círculo as pontas do linear caem nos cantos, que ali não existem.",
+                            "O aro e o realce como contrato; glass-round os troca por cônico e especular, porque num círculo não há cantos.",
                     },
                     {
                         prop: "--glass-spec",
                         type: "%",
                         default: "14%",
                         description:
-                            "O pico do especular do preset redondo. 14 e não 20 por robustez: no ponto onde a letra encontra o reflexo ele vale 16,7% disso.",
+                            "O pico do especular do preset redondo.",
                     },
                     {
                         prop: "--glass-cloud-rx / -ry",
                         type: "medida",
                         default: "100% / 18%",
                         description:
-                            "A pegada das nuvens. O preset `control` move só a `-ry`; a utility as lê com fallback e não as declara.",
+                            "A pegada das nuvens; o preset `control` move só a `-ry`.",
                     },
                 ]}
             />

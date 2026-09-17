@@ -334,16 +334,12 @@ export default function TopBarDoc() {
   return (
     <>
       <Usage>
-        A barra do topo da janela — a que fica parada enquanto a tela rola. Não é
-        o <code>PageHeader</code>, que é o topo de dentro da tela: esta leva o
-        voltar ou a marca, o nome da tela e as ações que valem em qualquer lugar.
-        No telefone ela é fixa e soma a área segura; no desktop ela gruda no topo
-        da região que rola.
+          A barra do topo da janela, parada enquanto a tela rola: o voltar ou a marca, o nome da tela e as ações que valem em qualquer lugar. O topo de dentro da tela é o <code>PageHeader</code>; a barra de baixo do telefone é a <code>BottomBar</code>. Não escreva <code>&lt;header className=&quot;sticky …&quot;&gt;</code> nem borrão à mão.
       </Usage>
 
       <DocSection
         title="O app, no desktop"
-        description="Gatilho da barra lateral, título e ações. No desktop ela tem um tamanho só, 48, com a barra lateral aberta ou recolhida. Role o conteúdo: ela vira vidro."
+        description="Gatilho da barra lateral, título e ações, em 48px com a lateral aberta ou recolhida. Role o conteúdo: ela vira vidro."
         previewClassName="p-4"
         code={`<TopBar position="auto" surface="scroll">
   <TopBarStart>
@@ -371,16 +367,12 @@ export default function TopBarDoc() {
       </DocSection>
 
       <DocNote title="A altura tem o fio e a área segura dentro">
-        A barra do app media 56 no telefone e desenhava o fio <em>por fora</em>,
-        enquanto a casca empurrava o conteúdo por <code>--mobile-header-offset</code>
-        {" "}— 56 mais a área segura. O conteúdo começava 1px debaixo dela. Hoje a
-        caixa é a soma de <code>--top-bar-h</code> e <code>--top-bar-safe</code>{" "}
-        em <code>border-box</code>, e o total é o token, por construção.
+          A caixa é <code>--top-bar-h</code> mais <code>--top-bar-safe</code> em <code>border-box</code>, então o total é o <code>--mobile-header-offset</code> que a casca usa para empurrar o conteúdo. Com o fio por fora, o conteúdo começaria 1px debaixo da barra.
       </DocNote>
 
       <DocSection
         title="Detalhe"
-        description="Voltar, título e uma ação. O voltar é o PageHeaderBack — icon-md, 32 de caixa, 46 de alvo no toque, e a seta alinhada à calha de 16px. Todo botão da barra fica no degrau padrão, md."
+        description="Voltar, título e uma ação. O voltar é o PageHeaderBack, e todo botão da barra fica no degrau padrão, md."
         previewClassName="p-4"
         code={`<TopBar>
   <TopBarStart><PageHeaderBack href="/cartoes" /></TopBarStart>
@@ -412,7 +404,7 @@ export default function TopBarDoc() {
 
       <DocSection
         title="Pública, com a busca no meio"
-        description="Marca à esquerda, busca centralizada, ações à direita. No telefone a busca vira ícone. Os dois lados são flex-1 e a busca não encolhe — é o que a centraliza na janela, e não no espaço que sobra."
+        description="Marca à esquerda, busca centralizada, ações à direita; no telefone a busca vira ícone. Os lados são flex-1 para a busca centrar na janela."
         previewClassName="p-4"
         code={`<TopBar>
   <TopBarStart className="min-w-0 flex-1 shrink"><AppWordmark size="sm" /></TopBarStart>
@@ -427,7 +419,7 @@ export default function TopBarDoc() {
 
       <DocSection
         title="Com filtro"
-        description="O recorte de tempo da tela entra nas ações, antes do sino. É o dateFilter que as páginas de faturas, cartões e categorias publicam para a barra do telefone."
+        description="O recorte de tempo da tela entra nas ações, antes do sino — o dateFilter que as páginas publicam para a barra."
         previewClassName="p-4"
         code={`<TopBar>
   <TopBarTitle>Faturas</TopBarTitle>
@@ -441,7 +433,7 @@ export default function TopBarDoc() {
 
       <DocSection
         title="Superfícies"
-        description="solid é o fundo da página; glass é a régua de barra — opaca a 95% e 60% onde o borrão existe; scroll é solid até o conteúdo passar por baixo, e glass depois. Role a prévia."
+        description="solid é o fundo da página; glass é a régua de barra; scroll é solid até o conteúdo passar por baixo, e glass depois. Role a prévia."
         previewClassName="flex-col items-stretch gap-3 p-4"
         code={`<TopBar surface="scroll">…</TopBar>`}
       >
@@ -472,7 +464,7 @@ export default function TopBarDoc() {
 
       <DocSection
         title="Tamanhos"
-        description="sm 48, md 56. O padrão é sm: 48 no telefone e no desktop, com a barra lateral aberta ou recolhida."
+        description="sm 48, md 56. O padrão é sm, no telefone e no desktop."
         previewClassName="flex-col items-stretch gap-4 p-4"
         code={`<TopBar size="sm" />  // 48
 <TopBar size="md" />  // 56
@@ -501,29 +493,15 @@ export default function TopBarDoc() {
       </DocSection>
 
       <DocNote title="Grudada fica abaixo da faixa de aviso">
-        <code>sticky</code> mora em <code>--z-sticky</code>, e não em{" "}
-        <code>--z-header</code>. A faixa de sem conexão é{" "}
-        <code>fixed md:top-0</code> em <code>--z-banner</code> e cobre a barra
-        do desktop de propósito — a 40 a barra a esconderia. No telefone a barra
-        é fixa, a faixa desce para baixo dela, e ali a barra vai a{" "}
-        <code>--z-header</code>.
+          <code>sticky</code> mora em <code>--z-sticky</code>, para a faixa de sem conexão (<code>--z-banner</code>) cobrir a barra no desktop. No telefone a barra é fixa, a faixa desce para baixo dela, e ali ela vai a <code>--z-header</code>.
       </DocNote>
 
       <DocNote title="O fio é da barra lateral, e não da tela">
-        A borda de baixo lê <code>--sidebar-inset-rule</code>, que o{" "}
-        <code>SidebarInset</code> publica: com a barra lateral{" "}
-        <code>floating</code> a placa não tem borda para o fio encostar, e ele
-        some em vez de ficar pendurado a 8px de nada. Fora de um{" "}
-        <code>SidebarInset</code>, 1px.
+          A borda de baixo lê <code>--sidebar-inset-rule</code>, publicada pelo <code>SidebarInset</code>: com a lateral <code>floating</code> ele some, em vez de ficar pendurado. Fora de um <code>SidebarInset</code>, 1px.
       </DocNote>
 
-      <DocNote title="O que ela substituiu">
-        Havia duas barras escritas à mão: a do app, com vidro próprio (8px, sem
-        saturação, sem guarda de transparência reduzida), <code>z-10</code> cru
-        e o fio por fora da altura; e a do catálogo, já na régua de barra. As
-        duas passaram a ser esta. As telas de entrada, 404 e erro não têm barra
-        — mostram a marca acima do conteúdo —, e a versão de marca acima é a
-        forma delas se um dia precisarem de uma.
+      <DocNote title="Telas fora da casca não têm barra">
+          Entrada, 404 e erro mostram a marca acima do conteúdo. A versão de marca é a forma delas se um dia precisarem de uma.
       </DocNote>
 
       <PropsTable
@@ -534,21 +512,21 @@ export default function TopBarDoc() {
             type: '"sm" | "md"',
             default: '"sm"',
             description:
-              "Altura: 48, 56. O padrão é sm — 48 no telefone e no desktop, um tamanho só com a barra lateral aberta ou recolhida.",
+              "Altura: 48 ou 56. O padrão é sm.",
           },
           {
             prop: "position",
             type: '"static" | "sticky" | "fixed" | "auto"',
             default: '"sticky"',
             description:
-              "sticky gruda no topo da região que rola, em --z-sticky. fixed prende na janela, em --z-header, e soma a área segura. auto é fixed no telefone e sticky acima — a forma do app.",
+              "sticky gruda na região que rola; fixed prende na janela e soma a área segura; auto é fixed no telefone e sticky acima.",
           },
           {
             prop: "surface",
             type: '"solid" | "glass" | "scroll"',
             default: '"solid"',
             description:
-              "solid é --background; glass é barSurfaceClassName; scroll é solid até o primeiro ancestral que rola (ou a janela) sair do topo, e glass depois.",
+              "solid é --background; glass é barSurfaceClassName; scroll troca de um para o outro ao rolar.",
           },
           {
             prop: "gutter",
@@ -577,7 +555,7 @@ export default function TopBarDoc() {
             prop: "TopBarTitle",
             type: "ComponentProps<'h1'> & { asChild?: boolean }",
             description:
-              "O nome da tela, truncado numa linha. É o elástico da linha quando não há TopBarContent.",
+              "O nome da tela, truncado numa linha.",
           },
           {
             prop: "TopBarContent",

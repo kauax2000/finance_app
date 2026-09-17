@@ -23,11 +23,9 @@ export default function DrawerDoc() {
     <>
       <Usage>
         Uma gaveta que se arrasta, <strong>em qualquer largura de tela</strong>.
-        A diferença para o <code>Sheet</code> não é o desenho, é quem decide: o{" "}
-        <code>Sheet</code> troca de superfície com a largura — painel no
-        desktop, gaveta no telefone. O <code>Drawer</code> é gaveta sempre.
-        Escolha-o quando o gesto é a afordância, e não uma consequência de a
-        tela ser estreita.
+        O <code>Sheet</code> troca de superfície com a largura — painel no
+        desktop, gaveta no telefone; o <code>Drawer</code> é gaveta sempre.
+        Escolha-o quando o gesto é a afordância.
       </Usage>
 
       <DocSection
@@ -65,8 +63,6 @@ export default function DrawerDoc() {
             <DialogBody>
               <p className="text-sm text-muted-foreground">
                 O corpo rola entre o cabeçalho e o rodapé, que ficam parados.
-                Quem entrega isso é o <code>DialogBody</code>, e não uma classe
-                escrita aqui.
               </p>
             </DialogBody>
             <DialogFooter>
@@ -122,61 +118,44 @@ export default function DrawerDoc() {
       </DocSection>
 
       <DocNote title="A largura existe por causa do desktop">
-        Uma gaveta de baixo numa janela de 1900px vira uma linha de leitura de
-        1900px, que medida de texto nenhuma suporta. <code>full</code> continua
-        o padrão porque é o comportamento do telefone, onde a gaveta nasceu —{" "}
-        <code>md</code> e <code>lg</code> a centralizam e param.{" "}
-        <code>variant=&quot;inset&quot;</code> vai junto nessa direção: solta a
-        gaveta das bordas, arredonda os quatro cantos e deixa a página aparecer
-        em volta.
+        Gaveta de ponta a ponta numa janela larga vira linha de leitura longa
+        demais. <code>full</code> é o padrão, o comportamento do telefone;{" "}
+        <code>md</code> e <code>lg</code> centralizam e param, e{" "}
+        <code>variant=&quot;inset&quot;</code> solta a gaveta das bordas.
       </DocNote>
 
       <DocNote title="A cromagem vem do Dialog — aqui não existe DrawerHeader">
-        Cabeçalho, título, descrição, corpo rolável e rodapé são{" "}
-        <code>DialogHeader</code>, <code>DialogTitle</code>,{" "}
-        <code>DialogDescription</code>, <code>DialogBody</code> e{" "}
-        <code>DialogFooter</code> — os mesmos que a{" "}
-        <Link href="/designsystem/sheet">folha</Link> usa, e pelo mesmo motivo:{" "}
-        <code>vaul</code> é construído sobre <code>@radix-ui/react-dialog</code>
-        , há uma instância só em <code>node_modules</code>, e por isso o{" "}
-        <code>DialogTitle</code> encontra o contexto de que precisa dentro de
-        um <code>DrawerContent</code>. As quatro peças que este arquivo tinha
-        saíram: eram um segundo título de gaveta que divergia do primeiro —
-        centralizava o texto, contra a decisão de que o cabeçalho é alinhado à
-        esquerda em toda largura.
+        Cabeçalho, título, descrição, corpo e rodapé são as peças{" "}
+        <code>Dialog*</code>, as mesmas da{" "}
+        <Link href="/designsystem/sheet">folha</Link>: o <code>vaul</code> é
+        construído sobre <code>@radix-ui/react-dialog</code>, então{" "}
+        <code>DialogTitle</code> acha o contexto dentro de{" "}
+        <code>DrawerContent</code>. O cabeçalho é alinhado à esquerda em toda
+        largura.
       </DocNote>
 
       <DocNote title="A alça é o gesto, e não o desenho dele">
-        Até esta revisão a alça daqui era uma <code>div</code> decorativa: sem{" "}
-        <code>data-vaul-handle</code>, sem área de toque, sem arraste. Ela
-        desenhava a promessa que a documentação descrevia — exatamente o defeito
-        que a rodada do <code>Sheet</code> tirou de 37 telas. Agora é o{" "}
+        A alça é o{" "}
         <Link href="/designsystem/drag-handle" className="underline">
           DragHandle
         </Link>
-        , que <em>é</em> a área de arraste e recebe os 44px de alvo. O que ela{" "}
-        <strong>não</strong> faz é fechar no clique: o <code>vaul</code> só
-        fecha ali quando <code>dismissible</code> é falso. Por isso{" "}
-        <code>showHandle</code> só se desliga junto com{" "}
-        <code>dismissible={"{false}"}</code> — sem gesto e com alça, a promessa
-        volta.
+        : a própria área de arraste, com 44px de alvo. Ela não fecha no clique,
+        então <code>showHandle</code> só se desliga junto com{" "}
+        <code>dismissible={"{false}"}</code> — alça sem gesto promete o que não
+        existe.
       </DocNote>
 
       <DocNote title="Só o eixo vertical">
-        <code>direction</code> aceita <code>bottom</code> e <code>top</code>. Não
-        é simplificação: o <code>[data-vaul-handle]</code> do <code>vaul</code>{" "}
-        declara <code>touch-action: pan-y</code> — a alça só arrasta na
-        vertical, e uma gaveta lateral teria a alça de enfeite outra vez. Painel
-        preso a uma borda lateral é o ramo desktop do{" "}
-        <Link href="/designsystem/sheet">Sheet</Link>, que não promete gesto
-        nenhum.
+        <code>direction</code> aceita <code>bottom</code> e <code>top</code>: a
+        alça do <code>vaul</code> declara <code>touch-action: pan-y</code> e só
+        arrasta na vertical. Painel preso a uma borda lateral é o{" "}
+        <Link href="/designsystem/sheet">Sheet</Link> no desktop.
       </DocNote>
 
       <DocNote title="Drawer ou Sheet?">
-        O app resolve formulário no telefone com <code>Sheet</code>, e ali o
-        arraste disputa com a rolagem do formulário. Use <code>Drawer</code>{" "}
-        para conteúdo curto e casual, que se descarta com o polegar — e{" "}
-        <code>Sheet</code> quando a mesma tela precisa ser painel no desktop.
+        <code>Drawer</code> para conteúdo curto e casual, que se descarta com o
+        polegar. Formulário vai no <code>Sheet</code>: numa gaveta arrastável o
+        arraste disputa com a rolagem, e a mesma tela vira painel no desktop.
       </DocNote>
 
       <PropsTable
@@ -199,8 +178,7 @@ export default function DrawerDoc() {
             prop: "fill",
             type: "boolean",
             default: "false",
-            description:
-              "Gaveta alta: ocupa quase a tela, com folga e área segura na borda oposta. Sem ela, a gaveta mede o próprio conteúdo e para no teto de 85dvh.",
+            description: "Gaveta alta, quase a tela toda; sem ela, mede o conteúdo até 85dvh.",
           },
           {
             prop: "variant",
@@ -213,15 +191,13 @@ export default function DrawerDoc() {
             prop: "size",
             type: '"full" | "md" | "lg"',
             default: '"full"',
-            description:
-              "O teto de largura acima de 640px: full estica, md para em 32rem, lg em 42rem — e as duas centralizam.",
+            description: "Teto de largura acima de 640px: full estica, md para em 32rem, lg em 42rem.",
           },
           {
             prop: "showHandle",
             type: "boolean",
             default: "true",
-            description:
-              "Desligue só junto com dismissible={false} — com o gesto ligado, a alça é a única pista de que ele existe.",
+            description: "Desligue só junto com dismissible={false}.",
           },
         ]}
       />

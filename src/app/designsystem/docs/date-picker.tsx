@@ -19,7 +19,7 @@ export default function DatePickerDoc() {
 
       <DocSection
         title="Ele é um campo"
-        description="Mesma altura, mesma borda e mesmo preenchimento do Input ao lado. Era Button variant='outline' size='md': 32px contra 36, e oklch(0.985) opaco contra oklab(0.9 0 0 / 0.3) translúcido — medidos no tema claro."
+        description="Mesma altura, borda e preenchimento do Input ao lado."
         code={`<DatePicker value={data} onChange={setData} />`}
         previewClassName="items-stretch"
       >
@@ -28,7 +28,7 @@ export default function DatePickerDoc() {
 
       <DocSection
         title="Intervalo"
-        description="mode='range' resolve num popover só o que hoje são dois DatePicker independentes — sem faixa realçada entre as pontas, e sem impedir um fim antes do início."
+        description="mode='range' escolhe o período num popover só, com a faixa entre as pontas realçada e sem fim antes do início."
         code={`const [periodo, setPeriodo] = React.useState<DateRange | undefined>()
 
 <DatePicker mode="range" value={periodo} onChange={setPeriodo} />`}
@@ -60,38 +60,20 @@ export default function DatePickerDoc() {
         <LimitesDemo />
       </DocSection>
 
-      <DocNote title="O seletor de ano é limitado, e o padrão do react-day-picker não servia">
-        Com <code>captionLayout=&quot;dropdown&quot;</code> e sem limites, ele
-        oferece <strong>±100 anos</strong> — medido: 101 opções começando em
-        1926. Ninguém lança uma transação em 1926, e uma lista de cem itens é
-        pior que paginar o mês. O padrão é cinco anos para cada lado, que cobre
-        lançamento retroativo e conta agendada; quem precisar de mais passa{" "}
-        <code>min</code> e <code>max</code>.
+      <DocNote title="O seletor de ano cobre cinco anos para cada lado">
+        Sem limites, o <code>react-day-picker</code> oferece ±100 anos, e uma lista de cem itens é pior que paginar o mês. Cinco anos cobrem lançamento retroativo e conta agendada; para mais, <code>min</code> e <code>max</code>.
       </DocNote>
 
       <DocNote title="O foco volta ao gatilho ao fechar">
-        Havia um <code>onCloseAutoFocus</code> prevenido, e com ele o foco ficava
-        no <code>&lt;body&gt;</code> — medido, no <kbd>Esc</kbd> e ao escolher.
-        É o mesmo bug que o <code>FormPickerPopover</code> já tinha registrado: a
-        justificativa (o salto de rolagem) vale para <strong>abrir</strong>, não
-        para fechar, porque o Radix devolve o foco com{" "}
-        <code>preventScroll</code>.
+        No <kbd>Esc</kbd> e ao escolher. Não previna <code>onCloseAutoFocus</code>: o foco ficaria no <code>&lt;body&gt;</code>. O salto de rolagem só vale ao abrir, e o Radix devolve o foco com <code>preventScroll</code>.
       </DocNote>
 
       <DocNote title="A raiz sabe do telefone">
-        <code>modal</code> era <code>false</code> cravado. Sem <code>modal</code>{" "}
-        no telefone, rolar a grade arrasta a folha que contém o formulário, e o
-        dedo não distingue as duas — é a decisão que o{" "}
-        <code>FormPickerPopover</code> já traz de fábrica.
+        <code>modal</code> é ligado no telefone: sem ele, rolar a grade arrasta a folha que contém o formulário, e o dedo não distingue as duas.
       </DocNote>
 
       <DocNote title="displayStyle=&quot;numeric&quot; para espaço apertado">
-        O padrão escreve o mês por extenso (&ldquo;5 de abril de 2026&rdquo;),
-        que é mais legível e mais longo. Numa linha de filtros ao lado de outros
-        controles, <code>numeric</code> devolve <code>05/04/2026</code>. Os dois
-        saem de <code>@/lib/transaction-date</code>: havia dois{" "}
-        <code>toLocaleDateString</code> escritos aqui dentro, com os helpers ao
-        lado.
+        O padrão escreve o mês por extenso (&ldquo;5 de abril de 2026&rdquo;); numa linha de filtros, <code>numeric</code> devolve <code>05/04/2026</code>. Os dois saem de <code>@/lib/transaction-date</code>.
       </DocNote>
 
       <PropsTable
@@ -123,7 +105,7 @@ export default function DatePickerDoc() {
             prop: "clearable",
             type: "boolean",
             default: "false",
-            description: "Um × no campo quando há valor. Irmão do gatilho, não filho.",
+            description: "Um × no campo quando há valor.",
           },
           {
             prop: "min / max",

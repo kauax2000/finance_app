@@ -17,7 +17,7 @@ export default function MoneyDisplayDoc() {
   return (
     <>
       <Usage>
-        <strong>Todo</strong> valor em reais que o app mostra. Nunca escreva <code>Intl.NumberFormat</code> numa tela: cada chamada solta é livre para divergir em casas decimais, símbolo e separador.
+        <strong>Todo</strong> valor em reais que o app mostra. Nunca escreva <code>Intl.NumberFormat</code> numa tela: cada chamada solta diverge em casas, símbolo e separador. Para <em>receber</em> valor, <code>&lt;Input money&gt;</code>.
       </Usage>
 
       <DocSection
@@ -65,7 +65,7 @@ export default function MoneyDisplayDoc() {
 
       <DocSection
         title="Coluna alinhada"
-        description="mono força a Geist Mono nos tamanhos pequenos, para quando os valores empilham e o alinhamento do símbolo também importa. Ele também desliga a mono num tamanho grande, se a tela pedir a sans. A figura tabular não é opcional: ela está sempre ligada."
+        description="mono força a Geist Mono nos tamanhos pequenos, para colunas empilhadas, e a desliga num tamanho grande. A figura tabular fica sempre ligada."
         code={`<MoneyDisplay value={1111.11} mono />
 <MoneyDisplay value={88.8} mono />`}
         previewClassName="flex-col items-end gap-1"
@@ -77,7 +77,7 @@ export default function MoneyDisplayDoc() {
 
       <DocSection
         title="Sem valor, e valor compacto"
-        description="null e undefined desenham travessão, não R$ 0,00 — “ainda não carregou” e “o saldo é zero” são respostas diferentes, e num app de finanças a segunda é a que ninguém pode inventar. O compacto carrega o valor cheio no title e no nome acessível, porque R$ 1,23 mi não diz se são 1.234.567 ou 1.230.000."
+        description="null e undefined desenham travessão, não R$ 0,00: “ainda não carregou” e “o saldo é zero” são respostas diferentes. O compacto leva o valor cheio no title e no nome acessível."
         code={`<MoneyDisplay value={null} />
 <MoneyDisplay value={1234567} compact />`}
       >
@@ -89,7 +89,7 @@ export default function MoneyDisplayDoc() {
 
       <Group
         title="Quando o valor precisa ser string"
-        description="Em src/lib/formatters.ts, e o MoneyDisplay usa currencyBRL por dentro. As funções servem para onde um componente não cabe: rótulo de eixo, texto de notificação, aria-label, exportação."
+        description="Em src/lib/formatters.ts; o MoneyDisplay usa currencyBRL por dentro. As funções são para onde um componente não cabe: eixo de gráfico, notificação, aria-label, exportação."
       >
         <Spec title="Saídas" meta="lib/formatters.ts">
           <Stack className="gap-3">
@@ -163,47 +163,21 @@ export default function MoneyDisplayDoc() {
         </Spec>
       </Group>
 
-      <DocNote title="Sinal e cor juntos são redundantes, e tudo bem">
-        Quando entrada e saída convivem na mesma lista, o sinal e a cor dizem a
-        mesma coisa de duas formas. Isso é proposital: cerca de 8% dos homens não
-        distingue verde de vermelho, e para eles a cor sozinha não carrega nada.
-      </DocNote>
-
-      <DocNote title="Numa lista de um tipo só, o sinal atrapalha">
-        Numa tela chamada &ldquo;Despesas&rdquo;, um menos na frente de cada
-        valor não acrescenta informação e ainda dá a impressão de desconto.
-        Sinal só onde há mistura.
+      <DocNote title="Sinal só onde entrada e saída se misturam">
+        Numa lista mista, sinal e cor dizem o mesmo de duas formas, de propósito: cerca de 8% dos homens não distingue verde de vermelho. Numa lista de um tipo só (&ldquo;Despesas&rdquo;), o menos não informa nada e parece desconto.
       </DocNote>
 
       <DocNote title="O menos é o tipográfico, nos dois caminhos">
-        O <code>Intl</code> devolve <code>-R$ 89,90</code>{" "}
-        com hífen-menos (U+002D), e o caminho de <code>signed</code>{" "}
-        sempre usou o menos de verdade (U+2212). Numa coluna que mistura os dois
-        — um extrato com filtro de entradas — o traço trocava de largura de
-        linha para linha. Hoje os dois passam pelo mesmo glifo.
+        Todo valor negativo sai com o menos de verdade (U+2212), com ou sem <code>signed</code>. Com hífen, a largura do traço trocaria de linha para linha numa coluna mista.
       </DocNote>
 
       <DocNote title="A face muda com o tamanho, e é de propósito">
-        Do <code>sm</code> ao <code>lg</code>{" "}
-        o valor é Inter com <code>tabular-nums</code> — é um dado de linha, e
-        precisa pertencer ao texto ao redor. Em <code>xl</code> e{" "}
-        <code>2xl</code>{" "}
-        ele vira Geist Mono: ali o valor é o herói da tela, e a face de extrato é
-        a que ele merece. Mono nas 46 linhas de um extrato viraria textura; num
-        saldo, é registro de livro-caixa.
-      </DocNote>
-
-      <DocNote title="value aceita null">
-        Um valor que ainda não chegou vira <code>0</code> formatado, não{" "}
-        <code>NaN</code>{" "}
-        nem string vazia. Se a distinção entre &ldquo;zero&rdquo;
-        e &ldquo;não sei ainda&rdquo; importa naquela tela, mostre um{" "}
-        <code>Skeleton</code> no lugar do componente.
+        Do <code>sm</code> ao <code>lg</code> o valor é Inter com <code>tabular-nums</code> — dado de linha, que pertence ao texto em volta. Em <code>xl</code> e <code>2xl</code> vira Geist Mono: ali ele é o herói da tela. Mono em todas as linhas de um extrato viraria textura.
       </DocNote>
 
       <PropsTable
         rows={[
-          { prop: "value", type: "number | null | undefined", description: "O valor. null vira zero." },
+          { prop: "value", type: "number | null | undefined", description: "O valor; null e undefined desenham travessão." },
           { prop: "tone", type: '"default" | "income" | "expense" | "muted"', default: '"default"', description: "A cor do valor." },
           { prop: "size", type: '"sm" | "md" | "lg" | "xl" | "2xl"', default: '"md"', description: "O tamanho do texto." },
           { prop: "signed", type: "boolean", default: "false", description: "Mostra o + no positivo." },

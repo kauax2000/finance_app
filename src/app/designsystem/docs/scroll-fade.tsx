@@ -29,9 +29,9 @@ export default function ScrollFadeDoc() {
   return (
     <>
       <Usage>
-        Uma lista cortada em seco na borda lê como lista terminada; a dissolução
-        diz que continua. Aparece só do lado em que ainda há conteúdo, e cresce
-        no mesmo passo em que a ponta consome o conteúdo.
+        Área rolável cujas pontas dissolvem: um corte seco lê como lista
+        terminada, a dissolução diz que continua. Aparece só do lado em que
+        ainda há conteúdo.
       </Usage>
 
       <DocSection
@@ -54,7 +54,7 @@ export default function ScrollFadeDoc() {
 
       <DocSection
         title="Horizontal"
-        description="São 24 filtros, e não uma dúzia: com 12 o conteúdo media 881px dentro de um preview de 908, e a demonstração saía chapada em qualquer tela de desktop — o defeito silencioso de uma região que só transborda no telefone."
+        description="Para fileiras que transbordam na largura, como filtros no telefone."
         code={`<ScrollFade axis="x">…</ScrollFade>`}
         previewClassName="items-stretch"
       >
@@ -118,7 +118,7 @@ export default function ScrollFadeDoc() {
 
       <DocSection
         title="Os três modos de borda"
-        description="Não são graus do mesmo efeito. fade e blur somam — o conteúdo apaga, e no segundo também desfoca. material substitui: o conteúdo passa por baixo nítido, e quem o esconde é o borrão. É a diferença entre um material e um véu."
+        description="Não são graus do mesmo efeito. fade e blur somam: o conteúdo apaga e, no segundo, também desfoca. material substitui: o conteúdo passa nítido por baixo, e quem o esconde é o borrão."
         code={`<ScrollFade edge="material" className="h-44">
   …
 </ScrollFade>`}
@@ -149,7 +149,7 @@ export default function ScrollFadeDoc() {
 
       <DocSection
         title="A tinta do material"
-        description="Ela nasce transparent, e o padrão é o certo: cravar uma cor é o defeito que enterrou o ScrollFade de gradiente pintado. Quem sabe sobre que superfície está escreve a variável — aqui, a do card."
+        description="Nasce transparent, e o padrão é o certo: cor cravada vira faixa errada sobre outra superfície. Quem sabe sobre que superfície está escreve a variável — aqui, a do card."
         code={`<ScrollFade
   edge="material"
   className="[--scroll-fade-blur-tint:var(--card)]"
@@ -185,114 +185,61 @@ export default function ScrollFadeDoc() {
       </DocSection>
 
       <DocNote title="O material substitui a dissolução; ele não soma a ela">
-        Nos outros dois modos a rampa apaga o conteúdo até 6% de alfa. Num
-        material do iOS o conteúdo <strong>continua lá</strong>, legível-porém-
-        desfocado, e quem o esconde é o borrão — por isso{" "}
-        <code>edge=&quot;material&quot;</code> desliga{" "}
-        <code>--scroll-fade-mask</code>. A folga de rolagem fica: um{" "}
-        <code>scrollIntoView</code> não pode depositar o item ativo debaixo da
-        faixa.
-        <br />
-        <br />
-        Isto contraria a regra que enterrou o <code>ScrollFade</code> de
-        gradiente pintado — <em>dissolver, e não pintar um véu</em> —, e a
-        contradição é consciente. O defeito daquela versão era{" "}
-        <strong>cor cravada</strong>: <code>from-card</code> dentro de um popover
-        pintava uma faixa clara. Esta faixa não pinta cor nenhuma por padrão.
+        Em <code>edge=&quot;material&quot;</code> a máscara sai e o conteúdo
+        continua legível sob o borrão, como num material do iOS. A folga de
+        rolagem fica: um <code>scrollIntoView</code> não pode depositar o item
+        ativo debaixo da faixa.
       </DocNote>
 
-      <DocNote title="Por que a tinta não herda o outro vidro da casa">
-        <code>--mobile-glass-bg</code> existe e <strong>não serve</strong>.
-        Medido, ele segue superfícies diferentes em cada tema:{" "}
-        <code>--background</code> no claro (0.985) e <code>--card</code> no
-        escuro (0.205, contra uma página de 0.145). Ele é calibrado para uma
-        folha sobre a página; uma faixa de borda vive sobre card, popover, página
-        ou <code>muted</code>. Herdá-lo seria cravar a cor de novo.
-        <br />
-        <br />O que <strong>é</strong> herdado são o raio e a vibrância:{" "}
-        <code>saturate(1.5)</code> é o número de{" "}
-        <code>.mobile-glass-surface</code>, para a casa ter uma vibrância só, e
-        as três camadas somam para ~26px efetivos contra os 24 de lá. Não é um
-        terceiro vidro — é a mesma receita, numa faixa em vez de numa superfície.
+      <DocNote title="A tinta não herda --mobile-glass-bg">
+        Ele muda de superfície entre os temas e é calibrado para uma folha sobre
+        a página; uma faixa de borda vive sobre card, popover, página ou{" "}
+        <code>muted</code>. Herdá-lo seria cravar cor. O que é herdado é a
+        vibrância: <code>saturate(1.5)</code>, a de{" "}
+        <code>.mobile-glass-surface</code>.
       </DocNote>
 
       <DocNote title="O borrão não pode morar no elemento mascarado">
-        Um <code>backdrop-filter</code> no rolável seria recortado{" "}
-        <strong>pela própria rampa</strong>: forte onde a máscara é opaca,
-        ausente justo na ponta — o contrário do que se quer. Filho dele herdaria
-        o mesmo recorte. Por isso as camadas são <strong>irmãs</strong>, e quem
-        hospeda as duas coisas é a casca.
-        <br />
-        <br />
-        E isso cobra um mecanismo: o hook escreve{" "}
-        <code>--scroll-fade-start</code> no rolável, e{" "}
-        <em>irmão não lê custom property de irmão</em>. Com <code>blur</code> ele
-        vai com <code>shell</code>, que espelha as duas variáveis na casca — de
-        onde elas descem por herança para o rolável e para as camadas, e o recuo
-        das faixas fixas sai de graça.
+        Um <code>backdrop-filter</code> no rolável seria recortado pela própria
+        rampa e sumiria justo na ponta. As camadas são <strong>irmãs</strong>,
+        hospedadas na casca; como irmão não lê custom property de irmão, com{" "}
+        <code>blur</code> o hook usa <code>shell</code> para espelhar as
+        variáveis na casca.
       </DocNote>
 
-      <DocNote title="Empilhadas, e a ordem é o mecanismo">
-        Uma camada só daria <strong>raio constante</strong> com opacidade
-        variável — um crossfade entre nítido e borrado, não um gradiente de
-        borrão. São três, e cada uma borra o que a de baixo já compôs: a
-        variância soma, e o raio efetivo cresce em direção à borda sozinho. O
-        índice multiplica o raio e <strong>encurta a extensão</strong> para{" "}
-        <code>100% / i</code> ao mesmo tempo, então a que mais borra é a que
-        menos avança para dentro.
-        <br />
-        <br />
-        Quem quiser mais ou menos vidro sobrescreve{" "}
-        <code>--scroll-fade-blur-r</code> no próprio elemento. Não há eixo de
-        intensidade: variável herda, e eixo sem caso medido é ficção.
+      <DocNote title="Três camadas empilhadas, e a ordem é o mecanismo">
+        Uma camada só faria um crossfade entre nítido e borrado. Cada uma borra o
+        que a de baixo compôs, com raio multiplicado pelo índice e extensão{" "}
+        <code>100% / i</code>, então o borrão cresce em direção à borda. Para
+        mais ou menos vidro, sobrescreva <code>--scroll-fade-blur-r</code>.
       </DocNote>
 
-      <DocNote title="Dois vidros nesta casa, e este é o do backdrop-filter">
-        A régua de escolha está em <code>globals.css</code>:{" "}
-        <strong>há algo passando por baixo</strong> → borrão de verdade;{" "}
-        <strong>não há</strong> → a <code>@utility glass</code>, que é luz
-        pintada porque borrar cor chapada não desenha nada. Numa borda de rolagem
-        há conteúdo passando por baixo — é o lado do{" "}
-        <code>backdrop-filter</code>, e com ele vem o{" "}
-        <code>prefers-reduced-transparency</code> que um blur de verdade obriga.
-        Junto com ele, mais três guardas: sem rolagem, em alto contraste ou sem
-        suporte a <code>backdrop-filter</code>, a camada sai do DOM pintado em
-        vez de ficar como um retângulo inerte pagando composição.
+      <DocNote title="Este é o vidro do backdrop-filter">
+        A régua de <code>globals.css</code>: <strong>há algo passando por
+        baixo</strong> → borrão de verdade; <strong>não há</strong> → a{" "}
+        <code>@utility glass</code>. Numa borda de rolagem há. Sem rolagem, em
+        alto contraste, com <code>prefers-reduced-transparency</code> ou sem
+        suporte a <code>backdrop-filter</code>, a camada sai do DOM.
       </DocNote>
 
       <DocNote title="Máscara, e não um gradiente pintado">
-        A versão anterior desenhava dois <code>&lt;span&gt;</code> absolutos com{" "}
-        <code>bg-gradient from-card</code> — uma <strong>cor cravada</strong>.
-        Dentro de um popover ou de um menu (<code>bg-popover</code>) ela pintava
-        uma faixa clara em vez de dissolver, e era por isso que este componente
-        nunca teve um consumidor. Máscara é <strong>alfa, não cor</strong>: serve
-        qualquer superfície sem precisar saber de que cor é o fundo. É o exemplo
-        acima, e antes ele reprovava.
-        <br />
-        <br />
-        Sem <code>blur</code>, <code>pointer-events</code> deixa de ser assunto —
-        não há nada por cima do conteúdo para comer o clique dos itens de baixo.
-        Com ele há seis camadas, e o que as mantém inertes é o{" "}
-        <code>pointer-events: none</code> da utility, não a ausência de nós.
+        Máscara é <strong>alfa, não cor</strong>: serve qualquer superfície sem
+        saber a cor do fundo, enquanto um gradiente <code>from-card</code> pinta
+        uma faixa clara dentro de um popover. Com <code>blur</code>, as camadas
+        ficam inertes pelo <code>pointer-events: none</code> da utility.
       </DocNote>
 
       <DocNote title="Quem rola não desenha nada">
-        A moldura, a altura e a tinta ficam no contêiner; a máscara vai no
-        elemento de dentro. Não é arrumação: a máscara recorta o alfa do elemento
-        inteiro — fundo, borda e sombra externa junto —, então mascarar um nó que
-        pinta apagaria os quatro cantos dele enquanto os lados continuam opacos,
-        o que lê como falha de renderização. É a mesma razão pela qual um popover
-        ou um menu precisa de um elemento interno para receber o efeito.
+        Moldura, altura e tinta ficam no contêiner; a máscara vai no elemento de
+        dentro. A máscara recorta o alfa do elemento inteiro, então mascarar um
+        nó que pinta apaga os cantos e deixa os lados opacos.
       </DocNote>
 
       <DocNote title="Um eixo por vez">
-        <code>axis</code> é exclusivo. É um gradiente por elemento: a spec define{" "}
-        <code>mask-image: none</code> como <em>camada preta transparente</em>,
-        então compor duas máscaras com <code>mask-composite: intersect</code>{" "}
-        daria alfa zero e apagaria o elemento. Para o conteúdo passar{" "}
-        <em>por trás</em> de um cabeçalho fixo, quem publica a altura dele é a
-        casca — a composição está em <code>scrollFadeBandsClassName</code>, e o{" "}
-        <code>Command</code> é o exemplo vivo.
+        <code>axis</code> é exclusivo: duas máscaras com{" "}
+        <code>mask-composite: intersect</code> dariam alfa zero. Para o conteúdo
+        passar <em>por trás</em> de um cabeçalho fixo, use{" "}
+        <code>scrollFadeBandsClassName</code>, como no <code>Command</code>.
       </DocNote>
 
       <PropsTable
@@ -313,8 +260,7 @@ export default function ScrollFadeDoc() {
             prop: "edge",
             type: '"fade" | "blur" | "material"',
             default: '"fade"',
-            description:
-              "O que a borda faz. blur soma borrão à dissolução; material a substitui — o conteúdo passa nítido por baixo, e três camadas irmãs o escondem.",
+            description: "O que a borda faz: blur soma borrão à dissolução, material a substitui.",
           },
           {
             prop: "viewportClassName",

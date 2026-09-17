@@ -7,7 +7,7 @@ export default function ToggleGroupDoc() {
   return (
     <>
       <Usage>
-        Opções sempre visíveis, com uma ou várias ativas: o segmento de receita/despesa, o de período. Quando trocam o <strong>conteúdo</strong> da tela em vez de filtrá-lo, o componente é o <code>Tabs</code>.
+        Opções sempre visíveis, com uma ou várias ativas, como o período. Quando trocam o <strong>conteúdo</strong> da tela em vez de filtrá-lo, o componente é o <code>Tabs</code>.
       </Usage>
 
       <DocSection

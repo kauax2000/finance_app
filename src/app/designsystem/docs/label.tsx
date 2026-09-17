@@ -9,7 +9,7 @@ export default function LabelDoc() {
   return (
     <>
       <Usage>
-        O nome do campo, ligado a ele por <code>htmlFor</code>. A ligação faz o clique no texto focar o controle e o leitor de tela anunciar os dois juntos.
+          O nome do campo, ligado a ele por <code>htmlFor</code>: o clique no texto foca o controle e o leitor de tela anuncia os dois juntos. Num formulário, prefira <code>FormInput</code> ou <code>Field</code>, que já fazem a ligação.
       </Usage>
 
       <DocSection
@@ -26,7 +26,7 @@ export default function LabelDoc() {
 
       <DocSection
         title="Com um controle booleano"
-        description="Aqui o rótulo fica ao lado, e a área clicável passa a incluir o texto — o que importa no telefone, onde o alvo do checkbox sozinho é pequeno demais."
+        description="O rótulo ao lado inclui o texto na área clicável — no telefone, o checkbox sozinho é alvo pequeno demais."
         code={`<Checkbox id="recorrente" />
 <Label htmlFor="recorrente">Repetir todo mês</Label>`}
       >

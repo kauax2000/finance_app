@@ -27,15 +27,7 @@ export default function CardDoc() {
   return (
     <>
       <Usage>
-        Agrupa conteúdo que se lê junto. Duas formas, e a escolha é uma só: se o
-        conteúdo é <strong>texto e números</strong>, o cartão dá o respiro
-        (<code>padding</code> padrão); se o conteúdo é uma{" "}
-        <strong>lista, tabela ou gráfico</strong> que precisa sangrar até a
-        borda, é painel — <code>padding=&quot;none&quot;</code>, com{" "}
-        <code>CardToolbar</code> em cima e <code>CardNote</code> embaixo. Cartão
-        dentro de cartão não: dois níveis de superfície elevada apagam a
-        hierarquia do primeiro. Para subdividir, <code>Separator</code> ou{" "}
-        <code>PageSection</code>.
+        Agrupa conteúdo que se lê junto. Texto e números levam o respiro padrão; lista, tabela ou gráfico que sangra até a borda é painel — <code>padding=&quot;none&quot;</code>, com <code>CardToolbar</code> e <code>CardNote</code>. Nunca cartão dentro de cartão: para subdividir, <code>Separator</code> ou <code>PageSection</code>.
       </Usage>
 
       {/* Dois espécimes desta página têm chão próprio — este e o do cartão
@@ -46,7 +38,7 @@ export default function CardDoc() {
           realmente põe embaixo de um cartão. */}
       <DocSection
         title="Superfície"
-        description="variant decide a borda e o preenchimento — nunca o respiro. outline é o cartão do app: chapado sobre a página, como o resto do sistema preenche. elevated é o mesmo levantado, para o que flutua sobre um conteúdo atrás. muted rebaixa, e serve ao contêiner de segunda ordem que não deve disputar com o cartão ao lado. plain não desenha nada: só agrupa, onde a superfície já é de outro (dentro de um Sheet, de um Dialog)."
+        description="variant decide borda e preenchimento, nunca o respiro. outline é o cartão do app; elevated o levanta sobre conteúdo atrás; muted rebaixa o contêiner de segunda ordem; plain só agrupa onde a superfície já é de outro."
         code={`<Card>…</Card>                       {/* outline */}
 <Card variant="elevated">…</Card>
 <Card variant="muted">…</Card>
@@ -76,7 +68,7 @@ export default function CardDoc() {
           extra do maior vira folga vazia no pé do menor. */}
       <DocSection
         title="Ritmo interno"
-        description="padding decide o respiro, e ele é uma medida só: o casco separa os blocos com ela e os slots recuam com ela. md é o padrão. none é o painel — o corpo perde o recuo para o conteúdo sangrar, mas as tiras de topo e de pé mantêm os seus 16px, porque uma barra com o rótulo colado na borda não é o que ninguém quis."
+        description="padding decide o respiro, uma medida só para o casco e os slots; md é o padrão. none é o painel: o corpo sangra, e as tiras de topo e de pé mantêm os 16px delas."
         code={`<Card padding="none">…</Card>
 <Card padding="sm">…</Card>
 <Card>…</Card>            {/* md */}
@@ -107,7 +99,7 @@ export default function CardDoc() {
 
       <DocSection
         title="Painel"
-        description="A forma mais comum do app: barra de topo, conteúdo sangrando de borda a borda, letra miúda no pé. As 24 barras e 18 notas que as telas escreviam à mão — em cinco e nove grafias diferentes — são estes dois componentes."
+        description="A forma mais comum do app: barra de topo, conteúdo de borda a borda e letra miúda no pé."
         code={`<Card padding="none">
   <CardToolbar>
     Fatura de março
@@ -159,7 +151,7 @@ export default function CardDoc() {
 
       <DocSection
         title="Cabeçalho"
-        description="Título, descrição e a ação da linha do título. CardHeader vive dentro do respiro do casco; o CardToolbar traz o próprio. Título e descrição não levam gap: são o mesmo dado em duas linhas, e quem os separa é a entrelinha."
+        description="Título, descrição e a ação da linha do título, dentro do respiro do casco. Título e descrição não levam gap: são o mesmo dado em duas linhas."
         code={`<Card>
   <CardHeader>
     <CardTitle>Saldo disponível</CardTitle>
@@ -190,7 +182,7 @@ export default function CardDoc() {
 
       <DocSection
         title="Rodapé de ações"
-        description="CardFooter é a tira onde ficam os botões que fecham o cartão. Ela pesa pelo alvo de toque dos botões, não por tinta. Se o que vai no pé é letra miúda que ninguém clica, é CardNote — os dois papéis já usaram este nome, e foi por isso que as 18 notas do app nasceram fora do design system."
+        description="CardFooter é a tira dos botões que fecham o cartão. Letra miúda que ninguém clica é CardNote."
         code={`<Card>
   <CardHeader>…</CardHeader>
   <CardContent>…</CardContent>
@@ -220,7 +212,7 @@ export default function CardDoc() {
 
       <DocSection
         title="Cartão clicável"
-        description="Quando o cartão inteiro é o alvo, ele é o link — não um link em volta dele. interactive traz a elevação no cursor, o par active: que o toque exige e o anel de foco; asChild faz o <Link> ser o próprio cartão, então há um nó a menos e o foco cai onde o olho está. Um cartão clicável não hospeda um segundo alvo dentro: dois destinos numa superfície só, e ninguém sabe onde clicou."
+        description="Quando o cartão inteiro é o alvo, ele é o link: interactive traz elevação, par active: e anel de foco, e asChild faz o Link ser o próprio cartão. Não ponha um segundo alvo dentro — dois destinos numa superfície confundem o clique."
         code={`<Card interactive asChild padding="none">
   <Link href="/categories/mercado">
     <CardToolbar>Mercado<ArrowTopRightOnSquareIcon className="size-3.5" /></CardToolbar>
@@ -252,7 +244,7 @@ export default function CardDoc() {
 
       <DocSection
         title="Anatomia"
-        description="Sete peças, e a ordem no JSX é a ordem na tela. As três tiras — CardToolbar, CardFooter e CardNote — sangram até a borda, e o casco recolhe o próprio respiro daquele lado sozinho: não existe rounded-t-xl para escrever, nem pt-0 para lembrar."
+        description="Sete peças, na ordem da tela. As três tiras — CardToolbar, CardFooter e CardNote — sangram até a borda, e o casco recolhe o respiro daquele lado sozinho."
         code={`<Card>
   <CardToolbar />   {/* tira de topo: sem fio, sem tinta, respiro próprio */}
   <CardHeader>      {/* dentro do respiro, na superfície do corpo    */}
@@ -305,28 +297,28 @@ export default function CardDoc() {
             type: '"outline" | "elevated" | "muted" | "plain"',
             default: '"outline"',
             description:
-              "A borda e a superfície. Nunca o respiro — isso é padding, e os dois eixos são independentes.",
+              "Borda e superfície; nunca o respiro.",
           },
           {
             prop: "padding",
             type: '"none" | "sm" | "md" | "lg"',
             default: '"md"',
             description:
-              "O respiro do casco e o recuo dos slots, na mesma medida. none é o painel: o corpo sangra até a borda e as tiras mantêm 16px.",
+              "Respiro do casco e recuo dos slots. none é o painel: o corpo sangra e as tiras mantêm 16px.",
           },
           {
             prop: "interactive",
             type: "boolean",
             default: "false",
             description:
-              "O cartão inteiro é o alvo: elevação no cursor, par active: para o toque, anel de foco. Use com asChild.",
+              "O cartão inteiro é o alvo: elevação, par active: e anel de foco. Use com asChild.",
           },
           {
             prop: "asChild",
             type: "boolean",
             default: "false",
             description:
-              "O cartão vira o filho — um link ou um botão. Sem ele, um cartão clicável precisa de um nó a mais em volta.",
+              "O cartão vira o filho — um link ou um botão.",
           },
         ]}
       />
@@ -338,19 +330,19 @@ export default function CardDoc() {
             prop: "CardToolbar",
             type: "div",
             description:
-              "Tira de topo: rótulo à esquerda, contagem ou ação à direita. Fio embaixo, bg-muted/30, altura mínima de 40.",
+              "Tira de topo: rótulo à esquerda, contagem ou ação à direita; sem fio nem tinta.",
           },
           {
             prop: "CardHeader",
             type: "div",
             description:
-              "Título, descrição e ação, dentro do respiro e na superfície do corpo. Vira grade de duas colunas sozinho quando há CardAction.",
+              "Título, descrição e ação; vira grade de duas colunas quando há CardAction.",
           },
           {
             prop: "CardTitle",
             type: "div · asChild",
             description:
-              "div por padrão, para um grid de doze cartões não despejar doze headings. Quando o cartão é uma seção da página, asChild devolve o <h2>.",
+              "div por padrão, para uma grade de cartões não despejar headings; asChild troca pelo heading da seção.",
           },
           {
             prop: "CardDescription",
@@ -362,70 +354,39 @@ export default function CardDoc() {
             prop: "CardAction",
             type: "div",
             description:
-              "A ação na linha do título, encostada à direita. Um controle, não uma barra deles.",
+              "Um controle na linha do título, encostado à direita.",
           },
           {
             prop: "CardContent",
             type: "div",
             description:
-              "O corpo. Recua com o padding do casco — e em padding=\"none\" não recua, que é o ponto.",
+              "O corpo; em padding=\"none\" não recua.",
           },
           {
             prop: "CardFooter",
             type: "div",
             description:
-              "Tira de ações no pé. Mesmo respiro da barra de topo, porque é a mesma coisa: estrutura emoldurando o corpo.",
+              "Tira de ações no pé, com o respiro da barra de topo.",
           },
           {
             prop: "CardNote",
             type: "div",
             description:
-              "Tira de letra miúda no pé: a contagem, a origem do número, a ressalva. Não se clica, e por isso é mais quieta que o rodapé.",
+              "Tira de letra miúda no pé — contagem, origem do número, ressalva —, mais quieta que o rodapé.",
           },
         ]}
       />
 
       <DocNote title="Barra de topo não é cabeçalho">
-        <code>CardToolbar</code> traz o <strong>próprio respiro</strong>{" "}
-        (<code>--card-strip-py</code>) e o tipo de rótulo: ela emoldura o corpo,
-        e é a peça certa quando o conteúdo sangra até a borda.{" "}
-        <code>CardHeader</code> vive dentro do respiro do casco e não tem ritmo
-        próprio.
-        <br />
-        <br />
-        Ela já teve fio e tinta — <code>border-b border-border bg-muted/30</code>{" "}
-        — e os dois saíram. Uma tira pintada é uma <strong>superfície
-        diferente</strong> do corpo, e o cartão é uma superfície só; o fio, em
-        cima dela, era o segundo sinal para a mesma emenda. A troca é
-        aritmeticamente neutra: <code>py-2.5</code> mais <code>min-h-10</code>{" "}
-        davam 40px, e 12 + 16 + 12 dão os mesmos 40. Quem separa agora é o
-        respiro e a letra.
+        <code>CardToolbar</code> traz o próprio respiro (<code>--card-strip-py</code>) e emoldura um corpo que sangra; <code>CardHeader</code> vive dentro do respiro do casco. Nenhuma tira tem fio nem tinta: o cartão é uma superfície só, e quem separa é o respiro.
       </DocNote>
 
       <DocNote title="Cartão não tem tom de dinheiro">
-        Verde de entrada e vermelho de saída em superfície inteira é trabalho do{" "}
-        <code>StatCard</code>, que existe para isso e mede o contraste do
-        número contra o tingido. Um <code>tone</code> aqui só convidaria cartão
-        colorido onde a cor não significa nada — e <code>success</code> não é{" "}
-        <code>income</code>.
+        Superfície tingida de entrada e saída é o <code>StatCard</code>, que mede o número contra o tingido. Um <code>tone</code> aqui convidaria cor sem significado — e <code>success</code> não é <code>income</code>.
       </DocNote>
 
-      <DocNote title="size saiu do tipo">
-        O <code>size=&quot;sm&quot;</code> de antes não era um tamanho: era{" "}
-        <code>gap-0 py-0</code> com o nome errado, e as onze telas que o usavam
-        escreviam <code>gap-0 py-0</code> do lado assim mesmo, porque o nome não
-        dizia o que ele fazia. Virou <code>padding=&quot;none&quot;</code>, e{" "}
-        <code>size</code> saiu do tipo — o compilador acusa quem o escrever,
-        como já acontece com <code>variant=&quot;plain&quot;</code> no{" "}
-        <code>Button</code>.
-      </DocNote>
-
-      <DocNote title="Sombra vinha de fora">
-        O cartão nunca teve sombra — e 52 chamadas do app carregavam{" "}
-        <code>shadow-none</code> para desligar o que não existia, copiado
-        adiante por quem não tinha como saber. Quem quer elevação pede{" "}
-        <code>variant=&quot;elevated&quot;</code>; quem quer o cartão chapado
-        não escreve nada.
+      <DocNote title="Elevação é variant, não classe">
+        O cartão chapado não tem sombra, então não escreva <code>shadow-none</code>. Quem quer elevação pede <code>variant=&quot;elevated&quot;</code>.
       </DocNote>
     </>
   )

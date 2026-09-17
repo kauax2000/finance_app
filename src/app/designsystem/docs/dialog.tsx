@@ -34,17 +34,12 @@ export default function DialogDoc() {
   return (
     <>
       <Usage>
-        Uma tarefa curta sem sair da tela: renomear, escolher, ajustar. No
-        telefone, um formulário de verdade cabe melhor num <code>Sheet</code> de
-        baixo. Dois eixos: <code>size</code> é a largura,{" "}
-        <code>layout</code> é quem manda na altura — o conteúdo (<code>auto</code>
-        ) ou a janela (<code>fixed</code>, com o corpo rolando entre cabeçalho e
-        rodapé parados).
+          Uma tarefa curta sem sair da tela: renomear, escolher, ajustar. Para confirmar o que não tem volta é o <code>AlertDialog</code>; um formulário longo no telefone cabe melhor num <code>Sheet</code>. <code>size</code> é a largura e <code>layout</code> decide quem manda na altura — o conteúdo (<code>auto</code>) ou a janela (<code>fixed</code>).
       </Usage>
 
       <DocSection
         title="Padrão"
-        description="layout=&quot;auto&quot;: a altura vem do conteúdo, e o casco dá o respiro. É o diálogo de um campo, de uma escolha, de um aviso — o que cabe na tela sem rolar."
+        description="layout=&quot;auto&quot;: a altura vem do conteúdo e o casco dá o respiro. Para um campo, uma escolha, um aviso — o que cabe sem rolar."
         code={`<Dialog>
   <DialogTrigger asChild><Button>Renomear</Button></DialogTrigger>
   <DialogContent>
@@ -91,7 +86,7 @@ export default function DialogDoc() {
 
       <DocSection
         title="Formulário"
-        description="layout=&quot;fixed&quot;: a altura é teto, e o corpo rola entre um cabeçalho e um rodapé parados. É a forma mais comum do app — 13 das 25 chamadas —, e era escrita à mão em cinco classes no casco mais três em cada corpo rolável. DialogBody é essas três, e a do meio (min-h-0) é a que falha calada: sem ela um item de flex não encolhe abaixo do conteúdo, e o diálogo cresce até sair da tela em vez de rolar."
+        description="layout=&quot;fixed&quot;: a altura é teto e o corpo rola entre cabeçalho e rodapé parados. Use DialogBody e não escreva o corpo à mão: sem o min-h-0 dele, o diálogo cresce até sair da tela em vez de rolar."
         code={`<DialogContent layout="fixed">
   <Form layout="none" className="flex min-h-0 flex-1 flex-col">
     <DialogHeader>
@@ -138,7 +133,7 @@ export default function DialogDoc() {
 
       <DocSection
         title="Largura"
-        description="Quatro degraus, e o padrão é md — o mesmo do AlertDialog, e o que 17 das 19 chamadas explícitas do app já pediam escrevendo sm:max-w-md na tela. Em telas estreitas todos caem para a largura da janela menos 2rem: a escada só vale a partir de sm."
+        description="Quatro degraus, com md como padrão, o mesmo do AlertDialog. Abaixo de sm todos ocupam a janela menos 2rem."
         code={`<DialogContent size="sm">…</DialogContent>
 <DialogContent>…</DialogContent>          {/* md */}
 <DialogContent size="lg">…</DialogContent>
@@ -179,7 +174,7 @@ export default function DialogDoc() {
 
       <DocSection
         title="Controle no cabeçalho"
-        description="DialogHeaderRow põe um controle na linha do título sem que ele dispute a largura do texto: o título e a descrição ficam numa coluna que encolhe, o adorno numa que não. Serve ao selo de estado, ao botão de ajuda, ao fechar próprio de um cabeçalho fixo."
+        description="DialogHeaderRow põe um controle na linha do título sem disputar a largura do texto — selo de estado, ajuda ou o fechar de um cabeçalho fixo."
         code={`<DialogHeader>
   <DialogHeaderRow endAdornment={<Badge tone="warning">Rascunho</Badge>}>
     <DialogTitle>Assinatura mensal</DialogTitle>
@@ -232,14 +227,14 @@ export default function DialogDoc() {
             type: '"auto" | "fixed"',
             default: '"auto"',
             description:
-              "Quem manda na altura. auto: o conteúdo, com o respiro no casco. fixed: a janela, com o corpo rolando em DialogBody entre cabeçalho e rodapé parados.",
+              "Quem manda na altura: auto, o conteúdo; fixed, a janela, com o corpo rolando em DialogBody.",
           },
           {
             prop: "showCloseButton",
             type: "boolean",
             default: "true",
             description:
-              "O × no canto. Desligue quando o cabeçalho tiver o próprio fechar — dois alvos para a mesma saída competem.",
+              "O × no canto; desligue quando o cabeçalho tiver o próprio fechar.",
           },
         ]}
       />
@@ -251,7 +246,7 @@ export default function DialogDoc() {
             prop: "DialogHeader",
             type: "div",
             description:
-              "Título e descrição, sem fio embaixo: o que separa as faixas é o respiro, e o conteúdo dissolvendo onde há rolagem. Já vem shrink-0 e, em layout=\"fixed\", com o recuo da tira — as duas coisas que as 16 chamadas escreviam toda vez.",
+              "Título e descrição, sem fio: quem separa é o respiro e a dissolução onde há rolagem.",
           },
           {
             prop: "DialogHeaderRow",
@@ -263,73 +258,35 @@ export default function DialogDoc() {
             prop: "DialogBody",
             type: "div",
             description:
-              "O corpo rolável do layout fixed: min-h-0 flex-1 overflow-y-auto, mais overscroll-contain para o gesto não vazar para a página atrás.",
+              "O corpo rolável do layout fixed, com overscroll-contain para o gesto não vazar.",
           },
           {
             prop: "DialogFooter",
             type: "div · showCloseButton",
             description:
-              "A tira de ações encostada na borda de baixo, nos dois layouts. Sem tingido e sem fio: o recuo e o peso dos botões já dizem que ali começa outra coisa.",
+              "A tira de ações na borda de baixo, sem tinta nem fio.",
           },
         ]}
       />
 
-      <DocNote title="A placa é --background de vidro, e a tela é que decidiu">
-        Ela veste <code>modalSurfaceClassName</code>: <code>--background</code>{" "}
-        a 85%, <strong>40%</strong> no escuro onde o borrão existe — mais aberta que
-        a flutuante (60%), porque a 60% sobre a página ela lia como fosca. Uma
-        rodada a levou a <code>--popover</code> para igualar o DatePicker, e o
-        resultado leu como <strong>opaco</strong>: a 60% sobre a página velada o{" "}
-        <code>--popover</code> compõe acima de tudo que está atrás, e nada
-        atravessa. O <code>--background</code> afunda no véu, e é o borrão que a
-        distingue — para um modal, que cobre a página inteira, é este o tom que
-        lê como material.
-        <br />
-        <br />
-        <strong>O que o borrão vê aqui é o véu</strong>, a 40%, mais a página:
-        medido, delta 0 sobre um card, 2 sobre a página, 15 sobre um botão{" "}
-        <code>primary</code>. Quem quiser o efeito mais visível mexe no véu, e
-        não na placa.
+      <DocNote title="A placa é --background de vidro">
+          Ela veste <code>modalSurfaceClassName</code>: <code>--background</code> a 85%, e 40% no escuro onde há borrão. <code>--popover</code> leria como opaco sobre a página velada. O borrão vê o véu mais a página, então para um efeito mais visível mexa no véu, não na placa.
       </DocNote>
 
-      <DocNote title="O × não reserva lugar — o cabeçalho reserva por ele">
-        O botão de fechar é <code>absolute</code>, então nada no cabeçalho sabe
-        que ele existe: sem ajuda, um título longo ou o{" "}
-        <code>endAdornment</code> de um <code>DialogHeaderRow</code> passa por
-        baixo dele — 16px, medidos. O título e a coluna do adorno desviam do
-        território do × por conta própria, e só quando há um × para desviar
-        (<code>showCloseButton={"{false}"}</code> devolve a largura inteira). No
-        telefone o desvio é <strong>simétrico</strong>, porque ali o cabeçalho é
-        centralizado e um recuo de um lado só tira o título do eixo.
+      <DocNote title="O cabeçalho reserva o lugar do ×">
+          O × é <code>absolute</code>; o título e a coluna do adorno desviam do território dele sozinhos, e só quando ele existe (<code>showCloseButton={"{false}"}</code> devolve a largura). Sem isso, um título longo passa por baixo do botão.
       </DocNote>
 
       <DocNote title="DialogTitle é obrigatório">
-        Ele é o nome acessível do diálogo: sem ele, o leitor de tela anuncia
-        &ldquo;diálogo&rdquo; e nada mais, e o Radix ainda avisa no console. Se o
-        título não deve aparecer, ele existe assim mesmo com{" "}
-        <code>className=&quot;sr-only&quot;</code>.
+          É o nome acessível do diálogo: sem ele o leitor de tela anuncia só &ldquo;diálogo&rdquo;. Se não deve aparecer, use <code>className=&quot;sr-only&quot;</code>.
       </DocNote>
 
       <DocNote title="O rodapé tem uma hierarquia só">
-        Cancelar é <code>tertiary</code> e vem antes; a ação que o diálogo veio
-        propor é <code>primary</code>, ou <code>destructive</code> quando não tem
-        volta. Como <code>DialogClose</code> é um passa-tudo, ele recebe{" "}
-        <code>asChild</code> com um{" "}
-        <code>Button variant=&quot;tertiary&quot; type=&quot;button&quot;</code>{" "}
-        dentro — sem o <code>type</code>, ele vira o alvo do Enter dentro de um{" "}
-        <code>Form</code>.
+          Cancelar é <code>tertiary</code> e vem antes; a ação é <code>primary</code>, ou <code>destructive</code> quando não tem volta. <code>DialogClose</code> recebe <code>asChild</code> com um <code>Button variant=&quot;tertiary&quot; type=&quot;button&quot;</code> — sem o <code>type</code>, ele vira o alvo do Enter dentro de um <code>Form</code>.
       </DocNote>
 
       <DocNote title="O rodapé sangra por variável, não por número">
-        Ele precisa alcançar a borda do diálogo, e o quanto recuar depende do
-        layout: em <code>auto</code> o casco tem recuo e o rodapé o desconta; em{" "}
-        <code>fixed</code> o casco não tem, e não há o que descontar. Isso é uma
-        variável (<code>--dialog-bleed</code>) e não uma regra de grupo de
-        propósito — como regra, ela venceria por especificidade os{" "}
-        <code>mx-0</code> que sete telas ainda escrevem, e quebraria exatamente
-        quem a mudança veio servir. O valor fixo anterior
-        (<code>-mx-4 -mb-4</code>) pressupunha um <code>p-4</code> que 13 das 25
-        chamadas não usam, e era por isso que elas o anulavam.
+          <code>--dialog-bleed</code> desconta o recuo do casco em <code>auto</code> e vale zero em <code>fixed</code>. Não escreva <code>-mx-*</code> no rodapé: um número fixo supõe um recuo que o layout pode não ter.
       </DocNote>
     </>
   )

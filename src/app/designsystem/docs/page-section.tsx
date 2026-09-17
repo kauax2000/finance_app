@@ -23,14 +23,12 @@ export default function PageSectionDoc() {
   return (
     <>
       <Usage>
-        O bloco que dá ritmo vertical a uma tela. Quem espaça é quem contém: uma
-        pilha de <code>PageSection</code> dentro de um <code>Container</code>, e
-        nenhum filho declarando margem própria.
+        O bloco que dá ritmo vertical a uma tela: uma pilha de <code>PageSection</code> dentro de um <code>Container</code>, sem nenhum filho declarando margem própria. O topo da tela é o <code>PageHeader</code>.
       </Usage>
 
       <DocSection
         title="Padrão"
-        description="Cabeçalho e conteúdo, com 16px entre os dois. Entre o título e a descrição não há gap: eles são o mesmo dado em duas linhas."
+        description="Cabeçalho e conteúdo, com 16px entre os dois. Título e descrição não levam gap: são o mesmo dado em duas linhas."
         code={`<PageSection>
   <PageSectionHeader>
     <PageSectionTitle>Orçamentos</PageSectionTitle>
@@ -53,7 +51,7 @@ export default function PageSectionDoc() {
 
       <DocSection
         title="Com ação"
-        description="actions é prop, e a peça existe porque esta mesma página a inventava por className — desmontando o empilhamento do cabeçalho com flex-row items-center justify-between para caber um “Ver todas”."
+        description="actions põe a ação da seção à direita do título, sem desmontar o empilhamento do cabeçalho por className."
         code={`<PageSectionHeader
   actions={<Button variant="tertiary" size="sm">Ver todas</Button>}
 >
@@ -79,17 +77,13 @@ export default function PageSectionDoc() {
         </PageSection>
       </DocSection>
 
-      <DocNote title="A ação se centra na primeira linha do título, e não no bloco">
-        Com <code>items-center</code> no cabeçalho inteiro, uma descrição de
-        duas linhas desce o botão para o meio do parágrafo. Ele se centra numa
-        caixa de exatamente uma linha de título (
-        <code>--page-section-title-line</code>), que o degrau publica — a mesma
-        conta do voltar do <code>PageHeader</code>, e sem número mágico.
+      <DocNote title="A ação se centra na primeira linha do título">
+        Ela se centra numa caixa de uma linha de título (<code>--page-section-title-line</code>), e não no bloco inteiro: com <code>items-center</code>, uma descrição de duas linhas desceria o botão para o meio do parágrafo.
       </DocNote>
 
       <DocSection
         title="A escada"
-        description="size encolhe o título e o respiro juntos, como no Alert. lg é o corpo que as 269 seções deste catálogo já renderizam; sm é para cabeçalho de painel denso."
+        description="size encolhe o título e o respiro juntos. md é o padrão; sm é para cabeçalho de painel denso."
         code={`<PageSection size="sm">…</PageSection>   {/* 14/20 · gap 12 */}
 <PageSection size="md">…</PageSection>   {/* 16/24 · gap 16 · o padrão */}
 <PageSection size="lg">…</PageSection>   {/* 18/28 · gap 16 */}`}
@@ -116,7 +110,7 @@ export default function PageSectionDoc() {
 
       <DocSection
         title="A régua é em cima"
-        description="ruled marca onde um bloco começa, e não onde ele termina. É onde as seções deste catálogo sempre a puseram — e é o que separa “começou outro assunto” de “este bloco tem um rodapé”."
+        description="ruled marca onde um bloco começa: fio em cima diz “começou outro assunto”; embaixo diria “este bloco tem um rodapé”."
         code={`<PageSection variant="ruled">…</PageSection>`}
         previewClassName="items-stretch"
       >
@@ -134,7 +128,7 @@ export default function PageSectionDoc() {
 
       <DocSection
         title="O ritmo da tela"
-        description="gap-4 dentro da seção, gap-8 entre elas, no Container. Duas escalas diferentes é o que faz a tela ter blocos em vez de uma lista contínua."
+        description="16px dentro da seção, 32px entre seções no Container. Duas escalas é o que faz a tela ter blocos em vez de uma lista contínua."
         code={`<Container stack="section">
   <PageHeader>…</PageHeader>
   <PageSection>…</PageSection>
@@ -158,36 +152,12 @@ export default function PageSectionDoc() {
         </Container>
       </DocSection>
 
-      <DocNote title="O título é um h2, e asChild é para o nível">
-        <code>PageSectionTitle</code> é <code>&lt;h2&gt;</code> e{" "}
-        <code>PageHeaderTitle</code> é <code>&lt;h1&gt;</code>. Um bloco dentro
-        de outro bloco é <code>&lt;h3&gt;</code>, e é para isso que{" "}
-        <code>asChild</code> existe aqui — não para trocar o estilo. A
-        hierarquia de cabeçalhos é como quem usa leitor de tela navega uma tela
-        longa: pular do h1 para um h3 deixa um degrau vazio.
+      <DocNote title="O título é h2, e asChild é para o nível">
+        <code>PageSectionTitle</code> é <code>&lt;h2&gt;</code> e <code>PageHeaderTitle</code> é <code>&lt;h1&gt;</code>; um bloco dentro de outro é <code>&lt;h3&gt;</code>, via <code>asChild</code> — nunca para trocar o estilo. Quem usa leitor de tela navega pela hierarquia, e pular do h1 para um h3 deixa um degrau vazio.
       </DocNote>
 
-      <DocNote title="Havia um PageSectionContent, e a medição o apagou">
-        Ele era um <code>&lt;div&gt;</code> com string de classe vazia. A
-        primeira versão desta rodada tentou salvá-lo dando-lhe{" "}
-        <code>min-w-0</code> — &ldquo;a tabela larga estoura a página em vez de
-        rolar&rdquo;. <strong>Medido, isso é falso</strong>: o tamanho mínimo
-        automático de um item de flex vale no <em>eixo principal</em>, e numa
-        coluna o eixo principal é o vertical — <code>min-width: auto</code> já
-        resolve para zero ali. Com e sem, os mesmos 400px.
-        <br />
-        O defeito real é um nível acima: uma seção usada como item de uma{" "}
-        <strong>linha</strong> de flex estoura para o próprio min-content —{" "}
-        <strong>5241px dentro de um pai de 400</strong> —, e leva a rolagem
-        interna junto. O <code>min-w-0</code> mudou para a seção, e a peça sem
-        trabalho foi apagada em vez de ganhar uma justificativa inventada.
-      </DocNote>
-
-      <DocNote title="Ele tinha zero consumidores e 269 cópias">
-        <code>DocSection</code> (247 usos) e <code>Group</code> (22) escreviam a
-        mesma string de cabeçalho de seção, em dois arquivos, com um corpo de
-        título um degrau acima do que este componente oferecia. Os dois eixos
-        saem dessa contagem, e hoje as duas peças <em>são</em> este componente.
+      <DocNote title="Não há peça de conteúdo, e a seção traz min-w-0">
+        O conteúdo vai direto como filho da seção. O <code>min-w-0</code> mora na <code>PageSection</code> porque, usada como item de uma linha de flex, ela estouraria para o min-content e levaria a rolagem interna junto.
       </DocNote>
 
       <PropsTable
@@ -197,8 +167,7 @@ export default function PageSectionDoc() {
             prop: "size",
             type: '"sm" | "md" | "lg"',
             default: '"md"',
-            description:
-              "O corpo do título e o respiro interno, juntos. Publica --page-section-title e --page-section-title-line.",
+            description: "O corpo do título e o respiro interno, juntos. Publica --page-section-title e --page-section-title-line.",
           },
           {
             prop: "variant",

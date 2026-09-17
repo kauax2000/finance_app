@@ -15,15 +15,12 @@ export default function TooltipDoc() {
   return (
     <>
       <Usage>
-        Um <strong>complemento curto</strong> para quem já entendeu o essencial:
-        o nome de um ícone, o porquê de um botão estar desligado. Nunca
-        informação necessária — no telefone não existe hover, e o tooltip
-        simplesmente não aparece.
+        Um <strong>complemento curto</strong>: o nome de um ícone, o porquê de um botão estar desligado. Nunca informação necessária — no telefone não há hover e ele não aparece. Explicação indispensável vira texto na tela ou um <code>Popover</code>.
       </Usage>
 
       <DocSection
         title="Padrão"
-        description="O TooltipProvider já está montado no layout raiz; não repita. O gatilho usa asChild para envolver o controle que já existe, em vez de acrescentar um elemento focável a mais."
+        description="O TooltipProvider já está no layout raiz; não repita. O gatilho usa asChild para envolver o controle existente, sem acrescentar um focável."
         code={`<Tooltip>
   <TooltipTrigger asChild>
     <Button variant="outline" size="icon-md" aria-label="Sobre o cálculo">
@@ -53,7 +50,7 @@ export default function TooltipDoc() {
 
       <DocSection
         title="Lado"
-        description="side escolhe de onde ele sai, e a entrada desliza a partir do gatilho — o movimento aponta para quem o abriu. O Radix vira o lado sozinho quando falta espaço na tela."
+        description="side escolhe de onde ele sai; a entrada desliza a partir do gatilho. O Radix vira o lado quando falta espaço."
         code={`<TooltipContent side="right">Copiar link</TooltipContent>`}
       >
         {LADOS.map((side) => (
@@ -70,7 +67,7 @@ export default function TooltipDoc() {
 
       <DocSection
         title="Tamanho"
-        description="md é o padrão, com o corpo de 14px de uma frase. sm desce a 12px e aperta o recuo, para rotular um ícone numa fileira densa — é o que a coluna de ações da Table monta sozinha, a partir do aria-label de cada botão."
+        description="md (14px) é o padrão, para uma frase. sm (12px, recuo menor) rotula ícones em fileira densa, como a coluna de ações da Table."
         code={`<TooltipContent size="sm">Editar Mercado</TooltipContent>`}
       >
         {(["sm", "md"] as const).map((size) => (
@@ -87,7 +84,7 @@ export default function TooltipDoc() {
 
       <DocSection
         title="Texto que não cabe numa linha"
-        description="max-w-xs quebra e a caixa cresce. Até esta rodada ela tinha altura fixa de 32px e cortava a segunda linha — mas o limite continua sendo de intenção, não de layout: se precisa de duas linhas, provavelmente não é tooltip."
+        description="max-w-xs quebra e a caixa cresce. Mas se precisa de duas linhas, provavelmente não é tooltip."
         code={`<TooltipContent>
   Fatura fechada. Lançamentos novos entram na próxima.
 </TooltipContent>`}
@@ -104,58 +101,20 @@ export default function TooltipDoc() {
         </Tooltip>
       </DocSection>
 
-      <DocNote title="No toque ele não existe">
-        Se a explicação é indispensável, ela vira texto na tela, um{" "}
-        <code>Popover</code>{" "}
-        acionado por toque, ou a descrição de um campo — nunca um tooltip. É a
-        regra que decide se ele cabe: <strong>a tela funciona sem ele?</strong>{" "}
-        Se não funciona, o conteúdo está no lugar errado.
+      <DocNote title="A tela funciona sem ele?">
+        Se não funciona, o conteúdo está no lugar errado: vira texto na tela, um <code>Popover</code> acionado por toque ou a descrição de um campo.
       </DocNote>
 
       <DocNote title="Tooltip não substitui aria-label">
-        Um botão só de ícone precisa dos <strong>dois</strong>: o{" "}
-        <code>aria-label</code> para ser anunciado e o tooltip para ser lido. O
-        Radix liga o tooltip por <code>aria-describedby</code>, que{" "}
-        <em>complementa</em>{" "}
-        o nome acessível e não o cria — sem o rótulo, o leitor de tela anuncia
-        &ldquo;botão&rdquo; e mais nada.
+        Botão só de ícone precisa dos dois. O Radix liga o tooltip por <code>aria-describedby</code>, que complementa o nome acessível e não o cria — sem rótulo, o leitor de tela anuncia &ldquo;botão&rdquo; e mais nada.
       </DocNote>
 
-      <DocNote title="A superfície é a de overlay, e não a da sidebar">
-        Ele pintava com <code>bg-sidebar-accent</code>{" "}
-        e <code>text-sidebar-accent-foreground</code>{" "}
-        — tokens de uma região específica, num elemento que flutua sobre a tela
-        inteira. O preço apareceu sozinho: ao corrigir o item ativo do menu
-        lateral, que era o mesmo cinza da lateral,{" "}
-        <strong>o tooltip mudou de cor junto</strong>. Hoje ele usa{" "}
-        <code>--popover</code>, a mesma superfície do <code>Popover</code>{" "}
-        e do <code>DropdownMenu</code>.
+      <DocNote title="Veste a superfície de menu, nunca tokens de região">
+        <code>menuPanelSurfaceClassName</code> dá o <code>--popover</code>, o canto de 10px, o <code>ring-1</code> e o material com guarda de <code>prefers-reduced-transparency</code> — a mesma casca de <code>Popover</code>, <code>Select</code> e menus. Tokens de <code>sidebar</code> num elemento que flutua mudam de cor quando a lateral muda.
       </DocNote>
 
-      <DocNote title="E ele era a quinta cópia dela, escrita à mão">
-        Falar a língua certa não é vestir a régua. Ele escrevia a casca por
-        extenso e divergia em duas medidas:{" "}
-        <code>rounded-md</code> (8px) contra os 10 de toda superfície flutuante
-        do sistema, e <code>border border-border</code>{" "}
-        contra o <code>ring-1 ring-foreground/10</code> que{" "}
-        <code>Select</code>, <code>Popover</code>, <code>HoverCard</code>,{" "}
-        <code>Command</code>{" "}
-        e os três menus usam. Hoje ele veste{" "}
-        <code>menuPanelSurfaceClassName</code>, e com ela vem o material do
-        cabeçalho — <code>blur(24px) saturate(1.5)</code>{" "}
-        com o guarda de <code>prefers-reduced-transparency</code>{" "}
-        embutido. As duas divergências caíram junto, e isso é mudança visível.
-      </DocNote>
-
-      <DocNote title="O alfa da régua serve sem revisão, e é por causa da tinta">
-        Os 85% do tema claro e os 60% do escuro foram calibrados contra o texto
-        que mais aperta numa superfície de menu, o{" "}
-        <code>--muted-foreground</code>{" "}
-        dos rótulos de grupo. Aqui o corpo inteiro é{" "}
-        <code>--popover-foreground</code>, que é a tinta cheia: medido sobre o
-        pior fundo real — o preenchimento do botão{" "}
-        <code>primary</code> —, <strong>11,5 no escuro e 15,54 no claro</strong>,
-        contra os 4,5 da norma.
+      <DocNote title="O alfa da superfície serve sem ajuste">
+        O corpo é <code>--popover-foreground</code>, tinta cheia, então passa de 4,5:1 com folga mesmo sobre o preenchimento do botão <code>primary</code>.
       </DocNote>
 
       <PropsTable
@@ -166,7 +125,7 @@ export default function TooltipDoc() {
             type: '"sm" | "md"',
             default: '"md"',
             description:
-              "O corpo: md é 14px, a leitura de uma frase; sm é 12px com recuo menor, para rotular um ícone numa fileira densa.",
+              "md é 14px, para uma frase; sm é 12px, para rotular ícone em fileira densa.",
           },
           {
             prop: "side",
@@ -191,23 +150,13 @@ export default function TooltipDoc() {
             type: "number | Padding",
             default: "ANCHORED_COLLISION_PADDING (8)",
             description:
-              "A folga até a borda da janela, vinda de lib/anchored-surface. Ele nasceu sem nenhuma — encostava na borda — e sem teto de tamanho: max-w-xs são 320px, exatamente a largura de um telefone pequeno.",
+              "A folga até a borda da janela, de lib/anchored-surface.",
           },
         ]}
       />
 
       <DocNote title="Ele encolhe antes de encostar">
-        <code>max-w-xs</code> é o teto de <em>leitura</em> — 320px, a medida em
-        que uma frase ainda se lê de um golpe. O teto da{" "}
-        <em>janela</em> é <code>max-w-(--radix-tooltip-content-available-width)</code>,
-        e o menor dos dois vence. Sem o segundo, uma dica de 320px sangrava num
-        telefone de 320: deslocar não resolve o que não cabe.
-        <br />
-        Ele é uma das quatro superfícies que abriam com{" "}
-        <code>collisionPadding</code> <strong>zero</strong> — o default do Radix —
-        junto de <code>DropdownMenu</code>, <code>ContextMenu</code> e{" "}
-        <code>Menubar</code>. Hoje as sete leem a mesma folga de{" "}
-        <code>lib/anchored-surface</code>.
+        <code>max-w-xs</code> é o teto de leitura; <code>max-w-(--radix-tooltip-content-available-width)</code> é o da janela, e o menor vence — deslocar não resolve o que não cabe. A folga de 8px vem de <code>lib/anchored-surface</code>, como em toda superfície ancorada.
       </DocNote>
     </>
   )

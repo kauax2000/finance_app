@@ -14,7 +14,7 @@ export default function AvatarDoc() {
   return (
     <>
       <Usage>
-        Identifica uma pessoa numa lista, num menu, numa transação. Sempre com <code>AvatarFallback</code>: a imagem pode não carregar, e um círculo vazio lê como erro.
+        Identifica uma pessoa numa lista, num menu, numa transação. Sempre com <code>AvatarFallback</code>: a imagem pode não carregar, e um círculo vazio lê como erro. Para categoria ou conta, use <code>ColorTile</code>.
       </Usage>
 
       <DocSection
@@ -30,7 +30,7 @@ export default function AvatarDoc() {
 
       <DocSection
         title="Forma"
-        description="circle é o padrão e é a convenção de retrato. rounded é o que o produto desenha hoje na lateral do usuário e na lista de membros — mesma família da marca de workspace, que costuma aparecer ao lado. O prop existe porque as duas formas conviviam sem estar ditas: o catálogo mostrava círculo e o app entregava canto arredondado."
+        description="circle é o padrão, a convenção de retrato. rounded é o da lateral do usuário e da lista de membros, da mesma família da marca de workspace que costuma aparecer ao lado."
         code={`<Avatar shape="rounded">
   <AvatarFallback>KL</AvatarFallback>
 </Avatar>`}
@@ -59,12 +59,7 @@ export default function AvatarDoc() {
       </DocSection>
 
       <DocNote title="O canto do rounded cresce com a caixa">
-        8px em <code>xs</code> e <code>sm</code>, 10px em <code>md</code> e{" "}
-        <code>lg</code>, 14px em <code>xl</code>{" "}
-        — a mesma progressão do <code>ColorTile</code>. Cravado num raio só, um
-        avatar de 24px ficava quase redondo e um de 56px quase reto; e a 32px
-        ele desenhava 10px contra os 8px do ladrilho de categoria, duas peças de
-        identidade lado a lado com cantos diferentes.
+        8px em <code>xs</code> e <code>sm</code>, 10px em <code>md</code> e <code>lg</code>, 14px em <code>xl</code> — a progressão do <code>ColorTile</code>, para as duas peças de identidade baterem lado a lado.
       </DocNote>
 
       <DocSection
@@ -98,28 +93,16 @@ export default function AvatarDoc() {
         A foto ao lado do nome não acrescenta informação: descrevê-la faria o leitor de tela anunciar a mesma pessoa duas vezes. <code>AvatarImage</code> já traz <code>alt=&quot;&quot;</code>. Sem o nome ao lado, aí o alt precisa dizer de quem é.
       </DocNote>
 
-      <DocNote title="A escala é de 8 em 8, e não é a escada de controle">
-        24, 32, 40, 48 e 56. A escada do projeto — 24, 28, 32, 36, 40 — existe
-        para botão alinhar com campo numa linha de formulário, e um avatar nunca
-        disputa essa linha: ali 40px é teto, não meio. O único degrau que os dois
-        vocabulários dividem, <code>xs</code>{" "}
-        a 24, vale o mesmo nos dois — que é o caso em que um avatar de fato mora
-        dentro de uma linha de controle.
+      <DocNote title="A escala é de 8 em 8, não a escada de controle">
+        24, 32, 40, 48 e 56. A escada 24–40 existe para botão alinhar com campo, e um avatar não disputa essa linha; só <code>xs</code>, a 24, coincide com ela.
       </DocNote>
 
       <DocNote title="delayMs evita o pisca das iniciais">
-        <code>AvatarFallback</code> aceita <code>delayMs</code>{" "}
-        do Radix: com ele as iniciais só entram depois do prazo, e uma foto que
-        chega rápido deixa de ser precedida por um lampejo de letras. Numa lista
-        onde a maioria tem foto, vale.
+        Com <code>delayMs</code> no <code>AvatarFallback</code>, as iniciais só entram depois do prazo, e uma foto rápida não é precedida por um lampejo de letras. Vale em listas onde a maioria tem foto.
       </DocNote>
 
       <DocNote title="A cor de fundo vem dos tons de identidade">
-        <code>identityToneFor</code>{" "}
-        devolve o par superfície + tinta, e o app inteiro passou a usá-lo — sete
-        telas que antes montavam classe crua do Tailwind com texto branco por
-        cima. A superfície é opaca e não alpha: avatares empilhados mostrariam o
-        de baixo através do de cima.
+        <code>identityToneFor</code> devolve o par superfície + tinta; não monte classe crua. A superfície é opaca: com alfa, avatares empilhados mostrariam o de baixo.
       </DocNote>
 
       <DocSection
@@ -168,89 +151,20 @@ export default function AvatarDoc() {
         </div>
       </DocSection>
 
-      <DocNote title="O vidro não tinha onde morar, e os dois caminhos óbvios falham">
-        Medido: a raiz do <code>Avatar</code>{" "}
-        <strong>não pinta fundo nenhum</strong>, e o{" "}
-        <code>AvatarFallback</code> é <code>h-full w-full</code>{" "}
-        com superfície <strong>opaca</strong>.
-        <br />
-        <br />
-        Vidro na <strong>raiz</strong> fica escondido atrás do fallback. Vidro
-        no <strong>fallback</strong> apaga a identidade. E o terceiro caminho —
-        tornar <code>--identity-N-surface</code> translúcido — está{" "}
-        <strong>rejeitado por escrito</strong>{" "}
-        no sistema: avatares empilhados mostrariam o de baixo.
-        <br />
-        <br />
-        A saída é a tradução: a lâmina fica na raiz, o tom vem da identidade, e
-        o fallback deixa de escrever superfície. E a objeção do empilhamento não
-        se aplica, porque <strong>é um modo</strong>{" "}
-        — quem escreve <code>glass</code>{" "}
-        aceita a translucidez, e o avatar sem ele segue opaco.
+      <DocNote title="No vidro, a lâmina fica na raiz e o tom vem da identidade">
+        Vidro na raiz some atrás do fallback opaco; vidro no fallback apaga a identidade. Por isso, no modo <code>glass</code>, o fallback deixa de pintar superfície — por contexto, já que um seletor <code>in-data-*</code> perderia para o fundo do próprio elemento. Sem <code>glass</code>, o avatar segue opaco.
       </DocNote>
 
-      <DocNote title="O fallback não anula nada — ele deixa de escrever">
-        A superfície opaca mora no <code>AvatarFallback</code>, não na raiz, e
-        desligá-la por seletor não funcionaria: um{" "}
-        <code>in-data-glass:bg-transparent</code> compila com{" "}
-        <code>:where()</code>, que{" "}
-        <strong>não soma especificidade</strong>, e perderia para o{" "}
-        <code>bg-muted</code>{" "}
-        declarado no próprio elemento. Quem desce o modo é{" "}
-        <strong>contexto</strong>{" "}
-        — o mecanismo do <code>Field</code>, e ele sai de graça porque o{" "}
-        <code>Avatar</code> já é módulo cliente.
+      <DocNote title="Círculo usa glass-round">
+        O aro linear do vidro acende nos cantos, e um círculo não tem cantos: ficaria uma borda cinza uniforme. Com <code>shape=&quot;circle&quot;</code> o avatar veste <code>glass-round</code>, com aro em <code>conic-gradient</code>; em <code>rounded</code> o linear continua certo.
       </DocNote>
 
-      <DocNote title="O aro nunca acendeu num círculo, e a causa é geométrica">
-        O aro do vidro é um gradiente <strong>linear</strong>, calibrado numa
-        placa de 240×424. Numa caixa de 40×40 o eixo dele mede{" "}
-        <strong>49px</strong>: as duas pontas — onde moram o pico e o extremo
-        aceso — caem nos <strong>cantos</strong> do quadrado, e num círculo os
-        cantos não existem.
-        <br />
-        <br />
-        Medido, amostrando 720 pontos do perímetro: <strong>0%</strong> via o
-        pico de 34%, <strong>0%</strong> via o extremo aceso, e{" "}
-        <strong>57,5%</strong> via só o vale de 10%. O avatar de vidro tinha uma
-        borda cinza quase uniforme, e era isso que o fazia ler como disco
-        chapado.
-        <br />
-        <br />
-        Com <code>shape=&quot;circle&quot;</code> ele veste{" "}
-        <code>glass-round</code>, que troca o aro por um{" "}
-        <code>conic-gradient</code> — cada ponto do perímetro mapeia para um
-        ângulo, então não há canto a perder. Depois: <strong>14%</strong> no pico
-        e 8,5% no vale. Em <code>shape=&quot;rounded&quot;</code> os cantos
-        existem, e ali o linear continua certo.
+      <DocNote title="O vidro lê pelo especular, não pelas nuvens">
+        Num disco pequeno não há &ldquo;atrás&rdquo; para as nuvens de luz; o que lê como vidro é o reflexo em <code>--glass-sheen-image</code>, acima do tom. No claro o corpo abre menos, para as iniciais manterem 4,5:1.
       </DocNote>
 
-      <DocNote title="Quatro das seis camadas não pintavam nada">
-        O tom é a camada de cima, e ele era <strong>opaco</strong>: a lâmina e as
-        duas nuvens ficavam por baixo dele e não chegavam à tela. Sobrava um
-        disco de cor sólida mais um fio.
-        <br />
-        <br />
-        As nuvens simulam luz <em>atrás</em> de uma placa; num disco de 40px não
-        há atrás, e o que faz ler como vidro é reflexo <strong>na</strong>{" "}
-        superfície. Por isso o conserto não foi trazê-las de volta — foi acender
-        um especular em <code>--glass-sheen-image</code>, a única camada acima do
-        tom.
-        <br />
-        <br />O corpo abre <strong>8%</strong> no escuro e <strong>2%</strong> no
-        claro, e a diferença saiu do contraste: ali a lâmina é branca e clareia o
-        corpo, então a 92% dois tons caíam abaixo dos 4,5:1. Onde a letra de fato
-        encontra o especular, os seis medem <strong>5,93 a 6,34</strong> no
-        escuro e <strong>4,61 a 5,14</strong> no claro.
-      </DocNote>
-
-      <DocNote title="A foto encolhe 2px, e o preço é a aresta">
-        O vidro traz <code>border: 1px solid transparent</code>, que é onde o
-        aro mora. Com <code>box-sizing: border-box</code>{" "}
-        a caixa externa não cresce — <strong>o conteúdo encolhe 2px</strong>.
-        Num avatar <code>sm</code> de 32px, são 30px de imagem. Numa peça
-        circular com foto isso é visível, e por isso está dito em vez de
-        descoberto depois.
+      <DocNote title="No vidro, a foto encolhe 2px">
+        O aro mora numa <code>border</code> transparente de 1px e a caixa é <code>border-box</code>, então o conteúdo perde 2px: num <code>sm</code> de 32px, são 30px de imagem.
       </DocNote>
 
       <PropsTable

@@ -124,21 +124,12 @@ export default function ChartDoc() {
   return (
     <>
       <Usage>
-        Duas camadas. <strong>A anatomia</strong> — <code>ChartContainer</code>,{" "}
-        <code>ChartGrid</code>, <code>ChartXAxis</code>, <code>ChartTooltip</code>,{" "}
-        <code>ChartLegend</code> — é a régua, e quem monta um{" "}
-        <code>ComposedChart</code> compõe ela. <strong>As cinco formas</strong> —{" "}
-        <code>ChartArea</code>, <code>ChartLine</code>, <code>ChartBars</code>,{" "}
-        <code>ChartDonut</code>, <code>ChartSparkline</code> — são a forma curta
-        sobre a anatomia, como <code>FormInput</code> é sobre <code>Field</code> +{" "}
-        <code>Input</code>. Um número sozinho não é gráfico: é{" "}
-        <code>StatCard</code>. Qual paleta a série usa é a primeira decisão, e
-        vem logo abaixo.
+        Todo gráfico do app. <strong>A anatomia</strong> — <code>ChartContainer</code>, <code>ChartGrid</code>, os eixos, <code>ChartTooltip</code>, <code>ChartLegend</code> — compõe qualquer gráfico do Recharts; <strong>as cinco formas</strong> — <code>ChartArea</code>, <code>ChartLine</code>, <code>ChartBars</code>, <code>ChartDonut</code>, <code>ChartSparkline</code> — são a forma curta sobre ela. Um número sozinho não é gráfico: é <code>StatCard</code>.
       </Usage>
 
       <DocSection
         title="A cor da série: quando ela significa"
-        description="Duas paletas, e escolher entre elas é a decisão inteira. Fluxo de caixa: verde é entrada e vermelho é saída, e trocar por outra cor destruiria a leitura — a série usa --chart-income e --chart-expense."
+        description="Quando verde e vermelho significam entrada e saída, a série usa --chart-income e --chart-expense. Trocar por outra cor destrói a leitura do fluxo de caixa."
         code={`const config = {
   entradas: { label: "Entradas", color: "var(--chart-income)" },
   saidas: { label: "Saídas", color: "var(--chart-expense)" },
@@ -157,7 +148,7 @@ export default function ChartDoc() {
 
       <DocSection
         title="A cor da série: quando ela só identifica"
-        description="Gasto por categoria: nenhuma delas é boa ou ruim. Aqui a rampa neutra --chart-1 a --chart-5 é o certo — com as cores de status, a categoria vermelha leria como problema. A ordem é fixa: a cor segue a entidade, nunca o ranking."
+        description="Categoria não é boa nem ruim: use a rampa neutra --chart-1 a --chart-5, que é o padrão sem color no config. Com cores de status, a categoria vermelha leria como problema. A cor segue a entidade, nunca o ranking."
         code={`// Sem \`color\` no config: as fatias caem na rampa, na ordem.
 const config = {
   Mercado: { label: "Mercado" },
@@ -191,10 +182,7 @@ const config = {
         title="Área"
         description={
           <>
-            A série contínua ao longo do tempo. <code>variant</code> escolhe o
-            preenchimento — <code>solid</code> chapado a 15%,{" "}
-            <code>gradient</code> dissolvendo até 2%, <code>stepped</code> em
-            degraus, para o dado que muda de patamar em vez de variar.
+            A série contínua no tempo. <code>variant</code>: <code>solid</code> chapado, <code>gradient</code> dissolvendo, <code>stepped</code> para o dado que muda de patamar.
           </>
         }
         code={`<ChartArea
@@ -231,23 +219,15 @@ const config = {
         />
       </DocSection>
 
-      <DocNote title="A legenda aparece na segunda série, e some na primeira">
-        Não é gosto, é a regra escrita como padrão:{" "}
-        <code>legend ?? series.length &gt;= 2</code>. Com uma série o título já a
-        nomeia e a legenda repete; com duas, a cor deixa de bastar. Os dois
-        primeiros gráficos acima não têm legenda e o terceiro tem, sem ninguém
-        ter passado nada.
+      <DocNote title="Legenda a partir da segunda série">
+        O padrão é <code>legend ?? series.length &gt;= 2</code>: com uma série o título já a nomeia; com duas, a cor sozinha não basta.
       </DocNote>
 
       <DocSection
         title="Linha"
         description={
           <>
-            Várias séries no mesmo eixo. <code>variant</code> é a interpolação
-            (<code>curved</code> de fábrica, <code>straight</code>,{" "}
-            <code>stepped</code>) e <code>dots</code> é o marcador:{" "}
-            <code>hover</code> só no ponto ativo — o padrão, e o menos ruidoso —,{" "}
-            <code>all</code> em todos, <code>none</code> em nenhum.
+            Várias séries no mesmo eixo. <code>variant</code> é a interpolação (<code>curved</code> de fábrica, <code>straight</code>, <code>stepped</code>); <code>dots</code> é o marcador — <code>hover</code>, o padrão e o menos ruidoso, <code>all</code> ou <code>none</code>.
           </>
         }
         code={`<ChartLine variant="straight" dots="all" … />`}
@@ -272,21 +252,14 @@ const config = {
       </DocSection>
 
       <DocNote title="O marcador tem 8px, e o anel dele é a superfície">
-        Abaixo de 8px de diâmetro o ponto lê como sujeira do traço, não como
-        dado. E ele leva <code>stroke</code> de 2px na cor de{" "}
-        <code>--chart-surface</code>: sem esse anel, dois pontos de séries
-        diferentes que se cruzam viram uma mancha só.
+        Abaixo de 8px o ponto lê como sujeira do traço. O <code>stroke</code> de 2px em <code>--chart-surface</code> impede que dois pontos que se cruzam virem uma mancha só.
       </DocNote>
 
       <DocSection
         title="Barras"
         description={
           <>
-            A magnitude por categoria. <code>layout=&quot;horizontal&quot;</code> é o
-            ranking com nome comprido — e ele declara o eixo de categoria por
-            quem chama, que é uma armadilha do Recharts.{" "}
-            <code>stacked</code> empilha e liga a linha de total
-            no tooltip.
+            A magnitude por categoria. <code>layout=&quot;horizontal&quot;</code> para nome comprido; <code>stacked</code> empilha e liga o total no tooltip.
           </>
         }
         code={`<ChartBars layout="horizontal" x="nome" … />
@@ -321,31 +294,18 @@ const config = {
       </DocSection>
 
       <DocNote title="A ponta arredonda e a base não">
-        <code>radius={`{[4, 4, 0, 0]}`}</code>, nunca{" "}
-        <code>radius={`{4}`}</code>. Arredondar os quatro cantos levanta a barra
-        da linha do zero — e a base é justamente onde um gráfico de barras diz a
-        magnitude. No <code>layout=&quot;horizontal&quot;</code> o raio gira junto:{" "}
-        <code>{`[0, 4, 4, 0]`}</code>. Empilhado, só o segmento de cima
-        arredonda.
+        <code>radius={`{[4, 4, 0, 0]}`}</code>, nunca <code>radius={`{4}`}</code>: a base é onde a barra diz a magnitude, e arredondá-la a levanta da linha do zero. Na horizontal, <code>{`[0, 4, 4, 0]`}</code>; empilhado, só o segmento de cima arredonda.
       </DocNote>
 
       <DocNote title="Os 2px entre segmentos são pintados, não vazados">
-        O vão entre barras empilhadas e entre fatias de rosca é um{" "}
-        <code>stroke</code> de 2px em <code>var(--chart-surface)</code> — a
-        variável que o <code>ChartContainer</code> declara e todo mundo herda.
-        Com <code>transparent</code> o vão mostraria o segmento de trás em vez
-        de abrir; com um literal, cada marca teria a própria cópia da cor do
-        fundo.
+        O vão entre barras empilhadas e entre fatias é um <code>stroke</code> de 2px em <code>var(--chart-surface)</code>, que o <code>ChartContainer</code> declara. Com <code>transparent</code> o vão mostraria o segmento de trás.
       </DocNote>
 
       <DocSection
         title="Rosca"
         description={
           <>
-            A composição de um total. <code>donut</code> deixa o miolo livre
-            para o valor, <code>pie</code> fecha o miolo, e <code>gauge</code> é
-            o meio-círculo de progresso contra um teto — limite de cartão,
-            orçamento consumido. <code>thickness</code> muda a espessura do anel.
+            A composição de um total. <code>donut</code> deixa o miolo para o valor, <code>pie</code> o fecha, e <code>gauge</code> é o progresso contra um teto — limite de cartão, orçamento. <code>thickness</code> muda a espessura do anel.
           </>
         }
         code={`<ChartDonut
@@ -396,60 +356,18 @@ const config = {
       </DocSection>
 
       <DocNote title="O miolo chega por `center`, e a caixa dele é a que tem tamanho">
-        <code>children</code> desce para dentro do <code>&lt;PieChart&gt;</code>,
-        que é SVG — uma <code>&lt;div&gt;</code> ali não renderiza. Por isso o
-        miolo tem prop própria. E ele entra pelo <code>overlay</code> do{" "}
-        <code>ChartContainer</code>, não como irmão dele: com um envelope{" "}
-        <code>relative</code> por fora, o <code>inset-0</code> mede o envelope, e{" "}
-        <strong>medido, o miolo saía 118px à direita do centro do anel</strong>{" "}
-        assim que o container era mais estreito que a coluna.
+        <code>children</code> desce para dentro do SVG, onde uma <code>&lt;div&gt;</code> não renderiza; por isso o miolo é prop, e entra pelo <code>overlay</code> do <code>ChartContainer</code>, a caixa que tem tamanho.
       </DocNote>
 
-      <DocNote title="O medidor não é uma rosca cortada ao meio">
-        Com o anel e a caixa da rosca, duas coisas quebravam. A corda interna{" "}
-        <strong>na altura do topo do texto</strong> media 42px e{" "}
-        <code>76%</code> já ocupava 43 — ele encostava no arco, e{" "}
-        <code>100%</code> invadiria. E o Recharts centraliza o círculo inteiro,
-        então um meio-arco num quadrado deixava <strong>68px mortos
-        embaixo</strong>: não era um <code>gap</code> grande, era vazio dentro do
-        SVG, e era ele que afastava a legenda das outras formas.
-        <br />
-        <br />
-        Hoje o medidor tem espessura própria, raio a 130% do máximo (o Recharts
-        aceita acima de 100), <code>cy</code> a 86% e proporção{" "}
-        <code>standard</code> de fábrica. Medido: corda de <strong>103px</strong>{" "}
-        — 30 de folga por lado com <code>76%</code>, 22 com <code>100%</code> —, e
-        o vão até a legenda em <strong>25px, igual nas três formas</strong>.
-      </DocNote>
-
-      <DocNote title="O anel se centra sobre a própria legenda">
-        Numa coluna flex o alinhamento padrão é <code>stretch</code>, e o{" "}
-        <code>ChartContainer</code> tem largura própria: ele encostava na
-        esquerda de uma caixa que a legenda definia —{" "}
-        <strong>208px de anel num envelope de 412, 102px fora do centro</strong>.
-        O <code>w-fit</code> fica, porque é <code>fit-content</code> e respeita o
-        espaço disponível: trocá-lo por <code>w-full</code> centraria o anel e
-        faria a legenda parar de quebrar linha no telefone.
-      </DocNote>
-
-      <DocNote title="A legenda da rosca sai do SVG, e isso move o centro">
-        Dentro do SVG, a <code>&lt;Legend&gt;</code> do Recharts reserva a faixa
-        dela encolhendo o anel — e aí <strong>o centro do anel deixa de ser o
-        centro da caixa</strong>, que é exatamente onde o{" "}
-        <code>ChartDonutCenter</code> se apoia. Na rosca a legenda é HTML ao
-        lado do gráfico, e é por isso que <code>ChartLegendContent</code> lê o
-        contexto sem exigi-lo. Como efeito colateral bom, a fileira ganha quebra
-        de linha de verdade.
+      <DocNote title="A legenda da rosca é HTML, fora do SVG">
+        Dentro do SVG a legenda encolheria o anel e tiraria o miolo do centro. Na rosca ela é HTML ao lado do gráfico, e <code>ChartLegendContent</code> lê o contexto sem exigi-lo.
       </DocNote>
 
       <DocSection
         title="Faísca"
         description={
           <>
-            A tendência sem eixo, para dentro de um <code>StatCard</code> ou de
-            uma linha de lista. Sem grade, sem eixo, sem legenda e sem tooltip:
-            uma faísca é a <em>forma</em> da curva, não os números dela. O nome
-            acessível continua obrigatório — é ele que diz o que a curva mostra.
+            A tendência sem eixo, para dentro de um <code>StatCard</code> ou de uma linha de lista: sem grade, legenda nem tooltip. O nome acessível continua obrigatório.
           </>
         }
         code={`<ChartSparkline y="saldo" config={CONFIG_SALDO} data={FLUXO} label="Saldo, últimos 6 meses" />`}
@@ -476,11 +394,7 @@ const config = {
         title="Proporção"
         description={
           <>
-            <code>aspect</code> é do componente porque quatro telas do app
-            responderam com um literal de pixel (<code>height={`{300}`}</code>{" "}
-            duas vezes, <code>240</code>, <code>200</code>) a um componente que
-            cravava <code>aspect-video</code> e ensinava proporção.{" "}
-            <code>auto</code> é a saída para quem dimensiona por fora.
+            <code>aspect</code> é do componente: a altura sai da proporção, nunca de um <code>height</code> em pixel. <code>auto</code> é para quem dimensiona por fora.
           </>
         }
         code={`<ChartArea aspect="wide" … />`}
@@ -514,12 +428,7 @@ const config = {
         title="Tooltip"
         description={
           <>
-            <code>format</code> é o eixo que faltava, e a falta dele custou
-            quatro tooltips escritas à mão: o componente formatava com{" "}
-            <code>numberBR</code>, então uma série em reais saía{" "}
-            <code>8.432</code>, <strong>sem R$</strong>.{" "}
-            <code>indicator</code> escolhe a forma do marcador e{" "}
-            <code>total</code> liga a linha de soma no rodapé.
+            <code>format</code> escreve o valor — <code>currency</code> para reais —, <code>indicator</code> escolhe o marcador e <code>total</code> liga a soma no rodapé.
           </>
         }
         code={`<ChartTooltip
@@ -549,23 +458,14 @@ const config = {
       </DocSection>
 
       <DocNote title="O eixo comprime e o tooltip não">
-        <code>format=&quot;currency&quot;</code> escreve <code>R$ 1.234.567,00</code> no
-        tooltip e <code>R$ 1,23 mi</code> no eixo — o eixo deriva{" "}
-        <code>compact</code> sozinho. São medidas diferentes de propósito: um
-        rótulo de eixo precisa caber numa coluna de ~56px, e um tooltip precisa
-        dizer o centavo. Os dois passam por <code>lib/formatters</code>; não há{" "}
-        <code>Intl</code> neste componente, e a regra <strong>I</strong> do
-        auditor é o que tranca isso.
+        <code>format=&quot;currency&quot;</code> escreve <code>R$ 1.234.567,00</code> no tooltip e <code>R$ 1,23 mi</code> no eixo, que deriva <code>compact</code> sozinho: o rótulo precisa caber na calha, o tooltip precisa do centavo. Tudo passa por <code>lib/formatters</code>; não há <code>Intl</code> no gráfico, e a regra <strong>I</strong> do auditor tranca.
       </DocNote>
 
       <DocSection
         title="Legenda interativa"
         description={
           <>
-            <code>interactive</code> transforma cada item em{" "}
-            <code>&lt;button&gt;</code> com <code>aria-pressed</code>. Clicar
-            isola a série — é o que <code>dashboard-expense-categories</code> já
-            faz hoje com um <code>&lt;ul&gt;</code> próprio de 40 linhas.
+            <code>interactive</code> transforma cada item em <code>&lt;button&gt;</code> com <code>aria-pressed</code>. Desligado, o rótulo <strong>risca</strong> além de esmaecer: opacidade sozinha é cor como único canal.
           </>
         }
         code={`<ChartLegendContent
@@ -578,22 +478,11 @@ const config = {
         <LegendaInterativa />
       </DocSection>
 
-      <DocNote title="O estado escondido não é só opacidade">
-        O rótulo <strong>risca</strong>, e é isso que sobrevive a quem não
-        distingue um degrau de transparência. Opacidade sozinha é a mesma
-        armadilha de cor-como-único-canal, um nível acima.
-      </DocNote>
-
       <DocSection
         title="Anatomia livre"
         description={
           <>
-            Barras mais linha é composição genuína, e não ganhou embrulho: dois
-            casos que diferem em tudo virariam API a mais, não a menos. As peças
-            da anatomia servem qualquer gráfico do Recharts —{" "}
-            <code>ChartReferenceLine</code> tem <code>tone</code>{" "}
-            (<code>zero</code>, <code>average</code>, <code>neutral</code>), que
-            são os três papéis que duas telas do app desenham à mão.
+            Barras mais linha é composição livre, sem embrulho. <code>ChartReferenceLine</code> tem <code>tone</code>: <code>zero</code>, <code>average</code> e <code>neutral</code>.
           </>
         }
         code={`<ChartContainer config={config} label="…">
@@ -634,7 +523,7 @@ const config = {
 
       <DocSection
         title="Estado"
-        description="Nenhum dos oito gráficos do app tem estado vazio hoje. O esqueleto carrega o mesmo eixo `aspect` do gráfico cheio — um esqueleto de altura arbitrária faz a tela saltar quando o dado chega."
+        description="Vazio, carregando e erro têm peça. O esqueleto usa o mesmo aspect do gráfico cheio, para a tela não saltar quando o dado chega."
         code={`{carregando ? <ChartSkeleton aspect="wide" />
  : erro       ? <ChartError description={erro} />
  : vazio      ? <ChartEmpty description="Nenhum lançamento entre 1 e 31 de março." />
@@ -660,11 +549,7 @@ const config = {
         title="A mesma série como tabela"
         description={
           <>
-            <code>dataTable</code> abre um <code>Collapsible</code> com a série
-            em <code>Table</code>. É a alternativa não-visual que um gráfico
-            deve ter e que não existia em lugar nenhum deste app — quem lê com
-            leitor de tela, quem imprime e quem precisa do número exato saem
-            todos do mesmo lugar.
+            <code>dataTable</code> abre a série num <code>Table</code> dentro de um <code>Collapsible</code>: a alternativa não-visual para leitor de tela, impressão e número exato.
           </>
         }
         code={`<ChartBars dataTable … />`}
@@ -700,7 +585,7 @@ const config = {
             prop: "label",
             type: "string",
             description:
-              "O nome acessível: emite `role=\"img\"` e `aria-label`. Opcional aqui e obrigatório nas cinco formas — a composição livre não pode cobrar.",
+              "O nome acessível (`role=\"img\"` e `aria-label`), obrigatório nas cinco formas.",
           },
           {
             prop: "description",
@@ -739,14 +624,14 @@ const config = {
             type: "boolean",
             default: "series.length >= 2",
             description:
-              "O padrão é a regra: duas séries ou mais sempre têm legenda, uma nunca tem.",
+              "Duas séries ou mais têm legenda; uma nunca tem.",
           },
           {
             prop: "dataTable",
             type: "boolean",
             default: "false",
             description:
-              "Abre um `Collapsible` com a mesma série em `Table`. Sem ele, nenhum invólucro é renderizado.",
+              "A mesma série num `Table` dentro de um `Collapsible`.",
           },
           {
             prop: "variant",
@@ -764,7 +649,7 @@ const config = {
             prop: "center",
             type: "ReactNode",
             description:
-              "Só na rosca: o `ChartDonutCenter`. Prop e não `children`, porque `children` desce para dentro do SVG.",
+              "Só na rosca: o `ChartDonutCenter`, como prop porque `children` desce para o SVG.",
           },
         ]}
       />
@@ -784,20 +669,20 @@ const config = {
             type: '"dot" | "line" | "dashed"',
             default: '"dot"',
             description:
-              "A forma do marcador de série no tooltip. Já existia antes desta rodada e nunca tinha sido documentado.",
+              "A forma do marcador de série no tooltip.",
           },
           {
             prop: "total",
             type: "boolean",
             default: "false",
             description:
-              "A linha de soma no rodapé do tooltip. As quatro tooltips à mão do app têm uma; empilhado, as formas ligam sozinhas.",
+              "A linha de soma no rodapé do tooltip; empilhado, as formas a ligam sozinhas.",
           },
           {
             prop: "interactive · hiddenSeries · onToggle",
             type: "boolean · string[] · (key) => void",
             description:
-              "Legenda: cada item vira um `button` com `aria-pressed`, e o item desligado risca o rótulo além de esmaecer.",
+              "Na legenda, cada item vira `button` com `aria-pressed`; desligado, o rótulo risca e esmaece.",
           },
           {
             prop: "align",
@@ -814,27 +699,12 @@ const config = {
         ]}
       />
 
-      <DocNote title="O anel de foco tinha sido apagado, e o gráfico é navegável">
-        A versão anterior escrevia <code>outline-hidden</code> em{" "}
-        <code>.recharts-layer</code>, <code>.recharts-sector</code> e{" "}
-        <code>.recharts-surface</code>. O que isso apagava era o foco de teclado
-        que o <code>accessibilityLayer</code> do Recharts v3 desenha — e a
-        versão instalada aqui é a <strong>3.8.0</strong>, onde ele vem ligado de
-        fábrica. Uma tela chegava a passar{" "}
-        <code>accessibilityLayer={`{false}`}</code>, o único do repositório.
-        Suprimir o foco não-visível continua certo; suprimir o visível é tirar a
-        única pista de que dá para andar no gráfico com <code>Tab</code> e as
-        setas.
+      <DocNote title="O anel de foco fica: o gráfico é navegável">
+        O <code>accessibilityLayer</code> do Recharts 3 vem ligado e permite andar pelo gráfico com <code>Tab</code> e as setas. Suprimir o foco visível apaga a única pista disso; não passe <code>accessibilityLayer={`{false}`}</code>.
       </DocNote>
 
       <DocNote title="A sexta série não é um matiz novo">
-        A rampa tem cinco degraus. Do sexto em diante,{" "}
-        <code>chartSeriesColor</code> devolve <code>--muted-foreground</code>,
-        que lê como &ldquo;não identificado&rdquo; — em vez de repetir{" "}
-        <code>--chart-1</code> e dar duas fatias da mesma cor, que é o que{" "}
-        <code>BAR_COLORS[idx % 5]</code> faz hoje em{" "}
-        <code>credit-cards-history-chart</code>. Quem tem seis categorias agrega
-        a cauda em &ldquo;Outros&rdquo;: quem tem os dados é quem pode agregar.
+        A rampa tem cinco degraus; do sexto em diante <code>chartSeriesColor</code> devolve <code>--muted-foreground</code> em vez de repetir <code>--chart-1</code>. Quem tem seis categorias agrega a cauda em &ldquo;Outros&rdquo;: quem tem os dados é quem pode agregar.
       </DocNote>
 
       <Group title="Regras que atravessam telas" layout="grid">
@@ -851,17 +721,14 @@ const config = {
             </p>
             <p>
               <strong className="text-foreground">Cor não é o único canal.</strong>{" "}
-              Rótulo, legenda ou padrão precisam distinguir as séries também: 8%
-              dos homens não separa verde de vermelho. Duas séries ou mais
-              sempre têm legenda; uma série nunca tem, porque ali o título já a
-              nomeia.
+              Rótulo, legenda ou padrão também distinguem as séries: 8% dos
+              homens não separa verde de vermelho.
             </p>
             <p>
               <strong className="text-foreground">O eixo Y começa em zero.</strong>{" "}
-              Cortar a base multiplica visualmente uma diferença de 3%.{" "}
-              <code>ChartYAxis</code> ancora em <code>[0, &quot;auto&quot;]</code>{" "}
-              por padrão; quem tem caso legítimo passa <code>domain</code> e
-              assume.
+              Cortar a base multiplica visualmente uma diferença pequena.{" "}
+              <code>ChartYAxis</code> ancora em <code>[0, &quot;auto&quot;]</code>;
+              quem tem caso legítimo passa <code>domain</code>.
             </p>
           </Stack>
         </Spec>
@@ -904,26 +771,12 @@ const config = {
         </Spec>
       </Group>
 
-      <DocNote title="Atributo SVG aceita var(), sim">
-        Um gráfico do app afirmava num comentário que &ldquo;Bar fill cannot
-        use var() in SVG&rdquo; e por isso fixava <code>#1f6a59</code>. A
-        premissa está errada: <code>fill</code> e{" "}
-        <code>stroke</code> resolvem <code>var()</code>, e é exatamente o que{" "}
-        <code>ChartContainer</code> explora. Com hex, o gráfico é a única parte
-        da tela que não acompanha o tema escuro.
+      <DocNote title="fill e stroke aceitam var()">
+        Atributo SVG resolve <code>var()</code>, e é o que o <code>ChartContainer</code> explora. Nunca fixe hex numa série: o gráfico deixa de acompanhar o tema escuro.
       </DocNote>
 
-      <DocNote title="O que ficou de fora, e por quê">
-        <strong>Sem autoplay e sem animação de entrada</strong> — num app de
-        finanças, um valor que se move enquanto a pessoa o lê é hostil.{" "}
-        <strong>Sem dois eixos Y</strong>: duas medidas de escala diferente são
-        dois gráficos, ou uma indexada à outra.{" "}
-        <strong>Sem embrulho para <code>ComposedChart</code></strong>, pela
-        contagem — dois casos que diferem em tudo. E{" "}
-        <strong>as sete telas do app ainda não migraram</strong>: elas estão
-        contadas no backlog do <code>AGENTS.md</code>, com as quatro tooltips,
-        as três legendas e os quatro <code>Intl</code> redeclarados que esta
-        rodada existe para apagar.
+      <DocNote title="Fora, de propósito">
+        <strong>Sem autoplay e sem animação de entrada</strong>: um valor que se move enquanto a pessoa o lê é hostil. <strong>Sem dois eixos Y</strong>: escalas diferentes são dois gráficos, ou uma indexada à outra. <strong>Sem embrulho para <code>ComposedChart</code></strong>: componha a anatomia.
       </DocNote>
     </>
   )

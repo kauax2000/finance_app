@@ -26,15 +26,8 @@ const QUEM_PEDIU: Record<keyof typeof containerSizes, string> = {
 }
 
 /**
- * O traço da régua é o **número**, e não uma aproximação em classe.
- *
- * A primeira versão desenhava três porcentagens arbitrárias em classe — a regra
- * D2 do auditor as pegou —, e elas ainda mentiam por um ou dois pontos, porque
- * a escala deixou de ser uniforme. A proporção é dado: ela sai da divisão pelo
- * maior degrau nomeado, e por isso vive em `style`, como a barra de um gráfico.
- *
- * (Uma lição de método de graça: o auditor varre **texto**, então citar as
- * classes removidas dentro deste comentário as fazia reaparecer no relatório.)
+ * O traço da régua é o número: a proporção sai da divisão pelo maior degrau
+ * nomeado, e por isso vive em `style`, como a barra de um gráfico.
  */
 const MAIOR = 1280
 
@@ -47,15 +40,12 @@ export default function ContainerDoc() {
   return (
     <>
       <Usage>
-        Onde uma tela começa: até onde o conteúdo cresce, quanto respiro ele tem
-        na lateral e em que ritmo os blocos dele se sucedem. As três decisões de
-        espaçamento e largura de uma página moram aqui — antes eram duas
-        páginas, e a Fundação declarava este arquivo como fonte.
+        Onde uma tela começa: até onde o conteúdo cresce, quanto respiro tem na lateral e em que ritmo os blocos se sucedem. Dentro dele, o bloco com título é o <code>PageSection</code>.
       </Usage>
 
       <DocSection
         title="Os degraus"
-        description="Cinco larguras, e cada uma tem um consumidor contado. Não há degrau sem tela."
+        description="Cinco larguras, cada uma com um consumidor. Não há degrau sem tela."
         code={`<Container>…</Container>              {/* md · 576 */}
 <Container size="lg">…</Container>`}
         previewClassName="flex-col items-stretch gap-3 p-0"
@@ -84,17 +74,9 @@ export default function ContainerDoc() {
         ))}
       </DocSection>
 
-      <DocNote title="1024 saiu da escada, e era o padrão">
-        Ele tinha <strong>zero usos no repositório inteiro</strong>. A rodada
-        anterior renomeou <code>default</code> para <code>md</code> e deixou o
-        número sem examinar — o nome ficou certo apontando para uma largura que
-        nenhuma tela pediu. Devolver um degrau no dia em que uma tela pedir é
-        uma linha; mantê-lo era manter a ficção.
-      </DocNote>
-
       <DocSection
         title="A calha é opt-in"
-        description="none é o padrão. page é a gramática que o app renderiza: um degrau, quebrando em 768."
+        description="none é o padrão, porque a casca do app já é dona da calha. page é a gramática que o app renderiza: px-4, e px-6 a partir de 768."
         code={`<Container />                    {/* sem calha — o padrão */}
 <Container gutter="page" />      {/* px-4 md:px-6 */}`}
         previewClassName="flex-col items-stretch gap-3 p-0"
@@ -117,39 +99,21 @@ export default function ContainerDoc() {
         ))}
       </DocSection>
 
-      <DocNote title="A calha era o que tornava este componente inadotável">
-        A casca do app já é dona dela (<code>px-4 … md:p-6</code>), e uma tela
-        que somasse a do <code>Container</code> a <strong>dobrava</strong>.
-        Medido a 375px, o conteúdo caía de <strong>343 para 311px</strong>; a
-        1280, de 1232 para <strong>960</strong>, com 56px de calha por lado. Era
-        palavra por palavra o defeito que esta página descrevia enquanto o
-        componente o cometia — e é por isso que ele passou tanto tempo com zero
-        consumidores.
-        <br />
-        Das nove cascas de página escritas à mão no app,{" "}
-        <strong>nenhuma</strong> declara calha horizontal. A única que tenta
-        escreve <code>px-1 sm:px-0</code> — quatro pixels que somem em 640.
+      <DocNote title="Não some calha dentro da casca do app">
+        A casca já declara o recuo lateral (<code>px-4 … md:p-6</code>). Um <code>Container</code> com <code>gutter=&quot;page&quot;</code> dentro dela dobra a calha e rouba largura justo no telefone; use <code>page</code> só quando ninguém acima a declarou.
       </DocNote>
 
-      <DocNote title="full não é “o mais largo”">
-        É &ldquo;não limite aqui&rdquo;, para quando o contêiner de fora já
-        resolve a largura. Usar <code>full</code> achando que é o maior degrau
-        produz linhas de texto de 1600px, que ninguém consegue ler sem perder a
-        linha de vista.
+      <DocNote title="full não é &ldquo;o mais largo&rdquo;">
+        É &ldquo;não limite aqui&rdquo;, para quando o contêiner de fora já resolve a largura. Usado como maior degrau, produz linhas de texto que ninguém lê sem perder a vista.
       </DocNote>
 
-      <DocNote title="A tabela e o cva são dois, e um teste os mantém iguais">
-        O Tailwind varre o código como <strong>texto</strong>, então uma classe
-        montada em tempo de execução não chega ao CSS: os literais têm que ficar
-        no <code>cva</code>. As tabelas <code>containerSizes</code> e{" "}
-        <code>containerGutters</code> existem ao lado dele para esta página
-        poder iterá-las, e <code>page-chrome-ladder.test.ts</code> falha se
-        divergirem.
+      <DocNote title="As classes ficam literais no cva">
+        O Tailwind varre o código como texto, então classe montada em tempo de execução não chega ao CSS. <code>containerSizes</code> e <code>containerGutters</code> existem ao lado do <code>cva</code> para esta página iterar, e <code>page-chrome-ladder.test.ts</code> falha se divergirem.
       </DocNote>
 
       <DocSection
         title="O ritmo"
-        description="stack empilha o conteúdo e declara a distância entre os blocos. Era escrito à mão em toda chamada: flex flex-col gap-8 nas páginas, flex flex-col gap-4 na casca do app."
+        description="stack empilha o conteúdo e declara a distância entre os blocos, no lugar do flex flex-col gap-* escrito à mão em cada chamada."
         code={`<Container stack="section">
   <PageHeader />
   <PageSection />
@@ -180,7 +144,7 @@ export default function ContainerDoc() {
 
       <DocSection
         title="A escala tem nome"
-        description="Quatro distâncias, e não uma régua numérica. Redeclarar 4/8/12/16 seria copiar o Tailwind para dentro de casa; estes nomeiam as decisões que o sistema já tomou."
+        description="Quatro distâncias com nome, e não uma régua numérica: elas nomeiam as decisões que o sistema já tomou."
         code={`gap-(--space-block)      /* entre blocos */
 gap-(--space-section)    /* entre seções */`}
         previewClassName="flex-col items-stretch gap-4 p-0"
@@ -232,39 +196,15 @@ gap-(--space-section)    /* entre seções */`}
       </DocSection>
 
       <DocNote title="Quem espaça é quem contém">
-        Nenhum filho declara a própria margem. A distância entre dois blocos é
-        decisão de quem os empilha — <code>stack</code> aqui,{" "}
-        <code>gap</code> no <code>PageSection</code> —, porque só quem contém
-        sabe o que vem antes e o que vem depois. Um componente que traz margem
-        própria muda de respiro conforme o vizinho, e ninguém consegue prever o
-        resultado sem abrir os dois arquivos.
+        Nenhum filho declara a própria margem: a distância entre dois blocos é de quem os empilha — <code>stack</code> aqui, <code>gap</code> no <code>PageSection</code>. Um componente com margem própria muda de respiro conforme o vizinho.
       </DocNote>
 
-      <DocNote title="Duas escalas, e é isso que faz a tela ter blocos">
-        Dentro de um bloco a distância é <code>--space-inline</code>; entre
-        blocos, <code>--space-block</code>. A razão de{" "}
-        <strong>2 para 1</strong> entre as duas é o que separa &ldquo;mesmo
-        assunto&rdquo; de &ldquo;outro assunto&rdquo; — foi medido na rodada do{" "}
-        <code>HoverCardBody</code>, onde tudo a 8px deixava identidade, rótulo,
-        número e datas lendo como cinco linhas soltas.
+      <DocNote title="Dentro de um bloco é metade da distância entre blocos">
+        Dentro, <code>--space-inline</code> (8px); entre blocos, <code>--space-block</code> (16px). A razão de 2 para 1 é o que separa &ldquo;mesmo assunto&rdquo; de &ldquo;outro assunto&rdquo; — tudo a 8px lê como linhas soltas.
       </DocNote>
 
       <DocNote title="Par de identidade: sem gap">
-        Nome sobre e-mail, rótulo sobre valor, título sobre legenda: quando dois
-        textos empilhados são <strong>o mesmo dado em duas linhas</strong>, quem
-        os separa é a entrelinha. Não declare <code>gap</code>, nem{" "}
-        <code>gap-1</code> — dois pixels bastam para o par deixar de ler como
-        uma coisa só. É <code>--space-identity</code>, e ele vale zero de
-        propósito. Cinco componentes chegaram nele corrigindo o mesmo defeito.
-      </DocNote>
-
-      <DocNote title="Isto era duas páginas">
-        Havia uma Fundação chamada &ldquo;Espaçamento e largura&rdquo; cuja
-        fonte declarada era <code>src/components/ui/container.tsx</code> — ela
-        documentava as duas coisas, e o componente entregava só uma. Os três
-        blocos dela eram o <code>Container</code>, e a tabela de props dela era
-        o <code>size</code> dele. Em vez de separar os assuntos, o componente
-        passou a fazer os dois: largura, calha e ritmo.
+        Nome sobre e-mail, rótulo sobre valor: quando dois textos são <strong>o mesmo dado em duas linhas</strong>, quem os separa é a entrelinha. Não declare <code>gap</code>, nem <code>gap-1</code> — é <code>--space-identity</code>, que vale zero.
       </DocNote>
 
       <PropsTable
@@ -273,22 +213,19 @@ gap-(--space-section)    /* entre seções */`}
             prop: "size",
             type: '"sm" | "md" | "lg" | "xl" | "full"',
             default: '"md"',
-            description:
-              "A largura máxima. 448 · 576 · 672 · 1280 · sem teto.",
+            description: "A largura máxima: 448 · 576 · 672 · 1280 · sem teto.",
           },
           {
             prop: "gutter",
             type: '"none" | "page"',
             default: '"none"',
-            description:
-              "A calha lateral. page só quando ninguém acima já a declarou.",
+            description: "A calha lateral. page só quando ninguém acima já a declarou.",
           },
           {
             prop: "stack",
             type: '"none" | "block" | "section"',
             default: '"none"',
-            description:
-              "Empilha o conteúdo e declara a distância entre os blocos.",
+            description: "Empilha o conteúdo e declara a distância entre os blocos.",
           },
         ]}
       />

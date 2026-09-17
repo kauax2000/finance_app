@@ -58,14 +58,11 @@ export default function SwitchDoc() {
       </DocSection>
 
       <DocNote title="Quando &ldquo;marcado&rdquo; não diz qual é qual">
-        Um switch nu responde &ldquo;ligado ou não&rdquo;, o que não serve para escolher entre duas coisas igualmente válidas: num alternador de tema, &ldquo;marcado&rdquo; não diz se o escuro é o estado ou o destino. O <code>ThemeToggle</code> — que tem página própria — desenha <strong>as duas faces</strong> no trilho e acende a que está valendo — é o controle no topo deste site.
+        Um switch nu responde &ldquo;ligado ou não&rdquo;, e não serve para escolher entre duas coisas igualmente válidas. Para tema, use o <code>ThemeToggle</code>, que desenha <strong>as duas faces</strong>.
       </DocNote>
 
       <DocNote title="O trilho desligado usa --input-fill">
-        O switch em repouso é <code>bg-input-fill/80</code>. Ele não usa{" "}
-        <code>--input</code>{" "}
-        porque aquele token é a borda de campo, com 3:1
-        medido — um trilho desligado nessa cor pareceria ligado.
+        Em repouso é <code>bg-input-fill/80</code>, não <code>--input</code>: a cor de borda de campo faria o trilho desligado parecer ligado.
       </DocNote>
     </>
   )

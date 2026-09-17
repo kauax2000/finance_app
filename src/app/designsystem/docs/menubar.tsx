@@ -44,16 +44,9 @@ const TAMANHOS = [
 ] as const
 
 /**
- * O único espécime em que o material da fileira aparece.
- *
- * `backdrop-filter` sobre cor chapada não desenha nada, e o `Preview` é um
- * cartão liso: nas outras seções a fileira `outline` sai idêntica à opaca. Aqui
- * ela gruda no topo de um rolável e o texto passa por baixo — que é a forma do
- * cabeçalho fixo, e a única em que há o que borrar.
- *
- * O `sticky` é da demonstração, e não um eixo do componente: quem gruda a barra
- * é o contêiner. O `sticky` da `Toolbar` já foi reprovado por contagem zero, e
- * o `Menubar` não tem consumidor nenhum no app.
+ * O único espécime em que o material da fileira aparece: sobre cor chapada o
+ * borrão não desenha nada. O `sticky` é da demonstração, não um eixo — quem
+ * gruda a barra é o contêiner.
  */
 function FileiraSobreConteudo() {
   return (
@@ -90,10 +83,7 @@ export default function MenubarDoc() {
   return (
     <>
       <Usage>
-        Uma fileira de menus percorrida com a seta: abre um, arrasta o cursor
-        para o vizinho e ele abre também. É o formato certo para{" "}
-        <strong>dezenas de comandos agrupados por assunto</strong> — o que este
-        app ainda não tem em lugar nenhum.
+        Uma fileira de menus percorrida com a seta, para <strong>dezenas de comandos agrupados por assunto</strong>. Para as ações de um objeto use <code>DropdownMenu</code>; para navegar, a <code>Sidebar</code>.
       </Usage>
 
       <DocSection
@@ -158,7 +148,7 @@ export default function MenubarDoc() {
 
       <DocSection
         title="Sobre conteúdo que rola"
-        description="A fileira outline veste a régua de barra — a mesma receita do cabeçalho deste catálogo: --background opaco de base, abrindo a 60% onde o backdrop-filter existe. Role a região: o texto passa borrado por baixo dela. É o único espécime da página em que o material aparece, porque sobre um cartão liso não há o que borrar."
+        description="A fileira outline veste a régua de barra: opaca de base, abrindo a 60% onde há backdrop-filter. Role a região: o texto passa borrado por baixo dela."
         code={`<div className="h-64 overflow-y-auto">
   <Menubar className="sticky top-0">…</Menubar>
   {/* o conteúdo passa por baixo */}
@@ -219,71 +209,28 @@ export default function MenubarDoc() {
         <MenubarEstado />
       </DocSection>
 
-      <DocNote title="Quando ela se paga — e a conta deste app">
-        Uma barra de menus existe para o que não cabe num botão nem num menu
-        único: <strong>dezenas de comandos, agrupados por assunto</strong>, com
-        atalhos e submenus. A régua prática são três grupos e algo como doze
-        comandos — abaixo disso ela cobra a mordida de aprender uma fileira
-        inteira e devolve o que um <Link href="/designsystem/dropdown-menu">
-        DropdownMenu</Link> já dava.
-        <br />
-        <br />
-        <strong>A superfície mais densa deste app tem 4 comandos.</strong> São
-        47 no total, espalhados por 18 arquivos, e nenhum agrupado por assunto —
-        são ações de um objeto (editar, duplicar, excluir), que é exatamente o
-        caso do <code>DropdownMenu</code>. Enquanto essa conta não virar, o
-        componente está aqui completo e correto, e a resposta certa continua
-        sendo a <Link href="/designsystem/sidebar">Sidebar</Link> para navegar e
-        o <code>DropdownMenu</code> para agir.
+      <DocNote title="Ela se paga a partir de três grupos">
+        Uma barra de menus serve o que não cabe num botão nem num menu único: dezenas de comandos, agrupados por assunto, com atalhos e submenus. Abaixo de uns três grupos e doze comandos ela cobra aprender uma fileira inteira e devolve o que um{" "}
+        <Link href="/designsystem/dropdown-menu">DropdownMenu</Link> já dava. Ações de um objeto (editar, duplicar, excluir) são <code>DropdownMenu</code>; navegar é a{" "}
+        <Link href="/designsystem/sidebar">Sidebar</Link>.
       </DocNote>
 
       <DocNote title="O tamanho mede o gatilho, não a barra">
-        O <Link href="/designsystem/tabs">TabsList</Link> ancora a escada no
-        contêiner, e pode: as abas dele esticam, então a altura da lista
-        determina a do gatilho. Aqui não — os gatilhos são do tamanho do próprio
-        rótulo, e a barra cresce em volta deles. Ancorar no contêiner foi
-        justamente o que produziu o defeito que esta revisão corrigiu: a barra
-        era <code>h-8</code> com 3px de recuo e uma borda, e o que
-        sobrava para o gatilho eram <strong>24px</strong> — o degrau{" "}
-        <code>xs</code>, que o projeto reserva para dentro de outro controle.
+        Os degraus 28 · 32 · 36 são a altura do gatilho, e a barra cresce em volta dele. Ancorar no contêiner espreme o gatilho para o degrau <code>xs</code> (24), que é para dentro de outro controle.
       </DocNote>
 
-      <DocNote title="A fileira é vidro, e só a que se sustenta sozinha">
-        A <code>outline</code> veste <code>barSurfaceClassName</code>, a régua
-        de barra da casa — a mesma do cabeçalho deste catálogo:{" "}
-        <code>--background</code> a 95% de base, abrindo a 60% onde o{" "}
-        <code>backdrop-filter</code> existe, <strong>nos dois temas</strong>, com
-        o guarda de <code>prefers-reduced-transparency</code>. Não é a régua do
-        painel: aquela é <code>--popover</code> e só abre no escuro.
-        <br />
-        <br />
-        As outras duas ficam opacas, e cada uma por um motivo medido.{" "}
-        <code>solid</code> é bandeja: a 60% no escuro ela cai de rgb 38 para{" "}
-        <strong>27</strong> sobre a página, enfraquece e deixa de ler como
-        bandeja — e divergiria da <code>TabsList solid</code>, com quem é
-        idêntica hoje. <code>plain</code> vive dentro de um cabeçalho que{" "}
-        <em>já é</em> o vidro, e uma segunda placa sobre a primeira empilha
-        borrão sem desenhar nada.
+      <DocNote title="Só a fileira outline é vidro">
+        A <code>outline</code> veste <code>barSurfaceClassName</code>, a régua de barra do cabeçalho deste catálogo: <code>--background</code> a 95%, abrindo a 60% onde há <code>backdrop-filter</code>, nos dois temas, com guarda de transparência reduzida. <code>solid</code> fica opaca porque translúcida deixa de ler como bandeja; <code>plain</code> fica transparente porque mora dentro de um cabeçalho que já é o vidro.
       </DocNote>
 
       <DocNote title="Na bandeja, o realce sobe em vez de tingir">
-        <code>--accent</code> e <code>--muted</code> são quase a mesma cor no
-        tema claro e <strong>exatamente</strong> a mesma no escuro
-        (<code>oklch(0.269 0 0)</code>). Acender com <code>accent</code> sobre
-        uma bandeja <code>muted</code> não desenharia nada. Por isso o{" "}
-        <code>solid</code> segue o <code>TabsTrigger</code>: o gatilho aberto
-        ganha <code>bg-background</code>, um fio e uma sombra, e se separa por
-        altura.
+        <code>--accent</code> e <code>--muted</code> são praticamente a mesma cor, então acender com <code>accent</code> sobre a bandeja não desenharia nada. No <code>solid</code> o gatilho aberto ganha <code>bg-background</code>, um fio e uma sombra, como o <code>TabsTrigger</code>.
       </DocNote>
 
       <DocNote title="O painel é o mesmo dos outros dois menus">
-        Casca, linha, rótulo, fio e atalho vêm de{" "}
-        <code>lib/menu-classes</code> — os mesmos do{" "}
+        Casca, linha, rótulo, fio e atalho vêm de <code>lib/menu-classes</code>, os mesmos do{" "}
         <Link href="/designsystem/dropdown-menu">DropdownMenu</Link> e do{" "}
-        <Link href="/designsystem/context-menu">ContextMenu</Link>. Só a fileira
-        e os gatilhos são daqui. Junto vieram o teto de altura (o painel não
-        tinha e um menu longo saía da tela), a animação de saída (ele sumia seco
-        enquanto o próprio submenu desvanecia) e a linha de 44px no toque.
+        <Link href="/designsystem/context-menu">ContextMenu</Link> — com teto de altura, animação de saída e linha de 44px no toque. Só a fileira e os gatilhos são daqui.
       </DocNote>
 
       <PropsTable
@@ -292,22 +239,19 @@ export default function MenubarDoc() {
             prop: "variant",
             type: '"outline" | "plain" | "solid"',
             default: '"outline"',
-            description:
-              "A superfície da barra. Desce por contexto até o gatilho, porque o realce depende de sobre o que ele acende.",
+            description: "A superfície da barra; desce por contexto até o gatilho, porque o realce depende de sobre o que ele acende.",
           },
           {
             prop: "size",
             type: '"sm" | "md" | "lg"',
             default: '"md"',
-            description:
-              "A altura do gatilho: 28, 32, 36. O piso é 28 — xs (24) é para dentro de outro controle.",
+            description: "A altura do gatilho: 28, 32, 36. O piso é 28 — xs (24) é para dentro de outro controle.",
           },
           {
             prop: "MenubarItem variant",
             type: '"default" | "destructive"',
             default: '"default"',
-            description:
-              "A mesma variant dos outros dois menus, com o realce e o par escuro juntos.",
+            description: "A mesma variant dos outros dois menus.",
           },
           {
             prop: "MenubarItem inset",

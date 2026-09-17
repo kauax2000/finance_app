@@ -8,10 +8,7 @@ export default function RadioGroupDoc() {
   return (
     <>
       <Usage>
-        Escolha única entre <strong>poucas</strong> opções — ele existe para
-        comparar todas lado a lado antes de decidir. Passando de cinco, o
-        componente é o <code>Select</code>. Dentro de um formulário, a forma
-        curta é <code>FormRadioGroup</code>.
+        Escolha única entre <strong>poucas</strong> opções, para comparar todas lado a lado antes de decidir. Passando de cinco, use <code>Select</code>. Dentro de um formulário, a forma curta é <code>FormRadioGroup</code>.
       </Usage>
 
       <DocSection
@@ -33,7 +30,7 @@ export default function RadioGroupDoc() {
 
       <DocSection
         title="Em cartão"
-        description="Quando cada opção precisa de uma explicação. A caixa inteira acende, e a descrição vive dentro do rótulo — é o que a mantém clicável."
+        description="Quando cada opção precisa de explicação. A caixa inteira acende, e a descrição vive dentro do rótulo para continuar clicável."
         code={`<RadioGroup defaultValue="pix" variant="card">
   <RadioGroupItem value="pix" description="Cai na hora, sem taxa.">
     Pix
@@ -62,7 +59,7 @@ export default function RadioGroupDoc() {
 
       <DocSection
         title="Na horizontal"
-        description="Colunas de largura igual. É a forma que substitui os trilhos segmentados que o app escrevia como abas dentro de formulário."
+        description="Colunas de largura igual. Use no lugar de abas dentro de formulário."
         code={`<RadioGroup
   defaultValue="total"
   variant="card"
@@ -116,50 +113,20 @@ export default function RadioGroupDoc() {
         />
       </DocSection>
 
-      <DocNote title="O rótulo embrulha o rádio, e o cartão exige isso">
-        `RadioGroupItem` <strong>é</strong> um <code>&lt;label&gt;</code> que
-        contém o <code>Radio</code>. Não há <code>useId</code> nem{" "}
-        <code>htmlFor</code>: a associação implícita do HTML resolve, e o
-        controle rotulado é o <code>&lt;button role=&quot;radio&quot;&gt;</code>{" "}
-        — que é elemento rotulável, e que o Radix emite antes do{" "}
-        <code>&lt;input&gt;</code> espelho.
-        <br />
-        <br />
-        O <code>variant=&quot;card&quot;</code> não teria como funcionar de outro
-        jeito: a caixa que acende é a mesma que precisa <em>conter</em> o rádio
-        para ler o estado dele com <code>:has()</code>. Um irmão com{" "}
-        <code>htmlFor</code> não pinta um retângulo em volta do que está fora
-        dele. Como o <code>plain</code> fica correto com o mesmo mecanismo, os
-        dois usam um só — duas mecânicas para a mesma associação é como uma
-        delas envelhece sozinha.
+      <DocNote title="O rótulo embrulha o rádio">
+        <code>RadioGroupItem</code> é um <code>&lt;label&gt;</code> que contém o <code>Radio</code>: sem <code>useId</code> nem <code>htmlFor</code>, a associação implícita do HTML resolve. O cartão depende disso — a caixa que acende precisa conter o rádio para ler o estado com <code>:has()</code> — e o <code>plain</code> usa o mesmo mecanismo, para as duas formas não divergirem.
       </DocNote>
 
-      <DocNote title="A descrição entra no nome, e não em aria-describedby">
-        Ela vive <strong>dentro</strong> do <code>&lt;label&gt;</code>, porque é
-        isso que mantém a caixa inteira clicável — e por isso já compõe o{" "}
-        <strong>nome acessível</strong> da opção: o leitor de tela anuncia
-        &ldquo;Pix, cai na hora, sem taxa&rdquo;. Apontar um{" "}
-        <code>aria-describedby</code> para o mesmo texto o faria dizer duas
-        vezes. O custo é um nome mais longo, e para uma opção de escolha o nome
-        longo <em>é</em> o texto da opção.
+      <DocNote title="A descrição entra no nome, não em aria-describedby">
+        Dentro do rótulo, ela já compõe o nome acessível: &ldquo;Pix, cai na hora, sem taxa&rdquo;. Um <code>aria-describedby</code> para o mesmo texto o faria ser lido duas vezes.
       </DocNote>
 
-      <DocNote title="O alvo já é 44px, e a página dizia o contrário">
-        Esta página afirmava que o cartão existe para resolver o alvo de toque,
-        &ldquo;porque um radio sozinho tem 16px&rdquo;. <strong>É falso</strong>{" "}
-        desde que o <code>after:-inset-3.5</code> entrou no controle: o desenho
-        tem 16 e o tocável tem <strong>44</strong>, medido. O cartão existe pela
-        <em>explicação</em> — e porque um alvo em forma de linha é melhor que um
-        círculo invisível de 44px que se sobrepõe ao vizinho.
+      <DocNote title="O alvo do rádio já é 44px">
+        O desenho tem 16px e o tocável, 44px (<code>after:-inset-3.5</code>). O cartão existe pela explicação, não pelo alvo de toque.
       </DocNote>
 
       <DocNote title="aria-invalid desce por contexto">
-        Escrito no grupo, ele alcança cada <code>Radio</code> por contexto React
-        — não por seletor descendente. O átomo não lê <code>group-*</code> de
-        quem o contém: seria o átomo conhecendo o contêiner, que é o defeito que
-        apagou o degrau <code>xs</code> do <code>Item</code>. Dentro de um{" "}
-        <code>FormRadioGroup</code>, quem o escreve é o <code>FieldControl</code>,
-        e renderizar um erro é o que o liga.
+        Escrito no grupo, ele alcança cada <code>Radio</code> por contexto React, não por seletor <code>group-*</code> — o átomo não conhece o contêiner. No <code>FormRadioGroup</code>, quem o escreve é o <code>FieldControl</code> quando há erro.
       </DocNote>
 
       <PropsTable
@@ -202,13 +169,13 @@ export default function RadioGroupDoc() {
           {
             prop: "children",
             type: "ReactNode",
-            description: "O rótulo. Obrigatório — é o que o item passou a carregar.",
+            description: "O rótulo. Obrigatório.",
           },
           {
             prop: "description",
             type: "ReactNode",
             description:
-              "A explicação. Só tem lugar em variant=\"card\"; numa linha não há onde ela caber sem virar cartão.",
+              "A explicação. Só em variant=\"card\".",
           },
           {
             prop: "variant",

@@ -18,10 +18,7 @@ export default function EmptyStateDoc() {
   return (
     <>
       <Usage>
-        O que a tela diz quando não há nada nela. Três vazios exigem três textos:{" "}
-        <strong>nunca teve</strong> (ofereça a primeira ação),{" "}
-        <strong>o filtro não achou</strong> (ofereça limpar),{" "}
-        <strong>deu erro</strong> (ofereça tentar de novo).
+          O que a tela diz quando não há nada nela. Cada vazio pede um texto e uma ação: <strong>nunca teve</strong> (a primeira ação), <strong>o filtro não achou</strong> (limpar), <strong>deu erro</strong> (tentar de novo). Enquanto o dado chega é <code>Skeleton</code>, não vazio.
       </Usage>
 
       <DocSection
@@ -55,7 +52,7 @@ export default function EmptyStateDoc() {
 
       <DocSection
         title="O filtro não achou"
-        description="Aqui a ação é remover o que causou o vazio, não criar algo novo — quem filtrou não quer cadastrar, quer ver o que sumiu."
+        description="A ação é remover o que causou o vazio: quem filtrou não quer cadastrar, quer ver o que sumiu."
         code={`<EmptyStateActions>
   <Button variant="outline">Limpar filtros</Button>
 </EmptyStateActions>`}
@@ -77,7 +74,7 @@ export default function EmptyStateDoc() {
 
       <DocSection
         title="Deu erro"
-        description="O tom do ícone é do sistema. route-error-fallback pintava bg-destructive-muted à mão — um estado de erro é um vazio de outra natureza, e a cor tem nome."
+        description="Erro é um vazio de outra natureza: use o tone do ícone, não bg-destructive-muted à mão."
         code={`<EmptyStateIcon tone="destructive">
   <ExclamationTriangleIcon />
 </EmptyStateIcon>`}
@@ -103,7 +100,7 @@ export default function EmptyStateDoc() {
 
       <DocSection
         title="Os quatro estados, na ordem"
-        description="Toda tela tem quatro: carregando, erro, vazio e com conteúdo. Uma tela que só desenha o último está incompleta, mesmo parecendo pronta onde o dado chega em 20ms. Carregando vem antes de vazio, e o esqueleto tem a forma do que vem depois."
+        description="Toda tela tem quatro estados: carregando, erro, vazio e com conteúdo. Desenhar só o último deixa a tela incompleta; carregando vem antes de vazio, com esqueleto na forma do conteúdo."
         code={`if (isLoading) return <ListaSkeleton />
 if (error) return <ErroComTentarDeNovo />
 if (!itens.length) return <EmptyState … />
@@ -125,7 +122,7 @@ return <Lista itens={itens} />`}
 
       <DocSection
         title="Molduras"
-        description="dashed é o padrão. card é o que duas telas do app já escreviam à mão. plain não desenha nada — é o de dentro de um Card, que já tem a sua."
+        description="dashed é o padrão; card é o bloco com superfície; plain não desenha moldura, para dentro de um Card."
         code={`<EmptyState variant="plain" size="sm">…</EmptyState>`}
         previewClassName="items-stretch"
       >
@@ -143,39 +140,19 @@ return <Lista itens={itens} />`}
       </DocSection>
 
       <DocNote title="O respiro é do pai, e não dos filhos">
-        As quatro peças carregavam <code>mb-4</code>, <code>mb-2</code> e{" "}
-        <code>mb-6</code>, e o contêiner ficava em <code>gap: normal</code> —
-        medido. O layout era decidido de baixo para cima: tirar a descrição
-        mudava sozinho o respiro entre o ícone e o título, e a última peça da
-        pilha deixava 24px de margem contra a borda de baixo do bloco.
+          O <code>gap</code> é do <code>EmptyState</code> e nenhuma peça declara margem. Com margem nos filhos, tirar a descrição mudaria sozinho o respiro entre ícone e título.
       </DocNote>
 
-      <DocNote title="O título não é um h2 cravado">
-        Ele era, e isso põe um <code>h2</code> na página toda vez que um bloco
-        vazio aparece — inclusive dentro de uma seção que já tem o seu, que é o
-        caso de duas das quatro telas do app. O padrão é um <code>&lt;p&gt;</code>{" "}
-        estilizado; quem precisa de cabeçalho de verdade usa <code>asChild</code>{" "}
-        com o nível certo, como a seção &ldquo;Deu erro&rdquo; acima faz.
-      </DocNote>
-
-      <DocNote title="variant existe porque duas telas já a escreviam">
-        <code>not-found-shell</code> e <code>route-error-fallback</code> abrem
-        com a <strong>mesma string</strong>:{" "}
-        <code>className=&quot;w-full border-border/80 bg-card/40 py-10&quot;</code>.
-        Duas cópias idênticas de uma sobrescrita são uma variante faltando — e o{" "}
-        <code>border-border/80</code> era ainda um quarto peso de borda no app.
+      <DocNote title="O título é um p; asChild quando precisa ser cabeçalho">
+          Um <code>h2</code> fixo entraria na página a cada bloco vazio, inclusive dentro de uma seção que já tem o seu. Quem precisa de cabeçalho usa <code>asChild</code> com o nível certo, como a seção &ldquo;Deu erro&rdquo; acima.
       </DocNote>
 
       <DocNote title="Vazio não é carregando">
-        Enquanto o dado está a caminho, o certo é <code>Skeleton</code>. Mostrar
-        o vazio e trocar meio segundo depois faz a pessoa ler &ldquo;você não tem
-        nada&rdquo; sobre uma conta que tem.
+          Enquanto o dado está a caminho, é <code>Skeleton</code>. Mostrar o vazio e trocar meio segundo depois faz a pessoa ler &ldquo;você não tem nada&rdquo; sobre uma conta que tem.
       </DocNote>
 
-      <DocNote title="Este componente é o do projeto, não o do registry">
-        O registry tem um <code>empty</code> parecido, e ele{" "}
-        <strong>não</strong> foi instalado: duas respostas para a mesma pergunta
-        é como um design system deixa de descrever o produto.
+      <DocNote title="Este é o componente do projeto, não o do registry">
+          Não instale o <code>empty</code> do registry: duas respostas para a mesma pergunta fazem o design system deixar de descrever o produto.
       </DocNote>
 
       <PropsTable
@@ -220,7 +197,7 @@ return <Lista itens={itens} />`}
             prop: "EmptyStateActions",
             type: "ComponentProps<'div'>",
             description:
-              "Ganha uma folga a mais que o gap do bloco: botão colado em parágrafo lê como parte dele.",
+              "Folga a mais que o gap, para o botão não ler como parte do parágrafo.",
           },
         ]}
       />

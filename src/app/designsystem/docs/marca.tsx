@@ -18,11 +18,7 @@ export default function MarcaDoc() {
   return (
     <>
       <Usage>
-        Duas peças, e a escolha é pela forma do espaço: onde a marca tem uma
-        linha para se apresentar, é o <strong>lockup</strong> (
-        <code>AppWordmark</code>); onde ela tem só um quadrado, é o{" "}
-        <strong>símbolo</strong> (<code>AppLogo</code>). Não existe uma terceira
-        montagem — símbolo mais o nome escrito ao lado é o que o lockup já é.
+        Duas peças, escolhidas pela forma do espaço: numa linha, o <strong>lockup</strong> (<code>AppWordmark</code>); num quadrado, o <strong>símbolo</strong> (<code>AppLogo</code>). Não há terceira montagem — símbolo com o nome ao lado é o que o lockup já é.
       </Usage>
 
       <Group title="As duas peças" layout="grid">
@@ -32,10 +28,7 @@ export default function MarcaDoc() {
               <AppWordmark size="lg" />
             </SpecimenPanel>
             <p className="text-xs leading-relaxed text-muted-foreground">
-              Símbolo e nome no mesmo traçado — o &ldquo;f&rdquo; do símbolo{" "}
-              <em>é</em> a inicial da palavra. Proporção 101/24, dimensionada por
-              altura. Onde aparece: login, cadastro, recuperação de senha, o
-              splash de carregamento e a barra deste catálogo.
+              Símbolo e nome no mesmo traçado, proporção 101/24, dimensionado por altura. Vai no login, no cadastro, na recuperação de senha, no splash e na barra deste catálogo.
             </p>
           </Stack>
         </Spec>
@@ -46,11 +39,7 @@ export default function MarcaDoc() {
               <AppLogo size="md" />
             </SpecimenPanel>
             <p className="text-xs leading-relaxed text-muted-foreground">
-              O mesmo &ldquo;f&rdquo;, sozinho, num quadrado de 32. É o que cabe
-              onde não há linha: favicon, ícone de PWA, o badge de uma
-              notificação, um avatar. Ele é sempre{" "}
-              <code>aria-hidden</code> — decoração ao lado de um texto que já
-              nomeia o produto.
+              O mesmo &ldquo;f&rdquo;, sozinho, num quadrado de 32: favicon, ícone de PWA, badge de notificação, avatar. Sempre <code>aria-hidden</code>, ao lado de um texto que já nomeia o produto.
             </p>
           </Stack>
         </Spec>
@@ -58,7 +47,7 @@ export default function MarcaDoc() {
 
       <DocSection
         title="Cor"
-        description="O desenho não carrega cor: os dois ativos são fill=&quot;currentColor&quot;, e quem decide é a classe. Verde de marca no tema claro, branco no escuro — a mesma linha nas duas peças."
+        description="O desenho não carrega cor: os dois ativos são fill=&quot;currentColor&quot;, e a classe decide — verde de marca no claro, branco no escuro."
         code={`// Já embutido nos dois componentes:
 "text-primary-accent dark:text-foreground"`}
         previewClassName="flex-col items-stretch gap-4 md:flex-row"
@@ -79,18 +68,13 @@ export default function MarcaDoc() {
 
       <DocNote title="É --primary-accent, e não --primary">
         <p>
-          O verde da marca tem dois tokens, e o papel decide qual.{" "}
-          <code>--primary</code> <strong>preenche</strong> — é medido contra o
-          texto claro que fica em cima dele. A marca é <strong>traço</strong>:
-          ela mesma precisa ser enxergada contra a página, que é o que{" "}
-          <code>--primary-accent</code> garante no tema escuro. No claro os dois
-          são a mesma cor; usar <code>--primary</code> aqui só quebraria à noite.
+          <code>--primary</code> preenche e é medido contra o texto em cima dele; a marca é traço e precisa ser vista contra a página, que é o que <code>--primary-accent</code> garante no escuro. No claro são a mesma cor, então o erro só aparece à noite.
         </p>
       </DocNote>
 
       <DocSection
         title="Escala"
-        description="A escala do lockup é por altura, e a largura vem sozinha do viewBox. w-auto está embutido justamente para um w-full herdado não esticar a marca."
+        description="A escala do lockup é por altura; a largura vem do viewBox, e o w-auto embutido impede um w-full herdado de esticar a marca."
         previewClassName="flex-col items-stretch gap-4"
       >
         <Stack className="gap-4">
@@ -121,7 +105,7 @@ export default function MarcaDoc() {
 
       <DocSection
         title="Em uso"
-        description="O lockup é o nome, então por padrão ele se anuncia: role=&quot;img&quot; com aria-label=&quot;Finance&quot;. Passe aria-hidden quando o nome já estiver dito ao lado — e aí o rótulo visível carrega a expansão em sr-only, porque uma sigla sozinha não diz nada em voz alta."
+        description="O lockup se anuncia: role=&quot;img&quot; com aria-label=&quot;Finance&quot;. Quando o nome já está dito ao lado, passe aria-hidden — e se o rótulo for uma sigla, ele leva a expansão em sr-only."
         code={`// A marca se apresentando sozinha — ela é o texto acessível
 <AppWordmark />
 
@@ -148,22 +132,15 @@ export default function MarcaDoc() {
         </SpecimenPanel>
       </DocSection>
 
-      <DocNote title="A sigla vem na serifa, e é a terceira exceção">
+      <DocNote title="A sigla do catálogo usa a serifa abaixo de 24px">
         <p>
-          A fundação de tipografia reserva a Ledger para o título de tela e o
-          nome escrito, e pede <strong>nada abaixo de 24px</strong>. O
-          &ldquo;DS&rdquo; do cabeçalho deste catálogo abre a exceção a 18px, e
-          o motivo é o vizinho: em <code>font-heading</code> a sigla lia como
-          legenda pregada na marca, e na mesma serifa do lockup as duas viram
-          uma assinatura só. Duas maiúsculas também não são texto — não há
-          descendente para se perder nem palavra para soletrar no corpo pequeno,
-          que é do que a regra dos 24px protege.
+          A Ledger não desce abaixo de 24px, e o &ldquo;DS&rdquo; do cabeçalho deste catálogo abre exceção a 18px: na mesma serifa do lockup, sigla e marca leem como uma assinatura só. Duas maiúsculas não têm descendente nem palavra para se perder, que é o que a regra protege.
         </p>
       </DocNote>
 
       <DocSection
         title="O nome como texto"
-        description="Onde não cabe SVG — o assunto de um e-mail, um título de janela, um texto puro — o nome se escreve com .wordmark: Ledger, o mesmo corpo de display do título de tela. É a única forma escrita autorizada do nome, e ela existe justamente para ninguém improvisar Inter seminegrito ao lado da arte."
+        description="Onde não cabe SVG — assunto de e-mail, título de janela, texto puro — o nome se escreve com .wordmark: Ledger, no corpo de display. É a única forma escrita do nome; não improvise Inter ao lado da arte."
         code={`<span className="wordmark text-lg">Finance</span>`}
       >
         <span className="wordmark text-lg text-foreground">Finance</span>
@@ -171,13 +148,7 @@ export default function MarcaDoc() {
 
       <DocNote title="O que não fazer">
         <p>
-          Recolorir o lockup (a cor já responde ao tema; qualquer{" "}
-          <code>text-*</code> por cima o desalinha do símbolo). Colar o{" "}
-          <code>AppLogo</code>{" "}ao lado dele — seria escrever a inicial duas
-          vezes. Escrever &ldquo;Finance&rdquo; em Inter ao lado da arte, que é a
-          montagem que o lockup veio substituir. Declarar{" "}
-          <code>width</code> junto de <code>height</code>: a proporção é do
-          traçado, não da tela.
+          Recolorir o lockup: a cor já responde ao tema. Colar o <code>AppLogo</code> ao lado dele, escrevendo a inicial duas vezes. Escrever &ldquo;Finance&rdquo; em Inter ao lado da arte. Declarar <code>width</code> junto de <code>height</code>: a proporção é do traçado.
         </p>
       </DocNote>
     </>
