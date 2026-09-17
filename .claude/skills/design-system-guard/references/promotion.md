@@ -13,12 +13,9 @@ Três perguntas. Se a resposta for não para alguma, **não promova**:
 3. **As variants vêm do uso real?** Cada variant corresponde a um caso que existe
    hoje.
 
-Falhou alguma? O bloco fica na tela como markup composto de tokens, e o relatório
-diz isso em uma linha. Não é dívida: é a resposta certa até haver evidência.
-
-E existe um quarto caso, que não é falha nenhuma: **layout exclusivo daquela
-rota**. Um cabeçalho que só aquela página tem não vira componente compartilhado
-só porque é uma função. Ele fica, e o relatório diz que fica.
+As três respostas vão **para o usuário** junto com a proposta. Falhou alguma na
+sua avaliação, ou parece **layout exclusivo daquela rota**? Diga isso na
+pergunta — quem decide se o bloco fica na tela é o usuário, nunca a skill.
 
 ## A ordem que não quebra a tela
 
@@ -65,7 +62,7 @@ npm run ds:audit -- src/app/<a-tela-de-origem>
 | Peça com semântica financeira, mas reutilizável (`MoneyDisplay`) | `src/components/ui/` |
 | Navegação e casca deste produto (`app-header`, `mobile-nav-island`) | `src/components/layout/` |
 | Bloco de uma área só, com regra de negócio (`bill-pending-card`) | `src/components/<área>/` |
-| Layout exclusivo de uma rota | fica em `src/app/`, e o relatório diz por quê |
+| Layout exclusivo de uma rota | só fica em `src/app/` com ok explícito do usuário |
 
 Só o primeiro e o segundo cruzam a fronteira de autorização. Mover algo de
 `src/app/` para `src/components/<área>/` é reorganização normal de código.

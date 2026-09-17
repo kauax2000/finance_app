@@ -1,6 +1,6 @@
 ---
 name: design-system-guard
-description: Use SOMENTE para conformidade com o design system do Finance App — não para design. Casos - componentes declarados soltos dentro de `src/app/`, cores e medidas cruas em vez de tokens do `globals.css` (causa comum de bug no tema escuro), primitivo cru com equivalente em `src/components/ui/`, `hover:` sem par de toque, formatação de dinheiro ou data fora dos helpers, lacunas do design system que viram proposta (registry do shadcn antes de código autoral), e a fronteira de autorização de `src/components/ui/` + `globals.css`. Casos típicos - "esse texto some no tema escuro", "uso o Button do projeto ou faço um custom?", "esse componente da página deveria virar compartilhado?", "audita os tokens dessa tela". Para criar, redesenhar, revisar, criticar ou polir UI — hierarquia visual, UX, tipografia, cor, motion, acessibilidade, responsividade — a skill é a `impeccable`; esta entra depois, como verificação de conformidade do resultado. Não use para lógica de backend, rotas de API, auth, build ou tipos.
+description: Use SOMENTE para conformidade com o design system do Finance App — não para design. Casos - componentes declarados soltos dentro de `src/app/`, revisão de tela contra o design system, cores e medidas cruas em vez de tokens do `globals.css` (causa comum de bug no tema escuro), primitivo cru com equivalente em `src/components/ui/`, `hover:` sem par de toque, formatação de dinheiro ou data fora dos helpers, lacunas do design system que viram proposta (registry do shadcn antes de código autoral), e a fronteira de autorização de `src/components/ui/` + `globals.css`. Casos típicos - "esse texto some no tema escuro", "uso o Button do projeto ou faço um custom?", "esse componente da página deveria virar compartilhado?", "audita os tokens dessa tela". Para criar, redesenhar, revisar, criticar ou polir UI — hierarquia visual, UX, tipografia, cor, motion, acessibilidade, responsividade — a skill é a `impeccable`; esta entra depois, como verificação de conformidade do resultado. Não use para lógica de backend, rotas de API, auth, build ou tipos.
 ---
 
 # Design system guard
@@ -34,6 +34,13 @@ polimento, hierarquia, UX, motion, tipografia. Esta skill não opina sobre desig
 ela verifica se o resultado obedece o design system. O fluxo normal é a
 `impeccable` produzir ou refinar a tela e esta auditar a conformidade no final.
 Quando as duas parecerem se aplicar, a `impeccable` vence.
+
+A `impeccable` e a `frontend-design` **podem fugir do padrão** — sugerir mudança
+na tela e no próprio design system. A proposta sai como pergunta marcada
+**⚠️ Fora do padrão do DS** e, aprovada, é implementada **no design system**
+(componente, variant ou token), nunca como estilo especial na tela. Esta skill
+verifica que nada ficou "especial" na tela. O fluxo completo está em
+`AGENTS.md`, seção "Revisão de tela — o design system é a regra".
 
 ## A fronteira que não se atravessa sozinho
 
@@ -138,7 +145,7 @@ entender a tela antes de mexer: o script vê linhas, não intenção.
 
 | Regra | O que é | Ação |
 |---|---|---|
-| **A** | componente declarado dentro de `src/app/` | Extrair é **proposta** — ver `references/promotion.md`. Até o ok chegar, o componente fica onde está. Se for layout genuinamente exclusivo daquela rota, ele fica de vez: diga isso no relatório em vez de mover calado. |
+| **A** | componente declarado dentro de `src/app/` | Extrair é **proposta** — ver `references/promotion.md`. Até o ok chegar, o componente fica onde está. Parece layout exclusivo daquela rota? **Pergunte** se vira componente — não decida sozinho que fica. |
 | **A2** | `cva()` fora de `components/ui/` | Sempre acompanha um caso A. Move junto com o componente. |
 | **C** | primitivo cru com equivalente no DS | **Corrigir direto.** Trocar a tag e adicionar o import. |
 | **C'** | primitivo cru sem equivalente | **Lacuna.** Propor e esperar. Não escrever o componente à mão sem checar o registry. |
@@ -194,7 +201,8 @@ espera. Não é motivo para abrir exceção e deixar o literal.
 
 ## Quando um componente merece existir
 
-Três perguntas. Se a resposta for não para alguma, ele ainda não deve nascer:
+Três perguntas — e elas vão **para o usuário**, com a sua resposta sugerida para
+cada uma. Quem decide se o componente nasce é ele:
 
 1. **Tem semântica própria?** Um nome que descreve o que ele é no produto, não
    como ele parece. `MoneyDisplay` sim; `GrayBoxWithBorder` não.
@@ -204,8 +212,9 @@ Três perguntas. Se a resposta for não para alguma, ele ainda não deve nascer:
    existe hoje. Variant inventada "para o futuro" envelhece errada e ninguém
    remove.
 
-Falhou alguma? O bloco fica na tela como markup composto de tokens. Isso não é
-dívida — é a resposta certa até haver evidência de que é um componente.
+Falhou alguma na sua avaliação? Diga isso na pergunta — não deixe o bloco na tela
+como markup em silêncio. Tudo na tela é componente do design system, salvo
+decisão explícita do usuário.
 
 ## Formato do relatório
 

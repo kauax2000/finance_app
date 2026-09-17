@@ -78,8 +78,10 @@ Fundações, Átomos, `cores` ou `mobile-toque` nas rodadas abaixo são históri
 1. **Componente não nasce em `src/app/`.** Nada de `function StatCard()` nem
    `cva()` dentro de um arquivo de tela — nenhuma outra rota enxerga isso, e a
    próxima tela reescreve o mesmo componente um pouco diferente. Exceção:
-   convenção de rota do Next (`loading.tsx`, `error.tsx`) e layout genuinamente
-   exclusivo daquela rota, que fica e é dito no relatório.
+   convenção de rota do Next (`loading.tsx`, `error.tsx`). Todo o resto é
+   componente do design system — inclusive o que parece "layout exclusivo
+   daquela rota": nesse caso, **pergunte** se vira componente antes de deixar
+   markup na tela.
 2. **Token-first, zero literais.** Nenhum `#hex`, nenhum `rgb()`, nenhum
    `bg-white` ou `text-gray-600`, nenhum `p-[13px]`. Cor escolhida na tela não
    acompanha o tema escuro nem troca de marca.
@@ -104,6 +106,46 @@ Fundações, Átomos, `cores` ou `mobile-toque` nas rodadas abaixo são históri
 8. **Componente novo entra em três lugares na mesma mudança:** o arquivo em
    `src/components/ui/`, a entrada em `src/app/designsystem/registry.ts` e a
    página em `src/app/designsystem/docs/`. Depois, `npm run ds:docs-map`.
+
+### Revisão de tela — o design system é a regra
+
+O design system é a referência máxima na reconstrução das telas. A tela se
+adapta ao design system, nunca o contrário: divergência entre os dois, vence o
+design system. Tudo na tela é componente dele.
+
+**Ordem fixa em toda revisão de tela:**
+
+1. `npm run ds:catalog` — o que existe hoje, nunca de memória.
+2. Mapear cada elemento da tela para um componente do catálogo, antes de
+   escrever JSX.
+3. `npm run ds:audit -- <arquivo-da-tela>` e corrigir o que for local.
+4. `npx tsc --noEmit && npm run lint && npm run test:unit`.
+
+**Parar e perguntar (AskUserQuestion), sem exceção:**
+
+- **Componente novo** — elemento sem correspondência no catálogo. A pergunta
+  traz: nome proposto, onde aparece, `shadcn` registry ou autoral, e as variants
+  com o uso real que justifica cada uma. Nada de markup solto "por enquanto".
+- **Alteração em componente ou token existente** — variant, prop, estilo,
+  token. A pergunta traz o impacto: quais telas consomem.
+
+Sem ok, vale a invariante 7: esperar não é dissolver.
+
+**Espaço para criatividade.** A revisão não é só conformidade: sugira
+melhorias que fujam do padrão atual — nas telas e no próprio design system —
+com a `impeccable` e a `frontend-design`. Três condições:
+
+1. **Perguntar antes**, marcando como **⚠️ Fora do padrão do DS**: o que muda,
+   o ganho de UX ou visual, e o que o design system diz hoje.
+2. **A mudança mora no design system, nunca na tela.** Aprovada, ela vira
+   componente, variant ou token em `src/components/ui/` ou `globals.css`
+   (com registry e página de docs, invariante 8), e só então a tela consome.
+   Nenhum estilo "especial" escrito direto na tela.
+3. **Recusada**, a tela segue o design system como está.
+
+`src/components/ui/`, `src/app/globals.css`, `src/app/designsystem/` e
+`npx shadcn` estão em `permissions.ask` de `.claude/settings.local.json`: o
+harness pede confirmação mesmo que a pergunta tenha sido esquecida.
 
 ### O CLI do shadcn sobrescreve o que já existe
 
