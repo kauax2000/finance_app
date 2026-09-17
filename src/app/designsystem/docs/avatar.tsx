@@ -14,12 +14,13 @@ export default function AvatarDoc() {
   return (
     <>
       <Usage>
-        Identifica uma pessoa numa lista, num menu, numa transação. Sempre com <code>AvatarFallback</code>: a imagem pode não carregar, e um círculo vazio lê como erro. Para categoria ou conta, use <code>ColorTile</code>.
+        Identifica uma pessoa numa lista, num menu, numa transação. Duas versões, e só duas: <strong>com foto</strong> (a foto) e <strong>sem foto</strong> (as iniciais em tinta escura sobre um degradê pastel de marca, com grão). Sempre com <code>AvatarFallback</code>: a imagem pode não carregar, e um círculo vazio lê como erro. Para categoria ou conta, use <code>ColorTile</code>.
       </Usage>
 
       <DocSection
         title="Tamanhos"
-        code={`<Avatar size="sm"><AvatarFallback>KL</AvatarFallback></Avatar>`}
+        description="Cinco degraus de 8 em 8: 24, 32, 40, 48 e 56."
+        code={SIZES.map((s) => `<Avatar size="${s}"><AvatarFallback>KL</AvatarFallback></Avatar>`).join("\n")}
       >
         {SIZES.map((size) => (
           <Avatar key={size} size={size}>
@@ -30,32 +31,21 @@ export default function AvatarDoc() {
 
       <DocSection
         title="Forma"
-        description="circle é o padrão, a convenção de retrato. rounded é o da lateral do usuário e da lista de membros, da mesma família da marca de workspace que costuma aparecer ao lado."
-        code={`<Avatar shape="rounded">
-  <AvatarFallback>KL</AvatarFallback>
-</Avatar>`}
+        description="circle é o retrato; rounded é o quadrado de canto arredondado, a mesma família da marca de workspace ao lado dele."
+        code={`<Avatar shape="circle"><AvatarFallback>KL</AvatarFallback></Avatar>
+<Avatar shape="rounded"><AvatarFallback>KL</AvatarFallback></Avatar>`}
         previewClassName="flex-col items-stretch gap-4"
       >
-        <div className="flex items-center gap-3">
-          <code className="w-16 shrink-0 font-mono text-2xs text-muted-foreground">
-            circle
-          </code>
-          {SIZES.map((size) => (
-            <Avatar key={size} size={size}>
-              <AvatarFallback>KL</AvatarFallback>
-            </Avatar>
-          ))}
-        </div>
-        <div className="flex items-center gap-3">
-          <code className="w-16 shrink-0 font-mono text-2xs text-muted-foreground">
-            rounded
-          </code>
-          {SIZES.map((size) => (
-            <Avatar key={size} size={size} shape="rounded">
-              <AvatarFallback>KL</AvatarFallback>
-            </Avatar>
-          ))}
-        </div>
+        {(["circle", "rounded"] as const).map((shape) => (
+          <div key={shape} className="flex items-center gap-3">
+            {SIZES.map((size) => (
+              <Avatar key={size} size={size} shape={shape}>
+                <AvatarFallback>KL</AvatarFallback>
+              </Avatar>
+            ))}
+            <Muted className="text-xs">{shape}</Muted>
+          </div>
+        ))}
       </DocSection>
 
       <DocNote title="O canto do rounded cresce com a caixa">
@@ -63,11 +53,17 @@ export default function AvatarDoc() {
       </DocNote>
 
       <DocSection
-        title="Com imagem e com iniciais"
-        description="AvatarImage entra por cima; o fallback aparece enquanto ela carrega e fica se ela falhar."
+        title="Foto ou iniciais"
+        description="AvatarImage entra por cima; o fallback aparece enquanto ela carrega e fica se ela falhar. Sem foto, as iniciais ficam em tinta escura sobre o degradê pastel da identidade, com grão fino por cima."
         code={`<Avatar>
   <AvatarImage src="/foto.jpg" alt="" />
   <AvatarFallback>KL</AvatarFallback>
+</Avatar>
+
+// A cor da pessoa vem de identityToneFor
+const tone = identityToneFor(profile.avatar_color, email)
+<Avatar>
+  <AvatarFallback className={cn(tone.surface, tone.ink)}>KL</AvatarFallback>
 </Avatar>`}
       >
         <Avatar>
@@ -75,19 +71,46 @@ export default function AvatarDoc() {
           <AvatarFallback>KL</AvatarFallback>
         </Avatar>
         <Avatar>
-          <AvatarFallback>AN</AvatarFallback>
-        </Avatar>
-        <Avatar>
-          <AvatarFallback className="bg-identity-3-surface text-identity-3">
-            MR
-          </AvatarFallback>
-        </Avatar>
-        <Avatar>
-          <AvatarFallback className="bg-identity-5-surface text-identity-5">
-            JS
+          <AvatarFallback className={cn(IDENTITY_TONES[2].surface, IDENTITY_TONES[2].ink)}>
+            KL
           </AvatarFallback>
         </Avatar>
       </DocSection>
+
+      <DocSection
+        title="Seis misturas"
+        description="Cada identidade mistura três ou quatro cores do arco-íris num ângulo próprio — as mesmas cores, em ordens diferentes. Passe o cursor: o degradê desliza por baixo das letras."
+        code={`{PESSOAS.map((iniciais, i) => (
+  <Avatar key={iniciais}>
+    <AvatarFallback className={cn(IDENTITY_TONES[i].surface, IDENTITY_TONES[i].ink)}>
+      {iniciais}
+    </AvatarFallback>
+  </Avatar>
+))}`}
+        previewClassName="flex-col items-stretch gap-4"
+      >
+        {(["circle", "rounded"] as const).map((shape) => (
+          <div key={shape} className="flex items-center gap-3">
+            {PESSOAS.map((iniciais, i) => (
+              <Avatar key={iniciais} size="lg" shape={shape}>
+                <AvatarFallback
+                  className={cn(IDENTITY_TONES[i].surface, IDENTITY_TONES[i].ink)}
+                >
+                  {iniciais}
+                </AvatarFallback>
+              </Avatar>
+            ))}
+          </div>
+        ))}
+      </DocSection>
+
+      <DocNote title="A cor vem de identityToneFor, e o degradê é a marca">
+        <code>identityToneFor</code> devolve o par superfície + tinta; não monte classe crua. Os seis são misturas de marca — azul→violeta→magenta, magenta→coral→âmbar, violeta→magenta→coral→âmbar, âmbar→coral→magenta→índigo, azul→índigo→magenta→coral, coral→magenta→violeta→azul, cada uma no seu ângulo —, com as paradas em 0,82 de luminosidade e 0,11 de croma nos dois temas, grão fino em <code>overlay</code> e tinta escura. A primeira versão era saturada com letra branca, e foi devolvida na tela; a referência é um chip pastel difuso com texto escuro, sobre preto — por isso um valor só nos dois temas. Interpolação em <code>oklch</code>: no sRGB o meio do caminho entre dois matizes distantes é cinza. Sem par invertido entre temas: um degradê é opaco por natureza e lê igual nos dois. Sem tom, o fallback veste a primeira identidade — nunca há iniciais sobre cinza.
+      </DocNote>
+
+      <DocNote title="O degradê se move no cursor e no toque">
+        Ele é pintado a 160% da caixa e ancorado no canto de cima; no <code>hover:</code> e no <code>active:</code> a âncora vai para o canto oposto, e a transição de <code>background-position</code> em <code>--duration-slow</code> o faz deslizar por baixo das letras. É um deslocamento, não uma troca de cor: a identidade continua a mesma. Com movimento reduzido o bloco global encurta a transição e o degradê só troca de lugar.
+      </DocNote>
 
       <DocNote title="alt vazio é proposital">
         A foto ao lado do nome não acrescenta informação: descrevê-la faria o leitor de tela anunciar a mesma pessoa duas vezes. <code>AvatarImage</code> já traz <code>alt=&quot;&quot;</code>. Sem o nome ao lado, aí o alt precisa dizer de quem é.
@@ -101,70 +124,8 @@ export default function AvatarDoc() {
         Com <code>delayMs</code> no <code>AvatarFallback</code>, as iniciais só entram depois do prazo, e uma foto rápida não é precedida por um lampejo de letras. Vale em listas onde a maioria tem foto.
       </DocNote>
 
-      <DocNote title="A cor de fundo vem dos tons de identidade">
-        <code>identityToneFor</code> devolve o par superfície + tinta; não monte classe crua. A superfície é opaca: com alfa, avatares empilhados mostrariam o de baixo.
-      </DocNote>
-
-      <DocSection
-        title="Em vidro"
-        description="A identidade da pessoa vira o tom da lâmina, e o fallback deixa de pintar superfície própria."
-        code={`<Avatar glass identity={2}>
-  <AvatarFallback>KL</AvatarFallback>
-</Avatar>`}
-      >
-        <div className="flex flex-wrap items-center gap-3">
-          {PESSOAS.map((iniciais, i) => (
-            <Avatar key={iniciais} glass identity={i}>
-              <AvatarFallback>{iniciais}</AvatarFallback>
-            </Avatar>
-          ))}
-        </div>
-      </DocSection>
-
-      <DocSection
-        title="Ao lado do avatar opaco"
-        description="O de cima é superfície opaca; o de baixo é lâmina. A diferença de material aparece na aresta."
-        code={`<Avatar><AvatarFallback className={cn(tom.surface, tom.ink)}>KL</AvatarFallback></Avatar>
-<Avatar glass identity={2}><AvatarFallback>KL</AvatarFallback></Avatar>`}
-      >
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            {PESSOAS.map((iniciais, i) => (
-              <Avatar key={iniciais}>
-                <AvatarFallback
-                  className={cn(IDENTITY_TONES[i].surface, IDENTITY_TONES[i].ink)}
-                >
-                  {iniciais}
-                </AvatarFallback>
-              </Avatar>
-            ))}
-            <Muted className="text-2xs">opaco</Muted>
-          </div>
-          <div className="flex items-center gap-3">
-            {PESSOAS.map((iniciais, i) => (
-              <Avatar key={iniciais} glass identity={i}>
-                <AvatarFallback>{iniciais}</AvatarFallback>
-              </Avatar>
-            ))}
-            <Muted className="text-2xs">vidro</Muted>
-          </div>
-        </div>
-      </DocSection>
-
-      <DocNote title="No vidro, a lâmina fica na raiz e o tom vem da identidade">
-        Vidro na raiz some atrás do fallback opaco; vidro no fallback apaga a identidade. Por isso, no modo <code>glass</code>, o fallback deixa de pintar superfície — por contexto, já que um seletor <code>in-data-*</code> perderia para o fundo do próprio elemento. Sem <code>glass</code>, o avatar segue opaco.
-      </DocNote>
-
-      <DocNote title="Círculo usa glass-round">
-        O aro linear do vidro acende nos cantos, e um círculo não tem cantos: ficaria uma borda cinza uniforme. Com <code>shape=&quot;circle&quot;</code> o avatar veste <code>glass-round</code>, com aro em <code>conic-gradient</code>; em <code>rounded</code> o linear continua certo.
-      </DocNote>
-
-      <DocNote title="O vidro lê pelo especular, não pelas nuvens">
-        Num disco pequeno não há &ldquo;atrás&rdquo; para as nuvens de luz; o que lê como vidro é o reflexo em <code>--glass-sheen-image</code>, acima do tom. No claro o corpo abre menos, para as iniciais manterem 4,5:1.
-      </DocNote>
-
-      <DocNote title="No vidro, a foto encolhe 2px">
-        O aro mora numa <code>border</code> transparente de 1px e a caixa é <code>border-box</code>, então o conteúdo perde 2px: num <code>sm</code> de 32px, são 30px de imagem.
+      <DocNote title="O que saiu, e por quê">
+        O avatar já teve um modo de vidro e um anel de arco-íris para a pessoa logada. Os dois saíram: com o degradê já sendo a marca, eram três maneiras de dizer a mesma coisa. Duas versões — foto, ou iniciais sobre degradê — são o suficiente.
       </DocNote>
 
       <PropsTable
@@ -180,20 +141,6 @@ export default function AvatarDoc() {
             type: '"circle" | "rounded"',
             default: '"circle"',
             description: "Retrato redondo ou quadrado de canto arredondado.",
-          },
-          {
-            prop: "glass",
-            type: "boolean",
-            default: "false",
-            description:
-              "A lâmina de vidro. A identidade vira o tom, e o fallback deixa de pintar superfície.",
-          },
-          {
-            prop: "identity",
-            type: "number",
-            default: "0",
-            description:
-              "Qual das seis identidades, no modo de vidro — o índice de IDENTITY_TONES, não a semente de identityToneFor.",
           },
         ]}
       />

@@ -68,19 +68,18 @@ export default function ColorsDoc() {
           <TokenTile name="Secondary" token="--secondary" onToken="--secondary-foreground" />
         </TokenGrid>
 
-        <TokenGrid label="Marca e foco">
+        <TokenGrid label="Primário e foco">
           <TokenTile name="Primary" token="--primary" onToken="--primary-foreground" />
-          {/* O realce e a aresta da tecla. O hover é opaco e escurece nos dois
-              temas — o rótulo em cima dele passa de 7,31 para 9,01 no claro. */}
+          {/* O realce e a aresta da tecla preta (branca no escuro). O hover é
+              opaco e puxa na direção do rótulo nos dois temas. */}
           <TokenTile name="Primary (hover)" token="--primary-hover" onToken="--primary-foreground" />
           <TokenTile name="Primary (aresta)" token="--primary-edge" onToken="--primary-foreground" />
-          {/* Dois papéis do mesmo verde. `--primary` preenche e por isso é
-              medido contra o texto que fica em cima; `--primary-accent` é
-              texto e por isso é medido contra o cartão que fica embaixo. No
-              tema claro os dois são a mesma cor — a divisão só existe no
-              escuro, onde nenhum valor único atende os dois. Até esta rodada a
-              página só media o primeiro, e por isso não viu quando o segundo
-              caiu para 2,8:1. */}
+          {/* Dois papéis. `--primary` preenche e por isso é medido contra o
+              texto que fica em cima; `--primary-accent` é texto e por isso é
+              medido contra o cartão que fica embaixo. Com a marca preta os
+              dois coincidem com `--foreground`, mas o papel não se funde:
+              dentro de uma tecla no escuro `text-primary` é branco sobre
+              branco. A cor da marca é o arco-íris, em `/designsystem/brand`. */}
           <TokenTile name="Primary (texto)" token="--primary-accent" rule="text" />
           <TokenTile name="Ring (foco)" token="--ring" rule="ui" />
           {/* `--input` foi igualado a `--border` a pedido: o contorno do campo
@@ -109,12 +108,59 @@ export default function ColorsDoc() {
         </TokenGrid>
       </Group>
 
+      <Group
+        layout="flow"
+        title="Marca"
+        description="A marca é preta e branca, e a única cor dela é o arco-íris: seis paradas num degradê que gira devagar, e o grão que só o campo de marca veste. Nenhuma tela usa uma parada solta."
+      >
+        <SpecimenPanel className="gap-4">
+          <div className="grid gap-3 sm:grid-cols-[3fr_2fr]">
+            <div className="flex flex-col gap-1.5">
+              <span className="text-2xs font-medium tracking-wide text-muted-foreground uppercase">
+                --brand-rainbow
+              </span>
+              <div className="brand-rainbow brand-rainbow-live h-24 rounded-lg" />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <span className="text-2xs font-medium tracking-wide text-muted-foreground uppercase">
+                brand-field · com grão
+              </span>
+              <div className="brand-field h-24 rounded-lg" />
+            </div>
+          </div>
+          <Ramp
+            label="As paradas"
+            tokens={[
+              { token: "--brand-blue", name: "blue" },
+              { token: "--brand-indigo", name: "indigo" },
+              { token: "--brand-violet", name: "violet" },
+              { token: "--brand-magenta", name: "magenta" },
+              { token: "--brand-coral", name: "coral" },
+              { token: "--brand-amber", name: "amber" },
+            ]}
+          />
+        </SpecimenPanel>
+
+        <TokenGrid label="Paradas" meta="lidas pelo degradê">
+          <TokenTile name="Brand blue" token="--brand-blue" />
+          <TokenTile name="Brand indigo" token="--brand-indigo" />
+          <TokenTile name="Brand violet" token="--brand-violet" />
+          <TokenTile name="Brand magenta" token="--brand-magenta" />
+          <TokenTile name="Brand coral" token="--brand-coral" />
+          <TokenTile name="Brand amber" token="--brand-amber" />
+        </TokenGrid>
+      </Group>
+
+      <DocNote title="O arco-íris mora só na marca">
+        O degradê é <code>--brand-rainbow</code>, com o ângulo em <code>@property --brand-angle</code> para girar; o grão é <code>--brand-grain</code>, e só o campo (<code>brand-field</code>) o veste — num traço de poucos pixels ele lê como sujeira. Quem o consome é o lockup, o símbolo, o campo de marca e o <code>Button variant=&quot;brand&quot;</code>. As paradas são tokens para esta página medir e o <code>ds:catalog</code> cobrar par; arco-íris num chip, num gráfico ou num fundo de cartão é a invariante 3 com seis cores de uma vez. A luminosidade das paradas desce um degrau no claro e sobe no escuro; a razão contra o cartão fica sem régua — nenhuma parada sustenta texto nem identifica peça.
+      </DocNote>
+
       <DocNote title="Popover tem a cor do card; o que os separa é a elevação">
         <code>--popover</code> e <code>--card</code> valem o mesmo nos dois temas: o popover se destaca pela sombra e pelo anel, não por ser mais claro.
       </DocNote>
 
       <DocNote title="--primary preenche; --primary-accent é marca sobre o fundo">
-        Cor que carrega texto claro por cima (botão, checkbox, switch) é <code>--primary</code>; cor que precisa ser vista contra a página (texto, ícone, traço fino ou com alfa) é <code>--primary-accent</code>. No escuro nenhum valor atende os dois, por isso <code>text-primary</code> é proibido — compila e some no escuro: use <code>text-primary-accent</code>.
+        Cor que carrega o rótulo por cima (botão, checkbox, switch) é <code>--primary</code>, a tecla preta — branca no escuro, com o rótulo invertendo junto; cor que precisa ser vista contra a página (texto, ícone, traço fino ou com alfa) é <code>--primary-accent</code>, que hoje coincide com <code>--foreground</code> nos dois temas. O papel não se funde por coincidirem: <code>text-primary</code> segue proibido, porque dentro de uma tecla no escuro ele é branco sobre branco — use <code>text-primary-accent</code>. A cor da marca não está aqui: é o arco-íris do grupo acima.
       </DocNote>
 
       <DocNote title="O ladrilho --input reprova de propósito">
@@ -149,9 +195,9 @@ export default function ColorsDoc() {
         </TokenGrid>
 
         <TokenGrid label="Tonal" meta="fundo suave" columns={2}>
-          {/* A marca em tinta suave. Ela não existia, e a consequência era o
-              `Badge variant="primary"` renderizar `--info-muted` — azul — num
-              sistema onde `primary` é o verde em todo o resto. */}
+          {/* A marca em tinta suave, neutra como o primário. Ela existe porque
+              o `Badge tone="primary"` precisa de um par próprio, e não do
+              `--info-muted` que ele chegou a renderizar. */}
           <TokenTile
             name="Primary muted"
             token="--primary-muted"
@@ -257,8 +303,8 @@ export default function ColorsDoc() {
         </TokenGrid>
       </Group>
 
-      <DocNote title="A rampa não reusa cores de status">
-        Numa pizza, uma fatia azul leria como &ldquo;informação&rdquo; e uma vermelha como &ldquo;erro&rdquo;. As séries se separam por matiz e claridade juntos, medidos pela distância entre pares (ΔE, inclusive protanopia) e não só contra o fundo.
+      <DocNote title="A rampa não reusa cores de status — com uma exceção dita">
+        Numa pizza, uma fatia azul leria como &ldquo;informação&rdquo; e uma vermelha como &ldquo;erro&rdquo;. As séries se separam por matiz e claridade juntos, medidos pela distância entre pares (ΔE, inclusive protanopia) e não só contra o fundo. A exceção é <code>--chart-1</code>: ela estava no verde 166 da marca antiga e, com a marca preta, foi para o matiz 152 de <code>success</code>, por decisão — em outra claridade, e mais longe da série 2 do que estava.
       </DocNote>
 
       <DocNote title="No escuro, a separação vence a faixa de claridade">
@@ -268,44 +314,28 @@ export default function ColorsDoc() {
       <Group
         layout="flow"
         title="Identidade"
-        description="Distinguem uma pessoa da outra e nada mais: seis matizes, com croma abaixo do de status. O par inverte entre os temas — pastilha escura com tinta clara no escuro, pastilha na cor com tinta quase branca no claro."
+        description="Distinguem uma pessoa da outra e nada mais: seis misturas pastel de marca — três ou quatro paradas do arco-íris interpoladas em oklch, cada uma no seu ângulo —, com grão fino e as iniciais em tinta escura por cima. Uma receita só nos dois temas, como na referência sobre preto."
       >
         <SpecimenPanel>
           <IdentityDiscs
             label="O avatar"
             items={[
-              { surface: "--identity-1-surface", onToken: "--identity-1", initials: "AC" },
-              { surface: "--identity-2-surface", onToken: "--identity-2", initials: "BM" },
-              { surface: "--identity-3-surface", onToken: "--identity-3", initials: "KL" },
-              { surface: "--identity-4-surface", onToken: "--identity-4", initials: "RS" },
-              { surface: "--identity-5-surface", onToken: "--identity-5", initials: "TF" },
-              { surface: "--identity-6-surface", onToken: "--identity-6", initials: "VP" },
+              { surface: "--identity-1", onToken: "--identity-foreground", initials: "AC" },
+              { surface: "--identity-2", onToken: "--identity-foreground", initials: "BM" },
+              { surface: "--identity-3", onToken: "--identity-foreground", initials: "KL" },
+              { surface: "--identity-4", onToken: "--identity-foreground", initials: "RS" },
+              { surface: "--identity-5", onToken: "--identity-foreground", initials: "TF" },
+              { surface: "--identity-6", onToken: "--identity-foreground", initials: "VP" },
             ]}
           />
-          {/* Havia aqui uma rampa "Os matizes" apontando para `--identity-1..6`, e
-              ela **deixou de ter significado** quando o par passou a inverter no
-              tema claro: ali aquele token é a tinta quase branca, e a rampa saía
-              como seis barras brancas.
-
-              O custo está dito em vez de escondido: **não existe mais um token
-              único que seja "o matiz" nos dois temas** — no escuro ele é
-              `--identity-N`, no claro é `--identity-N-surface`. Um espécime que
-              só funciona num tema é pior que espécime nenhum, e os discos acima
-              já mostram as seis identidades como elas de fato renderizam. */}
+          {/* Sem grade de ladrilhos: `TokenTile` mede uma cor resolvida, e um
+              degradê não é uma. O contraste das pontas está medido na página
+              do avatar. */}
         </SpecimenPanel>
-
-        <TokenGrid label="Superfícies opacas" meta="a cor no claro, 18% dela no escuro">
-          <TokenTile name="Identidade 1" token="--identity-1-surface" onToken="--identity-1" sample="AC" />
-          <TokenTile name="Identidade 2" token="--identity-2-surface" onToken="--identity-2" sample="BM" />
-          <TokenTile name="Identidade 3" token="--identity-3-surface" onToken="--identity-3" sample="KL" />
-          <TokenTile name="Identidade 4" token="--identity-4-surface" onToken="--identity-4" sample="RS" />
-          <TokenTile name="Identidade 5" token="--identity-5-surface" onToken="--identity-5" sample="TF" />
-          <TokenTile name="Identidade 6" token="--identity-6-surface" onToken="--identity-6" sample="VP" />
-        </TokenGrid>
       </Group>
 
-      <DocNote title="A superfície de identidade é opaca">
-        Avatares se sobrepõem, e um disco translúcido mostraria o de baixo sob as iniciais.
+      <DocNote title="As misturas, e por que em oklch">
+        Azul→violeta→magenta (135°), magenta→coral→âmbar (45°), violeta→magenta→coral→âmbar (160°), âmbar→coral→magenta→índigo (20°), azul→índigo→magenta→coral (110°) e coral→magenta→violeta→azul (200°): as mesmas cores, em ordens e ângulos diferentes. Só o matiz vem das paradas: elas ficam em 0,82 de luminosidade e 0,11 de croma nos dois temas, pastel, com a tinta escura por cima e um grão fino próprio (<code>--identity-grain</code>, mais leve que o do campo de marca). Interpolação em <code>oklch</code> (arco curto) porque no sRGB o meio do caminho entre dois matizes distantes é cinza.
       </DocNote>
 
       <DocNote title="identityToneFor traduz a cor gravada">

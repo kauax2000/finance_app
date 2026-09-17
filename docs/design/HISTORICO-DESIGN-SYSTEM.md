@@ -9830,3 +9830,122 @@ comportamento — sem essa ressalva a célula do calendário sumia da contagem);
   os 604 testes e a mesma receita dos sítios medidos.
 
 Reproduza a qualquer momento com `npm run ds:audit`.
+
+### Rodada 83 — a marca vira preta, e a cor vira arco-íris
+
+**O pedido.** Trocar o branding sem trocar componentes nem fontes: marca
+preta (branca no escuro), e um arco-íris neon com grão pesado como acento —
+referências ClickUp Brain, Neon Rainbow Button, AIG e uma imagem de campo
+granulado com pilha de cartões escuros à frente. Decisões fechadas com o
+dono antes de escrever: o verde sai de **tudo**; o wordmark é preenchido
+pelo arco-íris em todo tamanho (o halo borrado atrás da letra sólida nos
+degraus pequenos foi tentado duas vezes e rejeitado pelo dono na tela: lia
+como desregistro de cor); o degradê respira só nos momentos grandes; o campo de marca vira um cartão com os mockups do produto na frente;
+o botão ganha `variant="brand"` opt-in; o `link` sublinha sempre e o traço
+vira arco-íris no cursor. A paleta começou com sete paradas do espectro
+inteiro e o dono a devolveu na tela: "bandeira". Ficou a do ClickUp — azul,
+violeta, magenta, âmbar — com o coral no meio e sem verde, cinco matizes;
+depois, "o azul mais presente": duas paradas de azul e um quarto da rampa.
+E "remova o grain da logo": `brand-rainbow` ficou só com o degradê — num
+traço de poucos pixels o grão lia como sujeira —, e o grão é só do campo.
+
+**A página de cores e o catálogo vieram depois, e revelaram um buraco.** O
+`ds:catalog` não tinha balde para `--brand-*`: o degradê sumia do relatório
+e ninguém cobraria par. As seis paradas viraram tokens (`--brand-blue` …
+`--brand-amber`) que o degradê lê, porque a página só mede o que é cor
+resolvida e o catálogo só cobra par do que é cor — um degradê não é nem uma
+coisa nem outra. A página ganhou o grupo "Marca" (faixa, campo com grão,
+rampa e os seis ladrilhos), a nota do primário parou de dizer que "no escuro
+nenhum valor atende os dois", e `--chart-1` saiu do verde 166 da marca antiga
+para o matiz 152 de `success`, por decisão do dono — a nota da rampa registra
+a exceção.
+
+**O avatar fala a língua da marca.** As seis identidades eram matizes a 60°
+escolhidos para caber abaixo do croma do verde; viraram os seis matizes das
+paradas do arco-íris, em ordem de matiz (coral, âmbar, azul, índigo, violeta,
+magenta) para a dobra proporcional de `identityToneFor` continuar fazendo
+sentido. **Só o matiz vem da parada**: luminosidade 0,52 no claro (a que já
+mediu 5,14:1 com a tinta) e croma 0,14, no piso de `success` e longe do 0,245
+de `destructive` — coral e âmbar se separam dos status vizinhos pelo croma e
+pela luz. Medido nas seis: tinta 4,89–5,72 (claro) e 6,33–6,78 (escuro),
+pastilha contra a placa flutuante 4,61–5,44 no claro. O par invertido, a
+superfície opaca e o vidro ficaram como estavam;
+`GLASS_IDENTITY_TONES` lê os tokens e acompanhou. E o `Avatar` ganhou
+`brand`: 2px de arco-íris **por dentro** da caixa (a escala de 8 em 8 não
+muda, o `overflow-hidden` não recorta um `inset-0`), na receita do
+`::before` do botão, só para a pessoa logada — barra lateral, menu de conta
+e barra de baixo. Ignorado em `glass`, que já tem aro. Os dois espécimes do
+catálogo que escreviam `bg-identity-N-surface` à mão (avatar, hover-card)
+passaram a `IDENTITY_TONES[i]`, que é o que a própria página manda.
+
+**E então o dono simplificou: duas versões só.** Foto, ou iniciais brancas
+sobre um **degradê de marca** — seis degradês (pares de paradas do arco-íris,
+interpolados em oklch para o meio não cair no cinza do sRGB). A primeira
+versão era saturada (0,5 de luminosidade) com letra branca, e o dono a
+devolveu na tela: "feio". A referência é um chip pastel difuso com grão e
+texto escuro sobre preto — as pontas subiram para 0,82 e 0,11 de croma, a
+tinta virou escura, entrou um grão fino próprio (`--identity-grain`, 35%,
+em `overlay` por um `::before`), e o valor é um só nos dois temas. Depois,
+"mais cores num avatar só": os pares viraram misturas de três e quatro
+paradas, cada identidade com a sua ordem e o seu ângulo (135°, 45°, 160°,
+20°, 110°, 200°) — as mesmas cores, misturadas diferente, é o que distingue
+seis pessoas sem dar a nenhuma "uma cor". Os dois `bg-size-[…]` que o
+auditor acusou viraram tokens (`--identity-drift-size`,
+`--identity-grain-size`). Saíram o
+modo `glass` (e `GLASS_IDENTITY_TONES`), o `identity` numérico, o anel
+`brand` da rodada anterior e o par invertido entre temas: uma receita só, nos
+dois. O degradê é pintado a 160% da caixa e desliza no cursor e no toque
+(`background-position`, com o par `active:` da regra H). Os consumidores
+não mudaram: `IDENTITY_TONES[i]` continua `{ surface, ink }`, e o fallback
+veste a primeira identidade por padrão para nunca haver iniciais sobre cinza.
+
+**Os tokens.** `--primary` é a tecla preta (`0.205`) no claro e a tecla branca
+(`0.985`) no escuro, com o rótulo invertendo junto. A mecânica da rodada 78
+ficou: `hover` puxa na direção do rótulo nos dois temas, `edge` abaixo do
+`hover`, e `button-primary.test.ts` continuou verde sem uma linha mudada. O
+fio de luz do topo é `transparent` no escuro — luz branca sobre tecla branca
+não desenha nada, e o comentário da 78 já autorizava. `--primary-accent`,
+`--ring`, `--sidebar-ring` e os `-muted` viraram neutros; `--chart-1` ficou no
+matiz 166 por ser cor de série, não de marca (invariante 4).
+
+**O arco-íris é um token de degradê**, `--brand-rainbow`, com as mesmas cinco
+matizes nos dois temas e luminosidade por tema, e um `@property --brand-angle`
+— o primeiro do arquivo — porque só variável tipada interpola. **Cônico foi
+rejeitado na tela**: a partir do centro ele lê como roda de cores, um gráfico
+de pizza; o linear a 135° mais o ângulo é o que as referências chamam de neon.
+A parada de fecho repete a primeira para o giro não ter emenda.
+
+**O campo de marca não redefine token nenhum, e isso custou uma medição.** A
+primeira versão herdou do campo verde o `--foreground` redefinido no
+contêiner, e o saldo dentro do `Card` hospedado saiu **branco sobre o cartão
+branco** — `MoneyDisplay` é `text-foreground`, e o override desceu pelo
+cartão. A utility declara só `color`, que o wordmark herda por `currentColor`
+(a classe de cor saiu do `AppWordmark` e do `AppLogo` por isso: a marca é
+tinta), e o fio é `box-shadow` interno para não chegar à borda dos cartões.
+`--brand-field-muted-foreground` deixou de existir: nenhum texto corrido mora
+sobre sete matizes.
+
+**O grão não existia, e o σ provou.** Escrito como `vinheta, arco-íris, grão`,
+o grão era a camada de baixo — `overlay` sobre a cor preta é preto, e o
+arco-íris opaco pintava por cima. O método antigo (σ da luminância crua) não
+teria visto: o degradê varia ~15 unidades ao longo do retalho e deu **15,26
+com e sem grão**. O método novo é o σ da **diferença entre pixels vizinhos**
+(`scripts/brand-grain-ab.mjs`, que substitui o `grain-ab.mjs` solto na raiz):
+sem grão 0,64; com a ordem corrigida e o token final (`baseFrequency` 0,75,
+`slope` 1, alfa 0,85/0,75) **6,94 no claro e 8,70 no escuro** sobre a paleta
+de cinco paradas; alfa 1 deu 11,28/9,21 sobre a de sete e foi rejeitado por
+ler como ruído de sinal.
+
+**O botão `brand` não pinta o próprio fundo.** Numa raiz de empilhamento o
+fundo do elemento pinta antes dos filhos de `z` negativo, então um
+`bg-primary` no botão cobriria o contorno. O preenchimento **e** o contorno
+vivem no `::before` (preto em `padding-box` sobre o arco-íris em `border-box`,
+com 1px de borda transparente entre os dois), o halo no `::after`, e o hover
+troca a variável que o pseudo lê. O `link` ganhou sublinhado fixo, e o traço
+do cursor é um `background` de 1px recortado à caixa de conteúdo — decoração
+não aceita degradê —, com o par `active:` que a regra H cobra.
+
+**Fallout:** `button-touch-response.test.ts` (o teste 4 descrevia o `link`
+antigo), assertiva 9 nova em `button-primary.test.ts`, as páginas `brand`,
+`button` e `colors` do catálogo, o `AGENTS.md` e o contrato de direção das
+telas de acesso. Nenhuma rota, nenhuma jornada.

@@ -55,7 +55,7 @@ export function AppBootstrapScreen({ className }: AppBootstrapScreenProps) {
             aria-label="Carregando aplicativo"
             suppressHydrationWarning
         >
-            <AppWordmark size="xl" aria-hidden />
+            <AppWordmark size="xl" rainbow aria-hidden />
             {/* O espaço é reservado desde o primeiro quadro: sem isso a marca
                 salta 40px para cima quando o sinal entra. */}
             <div

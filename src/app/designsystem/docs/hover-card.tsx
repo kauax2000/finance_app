@@ -1,6 +1,8 @@
 "use client"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { IDENTITY_TONES } from "@/lib/avatar"
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -92,7 +94,7 @@ export default function HoverCardDoc() {
           <HoverCardContent>
             <div className="flex gap-3">
               <Avatar>
-                <AvatarFallback className="bg-identity-4-surface text-identity-4">
+                <AvatarFallback className={cn(IDENTITY_TONES[3].surface, IDENTITY_TONES[3].ink)}>
                   AR
                 </AvatarFallback>
               </Avatar>
@@ -312,7 +314,7 @@ function MembroInline({
       <HoverCardContent>
         <div className="flex gap-3">
           <Avatar>
-            <AvatarFallback className="bg-identity-2-surface text-identity-2">
+            <AvatarFallback className={cn(IDENTITY_TONES[1].surface, IDENTITY_TONES[1].ink)}>
               {iniciais}
             </AvatarFallback>
           </Avatar>

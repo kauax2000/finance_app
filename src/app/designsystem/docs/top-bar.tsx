@@ -250,7 +250,7 @@ function BarraDeMarca() {
   return (
     <TopBar position="static">
       <TopBarContent className="justify-center">
-        <AppWordmark size="sm" />
+        <AppWordmark size="sm" rainbow />
       </TopBarContent>
     </TopBar>
   )
@@ -264,7 +264,7 @@ function BarraPublica() {
   return (
     <TopBar position="static">
       <TopBarStart className="min-w-0 flex-1 shrink">
-        <AppWordmark size="sm" />
+        <AppWordmark size="sm" rainbow />
       </TopBarStart>
       <SearchInput
         aria-label="Buscar"
@@ -393,7 +393,7 @@ export default function TopBarDoc() {
         previewClassName="p-4"
         code={`<TopBar>
   <TopBarContent className="justify-center">
-    <AppWordmark size="sm" />
+    <AppWordmark size="sm" rainbow />
   </TopBarContent>
 </TopBar>`}
       >
@@ -407,7 +407,7 @@ export default function TopBarDoc() {
         description="Marca à esquerda, busca centralizada, ações à direita; no telefone a busca vira ícone. Os lados são flex-1 para a busca centrar na janela."
         previewClassName="p-4"
         code={`<TopBar>
-  <TopBarStart className="min-w-0 flex-1 shrink"><AppWordmark size="sm" /></TopBarStart>
+  <TopBarStart className="min-w-0 flex-1 shrink"><AppWordmark size="sm" rainbow /></TopBarStart>
   <SearchInput className="hidden w-full max-w-sm md:flex" />
   <TopBarActions className="flex-1 justify-end">…</TopBarActions>
 </TopBar>`}

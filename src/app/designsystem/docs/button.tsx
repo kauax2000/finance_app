@@ -15,7 +15,7 @@ export default function ButtonDoc() {
 
       <DocSection
         title="Hierarquia"
-        description="Três degraus que descem em peso visual: primary preenche de verde, secondary de cinza, tertiary não preenche. Uma tela tem um primary só — se dois competem, nenhum é a ação da tela."
+        description="Três degraus que descem em peso visual: primary preenche de preto (branco no escuro), secondary de cinza, tertiary não preenche. Uma tela tem um primary só — se dois competem, nenhum é a ação da tela."
         code={`<Button>primary</Button>
 <Button variant="secondary">secondary</Button>
 <Button variant="tertiary">tertiary</Button>`}
@@ -27,14 +27,16 @@ export default function ButtonDoc() {
 
       <DocSection
         title="Fora da escada"
-        description="outline quando o controle precisa de contorno, destructive para o que não tem volta, link para ação que se comporta como texto."
+        description="outline quando o controle precisa de contorno, destructive para o que não tem volta, link para ação que se comporta como texto (sublinhado sempre; o traço vira arco-íris no cursor e no toque), brand para o único CTA de marca da tela — a tecla do primary com o arco-íris em volta."
         code={`<Button variant="outline">outline</Button>
 <Button variant="destructive">destructive</Button>
-<Button variant="link">link</Button>`}
+<Button variant="link">link</Button>
+<Button variant="brand">brand</Button>`}
       >
         <Button variant="outline">outline</Button>
         <Button variant="destructive">destructive</Button>
         <Button variant="link">link</Button>
+        <Button variant="brand">brand</Button>
       </DocSection>
 
       <DocSection
@@ -162,9 +164,9 @@ export default function ButtonDoc() {
         rows={[
           {
             prop: "variant",
-            type: '"primary" | "secondary" | "tertiary" | "outline" | "destructive" | "link"',
+            type: '"primary" | "secondary" | "tertiary" | "outline" | "destructive" | "link" | "brand"',
             default: '"primary"',
-            description: "O degrau da hierarquia; outline, destructive e link ficam fora da escada.",
+            description: "O degrau da hierarquia; outline, destructive, link e brand ficam fora da escada.",
           },
           {
             prop: "size",

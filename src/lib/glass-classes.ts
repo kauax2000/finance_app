@@ -150,8 +150,8 @@ export const glassRoundSurfaceClassName = "glass glass-control glass-round"
  *
  * **A cor vem dos pares `-muted` que já existem**, e não de uma receita nova.
  *
- * **E o tom é opaco** — ou quase: a identidade abre 98% no claro e 92% no escuro (ver `GLASS_IDENTITY_TONES`). Ele já foi translúcido — 75%/65% nos semânticos, 80% na
- * identidade —, e o efeito era medível: a lâmina abaixo dele compõe para
+ * **E o tom é opaco** — ou quase. Ele já foi translúcido — 75%/65% nos
+ * semânticos —, e o efeito era medível: a lâmina abaixo dele compõe para
  * **rgb 2** sobre a página, então os 20% que atravessavam puxavam o corpo para
  * baixo. O avatar de vidro saía **20% mais escuro** que o opaco da mesma
  * identidade (41,2 contra 51,3 de média nas seis): a mesma pessoa lia com duas
@@ -259,33 +259,6 @@ export const glassRoundSurfaceClassName = "glass glass-control glass-round"
  * A tinta continua sendo `text-identity-N`, exatamente como no avatar normal —
  * o par já é calibrado, e o vidro só troca a superfície opaca por uma lâmina.
  */
-/*
- * **O tom abre, e o que passa por baixo é a lâmina — não a página.**
- *
- * Ele foi a 100% na rodada 44 por uma razão medida: a 80% o avatar de vidro
- * saía 20% mais escuro que o opaco da mesma identidade. O efeito colateral que
- * aquela rodada anotou pela metade é que, **opaco, ele apaga as quatro camadas
- * de luz** — lâmina e nuvens ficam por baixo dele e não pintam nada.
- *
- * **A abertura é diferente por tema, e o número saiu do contraste.** Ela compõe
- * com a lâmina, que troca de polaridade: no escuro é preta e o corpo afunda; no
- * claro é branca e ele **sobe**, empurrando as iniciais para perto do piso.
- *
- * Varridos os seis tons no claro contra os 4,5:1 da norma: a 92% dois deles
- * reprovam (4,48 e **4,37**), a 97% um deles ainda cai a **4,47** no ponto
- * em que a letra encontra o especular, e **98%** é a abertura máxima que passa.
- * No escuro os 92% passam com folga: 6,36 a 6,80 no centro e 5,93 no pior ponto
- * onde há letra, com desvio de 4,5 unidades contra o opaco.
- *
- * Ou seja: **no claro a abertura quase não se paga**, e é o contraste que manda.
- * É a mesma assimetria que os degraus do material encontraram — a lâmina e a
- * tinta andam em direções opostas nos dois temas.
- */
-export const GLASS_IDENTITY_TONES = [
-    "[--glass-tone:color-mix(in_srgb,var(--identity-1-surface)_98%,transparent)] dark:[--glass-tone:color-mix(in_srgb,var(--identity-1-surface)_92%,transparent)] [--glass-ink:var(--identity-1-surface)] dark:[--glass-ink:var(--identity-1)] [--glass-ink-amount:20%]",
-    "[--glass-tone:color-mix(in_srgb,var(--identity-2-surface)_98%,transparent)] dark:[--glass-tone:color-mix(in_srgb,var(--identity-2-surface)_92%,transparent)] [--glass-ink:var(--identity-2-surface)] dark:[--glass-ink:var(--identity-2)] [--glass-ink-amount:20%]",
-    "[--glass-tone:color-mix(in_srgb,var(--identity-3-surface)_98%,transparent)] dark:[--glass-tone:color-mix(in_srgb,var(--identity-3-surface)_92%,transparent)] [--glass-ink:var(--identity-3-surface)] dark:[--glass-ink:var(--identity-3)] [--glass-ink-amount:20%]",
-    "[--glass-tone:color-mix(in_srgb,var(--identity-4-surface)_98%,transparent)] dark:[--glass-tone:color-mix(in_srgb,var(--identity-4-surface)_92%,transparent)] [--glass-ink:var(--identity-4-surface)] dark:[--glass-ink:var(--identity-4)] [--glass-ink-amount:20%]",
-    "[--glass-tone:color-mix(in_srgb,var(--identity-5-surface)_98%,transparent)] dark:[--glass-tone:color-mix(in_srgb,var(--identity-5-surface)_92%,transparent)] [--glass-ink:var(--identity-5-surface)] dark:[--glass-ink:var(--identity-5)] [--glass-ink-amount:20%]",
-    "[--glass-tone:color-mix(in_srgb,var(--identity-6-surface)_98%,transparent)] dark:[--glass-tone:color-mix(in_srgb,var(--identity-6-surface)_92%,transparent)] [--glass-ink:var(--identity-6-surface)] dark:[--glass-ink:var(--identity-6)] [--glass-ink-amount:20%]",
-] as const
+/* `GLASS_IDENTITY_TONES` morou aqui: o avatar de vidro. Saiu quando o avatar
+ * passou a ter duas versões só (foto, ou iniciais sobre degradê de marca) —
+ * ver `components/ui/avatar.tsx`. As medições dele estão no histórico. */

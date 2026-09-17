@@ -9,12 +9,16 @@ const buttonVariants = cva(
   {
     variants: {
       // A hierarquia é uma escada, e ela desce em peso visual, não só em nome:
-      // `primary` preenche de verde, `secondary` preenche de cinza,
-      // `tertiary` não preenche nada. Uma tela tem um `primary` só.
+      // `primary` preenche de preto (branco no escuro), `secondary` preenche
+      // de cinza, `tertiary` não preenche nada. Uma tela tem um `primary` só.
       //
       // `outline` fica de fora da escada de propósito: é a exceção, para
       // quando um controle precisa de contorno próprio (um par de navegação,
-      // um filtro que alterna) e nenhum dos três degraus serve.
+      // um filtro que alterna) e nenhum dos três degraus serve. `brand`
+      // também fica de fora: é a mesma tecla do `primary` com o arco-íris da
+      // marca em volta, para **um** CTA de marca por tela — entrar, começar.
+      // O arco-íris não entra no `primary` porque um acento em todo botão
+      // deixa de ser acento.
       //
       // `success` e `warning` foram removidos: nomeavam um estado, não um
       // peso, e nenhuma tela do app chegou a usá-los. Estado de sucesso e de
@@ -37,6 +41,24 @@ const buttonVariants = cva(
         // reprovada quatro vezes (a lápide está em `lib/glass-classes.ts`).
         primary:
           "border-primary-edge bg-primary text-primary-foreground shadow-(--primary-shadow-value) hover:bg-primary-hover active:bg-primary-hover aria-expanded:bg-primary-hover active:shadow-(--primary-shadow-pressed-value) aria-busy:disabled:shadow-(--primary-shadow-pressed-value) aria-busy:disabled:opacity-100 disabled:shadow-none",
+        // A tecla de marca. Três camadas, e a ordem delas é a razão do
+        // arranjo: o botão em si não pinta nada (`isolate` o faz raiz de
+        // empilhamento; a base já traz `border-transparent`), o `::before`
+        // é o preenchimento **e** o contorno — o preto em `padding-box` sobre
+        // o arco-íris em `border-box`, com 1px de borda transparente entre
+        // os dois, que é por onde o arco-íris aparece —, e o `::after` é o
+        // halo: o mesmo degradê, borrado, uma camada abaixo.
+        //
+        // Por que não `bg-primary` no próprio botão: numa raiz de
+        // empilhamento o fundo do elemento pinta **antes** dos filhos de
+        // `z-index` negativo, então um `::before` a `-z-10` cobriria a tecla
+        // em vez de ficar atrás dela. O preenchimento vai para o pseudo por
+        // isso, e o hover troca a variável que ele lê.
+        //
+        // Sem grão: numa área de 32px o grão é ruído, não textura. Sem a
+        // sombra da tecla: o contorno arco-íris já é a aresta.
+        brand:
+          "relative isolate text-primary-foreground [--brand-fill:var(--primary)] hover:[--brand-fill:var(--primary-hover)] active:[--brand-fill:var(--primary-hover)] aria-expanded:[--brand-fill:var(--primary-hover)] before:absolute before:-inset-px before:-z-10 before:rounded-[inherit] before:border before:border-transparent before:[background:linear-gradient(var(--brand-fill),var(--brand-fill))_padding-box,var(--brand-rainbow)_border-box] before:transition-[background] before:duration-(--duration-fast) after:absolute after:-inset-1 after:-z-20 after:rounded-[inherit] after:bg-(image:--brand-rainbow) after:opacity-50 after:blur-md after:transition-opacity after:duration-(--duration-fast) hover:after:opacity-80 active:after:opacity-80 aria-busy:disabled:opacity-100",
         // Sem borda visível — e sem o anel vazado que havia antes. O culpado
         // não era a borda transparente da base, era o `bg-clip-padding` que a
         // acompanha: ele recortava o preenchimento na caixa de padding, então o
@@ -66,7 +88,12 @@ const buttonVariants = cva(
           "border-border bg-background hover:bg-muted hover:text-foreground active:bg-muted active:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input-fill/30 dark:hover:bg-input-fill/50 dark:active:bg-input-fill/50",
         destructive:
           "bg-destructive/10 text-destructive-muted-foreground hover:bg-destructive/20 active:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:active:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        link: "text-primary-accent underline-offset-4 hover:underline active:underline",
+        // O link é sublinhado **sempre**: com a marca preta ele tem a cor do
+        // texto, e sem o traço nada o distinguia até o cursor passar — o que
+        // no toque é nunca. No cursor e no toque o traço vira arco-íris, que é
+        // um `background` de 1px no pé da caixa de conteúdo, e não um
+        // `text-decoration`, porque decoração não aceita degradê.
+        link: "text-primary-accent underline underline-offset-4 decoration-1 hover:no-underline hover:bg-(image:--brand-rainbow) hover:bg-[length:100%_1px] hover:bg-bottom hover:bg-no-repeat hover:bg-clip-content hover:bg-origin-content active:no-underline active:bg-(image:--brand-rainbow) active:bg-[length:100%_1px] active:bg-bottom active:bg-no-repeat active:bg-clip-content active:bg-origin-content",
       },
       // Uma escada só, de 24 a 40 em degraus de 4, e a coluna `icon-*` espelha
       // a de texto degrau a degrau: `md` casa com `icon-md`, `lg` com

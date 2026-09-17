@@ -10,6 +10,8 @@ import {
 } from "@heroicons/react/16/solid"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { IDENTITY_TONES } from "@/lib/avatar"
+import { cn } from "@/lib/utils"
 import {
   TIMELINE_TONES,
   Timeline,
@@ -128,8 +130,10 @@ export default function TimelineDoc() {
               <TimelineItem
                 key={nome as string}
                 avatar={
-                  <Avatar size="sm" glass identity={tom as number}>
-                    <AvatarFallback>{iniciais as string}</AvatarFallback>
+                  <Avatar size="sm">
+                    <AvatarFallback className={cn(IDENTITY_TONES[tom as number].surface, IDENTITY_TONES[tom as number].ink)}>
+                      {iniciais as string}
+                    </AvatarFallback>
                   </Avatar>
                 }
               >
@@ -194,8 +198,10 @@ export default function TimelineDoc() {
           <TimelineItem
             marker="avatar"
             avatar={
-              <Avatar size="sm" glass identity={2}>
-                <AvatarFallback>MA</AvatarFallback>
+              <Avatar size="sm">
+                <AvatarFallback className={cn(IDENTITY_TONES[2].surface, IDENTITY_TONES[2].ink)}>
+                  MA
+                </AvatarFallback>
               </Avatar>
             }
           >

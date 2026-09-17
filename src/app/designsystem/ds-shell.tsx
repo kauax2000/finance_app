@@ -159,7 +159,7 @@ function DsTopBar() {
               Navegação do design system
             </DialogTitle>
             <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-border px-4 pr-14">
-              <AppWordmark size="sm" className="shrink-0" aria-hidden />
+              <AppWordmark size="sm" rainbow className="shrink-0" aria-hidden />
               <Separator orientation="vertical" />
               {/* O `DialogTitle` acima já diz "Navegação do design system" ao
                   leitor de tela; aqui a sigla é só o que se vê. */}
@@ -204,7 +204,7 @@ function DsTopBar() {
           // grupo elástico, e a 320px empurrava os controles para fora.
           className="-ml-1 flex min-w-0 items-center gap-2.5 rounded-md px-1 py-1 outline-none transition-opacity hover:opacity-70 focus-visible:ring-3 focus-visible:ring-ring/70 active:opacity-70"
         >
-          <AppWordmark className="shrink-0" aria-hidden />
+          <AppWordmark rainbow className="shrink-0" aria-hidden />
           <Separator orientation="vertical" />
           {/* `leading-none` porque não há ascendente nem descendente para a
               caixa da linha acomodar — só as duas maiúsculas.

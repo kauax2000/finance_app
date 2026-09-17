@@ -5,12 +5,14 @@ import { Avatar as AvatarPrimitive } from "radix-ui"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { IDENTITY_TONES } from "@/lib/avatar"
-import {
-  GLASS_IDENTITY_TONES,
-  glassControlSurfaceClassName,
-  glassRoundSurfaceClassName,
-} from "@/lib/glass-classes"
 import { cn } from "@/lib/utils"
+
+/**
+ * Duas versões, e só duas: **com foto** (a foto) e **sem foto** (as iniciais
+ * em tinta escura sobre um degradê pastel de marca, com grão). O avatar já teve um modo de vidro e um
+ * anel de arco-íris para a pessoa logada; os dois saíram a pedido, porque com
+ * o degradê já sendo a marca eram três maneiras de dizer a mesma coisa.
+ */
 
 /**
  * A escala do avatar é dele, e diverge da escada de controle de propósito.
@@ -75,100 +77,31 @@ const avatarVariants = cva(
   }
 )
 
-/**
- * O modo de vidro desce pelo **contexto**, e não por seletor.
- *
- * A superfície opaca que o vidro precisa desligar (`bg-muted`) mora no
- * `AvatarFallback`, não na raiz. Um `in-data-glass:bg-transparent` no fallback
- * compilaria com `:where()`, que **não soma especificidade**, e perderia para o
- * `bg-muted` declarado no próprio elemento — a armadilha que este projeto já
- * pagou no `DescriptionList`. Contexto não disputa: o fallback simplesmente
- * não escreve a classe.
- *
- * É o mecanismo do `Field` / `FieldControl`, e ele sai de graça porque o
- * `Avatar` já é módulo cliente.
- */
-const AvatarGlassContext = React.createContext<{ ink: string } | null>(null)
-
 function Avatar({
   className,
   size,
   shape,
-  glass,
-  identity = 0,
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Root> &
-  VariantProps<typeof avatarVariants> & {
-    /** A superfície: preenchimento opaco, ou a lâmina de vidro do sistema. */
-    glass?: boolean
-    /**
-     * Qual das seis identidades, no modo de vidro — o **índice** de
-     * `IDENTITY_TONES`, e não a semente de `identityToneFor`.
-     *
-     * O nome anterior era `seed`, e o JSDoc dizia ser "o mesmo argumento de
-     * `identityToneFor`". Não era: aquela função recebe duas **strings** e faz
-     * hash; aqui é um número com módulo. As duas não davam a mesma cor para a
-     * mesma pessoa. Quem tem a cor gravada resolve o tom antes e passa o índice.
-     */
-    identity?: number
-  }) {
-  // Módulo duplo para aceitar índice negativo.
-  const i =
-    (((identity % IDENTITY_TONES.length) + IDENTITY_TONES.length) %
-      IDENTITY_TONES.length) |
-    0
-
-  const raiz = (
+  VariantProps<typeof avatarVariants>) {
+  return (
     <AvatarPrimitive.Root
       data-slot="avatar"
       data-size={size ?? "md"}
       data-shape={shape ?? "circle"}
-      data-glass={glass || undefined}
-      data-identity={glass ? i : undefined}
-      className={cn(
-        avatarVariants({ size, shape }),
-        // A raiz não pinta fundo nenhum, então aqui não há o que anular: a
-        // lâmina e o tom apenas se somam.
-        // O aro do vidro é um gradiente linear, e num círculo as pontas dele
-        // caem nos cantos da caixa — que ali não existem. Medido, **0% do
-        // perímetro** via o pico. `glass-round` troca o aro por um cônico e
-        // acende o especular; num `shape="rounded"` os cantos existem e o
-        // linear continua certo.
-        glass && [
-          (shape ?? "circle") === "circle"
-            ? glassRoundSurfaceClassName
-            : glassControlSurfaceClassName,
-          GLASS_IDENTITY_TONES[i],
-        ],
-        className
-      )}
+      className={cn(avatarVariants({ size, shape }), className)}
       {...props}
     />
-  )
-
-  if (!glass) return raiz
-
-  return (
-    <AvatarGlassContext.Provider value={{ ink: IDENTITY_TONES[i].ink }}>
-      {raiz}
-    </AvatarGlassContext.Provider>
   )
 }
 
 /**
  * A foto entra em fade quando termina de carregar.
  *
- * Sem isso ela aparece de estalo por cima das iniciais, e o troco é visível
- * justamente onde o avatar mais aparece: uma lista de membros ou de transações,
- * onde uma dúzia deles resolve em momentos diferentes e a tela pisca em
- * pedaços.
- *
- * É **animação de entrada**, e não transição. O `Avatar.Image` do Radix não
- * publica `data-state` nem renderiza cedo: ele simplesmente não monta enquanto
- * a imagem não carregou. Transição precisa de dois estados no mesmo elemento e
- * aqui só existe um — a primeira versão disto usava
- * `data-[state=loaded]:opacity-100` e deixava toda foto de perfil invisível,
- * porque o seletor nunca casava.
+ * É uma animação de **entrada**, não uma transição de estado: o Radix não
+ * monta a imagem antes de ela carregar, então um `data-[state=loaded]:opacity-100`
+ * com `opacity-0` na base deixava toda foto invisível — o elemento nascia já
+ * carregado e nunca passava pelo estado que a transição esperava.
  */
 const AvatarImage = React.forwardRef<
   HTMLImageElement,
@@ -197,6 +130,17 @@ AvatarImage.displayName = "AvatarImage"
 /**
  * As iniciais, e o que se vê enquanto a foto não chega.
  *
+ * **Sempre sobre um degradê pastel de marca, com grão e a tinta escura.** O padrão é a
+ * primeira identidade; quem sabe qual pessoa é passa o par de
+ * `identityToneFor` por `className` (`cn(tone.surface, tone.ink)`), e o
+ * `bg-(image:…)` dele vence o padrão no merge.
+ *
+ * **O degradê se move no cursor e no toque.** Ele é pintado a 160% da caixa e
+ * ancorado no canto de cima; no `hover:` e no `active:` (o par que a regra H
+ * cobra) a âncora vai para o canto oposto, e a transição de
+ * `background-position` faz o degradê deslizar por baixo das letras. Movimento
+ * reduzido: o bloco global encurta a transição, e o degradê só troca de lugar.
+ *
  * Sem raio próprio: quem recorta é o `overflow-hidden` da raiz, e é o que faz o
  * fundo acompanhar o `shape`. Com `rounded-full` cravado aqui — como estava —,
  * um avatar de canto arredondado desenhava um círculo dentro de um quadrado.
@@ -207,24 +151,26 @@ AvatarImage.displayName = "AvatarImage"
 const AvatarFallback = React.forwardRef<
   HTMLSpanElement,
   React.ComponentProps<typeof AvatarPrimitive.Fallback>
->(({ className, ...props }, ref) => {
-  const vidro = React.useContext(AvatarGlassContext)
-  return (
-    <AvatarPrimitive.Fallback
-      ref={ref}
-      data-slot="avatar-fallback"
-      className={cn(
-        "flex h-full w-full items-center justify-center font-medium",
-        // Sob vidro a superfície é a lâmina da raiz, e a tinta é a da
-        // identidade. As duas classes opacas não são escritas — não há
-        // `bg-transparent` a empilhar por cima.
-        vidro ? vidro.ink : "bg-muted text-foreground",
-        className
-      )}
-      {...props}
-    />
-  )
-})
+>(({ className, ...props }, ref) => (
+  <AvatarPrimitive.Fallback
+    ref={ref}
+    data-slot="avatar-fallback"
+    className={cn(
+      "flex h-full w-full items-center justify-center font-medium",
+      IDENTITY_TONES[0].surface,
+      IDENTITY_TONES[0].ink,
+      // O grão vem por um `::before` e não por uma segunda camada de
+      // `background-image`: a camada vive no token de identidade, e quem
+      // chama troca o token inteiro por `className` — uma lista de camadas
+      // aqui seria sobrescrita junto. O pseudo fica atrás das letras (o
+      // `relative isolate` do fallback é o que o segura dentro).
+      "relative isolate before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:bg-(image:--identity-grain) before:bg-size-(--identity-grain-size) before:mix-blend-overlay",
+      "bg-size-(--identity-drift-size) bg-position-[0%_0%] transition-[background-position] duration-(--duration-slow) ease-(--ease-out) hover:bg-position-[100%_100%] active:bg-position-[100%_100%]",
+      className
+    )}
+    {...props}
+  />
+))
 AvatarFallback.displayName = "AvatarFallback"
 
 export { Avatar, AvatarFallback, AvatarImage, avatarVariants }

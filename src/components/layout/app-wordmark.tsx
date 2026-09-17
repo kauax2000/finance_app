@@ -9,9 +9,20 @@ import { cn } from "@/lib/utils"
  * traçado, e o "f" do símbolo é a inicial da própria palavra: repetir o símbolo
  * ao lado seria escrever a letra duas vezes.
  *
- * O arquivo veio preto; a cor sai daqui, não de dentro do desenho. `currentColor`
- * é o que permite ao mesmo path ser verde de marca no tema claro e branco no
- * escuro sem duas versões do ativo.
+ * O arquivo veio preto; a cor não sai daqui nem de dentro do desenho: o path é
+ * `currentColor` **sem classe de cor**, e a marca herda a tinta do texto ao
+ * redor — preto no claro, branco no escuro, branco dentro do campo de marca
+ * (que declara só `color`). Uma classe aqui foi o que fez a versão anterior
+ * precisar de `text-primary-foreground` em cada tela que a punha sobre cor.
+ *
+ * **`rainbow` é o acento, e ele é um só em todo tamanho:** as letras são
+ * **preenchidas** pelo arco-íris — uma `div` mascarada pelo mesmo desenho
+ * (`public/wordmark.svg`, o ativo de origem deste path) vestindo
+ * `brand-rainbow`. O que muda com o tamanho é só o movimento: em `lg` e `xl`
+ * o degradê gira devagar; em `sm` e `md` ele fica parado, porque na barra
+ * quem está ali olha números. Houve uma versão com halo borrado atrás da
+ * letra sólida nos degraus pequenos, e ela foi rejeitada na tela: lia como
+ * desregistro de cor, não como luz.
  *
  * O símbolo sozinho continua sendo `AppLogo` — é o que cabe onde só há um
  * quadrado: favicon, ícone de PWA, avatar.
@@ -34,9 +45,20 @@ const sizeClasses = {
     xl: "h-10 md:h-11",
 } as const
 
+/**
+ * A máscara é o próprio ativo, e é URL e não cor: o único literal aqui é o
+ * caminho do arquivo que o path acima também é. `mask-contain` + `aspect-[101/24]`
+ * fazem a `div` ter a caixa exata do SVG a partir da altura, como o `w-auto`
+ * faz com o viewBox.
+ */
+const MASK_CLASSES =
+    "mask-[url(/wordmark.svg)] mask-contain mask-center mask-no-repeat aspect-[101/24]"
+
 type AppWordmarkProps = {
     size?: keyof typeof sizeClasses
     className?: string
+    /** O arco-íris preenchendo as letras; gira em `lg`/`xl`, parado em `sm`/`md`. */
+    rainbow?: boolean
     /**
      * O lockup **é** o nome, então por padrão ele se anuncia como imagem
      * rotulada — diferente do símbolo, que é decoração ao lado de texto.
@@ -52,23 +74,37 @@ type AppWordmarkProps = {
 export function AppWordmark({
     size = "md",
     className,
+    rainbow = false,
     "aria-hidden": ariaHidden,
 }: AppWordmarkProps) {
+    // `applicationName` no metadata é "Finance", e é o que o desenho escreve.
+    // "Finance App" seria anunciar uma palavra que não está lá.
+    const a11y = ariaHidden
+        ? { "aria-hidden": true as const }
+        : { role: "img" as const, "aria-label": "Finance" }
+
+    if (rainbow) {
+        return (
+            <div
+                className={cn(
+                    "brand-rainbow w-auto",
+                    (size === "lg" || size === "xl") && "brand-rainbow-live",
+                    MASK_CLASSES,
+                    sizeClasses[size],
+                    className,
+                )}
+                {...a11y}
+            />
+        )
+    }
+
     return (
         <svg
             viewBox="0 0 101 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className={cn(
-                "w-auto text-primary-accent dark:text-foreground",
-                sizeClasses[size],
-                className,
-            )}
-            // `applicationName` no metadata é "Finance", e é o que o desenho
-            // escreve. "Finance App" seria anunciar uma palavra que não está lá.
-            role={ariaHidden ? undefined : "img"}
-            aria-label={ariaHidden ? undefined : "Finance"}
-            aria-hidden={ariaHidden || undefined}
+            className={cn("w-auto", sizeClasses[size], className)}
+            {...a11y}
         >
             <path d={WORDMARK_PATH} fill="currentColor" />
         </svg>

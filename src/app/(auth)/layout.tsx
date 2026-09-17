@@ -11,21 +11,25 @@ import { AuthSignedInRedirect } from "@/components/layout/auth-signed-in-redirec
  *   entrega, e o que estas quatro telas eram.
  *
  * OWN-WORLD
- *   Campo de `--primary` ocupando ~45% da largura no desktop, com grão e
- *   vinheta (`@utility brand-field`, que também inverte a paleta local);
- *   coluna de formulário sobre `--background`, **sem cartão**; controles no
- *   degrau `xl`; título em `.page-title` (Ledger).
+ *   Campo de marca ocupando ~45% da largura no desktop: um **cartão** de
+ *   cantos arredondados com o arco-íris da marca, grão pesado e vinheta para o
+ *   preto (`@utility brand-field`), e na frente uma pilha de cartões do
+ *   próprio produto; coluna de formulário sobre `--background`, **sem
+ *   cartão**; controles no degrau `xl`; título em `.page-title` (Ledger).
+ *   A marca é preta e branca; o arco-íris é o único acento, e mora só nela.
  *
  * STORY
  *   "Este app junta carteira, cartões, contas a pagar e assinaturas" → "entro
  *   com e-mail e senha" → Painel.
  *
  * FIRST VIEWPORT
- *   Esquerda: wordmark no topo do campo verde, quatro linhas no centro com o
- *   nome e o número de cada área, uma frase de fecho embaixo. Direita: título,
- *   uma linha de apoio, os campos, botão primário de largura total, uma linha
- *   de rodapé. No telefone o campo verde vira faixa de marca e o formulário
- *   ocupa o resto.
+ *   Esquerda: wordmark branco no topo do campo arco-íris; embaixo, o cartão
+ *   da carteira — saldo, três áreas com número, a frase de fecho na nota —
+ *   com duas arestas de cartão aparecendo atrás. Nenhum texto corrido sobre o
+ *   arco-íris. Direita: título, uma linha de apoio, os campos, botão primário
+ *   de largura total, uma linha de rodapé. No telefone o campo vira um cartão
+ *   de marca no topo, com a grade 2×2 dos números dentro de um cartão, e o
+ *   formulário ocupa o resto.
  *
  * FORM
  *   Painel dividido. Direção **fixada pelo usuário**, então o sorteio do

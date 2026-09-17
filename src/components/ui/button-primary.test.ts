@@ -114,6 +114,25 @@ describe("o primário é uma tecla", () => {
     }
   })
 
+  it("9. `brand` é a mesma tecla com o arco-íris em volta, e não pinta o próprio fundo", () => {
+    const BRAND = buttonVariants({ variant: "brand" }).split(/\s+/)
+    // Numa raiz de empilhamento o fundo do elemento pinta antes dos filhos de
+    // z negativo: um `bg-primary` aqui ficaria **na frente** do contorno.
+    expect(BRAND).toContain("isolate")
+    expect(BRAND.filter((c) => /^bg-(?!clip-)/.test(c))).toStrictEqual([])
+    // O contorno e o preenchimento vivem no `::before`; o halo, no `::after`.
+    expect(BRAND.some((c) => c.startsWith("before:[background:") && c.includes("--brand-rainbow"))).toBe(true)
+    expect(BRAND).toContain("after:bg-(image:--brand-rainbow)")
+    expect(BRAND).toContain("after:blur-md")
+    // O hover troca a variável que o pseudo lê, e o toque acompanha (regra H).
+    expect(BRAND).toContain("hover:[--brand-fill:var(--primary-hover)]")
+    expect(BRAND).toContain("active:[--brand-fill:var(--primary-hover)]")
+    expect(BRAND).toContain("hover:after:opacity-80")
+    expect(BRAND).toContain("active:after:opacity-80")
+    // O arco-íris é da marca: o `primary` não o veste.
+    expect(PRIMARIO.join(" ")).not.toContain("brand-rainbow")
+  })
+
   it("8. nenhuma tela remenda o hover do primário à mão", () => {
     const culpados = arquivosTsx(RAIZ)
       .filter((f) => !f.includes(`${join("components", "ui")}`))

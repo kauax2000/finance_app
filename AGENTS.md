@@ -284,7 +284,21 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
 
 - **Semantic colors** live in [`src/app/globals.css`](src/app/globals.css):
   `success`, `warning`, `info`, `income`, `expense`, e os pares `-muted` de cada
-  um. **O verde da marca tem dois tokens, e a escolha é pelo papel**:
+  um. **A marca é preta e branca, e a única cor dela é o arco-íris.** O
+  primário deixou de ser verde: `--primary` é a **tecla preta** no claro e a
+  tecla branca no escuro, `--primary-accent` coincide com `--foreground`, e
+  `--ring` e os `-muted` são neutros. O acento é o token de degradê
+  `--brand-rainbow` (cinco matizes em oklch — azul com duas paradas, violeta, magenta, coral, âmbar; sem verde —, luminosidade por tema; cada parada é um token `--brand-<cor>`, para a página de cores medir e o `ds:catalog` cobrar par) com o grão
+  `--brand-grain`, e ele mora **só na marca**: o wordmark e o símbolo (prop
+  `rainbow` — preenchido em todo tamanho, girando só em `lg`/`xl`), o campo de marca
+  e o `Button variant="brand"`. Arco-íris num chip, num gráfico ou num fundo
+  de cartão é a invariante 3 sendo violada com sete cores de uma vez. As
+  `@utility` são `brand-rainbow` (só o degradê; o grão é do campo) e `brand-rainbow-live` (o
+  giro de 12 s, opt-in, só nos degraus grandes); as três moram depois de
+  `no-scrollbar` pela fatia do `glass.test.ts`, e `--brand-angle` é
+  `@property` porque só variável tipada interpola. Ver `/designsystem/brand`.
+  **Os dois tokens do primário continuam existindo pelo papel**, mesmo
+  coincidindo em valor:
   **`--secondary-hover`** existe pela mesma razão que a divisão acima: um alfa
   único não serve os dois temas. `bg-secondary/80` dava 1,03:1 contra a base
   — invisível — e em direções trocadas, clareando no claro e afundando o botão
@@ -307,22 +321,23 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   contra a página exige subir a cor, e aí o texto branco sobre o preenchimento
   reprova. Por isso **`text-primary` é proibido** — compila, porque
   `--color-primary` existe, e é justamente por isso que a regra é escrita: use
-  `text-primary-accent`. Além deles: `--identity-1..6` (+ `-surface`) para distinguir pessoas,
+  `text-primary-accent`. Além deles: `--identity-1..6` para distinguir pessoas — seis **misturas pastel** de três ou quatro paradas do arco-íris em ângulos próprios, com grão fino e a tinta `--identity-foreground` escura por cima; o `Avatar` tem duas versões só, foto ou iniciais sobre o degradê, e o degradê desliza no cursor e no toque —,
   `--skeleton`, `--input-fill`, `--overlay`, a rampa `--chart-1..5` mais
   `--chart-income` / `--chart-expense`, a escala `--z-*` e os tokens de movimento
   `--duration-*` / `--ease-*`. Prefira utilitários como `bg-success-muted`,
   `text-expense-muted-foreground`, `z-(--z-sheet)` — **não** adicione classes
   cruas da paleta do Tailwind (`text-green-600`, `bg-rose-100`).
-- **O campo de marca**: `@utility brand-field` é o verde ocupando uma **região**
-  — hoje, o painel das telas de acesso. Ela traz o material (a vinheta lendo
-  `--primary-edge`, e o grão em `--brand-field-grain`, com alfa diferente por
-  tema) e **inverte a paleta local**: dentro dela, `--foreground`,
-  `--muted-foreground` e `--border` são redefinidos, e o secundário é
-  `--brand-field-muted-foreground`, um verde pálido. É isso que faz `Item`,
-  `MoneyDisplay`, `Muted` e `Caption` chegarem com a tinta certa **sem nenhum
-  `text-primary-foreground` na tela** — pintar os filhos seria reimportar a
-  paleta uma classe por vez. A posição dela no arquivo é carga estrutural:
-  `glass.test.ts` fatia o CSS de `@utility glass-material` até
+- **O campo de marca**: `@utility brand-field` é o arco-íris ocupando uma
+  **região** — hoje, o painel das telas de acesso — com grão pesado e vinheta
+  para o preto, e ele é um **cartão**: cantos arredondados, um fio por dentro
+  (`box-shadow`), margem dada por quem chama. **Nenhum texto corrido mora
+  direto sobre ele**: sete matizes não têm um contraste só, e o que se lê vive
+  em `Card`, que segue o tema. A única exceção é o wordmark, branco, que herda
+  o `color` do campo por `currentColor`. **A utility não redefine token
+  nenhum**, e isso é medido: a versão verde redefinia `--foreground` para os
+  filhos, e sobre o arco-íris esse override desceu pelo `Card` hospedado — o
+  saldo saiu branco sobre o cartão branco. A posição dela no arquivo é carga
+  estrutural: `glass.test.ts` fatia o CSS de `@utility glass-material` até
   `@utility no-scrollbar`, e uma utility nova dentro desse intervalo entra na
   fatia e reprova asserções de outro componente. As medições estão em
   `/designsystem/brand`.
@@ -505,13 +520,18 @@ tema.
 
 - **`Badge`**: `variant` (forma) + `tone` (cor) + `size` (`xs` | `sm` | `md`); as classes de chip moram no próprio `badge.tsx` e não se duplicam fora dele.
 - **`Button` — a hierarquia é uma escada, e ela desce em peso visual**:
-  `primary` preenche de verde, `secondary` preenche de cinza, `tertiary` não
-  preenche nada. **`tertiary` acende no cursor e no toque** — o par
+  `primary` preenche de preto (branco no escuro), `secondary` preenche de
+  cinza, `tertiary` não preenche nada. **`tertiary` acende no cursor e no toque** — o par
   `active:` entrou na origem na rodada 29b, porque `hover:` compila dentro de
   `@media (hover: hover)` e sem ele o degrau ficava inerte no dedo. Uma tela tem um `primary` só. Fora da escada, de propósito:
   `outline` é a exceção para quando o controle precisa de contorno próprio e
   nenhum degrau serve, `destructive` é o que não tem volta, `link` é ação que se
-  comporta como texto. **Não existe `variant="default"` nem `variant="ghost"`**
+  comporta como texto — **sublinhada sempre**, com o traço virando arco-íris no
+  cursor e no toque —, e `brand` é a tecla do `primary` com o arco-íris em
+  volta (contorno de 1px no `::before`, halo no `::after`, o botão em si sem
+  fundo, porque numa raiz de empilhamento o fundo pinta antes dos filhos de
+  `z` negativo): **um por tela**, para o CTA de marca. O arco-íris não entra
+  no `primary` porque acento em todo botão deixa de ser acento. **Não existe `variant="default"` nem `variant="ghost"`**
   — viraram `primary` e `tertiary`, para o nome dizer o degrau; os dois saíram
   do tipo, então o compilador acusa quem os escrever. **`success` e `warning`
   também saíram**: nomeavam um estado, não um peso, e nenhuma tela do app
@@ -1311,7 +1331,7 @@ tema.
   além do cursor, e em volta de um `<span>` a prévia passa a existir só para quem
   tem mouse.
 - **`Progress`**: Radix-based; pass `tone` (`default` | `success` | `warning` | `destructive`) for budget / status bars.
-- **`Avatar`**: Radix-based with `size` prop; keep `data-slot` for tests and form deferrals.
+- **`Avatar`**: Radix-based with `size` and `shape`; keep `data-slot` for tests and form deferrals. Duas versões só: `AvatarImage` (a foto) ou `AvatarFallback` (iniciais escuras sobre o degradê pastel de identidade, com grão, que desliza no hover/active). Sem vidro, sem anel. A cor da pessoa vem de `identityToneFor`, nunca de classe montada.
 - **Overlays**: `Dialog` / `Sheet` / `AlertDialog` use `bg-overlay` (not hardcoded `bg-black/10`).
 - **`DialogFooter` empilha ao contrário** (`flex-col-reverse`), para a ação
   principal ficar em cima no telefone. O antigo `SheetFooter` empilhava na

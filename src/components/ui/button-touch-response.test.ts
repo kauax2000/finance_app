@@ -89,9 +89,16 @@ describe("resposta ao toque do Button", () => {
     expect([...semPar].sort()).toStrictEqual([...PENDENTES].sort())
   })
 
-  it("4. `link` não é cobrado — ele não preenche, sublinha", () => {
+  it("4. `link` sublinha sempre, e o traço arco-íris do cursor tem o par de toque", () => {
     const classes = buttonVariants({ variant: "link" })
-    expect(classes).toContain("hover:underline")
-    expect(classes).not.toMatch(/hover:bg-/)
+    // Sublinhado fixo: com a marca preta o link tem a cor do texto, e sem o
+    // traço nada o distinguia até o cursor passar — o que no toque é nunca.
+    expect(classes).toContain(" underline ")
+    expect(classes).not.toContain("hover:underline")
+    // O traço do cursor é um `background` de 1px (decoração não aceita
+    // degradê), e por isso ele **é** cobrado pela regra H como qualquer fundo.
+    const { hover, active } = fundos(classes)
+    expect(hover).toContain("(image:--brand-rainbow)")
+    expect(active).toContain("(image:--brand-rainbow)")
   })
 })

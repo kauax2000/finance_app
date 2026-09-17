@@ -226,6 +226,10 @@ function readTokens(cssPath) {
     dark,
     theme,
     grupos: {
+      // As paradas do arco-íris e o material do campo de marca. `--brand-angle`
+      // e `--brand-rainbow` caem aqui também, e não têm par cobrado: um é
+      // `@property` e o outro é degradê — `precisaDePar` só cobra cor.
+      marca: group((k) => /^--brand-/.test(k)),
       superficie: group(
         (k) =>
           /^--(background|foreground|card|popover|muted|accent|secondary|primary|border|input|ring|skeleton|overlay)/.test(

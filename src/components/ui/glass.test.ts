@@ -268,14 +268,9 @@ describe("a superfície de vidro", () => {
         ).replace(/\/\*[\s\S]*?\*\//g, " ")
         expect(regua).toMatch(/glassRoundSurfaceClassName\s*=\s*"[^"]*\bglass-round\b/)
 
-        // O `Avatar` o veste **por forma**: num `shape="rounded"` os cantos
-        // existem e o aro linear continua certo.
-        const avatar = readFileSync(
-            join(process.cwd(), "src/components/ui/avatar.tsx"),
-            "utf8"
-        ).replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/.*$/gm, "$1")
-        expect(avatar).toContain("glassRoundSurfaceClassName")
-        expect(avatar).toMatch(/=== "circle"/)
+        // O `Avatar` já o vestiu por forma; hoje ele não tem modo de vidro
+        // (duas versões: foto, ou iniciais sobre degradê de marca). Quem veste
+        // o cônico por forma é o marcador da `Timeline`.
     })
 
     it("23. as duas réguas vestem o mesmo material do iOS, cada uma no seu token", () => {
@@ -592,7 +587,6 @@ describe("a superfície de vidro", () => {
          * `Button` reprovar quatro vezes na tela.
          */
         const COM_MODO = [
-            "avatar",
             "color-tile",
             "tabs",
             "theme-toggle",
@@ -613,10 +607,9 @@ describe("a superfície de vidro", () => {
             expect(base(nome)).toMatch(/\bglass\??:/)
         }
 
-        // 3. A identidade não entra na tabela semântica: identidade distingue
-        //    pessoas, tom significa estado, e a régua separa as duas famílias.
-        expect(base("avatar")).toContain("GLASS_IDENTITY_TONES")
-        expect(base("avatar")).not.toContain("GLASS_TONES")
+        // 3. (A identidade não entrava na tabela semântica: o avatar de vidro
+        //    saiu, e com ele a tabela de identidade. Fica a régua: identidade
+        //    distingue pessoas, tom significa estado.)
 
         // 4. **A asserção que prova que a absorção é eixo.** Onde o eixo
         //    dispensa o neutralizador, ele não pode existir: nestes quatro, a

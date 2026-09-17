@@ -306,8 +306,9 @@ export function IdentityDiscs({
           <span
             key={item.surface}
             className="flex size-12 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
+            // `backgroundImage`: a identidade é um degradê, não uma cor.
             style={{
-              backgroundColor: `var(${item.surface})`,
+              backgroundImage: `var(${item.surface})`,
               color: `var(${item.onToken})`,
             }}
           >

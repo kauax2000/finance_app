@@ -83,18 +83,7 @@
   --color-input-fill: var(--input-fill);
   --color-chart-income: var(--chart-income);
   --color-chart-expense: var(--chart-expense);
-  --color-identity-1: var(--identity-1);
-  --color-identity-2: var(--identity-2);
-  --color-identity-3: var(--identity-3);
-  --color-identity-4: var(--identity-4);
-  --color-identity-5: var(--identity-5);
-  --color-identity-6: var(--identity-6);
-  --color-identity-1-surface: var(--identity-1-surface);
-  --color-identity-2-surface: var(--identity-2-surface);
-  --color-identity-3-surface: var(--identity-3-surface);
-  --color-identity-4-surface: var(--identity-4-surface);
-  --color-identity-5-surface: var(--identity-5-surface);
-  --color-identity-6-surface: var(--identity-6-surface);
+  --color-identity-foreground: var(--identity-foreground);
   --shadow-xs: var(--shadow-xs-value);
   --shadow-sm: var(--shadow-sm-value);
   --shadow-md: var(--shadow-md-value);
@@ -136,133 +125,116 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.42 0.12 166);
+  /* ── A marca é preta, e a cor é o arco-íris ──────────────────────────────
+
+     O primário deixou de ser o verde da marca: ele é a **tecla preta** no
+     claro e a tecla branca no escuro, e a única cor do sistema é o arco-íris
+     neon (`--brand-rainbow`), reservado para os momentos de marca — o
+     wordmark, o campo de marca e o `Button variant="brand"`. Um acento que
+     aparece em todo botão deixa de ser acento; é por isso que `primary`
+     não o veste.
+
+     A mecânica da tecla é a da rodada 78 e não mudou: `--primary-hover` é
+     opaco e puxa na direção do rótulo (escurece no claro, onde o rótulo é
+     branco; escurece no escuro também, onde o rótulo é preto, porque lá a
+     tecla é branca), `--primary-edge` é contorno e plinto, e
+     `--primary-highlight` é o fio de luz de 1px no topo. A ordem de
+     luminosidade `edge < hover < primary` vale nos dois temas e
+     `button-primary.test.ts` a tranca.
+
+     Os dois `*-value` são a sombra inteira da tecla num token só, lido por
+     `shadow-(…)` e **nunca** por `inset-shadow-(…)`, que prefixa `inset`
+     e produz `inset inset …` — inválido, e uma camada inválida derruba a
+     cadeia inteira, anel de foco incluído (medido: `box-shadow: none`). */
+  --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
-  /* ── O primário é uma tecla ──────────────────────────────────────────────
-
-     `--primary-hover` é opaco e **escurece nos dois temas**. O hover era
-     `bg-primary/90`, e um alfa único trocava de direção por tema — clareava no
-     claro (o rótulo caía de 7,31 para 5,81) e escurecia no escuro —, além de
-     mudar de força conforme a superfície embaixo. É o defeito que
-     `--secondary-hover` consertou, com uma diferença: o contato do primário é
-     o rótulo **branco** nos dois temas, e escurecer é o único sentido que sobe
-     o contraste dele. Clarear no escuro gastaria a margem de 0,72 que o rótulo
-     tem sobre os 4,5. Medido: rótulo 9,01 no claro e 6,21 no escuro, passo
-     contra a base 1,23 e 1,19. O custo, dito: no escuro o hover fica a 2,76
-     contra `--card`; quem identifica o controle nesse estado é o rótulo.
-
-     `--primary-edge` é o contorno e o plinto; `--primary-highlight` é o fio de
-     luz do topo, por dentro, acima da faixa do texto. A elevação é **escura**
-     — contorno e plinto mais escuros que o corpo, sombra preta —, e a única
-     luz tem 1px. As quatro tentativas de vidro deste botão acenderam o corpo
-     ou a borda, e a leitura foi "botão mais claro" (a lápide está em
-     `lib/glass-classes.ts`). Se o fio reproduzir isso, ele vira `transparent`
-     aqui e no `.dark`, e o resto segura a elevação sozinho.
-
-     Os dois `*-value` são a sombra inteira da tecla — as duas internas mais a
-     `--shadow-xs` de fora — num token só, lido por `shadow-(…)`. **Não por
-     `inset-shadow-(…)`**: ele prefixa `inset` no valor, e com o `inset` que o
-     token já traz a declaração vira `inset inset …`, inválida — e uma camada
-     inválida derruba a cadeia de `box-shadow` inteira, levando junto a sombra
-     de fora e o anel de foco. Medido: `box-shadow: none`. O `var()` resolve
-     onde é declarado, por isso os dois se repetem no `.dark`. */
-  --primary-hover: oklch(0.37 0.115 166);
-  --primary-edge: oklch(0.32 0.1 166);
-  --primary-highlight: oklch(1 0 0 / 18%);
+  --primary-hover: oklch(0.145 0 0);
+  --primary-edge: oklch(0.1 0 0);
+  --primary-highlight: oklch(1 0 0 / 14%);
   --primary-shadow-value: inset 0 1px 0 0 var(--primary-highlight),
     inset 0 -1px 0 0 var(--primary-edge), var(--shadow-xs-value);
   --primary-shadow-pressed-value: inset 0 1px 2px 0 oklch(0 0 0 / 0.25);
-  /* O mesmo verde em dois papéis que se contradizem no tema escuro: `--primary`
-     preenche (precisa contrastar com texto claro por cima) e `--primary-accent`
-     é texto (precisa contrastar com a página escura por baixo). No claro os
-     dois são a mesma cor — a divisão só existe onde a física obriga. */
-  --primary-accent: oklch(0.42 0.12 166);
-  /* A marca em tinta suave, para chip e contagem — a mesma receita de
-     `success`/`info` (`0.96 0.03` claro, `0.27 0.06` escuro), no matiz 166.
-     Ela existe porque as 8 variantes do `Badge` são tintas suaves e não havia
-     nenhuma de marca: `variant="primary"` renderizava `--info-muted`, ou seja
-     azul, num sistema onde `primary` significa o verde em todo o resto. */
-  --primary-muted: oklch(0.96 0.03 166);
-  --primary-muted-foreground: oklch(0.32 0.1 166);
+  /* `--primary` preenche e é medido contra o texto em cima; `--primary-accent`
+     é a marca **sobre a página** — texto, ícone, traço. Com a marca preta os
+     dois coincidem com `--foreground` nos dois temas, mas o papel continua
+     separado: `text-primary` segue proibido, porque no escuro ele é branco
+     sobre branco assim que alguém o põe dentro de uma tecla. */
+  --primary-accent: oklch(0.145 0 0);
+  /* A tinta suave de marca, para chip e contagem: neutra, como o resto. */
+  --primary-muted: oklch(0.94 0 0);
+  --primary-muted-foreground: oklch(0.145 0 0);
 
-  /* O campo de marca: o verde ocupando uma região inteira, e não um controle.
-     Ele existe porque `--primary` chapado numa metade de tela lê como um
-     swatch gigante — a mesma cor que convence num botão de 40px vira tinta
-     quando cobre 45% da página.
+  /* ── O arco-íris ──────────────────────────────────────────────────────────
 
-     São dois materiais, e os dois moram aqui porque nenhuma tela pode
-     escrevê-los: um degradê e um `data:` numa classe de tela seriam literais,
-     e a invariante 2 os proíbe.
+     Cinco matizes em seis paradas — ciano-azul e azul, violeta, magenta,
+     coral, âmbar — num
+     `linear-gradient` cujo ângulo soma `--brand-angle`, a variável
+     registrada com `@property` (ver `@utility brand-rainbow`) para poder
+     girar. **A paleta é a do ClickUp** (rosa `#FA12E3`, roxo `#7B68EE`,
+     azul `#49CCF9`, amarelo `#FFC800`) com o coral entre o magenta e o
+     âmbar, e **sem verde**: a primeira versão tinha sete paradas com lima e
+     ciano-verde, e na tela lia como bandeira; três das quatro referências
+     (Super Agent, "Start for Free", o "Design" da Apple) param no azul de
+     um lado e no coral do outro. **Linear, e não cônico**: o cônico a partir
+     do centro foi medido na tela e lê como roda de cores, um gráfico de
+     pizza; as faixas diagonais são o que as referências chamam de neon. Num
+     linear não se repete a primeira parada no fim — isso era o fecho do giro
+     cônico, e aqui só dobrava o degradê.
 
-     A vinheta escurece **na direção de `--primary-edge`** — o token que já
-     significa "este mesmo verde, um degrau mais fundo", e que a tecla do
-     `Button` usa como plinto. Nenhuma cor nova entra no sistema por causa
-     disto. A luz vem de cima, então o topo fica limpo e o peso desce para os
-     cantos de baixo, que é onde o olho quer apoio.
+     **O azul tem duas paradas e um quarto da rampa** (0% e 24%), porque com
+     uma só ele era a ponta e o violeta o engolia a 20%: o dono viu a tela
+     e pediu "o azul mais presente". As posições são explícitas por isso —
+     azul até 24%, violeta em 42%, magenta em 60%, coral em 80%.
 
-     O grão é `feTurbulence` em `overlay`, e os três números dele são medidos,
-     não escolhidos.
+     **Cada parada é um token** (`--brand-blue` … `--brand-amber`) e o degradê
+     os lê, porque a página de cores só mede o que é cor resolvida e o
+     `ds:catalog` só cobra par do que é cor: um degradê não é medível nem
+     cobrável, seis cores são. Nenhuma tela usa as paradas soltas — arco-íris
+     fora da marca é a invariante 3 com seis cores —; elas existem para o
+     degradê e para a régua. Duas declarações, uma por tema, com as **mesmas matizes**: no
+     claro a luminosidade desce um degrau para o wordmark preenchido ler
+     sobre branco; no escuro sobe, porque neon sobre preto é luz.
 
-     **`overlay` foi comparado**: por unidade de desvio de cor ele rende mais
-     textura que `soft-light`, que `multiply` e que pintar o ruído direto
-     (`normal`) — a 8% de alfa, o direto dava σ 1,34 contra σ 4,32 do `overlay`
-     a 60%, com desvio parecido.
+     O grão é `feTurbulence` como no campo verde, mas com os três números
+     mudados, porque o pedido é grão **pesado** e a base é outra: `baseFrequency`
+     0,75 (era 0,9 — mais baixo é grão mais graúdo, o de filme, e não o de
+     sensor), `slope` 1 (era 0,6; a compressão existia para o ruído não
+     clarear um painel escuro com texto em cima, e aqui não há texto sobre
+     ele), e alfa 0,85 no claro e 0,75 no escuro.
 
-     **O `feComponentTransfer` com `slope` 0,6 não é enfeite.** `feTurbulence`
-     sai com amplitude cheia, e `overlay` sobre uma base escura amplifica só um
-     lado da curva: o painel **clareava** 10 unidades de luminância, o que come
-     exatamente a folga de contraste do tema escuro. Comprimindo o ruído para
-     60% da amplitude, o desvio cai para 3,3 e a textura continua legível.
-
-     **O alfa está dentro do SVG, e é diferente por tema**, porque a base é:
-     0,42 no claro e 0,50 no escuro. A 60% nos dois, o escuro clareava 4,2 e o
-     texto secundário caía para 4,38:1. Com 60% no claro e 45% no escuro o
-     contraste se mantém e a textura sobe.
-
-     **Os números, e o método — porque σ sem método não compara.** Desvio-padrão
-     da **luminância** (0,2126R + 0,7152G + 0,0722B) sobre um retalho de
-     220×140 sem texto do painel, na captura real a 1440×900, com a versão
-     antiga e a nova medidas no mesmo retalho e na mesma passada:
-
-       claro  2,07 → 3,21     escuro  2,38 → 3,36
-
-     Cerca de uma vez e meia, e não o triplo: uma primeira redação daqui disse
-     "triplo" comparando contra 0,96, que é a **média de RGB** — outra métrica.
-     Quem for mexer nisto remede os dois lados com a mesma fórmula antes de
-     escrever qualquer razão. */
+     **O método mudou junto, e a razão é medida.** O σ da luminância crua do
+     retalho, o método do campo verde, deu 15,26 com e sem grão: o degradê
+     varia ~15 unidades ao longo dos 220px e afoga a textura. O que se mede
+     agora é o desvio-padrão da **diferença entre pixels vizinhos** — vizinho
+     menos vizinho cancela o que é suave e sobra o que é grão. Sem grão o
+     degradê sozinho dá 0,64 nos dois temas; o script
+     `scripts/brand-grain-ab.mjs` é o método, e os números de cada variante
+     estão no comentário da `@utility brand-field`. */
+  --brand-blue: oklch(0.7 0.15 225);
+  --brand-indigo: oklch(0.56 0.21 262);
+  --brand-violet: oklch(0.55 0.22 290);
+  --brand-magenta: oklch(0.62 0.28 335);
+  --brand-coral: oklch(0.66 0.2 35);
+  --brand-amber: oklch(0.78 0.17 85);
+  --brand-rainbow: linear-gradient(
+    calc(var(--brand-angle) + 135deg),
+    var(--brand-blue) 0%,
+    var(--brand-indigo) 24%,
+    var(--brand-violet) 42%,
+    var(--brand-magenta) 60%,
+    var(--brand-coral) 80%,
+    var(--brand-amber) 100%
+  );
+  --brand-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1' intercept='0'/%3E%3CfeFuncG type='linear' slope='1' intercept='0'/%3E%3CfeFuncB type='linear' slope='1' intercept='0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.85'/%3E%3C/svg%3E");
+  --brand-grain-size: 180px 180px;
+  /* A vinheta do campo de marca escurece os cantos em direção ao preto, e não
+     a um degrau da própria cor como antes: sobre o arco-íris o preto é o que
+     dá ao wordmark branco um chão para apoiar. */
   --brand-field-vignette: radial-gradient(
     120% 100% at 50% 0%,
-    transparent 30%,
-    var(--primary-edge) 100%
+    transparent 40%,
+    oklch(0 0 0 / 0.45) 100%
   );
-  --brand-field-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='0.6' intercept='0'/%3E%3CfeFuncG type='linear' slope='0.6' intercept='0'/%3E%3CfeFuncB type='linear' slope='0.6' intercept='0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.6'/%3E%3C/svg%3E");
-  --brand-field-grain-size: 180px 180px;
-
-  /* O texto secundário **dentro** do campo de marca.
-
-     Ele não é branco com alfa, e a razão é medida: sobre o `--primary` do tema
-     escuro (0,50 de luminosidade) o **branco puro** já só alcança 5,22:1, então
-     qualquer alfa que devolva os 4,5:1 da norma tem de ficar em ~92% — e a 92%
-     o "secundário" é indistinguível do título. A hierarquia morria para a
-     norma sobreviver.
-
-     Um tom da **própria matiz** resolve os dois: medido **sobre o painel já
-     granulado** (que é a superfície real, e não o `--primary` chapado), ele dá
-     4,66:1 no escuro e 6,54:1 no claro, e o olho lê o verde pálido como outra
-     camada, não como branco apagado. A luminosidade subiu de 0,94 para 0,96
-     quando o grão ganhou amplitude: o `overlay` clareia a base, e a folga do
-     tema escuro é estreita o bastante para 0,02 decidirem entre 4,38 e 4,66. É o que o piso de craft pede para superfície colorida — tingir a
-     partir da matiz, nunca cinza.
-
-     `color-mix(in oklch, branco, verde)` foi tentado e **sai rosa**:
-     `oklch(0.985 0 0)` tem matiz 0 explícita (não `none`), então a
-     interpolação até 166 passa pelo laranja. Medido: `[240, 211, 196]`.
-
-     Um valor só nos dois temas, de propósito: o fundo dele é `--primary`, que
-     já troca. Ele está declarado nos dois blocos porque o `ds:catalog` cobra
-     par para todo token de cor, e ter o mesmo número escrito duas vezes é mais
-     honesto do que uma exceção. */
-  --brand-field-muted-foreground: oklch(0.96 0.035 166);
   /* ── A camada de chão do tema claro ──────────────────────────────────────
 
      `--secondary`, `--muted` e `--accent` são os cinzas que ficam *sobre* uma
@@ -309,7 +281,7 @@
      o campo é preenchido nos dois temas e o contorno acompanha a superfície. */
   --input: oklch(0.9 0 0);
   --input-fill: oklch(0.9 0 0);
-  --ring: oklch(0.348 0.118 166);
+  --ring: oklch(0.145 0 0);
   --success: oklch(0.542 0.14 152);
   --success-foreground: oklch(0.985 0 0);
   --success-muted: oklch(0.96 0.03 152);
@@ -365,8 +337,14 @@
 
      Uma sexta série não é um matiz novo: ela vira "Outros", em
      `--muted-foreground`. Esticar a rampa é o que produz duas fatias
-     parecidas. */
-  --chart-1: oklch(0.45 0.13 166);
+     parecidas.
+
+     A série 1 estava no matiz 166, que era o verde da marca; com a marca
+     preta ela foi para o 152 de `success`, por decisão do dono. É a única
+     série que divide matiz com um status, e divide de propósito — a
+     claridade é outra (0,45 contra 0,54), e o afastamento da série 2 (205)
+     cresceu de 39° para 53°. */
+  --chart-1: oklch(0.45 0.13 152);
   --chart-2: oklch(0.6 0.12 205);
   --chart-3: oklch(0.48 0.16 275);
   --chart-4: oklch(0.62 0.13 60);
@@ -375,37 +353,83 @@
      (fluxo de caixa, faturas), a série usa estes e não a rampa acima. */
   --chart-income: var(--income);
   --chart-expense: var(--expense);
-  /* Tons de identidade — distinguem uma pessoa de outra e nada mais. Seis
-     matizes a 60° de distância, todos com croma abaixo do menor croma de status
-     (primary, 0.118), então um avatar nunca é confundido com um estado.
-     Superfície **opaca** e não alpha: alpha só funciona enquanto nada passa por
-     baixo, e em avatares sobrepostos um vazava pelo outro.
+  /* Tons de identidade — distinguem uma pessoa de outra e nada mais. Cada um é
+     uma **mistura pastel de marca**: três ou quatro paradas do arco-íris
+     interpoladas em oklch (arco curto, para o caminho entre duas ficar dentro
+     do arco-íris e não no cinza do sRGB), num ângulo próprio, com grão fino
+     por cima e as iniciais em tinta escura. Cada identidade mistura as mesmas
+     cores de um jeito diferente — ordem e ângulo —, que é o que distingue
+     seis pessoas sem dar a nenhuma "uma cor": azul→violeta→magenta a 135°,
+     magenta→coral→âmbar a 45°, violeta→magenta→coral→âmbar a 160°,
+     âmbar→coral→magenta→índigo a 20°, azul→índigo→magenta→coral a 110°,
+     coral→magenta→violeta→azul a 200°. Pares de duas cores foram a versão
+     anterior, e o dono pediu "mais cores num avatar só".
 
-     **O par é invertido entre os temas, e isso saiu de medição.** No escuro a
-     pastilha é escura tingida com a tinta clara — 1,65 contra a placa
-     flutuante, visível. No claro a mesma receita (12% da cor misturada no
-     `--card`) dava `[230,235,229]`, e **1,10** contra a mesma placa: a pastilha
-     sumia e sobrava a letra escura flutuando sozinha, sem chip.
+     `--identity-drift-size` (160%) é o quanto o degradê é maior que a caixa
+     para poder deslizar no cursor; `--identity-grain-size` é o ladrilho do
+     grão. Os dois moram aqui porque o auditor acusa `bg-size-[…]` arbitrário
+     na peça, e com razão: medida é token.
 
-     A causa é que a receita foi calibrada contra `--card` (255) e a placa
-     flutuante é 244 — ela perde metade da separação num fundo que não é o
-     cartão. Em vez de empurrar a mistura até um cinza sujo, o claro inverte: a
-     **superfície é a cor** e a **tinta é clara**, que é como um avatar
-     preenchido se comporta em toda interface clara. `--identity-N` é a tinta e
-     `--identity-N-surface` é a pastilha nos dois temas — os nomes descrevem o
-     papel, e é o papel que se inverte, não o nome. */
-  --identity-1: oklch(0.99 0.012 20);
-  --identity-2: oklch(0.99 0.012 80);
-  --identity-3: oklch(0.99 0.012 140);
-  --identity-4: oklch(0.99 0.012 200);
-  --identity-5: oklch(0.99 0.012 260);
-  --identity-6: oklch(0.99 0.012 320);
-  --identity-1-surface: oklch(0.52 0.11 20);
-  --identity-2-surface: oklch(0.52 0.11 80);
-  --identity-3-surface: oklch(0.52 0.11 140);
-  --identity-4-surface: oklch(0.52 0.11 200);
-  --identity-5-surface: oklch(0.52 0.11 260);
-  --identity-6-surface: oklch(0.52 0.11 320);
+     **Pastel, e não saturado.** A primeira versão tinha as pontas em 0,5 de
+     luminosidade com letra branca, e o dono a devolveu na tela: "feio". A
+     referência que ele mandou é um chip difuso e claro (lavanda → rosa) com
+     grão e texto escuro, sobre preto — então as pontas subiram para 0,82 de
+     luminosidade e 0,11 de croma, e a tinta virou escura. É um valor só nos
+     dois temas, porque a referência já era sobre fundo preto: o chip pastel
+     lê sobre o cartão claro e sobre o escuro.
+
+     **O grão é próprio** (`--identity-grain`): o do campo de marca tem
+     amplitude cheia a 85% e sobre um pastel de 40px vira sal e pimenta. Este
+     é mais fino (0,9 de frequência, duas oitavas) e a 35%, em `overlay`.
+
+     Degradê e não cor, por isso nenhum `--color-identity-N` no
+     `@theme inline`: a tela o veste por `bg-(image:--identity-N)`, e a única
+     cor da família é a tinta. Os contrastes medidos estão em
+     `/designsystem/avatar`. */
+  --identity-1: linear-gradient(
+    135deg in oklch,
+    oklch(0.82 0.11 225),
+    oklch(0.82 0.11 290),
+    oklch(0.82 0.11 335)
+  );
+  --identity-2: linear-gradient(
+    45deg in oklch,
+    oklch(0.82 0.11 335),
+    oklch(0.82 0.11 35),
+    oklch(0.82 0.11 85)
+  );
+  --identity-3: linear-gradient(
+    160deg in oklch,
+    oklch(0.82 0.11 290),
+    oklch(0.82 0.11 335),
+    oklch(0.82 0.11 35),
+    oklch(0.82 0.11 85)
+  );
+  --identity-4: linear-gradient(
+    20deg in oklch,
+    oklch(0.82 0.11 85),
+    oklch(0.82 0.11 35),
+    oklch(0.82 0.11 335),
+    oklch(0.82 0.11 262)
+  );
+  --identity-5: linear-gradient(
+    110deg in oklch,
+    oklch(0.82 0.11 225),
+    oklch(0.82 0.11 262),
+    oklch(0.82 0.11 335),
+    oklch(0.82 0.11 35)
+  );
+  --identity-6: linear-gradient(
+    200deg in oklch,
+    oklch(0.82 0.11 35),
+    oklch(0.82 0.11 335),
+    oklch(0.82 0.11 290),
+    oklch(0.82 0.11 225)
+  );
+  --identity-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23g)' opacity='0.35'/%3E%3C/svg%3E");
+  --identity-foreground: oklch(0.22 0 0);
+  --identity-grain-size: 120px 120px;
+  --identity-drift-size: 160% 160%;
   /* Osso de skeleton: `muted` some em telas de baixo gamut, então é um degrau
      abaixo dele, no mesmo matiz.
 
@@ -464,7 +488,7 @@
      peso. */
   --sidebar-accent-foreground: oklch(0.145 0 0);
   --sidebar-border: oklch(0.9 0 0);
-  --sidebar-ring: oklch(0.348 0.118 166);
+  --sidebar-ring: oklch(0.145 0 0);
   /**
    * A aresta da placa flutuante — o que faz o `Sidebar variant="floating"` ler
    * como vidro em vez de retângulo pintado.
@@ -698,31 +722,48 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  /* Claro sobre escuro, com texto escuro em cima — o mesmo arranjo que
-     `success`, `warning` e `info` já usavam neste bloco. No valor anterior
-     (0.45) o token media 3,04:1 como texto sobre o fundo e 2,32:1 sobre
-     `muted`, o que reprovava `Button variant="link"`, os rótulos de categoria
-     e todo `Code` com `text-primary`. Agora mede 8,46:1 nas duas direções. */
-  --primary: oklch(0.5 0.125 166);
-  --primary-foreground: oklch(0.985 0 0);
-  --primary-hover: oklch(0.46 0.12 166);
-  --primary-edge: oklch(0.36 0.09 166);
-  --primary-highlight: oklch(1 0 0 / 22%);
+  /* A tecla branca. O rótulo é preto, então "puxar na direção do rótulo"
+     escurece o hover aqui também — e o fio de luz do topo é `transparent`,
+     porque luz branca sobre tecla branca não desenha nada (a nota do claro já
+     autorizava). A sombra de apertar é mais leve: preto a 50% sobre branco
+     lia como mancha. */
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.145 0 0);
+  --primary-hover: oklch(0.92 0 0);
+  --primary-edge: oklch(0.85 0 0);
+  --primary-highlight: transparent;
   --primary-shadow-value: inset 0 1px 0 0 var(--primary-highlight),
     inset 0 -1px 0 0 var(--primary-edge), var(--shadow-xs-value);
-  --primary-shadow-pressed-value: inset 0 1px 2px 0 oklch(0 0 0 / 0.5);
-  --primary-accent: oklch(0.66 0.13 166);
-  --primary-muted: oklch(0.27 0.06 166);
-  --primary-muted-foreground: oklch(0.88 0.06 166);
+  --primary-shadow-pressed-value: inset 0 1px 2px 0 oklch(0 0 0 / 0.18);
+  --primary-accent: oklch(0.985 0 0);
+  --primary-muted: oklch(0.269 0 0);
+  --primary-muted-foreground: oklch(0.985 0 0);
 
-  /* Ver a nota no tema claro. A vinheta troca sozinha, porque ela lê
-     `--primary-edge`; o grão é redeclarado porque o alfa é o que não atravessa
-     os temas. 45% aqui contra 60% lá: a base do escuro é mais clara (0,50), o
-     `overlay` clareia mais sobre ela, e este tema tem menos folga de contraste
-     para gastar. */
-  --brand-field-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='0.6' intercept='0'/%3E%3CfeFuncG type='linear' slope='0.6' intercept='0'/%3E%3CfeFuncB type='linear' slope='0.6' intercept='0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.45'/%3E%3C/svg%3E");
-  /* Mesmo valor do tema claro — ver a nota lá. O fundo é que troca. */
-  --brand-field-muted-foreground: oklch(0.96 0.035 166);
+  /* Ver a nota no tema claro: mesmas matizes, luminosidade um degrau acima.
+     O grão desce para 0,75 porque o `overlay` clareia mais sobre paradas
+     mais claras. A vinheta é a mesma — ela já vai para o preto. */
+  --brand-blue: oklch(0.8 0.14 220);
+  --brand-indigo: oklch(0.66 0.19 262);
+  --brand-violet: oklch(0.66 0.2 288);
+  --brand-magenta: oklch(0.72 0.28 335);
+  --brand-coral: oklch(0.75 0.18 38);
+  --brand-amber: oklch(0.88 0.17 90);
+  --brand-rainbow: linear-gradient(
+    calc(var(--brand-angle) + 135deg),
+    var(--brand-blue) 0%,
+    var(--brand-indigo) 24%,
+    var(--brand-violet) 42%,
+    var(--brand-magenta) 60%,
+    var(--brand-coral) 80%,
+    var(--brand-amber) 100%
+  );
+  --brand-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1' intercept='0'/%3E%3CfeFuncG type='linear' slope='1' intercept='0'/%3E%3CfeFuncB type='linear' slope='1' intercept='0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.75'/%3E%3C/svg%3E");
+  --brand-grain-size: 180px 180px;
+  --brand-field-vignette: radial-gradient(
+    120% 100% at 50% 0%,
+    transparent 40%,
+    oklch(0 0 0 / 0.45) 100%
+  );
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --secondary-hover: oklch(0.36 0 0);
@@ -739,7 +780,7 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 10%);
   --input-fill: oklch(1 0 0 / 15%);
-  --ring: oklch(0.72 0.13 166);
+  --ring: oklch(0.985 0 0);
   --success: oklch(0.7 0.15 152);
   --success-foreground: oklch(0.145 0 0);
   --success-muted: oklch(0.27 0.06 152);
@@ -782,27 +823,59 @@
      `--card`. A separação vence a faixa, porque a faixa é heurística sobre uma
      superfície de referência e a separação é um leitor que não consegue ler o
      gráfico. */
-  --chart-1: oklch(0.72 0.14 166);
+  --chart-1: oklch(0.72 0.14 152);
   --chart-2: oklch(0.56 0.1 220);
   --chart-3: oklch(0.63 0.18 280);
   --chart-4: oklch(0.88 0.15 85);
   --chart-5: oklch(0.8 0.16 340);
   --chart-income: var(--income);
   --chart-expense: var(--expense);
-  /* No escuro os tons de identidade sobem de claridade para ler sobre o card, e
-     a superfície vai a 18% porque 12% de uma cor clara sobre #171717 quase some. */
-  --identity-1: oklch(0.78 0.09 20);
-  --identity-2: oklch(0.78 0.09 80);
-  --identity-3: oklch(0.78 0.09 140);
-  --identity-4: oklch(0.78 0.09 200);
-  --identity-5: oklch(0.78 0.09 260);
-  --identity-6: oklch(0.78 0.09 320);
-  --identity-1-surface: color-mix(in srgb, var(--identity-1) 18%, var(--card));
-  --identity-2-surface: color-mix(in srgb, var(--identity-2) 18%, var(--card));
-  --identity-3-surface: color-mix(in srgb, var(--identity-3) 18%, var(--card));
-  --identity-4-surface: color-mix(in srgb, var(--identity-4) 18%, var(--card));
-  --identity-5-surface: color-mix(in srgb, var(--identity-5) 18%, var(--card));
-  --identity-6-surface: color-mix(in srgb, var(--identity-6) 18%, var(--card));
+  /* Ver a nota no tema claro: o mesmo chip pastel nos dois temas — a
+     referência era sobre preto. */
+  --identity-1: linear-gradient(
+    135deg in oklch,
+    oklch(0.82 0.11 225),
+    oklch(0.82 0.11 290),
+    oklch(0.82 0.11 335)
+  );
+  --identity-2: linear-gradient(
+    45deg in oklch,
+    oklch(0.82 0.11 335),
+    oklch(0.82 0.11 35),
+    oklch(0.82 0.11 85)
+  );
+  --identity-3: linear-gradient(
+    160deg in oklch,
+    oklch(0.82 0.11 290),
+    oklch(0.82 0.11 335),
+    oklch(0.82 0.11 35),
+    oklch(0.82 0.11 85)
+  );
+  --identity-4: linear-gradient(
+    20deg in oklch,
+    oklch(0.82 0.11 85),
+    oklch(0.82 0.11 35),
+    oklch(0.82 0.11 335),
+    oklch(0.82 0.11 262)
+  );
+  --identity-5: linear-gradient(
+    110deg in oklch,
+    oklch(0.82 0.11 225),
+    oklch(0.82 0.11 262),
+    oklch(0.82 0.11 335),
+    oklch(0.82 0.11 35)
+  );
+  --identity-6: linear-gradient(
+    200deg in oklch,
+    oklch(0.82 0.11 35),
+    oklch(0.82 0.11 335),
+    oklch(0.82 0.11 290),
+    oklch(0.82 0.11 225)
+  );
+  --identity-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23g)' opacity='0.35'/%3E%3C/svg%3E");
+  --identity-foreground: oklch(0.22 0 0);
+  --identity-grain-size: 120px 120px;
+  --identity-drift-size: 160% 160%;
   --skeleton: oklch(0.3 0 0);
   --shadow-xl-value: 0 24px 48px -12px oklch(0 0 0 / 0.7);
 
@@ -811,7 +884,7 @@
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.72 0.13 166);
+  --sidebar-ring: oklch(0.985 0 0);
   /* Aqui a direção se inverte: quem carrega é a **luz do topo**. Ele chegou a
      cair para 18% numa tentativa de "contraluz não tem especular" — e isso
      estava errado: o brilho da borda é o que faz a peça ler como **vidro**, e
@@ -914,8 +987,8 @@
      superfície. */
   .brand-field ::selection,
   .brand-field::selection {
-    background-color: var(--primary-foreground);
-    color: var(--primary);
+    background-color: oklch(0.985 0 0);
+    color: oklch(0.145 0 0);
   }
 
   html {
@@ -1734,59 +1807,101 @@
   }
 }
 
-/* A superfície de marca: `--primary` como **região**, com material.
+/* ── O arco-íris como material ─────────────────────────────────────────────
 
-   Ela é uma só e mora aqui pela mesma razão que `menu-classes`, `bar-classes` e
-   `field-classes` existem — a receita de uma superfície não se copia para
-   dentro de cada tela que a veste. Quem a usa hoje é o painel das telas de
-   acesso; quem a usar amanhã herda a mesma decisão.
+   Três peças, e a posição delas no arquivo é carga estrutural: `glass.test.ts`
+   fatia este CSS de `@utility glass-material` até `@utility no-scrollbar` e
+   prova que o vidro não declara `background` nem `background-blend-mode`.
+   Tudo o que é marca mora **depois** de `no-scrollbar` por isso.
 
-   **`background-blend-mode` em vez de pseudo-elementos**: um `::before` e um
-   `::after` absolutos precisariam de `isolation` e de `z-index` negativo para
-   ficarem atrás do conteúdo, e aí a superfície passaria a disputar o
-   empilhamento com quem ela contém. Duas camadas de `background-image` sobre a
-   cor não disputam nada, e liberam os dois pseudo-elementos para quem chama.
+   `--brand-angle` é registrada com `@property` porque só variável tipada
+   interpola: sem o registro, animar o `from` do `conic-gradient` salta de
+   0 a 360 sem nada no meio. `inherits: false` é o que impede um wordmark
+   girando de arrastar o botão de marca ao lado dele.
 
-   A ordem importa: a vinheta pinta **por cima** do grão (é a primeira camada),
-   então os cantos escurecem o material em vez de o material texturizar a
-   vinheta.
+   `brand-rainbow` é só o degradê, **sem grão**, e serve a duas coisas que
+   não se parecem: a máscara do wordmark (a `div` com `mask-image` do ativo)
+   e o `::before` do `Button variant="brand"`. O grão chegou a morar aqui e
+   saiu a pedido: num traço de 2 a 4px ele não é textura, é sujeira na letra.
+   O grão é do **campo** (`brand-field`), onde há área para ele ler como
+   material.
+   `brand-rainbow-live` é o movimento, e ele é opt-in: a marca respira nos
+   momentos grandes (splash, campo de marca) e fica parada na barra, onde a
+   pessoa está olhando números. `prefers-reduced-motion` já é tratado pelo
+   bloco global de `@layer base`, que encurta toda animação que não é
+   `animate-spin`/`animate-pulse` — o ângulo para onde estiver. */
+@property --brand-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
 
-   **A posição no arquivo é carga estrutural.** `glass.test.ts` fatia este CSS
-   de `@utility glass-material` até `@utility no-scrollbar` e prova que o vidro
-   não declara `background` nem `background-blend-mode`. Escrita dentro desse
-   intervalo, esta utility entrava na fatia e reprovava três asserções que
-   falam de outro componente. Ela mora depois de `no-scrollbar` por isso. */
+@keyframes brand-rotate {
+  to {
+    --brand-angle: 360deg;
+  }
+}
+
+@utility brand-rainbow {
+  background-image: var(--brand-rainbow);
+}
+
+@utility brand-rainbow-live {
+  animation: brand-rotate 12s linear infinite;
+}
+
+/* O campo de marca: o arco-íris ocupando uma **região**, com grão pesado e uma
+   vinheta para o preto nos cantos de baixo.
+
+   Ele é um cartão, e não a coluna inteira: cantos arredondados e um fio, com o
+   casco (`AuthBrandPanel`) dando a margem. **Nenhum texto corrido mora direto
+   sobre ele** — sete matizes não têm um contraste só, e o texto do painel
+   vive nos cartões que ele hospeda. A única exceção é o wordmark, branco e
+   grande, apoiado na vinheta — e ele é `currentColor`, então basta o `color`
+   do campo.
+
+   **A utility não redefine token nenhum**, e isso é medido: a primeira versão
+   redefinia `--foreground` como a do campo verde fazia, e o saldo dentro do
+   `Card` saiu branco sobre o cartão branco — `MoneyDisplay` é
+   `text-foreground`, e o override desceu pelo cartão. Pela mesma razão o fio
+   é `box-shadow` interno e não `--border`: redefinida, ela chegaria à borda
+   dos cartões hospedados.
+
+   `background-blend-mode` em vez de pseudo-elementos, pela mesma razão de
+   antes: camadas de `background-image` não disputam empilhamento com o
+   conteúdo, e deixam `::before`/`::after` livres para quem chama.
+
+   **A ordem das camadas é o grão existir ou não, e custou uma medição.** Cada
+   camada mistura com o que está **abaixo** dela, e a primeira da lista é a
+   de cima. Escrito como `vinheta, arco-íris, grão`, o grão era a camada de
+   baixo: misturava em `overlay` com a cor de fundo preta (overlay sobre
+   preto é preto) e o arco-íris opaco pintava por cima — σ de diferença entre
+   vizinhos deu 0,57 com e sem grão, idênticos. A ordem certa é `vinheta,
+   grão, arco-íris`: o grão fica sobre o degradê e é ele que o `overlay`
+   texturiza. (O mesmo valia para `brand-rainbow` enquanto ela teve grão.)
+
+   Os números, com `scripts/brand-grain-ab.mjs` (σ da diferença entre pixels
+   vizinhos, retalho de 220×140 sem texto, captura a 1440×900, animação
+   parada):
+
+     sem grão                    claro 0,64   escuro 0,64
+     campo verde (0,9 · 0,6 · 0,6/0,45)  — não comparável: outro método
+     0,75 · slope 1 · 0,85/0,75  claro 6,94   escuro 8,70   ← o token
+     0,75 · slope 1 · 1          claro 11,28  escuro 9,21   (rejeitado na paleta
+                                 de sete paradas: já lia como ruído de sinal)
+
+     Os dois primeiros números foram remedidos depois da troca para a paleta
+     de cinco paradas: o `overlay` rende conforme a luminosidade da base, e
+     a paleta escura mais clara subiu o escuro de 6,54 para 8,70. */
 @utility brand-field {
-  background-color: var(--primary);
-  background-image: var(--brand-field-vignette), var(--brand-field-grain);
-  background-size: cover, var(--brand-field-grain-size);
-  background-repeat: no-repeat, repeat;
-  background-blend-mode: normal, overlay;
-
-  /* **A superfície é invertida, e quem resolve isso é ela.**
-
-     Sem estas quatro linhas, todo componente do sistema que entra aqui chega
-     com a tinta do tema: `ItemDescription` é `Muted`, ou seja
-     `text-muted-foreground`, que é **cinza**; `MoneyDisplay tone="default"` é
-     `text-foreground`, que no tema claro é quase preto. Os dois somem sobre o
-     verde, e o conserto por fora seria um `text-primary-foreground` repetido em
-     cada filho — a tela reimportando a paleta, que é a invariante 2 sendo
-     violada uma classe por vez.
-
-     Redefinir os tokens **no contêiner** faz o contrário: `Item`,
-     `MoneyDisplay`, `Muted`, `Separator` e qualquer peça futura funcionam aqui
-     sem saber que estão sobre verde. É a mesma jogada que o `AlertAction` faz
-     com `currentColor` para servir os cinco tons com uma peça só.
-
-     O secundário é `--brand-field-muted-foreground`, um verde pálido, e não
-     branco com alfa: a medição está na nota do token. A borda continua sendo
-     alfa porque ela é traço e não texto, e `color-mix` é o caminho porque
-     `--primary-foreground` é um token — `var(--x / 22%)` não é sintaxe
-     válida. */
-  color: var(--primary-foreground);
-  --foreground: var(--primary-foreground);
-  --muted-foreground: var(--brand-field-muted-foreground);
-  --border: color-mix(in oklch, var(--primary-foreground) 22%, transparent);
+  background-color: oklch(0 0 0);
+  background-image: var(--brand-field-vignette), var(--brand-grain),
+    var(--brand-rainbow);
+  background-size: cover, var(--brand-grain-size), cover;
+  background-repeat: no-repeat, repeat, no-repeat;
+  background-blend-mode: normal, overlay, normal;
+  color: oklch(0.985 0 0);
+  box-shadow: inset 0 0 0 1px oklch(1 0 0 / 22%);
 }
 
 @utility scroll-fade-y {
