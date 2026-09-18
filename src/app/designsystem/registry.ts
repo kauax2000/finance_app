@@ -400,7 +400,7 @@ export const REGISTRY: RegistryEntry[] = [
 
   // ── Atoms ──────────────────────────────────────────────────────────────
   entry("avatar", "Avatar", "Imagem ou iniciais, em cinco tamanhos.", ui("avatar"), "Avatar, AvatarImage, AvatarFallback"),
-  entry("badge", "Badge", "Rótulo compacto de status ou contagem.", ui("badge"), "Badge"),
+  entry("badge", "Badge", "Rótulo compacto de status ou contagem.", ui("badge"), "Badge, BadgeDot"),
   entry("button", "Button", "A ação clicável.", ui("button"), "Button"),
   entry("checkbox", "Checkbox", "Escolha booleana em formulários e listas.", ui("checkbox"), "Checkbox"),
   entry("code", "Code", "Identificador literal dentro do texto.", ui("code"), "Code"),

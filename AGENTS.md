@@ -284,15 +284,31 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
 
 - **Semantic colors** live in [`src/app/globals.css`](src/app/globals.css):
   `success`, `warning`, `info`, `income`, `expense`, e os pares `-muted` de cada
-  um. **A marca é preta e branca, e a única cor dela é o arco-íris.** O
+  um. **As seis superfícies `-muted` subiram de croma na rodada 89**, porque a
+  paleta lia como apagada: o estado ia de 0,03 a 0,04 e hoje vai de 0,06 a
+  0,07; o dinheiro subiu junto, para 0,105–0,11, senão o vermelho de "falhou"
+  passaria o de "saiu dinheiro" e a **invariante 3 se inverteria**. Só a
+  superfície mudou — nenhuma tinta `-muted-foreground` se mexeu, porque é ela
+  que carrega o contraste, e mexer nos dois lados torna a medição ilegível.
+  Elas servem `Badge`, `Alert`, `StatCard`, `Timeline`, `EmptyState` e
+  `AnnouncementBar`, e quem remexer numa rampa remede em
+  `scripts/tone-contrast.mjs` — piso 4,5, pior caso medido **4,67** (o `Alert`
+  de `expense` no tema claro, que é a tinta a 85% sobre a superfície mais
+  saturada; a folga é fina, e é o que reprova primeiro se alguém subir mais). **A marca é preta e branca, e a única cor dela é o arco-íris.** O
   primário deixou de ser verde: `--primary` é a **tecla preta** no claro e a
   tecla branca no escuro, `--primary-accent` coincide com `--foreground`, e
   `--ring` e os `-muted` são neutros. O acento é o token de degradê
   `--brand-rainbow` (sete matizes em oito paradas, em oklch — teal, azul com duas paradas, violeta, magenta, coral, âmbar, lima —, luminosidade por tema; cada parada é um token `--brand-<cor>`, para a página de cores medir e o `ds:catalog` cobrar par; **o verde da marca não é o verde de estado**: a lima fica em 130 e `success`/`income`/`chart-1` em 152 — ver a rodada 84) com o grão
   `--brand-grain`, e ele mora **só na marca**: o wordmark e o símbolo (prop
   `rainbow` — preenchido em todo tamanho, girando só em `lg`/`xl`), o campo de marca
-  e o `Button variant="brand"`. Arco-íris num chip, num gráfico ou num fundo
-  de cartão é a invariante 3 sendo violada com sete cores de uma vez. As
+  e o `Button variant="brand"`, mais o `Badge variant="brand"` desde a rodada 89.
+  Arco-íris **sob texto** — num gráfico, num fundo de cartão, preenchendo um
+  chip — continua sendo a invariante 3 violada com sete cores de uma vez, e
+  sete matizes não têm um contraste só. As duas peças de marca escapam porque
+  nelas o degradê **nunca fica sob o rótulo**: ele vive num contorno de 1px
+  (`::before`, `border-box` sobre um `padding-box` chapado) e num halo borrado
+  atrás (`::after`), com o miolo preenchido pelo `primary`. Uma por tela, nas
+  duas. As
   `@utility` são `brand-rainbow` (só o degradê; o grão é do campo) e `brand-rainbow-live` (o
   giro de 12 s, opt-in, só nos degraus grandes); as três moram depois de
   `no-scrollbar` pela fatia do `glass.test.ts`, e `--brand-angle` é
@@ -518,7 +534,7 @@ tema.
 
 ### Component rules
 
-- **`Badge`**: `variant` (forma) + `tone` (cor) + `size` (`xs` | `sm` | `md`); as classes de chip moram no próprio `badge.tsx` e não se duplicam fora dele.
+- **`Badge`**: `variant` (forma) + `tone` (cor) + `size` (`xs` | `sm` | `md`); as classes de chip moram no próprio `badge.tsx` e não se duplicam fora dele. **`variant` tem quatro valores**: `soft`, `outline`, `contrast` (a pílula grave — `primary` no claro, `secondary` no escuro, **sem inverter**; ali o `tone` não pinta superfície, fica só no dot) e `brand` (o arco-íris em contorno e halo, uma por tela). **`tone` tem oito** — `info` entrou na rodada 89, e ele já era usado sem existir: duas telas escreviam `tone="neutral"` e anulavam a tinta com `tagChipInfo` por `className`. **O respiro e o corpo do ícone são do componente** (`gap-1` na base, `size-2.5` no `xs` e `size-3` nos outros), porque sete telas os escreviam à mão e uma delas usava `mr-1` por não haver `gap` nenhum; o conjunto é sempre `16/solid`. **`BadgeDot` é o ponto de estado**, com `pulse` para o que acontece agora e sem ele para o que só é relatado — a cor sai de `--badge-dot`, que o `tone` publica. Ele é `animate-ping` e **não** `animate-pulse`, de propósito: o bloco global de `prefers-reduced-motion` isenta `spin` e `pulse` do corte, e um ponto decorativo não tem a desculpa do spinner.
 - **`Button` — a hierarquia é uma escada, e ela desce em peso visual**:
   `primary` preenche de preto (branco no escuro), `secondary` preenche de
   cinza, `tertiary` não preenche nada. **`tertiary` acende no cursor e no toque** — o par

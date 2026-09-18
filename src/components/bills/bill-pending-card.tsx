@@ -160,7 +160,7 @@ export function BillPendingCard({
                         >
                             {row.kind === "virtual_cc" ? (
                                 <>
-                                    <CreditCardIcon className="mr-1 inline size-3" aria-hidden />
+                                    <CreditCardIcon aria-hidden />
                                     {pill.label}
                                 </>
                             ) : (

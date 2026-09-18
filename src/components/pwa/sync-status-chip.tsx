@@ -16,8 +16,8 @@ export function SyncStatusChip({ className }: SyncStatusChipProps) {
 
     return (
         <div className={cn("flex flex-wrap items-center gap-2", className)}>
-            <Badge tone="warning" size="sm" className="gap-1">
-                <CloudArrowUpIcon className="size-3" aria-hidden />
+            <Badge tone="warning" size="sm">
+                <CloudArrowUpIcon aria-hidden />
                 {shell.pendingSyncCount} pendente{shell.pendingSyncCount === 1 ? "" : "s"}
             </Badge>
             <Button

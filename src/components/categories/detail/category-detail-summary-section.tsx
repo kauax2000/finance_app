@@ -155,13 +155,13 @@ function MomBadge({ model }: { model: MomBadgeModel }) {
         return (
             <Badge
                 tone={model.tone}
-                className="max-w-[min(100%,7.5rem)] shrink-0 gap-1 truncate px-2 py-0.5 text-2xs font-medium tabular-nums"
+                className="max-w-[min(100%,7.5rem)] shrink-0 truncate px-2 py-0.5 text-2xs font-medium tabular-nums"
                 aria-label={model.ariaLabel}
                 title={model.ariaLabel}
                 role="status"
             >
                 <InformationCircleIcon
-                    className="hidden size-3 shrink-0 text-primary-accent md:block"
+                    className="hidden text-primary-accent md:block"
                     aria-hidden
                 />
                 <span>{model.display}</span>
@@ -177,7 +177,7 @@ function MomBadge({ model }: { model: MomBadgeModel }) {
                 aria-label={model.ariaLabel}
                 role="status"
             >
-                <MinusIcon className="hidden size-3 shrink-0 opacity-90 md:block" aria-hidden />
+                <MinusIcon className="hidden opacity-90 md:block" aria-hidden />
                 <span>{model.display}</span>
             </Badge>
         )
@@ -193,7 +193,7 @@ function MomBadge({ model }: { model: MomBadgeModel }) {
             aria-label={model.ariaLabel}
             role="status"
         >
-            <Icon className="hidden size-3 shrink-0 opacity-90 md:block" aria-hidden />
+            <Icon className="hidden opacity-90 md:block" aria-hidden />
             <span>{model.display}</span>
         </Badge>
     )

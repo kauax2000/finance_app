@@ -851,25 +851,16 @@ export function CreditCardInvoiceAnalyticsPanel({
                                             <Badge
                                                 size="sm"
                                                 tone={deltaTone(committedVsPriorDelta.direction, "expense")}
-                                                className="gap-1 shrink-0 tabular-nums"
+                                                className="shrink-0 tabular-nums"
                                                 title={committedVsPriorDelta.label}
                                                 aria-label={committedVsPriorDelta.ariaLabel}
                                             >
                                                 {committedVsPriorDelta.direction === "up" ? (
-                                                    <ArrowTrendingUpIcon
-                                                        className="size-3.5 shrink-0"
-                                                        aria-hidden
-                                                    />
+                                                    <ArrowTrendingUpIcon aria-hidden />
                                                 ) : committedVsPriorDelta.direction === "down" ? (
-                                                    <ArrowTrendingDownIcon
-                                                        className="size-3.5 shrink-0"
-                                                        aria-hidden
-                                                    />
+                                                    <ArrowTrendingDownIcon aria-hidden />
                                                 ) : (
-                                                    <MinusIcon
-                                                        className="size-3.5 shrink-0"
-                                                        aria-hidden
-                                                    />
+                                                    <MinusIcon aria-hidden />
                                                 )}
                                                 {committedVsPriorDelta.pctDisplay}
                                             </Badge>

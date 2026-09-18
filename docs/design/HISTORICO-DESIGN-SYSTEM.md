@@ -10365,3 +10365,124 @@ onde a variável é declarada, não como é lida. `glass.test.ts` fatia de
 depois. 617 testes, `tsc`, `lint` e `ds:catalog` verdes; o catálogo deixou de
 listar `--brand-rainbow` entre os tokens de marca, que é o correto — ele não
 é mais um.
+
+### Rodada 89 — os chips acendem, ganham ícone e um ponto que pulsa
+
+O dono revisou o `Badge` contra a marca nova e pediu cinco coisas de uma vez:
+uma paleta menos apagada, ícones, uma versão com o arco-íris e o halo do
+`Button`, a pílula escura com ponto de uma referência que ele enviou, e o ponto
+em duas formas — pulsando e parado.
+
+**A causa da paleta apagada estava escrita no próprio arquivo, três anos de
+decisões atrás.** O comentário de `globals.css`, sobre os tokens de dinheiro:
+
+> `/* Finance-only: stronger than generic success-muted (chips, badges, icon wells). */`
+
+O projeto já tinha concluído que **chip pede tinta mais forte** — e aplicou a
+conclusão só ao dinheiro, deixando estado para trás. O resultado, medido em
+croma de superfície no tema claro: `income`/`expense` em 0,07 e 0,055,
+`warning`/`destructive` em 0,04, `success`/`info` em 0,03, e `primary` — o tom
+**padrão** do componente — em **0,00**, cinza puro. Para comparação, as cores de
+identidade aprovadas na rodada 87 vivem em 0,10–0,12. Os chips de estado tinham
+um terço da cor.
+
+**Três colunas foram montadas e vistas antes de escolher.** HOJE · B · C, os
+dois temas empilhados, com um `Alert` de cada tom ao lado do chip — porque é ele
+o consumidor exposto: carrega parágrafo, e a tinta dele herda o tom a 85%.
+**B venceu**: estado a 0,06–0,07, dinheiro a 0,105–0,11. O C, no nível da
+identidade, ficou para o dia em que a marca pedir mais. O método é o da rodada
+84 e está em [[comparativo-visual-por-playwright]]: HTML estático gerado por
+Node, rasterizado pelo Playwright, faixas de largura cheia.
+
+**O dinheiro subiu junto, e isso foi obrigação e não gosto.** Com
+`destructive-muted` indo a 0,065 e `expense-muted` parado nos 0,055, o vermelho
+de "falhou" passaria o vermelho de "saiu dinheiro" e a **invariante 3 se
+inverteria**. A folga entre as duas famílias foi de ~0,03 para ~0,045 de croma,
+mais um degrau de luminosidade: a distinção ficou mais legível, não menos.
+
+**Só a superfície mudou.** Nenhuma tinta `-muted-foreground` se mexeu, porque é
+ela que carrega o contraste — mexer nos dois lados ao mesmo tempo torna a
+medição ilegível. `scripts/tone-contrast.mjs` é novo e mede as 24 células (6
+tons × 2 temas × 2 usos). Todas passam; **o pior caso é 4,67:1**, o `Alert` de
+`expense` no claro, com 0,17 de folga sobre o piso AA. É fina de propósito, e é
+o que reprova primeiro se alguém subir mais — está escrito no `AGENTS.md`.
+
+O método do script merece nota: ele mede **um retângulo sólido por célula, e o
+pixel do centro dele**, em vez de amostrar a letra. Num bloco chapado não há
+antisserrilhado, então o valor lido é a cor composta exata; os pixels de borda
+de um glifo são a mistura dos dois e **superestimariam** o contraste. As cores
+saem por canvas de 1×1, pela razão de sempre — `getComputedStyle` devolve
+`oklch(...)`, e parsear aqueles números como RGB foi o que fez toda razão marcar
+1,0 na primeira versão da página de cores.
+
+**O ícone não era uma feature nova; era a invariante 1 violada sete vezes.**
+`dashboard-kpi-cards` (2×), `category-detail-summary-section` (3×), o painel de
+fatura e o `sync-status-chip` já desenhavam glifo dentro do chip à mão, cada um
+com o seu `gap` e o seu corpo. A oitava, `bill-pending-card`, escrevia
+`mr-1 inline` — **porque o `Badge` não declarava `gap` nenhum**, que é o sintoma
+na forma mais crua: a tela inventando o respiro que o componente devia dar.
+Hoje o `gap-1` e o corpo por degrau (`size-2.5` no `xs`, `size-3` nos outros)
+moram na base, com o `:not([class*='size-'])` que `Button`, `Select`, `Tabs` e
+`Menubar` já usam. O conjunto é **sempre `16/solid`**: 10 a 12px cai em `size-4`
+ou menos, e a regra G do auditor não tem exceção para o `badge`.
+
+**O tom `info` já era usado sem existir.** A constante `tagChipInfo` estava em
+`badge.tsx` desde sempre, mas não havia tom para ela — então `plans` e `members`
+escreviam `tone="neutral"` e anulavam a tinta por `className`. Declarar um tom e
+sobrescrevê-lo é o buraco pedindo a peça.
+
+**Cada tom passou a publicar `--badge-dot`**, e é a única coisa que ele faz
+sozinho — a tinta continua saindo do cruzamento com a `variant`. A indireção é a
+de `--brand-fill` no `Button` e `--tl-ink` no `Timeline`, e ela **atravessa a
+variant**: por isso o ponto funciona igual nas quatro, inclusive na `contrast`,
+onde o tom não pinta superfície nenhuma.
+
+**A pílula grave não precisou de token novo.** Os dois valores que a referência
+pede já existiam: no claro `--primary` é `oklch(0.205 0 0)`, a tecla preta; no
+escuro a tecla fica branca, então ela troca para `--secondary`,
+`oklch(0.269 0 0)` — o mesmo cinza de `--muted` e `--accent`. Escura nos dois
+temas, por decisão do dono, e não invertendo com o tema. Um par `--badge-*` daria
+os mesmos dois números e **não cairia em grupo nenhum do `ds:catalog`**, cujos
+predicados são fechados por prefixo.
+
+**O ponto é `animate-ping`, e não `animate-pulse` — a razão é acessibilidade.**
+O bloco de `prefers-reduced-motion` isenta `.animate-spin` e `.animate-pulse` do
+corte, porque um spinner parado é um componente quebrado e um esqueleto parado
+não diz que está carregando. Um ponto decorativo não tem essa desculpa.
+`animate-ping` cai no seletor, então ele para sozinho — **sem nenhum
+`motion-reduce:` escrito à mão** — e o que fica é o núcleo sólido, que é o estado
+certo. O padrão do anel sobre o núcleo veio de `plans/page-client.tsx:108`, onde
+estava à mão dentro de uma rota; o `ring-2 ring-background` de lá **não** veio
+junto, porque ali ele separava o ponto do ícone atrás e num chip não há o que
+separar. Aquele uso ficou onde está: é adorno no canto de um ladrilho de 64px,
+não cabe num `Badge`.
+
+**O arco-íris no chip é a proibição do `AGENTS.md` com uma exceção nomeada.** A
+regra continua valendo para degradê **sob texto** — sete matizes não têm um
+contraste só. Aqui ele nunca fica sob o rótulo: vive num contorno de 1px
+(`::before`, `border-box` sobre `padding-box` chapado) e num halo borrado atrás
+(`::after`), com o miolo preenchido pelo `primary`. O rótulo tem exatamente o
+contraste do botão primário. Três diferenças para o `Button`, todas de escala:
+halo a `-inset-0.5` em vez de `-inset-1`, `blur-sm` em vez de `blur-md`, e
+**nenhum estado de cursor** — um badge descreve, não age, então a regra H do
+auditor nem é acionada.
+
+**O risco que não se confirmou:** oito paradas num chip de 48×22 podiam colapsar
+numa cor só. Medido a 4× de escala nos dois temas: o eixo do degradê a 135° mede
+~50px na caixa, e o contorno atravessa teal, azul, índigo, violeta, magenta,
+coral e âmbar visivelmente. A peça lê como arco-íris.
+
+**A dependência que quebra calada:** a variant de marca veste
+`brand-rainbow-image`, e **não** apenas lê `var(--brand-rainbow)`. O degradê
+desceu do `:root` na rodada 88; sem a classe, a variável não existe no elemento
+e nada pinta.
+
+**Fallout:** `globals.css` (12 tokens e dois blocos de comentário), `badge.tsx`
+(base, os dois eixos, duas variants novas e o `BadgeDot`), `docs/badge.tsx`
+(quatro seções novas, a grade de 2×7 para 3×8, e o bloco `code=` que ainda
+mostrava `<Badge>default</Badge>` — um `size` que não existe desde a rodada que
+o removeu), `registry.ts` (a `entry` anunciava só `Badge`), `AGENTS.md` (três
+parágrafos), sete telas perdendo `gap-*`/`size-3`/`mr-1`, e duas trocando o tom
+falsificado pelo real. 617 testes, `tsc` e `ds:catalog` verdes; `lint` com 0
+erros e os 65 avisos anteriores. O auditor acusa 9 achados nos arquivos
+tocados, e **os 9 existiam no HEAD** — conferidos um a um contra `git show`.

@@ -35,7 +35,7 @@ function DeltaBadge({
         return (
             <Badge
                 variant="outline" tone="neutral"
-                className="max-w-[min(100%,7.5rem)] shrink-0 gap-1 truncate px-2 py-0.5 text-2xs font-medium tabular-nums"
+                className="max-w-[min(100%,7.5rem)] shrink-0 truncate px-2 py-0.5 text-2xs font-medium tabular-nums"
                 title="Sem valor no período anterior para comparar"
             >
                 Sem base
@@ -53,11 +53,11 @@ function DeltaBadge({
         return (
             <Badge
                 variant="outline" tone="neutral"
-                className="shrink-0 gap-1 px-2 py-0.5 text-2xs font-medium tabular-nums whitespace-nowrap"
+                className="shrink-0 px-2 py-0.5 text-2xs font-medium tabular-nums whitespace-nowrap"
                 aria-label="Sem variação percentual vs. mesmo período do mês anterior"
             >
                 <MinusIcon
-                    className="hidden size-3 shrink-0 opacity-90 md:block"
+                    className="hidden opacity-90 md:block"
                     aria-hidden
                 />
                 <span>0%</span>
@@ -71,11 +71,11 @@ function DeltaBadge({
     return (
         <Badge
             tone={tone}
-            className="shrink-0 gap-1 px-2 py-0.5 text-2xs font-medium tabular-nums whitespace-nowrap"
+            className="shrink-0 px-2 py-0.5 text-2xs font-medium tabular-nums whitespace-nowrap"
             aria-label={`${display} vs. mesmo período do mês anterior`}
         >
             <Icon
-                className="hidden size-3 shrink-0 opacity-90 md:block"
+                className="hidden opacity-90 md:block"
                 aria-hidden
             />
             <span>{display}</span>

@@ -1,7 +1,14 @@
 "use client"
 
 import {
+  ArrowTrendingUpIcon,
+  CheckCircleIcon,
+  ClockIcon,
+} from "@heroicons/react/16/solid"
+
+import {
   Badge,
+  BadgeDot,
   tagChipDanger,
   tagChipExpense,
   tagChipFilterIdle,
@@ -39,8 +46,7 @@ export default function BadgeDoc() {
         description="Três degraus: 14, 18 e 22 de altura. Quem manda na altura é a entrelinha, e cada degrau declara a sua — senão xs e sm saem idênticos."
         code={`<Badge size="xs">xs</Badge>
 <Badge size="sm">sm</Badge>
-<Badge>md</Badge>
-<Badge>default</Badge>`}
+<Badge>md</Badge>`}
       >
         <Badge size="xs" tone="neutral">
           xs
@@ -63,6 +69,7 @@ export default function BadgeDoc() {
         code={`<Badge>Padrão</Badge>
 <Badge tone="neutral">Neutro</Badge>
 <Badge tone="success">Pago</Badge>
+<Badge tone="info">Em análise</Badge>
 <Badge tone="warning">Vence hoje</Badge>
 <Badge tone="destructive">Atrasado</Badge>
 <Badge tone="income">Receita</Badge>
@@ -72,6 +79,7 @@ export default function BadgeDoc() {
         <Badge>Padrão</Badge>
         <Badge tone="neutral">Neutro</Badge>
         <Badge tone="success">Pago</Badge>
+        <Badge tone="info">Em análise</Badge>
         <Badge tone="warning">Vence hoje</Badge>
         <Badge tone="destructive">Atrasado</Badge>
         <Badge tone="income">Receita</Badge>
@@ -81,13 +89,13 @@ export default function BadgeDoc() {
 
       <DocSection
         title="Os dois eixos se cruzam"
-        description="variant é a forma, tone é a cor, e os dois se combinam — inclusive contorno na cor do tom."
+        description="variant é a forma, tone é a cor, e os dois se combinam — inclusive contorno na cor do tom. Na contrast o tom não pinta a superfície: ele fica só no dot."
         code={`<Badge variant="outline" tone="success">Ativa</Badge>`}
       >
         <div className="flex flex-col gap-3">
-          {(["soft", "outline"] as const).map((v) => (
+          {(["soft", "outline", "contrast"] as const).map((v) => (
             <div key={v} className="flex flex-wrap items-center gap-2">
-              <code className="w-16 shrink-0 font-mono text-2xs text-muted-foreground">
+              <code className="w-20 shrink-0 font-mono text-2xs text-muted-foreground">
                 {v}
               </code>
               {(
@@ -95,6 +103,7 @@ export default function BadgeDoc() {
                   "primary",
                   "neutral",
                   "success",
+                  "info",
                   "warning",
                   "destructive",
                   "income",
@@ -102,6 +111,7 @@ export default function BadgeDoc() {
                 ] as const
               ).map((t) => (
                 <Badge key={t} variant={v} tone={t}>
+                  {v === "contrast" ? <BadgeDot /> : null}
                   {t}
                 </Badge>
               ))}
@@ -109,6 +119,101 @@ export default function BadgeDoc() {
           ))}
         </div>
       </DocSection>
+
+      <DocSection
+        title="Ícone"
+        description="O respiro e o corpo do glifo são do componente. Não escreva gap-1 nem size-3 na tela — e nunca mr-1, que foi o que uma tela inventou quando o Badge ainda não dava gap nenhum."
+        code={`<Badge tone="success">
+  <CheckCircleIcon />
+  Pago
+</Badge>`}
+      >
+        <Badge tone="success">
+          <CheckCircleIcon />
+          Pago
+        </Badge>
+        <Badge tone="warning">
+          <ClockIcon />
+          Vence hoje
+        </Badge>
+        <Badge tone="income" size="sm">
+          <ArrowTrendingUpIcon />
+          +12%
+        </Badge>
+        <Badge tone="neutral" size="xs">
+          <ClockIcon />
+          xs
+        </Badge>
+      </DocSection>
+
+      <DocNote title="O conjunto do ícone aqui é sempre o micro">
+        O corpo vai de 10 a 12px — <code>size-2.5</code> no <code>xs</code>, <code>size-3</code> nos outros dois —, e tudo que é <code>size-4</code> ou menor usa <code>@heroicons/react/16/solid</code>. O conjunto de 24 num chip sai com traço fino demais para sobreviver, e a regra G do auditor não tem exceção para o <code>Badge</code>.
+      </DocNote>
+
+      <DocSection
+        title="O ponto de estado"
+        description="Duas formas: pulsando, para o que está acontecendo agora, e parado, para o que só está sendo relatado. A cor sai do tone; o dot não escolhe cor nenhuma."
+        code={`<Badge variant="contrast" tone="info">
+  <BadgeDot pulse />
+  Sincronizando
+</Badge>
+
+<Badge variant="contrast" tone="success">
+  <BadgeDot />
+  Conectado
+</Badge>`}
+      >
+        <Badge variant="contrast" tone="info">
+          <BadgeDot pulse />
+          Sincronizando
+        </Badge>
+        <Badge variant="contrast" tone="success">
+          <BadgeDot />
+          Conectado
+        </Badge>
+        <Badge variant="contrast" tone="destructive">
+          <BadgeDot pulse />
+          Fora do ar
+        </Badge>
+        <Badge tone="success">
+          <BadgeDot />
+          Aberta
+        </Badge>
+        <Badge variant="outline" tone="warning">
+          <BadgeDot pulse />
+          Processando
+        </Badge>
+      </DocSection>
+
+      <DocNote title="Pulsa é animate-ping, e isso é decisão de acessibilidade">
+        O bloco global de <code>prefers-reduced-motion</code> isenta <code>animate-spin</code> e <code>animate-pulse</code> do corte — um spinner parado é um componente quebrado, e um esqueleto parado não diz que está carregando. Um ponto decorativo não tem essa desculpa, então ele usa <code>animate-ping</code>, que <strong>não</strong> é isento: para quem pede menos movimento o anel simplesmente não roda, e sobra o núcleo sólido. Nada de <code>motion-reduce:</code> escrito à mão.
+      </DocNote>
+
+      <DocNote title="A pílula grave é escura nos dois temas">
+        <code>variant=&quot;contrast&quot;</code> não inverte com o tema. No claro ela é a tecla preta do <code>primary</code>; no escuro a tecla fica branca, então a superfície troca para o cinza levantado do <code>secondary</code> — o mesmo <code>oklch(0.269 0 0)</code> de <code>muted</code> e <code>accent</code>. É o que mantém o ponto aceso contra um fundo grave nas duas leituras, que é a razão de a forma existir.
+      </DocNote>
+
+      <DocSection
+        title="A marca"
+        description="O arco-íris em contorno de 1px e num halo borrado atrás, com o miolo chapado. Uma por tela, pela mesma razão do Button: acento em todo chip deixa de ser acento."
+        code={`<Badge variant="brand">
+  <BadgeDot pulse />
+  Beta
+</Badge>`}
+      >
+        <Badge variant="brand">Beta</Badge>
+        <Badge variant="brand" size="sm">
+          Novo
+        </Badge>
+        <Badge variant="brand">
+          <CheckCircleIcon />
+          Pro
+        </Badge>
+      </DocSection>
+
+      <DocNote title="O texto não pousa no arco-íris, e é isso que torna a peça legítima">
+        Sete matizes não têm um contraste só — é por isso que o <code>AGENTS.md</code> proíbe arco-íris num chip. Aqui o degradê fica na borda de 1px e no halo; o miolo é o preenchimento chapado do <code>primary</code>, então o rótulo tem exatamente o contraste do botão primário. Arco-íris <strong>sob</strong> texto continua proibido.
+      </DocNote>
 
       <DocNote title="tone é a cor; variant é só a forma">
         O eixo de cor se chama <code>tone</code>, como no <code>Alert</code>, <code>StatCard</code>, <code>Timeline</code>, <code>Progress</code> e <code>AnnouncementBar</code>. Não misture os dois num ternário: &ldquo;ativa&rdquo; e &ldquo;inativa&rdquo; são tons, não uma cor contra um contorno.
@@ -194,14 +299,14 @@ export default function BadgeDoc() {
         rows={[
           {
             prop: "variant",
-            type: '"soft" | "outline"',
+            type: '"soft" | "outline" | "contrast" | "brand"',
             default: '"soft"',
             description:
-              "A forma: preenche a tinta suave do tom, ou desenha o contorno na cor dele.",
+              "A forma: tinta suave do tom, contorno na cor dele, a pílula grave (onde o tom fica só no dot) ou o arco-íris da marca.",
           },
           {
             prop: "tone",
-            type: '"primary" | "neutral" | "success" | "warning" | "destructive" | "income" | "expense"',
+            type: '"primary" | "neutral" | "success" | "info" | "warning" | "destructive" | "income" | "expense"',
             default: '"primary"',
             description: "A cor — o estado que o rótulo comunica.",
           },
@@ -210,7 +315,14 @@ export default function BadgeDoc() {
             type: '"xs" | "sm" | "md"',
             default: '"md"',
             description:
-              "Altura: xs 14, sm 18, md 22. xs é para contagem dentro de outro controle.",
+              "Altura: xs 14, sm 18, md 22. xs é para contagem dentro de outro controle. O degrau também decide o corpo do ícone.",
+          },
+          {
+            prop: "BadgeDot pulse",
+            type: "boolean",
+            default: "false",
+            description:
+              "O ponto pulsa em vez de ficar parado. A cor vem do tone do Badge, nunca do dot.",
           },
         ]}
       />

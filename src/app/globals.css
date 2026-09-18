@@ -280,7 +280,7 @@
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
-  --destructive-muted: oklch(0.96 0.04 27);
+  --destructive-muted: oklch(0.94 0.065 27);
   --destructive-muted-foreground: oklch(0.45 0.16 27);
   --border: oklch(0.9 0 0);
   /* Mesmo contorno do cartão. Antes `--input` era `oklch(0.66)` para a borda
@@ -289,26 +289,48 @@
   --input: oklch(0.9 0 0);
   --input-fill: oklch(0.9 0 0);
   --ring: oklch(0.145 0 0);
+  /* **A superfície `-muted` é a tinta de chip, e ela subiu na rodada 89.** O
+     croma das quatro de estado ia de 0,03 a 0,04, contra 0,10–0,12 das cores
+     de identidade: um terço da cor, e o dono leu o conjunto como apagado. A
+     causa estava escrita três linhas abaixo — o comentário `Finance-only`
+     concluiu que chip pede tinta mais forte e aplicou a conclusão **só ao
+     dinheiro**, deixando estado para trás. Hoje as duas famílias sobem juntas.
+
+     Só a **superfície** mudou; nenhuma tinta `-muted-foreground` se mexeu.
+     Mexer nos dois lados ao mesmo tempo torna a medição de contraste
+     ilegível, e é a tinta que carrega o contraste. Medido depois em
+     `scripts/tone-contrast.mjs`, piso 4,5.
+
+     Três colunas foram montadas e vistas antes de escolher (HOJE · B · C, com
+     um `Alert` de cada tom ao lado do chip, porque ele é quem carrega
+     parágrafo). **B venceu**: dobra a cor sem o alerta virar um bloco
+     colorido. O C, no nível da identidade, ficou para o dia em que a marca
+     pedir mais. */
   --success: oklch(0.542 0.14 152);
   --success-foreground: oklch(0.985 0 0);
-  --success-muted: oklch(0.96 0.03 152);
+  --success-muted: oklch(0.94 0.06 152);
   --success-muted-foreground: oklch(0.32 0.1 152);
   --warning: oklch(0.78 0.13 78);
   --warning-foreground: oklch(0.21 0 0);
-  --warning-muted: oklch(0.97 0.04 78);
+  --warning-muted: oklch(0.95 0.07 78);
   --warning-muted-foreground: oklch(0.42 0.1 78);
   --info: oklch(0.53 0.15 240);
   --info-foreground: oklch(0.985 0 0);
-  --info-muted: oklch(0.96 0.03 240);
+  --info-muted: oklch(0.94 0.06 240);
   --info-muted-foreground: oklch(0.36 0.1 240);
   --income: var(--success);
   --income-foreground: var(--success-foreground);
-  /* Finance-only: stronger than generic success-muted (chips, badges, icon wells). */
-  --income-muted: oklch(0.93 0.07 152);
+  /* **Dinheiro é mais forte que estado, e isso é a invariante 3.** O par daqui
+     subiu junto com os de estado, e não por gosto: com `destructive-muted` em
+     0,065 e `expense-muted` parado nos 0,055 de antes, o vermelho de "falhou"
+     passaria o vermelho de "saiu dinheiro" e a invariante se inverteria. A
+     folga foi de ~0,03 para ~0,045 de croma, mais um degrau de luminosidade —
+     a distinção ficou mais legível, não menos. */
+  --income-muted: oklch(0.9 0.11 152);
   --income-muted-foreground: oklch(0.34 0.14 152);
   --expense: var(--destructive);
   --expense-foreground: var(--destructive-foreground);
-  --expense-muted: oklch(0.93 0.055 27);
+  --expense-muted: oklch(0.9 0.105 27);
   --expense-muted-foreground: oklch(0.4 0.22 27);
   /* O véu do modal. Aqui o alfa **não** desce, e é medido: no claro ele é a
      única coisa que separa uma placa branca de uma página branca — a 0.4 dá
@@ -738,7 +760,7 @@
   /* Era o único `-foreground` claro deste bloco sobre um preenchimento também
      claro: media 2,77:1. Escuro, como os irmãos, mede 6,84:1. */
   --destructive-foreground: oklch(0.145 0 0);
-  --destructive-muted: oklch(0.3 0.08 27);
+  --destructive-muted: oklch(0.32 0.1 27);
   --destructive-muted-foreground: oklch(0.92 0.06 27);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 10%);
@@ -746,23 +768,23 @@
   --ring: oklch(0.985 0 0);
   --success: oklch(0.7 0.15 152);
   --success-foreground: oklch(0.145 0 0);
-  --success-muted: oklch(0.27 0.06 152);
+  --success-muted: oklch(0.3 0.09 152);
   --success-muted-foreground: oklch(0.88 0.06 152);
   --warning: oklch(0.82 0.14 78);
   --warning-foreground: oklch(0.145 0 0);
-  --warning-muted: oklch(0.3 0.06 78);
+  --warning-muted: oklch(0.33 0.09 78);
   --warning-muted-foreground: oklch(0.92 0.06 78);
   --info: oklch(0.72 0.13 240);
   --info-foreground: oklch(0.145 0 0);
-  --info-muted: oklch(0.28 0.06 240);
+  --info-muted: oklch(0.31 0.09 240);
   --info-muted-foreground: oklch(0.9 0.06 240);
   --income: var(--success);
   --income-foreground: var(--success-foreground);
-  --income-muted: oklch(0.26 0.1 152);
+  --income-muted: oklch(0.28 0.14 152);
   --income-muted-foreground: oklch(0.78 0.12 152);
   --expense: var(--destructive);
   --expense-foreground: var(--destructive-foreground);
-  --expense-muted: oklch(0.28 0.11 27);
+  --expense-muted: oklch(0.3 0.14 27);
   --expense-muted-foreground: oklch(0.82 0.13 27);
   /* Aqui ele clareia, e custa zero. Varridos os alfas, a placa de um diálogo
      (`oklch(0.145)`) contra o card velado mede 1,01 a 1,08 em **toda** a faixa

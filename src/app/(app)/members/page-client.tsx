@@ -47,8 +47,6 @@ import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
     Badge,
-    tagChipInfo,
-    tagChipSuccess,
 } from "@/components/ui/badge"
 import {
     AlertDialog,
@@ -703,11 +701,8 @@ export default function MembersPage() {
                                                             {name}
                                                         </span>
                                                         <Badge
-                                                            tone="neutral"
-                                                            className={cn(
-                                                                "shrink-0 px-1.5 py-0 text-2xs",
-                                                                isOwner ? tagChipInfo : tagChipSuccess
-                                                            )}
+                                                            tone={isOwner ? "info" : "success"}
+                                                            className="shrink-0 px-1.5 py-0 text-2xs"
                                                         >
                                                             {isOwner ? "Owner" : "Membro"}
                                                         </Badge>

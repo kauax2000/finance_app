@@ -16,7 +16,6 @@ import { SparklesIcon } from "@heroicons/react/20/solid"
 import { ReceiptPercentIcon, SparklesIcon as SparklesOutlineIcon } from "@heroicons/react/24/outline"
 import {
     Badge,
-    tagChipInfo,
     tagChipWarning,
 } from "@/components/ui/badge"
 import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
@@ -45,11 +44,8 @@ export default function PlansPage() {
                                             Gratuito
                                         </p>
                                         <Badge
-                                            tone="neutral"
-                                            className={cn(
-                                                "shrink-0 px-1.5 py-0 text-2xs",
-                                                tagChipInfo,
-                                            )}
+                                            tone="info"
+                                            className="shrink-0 px-1.5 py-0 text-2xs"
                                         >
                                             Atual
                                         </Badge>
