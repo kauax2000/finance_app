@@ -57,8 +57,17 @@ const buttonVariants = cva(
         //
         // Sem grão: numa área de 32px o grão é ruído, não textura. Sem a
         // sombra da tecla: o contorno arco-íris já é a aresta.
+        //
+        // `brand-rainbow-image` **não é redundante**, e não se apaga: ela é
+        // quem declara `--brand-rainbow` no botão. O degradê saiu do `:root`
+        // porque um `var()` dentro de uma propriedade personalizada é
+        // substituído onde ela é **declarada** — no `:root`, o
+        // `var(--brand-angle)` congelava em 0deg e o arco-íris nunca girava.
+        // Os dois pseudo-elementos herdam daqui o valor já substituído, então
+        // basta a classe no elemento. Ver `@utility brand-rainbow-image` em
+        // `globals.css`.
         brand:
-          "relative isolate text-primary-foreground [--brand-fill:var(--primary)] hover:[--brand-fill:var(--primary-hover)] active:[--brand-fill:var(--primary-hover)] aria-expanded:[--brand-fill:var(--primary-hover)] before:absolute before:-inset-px before:-z-10 before:rounded-[inherit] before:border before:border-transparent before:[background:linear-gradient(var(--brand-fill),var(--brand-fill))_padding-box,var(--brand-rainbow)_border-box] before:transition-[background] before:duration-(--duration-fast) after:absolute after:-inset-1 after:-z-20 after:rounded-[inherit] after:bg-(image:--brand-rainbow) after:opacity-50 after:blur-md after:transition-opacity after:duration-(--duration-fast) hover:after:opacity-80 active:after:opacity-80 aria-busy:disabled:opacity-100",
+          "brand-rainbow-image relative isolate text-primary-foreground [--brand-fill:var(--primary)] hover:[--brand-fill:var(--primary-hover)] active:[--brand-fill:var(--primary-hover)] aria-expanded:[--brand-fill:var(--primary-hover)] before:absolute before:-inset-px before:-z-10 before:rounded-[inherit] before:border before:border-transparent before:[background:linear-gradient(var(--brand-fill),var(--brand-fill))_padding-box,var(--brand-rainbow)_border-box] before:transition-[background] before:duration-(--duration-fast) after:absolute after:-inset-1 after:-z-20 after:rounded-[inherit] after:bg-(image:--brand-rainbow) after:opacity-50 after:blur-md after:transition-opacity after:duration-(--duration-fast) hover:after:opacity-80 active:after:opacity-80 aria-busy:disabled:opacity-100",
         // Sem borda visível — e sem o anel vazado que havia antes. O culpado
         // não era a borda transparente da base, era o `bg-clip-padding` que a
         // acompanha: ele recortava o preenchimento na caixa de padding, então o
@@ -93,7 +102,9 @@ const buttonVariants = cva(
         // no toque é nunca. No cursor e no toque o traço vira arco-íris, que é
         // um `background` de 1px no pé da caixa de conteúdo, e não um
         // `text-decoration`, porque decoração não aceita degradê.
-        link: "text-primary-accent underline underline-offset-4 decoration-1 hover:no-underline hover:bg-(image:--brand-rainbow) hover:bg-[length:100%_1px] hover:bg-bottom hover:bg-no-repeat hover:bg-clip-content hover:bg-origin-content active:no-underline active:bg-(image:--brand-rainbow) active:bg-[length:100%_1px] active:bg-bottom active:bg-no-repeat active:bg-clip-content active:bg-origin-content",
+        // `brand-rainbow-image` pela mesma razão do `brand`: ela declara
+        // `--brand-rainbow` aqui, que é o que o sublinhado de 1px lê.
+        link: "brand-rainbow-image text-primary-accent underline underline-offset-4 decoration-1 hover:no-underline hover:bg-(image:--brand-rainbow) hover:bg-[length:100%_1px] hover:bg-bottom hover:bg-no-repeat hover:bg-clip-content hover:bg-origin-content active:no-underline active:bg-(image:--brand-rainbow) active:bg-[length:100%_1px] active:bg-bottom active:bg-no-repeat active:bg-clip-content active:bg-origin-content",
       },
       // Uma escada só, de 24 a 40 em degraus de 4, e a coluna `icon-*` espelha
       // a de texto degrau a degrau: `md` casa com `icon-md`, `lg` com

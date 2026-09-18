@@ -122,9 +122,12 @@ AvatarImage.displayName = "AvatarImage"
  * cover` **não se desloca por porcentagem** (só por `px`), o que permite mover
  * uma camada de cima sem mexer no fundo; `transition-[background-position]` é
  * obrigatório, porque este projeto sobrescreve a lista padrão do Tailwind;
- * e **girar pelo ângulo do gradiente não funciona**, porque um `var()` dentro
- * de um token do `:root` é substituído lá e não no elemento que o veste — o
- * mesmo vale para `--brand-rainbow` e `--brand-angle`.
+ * e **girar pelo ângulo do gradiente não funciona** a partir do `:root`,
+ * porque um `var()` dentro de uma propriedade personalizada é substituído
+ * onde ela é **declarada** e não no elemento que a veste. `--brand-rainbow`
+ * e `--brand-angle` tinham o mesmo defeito, e a saída está na rodada 88:
+ * declarar o gradiente no próprio elemento (`@utility brand-rainbow-image`),
+ * não no `:root`. Quem repuser movimento aqui faz o mesmo.
  *
  * Sem raio próprio: quem recorta é o `overflow-hidden` da raiz. E o
  * `select-none` da raiz é o que tira o I-beam de cima das iniciais: sobre

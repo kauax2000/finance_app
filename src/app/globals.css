@@ -232,17 +232,6 @@
   --brand-coral: oklch(0.66 0.2 35);
   --brand-amber: oklch(0.78 0.17 85);
   --brand-green: oklch(0.78 0.18 130);
-  --brand-rainbow: linear-gradient(
-    calc(var(--brand-angle) + 135deg),
-    var(--brand-teal) 0%,
-    var(--brand-blue) 14%,
-    var(--brand-indigo) 32%,
-    var(--brand-violet) 46%,
-    var(--brand-magenta) 58%,
-    var(--brand-coral) 70%,
-    var(--brand-amber) 82%,
-    var(--brand-green) 100%
-  );
   --brand-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1' intercept='0'/%3E%3CfeFuncG type='linear' slope='1' intercept='0'/%3E%3CfeFuncB type='linear' slope='1' intercept='0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.85'/%3E%3C/svg%3E");
   --brand-grain-size: 180px 180px;
   /* A vinheta do campo de marca escurece os cantos em direção ao preto, e não
@@ -731,17 +720,6 @@
   --brand-coral: oklch(0.75 0.18 38);
   --brand-amber: oklch(0.88 0.17 90);
   --brand-green: oklch(0.88 0.18 130);
-  --brand-rainbow: linear-gradient(
-    calc(var(--brand-angle) + 135deg),
-    var(--brand-teal) 0%,
-    var(--brand-blue) 14%,
-    var(--brand-indigo) 32%,
-    var(--brand-violet) 46%,
-    var(--brand-magenta) 58%,
-    var(--brand-coral) 70%,
-    var(--brand-amber) 82%,
-    var(--brand-green) 100%
-  );
   --brand-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1' intercept='0'/%3E%3CfeFuncG type='linear' slope='1' intercept='0'/%3E%3CfeFuncB type='linear' slope='1' intercept='0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.75'/%3E%3C/svg%3E");
   --brand-grain-size: 180px 180px;
   --brand-field-vignette: radial-gradient(
@@ -1767,16 +1745,43 @@
    0 a 360 sem nada no meio. `inherits: false` é o que impede um wordmark
    girando de arrastar o botão de marca ao lado dele.
 
+   **O degradê é composto no elemento, e não no `:root` — a rotação depende
+   disso.** Um `var()` dentro de uma propriedade personalizada é substituído
+   **onde ela é declarada**, e não onde é usada. Enquanto `--brand-rainbow`
+   morou no `:root`, o `calc(var(--brand-angle) + 135deg)` resolvia contra o
+   `--brand-angle` de lá — o valor inicial, 0deg — e o que os descendentes
+   herdavam já era a string substituída. Animar `--brand-angle` num
+   descendente não desfazia isso: medido em `/designsystem/colors`, a
+   variável ia de 0 a 212deg enquanto o `background-image` computado ficava
+   cravado em `linear-gradient(135deg …)`. `brand-rainbow-live` girava um
+   valor que ninguém lia, e valia para `@property` com `inherits` nos dois
+   valores — é a mesma medição que o `avatar.tsx` registra na rodada 87,
+   onde ela foi escrita e o conserto ficou por fazer.
+
+   Por isso a composição mora em `brand-rainbow-image`, que **só declara a
+   variável**, e quem pinta a veste: `brand-rainbow` (fundo próprio),
+   `brand-field` (uma camada de três) e o `Button variant="brand"`, que a lê
+   nos dois pseudo-elementos — um pseudo-elemento herda o valor **já
+   substituído** do elemento de origem, então a conta acontece no botão e o
+   `::before` recebe o resultado. Uma cópia do degradê no arquivo inteiro:
+   as paradas continuam tokens por tema, e a estrutura (ângulo e
+   porcentagens) nunca foi diferente entre os dois blocos.
+
    `brand-rainbow` é só o degradê, **sem grão**, e serve a duas coisas que
    não se parecem: a máscara do wordmark (a `div` com `mask-image` do ativo)
    e o `::before` do `Button variant="brand"`. O grão chegou a morar aqui e
    saiu a pedido: num traço de 2 a 4px ele não é textura, é sujeira na letra.
    O grão é do **campo** (`brand-field`), onde há área para ele ler como
    material.
-   `brand-rainbow-live` é o movimento, e ele é opt-in: a marca respira nos
-   momentos grandes (splash, campo de marca) e fica parada na barra, onde a
-   pessoa está olhando números. `prefers-reduced-motion` já é tratado pelo
-   bloco global de `@layer base`, que encurta toda animação que não é
+   `brand-rainbow-live` é o movimento, e ele é opt-in: quem o veste hoje é o
+   lockup e o símbolo em `lg`/`xl` — o splash — e a faixa de
+   `/designsystem/colors`. **O campo de marca fica parado**: desde que a
+   composição desceu para o elemento ele *pode* girar, e a decisão foi
+   deixá-lo quieto — este parágrafo já prometeu o contrário ("a marca respira
+   nos momentos grandes (splash, campo de marca)") enquanto `brand-field`
+   nunca declarou a animação. Na barra ela também não se mexe, onde a pessoa
+   está olhando números. `prefers-reduced-motion` já é tratado pelo bloco
+   global de `@layer base`, que encurta toda animação que não é
    `animate-spin`/`animate-pulse` — o ângulo para onde estiver. */
 @property --brand-angle {
   syntax: "<angle>";
@@ -1790,7 +1795,22 @@
   }
 }
 
+@utility brand-rainbow-image {
+  --brand-rainbow: linear-gradient(
+    calc(var(--brand-angle) + 135deg),
+    var(--brand-teal) 0%,
+    var(--brand-blue) 14%,
+    var(--brand-indigo) 32%,
+    var(--brand-violet) 46%,
+    var(--brand-magenta) 58%,
+    var(--brand-coral) 70%,
+    var(--brand-amber) 82%,
+    var(--brand-green) 100%
+  );
+}
+
 @utility brand-rainbow {
+  @apply brand-rainbow-image;
   background-image: var(--brand-rainbow);
 }
 
@@ -1843,6 +1863,7 @@
      paradas mais claras — subiram o σ de 6,94/8,70 (cinco paradas) para
      9,58/9,82. O token não mudou; só a base. */
 @utility brand-field {
+  @apply brand-rainbow-image;
   background-color: oklch(0 0 0);
   background-image: var(--brand-field-vignette), var(--brand-grain),
     var(--brand-rainbow);

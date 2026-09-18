@@ -10290,3 +10290,78 @@ bloco de comentário reescrito), `avatar.tsx`, `lib/avatar.ts`, as páginas
 `avatar` e `colors` do catálogo, o `AGENTS.md` e o script novo. Nenhum teste mudou — nada no `src/`
 afirma `--identity` ou `IDENTITY_TONES`. Nenhuma rota, nenhuma jornada.
 
+
+
+### Rodada 88 — o arco-íris da marca gira de verdade, e o degradê desce do `:root`
+
+**O pedido.** Consertar o que a rodada 86 registrou e deixou de pé:
+`brand-rainbow-live` animava `--brand-angle` de 0 a 360° em 12s e o degradê
+pintado nunca se mexia.
+
+**A medição, refeita antes de tocar em nada.** Em
+`/designsystem/colors`, no elemento com `brand-rainbow-live`: `--brand-angle`
+andando de 0 a 212° enquanto `getComputedStyle(el).backgroundImage` ficava
+cravado em `linear-gradient(135deg …)`. A animação rodava desde a rodada 83
+sem desenhar nada: uma animação composta a cada frame para girar uma
+variável que a pintura não lia.
+
+**A causa é a da rodada 86, palavra por palavra.** Um `var()` dentro de uma
+propriedade personalizada é substituído **onde ela é declarada**, e não onde
+é usada. `--brand-rainbow` morava no `:root` e lia `var(--brand-angle)`: a
+substituição acontecia no `:root`, contra o valor inicial de 0deg, e o que os
+descendentes herdavam já era a string pronta. Animar a variável num
+descendente não desfaz isso, com `inherits` em qualquer um dos dois valores.
+
+**O conserto é o que a rodada 86 prescreveu: o `linear-gradient()` desce para
+o elemento.** Ele mora agora em `@utility brand-rainbow-image`, que **só
+declara a variável**, e quem pinta a veste. Escolhida contra a alternativa de
+inliná-lo só na `brand-rainbow`, que consertaria o lockup e deixaria o campo
+e o botão presos ao `:root` para sempre — e custaria uma terceira cópia da
+lista de oito paradas.
+
+**Quatro consumidores, e só um deles era óbvio.** `brand-rainbow` (fundo
+próprio: lockup, símbolo, faixa do catálogo), `brand-field` (uma camada de
+três) e o `Button` nas variantes `brand` **e** `link` — a segunda pinta um
+sublinhado de 1px com o mesmo degradê, e passaria despercebida numa busca por
+"brand". As duas do botão ganharam a classe no próprio elemento: um
+pseudo-elemento herda o valor **já substituído** de quem o originou, então a
+conta acontece no botão e o `::before` e o `::after` recebem o resultado. É por
+isso que a classe **não é redundante** e não se apaga — o comentário em
+`button.tsx` diz isso, porque ela parece sobrando.
+
+**Saldo de linhas: negativo.** O degradê era escrito duas vezes, idêntico,
+em `:root` e em `.dark` — a estrutura (ângulo e porcentagens) nunca variou
+entre os temas, só as paradas, e elas já eram tokens por tema. As duas cópias
+saíram e sobrou uma.
+
+**O campo de marca fica parado, por decisão.** Desde que a composição desceu
+para o elemento ele *pode* girar, e o dono escolheu deixá-lo quieto. O
+comentário de `globals.css` prometia o contrário havia cinco rodadas — "a
+marca respira nos momentos grandes (splash, campo de marca)" — enquanto
+`brand-field` nunca declarou a animação. O texto foi corrigido em vez de a
+promessa ser cumprida: **documentação que descreve o que o código faria é a
+mesma dívida que o código que promete o que não faz.**
+
+**Uma armadilha de medição, para quem for conferir.** O painel do navegador
+estava escondido, e **documento escondido congela animação CSS**: a primeira
+conferência na página `brand` saiu com `--brand-angle` em 0deg e
+`animationPlayState` em `running`, que lia como regressão e não era. A prova
+que não depende de visibilidade é dirigir o relógio: `el.getAnimations()[0]`
+e `currentTime` em pontos escolhidos. Medido assim, `pintado = ângulo + 135deg`
+em todos: 0→135, 90→225, 180→315, 270→405. Cuidado com um detalhe de
+serialização: a 45° a soma dá exatamente 180deg, a direção padrão, e o CSS
+**omite o ângulo** — o valor chegou, a string é que não o mostra.
+
+**Fallout:** `globals.css` (as duas declarações removidas, a `@utility`
+`brand-rainbow-image` nova, `@apply` em `brand-rainbow` e `brand-field`, e o
+bloco de comentário reescrito), `button.tsx` (as variantes `brand` e `link`),
+`avatar.tsx` (o comentário da rodada 86, que apontava o defeito como aberto),
+e as páginas `brand` e `colors` do catálogo, que chamavam `--brand-rainbow` de
+token do `:root`. **Nenhum teste mudou**: `button-primary.test.ts` e
+`button-touch-response.test.ts` afirmam as strings `--brand-rainbow` e
+`(image:--brand-rainbow)` nas variantes, e elas continuam lá — o que mudou foi
+onde a variável é declarada, não como é lida. `glass.test.ts` fatia de
+`@utility glass-material` até `no-scrollbar`, e a marca continua morando
+depois. 617 testes, `tsc`, `lint` e `ds:catalog` verdes; o catálogo deixou de
+listar `--brand-rainbow` entre os tokens de marca, que é o correto — ele não
+é mais um.
