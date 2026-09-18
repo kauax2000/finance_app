@@ -91,7 +91,7 @@ function MobileAccountMenuSlotContent({
         }
 
         return (
-            <Avatar size="xs" shape="rounded" className="shrink-0">
+            <Avatar size="xs" className="shrink-0">
                 {avatarUrl ? <AvatarImage src={avatarUrl} alt={userName} /> : null}
                 <AvatarFallback className={cn(avatarTone.surface, avatarTone.ink)}>
                     {getInitials(userName)}

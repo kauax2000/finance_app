@@ -111,7 +111,7 @@ export default function ColorsDoc() {
       <Group
         layout="flow"
         title="Marca"
-        description="A marca é preta e branca, e a única cor dela é o arco-íris: seis paradas num degradê que gira devagar, e o grão que só o campo de marca veste. Nenhuma tela usa uma parada solta."
+        description="A marca é preta e branca, e a única cor dela é o arco-íris: oito paradas num degradê que gira devagar, e o grão que só o campo de marca veste. Nenhuma tela usa uma parada solta."
       >
         <SpecimenPanel className="gap-4">
           <div className="grid gap-3 sm:grid-cols-[3fr_2fr]">
@@ -131,28 +131,32 @@ export default function ColorsDoc() {
           <Ramp
             label="As paradas"
             tokens={[
+              { token: "--brand-teal", name: "teal" },
               { token: "--brand-blue", name: "blue" },
               { token: "--brand-indigo", name: "indigo" },
               { token: "--brand-violet", name: "violet" },
               { token: "--brand-magenta", name: "magenta" },
               { token: "--brand-coral", name: "coral" },
               { token: "--brand-amber", name: "amber" },
+              { token: "--brand-green", name: "green" },
             ]}
           />
         </SpecimenPanel>
 
         <TokenGrid label="Paradas" meta="lidas pelo degradê">
+          <TokenTile name="Brand teal" token="--brand-teal" />
           <TokenTile name="Brand blue" token="--brand-blue" />
           <TokenTile name="Brand indigo" token="--brand-indigo" />
           <TokenTile name="Brand violet" token="--brand-violet" />
           <TokenTile name="Brand magenta" token="--brand-magenta" />
           <TokenTile name="Brand coral" token="--brand-coral" />
           <TokenTile name="Brand amber" token="--brand-amber" />
+          <TokenTile name="Brand green" token="--brand-green" />
         </TokenGrid>
       </Group>
 
       <DocNote title="O arco-íris mora só na marca">
-        O degradê é <code>--brand-rainbow</code>, com o ângulo em <code>@property --brand-angle</code> para girar; o grão é <code>--brand-grain</code>, e só o campo (<code>brand-field</code>) o veste — num traço de poucos pixels ele lê como sujeira. Quem o consome é o lockup, o símbolo, o campo de marca e o <code>Button variant=&quot;brand&quot;</code>. As paradas são tokens para esta página medir e o <code>ds:catalog</code> cobrar par; arco-íris num chip, num gráfico ou num fundo de cartão é a invariante 3 com seis cores de uma vez. A luminosidade das paradas desce um degrau no claro e sobe no escuro; a razão contra o cartão fica sem régua — nenhuma parada sustenta texto nem identifica peça.
+        O degradê é <code>--brand-rainbow</code>, com o ângulo em <code>@property --brand-angle</code> para girar; o grão é <code>--brand-grain</code>, e só o campo (<code>brand-field</code>) o veste — num traço de poucos pixels ele lê como sujeira. Quem o consome é o lockup, o símbolo, o campo de marca e o <code>Button variant=&quot;brand&quot;</code>. As paradas são tokens para esta página medir e o <code>ds:catalog</code> cobrar par; arco-íris num chip, num gráfico ou num fundo de cartão é a invariante 3 com oito cores de uma vez. A luminosidade das paradas desce um degrau no claro e sobe no escuro; a razão contra o cartão fica sem régua — nenhuma parada sustenta texto nem identifica peça. O verde voltou na rodada 84, nas duas pontas (teal antes do azul, lima depois do âmbar), e <strong>não é o verde de estado</strong>: <code>success</code>, <code>income</code> e <code>chart-1</code> ficam no matiz 152, a lima está em 130, mais clara e mais saturada — o chip &ldquo;Pago&rdquo; ao lado da faixa não lê como a mesma cor.
       </DocNote>
 
       <DocNote title="Popover tem a cor do card; o que os separa é a elevação">
@@ -314,7 +318,7 @@ export default function ColorsDoc() {
       <Group
         layout="flow"
         title="Identidade"
-        description="Distinguem uma pessoa da outra e nada mais: seis misturas pastel de marca — três ou quatro paradas do arco-íris interpoladas em oklch, cada uma no seu ângulo —, com grão fino e as iniciais em tinta escura por cima. Uma receita só nos dois temas, como na referência sobre preto."
+        description="Distinguem uma pessoa da outra e nada mais: seis cores chapadas, uma família cada, com as iniciais em tinta escura por cima. Uma receita só nos dois temas."
       >
         <SpecimenPanel>
           <IdentityDiscs
@@ -334,8 +338,8 @@ export default function ColorsDoc() {
         </SpecimenPanel>
       </Group>
 
-      <DocNote title="As misturas, e por que em oklch">
-        Azul→violeta→magenta (135°), magenta→coral→âmbar (45°), violeta→magenta→coral→âmbar (160°), âmbar→coral→magenta→índigo (20°), azul→índigo→magenta→coral (110°) e coral→magenta→violeta→azul (200°): as mesmas cores, em ordens e ângulos diferentes. Só o matiz vem das paradas: elas ficam em 0,82 de luminosidade e 0,11 de croma nos dois temas, pastel, com a tinta escura por cima e um grão fino próprio (<code>--identity-grain</code>, mais leve que o do campo de marca). Interpolação em <code>oklch</code> (arco curto) porque no sRGB o meio do caminho entre dois matizes distantes é cinza.
+      <DocNote title="As seis cores, e de onde elas vieram">
+        Ember, gold, grove, ocean, iris e bloom, em 0,84–0,88 de luminosidade e 0,10–0,12 de croma, com os matizes (58, 100, 175, 230, 275, 318) de 42° a 100° uns dos outros. <strong>Os valores vêm de um degradê que não existe mais</strong>: por três rodadas a identidade foi uma mancha radial, e cada cor daqui é a parada do meio daquela mancha — a que ela mostrava em maior área. <strong>Uma família por pessoa é uma inversão consciente</strong> da regra que dizia que ninguém é dono de uma cor. Como voltaram a ser cor, elas entram no <code>@theme inline</code> e a tela escreve <code>bg-identity-N</code>. Contraste medido por <code>scripts/identity-contrast.mjs</code>, pior caso 10,17:1.
       </DocNote>
 
       <DocNote title="identityToneFor traduz a cor gravada">

@@ -9949,3 +9949,344 @@ não aceita degradê —, com o par `active:` que a regra H cobra.
 antigo), assertiva 9 nova em `button-primary.test.ts`, as páginas `brand`,
 `button` e `colors` do catálogo, o `AGENTS.md` e o contrato de direção das
 telas de acesso. Nenhuma rota, nenhuma jornada.
+
+### Rodada 84 — o verde volta ao arco-íris, nas duas pontas
+
+**O pedido.** "Uma ou duas cores a mais no degradê, por exemplo verde." A
+rodada 83 tinha fechado o contrário — o verde saía de tudo, e a versão de
+sete paradas com lima e ciano-verde foi devolvida como "bandeira" —, então a
+primeira coisa foi dizer isso ao dono e perguntar. Três decisões antes de
+tocar em token: **ver antes de escolher o matiz**, porque `success`,
+`income` e `chart-1` são verdes de estado (152) e o risco real era a marca
+virar a cor de um chip; **duas paradas, uma em cada ponta** — teal antes do
+azul e verde depois do âmbar; e **as misturas de identidade entram junto**.
+
+**O comparativo não foi no catálogo.** A faixa da página `colors` gira e mede
+poucos pixels, e o dono devolveu a primeira captura: "num objeto pequeno não
+consigo ter noção". O que decidiu foi uma página descartável no scratchpad
+com as três candidatas em faixas de largura cheia, o campo com grão ao lado,
+os chips `Pago`/`Aberta`/`+ R$` de estado à direita e as três misturas de
+avatar que mudam embaixo, nos dois temas — rasterizada com o Playwright que o
+projeto já tem, porque o painel do app não renderiza `file://` (o `<script>`
+não roda, e o `url("data:…")` do grão dentro de `style="…"` quebra o atributo
+até virar `&quot;`). As candidatas: **A** menta 165 (afastada do estado),
+**B** o próprio 152, **C** lima 130. O dono escolheu a **lima**, e manteve o
+verde como acento de ponta (âmbar 82% → lima 100%) em vez de um quarto da
+rampa.
+
+**Os tokens.** `--brand-teal` (0,72/0,13/195 no claro, 0,82/0,12/195 no
+escuro) e `--brand-green` (0,78/0,18/130 e 0,88/0,18/130), nos dois temas,
+seguindo a régua das vizinhas: claro um degrau abaixo, escuro um acima. A
+rampa passou a oito paradas — teal 0, azul 14, índigo 32, violeta 46, magenta
+58, coral 70, âmbar 82, lima 100 — e a família do azul ficou com o primeiro
+terço, que era o "azul mais presente" da 83. O `ds:catalog` agrupa por
+prefixo e cobra par por valor, então as duas entraram no grupo **marca** sem
+uma linha de script. **A regra escrita mudou**: "sem verde" virou "o verde
+da marca não é o verde de estado" — a lima está 22° acima do 152, mais
+clara e mais saturada, e um chip `Pago` ao lado da faixa não lê como a mesma
+cor.
+
+**Três misturas trocaram de família.** `identity-3` virou âmbar→lima→teal
+(160°), `identity-5` teal→azul→índigo→magenta (110°) e `identity-6`
+coral→âmbar→lima→azul (200°); 1, 2 e 4 ficaram. Mesma receita (0,82 de
+luminosidade, 0,11 de croma, `in oklch`, arcos curtos crescentes). O pastel
+verde fica perto de `--income-muted` e foi olhado ao lado do chip de entrada
+no comparativo — distingue, porque o avatar é degradê e o chip é chapado.
+`IDENTITY_TONES` e `identityToneFor` não mudaram: seis entradas, dobra pelo
+comprimento.
+
+**O grão remedido.** `scripts/brand-grain-ab.mjs` sobre a paleta de oito
+paradas: **9,58 no claro e 9,82 no escuro** (eram 6,94 e 8,70 sobre cinco).
+O token do grão não mudou; a lima e o teal são as paradas mais claras e o
+`overlay` rende mais sobre elas. Sem grão, 0,63/0,61.
+
+**Fallout:** `colors`, `brand` e `avatar` do catálogo (rampa, ladrilhos e a
+prosa das misturas), o `AGENTS.md`, os comentários do `globals.css`. Nenhum
+componente, nenhum teste, nenhuma rota — `button-primary.test.ts` e
+`button-touch-response.test.ts` afirmam o nome `--brand-rainbow`, não os
+valores, e continuaram verdes.
+
+### Rodada 85 — o avatar mostrava duas cores prometendo quatro, e o quadrado saiu
+
+**O pedido.** "No avatar os degradês devem ter entre 3 a 4 cores, e remova a
+versão quadrada."
+
+**A primeira metade parecia já estar feita, e não estava.** As seis misturas
+declaravam três ou quatro paradas — a documentação dizia isso, o token dizia
+isso. Na tela, não. **O que a medição achou foi o recorte**: o fallback pinta
+o degradê a `--identity-drift-size` (160% da caixa) ancorado no canto de
+cima, então no repouso o avatar mostra 1/1,6 do degradê — e como a rampa é
+diagonal, os extremos caem nos cantos, que quase não têm área. Medido com o
+Playwright, amostrando os pixels do próprio elemento e contando o span de
+matiz visível contra o declarado:
+
+    identity-1   45° de 110       identity-4   93° de 183
+    identity-2   31° de 110       identity-5   **20° de 140**
+    identity-3   45° de 110       identity-6   47° de 190
+
+Uma varredura de recortes (160 · 140 · 125 · 110 · 100%) mostrou onde a curva
+vira: **125%** recupera a maior parte da cor e ainda deixa um quarto da caixa
+de deslocamento no cursor — 10px num avatar de 40, que era o ponto do
+movimento. A 110% o degradê aparece quase inteiro e o deslize vira 4px, que
+não se vê.
+
+**A segunda causa era a distância entre as paradas.** As misturas da rodada 84
+encadeavam vizinhas do arco-íris — `identity-5` era teal→azul→índigo→magenta,
+e teal, azul e índigo são três azuis a 30° um do outro. Duas paradas a 30° não
+leem como duas cores; leem como um degradê de uma. As seis foram redesenhadas
+com **quatro paradas e saltos em torno de 90°**: coral→lima→azul→violeta
+(135°), âmbar→teal→índigo→magenta (45°), lima→azul→magenta→coral (160°),
+teal→violeta→coral→âmbar (20°), azul→magenta→âmbar→lima (110°),
+índigo→coral→lima→teal (200°). Cada matiz aparece em duas das seis, então
+ninguém é dono de uma cor — a regra da 83 continua valendo. Todas as pernas
+andam menos de 180°, que é o que mantém o `shorter hue` do `in oklch` indo na
+direção pretendida.
+
+Remedido depois das duas mudanças: **66° a 173° de span visível**, contra os
+20° a 47° de antes.
+
+**O quadrado saiu.** `shape="rounded"` existia porque o produto desenhava
+avatar de canto arredondado e o catálogo desenhava círculo, e o prop foi a
+maneira de dizer a divergência em vez de bifurcá-la. O dono resolveu a
+divergência: retrato é redondo. O canto arredondado fica com o `ColorTile` e
+a marca de workspace, que identificam **coisa** e não pessoa — e era
+justamente o avatar compartilhando a progressão de raio do `ColorTile` que
+apagava a diferença entre as duas numa lista. Saíram a variante, os cinco
+compostos de raio, o `data-shape` e as sete chamadas com `shape="rounded"`
+(conta, membros, barra de baixo, menu de conta, lateral, e as páginas
+`sidebar` e `top-bar` do catálogo); `rounded-full` subiu para a base do `cva`.
+
+**Fallout:** `avatar.tsx`, `globals.css`, a página `avatar` do catálogo (a
+seção "Forma" e a nota do raio saíram, a fileira das seis deixou de varrer
+duas formas), a prosa do `color-tile` e do `timeline` que citavam o prop, e o
+`AGENTS.md`. Nenhum teste mudou — nenhum afirmava `shape`. Nenhuma rota,
+nenhuma jornada.
+
+### Rodada 86 — o degradê do avatar gira, e o `var()` no `:root` não obedece ao elemento
+
+**O pedido.** "A animação do hover: mantenha as mesmas cores, porém movimente
+elas, para que a animação seja as cores se movimentando internamente, não
+trocando totalmente o degradê." E: tire o cursor de texto de cima das
+iniciais.
+
+**A primeira tentativa foi a óbvia, e ela falhou calada.** O arco-íris já tem
+o mecanismo: `@property --brand-angle` somado ao ângulo do `linear-gradient()`.
+Copiei isso para a identidade — `@property --identity-angle`, cada mistura
+virando `calc(var(--identity-angle) + 160deg) in oklch`, e o fallback
+transicionando a variável no `hover:`. A variável interpolou perfeitamente
+(medido: 0 → 94,8 → 115,8 → 120°), e **o degradê não se mexeu um pixel**:
+`backgroundImage` computado seguia em `160deg`, e o diff das capturas deu
+**zero pixels diferentes**.
+
+**A causa é do CSS, e vale para todo token deste projeto.** Um `var()` dentro
+de um custom property é substituído **onde o property é declarado**, não onde
+é usado. `--identity-3` mora no `:root`, então `var(--identity-angle)` resolve
+contra o `:root` — que tem o valor inicial, 0deg — e o resultado já vai
+substituído para quem herda. Mexer na variável no elemento não desfaz a
+substituição. Testado nos dois modos de registro, `inherits: true` e `false`:
+mesmo resultado.
+
+**E isso expôs um bug antigo: a rotação do arco-íris da marca nunca
+funcionou.** `--brand-rainbow` é declarado no `:root` e lê `var(--brand-angle)`
+— exatamente o mesmo arranjo. Medido na página `/designsystem/brand`, no
+elemento com `brand-rainbow-live`: `--brand-angle` andando de 53,76° para
+129,05° enquanto o `background-image` computado ficava cravado em
+`linear-gradient(135deg`. A animação de 12 s roda desde a rodada 83 sem
+desenhar nada. **Fica registrado e não foi consertado nesta rodada** — é outro
+componente e outro pedido. O conserto é o mesmo daqui: o `linear-gradient()`
+tem de ser declarado no elemento (uma `@utility`), não num token do `:root`.
+
+**O conserto: quem gira é a camada, não o ângulo.** O degradê saiu do
+`background` do fallback e foi para um `::before` de `inset-0`, que roda **meia
+volta** no `hover:` e no `active:`; o grão desceu para o `::after`. Girar o fundo do
+próprio fallback levaria as iniciais junto, e por isso a camada é separada.
+Numa caixa redonda isso nunca descobre canto: o círculo inscrito num quadrado
+continua coberto em qualquer ângulo — e o avatar é redondo sempre desde a
+rodada 85. Medido depois: **o conjunto de matizes é idêntico** no repouso e no
+cursor, e **71,4% dos pixels mudam de lugar**. As mesmas cores, se movendo.
+
+**`IDENTITY_TONES[i].surface` passou a declarar uma variável** —
+`[--identity-surface:var(--identity-N)]` em vez de `bg-(image:--identity-N)` —,
+porque quem pinta agora é o pseudo-elemento. As 12 chamadas do projeto
+continuam iguais: o par sempre foi usado em `AvatarFallback` e em nenhum outro
+lugar. `IdentityDiscs`, no catálogo, pinta `var(--identity-N)` por estilo
+inline e não mudou — os tokens continuam degradês fixos e pintáveis.
+
+**O cursor de texto.** As iniciais são texto, então `cursor: auto` resolvia
+para `text` em cima delas. O conserto é `select-none` na raiz do `Avatar`:
+pela CSS UI 4, `auto` só vira `text` onde a seleção é permitida. Não declarar
+`cursor` é o que importa — um `cursor: default` ali quebraria o ponteiro do
+avatar dentro de um botão. Verificado: o fallback computa `cursor: auto`
+sozinho e `pointer` dentro de um pai clicável. As duas chamadas que escreviam
+`select-none` à mão (lateral e membros) perderam a razão e saíram.
+
+**Também saiu `--identity-drift-size`.** Ele existia para o degradê ser maior
+que a caixa e poder deslizar; sem deslize, o degradê cabe na caixa inteira,
+que é o que mostra a faixa de matiz mais larga.
+
+**A curva enfática estava errada aqui, e o dono viu antes de mim.** A primeira
+versão do giro usava `--ease-out` — `cubic-bezier(0.16, 1, 0.3, 1)` —, e ele
+devolveu: "a transição deve ser linear, não instantânea; se o azul está num
+canto, ele deve se mover para o outro canto". Medido na camada: a curva cobria
+**69% do giro nos primeiros 50ms** dos 300, ou seja, um salto seguido de uma
+acomodação que ninguém vê. Com `linear` os quadros ficam iguais — 0, 30, 65,
+95, 130, 160, 180 —, e o giro subiu de 120° para meia volta, para a cor
+chegar de fato ao canto oposto. **A régua que fica: a curva enfática é para o
+que *chega* (uma folha abrindo, um diálogo entrando), e não para o que
+*percorre*.** Onde o movimento é o conteúdo da animação, velocidade constante.
+
+**Fallout:** `avatar.tsx`, `lib/avatar.ts`, `globals.css`, a página `avatar` do
+catálogo e o `AGENTS.md`. Nenhum teste mudou, nenhuma rota, nenhuma jornada.
+
+### Rodada 87 — o avatar vira esfera, e a luz é que viaja
+
+**O pedido, em três mensagens.** Uma referência: três círculos que leem como
+esferas — menta→verde→azul, pêssego→laranja→vermelho,
+quase-branco→periwinkle→violeta —, "mais circulares, com sombras e efeito
+levemente 3D". Depois: "pode mudar para cores do mesmo tom para fazer os
+degradês" e "cria os degradês muito parecidos com essa referência". Por fim:
+"talvez para animação você possa fazer com que o ponto de luz que tem dentro
+se mova no hover".
+
+**Isso inverte duas decisões, e a inversão foi posta na mesa antes.** A rodada
+85 espaçou os matizes a ~90° porque vizinhas a 30° leem como uma cor só; a
+rodada 83 fechou que ninguém é dono de uma cor. A referência faz o oposto nas
+duas: **a riqueza vem da rampa de luz, não do salto de matiz**, e cada círculo
+é uma família só. Perguntado com o custo escrito, o dono escolheu a
+referência. Também escolheu que **só a luz se move** (a tinta fica parada) e
+que **não há sombra externa** — o 3D vem da rampa e do brilho.
+
+**Duas versões erradas antes da certa, e as duas pelo mesmo motivo.** A
+primeira saiu com o núcleo claro a 0,95 no meio, a ponta a 0,57 na borda e um
+especular duro: "as esferas estão bem distantes da referência, elas estão
+muito efeito 3D". **Bola de bilhar tem duas assinaturas — limbo escuro e
+ponto de luz pequeno e forte —, e eram exatamente as duas.** A segunda
+achatou a rampa para 0,92 → 0,73 e alargou a luz, e ainda estava errada:
+"ficou horrível". **O erro comum às duas era de topologia, não de grau** —
+as duas punham o claro no **meio** e o escuro na **borda**, e a referência faz
+o contrário. Ela é uma mancha de cor borrada dentro de um círculo que desbota
+para quase branco na ponta mais distante dela: *"deixe exatamente igual à
+referência, com a claridade maior nas bordas e só um ponto de luz nas cores"*.
+A rampa foi invertida — 0,68–0,76 no ponto de cor, 0,95 na borda —, a âncora
+foi para 58% 66% e a luz virou um ponto pequeno outra vez (44% da caixa, pico
+0,55), agora sobre uma base que não tem limbo escuro para ele denunciar.
+
+**As seis manchas.** Cada `--identity-N` é um `radial-gradient` de três
+paradas ancorado em 58% 66%, em `farthest-side` — sem ele a última parada
+cairia fora do disco e a borda clara nunca pintaria; com ele a borda longe da
+mancha fecha no quase-branco e a borda perto dela continua colorida, que é o
+que a referência mostra. As famílias são ember, gold, grove, ocean, iris e
+bloom; quem identifica a pessoa é o **ponto de cor** (35, 82, 200, 255, 295,
+340), de 40° a 118° um do outro, e cada família anda 25° a 50° dali até a
+borda. **Nenhuma parada encosta na parede do sRGB** — medido repintando cada
+uma com croma ×1,08. Um detalhe do método que custou uma medição: gamut por
+`getComputedStyle` **não funciona**, porque ele devolve `oklch()` de volta e a
+comparação vira entrada contra entrada — a primeira leitura acusou 18 de 18
+clipando, o que é absurdo. Só rasterizar por canvas responde, que é a mesma
+lição do `createColorCompositor()`.
+
+**O grão nasceu, engordou e morreu na mesma rodada.** Ele era fino (0,9 de
+frequência, 35%) e quase invisível; o dono pediu "grãos bem grandes, efeito
+mais de pintura", e um A/B na tela varreu 0,9, 0,5, 0,3, 0,18 e 0,1 mais o
+número de oitavas, fechando em 0,22 · 2 oitavas · 60% — em `feTurbulence` a
+frequência é o inverso do tamanho do grão, uma oitava só dá mancha lisa e três
+voltam a parecer ruído de sensor. Na mesma rodada, junto com a inversão da
+rampa, o dono pediu para tirar. Saíram `--identity-grain`,
+`--identity-grain-size` e a camada `::after` do fallback. **Fica registrado
+porque o A/B é reaproveitável**: quem for repor grão aqui já tem a escada
+medida.
+
+**O mecanismo do ponto de luz.** O `::before` empilha `--identity-spec` (um
+ponto branco a 44% da caixa) sobre a mancha em `cover`, com um
+`background-position` só para as duas. **Só o ponto obedece**, e isso é
+aritmética: uma camada em `cover` ocupa exatamente a área de posicionamento,
+então `(área − imagem) × porcentagem = 0`. Medido em Chromium, amostrando
+pixel. **Vale só para porcentagem** — um offset em `px` moveria a camada
+`cover` junto.
+
+**O movimento no cursor existiu e saiu.** O ponto viajava de `0% 0%` a
+`100% 100%` em curva `linear` — o `--ease-out` da casa cobria 69% do percurso
+nos primeiros 50ms dos 300 e lia como salto, que é a medição da rodada 86 se
+repetindo. O dono pediu para remover, e com o movimento saíram o par
+`hover:`/`active:` e o `transition-[background-position]`. **Essa classe era
+carga estrutural**, e fica registrada para quem for repor: o projeto
+sobrescreve a lista padrão de transição do Tailwind e `background-position` não
+está nela, então sem ela o ponto salta. Vale registrar também por que aquele
+deslocamento era legítimo, já que a rodada 86 rejeitara a jogada — lá quem se
+deslocava era a camada **colorida**, e o que entrava na tela era outra fatia de
+cor; aqui era a **branca**, que não tira nem põe cor nenhuma.
+
+**Parado, a posição virou uma decisão própria.** `0% 0%` deixa o ponto sobre a
+borda clara, onde ele some; de `36% 40%` em diante ele começa a lavar as
+letras. Comparadas as quatro na tela, ficou **`25% 28%`**: o ponto sobre a cor,
+acima e à esquerda da mancha. **Só o
+brilho viaja**, e isso é aritmética: uma camada em `cover` ocupa exatamente a
+área de posicionamento, então `(área − imagem) × porcentagem = 0` para
+qualquer porcentagem. Medido em Chromium, amostrando pixel — a camada `cover` a
+0% e a 100% devolve a mesma imagem, e no meio da transição a lista computada é
+`56,1% 56,7%, 50% 50%`: a primeira anda, a segunda fica. **Duas ressalvas:**
+vale só para porcentagem (um offset em `px` move a camada `cover` também), e
+a rodada 86 rejeitou exatamente esta jogada — com uma diferença que é tudo,
+**lá quem se deslocava era a camada colorida, aqui é a branca**. Mover o
+degradê traz outra fatia de cor para a tela; mover a luz por cima dele não
+tira nem põe cor nenhuma.
+
+**O contraste virou script.** `scripts/identity-contrast.mjs`, no molde do
+`brand-grain-ab.mjs`: clona o avatar real para cada família × tamanho, esconde
+o texto, captura em repouso e sob o cursor, e pega o **pixel mais escuro** da
+caixa onde as letras pousam. Amostra pixel em vez de compor analiticamente
+porque `mix-blend-overlay` não é uma pilha `source-over` — o
+`createColorCompositor()` da página de cores não modela o grão. Resultado nos
+dois temas, 36 células: **pior caso 5,71:1** contra o piso AA de 4,5. Com a
+rampa invertida a borda é a parte clara, então a restrição que a versão 3D
+criou — não desenhar nada perto da borda do disco, onde a ponta escura dava
+2,6:1 — deixou de existir.
+
+**Duas armadilhas medidas no caminho.** `before:bg-size-[52%_52%,cover]`
+reprova na regra D2 do auditor — o `\b` da regex casa `size-[` mesmo dentro de
+`bg-size-[` —, e a forma com `var(--identity-spec-size)` passa limpa; é a mesma
+razão de `--identity-grain-size` existir. E `transition-[background-position]`
+é carga estrutural: o projeto sobrescreve a lista padrão de transição do
+Tailwind, e `background-position` não está nela.
+
+**O que ficou sem verificar:** o Safari do iOS. A conta do `cover` é
+respaldada pela especificação e confirmada em Chromium, mas o app é PWA e essa
+é a engine que não dá para errar. O simulador desta máquina não subiu — o
+Xcode está instalado sem ter concluído a configuração inicial, o que exige
+abrir o Xcode uma vez. Se lá a camada `cover` se mover, a esfera desliza sob o
+brilho e o mecanismo falha visivelmente.
+
+**E no fim o degradê foi apagado.** Antes disso houve um passo intermediário:
+`AvatarFallback` ganhou `variant`, com `gradient` e `solid` convivendo, e o
+valor do chapado saiu da **parada do meio** de cada mancha — a cor que ela
+mostrava em maior área, e a luminosidade que já carregava a tinta escura sem
+folga. O ponto de cor daria um disco visivelmente mais escuro que o degradê ao
+lado; a borda daria seis discos quase brancos, indistinguíveis. Visto o par na
+tela, o dono pediu para apagar o degradê.
+
+**O que a remoção arrastou.** Os seis `--identity-N` deixaram de ser
+`radial-gradient` e passaram a ser a cor do chapado; `--identity-spec` e
+`--identity-spec-size` saíram, e com eles o `::before`, o `variant` e o `cva`
+do fallback. **A indireção por `--identity-surface` saiu junto, e a razão é
+bonita:** ela existia porque um degradê não cabe no `@theme inline` — sendo
+cor, os tokens entram lá como `--color-identity-N` e a tela volta a escrever
+`bg-identity-N`, que é a língua do resto do projeto. `IdentityDiscs`, no
+catálogo, trocou `backgroundImage` por `backgroundColor` pela mesma razão.
+`IDENTITY_TONES` continua com seis entradas e a forma `{ surface, ink }`; só o
+conteúdo de `surface` encolheu.
+
+O script de contraste voltou a uma superfície só: **36 células**, pior caso
+**10,17:1** — o chapado é bem mais folgado que o degradê, que ficava em 5,71.
+
+**Fica o registro de três medições que a remoção tornou inúteis hoje e úteis
+amanhã**, todas nesta rodada: o A/B de grão (0,9 a 0,1 de frequência, e por que
+duas oitavas), a conta de que uma camada em `background-size: cover` não se
+desloca por porcentagem (o que permitia mover a luz sem mover a tinta), e a
+razão de a claridade ter de ficar na borda e não no meio.
+
+**Fallout:** `globals.css` (os seis tokens nos dois temas, mais
+`--identity-spec`, `--identity-spec-size` e os seis `--identity-solid-N`, e o
+bloco de comentário reescrito), `avatar.tsx`, `lib/avatar.ts`, as páginas
+`avatar` e `colors` do catálogo, o `AGENTS.md` e o script novo. Nenhum teste mudou — nada no `src/`
+afirma `--identity` ou `IDENTITY_TONES`. Nenhuma rota, nenhuma jornada.
+

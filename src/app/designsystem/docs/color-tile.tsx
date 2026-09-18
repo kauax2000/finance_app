@@ -136,7 +136,7 @@ export default function ColorTileDoc() {
       </DocSection>
 
       <DocNote title="O raio cresce com a caixa">
-        8px em <code>sm</code> e <code>md</code>, 10px em <code>lg</code> — a progressão do <code>Avatar</code> com <code>shape=&quot;rounded&quot;</code>, para avatar e ladrilho do mesmo tamanho terem o mesmo canto numa lista.
+        8px em <code>sm</code> e <code>md</code>, 10px em <code>lg</code>. O <code>Avatar</code> já dividiu essa progressão, e deixou de dividir: ele é redondo sempre, porque identifica <strong>pessoa</strong>, e o ladrilho identifica coisa.
       </DocNote>
 
       <DocSection

@@ -127,7 +127,7 @@ function NavDemo() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" tooltip="Pessoal">
-              <Avatar size="xs" shape="rounded">
+              <Avatar size="xs">
                 <AvatarFallback
                   className={cn(TOM_WORKSPACE.surface, TOM_WORKSPACE.ink)}
                 >

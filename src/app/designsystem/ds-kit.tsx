@@ -285,7 +285,9 @@ export function Ramp({
  * Estes tokens não são cor de gráfico nem de estado — são o fundo de um avatar
  * com as iniciais de alguém em cima. Mostrados como faixa, a única pergunta que
  * dava para fazer era "são seis matizes diferentes?"; mostrados como disco, dá
- * para ver a pergunta que importa, que é se as iniciais se leem.
+ * para ver a pergunta que importa, que é se as iniciais se leem. É por isso que
+ * eles não viram `TokenTile`: o ladrilho mede uma cor contra uma superfície, e
+ * aqui o que importa é a tinta em cima.
  */
 export function IdentityDiscs({
   label,
@@ -306,9 +308,10 @@ export function IdentityDiscs({
           <span
             key={item.surface}
             className="flex size-12 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
-            // `backgroundImage`: a identidade é um degradê, não uma cor.
+            // A identidade voltou a ser cor na rodada 87, quando o degradê
+            // foi apagado — antes disto era `backgroundImage`.
             style={{
-              backgroundImage: `var(${item.surface})`,
+              backgroundColor: `var(${item.surface})`,
               color: `var(${item.onToken})`,
             }}
           >

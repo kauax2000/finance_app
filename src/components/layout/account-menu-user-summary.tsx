@@ -27,7 +27,7 @@ export function AccountMenuUserSummary({ className }: AccountMenuUserSummaryProp
                 className
             )}
         >
-            <Avatar size="sm" shape="rounded" className="shrink-0">
+            <Avatar size="sm" className="shrink-0">
                 {user?.user_metadata?.avatar_url ? (
                     <AvatarImage
                         src={user.user_metadata.avatar_url}

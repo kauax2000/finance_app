@@ -9,9 +9,15 @@ import { cn } from "@/lib/utils"
 
 /**
  * Duas versões, e só duas: **com foto** (a foto) e **sem foto** (as iniciais
- * em tinta escura sobre um degradê pastel de marca, com grão). O avatar já teve um modo de vidro e um
- * anel de arco-íris para a pessoa logada; os dois saíram a pedido, porque com
- * o degradê já sendo a marca eram três maneiras de dizer a mesma coisa.
+ * em tinta escura sobre a cor chapada de identidade). O avatar já teve um modo
+ * de vidro, um anel de arco-íris para a pessoa logada e, por três rodadas, um
+ * degradê com grão e ponto de luz no lugar da cor; todos saíram a pedido. A
+ * peça vai ficando mais simples a cada rodada, e é de propósito.
+ *
+ * **Uma forma só, o círculo.** O `shape="rounded"` existiu para o quadrado de
+ * canto arredondado que o produto desenhava, e saiu a pedido: retrato é
+ * redondo, e o canto arredondado é a família do `ColorTile` e da marca de
+ * workspace, que são outra coisa.
  */
 
 /**
@@ -29,7 +35,7 @@ import { cn } from "@/lib/utils"
  * removeu de todo o resto.
  */
 const avatarVariants = cva(
-  "relative flex shrink-0 overflow-hidden",
+  "relative flex shrink-0 overflow-hidden rounded-full select-none",
   {
     variants: {
       size: {
@@ -39,40 +45,9 @@ const avatarVariants = cva(
         lg: "size-12 text-base",
         xl: "size-14 text-lg",
       },
-      /**
-       * O produto sempre desenhou avatar de canto arredondado — a lateral do
-       * usuário e a lista de membros, as duas —, enquanto o catálogo mostrava
-       * círculo. Duas formas para a mesma peça, e nenhuma das duas errada:
-       * círculo é a convenção de retrato, e o quadrado arredondado é a mesma
-       * família da marca de workspace que aparece ao lado dele.
-       *
-       * O prop existe para a divergência ficar dita em vez de bifurcada. O
-       * padrão continua `circle`, que é o que os consumidores atuais do
-       * componente esperam.
-       *
-       * O raio do `rounded` mora nos compostos abaixo, e não aqui: ele **cresce
-       * com a caixa**. Cravado em `rounded-lg`, um avatar de 24px ficava quase
-       * redondo e um de 56px ficava quase reto — e a 32px ele desenhava 10px
-       * contra os 8px que o `ColorTile` desenha no mesmo tamanho, duas peças de
-       * identidade lado a lado com cantos diferentes.
-       */
-      shape: {
-        circle: "rounded-full",
-        rounded: "",
-      },
     },
-    // O raio acompanha o tamanho, na mesma progressão do `ColorTile`: `md` (8px)
-    // nas caixas pequenas, `lg` (10px) nas médias, `xl` (14px) na maior.
-    compoundVariants: [
-      { shape: "rounded", size: "xs", class: "rounded-md" },
-      { shape: "rounded", size: "sm", class: "rounded-md" },
-      { shape: "rounded", size: "md", class: "rounded-lg" },
-      { shape: "rounded", size: "lg", class: "rounded-lg" },
-      { shape: "rounded", size: "xl", class: "rounded-xl" },
-    ],
     defaultVariants: {
       size: "md",
-      shape: "circle",
     },
   }
 )
@@ -80,7 +55,6 @@ const avatarVariants = cva(
 function Avatar({
   className,
   size,
-  shape,
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Root> &
   VariantProps<typeof avatarVariants>) {
@@ -88,8 +62,7 @@ function Avatar({
     <AvatarPrimitive.Root
       data-slot="avatar"
       data-size={size ?? "md"}
-      data-shape={shape ?? "circle"}
-      className={cn(avatarVariants({ size, shape }), className)}
+      className={cn(avatarVariants({ size }), className)}
       {...props}
     />
   )
@@ -130,20 +103,33 @@ AvatarImage.displayName = "AvatarImage"
 /**
  * As iniciais, e o que se vê enquanto a foto não chega.
  *
- * **Sempre sobre um degradê pastel de marca, com grão e a tinta escura.** O padrão é a
- * primeira identidade; quem sabe qual pessoa é passa o par de
- * `identityToneFor` por `className` (`cn(tone.surface, tone.ink)`), e o
- * `bg-(image:…)` dele vence o padrão no merge.
+ * **Uma cor chapada de identidade, com a tinta escura.** O padrão é a primeira
+ * identidade; quem sabe qual pessoa é passa o par de `identityToneFor` por
+ * `className` (`cn(tone.surface, tone.ink)`), e o `bg-identity-N` dele vence o
+ * padrão no merge.
  *
- * **O degradê se move no cursor e no toque.** Ele é pintado a 160% da caixa e
- * ancorado no canto de cima; no `hover:` e no `active:` (o par que a regra H
- * cobra) a âncora vai para o canto oposto, e a transição de
- * `background-position` faz o degradê deslizar por baixo das letras. Movimento
- * reduzido: o bloco global encurta a transição, e o degradê só troca de lugar.
+ * **Isto já foi um degradê, e o que sobrou é este parágrafo.** Por três
+ * rodadas a superfície foi uma mancha radial num `::before`, com grão, com um
+ * ponto de luz e, por um tempo, com movimento no cursor; depois ganhou um
+ * `variant` para conviver com a versão chapada, e no fim o degradê foi apagado
+ * a pedido do dono. Saíram o pseudo-elemento, o `variant`, os tokens
+ * `--identity-grain*` e `--identity-spec*`, e a indireção por
+ * `--identity-surface` — que existia só porque um degradê não cabe no
+ * `@theme inline`. As cores de hoje são a parada do meio daquela mancha.
  *
- * Sem raio próprio: quem recorta é o `overflow-hidden` da raiz, e é o que faz o
- * fundo acompanhar o `shape`. Com `rounded-full` cravado aqui — como estava —,
- * um avatar de canto arredondado desenhava um círculo dentro de um quadrado.
+ * Três medições daquele tempo valem para quem for repor movimento aqui, e
+ * estão inteiras no histórico da rodada 87: uma camada em `background-size:
+ * cover` **não se desloca por porcentagem** (só por `px`), o que permite mover
+ * uma camada de cima sem mexer no fundo; `transition-[background-position]` é
+ * obrigatório, porque este projeto sobrescreve a lista padrão do Tailwind;
+ * e **girar pelo ângulo do gradiente não funciona**, porque um `var()` dentro
+ * de um token do `:root` é substituído lá e não no elemento que o veste — o
+ * mesmo vale para `--brand-rainbow` e `--brand-angle`.
+ *
+ * Sem raio próprio: quem recorta é o `overflow-hidden` da raiz. E o
+ * `select-none` da raiz é o que tira o I-beam de cima das iniciais: sobre
+ * texto que não se seleciona, `cursor: auto` não resolve para `text` — e
+ * continua herdando o ponteiro quando o avatar mora dentro de um botão.
  *
  * O Radix aceita `delayMs`: com ele o fallback só aparece depois do prazo, e
  * uma foto que chega rápido deixa de piscar iniciais antes de si mesma.
@@ -159,13 +145,6 @@ const AvatarFallback = React.forwardRef<
       "flex h-full w-full items-center justify-center font-medium",
       IDENTITY_TONES[0].surface,
       IDENTITY_TONES[0].ink,
-      // O grão vem por um `::before` e não por uma segunda camada de
-      // `background-image`: a camada vive no token de identidade, e quem
-      // chama troca o token inteiro por `className` — uma lista de camadas
-      // aqui seria sobrescrita junto. O pseudo fica atrás das letras (o
-      // `relative isolate` do fallback é o que o segura dentro).
-      "relative isolate before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:bg-(image:--identity-grain) before:bg-size-(--identity-grain-size) before:mix-blend-overlay",
-      "bg-size-(--identity-drift-size) bg-position-[0%_0%] transition-[background-position] duration-(--duration-slow) ease-(--ease-out) hover:bg-position-[100%_100%] active:bg-position-[100%_100%]",
       className
     )}
     {...props}

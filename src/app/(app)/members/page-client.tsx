@@ -679,11 +679,7 @@ export default function MembersPage() {
                                                     tamanho do avatar da lateral,
                                                     que é a mesma peça: uma pessoa
                                                     numa linha. */}
-                                                <Avatar
-                                                    size="sm"
-                                                    shape="rounded"
-                                                    className="select-none"
-                                                >
+                                                <Avatar size="sm">
                                                     {displayAvatarUrl ? (
                                                         <AvatarImage
                                                             src={displayAvatarUrl}

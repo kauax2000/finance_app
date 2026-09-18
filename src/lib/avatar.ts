@@ -42,17 +42,22 @@ const LEGACY_AVATAR_CLASSES = [
  * Os seis pares, escritos por extenso porque o Tailwind precisa ver a classe no
  * fonte para gerá-la — nome montado em runtime não existe no CSS.
  *
- * A superfície é o **degradê pastel de marca** da identidade (`--identity-N`,
- * ver a nota em `globals.css`) e a tinta é sempre a escura. Opaco por natureza:
- * avatares que se sobrepõem em pilha não mostram o de baixo.
+ * A superfície é a cor de identidade (`--identity-N`, ver a nota em
+ * `globals.css`) e a tinta é sempre a escura. Opaco por natureza: avatares que
+ * se sobrepõem em pilha não mostram o de baixo.
+ *
+ * **É uma classe de fundo comum, e já foi mais complicado.** Enquanto a
+ * identidade era um degradê, isto declarava variáveis em vez de pintar,
+ * porque quem pintava era um pseudo-elemento. Apagado o degradê, o fundo
+ * voltou para o próprio elemento e a indireção saiu junto.
  */
 export const IDENTITY_TONES = [
-    { surface: "bg-(image:--identity-1)", ink: "text-identity-foreground" },
-    { surface: "bg-(image:--identity-2)", ink: "text-identity-foreground" },
-    { surface: "bg-(image:--identity-3)", ink: "text-identity-foreground" },
-    { surface: "bg-(image:--identity-4)", ink: "text-identity-foreground" },
-    { surface: "bg-(image:--identity-5)", ink: "text-identity-foreground" },
-    { surface: "bg-(image:--identity-6)", ink: "text-identity-foreground" },
+    { surface: "bg-identity-1", ink: "text-identity-foreground" },
+    { surface: "bg-identity-2", ink: "text-identity-foreground" },
+    { surface: "bg-identity-3", ink: "text-identity-foreground" },
+    { surface: "bg-identity-4", ink: "text-identity-foreground" },
+    { surface: "bg-identity-5", ink: "text-identity-foreground" },
+    { surface: "bg-identity-6", ink: "text-identity-foreground" },
 ] as const
 
 export type IdentityTone = (typeof IDENTITY_TONES)[number]

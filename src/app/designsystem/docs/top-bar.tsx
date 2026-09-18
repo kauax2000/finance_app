@@ -205,7 +205,7 @@ function BarraDoAppTelefone({ voltar = false }: { voltar?: boolean }) {
             {voltar ? (
               <PageHeaderBack href="#" />
             ) : (
-              <Avatar size="sm" shape="rounded">
+              <Avatar size="sm">
                 <AvatarFallback className={cn(TOM.surface, TOM.ink)}>
                   P
                 </AvatarFallback>

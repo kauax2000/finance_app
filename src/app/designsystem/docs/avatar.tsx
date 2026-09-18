@@ -1,7 +1,6 @@
 "use client"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Muted } from "@/components/ui/typography"
 import { IDENTITY_TONES } from "@/lib/avatar"
 import { cn } from "@/lib/utils"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
@@ -29,27 +28,8 @@ export default function AvatarDoc() {
         ))}
       </DocSection>
 
-      <DocSection
-        title="Forma"
-        description="circle é o retrato; rounded é o quadrado de canto arredondado, a mesma família da marca de workspace ao lado dele."
-        code={`<Avatar shape="circle"><AvatarFallback>KL</AvatarFallback></Avatar>
-<Avatar shape="rounded"><AvatarFallback>KL</AvatarFallback></Avatar>`}
-        previewClassName="flex-col items-stretch gap-4"
-      >
-        {(["circle", "rounded"] as const).map((shape) => (
-          <div key={shape} className="flex items-center gap-3">
-            {SIZES.map((size) => (
-              <Avatar key={size} size={size} shape={shape}>
-                <AvatarFallback>KL</AvatarFallback>
-              </Avatar>
-            ))}
-            <Muted className="text-xs">{shape}</Muted>
-          </div>
-        ))}
-      </DocSection>
-
-      <DocNote title="O canto do rounded cresce com a caixa">
-        8px em <code>xs</code> e <code>sm</code>, 10px em <code>md</code> e <code>lg</code>, 14px em <code>xl</code> — a progressão do <code>ColorTile</code>, para as duas peças de identidade baterem lado a lado.
+      <DocNote title="Uma forma só, o círculo">
+        O <code>shape=&quot;rounded&quot;</code> existiu para o quadrado de canto arredondado que o produto desenhava, e saiu a pedido: retrato é redondo. O canto arredondado é a família do <code>ColorTile</code> e da marca de workspace, que identificam <strong>coisa</strong> e não pessoa — duas peças com o mesmo canto numa lista era exatamente o que apagava a diferença.
       </DocNote>
 
       <DocSection
@@ -78,8 +58,8 @@ const tone = identityToneFor(profile.avatar_color, email)
       </DocSection>
 
       <DocSection
-        title="Seis misturas"
-        description="Cada identidade mistura três ou quatro cores do arco-íris num ângulo próprio — as mesmas cores, em ordens diferentes. Passe o cursor: o degradê desliza por baixo das letras."
+        title="Seis cores"
+        description="Uma cor chapada por pessoa, com as iniciais em tinta escura. Os matizes ficam de 42° a 100° uns dos outros, que é o que distingue seis pessoas num relance."
         code={`{PESSOAS.map((iniciais, i) => (
   <Avatar key={iniciais}>
     <AvatarFallback className={cn(IDENTITY_TONES[i].surface, IDENTITY_TONES[i].ink)}>
@@ -89,27 +69,25 @@ const tone = identityToneFor(profile.avatar_color, email)
 ))}`}
         previewClassName="flex-col items-stretch gap-4"
       >
-        {(["circle", "rounded"] as const).map((shape) => (
-          <div key={shape} className="flex items-center gap-3">
-            {PESSOAS.map((iniciais, i) => (
-              <Avatar key={iniciais} size="lg" shape={shape}>
-                <AvatarFallback
-                  className={cn(IDENTITY_TONES[i].surface, IDENTITY_TONES[i].ink)}
-                >
-                  {iniciais}
-                </AvatarFallback>
-              </Avatar>
-            ))}
-          </div>
-        ))}
+        <div className="flex items-center gap-3">
+          {PESSOAS.map((iniciais, i) => (
+            <Avatar key={iniciais} size="lg">
+              <AvatarFallback
+                className={cn(IDENTITY_TONES[i].surface, IDENTITY_TONES[i].ink)}
+              >
+                {iniciais}
+              </AvatarFallback>
+            </Avatar>
+          ))}
+        </div>
       </DocSection>
 
-      <DocNote title="A cor vem de identityToneFor, e o degradê é a marca">
-        <code>identityToneFor</code> devolve o par superfície + tinta; não monte classe crua. Os seis são misturas de marca — azul→violeta→magenta, magenta→coral→âmbar, violeta→magenta→coral→âmbar, âmbar→coral→magenta→índigo, azul→índigo→magenta→coral, coral→magenta→violeta→azul, cada uma no seu ângulo —, com as paradas em 0,82 de luminosidade e 0,11 de croma nos dois temas, grão fino em <code>overlay</code> e tinta escura. A primeira versão era saturada com letra branca, e foi devolvida na tela; a referência é um chip pastel difuso com texto escuro, sobre preto — por isso um valor só nos dois temas. Interpolação em <code>oklch</code>: no sRGB o meio do caminho entre dois matizes distantes é cinza. Sem par invertido entre temas: um degradê é opaco por natureza e lê igual nos dois. Sem tom, o fallback veste a primeira identidade — nunca há iniciais sobre cinza.
+      <DocNote title="A cor vem de identityToneFor">
+        <code>identityToneFor</code> devolve o par superfície + tinta; não monte classe crua. As seis são cores chapadas, uma família cada: ember, gold, grove, ocean, iris e bloom, em 0,84–0,88 de luminosidade e 0,10–0,12 de croma. <strong>Uma família por pessoa é uma inversão consciente</strong>: até a rodada 86 cada identidade misturava quatro matizes a ~90° de distância, justamente para ninguém ser dono de uma cor. Um valor só nos dois temas. Sem tom, o fallback veste a primeira identidade — nunca há iniciais sobre cinza.
       </DocNote>
 
-      <DocNote title="O degradê se move no cursor e no toque">
-        Ele é pintado a 160% da caixa e ancorado no canto de cima; no <code>hover:</code> e no <code>active:</code> a âncora vai para o canto oposto, e a transição de <code>background-position</code> em <code>--duration-slow</code> o faz deslizar por baixo das letras. É um deslocamento, não uma troca de cor: a identidade continua a mesma. Com movimento reduzido o bloco global encurta a transição e o degradê só troca de lugar.
+      <DocNote title="Isto já foi um degradê">
+        Por três rodadas a superfície foi uma mancha radial num <code>::before</code>, com grão, com um ponto de luz e, por um tempo, com movimento no cursor. O degradê foi apagado a pedido, e as cores de hoje são a <strong>parada do meio</strong> daquela mancha — a que ela mostrava em maior área, e a luminosidade que já carregava a tinta escura. Saíram o pseudo-elemento, o <code>variant</code>, os tokens de grão e de ponto de luz, e a indireção por <code>--identity-surface</code>, que existia só porque um degradê não cabe no <code>@theme inline</code>. As medições daquele tempo estão na rodada 87 do histórico, caso alguma delas volte.
       </DocNote>
 
       <DocNote title="alt vazio é proposital">
@@ -135,12 +113,6 @@ const tone = identityToneFor(profile.avatar_color, email)
             type: '"xs" | "sm" | "md" | "lg" | "xl"',
             default: '"md"',
             description: "24, 32, 40, 48 e 56.",
-          },
-          {
-            prop: "shape",
-            type: '"circle" | "rounded"',
-            default: '"circle"',
-            description: "Retrato redondo ou quadrado de canto arredondado.",
           },
         ]}
       />

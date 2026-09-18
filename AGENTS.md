@@ -288,7 +288,7 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   primário deixou de ser verde: `--primary` é a **tecla preta** no claro e a
   tecla branca no escuro, `--primary-accent` coincide com `--foreground`, e
   `--ring` e os `-muted` são neutros. O acento é o token de degradê
-  `--brand-rainbow` (cinco matizes em oklch — azul com duas paradas, violeta, magenta, coral, âmbar; sem verde —, luminosidade por tema; cada parada é um token `--brand-<cor>`, para a página de cores medir e o `ds:catalog` cobrar par) com o grão
+  `--brand-rainbow` (sete matizes em oito paradas, em oklch — teal, azul com duas paradas, violeta, magenta, coral, âmbar, lima —, luminosidade por tema; cada parada é um token `--brand-<cor>`, para a página de cores medir e o `ds:catalog` cobrar par; **o verde da marca não é o verde de estado**: a lima fica em 130 e `success`/`income`/`chart-1` em 152 — ver a rodada 84) com o grão
   `--brand-grain`, e ele mora **só na marca**: o wordmark e o símbolo (prop
   `rainbow` — preenchido em todo tamanho, girando só em `lg`/`xl`), o campo de marca
   e o `Button variant="brand"`. Arco-íris num chip, num gráfico ou num fundo
@@ -321,7 +321,7 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   contra a página exige subir a cor, e aí o texto branco sobre o preenchimento
   reprova. Por isso **`text-primary` é proibido** — compila, porque
   `--color-primary` existe, e é justamente por isso que a regra é escrita: use
-  `text-primary-accent`. Além deles: `--identity-1..6` para distinguir pessoas — seis **misturas pastel** de três ou quatro paradas do arco-íris em ângulos próprios, com grão fino e a tinta `--identity-foreground` escura por cima; o `Avatar` tem duas versões só, foto ou iniciais sobre o degradê, e o degradê desliza no cursor e no toque —,
+  `text-primary-accent`. Além deles: `--identity-1..6` para distinguir pessoas — seis **cores chapadas**, uma família cada (ember, gold, grove, ocean, iris, bloom), em 0,84–0,88 de luminosidade e 0,10–0,12 de croma, com os matizes de 42° a 100° uns dos outros. Como são cor, entram no `@theme inline` e a tela escreve `bg-identity-N`. **Uma família por pessoa inverte de propósito a regra de que ninguém é dono de uma cor** — ver a rodada 87. **Os valores vêm de um degradê que não existe mais**: por três rodadas a identidade foi uma mancha radial com grão e ponto de luz, e cada cor daqui é a parada do meio daquela mancha. Saíram junto os tokens `--identity-grain*` e `--identity-spec*`, a indireção por `--identity-surface`, a camada `::before` do fallback e o `variant` que fazia as duas superfícies conviverem; as medições daquele tempo ficam na rodada 87. Contraste por `scripts/identity-contrast.mjs`, piso 4,5, pior caso medido 10,17. **Girar pelo ângulo do gradiente não funciona**: um `var()` dentro de um token do `:root` é substituído lá, não no elemento que o veste — ver a rodada 86 —,
   `--skeleton`, `--input-fill`, `--overlay`, a rampa `--chart-1..5` mais
   `--chart-income` / `--chart-expense`, a escala `--z-*` e os tokens de movimento
   `--duration-*` / `--ease-*`. Prefira utilitários como `bg-success-muted`,
@@ -1331,7 +1331,7 @@ tema.
   além do cursor, e em volta de um `<span>` a prévia passa a existir só para quem
   tem mouse.
 - **`Progress`**: Radix-based; pass `tone` (`default` | `success` | `warning` | `destructive`) for budget / status bars.
-- **`Avatar`**: Radix-based with `size` and `shape`; keep `data-slot` for tests and form deferrals. Duas versões só: `AvatarImage` (a foto) ou `AvatarFallback` (iniciais escuras sobre o degradê pastel de identidade, com grão, que desliza no hover/active). Sem vidro, sem anel. A cor da pessoa vem de `identityToneFor`, nunca de classe montada.
+- **`Avatar`**: Radix-based with `size`; keep `data-slot` for tests and form deferrals. Duas versões só: `AvatarImage` (a foto) ou `AvatarFallback` (iniciais escuras sobre a cor chapada de identidade). Sem `variant` de superfície — houve um, enquanto o degradê e o chapado conviveram, e saiu com o degradê. Sem vidro, sem anel, e **uma forma só, o círculo** — `shape="rounded"` saiu na rodada 85, porque canto arredondado é a família do `ColorTile` e da marca de workspace, que identificam coisa e não pessoa. A cor da pessoa vem de `identityToneFor`, nunca de classe montada.
 - **Overlays**: `Dialog` / `Sheet` / `AlertDialog` use `bg-overlay` (not hardcoded `bg-black/10`).
 - **`DialogFooter` empilha ao contrário** (`flex-col-reverse`), para a ação
   principal ficar em cima no telefone. O antigo `SheetFooter` empilhava na

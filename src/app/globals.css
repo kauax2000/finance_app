@@ -83,6 +83,12 @@
   --color-input-fill: var(--input-fill);
   --color-chart-income: var(--chart-income);
   --color-chart-expense: var(--chart-expense);
+  --color-identity-1: var(--identity-1);
+  --color-identity-2: var(--identity-2);
+  --color-identity-3: var(--identity-3);
+  --color-identity-4: var(--identity-4);
+  --color-identity-5: var(--identity-5);
+  --color-identity-6: var(--identity-6);
   --color-identity-foreground: var(--identity-foreground);
   --shadow-xs: var(--shadow-xs-value);
   --shadow-sm: var(--shadow-sm-value);
@@ -166,31 +172,39 @@
 
   /* ── O arco-íris ──────────────────────────────────────────────────────────
 
-     Cinco matizes em seis paradas — ciano-azul e azul, violeta, magenta,
-     coral, âmbar — num
+     Sete matizes em oito paradas — teal, ciano-azul e azul, violeta,
+     magenta, coral, âmbar, lima — num
      `linear-gradient` cujo ângulo soma `--brand-angle`, a variável
      registrada com `@property` (ver `@utility brand-rainbow`) para poder
      girar. **A paleta é a do ClickUp** (rosa `#FA12E3`, roxo `#7B68EE`,
      azul `#49CCF9`, amarelo `#FFC800`) com o coral entre o magenta e o
-     âmbar, e **sem verde**: a primeira versão tinha sete paradas com lima e
-     ciano-verde, e na tela lia como bandeira; três das quatro referências
-     (Super Agent, "Start for Free", o "Design" da Apple) param no azul de
-     um lado e no coral do outro. **Linear, e não cônico**: o cônico a partir
+     âmbar — **e o verde voltou por decisão do dono** (rodada 84). A rodada 83
+     o tinha tirado de tudo: a primeira versão de sete paradas com lima e
+     ciano-verde lia como bandeira, e três das quatro referências (Super
+     Agent, "Start for Free", o "Design" da Apple) param no azul de um lado e
+     no coral do outro. Ele voltou nas duas pontas — teal antes do azul, lima
+     depois do âmbar —, escolhido na tela entre três candidatas (menta 165, o
+     152 de estado, lima 130). **O verde da marca não é o verde de estado**:
+     `success`, `income` e `chart-1` ficam no matiz 152, e a lima está 22°
+     acima, mais clara e mais saturada — um chip "Pago" ao lado da faixa não
+     lê como a mesma cor. **Linear, e não cônico**: o cônico a partir
      do centro foi medido na tela e lê como roda de cores, um gráfico de
      pizza; as faixas diagonais são o que as referências chamam de neon. Num
      linear não se repete a primeira parada no fim — isso era o fecho do giro
      cônico, e aqui só dobrava o degradê.
 
-     **O azul tem duas paradas e um quarto da rampa** (0% e 24%), porque com
-     uma só ele era a ponta e o violeta o engolia a 20%: o dono viu a tela
-     e pediu "o azul mais presente". As posições são explícitas por isso —
-     azul até 24%, violeta em 42%, magenta em 60%, coral em 80%.
+     **A família do azul continua com um terço da rampa** (teal 0%, azul 14%,
+     índigo 32%), porque com uma parada só o azul era a ponta e o violeta o
+     engolia a 20%: o dono viu a tela e pediu "o azul mais presente". As
+     posições são explícitas por isso — teal 0%, azul 14%, índigo 32%, violeta
+     46%, magenta 58%, coral 70%, âmbar 82%, lima 100%. O verde é acento de
+     ponta (18%), escolhido na tela contra a alternativa de um quarto.
 
-     **Cada parada é um token** (`--brand-blue` … `--brand-amber`) e o degradê
+     **Cada parada é um token** (`--brand-teal` … `--brand-green`) e o degradê
      os lê, porque a página de cores só mede o que é cor resolvida e o
      `ds:catalog` só cobra par do que é cor: um degradê não é medível nem
-     cobrável, seis cores são. Nenhuma tela usa as paradas soltas — arco-íris
-     fora da marca é a invariante 3 com seis cores —; elas existem para o
+     cobrável, oito cores são. Nenhuma tela usa as paradas soltas — arco-íris
+     fora da marca é a invariante 3 com oito cores —; elas existem para o
      degradê e para a régua. Duas declarações, uma por tema, com as **mesmas matizes**: no
      claro a luminosidade desce um degrau para o wordmark preenchido ler
      sobre branco; no escuro sobe, porque neon sobre preto é luz.
@@ -210,20 +224,24 @@
      degradê sozinho dá 0,64 nos dois temas; o script
      `scripts/brand-grain-ab.mjs` é o método, e os números de cada variante
      estão no comentário da `@utility brand-field`. */
+  --brand-teal: oklch(0.72 0.13 195);
   --brand-blue: oklch(0.7 0.15 225);
   --brand-indigo: oklch(0.56 0.21 262);
   --brand-violet: oklch(0.55 0.22 290);
   --brand-magenta: oklch(0.62 0.28 335);
   --brand-coral: oklch(0.66 0.2 35);
   --brand-amber: oklch(0.78 0.17 85);
+  --brand-green: oklch(0.78 0.18 130);
   --brand-rainbow: linear-gradient(
     calc(var(--brand-angle) + 135deg),
-    var(--brand-blue) 0%,
-    var(--brand-indigo) 24%,
-    var(--brand-violet) 42%,
-    var(--brand-magenta) 60%,
-    var(--brand-coral) 80%,
-    var(--brand-amber) 100%
+    var(--brand-teal) 0%,
+    var(--brand-blue) 14%,
+    var(--brand-indigo) 32%,
+    var(--brand-violet) 46%,
+    var(--brand-magenta) 58%,
+    var(--brand-coral) 70%,
+    var(--brand-amber) 82%,
+    var(--brand-green) 100%
   );
   --brand-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1' intercept='0'/%3E%3CfeFuncG type='linear' slope='1' intercept='0'/%3E%3CfeFuncB type='linear' slope='1' intercept='0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.85'/%3E%3C/svg%3E");
   --brand-grain-size: 180px 180px;
@@ -353,83 +371,46 @@
      (fluxo de caixa, faturas), a série usa estes e não a rampa acima. */
   --chart-income: var(--income);
   --chart-expense: var(--expense);
-  /* Tons de identidade — distinguem uma pessoa de outra e nada mais. Cada um é
-     uma **mistura pastel de marca**: três ou quatro paradas do arco-íris
-     interpoladas em oklch (arco curto, para o caminho entre duas ficar dentro
-     do arco-íris e não no cinza do sRGB), num ângulo próprio, com grão fino
-     por cima e as iniciais em tinta escura. Cada identidade mistura as mesmas
-     cores de um jeito diferente — ordem e ângulo —, que é o que distingue
-     seis pessoas sem dar a nenhuma "uma cor": azul→violeta→magenta a 135°,
-     magenta→coral→âmbar a 45°, violeta→magenta→coral→âmbar a 160°,
-     âmbar→coral→magenta→índigo a 20°, azul→índigo→magenta→coral a 110°,
-     coral→magenta→violeta→azul a 200°. Pares de duas cores foram a versão
-     anterior, e o dono pediu "mais cores num avatar só".
+  /* Tons de identidade — distinguem uma pessoa de outra e nada mais. Seis
+     cores chapadas, uma família cada: ember, gold, grove, ocean, iris e bloom.
+     O `AvatarFallback` as veste por `bg-identity-N`, com
+     `--identity-foreground` escura por cima.
 
-     `--identity-drift-size` (160%) é o quanto o degradê é maior que a caixa
-     para poder deslizar no cursor; `--identity-grain-size` é o ladrilho do
-     grão. Os dois moram aqui porque o auditor acusa `bg-size-[…]` arbitrário
-     na peça, e com razão: medida é token.
+     **Os valores vêm de um degradê que não existe mais.** Por três rodadas a
+     identidade foi uma mancha radial — com grão, com ponto de luz e, por um
+     tempo, com movimento no cursor —, e cada valor daqui é a **parada do meio**
+     daquela mancha: a cor que ela mostrava em maior área, e a luminosidade que
+     já carregava a tinta escura sem folga. O degradê foi apagado a pedido do
+     dono; os números ficaram, porque tinham sido escolhidos na tela.
 
-     **Pastel, e não saturado.** A primeira versão tinha as pontas em 0,5 de
-     luminosidade com letra branca, e o dono a devolveu na tela: "feio". A
-     referência que ele mandou é um chip difuso e claro (lavanda → rosa) com
-     grão e texto escuro, sobre preto — então as pontas subiram para 0,82 de
-     luminosidade e 0,11 de croma, e a tinta virou escura. É um valor só nos
-     dois temas, porque a referência já era sobre fundo preto: o chip pastel
-     lê sobre o cartão claro e sobre o escuro.
+     O que morreu junto, para ninguém procurar: `--identity-grain` e
+     `--identity-grain-size` (o grão), `--identity-spec` e
+     `--identity-spec-size` (o ponto de luz), a indireção por
+     `--identity-surface`, e a camada `::before` do fallback. O histórico da
+     rodada 87 guarda as medições — o A/B de grão, a conta do
+     `background-position` sobre camada em `cover`, e a razão de a claridade ter
+     de ficar na borda e não no meio —, caso alguma delas volte.
 
-     **O grão é próprio** (`--identity-grain`): o do campo de marca tem
-     amplitude cheia a 85% e sobre um pastel de 40px vira sal e pimenta. Este
-     é mais fino (0,9 de frequência, duas oitavas) e a 35%, em `overlay`.
+     **Os matizes ficam de 42° a 100° uns dos outros** (58, 100, 175, 230, 275,
+     318), que é o que distingue seis pessoas à primeira vista. A luminosidade
+     é 0,84–0,88 e o croma 0,10–0,12: pastel, porque a primeira versão de todas
+     tinha as pontas em 0,5 com letra branca e o dono a devolveu na tela —
+     "feio". É um valor só nos dois temas, porque a referência já era sobre
+     fundo preto: o pastel lê sobre o cartão claro e sobre o escuro.
 
-     Degradê e não cor, por isso nenhum `--color-identity-N` no
-     `@theme inline`: a tela o veste por `bg-(image:--identity-N)`, e a única
-     cor da família é a tinta. Os contrastes medidos estão em
-     `/designsystem/avatar`. */
-  --identity-1: linear-gradient(
-    135deg in oklch,
-    oklch(0.82 0.11 225),
-    oklch(0.82 0.11 290),
-    oklch(0.82 0.11 335)
-  );
-  --identity-2: linear-gradient(
-    45deg in oklch,
-    oklch(0.82 0.11 335),
-    oklch(0.82 0.11 35),
-    oklch(0.82 0.11 85)
-  );
-  --identity-3: linear-gradient(
-    160deg in oklch,
-    oklch(0.82 0.11 290),
-    oklch(0.82 0.11 335),
-    oklch(0.82 0.11 35),
-    oklch(0.82 0.11 85)
-  );
-  --identity-4: linear-gradient(
-    20deg in oklch,
-    oklch(0.82 0.11 85),
-    oklch(0.82 0.11 35),
-    oklch(0.82 0.11 335),
-    oklch(0.82 0.11 262)
-  );
-  --identity-5: linear-gradient(
-    110deg in oklch,
-    oklch(0.82 0.11 225),
-    oklch(0.82 0.11 262),
-    oklch(0.82 0.11 335),
-    oklch(0.82 0.11 35)
-  );
-  --identity-6: linear-gradient(
-    200deg in oklch,
-    oklch(0.82 0.11 35),
-    oklch(0.82 0.11 335),
-    oklch(0.82 0.11 290),
-    oklch(0.82 0.11 225)
-  );
-  --identity-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23g)' opacity='0.35'/%3E%3C/svg%3E");
+     **Agora que são cor e não degradê, elas entram no `@theme inline`** como
+     `--color-identity-N`, e a tela escreve `bg-identity-N`. Enquanto foram
+     degradê isso não era possível — daí a indireção por `--identity-surface`,
+     que saiu junto. Contraste medido por `scripts/identity-contrast.mjs`, e
+     ele é folgado: **pior caso 10,17:1** contra o piso AA de 4,5. Os números
+     estão em `/designsystem/avatar`. */
+  --identity-1: oklch(0.85 0.11 58); /* ember */
+  --identity-2: oklch(0.88 0.11 100); /* gold */
+  --identity-3: oklch(0.85 0.10 175); /* grove */
+  --identity-4: oklch(0.84 0.10 230); /* ocean */
+  --identity-5: oklch(0.84 0.11 275); /* iris */
+  --identity-6: oklch(0.85 0.12 318); /* bloom */
   --identity-foreground: oklch(0.22 0 0);
-  --identity-grain-size: 120px 120px;
-  --identity-drift-size: 160% 160%;
   /* Osso de skeleton: `muted` some em telas de baixo gamut, então é um degrau
      abaixo dele, no mesmo matiz.
 
@@ -742,20 +723,24 @@
   /* Ver a nota no tema claro: mesmas matizes, luminosidade um degrau acima.
      O grão desce para 0,75 porque o `overlay` clareia mais sobre paradas
      mais claras. A vinheta é a mesma — ela já vai para o preto. */
+  --brand-teal: oklch(0.82 0.12 195);
   --brand-blue: oklch(0.8 0.14 220);
   --brand-indigo: oklch(0.66 0.19 262);
   --brand-violet: oklch(0.66 0.2 288);
   --brand-magenta: oklch(0.72 0.28 335);
   --brand-coral: oklch(0.75 0.18 38);
   --brand-amber: oklch(0.88 0.17 90);
+  --brand-green: oklch(0.88 0.18 130);
   --brand-rainbow: linear-gradient(
     calc(var(--brand-angle) + 135deg),
-    var(--brand-blue) 0%,
-    var(--brand-indigo) 24%,
-    var(--brand-violet) 42%,
-    var(--brand-magenta) 60%,
-    var(--brand-coral) 80%,
-    var(--brand-amber) 100%
+    var(--brand-teal) 0%,
+    var(--brand-blue) 14%,
+    var(--brand-indigo) 32%,
+    var(--brand-violet) 46%,
+    var(--brand-magenta) 58%,
+    var(--brand-coral) 70%,
+    var(--brand-amber) 82%,
+    var(--brand-green) 100%
   );
   --brand-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1' intercept='0'/%3E%3CfeFuncG type='linear' slope='1' intercept='0'/%3E%3CfeFuncB type='linear' slope='1' intercept='0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.75'/%3E%3C/svg%3E");
   --brand-grain-size: 180px 180px;
@@ -832,50 +817,13 @@
   --chart-expense: var(--expense);
   /* Ver a nota no tema claro: o mesmo chip pastel nos dois temas — a
      referência era sobre preto. */
-  --identity-1: linear-gradient(
-    135deg in oklch,
-    oklch(0.82 0.11 225),
-    oklch(0.82 0.11 290),
-    oklch(0.82 0.11 335)
-  );
-  --identity-2: linear-gradient(
-    45deg in oklch,
-    oklch(0.82 0.11 335),
-    oklch(0.82 0.11 35),
-    oklch(0.82 0.11 85)
-  );
-  --identity-3: linear-gradient(
-    160deg in oklch,
-    oklch(0.82 0.11 290),
-    oklch(0.82 0.11 335),
-    oklch(0.82 0.11 35),
-    oklch(0.82 0.11 85)
-  );
-  --identity-4: linear-gradient(
-    20deg in oklch,
-    oklch(0.82 0.11 85),
-    oklch(0.82 0.11 35),
-    oklch(0.82 0.11 335),
-    oklch(0.82 0.11 262)
-  );
-  --identity-5: linear-gradient(
-    110deg in oklch,
-    oklch(0.82 0.11 225),
-    oklch(0.82 0.11 262),
-    oklch(0.82 0.11 335),
-    oklch(0.82 0.11 35)
-  );
-  --identity-6: linear-gradient(
-    200deg in oklch,
-    oklch(0.82 0.11 35),
-    oklch(0.82 0.11 335),
-    oklch(0.82 0.11 290),
-    oklch(0.82 0.11 225)
-  );
-  --identity-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23g)' opacity='0.35'/%3E%3C/svg%3E");
+  --identity-1: oklch(0.85 0.11 58); /* ember */
+  --identity-2: oklch(0.88 0.11 100); /* gold */
+  --identity-3: oklch(0.85 0.10 175); /* grove */
+  --identity-4: oklch(0.84 0.10 230); /* ocean */
+  --identity-5: oklch(0.84 0.11 275); /* iris */
+  --identity-6: oklch(0.85 0.12 318); /* bloom */
   --identity-foreground: oklch(0.22 0 0);
-  --identity-grain-size: 120px 120px;
-  --identity-drift-size: 160% 160%;
   --skeleton: oklch(0.3 0 0);
   --shadow-xl-value: 0 24px 48px -12px oklch(0 0 0 / 0.7);
 
@@ -1884,15 +1832,16 @@
    vizinhos, retalho de 220×140 sem texto, captura a 1440×900, animação
    parada):
 
-     sem grão                    claro 0,64   escuro 0,64
+     sem grão                    claro 0,63   escuro 0,61
      campo verde (0,9 · 0,6 · 0,6/0,45)  — não comparável: outro método
-     0,75 · slope 1 · 0,85/0,75  claro 6,94   escuro 8,70   ← o token
-     0,75 · slope 1 · 1          claro 11,28  escuro 9,21   (rejeitado na paleta
+     0,75 · slope 1 · 0,85/0,75  claro 9,58   escuro 9,82   ← o token
+     0,75 · slope 1 · 1          claro 11,23  escuro 13,08  (rejeitado na paleta
                                  de sete paradas: já lia como ruído de sinal)
 
-     Os dois primeiros números foram remedidos depois da troca para a paleta
-     de cinco paradas: o `overlay` rende conforme a luminosidade da base, e
-     a paleta escura mais clara subiu o escuro de 6,54 para 8,70. */
+     Remedidos na rodada 84, sobre a paleta de oito paradas: o `overlay`
+     rende conforme a luminosidade da base, e a lima e o teal — as duas
+     paradas mais claras — subiram o σ de 6,94/8,70 (cinco paradas) para
+     9,58/9,82. O token não mudou; só a base. */
 @utility brand-field {
   background-color: oklch(0 0 0);
   background-image: var(--brand-field-vignette), var(--brand-grain),

@@ -74,7 +74,7 @@ export function SidebarUserProfile() {
                             cai nas iniciais sozinho quando ela falha — que era
                             justamente o que a versão à mão não fazia: endereço
                             quebrado deixava um quadrado cinza vazio. */}
-                        <Avatar size="sm" shape="rounded" className="select-none">
+                        <Avatar size="sm">
                             {user?.user_metadata?.avatar_url ? (
                                 <AvatarImage
                                     src={user.user_metadata.avatar_url}

@@ -270,7 +270,7 @@ type TimelineMarker = NonNullable<
  * A superfície de vidro, na forma que as três têm em comum.
  *
  * `glassRoundSurfaceClassName` é `glass glass-control glass-round` — o mesmo
- * que o `Avatar` veste em `shape="circle"`. O preset cônico existe porque o aro
+ * recorte redondo que o `Avatar` veste. O preset cônico existe porque o aro
  * padrão é um gradiente **linear**, e num círculo as duas pontas dele caem nos
  * **cantos** da caixa, que ali não existem: medido no avatar, **0% do
  * perímetro** via o pico. As três formas daqui são redondas, então as três o
