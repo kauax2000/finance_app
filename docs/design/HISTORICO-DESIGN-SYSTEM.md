@@ -10486,3 +10486,404 @@ parágrafos), sete telas perdendo `gap-*`/`size-3`/`mr-1`, e duas trocando o tom
 falsificado pelo real. 617 testes, `tsc` e `ds:catalog` verdes; `lint` com 0
 erros e os 65 avisos anteriores. O auditor acusa 9 achados nos arquivos
 tocados, e **os 9 existiam no HEAD** — conferidos um a um contra `git show`.
+
+### Rodada 90 — o primário com arco-íris foi medido e recusado, e nada foi para o código
+
+O dono mandou a referência
+[button-colorful](https://21st.dev/@kokonutd/components/button-colorful) e pediu o
+`primary` baseado nela: arco-íris no fundo, acendendo no cursor. Pediu também para
+**montar os candidatos separados antes de eu tocar no componente**. Olhou, e ficou com
+a tecla chapada que já existia. **Esta rodada não mudou nenhum componente** — o que
+fica dela é a medição, que é cara de refazer e cujo resultado é um "não".
+
+**A referência foi medida, não deduzida.** O preview do 21st.dev é um iframe
+cross-origin, mas o bundle (`cdn.21st.dev/bundled/3.html`) abre same-origin: dali
+saíram o DOM e os estilos computados. É um botão `relative overflow-hidden` com uma
+`div` `absolute inset-0` carregando `linear-gradient(to right, #6366f1, #a855f7,
+#ec4899)` a `opacity-40`, `blur(8px)`, subindo para `0.8` no cursor em 500 ms.
+
+**A peça decisiva é o `overflow-hidden`**, e é o que separa a referência do que este
+projeto já tinha: ela recorta o borrão **para dentro**, e o `variant="brand"` daqui
+borra o mesmo degradê **para fora**, a `-inset-1`, sem recortar nada. São a mesma
+ideia apontada em direções contrárias.
+
+**A referência também tem um defeito, e ele foi medido.** Ela inverte o botão com o
+tema, e no escuro o arco-íris a 40% sobre um botão claro vira um pastel lavado. Como
+`--primary` inverte igual, isso seria herdado — e foi o que motivou os três
+candidatos.
+
+#### A grade, e os números
+
+Cinco espécimes ao vivo em `/designsystem/button` (o efeito é de **cursor**; um PNG
+mostraria metade da coisa), no molde do `PalcoDeMaterial` de `docs/glass.tsx`, que é o
+"A vs B" mais próximo que o repo tem. Sem comparação claro-contra-escuro lado a lado:
+`ds-kit.tsx` registra que o `SpecimenPanel` já fez isso e **foi removido de propósito**.
+
+Contraste do rótulo, pior pixel, piso AA 4,5:
+
+| candidato | claro, cursor | escuro, cursor |
+| --- | --- | --- |
+| hoje · primary | 18,97 | 15,57 |
+| A · escuro nos dois temas | 4,88 | **3,22 ✗** |
+| B · inverte, compensado | 4,88 | 6,79 |
+| C · inverte, fiel à referência | 4,86 | 7,73 |
+
+**A reprovação do A não é um número mal escolhido; é uma contradição.** As paradas da
+marca **sobem de luminosidade no tema escuro** (índigo 0,56 → 0,66, magenta 0,62 →
+0,72) porque esperam pousar sobre fundo claro. O A inverte a superfície e **não**
+inverte o arco-íris, então põe texto branco sobre as paradas mais claras do sistema.
+A varredura mostrou que ele só passa com a opacidade do cursor em 0,55 ou menos
+(4,97:1) — e aí o acender vai de 0,40 a 0,55 e o efeito quase some. Quem quiser
+retomar o A precisa fazer o **arco-íris** parar de inverter também, e isso é decisão
+de token.
+
+**Um número que vale para os três:** no tema claro todos caem a ~4,87 no cursor, com
+0,37 de folga sobre o piso. É lá que o texto branco encontra as paradas mais claras, e
+é o teto de quanto a lavagem pode subir.
+
+**Verificado de passagem:** o anel de foco **sobrevive ao `overflow-hidden`**
+(alcançado por teclado, com `:focus-visible` confirmado) — `overflow` recorta
+descendentes, não o `box-shadow` do próprio elemento.
+
+#### O `brand` não mudou, e isso custou uma volta
+
+O pedido de fechamento foi *"o primary com o branco e o brand com contorno e o fundo
+colorido"*. **"Fundo" ali é o halo atrás**, o `::after` — a frase descrevia o `brand`
+como ele **já era**. Eu li como preenchimento e pus um véu translúcido sobre o
+arco-íris, fazendo cor aparecer dentro da tecla; o dono corrigiu (*"ele não tinha cor
+no botão só nas bordas e fundo"*) e a mudança foi desfeita inteira.
+
+Fica escrito para ninguém "consertar" o `brand` outra vez achando que falta cor no
+miolo: **ele é tecla chapada, contorno de 1px e halo atrás, e é assim de propósito.**
+O mecanismo do véu funcionava e media 6,65:1 — a camada do arco-íris do `::before` é
+recortada em `border-box` e já pinta sob a caixa inteira, então basta o preenchimento
+ganhar alfa para o degradê atravessar o miolo. Não foi rejeitado por defeito; foi
+rejeitado por não ser o desenho.
+
+### Rodada 91 — o arco-íris do `brand` gira sob o cursor, e o sublinhado do `link` para de saltar
+
+Três pedidos do dono, e o terceiro era um defeito que ninguém tinha nomeado.
+
+#### O sublinhado do `link` estava 5,5px fora, e isso foi medido
+
+O dono escreveu: *"o underline está distante, quebrando"*. Medido no DOM com
+`emHover: true` confirmado, e a linha de base lida por canvas a partir das métricas da
+fonte:
+
+| ponto | y, dentro do botão de 32px |
+| --- | --- |
+| linha de base do texto | 21,5 |
+| onde `underline-offset-4` pinta | **25,5** |
+| onde o arco-íris caía | **31** |
+| erro | **5,5px** |
+
+**A causa é que o eixo `size` só declara recuo lateral.** O `md` é `h-8 px-3`, sem
+`py`, então a caixa de conteúdo tem os 32px inteiros e `bg-bottom` resolve para o pé do
+**botão**, não o pé do texto. No cursor a decoração some (`hover:no-underline`) e o
+traço reaparecia 5,5px abaixo: o salto que o dono viu como quebra.
+
+**O conserto é uma âncora, não um número cravado:** `calc(50% + 0.5lh)`. A `%` do
+`background-position` resolve contra `(altura − 1px)` e `lh` é a entrelinha do próprio
+elemento, então a conta acompanha o degrau sozinha. Medido nos cinco: **erro 0 em
+`md`, `lg` e `xl`; 1px em `xs` e `sm`**, onde a relação entre entrelinha e métrica da
+fonte muda. A fórmula é exata quando `entrelinha = ascent − descent + 9`.
+
+#### A varredura, e a armadilha que ela carrega
+
+O traço agora entra da esquerda para a direita: a posição horizontal é ancorada em
+`0%` e a largura vai de `bg-[length:0%_1px]` a `100%`.
+
+**A armadilha é que `background-size` não está na lista de transição da base**, que
+enumera `[color,background-color,border-color,box-shadow,opacity,translate]`. Sem
+redeclarar a lista inteira na variante, com ela dentro, o traço aparece pronto em vez
+de varrer — é a mesma pedra que o `avatar.tsx` registrou com `background-position` na
+rodada 87. Medido depois do conserto: **30% → 79% → 98% → 100% em ~140ms**.
+
+**A saída não varre de volta, e é consciente.** `background-image` é propriedade
+discreta: ela some no instante em que o cursor sai. Declarar a imagem também em repouso
+daria o recuo animado, ao custo de a classe do `hover:` virar redundância. Como a
+decoração volta no mesmo pixel, o que se vê é o traço trocando de cor de volta.
+
+**`bg-origin-content` ficou**, e é ele que mantém o traço na largura do texto e não do
+botão: o `px-*` do degrau vira recuo. Só o eixo vertical estava errado.
+
+#### O giro do `brand` pausa, em vez de desligar
+
+O pedido foi que as cores girassem em volta do botão **enquanto** o cursor estivesse
+em cima, em velocidade moderada.
+
+**Pausar é o que evita o salto.** `brand-rainbow-live` fica aplicada sempre, com
+`animation-play-state: paused`, e o cursor a põe em `running`. Ligar a animação só
+dentro do `hover:` faria o ângulo voltar a 0° na saída. Medido: **119,5° ao sair, e
+119,5° um segundo depois** — congela onde estava e retoma dali.
+
+A utility ganhou um botão de velocidade em vez de um valor novo:
+`animation: brand-rotate var(--brand-spin, 12s) linear infinite`. O botão passa
+`[--brand-spin:6s]`; o único consumidor anterior (`docs/colors.tsx`) não passa nada e
+continua nos 12s. **Nenhuma `@utility` nova** — e se houvesse, teria de nascer depois
+de `@utility no-scrollbar`, porque `glass.test.ts` recorta o CSS de `glass-material`
+até ali e qualquer coisa com a palavra `background` nessa janela reprova.
+
+**O giro chega ao contorno e ao halo sem camada nova**, e a medição que prova isso é a
+mesma que expôs o giro morto na rodada 88: com o cursor em cima, `--brand-angle` foi de
+0° a 124° a 239°, e o `linear-gradient` **computado** do `::before` e do `::after`
+acompanhou — 135° → 259° → 374°. Um ângulo que anda com a pintura congelada é
+exatamente o defeito que aquela rodada consertou.
+
+**Movimento reduzido já estava coberto**, sem regra nova: o bloco global isenta só
+`.animate-spin` e `.animate-pulse`, então `brand-rotate` é cortada a 0,01ms com uma
+iteração e o botão não gira.
+
+#### Dois ajustes na volta, e um deles custou uma investigação
+
+**"O hover do link tem um fundo branco."** A varredura em si estava limpa — verificado
+com hover real em câmera lenta (a transição alargada para 3s) a 50% do percurso:
+`textDecorationLine: none`, e na captura só a meia linha de arco-íris. O branco era o
+**sublinhado de repouso**, que herdava `currentColor` e portanto era branco no tema
+escuro. Ao lado de uma varredura colorida, isso lia como "o branco vem antes e a cor
+cresce por cima".
+
+**E eu li errado, duas vezes.** Primeiro apaguei o traço parado
+(`decoration-muted-foreground`, medido em 5,76:1 no claro e 7,66:1 no escuro); o dono
+devolveu a frase que fechava a questão: *"eu quero que o underline branco fique quando
+não tem hover, e quando eu colocar o mouse em cima ele remove o underline branco e faz
+a animação da esquerda para a direita para criar esse segundo underline rainbow."*
+
+**O branco não era o defeito; era metade do efeito.** O que se quer ver é a **troca**:
+o traço herdado sai e um segundo, de arco-íris, entra varrendo — dois traços diferentes,
+e não um que muda de tinta. Apagar o primeiro tirava o branco e tirava junto o contraste
+entre os dois estados. O `decoration-muted-foreground` foi desfeito e o traço voltou a
+herdar `currentColor`.
+
+Fica registrado porque a leitura errada é fácil de repetir: "tem branco no hover" soa
+como defeito de pintura, e era descrição de um estado que existe de propósito. A
+pergunta que teria evitado as duas voltas não é "qual tom o traço parado deve ter", mas
+"o branco deve sair no cursor ou nunca aparecer".
+
+**"Deixe a animação um pouco mais lenta."** A varredura herdava os 150ms do
+`--duration-fast` da base. Subir para `--duration-slow` **não resolveu**, e a medição
+mostrou por quê: com a curva enfática da casa (`--ease-out`,
+`cubic-bezier(0.16, 1, 0.3, 1)`) o traço cobria **60% do percurso nos primeiros 46ms**
+e gastava os 200ms restantes nos últimos 12%. Era o mesmo estalo com uma cauda longa.
+
+**Movimento que percorre uma distância pede velocidade constante.** A curva enfática é
+para o que **aparece** — um painel, um realce —, não para o que **anda**. É a mesma
+conclusão que a rodada 86 registrou no avatar, e a saída é a mesma: `ease-linear`.
+Medido depois, a cada 45ms: 13% → 31% → 45% → 62% → 76% → 93% → 100%, uniforme, em
+321ms. O `link` é a única variante que sobrescreve duração **e** curva da base.
+
+**A asserção 6 não conseguia pegar isso, e foi por isso que ela mudou.** Ela lia a
+saída crua do `cva`, onde a classe da base sobrevive na string mesmo quando a variante
+a vence no `tailwind-merge` — então `duration-(--duration-fast)` aparecia sempre e o
+teste **não podia falhar**. Era uma asserção decorativa, e eu tinha registrado essa
+brecha no plano desta rodada prometendo não explorá-la. Hoje ela resolve o `cn()` antes
+de afirmar, guarda duração **e** curva, e carrega um mapa de exceções nomeadas com a
+razão escrita — quem não é exceção não pode carregar outro ritmo.
+
+**`brandOutline`**, a segunda versão do botão de marca: o mesmo contorno de 1px e o
+mesmo giro, **sem o halo**. A razão é geométrica — o `::after` do `brand` sangra 4px
+para fora da caixa (`-inset-1`), e num vizinho próximo isso encosta. Ele não é um
+degrau a menos na escada: continua fora dela e continua um por tela; o que muda é
+quanto espaço ele pede em volta. A variante nasceu derivada da string do `brand` com o
+bloco do halo removido, então as duas não podem divergir por descuido.
+
+**Fallout:** `globals.css` (uma linha), `button.tsx` (as variantes `link` e `brand`,
+a `brandOutline` nova e os comentários), `AGENTS.md`, `docs/button.tsx` (quatro notas
+novas) e `docs/brand.tsx`. 617 testes, `tsc`, `lint` e auditor verdes, **sem mudar teste
+nenhum** — as asserções 4 (o `link` sublinha sempre, com par de toque) e 9 (o `brand`
+não pinta fundo próprio) foram conferidas contra o desenho antes de escrever. Nenhuma
+rota e nenhuma jornada mudaram.
+
+### Rodada 92 — o sublinhado do link deixa de ser decoração, e a emenda tinha nome
+
+Três ajustes, e o terceiro era um defeito que ninguém tinha nomeado: *"parece que o
+underline branco está com um divisor em um ponto dele."*
+
+#### A emenda: `::first-letter` partindo a decoração
+
+O `::first-letter` que a base do `Button` usa para a maiúscula inicial do CTA cria uma
+**caixa separada para a primeira letra**, e o `text-decoration` propagado é pintado em
+**dois segmentos** com uma costura entre eles. Diagnosticado num clone a 22× de
+ampliação: removida a classe de `::first-letter`, a linha sai contínua; com ela, sai
+partida logo depois do "L".
+
+Quatro consertos foram testados na mesma montagem, e três falharam:
+
+| candidato | resultado |
+| --- | --- |
+| sublinhar também o `::first-letter` | emenda, no mesmo lugar |
+| `text-decoration-skip-ink: none` | emenda |
+| decoração no `<span>` em vez do botão | emenda |
+| **linha como camada de `background`** | **contínua** |
+
+A classe de `::first-letter` não podia sair — ela é a garantia do sistema. Então **a
+linha de repouso deixou de ser `text-decoration`**: um fundo é uma pintura só, e não
+tem como partir.
+
+#### Duas linhas, dois elementos — e isso é o mecanismo
+
+O dono escolheu a saída em que **o arco-íris recua deixando o espaço vazio, e o branco
+só volta quando o recuo termina**. Eu tinha orçado isso como caro: exigiria registrar a
+tinta com `@property` para poder atrasá-la, a mecânica do `--brand-angle`. **Não
+exigiu.** Basta a linha parada morar no `<span data-slot="button-label">` e o arco-íris
+no botão: elementos diferentes têm `transition` própria, e o atraso de um não segura o
+outro.
+
+**O atraso que vale numa troca de estado é o declarado no destino.** Entrando no
+cursor vale `delay-0` — o branco some na hora. Saindo vale
+`delay-[var(--duration-base)]` — ele volta só quando o recuo acaba. `duration-0` faz as
+duas pontas instantâneas: o branco **some** e **volta**, nunca encolhe.
+
+Medido, amostrando as duas camadas na mesma passagem do Playwright (o painel do
+navegador não serve: a latência entre mover o ponteiro e rodar o script engole a
+transição inteira):
+
+| saída | 0ms | 65 | 131 | 196 | **231** |
+| --- | --- | --- | --- | --- | --- |
+| arco-íris | 100% | 67% | 33% | 4% | 0% |
+| branca | 0% | 0% | 0% | 0% | **100%** |
+
+**As duas caem no mesmo pixel, e não por número cravado.** `calc(50% + 0.5lh)` é meia
+entrelinha abaixo do meio da caixa: a `%` resolve contra `(altura − 1px)` e `lh` é a
+entrelinha do próprio elemento. No botão (32 de altura) dá 25,5; no rótulo (20 de
+altura, topo em 6) dá 19,5 + 6 = os mesmos 25,5. Divergência medida: **≤0,01px nos
+cinco degraus, nos dois temas**.
+
+#### O ritmo, pela terceira vez
+
+150ms piscava, 300ms arrastava; ficou em `--duration-base`. `ease-linear` continua da
+rodada 91, e a razão também: com a curva enfática da casa o traço cobria 60% do
+percurso nos primeiros 46ms.
+
+#### Os dois testes mudaram, e por quê
+
+**`button-touch-response.test.ts`, asserção 4** exigia `" underline "` e
+`(image:--brand-rainbow)` como alvo do `hover:bg-`. As duas deixaram de valer: não há
+decoração, e o que o cursor troca é a **largura**. A intenção sobreviveu — há linha
+parada, há traço de cursor arco-íris, e ele tem par de toque — e o comentário da
+asserção passou a registrar **por que** deixou de ser decoração, senão a próxima
+rodada "conserta" de volta e a emenda vem junto.
+
+**`button-primary.test.ts`, asserção 6**: o mapa de exceções do `link` trocou
+`--duration-slow` por `--duration-base`.
+
+**Fallout:** `button.tsx` (só a variante `link` e o comentário dela, reescrito porque
+acumulara afirmações que deixaram de ser verdade), os dois testes, `AGENTS.md`,
+`docs/button.tsx`. 617 testes, `tsc`, `lint` e auditor verdes. Nenhuma rota, nenhuma
+jornada.
+
+**O que fica em aberto:** a linha parada não é mais `text-decoration`, então ela não
+acompanha quebra de linha — um `link` que quebrasse em duas linhas ganharia o traço só
+na primeira. Os quatro usos do app são rótulos curtos e nenhum quebra.
+
+### Rodada 93 — uma das linhas tinha metade da espessura, e ninguém tinha medido
+
+Dois pedidos, e os dois eram consequência de uma decisão minha na rodada 92: para dar
+ao branco um atraso próprio, eu o pus no `<span data-slot="button-label">` e deixei o
+arco-íris no botão.
+
+#### Meia espessura, e a caixa é a culpada
+
+| | caixa | topo da linha | sobra abaixo | **espessura visível** |
+| --- | --- | --- | --- | --- |
+| arco-íris (botão) | 32px | 25,5 | 6,5px | **1px** |
+| branca (rótulo) | 20px | 19,5 | 0,5px | **0,5px** |
+
+A caixa do rótulo **é** a caixa de linha. Com a âncora em `calc(50% + 0.5lh)`, a linha
+de 1px começa meio pixel antes do fim dela — e fundo é recortado pela caixa, então
+**metade foi jogada fora**. O dono viu como "espessuras diferentes"; era exatamente
+isso, e o fator era dois.
+
+**O conserto é `- 0.5px` na âncora, nas duas camadas.** Ele encosta a linha na borda de
+baixo em vez de atravessá-la, mantém as duas alinhadas, e de quebra as põe em **pixel
+inteiro** — nítidas em vez de antisserrilhadas. Medido depois, contando linhas de pixel
+a DPR 8: as duas ocupam **exatamente as mesmas 8 linhas de dispositivo**. A diferença
+de brilho que resta (250 contra 165) é a cor, não a geometria.
+
+**E a conta é geral.** No rótulo, cuja altura é a entrelinha, a fórmula dá `LH − 1`; no
+botão dá `(H + LH)/2 − 1`, que é o mesmo valor somado ao topo do rótulo, `(H − LH)/2`.
+Coincidem em qualquer degrau — verificado nos cinco.
+
+**O que fica frágil, e vai escrito:** a linha do rótulo agora é **rente** à borda da
+caixa dele. Qualquer `padding` ou `border` naquele span a recorta outra vez, e o
+sintoma é meia espessura, que é silencioso. É o preço de as duas linhas morarem em
+elementos diferentes — e elas precisam morar, porque é isso que lhes dá transição
+independente.
+
+#### O branco volta desenhando, não saltando
+
+A rodada 92 entregou o branco **saltando** para a largura cheia depois do recuo. O dono
+recusou — *"não gostei do underline branco reaparecer do nada"* — e pediu que a volta
+fosse **a mesma animação da entrada do arco-íris**, em sequência.
+
+O conserto foi trocar **onde o `duration-0` mora**: ele saiu da base e foi para o
+cursor. Como o que vale numa troca de estado é o declarado no **destino**, a entrada
+passou a ser instantânea e a saída passou a animar, com a mesma duração e a mesma
+curva `linear`. Medido:
+
+| fase | ms | arco-íris | branca |
+| --- | --- | --- | --- |
+| 1 · recua | 0 → 194 | 100 → 4% | 0% |
+| 2 · desenha | 232 → 429 | 0% | 17 → 100% |
+
+A saída passou a levar ~400ms no total, por ser sequencial.
+
+#### O teste guarda os dois
+
+A asserção 4 ganhou duas travas, e ambas foram **verificadas contra a regressão**:
+devolvendo a âncora antiga só no rótulo, o teste falha; restaurando, passa. Ela afirma
+agora que **as duas camadas declaram a mesma espessura e a mesma âncora** (com o
+`- 0.5px` nomeado) e que o rótulo tem duração, atraso e curva próprios. O comentário
+registra o defeito de meia espessura, para ninguém "simplificar" as duas de volta para
+o mesmo elemento sem saber o que se perde.
+
+**Fallout:** `button.tsx` (a variante `link` e o comentário), o teste, `AGENTS.md`,
+`docs/button.tsx`. 617 testes, `tsc`, `lint` e auditor verdes. Nenhuma rota, nenhuma
+jornada.
+
+### Rodada 94 — a animação do sublinhado sai inteira, e o que sobra são dez classes
+
+*"Pensando melhor, remova a animação do underline. Só quando eu estiver no hover, deixe
+o underline de branco para arco-íris, sem animação nenhuma."*
+
+Três rodadas construíram aquele movimento — a varredura da esquerda para a direita (91),
+o recuo na saída com o branco voltando depois (92), a volta desenhando em duas fases
+(93) — e esta apagou todas. Fica registrado porque o caminho custou medição, e porque
+a conclusão é sobre **quando não animar**.
+
+**O que saiu:** a lista de transição própria com `background-size` dentro, a duração
+`--duration-base`, a curva `ease-linear`, o atraso, o `duration-0`, a segunda camada no
+`<span data-slot="button-label">` e os onze utilitários com seletor de filho que ela
+exigia. **A variante foi de 27 classes para 10.**
+
+**O que sobrou é uma camada só cuja imagem troca.** `background-image` é propriedade
+discreta: a troca de `linear-gradient(currentColor, currentColor)` para
+`var(--brand-rainbow)` é instantânea **de graça**, sem transição, sem atraso, sem
+segunda camada. Não há o que desalinhar nem o que recortar — os dois defeitos da
+rodada 93 deixaram de ser possíveis, em vez de serem consertados.
+
+**A âncora voltou para `calc(50% + 0.5lh)`.** O `- 0.5px` existia só para a linha do
+rótulo caber na caixa de linha dele, e com uma camada só, no botão, não há caixa
+apertada. O traço volta a cair **exatamente** onde o `underline-offset-4` pintava —
+25,5 no `md`, erro zero.
+
+**O que continua valendo, e é a única coisa que sobrevive das quatro rodadas:** o
+traço **não** é `text-decoration`, porque o `::first-letter` da base parte a decoração
+em dois segmentos. Essa medição da rodada 92 é a razão de haver `background` aqui, e
+está escrita no componente e no teste — quem devolver `underline` traz a emenda junto.
+
+**Verificado depois:** 1px exato nos dois estados e nos dois temas, contando linhas de
+pixel a DPR 8 (pela mediana da fatia, porque no tema claro a linha é escura e o fundo
+claro — tomar o mínimo como fundo inverte a conta e foi o que fez a primeira medição
+reportar 5px). A transição do botão voltou a ser a da base, 0,15s, sem
+`background-size`.
+
+**Os dois testes encolheram junto.** A asserção 4 voltou a afirmar o que sempre quis —
+há traço parado, ele vira arco-íris no cursor, e o toque acompanha — mais duas travas
+novas: **nada de `background-size` na transição e nada de `delay-`**, para a animação
+não voltar por descuido. E o mapa de exceções de ritmo da asserção 6 ficou **vazio**: o
+`link` era o único membro, e saiu.
+
+**Fallout:** `button.tsx` (a variante e o comentário, reescritos), os dois testes,
+`AGENTS.md`, `docs/button.tsx` (duas notas no lugar de duas). 617 testes, `tsc`, `lint`
+e auditor verdes. Nenhuma rota, nenhuma jornada.

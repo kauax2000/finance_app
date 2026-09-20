@@ -3,6 +3,7 @@ import { join, resolve } from "node:path"
 import { describe, expect, it } from "vitest"
 
 import { buttonVariants } from "./button"
+import { cn } from "@/lib/utils"
 
 /**
  * O primário é uma tecla (rodada 78): corpo chapado, contorno e plinto mais
@@ -80,12 +81,29 @@ describe("o primário é uma tecla", () => {
     }
   })
 
+  // A duração é afirmada sobre a string **resolvida** pelo `tailwind-merge`, e
+  // não sobre a saída crua do `cva`. A versão anterior lia a crua, onde a
+  // classe da base sobrevive mesmo quando a variante a vence — então
+  // `duration-(--duration-fast)` aparecia sempre e a asserção não podia
+  // falhar. Foi essa brecha que deixou o `link` mudar de ritmo em silêncio na
+  // rodada 91.
   it("6. a transição é enumerada e usa a curva da casa, em todo peso", () => {
+    // Quem foge do ritmo da casa entra aqui, com a razão escrita. Está vazio
+    // desde a rodada 94: o `link` era a única exceção, por causa da varredura
+    // do sublinhado, e ela saiu a pedido do dono — a troca de tinta é
+    // instantânea e não precisa de ritmo nenhum.
+    const RITMO_PROPRIO: Partial<Record<string, { duracao: string; curva: string }>> = {}
     for (const variant of ["primary", "secondary", "tertiary", "outline", "destructive", "link"] as const) {
-      const classes = buttonVariants({ variant })
+      const classes = cn(buttonVariants({ variant }))
+      const proprio = RITMO_PROPRIO[variant]
       expect(classes, variant).not.toContain("transition-all")
-      expect(classes, variant).toContain("duration-(--duration-fast)")
-      expect(classes, variant).toContain("ease-(--ease-out)")
+      expect(classes, variant).toContain(proprio?.duracao ?? "duration-(--duration-fast)")
+      expect(classes, variant).toContain(proprio?.curva ?? "ease-(--ease-out)")
+      // E quem não é exceção não pode carregar outro ritmo.
+      if (!proprio) {
+        expect(classes, variant).not.toMatch(/duration-\(--duration-(base|slow|instant)\)/)
+        expect(classes, variant).not.toMatch(/\bease-(linear|in|in-out)\b/)
+      }
     }
   })
 

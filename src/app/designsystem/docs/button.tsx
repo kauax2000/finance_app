@@ -27,16 +27,18 @@ export default function ButtonDoc() {
 
       <DocSection
         title="Fora da escada"
-        description="outline quando o controle precisa de contorno, destructive para o que não tem volta, link para ação que se comporta como texto (sublinhado sempre; o traço vira arco-íris no cursor e no toque), brand para o único CTA de marca da tela — a tecla do primary com o arco-íris em volta."
+        description="outline quando o controle precisa de contorno, destructive para o que não tem volta, link para ação que se comporta como texto (sublinhado sempre; no cursor o traço troca de tinta, do texto para o arco-íris, sem animação), brand para o único CTA de marca da tela — a tecla do primary com o arco-íris em volta, girando enquanto o cursor estiver em cima; brandOutline é o mesmo sem o halo, para onde ele não cabe. Passe o mouse: o link varre o sublinhado da esquerda para a direita, e os dois de marca giram."
         code={`<Button variant="outline">outline</Button>
 <Button variant="destructive">destructive</Button>
 <Button variant="link">link</Button>
-<Button variant="brand">brand</Button>`}
+<Button variant="brand">brand</Button>
+<Button variant="brandOutline">brandOutline</Button>`}
       >
         <Button variant="outline">outline</Button>
         <Button variant="destructive">destructive</Button>
         <Button variant="link">link</Button>
         <Button variant="brand">brand</Button>
+        <Button variant="brandOutline">brandOutline</Button>
       </DocSection>
 
       <DocSection
@@ -124,6 +126,26 @@ export default function ButtonDoc() {
         </FormSubmit>
       </DocSection>
 
+      <DocNote title="O sublinhado do link é ancorado na entrelinha, não no pé do botão">
+        O traço arco-íris é <code>background</code>, porque <code>text-decoration</code> não aceita degradê — e ele fica em <code>calc(50% + 0.5lh)</code>, meia entrelinha abaixo do meio da caixa. A versão anterior usava <code>bg-bottom</code>, e como o eixo <code>size</code> só declara recuo <em>lateral</em>, a caixa de conteúdo tem a altura inteira do botão: o traço caía no pé dele, <strong>5,5px abaixo</strong> do sublinhado, e saltava para longe do texto assim que o cursor chegava. Com a âncora o erro é zero em <code>md</code>, <code>lg</code> e <code>xl</code>, e 1px em <code>xs</code> e <code>sm</code>.
+      </DocNote>
+
+      <DocNote title="O traço do link é fundo, e isso conserta uma emenda">
+        Ele não é <code>text-decoration</code>, e a razão foi medida: o <code>::first-letter</code> da base — a maiúscula inicial do CTA — cria caixa própria para a primeira letra, e a decoração propagada sai <strong>partida em dois segmentos</strong>. Sublinhar também o <code>::first-letter</code>, <code>text-decoration-skip-ink: none</code> e mover a decoração para o <code>&lt;span&gt;</code> mantêm a emenda; só a camada de <code>background</code> a elimina, porque um fundo é uma pintura só. Ela é ancorada em <code>calc(50% + 0.5lh)</code>, que cai no mesmo pixel em que a decoração caía.
+      </DocNote>
+
+      <DocNote title="A troca de tinta é seca, e isso é decisão">
+        No cursor o traço passa da cor do texto para o arco-íris <strong>sem animação</strong> — <code>background-image</code> é propriedade discreta, então a troca é instantânea sem ninguém pedir. Ele chegou a varrer da esquerda para a direita, a recuar na saída e a ter uma segunda linha no rótulo só para ter timing próprio; foram quatro rodadas de ajuste, e o dono encerrou pedindo a troca seca. O que sobrou não tem transição própria, nem atraso, nem segunda camada.
+      </DocNote>
+
+      <DocNote title="brandOutline é o brand onde o halo não cabe">
+        O halo do <code>brand</code> é um <code>::after</code> a <code>-inset-1</code>: ele sangra 4px para fora da caixa, e num vizinho próximo — uma barra, um cabeçalho, um par de ações — isso encosta. <code>brandOutline</code> tira a camada do halo e mantém o resto, contorno de 1px e giro incluídos. **Não é um degrau a menos na escada**: continua fora dela, e continua um por tela. O que muda é quanto espaço ele pede em volta.
+      </DocNote>
+
+      <DocNote title="O giro do brand pausa, não desliga">
+        <code>brand-rainbow-live</code> fica aplicada sempre, com <code>animation-play-state: paused</code>; o cursor e o toque a põem em <code>running</code>. Ligar a animação só dentro do <code>hover:</code> faria o ângulo <strong>voltar a 0°</strong> na saída — pausada, ela congela onde estava e retoma dali. Medido: 119,5° ao sair, e 119,5° um segundo depois. <code>--brand-spin</code> é o botão de velocidade da utility: 6s aqui, contra os 12s do padrão que a marca grande usa. Quem pede menos movimento não vê giro nenhum, porque o bloco global de <code>prefers-reduced-motion</code> isenta só <code>animate-spin</code> e <code>animate-pulse</code>.
+      </DocNote>
+
       <DocNote title="Hover usa --primary-hover, nunca alfa">
         <code>--primary-hover</code> é opaco e escurece nos dois temas. Um alfa
         como <code>bg-primary/90</code> clareava no tema claro e derrubava o
@@ -164,7 +186,7 @@ export default function ButtonDoc() {
         rows={[
           {
             prop: "variant",
-            type: '"primary" | "secondary" | "tertiary" | "outline" | "destructive" | "link" | "brand"',
+            type: '"primary" | "secondary" | "tertiary" | "outline" | "destructive" | "link" | "brand" | "brandOutline"',
             default: '"primary"',
             description: "O degrau da hierarquia; outline, destructive, link e brand ficam fora da escada.",
           },

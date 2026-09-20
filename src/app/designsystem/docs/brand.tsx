@@ -230,7 +230,7 @@ export default function BrandDoc() {
 
       <DocSection
         title="O botão de marca"
-        description="variant=&quot;brand&quot; é a tecla do primary com o arco-íris em volta: um contorno de 1px e um halo borrado atrás. Um por tela, para o CTA de marca — entrar, começar. O link sublinha sempre, e o traço vira arco-íris no cursor e no toque."
+        description="variant=&quot;brand&quot; é a tecla do primary com o arco-íris em volta: um contorno de 1px e um halo borrado atrás. Sob o cursor o arco-íris gira, uma volta a cada 6s, e ao sair ele pausa no ângulo em que estava — desligar a animação faria a cor saltar de volta ao começo. Um por tela, para o CTA de marca — entrar, começar. O link sublinha sempre, e no cursor o traço vira arco-íris varrendo da esquerda para a direita."
         code={`<Button variant="brand" size="xl">entrar</Button>
 <Button variant="link">esqueceu a senha?</Button>`}
         previewClassName="items-center gap-6"

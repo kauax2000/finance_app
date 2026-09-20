@@ -542,11 +542,37 @@ tema.
   `@media (hover: hover)` e sem ele o degrau ficava inerte no dedo. Uma tela tem um `primary` só. Fora da escada, de propósito:
   `outline` é a exceção para quando o controle precisa de contorno próprio e
   nenhum degrau serve, `destructive` é o que não tem volta, `link` é ação que se
-  comporta como texto — **sublinhada sempre**, com o traço virando arco-íris no
-  cursor e no toque —, e `brand` é a tecla do `primary` com o arco-íris em
+  comporta como texto — **sublinhada sempre**, e no cursor o traço **troca de
+  tinta**, da cor do texto para o arco-íris, **sem animação nenhuma**. É uma
+  camada de `background` só: `background-image` é propriedade discreta, então a
+  troca é instantânea de graça. O traço chegou a varrer da esquerda para a
+  direita, a recuar na saída e a ter uma segunda linha no rótulo para ter
+  timing próprio — quatro rodadas (91 a 94) que o dono encerrou pedindo a troca
+  seca.
+  **Ele não é `text-decoration`, e a razão é uma emenda medida**: o
+  `::first-letter` da base — a maiúscula inicial do CTA — cria caixa própria
+  para a primeira letra, e a decoração propagada sai pintada em **dois
+  segmentos** com uma costura visível. Sublinhar também o `::first-letter`,
+  `text-decoration-skip-ink: none` e mover a decoração para o `<span>`
+  **mantêm** a emenda; só a camada de `background` a elimina, porque um fundo é
+  uma pintura só. Quem devolver `underline` traz a emenda junto.
+  A âncora é `calc(50% + 0.5lh)` — meia entrelinha abaixo do meio da caixa —, e
+  ela cai **no mesmo pixel** em que a decoração caía: a `%` resolve contra
+  `(altura − 1px)` e `lh` é a entrelinha do próprio elemento, então a conta
+  acompanha o degrau sozinha. Medido no `md`: `underline-offset-4` pintava em
+  25,5 e a âncora resolve em 25,5; ≤1px nos cinco degraus. `bg-bottom` punha o
+  traço 5,5px abaixo do texto, porque o eixo `size` só declara recuo lateral e
+  a caixa de conteúdo tem a altura inteira. `bg-origin-content` é o que mantém
+  o traço na largura do **texto** e não do botão. Ver as rodadas 91 a 94.
+  E `brand` é a tecla do `primary` com o arco-íris em
   volta (contorno de 1px no `::before`, halo no `::after`, o botão em si sem
   fundo, porque numa raiz de empilhamento o fundo pinta antes dos filhos de
-  `z` negativo): **um por tela**, para o CTA de marca. O arco-íris não entra
+  `z` negativo), girando uma volta a cada 6s sob o cursor e **pausando** no
+  ângulo em que estava ao sair — ligar a animação só dentro do `hover:` faria
+  a cor saltar de volta ao começo. **`brandOutline` é o mesmo sem o halo**,
+  para onde ele não cabe: o `::after` sangra 4px para fora da caixa e encosta
+  no vizinho numa barra ou num par de ações. Os dois: **um por tela**, para o
+  CTA de marca. O arco-íris não entra
   no `primary` porque acento em todo botão deixa de ser acento. **Não existe `variant="default"` nem `variant="ghost"`**
   — viraram `primary` e `tertiary`, para o nome dizer o degrau; os dois saíram
   do tipo, então o compilador acusa quem os escrever. **`success` e `warning`

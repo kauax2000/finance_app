@@ -89,16 +89,33 @@ describe("resposta ao toque do Button", () => {
     expect([...semPar].sort()).toStrictEqual([...PENDENTES].sort())
   })
 
-  it("4. `link` sublinha sempre, e o traço arco-íris do cursor tem o par de toque", () => {
+  // **Por que o traço não é `text-decoration`.** Esta asserção exigia
+  // `" underline "` até a rodada 92, quando a emenda foi medida: o
+  // `::first-letter` da base — a maiúscula inicial do CTA — cria caixa
+  // separada para a primeira letra, e a decoração propagada sai partida em
+  // dois segmentos. Sublinhar também o `::first-letter`,
+  // `text-decoration-skip-ink: none` e mover a decoração para o `<span>`
+  // **mantêm** a emenda; só a camada de `background` a elimina. Se alguém
+  // devolver `underline` aqui, a emenda volta junto.
+  //
+  // **E é uma camada só.** O traço chegou a varrer e a recuar, com uma segunda
+  // linha no rótulo para ter timing próprio (rodadas 91–93); o dono encerrou
+  // pedindo a troca seca, e com ela foram embora a transição própria, o atraso
+  // e a segunda camada. `background-image` é discreta: a troca é instantânea
+  // sem ninguém pedir.
+  it("4. `link` tem traço sempre, e ele vira arco-íris no cursor e no toque", () => {
     const classes = buttonVariants({ variant: "link" })
-    // Sublinhado fixo: com a marca preta o link tem a cor do texto, e sem o
-    // traço nada o distinguia até o cursor passar — o que no toque é nunca.
-    expect(classes).toContain(" underline ")
-    expect(classes).not.toContain("hover:underline")
-    // O traço do cursor é um `background` de 1px (decoração não aceita
-    // degradê), e por isso ele **é** cobrado pela regra H como qualquer fundo.
+    // O traço parado é a cor do texto, à largura cheia.
+    expect(classes).toContain("bg-[image:linear-gradient(currentColor,currentColor)]")
+    expect(classes).toContain("bg-[length:100%_1px]")
+    expect(classes).not.toContain(" underline ")
+    expect(classes).not.toContain("text-decoration")
+    // No cursor ele troca de tinta, e o toque acompanha (regra H).
     const { hover, active } = fundos(classes)
     expect(hover).toContain("(image:--brand-rainbow)")
     expect(active).toContain("(image:--brand-rainbow)")
+    // Sem animação: nada de `background-size` na transição, nada de atraso.
+    expect(classes).not.toContain("background-size")
+    expect(classes).not.toContain("delay-")
   })
 })

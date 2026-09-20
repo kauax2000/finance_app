@@ -18,7 +18,11 @@ const buttonVariants = cva(
       // também fica de fora: é a mesma tecla do `primary` com o arco-íris da
       // marca em volta, para **um** CTA de marca por tela — entrar, começar.
       // O arco-íris não entra no `primary` porque um acento em todo botão
-      // deixa de ser acento.
+      // deixa de ser acento — e isso deixou de ser só argumento na rodada 90,
+      // quando três candidatos de primário com arco-íris foram montados ao
+      // vivo, medidos e recusados pelo dono. O número que sobrou: com a
+      // lavagem acesa no cursor o rótulo branco cai a **4,87:1** no tema
+      // claro, contra **18,97** da tecla chapada.
       //
       // `success` e `warning` foram removidos: nomeavam um estado, não um
       // peso, e nenhuma tela do app chegou a usá-los. Estado de sucesso e de
@@ -58,6 +62,21 @@ const buttonVariants = cva(
         // Sem grão: numa área de 32px o grão é ruído, não textura. Sem a
         // sombra da tecla: o contorno arco-íris já é a aresta.
         //
+        // **O arco-íris gira sob o cursor, e ele pausa em vez de desligar.**
+        // `brand-rainbow-live` fica aplicada sempre, com
+        // `animation-play-state: paused`; o cursor e o toque a põem em
+        // `running`. Ligar a animação só dentro do `hover:` faria o ângulo
+        // **voltar a 0°** ao sair — pausada, ela congela onde estava e retoma
+        // dali. `--brand-spin` é o botão de velocidade da utility; 6s num
+        // botão de 32px lê como giro, enquanto os 12s do padrão (o splash)
+        // leem como respiração.
+        //
+        // O giro chega ao contorno **e** ao halo sem camada nova: os dois leem
+        // `--brand-rainbow`, que é composto aqui a partir de `--brand-angle`.
+        // Movimento reduzido já está coberto pelo bloco global, que isenta só
+        // `.animate-spin` e `.animate-pulse` — `brand-rotate` é cortada, e o
+        // botão não gira.
+        //
         // `brand-rainbow-image` **não é redundante**, e não se apaga: ela é
         // quem declara `--brand-rainbow` no botão. O degradê saiu do `:root`
         // porque um `var()` dentro de uma propriedade personalizada é
@@ -67,7 +86,15 @@ const buttonVariants = cva(
         // basta a classe no elemento. Ver `@utility brand-rainbow-image` em
         // `globals.css`.
         brand:
-          "brand-rainbow-image relative isolate text-primary-foreground [--brand-fill:var(--primary)] hover:[--brand-fill:var(--primary-hover)] active:[--brand-fill:var(--primary-hover)] aria-expanded:[--brand-fill:var(--primary-hover)] before:absolute before:-inset-px before:-z-10 before:rounded-[inherit] before:border before:border-transparent before:[background:linear-gradient(var(--brand-fill),var(--brand-fill))_padding-box,var(--brand-rainbow)_border-box] before:transition-[background] before:duration-(--duration-fast) after:absolute after:-inset-1 after:-z-20 after:rounded-[inherit] after:bg-(image:--brand-rainbow) after:opacity-50 after:blur-md after:transition-opacity after:duration-(--duration-fast) hover:after:opacity-80 active:after:opacity-80 aria-busy:disabled:opacity-100",
+          "brand-rainbow-image brand-rainbow-live [--brand-spin:6s] [animation-play-state:paused] hover:[animation-play-state:running] active:[animation-play-state:running] relative isolate text-primary-foreground [--brand-fill:var(--primary)] hover:[--brand-fill:var(--primary-hover)] active:[--brand-fill:var(--primary-hover)] aria-expanded:[--brand-fill:var(--primary-hover)] before:absolute before:-inset-px before:-z-10 before:rounded-[inherit] before:border before:border-transparent before:[background:linear-gradient(var(--brand-fill),var(--brand-fill))_padding-box,var(--brand-rainbow)_border-box] before:transition-[background] before:duration-(--duration-fast) after:absolute after:-inset-1 after:-z-20 after:rounded-[inherit] after:bg-(image:--brand-rainbow) after:opacity-50 after:blur-md after:transition-opacity after:duration-(--duration-fast) hover:after:opacity-80 active:after:opacity-80 aria-busy:disabled:opacity-100",        // A mesma tecla de marca **sem o halo**: só o contorno de arco-íris,
+        // que continua girando sob o cursor. É o `brand` para onde ele não
+        // cabe — uma barra, um cabeçalho, um par de ações — porque o halo do
+        // `::after` sangra 4px para fora da caixa e encosta no vizinho.
+        //
+        // Ele não é um degrau a menos na escada: continua fora dela, e
+        // continua **um por tela**. O que muda é quanto espaço ele pede.
+        brandOutline: "brand-rainbow-image brand-rainbow-live [--brand-spin:6s] [animation-play-state:paused] hover:[animation-play-state:running] active:[animation-play-state:running] relative isolate text-primary-foreground [--brand-fill:var(--primary)] hover:[--brand-fill:var(--primary-hover)] active:[--brand-fill:var(--primary-hover)] aria-expanded:[--brand-fill:var(--primary-hover)] before:absolute before:-inset-px before:-z-10 before:rounded-[inherit] before:border before:border-transparent before:[background:linear-gradient(var(--brand-fill),var(--brand-fill))_padding-box,var(--brand-rainbow)_border-box] before:transition-[background] before:duration-(--duration-fast) aria-busy:disabled:opacity-100",
+
         // Sem borda visível — e sem o anel vazado que havia antes. O culpado
         // não era a borda transparente da base, era o `bg-clip-padding` que a
         // acompanha: ele recortava o preenchimento na caixa de padding, então o
@@ -99,12 +126,43 @@ const buttonVariants = cva(
           "bg-destructive/10 text-destructive-muted-foreground hover:bg-destructive/20 active:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:active:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         // O link é sublinhado **sempre**: com a marca preta ele tem a cor do
         // texto, e sem o traço nada o distinguia até o cursor passar — o que
-        // no toque é nunca. No cursor e no toque o traço vira arco-íris, que é
-        // um `background` de 1px no pé da caixa de conteúdo, e não um
-        // `text-decoration`, porque decoração não aceita degradê.
+        // no toque é nunca. No cursor e no toque o traço **troca de tinta**,
+        // do texto para o arco-íris, sem animação nenhuma.
+        //
+        // **É uma camada só, e isso é o desenho.** O traço chegou a varrer da
+        // esquerda para a direita e a recuar na saída, com o branco desenhando
+        // de volta em seguida — quatro rodadas de ajuste (91 a 93) que o dono
+        // encerrou pedindo a troca seca. O que sobrou não tem `transition`
+        // própria, não tem atraso e não tem segunda camada: `background-image`
+        // é propriedade discreta, então a troca é instantânea de graça.
+        //
+        // **O traço não é `text-decoration`, e a razão é uma emenda medida.**
+        // O `::first-letter` da base — a garantia de maiúscula do CTA — cria
+        // caixa própria para a primeira letra, e a decoração propagada é
+        // pintada em **dois segmentos** com uma costura entre eles, visível a
+        // olho nu. Quatro candidatos foram testados a 22× de ampliação:
+        // sublinhar também o `::first-letter`, `text-decoration-skip-ink:
+        // none` e mover a decoração para o `<span>` **mantêm** a emenda; só a
+        // camada de `background` a elimina, porque um fundo é uma pintura só.
+        // A classe de `::first-letter` não pode sair — ela é a regra do
+        // sistema. **Quem devolver `underline` aqui traz a emenda junto.**
+        //
+        // **A âncora é `calc(50% + 0.5lh)`, e ela cai no mesmo pixel em que a
+        // decoração caía.** Meia entrelinha abaixo do meio da caixa: a `%`
+        // resolve contra `(altura − 1px)` e `lh` é a entrelinha do próprio
+        // elemento, então a conta acompanha o degrau sozinha. Medido no `md`:
+        // linha de base em 21,5, `underline-offset-4` pintando em 25,5, e a
+        // âncora resolvendo em 25,5 — erro zero; ≤1px nos cinco degraus.
+        // A versão anterior usava `bg-bottom`, e como o eixo `size` só declara
+        // recuo lateral a caixa de conteúdo tem a altura inteira: o traço caía
+        // no pé do **botão**, 5,5px abaixo do texto.
+        //
+        // **`bg-origin-content` é o que mantém o traço na largura do texto** e
+        // não do botão, porque o `px-*` do degrau vira recuo.
+        //
         // `brand-rainbow-image` pela mesma razão do `brand`: ela declara
-        // `--brand-rainbow` aqui, que é o que o sublinhado de 1px lê.
-        link: "brand-rainbow-image text-primary-accent underline underline-offset-4 decoration-1 hover:no-underline hover:bg-(image:--brand-rainbow) hover:bg-[length:100%_1px] hover:bg-bottom hover:bg-no-repeat hover:bg-clip-content hover:bg-origin-content active:no-underline active:bg-(image:--brand-rainbow) active:bg-[length:100%_1px] active:bg-bottom active:bg-no-repeat active:bg-clip-content active:bg-origin-content",
+        // `--brand-rainbow` aqui, que é o que o traço de 1px lê no cursor.
+        link: "brand-rainbow-image text-primary-accent bg-[image:linear-gradient(currentColor,currentColor)] bg-no-repeat bg-clip-content bg-origin-content bg-[length:100%_1px] bg-[position:0%_calc(50%+0.5lh)] hover:bg-(image:--brand-rainbow) active:bg-(image:--brand-rainbow)",
       },
       // Uma escada só, de 24 a 40 em degraus de 4, e a coluna `icon-*` espelha
       // a de texto degrau a degrau: `md` casa com `icon-md`, `lg` com
