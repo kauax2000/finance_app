@@ -497,12 +497,12 @@ function BottomBarSlot({
  *
  * E ela **não declara cor nenhuma**. A classe que ela substitui tinha **seis
  * `!important`** (`hover:!bg-primary`, `hover:!border-primary`, e os pares
- * `dark:`) que anulavam a tecla que o `primary` virou na rodada 78: o
- * `hover:bg-primary-hover`, o `border-primary-edge` e o
- * `shadow-(--primary-shadow-value)`. O FAB era um quadrado verde chapado e
- * inerte ao cursor. O `active:scale-95` saiu junto — a base já traz
- * `active:translate-y-px` e a tecla já tem a sombra de apertado; dois
- * afundamentos são um a mais.
+ * `dark:`) que anulavam o desenho do `primary` — na época a tecla da rodada
+ * 78, com `hover:bg-primary-hover`, contorno e sombra; desde a rodada 98 o
+ * primário é chapado e acende a lava sob o cursor, e a ação continua sem
+ * declarar nada: o que o `primary` desenha, ela desenha. O FAB era um
+ * quadrado verde chapado e inerte ao cursor. O `active:scale-95` saiu junto —
+ * a base já traz `active:translate-y-px`; dois afundamentos são um a mais.
  */
 const bottomBarActionClassName = [
   "size-(--bottom-bar-h) shrink-0 rounded-full p-0",

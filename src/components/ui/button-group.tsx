@@ -44,11 +44,17 @@ export function ButtonGroup({ className, children, ...props }: ButtonGroupProps)
                 "[&>*:not(:first-child)]:before:w-px",
                 "[&>*:not(:first-child)]:before:bg-current/20",
                 // Quem tem borda visível desenha a própria emenda, e o filete
-                // por cima era um segundo traço para ela. O primário é tecla,
-                // com contorno em `--primary-edge`; o `outline` tem o contorno
-                // no nome. Nos dois a sobreposição de 1px já dá um fio só.
-                "[&>[data-variant=primary]]:before:hidden",
+                // por cima era um segundo traço para ela: o `outline` tem o
+                // contorno no nome, e a sobreposição de 1px já dá um fio só.
                 "[&>[data-variant=outline]]:before:hidden",
+                // O primário foi tecla com contorno até a rodada 97 e entrava
+                // aqui pela regra de cima; chapado desde a 98, ele cai na do
+                // `secondary` logo abaixo — o vão transparente de 1px. O
+                // `before:hidden` fica pela segunda razão: a lava do primário
+                // mora no `background`, e não num pseudo-elemento, justamente
+                // porque este seletor o esconderia.
+                "[&>[data-variant=primary]]:before:hidden",
+                "[&>[data-variant=primary]:not(:first-child)]:ml-px",
                 // O `secondary` não tem borda que desenhe a emenda, e o filete
                 // recuado lia como risco no meio de um bloco. No lugar dele a
                 // emenda é um vão de 1px de cima a baixo, **transparente**: o

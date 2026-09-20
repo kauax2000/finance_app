@@ -73,7 +73,6 @@ export default function ColorsDoc() {
           {/* O realce e a aresta da tecla preta (branca no escuro). O hover é
               opaco e puxa na direção do rótulo nos dois temas. */}
           <TokenTile name="Primary (hover)" token="--primary-hover" onToken="--primary-foreground" />
-          <TokenTile name="Primary (aresta)" token="--primary-edge" onToken="--primary-foreground" />
           {/* Dois papéis. `--primary` preenche e por isso é medido contra o
               texto que fica em cima; `--primary-accent` é texto e por isso é
               medido contra o cartão que fica embaixo. Com a marca preta os

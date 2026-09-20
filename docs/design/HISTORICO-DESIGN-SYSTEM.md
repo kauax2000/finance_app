@@ -11169,3 +11169,333 @@ nenhuma jornada.
 **O que ficou sem verificar:** as telas do app rodando — o painel do navegador
 não está autenticado. O seletor de amostras de categoria e de carteira foi
 verificado por tipo e por teste, não por captura.
+
+### Rodada 97 — a tecla do primário ganha o molde do Polaris
+
+**O pedido.** "Revisão no `Button variant="primary"` para ele ficar com as mesmas
+especificações de estilo dos botões da Shopify, igual o botão continuar do meio
+dessa tela, mantendo os tamanhos e as bordas arredondadas que temos hoje, e as
+cores atuais também", com o link de `accounts.shopify.com/lookup`.
+
+**A referência foi medida, não deduzida — e ela tinha duas receitas.** O CSS é
+cross-origin, então `cssRules` não abre; o `fetch` do bundle
+(`shopify-assets.shopifycdn.com/…/merchant-public-….css`, 534KB) abre, e dali
+saíram as 470 regras de `.ui-button`. O que elas mostram:
+
+- **A tela do link roda a versão achatada.** `body.has-dark-background` zera as
+  sombras internas do `::before`, e sobra `--p-shadow-200`
+  (`0 3px 1px -1px rgba(26,26,26,.07)`) mais um véu
+  `linear-gradient(180deg, rgba(255,255,255,.07) 80%, rgba(255,255,255,.15) 100%)`.
+  As cores ali são `#0B1314`, hover `#283133`, active `#545D5E`, texto `#FAFCFC`.
+  No cursor ela acende um aro interno de 1px — `#ebebeb` em cima e nas laterais,
+  `#cccccc` embaixo —, medido ao vivo com um `hover` de verdade.
+- **O Polaris canônico é a tecla moldada.** `--p-shadow-button-primary` é
+  `inset 0 2px 0 0 rgba(255,255,255,.2)`, `inset ±2px 0 0 0` iguais,
+  `inset 0 -1px 0 1px #000` e `inset 0 1px 0 0 #000`. Apertado:
+  `inset 0 3px 0 0 #000`, o véu inverte para
+  `rgba(255,255,255,.1) 0% → transparent` e o rótulo desce 1px.
+
+Posta a diferença na mesa, o dono escolheu **o canônico** — que é o que de fato
+nos faltava: tínhamos luz só no topo, 1px a 14%, e nenhuma nas laterais.
+
+#### O que entrou
+
+A luz engrossou e passou a **cercar**: `--primary-highlight` foi de 14% a 20%, em
+três camadas (`inset 0 2px`, `inset 2px 0`, `inset -2px 0`). Nasceram
+`--primary-sheen` (o véu) e `--primary-shadow-drop` (`0 3px 1px -1px` a 7%). O
+plinto ganhou o espalhamento do Polaris (`inset 0 -1px 0 1px`), e o afundar virou
+**duro**: `inset 0 3px 0 0`, sem raio de borrão, contra o `inset 0 1px 2px 0` de
+antes.
+
+**A sombra de fora é da tecla, e não a do sistema.** A do Polaris é mais baixa e
+mais espalhada que a nossa `--shadow-xs-value` (`0 1px 1px 0` a 4%), e mudar o
+token compartilhado por causa de um botão alcançaria todo componente que o veste.
+
+**A linha escura acima da luz não foi escrita.** O Polaris a desenha com
+`inset 0 1px 0 0 #000` porque o botão dele **não tem borda**; o nosso tem
+`border-primary-edge`, que já contorna os quatro lados. As duas juntas dariam 2px
+de escuro no topo.
+
+#### O que não mudou, por decisão
+
+Cores, escada (24 · 28 · 32 · 36 · 40), raio (10px) e anel de foco. E o **ritmo**:
+o Polaris anima em 75ms com `cubic-bezier(0.19, 0.91, 0.38, 1)`, e nós ficamos em
+`--duration-fast` com `--ease-out`. A asserção 6 cobra a mesma curva em **todos**
+os pesos, e um `primary` respondendo diferente do `secondary` ao lado é o defeito
+que ela existe para impedir. O desenho veio inteiro; o tempo continua nosso.
+
+O rótulo também não ganhou deslocamento próprio: a base já tem
+`active:translate-y-px` no botão inteiro, e dois afundamentos seriam um a mais —
+a mesma correção que a rodada 82 fez no FAB.
+
+#### O véu não pode ser pseudo-elemento, e isso foi verificado no DOM
+
+`ButtonGroup` escreve `[&>[data-variant=primary]]:before:hidden`
+(`button-group.tsx:50`) para desligar o próprio divisor sobre o primário. Um
+`::before` na variante **sumiria calado dentro de um grupo** — e o catálogo não
+mostra o botão agrupado, então a regressão não apareceria. O véu foi como
+`background-image`; medido em `/designsystem/button-group`: ali o pseudo do
+primário é `display: none` e o véu segue pintando.
+
+Antes de escrever, medi o `tailwind-merge`: `bg-primary` (cor) e
+`bg-(image:--primary-sheen)` (imagem) sobrevivem juntas, com `hover:bg-primary-hover`
+junto. Se não sobrevivessem, a saída era a propriedade arbitrária.
+
+#### No tema escuro a luz inverte, e o escuro estava sem molde havia quatro rodadas
+
+A receita do Polaris é luz branca mais aresta preta, e isso pressupõe tecla
+escura. A nossa inverte para branca, onde luz branca não desenha nada — foi por
+isso que a rodada 83 pôs `--primary-highlight: transparent` ali. O que a medição
+mostrou é que aquilo deixou o escuro **sem molde nenhum**: só a aresta. Agora quem
+cerca é o escuro (`oklch(0 0 0 / 10%)`), e a aresta continua mais clara que o
+corpo — a mesma peça, moldada pelo lado oposto.
+
+#### Os números, e uma correção ao histórico
+
+| | aresta / corpo | luz / corpo, antes | luz / corpo, agora | rótulo |
+| --- | --- | --- | --- | --- |
+| claro | 1,15 | 1,52 | **1,88** | 17,18 |
+| escuro | 1,51 | **invisível** | **1,26** | 18,97 |
+
+**A rodada 78 registrou "aresta contra corpo 1,53 no claro e 1,86 no escuro, fio
+de luz contra corpo 1,53 e 1,51", e esses números estão mortos desde a rodada
+83.** Nenhum dos dois tokens mudou *nesta* rodada, e mesmo assim a aresta mede
+1,15 no claro: os valores da 78 são da era do primário **verde**, e a 83 trocou a
+tecla por preta dizendo que "`button-primary.test.ts` continuou verde sem uma
+linha mudada" — o teste continuou, os números não. O caso do escuro é pior: a 78
+anotou 1,51 para um fio de luz que a 83 tornou `transparent`, e a linha
+sobreviveu no documento descrevendo uma luz que não existia.
+
+É o mesmo defeito que a rodada 95 nomeou no `ColorTile`: **o token muda de
+significado e o consumidor não sabe** — aqui, o consumidor era a documentação.
+
+Fica dito o que a medição também mostrou e não foi consertado: no tema claro a
+aresta é fraca (1,15) perto da luz (1,88), então quem molda ali é a luz. Aprofundar
+a aresta é mexer numa cor, e as cores ficaram de fora do pedido.
+
+#### O teste
+
+Quatro asserções novas em `button-primary.test.ts`, que passou de 9 para 13: a luz
+**cerca** (três camadas de `var(--primary-highlight)` no `--primary-shadow-value`,
+nos dois blocos de tema, com as duas laterais nomeadas); o véu é token, está nos
+dois temas e **sobrevive ao merge** (o resolvido por `cn()` tem `bg-primary` *e*
+`bg-(image:--primary-sheen)`); o véu **não** é pseudo-elemento, e a asserção lê o
+`button-group.tsx` para que a razão fique junto da regra; e o afundar é duro (o
+terceiro valor do `pressed` é `0`). Duas sabotagens, duas reprovações.
+
+#### Fallout
+
+`globals.css` (os tokens nos dois temas), `button.tsx` (uma classe e os
+doc-comments), `button-primary.test.ts`, a página `button` do catálogo (a seção da
+tecla e três notas, uma delas substituindo a "Elevação escura, não luz", que dizia
+"a única luz é o fio de 1px no topo") e o `AGENTS.md`. 628 testes, `tsc`, `lint`,
+`ds:audit` e `ds:catalog` verdes. Nenhuma rota, nenhuma jornada.
+
+**O que ficou sem verificar:** o `active` mantido não foi amostrado por quadro — o
+painel do navegador não segura o clique, que é a mesma limitação que a rodada 78
+registrou; o que o prova é a regra `:active` lida no CSS emitido. E as telas do
+app, que seguem atrás de autenticação.
+
+### Rodada 98 — o primário vira chapado, e acende em lava sob o cursor
+
+**O pedido, em três mensagens.** A primeira desfez a rodada 97: "não gostei do
+resultado; quero mudar completamente o `primary` — branco chapado, sem efeito,
+3D, profundidade, nada disso. No hover, a tintura de fundo é o arco-íris,
+levemente alguns blobs como um lava-lamp passando atrás do botão, focando sempre
+na ponta do mouse; nas laterais um branco mais aparente e no centro cada vez mais
+forte." A segunda corrigiu a minha leitura: **não há animação de clique** — o
+clique só afunda, como `secondary` e `tertiary`; a animação é a das cores de
+fundo, referenciada à ponta do mouse. A terceira deu a chave: "a coloração não
+precisa estar 100%, pode estar meio opaca, como se tivesse um vidro branco na
+frente — mas aparente, para ficar bonito."
+
+**Isto inverte a rodada 90, e foi dito antes de fazer.** A 90 montou três
+primários com arco-íris no cursor e o dono os recusou; o `AGENTS.md` escrevia "o
+arco-íris não entra no `primary`" e contava arco-íris sob texto como a invariante
+3 violada. O desenho de agora é outro — botão chapado, texto na cor do sistema, a
+cor **atrás** de um vidro com teto medido — e a decisão é do dono. A 90 continua
+verdadeira sobre o que mediu: texto branco sobre cor cheia, 4,87:1.
+
+Três decisões fechadas com ele antes de escrever: **chapado mantendo a inversão**
+da marca (preto no claro, branco no escuro — o vidro é da cor do botão, então é
+branco no escuro e preto no claro); **a tinta tem teto e é medida**; e o clique
+afunda 1px pela base, mais nada.
+
+#### O desenho
+
+Lava sob vidro fosco, que segue o dedo — cinco camadas de `background-image` no
+próprio botão, em `@utility primary-wash`:
+
+1. **O vidro**, por cima: um `radial-gradient` de `--primary` em `color-mix`,
+   centrado no ponteiro, fino no centro (`--button-glass-min`, 36%) e grosso na
+   borda (`--button-glass-max`, 76%). É a peça que faz as duas coisas do pedido
+   de uma vez — "mais forte perto do mouse, mais branco nas laterais" **e** o
+   teto de contraste do rótulo.
+2–9. **Oito blobs, uma parada da marca cada** — teal a lima —, elipses macias
+   que caem a transparente aos 70% do raio, cada um centrado no ponteiro mais um
+   deslocamento **orbital** com raio (24–38px), fase (i/8) e sentido próprios.
+   Nasceram quatro, de matizes afastados; o dono pediu "todas as cores do
+   arco-íris", e com oito a lava lê como o degradê da marca, não como manchas. Uma volta em 8s: a cor respira em vez de girar. Cursor parado,
+   a lava anda; cursor andando, ela vai junto.
+
+**Quem liga é `--button-wash`**, uma `@property` tipada de 0 a 1, no cursor, no
+toque (regra H) e com o popover aberto. Ela multiplica a transparência do vidro:
+em 0 o vidro é 100% opaco e o botão é chapado; em 1 ele afina até o teto. Não é
+`opacity` — apagaria o rótulo junto — e não é `hover:bg-*`: o fundo não muda de
+cor. Registrada pela razão do `--brand-angle`: só variável tipada interpola, e é
+isso que dá entrada e saída suaves com a transição da casa. **Os blobs são sempre
+pintados**; é o vidro que os mostra ou esconde.
+
+**A órbita pausa em vez de desligar** (`animation-play-state`), a decisão do
+`brand`: ligar só dentro do `hover:` faria a lava saltar ao ponto zero a cada
+entrada. Medido: `paused` a 0ms em repouso, `running` a 1016ms um segundo depois
+de o cursor entrar.
+
+**A posição do ponteiro** chega em `--button-mx`/`--button-my`, em px relativos à
+caixa, escritas por `onPointerMove`/`onPointerDown` no `Button` por
+`setProperty` — sem estado, sem re-render, o precedente do marcador do `Tabs`. Os
+handlers compõem com os de quem chama; com `asChild` o `Slot` os funde no filho.
+`pointerdown` escreve também, para o toque acender onde o dedo pousou. Sem
+ponteiro (teclado), o padrão é o centro, e o foco **não** acende o wash — foco
+não é intenção de clicar. O `button.tsx` ganhou `"use client"` por isso.
+`sin()`/`cos()` são o primeiro uso de trigonometria em CSS do projeto.
+
+#### Por que nada é pseudo-elemento
+
+`ButtonGroup` escreve `[&>[data-variant=primary]]:before:hidden` — um `::before`
+sumiria calado dentro de um grupo (medido na 97). E um `::after` em `z` negativo
+fica atrás do próprio `background` (a medição do `brand`, rodada 83). Camadas de
+`background-image` não disputam empilhamento com nada, e o `bg-clip-padding` da
+base já as recorta. Chapado e sem borda, o primário caiu na emenda do
+`secondary` no `ButtonGroup`: o vão transparente de 1px.
+
+#### O que saiu
+
+A tecla inteira — `--primary-edge`, `--primary-highlight`, `--primary-sheen`,
+`--primary-shadow-drop`, `--primary-shadow-value`, `--primary-shadow-pressed-value`,
+nos dois temas, e `--color-primary-edge` do `@theme`. Da variante: o contorno, os
+dois `shadow-(…)`, `hover:`/`active:bg-primary-hover`, `disabled:shadow-none`.
+`--primary-hover` fica: o `brand` o lê como `--brand-fill`. O ladrilho da aresta
+saiu de `/designsystem/colors`.
+
+#### Calibração e medição
+
+A primeira versão dos blobs (elipses de 55–60% da largura, órbitas de 18–30px,
+vidro a 92% na borda) cobria uns 60% do botão; o pedido é "quase todo, com as
+laterais mais brancas". Os blobs foram a 75–85% da largura, as órbitas a 24–36px
+e o vidro na borda a 76%. Visto ampliado 2,4× nos dois temas, com o ponteiro na
+esquerda, no centro e na direita: a cor segue o ponteiro e a borda longe fica
+na cor do botão.
+
+`scripts/primary-wash-contrast.mjs` é a guarda: força `--button-wash: 1`, varre
+8 fases da órbita × 5 posições do ponteiro (centro do rótulo e quatro pontas) × 2
+temas, esconde o texto e amostra o pior pixel na caixa do rótulo. **80 células,
+piso 4,5, pior caso 5,54** (claro, fase 0, ponteiro no centro); no escuro, 8,81.
+O vidro nasceu a 45%/84% (pior caso 5,94) e o dono pediu as cores mais vivas: a
+32% o rótulo caiu a **4,49** e reprovou por um centésimo; 36% passou a 4,86 com
+quatro blobs, caiu a 4,63 com oito empilhados na ordem do arco-íris, e voltou
+a **4,86** com a pilha intercalada — 0,36 de folga, e é o teto de quanto a lava
+pode subir sem trocar a tinta do rótulo.
+
+**A ordem da pilha é desenho, e foi medida na tela.** A primeira camada de
+`background-image` pinta por cima; com as oito na ordem do degradê, os três
+azuis vizinhos (teal, azul, índigo) ficavam no topo e a lava saía **ciano** —
+coral, âmbar e magenta existiam e não apareciam. Intercalar frio e quente (teal,
+coral, índigo, âmbar, magenta, lima, violeta, azul) é o que faz as oito lerem.
+
+**Mais vivo, e uma névoa nas bordas.** O terceiro pedido foi "um frosty feel
+nas bordas, já que o centro vai ficar mais vivo, e as cores do arco-íris mais
+vivas no fundo". Vivacidade sem tocar no contraste é **croma**: os blobs passaram
+a `oklch(from var(--brand-x) l calc(c * 1.3) h)` — claridade intacta, que é o
+que o contraste do rótulo mede — e a queda foi de 70% para 80% do raio. A névoa
+é um `box-shadow` **interno** borrado da cor do botão (`inset 0 0 18px 3px` mais
+um fio de 1px), ligado pelo `--button-wash`: em repouso é transparente e o botão
+continua chapado; mora na utility e não numa classe `shadow-*`, que a asserção 3
+proíbe. Com a névoa branqueando a borda, o vidro na borda afinou de 76% para
+70%. Remedido: **4,99** no claro, 11,23 no escuro — subiu, porque a névoa cobre
+a ponta do rótulo perto da borda.
+
+**"Ainda mais vivas e aparentes."** Croma dos blobs de ×1,3 para **×1,7**, queda
+de 80% para **90%** do raio, vidro na borda de 70% para **58%**. O vidro no
+ponteiro foi testado a 28% (**3,95**, reprova), 33% (4,37), 35% (4,49 — um
+centésimo) e ficou em **36%**: 4,61 no claro, 9,72 no escuro. É a régua desta
+peça: a vivacidade sobe pelo croma, pela queda e pela borda; sob o rótulo, o
+vidro não passa de 36% sem trocar a tinta do texto.
+
+**"Ainda mais vivas" — e o teto se mexeu, porque a claridade estava errada.**
+Com o vidro no limite, o teal continuava dominando: no tema escuro as paradas
+mais claras (teal 0,82, âmbar e lima 0,88) atravessam o vidro branco saturadas
+e as escuras (índigo e violeta, 0,66) viram pastel cinza. Igualar a claridade
+das oito é o que faz todas aparecerem — e claridade fixa e única (0,78) reprovou
+a **3,95**, porque no tema claro o vidro é preto e o rótulo é branco: clarear o
+blob come o contraste dele. A claridade virou token **por tema**,
+`--button-lava-l` (0,56 no claro, 0,8 no escuro), e com ela o rótulo subiu a
+6,92. Essa folga é vivacidade não usada: o vidro desceu a 28%/50% (6,10) e a
+**22%/44%**, onde ficou — **5,54** no claro, 8,81 no escuro. O vidro no
+ponteiro saiu de 36% para 22% sem perder o piso, porque o que limitava não era o
+vidro, era a claridade dos blobs.
+
+Uma armadilha de método no caminho: um laço `for par in "28 50"` com
+`set -- $par` **não divide palavras no zsh**, e o `sed` gravou `28 50%` como
+valor. O CSS ficou inválido, o wash caiu, e o script mediu **17,18** — o número
+do rótulo sobre o botão chapado. Um resultado bom demais é sintoma.
+
+**"Sempre começar com uma cor diferente do arco-íris."** A causa era a pilha,
+não a fase: os blobs são elipses de 75–85% da largura e **todos** cobrem o
+ponteiro, então quem lê no ponto de entrada é a camada de cima — fixa no CSS,
+sempre o teal. Girar a órbita não muda isso. A cor de cada camada virou
+variável (`--button-blob-1..8`, padrão intercalado na utility), e o `Button`
+gira a atribuição a cada `pointerenter`: as mesmas oito paradas exatas, em
+outra ordem — e **nunca a mesma ordem duas vezes seguidas**, porque um sorteio
+puro repetia a anterior 1 vez em 8 (medido na tela: lima, lima). O passo é
+sorteado entre 1 e 7 sobre a rotação anterior, guardada em `data-lava-r`.
+
+**"Deixou de mudar as cores" — a lava respira.** Com o giro na entrada, ficou
+evidente que **durante** o hover a cor sob o cursor não mudava. Medido nas quatro
+fases da órbita com o ponteiro fixo: a camada de cima ficava sempre a 25–28px do
+ponteiro — num raio de ~205px, quase opaca —, e a órbita só a deslocava sem
+tirá-la de cima. Lava-lamp não é só mancha que anda; é mancha que incha e apaga.
+Cada blob ganhou opacidade pulsante sobre `--button-lava`, com a fase da própria
+órbita: quando o do topo está no vale, os de baixo aparecem, e a cor sob o cursor
+atravessa a pilha numa volta.
+
+**A forma do pulso foi medida por pixel**, com um script descartável que clona o
+botão em oito fases, ponteiro fixo no centro, e lê o pixel sob ele (tema escuro,
+rotação 0). Seno puro de 0,3 a 1: os oito blobs ficavam todos a meia opacidade ao
+mesmo tempo, e o pixel virava uma **média cinzenta** — matiz preso entre 131° e
+179° (a família do topo) e saturação caindo a 0,06. O cubo do seno
+(`pow(…, 3)`, piso 0,12) acende só dois ou três por vez: **sete matizes
+distintos** numa volta (38 → 161 → 180 → 184 → 138 → 345 → 359 → 100°). Expoente
+2 com piso 0,2 e 2,5 com piso 0,18 deram menos matizes e o mesmo vale. Fica o
+cubo. Os vales de saturação (~0,05 em duas das oito fases) são a lava respirando,
+e ficam. Girar o matiz (`h + lava·360°`) foi
+descartado: ciclaria a cor, mas as camadas deixariam de ser as paradas da marca e
+a pilha andaria em bloco — "arco-íris rodando", não lava. Contraste remedido nas
+192 células: **5,55** no claro, 6,70 no escuro. O script de contraste passou a varrer as oito rotações
+da pilha com o ponteiro no centro do rótulo, além das cinco posições na ordem
+padrão — 208 células.
+
+#### Os testes
+
+`button-primary.test.ts` foi reescrito: ficam a 1 (agora "o cursor não troca o
+fundo"), a 2, a 6 (com `--button-wash` na lista de transição) e a 8; saem as da
+tecla; entram chapado, o wash nos três estados, a órbita que pausa, os seis
+tokens que não existem mais em tema nenhum, nada de pseudo-elemento (lendo o
+`button-group.tsx`), e a anatomia da lava (cinco camadas, o vidro lendo
+`--button-wash`, oito blobs lendo `--button-lava`, um por parada, as duas `@property`). A 9
+mudou de sentido: o primário veste o arco-íris pela utility, o `brand` continua
+sendo contorno e halo. `button-touch-response.test.ts` passou como estava —
+`fundos()` conta `hover:bg-*`, e o primário deixou de ter qualquer um.
+
+#### Fallout
+
+`globals.css`, `button.tsx`, `button-group.tsx`, `button-primary.test.ts`, o
+script novo, as páginas `button` e `colors` do catálogo (a seção da tecla virou a
+da lava, com um espécime largo para ela ter onde andar; uma frase morta sobre a
+varredura do link foi corrigida de passagem), a prosa do `bottom-bar.tsx` e o
+`AGENTS.md`. Nenhuma rota, nenhuma jornada.
+
+**O que ficou sem verificar:** o toque num telefone de verdade (o `pointerdown`
+escrevendo a posição do dedo foi lido no código, não sentido), e o Safari do
+iOS com `sin()`/`cos()` em `calc()` — a especificação e o Chromium cobrem, o
+PWA roda lá.

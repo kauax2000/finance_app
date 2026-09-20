@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
@@ -28,23 +30,42 @@ const buttonVariants = cva(
       // peso, e nenhuma tela do app chegou a usá-los. Estado de sucesso e de
       // atenção continua sendo trabalho do `Badge` e do `Alert`.
       variant: {
-        // O primário é uma tecla: corpo chapado, contorno e plinto mais escuros
-        // (`--primary-edge`), um fio de luz de 1px no topo e `shadow-xs` por
-        // fora. O plinto é sombra **interna**, então a caixa continua com a
-        // altura do degrau e alinhada ao `Input` do lado.
+        // **O primário é chapado, e acende em lava sob o cursor** (rodada 98).
+        // Em repouso é só o preenchimento — sem contorno, plinto, luz, véu ou
+        // sombra: ele foi tecla da rodada 78 à 97 e o dono pediu o relevo
+        // inteiro fora. Sob o cursor, o arco-íris da marca aparece **atrás de
+        // um vidro** da cor do botão, focado na ponta do mouse e drifting como
+        // lava-lamp; a receita inteira mora em `@utility primary-wash`, no
+        // `globals.css`, e o que a variante faz é ligá-la.
         //
-        // Cursor e toque escurecem por token (`--primary-hover`), não por alfa:
-        // `bg-primary/90` clareava num tema e escurecia no outro. Ao apertar a
-        // tecla afunda — o plinto e a sombra somem e entra uma sombra interna
-        // no topo —, e enviando (`aria-busy`) ela fica afundada com opacidade
-        // cheia, para "salvando" não ler como "desabilitado". Os estados de
-        // envio vão sob `aria-busy:disabled:` porque `disabled:` e `aria-busy:`
-        // empatam em especificidade, e juntos vencem.
+        // **Quem liga é `--button-wash`** (uma `@property` tipada, 0 → 1) no
+        // cursor, no toque e com o popover aberto — e não um `hover:bg-*`: o
+        // fundo não troca de cor, o vidro afina. Por isso a lista de
+        // `transition` é restatada inteira com `--button-wash` no fim: o
+        // `tailwind-merge` troca a classe, não acrescenta.
         //
-        // Não é vidro, e não deve virar: a luz clara no corpo ou na borda foi
-        // reprovada quatro vezes (a lápide está em `lib/glass-classes.ts`).
+        // **A órbita pausa em vez de desligar** (`animation-play-state`), a
+        // decisão do `brand`: ligar a animação só dentro do `hover:` faria a
+        // lava saltar ao ponto zero a cada entrada.
+        //
+        // **Nada aqui é pseudo-elemento.** O `ButtonGroup` esconde o `::before`
+        // do primário, e um `::after` em `z` negativo fica atrás do próprio
+        // `background`. As cinco camadas são `background-image` do elemento.
+        //
+        // A posição do ponteiro chega por `--button-mx`/`--button-my`, escritas
+        // pelo `Button` em `onPointerMove`/`onPointerDown` (ver abaixo).
+        //
+        // **O clique não tem animação própria**: afunda 1px pelo
+        // `active:translate-y-px` da base, como `secondary` e `tertiary`.
+        // Enviando (`aria-busy`) a opacidade fica cheia, para "salvando" não
+        // ler como "desabilitado".
+        //
+        // A rodada 90 recusou arco-íris no primário, e o `AGENTS.md` escrevia
+        // que ele não o veste. O dono pediu de novo com outro desenho — chapado,
+        // texto na cor do sistema, cor atrás de vidro com teto medido por
+        // `scripts/primary-wash-contrast.mjs` — e a decisão é dele.
         primary:
-          "border-primary-edge bg-primary text-primary-foreground shadow-(--primary-shadow-value) hover:bg-primary-hover active:bg-primary-hover aria-expanded:bg-primary-hover active:shadow-(--primary-shadow-pressed-value) aria-busy:disabled:shadow-(--primary-shadow-pressed-value) aria-busy:disabled:opacity-100 disabled:shadow-none",
+          "primary-wash bg-primary text-primary-foreground hover:[--button-wash:1] active:[--button-wash:1] aria-expanded:[--button-wash:1] [animation-play-state:paused] hover:[animation-play-state:running] active:[animation-play-state:running] transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-wash] aria-busy:disabled:opacity-100",
         // A tecla de marca. Três camadas, e a ordem delas é a razão do
         // arranjo: o botão em si não pinta nada (`isolate` o faz raiz de
         // empilhamento; a base já traz `border-transparent`), o `::before`
@@ -193,6 +214,13 @@ const buttonVariants = cva(
   }
 )
 
+/**
+ * A ordem padrão da pilha da lava — a mesma da `@utility primary-wash`,
+ * intercalando frio e quente para nenhuma família tampar a outra. O `Button`
+ * a gira a cada entrada do cursor.
+ */
+const LAVA_STOPS = ["teal", "coral", "indigo", "amber", "magenta", "green", "violet", "blue"] as const
+
 function Button({
   className,
   variant = "primary",
@@ -205,6 +233,59 @@ function Button({
     asChild?: boolean
   }) {
   const Comp = asChild ? Slot.Root : "button"
+
+  // A lava do primário segue a ponta do mouse: a posição vai para o CSS como
+  // `--button-mx`/`--button-my`, em px relativos à caixa, por `setProperty` —
+  // sem estado React, sem re-render (o precedente é o marcador do `Tabs`).
+  // `pointerdown` escreve também, para o toque acender onde o dedo pousou.
+  // Os handlers **compõem** com os de quem chama; com `asChild` o `Slot` os
+  // funde no filho e o `currentTarget` é o elemento do consumidor.
+  const seguirPonteiro =
+    variant === "primary"
+      ? (e: React.PointerEvent<HTMLElement>) => {
+          const el = e.currentTarget
+          const r = el.getBoundingClientRect()
+          el.style.setProperty("--button-mx", `${e.clientX - r.left}px`)
+          el.style.setProperty("--button-my", `${e.clientY - r.top}px`)
+        }
+      : undefined
+  // E a cada entrada a lava começa por outra cor. Todos os blobs cobrem o
+  // ponteiro, então quem lê no ponto de entrada é a camada de cima da pilha —
+  // fixa no CSS, ela seria sempre a mesma. As oito cores da pilha são
+  // variáveis (`--button-blob-1..8`, padrão intercalado na utility), e aqui a
+  // atribuição gira por um sorteio: as mesmas oito paradas, em outra ordem.
+  //
+  // **Nunca a mesma ordem duas vezes seguidas.** Um sorteio puro repete a
+  // anterior 1 vez em 8, e o pedido é "sempre uma cor diferente": o passo é
+  // sorteado entre 1 e 7 e somado à rotação anterior, guardada no elemento.
+  const girarLava = (el: HTMLElement) => {
+    const anterior = Number(el.dataset.lavaR ?? 0)
+    const passo = 1 + Math.floor(Math.random() * (LAVA_STOPS.length - 1))
+    const r = (anterior + passo) % LAVA_STOPS.length
+    el.dataset.lavaR = String(r)
+    LAVA_STOPS.forEach((_, k) => {
+      const parada = LAVA_STOPS[(k + r) % LAVA_STOPS.length]
+      el.style.setProperty(`--button-blob-${k + 1}`, `var(--brand-${parada})`)
+    })
+  }
+  const { onPointerMove, onPointerDown, onPointerEnter, ...resto } = props
+  const ponteiro = seguirPonteiro
+    ? {
+        onPointerEnter: (e: React.PointerEvent<HTMLButtonElement>) => {
+          onPointerEnter?.(e)
+          girarLava(e.currentTarget)
+          seguirPonteiro(e)
+        },
+        onPointerMove: (e: React.PointerEvent<HTMLButtonElement>) => {
+          onPointerMove?.(e)
+          seguirPonteiro(e)
+        },
+        onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => {
+          onPointerDown?.(e)
+          seguirPonteiro(e)
+        },
+      }
+    : { onPointerMove, onPointerDown, onPointerEnter }
 
   // A maiúscula inicial é do design system, não de quem escreve o rótulo — mas
   // `::first-letter` não se aplica a `inline-flex`, e o botão precisa ser flex
@@ -238,7 +319,8 @@ function Button({
       data-variant={variant}
       data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
+      {...resto}
+      {...ponteiro}
     >
       {content}
     </Comp>

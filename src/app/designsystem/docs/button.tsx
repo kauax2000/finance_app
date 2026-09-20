@@ -27,7 +27,7 @@ export default function ButtonDoc() {
 
       <DocSection
         title="Fora da escada"
-        description="outline quando o controle precisa de contorno, destructive para o que não tem volta, link para ação que se comporta como texto (sublinhado sempre; no cursor o traço troca de tinta, do texto para o arco-íris, sem animação), brand para o único CTA de marca da tela — a tecla do primary com o arco-íris em volta, girando enquanto o cursor estiver em cima; brandOutline é o mesmo sem o halo, para onde ele não cabe. Passe o mouse: o link varre o sublinhado da esquerda para a direita, e os dois de marca giram."
+        description="outline quando o controle precisa de contorno, destructive para o que não tem volta, link para ação que se comporta como texto (sublinhado sempre; no cursor o traço troca de tinta, do texto para o arco-íris, sem animação), brand para o único CTA de marca da tela — a tecla do primary com o arco-íris em volta, girando enquanto o cursor estiver em cima; brandOutline é o mesmo sem o halo, para onde ele não cabe. Passe o mouse: o traço do link troca de tinta de uma vez, e os dois de marca giram."
         code={`<Button variant="outline">outline</Button>
 <Button variant="destructive">destructive</Button>
 <Button variant="link">link</Button>
@@ -113,12 +113,17 @@ export default function ButtonDoc() {
       </DocSection>
 
       <DocSection
-        title="O primário é uma tecla"
-        description="Contorno e plinto escuros com um fio de luz no topo. Ao apertar, a tecla afunda; enviando, ela fica afundada com opacidade cheia, porque salvando não é o mesmo que desabilitado."
-        code={`<Button>salvar</Button>
+        title="O primário é chapado, e acende em lava sob o cursor"
+        description="Em repouso é só o preenchimento — sem contorno, plinto, luz ou sombra. Sob o cursor, o arco-íris da marca aparece atrás de um vidro da cor do botão, focado na ponta do mouse e drifting como lava-lamp: mais forte onde o cursor está, mais chapado nas bordas. Passe o mouse devagar pelo espécime largo. Ao apertar, só afunda 1px, como os outros pesos; enviando, fica com opacidade cheia, porque salvando não é o mesmo que desabilitado."
+        code={`<Button size="xl" className="w-64">continuar</Button>
+<Button>salvar</Button>
 <Button disabled>desabilitado</Button>
 <FormSubmit pending pendingLabel="salvando">salvar</FormSubmit>`}
+        previewClassName="flex-wrap"
       >
+        <Button size="xl" className="w-64">
+          continuar
+        </Button>
         <Button>salvar</Button>
         <Button disabled>desabilitado</Button>
         <FormSubmit pending pendingLabel="salvando">
@@ -152,11 +157,20 @@ export default function ButtonDoc() {
         contraste do rótulo branco; escurecer é o único sentido que o sobe.
       </DocNote>
 
-      <DocNote title="Elevação escura, não luz">
-        Contorno e plinto em <code>--primary-edge</code>, e a única luz é o fio
-        de 1px no topo. Luz no corpo ou na borda faz o botão inteiro ler mais
-        claro. O plinto é sombra interna, então a altura continua alinhada ao
-        <code>Input</code>.
+      <DocNote title="A lava é um vidro sobre as oito paradas da marca">
+        Cinco camadas de <code>background-image</code>, na <code>@utility primary-wash</code>. Por cima, o <strong>vidro</strong>: um <code>radial-gradient</code> da cor do botão (<code>--primary</code>, então branco no escuro e preto no claro) centrado no ponteiro — fino onde o cursor está, grosso na borda. Por baixo, oito blobs — uma parada do arco-íris cada, teal a lima —, cada um orbitando o ponteiro num raio, numa fase e num sentido próprios e <strong>respirando</strong> (opacidade de 0,12 a 1 num pulso agudo, <code>pow(sin, 3)</code>, para só dois ou três estarem acesos por vez e a cor sob o cursor ler limpa — medido: sete matizes numa volta), uma volta em 8s, com o croma das paradas em ×1,7 e a claridade igualada por tema (<code>--button-lava-l</code>: escura no claro, onde o rótulo é branco; clara no escuro) — sem isso o teal dominava e índigo e violeta viravam cinza. A cor de cada camada é variável, e o botão gira a ordem a cada entrada do cursor — senão a lava começaria sempre pela mesma, porque a camada de cima é a que lê sob o ponteiro. Nas bordas, uma <strong>névoa</strong>: sombra interna borrada da cor do botão, ligada pelo wash e transparente em repouso. O vidro faz as duas coisas do pedido de uma vez: &quot;mais forte perto do mouse, mais branco nas laterais&quot; <em>e</em> o teto de contraste do rótulo.
+      </DocNote>
+
+      <DocNote title="Quem liga é uma variável tipada, e não opacity">
+        <code>--button-wash</code> vai de 0 a 1 no cursor, no toque e com o popover aberto, e é ela que afina o vidro — <code>opacity</code> apagaria o rótulo junto. Registrada com <code>@property</code> pela mesma razão do <code>--brand-angle</code>: só variável tipada interpola, e é isso que dá entrada e saída suaves com a transição da casa. A órbita <strong>pausa</strong> em vez de desligar (<code>animation-play-state</code>): ligar só no <code>hover:</code> faria a lava saltar ao ponto zero a cada entrada.
+      </DocNote>
+
+      <DocNote title="Nada é pseudo-elemento, e a razão é o ButtonGroup">
+        <code>ButtonGroup</code> escreve <code>[&amp;&gt;[data-variant=primary]]:before:hidden</code> — um <code>::before</code> sumiria calado dentro de um grupo (medido na rodada 97). E um <code>::after</code> em <code>z</code> negativo fica atrás do próprio <code>background</code> (a medição do <code>brand</code>, rodada 83). Camadas de <code>background-image</code> não disputam empilhamento com nada.
+      </DocNote>
+
+      <DocNote title="Isto inverte a rodada 90, de propósito">
+        A 90 montou três primários com arco-íris no cursor e o dono os recusou: texto branco sobre cor cheia caía a 4,87:1. O desenho de agora é outro — botão chapado, texto na cor do sistema, e a cor <strong>atrás</strong> de um vidro com teto medido por <code>scripts/primary-wash-contrast.mjs</code>: 80 células, piso 4,5, pior caso 5,55 com o cursor sobre o rótulo. O <code>brand</code> continua sendo a peça de contorno e halo, um CTA de marca por tela; o primário é o peso de toda ação principal.
       </DocNote>
 
       <DocNote title="A maiúscula inicial é do sistema">
