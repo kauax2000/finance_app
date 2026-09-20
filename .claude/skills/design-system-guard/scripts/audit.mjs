@@ -68,6 +68,9 @@ const BARE_BW = /\b(?:bg|text|border|ring|fill|stroke|divide|placeholder)-(?:whi
  * seria o erro, não o acerto.
  */
 const RUNTIME_COLOR_FILES = [
+  // A paleta que a pessoa escolhe e o banco guarda, num arquivo só desde a
+  // rodada 96 — ela servia categoria e carteira por duas listas separadas.
+  "tile-palette",
   "category-appearance-fields",
   // A marca do Google no botão de entrar: quatro hexadecimais que são de outra
   // pessoa e não seguem o tema.

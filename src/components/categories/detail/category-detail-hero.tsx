@@ -40,7 +40,7 @@ export function CategoryDetailHero({
             <div className="flex w-full min-w-0 items-center justify-between gap-2 md:hidden">
                 <div className="flex min-w-0 flex-1 items-center gap-2">
                     <div className="flex min-w-0 max-w-full flex-1 items-center gap-2 overflow-hidden">
-                        <ColorTile size="sm" color={accentColor}>
+                        <ColorTile color={accentColor}>
                             <CategoryIconPreview name={normalizeCategoryIcon(category.icon)} />
                         </ColorTile>
 
@@ -109,7 +109,7 @@ export function CategoryDetailHero({
                 <div className="min-w-0">
                     <div className="flex min-h-10 min-w-0 items-center gap-2.5">
                         <div className="flex min-w-0 max-w-full flex-1 items-center gap-2 overflow-hidden">
-                            <ColorTile size="sm" color={accentColor}>
+                            <ColorTile color={accentColor}>
                                 <CategoryIconPreview name={normalizeCategoryIcon(category.icon)} />
                             </ColorTile>
                             <div className="flex min-w-0 items-center gap-2">

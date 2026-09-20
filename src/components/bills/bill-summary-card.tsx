@@ -87,7 +87,7 @@ export function BillSummaryCard({
             >
                 <CardToolbar className="px-3">
                     <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] grid-rows-[auto_auto] items-start gap-x-3 gap-y-1">
-                        <ColorTile size="lg" color={headerColor} className="col-start-1 row-span-2 self-start">
+                        <ColorTile size="2xl" color={headerColor} className="col-start-1 row-span-2 self-start">
                             {/* `lg` desenha o ícone a 20px, e a 20 o conjunto é o mini. */}
                             <CategoryIconPreview name={iconId} size="mini" />
                         </ColorTile>

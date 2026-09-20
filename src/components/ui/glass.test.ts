@@ -189,8 +189,9 @@ describe("a superfície de vidro", () => {
 
     it("20. o aro e o realce são contrato, e sem produtor nada muda", () => {
         // As duas camadas viraram `var(--x, <o valor de hoje>)`. O fallback é o
-        // que garante que o painel e o `ColorTile` não se mexem — medido no
-        // navegador: as duas superfícies saem byte a byte iguais às de antes.
+        // que garante que o painel e o preset de controle não se mexem —
+        // medido no navegador: as duas superfícies saem byte a byte iguais às
+        // de antes.
         expect(RECEITA_CODIGO).toContain("var(\n        --glass-rim-image,")
         expect(RECEITA_CODIGO).toContain("var(\n        --glass-sheen-image,")
 
@@ -220,9 +221,13 @@ describe("a superfície de vidro", () => {
         expect(REDONDO).toContain("--glass-rim-image:")
         expect(REDONDO).toContain("--glass-sheen-image:")
 
-        // **O cônico não pode vazar para o `glass-control`.** Ele serve o
-        // `ColorTile`, que é `rounded-md`: um bisel polar num quadrado
-        // arredondado põe as transições nos cantos errados.
+        // **O cônico não pode vazar para o `glass-control`.** Ele serve peças
+        // de canto arredondado — o marcador do `Tabs` e o `Glass size="control"`
+        // —, e um bisel polar num quadrado arredondado põe as transições nos
+        // cantos errados: o pico cairia no meio de uma aresta reta. O
+        // `ColorTile` foi o primeiro motivo desta regra, e saiu do vidro na
+        // rodada 95; a regra fica, porque os dois que sobraram têm a mesma
+        // forma.
         // Cortada no **próprio** fechamento: entre `glass-control` e
         // `no-scrollbar` moram o `glass-round` e o `glass-material`, e uma
         // fatia até o vizinho seguinte engoliria os dois.
@@ -580,22 +585,27 @@ describe("a superfície de vidro", () => {
          * fileira `solid` são a mesma anatomia — uma bandeja com um polegar que
          * desliza —, e o polegar já vestia as três classes do `tabs-indicator`.
          *
-         * O que os cinco têm em comum não é a camada, é a régua: **nenhuma das
+         * O que os três têm em comum não é a camada, é a régua: **nenhuma das
          * peças de vidro é clicável**. No `Tabs` quem recebe o clique é o
          * gatilho e no alternador é a raiz; o polegar é superfície, e fica atrás
          * dela. É a mesma linha que manteve `Avatar` e `ColorTile` depois de o
          * `Button` reprovar quatro vezes na tela.
+         *
+         * **O `ColorTile` saiu na rodada 95**, e não por essa régua: o eixo
+         * existia com **zero** telas do produto, e o `Avatar` tinha acabado de
+         * largar o vidro junto com o degradê. Um modo que ninguém veste é uma
+         * linha a manter, não uma opção a oferecer.
          */
         const COM_MODO = [
-            "color-tile",
             "tabs",
             "theme-toggle",
             "timeline",
         ]
 
         // 1. A tradução existe, em qualquer das três formas: tabela semântica,
-        //    tabela de identidade, ou `--glass-tone` literal (o `ColorTile`, cuja
-        //    cor é de runtime e por isso não cabe em tabela nenhuma).
+        //    tabela de identidade, ou `--glass-tone` literal — a forma que o
+        //    `ColorTile` usava, com cor de runtime que não cabe em tabela
+        //    nenhuma, e que o `theme-toggle` ainda usa.
         for (const nome of COM_MODO) {
             expect(base(nome)).toMatch(/GLASS_TONES|GLASS_IDENTITY_TONES|--glass-tone/)
         }

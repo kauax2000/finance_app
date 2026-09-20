@@ -10887,3 +10887,285 @@ não voltar por descuido. E o mapa de exceções de ritmo da asserção 6 ficou 
 **Fallout:** `button.tsx` (a variante e o comentário, reescritos), os dois testes,
 `AGENTS.md`, `docs/button.tsx` (duas notas no lugar de duas). 617 testes, `tsc`, `lint`
 e auditor verdes. Nenhuma rota, nenhuma jornada.
+
+### Rodada 95 — o ladrilho larga o vidro, e o "sem cor" tinha virado a tecla da marca
+
+**O pedido.** "Revisar o `ColorTile` para adequar melhor ao novo branding do
+Rainbow, usando como base o avatar que já mexemos."
+
+**O modelo é o arco do `Avatar`, e não o arco-íris.** A revisão dele (rodadas 85
+a 87) foi uma subtração em série: saíram o modo de vidro, o anel de arco-íris da
+pessoa logada, o degradê, o grão, o ponto de luz, o movimento no cursor e a
+forma quadrada, e sobrou cor chapada com um script de contraste guardando o
+resultado. Adequar o ladrilho ao branding novo é fazer a mesma coisa — e
+**não** pôr arco-íris nele. A rodada 90 já mediu e recusou arco-íris em
+preenchimento, e o anel do avatar saiu a pedido do dono na 83; sob um ícone,
+oito paradas não têm um contraste só. O acento continua morando no wordmark, no
+campo de acesso e nas variantes `brand` do `Button` e do `Badge`.
+
+#### O vidro saiu, e a contagem decidiu
+
+O eixo `glass` (rodadas 43 a 45) tinha **zero** telas do produto. Os dois únicos
+espécimes eram as duas seções da página do catálogo, escritas para demonstrar um
+modo que ninguém vestia — e o `AGENTS.md` já afirmava, errado, que "o ladrilho é
+chapado", texto que sobrou da primeira vez que o verniz saiu. Um modo sem
+consumidor é uma linha a manter, não uma opção a oferecer.
+
+Com ele saíram o import de `glass-classes`, o `data-glass`, as duas seções e as
+duas notas do catálogo, a linha da `PropsTable`, e `color-tile` da lista
+`COM_MODO` da asserção 13 de `glass.test.ts`. **Nenhuma asserção mudou de
+forma.** A 21 — o bisel cônico não vaza para o `glass-control` — era ancorada
+no ladrilho ("ele é `rounded-md`"), e foi reancorada no marcador do `Tabs` e no
+`Glass size="control"`, que sobraram com a mesma forma; a regra continua valendo
+pelo mesmo motivo. Verificado na tela: `/designsystem/glass` e
+`/designsystem/tabs` não se mexeram.
+
+#### O "sem cor" tinha mudado de significado sem ninguém tocar no arquivo
+
+O padrão era `var(--primary)`, escrito quando o primário era o verde da marca.
+A rodada 83 tornou `--primary` a **tecla preta** — `oklch(0.205 0 0)` no claro e
+`oklch(0.985 0 0)` no escuro, **croma 0**. O ladrilho continuou fazendo a conta
+certa sobre um insumo que virou outra coisa: véu de 12% de preto sobre o cartão,
+tinta em cinza 0,42. Uma categoria recém-criada passou a ler como **desativada**,
+e ninguém tinha mexido no componente.
+
+É a forma mais cara de dívida que este projeto encontra: **o token muda de
+significado e o consumidor não sabe.** Não há teste que pegue isso — a conta
+continua correta, e é o insumo que deixou de querer dizer o que dizia.
+
+O padrão é `var(--muted-foreground)`, croma 0 nos dois temas de propósito. A
+receita não muda em nada: ausência de cor lê como ausência de cor, e não como a
+marca esmaecida.
+
+**E isso matou dois ladrilhos desenhados à mão** (invariante 1). `bill-pending-card`
+e `bill-detail-sheet` desenhavam cada um uma `div` de 44px com `bg-muted` e
+`border-border`, com o comentário de que *"fatura de cartão não tem cor escolhida
+por ninguém: o ladrilho é de tema, e o verniz do `ColorTile` não teria sobre o
+que brilhar"*. Era verdade quando o padrão era o verde. Medido depois da troca,
+rasterizando as duas superfícies no mesmo canvas: **236 contra 235 em 255** — o
+corpo é o mesmo cinza. O que muda é a aresta, que deixa de ser `border-border`
+sólido e passa a ser o fio normalizado a 0,25 de alfa, igual ao das linhas
+vizinhas. Que é o ponto.
+
+#### A escada ganha os nomes do sistema
+
+Ela era 32 · 36 · 44 sob `sm` · `md` · `lg`, enquanto no sistema 32 é `md` e 36 é
+`lg`. É a terceira vez que este defeito aparece — o `Menubar` entregava 24 sob um
+nome de 28, o `Tabs` entregava 27 —, e a assinatura dele é sempre a mesma: **uma
+tela contornando o eixo**. `credit-card-invoice-category-spend-section` escrevia
+`sm:h-9 sm:w-9` para promover um `sm` aos 36 do `md` à mão.
+
+| era | é | px | raio | ícone |
+| --- | --- | --- | --- | --- |
+| `sm` | **`md`** (padrão) | 32 | 8px | 16/solid |
+| `md` (padrão) | **`lg`** | 36 | 8px | 16/solid |
+| — | **`xl`** | 40 | 10px | 20/solid |
+| `lg` | **`2xl`** | 44 | 10px | 20/solid |
+
+`2xl` vem do `MoneyDisplay`, e é o único degrau que alcança os 44px de alvo de
+toque. `xl` (40) fecha a escada no teto do sistema e ainda não tem consumidor —
+dito na página, para não parecer esquecimento.
+
+A migração é pixel a pixel idêntica, e o padrão mudou de 36 para 32: os três
+sítios que omitiam passaram a declarar `lg`, os seis `sm` passaram a omitir, e os
+três `lg` viraram `2xl`. Medido na tela: 32/8/16 · 36/8/16 · 40/10/20 ·
+44/10/20.
+
+#### Duas medições de passagem
+
+**O `iconClassName` do `WorkspaceBrandMark` nunca funcionou.** Ele passava
+`size-3.5` — 14px, fora da régua de Iconografia —, e **isso nunca desenhou
+nada**: `[&>svg]:size-4` do degrau é um seletor de descendente (0,1,1) e a classe
+no próprio `svg` é 0,1,0. Medido no navegador, injetando `size-5` e `size-3` num
+ícone do catálogo: **16px nos três casos**. A consequência é maior que a linha
+apagada — **cinco telas** passam um tamanho por esse prop (`size-5`, `size-4`,
+`size-3`) e nenhuma o obtém, enquanto o `className` da caixa (`size-12`,
+`size-6`, `size-10`) funciona normalmente, porque ali é o mesmo elemento e o
+`tailwind-merge` resolve. Uma marca de workspace de 48px desenha um ícone de 16.
+**Fica registrado e não foi consertado aqui**: o conserto é a forma que o `Badge`
+já usa, `[&>svg:not([class*='size-'])]:size-4`, e ele **muda a aparência de cinco
+telas** — é decisão do dono, e é de outro componente.
+
+**A regra G do auditor não enxerga o `[&>svg]`.** Os dois ícones `20/solid` da
+página são acusados de estar em `size-4`, porque o auditor lê "sem classe de
+tamanho" como 16. É falso positivo, é **anterior a esta rodada** (verificado
+rodando o auditor contra a versão em `HEAD`), e a saída correta não é escrever
+uma classe morta no espécime para calar o relatório.
+
+#### A guarda
+
+`scripts/tile-contrast.mjs`, no molde do `identity-contrast.mjs`: clona o
+ladrilho real, esconde o glifo, captura e pega o pior par da caixa central,
+com a tinta saindo de `getComputedStyle().color` por um canvas de 1×1 — o
+navegador devolve `oklch()`, e parsear aqueles números como RGB é o erro que a
+página de cores já cometeu.
+
+A grade são as 10 cores de `CATEGORY_COLORS`, os 3 extremos da paleta livre e o
+caso sem cor, × 4 degraus × 2 temas: **112 células**. O piso é **3:1** e não 4,5
+— o ícone é gráfico e não texto, então quem manda é a WCAG 1.4.11. Resultado:
+**pior caso 5,09** (branco, tema escuro); no claro, 6,55 (esmeralda). Os números
+que o componente afirmava em prosa eram 6,48 e 4,78, medidos à mão numa varredura
+que incluía o modo de vidro.
+
+**Sem entrada no `package.json`**, como os outros dois scripts de contraste: eles
+rodam por `node scripts/…`, e uma terceira convenção seria pior que nenhuma.
+
+#### Fallout
+
+`color-tile.tsx`, `glass.test.ts`, `globals.css` e `glass-classes.ts` (as três
+âncoras de comentário), a página `color-tile` do catálogo, o `AGENTS.md`, o
+script novo, e 11 sítios de uso em 9 arquivos. 617 testes, `tsc`, `lint`,
+`ds:audit` e `ds:catalog` verdes — o catálogo passou a listar `color-tile` com
+**um** eixo. Nenhuma rota, nenhuma jornada, nenhum passo de fluxo: `JORNADAS.md`
+e o Atlas não foram tocados.
+
+**O que ficou sem verificar:** as telas de contas a pagar no app rodando. O
+painel do navegador não está autenticado, e entrar não é coisa que eu faça. A
+troca das duas `div` foi verificada por medição das duas superfícies lado a lado
+(236 contra 235), não por captura da tela real.
+
+### Rodada 96 — a cor da pessoa vira marca, e o ladrilho vira o avatar
+
+**O pedido, em duas mensagens.** A primeira foi uma correção minha: entregue a
+rodada 95, o dono perguntou *"por que você não mexeu nas cores? Eles não
+deveriam usar cores do arco-íris assim como os avatares?"*. A segunda, já com a
+paleta trocada: *"ajuste para que a forma de aplicação das cores seja igual do
+avatar, sólida de fundo, e remova qualquer outra versão que não seja isso."*
+
+**A premissa da pergunta estava meio errada, e o alvo dela inteiro certo.** O
+avatar **não** usa as cores do arco-íris: ele usa `--identity-1..6`, seis cores
+chapadas próprias, cujos matizes (58 · 100 · 175 · 230 · 275 · 318) deixaram de
+vir das paradas da marca na rodada 87. Mas o buraco existia, e a rodada 95 passou
+ao lado dele: **o ladrilho não tem cor própria para revisar — ele recebe um
+hexadecimal do banco.** Quem tem cor são as duas paletas que o alimentam, e eu
+tinha revisado o componente sem olhar para elas.
+
+#### As duas listas, e a prova de que ninguém as revisitara
+
+`CATEGORY_COLORS` eram dez Tailwind 500; `WORKSPACE_ACCENT_PALETTE`, doze
+Tailwind 600. Nenhuma relação com o produto, e as duas carregando a própria
+data de validade:
+
+- A de carteira ainda se descrevia como *"Saturated backgrounds; white glyphs
+  read clearly on top"* — **glifo branco sobre preenchimento saturado é
+  exatamente o desenho que o ladrilho abandonou**, por reprovar nos 3:1 da WCAG
+  1.4.11 em 4 dos 10 presets.
+- A de categoria trazia `#6366F6`. O indigo-500 do Tailwind é `#6366F1`. Um
+  dígito trocado que ninguém viu, porque o ladrilho normalizava a claridade e o
+  erro sumia.
+
+Bills não têm paleta: `bill.color` é a cor da categoria. Então são duas listas
+para três lugares, e viraram uma: `TILE_PALETTE`, em `lib/tile-palette.ts`.
+
+#### Chapar a parada da marca reprova, e a medição é o argumento inteiro
+
+O pedido de "sólida de fundo, igual ao avatar" foi medido antes de escrito. Com
+as oito paradas da marca chapadas **como elas são no token**:
+
+| parada | tinta escura (0,22) | tinta branca |
+| --- | --- | --- |
+| teal | 7,40 | **2,23** |
+| azul | 6,83 | **2,42** |
+| índigo | **3,55** | 4,65 |
+| violeta | **3,21** | 5,15 |
+| magenta | **4,09** | 4,04 |
+| coral | 5,07 | **3,25** |
+| âmbar | 8,50 | **1,94** |
+| lima | 9,02 | **1,83** |
+
+**Nenhuma tinta única serve as oito** — três reprovam com a escura, quatro com a
+branca. É, literalmente, o desenho que esta peça já teve e abandonou, voltando
+pela porta da frente. E é a mesma lição da rodada 83 no avatar, onde as
+identidades pegaram das paradas **só o matiz**, com luminosidade e croma
+próprios.
+
+Clareadas para a banda da identidade — `oklch(0.86 0.12 h)`, mesmos matizes —,
+as oito entregam **10,28 a 11,76** com a tinta escura, a mesma faixa que as seis
+identidades entregam hoje (10,17 a 12,12). Nenhuma encosta na parede do sRGB,
+verificado repintando cada uma com croma ×1,08. São os valores da paleta nova.
+
+#### A superfície normaliza de novo, e não é redundância
+
+O ladrilho pinta `oklch(from var(--tile-color) 0.86 min(c, 0.12) h)`. Uma cor da
+paleta atravessa sem mudar; o que essa fórmula cobre é o **seletor livre da
+carteira**, um `<input type="color">` onde cabe qualquer hexadecimal — inclusive
+o branco e o preto, que chapados matariam o ícone ou o ladrilho.
+
+Medido em dez cores, entre paradas e extremos: **10,63 a 11,74**, e preto, branco
+e cinza chegando neutros a 11,2. É o mesmo princípio que a peça já tinha ("a
+claridade é do sistema; o matiz é da pessoa"), movido do véu para o
+preenchimento.
+
+**O teto de croma não é cosmético.** Sem ele o magenta cai a **7,70** e o croma
+das peças varia de 0,12 a 0,28 — oito ladrilhos numa lista deixam de ler como uma
+família. Com `min(c, 0.12)` todos ficam na banda.
+
+#### O que a mudança arrastou
+
+Saíram, do componente, o véu de 12%/18%, o fio normalizado a 0,25 de alfa, a
+tinta `oklch(from … 0.42/0.78 c h)` e **os pares por tema**: como a identidade, é
+um valor só nos dois. Sobraram uma superfície e uma tinta. Com a rodada 95, o
+ladrilho perdeu em duas rodadas o eixo `glass`, o véu, o fio e a divisão por
+tema — o mesmo arco do avatar, que largou o vidro, o anel de arco-íris, o
+degradê, o grão e o ponto de luz. **Hoje os dois são a mesma construção**,
+separados pela forma e por quem escolhe a cor.
+
+`tileColorFor` dobra na leitura os 22 presets legados, **sem escrever no banco**,
+no precedente de `identityToneFor`: cada um vai para o matiz mais próximo, com
+desvio medido de 0,9° a 32,5°. Duas decisões dentro dela:
+
+- **O que a pessoa digitou no seletor livre atravessa intacto.** Só os presets
+  que o produto ofereceu são dobrados — quem escolheu o próprio azul continua
+  com ele. É onde esta dobra difere da do avatar, cujo valor gravado nunca foi
+  escolha de ninguém.
+- **`#6B7280` vira o neutro, e não um azul.** É o cinza da lista antiga, croma
+  0,023: o matiz de 264° ali é ruído de arredondamento, e a régua de matiz
+  transformaria um cinza deliberado numa cor.
+
+**Um índice carregava semântica, e a lista mudou de ordem embaixo dele.**
+`CATEGORY_COLORS[0]` era esmeralda (receita) e `[3]` era vermelho (despesa), em
+15 sítios. Com a lista nova eles passariam a teal e **violeta**, calados.
+Viraram `TILE_INCOME_DEFAULT` e `TILE_EXPENSE_DEFAULT` nos seis sítios em que o
+índice queria dizer alguma coisa; nos outros nove ele quer dizer "a primeira
+amostra", e ficou. A intenção fica dentro da família — lima e coral —, e **não é
+a invariante 3 sendo violada**: quem diz "entrou" e "saiu" continua sendo
+`--income` e `--expense`, e a lima da marca está 22° acima do verde de estado
+justamente para não ser lida como ele.
+
+**A dobra é idempotente, e isso é carga estrutural.** Ela roda no `ColorTile` —
+onde alcança os onze sítios de uma vez e não dá para esquecer — **e** em
+`accentColor`, na tela de detalhe da categoria, porque lá a mesma cor tem um
+segundo consumidor: o gráfico de tendências, que a lê crua por `hexToRgba`. Sem
+a segunda chamada, uma categoria com cor legada sairia com o ladrilho na família
+da marca e a área do gráfico na cor antiga, lado a lado.
+
+#### A guarda
+
+`scripts/tile-contrast.mjs` foi refeito para a construção nova: 8 cores da
+paleta + 3 extremos do seletor livre + o caso sem cor, × 4 degraus × 2 temas =
+**96 células**. O piso subiu de 3 para **4,5** — o ícone é gráfico e bastariam 3,
+mas a peça agora mede pela régua do `AvatarFallback`, e medir a mais custa nada.
+Pior caso **10,64** (coral), **idêntico nos dois temas**, que é a prova de que o
+valor é um só. Ele também passou a imprimir o pior caso por tema.
+
+`lib/tile-palette.test.ts` tranca o resto: a dobra é idempotente, os 22 legados
+caem na paleta ou no neutro, o seletor livre atravessa, e os oito matizes não
+têm vizinhos a menos de **28°** — que é o vão real entre índigo e violeta, e
+vem da rampa da marca, não deste arquivo. A primeira versão do teste cobrava 30°
+porque eu chutei a régua; o valor medido a corrigiu.
+
+#### Fallout
+
+`lib/tile-palette.ts` e o teste (novos), `color-tile.tsx`, `category-appearance-fields.tsx`,
+`workspace-icons.ts`, o `accentColor` da tela de detalhe, os seis sítios de
+padrão semântico, os cinco `#2563EB` escritos por extenso (a parada de índigo
+está a 0,9° dele), a página `color-tile` do catálogo, o `AGENTS.md` e o script.
+A amostra de cor também parou de soletrar hexadecimal no leitor de tela: a
+paleta tem nome, então o `aria-label` diz "Cor teal".
+
+624 testes, `tsc`, `lint`, `ds:audit` e `ds:catalog` verdes. Nenhuma rota,
+nenhuma jornada.
+
+**O que ficou sem verificar:** as telas do app rodando — o painel do navegador
+não está autenticado. O seletor de amostras de categoria e de carteira foi
+verificado por tipo e por teste, não por captura.

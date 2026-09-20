@@ -10,12 +10,13 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CATEGORY_COLORS, CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
+import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
 import { cn } from "@/lib/utils"
 import { ChevronRightIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ColorTile } from "@/components/ui/color-tile"
 import { deltaTone } from "@/lib/delta-tone"
 import { currencyBRL } from "@/lib/formatters"
+import { TILE_EXPENSE_DEFAULT } from "@/lib/tile-palette"
 
 function stopLinkNavigation(e: React.MouseEvent) {
     e.preventDefault()
@@ -120,7 +121,7 @@ export function ExpenseCategoryCard({
     onEdit: () => void
     onDelete: () => void
 }) {
-    const color = category.color || CATEGORY_COLORS[3]
+    const color = category.color || TILE_EXPENSE_DEFAULT
     const hasBudget = limit > 0
     const over = hasBudget && spent > limit
     const near = hasBudget && !over && limit > 0 && spent / limit >= 0.85
@@ -192,7 +193,7 @@ export function ExpenseCategoryCard({
             >
                 <CardToolbar className="px-3">
                     <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3">
-                        <ColorTile color={color} className="col-start-1 row-start-1 self-start">
+                        <ColorTile size="lg" color={color} className="col-start-1 row-start-1 self-start">
                             <CategoryIconPreview name={normalizeCategoryIcon(category.icon)} />
                         </ColorTile>
 

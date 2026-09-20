@@ -1656,12 +1656,17 @@
  * `Button` e `Checkbox` perderam o modo de vidro, e é exatamente o encaixe de
  * que ela precisava.
  *
- * ## Ele não entra no `glass-control`, e o motivo é o `ColorTile`
+ * ## Ele não entra no `glass-control`, e o motivo é a forma
  *
- * Aquele preset serve as duas peças pequenas, e o ladrilho é `rounded-md`. Um
- * bisel cônico num quadrado arredondado desenha as transições nos cantos
- * errados — o pico cairia no meio de uma aresta reta. Este preset é opt-in por
- * **forma**, e o `Avatar` o veste só quando `shape="circle"`.
+ * Aquele preset serve as peças pequenas de **canto arredondado** — hoje o
+ * marcador do `Tabs` e o `Glass size="control"`. Um bisel cônico num quadrado
+ * arredondado desenha as transições nos cantos errados: o pico cairia no meio
+ * de uma aresta reta. Este preset é opt-in por **forma**, e quem o veste é o
+ * que de fato é redondo.
+ *
+ * O primeiro motivo escrito aqui era o `ColorTile`, que é `rounded-md`. Ele
+ * saiu do vidro na rodada 95 — zero telas do produto o vestiam —, e a regra
+ * ficou, porque quem restou tem a mesma forma.
  */
 @utility glass-round {
   /* O bisel em coordenada polar. `from -45deg` põe o 0° do gradiente no canto

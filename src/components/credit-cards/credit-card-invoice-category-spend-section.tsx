@@ -300,7 +300,7 @@ export function CreditCardInvoiceCategorySpendSection({
                             )
                             const rowBody = (
                                 <div className="flex min-w-0 items-center gap-2">
-                                        <ColorTile size="sm" color={c.color} className="sm:h-9 sm:w-9">
+                                        <ColorTile color={c.color} className="sm:size-9">
                                             <CategoryIconPreview name={normalizeCategoryIcon(c.icon)} />
                                         </ColorTile>
                                         <div className="min-w-0 flex-1">

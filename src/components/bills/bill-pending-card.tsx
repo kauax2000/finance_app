@@ -117,17 +117,22 @@ export function BillPendingCard({
                     <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] grid-rows-[auto_auto] items-start gap-x-3 gap-y-1">
                         {row.kind === "virtual_cc" ? (
                             /* Fatura de cartão não tem cor escolhida por
-                               ninguém: o ladrilho é de tema, e o verniz do
-                               ColorTile não teria sobre o que brilhar. */
-                            <div
-                                className="col-start-1 row-span-2 flex size-11 shrink-0 items-center justify-center self-start rounded-lg border border-border bg-muted"
-                                aria-hidden
+                               ninguém — e é exatamente o que o `ColorTile` sem
+                               cor desenha desde a rodada 95: o cinza do
+                               sistema, pela mesma receita das outras linhas. A
+                               `div` que morava aqui repetia o degrau `2xl` à
+                               mão porque o padrão de então era `--primary`, e
+                               com o branding preto e branco isso lia como
+                               desativado. */
+                            <ColorTile
+                                size="2xl"
+                                className="col-start-1 row-span-2 self-start"
                             >
-                                <CreditCardMiniIcon className="size-5 text-muted-foreground" />
-                            </div>
+                                <CreditCardMiniIcon />
+                            </ColorTile>
                         ) : (
                             <ColorTile
-                                size="lg"
+                                size="2xl"
                                 color={headerColor}
                                 className="col-start-1 row-span-2 self-start"
                             >

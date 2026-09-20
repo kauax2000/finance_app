@@ -9,10 +9,11 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CATEGORY_COLORS, CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
+import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
 import { cn } from "@/lib/utils"
 import { ChevronRightIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ColorTile } from "@/components/ui/color-tile"
+import { TILE_INCOME_DEFAULT } from "@/lib/tile-palette"
 
 function stopLinkNavigation(e: React.MouseEvent) {
     e.preventDefault()
@@ -30,7 +31,7 @@ export function IncomeCategoryCard({
     onEdit: () => void
     onDelete: () => void
 }) {
-    const color = category.color || CATEGORY_COLORS[0]
+    const color = category.color || TILE_INCOME_DEFAULT
 
     return (
         // O cartão inteiro é clicável por um link esticado (::after) no título, e
@@ -51,7 +52,7 @@ export function IncomeCategoryCard({
             >
                 <CardToolbar className="px-3">
                     <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3">
-                        <ColorTile color={color}>
+                        <ColorTile size="lg" color={color}>
                             <CategoryIconPreview name={normalizeCategoryIcon(category.icon)} />
                         </ColorTile>
                         <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pr-1">

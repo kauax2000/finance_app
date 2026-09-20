@@ -25,6 +25,7 @@ import {
     isWorkspaceIconKey,
     type WorkspaceIconKey,
 } from "@/lib/workspace-icons"
+import { TILE_WORKSPACE_DEFAULT } from "@/lib/tile-palette"
 
 type WorkspaceAppearanceEditDialogProps = {
     open: boolean
@@ -42,7 +43,7 @@ export function WorkspaceAppearanceEditDialog({
 
     const [name, setName] = useState("")
     const [icon, setIcon] = useState<WorkspaceIconKey>("home")
-    const [previewColor, setPreviewColor] = useState("#2563EB")
+    const [previewColor, setPreviewColor] = useState(TILE_WORKSPACE_DEFAULT)
     const [submitting, setSubmitting] = useState(false)
     const [localError, setLocalError] = useState<string | null>(null)
 
@@ -52,7 +53,7 @@ export function WorkspaceAppearanceEditDialog({
         setIcon(
             isWorkspaceIconKey(workspace.icon) ? workspace.icon : "home"
         )
-        setPreviewColor(workspace.icon_background_color || "#2563EB")
+        setPreviewColor(workspace.icon_background_color || TILE_WORKSPACE_DEFAULT)
         setLocalError(null)
         setSubmitting(false)
         // eslint-disable-next-line react-hooks/exhaustive-deps -- seed when opening or switching edited workspace id

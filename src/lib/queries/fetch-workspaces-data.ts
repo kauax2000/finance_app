@@ -8,6 +8,7 @@ import { supabase, type Workspace, type WorkspaceRole } from "@/lib/supabase"
 import { describeWorkspaceSupabaseError } from "@/lib/queries/workspace-errors"
 import { describeSupabaseErrorForLog, formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { isPostgrestTransientNetworkError } from "@/lib/transient-network-retry"
+import { TILE_WORKSPACE_DEFAULT } from "@/lib/tile-palette"
 
 export type PendingWorkspaceInvite = {
     id: string
@@ -96,7 +97,7 @@ export async function fetchWorkspacesData(user: User): Promise<WorkspacesBundle>
                 typeof w.icon_background_color === "string" &&
                 w.icon_background_color.trim()
                     ? w.icon_background_color
-                    : "#2563EB",
+                    : TILE_WORKSPACE_DEFAULT,
         }))
 
     const orderedWorkspaces = [...loadedWorkspaces].sort((a, b) => {
@@ -147,7 +148,7 @@ export async function fetchWorkspacesData(user: User): Promise<WorkspacesBundle>
                               typeof wRaw.icon_background_color === "string" &&
                               wRaw.icon_background_color.trim()
                                   ? wRaw.icon_background_color
-                                  : "#2563EB",
+                                  : TILE_WORKSPACE_DEFAULT,
                       }
                     : null
                 nextPending.push({

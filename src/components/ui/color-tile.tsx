@@ -1,121 +1,80 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
-import { glassControlSurfaceClassName } from "@/lib/glass-classes"
+import { tileColorFor } from "@/lib/tile-palette"
 import { cn } from "@/lib/utils"
 
 /**
  * O ladrilho que carrega uma cor escolhida pela pessoa — ícone de categoria,
  * marca de conta, capa de conta a pagar.
  *
- * **A cor da pessoa entra como matiz, não como preenchimento.** O ladrilho a
- * dissolve num véu sobre o cartão e devolve o mesmo matiz, saturado, no ícone —
- * a construção do `Avatar` com os tons de identidade, e pelo mesmo motivo:
- * quando a cor vem do banco, quem garante a legibilidade é o sistema.
+ * **É a construção do `AvatarFallback`, e agora literalmente:** superfície
+ * chapada com a cor, tinta escura por cima, um valor só nos dois temas. O que
+ * separa os dois é a forma e quem escolhe — o avatar é redondo e o sistema
+ * sorteia uma das seis identidades; o ladrilho é de canto arredondado e quem
+ * escolhe é a pessoa.
  *
- * Ele já foi o contrário disso. Preenchia de cor cheia com ícone branco por
- * cima, e quatro dos dez presets de categoria reprovavam nos 3:1 da WCAG
- * 1.4.11 — âmbar dava 2,15, esmeralda 2,54. A rodada anterior consertou isso
- * medindo a luminância e virando a tinta para escura quando o branco não
- * alcançava. Funcionava, mas era remendo: uma conta corrigindo um desenho que
- * não fechava. Fixando a **claridade** da tinta e deixando a pessoa escolher só
- * matiz e croma, não há o que medir — o contraste é estrutural.
+ * **A claridade é do sistema; o matiz é da pessoa.** A superfície é
+ * `oklch(from var(--tile-color) 0.86 min(c, 0.12) h)`: pega o matiz do que ela
+ * escolheu, prende a claridade na faixa da rampa de identidade e **limita** o
+ * croma. Medido, o piso não é opinião — com a tinta em
+ * `--identity-foreground`, qualquer cor de runtime cai entre **10,63 e 11,74**,
+ * a mesma faixa que as seis identidades do avatar entregam hoje (10,17 a
+ * 12,12). Preto, branco e cinza chegam neutros e a 11,2. Não há o que medir por
+ * cor: o contraste é estrutural.
  *
- * Antes disso ele também foi lustrado: degradê branco na diagonal, borda clara,
- * sombra e um `backdrop-blur`. Saiu porque o resto do sistema preenche chapado.
+ * **O limite de croma não é cosmético.** Sem ele, magenta cai a 7,70 e o croma
+ * das peças varia de 0,12 a 0,28 — oito ladrilhos numa lista deixam de ler como
+ * uma família. Com ele, todos ficam na banda da identidade.
+ *
+ * **E por que a cor não entra crua.** Chapar a parada da marca como ela é
+ * reprova: com a tinta escura, índigo dá 3,55, violeta 3,21 e magenta 4,09;
+ * com tinta branca, âmbar 1,94, lima 1,83, teal 2,23 e azul 2,42. **Nenhuma
+ * tinta única serve as oito** — que é exatamente o desenho que este componente
+ * já teve e abandonou, quando 4 dos 10 presets reprovavam nos 3:1 da WCAG
+ * 1.4.11. É a mesma lição da rodada 83 no avatar: da parada do arco-íris vem o
+ * matiz, e só ele.
+ *
+ * **Uma versão só.** Ele já foi lustrado (degradê branco, borda clara, sombra,
+ * `backdrop-blur`), já teve um eixo `glass`, e por muitas rodadas foi um véu de
+ * 12%/18% sobre o cartão com a tinta e o fio normalizados e um par de valores
+ * por tema. Tudo isso saiu: sobrou uma superfície e uma tinta.
  */
 const colorTileVariants = cva(
   [
     "flex shrink-0 items-center justify-center overflow-hidden",
-    // A tinta vem da cor da pessoa com a **claridade trocada** pela do sistema:
-    // 0,42 no claro e 0,78 no escuro, os mesmos números da rampa de identidade.
-    // `oklch(from …)` pega matiz e croma do que ela escolheu e descarta o resto,
-    // então amarelo puro e azul-marinho chegam aqui com o mesmo peso.
-    //
-    // **É a única das três camadas que vale nos dois modos**, e por isso é a
-    // única que ficou na base: a lâmina clara é quase branca e a escura quase
-    // preta, então 0,42 e 0,78 continuam do lado certo das duas.
-    "[&>*]:text-[oklch(from_var(--tile-color)_0.42_c_h)]",
-    "dark:[&>*]:text-[oklch(from_var(--tile-color)_0.78_c_h)]",
+    "bg-[oklch(from_var(--tile-color)_0.86_min(c,_0.12)_h)]",
+    "text-identity-foreground",
   ].join(" "),
   {
     variants: {
-      size: {
-        sm: "size-8 rounded-md [&>svg]:size-4",
-        md: "size-9 rounded-md [&>svg]:size-4",
-        lg: "size-11 rounded-lg [&>svg]:size-5",
-      },
       /**
-       * A superfície: preenchimento chapado, ou a lâmina de vidro do sistema.
+       * A escada, com os nomes do sistema.
        *
-       * **O eixo existe para não haver o que anular.** Como embrulho, o modo de
-       * vidro empilhava `bg-transparent` e `ring-0 ring-transparent` por fora
-       * para desfazer o véu e o fio que a base já tinha emitido — e o fio
-       * precisava de três classes, porque `ring-0` derruba só a largura. Aqui
-       * as duas camadas simplesmente **não são escritas** no ramo de vidro.
+       * As medidas são 32 · 36 · 40 · 44, e os nomes são os que o `Button`, o
+       * `Input`, o `Tabs` e o `SelectTrigger` dão a 32, 36 e 40 — um ladrilho
+       * `md` ao lado de um botão `md` alinha sem ninguém dizer nada. Eles já
+       * foram `sm` · `md` · `lg` para as mesmas 32 · 36 · 44, e era o defeito
+       * que o `Menubar` e o `Tabs` já corrigiram: um nome da escada apontando
+       * para outra altura.
        *
-       * O raio não muda de lugar: a `@utility glass` não declara
-       * `border-radius`, então o `rounded-md`/`rounded-lg` do degrau continua
-       * valendo — é isso que a torna portátil sem eixo de forma.
+       * **`2xl` é o único que alcança os 44px de alvo de toque**, e é o degrau
+       * de quando o ladrilho é clicável. Acima de `xl` o sistema não tem nome
+       * de controle para emprestar, e `2xl` vem do `MoneyDisplay`.
+       *
+       * O raio cresce com a caixa, e o conjunto do ícone acompanha o corpo:
+       * `size-4` é micro (16/solid) e `size-5` é mini (20/solid), pela régua de
+       * Iconografia.
        */
-      glass: {
-        false: [
-          // O véu é 12% da cor sobre o cartão no claro e 18% no escuro. Opaco e
-          // não alpha — dois ladrilhos vizinhos não devem se atravessar.
-          //
-          // Ele **já teve** as mesmas proporções de `--identity-N-surface`, e
-          // deixou de ter quando o par de identidade passou a inverter no tema
-          // claro. A divergência é correta, e o motivo é a régua deste arquivo:
-          // o ladrilho carrega uma cor **de runtime**, escolhida pela pessoa e
-          // vinda do banco, e ele não pode virar uma pastilha preenchida numa
-          // cor que ninguém calibrou. O avatar carrega uma das seis identidades
-          // do sistema.
-          "bg-[color-mix(in_srgb,var(--tile-color)_12%,var(--card))]",
-          "dark:bg-[color-mix(in_srgb,var(--tile-color)_18%,var(--card))]",
-          // O fio leva a mesma claridade normalizada da tinta, e não a cor
-          // crua. Medido: com a cor crua, um ladrilho branco dava véu de 1,00
-          // contra o cartão **e** fio branco sobre branco — o corpo sumia
-          // inteiro e sobrava um ícone flutuando. Normalizado, o fio de um
-          // branco é um cinza de 0,42, que se enxerga. É o mesmo motivo da
-          // tinta, aplicado à aresta.
-          "ring-1 ring-[oklch(from_var(--tile-color)_0.42_c_h_/_0.25)]",
-          "dark:ring-[oklch(from_var(--tile-color)_0.78_c_h_/_0.25)]",
-        ].join(" "),
-        // A lâmina, mais a cor da pessoa como tom dela. **É a primeira tradução
-        // de uma cor de runtime**: as outras leem um token de uma tabela, e
-        // aqui a cor é um hex do banco, então o tom lê a `--tile-color` que o
-        // `style` publica. Literais e nunca montadas — o Tailwind varre o
-        // código como texto.
-        //
-        // Os dois percentuais saíram de varredura com os dez presets de
-        // `CATEGORY_COLORS` e os três extremos da paleta livre, minimizando o
-        // **desvio contra o véu chapado** para os dois lerem como a mesma
-        // família: 0,011 no claro e 0,086 no escuro, com a tinta em 6,48 e 4,78
-        // no pior caso — bem acima dos 3:1 da WCAG 1.4.11.
-        true: [
-          glassControlSurfaceClassName,
-          // **Aqui o percentual não é alfa — é diluição**, e é o que faz esta
-          // peça ser a exceção quando o tom passou a ser opaco. Nas outras a
-          // fonte é um token `-muted` já na cor certa, e o `N%` era só
-          // transparência; aqui a fonte é o **hex cru do banco**, e o `12%` /
-          // `18%` são a receita que transforma uma cor saturada num véu.
-          //
-          // Por isso o tom é literalmente **o véu do ladrilho chapado, opaco**:
-          // é o que faz o corpo das duas versões ser o mesmo, que é a decisão
-          // desta rodada. Um `100%` aqui pintaria a cor cheia — o desenho que
-          // reprovava em 4 dos 10 presets nos 3:1 da WCAG 1.4.11.
-          "[--glass-tone:color-mix(in_srgb,var(--tile-color)_12%,var(--card))]",
-          "dark:[--glass-tone:color-mix(in_srgb,var(--tile-color)_18%,var(--card))]",
-          // E a mesma cor tinge o aro e as nuvens. Aqui a fonte de matiz é a
-          // própria `--tile-color`, sem par por tema: ela é a cor crua do
-          // banco, e não um token que inverte.
-          "[--glass-ink:var(--tile-color)] [--glass-ink-amount:20%]",
-        ].join(" "),
+      size: {
+        md: "size-8 rounded-md [&>svg]:size-4",
+        lg: "size-9 rounded-md [&>svg]:size-4",
+        xl: "size-10 rounded-lg [&>svg]:size-5",
+        "2xl": "size-11 rounded-lg [&>svg]:size-5",
       },
     },
     defaultVariants: {
       size: "md",
-      glass: false,
     },
   }
 )
@@ -123,7 +82,6 @@ const colorTileVariants = cva(
 function ColorTile({
   className,
   size,
-  glass,
   color,
   style,
   ...props
@@ -131,21 +89,36 @@ function ColorTile({
   // Sem o Omit, a interseção proíbe o `null` que vem do banco.
 }: Omit<React.ComponentProps<"div">, "color"> &
   VariantProps<typeof colorTileVariants> & {
-    /** Cor gravada no banco. Vazia cai em `--primary`. */
+    /**
+     * Cor gravada no banco. Vazia cai no cinza do sistema, e um preset legado é
+     * dobrado na parada de marca mais próxima por `tileColorFor`.
+     */
     color?: string | null
   }) {
   return (
     <div
       data-slot="color-tile"
-      data-glass={glass || undefined}
       aria-hidden
-      className={cn(colorTileVariants({ size, glass }), className)}
-      // A cor entra uma vez, como variável, e as três camadas — véu, tinta e
-      // fio — se derivam dela no CSS. Passá-la três vezes pelo `style` exigiria
-      // repetir a conta em JavaScript e perderia o `dark:`.
+      className={cn(colorTileVariants({ size }), className)}
+      // A cor entra uma vez, como variável, e a superfície se deriva dela no
+      // CSS. Fazer a conta em JavaScript perderia o `oklch(from …)`, que é o
+      // que prende a claridade sem precisar medir cor por cor.
+      //
+      // **Sem cor, o ladrilho é cinza, e isso é dito.** O padrão era
+      // `--primary`, escrito quando o primário era o verde da marca; com o
+      // branding preto e branco ele virou croma 0, e o ladrilho "sem cor"
+      // passou a ser a tecla da marca esmaecida — lia como desativado.
+      // `--muted-foreground` é croma 0 de propósito, e a fórmula da superfície
+      // o leva ao mesmo cinza de 0,86 nos dois temas.
+      //
+      // **O arco-íris não entra como preenchimento** — a rodada 90 mediu e
+      // recusou isso no primário, e sob um ícone oito paradas não têm um
+      // contraste só. Ele entra pela outra ponta: desde a rodada 96 as cores
+      // que a pessoa **escolhe** são as oito da marca, e `tileColorFor` dobra
+      // na leitura o que o banco já guardava.
       style={
         {
-          "--tile-color": color?.trim() || "var(--primary)",
+          "--tile-color": tileColorFor(color) ?? "var(--muted-foreground)",
           ...style,
         } as React.CSSProperties
       }

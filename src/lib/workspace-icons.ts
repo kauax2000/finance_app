@@ -1,4 +1,5 @@
 import type { HeroIcon } from "@/types/navigation"
+import { TILE_COLORS } from "@/lib/tile-palette"
 import {
     ArrowTrendingUpIcon,
     BeakerIcon,
@@ -98,21 +99,21 @@ export const WORKSPACE_ICON_MAP: Record<WorkspaceIconKey, HeroIcon> = {
     globe: GlobeAltIcon,
 }
 
-/** Saturated backgrounds; white glyphs read clearly on top. */
-export const WORKSPACE_ACCENT_PALETTE = [
-    "#2563EB",
-    "#7C3AED",
-    "#DB2777",
-    "#DC2626",
-    "#EA580C",
-    "#CA8A04",
-    "#16A34A",
-    "#0D9488",
-    "#0891B2",
-    "#4F46E5",
-    "#9333EA",
-    "#C026D3",
-] as const
+/**
+ * As amostras de cor da carteira: **as oito paradas do arco-íris da marca**,
+ * reexportadas de `lib/tile-palette` para não haver duas listas.
+ *
+ * Eram doze hexadecimais crus do Tailwind 600, e a linha que descrevia esta
+ * constante — *"saturated backgrounds; white glyphs read clearly on top"* — era
+ * a prova de que ninguém a revisitara: glifo branco sobre preenchimento
+ * saturado é exatamente o desenho que o `ColorTile` abandonou, por reprovar nos
+ * 3:1 da WCAG 1.4.11 em 4 dos 10 presets. Hoje quem decide a tinta é o
+ * ladrilho, pela claridade do sistema.
+ *
+ * O seletor livre da carteira continua de pé: o que a pessoa digitar à mão não
+ * é dobrado.
+ */
+export const WORKSPACE_ACCENT_PALETTE = TILE_COLORS
 
 export function randomWorkspaceAccentColor(): string {
     const i = Math.floor(Math.random() * WORKSPACE_ACCENT_PALETTE.length)

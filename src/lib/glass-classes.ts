@@ -103,8 +103,8 @@ export type GlassMaterial = keyof typeof GLASS_MATERIALS
  *
  * **Ela se soma à de controle, não a substitui:** `glass glass-control
  * glass-round`. O `glass-control` corrige a medida absoluta da nuvem; este
- * corrige a forma do aro. São eixos diferentes, e o `ColorTile` — que é
- * `rounded-md` — usa só o primeiro.
+ * corrige a forma do aro. São eixos diferentes, e quem é de canto arredondado
+ * — o marcador do `Tabs`, o `Glass size="control"` — usa só o primeiro.
  */
 export const glassRoundSurfaceClassName = "glass glass-control glass-round"
 
@@ -173,7 +173,8 @@ export const glassRoundSurfaceClassName = "glass glass-control glass-round"
  * `--success-muted` é um verde pálido, no escuro é um verde escuro.
  *
  * É o mecanismo do `ColorTile`, que deriva superfície e tinta de uma cor de
- * runtime com percentual por tema. A diferença é que aqui a cor não é de
+ * runtime com percentual por tema — ele não veste mais vidro desde a rodada
+ * 95, mas a conta continua sendo dele. A diferença é que aqui a cor não é de
  * runtime: são os sete tons do sistema.
  *
  * ## O aro e as nuvens também puxam a cor — mas por outra variável

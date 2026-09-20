@@ -59,6 +59,7 @@ import {
 } from "@/components/categories/categories-onboarding-panel-styles"
 import { cn } from "@/lib/utils"
 import { currencyBRL } from "@/lib/formatters"
+import { TILE_EXPENSE_DEFAULT } from "@/lib/tile-palette"
 type Props = {
     user: User
     workspaceId: string
@@ -192,7 +193,7 @@ export function CategoriesOnboardingWizard({
     const [addOpen, setAddOpen] = useState(false)
     const [addName, setAddName] = useState("")
     const [addType, setAddType] = useState<"income" | "expense">("expense")
-    const [addColor, setAddColor] = useState<string>(CATEGORY_COLORS[3])
+    const [addColor, setAddColor] = useState<string>(TILE_EXPENSE_DEFAULT)
     const [addIcon, setAddIcon] = useState<CategoryIconId>(normalizeCategoryIcon("utensils"))
 
     const [editOpen, setEditOpen] = useState(false)
@@ -226,7 +227,7 @@ export function CategoriesOnboardingWizard({
         setError(null)
         setAddName(nextUniqueCategoryName(localCategories))
         setAddType("expense")
-        setAddColor(CATEGORY_COLORS[3])
+        setAddColor(TILE_EXPENSE_DEFAULT)
         setAddIcon(normalizeCategoryIcon("utensils"))
         setAddOpen(true)
     }
@@ -512,14 +513,14 @@ export function CategoriesOnboardingWizard({
     )
 
     const renderCategoryRow = (c: Category) => {
-        const bg = c.color || CATEGORY_COLORS[3]
+        const bg = c.color || TILE_EXPENSE_DEFAULT
         return (
             <div
                 key={c.id}
                 className="flex flex-col gap-2 rounded-lg border border-border/80 bg-background/80 px-2 py-2 sm:flex-row sm:items-center"
             >
                 <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <ColorTile size="sm" color={bg} className="shrink-0">
+                    <ColorTile color={bg} className="shrink-0">
                         <CategoryIconPreview name={c.icon ?? ""} />
                     </ColorTile>
                     <span className="min-w-0 flex-1 truncate text-xs font-medium">{c.name}</span>
@@ -1041,7 +1042,7 @@ export function CategoriesOnboardingWizard({
                             const amt = raw === "" ? null : parseMoneyBrl(raw)
                             if (amt === null || amt <= 0) return null
                             const formatted = currencyBRL(amt)
-                            const bg = c.color || CATEGORY_COLORS[3]
+                            const bg = c.color || TILE_EXPENSE_DEFAULT
                             return (
                                 <div
                                     key={c.id}
@@ -1052,10 +1053,8 @@ export function CategoriesOnboardingWizard({
                                 >
                                     <div className="flex min-w-0 flex-1 items-center gap-2">
                                         <ColorTile
-                                            size="sm"
                                             color={bg}
                                             className="shrink-0"
-                                            aria-hidden
                                         >
                                             <CategoryIconPreview name={c.icon ?? ""} />
                                         </ColorTile>

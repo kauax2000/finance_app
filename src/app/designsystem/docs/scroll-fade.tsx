@@ -134,7 +134,7 @@ export default function ScrollFadeDoc() {
               <div className="flex flex-col gap-2 p-3">
                 {Array.from({ length: 14 }, (_, i) => (
                   <div key={i} className="flex items-center gap-2">
-                    <ColorTile color={CORES[i % CORES.length]!} size="sm" />
+                    <ColorTile color={CORES[i % CORES.length]!} />
                     <span className="text-sm">Mercado {i + 1}</span>
                     <span className="nums ms-auto text-sm text-muted-foreground">
                       {currencyBRL((i + 1) * 37.4)}
@@ -171,7 +171,7 @@ export default function ScrollFadeDoc() {
               <div className="flex flex-col gap-2 p-3">
                 {Array.from({ length: 14 }, (_, i) => (
                   <div key={i} className="flex items-center gap-2">
-                    <ColorTile color={CORES[i % CORES.length]!} size="sm" />
+                    <ColorTile color={CORES[i % CORES.length]!} />
                     <span className="text-sm">Mercado {i + 1}</span>
                     <span className="nums ms-auto text-sm text-muted-foreground">
                       {currencyBRL((i + 1) * 37.4)}

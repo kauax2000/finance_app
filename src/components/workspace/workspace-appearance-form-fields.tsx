@@ -30,6 +30,7 @@ import {
     type WorkspaceIconKey,
     WORKSPACE_ICON_LABELS,
 } from "@/lib/workspace-icons"
+import { TILE_WORKSPACE_DEFAULT } from "@/lib/tile-palette"
 
 type WorkspaceAppearanceFormFieldsProps = {
     name: string
@@ -139,7 +140,7 @@ export function WorkspaceAppearanceFormFields({
                             value={
                                 /^#[0-9A-Fa-f]{6}$/.test(previewColor)
                                     ? previewColor
-                                    : "#2563EB"
+                                    : TILE_WORKSPACE_DEFAULT
                             }
                             onChange={(e) =>
                                 onPreviewColorChange(e.target.value)

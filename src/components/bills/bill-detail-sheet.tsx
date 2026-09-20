@@ -167,12 +167,15 @@ export function BillDetailSheet({
                         {loading && !bill ? (
                             <Skeleton className="size-11 shrink-0 rounded-lg" />
                         ) : bill ? (
-                            <ColorTile size="lg" color={headerColor}>
+                            <ColorTile size="2xl" color={headerColor}>
                                 {/* `lg` desenha o ícone a 20px, e a 20 o conjunto é o mini. */}
                                 <CategoryIconPreview name={iconId} size="mini" />
                             </ColorTile>
                         ) : (
-                            <div className="size-11 shrink-0 rounded-lg bg-muted" aria-hidden />
+                            /* Sem conta carregada: o ladrilho sem cor é o
+                               cinza do sistema, e não precisa ser desenhado
+                               à mão. */
+                            <ColorTile size="2xl" />
                         )}
 
                         <div className="min-w-0 flex-1">

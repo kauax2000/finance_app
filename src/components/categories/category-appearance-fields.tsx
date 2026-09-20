@@ -59,19 +59,18 @@ import {
     ToggleGroup,
     ToggleGroupItem,
 } from "@/components/ui/toggle-group"
+import { TILE_COLORS, TILE_PALETTE } from "@/lib/tile-palette"
 
-export const CATEGORY_COLORS = [
-    "#10B981",
-    "#3B82F6",
-    "#F59E0B",
-    "#EF4444",
-    "#8B5CF6",
-    "#EC4899",
-    "#6366F6",
-    "#14B8A6",
-    "#F97316",
-    "#6B7280",
-] as const
+/**
+ * As amostras de cor da categoria: **as oito paradas do arco-íris da marca**,
+ * reexportadas de `lib/tile-palette` para não haver duas listas.
+ *
+ * Eram dez hexadecimais crus do Tailwind 500 — e um deles, `#6366F6`, era o
+ * indigo-500 com um dígito trocado (`#6366F1`) que ninguém viu, porque o
+ * ladrilho normaliza a claridade e o erro some. O que já está gravado no banco
+ * é dobrado na leitura por `tileColorFor`; nada foi reescrito.
+ */
+export const CATEGORY_COLORS = TILE_COLORS
 
 export const CATEGORY_ICONS = [
     "utensils",
@@ -211,14 +210,16 @@ export function CategoryColorSwatches({
             aria-label="Cor da categoria"
             className="flex-wrap gap-2"
         >
-            {CATEGORY_COLORS.map((c, i) => (
+            {TILE_PALETTE.map(({ hex, nome }, i) => (
                 <ToggleGroupItem
-                    key={c}
+                    key={hex}
                     id={`${idPrefix}-${i}`}
-                    value={c}
+                    value={hex}
                     className="size-8 min-w-0 rounded-full border-2 border-transparent p-0 data-[state=on]:border-foreground"
-                    style={{ backgroundColor: c }}
-                    aria-label={`Cor ${c}`}
+                    style={{ backgroundColor: hex }}
+                    /* A paleta passou a ter nome, então a amostra para de
+                       soletrar um hexadecimal no leitor de tela. */
+                    aria-label={`Cor ${nome}`}
                 />
             ))}
         </ToggleGroup>

@@ -36,6 +36,11 @@ import { attachPaymentCards } from "@/lib/transactions-detail-sheet-query"
 import { categoryDetailBundleKeys } from "@/lib/queries/keys"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
 import { useCategoryDetailBundleQuery } from "@/lib/queries/use-category-detail-bundle"
+import {
+    TILE_EXPENSE_DEFAULT,
+    TILE_INCOME_DEFAULT,
+    tileColorFor,
+} from "@/lib/tile-palette"
 
 export default function CategoryDetailPageClient({ categoryId }: { categoryId: string }) {
     const queryClient = useQueryClient()
@@ -383,9 +388,15 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     const remaining = limit > 0 ? limit - monthTotal : 0
     const overBudget = limit > 0 && monthTotal > limit
 
+    // A dobra é aplicada **aqui** e não só no `ColorTile` porque esta cor tem
+    // dois consumidores: o ladrilho do hero e o gráfico de tendências, que a lê
+    // crua por `hexToRgba`. Sem ela, uma categoria com cor legada sairia com o
+    // ladrilho na família da marca e a área do gráfico na cor antiga, lado a
+    // lado. `tileColorFor` é idempotente, então a segunda dobra dentro do
+    // ladrilho não faz nada.
     const accentColor =
-        category?.color ||
-        (category?.type === "income" ? CATEGORY_COLORS[0] : CATEGORY_COLORS[3])
+        tileColorFor(category?.color) ||
+        (category?.type === "income" ? TILE_INCOME_DEFAULT : TILE_EXPENSE_DEFAULT)
 
     const amounts = txs
         .filter((t) => (typeFilter ? t.type === typeFilter : true))
