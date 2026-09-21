@@ -423,7 +423,14 @@ function auditFile(absPath, project) {
   for (const m of isCatalog
     ? []
     : src.matchAll(
-        /\b(?:p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|gap|w|h|size|text|rounded|z|top|left|right|bottom|leading|tracking)-\[[^\]]+\]/g
+        // A fronteira é `(?<![\w-])` e não `\b`: entre o `-` e o `w` de
+        // `max-w-[…]` o `\b` **casa**, então a regra vinha recortando
+        // `w-[min(100%,12rem)]` de dentro de `max-w-[min(100%,12rem)]` e
+        // reportando um token que não existe no arquivo. Quem fosse consertar
+        // pelo relatório escreveria `max-w-full max-w-48`. As quatro utilidades
+        // compostas passam a ser nomeadas, para a cobertura não cair junto — e
+        // vêm antes das curtas, porque a alternância casa a primeira que serve.
+        /(?<![\w-])(?:max-w|min-w|max-h|min-h|p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|gap|w|h|size|text|rounded|z|top|left|right|bottom|leading|tracking)-\[[^\]]+\]/g
       )) {
     // Variáveis CSS e cálculos com env() são legítimos: a área segura e a
     // largura do gatilho do Radix não têm token que os substitua. `inherit` e as
@@ -431,6 +438,27 @@ function auditFile(absPath, project) {
     // tinta do tema — o painel do `<select>` nativo segue o esquema do sistema
     // operacional, e `rounded-[inherit]` herda o raio de quem contém.
     if (/var\(|env\(|calc\(|--|\[inherit\]|\[Canvas(?:Text)?\]/.test(m[0])) continue
+    // `min()`, `max()`, `clamp()` e a porcentagem entram na mesma isenção, e
+    // pela mesma razão: **não existe utilitário que diga aquilo**. Uma trava
+    // como `min(72vw, 11rem)` ou `min(100vw-2rem, 18rem)` é uma comparação
+    // entre duas unidades, e `max-width` aceita **um** valor — não há duas
+    // classes que a componham. As porcentagens do app hoje são 45%, 55% e 70%,
+    // e as frações do Tailwind vão até doze avos: nenhuma das três é uma delas.
+    //
+    // **A ressalva é `w-[min(100%, <medida na escala>)]`**, que continua
+    // acusado porque tem equivalente exato e de duas classes:
+    // `w-full max-w-N` é, letra por letra, `width:100%; max-width:N`. Foram 30+
+    // das trocas da rodada dos esqueletos, e isentá-lo em bloco reabriria o
+    // buraco que ela fechou. Repare que isso **não** vale para
+    // `max-w-[min(100%, N)]`: ali o `min()` está no próprio `max-width`, que
+    // não se decompõe, e por isso ele é isento.
+    //
+    // Cuidado de quem for traduzir na mão: num item de flex com `flex-1` a
+    // `width` é inerte (`flex-basis: 0%` a ignora) e um `max-w-*` novo passa a
+    // cortar o crescimento — medido, 232px viraram 224.
+    const comparacao = /\[(?:[^\]]*\b)?(?:min|max|clamp)\(/.test(m[0])
+    const temEquivalente = /^w-\[min\(100%,\s*[\d.]+(?:rem|px)\)\]$/.test(m[0])
+    if ((comparacao || /\[[\d.]+%\]/.test(m[0])) && !temEquivalente) continue
     add("D2", m.index, `valor arbitrário \`${m[0]}\``, m[0])
   }
 
@@ -489,7 +517,34 @@ function auditFile(absPath, project) {
       const dentroDeEmptyState = /<EmptyStateIcon\b[^>]*>\s*$/.test(
         src.slice(Math.max(0, m.index - 200), m.index)
       )
-      const n = found ? parseFloat(found[1]) : dentroDeEmptyState ? 6 : 4
+      // Mesma cláusula, outro possúdo: o `ColorTile` crava o corpo do filho
+      // pelo **degrau** (`md`/`lg` → `[&>svg]:size-4`, `xl`/`2xl` → `size-5`),
+      // e com (0,1,1) ele vence qualquer classe no próprio `svg`. Um ícone ali
+      // não declara tamanho de propósito, e contá-lo como `size-4` acusava o
+      // conjunto `20` num `2xl` — que é justamente o certo. O padrão do
+      // componente é `md`, então sem `size=` os 4 já respondem.
+      // O possúdo do ladrilho é **ancestral**, e não vizinho imediato: entre a
+      // tag e o ícone cabe um ternário. Procura o último `<ColorTile` em aberto.
+      const antesDoIcone = src.slice(Math.max(0, m.index - 400), m.index)
+      const ultTile = antesDoIcone.lastIndexOf("<ColorTile")
+      const abridorTile =
+        ultTile !== -1 && !antesDoIcone.slice(ultTile).includes("</ColorTile>")
+          ? antesDoIcone.slice(ultTile).match(/^<ColorTile\b([^>]*)>/)
+          : null
+      const degrauTile = abridorTile?.[1].match(/\bsize=["'](\w+)["']/)?.[1]
+      // E quando o degrau vem de uma expressão (`size={size}` dentro de um
+      // `.map()`), ele **se cala** — a mesma política de errar para menos que a
+      // indireção abaixo declara. A página do `ColorTile` percorre a escada e
+      // troca o conjunto no ternario (`size === "xl" || size === "2xl"`), que é
+      // a regra sendo demonstrada; chutar `size-4` ali acusaria o acerto.
+      if (!found && abridorTile && !degrauTile && /\bsize=\{/.test(abridorTile[1])) continue
+      const n = found
+        ? parseFloat(found[1])
+        : dentroDeEmptyState
+          ? 6
+          : degrauTile === "xl" || degrauTile === "2xl"
+            ? 5
+            : 4
       const want = heroiconSetForSize(n)
       if (want !== declared) {
         add(
