@@ -587,9 +587,21 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   inverte a rodada 90 de propósito**: lá o dono recusou arco-íris no primário
   (texto branco sobre cor cheia, 4,87:1); aqui o botão é chapado, o texto é o
   do sistema e a cor fica atrás do vidro — `scripts/primary-wash-contrast.mjs`
-  varre 80 células, piso 4,5, pior caso **5,54** (claro, cursor no centro), com o vidro
-  a 22% no ponteiro e 44% na borda — o que limitava o vidro era a claridade dos
-  blobs, e ela virou token por tema. O
+  varre 192 células, piso 4,5. **A lava tem três controles, e os três são token
+  por tema** — `--button-lava-l` (claridade), `--button-lava-c` (croma, que era
+  `1.7` cravado nas oito camadas) e o par `--button-glass-min`/`-max` (a lâmina,
+  que era 22%/44% nos dois temas). São por tema porque **a gangorra é de tema**:
+  no claro o botão é preto e o rótulo branco, no escuro o contrário, e isso
+  inverte o que cada controle custa. No claro a claridade é gangorra pura (blob
+  claro aparece e apaga o texto, blob escuro salva o texto e some no botão) mas
+  **compra folga para os outros dois**; no escuro ela **sobe** o contraste, e é o
+  croma que o gasta, porque saturar um blob claro o escurece — a 0,88 de luz, o
+  croma a 2,2 reprova com 4,24 enquanto 2,0 dá 5,12. Acima de ~3 o croma para de
+  render: as paradas batem no limite do sRGB e são recortadas. Hoje o claro é
+  **0,46 / 3 / 9%–20%** (pior caso **4,72**, de 5,55 quando era 0,56 / 1,7 /
+  22%–44%) e o escuro **0,87 / 2 / 2%–6%** (pior caso **5,12**), e a razão
+  centro→borda segue acima de 2×, que é o que mantém o foco na ponta do mouse
+  em vez de uma mancha chapada. O
   ritmo continua o da casa (`--duration-fast`, `--ease-out`), com `--button-wash`
   na lista enumerada de transição. **Os outros quatro pesos que preenchem —
   `secondary`, `tertiary`, `outline`, `destructive` — não trocam de cor no

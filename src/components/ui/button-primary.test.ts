@@ -221,11 +221,22 @@ describe("o primário é chapado, e acende em lava", () => {
     // repouso é transparente, então o botão continua chapado. Ela mora na
     // utility e nunca numa classe `shadow-*` da variante (asserção 3).
     expect(LAVA).toMatch(/box-shadow:\s*\n?\s*inset[\s\S]*var\(--button-wash\)/)
-    // Os blobs sobem o croma das paradas e **igualam a claridade** por tema
-    // (`--button-lava-l`): no claro o vidro é preto e o rótulo branco, então
-    // os blobs ficam escuros; no escuro, o contrário. Claridade fixa e única
-    // reprovou (3,95) — o token existe nos dois temas por isso.
-    expect(blobs.match(/oklch\(from var\(--button-blob-[1-8]\) var\(--button-lava-l\) calc\(c \* [\d.]+\) h \/ calc\([^)]*sin\(/g)?.length).toBe(8)
+    // Os blobs igualam **claridade e croma** por tema, e os dois são token:
+    // `--button-lava-l` e `--button-lava-c`. A gangorra é de tema — no claro o
+    // botão é preto e o rótulo branco, no escuro o contrário —, então cada
+    // controle custa o oposto em cada um: no claro a claridade é gangorra e o
+    // croma é barato, no escuro a claridade é de graça e o croma é caro (a 0,88
+    // de luz, croma 2,2 reprova com 4,24 contra 5,12 a 2,0). Claridade fixa e
+    // única reprovou (3,95); croma fixo e único deixava os dois temas presos ao
+    // número calibrado para o outro. **Nenhum dos dois pode voltar a ser
+    // literal aqui**, e é isso que a asserção tranca.
+    expect(blobs.match(/oklch\(from var\(--button-blob-[1-8]\) var\(--button-lava-l\) calc\(c \* var\(--button-lava-c\)\) h \/ calc\([^)]*sin\(/g)?.length).toBe(8)
+    // E os quatro controles moram no tema, nunca na utility: declarados nela, o
+    // valor do elemento sombrearia o do tema e os dois voltariam a dividir um
+    // número só.
+    for (const t of ["--button-lava-l", "--button-lava-c", "--button-glass-min", "--button-glass-max"]) {
+      expect(LAVA, t).not.toContain(`${t}:`)
+    }
     // …e cada um **respira** (o `/ calc(… sin(…))`): sem a opacidade pulsando,
     // o blob do topo cobre o ponteiro o tempo todo e a cor sob o cursor não
     // muda — a órbita sozinha só o desloca 24–38px num raio de ~200.

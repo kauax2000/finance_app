@@ -151,11 +151,29 @@
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
   --primary-hover: oklch(0.145 0 0);
-  /* A claridade dos blobs da lava (`@utility primary-wash`), por tema: no
-     claro o vidro é preto e o rótulo é branco, então os blobs ficam escuros
-     para o texto ler; no escuro é o contrário. Igualar a claridade das oito
-     paradas é o que faz índigo e violeta aparecerem tanto quanto o teal. */
-  --button-lava-l: 0.56;
+  /* A lava tem três controles, e os três são por tema porque a **gangorra é
+     de tema**. No claro o botão é preto e o rótulo é branco; no escuro,
+     o contrário. Isso inverte o que cada controle custa, e foi varrido:
+
+       claridade  no claro, blob mais claro aparece mais e apaga o rótulo
+                  branco; mais escuro salva o rótulo e some no botão preto.
+                  É a gangorra. **Mas ela compra folga**, e a folga paga os
+                  outros dois: 0,56 → 0,46 rendeu croma quase dobrado e vidro
+                  pela metade, no mesmo contraste.
+       croma      satura sem mexer tanto na luminância — mas não de graça:
+                  a 0,56 de luz, subir o croma de 1,7 para 2,3 já reprovava
+                  (4,39). Acima de ~3 o ganho some, porque a maioria das oito
+                  paradas já bate no limite do sRGB e é recortada.
+       vidro      a lâmina da cor do botão sobre a lava, fina no ponteiro
+                  (`min`) e grossa na borda (`max`). Tirar vidro mostra a
+                  cor e gasta contraste.
+
+     Aqui: 0,46 / 3 / 9%-20%, pior caso **4,72** (piso 4,5). O ponto de partida
+     era 0,56 / 1,7 / 22%-44% em 5,55. */
+  --button-lava-l: 0.46;
+  --button-lava-c: 3;
+  --button-glass-min: 9%;
+  --button-glass-max: 20%;
   /* `--primary` preenche e é medido contra o texto em cima; `--primary-accent`
      é a marca **sobre a página** — texto, ícone, traço. Com a marca preta os
      dois coincidem com `--foreground` nos dois temas, mas o papel continua
@@ -732,7 +750,21 @@
   --primary: oklch(0.985 0 0);
   --primary-foreground: oklch(0.145 0 0);
   --primary-hover: oklch(0.92 0 0);
-  --button-lava-l: 0.8;
+  /* Ver a tabela no tema claro. Aqui os sinais trocam, porque o rótulo é
+     preto sobre blobs claros: **claridade sobe o contraste** em vez de gastá-lo
+     (é só afastar o blob do preto do texto), e **croma o gasta**, porque
+     saturar um blob claro o escurece. Medido: a 0,88 de luz, o croma a 2,2
+     reprova com 4,24 enquanto 2,0 dá 5,12 — o degrau é íngreme e é uma parada
+     só da marca que o produz, recortada no limite do sRGB.
+
+     Por isso o escuro leva quase nenhum vidro: 0,87 / 2 / 2%-6%, pior caso
+     5,12 na varredura reduzida. O arco-íris aparece praticamente inteiro, e a
+     razão centro→borda continua 3×, que é o que mantém o foco na ponta do
+     mouse em vez de uma mancha chapada. */
+  --button-lava-l: 0.87;
+  --button-lava-c: 2;
+  --button-glass-min: 2%;
+  --button-glass-max: 6%;
   --primary-accent: oklch(0.985 0 0);
   --primary-muted: oklch(0.269 0 0);
   --primary-muted-foreground: oklch(0.985 0 0);
@@ -1961,8 +1993,12 @@
   --button-blob-6: var(--brand-green);
   --button-blob-7: var(--brand-violet);
   --button-blob-8: var(--brand-blue);
-  --button-glass-min: 22%;
-  --button-glass-max: 44%;
+  /* `--button-glass-min`, `--button-glass-max`, `--button-lava-l` e
+     `--button-lava-c` **não se declaram aqui**: eles moram em `:root` e
+     `.dark`, porque a folga de contraste é de tema e não do componente. Declarados na utility, o valor do
+     elemento sombrearia o do tema e os dois temas voltariam a dividir um
+     número só — que era o estado anterior, e o que mantinha o escuro com um
+     vidro calibrado para o problema do claro. */
   background-image:
     radial-gradient(
       ellipse 110% 220% at var(--button-mx) var(--button-my),
@@ -1985,56 +2021,56 @@
       ellipse 80% 190% at
         calc(var(--button-mx) + cos((var(--button-lava) + 0) * 360deg) * 28px)
         calc(var(--button-my) + sin((var(--button-lava) + 0) * 360deg) * 10px),
-      oklch(from var(--button-blob-1) var(--button-lava-l) calc(c * 1.7) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0) * 360deg), 3))) 0%,
+      oklch(from var(--button-blob-1) var(--button-lava-l) calc(c * var(--button-lava-c)) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0) * 360deg), 3))) 0%,
       transparent 90%
     ),
     radial-gradient(
       ellipse 85% 200% at
         calc(var(--button-mx) - cos((var(--button-lava) + 0.125) * 360deg) * 36px)
         calc(var(--button-my) + sin((var(--button-lava) + 0.125) * 360deg) * 12px),
-      oklch(from var(--button-blob-2) var(--button-lava-l) calc(c * 1.7) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0.125) * 360deg), 3))) 0%,
+      oklch(from var(--button-blob-2) var(--button-lava-l) calc(c * var(--button-lava-c)) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0.125) * 360deg), 3))) 0%,
       transparent 90%
     ),
     radial-gradient(
       ellipse 75% 180% at
         calc(var(--button-mx) + cos((var(--button-lava) + 0.25) * 360deg) * 32px)
         calc(var(--button-my) - sin((var(--button-lava) + 0.25) * 360deg) * 9px),
-      oklch(from var(--button-blob-3) var(--button-lava-l) calc(c * 1.7) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0.25) * 360deg), 3))) 0%,
+      oklch(from var(--button-blob-3) var(--button-lava-l) calc(c * var(--button-lava-c)) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0.25) * 360deg), 3))) 0%,
       transparent 90%
     ),
     radial-gradient(
       ellipse 82% 190% at
         calc(var(--button-mx) - cos((var(--button-lava) + 0.375) * 360deg) * 24px)
         calc(var(--button-my) - sin((var(--button-lava) + 0.375) * 360deg) * 14px),
-      oklch(from var(--button-blob-4) var(--button-lava-l) calc(c * 1.7) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0.375) * 360deg), 3))) 0%,
+      oklch(from var(--button-blob-4) var(--button-lava-l) calc(c * var(--button-lava-c)) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0.375) * 360deg), 3))) 0%,
       transparent 90%
     ),
     radial-gradient(
       ellipse 78% 185% at
         calc(var(--button-mx) + cos((var(--button-lava) + 0.5) * 360deg) * 30px)
         calc(var(--button-my) + sin((var(--button-lava) + 0.5) * 360deg) * 11px),
-      oklch(from var(--button-blob-5) var(--button-lava-l) calc(c * 1.7) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0.5) * 360deg), 3))) 0%,
+      oklch(from var(--button-blob-5) var(--button-lava-l) calc(c * var(--button-lava-c)) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0.5) * 360deg), 3))) 0%,
       transparent 90%
     ),
     radial-gradient(
       ellipse 84% 195% at
         calc(var(--button-mx) - cos((var(--button-lava) + 0.625) * 360deg) * 34px)
         calc(var(--button-my) + sin((var(--button-lava) + 0.625) * 360deg) * 10px),
-      oklch(from var(--button-blob-6) var(--button-lava-l) calc(c * 1.7) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0.625) * 360deg), 3))) 0%,
+      oklch(from var(--button-blob-6) var(--button-lava-l) calc(c * var(--button-lava-c)) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0.625) * 360deg), 3))) 0%,
       transparent 90%
     ),
     radial-gradient(
       ellipse 76% 180% at
         calc(var(--button-mx) + cos((var(--button-lava) + 0.75) * 360deg) * 26px)
         calc(var(--button-my) - sin((var(--button-lava) + 0.75) * 360deg) * 13px),
-      oklch(from var(--button-blob-7) var(--button-lava-l) calc(c * 1.7) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0.75) * 360deg), 3))) 0%,
+      oklch(from var(--button-blob-7) var(--button-lava-l) calc(c * var(--button-lava-c)) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0.75) * 360deg), 3))) 0%,
       transparent 90%
     ),
     radial-gradient(
       ellipse 80% 190% at
         calc(var(--button-mx) - cos((var(--button-lava) + 0.875) * 360deg) * 38px)
         calc(var(--button-my) - sin((var(--button-lava) + 0.875) * 360deg) * 12px),
-      oklch(from var(--button-blob-8) var(--button-lava-l) calc(c * 1.7) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0.875) * 360deg), 3))) 0%,
+      oklch(from var(--button-blob-8) var(--button-lava-l) calc(c * var(--button-lava-c)) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0.875) * 360deg), 3))) 0%,
       transparent 90%
     );
   /* A névoa (frost) nas bordas: uma sombra **interna** borrada da cor do
