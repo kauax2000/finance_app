@@ -300,7 +300,7 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   `--ring` e os `-muted` são neutros. O acento é o token de degradê
   `--brand-rainbow` (sete matizes em oito paradas, em oklch — teal, azul com duas paradas, violeta, magenta, coral, âmbar, lima —, luminosidade por tema; cada parada é um token `--brand-<cor>`, para a página de cores medir e o `ds:catalog` cobrar par; **o verde da marca não é o verde de estado**: a lima fica em 130 e `success`/`income`/`chart-1` em 152 — ver a rodada 84) com o grão
   `--brand-grain`, e ele mora **só na marca**: o wordmark e o símbolo (prop
-  `rainbow` — preenchido em todo tamanho, girando só em `lg`/`xl`), o campo de marca
+  `rainbow` — preenchido e **parado** em todo tamanho), o campo de marca
   e o `Button variant="brand"`, mais o `Badge variant="brand"` desde a rodada 89
   desde a rodada 89.
   Arco-íris **sob texto** — num gráfico, num fundo de cartão, preenchendo um
@@ -325,10 +325,32 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   novo não registra em aba patchada por HMR**; **uma transição que nasce na
   mesma mudança de estado não dispara** — declarada só dentro da regra de foco,
   o valor salta; e num contexto de empilhamento o fundo pinta antes dos filhos
-  de `z` negativo, que é por que o `brand` não tem fundo próprio. As  `@utility` são `brand-rainbow` (só o degradê; o grão é do campo) e `brand-rainbow-live` (o
-  giro de 12 s, opt-in, só nos degraus grandes); as três moram depois de
-  `no-scrollbar` pela fatia do `glass.test.ts`, e `--brand-angle` é
-  `@property` porque só variável tipada interpola. Ver `/designsystem/brand`.
+  de `z` negativo, que é por que o `brand` não tem fundo próprio. As `@utility`
+  são `brand-rainbow` (só o degradê; o grão é do campo), `brand-field` e
+  `brand-lava`; **todas moram depois de `no-scrollbar`**, pela fatia do
+  `glass.test.ts` — a faixa entre `@utility glass` e `no-scrollbar` reprova
+  utility nova, e a asserção 8 acusa até a palavra `background` num comentário
+  ali dentro. Ver `/designsystem/brand`.
+  **O degradê não gira, e o giro não volta.** Da rodada 83 à 99 o ângulo somava
+  `--brand-angle` e `brand-rainbow-live` o animava (12s no splash, 6s sob o
+  cursor no botão de marca). O dono o recusou inteiro na rodada 100, e saíram
+  com ele `--brand-angle`, `@keyframes brand-rotate`, `--brand-spin` e a
+  própria `brand-rainbow-live`. **O movimento da marca é a lava**: blobos de
+  cor transitando dentro da caixa — `primary-wash` no hover do primário, e
+  `brand-lava` em escala de região. E **a receita de uma não serve a outra**:
+  no botão o raio da órbita é `px` e o alfa pulsa, o que numa região faz a lava
+  sair de uma cor só e lavada; na `brand-lava` o raio é `%`, o núcleo é opaco
+  até 38% e não há pulso nenhum — quem muda a cor é a sobreposição andando.
+  O degradê interpola **`in oklch shorter hue`**, e isso é o conserto do fio que
+  se via cortando o campo: em sRGB a travessia magenta→coral gastava 36,1° de
+  matiz a cada 5% da largura contra 9,0° no azul (razão 4,01×), e em oklch o
+  pico cai para 26,3°. O espaçamento das paradas **não** era a causa (razão de
+  velocidade perceptual 1,29×, pior quebra de derivada 1,37×) e não se mexeu.
+  **O sRGB fica declarado antes, e o oklch entra por `@supports`** — não é
+  redundância: o valor de uma propriedade personalizada não é validado na
+  análise, então um `in oklch` que o navegador não entenda só falha no **uso**,
+  e ali o `background-image` cai para `none` em vez de degradar. A marca sumiria
+  inteira.
   **Os dois tokens do primário continuam existindo pelo papel**, mesmo
   coincidindo em valor:
   **`--secondary-hover`** existe pela mesma razão que a divisão acima: um alfa
@@ -645,9 +667,9 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   E `brand` é a tecla do `primary` com o arco-íris em
   volta (contorno de 1px no `::before`, halo no `::after`, o botão em si sem
   fundo, porque numa raiz de empilhamento o fundo pinta antes dos filhos de
-  `z` negativo), girando uma volta a cada 6s sob o cursor e **pausando** no
-  ângulo em que estava ao sair — ligar a animação só dentro do `hover:` faria
-  a cor saltar de volta ao começo. **`brandOutline` é o mesmo sem o halo**,
+  `z` negativo). Ele girava uma volta a cada 6s sob o cursor, e o giro saiu na
+  rodada 100; o botão não ficou inerte — o halo continua acendendo no cursor e
+  o preenchimento continua trocando de `--brand-fill`. **`brandOutline` é o mesmo sem o halo**,
   para onde ele não cabe: o `::after` sangra 4px para fora da caixa e encosta
   no vizinho numa barra ou num par de ações. Os dois: **um por tela**, para o
   CTA de marca. O `primary` veste o arco-íris de outro jeito — como

@@ -18,11 +18,12 @@ import { cn } from "@/lib/utils"
  * **`rainbow` é o acento, e ele é um só em todo tamanho:** as letras são
  * **preenchidas** pelo arco-íris — uma `div` mascarada pelo mesmo desenho
  * (`public/wordmark.svg`, o ativo de origem deste path) vestindo
- * `brand-rainbow`. O que muda com o tamanho é só o movimento: em `lg` e `xl`
- * o degradê gira devagar; em `sm` e `md` ele fica parado, porque na barra
- * quem está ali olha números. Houve uma versão com halo borrado atrás da
- * letra sólida nos degraus pequenos, e ela foi rejeitada na tela: lia como
- * desregistro de cor, não como luz.
+ * `brand-rainbow`. **O tamanho não decide mais nada aqui**: em `lg` e `xl` o
+ * degradê girava devagar (`brand-rainbow-live`), e o giro saiu do sistema a
+ * pedido do dono — a marca é a mesma peça parada nos quatro degraus. Houve
+ * também uma versão com halo borrado atrás da letra sólida nos degraus
+ * pequenos, e ela foi rejeitada na tela: lia como desregistro de cor, não
+ * como luz.
  *
  * O símbolo sozinho continua sendo `AppLogo` — é o que cabe onde só há um
  * quadrado: favicon, ícone de PWA, avatar.
@@ -88,7 +89,6 @@ export function AppWordmark({
             <div
                 className={cn(
                     "brand-rainbow w-auto",
-                    (size === "lg" || size === "xl") && "brand-rainbow-live",
                     MASK_CLASSES,
                     sizeClasses[size],
                     className,

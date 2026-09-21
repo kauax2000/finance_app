@@ -10,12 +10,15 @@ import { Muted } from "@/components/ui/typography"
 import { DocNote, DocSection, Usage } from "../ds-doc"
 import { Group, Spec, SpecimenPanel, Stack } from "../ds-kit"
 
-/** Altura declarada, largura que sai do viewBox de 101/24, e se o arco-íris gira naquele degrau. */
+/** Altura declarada e largura que sai do viewBox de 101/24.
+ *
+ * Havia uma quinta coluna, "gira/parado", e ela saiu com o giro: uma coluna
+ * com um valor só não carrega decisão nenhuma. */
 const ESCALA = [
-  ["sm", "h-5", "20px", "84px", "parado", "faixa estreita — o cabeçalho do sheet no telefone"],
-  ["md", "h-6", "24px", "101px", "parado", "o padrão: barra do catálogo"],
-  ["lg", "h-8", "32px", "135px", "gira", "quando a marca é o assunto da superfície — o campo de marca"],
-  ["xl", "h-10 md:h-11", "40 → 44px", "168 → 185px", "gira", "a marca sozinha numa tela inteira — o splash"],
+  ["sm", "h-5", "20px", "84px", "faixa estreita — o cabeçalho do sheet no telefone"],
+  ["md", "h-6", "24px", "101px", "o padrão: barra do catálogo"],
+  ["lg", "h-8", "32px", "135px", "quando a marca é o assunto da superfície — o campo de marca"],
+  ["xl", "h-10 md:h-11", "40 → 44px", "168 → 185px", "a marca sozinha numa tela inteira — o splash"],
 ]
 
 export default function BrandDoc() {
@@ -83,12 +86,12 @@ export default function BrandDoc() {
 
       <DocSection
         title="O arco-íris"
-        description="rainbow preenche as letras com o degradê em todo tamanho. O que o tamanho decide é o movimento: em lg e xl o degradê gira devagar; em sm e md ele fica parado."
-        code={`// Preenchido e respirando — o splash, o campo de marca
+        description="rainbow preenche as letras com o degradê, do mesmo jeito em todo tamanho. O tamanho não decide mais nada aqui: o giro que havia em lg e xl saiu do sistema, e a marca é a mesma peça parada nos quatro degraus."
+        code={`// O splash, o campo de marca
 <AppWordmark size="xl" rainbow />
 <AppLogo size="lg" rainbow />
 
-// Preenchido e parado — a barra
+// A barra
 <AppWordmark size="md" rainbow />`}
         previewClassName="flex-col items-stretch gap-4"
       >
@@ -103,20 +106,23 @@ export default function BrandDoc() {
 
       <DocNote title="Uma receita só, e por que ela é linear">
         <p>
-          O degradê é <code>--brand-rainbow</code>, composto pela <code>@utility brand-rainbow-image</code> no próprio elemento (e não no <code>:root</code>, onde o ângulo congelava — rodada 88), e cada parada é um token próprio — <code>--brand-teal</code>, <code>--brand-blue</code>, <code>--brand-indigo</code>, <code>--brand-violet</code>, <code>--brand-magenta</code>, <code>--brand-coral</code>, <code>--brand-amber</code>, <code>--brand-green</code>, medidos em <code>/designsystem/colors</code>. Sete matizes em oito paradas — teal, ciano-azul e azul (um terço da rampa, para o azul não ser só a ponta), violeta, magenta, coral, âmbar, lima: a paleta do ClickUp com o coral no meio, e o verde de volta nas duas pontas por decisão do dono na rodada 84 (a 83 o tinha tirado: a primeira versão de sete paradas lia como bandeira). O verde da marca não é o verde de estado — <code>success</code> fica em 152, a lima em 130 —, com as mesmas matizes nos dois temas e a luminosidade um degrau abaixo no claro (para o preenchimento ler sobre branco) e acima no escuro. É um <code>linear-gradient</code> cujo ângulo soma <code>--brand-angle</code>, registrada com <code>@property</code> para poder girar — sem o registro o ângulo salta de 0 a 360 sem nada no meio. O registro sozinho não bastava: enquanto o degradê morou no <code>:root</code>, o <code>var(--brand-angle)</code> era substituído lá, e <code>brand-rainbow-live</code> girava uma variável que a pintura não lia. A primeira versão era cônica a partir do centro, e na tela lia como roda de cores: um gráfico de pizza, não neon.
+          O degradê é <code>--brand-rainbow</code>, composto pela <code>@utility brand-rainbow-image</code> no próprio elemento (e não no <code>:root</code>, onde o ângulo congelava — rodada 88), e cada parada é um token próprio — <code>--brand-teal</code>, <code>--brand-blue</code>, <code>--brand-indigo</code>, <code>--brand-violet</code>, <code>--brand-magenta</code>, <code>--brand-coral</code>, <code>--brand-amber</code>, <code>--brand-green</code>, medidos em <code>/designsystem/colors</code>. Sete matizes em oito paradas — teal, ciano-azul e azul (um terço da rampa, para o azul não ser só a ponta), violeta, magenta, coral, âmbar, lima: a paleta do ClickUp com o coral no meio, e o verde de volta nas duas pontas por decisão do dono na rodada 84 (a 83 o tinha tirado: a primeira versão de sete paradas lia como bandeira). O verde da marca não é o verde de estado — <code>success</code> fica em 152, a lima em 130 —, com as mesmas matizes nos dois temas e a luminosidade um degrau abaixo no claro (para o preenchimento ler sobre branco) e acima no escuro. É um <code>linear-gradient</code> a 135°, <strong>parado</strong>, e ele interpola <code>in oklch shorter hue</code>. A interpolação é o conserto do fio que se via cortando o campo: em sRGB — o padrão quando o espaço não é declarado — o matiz não corre parelho, e a travessia magenta→coral gastava <strong>36,1° a cada 5%</strong> da largura contra 9,0° no azul (razão 4,01×); em oklch o pico cai para <strong>26,3°</strong>. O que não era a causa, e por isso não se mexeu: o espaçamento das paradas (razão de velocidade perceptual entre segmentos 1,29×) e o gamut (pior perda de croma 0,012). A primeira versão era cônica a partir do centro, e na tela lia como roda de cores: um gráfico de pizza, não neon.
         </p>
         <p>
-          O preenchimento é uma <code>div</code> mascarada pelo próprio ativo (<code>mask-[url(/wordmark.svg)]</code>) vestindo <code>brand-rainbow</code>, em todo tamanho — e <strong>sem grão</strong>: num traço de poucos pixels ele não é textura, é sujeira na letra; o grão é do campo de marca. Houve uma versão com halo borrado atrás da letra sólida nos degraus pequenos, e ela foi rejeitada na tela: lia como desregistro de cor, não como luz. O movimento é <code>brand-rainbow-live</code>, opt-in e só nos degraus grandes: na barra a pessoa está olhando números. <code>prefers-reduced-motion</code> já é tratado pelo bloco global — o ângulo para onde estiver.
+          O preenchimento é uma <code>div</code> mascarada pelo próprio ativo (<code>mask-[url(/wordmark.svg)]</code>) vestindo <code>brand-rainbow</code>, em todo tamanho — e <strong>sem grão</strong>: num traço de poucos pixels ele não é textura, é sujeira na letra; o grão é do campo de marca. Houve uma versão com halo borrado atrás da letra sólida nos degraus pequenos, e ela foi rejeitada na tela: lia como desregistro de cor, não como luz.
+        </p>
+        <p>
+          <strong>O degradê girava, e o giro saiu.</strong> Da rodada 83 à 99 o ângulo somava <code>--brand-angle</code>, animada por <code>brand-rainbow-live</code>: 12s no lockup e no símbolo em <code>lg</code>/<code>xl</code>, 6s sob o cursor no <code>Button variant=&quot;brand&quot;</code>. O dono o recusou inteiro — <em>não é uma animação que eu quero usar em nenhum lugar de site</em> — e com ele saíram <code>--brand-angle</code>, <code>@keyframes brand-rotate</code> e <code>--brand-spin</code>. O movimento da marca hoje é a <strong>lava</strong>: blobos de cor transitando dentro da caixa, que é o que o <code>primary-wash</code> faz no hover do primário desde a rodada 98 e o que a <code>@utility brand-lava</code> faz em escala de região, medida em <code>/designsystem/colors</code>.
         </p>
       </DocNote>
 
       <DocSection
         title="Escala"
-        description="A escala do lockup é por altura; a largura vem do viewBox, e o w-auto embutido impede um w-full herdado de esticar a marca. A quinta coluna diz se o degradê gira naquele degrau."
+        description="A escala do lockup é por altura; a largura vem do viewBox, e o w-auto embutido impede um w-full herdado de esticar a marca."
         previewClassName="flex-col items-stretch gap-4"
       >
         <Stack className="gap-4">
-          {ESCALA.map(([size, cls, altura, largura, forma, uso]) => (
+          {ESCALA.map(([size, cls, altura, largura, uso]) => (
             <div key={size} className="flex flex-wrap items-center gap-x-4 gap-y-1">
               {/* Caixa de largura fixa: sem ela cada degrau começa a coluna de
                   código num x diferente, e a tabela deixa de ler como tabela. */}
@@ -136,7 +142,6 @@ export default function BrandDoc() {
               <span className="nums w-24 shrink-0 text-2xs text-muted-foreground">
                 {altura} · {largura}
               </span>
-              <span className="w-20 shrink-0 text-2xs text-muted-foreground">{forma}</span>
               <span className="text-xs text-muted-foreground">{uso}</span>
             </div>
           ))}

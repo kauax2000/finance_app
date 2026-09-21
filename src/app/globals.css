@@ -2094,64 +2094,56 @@
    prova que o vidro não declara `background` nem `background-blend-mode`.
    Tudo o que é marca mora **depois** de `no-scrollbar` por isso.
 
-   `--brand-angle` é registrada com `@property` porque só variável tipada
-   interpola: sem o registro, animar o `from` do `conic-gradient` salta de
-   0 a 360 sem nada no meio. `inherits: false` é o que impede um wordmark
-   girando de arrastar o botão de marca ao lado dele.
+   **O degradê não gira mais, e o giro não volta.** Da rodada 83 à 99 o ângulo
+   somava `--brand-angle`, uma `@property` animada por `brand-rainbow-live`:
+   12s no lockup e no símbolo em `lg`/`xl`, 6s sob o cursor no
+   `Button variant="brand"`. O dono o viu na faixa do catálogo e o recusou
+   inteiro — "não é uma animação que eu quero usar em nenhum lugar de site".
+   O movimento da marca é a **lava** (`@utility brand-lava`, abaixo): blobos de
+   cor transitando dentro da caixa, que é o que o `primary-wash` já faz no
+   hover do primário desde a 98. Saíram com o giro `--brand-angle`,
+   `@keyframes brand-rotate` e `--brand-spin`.
 
-   **O degradê é composto no elemento, e não no `:root` — a rotação depende
-   disso.** Um `var()` dentro de uma propriedade personalizada é substituído
-   **onde ela é declarada**, e não onde é usada. Enquanto `--brand-rainbow`
-   morou no `:root`, o `calc(var(--brand-angle) + 135deg)` resolvia contra o
-   `--brand-angle` de lá — o valor inicial, 0deg — e o que os descendentes
-   herdavam já era a string substituída. Animar `--brand-angle` num
-   descendente não desfazia isso: medido em `/designsystem/colors`, a
-   variável ia de 0 a 212deg enquanto o `background-image` computado ficava
-   cravado em `linear-gradient(135deg …)`. `brand-rainbow-live` girava um
-   valor que ninguém lia, e valia para `@property` com `inherits` nos dois
-   valores — é a mesma medição que o `avatar.tsx` registra na rodada 87,
-   onde ela foi escrita e o conserto ficou por fazer.
+   **A interpolação é `in oklch shorter hue`, e isso é o conserto do fio.** Em
+   sRGB — o padrão de um `linear-gradient` sem espaço declarado — o matiz não
+   corre parelho: medido em canvas, a travessia magenta→coral gastava **36,1°
+   a cada 5%** da largura contra 9,0° no azul, razão **4,01×**, e era ela o
+   traço que se via cortando o campo. Em oklch o pico cai para **26,3°**
+   (razão 2,96×). O que **não** era a causa, e por isso não se mexeu: o
+   espaçamento das paradas (razão de velocidade perceptual entre segmentos
+   1,29×, pior quebra de derivada 1,37× no coral) e o gamut (pior perda de
+   croma 0,012). Uma rampa reposicionada para taxa de matiz constante existe
+   e foi recusada: rebalanceia a marca para o quente, com teal e azul pela
+   metade.
 
-   Por isso a composição mora em `brand-rainbow-image`, que **só declara a
-   variável**, e quem pinta a veste: `brand-rainbow` (fundo próprio),
-   `brand-field` (uma camada de três) e o `Button variant="brand"`, que a lê
-   nos dois pseudo-elementos — um pseudo-elemento herda o valor **já
-   substituído** do elemento de origem, então a conta acontece no botão e o
-   `::before` recebe o resultado. Uma cópia do degradê no arquivo inteiro:
-   as paradas continuam tokens por tema, e a estrutura (ângulo e
-   porcentagens) nunca foi diferente entre os dois blocos.
+   **O degradê é composto no elemento, e não no `:root`.** Um `var()` dentro
+   de uma propriedade personalizada é substituído **onde ela é declarada**, e
+   não onde é usada — foi essa medição que a rodada 88 pagou: com
+   `--brand-rainbow` no `:root`, o `calc(var(--brand-angle) + …)` resolvia
+   contra o valor inicial de lá e os descendentes herdavam a string já pronta,
+   então o ângulo andava de 0 a 212deg enquanto o `background-image` computado
+   ficava cravado. Sem ângulo a conta não tem mais var de elemento, mas
+   `brand-rainbow-image` **fica**: é ela que declara `--brand-rainbow` no
+   elemento, e o `Button` nas variantes `brand` e `link` conta com isso —
+   um pseudo-elemento herda o valor já substituído de quem o originou. A
+   classe não é redundante e não se apaga.
 
    `brand-rainbow` é só o degradê, **sem grão**, e serve a duas coisas que
    não se parecem: a máscara do wordmark (a `div` com `mask-image` do ativo)
    e o `::before` do `Button variant="brand"`. O grão chegou a morar aqui e
    saiu a pedido: num traço de 2 a 4px ele não é textura, é sujeira na letra.
    O grão é do **campo** (`brand-field`), onde há área para ele ler como
-   material.
-   `brand-rainbow-live` é o movimento, e ele é opt-in: quem o veste hoje é o
-   lockup e o símbolo em `lg`/`xl` — o splash — e a faixa de
-   `/designsystem/colors`. **O campo de marca fica parado**: desde que a
-   composição desceu para o elemento ele *pode* girar, e a decisão foi
-   deixá-lo quieto — este parágrafo já prometeu o contrário ("a marca respira
-   nos momentos grandes (splash, campo de marca)") enquanto `brand-field`
-   nunca declarou a animação. Na barra ela também não se mexe, onde a pessoa
-   está olhando números. `prefers-reduced-motion` já é tratado pelo bloco
-   global de `@layer base`, que encurta toda animação que não é
-   `animate-spin`/`animate-pulse` — o ângulo para onde estiver. */
-@property --brand-angle {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0deg;
-}
-
-@keyframes brand-rotate {
-  to {
-    --brand-angle: 360deg;
-  }
-}
-
+   material. */
 @utility brand-rainbow-image {
+  /* O sRGB primeiro, e o `@supports` por cima. **Não é cinto e suspensório**:
+     aqui o degradê mora numa **propriedade personalizada**, e o valor de uma
+     custom property não é validado na análise — ele é um fluxo de tokens. Um
+     `in oklch` que o navegador não entenda só é descoberto no **uso**, onde
+     vira inválido-em-tempo-de-valor-computado e o `background-image` cai para
+     `none`: a marca sumiria inteira em vez de degradar para sRGB. O
+     `@supports` é o único lugar onde a pergunta pode ser feita antes. */
   --brand-rainbow: linear-gradient(
-    calc(var(--brand-angle) + 135deg),
+    135deg,
     var(--brand-teal) 0%,
     var(--brand-blue) 14%,
     var(--brand-indigo) 32%,
@@ -2161,15 +2153,25 @@
     var(--brand-amber) 82%,
     var(--brand-green) 100%
   );
+
+  @supports (background-image: linear-gradient(in oklch, red, blue)) {
+    --brand-rainbow: linear-gradient(
+      135deg in oklch shorter hue,
+      var(--brand-teal) 0%,
+      var(--brand-blue) 14%,
+      var(--brand-indigo) 32%,
+      var(--brand-violet) 46%,
+      var(--brand-magenta) 58%,
+      var(--brand-coral) 70%,
+      var(--brand-amber) 82%,
+      var(--brand-green) 100%
+    );
+  }
 }
 
 @utility brand-rainbow {
   @apply brand-rainbow-image;
   background-image: var(--brand-rainbow);
-}
-
-@utility brand-rainbow-live {
-  animation: brand-rotate var(--brand-spin, 12s) linear infinite;
 }
 
 /* O campo de marca: o arco-íris ocupando uma **região**, com grão pesado e uma
@@ -2206,16 +2208,21 @@
    vizinhos, retalho de 220×140 sem texto, captura a 1440×900, animação
    parada):
 
-     sem grão                    claro 0,63   escuro 0,61
+     sem grão                    claro 0,64   escuro 0,62
      campo verde (0,9 · 0,6 · 0,6/0,45)  — não comparável: outro método
-     0,75 · slope 1 · 0,85/0,75  claro 9,58   escuro 9,82   ← o token
-     0,75 · slope 1 · 1          claro 11,23  escuro 13,08  (rejeitado na paleta
+     0,75 · slope 1 · 0,85/0,75  claro 9,47   escuro 9,77   ← o token
+     0,75 · slope 1 · 1          claro 11,12  escuro 13,01  (rejeitado na paleta
                                  de sete paradas: já lia como ruído de sinal)
 
      Remedidos na rodada 84, sobre a paleta de oito paradas: o `overlay`
      rende conforme a luminosidade da base, e a lima e o teal — as duas
      paradas mais claras — subiram o σ de 6,94/8,70 (cinco paradas) para
-     9,58/9,82. O token não mudou; só a base. */
+     9,58/9,82. O token não mudou; só a base.
+
+     Remedidos de novo na rodada 100, quando o degradê passou a interpolar
+     `in oklch shorter hue`: 9,58/9,82 → **9,47/9,77**. A base ficou mais lisa
+     e o grão praticamente não sentiu — era a previsão, porque o `overlay`
+     rende pela luminosidade da base, e a interpolação move o **matiz**. */
 @utility brand-field {
   @apply brand-rainbow-image;
   background-color: oklch(0 0 0);
@@ -2226,6 +2233,128 @@
   background-blend-mode: normal, overlay, normal;
   color: oklch(0.985 0 0);
   box-shadow: inset 0 0 0 1px oklch(1 0 0 / 22%);
+}
+
+/* ── A lava da marca ───────────────────────────────────────────────────────
+
+   O movimento do arco-íris, no lugar do giro que saiu. Oito blobos — uma
+   parada da marca cada — orbitando dentro da caixa, como a lava do primário
+   (`@utility primary-wash`, rodada 98) faz atrás do rótulo.
+
+   **A receita do botão não se transplanta, e isso foi medido antes de
+   escrever.** Numa caixa de 468×96 os blobos de lá saem errados por dois
+   motivos: o raio da órbita está em **px** (24–38) e as elipses medem
+   `80% 190%`, então cada um cobre a caixa inteira e a lava sai **de uma cor
+   só**; e o alfa pulsante (`sin³`, piso 0,12) soma oito matizes translúcidos
+   para o cinza — o resultado é **pastel**, mais lavado que o degradê que ele
+   veio substituir. Aqui o raio é `%` (a lava acompanha a caixa em vez de
+   encolher quando ela cresce), o núcleo é **opaco** até 38% e só a franja é
+   translúcida, e **não há pulso de alfa**: quem faz a cor mudar é a
+   sobreposição andando, que é o que a palavra lava quer dizer.
+
+   **A cor é a parada crua da marca.** Nada de `--button-lava-l` nem de
+   `calc(c * --button-lava-c)`: aqueles existem para segurar o contraste de um
+   **rótulo** sobre a lava, e aqui não há texto — vale a invariante do campo,
+   nenhum texto corrido mora sobre sete matizes.
+
+   **As âncoras avançam da esquerda para a direita na ordem do degradê**, com
+   o zigue-zague na vertical. Não é enfeite: é o que preserva a leitura da
+   marca (teal de um lado, lima do outro) agora que o degradê linear não está
+   mais embaixo. A rodada 98 já tinha medido o avesso disso no botão — com as
+   oito empilhadas no ponteiro na ordem da rampa, a lava saía ciano.
+
+   Período de 14s contra os 8s do botão: um botão é um momento, uma região é
+   ambiente. `prefers-reduced-motion` é tratado pelo bloco global de
+   `@layer base`, que congela a órbita no quadro 0 — e sem degradê embaixo o
+   quadro 0 **tem** que ser um quadro bom, o que as fases i/8 garantem: em
+   `--brand-lava: 0` os oito já estão espalhados, cada um no seu ângulo. */
+@property --brand-lava {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
+@keyframes brand-lava {
+  to {
+    --brand-lava: 1;
+  }
+}
+
+@utility brand-lava {
+  background-color: oklch(0 0 0);
+  background-image:
+    radial-gradient(
+      ellipse 32% 130% at calc(6% + cos((var(--brand-lava) + 0) * 360deg) * 5%)
+        calc(14% + sin((var(--brand-lava) + 0) * 360deg) * 20%),
+      var(--brand-teal) 0%,
+      var(--brand-teal) 38%,
+      oklch(from var(--brand-teal) l c h / 0.72) 60%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 32% 130% at
+        calc(18% - cos((var(--brand-lava) + 0.125) * 360deg) * 5%)
+        calc(72% + sin((var(--brand-lava) + 0.125) * 360deg) * 20%),
+      var(--brand-blue) 0%,
+      var(--brand-blue) 38%,
+      oklch(from var(--brand-blue) l c h / 0.72) 60%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 32% 130% at
+        calc(30% + cos((var(--brand-lava) + 0.25) * 360deg) * 5%)
+        calc(26% - sin((var(--brand-lava) + 0.25) * 360deg) * 20%),
+      var(--brand-indigo) 0%,
+      var(--brand-indigo) 38%,
+      oklch(from var(--brand-indigo) l c h / 0.72) 60%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 32% 130% at
+        calc(42% - cos((var(--brand-lava) + 0.375) * 360deg) * 5%)
+        calc(80% - sin((var(--brand-lava) + 0.375) * 360deg) * 20%),
+      var(--brand-violet) 0%,
+      var(--brand-violet) 38%,
+      oklch(from var(--brand-violet) l c h / 0.72) 60%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 32% 130% at
+        calc(54% + cos((var(--brand-lava) + 0.5) * 360deg) * 5%)
+        calc(30% + sin((var(--brand-lava) + 0.5) * 360deg) * 20%),
+      var(--brand-magenta) 0%,
+      var(--brand-magenta) 38%,
+      oklch(from var(--brand-magenta) l c h / 0.72) 60%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 32% 130% at
+        calc(66% - cos((var(--brand-lava) + 0.625) * 360deg) * 5%)
+        calc(74% + sin((var(--brand-lava) + 0.625) * 360deg) * 20%),
+      var(--brand-coral) 0%,
+      var(--brand-coral) 38%,
+      oklch(from var(--brand-coral) l c h / 0.72) 60%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 32% 130% at
+        calc(78% + cos((var(--brand-lava) + 0.75) * 360deg) * 5%)
+        calc(26% - sin((var(--brand-lava) + 0.75) * 360deg) * 20%),
+      var(--brand-amber) 0%,
+      var(--brand-amber) 38%,
+      oklch(from var(--brand-amber) l c h / 0.72) 60%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 32% 130% at
+        calc(92% - cos((var(--brand-lava) + 0.875) * 360deg) * 5%)
+        calc(76% - sin((var(--brand-lava) + 0.875) * 360deg) * 20%),
+      var(--brand-green) 0%,
+      var(--brand-green) 38%,
+      oklch(from var(--brand-green) l c h / 0.72) 60%,
+      transparent 100%
+    );
+  animation: brand-lava 14s linear infinite;
 }
 
 @utility scroll-fade-y {

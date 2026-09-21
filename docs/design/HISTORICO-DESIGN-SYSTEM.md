@@ -11581,3 +11581,153 @@ para isto.
 **Fallout:** `globals.css`, `button.tsx`, `alert.tsx`, `button-touch-response.test.ts`,
 `button-primary.test.ts` (a tabela de ritmo), a página `button` do catálogo e o
 `AGENTS.md`. Nenhuma rota, nenhuma jornada.
+
+
+### Rodada 100 — o giro sai, a lava entra, o campo para de listrar
+
+**O pedido, olhando `/designsystem/colors`.** Duas queixas numa mensagem.
+A primeira: *"primeiro girando, não é uma animação que eu quero usar em nenhum
+lugar de site, está péssimo, feio e horrível. A animação que a gente está usando
+de rainbow é um efeito de lava, onde as cores transitam blobs dentro de um
+componente."* A segunda: *"o brandfield eu quero que você melhore a transição
+para cada cor pra que elas fiquem mais integradas nas transições, para que não
+fique fios bem aparentes de cada cor."*
+
+**Isto desfaz a rodada 83, que criou o giro, e a 88, que o fez pintar.** As duas
+continuam verdadeiras sobre o que mediram — a cônica lia como roda de cores, e
+um `var()` dentro de uma propriedade personalizada é resolvido onde ela é
+declarada. O que caiu foi o movimento, não as medições.
+
+**O fio não era o que parecia, e medir primeiro economizou a rodada errada.**
+Três hipóteses foram à medição, em canvas, no tema escuro:
+
+| hipótese | medida | veredito |
+| --- | --- | --- |
+| as paradas estão mal espaçadas | razão de velocidade perceptual entre segmentos **1,29×**; pior quebra de derivada **1,37×** (coral) | **não é** |
+| alguma parada estoura o gamut | pior perda de croma **0,012** (coral) | **não é** |
+| o matiz não corre parelho | pico **36,1°/5%** em 65–70% contra vale de 9,0° — razão **4,01×** | **é** |
+
+A travessia magenta→coral gasta quatro vezes mais matiz por pixel que o azul, e
+é ela o traço que se via cortando o campo. A causa é a interpolação: um
+`linear-gradient` sem espaço declarado interpola em **sRGB**, que corta a corda
+do arco de matiz em vez de percorrê-lo. `in oklch shorter hue` derruba o pico
+para **26,3°** (razão 2,96×) — **uma linha**, e ela conserta os três consumidores
+de uma vez, porque todos leem `--brand-rainbow`.
+
+Uma primeira medição deu números absurdos (razão de velocidade 18×, magenta→coral
+com 56% da rampa) e foi descartada: `getComputedStyle(el).color` devolve **a
+string oklch**, não `rgb()`, e o regex de dígitos estava lendo `0.72, 0.28, 335`
+como se fossem canais. *Um resultado extremo demais é sintoma* — a mesma lição
+que a rodada 98 registrou com o `17,18` do zsh. A medição válida rasteriza o
+degradê num `CanvasGradient` e lê pixel.
+
+**A rampa de taxa constante existe, foi vista e foi recusada.** Largura
+proporcional ao matiz percorrido dá `0 · 8,5 · 22,7 · 31,5 · 47,4 · 68,8 · 86,4 ·
+100` e zera a razão — mas rebalanceia a marca para o quente, com magenta e coral
+ganhando banda e teal e azul encolhendo pela metade. O dono ficou com as posições
+de hoje.
+
+**O vale de claridade ficou para depois, com candidatos.** O segundo mecanismo do
+fio não é matiz: a luminosidade vai **0,82 (teal) → 0,656 (violeta) → 0,88
+(lima)**, um vale de **0,224**, que sai como faixa escura no meio e platô claro no
+fim. Mexer nisso atinge wordmark, botão, badge, `ColorTile` e identidades, e
+arrasta remedição de `primary-wash-contrast`, `tile-contrast` e `brand-grain-ab`.
+O dono pediu para **ver antes**, pelo método da rodada 84 — faixas de largura
+cheia, não objeto pequeno. Nenhum token se mexeu.
+
+**A receita da lava do botão não se transplanta, e isso foi medido antes de
+escrever.** Em caixa de 468×96, a composição do `primary-wash` sai errada por
+dois motivos independentes:
+
+- o raio da órbita está em **px** (24–38) e as elipses medem `80% 190%`: numa
+  região cada blob cobre a caixa inteira e a lava sai **de uma cor só**;
+- o alfa pulsante (`sin³`, piso 0,12) soma oito matizes translúcidos e o
+  resultado é **pastel** — na tela, mais lavado que o degradê que ele veio
+  substituir. Foram quatro variantes até o diagnóstico: alfa cheio, piso 0,35,
+  piso 0,55 e cor crua sem o `--button-lava-l`; todas pastel.
+
+`@utility brand-lava` é outra geometria: **raio em `%`** (a lava acompanha a
+caixa em vez de encolher quando ela cresce), **núcleo opaco** até 38% com só a
+franja translúcida, e **nenhum pulso de alfa** — quem faz a cor mudar é a
+sobreposição andando, que é o que a palavra lava quer dizer. As âncoras avançam
+da esquerda para a direita **na ordem do degradê** (6 · 18 · 30 · 42 · 54 · 66 ·
+78 · 92), ziguezagueando na vertical: é o que preserva a leitura da marca agora
+que o degradê linear não está mais embaixo. A rodada 98 já tinha medido o avesso
+disso no botão — oito blobos empilhados no ponteiro na ordem da rampa saíam
+**ciano**.
+
+As âncoras começaram em `4 · 16 · 31 · 45 · 58 · 72 · 86 · 98` e a lima não lia:
+um blob de 32% de largura ancorado em 98% joga metade fora da caixa. Puxadas para
+dentro, as oito cores aparecem.
+
+**Cobertura, sem base para segurar.** O dono escolheu a lava **substituindo** o
+degradê, e não sobre ele — então preto vaza onde nenhum blob alcança. Verificado
+em quatro proporções (468×96, 240×240 quadrado, 160×420 alto, 64×64): **nenhum
+vazamento**. O quadro 0 também tem que ser um quadro bom, porque
+`prefers-reduced-motion` congela a órbita ali e não há degradê embaixo — as fases
+`i/8` garantem que em `--brand-lava: 0` os oito já estão espalhados.
+
+**Nomes próprios, e a razão é um teste.** `--brand-lava` e `@keyframes brand-lava`
+não reusam os do botão: `button-primary.test.ts` (asserção 11) conta exatamente
+**24** ocorrências de `var(--button-lava)` dentro de `primary-wash` e trava o
+formato literal dos oito blobos. Pela mesma razão `primary-wash` **não** foi
+refatorada para compor a lava da marca: são dois papéis, e o do botão existe para
+segurar o contraste de um rótulo (`--button-lava-l`, `calc(c * --button-lava-c)`)
+que aqui não existe.
+
+**Posição no arquivo é carga estrutural, de novo.** A utility nasce depois de
+`@utility brand-field`, com doc-comment `/**` próprio. A faixa entre
+`@utility glass` e `no-scrollbar` está interditada: `glass.test.ts` fatia ali e a
+asserção 8 reprova até a **palavra** `background` num comentário, e
+`sidebar-ladder.test.ts` fatia a mesma região outra vez.
+
+**A pintura acompanha a variável — o defeito da 88 não voltou.** Medido no
+elemento: `--brand-lava` andando (0,993 → 0,134 → 0,277) **e** o
+`background-image` computado resolvendo a posição (`at 5,15% 33,71%`). Em 88, o
+ângulo andava de 0 a 212deg com o degradê cravado em `135deg`.
+
+**O grão do campo foi remedido, porque a base sob ele mudou.** σ da diferença
+entre pixels vizinhos, `scripts/brand-grain-ab.mjs`: **9,58/9,82 → 9,47/9,77**.
+Praticamente parado, e era a previsão — o `overlay` rende pela luminosidade da
+base, e a interpolação move o **matiz**. A tabela no comentário de
+`@utility brand-field` foi atualizada.
+
+**O botão de marca não ficou inerte.** Com o giro fora, `brand` e `brandOutline`
+mantêm o halo acendendo no cursor (`hover:after:opacity-80`, medido 0,5 em
+repouso) e o preenchimento trocando de `--brand-fill`. Saiu só a animação.
+
+**A coluna morta.** A tabela `ESCALA` da página `brand` tinha uma quinta coluna,
+"gira/parado", e com o giro fora ela passaria a dizer "parado" quatro vezes.
+Coluna com um valor só não carrega decisão: saiu.
+
+**Fallout:** `globals.css` (fora: `@property --brand-angle`,
+`@keyframes brand-rotate`, `@utility brand-rainbow-live`, `--brand-spin`; dentro:
+`@property --brand-lava`, `@keyframes brand-lava`, `@utility brand-lava`, e a
+interpolação em `brand-rainbow-image`), `button.tsx`, `app-wordmark.tsx`,
+`app-logo.tsx`, as páginas `colors` e `brand` do catálogo, e o `AGENTS.md`.
+`npx tsc --noEmit`, `npm run lint` (0 erros) e `npm run test:unit` (70 arquivos,
+635 testes) passam sem nenhum teste tocado. Nenhuma rota, nenhuma jornada.
+
+**O suporte virou `@supports`, e a razão é sutil.** As fontes divergem sobre o
+Firefox (113 ou 127), e o modo de falha aqui **não** é degradar para sRGB: o
+degradê mora numa **propriedade personalizada**, cujo valor não é validado na
+análise — é um fluxo de tokens. Um `in oklch` desconhecido só é descoberto no
+**uso**, onde vira inválido-em-tempo-de-valor-computado e o `background-image`
+cai para `none`. A marca sumiria inteira. `brand-rainbow-image` declara o sRGB
+primeiro e sobrepõe o oklch dentro de
+`@supports (background-image: linear-gradient(in oklch, red, blue))` — o único
+lugar onde a pergunta pode ser feita antes.
+
+**De quebra, a página `colors` emagreceu 27%** a pedido do dono, de "Como ler os
+ladrilhos" para baixo (5.283 → 3.907 caracteres de prosa). A régua do corte: a
+página carrega a **regra**, e a história das rodadas mora neste arquivo — saiu a
+narração ("na rodada 89", "por três rodadas a identidade foi uma mancha
+radial"), ficou o que alguém precisa para usar o token. O desequilíbrio era num
+bloco só: "O arco-íris mora só na marca" tinha **964 caracteres**, 2,5× o
+seguinte, e foi para 543; a distribuição ficou 118–543, sem outlier. Nenhuma
+decisão perdeu a única cópia — `text-primary` proibido, a 1.4.11 reprovando de
+propósito, a exceção do `--chart-1`, a inversão de "ninguém é dono de uma cor".
+E "As seis cores, e de onde elas vieram" virou "As seis cores", porque o título
+prometia a origem que o corte tirou.
+
+**Ficou por fazer:** o vale de claridade, com os candidatos pendentes.

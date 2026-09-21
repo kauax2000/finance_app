@@ -24,15 +24,15 @@ export default function ColorsDoc() {
       </Usage>
 
       <DocNote title="Como ler os ladrilhos">
-        A página mostra o tema do alternador; hex e contraste são calculados no navegador. Quem sustenta texto (<code>Aa</code>) é medido contra ele — <code>✓</code> é AA, 4,5:1; peça sobre superfície (anel, contorno, série) é medida contra o cartão pelos 3:1 da WCAG 1.4.11. Uma marca âmbar avisa quando o token falha só no outro tema.
+        Hex e contraste são calculados no navegador, no tema do alternador. Quem sustenta texto (<code>Aa</code>) é medido contra ele — <code>✓</code> é AA, 4,5:1; peça sobre superfície (anel, contorno, série) vai contra o cartão, pelos 3:1 da 1.4.11. A marca âmbar avisa quando o token falha só no outro tema.
       </DocNote>
 
       <DocNote title="Edite em oklch; o hex é para levar a cor embora">
-        Os tokens se editam em <code>oklch</code>, em <code>globals.css</code>. O hex é projeção em sRGB para ferramentas externas; token translúcido vem como base mais alpha (<code>#FFFFFF 10%</code>).
+        Os tokens se editam em <code>oklch</code>, em <code>globals.css</code>. O hex é projeção em sRGB para ferramenta externa; token translúcido vem como base mais alpha (<code>#FFFFFF 10%</code>).
       </DocNote>
 
       <DocNote title="No claro, os chãos sobre superfície ficam em 0,93–0,94">
-        <code>--secondary</code>, <code>--muted</code>, <code>--accent</code> e <code>--sidebar-accent</code> (item ativo, hover, pastilha) precisam de degraus maiores no claro: perto do branco a razão da WCAG rende pouco, e com valores mais claros o item ativo empata com a lateral.
+        <code>--secondary</code>, <code>--muted</code>, <code>--accent</code> e <code>--sidebar-accent</code> precisam de degraus maiores no claro: perto do branco a razão da WCAG rende pouco, e mais claro que isso o item ativo empata com a lateral.
       </DocNote>
 
       <Group
@@ -108,15 +108,15 @@ export default function ColorsDoc() {
       <Group
         layout="flow"
         title="Marca"
-        description="A marca é preta e branca, e a única cor dela é o arco-íris: oito paradas num degradê que gira devagar, e o grão que só o campo de marca veste. Nenhuma tela usa uma parada solta."
+        description="A marca é preta e branca, e a única cor dela é o arco-íris: oito paradas num degradê parado, a lava que é o movimento delas, e o grão que só o campo de marca veste. Nenhuma tela usa uma parada solta."
       >
         <SpecimenPanel className="gap-4">
           <div className="grid gap-3 sm:grid-cols-[3fr_2fr]">
             <div className="flex flex-col gap-1.5">
               <span className="text-2xs font-medium tracking-wide text-muted-foreground uppercase">
-                brand-rainbow · girando
+                brand-lava · o movimento
               </span>
-              <div className="brand-rainbow brand-rainbow-live h-24 rounded-lg" />
+              <div className="brand-lava h-24 rounded-lg" />
             </div>
             <div className="flex flex-col gap-1.5">
               <span className="text-2xs font-medium tracking-wide text-muted-foreground uppercase">
@@ -153,7 +153,7 @@ export default function ColorsDoc() {
       </Group>
 
       <DocNote title="O arco-íris mora só na marca">
-        O degradê é <code>--brand-rainbow</code>, com o ângulo em <code>@property --brand-angle</code> para girar — e ele <strong>não mora no <code>:root</code></strong>: quem o compõe é a <code>@utility brand-rainbow-image</code>, no próprio elemento. Um <code>var()</code> dentro de uma propriedade personalizada é substituído onde ela é <em>declarada</em>, então no <code>:root</code> o ângulo congelava em 0deg e a rotação não chegava a pintar (rodada 88); o grão é <code>--brand-grain</code>, e só o campo (<code>brand-field</code>) o veste — num traço de poucos pixels ele lê como sujeira. Quem o consome é o lockup, o símbolo, o campo de marca e o <code>Button variant=&quot;brand&quot;</code>. As paradas são tokens para esta página medir e o <code>ds:catalog</code> cobrar par; arco-íris <strong>sob texto</strong> — num gráfico, num fundo de cartão, preenchendo um chip — é a invariante 3 com oito cores de uma vez, porque oito matizes não têm um contraste só. O <code>Badge variant=&quot;brand&quot;</code> escapa pela mesma razão que o botão: nele o degradê vive num contorno de 1px e num halo atrás, nunca sob o rótulo (rodada 89). A luminosidade das paradas desce um degrau no claro e sobe no escuro; a razão contra o cartão fica sem régua — nenhuma parada sustenta texto nem identifica peça. O verde voltou na rodada 84, nas duas pontas (teal antes do azul, lima depois do âmbar), e <strong>não é o verde de estado</strong>: <code>success</code>, <code>income</code> e <code>chart-1</code> ficam no matiz 152, a lima está em 130, mais clara e mais saturada — o chip &ldquo;Pago&rdquo; ao lado da faixa não lê como a mesma cor.
+        <code>--brand-rainbow</code> é o degradê, <strong>parado</strong>, interpolado <code>in oklch shorter hue</code> — em sRGB o matiz corria 4× mais rápido na travessia magenta→coral, e era ela o fio que cortava o campo. O movimento é a <code>@utility brand-lava</code>, a faixa acima. Arco-íris <strong>sob texto</strong> é a invariante 3 com oito cores de uma vez: oito matizes não têm um contraste só. O <code>Button</code> e o <code>Badge variant=&quot;brand&quot;</code> escapam porque neles o degradê vive num contorno de 1px e num halo atrás, nunca sob o rótulo. E a lima <strong>não é o verde de estado</strong>: <code>success</code>, <code>income</code> e <code>chart-1</code> ficam em 152, ela em 130.
       </DocNote>
 
       <DocNote title="Popover tem a cor do card; o que os separa é a elevação">
@@ -161,11 +161,11 @@ export default function ColorsDoc() {
       </DocNote>
 
       <DocNote title="--primary preenche; --primary-accent é marca sobre o fundo">
-        Cor que carrega o rótulo por cima (botão, checkbox, switch) é <code>--primary</code>, a tecla preta — branca no escuro, com o rótulo invertendo junto; cor que precisa ser vista contra a página (texto, ícone, traço fino ou com alfa) é <code>--primary-accent</code>, que hoje coincide com <code>--foreground</code> nos dois temas. O papel não se funde por coincidirem: <code>text-primary</code> segue proibido, porque dentro de uma tecla no escuro ele é branco sobre branco — use <code>text-primary-accent</code>. A cor da marca não está aqui: é o arco-íris do grupo acima.
+        Cor que carrega o rótulo por cima (botão, checkbox, switch) é <code>--primary</code>; cor que precisa ser vista contra a página (texto, ícone, traço fino ou com alfa) é <code>--primary-accent</code>. Hoje os dois coincidem com <code>--foreground</code>, e o papel não se funde por isso: <code>text-primary</code> segue proibido, porque dentro de uma tecla no escuro ele é branco sobre branco — use <code>text-primary-accent</code>.
       </DocNote>
 
       <DocNote title="O ladrilho --input reprova de propósito, pela segunda vez">
-        O fio do campo quase não existe — 1,16:1 contra o fill no claro, 1,12 no escuro — e quem identifica o controle é o <strong>preenchimento</strong>, a <code>bg-input-fill/50</code>: 1,13 e 1,16 contra a página. É a conta do <code>border-beam</code> do 21st (1,11 e 1,15), que o dono trouxe como referência. A 1.4.11 pede 3:1 para o que identifica uma peça acionável, e o conjunto não cumpre; a saída está escrita no token (<code>oklch(0.62)</code> claro, <code>0.55</code> escuro), e a medição tem <strong>três</strong> vizinhos — página, cartão e o próprio fill —, que é o que fez <code>0.66</code> parecer suficiente por uma temporada.
+        O fio do campo quase não existe — 1,16:1 contra o fill no claro, 1,12 no escuro — e quem identifica o controle é o <strong>preenchimento</strong>, a <code>bg-input-fill/50</code>: 1,13 e 1,16 contra a página. É a conta da referência que o dono trouxe (o <code>border-beam</code> do 21st: 1,11 e 1,15). A 1.4.11 pede 3:1 e o conjunto não cumpre, por decisão. A saída está escrita no token (<code>oklch(0.62)</code> claro, <code>0.55</code> escuro), e quem a tomar mede contra <strong>três</strong> vizinhos — página, cartão e o próprio fill.
       </DocNote>
 
       <Group
@@ -235,7 +235,7 @@ export default function ColorsDoc() {
       <Group
         layout="flow"
         title="Dinheiro"
-        description="Receita e despesa não são success e destructive: compartilham o matiz, mas são mais saturadas. Num extrato, verde e vermelho são o dado, não um aviso. As duas subiram junto com as de estado na rodada 89 — se não subissem, o vermelho de falhou passaria o de saiu dinheiro."
+        description="Receita e despesa não são success e destructive: compartilham o matiz, mas são mais saturadas. Num extrato, verde e vermelho são o dado, não um aviso — e é essa folga que impede o vermelho de falhou de passar o de saiu dinheiro."
       >
         <TokenGrid columns={2}>
           <TokenTile
@@ -305,7 +305,7 @@ export default function ColorsDoc() {
       </Group>
 
       <DocNote title="A rampa não reusa cores de status — com uma exceção dita">
-        Numa pizza, uma fatia azul leria como &ldquo;informação&rdquo; e uma vermelha como &ldquo;erro&rdquo;. As séries se separam por matiz e claridade juntos, medidos pela distância entre pares (ΔE, inclusive protanopia) e não só contra o fundo. A exceção é <code>--chart-1</code>: ela estava no verde 166 da marca antiga e, com a marca preta, foi para o matiz 152 de <code>success</code>, por decisão — em outra claridade, e mais longe da série 2 do que estava.
+        Numa pizza, uma fatia azul leria como &ldquo;informação&rdquo; e uma vermelha como &ldquo;erro&rdquo;. As séries se separam por matiz e claridade juntos, medidos pela distância entre pares (ΔE, inclusive protanopia) e não só contra o fundo. A exceção é <code>--chart-1</code>, que divide o matiz 152 com <code>success</code> por decisão — em outra claridade, e mais longe da série 2 do que estava antes.
       </DocNote>
 
       <DocNote title="No escuro, a separação vence a faixa de claridade">
@@ -335,8 +335,8 @@ export default function ColorsDoc() {
         </SpecimenPanel>
       </Group>
 
-      <DocNote title="As seis cores, e de onde elas vieram">
-        Ember, gold, grove, ocean, iris e bloom, em 0,84–0,88 de luminosidade e 0,10–0,12 de croma, com os matizes (58, 100, 175, 230, 275, 318) de 42° a 100° uns dos outros. <strong>Os valores vêm de um degradê que não existe mais</strong>: por três rodadas a identidade foi uma mancha radial, e cada cor daqui é a parada do meio daquela mancha — a que ela mostrava em maior área. <strong>Uma família por pessoa é uma inversão consciente</strong> da regra que dizia que ninguém é dono de uma cor. Como voltaram a ser cor, elas entram no <code>@theme inline</code> e a tela escreve <code>bg-identity-N</code>. Contraste medido por <code>scripts/identity-contrast.mjs</code>, pior caso 10,17:1.
+      <DocNote title="As seis cores">
+        Ember, gold, grove, ocean, iris e bloom, em 0,84–0,88 de luminosidade e 0,10–0,12 de croma, com os matizes (58, 100, 175, 230, 275, 318) de 42° a 100° uns dos outros. <strong>Uma família por pessoa é uma inversão consciente</strong> da regra que dizia que ninguém é dono de uma cor. Como são cor chapada, entram no <code>@theme inline</code> e a tela escreve <code>bg-identity-N</code>. Contraste por <code>scripts/identity-contrast.mjs</code>, pior caso 10,17:1.
       </DocNote>
 
       <DocNote title="identityToneFor traduz a cor gravada">

@@ -83,38 +83,31 @@ const buttonVariants = cva(
         // Sem grão: numa área de 32px o grão é ruído, não textura. Sem a
         // sombra da tecla: o contorno arco-íris já é a aresta.
         //
-        // **O arco-íris gira sob o cursor, e ele pausa em vez de desligar.**
-        // `brand-rainbow-live` fica aplicada sempre, com
-        // `animation-play-state: paused`; o cursor e o toque a põem em
-        // `running`. Ligar a animação só dentro do `hover:` faria o ângulo
-        // **voltar a 0°** ao sair — pausada, ela congela onde estava e retoma
-        // dali. `--brand-spin` é o botão de velocidade da utility; 6s num
-        // botão de 32px lê como giro, enquanto os 12s do padrão (o splash)
-        // leem como respiração.
-        //
-        // O giro chega ao contorno **e** ao halo sem camada nova: os dois leem
-        // `--brand-rainbow`, que é composto aqui a partir de `--brand-angle`.
-        // Movimento reduzido já está coberto pelo bloco global, que isenta só
-        // `.animate-spin` e `.animate-pulse` — `brand-rotate` é cortada, e o
-        // botão não gira.
+        // **O contorno não gira mais.** Da rodada 83 à 99 ele carregava
+        // `brand-rainbow-live` com `[--brand-spin:6s]`, pausada em repouso e
+        // correndo sob o cursor. O dono recusou o giro no sistema inteiro, e
+        // ele saiu daqui junto com `--brand-angle` e `--brand-spin`. O botão
+        // **não ficou inerte**: o halo continua acendendo no cursor
+        // (`hover:after:opacity-80`) e o preenchimento continua trocando de
+        // `--brand-fill`. O movimento do arco-íris hoje é a lava — no primário
+        // pela `@utility primary-wash`, em região pela `@utility brand-lava`.
         //
         // `brand-rainbow-image` **não é redundante**, e não se apaga: ela é
-        // quem declara `--brand-rainbow` no botão. O degradê saiu do `:root`
-        // porque um `var()` dentro de uma propriedade personalizada é
-        // substituído onde ela é **declarada** — no `:root`, o
-        // `var(--brand-angle)` congelava em 0deg e o arco-íris nunca girava.
-        // Os dois pseudo-elementos herdam daqui o valor já substituído, então
-        // basta a classe no elemento. Ver `@utility brand-rainbow-image` em
-        // `globals.css`.
+        // quem declara `--brand-rainbow` no botão, e os dois pseudo-elementos
+        // herdam daqui o valor já substituído. Um `var()` dentro de uma
+        // propriedade personalizada é resolvido onde ela é **declarada**, e foi
+        // por isso que o degradê desceu do `:root` na rodada 88. Ver
+        // `@utility brand-rainbow-image` em `globals.css`.
         brand:
-          "brand-rainbow-image brand-rainbow-live [--brand-spin:6s] [animation-play-state:paused] hover:[animation-play-state:running] active:[animation-play-state:running] relative isolate text-primary-foreground [--brand-fill:var(--primary)] hover:[--brand-fill:var(--primary-hover)] active:[--brand-fill:var(--primary-hover)] aria-expanded:[--brand-fill:var(--primary-hover)] before:absolute before:-inset-px before:-z-10 before:rounded-[inherit] before:border before:border-transparent before:[background:linear-gradient(var(--brand-fill),var(--brand-fill))_padding-box,var(--brand-rainbow)_border-box] before:transition-[background] before:duration-(--duration-fast) after:absolute after:-inset-1 after:-z-20 after:rounded-[inherit] after:bg-(image:--brand-rainbow) after:opacity-50 after:blur-md after:transition-opacity after:duration-(--duration-fast) hover:after:opacity-80 active:after:opacity-80 aria-busy:disabled:opacity-100",        // A mesma tecla de marca **sem o halo**: só o contorno de arco-íris,
-        // que continua girando sob o cursor. É o `brand` para onde ele não
-        // cabe — uma barra, um cabeçalho, um par de ações — porque o halo do
-        // `::after` sangra 4px para fora da caixa e encosta no vizinho.
+          "brand-rainbow-image relative isolate text-primary-foreground [--brand-fill:var(--primary)] hover:[--brand-fill:var(--primary-hover)] active:[--brand-fill:var(--primary-hover)] aria-expanded:[--brand-fill:var(--primary-hover)] before:absolute before:-inset-px before:-z-10 before:rounded-[inherit] before:border before:border-transparent before:[background:linear-gradient(var(--brand-fill),var(--brand-fill))_padding-box,var(--brand-rainbow)_border-box] before:transition-[background] before:duration-(--duration-fast) after:absolute after:-inset-1 after:-z-20 after:rounded-[inherit] after:bg-(image:--brand-rainbow) after:opacity-50 after:blur-md after:transition-opacity after:duration-(--duration-fast) hover:after:opacity-80 active:after:opacity-80 aria-busy:disabled:opacity-100",
+        // A mesma tecla de marca **sem o halo**: só o contorno de arco-íris.
+        // É o `brand` para onde ele não cabe — uma barra, um cabeçalho, um par
+        // de ações — porque o halo do `::after` sangra 4px para fora da caixa e
+        // encosta no vizinho.
         //
         // Ele não é um degrau a menos na escada: continua fora dela, e
         // continua **um por tela**. O que muda é quanto espaço ele pede.
-        brandOutline: "brand-rainbow-image brand-rainbow-live [--brand-spin:6s] [animation-play-state:paused] hover:[animation-play-state:running] active:[animation-play-state:running] relative isolate text-primary-foreground [--brand-fill:var(--primary)] hover:[--brand-fill:var(--primary-hover)] active:[--brand-fill:var(--primary-hover)] aria-expanded:[--brand-fill:var(--primary-hover)] before:absolute before:-inset-px before:-z-10 before:rounded-[inherit] before:border before:border-transparent before:[background:linear-gradient(var(--brand-fill),var(--brand-fill))_padding-box,var(--brand-rainbow)_border-box] before:transition-[background] before:duration-(--duration-fast) aria-busy:disabled:opacity-100",
+        brandOutline: "brand-rainbow-image relative isolate text-primary-foreground [--brand-fill:var(--primary)] hover:[--brand-fill:var(--primary-hover)] active:[--brand-fill:var(--primary-hover)] aria-expanded:[--brand-fill:var(--primary-hover)] before:absolute before:-inset-px before:-z-10 before:rounded-[inherit] before:border before:border-transparent before:[background:linear-gradient(var(--brand-fill),var(--brand-fill))_padding-box,var(--brand-rainbow)_border-box] before:transition-[background] before:duration-(--duration-fast) aria-busy:disabled:opacity-100",
 
         // Sem borda visível — e sem o anel vazado que havia antes. O culpado
         // não era a borda transparente da base, era o `bg-clip-padding` que a
