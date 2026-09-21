@@ -11809,3 +11809,135 @@ passam. Nenhuma rota, nenhuma jornada.
 superfícies; a geometria dos oito (`ring-2` + `ring-offset-2` → `ring-3`); e
 `--sidebar-ring`, que é uma segunda grafia dos mesmos dois valores de `--ring`,
 mantida à mão e sem teste.
+
+
+### Rodada 102 — o `Progress` vai buscar as barras que nunca o usaram
+
+**O pedido.** Melhorar o `Progress` e adequá-lo ao branding novo. O
+levantamento mudou o problema antes de qualquer desenho: **o caso de uso que o
+componente descreve não tinha um único consumidor.**
+
+Os dois usos reais eram "parcelas pagas" (`success` + `sm`), e os tons de
+dinheiro — criados na revisão anterior justamente para a barra de orçamento —
+estavam em **zero**. Enquanto isso, **cinco barras feitas à mão** faziam o
+trabalho dele: uso do orçamento na listagem e no detalhe da categoria,
+participação nas despesas, uso do limite estimado do cartão e uso da fatura
+aberta no tile. As cinco com `bg-muted` no trilho — o token que o `Progress`
+abandonou por sumir no tema claro —, quatro redeclarando a altura que o eixo
+`size` existe para eliminar, e a do tile com `role="presentation"`, sem
+anunciar nada.
+
+**As duas rampas de limiar não eram uma duplicata, e a leitura do código
+corrigiu a minha primeira descrição.** Orçamento: `≥85%` âmbar, `>100%`
+vermelho. Limite de cartão: `<30%` verde, `<70%` âmbar, daí vermelho — com um
+comentário que já justificava a diferença ("uso do limite é estado, não direção
+de dinheiro"). São duas perguntas com a mesma forma, e por isso o componente
+recebe os **cortes** em vez de cravar 85. Hoje elas moram lado a lado em
+`lib/budget-bands.ts`, e um teste pergunta por quê se alguém as uniformizar.
+
+**Quatro candidatos de forma, e dois reprovaram por razão escrita.** A barra
+sem trilho diz "45", não "45% de" — é o defeito que o próprio componente já
+tinha consertado. A trilha segmentada quantiza em degraus de 5%, e 90% e 92%
+desenham igual. Sobraram a cesura do limiar e a faixa de excesso, que eram
+complementares; a segunda volta as combinou e mediu **o caso que decide: hoje
+104% e 400% desenhavam o mesmo pixel.** Venceu o excesso **transbordando** para
+fora do trilho, e não dividindo-o: assim o trilho continua valendo o total
+sempre, e duas categorias lado a lado continuam comparáveis — que é o caso
+real, uma grade de cartões. A pastilha satura, então 400% e 1000% ainda
+desenham igual: uma mentira menor que a anterior.
+
+**O fio de arco-íris reprovou na altura real, e a conta é simples.** No
+`Button` de 32px, 1px de contorno de cada lado é 1/16 da peça; num trilho de
+6px é **2 de 6, um terço**, e em 8px um quarto. Na tela o fio engolia o
+preenchimento: as faixas com contorno liam como barra de arco-íris com um risco
+branco no meio. Só a partir de 14px ele começava a funcionar. O halo sobrevivia
+nas três alturas — **e o dono escolheu nenhum dos dois: o arco-íris
+preenchendo**, que era a faixa que eu tinha posto na grade só como comparação.
+
+**Isso levantou duas objeções, e as duas foram medidas.** A primeira era
+funcional: com arco-íris no preenchimento a cor deixa de codificar o valor. Ela
+morreu com um segundo par de candidatos — **o degradê é do trilho, e o
+preenchimento o revela**. Em 15% a barra é teal, em 72% chegou no coral, e o
+arco-íris só fica completo em 100%: completar a barra completa a marca, e a cor
+volta a dizer o valor. Escalado ao preenchido ele estaria sempre inteiro e não
+diria nada. A conta que torna isso possível sem um nó a mais: o indicador mede
+`pct%` do trilho, então `10000 / pct` por cento da largura **dele** é a largura
+do trilho, e `background-size` em porcentagem resolve contra a caixa do próprio
+elemento.
+
+A segunda objeção era de contraste, e **vetou o tema claro**: contra o trilho
+do sistema, **cinco das oito paradas reprovam** a 1.4.11 — lima 1,42, âmbar
+1,51, teal 1,73, azul 1,87, coral 2,53 —, porque no claro o trilho é
+`oklch(0.9)` e as paradas das pontas são quase tão claras quanto ele. No escuro
+passava tudo, pior caso 4,52. A causa é histórica: **o arco-íris deste sistema
+sempre morou sobre preto** (`brand-field`, `brand-lava`), e esta foi a primeira
+vez que pediram ele sobre um cinza claro. O dono escolheu o leito preto nos
+dois temas — `@utility brand-well` —, medido contra `--foreground` (3,68) e
+`oklch(0.22)` (3,21): preto puro dá **3,91** e é o mesmo valor que as outras
+duas peças de marca já usam.
+
+**Uma medição que economizou uma mudança de token:** o ângulo. `--brand-rainbow`
+é 135°, e a suspeita era que numa caixa de 8px ele precisasse virar 90°. Os dois
+desenham **igual** — numa barra o eixo horizontal domina —, então
+`brand-rainbow-image` entrou como está e o `globals.css` não ganhou parâmetro
+nenhum.
+
+**A rodada se paga na migração.** As cinco órfãs viraram `Progress`; saíram
+`budgetFillColor` (duas cópias), `limitGaugeFillClass`, cinco alturas literais e
+cinco trilhos em `bg-muted`. O `grep` por `role="progressbar"` fora de `ui/`
+devolve **zero**, e é uma asserção de teste agora. De passagem, o número ao lado
+da barra deixou de ser limitado a 100 nos dois arquivos de categoria: ele era
+`Math.min(100, …)` junto com a barra, então **104% e 400% liam igual também no
+texto** — que era justamente o argumento pelo qual a doc o chamava de
+obrigatório.
+
+**E a rede nasceu.** `progress.test.ts`, oito asserções: a escada de `bands`
+com os cortes inclusivos, as duas políticas continuando diferentes, o estouro
+vencendo os cortes, o clamp e o `aria-valuetext` (que já regrediu uma vez), o
+piso de 1%, o trilho que não volta a `bg-muted`, o leito preto da marca, e a
+varredura que impede as órfãs de voltarem. Eram **zero** testes tocando o
+`Progress` em 11.9 mil linhas de histórico.
+
+**Fallout:** `progress.tsx`, `globals.css` (`@utility brand-well`),
+`lib/budget-bands.ts` (novo), `progress.test.ts` (novo), as cinco telas, a
+página do catálogo e o `AGENTS.md` — cuja linha do `Progress` descrevia `tone`
+sem `income`/`expense` e ignorava o eixo `size` inteiro desde a revisão passada.
+`npx tsc --noEmit`, `npm run lint` (0 erros, 65 avisos — o baseline) e
+`npm run test:unit` passam. Nenhuma rota, nenhuma jornada.
+
+**Não verificado na tela:** as cinco telas migradas. O painel do navegador não
+está autenticado e o dev aponta para o banco de produção, então a conferência
+visual foi feita na página do catálogo, com o componente real, nos dois temas.
+
+**Adendo, na mesma rodada: o leito preto durou o tempo de ser visto.** O dono
+pediu o trilho do sistema de volta, primeiro no claro — *"mais claro, mesmo
+fundo de outros"* — e em seguida no escuro também. A barra de marca veste o
+mesmo `bg-input-fill` de todas as outras, e a razão é de desenho e não de
+número: **uma peça de marca que destoa das vizinhas não é o desenho.**
+
+O custo fica só no claro, e fica escrito: pior caso **1,42**, a **segunda
+divergência consciente da 1.4.11** desta casa, ao lado do contorno de campo. No
+escuro não há custo nenhum — lá o trilho do sistema sempre passou (4,52), e o
+leito preto era supérfluo desde o começo.
+
+**A `@utility brand-well` saiu junto**, porque ficou sem consumidor: ela nasceu
+e morreu na mesma rodada, e `brand-field` e `brand-lava` já declaram o mesmo
+preto inline. O caminho de volta à conformidade é uma declaração de
+`background-color`, escrita no componente.
+
+**E a simetria apagou um eixo.** Com o trilho igual nos dois casos, o `variant`
+do `cva` do trilho não decidia mais nada: ele saiu, e `variant` passou a existir
+só onde de fato muda alguma coisa — o preenchimento.
+
+Uma nota de método que vale para a próxima medição: a razão da WCAG é **só de
+luminância**, e um teal saturado sobre cinza neutro tem contraste cromático que
+a fórmula não vê — na tela ele lê melhor que 1,73 sugere. Isso explica a
+discordância entre o número e o olho; não a anula, porque a lima e o âmbar são
+frágeis de verdade.
+
+**Ficou por fazer:** o `variant="brand"` **não tem consumidor no app** — o lugar
+natural são os dois usos de "parcelas pagas", que são progresso sem limiar, mas
+trocá-los é decisão de produto. E duas decisões de token continuam abertas:
+dar valor próprio a `--income`/`--expense` sólidos, e o `default` do `Progress`
+ser `--primary`, que depois da rebrand é a cor mais forte da tela numa barra que
+não tem estado nenhum.

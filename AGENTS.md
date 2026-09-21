@@ -1503,7 +1503,43 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   passagem de cursor. E **o gatilho precisa ser focável** — o Radix abre no foco
   além do cursor, e em volta de um `<span>` a prévia passa a existir só para quem
   tem mouse.
-- **`Progress`**: Radix-based; pass `tone` (`default` | `success` | `warning` | `destructive`) for budget / status bars.
+- **`Progress` — a forma normal é entregar os cortes, não o tom.** `bands={[aviso, perigo]}`
+  faz o componente derivar a cor, marcar o limiar na trilha e tratar o estouro;
+  `tone` (`default` | `success` | `warning` | `destructive` | `income` |
+  `expense`) fica para quem mede algo **sem** escada de risco, e `size` é `sm`
+  6px ou `md` 8px. Os três eixos de cor — `tone`, `bands` e `variant="brand"` —
+  são **excludentes**, e o tipo cobra: os três respondem à mesma pergunta por
+  caminhos diferentes, e aceitar dois juntos é aceitar que um não faz nada.
+  Os cortes do app moram em [`lib/budget-bands`](src/lib/budget-bands.ts):
+  **orçamento `[85, 100]`**, **limite de cartão `[30, 70]`**. As duas rampas têm
+  a mesma forma e respondem a perguntas diferentes — um orçamento é meta que a
+  pessoa escolheu gastar, o limite do cartão é margem que ela não quer
+  encostar —, e por isso moram no mesmo arquivo: separadas, pareciam a mesma
+  regra com números errados de um dos lados.
+  **O excesso transborda, e não divide o trilho**: acima do total a barra fica
+  cheia e o que passou vira uma pastilha à direita, **fora** do trilho, que
+  continua valendo o total sempre — é o que mantém duas categorias comparáveis
+  numa grade. Antes desta rodada 104% e 400% desenhavam igual.
+  **`variant="brand"` é o arco-íris sobre leito preto** (`@utility brand-well`),
+  para progresso **sem limiar**. O degradê é do **trilho** e o preenchimento o
+  revela: completar a barra completa a marca. Duas medições o desenharam: o fio
+  de 1px do `Button` reprova aqui, porque num trilho de 6px ele é **um terço da
+  peça** contra 1/16 num botão de 32; e sobre o trilho claro do sistema **cinco
+  das oito paradas reprovam a 1.4.11** (pior caso 1,42), o que sobre um leito
+  preto viraria 3,91. É a terceira exceção nomeada à invariante 3, ao lado do
+  `Button` e do `Badge` — e a diferença é que aqui não há rótulo por cima.
+  **O leito preto foi recusado na tela, nos dois temas**: a barra de marca veste
+  o mesmo trilho das outras, porque uma peça que destoa das vizinhas não é o
+  desenho. O claro é, portanto, a **segunda divergência consciente da 1.4.11**
+  desta casa, ao lado do contorno de campo, e o caminho de volta é uma
+  declaração de `background-color` no trilho. Nota de método que ficou da
+  medição: **a razão da WCAG é só de luminância**, e um matiz saturado sobre
+  cinza neutro tem contraste cromático que a fórmula não vê — o que explica a
+  discordância entre o número e o olho, sem anulá-la.
+  **`income`/`expense` desenham o mesmo pixel que `success`/`destructive`** no
+  preenchimento: `--income` é `var(--success)` e `--expense` é
+  `var(--destructive)`, e o que separa dinheiro de estado são as superfícies
+  `-muted`, que esta barra não consome. A distinção aqui é de vocabulário.
 - **`Avatar`**: Radix-based with `size`; keep `data-slot` for tests and form deferrals. Duas versões só: `AvatarImage` (a foto) ou `AvatarFallback` (iniciais escuras sobre a cor chapada de identidade). Sem `variant` de superfície — houve um, enquanto o degradê e o chapado conviveram, e saiu com o degradê. Sem vidro, sem anel, e **uma forma só, o círculo** — `shape="rounded"` saiu na rodada 85, porque canto arredondado é a família do `ColorTile` e da marca de workspace, que identificam coisa e não pessoa. A cor da pessoa vem de `identityToneFor`, nunca de classe montada.
 - **Overlays**: `Dialog` / `Sheet` / `AlertDialog` use `bg-overlay` (not hardcoded `bg-black/10`).
 - **`DialogFooter` empilha ao contrário** (`flex-col-reverse`), para a ação

@@ -14,6 +14,8 @@ import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categor
 import { cn } from "@/lib/utils"
 import { ChevronRightIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ColorTile } from "@/components/ui/color-tile"
+import { Progress } from "@/components/ui/progress"
+import { BUDGET_BANDS } from "@/lib/budget-bands"
 import { deltaTone } from "@/lib/delta-tone"
 import { currencyBRL } from "@/lib/formatters"
 import { TILE_EXPENSE_DEFAULT } from "@/lib/tile-palette"
@@ -124,9 +126,12 @@ export function ExpenseCategoryCard({
     const color = category.color || TILE_EXPENSE_DEFAULT
     const hasBudget = limit > 0
     const over = hasBudget && spent > limit
-    const near = hasBudget && !over && limit > 0 && spent / limit >= 0.85
-    const budgetPctRounded = hasBudget
-        ? Math.min(100, Math.max(0, Math.round((spent / limit) * 100)))
+    // O número ao lado da barra carrega o que o desenho não carrega: a barra
+    // satura em 100% e o `Progress` só marca que passou, então quem diz **o
+    // quanto** passou é este número. Ele era limitado a 100 junto com a barra,
+    // e aí 104% e 400% liam igual nos dois lugares.
+    const budgetPctReal = hasBudget
+        ? Math.max(0, Math.round((spent / limit) * 100))
         : 0
 
     const sharePct = totalMonthSpend > 0 ? Math.min(100, (spent / totalMonthSpend) * 100) : 0
@@ -158,7 +163,7 @@ export function ExpenseCategoryCard({
         : undefined
 
     const budgetBarLabel = hasBudget
-        ? `Uso do orçamento na categoria ${category.name}: ${budgetPctRounded}% de ${currency(limit)}${over ? ", acima do limite" : ""}`
+        ? `Uso do orçamento na categoria ${category.name}: ${budgetPctReal}% de ${currency(limit)}${over ? ", acima do limite" : ""}`
         : undefined
 
     const shareBarLabel =
@@ -168,11 +173,6 @@ export function ExpenseCategoryCard({
               )}%`
             : `Participação da categoria ${category.name} nas despesas do mês: 0%`
 
-    const budgetFillColor = over
-        ? "var(--destructive)"
-        : near
-          ? "var(--warning)"
-          : "var(--success)"
 
     return (
         // O cartão inteiro é clicável por um link esticado (::after) no título, e
@@ -288,25 +288,15 @@ export function ExpenseCategoryCard({
                                 <div className="flex items-center justify-between gap-2 text-2xs text-muted-foreground">
                                     <span className="min-w-0 truncate">{shareInsight}</span>
                                     <span className="shrink-0 tabular-nums font-medium text-foreground">
-                                        {budgetPctRounded}%
+                                        {budgetPctReal}%
                                     </span>
                                 </div>
-                                <div
-                                    role="progressbar"
-                                    aria-valuemin={0}
-                                    aria-valuemax={100}
-                                    aria-valuenow={budgetPctRounded}
+                                <Progress
+                                    value={spent}
+                                    max={limit}
+                                    bands={BUDGET_BANDS}
                                     aria-label={budgetBarLabel}
-                                    className="h-2 w-full overflow-hidden rounded-full bg-muted"
-                                >
-                                    <div
-                                        className="h-full max-w-full rounded-full transition-[width] duration-300 ease-out"
-                                        style={{
-                                            width: `${budgetPctRounded}%`,
-                                            backgroundColor: budgetFillColor,
-                                        }}
-                                    />
-                                </div>
+                                />
                             </>
                         ) : (
                             <>
@@ -321,19 +311,7 @@ export function ExpenseCategoryCard({
                                         {sharePct.toFixed(0)}%
                                     </span>
                                 </div>
-                                <div
-                                    role="progressbar"
-                                    aria-valuemin={0}
-                                    aria-valuemax={100}
-                                    aria-valuenow={Math.round(sharePct)}
-                                    aria-label={shareBarLabel}
-                                    className="h-2 w-full overflow-hidden rounded-full bg-muted"
-                                >
-                                    <div
-                                        className="h-full max-w-full rounded-full bg-muted-foreground/35 transition-[width] duration-300 ease-out"
-                                        style={{ width: `${sharePct}%` }}
-                                    />
-                                </div>
+                                <Progress value={sharePct} aria-label={shareBarLabel} />
                                 <p className="text-xs leading-relaxed text-muted-foreground">
                                     {shareInsight}
                                 </p>

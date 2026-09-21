@@ -11,8 +11,60 @@ export default function ProgressDoc() {
       </Usage>
 
       <DocSection
+        title="Limiar"
+        description="A forma normal. A tela entrega os dois cortes e o componente deriva a cor, marca o limiar na trilha e trata o estouro. Antes disso a escada estava escrita à mão em três telas, com dois conjuntos de números diferentes."
+        code={`// orçamento de categoria: verde até 85%, âmbar até o limite
+<Progress value={gasto} max={orcamento} bands={BUDGET_BANDS} />
+
+// limite de cartão: mais conservador, verde só até 30%
+<Progress value={usado} max={limite} bands={CARD_LIMIT_BANDS} />`}
+        previewClassName="flex-col items-stretch gap-4"
+      >
+        {[
+          ["Mercado", 45],
+          ["Lazer", 84],
+          ["Transporte", 92],
+          ["Assinaturas", 104],
+          ["Cartão", 400],
+        ].map(([nome, pct]) => (
+          <div key={nome as string} className="flex w-full flex-col gap-1.5">
+            <div className="flex items-baseline justify-between text-xs">
+              <span className="text-muted-foreground">{nome}</span>
+              <span className="nums text-muted-foreground">{pct}%</span>
+            </div>
+            <Progress
+              value={pct as number}
+              bands={[85, 100]}
+              aria-label={nome as string}
+            />
+          </div>
+        ))}
+      </DocSection>
+
+      <DocSection
+        title="Marca"
+        description="Progresso sem limiar — uma parcela quitada, uma meta batida. O arco-íris é do trilho, e o preenchimento o revela: completar a barra completa a marca. Uma por tela, como as outras peças de marca."
+        code={`<Progress variant="brand" value={72} />`}
+        previewClassName="flex-col items-stretch gap-4"
+      >
+        {[15, 40, 72, 100].map((pct) => (
+          <div key={pct} className="flex w-full flex-col gap-1.5">
+            <div className="flex items-baseline justify-between text-xs">
+              <span className="text-muted-foreground">Parcelas pagas</span>
+              <span className="nums text-muted-foreground">{pct}%</span>
+            </div>
+            <Progress
+              variant="brand"
+              value={pct}
+              aria-label={`Parcelas pagas: ${pct}%`}
+            />
+          </div>
+        ))}
+      </DocSection>
+
+      <DocSection
         title="Tons"
-        description="O tom vem do estado: 45% é default, 85% é warning, estourado é destructive. A tela decide o limiar; o componente só pinta."
+        description="Quando não há limiar para derivar, a tela entrega o tom pronto. É o caminho de quem mede algo sem escada de risco — uma participação, um passo de importação."
         code={`<Progress value={45} />
 <Progress value={72} tone="success" />
 <Progress value={88} tone="warning" />
@@ -118,8 +170,12 @@ export default function ProgressDoc() {
           O preenchimento tem piso de largura igual à altura da barra, então um valor pequeno e diferente de zero aparece como ponto: &ldquo;mal começou&rdquo; não desenha igual a &ldquo;não começou&rdquo;.
       </DocNote>
 
-      <DocNote title="value acima de max não estoura a barra">
-          Acima do total a barra fica cheia e ganha <code>data-over</code>. Por isso o número ao lado é obrigatório: sem ele, 104% e 400% desenham igual.
+      <DocNote title="O excesso transborda, e não divide o trilho">
+          Acima do total a barra fica cheia, ganha <code>data-over</code> e o que passou vira uma pastilha à direita, <strong>fora</strong> do trilho. O trilho continua valendo o total sempre, então duas categorias lado a lado continuam comparáveis — que é o caso real, uma grade de cartões. A alternativa medida (o excesso dividindo o trilho) mostra a proporção com mais força, mas a 400% o orçamento vira um quarto da barra e o trilho muda de significado conforme o valor. A pastilha satura, então 400% e 1000% desenham igual: uma mentira menor que a anterior, em que 104% e 400% desenhavam igual. O número ao lado continua obrigatório.
+      </DocNote>
+
+      <DocNote title="income e expense desenham o mesmo pixel que success e destructive">
+          <code>--income</code> é <code>var(--success)</code> e <code>--expense</code> é <code>var(--destructive)</code>. No preenchimento os pares são <strong>idênticos</strong>; o que separa dinheiro de estado são as superfícies <code>-muted</code>, que esta barra não consome. A distinção aqui é de vocabulário — ela diz a quem lê o código que aquilo é gasto e não erro —, e fica assim até alguém decidir dar valor próprio aos tokens sólidos.
       </DocNote>
 
       <DocNote title="O valor real continua sendo anunciado">
@@ -131,11 +187,24 @@ export default function ProgressDoc() {
           { prop: "value", type: "number", description: "O valor atual." },
           { prop: "max", type: "number", default: "100", description: "O total." },
           {
+            prop: "bands",
+            type: "[number, number]",
+            description:
+              "Os dois cortes da escada de cor, em % do total. Deriva o tom e marca o limiar na trilha. Excludente com tone.",
+          },
+          {
+            prop: "variant",
+            type: '"default" | "brand"',
+            default: '"default"',
+            description:
+              "brand é o arco-íris sobre leito preto, para progresso sem limiar. Excludente com tone e bands.",
+          },
+          {
             prop: "tone",
             type: '"default" | "success" | "warning" | "destructive" | "income" | "expense"',
             default: '"default"',
             description:
-              "A cor da barra preenchida. Os dois últimos são os tons de dinheiro.",
+              "A cor da barra preenchida, quando a tela decide. Os dois últimos são os tons de dinheiro. Excludente com bands.",
           },
           {
             prop: "size",

@@ -22,6 +22,8 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Category } from "@/lib/supabase"
 import { currencyBRL } from "@/lib/formatters"
+import { Progress } from "@/components/ui/progress"
+import { BUDGET_BANDS } from "@/lib/budget-bands"
 import { cn } from "@/lib/utils"
 import { deltaTone } from "@/lib/delta-tone"
 
@@ -223,17 +225,13 @@ function ExpenseBudgetOverviewCard({
 }) {
     const hasBudget = limit > 0
     const over = hasBudget && monthTotal > limit
-    const near = hasBudget && !over && monthTotal / limit >= 0.85
-    const budgetPctRounded = hasBudget
-        ? Math.min(100, Math.max(0, Math.round((monthTotal / limit) * 100)))
+    // Sem o teto de 100: a barra satura, e quem diz **o quanto** passou é o
+    // número. Ver a mesma nota em `expense-category-card`.
+    const budgetPctReal = hasBudget
+        ? Math.max(0, Math.round((monthTotal / limit) * 100))
         : 0
-    const budgetFillColor = over
-        ? "var(--destructive)"
-        : near
-          ? "var(--warning)"
-          : "var(--success)"
     const budgetBarLabel = hasBudget
-        ? `Uso do orçamento: ${budgetPctRounded}% de ${currencyBRL(limit)}${over ? ", acima do limite" : ""}`
+        ? `Uso do orçamento: ${budgetPctReal}% de ${currencyBRL(limit)}${over ? ", acima do limite" : ""}`
         : undefined
 
     return (
@@ -365,25 +363,16 @@ function ExpenseBudgetOverviewCard({
                                 <div className="flex items-center justify-between gap-2 text-2xs text-muted-foreground">
                                     <span className="min-w-0 truncate">Uso do orçamento</span>
                                     <span className="shrink-0 tabular-nums font-medium text-foreground">
-                                        {budgetPctRounded}%
+                                        {budgetPctReal}%
                                     </span>
                                 </div>
-                                <div
-                                    role="progressbar"
-                                    aria-valuemin={0}
-                                    aria-valuemax={100}
-                                    aria-valuenow={budgetPctRounded}
+                                <Progress
+                                    value={monthTotal}
+                                    max={limit}
+                                    bands={BUDGET_BANDS}
+                                    size="sm"
                                     aria-label={budgetBarLabel}
-                                    className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
-                                >
-                                    <div
-                                        className="h-full max-w-full rounded-full transition-[width] duration-300 ease-out"
-                                        style={{
-                                            width: `${budgetPctRounded}%`,
-                                            backgroundColor: budgetFillColor,
-                                        }}
-                                    />
-                                </div>
+                                />
                             </div>
                         </>
                     ) : (

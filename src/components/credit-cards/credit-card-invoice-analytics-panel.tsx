@@ -68,6 +68,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Progress } from "@/components/ui/progress"
+import { CARD_LIMIT_BANDS } from "@/lib/budget-bands"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import { ArrowTrendingDownIcon, ArrowTrendingUpIcon, CalendarDaysIcon, ChartBarIcon, ChevronUpDownIcon, LightBulbIcon, MinusIcon } from "@heroicons/react/16/solid"
@@ -390,17 +391,6 @@ function committedVsPriorDeltaPct(snapshot: CardCycleSnapshot): {
         label,
         ariaLabel: `Total planejado da fatura aberta, ${label.replace(" vs.", " versus")}`,
     }
-}
-
-/**
- * Uso do limite é **estado**, não direção de dinheiro: um limite folgado é
- * "deu certo" (`success`), não "entrou dinheiro" (`income`). Por isso a rampa
- * aqui é success/warning/destructive, e não a paleta de dinheiro.
- */
-function limitGaugeFillClass(pct: number): string {
-    if (pct < 30) return "bg-success/80"
-    if (pct < 70) return "bg-warning/80"
-    return "bg-destructive/80"
 }
 
 type InsightNoticeVariant = "info" | "success" | "warning" | "neutral"
@@ -902,22 +892,11 @@ export function CreditCardInvoiceAnalyticsPanel({
                                         {percentPointsBR(openLimitPct)}%
                                     </span>
                                 </div>
-                                <div
-                                    className="h-2 overflow-hidden rounded-full bg-muted"
-                                    role="progressbar"
-                                    aria-valuenow={Math.round(openLimitPct)}
-                                    aria-valuemin={0}
-                                    aria-valuemax={100}
+                                <Progress
+                                    value={openLimitPct}
+                                    bands={CARD_LIMIT_BANDS}
                                     aria-label="Uso estimado do limite do cartão na fatura planejada"
-                                >
-                                    <div
-                                        className={cn(
-                                            "h-full rounded-full transition-[width]",
-                                            limitGaugeFillClass(openLimitPct)
-                                        )}
-                                        style={{ width: `${Math.min(100, Math.max(0, openLimitPct))}%` }}
-                                    />
-                                </div>
+                                />
                             </div>
                         ) : null}
                     </CardContent>

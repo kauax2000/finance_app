@@ -16,6 +16,8 @@ import { CreditCardFaceTilt } from "@/components/credit-cards/credit-card-face-t
 import { RegisteredCreditCardFace } from "@/components/credit-cards/registered-credit-card-face"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardTitle } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { CARD_LIMIT_BANDS } from "@/lib/budget-bands"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ChevronRightIcon } from "@heroicons/react/16/solid"
 import { cn } from "@/lib/utils"
@@ -179,15 +181,13 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                                             {usagePct.toFixed(0)}%
                                         </span>
                                     </div>
-                                    <div
-                                        className="h-1.5 overflow-hidden rounded-full bg-muted"
-                                        role="presentation"
-                                    >
-                                        <div
-                                            className="h-full rounded-full bg-primary/80 transition-[width]"
-                                            style={{ width: `${usagePct}%` }}
-                                        />
-                                    </div>
+                                    <Progress
+                                        value={committedTotal}
+                                        max={limit ?? 100}
+                                        bands={CARD_LIMIT_BANDS}
+                                        size="sm"
+                                        aria-label={`Uso da fatura aberta no limite do cartão ${card.name}`}
+                                    />
                                 </div>
                             ) : null}
                         </>
