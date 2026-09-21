@@ -9,6 +9,7 @@ import {
 import * as React from "react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { useTimeout } from "@/hooks/use-timeout"
 import { slugifyCategory } from "./registry"
 import { Button } from "@/components/ui/button"
 import {
@@ -190,9 +191,13 @@ function DocMeta({
           <div className="absolute top-2 right-2">
             <CopyButton code={importLine} />
           </div>
-          {/* O `pr-14` reserva o território do botão em todas as linhas. Sem
-              ele, um import longo passa por baixo do botão ao quebrar. */}
-          <pre className="overflow-x-auto px-4 py-3.5 pr-14 font-mono text-xs leading-relaxed whitespace-pre-wrap text-foreground">
+          {/* O `pr-28` reserva o território do botão em todas as linhas. Sem
+              ele, um import longo passa por baixo do botão ao quebrar — e o
+              território cresceu: aberto em "Copiado" a pílula mede 85,2px
+              medidos, mais os 8px do `right-2`. Eram 56 (`pr-14`), de quando o
+              botão era quadrado. `pr-24` (96) chegou a bastar por 2,8px, que é
+              menos que os 3px do próprio anel de foco do botão; 112 dão 18,8. */}
+          <pre className="overflow-x-auto px-4 py-3.5 pr-28 font-mono text-xs leading-relaxed whitespace-pre-wrap text-foreground">
             {importLine}
           </pre>
         </>
@@ -488,35 +493,118 @@ function PreviewCode({ code }: { code: string }) {
  *
  * Um só peso nos dois lugares onde ele aparece. Chegou a ser `outline` sobre a
  * superfície tingida do campo de import, para se anunciar como controle — mas
- * com o mesmo `icon-sm` do outro, o contorno não mudava o tamanho, só fazia
+ * com o mesmo degrau do outro, o contorno não mudava o tamanho, só fazia
  * parecer que mudava. Dois botões que fazem a mesma coisa não têm por que ter
  * pesos diferentes.
+ *
+ * A confirmação é o cheque **e** a palavra: um ícone que troca sozinho diz que
+ * algo aconteceu sem dizer o quê, e era a única resposta que este botão dava.
+ * O botão se abre **para a esquerda** para caber "Copiado" e fecha em 1,5s —
+ * quem paga a conta da largura aberta é o `pr-24` do campo de import.
  */
 function CopyButton({ code }: { code: string }) {
   const [copied, setCopied] = React.useState(false)
+  // O `setTimeout` cru sobrevivia ao desmonte. O hook existe para isto — o
+  // docstring dele nomeia "o 'Copiado' que volta ao normal".
+  const later = useTimeout()
 
   function copy() {
     navigator.clipboard.writeText(code).then(() => {
       setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
+      later(() => setCopied(false), 1500)
     })
   }
 
   return (
-    <Button
-      type="button"
-      variant="tertiary"
-      size="icon-sm"
-      onClick={copy}
-      aria-label="Copiar código"
-      className="shrink-0 text-muted-foreground"
-    >
-      {copied ? (
-        <CheckIcon className="text-success" aria-hidden />
-      ) : (
-        <DocumentDuplicateIcon aria-hidden />
-      )}
-    </Button>
+    <>
+      <Button
+        type="button"
+        variant="tertiary"
+        // `sm` e não `icon-sm`: o degrau de ícone é `size-7`, largura cravada, e
+        // a palavra precisa de largura livre. O `gap-0` tira os 4px que o
+        // degrau somaria com a faixa ainda fechada — o respiro mora dentro
+        // dela, no `pr-1` do texto.
+        size="sm"
+        onClick={copy}
+        aria-label="Copiar código"
+        className={cn(
+          "shrink-0 gap-0 px-1.5 text-muted-foreground",
+          // O verde de sucesso, `--success`, por decisão do dono — e o ícone e
+          // a palavra no mesmo, que dois verdes no mesmo botão seriam piores
+          // que o que havia. É `success` e não `income`: "deu certo" não é
+          // "entrou dinheiro" (invariante 3).
+          //
+          // O custo está medido, contra as duas superfícies reais em que este
+          // botão pousa (`bg-muted/40` do campo de import e `bg-muted/30` da
+          // gaveta), nos dois temas: escuro 7,24 e 6,81 — passa; **claro 4,29 e
+          // 4,48** — acima do piso 3 de ícone e um fio abaixo do 4,5 de texto.
+          // É conhecida e aceita, como a do contorno de campo. Quem carrega
+          // contraste nos quatro casos é `--success-muted-foreground`
+          // (10,94 a 13,03), um verde mais fechado: a volta é uma linha.
+          //
+          // O par `hover:`/`active:` não é zelo: o degrau `tertiary` declara
+          // `hover:text-foreground`, que é (0,2,0) e **vence** um `text-success`
+          // solto (0,1,0). Como quem clica de mouse fica com o cursor em cima
+          // do botão, o verde simplesmente não aparecia no desktop — medido:
+          // a cor durante o 1,5s inteiro era o branco do `foreground`.
+          copied && "text-success hover:text-success active:text-success"
+        )}
+      >
+        {/* A palavra vem **antes** do ícone, e é isso que deixa o ícone parado:
+            nos dois sítios a borda direita do botão é que está ancorada — no
+            campo de import por `absolute right-2`, na gaveta por ser o último
+            item de uma fila cujo vizinho é `flex-1` e só encolhe. O botão
+            cresce para a esquerda, e o cheque nasce exatamente onde o ícone de
+            copiar estava.
+
+            Flutuar para fora do botão não é opção: os dois contêineres que o
+            hospedam são `overflow-hidden`. A largura anima pelo truque do grid
+            — `width: auto` não interpola, e um `max-w-*` interpolaria sobre um
+            alcance maior que o conteúdo, com a metade final em tempo morto. O
+            `overflow-hidden` do filho é o que zera o mínimo automático da
+            faixa; sem ele o truque não colapsa. */}
+        <span
+          className={cn(
+            "grid grid-cols-[0fr]",
+            "transition-[grid-template-columns] duration-(--duration-base) ease-(--ease-out)",
+            copied && "grid-cols-[1fr]"
+          )}
+        >
+          <span className="overflow-hidden">
+            {/* O `translate-x-2` é o que faz a palavra **vir da direita**: ela
+                nasce 8px adiante, por baixo do recorte, e desliza para a
+                esquerda até o lugar enquanto a faixa abre. `whitespace-nowrap`
+                é estrutural — sem ele o texto quebra letra a letra enquanto a
+                faixa é estreita, dentro de um botão de altura fixa. E como
+                aqui passa elemento e não texto cru, a maiúscula inicial do
+                `Button` não age: "Copiado" já nasce maiúsculo. */}
+            <span
+              className={cn(
+                "block pr-1 whitespace-nowrap",
+                "transition-[opacity,translate] duration-(--duration-base) ease-(--ease-out)",
+                copied ? "translate-x-0 opacity-100" : "translate-x-2 opacity-0"
+              )}
+            >
+              Copiado
+            </span>
+          </span>
+        </span>
+        {/* O ícone segue como sempre foi: uma troca seca, o cheque no lugar do
+            papel duplicado. O `size-4` explicito mantém os 16px de quando o
+            degrau era `icon-sm` — o `sm` encolheria para 14. */}
+        {copied ? (
+          <CheckIcon className="size-4" aria-hidden />
+        ) : (
+          <DocumentDuplicateIcon className="size-4" aria-hidden />
+        )}
+      </Button>
+      {/* Fora do botão de propósito: com `aria-label` no botão, o conteúdo dele
+          não é anunciado, e a confirmação nunca chegaria a quem usa leitor de
+          tela — que é o estado de hoje, com o cheque verde mudo. */}
+      <span role="status" className="sr-only">
+        {copied ? "Código copiado" : ""}
+      </span>
+    </>
   )
 }
 
