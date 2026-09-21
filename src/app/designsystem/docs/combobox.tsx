@@ -74,7 +74,7 @@ export default function ComboboxDoc() {
 
       <DocSection
         title="Altura"
-        description="A mesma escada do Input e do SelectTrigger, com os mesmos nomes: sm 28, md 32, lg 36, xl 40."
+        description="A mesma escada do Input e do SelectTrigger, com os mesmos nomes: sm 28, md 32, lg 36, xl 40. Num apontador grosso os três degraus de baixo sobem ao piso de 40."
         code={`<ComboboxTrigger size="sm" />
 <ComboboxTrigger size="md" />  {/* o padrão */}
 <ComboboxTrigger size="lg" />

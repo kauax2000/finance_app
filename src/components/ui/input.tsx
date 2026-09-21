@@ -3,16 +3,22 @@ import * as React from "react"
 import { formatMoneyBrlTyping, normalizeMoneyBrlOnBlur, parseMoneyBrl } from "@/lib/money-brl"
 import { cn } from "@/lib/utils"
 import {
+  fieldControlHeightClassName,
+  fieldControlPaddingClassName,
   fieldDisabledClassName,
   fieldFocusRingClassName,
   fieldInvalidClassName,
   fieldSurfaceClassName,
+  type FieldControlSize,
 } from "@/lib/field-classes"
 
-/** Mesma escada do Button, mesmos nomes: sm 28, md 32, lg 36, xl 40.
-    Substitui o `size` nativo do <input>, que é largura em caracteres e
-    nunca foi usado aqui. */
-type InputSize = "sm" | "md" | "lg" | "xl"
+/** Mesma escada do Button, mesmos nomes: sm 28, md 32, lg 36, xl 40 — e no
+    dedo os três degraus de baixo sobem ao piso de 40. Substitui o `size`
+    nativo do <input>, que é largura em caracteres e nunca foi usado aqui.
+
+    O alias existe para o nome não sumir da API pública: 53 chamadas do app
+    importam `InputProps`, e a escada agora é a da família inteira. */
+type InputSize = FieldControlSize
 
 /** O campo de texto. `money` ausente ou `false`. */
 type InputBaseProps = Omit<React.ComponentProps<"input">, "size"> & {
@@ -151,12 +157,13 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           // `disabled:pointer-events-none` fica aqui, e não na régua: o
           // `SelectTrigger` não o tem, e igualá-los seria mudar comportamento
           // dentro de uma extração que promete não mudar nenhum.
-          "w-full min-w-0 px-2.5 py-1 placeholder:text-muted-foreground disabled:pointer-events-none",
+          "w-full min-w-0 py-1 placeholder:text-muted-foreground disabled:pointer-events-none",
           "file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground",
-          size === "sm" && "h-7 px-2 md:text-control-sm",
-          size === "md" && "h-8 px-3",
-          size === "lg" && "h-9 px-3",
-          size === "xl" && "h-10 px-3",
+          // A altura e o recuo saem do mesmo registro que o `SelectTrigger`, o
+          // `NativeSelect` e os outros cinco leem. Eram quatro condicionais
+          // aqui, e essa era uma das **cinco grafias** da mesma escada.
+          fieldControlHeightClassName[size],
+          fieldControlPaddingClassName[size],
           // Depois do degrau e antes do `className` de quem chama — a mesma
           // ordem que `cn("nums", mono && "font-mono", className)` produzia
           // quando o `MoneyInput` a passava como `className` do `Input`.

@@ -155,9 +155,7 @@ export function BillFormFields({
                     <FieldControl>
                         <SelectTrigger
                             id="bill-cat"
-                            size="sm"
-                            className="w-full bg-background shadow-xs"
-                            data-slot="select-trigger"
+                            className="w-full"
                         >
                             <SelectValue placeholder="Selecione" />
                         </SelectTrigger>
@@ -190,9 +188,7 @@ export function BillFormFields({
                     >
                         <FieldControl>
                             <SelectTrigger
-                                size="sm"
-                                className="w-full bg-background shadow-xs"
-                                data-slot="select-trigger"
+                                className="w-full"
                             >
                                 <SelectValue />
                             </SelectTrigger>
@@ -214,9 +210,7 @@ export function BillFormFields({
                     >
                         <FieldControl>
                             <SelectTrigger
-                                size="sm"
-                                className="w-full bg-background shadow-xs"
-                                data-slot="select-trigger"
+                                className="w-full"
                             >
                                 <SelectValue />
                             </SelectTrigger>
@@ -294,9 +288,7 @@ export function BillFormFields({
                 >
                     <FieldControl>
                         <SelectTrigger
-                            size="sm"
-                            className="bg-background shadow-xs"
-                            data-slot="select-trigger"
+                            className="w-full"
                         >
                             <SelectValue placeholder="Opcional" />
                         </SelectTrigger>
@@ -320,9 +312,7 @@ export function BillFormFields({
                     >
                         <FieldControl>
                             <SelectTrigger
-                                size="sm"
-                                className="bg-background shadow-xs"
-                                data-slot="select-trigger"
+                                className="w-full"
                             >
                                 <SelectValue placeholder="Escolha o cartão" />
                             </SelectTrigger>

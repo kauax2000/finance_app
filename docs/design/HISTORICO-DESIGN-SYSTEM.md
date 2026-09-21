@@ -11499,3 +11499,85 @@ varredura do link foi corrigida de passagem), a prosa do `bottom-bar.tsx` e o
 escrevendo a posição do dedo foi lido no código, não sentido), e o Safari do
 iOS com `sin()`/`cos()` em `calc()` — a especificação e o Chromium cobrem, o
 PWA roda lá.
+
+
+### Rodada 99 — os outros pesos preenchem no hover, a partir do ponteiro
+
+**O pedido.** "O hover do secundário, do terciário e de todas as outras versões
+que não sejam o primary deve ter uma animação que preencha o botão com a cor do
+hover — não simplesmente troque a cor —, de forma rápida." Duas decisões fechadas
+antes: só os quatro que preenchem (`brand`/`brandOutline` já têm o giro do
+arco-íris, `link` é texto), e o preenchimento **nasce no ponto onde o cursor
+entrou** — coerente com o primário, e reusa o mesmo rastreio.
+
+**O mecanismo foi validado antes do plano**: uma `@property` de
+`<length-percentage>` interpola dentro de um `radial-gradient` (149% a meio
+caminho, 150% no fim), com a curva da casa. `circle` sem tamanho é
+`farthest-corner` — o raio do degradê é a distância ao canto mais longe —, então
+**100% cobre a caixa a partir de qualquer ponto**, sem folga.
+
+**O desenho.** `@utility button-fill`: um `radial-gradient` em `background-image`
+centrado em `--button-mx`/`--button-my`, da cor `--button-fill-color` até
+`--button-fill` e transparente 1px depois. Cada peso declara só a cor e liga o
+raio no cursor, no toque (regra H) e, onde o expandido pintava, em
+`aria-expanded`; sai o par `hover:bg-*`/`active:bg-*`. A lista de `transition` é
+restatada com `--button-fill`, porque o `tailwind-merge` troca a classe em vez de
+acrescentar. Pseudo-elemento, não: o `ButtonGroup` usa o `::before` de todo filho
+como divisor, e um `::after` em `z` negativo fica atrás do `background` — as duas
+medições das rodadas 97 e 98. O rastreio de ponteiro do `Button` deixou de ser só
+do primário (`PESOS_COM_PONTEIRO`); o giro da lava continua só dele.
+
+**Os alfas são compostos, não copiados.** O disco pinta **por cima** do fundo de
+repouso, e copiar o alfa do hover antigo empilharia duas camadas: `destructive`
+claro tem repouso 0,10 e hover 0,20, então `0,10 + a·0,90 = 0,20` dá **11%**;
+escuro 0,20 → 0,30 dá **12,5%**; `outline` escuro 0,30 → 0,50 dá **29%**.
+`secondary` recebe `--secondary-hover` opaco e `tertiary` recebe `--muted`
+(escuro: `--muted` a 50%, como antes).
+
+**A conta foi provada por pixel.** Um script descartável clonou cada peso duas
+vezes — o disco a 100% sobre o repouso, e o hover antigo reproduzido pelos tokens
+em `background-color` inline — e leu o pixel central dos dois, nos dois temas.
+Desvio máximo **5/255** (o `tertiary` escuro: `--muted` a 50% em `oklab` composto
+sobre a página, contra o alfa do Tailwind); no claro, 0 a 1. A primeira versão do
+script media o repouso em vez do hover antigo, por dois motivos que valem
+registrar: a classe do hover somada à do repouso deixa a **ordem da folha**
+decidir, e `bg-secondary-hover` **deixou de ser emitida** assim que saiu do
+fonte — o Tailwind só gera o que vê. A linha de base certa é a cor pelos tokens,
+inline.
+
+**`AlertAction` era o único consumidor que sobrescrevia o hover do `tertiary`**
+(`hover:bg-current/10` mais o par `dark:` obrigatório, porque `&:hover` e
+`&:is(.dark *)` empatam em especificidade). Sem o `hover:bg-muted` para anular,
+ele passou a pôr `currentColor` a 10% em `--button-fill-color`: a mesma cor,
+agora preenchendo. **A primeira versão veio sem o par `dark:`**, com o
+argumento de que `currentColor` inverte sozinho — e a medição na página do
+catálogo derrubou o argumento: no escuro o disco do alerta saía no cinza de
+`--muted`, porque o `tertiary` declara a cor sob `dark:` e `.dark *` mais classe
+vence a classe simples. O par entrou; a razão não é cor, é especificidade — a
+mesma armadilha que o `hover:bg-current/10` anterior já tinha pago.
+
+**Os testes.** O teste 1 de `button-touch-response.test.ts` trancava as quatro
+classes literais do `tertiary` (`hover:bg-muted`…); a regra que ele guarda — o
+toque pinta o que o cursor pinta — continua, no par `hover:`/`active:[--button-fill:100%]`.
+Os testes 2 e 3 passaram como estavam (`fundos()` conta `hover:bg-*`, e os quatro
+deixaram de ter). Entrou o teste 5: os quatro vestem `button-fill`, declaram a cor
+(com par `dark:` em `color-mix` onde o hover antigo tinha `dark:`), a transição
+resolvida carrega `--button-fill` **e** `translate`, `brand`/`brandOutline`/`link`
+não vestem, e a `@property` existe com `<length-percentage>`.
+
+**Um desvio de método**: ao reescrever o teste 1 por fatia de arquivo, a
+constante `PENDENTES` — que morava entre o 1 e o 2 — foi junto, e os testes 2 e
+3 quebraram por referência, não por regra. Restaurada com o comentário.
+
+**"Quase imperceptível" — o ritmo virou exceção.** Com `--duration-fast` e
+`--ease-out` o disco chegava a 95% do raio em 60ms dos 150 (lido no hover real)
+e lia como um piscar. Os quatro pesos entraram em `RITMO_PROPRIO`, a tabela que a
+asserção 6 mantém para quem foge do ritmo da casa com a razão escrita:
+`--duration-slow` (300ms) com `--ease-emphasized` — tokens existentes. A mesma
+duração alcança `color` e o `translate` de 1px do clique, que a 300ms não se
+nota. O plano tinha dito "sem exceção nova" e estava errado: a exceção existe
+para isto.
+
+**Fallout:** `globals.css`, `button.tsx`, `alert.tsx`, `button-touch-response.test.ts`,
+`button-primary.test.ts` (a tabela de ritmo), a página `button` do catálogo e o
+`AGENTS.md`. Nenhuma rota, nenhuma jornada.

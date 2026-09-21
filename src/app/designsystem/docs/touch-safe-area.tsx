@@ -34,6 +34,18 @@ export default function TouchSafeAreaDoc() {
               tem 28px, então numa lista
               tocável a área clicável é a linha, não o botão.
             </p>
+            <p>
+              <strong>Os controles do sistema pousam em 40, e não em 44.</strong>{" "}
+              É o degrau que a <code>Toolbar</code> publica em{" "}
+              <code>--toolbar-control</code>, o que o <code>Tabs</code> aplica, e
+              o piso que a família de campo inteira — <code>Input</code>,{" "}
+              <code>Textarea</code>, <code>Select</code>,{" "}
+              <code>NativeSelect</code>, <code>Combobox</code>,{" "}
+              <code>DatePicker</code>, <code>FormPickerPopover</code> e{" "}
+              <code>InputGroup</code> — assume no dedo. 44 continua valendo para
+              o alvo <em>solto</em>, que não tem linha nem trilha em volta: item
+              de menu e <code>Pagination</code> usam <code>min-h-11</code>.
+            </p>
           </Stack>
         </Spec>
 

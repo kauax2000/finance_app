@@ -7,10 +7,12 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import {
+  fieldControlHeightClassName,
   fieldGroupDisabledClassName,
   fieldGroupFocusRingClassName,
   fieldGroupInvalidClassName,
   fieldSurfaceClassName,
+  type FieldControlSize,
 } from "@/lib/field-classes"
 import { Input, type InputBaseProps } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -24,7 +26,7 @@ import { Textarea } from "@/components/ui/textarea"
  * sabia uma altura — e um grupo ao lado de um campo `lg` não tinha como
  * alinhar sem alguém escrever `h-9` por fora.
  */
-type InputGroupSize = "sm" | "md" | "lg" | "xl"
+type InputGroupSize = FieldControlSize
 
 /**
  * O tamanho desce pelo contexto porque três peças precisam concordar sobre ele:
@@ -52,13 +54,6 @@ const InputGroupContext = React.createContext<InputGroupContextValue>({
   controlId: "",
 })
 
-const inputGroupSizes: Record<InputGroupSize, string> = {
-  sm: "h-7",
-  md: "h-8",
-  lg: "h-9",
-  xl: "h-10",
-}
-
 function InputGroup({
   className,
   size = "md",
@@ -77,13 +72,21 @@ function InputGroup({
       // ocorrência" do backlog, e já tinha divergido: faltava o
       // `dark:…border-destructive/50` do inválido e o cursor do desabilitado.
       className={cn(
-        "group/input-group relative flex w-full min-w-0 items-center",
+        "group/input-group flex w-full min-w-0 items-center",
         fieldSurfaceClassName,
         fieldGroupFocusRingClassName,
         fieldGroupInvalidClassName,
         fieldGroupDisabledClassName,
         "has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>textarea]:h-auto has-[>[data-align=block-end]]:[&>input]:pt-3 has-[>[data-align=block-start]]:[&>input]:pb-3 has-[>[data-align=inline-end]]:[&>input]:pr-1.5 has-[>[data-align=inline-start]]:[&>input]:pl-1.5",
-        inputGroupSizes[size],
+        // A altura vem do registro da família — era a quinta grafia da mesma
+        // escada, e agora traz o piso de toque junto.
+        //
+        // **E ela tem de continuar sem prefixo de `data-size`.** Os escapes
+        // logo acima (`has-[>textarea]:h-auto` e os dois `data-align`) são
+        // (0,2,0) e vencem um `h-8` limpo, que é (0,1,0). Numa grafia
+        // `data-[size=md]:h-8` os dois empatariam, e um textarea dentro do
+        // grupo ficaria travado em 32px conforme a ordem de emissão.
+        fieldControlHeightClassName[size],
         className
       )}
       {...props}

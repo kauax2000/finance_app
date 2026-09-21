@@ -62,7 +62,7 @@ export default function InputGroupDoc() {
 
       <DocSection
         title="Tamanhos"
-        description="A escada do Input e do Button: 28, 32, 36 e 40. O degrau desce para dentro — o botão acoplado desce um degrau sozinho, sem repetir size."
+        description="A escada do Input e do Button: 28, 32, 36 e 40. O degrau desce para dentro — o botão acoplado desce um degrau sozinho, sem repetir size. Num apontador grosso os três degraus de baixo sobem ao piso de 40."
         code={`<InputGroup size="lg">
   <InputGroupInput placeholder="Buscar" />
   <InputGroupAddon align="inline-end">

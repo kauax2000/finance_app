@@ -1,6 +1,9 @@
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 
 import { buttonVariants } from "./button"
+import { cn } from "@/lib/utils"
 
 /**
  * Todo peso preenchível do `Button` responde ao **toque**, e não só ao cursor.
@@ -50,13 +53,17 @@ function fundos(classes: string) {
 }
 
 describe("resposta ao toque do Button", () => {
-  it("1. `tertiary` tem par `active:` — era o item de backlog", () => {
+  it("1. `tertiary` responde ao toque como ao cursor — hoje pelo disco, não pela cor", () => {
+    // Era o item de backlog da rodada 29b: `hover:` compila dentro de
+    // `@media (hover: hover)`, e sem o par `active:` o terciário não devolvia
+    // nada ao toque. Desde a rodada 99 o hover dos pesos que preenchem não é
+    // `hover:bg-*` — é o raio do disco (`--button-fill`) subindo a 100% —, e
+    // a regra continua a mesma: o que o cursor liga, o toque liga.
     const classes = buttonVariants({ variant: "tertiary" })
-    expect(classes).toContain("hover:bg-muted")
-    expect(classes).toContain("active:bg-muted")
-    // O par escuro, pela aritmética de especificidade acima.
-    expect(classes).toContain("dark:hover:bg-muted/50")
-    expect(classes).toContain("dark:active:bg-muted/50")
+    expect(classes).toContain("hover:[--button-fill:100%]")
+    expect(classes).toContain("active:[--button-fill:100%]")
+    expect(classes).not.toMatch(/\bhover:bg-/)
+    expect(classes).not.toMatch(/\bactive:bg-/)
   })
 
   /**
@@ -98,24 +105,72 @@ describe("resposta ao toque do Button", () => {
   // **mantêm** a emenda; só a camada de `background` a elimina. Se alguém
   // devolver `underline` aqui, a emenda volta junto.
   //
-  // **E é uma camada só.** O traço chegou a varrer e a recuar, com uma segunda
-  // linha no rótulo para ter timing próprio (rodadas 91–93); o dono encerrou
-  // pedindo a troca seca, e com ela foram embora a transição própria, o atraso
-  // e a segunda camada. `background-image` é discreta: a troca é instantânea
-  // sem ninguém pedir.
-  it("4. `link` tem traço sempre, e ele vira arco-íris no cursor e no toque", () => {
+  // **E o traço voltou a andar.** As rodadas 91–93 varreram e recuaram, e a 94
+  // encerrou pedindo a troca seca; o dono trouxe depois o `link-button` do
+  // 21st como referência, e com ele a mecânica que faltava — `scaleX` com a
+  // origem trocando de lado. A diferença para as rodadas antigas é que agora
+  // **não há traço em repouso**: ele nasce da esquerda no cursor e recolhe
+  // para a direita na saída.
+  it("5. os quatro pesos que preenchem vestem o disco, e só eles", () => {
+    // O hover é um disco da cor do hover que nasce sob o ponteiro
+    // (`@utility button-fill`, rodada 99). Cada peso declara a cor e liga o
+    // raio; a transição resolvida pelo `tailwind-merge` tem de carregar
+    // `--button-fill` **e** manter `translate`, porque a variante restata a
+    // lista da base em vez de acrescentar a ela.
+    for (const variant of ["secondary", "tertiary", "outline", "destructive"] as const) {
+      const cru = buttonVariants({ variant })
+      expect(cru, variant).toContain("button-fill")
+      expect(cru, variant).toMatch(/\[--button-fill-color:/)
+      const resolvido = cn(cru)
+      expect(resolvido, variant).toMatch(/transition-\[[^\]]*--button-fill\]/)
+      expect(resolvido, variant).toMatch(/transition-\[[^\]]*\btranslate\b[^\]]*\]/)
+    }
+    // Quem tinha par `dark:` no hover antigo tem par `dark:` na cor do disco —
+    // e os alfas são compostos, não copiados (o disco pinta sobre o repouso).
+    expect(buttonVariants({ variant: "tertiary" })).toMatch(/dark:\[--button-fill-color:color-mix\(/)
+    expect(buttonVariants({ variant: "outline" })).toMatch(/dark:\[--button-fill-color:color-mix\(/)
+    expect(buttonVariants({ variant: "destructive" })).toMatch(/dark:\[--button-fill-color:color-mix\(/)
+    // `brand`, `brandOutline` e `link` têm hover próprio e não preenchem — decisão do dono.
+    for (const variant of ["brand", "brandOutline", "link"] as const) {
+      expect(buttonVariants({ variant }), variant).not.toContain("button-fill")
+    }
+    const CSS = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
+    expect(CSS).toMatch(/@property --button-fill \{\s*syntax: "<length-percentage>"/)
+    expect(CSS).toMatch(/@utility button-fill \{[\s\S]*radial-gradient\(\s*circle at var\(--button-mx\) var\(--button-my\)/)
+  })
+
+  it("4. `link` não tem traço em repouso, e ele entra pela esquerda", () => {
     const classes = buttonVariants({ variant: "link" })
-    // O traço parado é a cor do texto, à largura cheia.
-    expect(classes).toContain("bg-[image:linear-gradient(currentColor,currentColor)]")
-    expect(classes).toContain("bg-[length:100%_1px]")
+    // A pintura mora em `@utility link-sweep`; a variante só a veste, junto de
+    // `brand-rainbow-image`, que é quem declara `--brand-rainbow` no elemento.
+    expect(classes.split(/\s+/)).toContain("link-sweep")
+    expect(classes.split(/\s+/)).toContain("brand-rainbow-image")
+    // A emenda do `::first-letter` continua proibida — ver o comentário acima.
     expect(classes).not.toContain(" underline ")
     expect(classes).not.toContain("text-decoration")
-    // No cursor ele troca de tinta, e o toque acompanha (regra H).
-    const { hover, active } = fundos(classes)
-    expect(hover).toContain("(image:--brand-rainbow)")
-    expect(active).toContain("(image:--brand-rainbow)")
-    // Sem animação: nada de `background-size` na transição, nada de atraso.
-    expect(classes).not.toContain("background-size")
-    expect(classes).not.toContain("delay-")
+    // E o traço sumiu do `background` do botão: ele é `::after` do rótulo.
+    expect(classes).not.toContain("bg-[image:")
+    expect(classes).not.toContain("bg-[length:")
+
+    const CSS = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
+    const corpo = CSS.slice(CSS.indexOf("@utility link-sweep {"))
+    const utility = corpo.slice(0, corpo.indexOf("\n}"))
+    // Em repouso, colapsado à direita; no cursor, cheio a partir da esquerda.
+    // A troca de origem é o truque: sem ela o traço voltaria por onde veio.
+    expect(utility).toContain("transform: scaleX(0)")
+    expect(utility).toContain("transform-origin: right")
+    expect(utility).toContain("transform: scaleX(1)")
+    expect(utility).toContain("transform-origin: left")
+    // O toque e o teclado acompanham o cursor — regra H, e foco também.
+    for (const gatilho of ["&:hover", "&:active", "&:focus-visible"]) {
+      expect(utility, gatilho).toContain(gatilho)
+    }
+    // O traço tem a largura do **texto**: ele mora no rótulo, não no botão.
+    expect(utility).toContain('[data-slot="button-label"]::after')
+    expect(utility).toContain("top: calc(50% + 0.5lh)")
+    // `prefers-reduced-motion` não pode apagar o traço — a referência põe o
+    // `motion-safe:` no próprio `scaleX` e deixa quem pede menos movimento sem
+    // sublinhado nenhum. Aqui só a transição encurta, pelo bloco global.
+    expect(utility).not.toContain("prefers-reduced-motion")
   })
 })

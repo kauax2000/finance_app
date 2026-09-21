@@ -8,12 +8,14 @@ import {
 import { cn } from "@/lib/utils"
 import { Muted } from "@/components/ui/typography"
 import {
+  fieldControlHeightClassName,
+  fieldControlPaddingClassName,
   fieldDisabledClassName,
   fieldFocusRingClassName,
   fieldInvalidClassName,
   fieldSurfaceClassName,
   fieldTriggerHoverClassName,
-  fieldTriggerSizeClassName,
+  type FieldControlSize,
 } from "@/lib/field-classes"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
@@ -115,16 +117,19 @@ function FormPickerPopover({
  * translúcido. É a mesma medição que tirou o `Combobox` do `Button` na rodada
  * 06 — e este era o outro gatilho que faltava converger.
  *
- * A altura não muda: `xl` (40) é a que ele já tinha. A conversão é de
- * **superfície**, não de medida.
+ * **O padrão desceu de `xl` para `md`**, na rodada do piso de toque. Ele era o
+ * segundo padrão fora do passo — a página dele documentava `lg` enquanto o
+ * código dizia `xl`, e nenhum dos dois era o `md` da família. Com o piso, no
+ * telefone ele mede 40 de qualquer jeito; o que muda é o desktop, onde agora
+ * ele alinha com o campo ao lado.
  */
 function FormPickerPopoverTrigger({
   className,
   children,
-  size = "xl",
+  size = "md",
   ...props
 }: Omit<React.ComponentProps<"button">, "size"> & {
-  size?: "sm" | "md" | "lg" | "xl"
+  size?: FieldControlSize
 }) {
   return (
     <PopoverTrigger
@@ -137,8 +142,9 @@ function FormPickerPopoverTrigger({
         fieldInvalidClassName,
         fieldDisabledClassName,
         fieldTriggerHoverClassName,
-        fieldTriggerSizeClassName,
-        "group/picker-trigger flex w-full min-w-0 items-center justify-between gap-2 px-3 text-left font-normal",
+        "group/picker-trigger flex w-full min-w-0 items-center justify-between gap-2 text-left font-normal",
+        fieldControlHeightClassName[size],
+        fieldControlPaddingClassName[size],
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}

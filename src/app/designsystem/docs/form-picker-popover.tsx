@@ -110,9 +110,9 @@ export default function FormPickerPopoverDoc() {
           {
             prop: "FormPickerPopoverTrigger",
             type: 'Omit<ComponentProps<"button">, "size"> & { size?: "sm" | "md" | "lg" | "xl" }',
-            default: 'size="xl"',
+            default: 'size="md"',
             description:
-              "O gatilho é o campo: field-classes, altura da escada e chevron que gira.",
+              "O gatilho é o campo: field-classes, altura da escada e chevron que gira. Nasceu xl, e era o segundo padrão fora do passo — esta página chegou a documentar lg enquanto o código dizia xl.",
           },
           {
             prop: "FormPickerPopoverSearch",

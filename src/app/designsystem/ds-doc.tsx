@@ -122,18 +122,19 @@ export function DocPage({
       <PageHeader variant="plain">
         <PageHeaderTitleRow
           endAdornment={
-            <Link
-              href={`/designsystem#${slugifyCategory(category)}`}
-              className={cn(
-                EYEBROW,
-                "rounded-sm text-muted-foreground underline-offset-4",
-                "transition-colors duration-(--duration-fast) ease-(--ease-out)",
-                "hover:text-foreground hover:underline active:text-foreground active:underline",
-                "focus-visible:ring-3 focus-visible:ring-ring/70 focus-visible:outline-none"
-              )}
-            >
-              {category}
-            </Link>
+            /* O `Button variant="link"` de verdade, e não a cópia à mão que
+               estava aqui: eram sete classes reimplementando tinta, sublinhado,
+               transição, par de toque e anel de foco — tudo o que a variante já
+               traz, inclusive o traço de arco-íris que varre da esquerda.
+               `h-auto p-0 align-baseline` tira a caixa do botão para ele pousar
+               na linha de base do título, que é o precedente do `HoverCard`; o
+               `EYEBROW` vem depois e vence o `text-sm` da base pelo grupo de
+               `font-size`. */
+            <Button asChild variant="link" className={cn(EYEBROW, "h-auto p-0 align-baseline")}>
+              <Link href={`/designsystem#${slugifyCategory(category)}`}>
+                {category}
+              </Link>
+            </Button>
           }
         >
           <PageHeaderTitle>{name}</PageHeaderTitle>

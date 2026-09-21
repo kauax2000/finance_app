@@ -45,15 +45,15 @@ import {
     FormPickerPopoverItem,
     FormPickerPopoverList,
     FormPickerPopoverSearch,
+    FormPickerPopoverTrigger,
 } from "@/components/ui/form-picker-popover"
-import { Popover, PopoverTrigger } from "@/components/ui/popover"
+import { Popover } from "@/components/ui/popover"
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
     tagChipFilterIdle,
     tagChipFilterSelected,
 } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { ChevronDownIcon } from "@heroicons/react/16/solid"
 import { currencyBRL } from "@/lib/formatters"
 function CategoryRows({
     categories,
@@ -526,39 +526,28 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                     open={categoryPopoverOpen}
                     onOpenChange={handleCategoryPopoverOpenChange}
                 >
-                    <PopoverTrigger asChild>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="xl"
-                            className="w-full justify-between px-3 text-left text-sm font-normal"
-                            id="tx-category"
-                        >
-                            <span className="flex min-w-0 items-center gap-2">
-                                {selectedCategory ? (
-                                    <>
-                                        <span
-                                            className="size-2 shrink-0 rounded-full"
-                                            style={{
-                                                backgroundColor:
-                                                    selectedCategory.color ||
-                                                    "var(--muted-foreground)",
-                                            }}
-                                            aria-hidden
-                                        />
-                                        <span className="truncate">
-                                            {selectedCategory.name}
-                                        </span>
-                                    </>
-                                ) : (
-                                    <span className="text-muted-foreground">
-                                        Selecione uma categoria
-                                    </span>
-                                )}
+                    <FormPickerPopoverTrigger id="tx-category">
+                        {selectedCategory ? (
+                            <>
+                                <span
+                                    className="size-2 shrink-0 rounded-full"
+                                    style={{
+                                        backgroundColor:
+                                            selectedCategory.color ||
+                                            "var(--muted-foreground)",
+                                    }}
+                                    aria-hidden
+                                />
+                                <span className="truncate">
+                                    {selectedCategory.name}
+                                </span>
+                            </>
+                        ) : (
+                            <span className="text-muted-foreground">
+                                Selecione uma categoria
                             </span>
-                            <ChevronDownIcon className="size-4 shrink-0 opacity-50" />
-                        </Button>
-                    </PopoverTrigger>
+                        )}
+                    </FormPickerPopoverTrigger>
                     <FormPickerPopoverContent>
                         <FormPickerPopoverSearch
                             value={categorySearch}
@@ -619,7 +608,6 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                     <FieldControl>
                         <DatePicker
                             id="tx-date"
-                            className="text-sm"
                             value={parseYmdLocal(dateYmd)}
                             onChange={(d) =>
                                 setDateYmd(
@@ -678,29 +666,20 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                                         handleCreditCardPopoverOpenChange
                                     }
                                 >
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="xl"
-                                            id="tx-credit-card"
-                                            className="w-full justify-between px-3 text-left text-sm font-normal"
-                                        >
-                                            <span className="min-w-0 truncate">
-                                                {selectedCard ? (
-                                                    <>
-                                                        {selectedCard.name} · ••••{" "}
-                                                        {selectedCard.last_four}
-                                                    </>
-                                                ) : (
-                                                    <span className="text-muted-foreground">
-                                                        Selecione o cartão
-                                                    </span>
-                                                )}
-                                            </span>
-                                            <ChevronDownIcon className="size-4 shrink-0 opacity-50" />
-                                        </Button>
-                                    </PopoverTrigger>
+                                    <FormPickerPopoverTrigger id="tx-credit-card">
+                                        <span className="min-w-0 truncate">
+                                            {selectedCard ? (
+                                                <>
+                                                    {selectedCard.name} · ••••{" "}
+                                                    {selectedCard.last_four}
+                                                </>
+                                            ) : (
+                                                <span className="text-muted-foreground">
+                                                    Selecione o cartão
+                                                </span>
+                                            )}
+                                        </span>
+                                    </FormPickerPopoverTrigger>
                                     <FormPickerPopoverContent>
                                         <FormPickerPopoverList className="py-2">
                                             <CreditCardRows

@@ -29,29 +29,20 @@
  * lado dele. Os dois só convergiam sob `dark:`. Um combobox é um select com
  * busca; até abrir, ele tem de ser indistinguível de um.
  *
- * ## O que entrou aqui, e o que não entrou
+ * ## A escada entrou, e com ela o piso de toque
  *
- * Só o que era **byte a byte idêntico** entre `Input` e `SelectTrigger`. A
- * conferência achou duas divergências reais, e nenhuma das duas foi dissolvida
- * à força:
+ * Por duas rodadas este cabeçalho argumentou que a altura não podia morar aqui,
+ * porque os consumidores a aplicavam por mecânicas diferentes — condicional em
+ * JS no `Input`, `data-[size=…]` inline no `SelectTrigger` e no
+ * `ComboboxTrigger`, um registro local no `InputGroup`, e a constante daqui nos
+ * outros três. O argumento estava certo sobre a mecânica e errado sobre a
+ * conclusão: **cinco grafias da mesma escada não são cinco decisões, são uma
+ * decisão sem dono**, e nenhum teste as via (grep em todo `*.test.ts`: zero
+ * asserções sobre `h-7`).
  *
- * 1. **`disabled:pointer-events-none` só existe no `Input`.** Está fora de
- *    `fieldDisabledClassName` de propósito — o `Input` continua declarando o
- *    seu inline. Somá-lo aqui seria mudar o comportamento do `SelectTrigger`
- *    dentro de um refactor que promete ser no-op, e um refactor que muda
- *    comportamento é como uma régua compartilhada perde a confiança na primeira
- *    semana. (Que os dois gatilhos, sendo elementos de botão, já bloqueiem ponteiro por `disabled`
- *    nativo é verdade, e é justamente por isso que o token do `Input` é o
- *    estranho — mas isso é conserto, não extração.)
- * 2. **`hover:` / `active:` só existem no gatilho.** Um campo de texto não tem
- *    o que insinuar ao cursor; um gatilho que abre painel tem. Por isso o par
- *    mora num export próprio, que o `Input` não importa.
- *
- * A **escada de altura** entrou depois, e só para quem a resolve por
- * `data-size` — ver `fieldTriggerSizeClassName`, no fim do arquivo. O
- * argumento original (três mecânicas, uma constante servindo um terço) continua
- * correto para `Input` e `SelectTrigger`, que decidem a altura por outro
- * caminho e seguem de fora.
+ * Hoje a altura e o recuo são dois registros, indexados em JS por quem já tem
+ * o `size` em mãos. Ver `fieldControlHeightClassName` e
+ * `fieldControlPaddingClassName`, no fim do arquivo.
  *
  * ## Duas armadilhas mecânicas
  *
@@ -65,20 +56,36 @@
  * (do degrau) por esse grupo — quem compuser o degrau **antes** da constante
  * faz o `sm` perder o corpo de texto, calado. Constantes primeiro, tamanho e
  * variante por último.
+ *
+ * ## Um teto conhecido, e ele não é consertado aqui
+ *
+ * O piso de toque pergunta ao **ponteiro** (`pointer-coarse`), e a regra de
+ * 16px do `@layer base` em `globals.css` pergunta à **largura**
+ * (`max-width: 767px`). Uma janela de desktop com 700px ganha texto de
+ * 16px/24px numa caixa de 32 — 24 de linha, 8 de recuo e 2 de borda dão 34 — e
+ * **nenhum piso**, porque o ponteiro dela é fino. Já era o comportamento antes
+ * desta rodada, o campo apenas recorta, e cruzar os dois eixos é uma decisão
+ * própria: ou o piso passa a perguntar pela largura também, ou a regra de
+ * fonte passa a perguntar pelo ponteiro. Fica anotado em vez de resolvido de
+ * passagem.
  */
 
 /**
  * O contorno, o preenchimento e o corpo do texto.
  *
- * `border-input` e não `border-border`: são o mesmo valor hoje, e continuam
- * sendo dois tokens porque a decisão registrada em `globals.css` é que o
- * contorno de campo pode voltar a divergir — ver a nota da 1.4.11 no AGENTS.md.
+ * `border-input` e não `border-border`: são dois tokens porque medem coisas
+ * diferentes — `--border` separa superfícies, `--input` **identifica um
+ * controle**. Hoje os dois valem o mesmo no claro, e é decisão: o fio do campo
+ * quase some (1,16:1 contra o fill) e quem identifica o controle é o
+ * **preenchimento**, a `/50` — a conta do `border-beam` do 21st, que o dono
+ * trouxe como referência. Fora da 1.4.11 de propósito; a nota está em
+ * `globals.css`, no próprio token, com a saída registrada.
  *
  * `text-base md:text-sm` é a rampa que impede o zoom automático do iOS: abaixo
  * de 16px o Safari amplia a página ao focar o campo.
  */
 export const fieldSurfaceClassName =
-  "rounded-lg border border-input bg-input-fill/30 text-base transition-colors outline-none md:text-sm"
+  "rounded-lg border border-input bg-input-fill/50 text-base transition-colors outline-none md:text-sm"
 
 /**
  * O anel de foco do sistema — `ring-3`, e não `ring-2`.
@@ -86,6 +93,13 @@ export const fieldSurfaceClassName =
  * É o mesmo valor no `Button`, no `Input`, no `SelectTrigger` e no
  * `MenubarTrigger`. O `TabsTrigger` era o único em `ring-2`, e a diferença de
  * 1px só aparecia quando os dois ficavam na mesma linha.
+ *
+ * **E ele é o único indicador de foco do campo.** Houve cinco rodadas pondo
+ * marca aqui — contorno estático, feixe animado, halo por sombra, a receita do
+ * `Button brand`, e ela com teto de croma e de luz —, e o dono as recusou na
+ * tela: arco-íris no campo não funciona neste app. O que sobra é o que sempre
+ * esteve certo — `--ring`, que é quase preto no claro e quase branco no
+ * escuro. `field-control-ladder.test.ts` proíbe a sexta tentativa.
  */
 export const fieldFocusRingClassName =
   "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/70"
@@ -142,29 +156,93 @@ export const fieldGroupDisabledClassName = [
  * de toque `hover:` compila para `@media (hover: hover)` e simplesmente não
  * vale, então sem ele o gatilho não responde ao dedo. Mesmo alvo nas duas
  * entradas, mesma tinta.
+ *
+ * **Ele fica sem efeito enquanto o campo está focado**, e é consequência e não
+ * defeito: o contorno de marca pinta `background`, que é uma camada acima de
+ * `background-color`, e ainda vence em especificidade (0,3,0 contra 0,2,0). Um
+ * gatilho focado já está dizendo o que o realce diria.
  */
 export const fieldTriggerHoverClassName =
   "hover:bg-input-fill/50 active:bg-input-fill/50"
 
+/** A escada de controle do projeto: os mesmos nomes do `Button` e do `Tabs`. */
+export type FieldControlSize = "sm" | "md" | "lg" | "xl"
+
 /**
- * A escada de altura — **só para o gatilho que a resolve por `data-size`**.
+ * Os números, para um teste poder afirmar que eles não se mexeram.
  *
- * O cabeçalho deste arquivo argumentava, com razão na época, que a escada não
- * podia entrar: os três consumidores a aplicavam por três mecânicas diferentes
- * (o `Input` por condicional em JS, o `SelectTrigger` por `data-[size=…]`
- * inline, o `Button` por variante de `cva`), e uma constante que serve um terço
- * dos casos é uma quarta grafia disfarçada de solução.
- *
- * O que mudou é a contagem. Com o `DatePicker` e o `FormPickerPopoverTrigger`
- * saindo do `Button` e passando a resolver por `data-size` como o
- * `ComboboxTrigger`, são **três** gatilhos escrevendo a mesma linha — e aí ela
- * deixa de ser um terço dos casos e passa a ser a regra do grupo que a usa.
- *
- * `Input` e `SelectTrigger` continuam de fora, e continuam sendo os que decidem
- * a altura por outro caminho. Igualá-los é conserto de mecânica, não extração.
- *
- * Os quatro degraus são os do sistema — 28, 32, 36, 40 —, e um gatilho de campo
- * não desce a 24: `xs` é para dentro de outro controle.
+ * Enquanto a escada era cinco strings espalhadas, não havia como comparar dois
+ * degraus — é o defeito que o `Item` teve (`default` e `sm` com a **mesma
+ * string**) e que só apareceu quando a escada virou um objeto inspecionável.
  */
-export const fieldTriggerSizeClassName =
-  "data-[size=sm]:h-7 data-[size=md]:h-8 data-[size=lg]:h-9 data-[size=xl]:h-10"
+export const FIELD_CONTROL_HEIGHTS = {
+  sm: 28,
+  md: 32,
+  lg: 36,
+  xl: 40,
+} as const satisfies Record<FieldControlSize, number>
+
+/**
+ * A altura do controle, com o **piso de toque** embutido.
+ *
+ * Medido a 375px com ponteiro grosso, antes desta rodada: `sm` 28, `md` 32,
+ * `lg` 36 — três degraus abaixo do piso, e o `sm` era uma caixa de 28px
+ * carregando uma linha de 24. No dedo a hierarquia de altura não é usável: ela
+ * só produz alvos pequenos de tamanhos diferentes.
+ *
+ * **O piso é 40, e a pergunta é o apontador.** É o degrau que a `Toolbar`
+ * publica em `--toolbar-control`, o mesmo que o `Tabs` aplica, e a altura que
+ * o app já renderiza no telefone. A pergunta é sobre o **ponteiro** e não sobre
+ * a largura da janela, pela mesma razão que `hover: hover` é: um telefone em
+ * paisagem continua grosso, um desktop estreito continua fino.
+ *
+ * `xl` **não** leva o piso: ele já é 40, e um piso redundante é uma segunda
+ * grafia esperando para divergir.
+ *
+ * **Duas armadilhas, as duas medidas em outros componentes desta casa:**
+ *
+ * 1. **Literais, nunca template.** O Tailwind varre o código como texto; uma
+ *    classe montada em runtime nunca chega ao CSS. O `Tabs` pagou essa medição.
+ * 2. **Quem decide entre `h-8` e `pointer-coarse:h-10` é a ordem de emissão, e
+ *    não a especificidade** — uma media query soma zero, e os dois seletores
+ *    empatam. O Tailwind emite a utility com mais variantes depois, no mesmo
+ *    arquivo e no mesmo build. E `twMerge` chaveia por modificadores + grupo,
+ *    então os dois nunca colapsam um no outro.
+ *
+ * **Sem prefixo de `data-size`, e isso é carga estrutural para o `InputGroup`.**
+ * Ele tem escapes `has-[>textarea]:h-auto` e `has-[>[data-align=block-end]]:h-auto`,
+ * ambos (0,2,0), que vencem um `h-8` limpo (0,1,0). Numa grafia
+ * `data-[size=…]:h-8` os dois empatariam em (0,2,0) e **um textarea dentro de um
+ * grupo ficaria travado em 32px na sorte da ordem**. Indexado em JS, o registro
+ * emite a classe crua e o escape continua ganhando.
+ */
+export const fieldControlHeightClassName = {
+  sm: "h-7 pointer-coarse:h-10",
+  md: "h-8 pointer-coarse:h-10",
+  lg: "h-9 pointer-coarse:h-10",
+  xl: "h-10",
+} as const satisfies Record<FieldControlSize, string>
+
+/**
+ * O recuo de **início** e o corpo do texto.
+ *
+ * Medido antes desta rodada: `Input md` recuava 12px, `Textarea` 10 e
+ * `NativeSelect` 10. Empilhados num formulário, a borda esquerda do texto saía
+ * serrilhada — 2px é pouco para nomear a olho e suficiente para o olho notar.
+ *
+ * **A ponta final não entra aqui, e é de propósito:** `NativeSelect` precisa de
+ * `pr-8` para o chevron, `SelectTrigger` e `ComboboxTrigger` de `pr-2.5`, e o
+ * `Input` de nenhum. Quem tem chevron sobrescreve `pe-*` **depois** deste
+ * registro — `twMerge` mantém os dois e a ponta vence, que é o resultado certo.
+ *
+ * O `md:text-control-sm` do `sm` vem junto porque ele é o degrau e não a
+ * superfície: composto antes de `fieldSurfaceClassName`, o `md:text-sm` de lá
+ * o apagaria pelo grupo `font-size`.
+ */
+export const fieldControlPaddingClassName = {
+  sm: "px-2 md:text-control-sm",
+  md: "px-3",
+  lg: "px-3",
+  xl: "px-3",
+} as const satisfies Record<FieldControlSize, string>
+

@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
 import {
     FormPickerPopoverContent,
     FormPickerPopoverFooter,
@@ -10,14 +9,14 @@ import {
     FormPickerPopoverItem,
     FormPickerPopoverList,
     FormPickerPopoverSearch,
+    FormPickerPopoverTrigger,
 } from "@/components/ui/form-picker-popover"
-import { Popover, PopoverTrigger } from "@/components/ui/popover"
+import { Popover } from "@/components/ui/popover"
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
     SUBSCRIPTION_SELECT_NONE,
     type ExpenseCategoryOption,
 } from "@/components/subscriptions/subscription-form-shared"
-import { ChevronDownIcon } from "@heroicons/react/16/solid"
 function CategoryRows({
     categories,
     search,
@@ -112,37 +111,27 @@ export function SubscriptionCategoryPicker({
 
     return (
         <Popover modal={isMobile} open={open} onOpenChange={handleOpenChange}>
-            <PopoverTrigger asChild>
-                <Button
-                    id="subscription-category-picker"
-                    type="button"
-                    variant="outline"
-                    size="xl"
-                    disabled={disabled}
-                    className="w-full justify-between px-3 text-left text-sm font-normal"
-                    aria-label="Categoria de despesa"
-                >
-                    <span className="flex min-w-0 items-center gap-2">
-                        {selected ? (
-                            <>
-                                <span
-                                    className="size-2.5 shrink-0 rounded-full"
-                                    style={{
-                                        backgroundColor:
-                                            selected.color ||
-                                            "var(--muted-foreground)",
-                                    }}
-                                    aria-hidden
-                                />
-                                <span className="truncate">{selected.name}</span>
-                            </>
-                        ) : (
-                            <span className="text-muted-foreground">Nenhuma</span>
-                        )}
-                    </span>
-                    <ChevronDownIcon className="size-4 shrink-0 opacity-50" />
-                </Button>
-            </PopoverTrigger>
+            <FormPickerPopoverTrigger
+                id="subscription-category-picker"
+                disabled={disabled}
+                aria-label="Categoria de despesa"
+            >
+                {selected ? (
+                    <>
+                        <span
+                            className="size-2.5 shrink-0 rounded-full"
+                            style={{
+                                backgroundColor:
+                                    selected.color || "var(--muted-foreground)",
+                            }}
+                            aria-hidden
+                        />
+                        <span className="truncate">{selected.name}</span>
+                    </>
+                ) : (
+                    <span className="text-muted-foreground">Nenhuma</span>
+                )}
+            </FormPickerPopoverTrigger>
             <FormPickerPopoverContent>
                 <FormPickerPopoverSearch
                     value={search}

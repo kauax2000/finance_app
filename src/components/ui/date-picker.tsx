@@ -6,12 +6,14 @@ import { CalendarIcon, XMarkIcon } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
 import {
+  fieldControlHeightClassName,
+  fieldControlPaddingClassName,
   fieldDisabledClassName,
   fieldFocusRingClassName,
   fieldInvalidClassName,
   fieldSurfaceClassName,
   fieldTriggerHoverClassName,
-  fieldTriggerSizeClassName,
+  type FieldControlSize,
 } from "@/lib/field-classes"
 import {
   formatDateLongPtBr,
@@ -58,7 +60,7 @@ import {
  * faixa realçada entre as pontas, e sem impedir um fim antes do início.
  */
 
-type DatePickerSize = "sm" | "md" | "lg" | "xl"
+type DatePickerSize = FieldControlSize
 
 type DatePickerBaseProps = {
   id?: string
@@ -68,7 +70,10 @@ type DatePickerBaseProps = {
   disabled?: boolean
   className?: string
   placeholder?: string
-  /** A altura, na escada do sistema. `lg` (36) é a do `Input`. */
+  /** A altura, na escada do sistema — e `md` (32) é o padrão da família
+      inteira, `Input` incluído. Ele nasceu `lg` e era o padrão fora do passo:
+      ninguém passa `size` nas sete chamadas do app, e uma data ao lado de um
+      campo de texto saía 36 contra 32 sem ninguém ter pedido. */
   size?: DatePickerSize
   /** Rótulo curto em pt-BR para linha apertada (dd/mm/aaaa). */
   displayStyle?: "default" | "numeric"
@@ -131,7 +136,7 @@ export function DatePicker(props: DatePickerProps) {
     disabled,
     className,
     placeholder,
-    size = "lg",
+    size = "md",
     displayStyle = "default",
     clearable = false,
     min,
@@ -196,8 +201,9 @@ export function DatePicker(props: DatePickerProps) {
               fieldInvalidClassName,
               fieldDisabledClassName,
               fieldTriggerHoverClassName,
-              fieldTriggerSizeClassName,
-              "flex w-full min-w-0 items-center gap-2 px-3 text-left font-normal",
+              "flex w-full min-w-0 items-center gap-2 text-left font-normal",
+              fieldControlHeightClassName[size],
+              fieldControlPaddingClassName[size],
               // O ícone media `size-3.5` com um `mr-2` por cima do `gap-1.5` do
               // botão — 14px de distância e um ícone fora da regra `size-4`. O
               // `gap` do campo agora é o único que decide.

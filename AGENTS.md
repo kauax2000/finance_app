@@ -301,15 +301,31 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   `--brand-rainbow` (sete matizes em oito paradas, em oklch — teal, azul com duas paradas, violeta, magenta, coral, âmbar, lima —, luminosidade por tema; cada parada é um token `--brand-<cor>`, para a página de cores medir e o `ds:catalog` cobrar par; **o verde da marca não é o verde de estado**: a lima fica em 130 e `success`/`income`/`chart-1` em 152 — ver a rodada 84) com o grão
   `--brand-grain`, e ele mora **só na marca**: o wordmark e o símbolo (prop
   `rainbow` — preenchido em todo tamanho, girando só em `lg`/`xl`), o campo de marca
-  e o `Button variant="brand"`, mais o `Badge variant="brand"` desde a rodada 89.
+  e o `Button variant="brand"`, mais o `Badge variant="brand"` desde a rodada 89
+  desde a rodada 89.
   Arco-íris **sob texto** — num gráfico, num fundo de cartão, preenchendo um
   chip — continua sendo a invariante 3 violada com sete cores de uma vez, e
-  sete matizes não têm um contraste só. As duas peças de marca escapam porque
+  sete matizes não têm um contraste só. As peças de marca escapam porque
   nelas o degradê **nunca fica sob o rótulo**: ele vive num contorno de 1px
-  (`::before`, `border-box` sobre um `padding-box` chapado) e num halo borrado
-  atrás (`::after`), com o miolo preenchido pelo `primary`. Uma por tela, nas
-  duas. As
-  `@utility` são `brand-rainbow` (só o degradê; o grão é do campo) e `brand-rainbow-live` (o
+  (`border-box` sobre um `padding-box` chapado) e num halo borrado
+  atrás (`::after`), com o miolo preenchido pelo `primary`. Uma por tela.
+  **O campo não veste marca, e isso custou cinco rodadas.** Passaram por ele um
+  contorno estático de arco-íris, o `border-beam` do 21st portado em CSS (feixe
+  animado), um halo por `box-shadow`, a receita do `Button variant="brand"` com
+  `::before`/`::after`, e ela com teto de croma e de luz — e o dono recusou
+  todas na tela. **O foco do campo é o anel do sistema** (`--ring`: quase preto
+  no claro, quase branco no escuro), que é o que `fieldFocusRingClassName`
+  sempre declarou; o que o anulava era o `ring-0` que as peças de marca
+  carregavam para não cobrir a cor de 1px.
+  `field-control-ladder.test.ts` proíbe a sexta tentativa: nenhum dos oito
+  controles pode casar `--brand-`, `field-brand` ou `brand-rainbow`.
+  Quatro medições daquela série ficam, porque valem fora dela: **`<input>`,
+  `<textarea>` e `<select>` não pintam pseudo-elemento** (e `getComputedStyle`
+  mente, resolvendo o pseudo mesmo onde ele nunca chega à tela); **`@property`
+  novo não registra em aba patchada por HMR**; **uma transição que nasce na
+  mesma mudança de estado não dispara** — declarada só dentro da regra de foco,
+  o valor salta; e num contexto de empilhamento o fundo pinta antes dos filhos
+  de `z` negativo, que é por que o `brand` não tem fundo próprio. As  `@utility` são `brand-rainbow` (só o degradê; o grão é do campo) e `brand-rainbow-live` (o
   giro de 12 s, opt-in, só nos degraus grandes); as três moram depois de
   `no-scrollbar` pela fatia do `glass.test.ts`, e `--brand-angle` é
   `@property` porque só variável tipada interpola. Ver `/designsystem/brand`.
@@ -426,21 +442,29 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   `--font-heading` (aponta para a sans), `--font-mono` (Geist Mono).
 - **Utilitários**: `.nums` (tabular figures) e `.page-title`.
 
-### Contorno de campo: decisão consciente fora da 1.4.11
+### Contorno de campo: decisão consciente fora da 1.4.11, pela segunda vez
 
-`--input` vale o mesmo que `--border`, e o campo ganhou preenchimento
-(`bg-input-fill/30`) nos dois temas em vez de só no escuro. Foi escolha de
-design, tomada com o custo medido na mesa: **o conjunto identifica o controle a
-1,3:1, e a WCAG 1.4.11 pede 3:1.** A página `/designsystem/colors` mantém a régua
-acesa no ladrilho `--input` — ele aparece reprovando nos dois temas de
-propósito, para a decisão ficar visível em vez de silenciada.
+O fio do campo quase não existe — `--input` é `oklch(0.9)` no claro (1,16:1
+contra o fill) e `oklch(0.31)` chapado no escuro (1,12) — e quem identifica o
+controle é o **preenchimento**, `bg-input-fill/50` em `field-classes`: 1,13 e
+1,16 contra a página. **A WCAG 1.4.11 pede 3:1 para o que identifica uma peça
+acionável, e o conjunto não cumpre.** A página `/designsystem/colors` mantém a
+régua acesa no ladrilho `--input`, reprovando de propósito.
 
-Antes `--input` era `oklch(0.66)` no claro (3,11:1, no piso da norma), porque o
-campo era transparente e a borda identificava o controle sozinha. **Sobre
-superfície branca não existe meio-termo suave**: qualquer cinza que alcance 3:1
-já é um cinza visível. Quem quiser voltar à conformidade troca `--input` de volta
-para `oklch(0.66 0 0)` no claro e `oklch(0.55 0 0)` no escuro — uma linha em cada
-tema.
+A decisão é do dono, com a referência na mesa: o `border-beam` do 21st (Jakub
+Antalik, MIT), em que o fio contrasta **1,11:1** com o fill e o fill **1,15**
+com a página. O campo passou **um dia** dentro da norma (`oklch(0.62)`, 3,49:1)
+e voltou a pedido, com o fill subindo de 1,08 para os números acima — que era
+o que faltava para ler como a referência. O escuro **não** voltou ao branco
+translúcido a 10% de antes: aquele dava 1,02 contra o fill, invisível até para
+a referência, e compunha diferente sobre página e cartão.
+
+**Quem quiser voltar à conformidade** troca `--input` para `oklch(0.62 0 0)` no
+claro e `oklch(0.55 0 0)` no escuro — uma linha em cada tema —, e mede contra
+**três** vizinhos: página, cartão e o próprio fill. Foi medir só contra o cartão
+que fez `oklch(0.66)` parecer suficiente por uma temporada (3,11 ali, 2,75 contra
+o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
+`Kbd`, e mexer nos dois lados de uma medição a torna ilegível.
 
 ### Touch devices and hover (Tailwind v4)
 
@@ -498,7 +522,7 @@ tema.
   [`field-classes`](src/lib/field-classes.ts) — a superfície de campo que
   `Input`, `Textarea`, `NativeSelect`, `SelectTrigger`, `ComboboxTrigger`,
   `DatePicker`, `FormPickerPopoverTrigger` e, pelas variantes `Group`, o
-  `InputGroup` vestem — e
+  `InputGroup` vestem, mais a **altura com o piso de toque** e o **recuo** — e
   [`command-filter`](src/lib/command-filter.ts) — a busca por substring sem
   acento, graduada, que a paleta do catálogo e o `Combobox` dividem — e
   [`bar-classes`](src/lib/bar-classes.ts), a superfície de **barra**: a
@@ -567,25 +591,37 @@ tema.
   a 22% no ponteiro e 44% na borda — o que limitava o vidro era a claridade dos
   blobs, e ela virou token por tema. O
   ritmo continua o da casa (`--duration-fast`, `--ease-out`), com `--button-wash`
-  na lista enumerada de transição. **`tertiary` acende no cursor e no toque** — o par
+  na lista enumerada de transição. **Os outros quatro pesos que preenchem —
+  `secondary`, `tertiary`, `outline`, `destructive` — não trocam de cor no
+  cursor** (rodada 99): a cor do hover preenche o botão num disco que nasce sob o
+  ponteiro (`@utility button-fill`, `background-image` com raio em
+  `@property --button-fill`, 0% → 100%; `circle` é `farthest-corner`, então 100%
+  cobre a caixa de qualquer ponto), a `--duration-slow` com `--ease-emphasized` — exceção
+  registrada em `RITMO_PROPRIO`, porque a 150ms/`--ease-out` o disco era um piscar. Cada
+  peso declara só `--button-fill-color`, e
+  os alfas do escuro e do `destructive` são **compostos** (`repouso + a·(1 −
+  repouso) = hover`: 11%, 12,5%, 29%), não copiados. `hover:bg-*` saiu do
+  vocabulário dessas variantes; `AlertAction` põe `currentColor` a 10% na mesma
+  variável. `brand`, `brandOutline` e `link` mantêm o hover próprio. **`tertiary` acende no cursor e no toque** — o par
   `active:` entrou na origem na rodada 29b, porque `hover:` compila dentro de
   `@media (hover: hover)` e sem ele o degrau ficava inerte no dedo. Uma tela tem um `primary` só. Fora da escada, de propósito:
   `outline` é a exceção para quando o controle precisa de contorno próprio e
   nenhum degrau serve, `destructive` é o que não tem volta, `link` é ação que se
   comporta como texto — **sublinhada sempre**, e no cursor o traço **troca de
-  tinta**, da cor do texto para o arco-íris, **sem animação nenhuma**. É uma
-  camada de `background` só: `background-image` é propriedade discreta, então a
-  troca é instantânea de graça. O traço chegou a varrer da esquerda para a
-  direita, a recuar na saída e a ter uma segunda linha no rótulo para ter
-  timing próprio — quatro rodadas (91 a 94) que o dono encerrou pedindo a troca
-  seca.
-  **Ele não é `text-decoration`, e a razão é uma emenda medida**: o
-  `::first-letter` da base — a maiúscula inicial do CTA — cria caixa própria
-  para a primeira letra, e a decoração propagada sai pintada em **dois
-  segmentos** com uma costura visível. Sublinhar também o `::first-letter`,
-  `text-decoration-skip-ink: none` e mover a decoração para o `<span>`
-  **mantêm** a emenda; só a camada de `background` a elimina, porque um fundo é
-  uma pintura só. Quem devolver `underline` traz a emenda junto.
+  **traço que entra pela esquerda**: não há sublinhado em repouso — ele é um
+  `::after` em `scaleX(0)` com origem à direita, e no cursor a origem troca
+  para a esquerda e ele vai a `scaleX(1)`, recolhendo para a direita na saída.
+  A mecânica é a do `link-button` do 21st (Hyperiux, MIT), lida do bundle do
+  preview, e ela **reverte a regra do sublinhado permanente** — decisão do
+  dono, com o custo dito: sem cursor o link depende de `--primary-accent` para
+  se distinguir do texto. As rodadas 91 a 93 já tinham varrido e recuado, e a
+  94 encerrou pedindo a troca seca; esta é a volta do movimento, agora sem
+  traço em repouso. A receita mora em `@utility link-sweep`, e o traço fica no
+  `data-slot="button-label"` para ter a largura do **texto** e não a do botão.
+  **Continua não sendo `text-decoration`**, e pela mesma emenda medida: o
+  `::first-letter` da base cria caixa própria para a primeira letra, e a
+  decoração propagada sai em dois segmentos com uma costura visível. Quem
+  devolver `underline` traz a emenda junto.
   A âncora é `calc(50% + 0.5lh)` — meia entrelinha abaixo do meio da caixa —, e
   ela cai **no mesmo pixel** em que a decoração caía: a `%` resolve contra
   `(altura − 1px)` e `lh` é a entrelinha do próprio elemento, então a conta
@@ -619,6 +655,19 @@ tema.
   `size`**, e mudar um degrau move os dois pelo mesmo nome. Nem todo controle
   oferece todos os degraus (campo não desce a 24), mas nenhum usa um nome para
   uma altura diferente.
+- **No dedo a escada de campo colapsa no piso de 40.** `sm`, `md` e `lg` sobem
+  a `pointer-coarse:h-10`; `xl` já é 40. Medido a 375px antes da regra existir:
+  `sm` era uma caixa de 28px carregando uma linha de 24, e **três dos quatro
+  degraus ficavam abaixo do alvo que o dedo acerta** — no telefone a hierarquia
+  de altura não é usável, ela só produz alvos pequenos de tamanhos diferentes.
+  O piso é 40 porque é o degrau que a `Toolbar` publica em `--toolbar-control` e
+  o `Tabs` aplica; **44 continua sendo o alvo _solto_**, sem linha nem trilha em
+  volta (item de menu, `Pagination`). A pergunta é sobre o **apontador** e não
+  sobre a largura, pela mesma razão que `hover: hover` é. A escada e o recuo
+  moram em `fieldControlHeightClassName` e `fieldControlPaddingClassName`
+  (`lib/field-classes`), e `field-control-ladder.test.ts` **proíbe os oito
+  controles de reescrever a altura à mão** — ela já esteve em cinco grafias, e
+  nenhum teste as via.
 - **`Button`** ainda tem a coluna `icon-*`, que espelha a de texto degrau a
   degrau: `icon-xs` 24 … `icon-xl` 40. **Espelha a caixa, não o tipo**: só
   `xs` e `sm` da coluna de texto descem o `font-size`, e nenhum `icon-*` o

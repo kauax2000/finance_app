@@ -129,7 +129,7 @@ export function SubscriptionFormFields({
                         <FieldControl>
                             <SelectTrigger
                                 id="sub-form-billing"
-                                className="h-9 w-full min-w-0 justify-between gap-2 px-2.5 py-0 text-sm font-normal shadow-none [&>svg]:size-4"
+                                className="w-full min-w-0"
                             >
                                 <SelectValue />
                             </SelectTrigger>
@@ -163,7 +163,6 @@ export function SubscriptionFormFields({
                 <FieldControl>
                     <DatePicker
                         id="sub-form-billing-date"
-                        className="text-sm"
                         value={parseYmdLocal(billingDate)}
                         onChange={(d) =>
                             setBillingDate(
@@ -202,7 +201,7 @@ export function SubscriptionFormFields({
                     <FieldControl>
                         <SelectTrigger
                             id="sub-form-payment-method"
-                            className="h-9 w-full min-w-0 justify-between gap-2 px-2.5 py-0 text-sm font-normal shadow-none [&>svg]:size-4"
+                            className="w-full min-w-0"
                         >
                             <SelectValue placeholder="Não informado" />
                         </SelectTrigger>
@@ -269,7 +268,7 @@ export function SubscriptionFormFields({
                             <FieldControl>
                                 <SelectTrigger
                                     id="sub-form-card"
-                                    className="h-9 w-full min-w-0 justify-between gap-2 px-2.5 py-0 text-sm font-normal shadow-none [&>svg]:size-4"
+                                    className="w-full min-w-0"
                                 >
                                     <SelectValue placeholder="Selecione o cartão" />
                                 </SelectTrigger>

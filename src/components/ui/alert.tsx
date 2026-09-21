@@ -220,15 +220,17 @@ function AlertActions({ className, ...props }: React.ComponentProps<"div">) {
  * **zero** componentes e se dizia molécula.
  *
  * **A pele sai de `currentColor`**, então a mesma linha serve os cinco tons sem
- * nomear nenhum, e o par `active:` que o toque exige vem junto. `tertiary` é o
- * degrau certo porque ele já não preenche nada; o que se corrige é o
- * `hover:bg-muted` dele, que poria uma mancha cinza sobre o tingido.
+ * nomear nenhum. `tertiary` é o degrau certo porque ele já não preenche nada em
+ * repouso; desde a rodada 99 o hover dele é um disco que nasce sob o ponteiro
+ * (`@utility button-fill`), e o que se corrige aqui é só a **cor** desse disco:
+ * `--button-fill-color` em `currentColor` a 10%, em vez do cinza de `--muted`.
+ * O par `active:` do toque vem da própria variante.
  *
- * **O `dark:hover:` é obrigatório, e não redundante.** `&:hover` e
- * `&:is(.dark *)` empatam em especificidade, e o `dark:` é emitido depois — sem
- * esta linha, o `dark:hover:bg-muted/50` do `tertiary` venceria o realce tonal
- * no tema escuro, calado e só num tema. É a armadilha que o `ThemeToggle`
- * já pagou uma vez.
+ * **O par `dark:` continua obrigatório**, e não por cor: o `tertiary` declara a
+ * sua cor de disco também sob `dark:`, e `.dark *` mais classe vence a classe
+ * simples daqui no tema escuro. Medido na página do catálogo: sem o par, o
+ * disco do alerta saía no cinza de `--muted`. `currentColor` inverte sozinho,
+ * mas a regra que o lê precisa vencer a do peso.
  *
  * `asChild` continua valendo: uma das seis chamadas é um `<Link>` dentro do
  * botão, e o tipo o carrega.
@@ -245,9 +247,17 @@ function AlertAction({
       size="sm"
       className={cn(
         "border-current/25 bg-transparent text-current",
-        "hover:bg-current/10 hover:text-current dark:hover:bg-current/10",
-        // O par `dark:` também no toque: sem ele o cinza do `tertiary` vencia no escuro.
-        "active:bg-current/10 active:text-current dark:active:bg-current/10",
+        // A cor do disco de preenchimento do `tertiary` (rodada 99) na pele do
+        // alerta: `currentColor` a 10%, o mesmo tom de antes, agora nascendo
+        // sob o ponteiro. **O par `dark:` é obrigatório mesmo com `currentColor`
+        // invertendo sozinho** — não por cor, por especificidade: o `tertiary`
+        // declara `dark:[--button-fill-color:…]`, que é `.dark *` mais classe e
+        // vence esta classe simples no tema escuro. Medido: sem o par, o disco
+        // do alerta saía no cinza de `--muted` no escuro. É a mesma armadilha
+        // que o `hover:bg-current/10` anterior já tinha pago.
+        "[--button-fill-color:color-mix(in_oklab,currentColor_10%,transparent)]",
+        "dark:[--button-fill-color:color-mix(in_oklab,currentColor_10%,transparent)]",
+        "hover:text-current active:text-current",
         className
       )}
       {...props}

@@ -62,7 +62,7 @@ export default function SwitchDoc() {
       </DocNote>
 
       <DocNote title="O trilho desligado usa --input-fill">
-        Em repouso é <code>bg-input-fill/80</code>, não <code>--input</code>: a cor de borda de campo faria o trilho desligado parecer ligado.
+        Em repouso é <code>bg-input-fill/80</code>, não <code>--input</code>: a cor de borda de campo faria o trilho desligado parecer ligado. A distância entre os dois cresceu quando <code>--input</code> voltou para dentro da 1.4.11 — hoje ele é bem mais escuro que o preenchimento, e os dois tokens deixaram de ser intercambiáveis.
       </DocNote>
     </>
   )

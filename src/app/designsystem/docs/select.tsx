@@ -48,7 +48,7 @@ export default function SelectDoc() {
 
       <DocSection
         title="Tamanhos e grupos"
-        description="Os tamanhos batem com os do Input e do Button. Grupos com rótulo servem quando as opções vêm de origens diferentes — despesa e receita, por exemplo."
+        description="Os tamanhos batem com os do Input e do Button, e com o piso de 40 no dedo. Grupos com rótulo servem quando as opções vêm de origens diferentes — despesa e receita, por exemplo."
         code={`<SelectTrigger size="sm">…</SelectTrigger>
 <SelectGroup>
   <SelectLabel>Despesa</SelectLabel>

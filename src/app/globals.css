@@ -279,9 +279,24 @@
   --destructive-muted: oklch(0.94 0.065 27);
   --destructive-muted-foreground: oklch(0.45 0.16 27);
   --border: oklch(0.9 0 0);
-  /* Mesmo contorno do cartão. Antes `--input` era `oklch(0.66)` para a borda
-     sozinha alcançar os 3:1 da WCAG 1.4.11 num campo sem preenchimento; agora
-     o campo é preenchido nos dois temas e o contorno acompanha a superfície. */
+  /* **O contorno de campo está fora da WCAG 1.4.11, por decisão consciente — e
+     pela segunda vez.** Ele passou um dia a `oklch(0.62)` (3,49:1 contra a
+     página, o primeiro valor que passava nas três adjacências), e o dono o
+     devolveu ao fio quase invisível a pedido, com a referência na mesa: no
+     `border-beam` do 21st o fio contrasta **1,11:1** com o preenchimento e é
+     o **preenchimento** que identifica o campo, a 1,15:1 contra a página. Aqui
+     é a mesma conta — `oklch(0.9)` dá 1,16 contra o fill a 50% — e é o mesmo
+     valor que o campo tinha antes daquele dia.
+
+     A saída continua registrada: `oklch(0.62 0 0)` aqui e `oklch(0.55 0 0)` no
+     escuro devolvem os 3:1, uma linha em cada tema. E a medição tem **três**
+     vizinhos — página, cartão e o próprio fill —; medir só contra o cartão foi
+     o que fez `oklch(0.66)` parecer suficiente por uma temporada.
+
+     `--input-fill` **não** se mexe, e isso é a lição da rodada 89: ele serve
+     `Switch`, `Slider`, `Progress` e `Kbd`. O que subiu foi o **alfa** que só o
+     campo veste (`bg-input-fill/50`, em `field-classes`), para o fill sair de
+     1,08 e chegar aos 1,13 da referência. */
   --input: oklch(0.9 0 0);
   --input-fill: oklch(0.9 0 0);
   --ring: oklch(0.145 0 0);
@@ -754,7 +769,13 @@
   --destructive-muted: oklch(0.32 0.1 27);
   --destructive-muted-foreground: oklch(0.92 0.06 27);
   --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 10%);
+  /* O par do claro: fio quase invisível por decisão, ver lá. Aqui ele **não**
+     volta ao branco translúcido a 10% que tinha antes — aquele dava 1,02
+     contra o fill, invisível até para a referência, e compunha diferente sobre
+     página e cartão. Chapado a 0,31 ele mede 1,12 contra o fill a 50% em
+     qualquer superfície, que é o 1,11 do `border-beam`. A saída para os 3:1 é
+     `oklch(0.55 0 0)`. */
+  --input: oklch(0.31 0 0);
   --input-fill: oklch(1 0 0 / 15%);
   --ring: oklch(0.985 0 0);
   --success: oklch(0.7 0.15 152);
@@ -1749,6 +1770,114 @@
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* ── O traço do `Button variant="link"` ─────────────────────────────────────
+
+   A mecânica é a do `link-button` do 21st (Hyperiux, MIT), lida do bundle do
+   preview porque a fonte está trancada: um `::after` de largura total que vive
+   em `scaleX(0)` com a origem à **direita**, e no cursor troca a origem para a
+   **esquerda** e vai a `scaleX(1)`. O efeito é o de sempre andar no mesmo
+   sentido — entra pela esquerda, e ao sair recolhe para a direita, em vez de
+   voltar por onde veio. A troca de origem **é** o truque; sem ela o traço
+   encolheria de volta para a esquerda.
+
+   **Isto reverte a regra do sublinhado permanente**, que este arquivo e o
+   `AGENTS.md` registravam: o `link` era "ação que se comporta como texto —
+   sublinhada sempre". Decisão do dono, com o custo na mesa: sem cursor o link
+   deixa de se distinguir do texto ao redor, e passa a depender de
+   `--primary-accent` para ser reconhecido.
+
+   **O traço mora no rótulo, e não no botão.** O `data-slot="button-label"` é o
+   `<span>` que embrulha o texto — o mesmo que existe para a maiúscula inicial
+   do CTA —, e é ele que tem a largura do **texto**. Num `::after` do botão o
+   traço pegaria o `px-*` do degrau junto. É a mesma razão pela qual a versão
+   por `background` usava `bg-origin-content`.
+
+   **E é pseudo-elemento, não `text-decoration`.** A razão continua a de antes:
+   o `::first-letter` da base cria caixa própria para a primeira letra, e a
+   decoração propagada sai em **dois segmentos** com uma costura visível. O
+   seletor é descendente (` `) e não filho (`>`) porque com `asChild` o
+   embrulho desce um nível.
+
+   **A âncora vertical é a mesma conta de sempre** — `calc(50% + 0.5lh)`, meia
+   entrelinha abaixo do meio da caixa. Ela acompanha o degrau sozinha, e é
+   onde a decoração caía: medido no `md`, 25,5 nos dois.
+
+   `--link-sweep` é 500ms, o valor da referência, e fica **fora** da escala
+   `--duration-*`: ela mede transição de estado, e isto é o movimento que dá o
+   caráter da peça — o mesmo precedente de `--brand-spin`. A curva também é a
+   de lá, e ela é agressiva de propósito: sai devagar e fecha rápido.
+   `prefers-reduced-motion` não precisa de regra própria — o bloco global de
+   `@layer base` encurta a transição, e o traço continua **aparecendo**, só que
+   de imediato. A referência põe o `motion-safe:` no próprio `scaleX`, o que
+   deixa quem pede menos movimento **sem traço nenhum**; aqui não. */
+@utility link-sweep {
+  & [data-slot="button-label"] {
+    position: relative;
+  }
+
+  & [data-slot="button-label"]::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: calc(50% + 0.5lh);
+    height: 1px;
+    background-image: var(--brand-rainbow);
+    transform: scaleX(0);
+    transform-origin: right;
+    pointer-events: none;
+    transition: transform var(--link-sweep, 500ms)
+      cubic-bezier(0.62, 0.05, 0.01, 0.99);
+  }
+
+  &:hover [data-slot="button-label"]::after,
+  &:active [data-slot="button-label"]::after,
+  &:focus-visible [data-slot="button-label"]::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+}
+
+
+
+
+/* ── O preenchimento dos outros pesos ──────────────────────────────────────
+
+   `secondary`, `tertiary`, `outline` e `destructive` não trocam de cor no
+   cursor: a cor do hover **preenche** o botão, num disco que nasce sob o
+   ponteiro e cresce até cobrir a caixa — a pedido do dono, rodada 99, e
+   coerente com o primário, que já segue a ponta do mouse pelo mesmo rastreio
+   (`--button-mx`/`--button-my`, escritas pelo `Button`). Ao sair, o disco
+   encolhe de volta para onde o cursor está; no toque, nasce sob o dedo.
+
+   É `background-image` do próprio botão, pelas duas restrições já medidas: o
+   `ButtonGroup` usa o `::before` de todo filho como divisor, e um `::after` em
+   `z` negativo fica atrás do `background`. Cada peso declara só a cor
+   (`--button-fill-color`) e liga o raio (`--button-fill`, 0% → 100%).
+
+   `circle` sem tamanho é `farthest-corner`: o raio do degradê é a distância do
+   centro ao canto mais longe, então **100% cobre a caixa inteira a partir de
+   qualquer ponto**, sem folga. `--button-fill` é `@property` de
+   `<length-percentage>` pela razão de sempre — só variável tipada interpola —,
+   e entra na lista enumerada de `transition` de cada um dos quatro pesos.
+
+   Movimento reduzido: o bloco global corta a transição e o disco aparece de
+   uma vez. Foco por teclado não preenche — foco não é intenção de clicar. */
+@property --button-fill {
+  syntax: "<length-percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
+@utility button-fill {
+  --button-mx: 50%;
+  --button-my: 50%;
+  background-image: radial-gradient(
+    circle at var(--button-mx) var(--button-my),
+    var(--button-fill-color) var(--button-fill),
+    transparent calc(var(--button-fill) + 1px)
+  );
 }
 
 /* ── A lava do primário ────────────────────────────────────────────────────

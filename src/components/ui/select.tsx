@@ -7,11 +7,14 @@ import { menuPanelSurfaceClassName } from "@/lib/menu-classes"
 import { cn } from "@/lib/utils"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import {
+  fieldControlHeightClassName,
+  fieldControlPaddingClassName,
   fieldDisabledClassName,
   fieldFocusRingClassName,
   fieldInvalidClassName,
   fieldSurfaceClassName,
   fieldTriggerHoverClassName,
+  type FieldControlSize,
 } from "@/lib/field-classes"
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/16/solid"
 import { Caption } from "@/components/ui/typography"
@@ -46,7 +49,7 @@ function SelectTrigger({
   children,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
-  size?: "sm" | "md" | "lg" | "xl"
+  size?: FieldControlSize
 }) {
   return (
     <SelectPrimitive.Trigger
@@ -61,8 +64,13 @@ function SelectTrigger({
         fieldInvalidClassName,
         fieldDisabledClassName,
         fieldTriggerHoverClassName,
-        "flex w-fit items-center justify-between gap-1.5 py-1 pr-2.5 pl-3 whitespace-nowrap select-none data-placeholder:text-muted-foreground",
-        "data-[size=sm]:h-7 data-[size=md]:h-8 data-[size=lg]:h-9 data-[size=xl]:h-10",
+        "flex w-fit items-center justify-between gap-1.5 py-1 whitespace-nowrap select-none data-placeholder:text-muted-foreground",
+        // A escada era uma linha literal aqui — uma das cinco grafias. O recuo
+        // de início vem do registro; a ponta fica, porque ela é do chevron e
+        // `twMerge` deixa o `pr-2.5` vencer o `px-3`.
+        fieldControlHeightClassName[size],
+        fieldControlPaddingClassName[size],
+        "pr-2.5",
         "*:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className

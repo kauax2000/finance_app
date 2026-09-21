@@ -49,10 +49,6 @@ import { cn } from "@/lib/utils"
 const FILTERS_DRAWER_SECTION_DIVIDER_CLASSNAME =
     "my-2.5 -mx-4 max-w-none w-[calc(100%+2rem)] sm:-mx-5 sm:w-[calc(100%+2.5rem)]"
 
-/** Full-width selects aligned with compact drawer inputs (border, radius, focus). */
-const FILTERS_DRAWER_SELECT_TRIGGER_CLASSNAME =
-    "w-full min-w-0 justify-between gap-2 rounded-lg border border-input bg-transparent px-3 text-left text-sm font-normal tabular-nums text-foreground transition-colors outline-none hover:bg-muted/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/70 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 data-placeholder:text-muted-foreground dark:bg-input-fill/30 dark:hover:bg-input-fill/50 [&_svg]:size-4 [&_svg]:shrink-0"
-
 function FilterSection({
     title,
     children,
@@ -795,7 +791,7 @@ export function TransactionsFiltersPanel({
                             <FieldControl>
                             <SelectTrigger
                                 id={`${fieldUid}-origem-plan`}
-                                className={FILTERS_DRAWER_SELECT_TRIGGER_CLASSNAME}
+                                className="w-full min-w-0 tabular-nums"
                             >
                                 <SelectValue placeholder="Qualquer" />
                             </SelectTrigger>
@@ -831,7 +827,7 @@ export function TransactionsFiltersPanel({
                             <FieldControl>
                             <SelectTrigger
                                 id={`${fieldUid}-origem-sub`}
-                                className={FILTERS_DRAWER_SELECT_TRIGGER_CLASSNAME}
+                                className="w-full min-w-0 tabular-nums"
                             >
                                 <SelectValue placeholder="Qualquer" />
                             </SelectTrigger>

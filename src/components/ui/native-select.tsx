@@ -3,16 +3,18 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 import {
+  fieldControlHeightClassName,
+  fieldControlPaddingClassName,
   fieldDisabledClassName,
   fieldFocusRingClassName,
   fieldInvalidClassName,
   fieldSurfaceClassName,
   fieldTriggerHoverClassName,
-  fieldTriggerSizeClassName,
+  type FieldControlSize,
 } from "@/lib/field-classes"
 
 type NativeSelectProps = Omit<React.ComponentProps<"select">, "size"> & {
-  size?: "sm" | "md" | "lg" | "xl"
+  size?: FieldControlSize
 }
 
 function NativeSelect({
@@ -43,8 +45,17 @@ function NativeSelect({
           fieldInvalidClassName,
           fieldDisabledClassName,
           fieldTriggerHoverClassName,
-          fieldTriggerSizeClassName,
-          "w-full min-w-0 appearance-none py-1 pr-8 pl-2.5 select-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground disabled:pointer-events-none data-[size=sm]:py-0.5"
+          // `selection:bg-primary selection:text-primary-foreground` saiu: a
+          // regra global de `@layer base` tinge a seleção com o par
+          // `--primary-muted`, de propósito, para não trocar a cor do texto que
+          // ela cobre. Isto a sobrescrevia com o primário cheio, e era o único
+          // controle do app a discordar.
+          // `pl-2.5` saiu junto: eram 10px contra os 12 do `Input`.
+          "w-full min-w-0 appearance-none py-1 select-none placeholder:text-muted-foreground disabled:pointer-events-none data-[size=sm]:py-0.5",
+          fieldControlHeightClassName[size],
+          fieldControlPaddingClassName[size],
+          // A ponta é do chevron, e vem depois do registro.
+          "pr-8"
         )}
         {...props}
       />

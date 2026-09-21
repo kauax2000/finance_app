@@ -81,16 +81,14 @@ export default function ColorsDoc() {
               branco. A cor da marca é o arco-íris, em `/designsystem/brand`. */}
           <TokenTile name="Primary (texto)" token="--primary-accent" rule="text" />
           <TokenTile name="Ring (foco)" token="--ring" rule="ui" />
-          {/* `--input` foi igualado a `--border` a pedido: o contorno do campo
-              agora é o mesmo do cartão, e o campo ganhou preenchimento nos dois
-              temas em vez de só no escuro.
-              O ladrilho abaixo continua com `rule="ui"` de propósito, e por
-              isso aparece em vermelho: a 1.4.11 pede 3:1 para o que identifica
-              uma peça acionável, e 1,3:1 não cumpre. Silenciar a régua
-              esconderia a decisão; deixá-la acesa a mantém à vista de quem
-              abrir a página. Antes `--input` valia `oklch(0.66)` — 3,11:1, no
-              piso da norma — porque no tema claro o campo era transparente e a
-              borda identificava o controle sozinha. */}
+          {/* `--input` está **fora da 1.4.11 por decisão consciente**, e o
+              ladrilho reprova de propósito para a decisão ficar visível. Ele
+              passou um dia a `oklch(0.62)` (3,49:1) e o dono o devolveu ao fio
+              quase invisível com a referência na mesa: no `border-beam` do 21st
+              o fio contrasta 1,11:1 com o preenchimento e é o **fill** que
+              identifica o campo, a 1,15 contra a página. Aqui: fill a `/50` a
+              1,13 / 1,16 contra a página, fio a 1,16 / 1,12 contra o fill. A
+              saída para os 3:1 está no token: 0,62 no claro, 0,55 no escuro. */}
           <TokenTile name="Border" token="--border" />
           <TokenTile name="Input (borda)" token="--input" rule="ui" />
           <TokenTile name="Skeleton" token="--skeleton" />
@@ -166,8 +164,8 @@ export default function ColorsDoc() {
         Cor que carrega o rótulo por cima (botão, checkbox, switch) é <code>--primary</code>, a tecla preta — branca no escuro, com o rótulo invertendo junto; cor que precisa ser vista contra a página (texto, ícone, traço fino ou com alfa) é <code>--primary-accent</code>, que hoje coincide com <code>--foreground</code> nos dois temas. O papel não se funde por coincidirem: <code>text-primary</code> segue proibido, porque dentro de uma tecla no escuro ele é branco sobre branco — use <code>text-primary-accent</code>. A cor da marca não está aqui: é o arco-íris do grupo acima.
       </DocNote>
 
-      <DocNote title="O ladrilho --input reprova de propósito">
-        <code>--input</code> vale o mesmo que <code>--border</code>, e o campo se identifica pelo preenchimento (<code>bg-input-fill/30</code>). O conjunto fica abaixo dos 3:1 da 1.4.11, e o ladrilho mantém a régua acesa para a decisão ficar visível.
+      <DocNote title="O ladrilho --input reprova de propósito, pela segunda vez">
+        O fio do campo quase não existe — 1,16:1 contra o fill no claro, 1,12 no escuro — e quem identifica o controle é o <strong>preenchimento</strong>, a <code>bg-input-fill/50</code>: 1,13 e 1,16 contra a página. É a conta do <code>border-beam</code> do 21st (1,11 e 1,15), que o dono trouxe como referência. A 1.4.11 pede 3:1 para o que identifica uma peça acionável, e o conjunto não cumpre; a saída está escrita no token (<code>oklch(0.62)</code> claro, <code>0.55</code> escuro), e a medição tem <strong>três</strong> vizinhos — página, cartão e o próprio fill —, que é o que fez <code>0.66</code> parecer suficiente por uma temporada.
       </DocNote>
 
       <Group

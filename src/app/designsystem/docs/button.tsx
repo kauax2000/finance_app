@@ -15,7 +15,7 @@ export default function ButtonDoc() {
 
       <DocSection
         title="Hierarquia"
-        description="Três degraus que descem em peso visual: primary preenche de preto (branco no escuro), secondary de cinza, tertiary não preenche. Uma tela tem um primary só — se dois competem, nenhum é a ação da tela."
+        description="Descem em peso: primary preenche de preto (branco no escuro), secondary de cinza, tertiary não preenche. Uma tela tem um primary só."
         code={`<Button>primary</Button>
 <Button variant="secondary">secondary</Button>
 <Button variant="tertiary">tertiary</Button>`}
@@ -27,7 +27,7 @@ export default function ButtonDoc() {
 
       <DocSection
         title="Fora da escada"
-        description="outline quando o controle precisa de contorno, destructive para o que não tem volta, link para ação que se comporta como texto (sublinhado sempre; no cursor o traço troca de tinta, do texto para o arco-íris, sem animação), brand para o único CTA de marca da tela — a tecla do primary com o arco-íris em volta, girando enquanto o cursor estiver em cima; brandOutline é o mesmo sem o halo, para onde ele não cabe. Passe o mouse: o traço do link troca de tinta de uma vez, e os dois de marca giram."
+        description="outline quando o controle precisa de contorno próprio, destructive para o que não tem volta, link para ação que se comporta como texto, brand para o único CTA de marca da tela. Passe o mouse."
         code={`<Button variant="outline">outline</Button>
 <Button variant="destructive">destructive</Button>
 <Button variant="link">link</Button>
@@ -114,7 +114,7 @@ export default function ButtonDoc() {
 
       <DocSection
         title="O primário é chapado, e acende em lava sob o cursor"
-        description="Em repouso é só o preenchimento — sem contorno, plinto, luz ou sombra. Sob o cursor, o arco-íris da marca aparece atrás de um vidro da cor do botão, focado na ponta do mouse e drifting como lava-lamp: mais forte onde o cursor está, mais chapado nas bordas. Passe o mouse devagar pelo espécime largo. Ao apertar, só afunda 1px, como os outros pesos; enviando, fica com opacidade cheia, porque salvando não é o mesmo que desabilitado."
+        description="Em repouso é só o preenchimento. Sob o cursor, o arco-íris da marca acende atrás de um vidro da cor do botão, seguindo o ponteiro. Passe o mouse devagar pelo espécime largo."
         code={`<Button size="xl" className="w-64">continuar</Button>
 <Button>salvar</Button>
 <Button disabled>desabilitado</Button>
@@ -131,46 +131,23 @@ export default function ButtonDoc() {
         </FormSubmit>
       </DocSection>
 
-      <DocNote title="O sublinhado do link é ancorado na entrelinha, não no pé do botão">
-        O traço arco-íris é <code>background</code>, porque <code>text-decoration</code> não aceita degradê — e ele fica em <code>calc(50% + 0.5lh)</code>, meia entrelinha abaixo do meio da caixa. A versão anterior usava <code>bg-bottom</code>, e como o eixo <code>size</code> só declara recuo <em>lateral</em>, a caixa de conteúdo tem a altura inteira do botão: o traço caía no pé dele, <strong>5,5px abaixo</strong> do sublinhado, e saltava para longe do texto assim que o cursor chegava. Com a âncora o erro é zero em <code>md</code>, <code>lg</code> e <code>xl</code>, e 1px em <code>xs</code> e <code>sm</code>.
-      </DocNote>
-
-      <DocNote title="O traço do link é fundo, e isso conserta uma emenda">
-        Ele não é <code>text-decoration</code>, e a razão foi medida: o <code>::first-letter</code> da base — a maiúscula inicial do CTA — cria caixa própria para a primeira letra, e a decoração propagada sai <strong>partida em dois segmentos</strong>. Sublinhar também o <code>::first-letter</code>, <code>text-decoration-skip-ink: none</code> e mover a decoração para o <code>&lt;span&gt;</code> mantêm a emenda; só a camada de <code>background</code> a elimina, porque um fundo é uma pintura só. Ela é ancorada em <code>calc(50% + 0.5lh)</code>, que cai no mesmo pixel em que a decoração caía.
-      </DocNote>
-
-      <DocNote title="A troca de tinta é seca, e isso é decisão">
-        No cursor o traço passa da cor do texto para o arco-íris <strong>sem animação</strong> — <code>background-image</code> é propriedade discreta, então a troca é instantânea sem ninguém pedir. Ele chegou a varrer da esquerda para a direita, a recuar na saída e a ter uma segunda linha no rótulo só para ter timing próprio; foram quatro rodadas de ajuste, e o dono encerrou pedindo a troca seca. O que sobrou não tem transição própria, nem atraso, nem segunda camada.
+      <DocNote title="Cada peso responde ao cursor de um jeito">
+        <code>primary</code> acende a lava por baixo de um vidro;{" "}
+        <code>secondary</code>, <code>tertiary</code>, <code>outline</code> e{" "}
+        <code>destructive</code> preenchem num disco que nasce sob o ponteiro;{" "}
+        <code>brand</code> e <code>brandOutline</code> giram o contorno; e o{" "}
+        <code>link</code> não tem traço em repouso — ele entra pela esquerda e
+        recolhe para a direita. A mecânica de cada um está comentada em{" "}
+        <code>button.tsx</code> e nas utilities <code>primary-wash</code>,{" "}
+        <code>button-fill</code> e <code>link-sweep</code> de{" "}
+        <code>globals.css</code>.
       </DocNote>
 
       <DocNote title="brandOutline é o brand onde o halo não cabe">
-        O halo do <code>brand</code> é um <code>::after</code> a <code>-inset-1</code>: ele sangra 4px para fora da caixa, e num vizinho próximo — uma barra, um cabeçalho, um par de ações — isso encosta. <code>brandOutline</code> tira a camada do halo e mantém o resto, contorno de 1px e giro incluídos. **Não é um degrau a menos na escada**: continua fora dela, e continua um por tela. O que muda é quanto espaço ele pede em volta.
-      </DocNote>
-
-      <DocNote title="O giro do brand pausa, não desliga">
-        <code>brand-rainbow-live</code> fica aplicada sempre, com <code>animation-play-state: paused</code>; o cursor e o toque a põem em <code>running</code>. Ligar a animação só dentro do <code>hover:</code> faria o ângulo <strong>voltar a 0°</strong> na saída — pausada, ela congela onde estava e retoma dali. Medido: 119,5° ao sair, e 119,5° um segundo depois. <code>--brand-spin</code> é o botão de velocidade da utility: 6s aqui, contra os 12s do padrão que a marca grande usa. Quem pede menos movimento não vê giro nenhum, porque o bloco global de <code>prefers-reduced-motion</code> isenta só <code>animate-spin</code> e <code>animate-pulse</code>.
-      </DocNote>
-
-      <DocNote title="Hover usa --primary-hover, nunca alfa">
-        <code>--primary-hover</code> é opaco e escurece nos dois temas. Um alfa
-        como <code>bg-primary/90</code> clareava no tema claro e derrubava o
-        contraste do rótulo branco; escurecer é o único sentido que o sobe.
-      </DocNote>
-
-      <DocNote title="A lava é um vidro sobre as oito paradas da marca">
-        Cinco camadas de <code>background-image</code>, na <code>@utility primary-wash</code>. Por cima, o <strong>vidro</strong>: um <code>radial-gradient</code> da cor do botão (<code>--primary</code>, então branco no escuro e preto no claro) centrado no ponteiro — fino onde o cursor está, grosso na borda. Por baixo, oito blobs — uma parada do arco-íris cada, teal a lima —, cada um orbitando o ponteiro num raio, numa fase e num sentido próprios e <strong>respirando</strong> (opacidade de 0,12 a 1 num pulso agudo, <code>pow(sin, 3)</code>, para só dois ou três estarem acesos por vez e a cor sob o cursor ler limpa — medido: sete matizes numa volta), uma volta em 8s, com o croma das paradas em ×1,7 e a claridade igualada por tema (<code>--button-lava-l</code>: escura no claro, onde o rótulo é branco; clara no escuro) — sem isso o teal dominava e índigo e violeta viravam cinza. A cor de cada camada é variável, e o botão gira a ordem a cada entrada do cursor — senão a lava começaria sempre pela mesma, porque a camada de cima é a que lê sob o ponteiro. Nas bordas, uma <strong>névoa</strong>: sombra interna borrada da cor do botão, ligada pelo wash e transparente em repouso. O vidro faz as duas coisas do pedido de uma vez: &quot;mais forte perto do mouse, mais branco nas laterais&quot; <em>e</em> o teto de contraste do rótulo.
-      </DocNote>
-
-      <DocNote title="Quem liga é uma variável tipada, e não opacity">
-        <code>--button-wash</code> vai de 0 a 1 no cursor, no toque e com o popover aberto, e é ela que afina o vidro — <code>opacity</code> apagaria o rótulo junto. Registrada com <code>@property</code> pela mesma razão do <code>--brand-angle</code>: só variável tipada interpola, e é isso que dá entrada e saída suaves com a transição da casa. A órbita <strong>pausa</strong> em vez de desligar (<code>animation-play-state</code>): ligar só no <code>hover:</code> faria a lava saltar ao ponto zero a cada entrada.
-      </DocNote>
-
-      <DocNote title="Nada é pseudo-elemento, e a razão é o ButtonGroup">
-        <code>ButtonGroup</code> escreve <code>[&amp;&gt;[data-variant=primary]]:before:hidden</code> — um <code>::before</code> sumiria calado dentro de um grupo (medido na rodada 97). E um <code>::after</code> em <code>z</code> negativo fica atrás do próprio <code>background</code> (a medição do <code>brand</code>, rodada 83). Camadas de <code>background-image</code> não disputam empilhamento com nada.
-      </DocNote>
-
-      <DocNote title="Isto inverte a rodada 90, de propósito">
-        A 90 montou três primários com arco-íris no cursor e o dono os recusou: texto branco sobre cor cheia caía a 4,87:1. O desenho de agora é outro — botão chapado, texto na cor do sistema, e a cor <strong>atrás</strong> de um vidro com teto medido por <code>scripts/primary-wash-contrast.mjs</code>: 80 células, piso 4,5, pior caso 5,55 com o cursor sobre o rótulo. O <code>brand</code> continua sendo a peça de contorno e halo, um CTA de marca por tela; o primário é o peso de toda ação principal.
+        O halo do <code>brand</code> sangra 4px para fora da caixa e encosta num
+        vizinho próximo — barra, cabeçalho, par de ações. O{" "}
+        <code>brandOutline</code> tira só essa camada. Os dois continuam fora da
+        escada e continuam <strong>um por tela</strong>.
       </DocNote>
 
       <DocNote title="A maiúscula inicial é do sistema">

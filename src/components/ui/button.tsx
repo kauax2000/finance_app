@@ -127,63 +127,78 @@ const buttonVariants = cva(
         // `secondary` recuava para 12px contra os 13px das outras, e os chips
         // que alternam entre `secondary` e `outline` saltavam 2px ao selecionar.
         secondary:
-          "bg-clip-border bg-secondary text-secondary-foreground hover:bg-secondary-hover active:bg-secondary-hover aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+          "button-fill bg-clip-border bg-secondary text-secondary-foreground [--button-fill-color:var(--secondary-hover)] hover:[--button-fill:100%] active:[--button-fill:100%] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-fill] duration-(--duration-slow) ease-(--ease-emphasized)",
+        // **Os quatro pesos que preenchem — este, `secondary`, `outline` e
+        // `destructive` — não trocam de cor no cursor: a cor do hover preenche
+        // o botão num disco que nasce sob o ponteiro** (rodada 99). A receita
+        // é `@utility button-fill`, no `globals.css`; cada peso declara só a
+        // cor (`--button-fill-color`, com par `dark:` onde o hover tinha um) e
+        // liga o raio (`--button-fill`, 0% → 100%) no cursor, no toque e — onde
+        // o expandido pintava — em `aria-expanded`. A lista de `transition` é
+        // restatada com `--button-fill`, porque o `tailwind-merge` troca a
+        // classe em vez de acrescentar.
+        //
+        // **O ritmo é próprio, e é exceção registrada** (`RITMO_PROPRIO` em
+        // `button-primary.test.ts`): `--duration-slow` com `--ease-emphasized`.
+        // Com o ritmo da casa o disco era um piscar — `--ease-out` chega a 95%
+        // do raio em 60ms dos 150, medido —, e o dono pediu para ser visível.
+        // A mesma duração alcança `color` e o `translate` de 1px do clique,
+        // que a 300ms não se nota.
+        //
+        // **Os alfas do escuro e do `destructive` são compostos, não copiados**:
+        // o disco pinta por cima do fundo de repouso, então para o resultado
+        // ser o mesmo hover de antes a conta é `repouso + a·(1 − repouso) =
+        // hover` — `destructive` 0,10 → 0,20 dá 11%, 0,20 → 0,30 dá 12,5%;
+        // `outline` escuro 0,30 → 0,50 dá 29%. Copiar o alfa empilharia duas
+        // camadas e escureceria.
+        //
         // O par `active:` não é redundante com o `hover:`: `hover:` compila
         // dentro de `@media (hover: hover)`, então sem ele **o terciário não
-        // devolvia nada ao toque** — em nenhuma das telas que o usam. Era um
-        // item de backlog nomeado, e o conserto mora aqui e não em cada
-        // chamada, que é onde `Toggle`, `Tabs`, `Menubar`, `Item` e `Calendar`
-        // já o escreviam à mão.
-        //
-        // O `dark:active:` vem junto pela aritmética de sempre: `&:active` e
-        // `&:is(.dark *)` empatam em especificidade e o `dark:` é emitido
-        // depois, então sem o par o realce escuro venceria o de toque — calado,
-        // e só num tema.
+        // devolvia nada ao toque** — em nenhuma das telas que o usam (rodada
+        // 29b). O conserto mora aqui e não em cada chamada, que é onde `Toggle`,
+        // `Tabs`, `Menubar`, `Item` e `Calendar` já o escreviam à mão.
         tertiary:
-          "hover:bg-muted hover:text-foreground active:bg-muted active:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 dark:active:bg-muted/50",
+          "button-fill [--button-fill-color:var(--muted)] dark:[--button-fill-color:color-mix(in_oklab,var(--muted)_50%,transparent)] hover:[--button-fill:100%] hover:text-foreground active:[--button-fill:100%] active:text-foreground aria-expanded:[--button-fill:100%] aria-expanded:text-foreground transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-fill] duration-(--duration-slow) ease-(--ease-emphasized)",
         outline:
-          "border-border bg-background hover:bg-muted hover:text-foreground active:bg-muted active:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input-fill/30 dark:hover:bg-input-fill/50 dark:active:bg-input-fill/50",
+          "button-fill border-border bg-background [--button-fill-color:var(--muted)] dark:[--button-fill-color:color-mix(in_oklab,var(--input-fill)_29%,transparent)] hover:[--button-fill:100%] hover:text-foreground active:[--button-fill:100%] active:text-foreground aria-expanded:[--button-fill:100%] aria-expanded:text-foreground dark:border-input dark:bg-input-fill/30 transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-fill] duration-(--duration-slow) ease-(--ease-emphasized)",
         destructive:
-          "bg-destructive/10 text-destructive-muted-foreground hover:bg-destructive/20 active:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:active:bg-destructive/30 dark:focus-visible:ring-destructive/40",
+          "button-fill bg-destructive/10 text-destructive-muted-foreground [--button-fill-color:color-mix(in_oklab,var(--destructive)_11%,transparent)] dark:[--button-fill-color:color-mix(in_oklab,var(--destructive)_12.5%,transparent)] hover:[--button-fill:100%] active:[--button-fill:100%] focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-fill] duration-(--duration-slow) ease-(--ease-emphasized)",
         // O link é sublinhado **sempre**: com a marca preta ele tem a cor do
         // texto, e sem o traço nada o distinguia até o cursor passar — o que
         // no toque é nunca. No cursor e no toque o traço **troca de tinta**,
         // do texto para o arco-íris, sem animação nenhuma.
         //
-        // **É uma camada só, e isso é o desenho.** O traço chegou a varrer da
-        // esquerda para a direita e a recuar na saída, com o branco desenhando
-        // de volta em seguida — quatro rodadas de ajuste (91 a 93) que o dono
-        // encerrou pedindo a troca seca. O que sobrou não tem `transition`
-        // própria, não tem atraso e não tem segunda camada: `background-image`
-        // é propriedade discreta, então a troca é instantânea de graça.
+        // **O traço entra pela esquerda e sai pela direita**, na mecânica do
+        // `link-button` do 21st que o dono trouxe: um `::after` que vive em
+        // `scaleX(0)` com a origem à direita e, no cursor, troca a origem para
+        // a esquerda e vai a `scaleX(1)`. A troca de origem é o truque — sem
+        // ela o traço encolheria de volta por onde veio.
         //
-        // **O traço não é `text-decoration`, e a razão é uma emenda medida.**
-        // O `::first-letter` da base — a garantia de maiúscula do CTA — cria
-        // caixa própria para a primeira letra, e a decoração propagada é
-        // pintada em **dois segmentos** com uma costura entre eles, visível a
+        // **Não há traço em repouso, e isso reverte a regra do sublinhado
+        // permanente.** Decisão do dono, com o custo dito: sem cursor o link
+        // deixa de se distinguir do texto ao redor e passa a depender de
+        // `--primary-accent`. As rodadas 91 a 93 tinham varrido e recuado
+        // antes, e a 94 encerrou pedindo a troca seca; esta é a volta do
+        // movimento, agora com o traço ausente em repouso em vez de branco.
+        //
+        // **Continua não sendo `text-decoration`, e a razão é a mesma emenda
+        // medida.** O `::first-letter` da base — a garantia de maiúscula do
+        // CTA — cria caixa própria para a primeira letra, e a decoração
+        // propagada é pintada em **dois segmentos** com uma costura visível a
         // olho nu. Quatro candidatos foram testados a 22× de ampliação:
         // sublinhar também o `::first-letter`, `text-decoration-skip-ink:
-        // none` e mover a decoração para o `<span>` **mantêm** a emenda; só a
-        // camada de `background` a elimina, porque um fundo é uma pintura só.
-        // A classe de `::first-letter` não pode sair — ela é a regra do
-        // sistema. **Quem devolver `underline` aqui traz a emenda junto.**
+        // none` e mover a decoração para o `<span>` **mantêm** a emenda; só
+        // uma pintura própria a elimina. **Quem devolver `underline` aqui traz
+        // a emenda junto.**
         //
-        // **A âncora é `calc(50% + 0.5lh)`, e ela cai no mesmo pixel em que a
-        // decoração caía.** Meia entrelinha abaixo do meio da caixa: a `%`
-        // resolve contra `(altura − 1px)` e `lh` é a entrelinha do próprio
-        // elemento, então a conta acompanha o degrau sozinha. Medido no `md`:
-        // linha de base em 21,5, `underline-offset-4` pintando em 25,5, e a
-        // âncora resolvendo em 25,5 — erro zero; ≤1px nos cinco degraus.
-        // A versão anterior usava `bg-bottom`, e como o eixo `size` só declara
-        // recuo lateral a caixa de conteúdo tem a altura inteira: o traço caía
-        // no pé do **botão**, 5,5px abaixo do texto.
-        //
-        // **`bg-origin-content` é o que mantém o traço na largura do texto** e
-        // não do botão, porque o `px-*` do degrau vira recuo.
+        // O resto da receita — a âncora `calc(50% + 0.5lh)`, o traço morando
+        // no `data-slot="button-label"` para ter a largura do texto e não a do
+        // botão, e o porquê de `prefers-reduced-motion` não desligar o traço —
+        // está em `@utility link-sweep`, em `globals.css`.
         //
         // `brand-rainbow-image` pela mesma razão do `brand`: ela declara
         // `--brand-rainbow` aqui, que é o que o traço de 1px lê no cursor.
-        link: "brand-rainbow-image text-primary-accent bg-[image:linear-gradient(currentColor,currentColor)] bg-no-repeat bg-clip-content bg-origin-content bg-[length:100%_1px] bg-[position:0%_calc(50%+0.5lh)] hover:bg-(image:--brand-rainbow) active:bg-(image:--brand-rainbow)",
+        link: "brand-rainbow-image link-sweep text-primary-accent",
       },
       // Uma escada só, de 24 a 40 em degraus de 4, e a coluna `icon-*` espelha
       // a de texto degrau a degrau: `md` casa com `icon-md`, `lg` com
@@ -221,6 +236,13 @@ const buttonVariants = cva(
  */
 const LAVA_STOPS = ["teal", "coral", "indigo", "amber", "magenta", "green", "violet", "blue"] as const
 
+/**
+ * Quem segue a ponta do mouse: o primário, pela lava, e os quatro pesos que
+ * preenchem a partir do ponteiro (rodada 99). `brand`, `brandOutline` e `link`
+ * têm o próprio hover e não leem `--button-mx`.
+ */
+const PESOS_COM_PONTEIRO = new Set(["primary", "secondary", "tertiary", "outline", "destructive"])
+
 function Button({
   className,
   variant = "primary",
@@ -234,14 +256,14 @@ function Button({
   }) {
   const Comp = asChild ? Slot.Root : "button"
 
-  // A lava do primário segue a ponta do mouse: a posição vai para o CSS como
+  // A lava do primário e o disco dos outros pesos seguem a ponta do mouse: a posição vai para o CSS como
   // `--button-mx`/`--button-my`, em px relativos à caixa, por `setProperty` —
   // sem estado React, sem re-render (o precedente é o marcador do `Tabs`).
   // `pointerdown` escreve também, para o toque acender onde o dedo pousou.
   // Os handlers **compõem** com os de quem chama; com `asChild` o `Slot` os
   // funde no filho e o `currentTarget` é o elemento do consumidor.
   const seguirPonteiro =
-    variant === "primary"
+    variant && PESOS_COM_PONTEIRO.has(variant)
       ? (e: React.PointerEvent<HTMLElement>) => {
           const el = e.currentTarget
           const r = el.getBoundingClientRect()
@@ -273,7 +295,7 @@ function Button({
     ? {
         onPointerEnter: (e: React.PointerEvent<HTMLButtonElement>) => {
           onPointerEnter?.(e)
-          girarLava(e.currentTarget)
+          if (variant === "primary") girarLava(e.currentTarget)
           seguirPonteiro(e)
         },
         onPointerMove: (e: React.PointerEvent<HTMLButtonElement>) => {

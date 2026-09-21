@@ -99,7 +99,18 @@ describe("o primário é chapado, e acende em lava", () => {
     // desde a rodada 94: o `link` era a única exceção, por causa da varredura
     // do sublinhado, e ela saiu a pedido do dono — a troca de tinta é
     // instantânea e não precisa de ritmo nenhum.
-    const RITMO_PROPRIO: Partial<Record<string, { duracao: string; curva: string }>> = {}
+    //
+    // **Os quatro pesos que preenchem entraram na rodada 99**: o disco de
+    // `button-fill` com `--ease-out` chegava a 95% do raio em 60ms dos 150
+    // (medido) e lia como um piscar; o dono pediu visível. É o ritmo mais
+    // lento da casa com a curva enfática — tokens existentes, nada novo.
+    const LENTO = { duracao: "duration-(--duration-slow)", curva: "ease-(--ease-emphasized)" }
+    const RITMO_PROPRIO: Partial<Record<string, { duracao: string; curva: string }>> = {
+      secondary: LENTO,
+      tertiary: LENTO,
+      outline: LENTO,
+      destructive: LENTO,
+    }
     for (const variant of ["primary", "secondary", "tertiary", "outline", "destructive", "link"] as const) {
       const classes = cn(buttonVariants({ variant }))
       const proprio = RITMO_PROPRIO[variant]

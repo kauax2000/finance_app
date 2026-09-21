@@ -6,11 +6,14 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { commandFilter } from "@/lib/command-filter"
 import {
+  fieldControlHeightClassName,
+  fieldControlPaddingClassName,
   fieldDisabledClassName,
   fieldFocusRingClassName,
   fieldInvalidClassName,
   fieldSurfaceClassName,
   fieldTriggerHoverClassName,
+  type FieldControlSize,
 } from "@/lib/field-classes"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
@@ -292,8 +295,9 @@ function ComboboxTrigger({
   size = "md",
   ...props
 }: Omit<React.ComponentProps<"button">, "children"> & {
-  /** A escada do sistema, os mesmos nomes: sm 28, md 32, lg 36, xl 40. */
-  size?: "sm" | "md" | "lg" | "xl"
+  /** A escada do sistema, os mesmos nomes: sm 28, md 32, lg 36, xl 40 — e o
+      piso de 40 no dedo, como toda a família de campo. */
+  size?: FieldControlSize
   placeholder?: string
   children?: React.ReactNode
 }) {
@@ -316,8 +320,10 @@ function ComboboxTrigger({
           fieldInvalidClassName,
           fieldDisabledClassName,
           fieldTriggerHoverClassName,
-          "flex w-full items-center justify-between gap-1.5 py-1 pr-2.5 pl-3 text-left whitespace-nowrap select-none",
-          "data-[size=sm]:h-7 data-[size=md]:h-8 data-[size=lg]:h-9 data-[size=xl]:h-10",
+          "flex w-full items-center justify-between gap-1.5 py-1 text-left whitespace-nowrap select-none",
+          fieldControlHeightClassName[size],
+          fieldControlPaddingClassName[size],
+          "pr-2.5",
           "data-placeholder:text-muted-foreground",
           "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
           className

@@ -19,7 +19,7 @@ export default function InputDoc() {
 
       <DocSection
         title="Tamanhos"
-        description="A escada do Button: sm 28, md 32, lg 36, xl 40. O padrão é md, então Input e Button alinham sem declarar size."
+        description="A escada do Button: sm 28, md 32, lg 36, xl 40. O padrão é md, então Input e Button alinham sem declarar size. Num apontador grosso os três degraus de baixo sobem ao piso de 40 — abra esta página no telefone e os quatro medem o mesmo."
         code={`<Input size="sm" placeholder="sm · 28" />
 <Input placeholder="md · 32" />
 <Input size="lg" placeholder="lg · 36" />
@@ -102,6 +102,19 @@ const [reais, setReais] = React.useState<number | null>(null)
         ficam no ramo base por <code>InputBaseProps</code>.
       </DocNote>
 
+      <DocNote title="No telefone os quatro degraus medem o mesmo, e é de propósito">
+        A demo acima mostra uma altura só num apontador grosso, porque os três
+        degraus de baixo sobem ao <strong>piso de toque de 40px</strong>. Medido
+        antes da regra existir: <code>sm</code> era uma caixa de 28px carregando
+        uma linha de 24, e três dos quatro degraus ficavam abaixo do alvo que o
+        dedo acerta. No dedo a hierarquia de altura não é usável — ela só produz
+        alvos pequenos de tamanhos diferentes. A pergunta é sobre o{" "}
+        <strong>apontador</strong> (<code>pointer-coarse:</code>) e não sobre a
+        largura da janela, pela mesma razão que <code>hover: hover</code> é. O
+        piso vale para os oito controles de campo, e 40 é o degrau que a{" "}
+        <code>Toolbar</code> publica e o <code>Tabs</code> aplica.
+      </DocNote>
+
       <DocNote title="No telefone o campo é 16px, e não é escolha de design">
         Safari do iOS dá zoom em campo com fonte abaixo de 16px, e o zoom costuma não voltar. Uma regra em <code>@layer base</code> força <code>1rem</code> abaixo de 768px.
       </DocNote>
@@ -118,7 +131,8 @@ const [reais, setReais] = React.useState<number | null>(null)
             prop: "size",
             type: '"sm" | "md" | "lg" | "xl"',
             default: '"md"',
-            description: "Altura: sm 28, md 32, lg 36, xl 40 — a mesma escada do Button.",
+            description:
+              "Altura: sm 28, md 32, lg 36, xl 40 — a mesma escada do Button. Em apontador grosso, 40 nos quatro.",
           },
           {
             prop: "aria-invalid",
