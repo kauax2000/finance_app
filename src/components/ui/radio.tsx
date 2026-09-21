@@ -59,7 +59,7 @@ function Radio({
         // `rounded-full`, o preenchimento, a rampa de corpo de texto) —, e
         // importar só o anel esconderia que o resto diverge. É o precedente do
         // `InputOTPSlot`.
-        "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/70",
+        "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/45",
         // Byte a byte `fieldInvalidClassName` — e o `ring-3` é a correção: a
         // versão anterior escrevia a **cor** do anel sem a largura dele, então
         // o estado inválido trocava só a borda. Mesma família do botão

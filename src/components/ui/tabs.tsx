@@ -461,7 +461,7 @@ const tabsTriggerVariants = cva(
     // `ring-3`, o valor do sistema. Era `ring-2` aqui, e o `Tabs` era o único
     // controle fora do valor — a diferença de 1px só aparece quando uma aba e
     // um botão ficam na mesma linha, que é onde ela mais acontece.
-    "focus-visible:ring-3 focus-visible:ring-ring/70",
+    "focus-visible:ring-3 focus-visible:ring-ring/45",
     "disabled:pointer-events-none disabled:opacity-50",
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   ],
@@ -889,7 +889,7 @@ function TabsContent({
     <TabsPrimitive.Content
       data-slot="tabs-content"
       className={cn(
-        "min-w-0 flex-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/70",
+        "min-w-0 flex-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/45",
         // O painel **reconhece** a troca, e nada mais: 150ms de fade com 4px de
         // assentamento. O Radix desmonta o painel inativo, então só existe
         // entrada — e é bom que seja curta, porque quem trocou de aba veio ler,

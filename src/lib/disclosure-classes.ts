@@ -147,7 +147,7 @@ export const disclosureLabelClassName = [
  * própria caixa da linha, que é onde o foco de uma linha de lista pertence.
  */
 export const disclosureRowFocusClassName =
-  "outline-none focus-visible:inset-ring-3 focus-visible:inset-ring-ring/70"
+  "outline-none focus-visible:inset-ring-3 focus-visible:inset-ring-ring/45"
 
 /**
  * O marcador — **um** ícone que gira, e não dois que se revezam.

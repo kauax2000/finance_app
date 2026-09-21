@@ -749,7 +749,7 @@ function ChartLegendContent({
               classes,
               "rounded-md px-1 py-0.5 -mx-1 outline-none transition-colors",
               "hover:bg-accent/60 active:bg-accent/60",
-              "focus-visible:ring-3 focus-visible:ring-ring/70",
+              "focus-visible:ring-3 focus-visible:ring-ring/45",
               // O estado não é só opacidade: o rótulo risca, e é isso que
               // sobrevive a quem não distingue o degrau de transparência.
               off && "text-muted-foreground line-through"
@@ -940,7 +940,7 @@ function ChartFrame({
     <div className="flex flex-col gap-2">
       {children}
       <Collapsible>
-        <CollapsibleTrigger className="flex items-center gap-1.5 self-start rounded-md text-xs text-muted-foreground outline-none hover:text-foreground active:text-foreground focus-visible:ring-3 focus-visible:ring-ring/70">
+        <CollapsibleTrigger className="flex items-center gap-1.5 self-start rounded-md text-xs text-muted-foreground outline-none hover:text-foreground active:text-foreground focus-visible:ring-3 focus-visible:ring-ring/45">
           <CollapsibleMarker className="size-3.5" />
           Ver os dados como tabela
         </CollapsibleTrigger>

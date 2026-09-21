@@ -468,7 +468,7 @@ function PreviewCode({ code }: { code: string }) {
             "text-xs font-medium text-muted-foreground",
             "transition-colors duration-(--duration-fast) ease-(--ease-out)",
             "hover:text-foreground active:text-foreground",
-            "focus-visible:ring-3 focus-visible:ring-ring/70 focus-visible:outline-none",
+            "focus-visible:ring-3 focus-visible:ring-ring/45 focus-visible:outline-none",
             // A mesma cortesia da navegação lateral: em ponteiro grosso o alvo
             // vai aos 44px que a página /designsystem/touch-safe-area exige.
             "pointer-coarse:min-h-11"

@@ -292,7 +292,7 @@ function StepperItem({
     // Só quando a etapa navega. O par `active:` não é cortesia: `hover:`
     // compila dentro de `@media (hover: hover)` e não existe no telefone.
     asChild &&
-      "rounded-lg text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/70 [&_[data-slot=stepper-label]]:hover:text-foreground [&_[data-slot=stepper-label]]:active:text-foreground"
+      "rounded-lg text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/45 [&_[data-slot=stepper-label]]:hover:text-foreground [&_[data-slot=stepper-label]]:active:text-foreground"
   )
 
   return (

@@ -40,7 +40,7 @@ export function IncomeCategoryCard({
         <div
             className={cn(
                 "group relative block h-full rounded-xl",
-                "has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring has-[a:focus-visible]:ring-offset-2 has-[a:focus-visible]:ring-offset-background",
+                "has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring/45 has-[a:focus-visible]:ring-offset-2 has-[a:focus-visible]:ring-offset-background",
             )}
         >
             <Card

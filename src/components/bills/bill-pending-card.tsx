@@ -108,7 +108,7 @@ export function BillPendingCard({
                 className={cn(
                     "group w-full min-w-0 rounded-xl text-left outline-none",
                     "transition-shadow hover:shadow-md",
-                    "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    "focus-visible:ring-2 focus-visible:ring-ring/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 )}
                 onClick={onOpenDetail}
                 aria-label={`Abrir ${row.title}`}

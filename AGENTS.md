@@ -319,6 +319,23 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   carregavam para não cobrir a cor de 1px.
   `field-control-ladder.test.ts` proíbe a sexta tentativa: nenhum dos oito
   controles pode casar `--brand-`, `field-brand` ou `brand-rainbow`.
+  **O anel é `ring-3` de `--ring` a 45%, e 45 é o piso.** Ele foi 70% até a
+  rodada 101, e o dono o pediu mais suave — no escuro, 3px de quase-branco a
+  70% sobre cartão quase preto leem como marca-texto. Medido contra as **sete**
+  superfícies (`background`, `card`, `popover`, `muted`, `secondary`, `accent`,
+  `sidebar`) nos dois temas, que é a régua certa porque um campo focado pousa em
+  qualquer uma delas: 70% dava 6,94 no claro e 7,83 no escuro; 45% dá **3,05 e
+  4,12**, e 40% reprova no claro (2,63) contra o piso de 3:1 da WCAG. Medir só
+  contra o cartão é medir metade — foi o que fez a primeira leitura desta
+  rodada reportar 3,16. **A folga de 0,05 não tem guarda**: não há script de
+  contraste para o anel como há para `tone`, `tile` e `identity`, então quem
+  mexer em `--secondary` ou `--accent` derruba o foco da norma sem nenhum teste
+  cair. O valor vive em **37 grafias** — `field-classes.ts` serve os oito
+  controles, e todo o resto escreve à mão, por decisão registrada em
+  `radio.tsx` ("importar só o anel esconderia que o resto diverge").
+  A largura (`ring-3`), a cor (`--ring`) e a **ausência de transição** não
+  mudaram. A última é um teto conhecido: `transition-colors` não cobre
+  `box-shadow`, então o anel do campo estala enquanto o do `Button` esmaece.
   Quatro medições daquela série ficam, porque valem fora dela: **`<input>`,
   `<textarea>` e `<select>` não pintam pseudo-elemento** (e `getComputedStyle`
   mente, resolvendo o pseudo mesmo onde ele nunca chega à tela); **`@property`

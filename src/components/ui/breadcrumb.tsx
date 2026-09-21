@@ -186,7 +186,7 @@ function BreadcrumbLink({
         // O par de toque. Sem `active:` a resposta vive dentro de
         // `@media (hover: hover)` e simplesmente não existe no telefone.
         "hover:text-foreground active:text-foreground",
-        "outline-none focus-visible:ring-3 focus-visible:ring-ring/70",
+        "outline-none focus-visible:ring-3 focus-visible:ring-ring/45",
         // Alvo de dedo por pseudo-elemento, e não por altura: crescer de
         // verdade empurraria a linha do cabeçalho de 20 para 44px.
         //

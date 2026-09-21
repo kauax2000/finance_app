@@ -83,7 +83,7 @@ const radioGroupItemVariants = cva("relative", {
         // O par `active:` não é cortesia com a regra H: num alvo que é para o
         // dedo, `hover:` compila dentro de `@media (hover: hover)` e não vale.
         "not-has-[:disabled,[data-disabled]]:hover:bg-muted/50 not-has-[:disabled,[data-disabled]]:active:bg-muted/50",
-        "has-[:focus-visible]:border-ring has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/70",
+        "has-[:focus-visible]:border-ring has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/45",
         "has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50",
       ].join(" "),
     },

@@ -358,7 +358,7 @@ function CommandInput({
         <div
           className={cn(
             "flex h-8 w-full min-w-0 items-center gap-2 rounded-lg border border-border bg-input-fill/30 px-3",
-            "has-[input:focus-visible]:border-ring has-[input:focus-visible]:ring-3 has-[input:focus-visible]:ring-ring/70",
+            "has-[input:focus-visible]:border-ring has-[input:focus-visible]:ring-3 has-[input:focus-visible]:ring-ring/45",
             "[[data-slot=dialog-content]_&]:has-[input:focus-visible]:border-border [[data-slot=dialog-content]_&]:has-[input:focus-visible]:ring-0"
           )}
         >

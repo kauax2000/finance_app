@@ -104,7 +104,7 @@ function InvoiceRow({
                     "block border-b border-border last:border-b-0",
                     "px-4 py-4 outline-none transition-colors",
                     "hover:bg-muted/30 focus-visible:bg-muted/30",
-                    "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                    "focus-visible:ring-2 focus-visible:ring-ring/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 ].join(" ")}
             >
                 <div className="flex min-w-0 flex-col gap-4">

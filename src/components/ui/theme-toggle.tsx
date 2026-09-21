@@ -188,7 +188,7 @@ export function ThemeToggle({
                 // pseudo-elemento a leva aos 44px que um dedo pede sem mexer no
                 // layout de quem a posiciona.
                 "after:absolute after:-inset-x-1 after:-inset-y-1.5 after:content-['']",
-                "focus-visible:ring-3 focus-visible:ring-ring/70",
+                "focus-visible:ring-3 focus-visible:ring-ring/45",
                 className,
             )}
             // Ele vive dentro de menus suspensos (conta e menu mobile): sem isto,

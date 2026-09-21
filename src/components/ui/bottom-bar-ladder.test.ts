@@ -116,7 +116,7 @@ describe("régua do BottomBar", () => {
 
   it("8. o item traz o próprio anel de foco", () => {
     expect(CODIGO).toContain("focus-visible:ring-3")
-    expect(CODIGO).toContain("focus-visible:ring-ring/70")
+    expect(CODIGO).toContain("focus-visible:ring-ring/45")
   })
 
   it("9. o movimento sai da escala", () => {

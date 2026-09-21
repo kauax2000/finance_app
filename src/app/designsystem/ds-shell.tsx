@@ -40,7 +40,7 @@ export function DsShell({ children }: { children: React.ReactNode }) {
           tabulação: menu, marca, tema, busca e os 87 links da navegação. */}
       <a
         href="#ds-conteudo"
-        className="sr-only focus-visible:not-sr-only focus-visible:absolute focus-visible:top-2 focus-visible:left-2 focus-visible:z-(--z-toast) focus-visible:rounded-md focus-visible:bg-card focus-visible:px-3 focus-visible:py-2 focus-visible:text-sm focus-visible:font-medium focus-visible:text-foreground focus-visible:ring-3 focus-visible:ring-ring/70"
+        className="sr-only focus-visible:not-sr-only focus-visible:absolute focus-visible:top-2 focus-visible:left-2 focus-visible:z-(--z-toast) focus-visible:rounded-md focus-visible:bg-card focus-visible:px-3 focus-visible:py-2 focus-visible:text-sm focus-visible:font-medium focus-visible:text-foreground focus-visible:ring-3 focus-visible:ring-ring/45"
       >
         Pular para o conteúdo
       </a>
@@ -202,7 +202,7 @@ function DsTopBar() {
           href="/designsystem"
           // Sem `shrink-0`: com ele o link mantinha a largura inteira dentro do
           // grupo elástico, e a 320px empurrava os controles para fora.
-          className="-ml-1 flex min-w-0 items-center gap-2.5 rounded-md px-1 py-1 outline-none transition-opacity hover:opacity-70 focus-visible:ring-3 focus-visible:ring-ring/70 active:opacity-70"
+          className="-ml-1 flex min-w-0 items-center gap-2.5 rounded-md px-1 py-1 outline-none transition-opacity hover:opacity-70 focus-visible:ring-3 focus-visible:ring-ring/45 active:opacity-70"
         >
           <AppWordmark rainbow className="shrink-0" aria-hidden />
           <Separator orientation="vertical" />

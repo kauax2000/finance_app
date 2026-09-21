@@ -21,7 +21,7 @@ function Checkbox({
         "after:absolute after:-inset-3.5 after:content-['']",
         // O par de toque: `hover:` compila dentro de `@media (hover: hover)`.
         "hover:bg-muted/60 active:bg-muted/60",
-        "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/70",
+        "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/45",
         // O estado inválido do `Radio`, que a caixa não tinha: um termo de uso
         // obrigatório desmarcado não mudava de aparência nenhuma.
         "aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20",

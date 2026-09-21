@@ -11731,3 +11731,81 @@ E "As seis cores, e de onde elas vieram" virou "As seis cores", porque o título
 prometia a origem que o corte tirou.
 
 **Ficou por fazer:** o vale de claridade, com os candidatos pendentes.
+
+
+### Rodada 101 — o anel de foco desce de 70% para 45%
+
+**O pedido.** *"Deixe os indicadores dos actives dos inputs mais suaves."*
+Olhando um `Input` focado no escuro, o anel é um marca-texto: 3px de `--ring`
+(quase branco) a 70% contra um cartão quase preto.
+
+**Medir contra o cartão é medir metade — e a primeira leitura caiu nisso.**
+Ela deu 3,16 para o 45% no claro e foi apresentada ao dono assim. A régua certa
+são as **sete** superfícies em que um campo focado pode pousar (`--background`,
+`--card`, `--popover`, `--muted`, `--secondary`, `--accent`, `--sidebar`), nos
+dois temas, e a pior delas é `--secondary`/`--accent` no claro:
+
+| alfa | pior caso claro | pior caso escuro |
+| --- | --- | --- |
+| 70% (antes) | 6,94 | 7,83 |
+| 50% | 3,55 | 4,74 |
+| **45% (hoje)** | **3,05** | **4,12** |
+| 40% | **2,63 ✗** | 3,57 |
+
+**45 é o último valor que passa nos dois temas.** A WCAG pede 3:1, e o anel
+entregava mais que o dobro disso. A correção do número foi dita ao dono antes
+de qualquer código, e ele escolheu ficar no 45 — **0,05 de folga, de olhos
+abertos**.
+
+**A folga ficou sem guarda, por decisão.** Foi oferecido um script no molde de
+`tone-contrast.mjs` e `tile-contrast.mjs` (7 superfícies × 2 temas), e o dono
+recusou: *"45% e pronto"*. Fica registrado o que isso custa — quem empurrar
+`--secondary` ou `--accent` derruba o foco da norma e **nenhum teste cai**.
+
+**O escopo é o sistema inteiro, e são 37 grafias.** O anel não é importado
+fora dos oito controles de campo, e isso é decisão antiga (`radio.tsx`:
+"importar só o anel esconderia que o resto diverge"). Então a troca passou por
+`field-classes.ts` (as duas constantes, campo e moldura — `field-classes.test.ts`
+exige bijeção), 25 componentes de `ui/`, `disclosure-classes.ts`, três arquivos
+do catálogo, e o bloco de CSS cru do Sonner, que reimplementa o anel à mão
+porque `ring-3` sozinho apaga a sombra de elevação do toast.
+
+**Oito arquivos de app estavam em alfa cheio**, com `ring-2` + `ring-offset-2`:
+as faturas do dashboard, os cartões de conta e de categoria, o tile de cartão e
+`transaction-form-fields`. Eles entraram **só pelo alfa**. Deixá-los de fora
+faria deles o indicador mais duro do app depois da rodada, que é o inverso do
+pedido; a divergência de **geometria** (a única grafia de `ring-2` viva fora do
+`Tabs`, que já migrou) fica nomeada e não consertada de passagem.
+
+**Dois testes gravavam o 70% e mudaram junto** — `field-control-ladder.test.ts`
+(asserção 8) e `bottom-bar-ladder.test.ts` (asserção 8). Eles codificavam o
+valor antigo; atualizá-los é parte da mudança, não efeito colateral. O que
+**não** se mexeu: as asserções que travam `ring-3` (`tabs-size-ladder`,
+`item-size-ladder`) e os valores literais de `--ring` nos dois temas.
+
+**A transição ficou de fora, e é o teto conhecido desta rodada.** O anel do
+campo é o único que **estala**: `fieldSurfaceClassName` declara
+`transition-colors`, que não cobre `box-shadow` — onde o anel vive —, enquanto
+o `Button` transiciona `box-shadow` e o dele esmaece. Medido nos dois. É o
+ganho de suavidade que não custa contraste nenhum, e o dono escolheu *"não, só
+baixar a tinta"*.
+
+**Verificação de que a classe chegou ao CSS**, que é a armadilha que esta casa
+já pagou: lidas as regras geradas na folha de estilo — 9 regras com
+`color-mix(in oklab, var(--ring) 45%, transparent)` e **zero** com 70% —, e o
+`box-shadow` computado de um campo focado nos dois temas
+(`oklab(0.985 0 0 / 0.45) 0 0 0 3px` no escuro, `oklab(0.145 0 0 / 0.45)` no
+claro). Armadilha de método anotada: o painel do navegador roda **sem foco de
+janela**, então `document.hasFocus()` é falso e `:focus-visible` não casa —
+`.focus()` por script não pinta o anel, e a medição precisa de um clique real.
+
+**Fallout:** 42 arquivos. `field-classes.ts` (com a tabela das sete
+superfícies), `globals.css`, 25 componentes de `ui/`, 8 de app, 3 do catálogo,
+`disclosure-classes.ts`, os 2 testes e o `AGENTS.md`. `npx tsc --noEmit`,
+`npm run lint` (0 erros) e `npm run test:unit` (70 arquivos, 635 testes)
+passam. Nenhuma rota, nenhuma jornada.
+
+**Ficou por fazer:** a transição do anel; o script de guarda das sete
+superfícies; a geometria dos oito (`ring-2` + `ring-offset-2` → `ring-3`); e
+`--sidebar-ring`, que é uma segunda grafia dos mesmos dois valores de `--ring`,
+mantida à mão e sem teste.

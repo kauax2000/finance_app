@@ -122,7 +122,7 @@ function InputOTPSlot({
         // `nums` porque isto é uma grade de dígitos: sem figuras tabulares o
         // "1" é mais estreito que o "8", e cada casa centra o próprio glifo
         // num lugar diferente. A 32px passa; a 40 a fileira treme.
-        "nums relative flex items-center justify-center border-y border-r border-input bg-input-fill/30 transition-all outline-none first:rounded-l-lg first:border-l last:rounded-r-lg aria-invalid:border-destructive data-[active=true]:z-10 data-[active=true]:border-ring data-[active=true]:ring-3 data-[active=true]:ring-ring/70 data-[active=true]:aria-invalid:border-destructive data-[active=true]:aria-invalid:ring-destructive/20 dark:data-[active=true]:aria-invalid:ring-destructive/40",
+        "nums relative flex items-center justify-center border-y border-r border-input bg-input-fill/30 transition-all outline-none first:rounded-l-lg first:border-l last:rounded-r-lg aria-invalid:border-destructive data-[active=true]:z-10 data-[active=true]:border-ring data-[active=true]:ring-3 data-[active=true]:ring-ring/45 data-[active=true]:aria-invalid:border-destructive data-[active=true]:aria-invalid:ring-destructive/20 dark:data-[active=true]:aria-invalid:ring-destructive/40",
         slotSizes[size],
         className
       )}

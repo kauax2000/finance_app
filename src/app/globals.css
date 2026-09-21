@@ -1341,7 +1341,7 @@
 [data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-close-button]:focus-visible {
   outline: none;
   border-color: var(--ring);
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 70%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 45%, transparent);
 }
 
 [data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-close-button] {

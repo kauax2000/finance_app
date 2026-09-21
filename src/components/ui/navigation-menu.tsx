@@ -131,7 +131,7 @@ const navigationMenuTriggerVariants = cva(
   [
     "group/navigation-menu-trigger flex shrink-0 items-center gap-1.5 rounded-md px-2.5 text-sm font-medium whitespace-nowrap outline-hidden select-none",
     "transition-colors",
-    "focus-visible:ring-3 focus-visible:ring-ring/70",
+    "focus-visible:ring-3 focus-visible:ring-ring/45",
     "disabled:pointer-events-none disabled:opacity-50",
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   ],
@@ -345,7 +345,7 @@ const navigationMenuPanelVariants = cva(
 const NAVIGATION_MENU_LINK_BASE = [
   "group/navigation-menu-link relative min-w-0 outline-hidden select-none",
   "transition-colors",
-  "focus-visible:ring-3 focus-visible:ring-ring/70",
+  "focus-visible:ring-3 focus-visible:ring-ring/45",
   "[&_svg]:pointer-events-none [&_svg]:shrink-0",
 ].join(" ")
 

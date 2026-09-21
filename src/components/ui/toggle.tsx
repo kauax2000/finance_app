@@ -48,7 +48,7 @@ const toggleVariants = cva(
     // desligado o deixava idêntico a um ligado. Mantendo a tinta apagada, o
     // hover diz "estou aqui" e só o ligado diz "estou valendo".
     "hover:bg-muted active:bg-muted",
-    "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/70",
+    "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/45",
     "disabled:pointer-events-none disabled:opacity-50",
     // Ligado é o cinza do `secondary`, não o verde da marca. O verde já é a
     // ação principal e, num app de finanças, também é dinheiro que entra: um

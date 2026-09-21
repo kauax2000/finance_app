@@ -110,7 +110,7 @@ const cardVariants = cva(
           "cursor-pointer outline-none",
           "transition-[box-shadow,border-color] duration-(--duration-fast) ease-(--ease-out)",
           "hover:shadow-md active:shadow-md",
-          "focus-visible:ring-3 focus-visible:ring-ring/70",
+          "focus-visible:ring-3 focus-visible:ring-ring/45",
         ],
         false: "",
       },

@@ -233,7 +233,7 @@ const resizableHandleVariants = cva(
     "data-[separator=active]:before:bg-primary-accent",
     // O anel do sistema. Era `ring-1` mais um `ring-offset-background` sem
     // largura — a única peça de `ui/` fora do `ring-3`.
-    "focus-visible:ring-3 focus-visible:ring-ring/70",
+    "focus-visible:ring-3 focus-visible:ring-ring/45",
     // Desabilitado volta a ser um fio, sem acento e sem pega.
     "data-[separator=disabled]:before:bg-transparent",
   ],

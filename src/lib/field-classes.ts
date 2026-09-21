@@ -94,6 +94,39 @@ export const fieldSurfaceClassName =
  * `MenubarTrigger`. O `TabsTrigger` era o único em `ring-2`, e a diferença de
  * 1px só aparecia quando os dois ficavam na mesma linha.
  *
+ * ## O alfa é 45%, e 45 é o piso
+ *
+ * Ele foi **70%** da origem até esta rodada, e o dono o pediu mais suave: no
+ * escuro, 3px de quase-branco a 70% sobre um cartão quase preto leem como
+ * marca-texto. Medido contra as **sete** superfícies (`--background`, `--card`,
+ * `--popover`, `--muted`, `--secondary`, `--accent`, `--sidebar`) nos dois
+ * temas, que é a régua certa porque um campo focado pousa em qualquer uma
+ * delas:
+ *
+ *     alfa        pior caso claro   pior caso escuro
+ *     70% (antes)      6,94              7,83
+ *     50%              3,55              4,74
+ *     45% (hoje)       3,05              4,12   ← o piso
+ *     40%              2,63 ✗            3,57
+ *
+ * A WCAG pede 3:1, e **45 é o último valor que passa nos dois temas**. O pior
+ * caso é `--secondary`/`--accent` no claro, a 3,05 — **0,05 de folga**, aceita
+ * de olhos abertos depois de ver o número. Quem empurrar `--secondary` ou
+ * `--accent` derruba o foco da norma sem nenhum teste cair: não há script de
+ * guarda aqui, ao contrário de `tone-contrast` e `tile-contrast`.
+ *
+ * **Medir contra o cartão só é medir metade.** A primeira leitura desta rodada
+ * deu 3,16 para o 45% no claro, porque olhou o `--card` e parou. A superfície
+ * que decide é outra.
+ *
+ * **O que não mudou, e é de propósito:** a largura (`ring-3` continua sendo o
+ * valor do sistema), a cor (`--ring`, quase preto no claro e quase branco no
+ * escuro) e a ausência de transição. Esta última é um teto conhecido:
+ * `fieldSurfaceClassName` declara `transition-colors`, que **não cobre
+ * `box-shadow`** — então o anel do campo aparece de estalo enquanto o do
+ * `Button`, que transiciona `box-shadow`, esmaece. Medido nos dois; o dono
+ * recusou mexer nisso nesta rodada.
+ *
  * **E ele é o único indicador de foco do campo.** Houve cinco rodadas pondo
  * marca aqui — contorno estático, feixe animado, halo por sombra, a receita do
  * `Button brand`, e ela com teto de croma e de luz —, e o dono as recusou na
@@ -102,7 +135,7 @@ export const fieldSurfaceClassName =
  * escuro. `field-control-ladder.test.ts` proíbe a sexta tentativa.
  */
 export const fieldFocusRingClassName =
-  "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/70"
+  "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/45"
 
 /**
  * O estado inválido. Vem de `aria-invalid`, escrito por quem chama — o `Field`
@@ -137,7 +170,7 @@ export const fieldDisabledClassName = [
  * mesma caixa é o defeito.
  */
 export const fieldGroupFocusRingClassName =
-  "has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot=input-group-control]:focus-visible]:ring-3 has-[[data-slot=input-group-control]:focus-visible]:ring-ring/70"
+  "has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot=input-group-control]:focus-visible]:ring-3 has-[[data-slot=input-group-control]:focus-visible]:ring-ring/45"
 
 export const fieldGroupInvalidClassName = [
   "has-aria-invalid:border-destructive has-aria-invalid:ring-3 has-aria-invalid:ring-destructive/20",

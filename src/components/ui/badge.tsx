@@ -110,7 +110,7 @@ const badgeVariants = cva(
   // O corpo do glifo desce por degrau, no eixo `size`. `:not([class*='size-'])`
   // é a mesma trava que `Button`, `Select`, `Tabs` e `Menubar` usam: quem passa
   // um corpo explícito continua mandando nele.
-  "inline-flex items-center justify-center gap-1 rounded-full border border-transparent text-center font-medium transition-colors focus:outline-none focus-visible:ring-3 focus-visible:ring-ring/70 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-1 rounded-full border border-transparent text-center font-medium transition-colors focus:outline-none focus-visible:ring-3 focus-visible:ring-ring/45 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       /**

@@ -48,7 +48,7 @@ const itemVariants = cva(
       //
       // Agora é explícito, como o `interactive` que o `Card` já documenta.
       interactive: {
-        true: "cursor-pointer hover:bg-muted active:bg-muted focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/70 pointer-coarse:min-h-11",
+        true: "cursor-pointer hover:bg-muted active:bg-muted focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/45 pointer-coarse:min-h-11",
         false: "",
       },
     },

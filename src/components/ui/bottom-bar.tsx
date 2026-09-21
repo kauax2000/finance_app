@@ -320,7 +320,7 @@ const itemRootClassName = [
   // `relative` é o que põe o item **por cima** do marcador sem `z-index`: um
   // estático pintaria antes do posicionado, e o marcador cobriria o ícone.
   "group/bottom-bar-item relative flex h-full w-full min-w-0 items-stretch rounded-full",
-  "outline-none focus-visible:ring-3 focus-visible:ring-ring/70",
+  "outline-none focus-visible:ring-3 focus-visible:ring-ring/45",
   "transition-[translate] duration-(--duration-fast) ease-(--ease-out)",
   "active:translate-y-px",
 ].join(" ")

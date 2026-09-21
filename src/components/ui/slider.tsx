@@ -114,7 +114,7 @@ function Slider({
             "ring-0 hover:ring-4 hover:ring-primary-accent/15 active:ring-4 active:ring-primary-accent/25",
             // O anel de foco do projeto: 3px em `--ring`, como no `Switch` e no
             // `Input`. Vem por último para vencer o halo.
-            "focus-visible:ring-3 focus-visible:ring-ring/70 focus-visible:outline-hidden"
+            "focus-visible:ring-3 focus-visible:ring-ring/45 focus-visible:outline-hidden"
           )}
         />
       ))}

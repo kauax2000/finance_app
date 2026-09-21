@@ -121,7 +121,7 @@ function InstallmentPlanCompactRow({
     const rowClass = cn(
         "block w-full px-4 py-3 text-left outline-none transition-colors",
         onSelect &&
-            "cursor-pointer hover:bg-muted/30 focus-visible:bg-muted/30 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+            "cursor-pointer hover:bg-muted/30 focus-visible:bg-muted/30 focus-visible:ring-2 focus-visible:ring-ring/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
     )
 
     if (onSelect) {

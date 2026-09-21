@@ -172,7 +172,7 @@ export default function DesignSystemIndexPage() {
                                         // toque: some a superfície, sobra a
                                         // régua, e é ela que acende.
                                         "hover:border-foreground/40 active:border-foreground/40",
-                                        "focus-visible:ring-3 focus-visible:ring-ring/70 focus-visible:outline-none"
+                                        "focus-visible:ring-3 focus-visible:ring-ring/45 focus-visible:outline-none"
                                     )}
                                 >
                                     {/* Ícone nu, sem ladrilho. Ele e o ordinal

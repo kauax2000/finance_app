@@ -909,7 +909,7 @@ function CarouselDots({
             data-active={ativo || undefined}
             className={cn(
               "group/dot flex shrink-0 cursor-pointer items-center justify-center",
-              "rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/70",
+              "rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/45",
               barra
                 ? "min-w-0 flex-1 py-2 pointer-coarse:py-5"
                 : "size-6 pointer-coarse:size-11"

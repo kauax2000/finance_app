@@ -68,7 +68,7 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                 className={cn(
                     "group block w-full min-w-0 rounded-xl text-left text-inherit no-underline outline-none",
                     "transition-shadow hover:shadow-md active:shadow-md",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 )}
                 aria-label={`Abrir cartão ${card.name}, final ${card.last_four}. Ver detalhes.`}
             >
