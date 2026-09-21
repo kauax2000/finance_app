@@ -90,7 +90,7 @@ export function WorkspaceSwitcher({
                     )}
                     <div className="min-w-0 flex-1 text-left group-data-[collapsible=icon]:hidden">
                         {loading ? (
-                            <Skeleton className="h-4 w-[min(100%,9rem)]" />
+                            <Skeleton className="h-4 w-full max-w-36" />
                         ) : (
                             <p className="truncate text-sm font-medium leading-tight">
                                 {currentWorkspace?.name ?? "Carteiras"}

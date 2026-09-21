@@ -38,7 +38,7 @@ export function ActivityPageSkeleton() {
                                         <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
                                         <div className="min-w-0 flex-1 space-y-1.5">
                                             <div className="flex min-w-0 items-center gap-2">
-                                                <Skeleton className="h-4 min-w-0 max-w-[12rem] flex-1" />
+                                                <Skeleton className="h-4 min-w-0 max-w-48 flex-1" />
                                                 <Skeleton className="h-3 w-10 shrink-0 rounded" />
                                             </div>
                                             <Skeleton className="h-3 w-full max-w-md" />

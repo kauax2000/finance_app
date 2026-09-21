@@ -45,7 +45,7 @@ function HeroSkeleton() {
                     <div className="flex w-full min-w-0 items-center justify-between gap-2">
                         <Skeleton className="h-8 w-16 shrink-0 rounded-md" />
                         <Skeleton className="size-8 shrink-0 rounded-md" />
-                        <Skeleton className="h-8 w-[min(100%,14rem)] flex-1 rounded-md" />
+                        <Skeleton className="h-8 flex-1 rounded-md" />
                         <Skeleton className="size-8 shrink-0 rounded-md" />
                     </div>
                 </div>
@@ -174,7 +174,7 @@ function TrendsSkeleton() {
             <Card padding="none">
                 <CardContent className="p-3">
                     <Skeleton className="mb-2 h-3 w-48 max-w-full" />
-                    <Skeleton className="h-[200px] w-full rounded-md" />
+                    <Skeleton className="h-50 w-full rounded-md" />
                 </CardContent>
             </Card>
         </section>
@@ -198,13 +198,13 @@ function EmbeddedTransactionsSkeleton({ rowCount = 8 }: { rowCount?: number }) {
             <Card padding="none">
                 <CardContent className="relative flex flex-col p-0">
                     <div className="min-w-0 overflow-hidden rounded-t-xl">
-                        <Table className="min-w-[700px] text-sm">
+                        <Table className="min-w-175 text-sm">
                             <TableHeader variant="muted" sticky className="[&_tr]:border-b-0">
                                 <TableRow className="border-0 [&>th]:border-b [&>th]:border-border">
                                     <TableHead className="w-10 px-2 py-0 md:w-11 md:px-3">
                                         <Skeleton className="mx-auto size-4 rounded-sm" />
                                     </TableHead>
-                                    <TableHead className="h-11 w-[5.5rem] px-4 py-0">
+                                    <TableHead className="h-11 w-22 px-4 py-0">
                                         <Skeleton className="h-3.5 w-8" />
                                     </TableHead>
                                     <TableHead className="h-11 px-4 py-0">
@@ -213,16 +213,16 @@ function EmbeddedTransactionsSkeleton({ rowCount = 8 }: { rowCount?: number }) {
                                     <TableHead className="h-11 px-4 py-0">
                                         <Skeleton className="h-3.5 w-10" />
                                     </TableHead>
-                                    <TableHead className="hidden h-11 max-w-[10rem] px-4 py-0 md:table-cell">
+                                    <TableHead className="hidden h-11 max-w-40 px-4 py-0 md:table-cell">
                                         <Skeleton className="h-3.5 w-24" />
                                     </TableHead>
                                     <TableHead className="hidden h-11 px-4 py-0 md:table-cell">
                                         <Skeleton className="h-3.5 w-16" />
                                     </TableHead>
-                                    <TableHead className="h-11 min-w-[5.5rem] px-4 py-0">
+                                    <TableHead className="h-11 min-w-22 px-4 py-0">
                                         <Skeleton className="h-3.5 w-8" />
                                     </TableHead>
-                                    <TableHead className="h-11 w-[5.25rem] px-3 py-0 pr-4 text-left">
+                                    <TableHead className="h-11 w-21 px-3 py-0 pr-4 text-left">
                                         <Skeleton className="h-3 w-10" />
                                     </TableHead>
                                 </TableRow>
@@ -236,25 +236,25 @@ function EmbeddedTransactionsSkeleton({ rowCount = 8 }: { rowCount?: number }) {
                                         <TableCell className="whitespace-nowrap px-4 py-3">
                                             <Skeleton className="h-4 w-14 tabular-nums" />
                                         </TableCell>
-                                        <TableCell className="max-w-[200px] px-4 py-3 text-left lg:max-w-[280px]">
-                                            <Skeleton className="h-4 w-[min(100%,14rem)] max-w-full" />
+                                        <TableCell className="max-w-50 px-4 py-3 text-left lg:max-w-70">
+                                            <Skeleton className="h-4 w-full max-w-56" />
                                         </TableCell>
                                         <TableCell className="px-4 py-3">
                                             <Skeleton className="h-4 w-20 tabular-nums" />
                                         </TableCell>
-                                        <TableCell className="hidden max-w-[10rem] truncate px-4 py-3 md:table-cell">
-                                            <Skeleton className="h-4 w-[min(100%,7rem)] max-w-full" />
+                                        <TableCell className="hidden max-w-40 truncate px-4 py-3 md:table-cell">
+                                            <Skeleton className="h-4 w-full max-w-28" />
                                         </TableCell>
-                                        <TableCell className="hidden max-w-[8rem] truncate px-4 py-3 md:table-cell">
+                                        <TableCell className="hidden max-w-32 truncate px-4 py-3 md:table-cell">
                                             <span className="inline-flex max-w-full items-center gap-1.5">
                                                 <Skeleton className="size-2 shrink-0 rounded-full" />
                                                 <Skeleton className="h-4 w-16 max-w-full" />
                                             </span>
                                         </TableCell>
-                                        <TableCell className="min-w-[5.5rem] px-4 py-3">
-                                            <Skeleton className="h-6 w-[4.5rem] rounded-full" />
+                                        <TableCell className="min-w-22 px-4 py-3">
+                                            <Skeleton className="h-6 w-18 rounded-full" />
                                         </TableCell>
-                                        <TableCell className="w-[5.25rem] px-3 py-3 pr-4">
+                                        <TableCell className="w-21 px-3 py-3 pr-4">
                                             <div className="flex items-center justify-start gap-1">
                                                 <Skeleton className="size-7 shrink-0 rounded-md" />
                                                 <Skeleton className="size-7 shrink-0 rounded-md" />
@@ -266,10 +266,10 @@ function EmbeddedTransactionsSkeleton({ rowCount = 8 }: { rowCount?: number }) {
                         </Table>
                     </div>
                     <CardNote className="flex-col gap-2.5 rounded-b-xl px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4">
-                        <Skeleton className="h-4 w-[min(100%,14rem)] max-w-full" />
+                        <Skeleton className="h-4 w-full max-w-56" />
                         <div className="flex items-center justify-between gap-3 sm:justify-end">
                             <Skeleton className="h-4 w-28 shrink-0 sm:mr-1" />
-                            <Skeleton className="h-9 w-[4.75rem] shrink-0 rounded-lg" />
+                            <Skeleton className="h-9 w-19 shrink-0 rounded-lg" />
                         </div>
                     </CardNote>
                 </CardContent>

@@ -64,8 +64,8 @@ function CategoriesToolbarSkeleton({ variant }: { variant: CategoriesPageSkeleto
                 aria-hidden
             >
                 <div className="flex h-full min-h-0 w-full gap-0.5 md:w-auto">
-                    <Skeleton className="h-[calc(100%-2px)] min-w-0 flex-1 rounded-md md:min-w-[4.25rem] md:flex-none" />
-                    <Skeleton className="h-[calc(100%-2px)] min-w-0 flex-1 rounded-md md:min-w-[4.25rem] md:flex-none" />
+                    <Skeleton className="h-[calc(100%-2px)] min-w-0 flex-1 rounded-md md:min-w-17 md:flex-none" />
+                    <Skeleton className="h-[calc(100%-2px)] min-w-0 flex-1 rounded-md md:min-w-17 md:flex-none" />
                 </div>
             </div>
 
@@ -78,7 +78,7 @@ function CategoriesToolbarSkeleton({ variant }: { variant: CategoriesPageSkeleto
                         <Skeleton className="size-8 shrink-0 rounded-md" />
                     </div>
                 ) : null}
-                <Skeleton className="h-8 w-[9.75rem] shrink-0 rounded-md" />
+                <Skeleton className="h-8 w-39 shrink-0 rounded-md" />
             </div>
         </div>
     )
@@ -112,7 +112,7 @@ function ExpenseCategoryCardSkeleton({ seed }: { seed: number }) {
 
                     <div className="col-start-2 row-start-1 flex min-w-0 flex-col gap-1.5 self-center pr-1">
                         <Skeleton className={cn("h-4 max-w-full", titleWidth)} />
-                        <Skeleton className="h-3 w-[min(100%,8.5rem)] max-w-full @min-[360px]/card-header:hidden" />
+                        <Skeleton className="h-3 w-full max-w-34 @min-[360px]/card-header:hidden" />
                     </div>
 
                     <div className="col-start-3 row-start-1 flex shrink-0 items-center justify-end gap-1.5 self-start">
@@ -127,7 +127,7 @@ function ExpenseCategoryCardSkeleton({ seed }: { seed: number }) {
                     <Skeleton className="mt-0.5 h-3 w-20 shrink-0 rounded-md" />
                 </div>
 
-                <Skeleton className="-mt-2 h-3 w-[min(100%,13.5rem)] max-w-full" />
+                <Skeleton className="-mt-2 h-3 w-full max-w-54" />
 
                 <div className="space-y-1">
                     <div className="flex items-center justify-between gap-2">
@@ -135,7 +135,7 @@ function ExpenseCategoryCardSkeleton({ seed }: { seed: number }) {
                         <Skeleton className="h-3 w-9 shrink-0" />
                     </div>
                     <Skeleton className="h-2 w-full rounded-full" />
-                    <Skeleton className="h-3 w-[min(100%,10rem)] max-w-full" />
+                    <Skeleton className="h-3 w-full max-w-40" />
                 </div>
             </CardContent>
         </CategoryCardShellSkeleton>

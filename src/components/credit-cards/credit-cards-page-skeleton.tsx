@@ -7,7 +7,7 @@ const DEFAULT_CARD_COUNT = 4
 export function CreditCardsHistoryChartSkeleton() {
     return (
         <div
-            className="flex aspect-video min-h-[240px] w-full items-center justify-center rounded-xl border border-border/80 bg-card"
+            className="flex aspect-video min-h-60 w-full items-center justify-center rounded-xl border border-border/80 bg-card"
             aria-hidden
         >
             <Skeleton className="h-40 w-full max-w-md rounded-lg" />
@@ -45,11 +45,11 @@ export function CreditCardsPageSkeleton({
                     aria-hidden
                 >
                     <div className="flex h-full min-h-0 w-full items-stretch gap-0.5 md:w-auto">
-                        <Skeleton className="h-8 flex-1 rounded-md md:h-7 md:min-w-[4.25rem] md:flex-none" />
-                        <Skeleton className="h-8 flex-1 rounded-md md:h-7 md:min-w-[4.25rem] md:flex-none" />
+                        <Skeleton className="h-8 flex-1 rounded-md md:h-7 md:min-w-17 md:flex-none" />
+                        <Skeleton className="h-8 flex-1 rounded-md md:h-7 md:min-w-17 md:flex-none" />
                     </div>
                 </div>
-                <Skeleton className="hidden h-8 min-w-[7.5rem] rounded-md md:inline-flex md:w-auto" />
+                <Skeleton className="hidden h-8 min-w-30 rounded-md md:inline-flex md:w-auto" />
             </div>
 
             {view === "history" ? (

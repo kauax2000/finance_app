@@ -57,7 +57,7 @@ function PrefRowSkeleton() {
         <div className="flex items-start justify-between gap-5 rounded-lg border border-border/80 bg-muted/20 p-3 sm:p-3.5">
             <div className="min-w-0 flex-1 space-y-1.5 pr-2">
                 <Skeleton className="h-4 w-40 max-w-full" />
-                <Skeleton className="h-3 w-[min(100%,14rem)]" />
+                <Skeleton className="h-3 w-full max-w-56" />
             </div>
             <Skeleton className="mt-0.5 h-6 w-11 shrink-0 rounded-full" />
         </div>

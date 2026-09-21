@@ -35,9 +35,9 @@ function ToolbarSkeleton() {
                     aria-hidden
                 >
                     <div className="flex h-full w-full min-h-0 items-center gap-0.5 px-0.5 md:w-auto">
-                        <Skeleton className="h-[calc(100%-2px)] min-w-0 flex-1 rounded-md md:min-w-[4.25rem] md:flex-none" />
-                        <Skeleton className="h-[calc(100%-2px)] min-w-0 flex-1 rounded-md md:min-w-[4.25rem] md:flex-none" />
-                        <Skeleton className="h-[calc(100%-2px)] min-w-0 flex-1 rounded-md md:min-w-[4.25rem] md:flex-none" />
+                        <Skeleton className="h-[calc(100%-2px)] min-w-0 flex-1 rounded-md md:min-w-17 md:flex-none" />
+                        <Skeleton className="h-[calc(100%-2px)] min-w-0 flex-1 rounded-md md:min-w-17 md:flex-none" />
+                        <Skeleton className="h-[calc(100%-2px)] min-w-0 flex-1 rounded-md md:min-w-17 md:flex-none" />
                     </div>
                 </div>
                 <Skeleton
@@ -50,12 +50,12 @@ function ToolbarSkeleton() {
                 <div className="flex min-w-0 max-w-full flex-1 flex-wrap items-center justify-end gap-2 md:flex-nowrap">
                     <div className="min-w-0 max-w-full flex-1 overflow-hidden">
                         <div className="flex min-w-0 flex-nowrap items-center justify-end gap-2">
-                            <Skeleton className="h-7 w-[4.75rem] shrink-0 rounded-full" />
-                            <Skeleton className="h-7 w-[6.25rem] shrink-0 rounded-full" />
+                            <Skeleton className="h-7 w-19 shrink-0 rounded-full" />
+                            <Skeleton className="h-7 w-25 shrink-0 rounded-full" />
                             <Skeleton className="h-7 w-20 shrink-0 rounded-full" />
                         </div>
                     </div>
-                    <Skeleton className="h-8 w-[5.75rem] shrink-0 rounded-md" />
+                    <Skeleton className="h-8 w-23 shrink-0 rounded-md" />
                 </div>
             </div>
         </div>
@@ -81,10 +81,10 @@ function MonthBandSkeletonRow() {
 function DataRowSkeleton({ seed }: { seed: number }) {
     const descW =
         seed % 3 === 0
-            ? "w-[min(100%,14rem)]"
+            ? "w-full max-w-56"
             : seed % 3 === 1
-              ? "w-[min(100%,11rem)]"
-              : "w-[min(100%,9rem)]"
+              ? "w-full max-w-44"
+              : "w-full max-w-36"
 
     return (
         <TableRow className="border-border/80">
@@ -94,23 +94,23 @@ function DataRowSkeleton({ seed }: { seed: number }) {
             <TableCell className="whitespace-nowrap px-4 py-3">
                 <Skeleton className="h-4 w-14 tabular-nums" />
             </TableCell>
-            <TableCell className="max-w-[160px] px-4 py-3 text-left sm:max-w-[200px] lg:max-w-[280px]">
+            <TableCell className="max-w-40 px-4 py-3 text-left sm:max-w-50 lg:max-w-70">
                 <Skeleton className={cn("h-4 max-w-full", descW)} />
             </TableCell>
             <TableCell className="px-4 py-3">
                 <Skeleton className="h-4 w-20 tabular-nums" />
             </TableCell>
-            <TableCell className="hidden max-w-[11rem] truncate px-4 py-3 md:table-cell">
-                <Skeleton className="h-4 w-[min(100%,7rem)] max-w-full" />
+            <TableCell className="hidden max-w-44 truncate px-4 py-3 md:table-cell">
+                <Skeleton className="h-4 w-full max-w-28" />
             </TableCell>
-            <TableCell className="hidden max-w-[8rem] truncate px-4 py-3 md:table-cell">
+            <TableCell className="hidden max-w-32 truncate px-4 py-3 md:table-cell">
                 <span className="inline-flex max-w-full items-center gap-1.5">
                     <Skeleton className="size-2 shrink-0 rounded-full" />
                     <Skeleton className="h-4 w-16 max-w-full" />
                 </span>
             </TableCell>
-            <TableCell className="min-w-[5.5rem] px-4 py-3">
-                <Skeleton className="h-6 w-[4.5rem] rounded-full" />
+            <TableCell className="min-w-22 px-4 py-3">
+                <Skeleton className="h-6 w-18 rounded-full" />
             </TableCell>
             <TableCell className="px-3 py-3 pr-4 text-left">
                 <div className="flex items-center justify-start gap-1">
@@ -141,13 +141,13 @@ function TableSkeleton({ rowCount }: { rowCount: number }) {
         <Card padding="none">
             <CardContent className="relative flex flex-col p-0">
                 <div className="min-w-0 overflow-hidden rounded-t-xl">
-                    <Table className="min-w-[640px] text-sm md:min-w-[700px]">
+                    <Table className="min-w-160 text-sm md:min-w-175">
                         <TableHeader variant="muted" sticky className="[&_tr]:border-b-0">
                             <TableRow className="border-0 [&>th]:border-b [&>th]:border-border">
                                 <TableHead className="w-10 px-2 py-0 md:w-11 md:px-3">
                                     <Skeleton className="mx-auto size-4 rounded-sm" />
                                 </TableHead>
-                                <TableHead className="h-11 w-[4.75rem] px-4 py-0 align-middle md:w-[5.5rem]">
+                                <TableHead className="h-11 w-19 px-4 py-0 align-middle md:w-22">
                                     <Skeleton className="h-3.5 w-8" />
                                 </TableHead>
                                 <TableHead className="h-11 px-4 py-0">
@@ -156,16 +156,16 @@ function TableSkeleton({ rowCount }: { rowCount: number }) {
                                 <TableHead className="h-11 px-4 py-0">
                                     <Skeleton className="h-3.5 w-10" />
                                 </TableHead>
-                                <TableHead className="hidden h-11 max-w-[11rem] px-4 py-0 md:table-cell">
+                                <TableHead className="hidden h-11 max-w-44 px-4 py-0 md:table-cell">
                                     <Skeleton className="h-3.5 w-24" />
                                 </TableHead>
                                 <TableHead className="hidden h-11 px-4 py-0 md:table-cell">
                                     <Skeleton className="h-3.5 w-16" />
                                 </TableHead>
-                                <TableHead className="h-11 min-w-[5.5rem] px-4 py-0">
+                                <TableHead className="h-11 min-w-22 px-4 py-0">
                                     <Skeleton className="h-3.5 w-8" />
                                 </TableHead>
-                                <TableHead className="h-11 w-[4.5rem] px-3 py-0 pr-4 text-left text-2xs font-semibold uppercase tracking-wider text-muted-foreground md:w-[5.25rem]">
+                                <TableHead className="h-11 w-18 px-3 py-0 pr-4 text-left text-2xs font-semibold uppercase tracking-wider text-muted-foreground md:w-21">
                                     <Skeleton className="h-3 w-10" />
                                 </TableHead>
                             </TableRow>
@@ -176,7 +176,7 @@ function TableSkeleton({ rowCount }: { rowCount: number }) {
                     </Table>
                 </div>
                 <CardNote className="flex-col gap-2.5 rounded-b-xl px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4">
-                    <Skeleton className="h-4 w-[min(100%,14rem)] max-w-full" />
+                    <Skeleton className="h-4 w-full max-w-56" />
                     <div className="flex items-center justify-between gap-3 sm:justify-end">
                         <Skeleton className="h-4 w-28 shrink-0 sm:mr-1" />
                         <div className="flex items-center rounded-lg border border-border/80 bg-background/80 p-0.5 shadow-sm">

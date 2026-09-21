@@ -72,7 +72,7 @@ function DashboardToolbarSkeleton() {
             <div className="flex w-full min-w-0 items-center justify-between gap-2 md:w-auto md:justify-end md:gap-1.5">
                 <Skeleton className="h-8 w-20 shrink-0 rounded-md" />
                 <Skeleton className="size-8 shrink-0 rounded-md" />
-                <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5 md:max-w-[16rem]">
+                <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5 md:max-w-64">
                     <Skeleton className="h-8 w-44 rounded-md" />
                 </div>
                 <Skeleton className="size-8 shrink-0 rounded-md" />
@@ -175,7 +175,7 @@ function CalendarMobileSkeleton() {
                                     className="flex items-center justify-between gap-2 rounded-lg border border-border/60 px-2 py-2"
                                 >
                                     <div className="flex min-w-0 flex-1 items-center gap-2">
-                                        <Skeleton className="h-4 max-w-[10rem] flex-1 rounded-md" />
+                                        <Skeleton className="h-4 max-w-40 flex-1 rounded-md" />
                                         <Skeleton className="h-5 w-14 shrink-0 rounded-full" />
                                     </div>
                                     <Skeleton className="h-4 w-16 shrink-0 rounded-md" />
@@ -205,10 +205,10 @@ function CalendarDesktopSkeleton() {
                                         className="flex items-center justify-between gap-2 rounded-lg border border-border/60 px-2 py-2"
                                     >
                                         <div className="flex min-w-0 flex-1 items-center gap-2">
-                                            <Skeleton className="h-4 max-w-[10rem] flex-1 rounded-md" />
+                                            <Skeleton className="h-4 max-w-40 flex-1 rounded-md" />
                                             <Skeleton className="h-5 w-14 shrink-0 rounded-full" />
                                         </div>
-                                        <Skeleton className="h-4 w-[4.25rem] shrink-0 rounded-md" />
+                                        <Skeleton className="h-4 w-17 shrink-0 rounded-md" />
                                     </div>
                                 ))}
                             </div>
@@ -218,7 +218,7 @@ function CalendarDesktopSkeleton() {
             </div>
             <div className="min-h-0 min-w-0 flex-1 p-4">
                 <div className="overflow-x-auto">
-                    <div className="min-w-[720px]">
+                    <div className="min-w-180">
                         <div className="mb-1 grid grid-cols-7 gap-1">
                             {WEEKDAY_KEYS.map((key) => (
                                 <div
@@ -272,8 +272,8 @@ function DashboardCategoriesSkeleton() {
             <CardSectionShell>
                 <CardSectionHeader />
                 <div className="space-y-4 p-4">
-                    <div className="relative mx-auto flex h-[240px] w-full max-w-[280px] items-center justify-center md:h-[320px] md:max-w-[360px]">
-                        <Skeleton className="aspect-square w-[min(100%,260px)] rounded-full md:w-[min(100%,320px)]" />
+                    <div className="relative mx-auto flex h-60 w-full max-w-70 items-center justify-center md:h-80 md:max-w-90">
+                        <Skeleton className="aspect-square w-full max-w-65 rounded-full md:max-w-80" />
                     </div>
                     <Skeleton className="h-3 w-40 max-w-full rounded-md" />
                     <ul className="m-0 list-none space-y-2 p-0" role="list">
@@ -283,7 +283,7 @@ function DashboardCategoriesSkeleton() {
                                     <div className="flex items-center justify-between gap-2">
                                         <div className="flex min-w-0 items-center gap-2">
                                             <Skeleton className="size-2 shrink-0 rounded-full" />
-                                            <Skeleton className="h-3 w-[min(100%,10rem)] rounded-md" />
+                                            <Skeleton className="h-3 w-full max-w-40 rounded-md" />
                                         </div>
                                         <div className="flex shrink-0 flex-col items-end gap-1">
                                             <Skeleton className="h-3 w-16 rounded-md" />
@@ -327,10 +327,10 @@ function DashboardInvoicesSkeleton() {
                             className="border-b border-border last:border-b-0"
                         >
                             <div className="flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-start sm:gap-4">
-                                <Skeleton className="aspect-[1.586] w-full min-w-0 shrink-0 rounded-2xl sm:w-[10.75rem] sm:max-w-[10.75rem]" />
+                                <Skeleton className="aspect-[1.586] w-full min-w-0 shrink-0 rounded-2xl sm:w-43 sm:max-w-43" />
                                 <div className="min-w-0 flex-1 space-y-3">
                                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                        <Skeleton className="h-4 w-[min(100%,12rem)] rounded-md" />
+                                        <Skeleton className="h-4 w-full max-w-48 rounded-md" />
                                         <Skeleton className="h-5 w-14 shrink-0 rounded-full" />
                                     </div>
                                     <Skeleton className="h-3 w-40 max-w-full rounded-md" />
@@ -341,13 +341,13 @@ function DashboardInvoicesSkeleton() {
                                                 <Skeleton className="h-7 w-28 rounded-md min-[480px]:ml-auto" />
                                             </div>
                                             <div className="space-y-1 border-t border-border/50 pt-3">
-                                                <Skeleton className="h-3 w-full max-w-[14rem] rounded-md" />
-                                                <Skeleton className="h-3 w-full max-w-[12rem] rounded-md" />
+                                                <Skeleton className="h-3 w-full max-w-56 rounded-md" />
+                                                <Skeleton className="h-3 w-full max-w-48 rounded-md" />
                                             </div>
                                         </div>
                                         <div className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-col sm:gap-2">
-                                            <Skeleton className="h-[3.25rem] min-w-0 rounded-md" />
-                                            <Skeleton className="h-[3.25rem] min-w-0 rounded-md" />
+                                            <Skeleton className="h-13 min-w-0 rounded-md" />
+                                            <Skeleton className="h-13 min-w-0 rounded-md" />
                                         </div>
                                     </div>
                                 </div>

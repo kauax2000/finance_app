@@ -204,7 +204,7 @@ export function CreditCardTileSkeleton() {
         <Card padding="none">
             <div className="flex items-start justify-between gap-3 border-b border-border/50 px-4 pb-3 pt-4">
                 <div className="min-w-0 flex-1 pr-2">
-                    <Skeleton className="h-4 w-[min(100%,14rem)]" />
+                    <Skeleton className="h-4 w-full max-w-56" />
                 </div>
                 <Skeleton className="h-5 w-14 shrink-0 rounded-full" />
             </div>
@@ -216,8 +216,8 @@ export function CreditCardTileSkeleton() {
                 <CardContent className="min-w-0 flex-1 space-y-3 border-0 p-0">
                     <div className="flex flex-col gap-2">
                         <div>
-                            <Skeleton className="h-2.5 w-[min(100%,11rem)] max-w-full" />
-                            <Skeleton className="mt-0.5 h-6 w-36 max-w-[min(100%,55%)] tabular-nums" />
+                            <Skeleton className="h-2.5 w-full max-w-44" />
+                            <Skeleton className="mt-0.5 h-6 w-36 max-w-[55%] tabular-nums" />
                         </div>
                     </div>
 
@@ -231,12 +231,12 @@ export function CreditCardTileSkeleton() {
                             <Skeleton className="h-3 min-w-0 flex-1 max-w-[min(100%,14rem)]" />
                             <Skeleton className="h-3 w-8 shrink-0 tabular-nums" />
                         </div>
-                        <Skeleton className="h-3 w-[min(100%,16rem)] max-w-full" />
+                        <Skeleton className="h-3 w-full max-w-64" />
                     </div>
 
                     <div className="space-y-1">
                         <div className="flex items-center justify-between gap-2">
-                            <Skeleton className="h-3 w-[min(100%,12rem)] max-w-[70%]" />
+                            <Skeleton className="h-3 w-48 max-w-[70%]" />
                             <Skeleton className="h-3 w-7 shrink-0 tabular-nums" />
                         </div>
                         <Skeleton className="h-1.5 w-full rounded-full" />

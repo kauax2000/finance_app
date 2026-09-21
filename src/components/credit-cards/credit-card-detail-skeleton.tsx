@@ -65,7 +65,7 @@ function SectionTitleRow({
                 </div>
                 <div className="flex shrink-0 items-center justify-end gap-1">
                     <Skeleton className="size-8 shrink-0 rounded-md" />
-                    <Skeleton className="h-8 w-[min(100%,9rem)] rounded-md" />
+                    <Skeleton className="h-8 w-full max-w-36 rounded-md" />
                     <Skeleton className="size-8 shrink-0 rounded-md" />
                 </div>
             </div>
@@ -82,10 +82,10 @@ function CategorySpendSectionSkeleton() {
     return (
         <section className="space-y-3 text-sm" aria-hidden>
             <Skeleton className="h-3 w-40 max-w-full rounded-sm" />
-            <div className="relative mx-auto flex h-[200px] w-full max-w-[260px] min-w-0 items-center justify-center sm:h-[220px] sm:max-w-[300px] md:h-[240px]">
-                <Skeleton className="size-[min(72vw,11rem)] shrink-0 rounded-full md:size-[13rem]" />
+            <div className="relative mx-auto flex h-50 w-full max-w-65 min-w-0 items-center justify-center sm:h-55 sm:max-w-75 md:h-60">
+                <Skeleton className="size-[min(72vw,11rem)] shrink-0 rounded-full md:size-52" />
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                    <div className="size-[min(42vw,6.5rem)] rounded-full bg-background md:size-[6.5rem]" />
+                    <div className="size-[min(42vw,6.5rem)] rounded-full bg-background md:size-26" />
                 </div>
             </div>
             <ul className="space-y-2">
@@ -97,7 +97,7 @@ function CategorySpendSectionSkeleton() {
                         <div className="flex min-w-0 items-center gap-2">
                             <Skeleton className="size-8 shrink-0 rounded-md sm:size-9" />
                             <div className="min-w-0 flex-1 space-y-1">
-                                <Skeleton className="h-4 w-[min(100%,10rem)] max-w-full" />
+                                <Skeleton className="h-4 w-full max-w-40" />
                                 <Skeleton className="h-3 w-24 max-w-full" />
                             </div>
                             <div className="flex shrink-0 items-center gap-1.5">
@@ -127,9 +127,9 @@ function InvoicePanelSkeleton() {
                         <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1.5">
                             <div className="min-w-0 flex-1 space-y-1">
                                 <Skeleton className="h-3 w-12" />
-                                <Skeleton className="h-9 w-[min(100%,11rem)] max-w-full tabular-nums md:h-10 md:w-44" />
+                                <Skeleton className="h-9 w-full max-w-44 tabular-nums md:h-10 md:w-44" />
                             </div>
-                            <Skeleton className="h-6 w-[4.5rem] shrink-0 rounded-full" />
+                            <Skeleton className="h-6 w-18 shrink-0 rounded-full" />
                         </div>
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                             <Skeleton className="h-3 w-28 max-w-full" />
@@ -178,7 +178,7 @@ function MorePeriodSummarySkeleton() {
             aria-hidden
         >
             <div className="flex items-center justify-between gap-2 px-4 py-3">
-                <Skeleton className="h-4 w-[min(100%,14rem)] max-w-full" />
+                <Skeleton className="h-4 w-full max-w-56" />
                 <Skeleton className="size-4 shrink-0 rounded-sm" />
             </div>
         </div>
@@ -205,10 +205,10 @@ function InstallmentsBlockSkeleton() {
                                 <CardToolbar>
                                     <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
                                         <div className="min-w-0 flex-1 space-y-1">
-                                            <Skeleton className="h-4 w-[min(100%,14rem)] max-w-full" />
+                                            <Skeleton className="h-4 w-full max-w-56" />
                                             <Skeleton className="h-3 w-32 max-w-full" />
                                         </div>
-                                        <Skeleton className="h-4 w-[4.75rem] shrink-0 tabular-nums" />
+                                        <Skeleton className="h-4 w-19 shrink-0 tabular-nums" />
                                     </div>
                                 </CardToolbar>
                                 <div className="space-y-2 px-3 py-3">
@@ -238,13 +238,13 @@ function RecentTransactionsSkeleton() {
                         {RECENT_TX_KEYS.map((key) => (
                             <div
                                 key={key}
-                                className="flex min-h-[44px] items-center gap-3 px-4 py-3"
+                                className="flex min-h-11 items-center gap-3 px-4 py-3"
                             >
                                 <div className="min-w-0 flex-1 space-y-1.5">
-                                    <Skeleton className="h-4 w-[min(100%,14rem)] rounded-md" />
+                                    <Skeleton className="h-4 w-full max-w-56 rounded-md" />
                                     <div className="flex items-center gap-1.5">
                                         <Skeleton className="h-4 w-4 shrink-0 rounded-full" />
-                                        <Skeleton className="h-3 w-[min(100%,18rem)] rounded-md" />
+                                        <Skeleton className="h-3 w-full max-w-72 rounded-md" />
                                     </div>
                                 </div>
                                 <div className="flex shrink-0 items-center gap-1">
@@ -262,7 +262,7 @@ function RecentTransactionsSkeleton() {
             <div className="hidden md:block">
                 <CardSectionShell>
                     <div className="overflow-x-auto">
-                        <Table className="min-w-[640px] text-sm md:min-w-[700px]">
+                        <Table className="min-w-160 text-sm md:min-w-175">
                             <TableHeader className="bg-muted/50">
                                 <TableRow className="border-0">
                                     <TableHead className="h-11 px-4 py-0">
@@ -292,7 +292,7 @@ function RecentTransactionsSkeleton() {
                                             <Skeleton className="h-4 w-14 rounded-md" />
                                         </TableCell>
                                         <TableCell className="px-4 py-3">
-                                            <Skeleton className="h-4 w-[min(100%,10rem)] max-w-full rounded-md" />
+                                            <Skeleton className="h-4 w-full max-w-40 rounded-md" />
                                         </TableCell>
                                         <TableCell className="px-4 py-3">
                                             <Skeleton className="h-4 w-20 rounded-md" />
@@ -332,14 +332,14 @@ export function CreditCardDetailSkeleton() {
                 <div className="mx-auto w-full max-w-sm">
                     <Skeleton className="aspect-[1.586] w-full rounded-2xl" />
                 </div>
-                <Skeleton className="h-8 w-[min(100%,16rem)] rounded-md" />
+                <Skeleton className="h-8 w-full max-w-64 rounded-md" />
             </div>
 
             <Card padding="none">
                 <CardHeader className="pb-3 pt-4">
                     <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0 flex-1">
-                            <Skeleton className="h-4 w-[min(100%,12rem)] max-w-full" />
+                            <Skeleton className="h-4 w-full max-w-48" />
                         </div>
                         <div className="flex shrink-0 items-center gap-1.5 pl-1">
                             <Skeleton className="h-5 w-14 shrink-0 rounded-full" />

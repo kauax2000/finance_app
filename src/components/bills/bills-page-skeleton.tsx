@@ -16,8 +16,8 @@ function ToolbarSkeleton() {
                 )}
             >
                 <div className="flex h-full w-fit min-h-0 items-center gap-0.5 px-0.5">
-                    <Skeleton className="h-[calc(100%-2px)] w-[4.75rem] shrink-0 rounded-md" />
-                    <Skeleton className="h-[calc(100%-2px)] w-[5.5rem] shrink-0 rounded-md" />
+                    <Skeleton className="h-[calc(100%-2px)] w-19 shrink-0 rounded-md" />
+                    <Skeleton className="h-[calc(100%-2px)] w-22 shrink-0 rounded-md" />
                 </div>
             </div>
             <div className="ml-auto flex min-w-0 shrink-0 flex-wrap items-center justify-end gap-2">
@@ -26,9 +26,9 @@ function ToolbarSkeleton() {
                     <Skeleton className="size-10 shrink-0 rounded-[min(var(--radius-md),12px)]" />
                 </div>
                 <div className="hidden shrink-0 md:flex md:flex-wrap md:items-center md:gap-2">
-                    <Skeleton className="h-8 w-[7.5rem] rounded-md" />
-                    <Skeleton className="h-8 w-[6.5rem] rounded-md" />
-                    <Skeleton className="h-8 w-[7.5rem] rounded-md" />
+                    <Skeleton className="h-8 w-30 rounded-md" />
+                    <Skeleton className="h-8 w-26 rounded-md" />
+                    <Skeleton className="h-8 w-30 rounded-md" />
                 </div>
             </div>
         </div>
@@ -38,10 +38,10 @@ function ToolbarSkeleton() {
 function CardSkeleton({ seed }: { seed: number }) {
     const titleW =
         seed % 3 === 0
-            ? "w-[min(100%,11rem)]"
+            ? "w-full max-w-44"
             : seed % 3 === 1
-              ? "w-[min(100%,8rem)]"
-              : "w-[min(100%,6rem)]"
+              ? "w-full max-w-32"
+              : "w-full max-w-24"
     return (
         <Card padding="none" className="ring-1 ring-border/60">
             <div className="flex items-start justify-between gap-3 border-b border-border/50 px-4 pb-3 pt-4">
@@ -49,7 +49,7 @@ function CardSkeleton({ seed }: { seed: number }) {
                     <Skeleton className="size-10 shrink-0 rounded-xl" />
                     <div className="min-w-0 flex-1 space-y-1.5">
                         <Skeleton className={cn("h-4 max-w-full", titleW)} />
-                        <Skeleton className="h-3 w-[min(100%,10rem)] max-w-full" />
+                        <Skeleton className="h-3 w-full max-w-40" />
                     </div>
                 </div>
                 <Skeleton className="h-6 w-16 shrink-0 rounded-full" />
@@ -58,11 +58,11 @@ function CardSkeleton({ seed }: { seed: number }) {
                 <div>
                     <Skeleton className="h-3 w-24" />
                     <Skeleton className="mt-2 h-7 w-28 tabular-nums" />
-                    <Skeleton className="mt-2 h-3 w-[min(100%,14rem)] max-w-full" />
+                    <Skeleton className="mt-2 h-3 w-full max-w-56" />
                 </div>
             </CardContent>
             <div className="flex items-center justify-end gap-2 border-t border-border/50 px-4 py-3">
-                <Skeleton className="h-8 w-[5.5rem] rounded-md" />
+                <Skeleton className="h-8 w-22 rounded-md" />
                 <Skeleton className="size-8 shrink-0 rounded-md" />
             </div>
         </Card>
