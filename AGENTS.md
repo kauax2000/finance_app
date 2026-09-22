@@ -587,11 +587,21 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   `InputGroup` vestem, mais a **altura com o piso de toque** e o **recuo** — e
   [`command-filter`](src/lib/command-filter.ts) — a busca por substring sem
   acento, graduada, que a paleta do catálogo e o `Combobox` dividem — e
-  [`bar-classes`](src/lib/bar-classes.ts), a superfície de **barra**: a
-  terceira régua de vidro da casa, ao lado de `menu-classes` (a flutuante) e
-  `modal-classes` (a modal). Só a veste quem tem conteúdo passando por baixo —
-  o cabeçalho fixo do catálogo e a fileira `outline` do `Menubar`. **Nada de
-  `cva` nesses arquivos**: a regra A2 do auditor o reprova fora de
+  [`bar-classes`](src/lib/bar-classes.ts), a superfície de **barra**. As
+  superfícies de vidro são três e as **tintas são duas**: `bar-classes` serve a
+  barra **e** a flutuante — `menuPanelTintClassName` é um **alias** dela —, e
+  `modal-classes` é a modal (`--background`, 85/40: mais aberta, porque pousa
+  sobre um véu). A flutuante era `--popover` a 85/60 e **não se via**:
+  `--popover` e `--card` são a mesma cor nos dois temas, então a placa sobre um
+  cartão dava delta **0** em RGB — medido com um `Select` aberto. Com a tinta
+  da barra o delta vai a **24** no escuro e 9 no claro, o `--muted-foreground`
+  **sobe** de 6,94 para 7,42 e o realce do item de 27 para 42. O pior caso da
+  rodada é **4,54** (claro, sem `backdrop-filter`, sobre cartão), e é o que
+  reprova primeiro se alguém subir o alfa base. O teto não mudou: sobre a
+  página nua, sem conteúdo atrás, a placa volta a delta 0 — borrar cor chapada
+  não desenha nada. A seta do `HoverCard` é o **único** espelho manual da
+  receita (`fill-*` não é `background`), e `glass.test.ts` compara os dois.
+  **Nada de `cva` nesses arquivos**: a regra A2 do auditor o reprova fora de
   `components/ui/`.
 - **Cor escolhida pela pessoa**: [`ColorTile`](src/components/ui/color-tile.tsx) para o ladrilho que carrega `categories.color`, `bills.color` ou a marca de um workspace. Se a cor vem do tema e não do banco, é o componente errado — use `bg-muted` ou um `Badge`. **É a construção do `AvatarFallback`**: superfície chapada com a cor, tinta escura por cima, **um valor só nos dois temas**. O que separa os dois é a forma e quem escolhe — o avatar é redondo e o sistema sorteia uma das seis identidades; o ladrilho é de canto arredondado e quem escolhe é a pessoa. **A claridade é do sistema; o matiz é da pessoa**: a superfície é `oklch(from var(--tile-color) 0.86 min(c, 0.12) h)`, e com a tinta em `--identity-foreground` qualquer cor de runtime cai entre **10,63 e 11,74** — a faixa das seis identidades (10,17–12,12). Preto, branco e cinza chegam neutros. **A cor não entra crua, e isso é medido**: chapando a parada da marca como ela é, índigo dá 3,55, violeta 3,21 e magenta 4,09 com tinta escura, e âmbar 1,94, lima 1,83, teal 2,23 e azul 2,42 com tinta branca — nenhuma tinta única serve as oito. Sem o teto de croma, o magenta cai a 7,70 e oito ladrilhos deixam de ler como uma família. `scripts/tile-contrast.mjs` é a guarda: 96 células, piso 4,5, pior caso **10,64**. **A paleta que a pessoa escolhe é a da marca** — `TILE_PALETTE` em [`lib/tile-palette.ts`](src/lib/tile-palette.ts), os oito matizes do arco-íris na banda da identidade, servindo categoria **e** carteira; eram duas listas de hexadecimais crus do Tailwind (dez e doze). `tileColorFor` dobra na leitura os 22 presets legados, sem escrever no banco, no precedente de `identityToneFor`; o que a pessoa digitou no seletor livre atravessa intacto. **Uma versão só**: saíram o verniz, o eixo `glass`, o véu de 12%/18%, o fio e o par por tema. **A escada fala os nomes do sistema**: `md` 32 · `lg` 36 · `xl` 40 · `2xl` 44, e só o `2xl` alcança o alvo de toque. **E quem manda no corpo do ícone é o degrau**: `[&>svg]:size-4` é seletor de descendente (0,1,1) e vence qualquer classe no próprio `svg` (0,1,0) — medido, um `size-5` no ícone computa 16px.
 - **Alerts / tabs / forms**: [`Alert`](src/components/ui/alert.tsx), [`Tabs`](src/components/ui/tabs.tsx), [`Textarea`](src/components/ui/textarea.tsx), [`ScrollArea`](src/components/ui/scroll-area.tsx), [`Toggle` / `ToggleGroup`](src/components/ui/toggle.tsx), [`Slider`](src/components/ui/slider.tsx), [`Radio` / `RadioGroup`](src/components/ui/radio-group.tsx) (a forma curta é `FormRadioGroup`), [`Pagination`](src/components/ui/pagination.tsx), [`Collapsible`](src/components/ui/collapsible.tsx), [`Breadcrumb`](src/components/ui/breadcrumb.tsx), [`ChartContainer` + chart helpers](src/components/ui/chart.tsx) for Recharts.

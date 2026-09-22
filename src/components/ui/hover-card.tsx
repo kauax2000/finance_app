@@ -173,7 +173,7 @@ function HoverCardContent({
  * num fio de 10% de alfa e um traço a mais dentro da seta, a interrupção é a que
  * ninguém enxerga.
  *
- * `fill-popover` e não `bg-popover`: quem pinta um triângulo vetorial é o
+ * `fill-background` e não `bg-background`: quem pinta um triângulo vetorial é o
  * `fill`. É a razão de a seta não ter virado um quadrado girado 45°, que é a
  * receita comum — ali o preenchimento é fundo, mas a geometria passa a ser
  * inventada e a rotação precisa de um deslocamento arbitrário para esconder a
@@ -192,8 +192,11 @@ function HoverCardArrow({
       height={height}
       className={cn(
         // A seta é a ponta da placa: com a placa translúcida, um triângulo opaco
-        // saía mais escuro que ela. Os alfas são os de `menuPanelSurfaceClassName`.
-        "fill-popover/85 supports-backdrop-filter:dark:fill-popover/60 reduced-transparency:fill-popover",
+        // saía mais escuro que ela. Os alfas são os de `menuPanelSurfaceClassName`,
+        // espelhados à mão porque `fill` não é `background` — este é o **único**
+        // lugar que repete a receita fora da régua, e o que a mantém honesta é
+        // a asserção do `glass.test.ts` que compara os dois.
+        "fill-background/95 supports-backdrop-filter:fill-background/60 reduced-transparency:fill-background",
         className,
       )}
       {...props}

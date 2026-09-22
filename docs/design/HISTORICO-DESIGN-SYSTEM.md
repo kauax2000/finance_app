@@ -11994,3 +11994,78 @@ caixa e trocar `after:-inset-3.5` por `-inset-2` derrubam uma asserção cada.
 **Fora de escopo:** o `Switch` tem a mesma anatomia e receberia a receita sem
 alteração; não foi pedido.
 
+### Rodada 104 — o vidro da placa flutuante estava certo e invisível
+
+**O pedido.** "O dropdown do `Select` não está transparente como os outros
+overlays." Depois, no meio da investigação: "quero que ele fique igual o
+background do header com efeito glass, e transparente."
+
+**A premissa não se sustentava no fonte, e a medição disse por quê.**
+`select.tsx` vestia `menuPanelSurfaceClassName` — byte a byte a mesma constante
+de `Popover`, `Tooltip` e `HoverCard` —, e a asserção 25 do `glass.test.ts`
+proíbe que ele divirja. Medido ao vivo: `backdrop-filter: blur(24px)
+saturate(1.5)` ligado, fundo `oklab(0.205 0 0 / 0.6)`, e **nenhum ancestral
+criando um backdrop root** (a velha teoria de que o `popper` do Radix mataria o
+borrão não é o que acontece — o wrapper tem `transform`, que sozinho não cria
+backdrop root).
+
+A causa é aritmética, e a rodada 51 já a tinha diagnosticado e arquivado: o que
+está pintado atrás do painel é um `Card` em `oklch(0.205 0 0)`, e `--popover`
+**é** `oklch(0.205 0 0)`. Sessenta por cento de uma cor sobre ela mesma é ela
+mesma — delta **0** em RGB. No claro o mesmo, com os dois em branco puro.
+
+**A saída já estava escrita na casa, para outra peça.** `bar-classes` diz da
+barra: *"no tema escuro `--popover` e `--card` são a mesma cor: uma barra
+`--popover` pousada num cartão sumiria. Quem define uma barra é o contraste
+contra a superfície em que ela pousa, e não a elevação."* Uma placa flutuante
+pousa em cartão exatamente como uma barra pousa. `menuPanelTintClassName` virou
+um **alias** de `barSurfaceClassName` — alias e não cópia, porque este
+repositório já pagou a quarta cópia da mesma forma.
+
+**Os números, placa sobre um `Card` real:**
+
+| | escuro antes | escuro | claro antes | claro |
+| --- | --- | --- | --- | --- |
+| delta RGB vs. cartão (vidro) | 0 | **24** | 0 | **9** |
+| delta RGB vs. cartão (fallback 95%) | — | 36 | — | 15 |
+| `--muted-foreground` | 6,94 | **7,42** | 4,74 | 4,62 |
+| texto do painel | 17,18 | 18,36 | 19,80 | 19,30 |
+| realce do item (`accent/60`) | 27 | **42** | 42 | 36 |
+
+No escuro **tudo melhora**, inclusive o realce do item. O pior caso da rodada é
+**4,54** — claro, sem `backdrop-filter`, sobre cartão —, e é o número que
+reprova primeiro se alguém subir o alfa base. Confirmado na tela: a placa compõe
+`rgb(15,15,15)` contra o cartão em `rgb(23,23,23)`.
+
+**Duas mudanças de forma vieram junto.** A barra abre nos dois temas e a
+flutuante abria só no escuro, então **o ramo `dark:` saiu** — o claro ganha
+pouco (delta 9) e isso é dito em vez de escondido. E `text-popover-foreground`
+virou `text-foreground`: zero pixel (os dois tokens têm o mesmo valor nos dois
+temas) e a placa deixou de vestir `--popover`, então nomeá-lo apontaria para o
+token errado.
+
+**A saída que não foi tomada.** Antes do segundo pedido, o caminho desenhado era
+**subir `--popover`** no escuro (0,205 → 0,24, delta 15). Ele foi abandonado por
+ser pior de duas formas: mexe num token que o toast do sonner
+(`--normal-bg: var(--popover)`) e quatro tooltips de gráfico também leem, e no
+claro não tinha para onde subir — `--popover` já é branco puro, e descer a placa
+para `oklch(0.975)` derruba o `--muted-foreground` para 4,46, abaixo do piso.
+Trocar quem veste o token, em vez de mover o token, não toca em nenhum dos dois.
+
+**O teto continua o mesmo, e é honesto dizê-lo:** aberta sobre a página nua, sem
+conteúdo atrás, a placa volta a delta 0 — `--background` sobre `--background`. É
+o teto do cabeçalho, e a lei que `globals.css` já escreve: borrar cor chapada
+não desenha nada.
+
+**A rede.** A asserção 23 era parametrizada por token e assumia que as duas
+réguas tinham ramo `supports-backdrop-filter:dark:`; a flutuante deixou de ter.
+Ela passou a cobrir **as duas tintas** (barra e modal) e a afirmar que
+`menuPanelTintClassName === barSurfaceClassName`. A 23b é nova e guarda o único
+espelho manual da receita: a seta do `HoverCard`, que se pinta com `fill` e não
+com `background` — medido depois da troca, seta e placa saem na mesma cor.
+
+**Ficou por fazer:** os tooltips de gráfico (`chart.tsx` mais três cópias em
+`credit-cards/` e `dashboard/`) usam `bg-popover` **opaco**, flutuam sobre
+gráficos dentro de cartões e sofrem exatamente o mesmo delta 0 — depois desta
+rodada são as únicas superfícies flutuantes com a tinta antiga.
+

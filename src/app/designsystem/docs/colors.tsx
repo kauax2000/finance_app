@@ -156,8 +156,8 @@ export default function ColorsDoc() {
         <code>--brand-rainbow</code> é o degradê, <strong>parado</strong>, interpolado <code>in oklch shorter hue</code> — em sRGB o matiz corria 4× mais rápido na travessia magenta→coral, e era ela o fio que cortava o campo. O movimento é a <code>@utility brand-lava</code>, a faixa acima. Arco-íris <strong>sob texto</strong> é a invariante 3 com oito cores de uma vez: oito matizes não têm um contraste só. O <code>Button</code> e o <code>Badge variant=&quot;brand&quot;</code> escapam porque neles o degradê vive num contorno de 1px e num halo atrás, nunca sob o rótulo. E a lima <strong>não é o verde de estado</strong>: <code>success</code>, <code>income</code> e <code>chart-1</code> ficam em 152, ela em 130.
       </DocNote>
 
-      <DocNote title="Popover tem a cor do card; o que os separa é a elevação">
-        <code>--popover</code> e <code>--card</code> valem o mesmo nos dois temas: o popover se destaca pela sombra e pelo anel, não por ser mais claro.
+      <DocNote title="Popover tem a cor do card — e por isso a placa flutuante não o veste">
+        <code>--popover</code> e <code>--card</code> valem o mesmo nos dois temas, e foi isso que deixou o vidro invisível: uma placa de <code>--popover</code> a 60% sobre um cartão é aritmeticamente idêntica a uma opaca — medido, delta <strong>0</strong> em RGB, com um <code>Select</code> aberto sobre o cartão de preview. A superfície flutuante passou a vestir a tinta da barra (<code>--background</code>), que é a mesma resposta que <code>bar-classes</code> já dava: quem define uma placa é o contraste contra a superfície em que ela pousa, e não a elevação. Delta 24 no escuro e 9 no claro, com o <code>--muted-foreground</code> subindo de 6,94 para 7,42. Os dois tokens continuam iguais — o que mudou é quem os veste; <code>--popover</code> hoje serve o toast e os tooltips de gráfico.
       </DocNote>
 
       <DocNote title="--primary preenche; --primary-accent é marca sobre o fundo">
