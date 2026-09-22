@@ -1569,6 +1569,33 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   medição: **a razão da WCAG é só de luminância**, e um matiz saturado sobre
   cinza neutro tem contraste cromático que a fórmula não vê — o que explica a
   discordância entre o número e o olho, sem anulá-la.
+  **O `Slider variant="brand"` é a mesma família e ancora igual — mas por
+  medição.** O arco-íris tem a largura do **trilho** e fica atrás; a faixa
+  ativa é a janela que o revela, então em 8% vê-se só o teal e a marca só fica
+  completa com a barra cheia. **A conta do `Progress`
+  (`background-size: 10000 / pct`) continua não transplantando**: ela exige
+  saber a porcentagem no render, e um slider costuma ser `defaultValue` — o
+  valor congelaria no inicial e erraria no primeiro arraste; a posição da faixa
+  também não é legível em CSS, porque o Radix escreve `left`/`right` inline.
+  **A saída é medir a caixa renderizada**, o padrão do marcador do `Tabs`: o
+  trilho publica `--slider-rainbow-w/h/x/y` (as de posição já negadas), lidas
+  por classe, com `ResizeObserver` no trilho e na faixa mais um
+  `MutationObserver` em `style` — que é o que pega a faixa **andando sem mudar
+  de tamanho** num slider de intervalo. `offsetLeft` relativo ao trilho, nunca
+  `getBoundingClientRect`. Os `var()` levam fallback `100%`: antes da primeira
+  medição, e sem JS, o degradê preenche a faixa — **degrada** em vez de derrubar
+  a declaração. A versão que escalava à faixa foi recusada na tela: com a faixa
+  curta, oito paradas em poucos pixels leem como ruído. **Dois desvios ficam, e
+  os dois são de ordem de cor e não de ancoragem**: em `vertical` o Radix
+  preenche de baixo para cima contra um degradê de 135° fixo, então o valor
+  baixo revela a lima; `inverted` e `dir="rtl"` são a mesma classe. O
+  trilho é o mesmo `--input-fill` dos dois, e por isso os números do claro
+  coincidem — **pior caso 1,42 na lima, cinco paradas abaixo de 3:1**; no
+  escuro, trilho compositado em `rgb(58,58,58)`, as oito passam (pior caso
+  **3,40** no violeta). **Nota de método que custou uma medição errada:** no
+  escuro `--input-fill` é `oklch(1 0 0 / 15%)`, translúcido, e medir contra o
+  token cru acusa seis reprovações falsas — ele tem de ser compositado sobre a
+  superfície de baixo antes da razão.
   **`income`/`expense` desenham o mesmo pixel que `success`/`destructive`** no
   preenchimento: `--income` é `var(--success)` e `--expense` é
   `var(--destructive)`, e o que separa dinheiro de estado são as superfícies

@@ -12069,3 +12069,149 @@ com `background` — medido depois da troca, seta e placa saem na mesma cor.
 gráficos dentro de cartões e sofrem exatamente o mesmo delta 0 — depois desta
 rodada são as únicas superfícies flutuantes com a tinta antiga.
 
+### Rodada 105 — o slider de marca, e a receita do `Progress` que não transplanta
+
+**O pedido.** "Crie um slider brand."
+
+**O eixo é um só e mora na faixa.** `sliderRangeVariants` (`default` | `brand`)
+é o primeiro `cva` do arquivo, então `ds:catalog` passa a mostrar o eixo; o
+trilho e o punho não mudam. Nenhum token novo, nenhuma linha em `globals.css` —
+`@utility brand-rainbow-image` já existia.
+
+**O arco-íris é da faixa, e não do trilho — e a razão é dupla.** O
+`Progress variant="brand"` ancora o degradê no trilho escalando
+`background-size` por `10000 / pct`, e é isso que faz "completar a barra
+completar a marca". Aqui a receita não serve:
+
+1. **Mecânica.** O `Progress` é sempre controlado e sabe a porcentagem no
+   render. Um `Slider` costuma ser **não controlado** (`defaultValue`), e um
+   `background-size` calculado congelaria no valor inicial e erraria no primeiro
+   arraste. A posição da faixa também não é legível em CSS: o Radix escreve
+   `left`/`right` **inline**, em porcentagem do trilho, e nenhuma dessas medidas
+   chega a uma classe. Verificado como impossível sem estado: não há caminho
+   CSS-only que ancore o degradê no trilho.
+2. **Semântica.** "Completar a barra completa a marca" só quer dizer algo onde
+   há um fim — progresso vai de 0 a 100 e terminar é um evento. Um slider é um
+   **ajuste**: não há "completo", e quem informa o valor é a posição do punho.
+
+O custo aceito é que a cor não codifica o valor — num campo de entrada isso é
+correto, e não uma perda. **A alternativa foi considerada e descartada por
+medição de tela**, não por argumento: a dúvida era o valor baixo, onde oito
+paradas se comprimiriam em poucos pixels. Renderizado em 8, 25, 50 e 100% mais
+um intervalo, o 8% sai como uma lasca teal-azul limpa, não como ruído.
+
+**A divergência da 1.4.11 foi medida nesta peça, não herdada de papel.** O
+trilho é `--input-fill`, o mesmo token do `Progress`:
+
+| tema | trilho compositado | pior caso | reprovam 3:1 |
+| --- | --- | --- | --- |
+| escuro | `rgb(58,58,58)` | **3,40** (violeta) | **zero** |
+| claro | `rgb(222,222,222)` | **1,42** (lima) | **cinco** |
+
+As cinco do claro são lima 1,42, âmbar 1,51, teal 1,73, azul 1,87 e coral 2,53
+— **idênticas às que o `Progress` registrou**, o que é a confirmação de que os
+dois dividem o trilho. O leito preto que resolveria já foi recusado na tela no
+`Progress`, e recusá-lo aqui é a mesma decisão: uma peça que destoa das vizinhas
+não é o desenho.
+
+**Uma medição errada que vale guardar.** No tema escuro `--input-fill` é
+`oklch(1 0 0 / 15%)` — **translúcido**. A primeira leitura mediu as paradas
+contra o token cru e acusou **seis** reprovando no escuro, o que contradizia o
+`Progress`. O trilho tem de ser compositado sobre a superfície de baixo antes da
+razão; feito isso, nenhuma reprova. Quando um número novo contradiz um registro
+antigo da mesma peça, o instrumento é o primeiro suspeito — é a terceira vez que
+esta casa paga essa lição.
+
+**A rede.** `brand-contour.test.ts` ganhou a asserção 8, para a família do
+**preenchimento**: as duas peças declaram `brand-rainbow-image` (é ela que
+publica `--brand-rainbow`; sem ela o `bg-(image:…)` cai para `none` e a faixa
+fica transparente, sem erro nenhum), dividem `bg-input-fill`, e o `Slider`
+**não** pode conter a conta do `Progress` (`10000`, `backgroundSize`). Verificado
+por mutação: tirar `brand-rainbow-image` da variante derruba a asserção.
+
+**Ficou por fazer:** o punho não veste marca — ele continua
+`border-primary-accent/50`, e sobre uma faixa de arco-íris isso lê limpo. Dar-lhe
+o contorno de marca seria a segunda peça de marca no mesmo componente, e é
+decisão de desenho, não de implementação.
+
+### Rodada 106 — o arco-íris do slider vai para trás do trilho
+
+**O pedido.** *"Ajuste para que o Rainbow fique atrás, ocupando toda a largura.
+o que está ativo no slider só mostra o rainbow que está atrás porque senão, por
+exemplo, quando fica curto ou pequeno o slider, ele mostra todas as cores e
+fica estranho."*
+
+**A rodada 105 estava certa sobre um mecanismo e errada sobre a saída.** Ela
+registrou que a receita do trilho do `Progress` "não transplanta", e a parte
+verdadeira continua verdadeira: **recalcular pelo `value` não serve**, porque o
+`Progress` é sempre controlado e um slider costuma ser `defaultValue` — um
+`background-size` calculado no render congelaria no valor inicial e erraria no
+primeiro arraste. O erro foi concluir daí que a **leitura** não era possível. A
+saída é **medir a caixa renderizada** em vez de recalcular, que é o padrão que
+esta casa já tinha em três lugares (o marcador do `Tabs`, o `useScrollFade`, o
+`--collapsible-full`) e que a própria 105 citou sem usar.
+
+A razão semântica que a 105 também deu — "um slider é ajuste, não há completo,
+então a cor não precisa acompanhar o valor" — **caiu por decisão do dono**, e é
+o tipo de argumento que só se sustenta enquanto ninguém olha a tela: com a faixa
+curta, as oito paradas comprimidas em poucos pixels leem como ruído colorido.
+
+**Sem JavaScript não há caminho, e foi verificado por eliminação** (três vezes,
+ao longo de duas rodadas): o arco-íris no `Track` com a faixa transparente
+pinta também a parte **não** preenchida, e não há elemento que cubra o
+complemento; um `::before` da faixa tem a **própria faixa** como bloco
+contentor, não o trilho; um `overflow-hidden` na faixa não recorta um absoluto
+ancorado acima dela na cadeia de bloco contentor; e um `background-size` fixo em
+`rem` deixa trilho sem pintura num slider largo (com `repeat`, ladrilha). O
+Radix escreve `left`/`right` **inline**, e CSS não lê o valor de outra
+propriedade.
+
+**A medição.** O trilho publica quatro variáveis, as de posição **já negadas**
+para a classe ser um `var()` puro em vez de um `calc()` com sinal:
+`--slider-rainbow-w/h` (a própria caixa) e `--slider-rainbow-x/y` (o
+deslocamento da faixa). `offsetLeft`/`offsetTop` **relativos ao trilho**, e não
+`getBoundingClientRect` — a regra que o `Tabs` já trancava, porque com a página
+rolada o retângulo do viewport escorrega. Dois observadores, cobrindo coisas
+diferentes: `ResizeObserver` no trilho **e** na faixa (janela, fonte, a faixa
+crescendo) e `MutationObserver` em `style` na faixa, que é o único que pega a
+faixa **andando sem mudar de tamanho** — o caso do slider de intervalo. O efeito
+é condicionado a `variant === "brand"`: um slider comum não ganha observador
+nenhum.
+
+**Os fallbacks são carga estrutural, não zelo.** `var(--slider-rainbow-w,100%)`
+faz o degradê preencher a faixa antes da primeira medição e sem JavaScript — a
+peça **degrada para a versão da rodada 105** em vez de derrubar a declaração. É
+a mesma garantia que a rampa do `Command` explora ("uma variável indefinida
+derruba a propriedade para `none` — desliga o fade em vez de apagar o
+componente") e a mesma postura do `Tabs`, que sem JS ainda pinta o gatilho ativo.
+
+**Medido na tela, num trilho de 384px:**
+
+| valor | faixa | `background-size` | `background-position-x` |
+| --- | --- | --- | --- |
+| 8% | 31px | **384px** | 0px |
+| 25% | 96px | **384px** | 0px |
+| 100% | 384px | **384px** | 0px |
+| 30–75% | 173px, offset 115 | **384px** | **−115px** |
+
+O `background-size` é a largura do **trilho** em todos, e não a da faixa. No
+slider **não controlado**, mover pelo teclado levou a faixa de 96 para 100px com
+o tamanho **constante** em 384px — que é exatamente o que uma versão baseada em
+`value` erraria. No de intervalo, o punho de baixo indo de 30 para 31 levou o
+offset de 115 a 119 e a âncora acompanhou para −119px. Em 375px de janela o
+trilho cai para 293px e o `background-size` segue: o `ResizeObserver` dispara.
+
+**Dois desvios ficam nomeados, e os dois são de ordem de cor e não de
+ancoragem.** Num slider **vertical** o Radix preenche de baixo para cima contra
+um `linear-gradient(135deg)` fixo, então o valor baixo revela a **lima** (o fim
+do degradê) e não o teal; `inverted` e `dir="rtl"` são a mesma classe de desvio.
+A ancoragem continua correta nos três, porque é medida e não deduzida do valor.
+`orientation="vertical"` não tem consumidor no app.
+
+**A rede.** A asserção 8 de `brand-contour.test.ts` mudou de forma: saiu o
+`not.toMatch(/backgroundSize/)` (a peça agora **precisa** ancorar) e entraram as
+quatro variáveis **com fallback**, o `bg-no-repeat`, o `offsetLeft` sem
+`getBoundingClientRect`, os dois observadores e o `variant !== "brand"` que
+isenta o slider comum. Verificado por mutação: tirar o `MutationObserver` e
+tirar o fallback de uma `var()` derrubam uma asserção cada.
+

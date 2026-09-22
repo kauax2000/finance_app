@@ -7,6 +7,7 @@ import { buttonVariants } from "./button"
 import { checkboxVariants } from "./checkbox"
 import { radioVariants } from "./radio"
 import { radioGroupItemVariants } from "./radio-group"
+import { sliderRangeVariants } from "./slider"
 
 /**
  * O contorno de marca, e o que ele não pode virar.
@@ -178,5 +179,61 @@ describe("contorno de marca", () => {
     ]) {
       expect(fonte(nome), nome).not.toMatch(/--brand-|brand-rainbow/)
     }
+  })
+
+  it("8. a família do preenchimento — `Progress` e `Slider` — declara a variável", () => {
+    // Estas duas não desenham contorno: o arco-íris **preenche**, e o que as
+    // liberta da invariante 3 é não haver rótulo em cima. O modo de quebrar
+    // calado é outro e é o mesmo dos dois: apagar `brand-rainbow-image` por
+    // parecer decoração. É ela que declara `--brand-rainbow` no elemento — sem
+    // ela `bg-(image:--brand-rainbow)` cai para `none` e a faixa fica
+    // transparente, sem erro nenhum.
+    const faixa = sliderRangeVariants({ variant: "brand" })
+    expect(faixa.split(/\s+/)).toContain("brand-rainbow-image")
+    expect(faixa).toContain("bg-(image:--brand-rainbow)")
+    // O `default` não veste marca nenhuma.
+    expect(sliderRangeVariants({ variant: "default" })).not.toMatch(/brand/)
+    // E o `Progress` continua na mesma receita.
+    expect(fonte("progress")).toContain("brand-rainbow-image")
+
+    // O trilho é o **mesmo token** nos dois, e é isso que faz os números do
+    // claro coincidirem (pior caso 1,42 na lima, cinco paradas abaixo de 3:1).
+    for (const nome of ["progress", "slider"]) {
+      expect(fonte(nome), nome).toContain("bg-input-fill")
+    }
+
+    // **O arco-íris do `Slider` é ancorado no trilho, e por medição.** A conta
+    // do `Progress` (`background-size: 10000 / pct`) continua proibida aqui:
+    // ela exige saber a porcentagem no render, e um slider não controlado não a
+    // tem — congelaria no valor inicial. Quem ancora é a caixa medida.
+    const src = fonte("slider")
+    expect(src).not.toMatch(/10000/)
+
+    // As quatro variáveis, **todas com fallback**: é o fallback que faz a peça
+    // degradar para "degradê preenche a faixa" antes da primeira medição e sem
+    // JavaScript, em vez de derrubar a declaração.
+    for (const v of [
+      "--slider-rainbow-w,100%",
+      "--slider-rainbow-h,100%",
+      "--slider-rainbow-x,0px",
+      "--slider-rainbow-y,0px",
+    ]) {
+      expect(src, v).toContain(v)
+    }
+    // Sem isto o degradê ladrilha quando a imagem é menor que a faixa.
+    expect(faixa.split(/\s+/)).toContain("bg-no-repeat")
+
+    // A regra que o marcador do `Tabs` já tranca: `offsetLeft` relativo ao
+    // trilho, nunca o retângulo do viewport — com a página rolada ele escorrega.
+    expect(src).toMatch(/offsetLeft/)
+    expect(src).not.toMatch(/getBoundingClientRect/)
+
+    // Os dois observadores cobrem coisas diferentes, e o de `style` é o que
+    // pega a faixa **andando sem mudar de tamanho** (slider de intervalo).
+    expect(src).toMatch(/new ResizeObserver/)
+    expect(src).toMatch(/attributeFilter: \["style"\]/)
+
+    // E um slider comum não paga observador nenhum.
+    expect(src).toMatch(/variant !== "brand"/)
   })
 })
