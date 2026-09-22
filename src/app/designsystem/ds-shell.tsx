@@ -175,7 +175,7 @@ function DsTopBar() {
                   lista, separado dela por um fio. */}
               <div className="flex items-center justify-between gap-3 border-b border-border py-3">
                 <span className="text-sm text-muted-foreground">Tema</span>
-                <ThemeToggle glass />
+                <ThemeToggle />
               </div>
               <DsNav />
             </div>
@@ -241,7 +241,7 @@ function DsTopBar() {
             existe a partir de `lg` — e é ele que faz o par elástico com a
             esquerda para a busca cair no centro exato. */}
         <div className="hidden items-center justify-end gap-1 sm:gap-2 lg:flex lg:flex-1">
-          <ThemeToggle glass />
+          <ThemeToggle />
         </div>
       </Container>
     </TopBar>

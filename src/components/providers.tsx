@@ -374,8 +374,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return (
         <ThemeProvider
             attribute="class"
-            defaultTheme="dark"
-            enableSystem={false}
+            defaultTheme="system"
+            enableSystem
             disableTransitionOnChange
         >
             <AuthContext.Provider value={authValue}>

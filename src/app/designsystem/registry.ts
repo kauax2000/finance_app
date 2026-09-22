@@ -428,7 +428,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("spinner", "Spinner", "Carregamento sem progresso conhecido.", ui("spinner"), "Spinner"),
   entry("switch", "Switch", "Liga e desliga com efeito imediato.", ui("switch"), "Switch"),
   entry("textarea", "Textarea", "Campo de texto multilinha.", ui("textarea"), "Textarea"),
-  entry("theme-toggle", "Theme Toggle", "Alterna entre tema claro e escuro.", ui("theme-toggle"), "ThemeToggle"),
+  entry("theme-toggle", "Theme Toggle", "Escolhe entre sistema, claro e escuro.", ui("theme-toggle"), "ThemeToggle"),
   entry("toggle", "Toggle", "Botão de dois estados.", ui("toggle"), "Toggle"),
   entry("tooltip", "Tooltip", "Dica curta ancorada a um gatilho.", ui("tooltip"), "Tooltip, TooltipTrigger, TooltipContent"),
 

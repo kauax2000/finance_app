@@ -615,7 +615,7 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   três faixas do `Card` e do `Dialog`. Escolha-o quando a lista é longa e pede
   busca; `Select` quando é curta, `Combobox` quando cabe numa palavra.
 - **Listas e detalhe**: [`Item`](src/components/ui/item.tsx) para linha de lista (e para o que a `Table` vira no telefone), [`DescriptionList`](src/components/ui/description-list.tsx) para pares termo/valor, [`Timeline`](src/components/ui/timeline.tsx) para histórico, [`Toolbar`](src/components/ui/toolbar.tsx) para a linha de filtros e ações.
-- **Tema**: [`ThemeToggle`](src/components/ui/theme-toggle.tsx) — o único alternador claro/escuro. Não escreva outro controle com `setTheme`.
+- **Tema**: [`ThemeToggle`](src/components/ui/theme-toggle.tsx) — o trilho de **três** paradas (sistema, claro, escuro), e o único controle de tema. Não escreva outro com `setTheme`. Ele é `radiogroup` e não `switch` desde a rodada 116: três estados não cabem num booleano. O app roda com `enableSystem` e `defaultTheme="system"`.
 - **Carregando**: [`Skeleton`](src/components/ui/skeleton.tsx) para uma tela esperando dado; [`Spinner`](src/components/ui/spinner.tsx) só para ação curta sem fim conhecido.
 - **Borda de região rolável**: a dissolução é uma **primitiva do sistema**, não
   um efeito da paleta de comandos. Ela mora em três camadas — as `@utility`
@@ -1007,17 +1007,18 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
 - **Variante empilhada é seletor de descendente.** `group-hover/x:group-data-[y]/x:`
   compila para uma **cadeia**, e quando as duas apontam para o mesmo elemento o
   seletor não casa com nada. Quando um valor depende de dois estados ao mesmo
-  tempo — no `AppThemeToggle`, de que lado está o polegar **e** se há cursor —,
+  tempo — no alternador de tema, de que lado está o polegar **e** se há cursor —,
   a saída é inverter quem carrega o quê: **o estado mora em variável na raiz, e
   o hover só troca qual variável o filho lê**. Cada classe fica com um variante
-  só. (`[--theme-blob-rest:0%] [--theme-blob-dest:100%]` mais
-  `data-[visual=light]:` invertendo as duas, e no filho
-  `translate-x-(--theme-blob-rest)` contra
-  `group-hover/theme:translate-x-(--theme-blob-dest)`.)
+  só. O exemplo era um par `--theme-blob-*` no `AppThemeToggle`, e **os dois
+  deixaram de existir** — o blob saiu quando o realce virou tinta, e o
+  componente virou `ThemeToggle` na rodada 79. A lição não depende deles: o
+  `--disclosure-nudge` da linha de divulgação é a mesma saída, viva.
 - **`hover:` e `dark:` empatam em especificidade, e o `dark:` é emitido depois.**
   `&:hover` e `&:is(.dark *)` são ambos 0,2,0, então no tema escuro um
   `dark:bg-*` **anula** o `hover:bg-*` — silenciosamente, e só num tema. Medido no
-  `AppThemeToggle`, onde o hover estava morto no escuro havia tempo. Quem pinta
+  alternador de tema (então `AppThemeToggle`), onde o hover estava morto no
+  escuro havia tempo. Quem pinta
   fundo diferente no escuro precisa do par `dark:hover:`, como o `Button` já faz
   com `dark:hover:bg-muted/50`.
 - **Classe montada em tempo de execução não existe.** O Tailwind varre o código
@@ -1416,7 +1417,7 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   quando o bloco vai abrir, 2px para cima quando vai fechar. A direção depende de
   **dois** estados (cursor e aberto), e variante empilhada apontando para o mesmo
   elemento compila uma cadeia de descendente que não casa com nada: é a medição
-  do `AppThemeToggle`, e a saída é a mesma — `--disclosure-nudge` na linha,
+  do alternador de tema, e a saída é a mesma — `--disclosure-nudge` na linha,
   `data-[state=open]:` invertendo, e o filho lendo a variável sob um variante só.
   No Tailwind v4 `translate` e `rotate` são propriedades independentes e o
   `translate` resolve **antes** do `rotate`, então os 2px descem na tela mesmo com

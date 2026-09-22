@@ -58,7 +58,7 @@ export default function SwitchDoc() {
       </DocSection>
 
       <DocNote title="Quando &ldquo;marcado&rdquo; não diz qual é qual">
-        Um switch nu responde &ldquo;ligado ou não&rdquo;, e não serve para escolher entre duas coisas igualmente válidas. Para tema, use o <code>ThemeToggle</code>, que desenha <strong>as duas faces</strong>.
+        Um switch nu responde &ldquo;ligado ou não&rdquo;, e não serve para escolher entre coisas igualmente válidas. Para tema, use o <code>ThemeToggle</code>: são <strong>três</strong> paradas — sistema, claro e escuro —, e um switch não carrega três estados.
       </DocNote>
 
       <DocNote title="O trilho desligado usa --input-fill">

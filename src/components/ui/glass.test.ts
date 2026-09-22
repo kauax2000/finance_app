@@ -623,11 +623,14 @@ describe("a superfície de vidro", () => {
          * por item, um eixo por item deixaria escrever a trilha com um poço de
          * vidro ao lado de um avatar chapado.
          *
-         * O `theme-toggle` entrou pela mesma porta que o `Tabs`: ele e uma
-         * fileira `solid` são a mesma anatomia — uma bandeja com um polegar que
-         * desliza —, e o polegar já vestia as três classes do `tabs-indicator`.
+         * **O `theme-toggle` saiu na rodada 116**, e pela mesma linha que tirou
+         * o `ColorTile`: o dono descartou o vidro no alternador, e um modo que
+         * ninguém veste é uma linha a manter. O polegar dele continua sendo o
+         * marcador do `tabs-indicator` — a anatomia que o fazia caber aqui —,
+         * só que chapado, e agora com um rastro e um pescoço do mesmo token,
+         * que é fusão de cor e não material.
          *
-         * O que os três têm em comum não é a camada, é a régua: **nenhuma das
+         * O que os dois têm em comum não é a camada, é a régua: **nenhuma das
          * peças de vidro é clicável**. No `Tabs` quem recebe o clique é o
          * gatilho e no alternador é a raiz; o polegar é superfície, e fica atrás
          * dela. É a mesma linha que manteve `Avatar` e `ColorTile` depois de o
@@ -640,14 +643,13 @@ describe("a superfície de vidro", () => {
          */
         const COM_MODO = [
             "tabs",
-            "theme-toggle",
             "timeline",
         ]
 
         // 1. A tradução existe, em qualquer das três formas: tabela semântica,
         //    tabela de identidade, ou `--glass-tone` literal — a forma que o
         //    `ColorTile` usava, com cor de runtime que não cabe em tabela
-        //    nenhuma, e que o `theme-toggle` ainda usa.
+        //    nenhuma.
         for (const nome of COM_MODO) {
             expect(base(nome)).toMatch(/GLASS_TONES|GLASS_IDENTITY_TONES|--glass-tone/)
         }
@@ -664,9 +666,9 @@ describe("a superfície de vidro", () => {
         //    distingue pessoas, tom significa estado.)
 
         // 4. **A asserção que prova que a absorção é eixo.** Onde o eixo
-        //    dispensa o neutralizador, ele não pode existir: nestes quatro, a
+        //    dispensa o neutralizador, ele não pode existir: nestes dois, a
         //    superfície que o vidro apagaria simplesmente não é escrita no ramo
-        //    de vidro. Como embrulho, os quatro empilhavam `bg-transparent` — e
+        //    de vidro. Como embrulho, eles empilhavam `bg-transparent` — e
         //    o `Badge` deixava o `bg-primary-muted` da linha `soft` **vivo na
         //    lista**, perdendo calado para o shorthand `background`.
         //

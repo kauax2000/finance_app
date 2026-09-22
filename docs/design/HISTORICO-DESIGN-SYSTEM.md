@@ -12665,3 +12665,342 @@ medição. Foram a **565** (−52%), guardando a regra, o número que a sustenta
 porquê de não ter sido feito do jeito óbvio. O resto já mora aqui, que é o lugar
 dele: **catálogo é referência, histórico é diário**, e confundir os dois faz a
 página de um componente crescer sem parar.
+
+### Rodada 116 — o alternador vira trilho de três, e a troca fica orgânica
+
+Pedido do dono, em três tempos: refazer o alternador de tema do zero pensando na
+marca nova, **descartar o vidro**, **implementar o tema do sistema** e dar à
+troca um movimento orgânico — "um bloco às vezes grudando um pedaço ali na
+animação". No meio do caminho, o arco-íris foi recusado na tela.
+
+#### O que o arco-íris ia ser, e por que não é
+
+A proposta aceita era a **janela sobre o trilho**: o polegar vestiria o contorno
+de marca (1px de `border-box` sobre miolo chapado, a receita dos controles de
+escolha) e o degradê seria ancorado ao **trilho**, não ao polegar —
+`background-size: 300%` e a posição andando com a viagem, de modo que o anel
+mostrasse a fatia do arco-íris sob ele. Sem observador: o polegar é exatamente
+1/3 do trilho, então a conta fecha em aritmética, como no `HistogramSlider`.
+
+Duas coisas ficaram medidas antes de o dono recusar, e valem fora daqui:
+
+- **`--brand-rainbow` não existe no `:root`.** Sondado no navegador: a variável
+  vem **vazia** até `brand-rainbow-image` entrar no elemento. É a rodada 88
+  outra vez, agora com número.
+- **A janela interpola de verdade.** Com `--ttx` registrada por `@property` como
+  `<percentage>`, a posição do degradê lia **50,016%** a 150ms de uma transição
+  linear de 300. O mecanismo funciona; foi a **aparência** que foi recusada.
+
+O polegar ficou, então, com as três classes do `tabs-indicator`. A ligação com a
+marca passou a ser o **movimento**, que é o que o `AGENTS.md` já declara: o
+movimento da marca é a lava.
+
+#### A anatomia: 88 × 32, três paradas de 28, polegar circular
+
+Ordem **Sistema · Claro · Escuro**, escolhida pelo dono — a do menu do macOS —,
+com o custo dito na hora: **o eixo do trilho não significa escuro→claro**, então
+nenhuma posição carrega sentido próprio.
+
+O polegar deixou de ser estádio (34 × 28) e virou **círculo de 28**. A conta
+fecha exata e foi conferida na tela: cabeça em **2 · 30 · 58**, `translate`
+**0 · 28 · 56**, e cada face começando no mesmo x da cabeça que a ocupa.
+
+`role="switch"` saiu: três estados não cabem num booleano. É
+`RadioGroup` do Radix direto — uma parada de tabulação, setas navegando —, e
+**não** o `ToggleGroup` de `ui/`, que é Molécula e tiraria o componente de
+Átomos.
+
+#### A viagem orgânica, e a curva que a fez existir
+
+Três peças do **mesmo** `bg-background`: cabeça, rastro e pescoço. A fusão é de
+**cor**, e não de filtro — medido: discos sobrepostos do mesmo token fundem sem
+costura. O pescoço é mais fino (18 contra 28), então em repouso ele cabe dentro
+de um disco e não existe na tela; as bordas entram **0,7 do raio** em cada
+disco, que é o que faz a emenda reta morrer sob a curva. Sem essa sobreposição o
+encontro é um canto convexo visível — visto ampliado, antes de corrigir.
+
+**O filtro goo foi montado e rejeitado.** `feGaussianBlur` + `feColorMatrix` de
+alfa é a técnica canônica e preserva o RGB da fonte (só o canal alfa é
+comprimido), mas no raio que faz pescoço num disco de 28 (σ≈4) ele **come a
+gota**: a peça pequena some. E ainda pediria exceção em `DRAWN_SVG_FILES`. A
+cápsula chega no mesmo lugar sem filtro e sem exceção.
+
+**O erro que custou a rodada, e a lição que fica: as duas curvas da casa são
+curvas de saída, e nenhuma serve a um rastro.** `--ease-out` é
+`cubic-bezier(0.16, 1, 0.3, 1)` e `--ease-emphasized` é
+`cubic-bezier(0.32, 0.72, 0, 1)`; as duas gastam quase todo o caminho no começo.
+Com `--ease-out` no rastro, medido no navegador:
+
+| salto | vão máximo entre os discos | separavam? |
+| --- | --- | --- |
+| uma parada (28px) | **10,9** | não — 17px de sobreposição |
+| duas paradas (56px) | **21,8** | não — os discos têm 28 |
+
+Ou seja: **o pescoço ficava escondido dentro dos discos a viagem inteira**, e o
+rompimento apagava um fio que nunca esteve à vista. O que faltava não era
+duração, era uma curva que **saísse devagar** — e a casa não tem nenhuma. O
+rastro ganhou ritmo próprio: `cubic-bezier(0.65, 0, 0.35, 1)`, 60ms de atraso e
+`--duration-slow + 240ms`. Medido depois:
+
+| salto | vão máximo | separavam? |
+| --- | --- | --- |
+| uma parada | **25,9** | não, por 2px — estica e recolhe |
+| duas paradas | **52** | **sim** — a gota solta e é reabsorvida |
+
+E é isso que faz a regra do dono ("às vezes gruda um pedaço") sair da **física**
+em vez de um `if`: a mesma dupla de curvas, distâncias diferentes, e um salto
+estica enquanto o outro rompe. O apagamento do fio roda entre 200 e 340ms, que é
+a janela medida em que o vão passa dos 28px do disco.
+
+#### O teclado estava inerte, e a causa é o React 19
+
+Medido: a seta **movia o foco e não trocava o tema**, e o Espaço também não
+pegava. A causa está no `RadioGroup` do Radix — ele marca uma flag num `keydown`
+de `document` e, no `onFocus` do item, clica se a flag estiver de pé:
+
+```js
+document.addEventListener("keydown", handleKeyDown)   // levanta a flag
+onFocus: () => { if (isArrowKeyPressedRef.current) ref.current?.click() }
+```
+
+O React 19 delega os eventos no **contêiner da raiz**, que fica abaixo de
+`document`: o `onKeyDown` do item move o foco *antes* de o listener de
+`document` levantar a flag, e o `onFocus` a lê como falsa. O conserto é ler o
+**foco** como fonte de verdade — `onFocus` na raiz, `data-parada` no item —, que
+é a seleção-segue-o-foco da WAI-ARIA e não depende de ordem de entrega. Conferido
+com teclas reais: → escolhe Claro, →→ escolhe Escuro, ← volta para Claro.
+
+#### O tema do sistema
+
+`enableSystem={false}` → `enableSystem`, e `defaultTheme="dark"` →
+`defaultTheme="system"`. Conferido na tela: com "Sistema" marcado, trocar o
+esquema do sistema emulado de escuro para claro troca a classe do `<html>` e a
+parada marcada **continua** "Sistema".
+
+Nenhum consumidor mudou, e isso foi verificado antes: `sonner.tsx` e
+`theme-color-sync.tsx` já liam `resolvedTheme`, o `ds-frame` espelha o tema por
+`MutationObserver` na classe (e o teste dele proíbe `useTheme` ali), e o
+`layout.tsx` não crava classe de tema no `<html>`.
+
+**O custo é dito:** quem nunca escolheu tema e está no claro no aparelho **troca
+de tema na próxima visita**. Era a opção escolhida entre as duas.
+
+#### O que saiu
+
+O prop `glass`, a constante `GLASS_SHEEN`, o import de
+`glassRoundSurfaceClassName` e a entrada `"theme-toggle"` em `COM_MODO` de
+`glass.test.ts` — que é o teste que cobrava o eixo, e reprovaria com ele
+removido. Sai pela mesma linha que tirou o `ColorTile` na rodada 95: **um modo
+que ninguém veste é uma linha a manter.** Os dois alternadores do `ds-shell`
+perderam o vidro junto, que é o que "descartar o vidro" significa.
+
+#### O teste, e as três coisas que ele tranca
+
+[`theme-toggle.test.ts`](../../src/components/ui/theme-toggle.test.ts), 9
+asserções: as três paradas e a ordem; a primitiva (`radiogroup`, nunca
+`switch`); a aritmética (88 = 4 + 3 × 28, e a viagem no mesmo 28); **as três
+peças no mesmo token de fundo, com fio e sombra só na cabeça**; **a curva do
+rastro, com a proibição explícita de devolver uma curva de saída** — que é o
+defeito que apaga o efeito sem quebrar nada; o vidro e a marca fora, com
+`COM_MODO` conferido no arquivo vizinho; o alvo de 44px e o par `active:`; a
+seleção-segue-o-foco; e nenhum bloco de `prefers-reduced-motion` próprio.
+
+#### Notas de método
+
+- **`getComputedStyle` devolve `oklch()`, e ler aqueles três números como RGB dá
+  razão 1,000 em tudo.** A primeira leitura de contraste desta rodada reportou
+  exatamente isso. A rasterização por canvas 1×1 é o que os quatro scripts de
+  contraste da casa já fazem, e é a única leitura válida. Os números certos:
+  `--background` contra `--muted` dá **1,308** (ΔRGB 28) no escuro e **1,142**
+  (ΔRGB 15) no claro — o pescoço lê bem no escuro e é sutil no claro, e isso
+  fica registrado em vez de escondido.
+- **`offsetLeft` não enxerga `translate`.** Uma medição inteira da viagem saiu
+  como "2 · 2 · 2" por isso. Quem mede deslocamento por transform usa
+  `getBoundingClientRect`, relativo à raiz.
+- **`requestAnimationFrame` não corre quando a aba não pinta.** Sob automação,
+  o adiamento de dois quadros faz `--tt-i` parecer **uma parada atrasado**; com
+  quadros de verdade ele alcança na hora. Duas leituras desta rodada foram
+  descartadas por isso antes de virarem "defeito".
+
+#### Adendo — o polegar não andava, e o culpado era o adiamento por rAF
+
+Reportado logo depois: "não está rodando a animação". As primeiras medições
+mostravam o trajeto interpolando bonito, e foi preciso notar o que elas tinham
+em comum — **todas rodavam com um laço `requestAnimationFrame` meu ligado**.
+Sem esse laço, a mesma sequência dava: clique, 1400ms de espera, cabeça parada
+em 2, `document.getAnimations()` **vazio**.
+
+A causa é o próprio conserto do `disableTransitionOnChange`. O next-themes
+injeta `* { transition: none !important }` durante a troca de classe, e a
+versão herdada da rodada 79 fugia disso aplicando a posição **dois
+`requestAnimationFrame` depois**. Isso torna o movimento refém de o rAF correr:
+aba que não pinta, quadro perdido, throttling — e o `setState` adiado nunca
+roda. O polegar fica simplesmente parado, sem erro nenhum no console.
+
+A saída é não usar transição de CSS para o que se desloca. **A WAAPI não é uma
+transição, então o `!important` do next-themes não a alcança**: a posição de
+repouso é aplicada na hora por `--tt-i`, e o trajeto é uma animação explícita do
+valor antigo para o novo com `fill: "none"` — o estilo manda no repouso, a
+animação só cobre o caminho. Saíram o adiamento, os dois estados (`visual` e
+`viagem`), o `setTimeout` de fim de viagem e a transição inline que dependia do
+sentido; o pescoço agora estica porque as duas bordas correm em relógios
+diferentes, cada uma numa animação própria, o que **dispensa saber o sentido**.
+
+Medido depois, **sem** laço nenhum segurando a página: em t=120ms a cabeça está
+em 49,8 e o rastro em 2,2, com 15 animações correndo; no fim os dois em 58. O
+salto curto estica até **25,7** e não rompe; o longo vai a **47,6** e rompe.
+E o movimento começa no mesmo quadro da troca de tema, em vez de 45ms depois
+dela.
+
+**O que isso custa, e está dito no catálogo:** o bloco global de
+`prefers-reduced-motion` encurta *transição*, e a WAAPI escapa dele — a
+pergunta passou a ser feita à mão, com `matchMedia`, e sem movimento não há o
+que fazer porque `--tt-i` já pôs tudo no lugar. As faces continuam em transição
+de CSS de propósito: ali o que muda é tinta, e trocar de estalo junto com a
+página é o compasso certo.
+
+**A lição de método:** uma medição que só reproduz o sucesso quando o medidor
+está segurando a página não mediu o componente — mediu a si mesma. O sinal foi
+`document.getAnimations()` devolver **0** numa sonda e ser descartado como
+ruído; era o achado.
+
+**E um segundo defeito caiu junto: o polegar animava na montagem.** O gate de
+montagem leva `indice` de 0 para a parada real, e o efeito lia isso como uma
+viagem — o polegar entrava deslizando da esquerda **toda vez que o componente
+nascia**. No catálogo isso é uma vez por carga; **no app é toda abertura do menu
+da conta**, porque o conteúdo de um `DropdownMenu` desmonta ao fechar. A guarda
+é uma linha (`jaPintou`), e a regra é "nascer é chegar, não viajar". Medido
+depois: **zero** animações durante a hidratação, com o polegar já na parada
+certa na primeira pintura.
+
+### Rodada 117 — a viagem vira uma peça só, e o esticão entra em fase
+
+Reportado pelo dono depois da 116: *"parece que tem duas bolas transitando
+totalmente diferentes"*. Estava certo, e a causa é de construção: cabeça, rastro
+e pescoço são **três nós**, e fundir por cor apaga a costura sem fazer uma forma
+só. A referência dada — o
+[apple-liquid-glass-switcher](https://21st.dev/community/components?q=glass&preview=%2F%40dennysdionigi%2Fcomponents%2Fapple-liquid-glass-switcher)
+de Dennys Dionigi — resolve o mesmo problema com **uma pílula**, e o bundle do
+preview mostra que a animação dela é exatamente três coisas: trajeto com
+inércia (`cubic-bezier(1,0,.4,1)`), esticão em `scale` com pico no meio, e
+`transform-origin` na borda **de trás** — que é para o que serve o
+`data-previous` do trilho, e nada mais.
+
+**Duas coisas que a leitura do bundle desmentiu.** A referência declara dois
+filtros SVG (`feImage` + `feDisplacementMap`), e é tentador copiar a refração:
+ela **não está ligada** — `filter` e `backdrop-filter` computam `none` nos
+elementos. O "líquido" dali é a aresta em camadas mais o esticão. E o esticão
+dela **não** depende da distância: o pico sai do destino (1,1 nas pontas, 1,2 no
+meio).
+
+#### O esticão da referência sai anticorrelacionado com a velocidade
+
+Copiado como está — pico em 50% do relógio da escala, relógios diferentes
+(0,44 contra 0,40) — o resultado é pior do que parece. Medido contra a
+velocidade da própria curva de trajeto:
+
+| fração do caminho | velocidade (do máximo) | escala |
+| --- | --- | --- |
+| 0,30 | **6%** | **1,33** |
+| 0,50 | 19% | 1,13 |
+| 0,70 | **68%** | **1,04** |
+
+Quase um espelho. Na tela: a forma **estica parada** — no filme de quadros, aos
+90ms ela estava em `x=1` já com 1,21 de escala — e depois atravessa contraída.
+É o contrário do que matéria faz.
+
+**O conserto é de fase, não de valor.** Os dois relógios passam a ser o mesmo
+(400ms), o perfil da escala vira uma meia-senoide de cada lado com pico em
+**0,58** — a velocidade desta curva pica em 0,667 —, e o efeito roda `linear`,
+que é o que faz cada `offset` do perfil valer a fração de tempo que ele diz.
+Meia-senoide e não triângulo: vértice reto no auge lê como repuxão.
+
+#### A amplitude é a velocidade, e o teto é a borda do trilho
+
+As duas viagens duram o mesmo e a longa percorre o dobro, então ela corre ao
+dobro e estica o dobro: **1,11** e **1,22**. Não é gosto — é o que cabe. Com a
+origem na borda de trás, o esticão empurra a forma para a frente, e com o pico
+em 0,58 a borda dianteira chega a **87,7** dos 88px do trilho no salto longo.
+Em **1,26** ela passa, e a peça sai da pílula. Medido depois, por scrubbing da
+animação real: largura 28 → **34,2** → 28, dianteira máxima em **84**.
+
+Nota de método: a primeira leitura disto foi **errada**. Uma maquete estática
+aplicou o pico do esticão na posição de **chegada** e a forma saiu escandalosa,
+8px para fora do trilho — e eu chamei de defeito. O pico acontece no meio do
+caminho, onde há espaço; varrendo a curva de verdade o transbordo era de
+**0,1px**. Maquete que escolhe o instante errado mede a maquete.
+
+#### O que saiu
+
+`theme-toggle-trail` e `theme-toggle-neck` inteiros, com os refs, as constantes
+do pescoço, as quatro animações de `left`/`right` e **o rompimento da gota** —
+que era, literalmente, a segunda bola. E a **borda** do polegar, por decisão do
+dono: o fio duro é o que denuncia a distorção quando a forma estica, porque o
+contorno deixa de ser circular. Quem segura a peça contra a bandeja passou a ser
+a sombra, e essa é a conta apertada do tema claro (`--background` contra
+`--muted`, ΔRGB 15 contra 28 no escuro) — conferido na tela a 3,4×, e ela
+sustenta.
+
+#### Adendo — "deixe mais elástico", e o que faltava era o eixo Y
+
+A forma esticava só em X (`scale: 1.22 1`), e isso não lê como matéria: lê como
+uma pílula que **engorda**. Elástico conserva volume — estica num eixo, afina no
+outro. O acoplamento entrou em 0,45 do esticão (e não o `1/√x` da física, que a
+1,22 daria 0,905: numa peça de 28px tirar 3px de altura é mais do que o olho
+aceita num controle).
+
+Com ele veio o **pouso**: o relógio da escala passou a 560 contra os 400 do
+trajeto, e os 160 que sobram são uma oscilação amortecida em torno de 1. Medido
+na animação real, no salto longo:
+
+| momento | largura × altura |
+| --- | --- |
+| repouso | 28 × 28 |
+| auge do esticão | **34,1 × 25,2** |
+| chegada | 28 × 28 |
+| fundo do pouso | **26,8 × 28,6** |
+| assenta | 27,6 × 28,2 → 28 × 28 |
+
+**A virada de origem é o que liberou a amplitude do pouso.** Ancorada atrás, a
+oscilação crescia *contra* a borda do trilho e tinha de ser tímida. Hoje a
+origem troca para a borda **da frente** na chegada, e o corpo se acomoda para
+dentro: bateu na parada, o resto empilha atrás. A troca cai exatamente onde `k`
+cruza zero — escala 1, transformação identidade, origem que não pinta nada —,
+então **é invisível por construção**. Os dois quadros a 0,0001 de distância
+fazem disso um degrau: interpolada, a origem deslizaria com a escala fora de 1,
+e isso se vê.
+
+Medido depois nos dois sentidos, e simétrico: a borda dianteira chega a **87,7**
+dos 88px indo para a direita e a peça para a **0,3** indo para a esquerda. **A
+folga é de 0,3px, e é o teto real desta animação** — quem quiser mais elástico
+não tem para onde crescer sem encurtar a cauda do esticão, que é o que ainda
+está largo quando a forma chega na parada.
+
+**O pouso virou um mergulho só.** A primeira versão dele oscilava três vezes em
+160ms (`+0,5 · −0,28 · +0,12`) e ficava estalada — o dono pediu mais suave.
+Hoje o relógio da escala é 640 contra os 400 do trajeto, e os 240 que sobram são
+**uma** compressão que vai e volta: a forma bate na parada, o corpo compacta
+atrás e relaxa. Medido: **uma** travessia da largura de repouso depois da
+chegada, com o fundo em 26,8 × 28,6 por volta dos 500ms. E `VIRADA` deixou de
+ser um número solto — é `TRAJETO.duration / ESTICAO.duration`, senão ela sai de
+fase calada quando alguém mexer numa das duas durações.
+
+**A bandeja virou sobreposição.** `bg-muted` é opaco, e medido ele pintava
+**38,38,38** tanto na barra do catálogo quanto dentro do painel de um cartão —
+o mesmo pixel nos dois, ignorando o que está atrás. O `TabsList` pode ser
+chapado porque sabe onde mora; este controle não sabe: ele vive na barra de
+vidro, no painel do `DropdownMenu`, no `Popover` do telefone e solto num cartão.
+Chapado, ele lia como um bloco estrangeiro colado sobre o preto do app.
+
+A superfície passou a ser a do **campo**, `bg-input-fill/50` — a mesma de
+`field-classes`, então a placa lê como o fundo de um `Input`. No escuro
+`--input-fill` é branco a 15%, e a `/50` são 7,5% de sobreposição:
+
+| onde | antes (chapado) | agora (sobreposição) |
+| --- | --- | --- |
+| sobre a página (cabeçalho) | 38 | **28** |
+| sobre o cartão (painel da demo) | 38 | **40** |
+
+O custo está no claro, e é dito: o token é opaco naquele tema por construção, e
+a placa sai a **238** sobre o cartão contra o polegar em 250 — ΔRGB **12**,
+contra os 15 de antes. Conferido na tela a 3×: com a sombra do polegar, sustenta.

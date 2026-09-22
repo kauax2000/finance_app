@@ -1,330 +1,469 @@
 "use client"
 
 import {
+    ComputerDesktopIcon as ComputerOutlineIcon,
     MoonIcon as MoonOutlineIcon,
     SunIcon as SunOutlineIcon,
 } from "@heroicons/react/24/outline"
 import {
+    ComputerDesktopIcon as ComputerSolidIcon,
     MoonIcon as MoonSolidIcon,
     SunIcon as SunSolidIcon,
 } from "@heroicons/react/16/solid"
-import { useEffect, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { useTheme } from "next-themes"
-import { Switch as SwitchPrimitive } from "radix-ui"
+import { RadioGroup as RadioGroupPrimitive } from "radix-ui"
 import { Skeleton } from "@/components/ui/skeleton"
-import { glassRoundSurfaceClassName } from "@/lib/glass-classes"
 import { cn } from "@/lib/utils"
 
 /**
- * O realce do vidro, publicado pela **raiz** no cursor e no toque.
+ * As três paradas, na ordem do trilho. A ordem é decisão do dono — a do menu de
+ * tema do macOS —, e a consequência fica dita: **o eixo do trilho não significa
+ * escuro→claro**, então não há nada a derivar da posição. Quem quiser um eixo
+ * com sentido reordena aqui e em mais lugar nenhum.
  *
- * São os quatro degraus do `TabsList` (5%/9% no claro, 7%/12% no escuro), e a
- * direção vira com o tema pela régua do `--secondary-hover`: o realce puxa
- * sempre na direção do contato — escurece no claro, clareia no escuro.
- *
- * O par `active:` é obrigatório e não é simetria: `hover:` compila dentro de
- * `@media (hover: hover)` e não existe no dedo. Sem ele o controle fica inerte
- * no telefone, que é a regra H.
- *
- * Quem publica é a raiz porque `--glass-sheen` precisa **herdar** até o
- * polegar, e custom property não atravessa para irmão — é a mesma razão pela
- * qual, no `Tabs`, quem publica é a trilha e não o gatilho.
+ * O par de ícones é **misto**, e isso é exceção nomeada no auditor
+ * (`HEROICON_SET_EXCEPTIONS`): o Heroicons não tem `16/outline`, então a face
+ * apagada é o glifo de 24 desenhado a 16. O traço fino trabalha a favor dela —
+ * contorno é o estado apagado —, e o peso do traço é o sinal que a cor sozinha
+ * não entrega num glifo de 16px no tema escuro.
  */
-const GLASS_SHEEN =
-    "hover:[--glass-sheen:oklch(0_0_0_/_5%)] active:[--glass-sheen:oklch(0_0_0_/_9%)] dark:hover:[--glass-sheen:oklch(1_0_0_/_7%)] dark:active:[--glass-sheen:oklch(1_0_0_/_12%)]"
+const PARADAS = [
+    {
+        valor: "system",
+        rotulo: "Sistema",
+        Solido: ComputerSolidIcon,
+        Contorno: ComputerOutlineIcon,
+    },
+    {
+        valor: "light",
+        rotulo: "Claro",
+        Solido: SunSolidIcon,
+        Contorno: SunOutlineIcon,
+    },
+    {
+        valor: "dark",
+        rotulo: "Escuro",
+        Solido: MoonSolidIcon,
+        Contorno: MoonOutlineIcon,
+    },
+] as const
+
+type Tema = (typeof PARADAS)[number]["valor"]
+
+const indiceDe = (tema: string | undefined) => {
+    const i = PARADAS.findIndex((p) => p.valor === tema)
+    return i === -1 ? 0 : i
+}
 
 /**
- * Alternador de tema: um switch com as duas faces visíveis.
+ * O relógio da viagem, e **por que ela é uma peça só**.
  *
- * Era um par de botões com `aria-pressed` e um indicador deslizante por baixo.
- * O desenho estava certo; a semântica é que pedia duas paradas de tabulação e
- * dois nomes acessíveis para uma decisão binária. Sobre o `Switch` do Radix ele
- * vira um controle só, com `role="switch"`, `aria-checked` e Espaço/Enter de
- * graça.
+ * ## Três nós nunca iam ler como um
  *
- * A lua e o sol continuam **os dois** desenhados, e é isso que separa este
- * switch de um liga/desliga: num switch nu, "marcado" não diz qual tema é. Aqui
- * o polegar desliza por baixo dos dois ícones e acende o que está valendo, então
- * o controle continua respondendo "qual dos dois" e não "ligado ou não".
+ * A primeira versão tinha cabeça, rastro e pescoço: dois discos iguais viajando
+ * em relógios diferentes com uma barra entre eles, fundidos por serem do mesmo
+ * `--background`. Na tela isso lê como **duas bolas transitando**, e não como
+ * matéria — a fusão por cor apaga a costura, mas não faz uma forma só.
  *
- * ## A superfície é a do `TabsList`, e a divergência era só no escuro
+ * A saída é a do switcher de vidro do 21st (Dennys Dionigi), lido do bundle do
+ * preview: **uma pílula**, e o orgânico vem de três coisas, não de três nós.
  *
- * Este controle e uma fileira de abas `solid` são **a mesma anatomia**: uma
- * bandeja com um polegar que desliza para marcar qual das posições vale. Só que
- * eles nasceram de primitivas diferentes (`Switch` aqui, `Tabs.List` lá) e
- * tomaram a decisão de superfície duas vezes, com respostas contrárias.
+ * 1. **Um trajeto com inércia.** `cubic-bezier(1, 0, 0.4, 1)` quase não sai do
+ *    lugar no começo, dispara no meio e pousa macio. É o que dá peso à forma.
+ * 2. **Um esticão com pico no meio do caminho**, em `scale`, voltando a 1 na
+ *    chegada — squash-and-stretch clássico.
+ * 3. **A origem presa na borda de trás do movimento.** Com `transform-origin`
+ *    atrás e `scaleX > 1`, a forma **estica para a frente**, na direção da
+ *    viagem. É para isto, e só para isto, que a referência mantém um
+ *    `data-previous` no trilho — aqui já temos o `anterior`.
  *
- * No tema claro elas quase coincidiam. No escuro **invertiam**: o `Tabs` põe a
- * bandeja em `--muted` (0,269) e faz o polegar *afundar* para `--background`
- * (0,145) — a mesma decisão que o `Menubar` registra, de subir para o fundo da
- * página em vez de tingir, já que `--accent` e `--muted` são a mesma cor no
- * escuro. Aqui era o oposto: bandeja rebaixada com alfa (`bg-muted/40`, que
- * compõe perto de 0,195) e polegar **subindo** para `--card` (0,205). Sobravam
- * 0,01 de luminosidade entre os dois — contra os 0,124 do `Tabs` —, e o que
- * ainda separava a pastilha do trilho era a borda de 1px e a sombra, não a
- * superfície. Ela sumia no próprio trilho.
+ * ## O que a leitura do bundle desmentiu
  *
- * Então a régua passou a ser a do `TabsList`: trilho `bg-muted` chapado nos dois
- * temas, polegar `bg-background` com `border-border/80` e `shadow-xs` — as três
- * classes do `tabs-indicator`, na letra. O `ring-1 ring-border/60` do trilho
- * saiu junto, porque a moldura do `Tabs` não tem contorno: com a bandeja
- * chapada ela não precisa de um, e o `focus-visible:ring-3` continua sendo o
- * único anel que este controle desenha.
+ * A referência declara dois filtros SVG (`feImage` + `feDisplacementMap`), e é
+ * tentador copiar a refração. **Ela não está ligada**: `filter` e
+ * `backdrop-filter` computam `none` nos elementos. O que faz o "líquido" ali é
+ * a aresta mais o esticão.
  *
- * ## O hover é tinta, e nada se move
+ * E o esticão dela **não** depende da distância — o pico sai do destino (1,1 nas
+ * pontas, 1,2 no meio). Aqui ele sai de quanto se andou, que é a régua desta
+ * casa: um salto de duas paradas estica mais que um de uma.
  *
- * O `TabsTrigger` inativo declara `hover:text-foreground` e mais nada: no cursor
- * ele **acende o rótulo**, sem pintar superfície e sem deslocar objeto. O
- * movimento é reservado para a troca de estado de verdade — é a mesma economia
- * que faz o marcador viajar só quando a aba muda.
+ * ## Continua em WAAPI
  *
- * Aqui era o inverso exato. A tinta das faces não reagia ao cursor (ela só lia
- * `data-visual`), e quem respondia era um segundo elemento — um "blob"
- * `bg-foreground/12`, do tamanho e da forma do polegar, que aparecia na metade
- * de destino e deslizava até ela para *prever* o clique.
- *
- * Ele saiu por duas razões. A primeira é a régua: desenhar uma superfície no
- * hover é o que este design system não faz em controle segmentado. A segunda é
- * que ele piorou com o conserto anterior — sobre o trilho rebaixado de antes o
- * blob compunha perto de 0,290, e sobre o `bg-muted` chapado ele vai a ~0,355,
- * enquanto o polegar de verdade afunda para 0,145. Passavam a ser **duas
- * pastilhas do mesmo tamanho** em lados opostos do trilho, uma clara e uma
- * escura, e num controle onde a pastilha *é* o estado isso lê como "já trocou".
- *
- * No lugar dele, a face de destino acende — `group-hover/face:text-foreground`,
- * com o par `active:` que a regra H exige. O destino continua sendo anunciado
- * antes do clique, pelo mesmo meio que uma aba usa.
- *
- * ## O vidro é do polegar, e o corpo não se move
- *
- * `glass` é opt-in, e a peça que veste é a que **desliza** — o mesmo encaixe do
- * marcador do `Tabs`, e pelo mesmo motivo: o polegar não é clicável (quem recebe
- * o clique é a raiz), não carrega texto por cima, e já tinha a borda de 1px em
- * que o aro mora, então a caixa não anda.
- *
- * **O corpo é idêntico ao chapado, por construção**: `--glass-tone` é
- * `--background` opaco, que é exatamente o que o ramo de cima pinta. O que entra
- * é o **aro** — e é ele, sozinho, que faz o material, como a rodada 44 mediu.
- * Nada de contraste se move.
- *
- * **O que continua divergindo, de propósito.** O `rounded-full` das duas peças,
- * porque um alternador de tema lê como switch por convenção e um trilho
- * segmentado não. O recuo de 2px contra os 4px do `Tabs`, porque lá o gatilho é
- * um controle de verdade e deve a altura à escada — aqui as duas metades não
- * são focáveis, o `role="switch"` é a raiz inteira, e subir a pílula para 40px
- * só para hospedar um polegar de 32 mudaria o cabeçalho que a contém. E o
- * relógio: `--duration-slow` com `--ease-emphasized` contra os 200ms do `Tabs`,
- * que documenta que "a 300 o marcador arrasta" — ali o marcador acompanha uma
- * troca de painel, aqui o deslize **é** a resposta, e ele ainda trabalha em
- * volta do `disableTransitionOnChange` do next-themes (ver os dois quadros
- * abaixo).
+ * O next-themes roda com `disableTransitionOnChange`, que injeta
+ * `* { transition: none !important }` enquanto troca a classe do tema. Uma
+ * transição de CSS morre ali; a WAAPI não é uma transição e escapa. A posição de
+ * repouso é do `--tt-i`, e a animação (com `fill: "none"`) só cobre o trajeto.
  */
-export function ThemeToggle({
-    className,
-    glass = false,
-}: {
-    /** Classes para o contentor do switch. */
-    className?: string
-    /**
-     * O polegar vira a peça de vidro. O corpo não se move — `--glass-tone` é
-     * `--background` opaco, que é exatamente o que o ramo chapado pinta —, e o
-     * que entra é o **aro**. Ver o cabeçalho.
-     */
-    glass?: boolean
-}) {
-    const { theme, setTheme, resolvedTheme } = useTheme()
-    const [mounted, setMounted] = useState(false)
+const PASSO = 28
+
+/** O trajeto. A curva da referência: quase parada, dispara, pousa macio. */
+const TRAJETO = { duration: 400, easing: "cubic-bezier(1,0,0.4,1)" }
+
+/**
+ * **O esticão anda no mesmo relógio do trajeto, e em fase com a velocidade.**
+ *
+ * A referência põe o pico no meio do *seu* relógio (0,44s contra 0,40s de
+ * viagem), e com esta curva isso sai **anticorrelacionado**: medido, aos 30% do
+ * caminho a escala está em 1,33 com a velocidade a **6%** do máximo, e aos 70%,
+ * com 68% da velocidade, a escala já caiu para 1,04. Na tela a forma **estica
+ * parada** e depois atravessa contraída — o contrário do que matéria faz.
+ *
+ * A velocidade desta curva pica em **0,667**. O pico do esticão fica em 0,58:
+ * perto o bastante para acompanhar a corrida, cedo o bastante para o auge não
+ * cair em cima da borda do trilho.
+ *
+ * O perfil é uma meia-senoide de cada lado do pico, e não um triângulo: um
+ * vértice reto no auge lê como um repuxão.
+ */
+const ESTICAO = { duration: 640, easing: "linear" }
+const PICO_EM = 0.58
+
+const ATRAS = "atras" as const
+const FRENTE = "frente" as const
+type Lado = typeof ATRAS | typeof FRENTE
+
+/** Onde o trajeto acaba, na régua da escala. Também é onde `k` cruza zero. */
+const VIRADA = TRAJETO.duration / ESTICAO.duration
+
+/**
+ * **O relógio da escala passa do trajeto de propósito**: 640 contra 400. Os 400
+ * primeiros são o esticão em fase com a corrida; os 240 que sobram são o
+ * **pouso**. As frações do esticão são as do trajeto multiplicadas por
+ * `VIRADA`, então o auge continua caindo em 0,58 **do trajeto**, que é onde ele
+ * tem de cair.
+ *
+ * `k` vale 0 em repouso, 1 no auge do esticão, e **negativo** no pouso, quando
+ * a forma encolhe. A amplitude multiplica tudo, então um salto curto balança
+ * menos sem precisar de tabela própria.
+ *
+ * **O pouso é um mergulho só, e não um quique.** A primeira versão oscilava
+ * três vezes em 160ms (+0,5 · −0,28 · +0,12) e ficava estalada — o dono pediu
+ * mais suave. Hoje é **uma** compressão que vai e volta em 240ms: a forma bate
+ * na parada, o corpo compacta atrás e relaxa. Uma travessia por zero, nenhum
+ * repique.
+ */
+const PERFIL: [number, number, Lado][] = [
+    [0, 0, ATRAS],
+    [0.15 * VIRADA, 0.395, ATRAS],
+    [0.3 * VIRADA, 0.726, ATRAS],
+    [0.45 * VIRADA, 0.939, ATRAS],
+    [PICO_EM * VIRADA, 1, ATRAS],
+    [0.7 * VIRADA, 0.901, ATRAS],
+    [0.82 * VIRADA, 0.624, ATRAS],
+    [0.92 * VIRADA, 0.294, ATRAS],
+    [VIRADA, 0, ATRAS],
+    // **A origem vira aqui, e a troca é invisível por construção**: neste
+    // instante `k` é 0, a escala é 1, e uma transformação identidade não tem
+    // origem que importe. Os dois quadros a 0,0001 de distância fazem disso um
+    // degrau em vez de uma varredura — a origem deslizando com a escala fora de
+    // 1 seria bem visível.
+    [VIRADA + 0.0001, 0, FRENTE],
+    // O mergulho do pouso, ancorado na borda **da frente**: a forma bate na
+    // parada e compacta **para trás**, para dentro do trilho.
+    [0.7, -0.16, FRENTE],
+    [0.78, -0.22, FRENTE],
+    [0.86, -0.17, FRENTE],
+    [0.93, -0.08, FRENTE],
+    [1, 0, FRENTE],
+]
+
+/**
+ * **O volume se conserva**, e é isso que faz a forma ler como matéria em vez de
+ * uma pílula que engorda: esticando em X, ela **afina em Y**.
+ *
+ * O acoplamento não é o `1/√x` da física — a 1,22 ele daria 0,905, e numa peça
+ * de 28px tirar 3px de altura é mais do que o olho aceita num controle. 0,45 do
+ * esticão dá 0,90 no auge, que é o quanto se lê sem a peça parecer amassada.
+ */
+const ACOPLAMENTO_Y = 0.45
+
+/**
+ * A amplitude, **proporcional à velocidade**: as duas viagens duram o mesmo, e
+ * a de duas paradas percorre o dobro do caminho — então ela corre ao dobro e
+ * estica o dobro.
+ *
+ * O teto é a borda do trilho, e é conta fechada em **dois** pontos, não um: o
+ * auge do esticão — que acontece no meio do caminho, onde sobra espaço — e o
+ * **contragolpe do pouso**, que acontece com a forma já na parada final e por
+ * isso é o apertado. Com 0,22 a borda dianteira chega a **87,7** dos 88px no
+ * contragolpe. Quem subir isto põe a peça para fora da pílula — e ninguém vai
+ * reclamar em teste, só na tela.
+ */
+const AMPLITUDE_POR_SALTO = [0, 0.11, 0.22]
+
+/** `useLayoutEffect` no cliente, `useEffect` no servidor — o componente é
+ *  renderizado no servidor (devolve o `Skeleton`), e o de layout avisa ali. */
+const useEfeitoDeLayout =
+    typeof window !== "undefined" ? useLayoutEffect : useEffect
+
+export function ThemeToggle({ className }: { className?: string }) {
+    const { theme, setTheme } = useTheme()
+    const [montado, setMontado] = useState(false)
 
     useEffect(() => {
         /* eslint-disable react-hooks/set-state-in-effect -- client-only mounted gate for next-themes */
-        setMounted(true)
+        setMontado(true)
         /* eslint-enable react-hooks/set-state-in-effect */
     }, [])
 
-    const effective =
-        theme === "light" || theme === "dark" ? theme : resolvedTheme
-    const isLight = mounted && effective === "light"
+    const indice = montado ? indiceDe(theme) : 0
 
-    // next-themes roda com `disableTransitionOnChange`, que injeta
-    // `* { transition: none !important }` enquanto troca a classe do tema.
-    // Aplicar a posição dois quadros depois deixa o deslize acontecer já sem esse
-    // estilo, senão o polegar salta de um lado ao outro sem animar.
-    //
-    // Só a *aparência* é adiada. O `checked` do Radix acompanha o estado real na
-    // hora, então o leitor de tela nunca anuncia o valor antigo.
-    const [visualIsLight, setVisualIsLight] = useState(isLight)
+    const cabecaRef = useRef<HTMLSpanElement>(null)
+    const anterior = useRef(indice)
+    const emCurso = useRef<Animation[]>([])
+    const jaPintou = useRef(false)
 
-    useEffect(() => {
-        let raf2: number | null = null
-        const raf1 = requestAnimationFrame(() => {
-            raf2 = requestAnimationFrame(() => setVisualIsLight(isLight))
-        })
-        return () => {
-            cancelAnimationFrame(raf1)
-            if (raf2 !== null) cancelAnimationFrame(raf2)
+    useEfeitoDeLayout(() => {
+        // Antes de montar não há tema conhecido: `indice` é 0 por convenção e o
+        // componente nem está na tela (quem está é o `Skeleton`).
+        if (!montado) return
+
+        const de = anterior.current
+        anterior.current = indice
+
+        // **A primeira pintura não anima.** O gate de montagem faz `indice` sair
+        // de 0 para a parada real, e sem esta guarda o polegar entra deslizando
+        // da esquerda toda vez que o componente nasce — o que no app é **toda
+        // abertura do menu da conta**, já que o conteúdo de um `DropdownMenu`
+        // desmonta ao fechar. Nascer é chegar, não viajar.
+        if (!jaPintou.current) {
+            jaPintou.current = true
+            return
         }
-    }, [isLight])
 
-    if (!mounted) {
+        if (de === indice) return
+
+        // Um salto novo cancela o anterior: sem isto, dois cliques seguidos
+        // deixam duas animações disputando a mesma propriedade.
+        for (const a of emCurso.current) a.cancel()
+        emCurso.current = []
+
+        // O bloco global de `globals.css` corta transição, e não WAAPI — aqui a
+        // pergunta tem de ser feita à mão. Sem movimento, o `--tt-i` já pôs
+        // tudo no lugar certo: não há nada a fazer.
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+
+        const peca = cabecaRef.current
+        if (!peca) return
+
+        const salto = Math.abs(indice - de)
+        const amplitude = AMPLITUDE_POR_SALTO[salto] ?? 0.22
+        const paraDireita = indice > de
+
+        // **As duas origens.** Enquanto corre, a forma estica a partir da borda
+        // de **trás**, ou seja, para a frente — é a direção da viagem. Ao
+        // chegar, ela passa a se acomodar a partir da borda da **frente**, para
+        // dentro do trilho: bateu na parada, o resto do corpo empilha atrás.
+        // Presa num valor fixo, a forma esticaria para trás em metade dos
+        // saltos, e nada quebraria — o movimento só ficaria errado.
+        const origem: Record<Lado, string> = {
+            [ATRAS]: paraDireita ? "0% 50%" : "100% 50%",
+            [FRENTE]: paraDireita ? "100% 50%" : "0% 50%",
+        }
+        // O repouso fica com a de trás; com escala 1 ela não pinta nada, e é a
+        // que vale no próximo salto antes de o quadro 0 assumir.
+        peca.style.transformOrigin = origem[ATRAS]
+
+        const animacoes = [
+            peca.animate(
+                [
+                    { translate: `${de * PASSO}px` },
+                    { translate: `${indice * PASSO}px` },
+                ],
+                { ...TRAJETO, fill: "none" },
+            ),
+            // O esticão é a segunda animação na **mesma** peça, noutra
+            // propriedade: em CSS `translate` e `scale` são independentes, então
+            // as duas convivem no mesmo relógio sem uma pisar na outra. O
+            // `linear` do efeito é o que faz cada `offset` do perfil valer
+            // exatamente a fração do tempo que ele diz.
+            peca.animate(
+                PERFIL.map(([offset, k, lado]) => ({
+                    offset,
+                    transformOrigin: origem[lado],
+                    scale: `${(1 + amplitude * k).toFixed(4)} ${(
+                        1 -
+                        amplitude * k * ACOPLAMENTO_Y
+                    ).toFixed(4)}`,
+                })),
+                { ...ESTICAO, fill: "none" },
+            ),
+        ]
+
+        emCurso.current = animacoes.filter((a): a is Animation => Boolean(a))
+    }, [indice, montado])
+
+    if (!montado) {
         return (
             <Skeleton
-                className={cn("h-8 w-18 shrink-0 rounded-full", className)}
+                className={cn("h-8 w-22 shrink-0 rounded-full", className)}
             />
         )
     }
 
     return (
-        <SwitchPrimitive.Root
-            checked={isLight}
-            onCheckedChange={(next) => setTheme(next ? "light" : "dark")}
-            aria-label="Tema claro"
+        <RadioGroupPrimitive.Root
+            value={PARADAS[indice].valor}
+            onValueChange={(v) => setTheme(v as Tema)}
+            orientation="horizontal"
+            loop
+            aria-label="Tema"
             data-slot="theme-toggle"
-            data-visual={visualIsLight ? "light" : "dark"}
-            data-glass={glass ? "" : undefined}
+            data-visual={PARADAS[indice].valor}
+            style={{ "--tt-i": indice } as React.CSSProperties}
             className={cn(
-                "group/theme relative inline-flex h-8 w-18 shrink-0 items-center rounded-full bg-muted p-0.5 outline-none transition-colors duration-(--duration-fast) ease-(--ease-out)",
-                glass && GLASS_SHEEN,
+                // **A bandeja é sobreposição, e não tinta chapada — e isto diverge do
+                // `TabsList` de propósito.**
+                //
+                // `bg-muted` é opaco: medido, ele pintava **38,38,38** tanto no
+                // cabeçalho quanto dentro do painel de um cartão, ignorando o que
+                // está atrás. Um trilho de abas vive dentro de uma tela conhecida;
+                // este controle não — ele mora na barra do catálogo (vidro sobre a
+                // página), no painel do `DropdownMenu`, no `Popover` do telefone e
+                // solto num cartão. Chapado, ele lê como um bloco estrangeiro
+                // colado sobre o preto do app.
+                //
+                // A superfície passa a ser a do campo, `bg-input-fill/50` — a mesma
+                // de `field-classes`, e por isso a placa lê como o fundo de um
+                // `Input`. No escuro `--input-fill` é branco a 15%, então a /50 são
+                // 7,5% de sobreposição: **28** sobre a página e **40** sobre o
+                // cartão, contra os 38 fixos de antes. No claro o token é opaco por
+                // construção, e a placa continua se comportando como campo.
+                "group/theme relative inline-flex h-8 w-22 shrink-0 items-center rounded-full bg-input-fill/50 p-0.5",
                 // O alvo de toque real: a pílula tem 32px de altura, e o
                 // pseudo-elemento a leva aos 44px que um dedo pede sem mexer no
                 // layout de quem a posiciona.
                 "after:absolute after:-inset-x-1 after:-inset-y-1.5 after:content-['']",
-                "focus-visible:ring-3 focus-visible:ring-ring/45",
                 className,
             )}
             // Ele vive dentro de menus suspensos (conta e menu mobile): sem isto,
             // o pointer down fecha o menu antes do clique chegar.
             onPointerDown={(e) => e.stopPropagation()}
+            // **A seleção segue o foco, e isso é escrito à mão de propósito.**
+            //
+            // O Radix já tenta fazer isso: ele marca uma flag num `keydown` de
+            // `document` e, no `onFocus` do item, clica se a flag estiver de pé.
+            // Só que o React 19 delega os eventos no **contêiner da raiz**, que
+            // fica abaixo de `document` — então o `onKeyDown` do item move o
+            // foco *antes* de o listener de `document` levantar a flag, e o
+            // `onFocus` a lê como falsa. Medido aqui: a seta movia o foco e
+            // **não** trocava o tema, e o Espaço também não pegava. Com o
+            // teclado, o controle ficava inerte.
+            //
+            // Ler o foco é a fonte de verdade que não depende de ordem de
+            // entrega: entrar por Tab foca a parada marcada e não muda nada;
+            // clicar foca a que já foi escolhida; a seta foca a vizinha e a
+            // escolhe — que é o comportamento de `radiogroup` da WAI-ARIA.
+            onFocus={(e) => {
+                const alvo = (e.target as HTMLElement).dataset?.parada
+                if (alvo && alvo !== PARADAS[indice].valor) setTheme(alvo as Tema)
+            }}
         >
-            <SwitchPrimitive.Thumb
+            {/*
+             * A peça. **Uma só** — ver o cabeçalho: cabeça, rastro e pescoço
+             * liam como duas bolas viajando, e não como matéria.
+             *
+             * Sem borda, por decisão do dono: o fio duro é o que denuncia a
+             * distorção quando a forma estica, porque o contorno deixa de ser
+             * circular e o olho vê a elipse. Sem ele, quem segura a peça contra
+             * a bandeja é a sombra — e essa é a conta apertada do tema claro,
+             * onde `--background` e `--muted` estão a ΔRGB 15 (contra 28 no
+             * escuro).
+             */}
+            <span
+                aria-hidden
+                ref={cabecaRef}
                 data-slot="theme-toggle-thumb"
-                className={cn(
-                    "pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc(50%-0.125rem)] rounded-full shadow-xs",
-                    // A superfície é composta em **dois ramos exclusivos**, e
-                    // não numa base que o vidro desfaz: é a forma do
-                    // `tabs-indicator` e do `ColorTile`, e a razão é a asserção
-                    // 13 de `glass.test.ts` — onde o eixo dispensa o
-                    // neutralizador, ele não pode existir. Um `bg-background`
-                    // deixado na base morreria calado sob o shorthand
-                    // `background` da utility.
-                    //
-                    // No chapado, as três classes são as do `tabs-indicator`
-                    // (`bg-background`, `border-border/80`, `shadow-xs`), e o
-                    // escuro **não** as sobrescreve — ver o cabeçalho. Só a
-                    // forma diverge, porque este é um switch.
-                    //
-                    // `glass-round` porque a peça é redonda: o aro linear põe o
-                    // pico nos **cantos** da caixa, e um círculo não os tem —
-                    // medido no `Avatar`, 0% do perímetro via o pico. A borda de
-                    // 1px que o vidro toma já estava aqui, então a caixa não
-                    // anda.
-                    glass
-                        ? `${glassRoundSurfaceClassName} [--glass-tone:var(--background)]`
-                        : "border border-border/80 bg-background",
-                    "transform-gpu will-change-transform transition-transform duration-(--duration-slow) ease-(--ease-emphasized)",
-                    "group-data-[visual=light]/theme:translate-x-full",
-                )}
+                className="pointer-events-none absolute top-0.5 left-0.5 size-7 translate-x-[calc(var(--tt-i)*1.75rem)] rounded-full bg-background shadow-sm"
             />
-            <ThemeFace icon="dark" alvo={visualIsLight} />
-            <ThemeFace icon="light" alvo={!visualIsLight} />
-        </SwitchPrimitive.Root>
+            {PARADAS.map((parada) => (
+                <ThemeFace
+                    key={parada.valor}
+                    parada={parada}
+                    ativo={PARADAS[indice].valor === parada.valor}
+                />
+            ))}
+        </RadioGroupPrimitive.Root>
     )
 }
 
 /**
- * Uma das duas faces. Vem depois do polegar no DOM de propósito: assim ela pinta
- * por cima dele sem precisar de `z-index`, e o ícone que está valendo aparece
- * *sobre* a pastilha em vez de sumir debaixo dela.
- *
- * **A face que está valendo é sólida; a outra é de contorno.** O peso do traço é
- * o sinal mais forte dos três, e ele resolve o que a cor sozinha não resolvia: no
- * tema escuro a distância entre `foreground` e `muted-foreground` fica sutil
- * demais num glifo de 16px. A escala e a tinta continuam, somando ao mesmo lado.
- *
- * O par não é do mesmo conjunto, e não podia ser: **o Heroicons só tem contorno
- * em 24** — não existe `16/outline` nem `20/outline`. Então o ativo usa o micro
- * (`16/solid`), que é o conjunto certo para `size-4`, e o inativo é o glifo de
- * 24 desenhado a 16. Ele fica com o traço fino, e é exatamente o que a régua de
- * iconografia adverte — aqui a troca é consciente: o contorno é o **estado
- * apagado**, e o traço mais leve trabalha a favor dele em vez de contra.
+ * Uma das três faces. Vem depois dos discos no DOM de propósito: assim ela pinta
+ * por cima deles sem precisar de `z-index` entre irmãos, e o glifo que está
+ * valendo aparece *sobre* a pastilha em vez de sumir debaixo dela.
  *
  * Os dois glifos ficam empilhados e trocam por opacidade, e não por condicional
- * no JSX: o estado visual é dirigido por CSS (`data-visual`, dois quadros atrás
- * do estado real, ver acima), então uma troca em React aconteceria no meio do
- * deslize do polegar — glifo pulando enquanto a pastilha ainda anda.
+ * no JSX: desmontar e montar não tem o que esmaecer. **Estes dois esmaecem por
+ * transição de CSS**, então o `disableTransitionOnChange` do next-themes os
+ * pega e eles trocam de estalo no momento da viagem — o que é o certo aqui: a
+ * página inteira troca de cor no mesmo instante, e um glifo dissolvendo sozinho
+ * ficaria fora de compasso. Quem tem de animar é o que se **desloca**, e esse
+ * usa WAAPI justamente para escapar do mesmo `!important`.
  */
 function ThemeFace({
-    icon,
-    alvo,
+    parada,
+    ativo,
 }: {
-    icon: "light" | "dark"
-    /** Esta é a metade para onde o polegar vai — a que acende sob o cursor. */
-    alvo: boolean
+    parada: (typeof PARADAS)[number]
+    ativo: boolean
 }) {
-    const OutlineIcon = icon === "light" ? SunOutlineIcon : MoonOutlineIcon
-    const SolidIcon = icon === "light" ? SunSolidIcon : MoonSolidIcon
-
-    // As três variantes são escritas por extenso, e não montadas a partir de
-    // `icon`: o Tailwind varre o código como **texto**, e uma classe interpolada
-    // em tempo de execução nunca chega ao CSS.
-    const ativo =
-        icon === "light"
-            ? "group-data-[visual=light]/theme:scale-100 group-data-[visual=light]/theme:text-foreground"
-            : "group-data-[visual=dark]/theme:scale-100 group-data-[visual=dark]/theme:text-foreground"
-    const sumeAtivo =
-        icon === "light"
-            ? "group-data-[visual=light]/theme:opacity-0"
-            : "group-data-[visual=dark]/theme:opacity-0"
-    const acendeAtivo =
-        icon === "light"
-            ? "opacity-0 group-data-[visual=light]/theme:opacity-100"
-            : "opacity-0 group-data-[visual=dark]/theme:opacity-100"
-
-    const glifo =
-        "absolute inset-0 size-4 transition-opacity duration-(--duration-slow) ease-(--ease-emphasized)"
+    const { Solido, Contorno, valor, rotulo } = parada
 
     return (
-        // A face de destino **precisa** receber o ponteiro para poder acender:
-        // o `pointer-events-none` fica só na que já está ativa. O clique não se
-        // perde — ele borbulha para o botão. `data-role` sobrevive porque é o
-        // que distingue as duas em teste e em depuração; nada de CSS o lê mais,
-        // desde que o hover deixou de ser desenhado pela raiz.
-        <span
-            data-role={alvo ? "target" : "active"}
+        <RadioGroupPrimitive.Item
+            value={valor}
+            aria-label={rotulo}
+            data-slot="theme-toggle-face"
+            // Lido pelo `onFocus` da raiz: é o valor desta parada, no elemento
+            // que recebe o foco.
+            data-parada={valor}
             className={cn(
-                // `group/face` porque quem recebe o ponteiro é esta caixa e quem
-                // carrega a tinta é o glifo lá dentro. Assim cada classe fica com
-                // **um variante só** — a armadilha das variantes empilhadas que
-                // este arquivo já documentou, e que aqui nem chega a existir.
+                // `group/face` porque quem recebe o ponteiro é este botão e quem
+                // carrega a tinta é o glifo lá dentro. Assim cada classe fica
+                // com **um variante só** — a armadilha das variantes empilhadas
+                // que este arquivo já documentou.
                 "group/face",
                 // `z-10` não é enfeite: o `::after` que expande o alvo de toque
                 // da raiz é gerado **depois** das faces e, sem `z-index`, pinta
-                // por cima delas — ele engolia o ponteiro, e a face de destino
-                // nunca recebia `:hover`. Medido: a pílula casava `:hover` e a
-                // face não. Subindo a face, o anel externo do `::after` continua
-                // capturando o que está fora da pílula.
-                "relative z-10 flex w-1/2 items-center justify-center",
-                !alvo && "pointer-events-none",
+                // por cima delas — ele engolia o ponteiro, e a face nunca
+                // recebia `:hover`. Subindo a face, o anel externo do `::after`
+                // continua capturando o que está fora da pílula.
+                "relative z-10 flex size-7 items-center justify-center rounded-full outline-none",
+                "focus-visible:ring-3 focus-visible:ring-ring/45",
             )}
         >
             <span
                 className={cn(
                     "relative block size-4 scale-90 text-muted-foreground transition-[transform,color] duration-(--duration-slow) ease-(--ease-emphasized)",
-                    // **O hover é tinta, e só.** É a régua do `TabsTrigger`
-                    // inativo (`hover:text-foreground`) — ver o cabeçalho. A
-                    // face que já está valendo tem `pointer-events-none`, então
-                    // só a de destino acende, que é exatamente o que a aba
-                    // inativa faz e a ativa não precisa fazer.
+                    // **O realce é tinta, e só.** É a régua do `TabsTrigger`
+                    // inativo (`hover:text-foreground`): no cursor a face acende
+                    // o rótulo, sem pintar superfície e sem deslocar objeto — o
+                    // movimento fica reservado para a troca de verdade.
                     "group-hover/face:text-foreground",
                     // `hover:` compila para `@media (hover: hover)` e não vale no
                     // telefone. Sem o par, a regra H do projeto acusa — e o toque
-                    // ficaria sem resposta nenhuma antes do polegar sair.
+                    // ficaria sem resposta nenhuma antes do dedo sair.
                     "group-active/face:text-foreground",
-                    ativo,
+                    ativo && "scale-100 text-foreground",
                 )}
             >
-                <OutlineIcon aria-hidden className={cn(glifo, sumeAtivo)} />
-                <SolidIcon aria-hidden className={cn(glifo, acendeAtivo)} />
+                <Contorno
+                    aria-hidden
+                    className={cn(
+                        "absolute inset-0 size-4 transition-opacity duration-(--duration-slow) ease-(--ease-emphasized)",
+                        ativo && "opacity-0",
+                    )}
+                />
+                <Solido
+                    aria-hidden
+                    className={cn(
+                        "absolute inset-0 size-4 opacity-0 transition-opacity duration-(--duration-slow) ease-(--ease-emphasized)",
+                        ativo && "opacity-100",
+                    )}
+                />
             </span>
-        </span>
+        </RadioGroupPrimitive.Item>
     )
 }
