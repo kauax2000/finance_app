@@ -3,6 +3,9 @@
 import { AppLogo } from "@/components/layout/app-logo"
 import { AppWordmark } from "@/components/layout/app-wordmark"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Separator } from "@/components/ui/separator"
@@ -235,7 +238,7 @@ export default function BrandDoc() {
 
       <DocSection
         title="O botão de marca"
-        description="variant=&quot;brand&quot; é a tecla do primary com o arco-íris em volta: um contorno de 1px e um halo borrado atrás. Sob o cursor o arco-íris gira, uma volta a cada 6s, e ao sair ele pausa no ângulo em que estava — desligar a animação faria a cor saltar de volta ao começo. Um por tela, para o CTA de marca — entrar, começar. O link sublinha sempre, e no cursor o traço vira arco-íris varrendo da esquerda para a direita."
+        description="variant=&quot;brand&quot; é a tecla do primary com o arco-íris em volta: um contorno de 1px e um halo borrado atrás. Sob o cursor o halo acende e o preenchimento troca de --brand-fill; o giro saiu do sistema na rodada 100. Um por tela, para o CTA de marca — entrar, começar. O link não tem traço em repouso: no cursor um sublinhado de arco-íris entra pela esquerda, e recolhe para a direita na saída."
         code={`<Button variant="brand" size="xl">entrar</Button>
 <Button variant="link">esqueceu a senha?</Button>`}
         previewClassName="items-center gap-6"
@@ -243,6 +246,45 @@ export default function BrandDoc() {
         <Button variant="brand" size="xl">entrar</Button>
         <Button variant="link">esqueceu a senha?</Button>
       </DocSection>
+
+      <DocSection
+        title="Os controles de escolha"
+        description="Checkbox, Radio e o cartão do RadioGroup vestem a marca por contorno, e só quando marcados — desmarcados eles são pixel a pixel os do sistema. O halo do botão não vem junto: nos dois átomos o ::after já é o alvo de toque de 44px, então sobra o contorno, como no brandOutline. Uma por tela."
+        code={`<Checkbox variant="brand" defaultChecked />
+
+<RadioGroup variant="brandCard" defaultValue="pro">
+  <RadioGroupItem value="pro" description="Carteiras ilimitadas.">
+    Pro — R$ 29/mês
+  </RadioGroupItem>
+</RadioGroup>`}
+        previewClassName="flex-col items-stretch gap-4"
+      >
+        <div className="flex items-center gap-2">
+          <Checkbox id="ds-brand-cb" variant="brand" defaultChecked />
+          <Label htmlFor="ds-brand-cb">Aceito os termos</Label>
+        </div>
+        <RadioGroup
+          variant="brandCard"
+          defaultValue="pro"
+          className="w-full max-w-sm"
+        >
+          <RadioGroupItem value="free" description="Uma carteira, sem histórico.">
+            Grátis
+          </RadioGroupItem>
+          <RadioGroupItem
+            value="pro"
+            description="Carteiras ilimitadas e relatórios."
+          >
+            Pro — R$ 29/mês
+          </RadioGroupItem>
+        </RadioGroup>
+      </DocSection>
+
+      <DocNote title="O contorno esmaece, e o conteúdo não pousa no degradê">
+        <p>
+          Quem liga e desliga a marca é uma <strong>opacidade</strong>, e não a troca da camada: <code>background-image</code> não interpola entre um degradê e <code>none</code>, então pintar e despintar faria o contorno estalar. O miolo é chapado — <code>--primary</code> na caixa, <code>--background</code> no anel, <code>--card</code> no cartão —, então o tique continua branco sobre a tecla e o ponto continua <code>--primary-accent</code> sobre a página: <strong>o mesmo contraste dos controles do sistema</strong>. O degradê só aparece por 1px de borda, e arco-íris sob texto continua proibido.
+        </p>
+      </DocNote>
 
       <DocNote title="O que não fazer">
         <p>

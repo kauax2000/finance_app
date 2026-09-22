@@ -302,13 +302,36 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   `--brand-grain`, e ele mora **só na marca**: o wordmark e o símbolo (prop
   `rainbow` — preenchido e **parado** em todo tamanho), o campo de marca
   e o `Button variant="brand"`, mais o `Badge variant="brand"` desde a rodada 89
-  desde a rodada 89.
+  e os **controles de escolha** — `Checkbox variant="brand"`,
+  `Radio variant="brand"` e `RadioGroupItem variant="brandCard"`. **Há duas
+  famílias de peça de marca, e elas quebram por motivos diferentes**: a do
+  **contorno** (`Button`, `Badge`, os controles de escolha), em que o degradê
+  vive em 1px de `border-box` sobre um miolo chapado; e a do
+  **preenchimento** (`Progress variant="brand"` e `Slider variant="brand"`), em
+  que ele preenche a barra e o que a liberta da invariante 3 é não haver rótulo
+  em cima. `brand-contour.test.ts` tranca as duas.
   Arco-íris **sob texto** — num gráfico, num fundo de cartão, preenchendo um
   chip — continua sendo a invariante 3 violada com sete cores de uma vez, e
   sete matizes não têm um contraste só. As peças de marca escapam porque
   nelas o degradê **nunca fica sob o rótulo**: ele vive num contorno de 1px
   (`border-box` sobre um `padding-box` chapado) e num halo borrado
   atrás (`::after`), com o miolo preenchido pelo `primary`. Uma por tela.
+  **Nos controles de escolha o halo não existe, e o motivo é mecânico**: o
+  `::after` dos dois átomos **já é o alvo de toque de 44px** (`after:-inset-3.5`),
+  e ele não se move. Sobra o contorno — o precedente do `brandOutline` —, e
+  nesta escala é o certo de qualquer forma: um halo a `-inset-1` sangra 4px e
+  encosta na linha vizinha de uma lista com `gap-3`. **E ele só acende
+  marcado**: desmarcado, os três são pixel a pixel os do sistema, porque a
+  passagem do fio cinza para o degradê *é* a comemoração e cinco anéis de
+  acento numa lista deixam de ser acento. Quem liga e desliga é uma
+  **opacidade** e não a troca da camada — `background-image` não interpola
+  entre um degradê e `none`, e pintar e despintar faria o contorno estalar. O
+  núcleo chapado muda por peça (`--primary` na caixa, `--background` no anel,
+  `--card` no cartão) e **tem que ser opaco**: com `transparent` a camada
+  `border-box` aparece no miolo e o controle inteiro vira degradê. O cartão de
+  marca troca o realce de seleção do `card` em vez de somá-lo, e o rádio dentro
+  dele **não** veste `brand` — dois contornos aninhados são "dois anéis na
+  mesma caixa". `brand-contour.test.ts` tranca as cinco peças.
   **O campo não veste marca, e isso custou cinco rodadas.** Passaram por ele um
   contorno estático de arco-íris, o `border-beam` do 21st portado em CSS (feixe
   animado), um halo por `box-shadow`, a receita do `Button variant="brand"` com

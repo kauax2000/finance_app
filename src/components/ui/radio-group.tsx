@@ -63,13 +63,28 @@ import { cn } from "@/lib/utils"
  * `card` reusa os tokens medidos do cartão de escolha do `FieldLabel`, com os
  * seletores reescritos para **esta** anatomia: lá o filho é um `Field`
  * (`has-[>[data-slot=field]]`), aqui é o próprio `Radio`.
+ *
+ * `brandCard` é o mesmo cartão com o arco-íris da marca no lugar do realce de
+ * seleção. O rádio dentro dele **não** leva `variant="brand"`: dois contornos
+ * de arco-íris aninhados são o defeito de "dois anéis na mesma caixa" que o
+ * `radioInCardClassName` já nomeia.
  */
+/** O que os dois cartões têm em comum — só o realce de seleção os separa. */
+const CARTAO = [
+  "min-h-11 w-full items-start gap-3 rounded-lg border border-input p-2.5 leading-snug font-normal transition-colors",
+  // O par `active:` não é cortesia com a regra H: num alvo que é para o
+  // dedo, `hover:` compila dentro de `@media (hover: hover)` e não vale.
+  "not-has-[:disabled,[data-disabled]]:hover:bg-muted/50 not-has-[:disabled,[data-disabled]]:active:bg-muted/50",
+  "has-[:focus-visible]:border-ring has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/45",
+  "has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50",
+].join(" ")
+
 const radioGroupItemVariants = cva("relative", {
   variants: {
     variant: {
       plain: "gap-2 pointer-coarse:min-h-11",
       card: [
-        "min-h-11 w-full items-start gap-3 rounded-lg border border-input p-2.5 leading-snug font-normal transition-colors",
+        CARTAO,
         // O contorno é `primary-accent` a 60% — 3,01:1 no claro e 2,99:1 no
         // escuro contra o fundo real do cartão, contra 1,35 e 1,32 do não
         // selecionado. A 100% ele sobe para 7,66 / 6,14 e lê como borda de erro
@@ -80,11 +95,35 @@ const radioGroupItemVariants = cva("relative", {
         // renderizado, o variante do Tailwind cobre `[data-state=checked]`
         // mesmo o Radix nunca escrevendo `data-checked`.
         "has-data-checked:border-primary-accent/60 has-data-checked:bg-primary/5 dark:has-data-checked:bg-primary/10",
-        // O par `active:` não é cortesia com a regra H: num alvo que é para o
-        // dedo, `hover:` compila dentro de `@media (hover: hover)` e não vale.
-        "not-has-[:disabled,[data-disabled]]:hover:bg-muted/50 not-has-[:disabled,[data-disabled]]:active:bg-muted/50",
-        "has-[:focus-visible]:border-ring has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/45",
-        "has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50",
+      ].join(" "),
+      /**
+       * O mesmo cartão com o arco-íris da marca por contorno, **e só quando
+       * selecionado** — não selecionado ele é pixel a pixel o `card`.
+       *
+       * É aqui que a marca de fato se vê: 44px de altura dão ao degradê a
+       * escala que os 16px do anel não dão. Uma por tela.
+       *
+       * **A lavagem de 5% sai de propósito.** Um contorno de arco-íris é sinal
+       * de seleção muito mais forte que um véu, e mantê-la exigiria achatar
+       * `primary/5` sobre um pai que o componente não conhece.
+       *
+       * **O núcleo é `--card`**, porque o `::before` a `-z-10` cobre o fundo
+       * *e a borda* do elemento (numa raiz de empilhamento eles pintam antes
+       * dos filhos de `z` negativo). Num cartão que não pouse numa superfície
+       * de `Card`, quem chama escreve `[--brand-fill:var(--background)]`.
+       *
+       * O anel de foco continua sendo o do cartão: o `ring-3` mora **fora** da
+       * caixa de borda, então o contorno não o cobre. O `border-ring` que vem
+       * junto é que fica escondido sob a franja, e é o certo — dois contornos
+       * concorrentes na mesma aresta.
+       */
+      brandCard: [
+        CARTAO,
+        "brand-rainbow-image isolate [--brand-fill:var(--card)]",
+        "before:absolute before:-inset-px before:-z-10 before:rounded-[inherit] before:border before:border-transparent",
+        "before:[background:linear-gradient(var(--brand-fill),var(--brand-fill))_padding-box,var(--brand-rainbow)_border-box]",
+        "before:opacity-0 before:transition-opacity before:duration-(--duration-fast)",
+        "has-data-checked:before:opacity-100",
       ].join(" "),
     },
   },
@@ -92,8 +131,9 @@ const radioGroupItemVariants = cva("relative", {
 })
 
 /**
- * O que o cartão ajusta no `Radio`. Três contra-classes, todas resolvidas pelo
- * `twMerge` (mesmo grupo, mesmo variante) e nenhuma por especificidade:
+ * O que os cartões (`card` e `brandCard`) ajustam no `Radio`. Três
+ * contra-classes, todas resolvidas pelo `twMerge` (mesmo grupo, mesmo
+ * variante) e nenhuma por especificidade:
  *
  * 1. `after:hidden` — o alvo de 44px do átomo sangra para **fora** do cartão
  *    (16 + 2×14 = 44 contra 10px de recuo de cada lado), e ali quem manda é o
@@ -112,7 +152,7 @@ const radioGroupItemVariants = cva("relative", {
 const radioInCardClassName =
   "mt-0.5 after:hidden focus-visible:ring-0 focus-visible:border-input disabled:opacity-100"
 
-type RadioGroupVariant = "plain" | "card"
+type RadioGroupVariant = "plain" | "card" | "brandCard"
 
 type RadioGroupContextValue = {
   variant: RadioGroupVariant
@@ -186,11 +226,11 @@ function RadioGroupItem({
   className,
   radioClassName,
   ...props
-}: Omit<React.ComponentProps<typeof Radio>, "children"> &
+}: Omit<React.ComponentProps<typeof Radio>, "children" | "variant"> &
   VariantProps<typeof radioGroupItemVariants> & {
     /** O rótulo da opção. */
     children: React.ReactNode
-    /** A explicação. Só tem lugar em `variant="card"` — ver o cabeçalho. */
+    /** A explicação. Só tem lugar nos cartões — ver o cabeçalho. */
     description?: React.ReactNode
     /** `className` veste a **caixa** (o `<label>`); esta veste o controle. */
     radioClassName?: string
@@ -208,7 +248,7 @@ function RadioGroupItem({
         {...props}
         aria-invalid={props["aria-invalid"] ?? (grupo.invalid || undefined)}
         className={cn(
-          resolvido === "card" && radioInCardClassName,
+          resolvido !== "plain" && radioInCardClassName,
           radioClassName
         )}
       />

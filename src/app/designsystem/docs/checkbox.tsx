@@ -42,6 +42,39 @@ export default function CheckboxDoc() {
       </DocNote>
 
       <DocSection
+        title="A versão de marca"
+        description="O arco-íris da marca por contorno, e só quando marcada. Uma por tela."
+        code={`<Checkbox variant="brand" />
+<Checkbox variant="brand" defaultChecked />`}
+        previewClassName="flex-col items-start gap-3"
+      >
+        <div className="flex items-center gap-2">
+          <Checkbox id="ds-cb-brand-1" variant="brand" />
+          <Label htmlFor="ds-cb-brand-1">Não marcado</Label>
+        </div>
+        <div className="flex items-center gap-2">
+          <Checkbox id="ds-cb-brand-2" variant="brand" defaultChecked />
+          <Label htmlFor="ds-cb-brand-2">Marcado</Label>
+        </div>
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="ds-cb-brand-3"
+            variant="brand"
+            checked="indeterminate"
+          />
+          <Label htmlFor="ds-cb-brand-3">Parcial</Label>
+        </div>
+      </DocSection>
+
+      <DocNote title="Desmarcada ela é a caixa do sistema, pixel a pixel">
+        O arco-íris só acende marcado, e isso é decisão. A passagem do fio cinza para o degradê <em>é</em> a comemoração — cinco caixas desmarcadas numa lista com cinco anéis de acento deixam de ter acento nenhum. O contorno esmaece por opacidade (<code>--duration-fast</code>) e não por troca de camada: <code>background-image</code> não interpola entre um degradê e <code>none</code>, então trocar a pintura faria o contorno estalar.
+      </DocNote>
+
+      <DocNote title="Sem halo, porque o ::after já é o alvo de toque">
+        O <code>Button</code> e o <code>Badge</code> desenham a marca em duas camadas: o contorno no <code>::before</code> e um halo borrado no <code>::after</code>. Aqui o <code>::after</code> é o alvo de 44px, e ele não se move — sobra o contorno, que é o precedente do <code>brandOutline</code>. Nesta escala é o certo de qualquer forma: um halo a <code>-inset-1</code> sangra 4px e encosta na linha vizinha de uma lista com <code>gap-3</code>. E o tique continua <code>--primary-foreground</code> sobre <code>--primary</code>: o miolo marcado é chapado, o degradê só aparece por 1px de borda, e o contraste do conteúdo é <strong>o mesmo da caixa do sistema</strong>. Arco-íris sob texto continua proibido.
+      </DocNote>
+
+      <DocSection
         title="Lista de seleção"
         description="Numa lista, o rótulo inteiro é o alvo do toque."
         code={`<Label className="flex items-center gap-3 rounded-lg border p-3">
@@ -70,6 +103,13 @@ export default function CheckboxDoc() {
 
       <PropsTable
         rows={[
+          {
+            prop: "variant",
+            type: '"default" | "brand"',
+            default: '"default"',
+            description:
+              "A aparência. `brand` acende o arco-íris da marca por contorno, e só quando marcada.",
+          },
           {
             prop: "checked",
             type: 'boolean | "indeterminate"',

@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { RadioGroup as RadioGroupPrimitive } from "radix-ui"
+import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
@@ -29,7 +30,7 @@ import { cn } from "@/lib/utils"
  *
  * O Radix acrescenta um `<input type="radio" aria-hidden tabIndex={-1}>` quando
  * há um formulário ancestral, para o valor participar do envio nativo — medido:
- * fora de um `<form>` ele não existe. Ele é `position:absolute; opacity:0;
+ * fora de um `<form>` ele não existe. Ele é `position:absolute; opacity:0
  * pointer-events:none`, então **não conta como filho de layout**; e num `<label>`
  * que embrulhe o rádio o controle rotulado continua sendo o `<button
  * role="radio">`, que o Radix emite primeiro e que **é** elemento rotulável.
@@ -39,38 +40,79 @@ import { cn } from "@/lib/utils"
  * Quem for ler o estado deste átomo de fora escreve `data-[state=checked]`.
  * (`data-checked:` do Tailwind também casa — medido —, mas o atributo que o
  * Radix escreve é `data-state`, e é por ele que se procura no DOM.)
+ *
+ * ## O eixo `variant`
+ *
+ * `brand` é o anel com o arco-íris da marca por contorno, e **só quando
+ * marcado** — desmarcado ele é pixel a pixel a `default`. As razões são as do
+ * `Checkbox`, e a nota sobre o halo ausente também: o `::after` daqui já é o
+ * alvo de toque de 44px, então sobra o contorno. Uma por tela.
  */
+const radioVariants = cva(
+  [
+    "relative aspect-square size-4 shrink-0 rounded-full border border-input text-primary-accent shadow-xs outline-none transition-colors",
+    // O alvo de toque, igual ao do `Checkbox` e ao do `Switch`: o desenho
+    // tem 16px, o tocável tem 44 (16 + 2 × 14). Medido: `inset: -14px`.
+    "after:absolute after:-inset-3.5 after:content-['']",
+    // Byte a byte `fieldFocusRingClassName`. Não é importado de
+    // `field-classes` pela mesma razão que o `Checkbox` e o `Switch` não
+    // importam: um controle redondo não veste `fieldSurfaceClassName` —
+    // três das quatro declarações dela seriam anuladas (`rounded-lg` →
+    // `rounded-full`, o preenchimento, a rampa de corpo de texto) —, e
+    // importar só o anel esconderia que o resto diverge. É o precedente do
+    // `InputOTPSlot`.
+    "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/45",
+    // Byte a byte `fieldInvalidClassName` — e o `ring-3` é a correção: a
+    // versão anterior escrevia a **cor** do anel sem a largura dele, então
+    // o estado inválido trocava só a borda. Mesma família do botão
+    // "Desfazer" do toast, que tinha `border-color` e nenhum `border-style`.
+    "aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20",
+    "dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+    // Sem `pointer-events-none` de propósito: com ele o `cursor-not-allowed`
+    // não chega a aparecer, porque o elemento deixa de receber o ponteiro.
+    "disabled:cursor-not-allowed disabled:opacity-50",
+  ].join(" "),
+  {
+    variants: {
+      variant: {
+        // O fundo escurecido do tema escuro é da caixa **do sistema**. A
+        // `brand` não o leva: marcada, o pseudo cobre o elemento inteiro, e
+        // conviver com um núcleo `--background` deixaria o desmarcado e o
+        // marcado em duas superfícies diferentes.
+        default: "dark:bg-input-fill/30",
+        // A receita do `Checkbox variant="brand"`, com um núcleo diferente: o
+        // anel marcado **não se preenche** — quem marca é o ponto —, então o
+        // `--brand-fill` só precisa ser opaco, para o arco-íris não vazar pelo
+        // miolo. Com `transparent` a camada `border-box` aparece no meio e o
+        // controle inteiro vira degradê.
+        //
+        // O ponto continua `bg-current` lendo `text-primary-accent` da base, e
+        // ele pinta **por cima** do pseudo: um `::before` a `-z-10` entra na
+        // ordem antes dos descendentes em fluxo.
+        brand: [
+          "brand-rainbow-image isolate [--brand-fill:var(--background)]",
+          "before:absolute before:-inset-px before:-z-10 before:rounded-[inherit] before:border before:border-transparent",
+          "before:[background:linear-gradient(var(--brand-fill),var(--brand-fill))_padding-box,var(--brand-rainbow)_border-box]",
+          "before:opacity-0 before:transition-opacity before:duration-(--duration-fast)",
+          "data-[state=checked]:before:opacity-100",
+        ].join(" "),
+      },
+    },
+    defaultVariants: { variant: "default" },
+  },
+)
+
 function Radio({
   className,
+  variant,
   ...props
-}: React.ComponentProps<typeof RadioGroupPrimitive.Item>) {
+}: React.ComponentProps<typeof RadioGroupPrimitive.Item> &
+  VariantProps<typeof radioVariants>) {
   return (
     <RadioGroupPrimitive.Item
       data-slot="radio"
-      className={cn(
-        "relative aspect-square size-4 shrink-0 rounded-full border border-input text-primary-accent shadow-xs outline-none transition-colors dark:bg-input-fill/30",
-        // O alvo de toque, igual ao do `Checkbox` e ao do `Switch`: o desenho
-        // tem 16px, o tocável tem 44 (16 + 2 × 14). Medido: `inset: -14px`.
-        "after:absolute after:-inset-3.5 after:content-['']",
-        // Byte a byte `fieldFocusRingClassName`. Não é importado de
-        // `field-classes` pela mesma razão que o `Checkbox` e o `Switch` não
-        // importam: um controle redondo não veste `fieldSurfaceClassName` —
-        // três das quatro declarações dela seriam anuladas (`rounded-lg` →
-        // `rounded-full`, o preenchimento, a rampa de corpo de texto) —, e
-        // importar só o anel esconderia que o resto diverge. É o precedente do
-        // `InputOTPSlot`.
-        "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/45",
-        // Byte a byte `fieldInvalidClassName` — e o `ring-3` é a correção: a
-        // versão anterior escrevia a **cor** do anel sem a largura dele, então
-        // o estado inválido trocava só a borda. Mesma família do botão
-        // "Desfazer" do toast, que tinha `border-color` e nenhum `border-style`.
-        "aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20",
-        "dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
-        // Sem `pointer-events-none` de propósito: com ele o `cursor-not-allowed`
-        // não chega a aparecer, porque o elemento deixa de receber o ponteiro.
-        "disabled:cursor-not-allowed disabled:opacity-50",
-        className
-      )}
+      data-variant={variant ?? "default"}
+      className={cn(radioVariants({ variant }), className)}
       {...props}
     >
       <RadioGroupPrimitive.Indicator
@@ -100,4 +142,4 @@ function Radio({
   )
 }
 
-export { Radio }
+export { Radio, radioVariants }

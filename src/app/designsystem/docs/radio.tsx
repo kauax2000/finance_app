@@ -45,6 +45,39 @@ export default function RadioDoc() {
         </RadioGroup>
       </DocSection>
 
+      <DocSection
+        title="A versão de marca"
+        description="O arco-íris da marca por contorno do anel, e só quando marcado. Uma por tela."
+        code={`<RadioGroup defaultValue="b">
+  <Label className="flex items-center gap-2">
+    <Radio variant="brand" value="a" /> Não marcado
+  </Label>
+  <Label className="flex items-center gap-2">
+    <Radio variant="brand" value="b" /> Marcado
+  </Label>
+</RadioGroup>`}
+        previewClassName="flex-col items-stretch"
+      >
+        <RadioGroup defaultValue="marcado" className="gap-3">
+          <Label className="flex w-fit items-center gap-2 font-normal">
+            <Radio variant="brand" value="nao-marcado" />
+            Não marcado
+          </Label>
+          <Label className="flex w-fit items-center gap-2 font-normal">
+            <Radio variant="brand" value="marcado" />
+            Marcado
+          </Label>
+        </RadioGroup>
+      </DocSection>
+
+      <DocNote title="Desmarcado ele é o anel do sistema, pixel a pixel">
+        O arco-íris só acende marcado — a passagem do fio cinza para o degradê <em>é</em> a comemoração, e um grupo inteiro de anéis de acento deixa de ter acento. O contorno esmaece por opacidade (<code>--duration-fast</code>): <code>background-image</code> não interpola entre um degradê e <code>none</code>, então trocar a camada faria o contorno estalar. E não há halo — o <code>::after</code> daqui já é o alvo de toque de 44px, então a marca fica só no contorno, como no <code>brandOutline</code>.
+      </DocNote>
+
+      <DocNote title="O anel de marca não se preenche, e o núcleo precisa ser opaco">
+        Quem marca a escolha continua sendo o ponto: o <code>--brand-fill</code> daqui é <code>--background</code>, e ele existe só para o degradê não vazar pelo miolo — com <code>transparent</code> a camada <code>border-box</code> aparece no meio e o controle inteiro vira arco-íris. O ponto pinta por cima do contorno: um <code>::before</code> a <code>-z-10</code> entra na ordem de pintura antes dos descendentes em fluxo. Dentro de um cartão, a marca é do cartão (<code>RadioGroupItem variant=&quot;brandCard&quot;</code>) e não do anel — dois contornos aninhados são dois anéis na mesma caixa.
+      </DocNote>
+
       <DocNote title="Ele exige o RadioGroup">
         O <code>Item</code> do Radix lança fora de um <code>RadioGroup</code>, e reimplementar papel, foco itinerante e input espelho à mão seria trocar uma primitiva testada por uma cópia pior. Contexto de primitiva não é composição: o anel continua sendo o átomo.
       </DocNote>
@@ -67,6 +100,13 @@ export default function RadioDoc() {
             prop: "value",
             type: "string",
             description: "O valor da opção. Obrigatório — é como o grupo a identifica.",
+          },
+          {
+            prop: "variant",
+            type: '"default" | "brand"',
+            default: '"default"',
+            description:
+              "A aparência. `brand` acende o arco-íris da marca por contorno, e só quando marcado.",
           },
           {
             prop: "disabled",

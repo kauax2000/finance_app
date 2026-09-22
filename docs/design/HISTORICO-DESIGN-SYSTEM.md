@@ -11941,3 +11941,56 @@ trocá-los é decisão de produto. E duas decisões de token continuam abertas:
 dar valor próprio a `--income`/`--expense` sólidos, e o `default` do `Progress`
 ser `--primary`, que depois da rebrand é a cor mais forte da tela numa barra que
 não tem estado nenhum.
+
+### Rodada 103 — a marca desce para os controles de escolha
+
+**O pedido.** Uma versão de marca para o `Checkbox` e o `Radio`. Duas decisões
+do dono no caminho: o arco-íris aparece **só marcado**, e o escopo inclui o
+cartão do `RadioGroup`.
+
+**O `::after` já estava ocupado, e isso decidiu o desenho.** A receita do
+`Button variant="brand"` tem duas camadas — o contorno no `::before` e um halo
+borrado no `::after`. Nos dois átomos o `::after` **é** o alvo de toque de 44px
+(`after:-inset-3.5`), e ele não se move. Sobrou o contorno, que é o precedente
+do `brandOutline` — e nesta escala é o certo de qualquer forma: um halo a
+`-inset-1` sangra 4px e encosta na linha vizinha de uma lista com `gap-3`.
+
+**Nenhum token novo e nenhuma linha em `globals.css`.** `@utility
+brand-rainbow-image` já existia e declara `--brand-rainbow` no próprio
+elemento; a mudança inteira coube em três arquivos de componente.
+
+**Quem liga e desliga é uma opacidade, não a troca da camada.**
+`background-image` não interpola entre um degradê e `none`, então pintar e
+despintar faria o contorno estalar. Com o pseudo sempre presente e a opacidade
+indo a 1 em `data-[state=checked]`, ele esmaece em `--duration-fast`.
+
+**O núcleo vai no pseudo, e tem de ser opaco.** Numa raiz de empilhamento o
+fundo *e a borda* do elemento pintam **antes** dos filhos de `z` negativo, então
+o `::before` a `-inset-px` cobre os dois — nada precisa ser anulado. Com
+`transparent` a camada `border-box` apareceria no miolo e o controle inteiro
+viraria degradê. O valor muda por peça: `--primary` na caixa (o tique continua
+branco sobre a tecla, contraste **idêntico** ao de hoje), `--background` no anel
+(que não se preenche — quem marca é o ponto) e `--card` no cartão.
+
+**O cartão troca o realce, e não o soma.** `brandCard` larga
+`has-data-checked:border-primary-accent/60` e a lavagem de 5%: um contorno de
+arco-íris é sinal muito mais forte que um véu, e manter a lavagem exigiria
+achatar `primary/5` sobre um pai desconhecido. O rádio dentro dele **não** veste
+`brand` — dois contornos aninhados são o "dois anéis na mesma caixa" que o
+`radioInCardClassName` já nomeia.
+
+**Uma colisão de tipo, a única não óbvia.** `RadioGroupItem` consome o nome
+`variant` para si e espalha o resto no `Radio`; com um eixo `variant` no átomo,
+os dois se cruzavam. O tipo passou a `Omit<…, "children" | "variant">`. O custo
+aceito: um `Radio variant="brand"` numa linha `plain` só é alcançável usando
+`<Radio>` direto. Se aparecer consumidor, a saída é uma prop `radioVariant`.
+
+**A rede.** `brand-contour.test.ts` tranca as cinco peças que desenham o
+contorno: todas vestem `brand-rainbow-image`, nenhuma declara tinta no elemento
+sob um variante de marcado, os dois átomos mantêm `after:-inset-3.5` e nenhum
+ganha halo. Verificado por mutação — pôr `data-[state=checked]:bg-primary` na
+caixa e trocar `after:-inset-3.5` por `-inset-2` derrubam uma asserção cada.
+
+**Fora de escopo:** o `Switch` tem a mesma anatomia e receberia a receita sem
+alteração; não foi pedido.
+

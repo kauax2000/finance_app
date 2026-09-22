@@ -58,6 +58,44 @@ export default function RadioGroupDoc() {
       </DocSection>
 
       <DocSection
+        title="O cartão de marca"
+        description="O mesmo cartão com o arco-íris da marca no lugar do realce de seleção. É onde a marca de fato se vê — 44px de altura dão ao degradê a escala que os 16px do anel não dão. Uma por tela."
+        code={`<RadioGroup defaultValue="pro" variant="brandCard">
+  <RadioGroupItem value="free" description="Uma carteira, sem histórico.">
+    Grátis
+  </RadioGroupItem>
+  <RadioGroupItem value="pro" description="Carteiras ilimitadas e relatórios.">
+    Pro — R$ 29/mês
+  </RadioGroupItem>
+</RadioGroup>`}
+        previewClassName="flex-col items-stretch"
+      >
+        <RadioGroup
+          defaultValue="pro"
+          variant="brandCard"
+          className="w-full max-w-sm"
+        >
+          <RadioGroupItem value="free" description="Uma carteira, sem histórico.">
+            Grátis
+          </RadioGroupItem>
+          <RadioGroupItem
+            value="pro"
+            description="Carteiras ilimitadas e relatórios."
+          >
+            Pro — R$ 29/mês
+          </RadioGroupItem>
+        </RadioGroup>
+      </DocSection>
+
+      <DocNote title="A lavagem de 5% sai, e o rádio de dentro não vira marca">
+        Um contorno de arco-íris é sinal de seleção muito mais forte que um véu de 5%, e mantê-lo exigiria achatar <code>primary/5</code> sobre um pai que o componente não conhece. Pela mesma razão o <code>Radio</code> dentro do cartão continua o do sistema: dois contornos de arco-íris aninhados são o defeito de &ldquo;dois anéis na mesma caixa&rdquo; que o cartão já resolve. O anel de foco também continua sendo o do cartão — o <code>ring-3</code> mora fora da caixa de borda, então o contorno não o cobre.
+      </DocNote>
+
+      <DocNote title="O núcleo é --card, e ele é trocável numa linha">
+        O <code>::before</code> a <code>-z-10</code> cobre o fundo <em>e</em> a borda do elemento — numa raiz de empilhamento eles pintam antes dos filhos de <code>z</code> negativo —, então o miolo chapado tem de vir do pseudo. Num cartão de marca que não pouse numa superfície de <code>Card</code>, quem chama escreve <code>[--brand-fill:var(--background)]</code>.
+      </DocNote>
+
+      <DocSection
         title="Na horizontal"
         description="Colunas de largura igual. Use no lugar de abas dentro de formulário."
         code={`<RadioGroup
@@ -134,7 +172,7 @@ export default function RadioGroupDoc() {
         rows={[
           {
             prop: "variant",
-            type: '"plain" | "card"',
+            type: '"plain" | "card" | "brandCard"',
             default: '"plain"',
             description:
               "A forma das opções. Desce por contexto até cada item, que pode sobrescrever.",
@@ -174,12 +212,11 @@ export default function RadioGroupDoc() {
           {
             prop: "description",
             type: "ReactNode",
-            description:
-              "A explicação. Só em variant=\"card\".",
+            description: "A explicação. Só nos cartões.",
           },
           {
             prop: "variant",
-            type: '"plain" | "card"',
+            type: '"plain" | "card" | "brandCard"',
             description: "Sobrescreve o do grupo, para a opção que foge do padrão.",
           },
           {
