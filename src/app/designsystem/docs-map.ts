@@ -37,6 +37,7 @@ import FieldDoc from "./docs/field"
 import FormDoc from "./docs/form"
 import FormPickerPopoverDoc from "./docs/form-picker-popover"
 import GlassDoc from "./docs/glass"
+import HistogramSliderDoc from "./docs/histogram-slider"
 import HoverCardDoc from "./docs/hover-card"
 import IconographyDoc from "./docs/iconography"
 import InputDoc from "./docs/input"
@@ -126,6 +127,7 @@ export const DOCS: Record<string, ComponentType> = {
   "form": FormDoc,
   "form-picker-popover": FormPickerPopoverDoc,
   "glass": GlassDoc,
+  "histogram-slider": HistogramSliderDoc,
   "hover-card": HoverCardDoc,
   "iconography": IconographyDoc,
   "input": InputDoc,

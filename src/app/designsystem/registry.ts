@@ -247,6 +247,8 @@ const LAYER: Record<string, Layer> = {
   drawer: "Organisms",
   "dropdown-menu": "Organisms",
   "form-picker-popover": "Organisms",
+  /** Compõe o StatCard, e quem contém organismo é organismo. */
+  "histogram-slider": "Organisms",
   "hover-card": "Organisms",
   menubar: "Organisms",
   "navigation-menu": "Organisms",
@@ -463,6 +465,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("dropdown-menu", "Dropdown Menu", "Menu de ações, com checkbox, radio e submenu.", ui("dropdown-menu"), "DropdownMenu, DropdownMenuItem"),
   entry("form", "Form", "Formulário, suas peças e o Enter.", ui("form"), "Form, FormInput, FormTextarea, FormRadioGroup, FormError, FormActions, FormCancel, FormSubmit"),
   entry("form-picker-popover", "Form Picker Popover", "Seletor com busca ancorado num campo.", ui("form-picker-popover"), "FormPickerPopover, FormPickerPopoverTrigger, FormPickerPopoverContent, FormPickerPopoverSearch, FormPickerPopoverList, FormPickerPopoverItem, FormPickerPopoverFooter"),
+  entry("histogram-slider", "Histogram Slider", "Faixa de valor sobre uma distribuição.", ui("histogram-slider"), "HistogramSlider"),
   entry("hover-card", "Hover Card", "Prévia ao pousar o cursor.", ui("hover-card"), "HoverCard, HoverCardTrigger, HoverCardContent, HoverCardArrow"),
   entry("menubar", "Menubar", "Fileira de menus.", ui("menubar"), "Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem, MenubarCheckboxItem, MenubarRadioItem, MenubarSub"),
   entry("navigation-menu", "Navigation Menu", "Navegação de um cabeçalho público.", ui("navigation-menu"), "NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent, NavigationMenuPanel, NavigationMenuSectionLabel, NavigationMenuLink, NavigationMenuLinkTitle, NavigationMenuLinkDescription"),

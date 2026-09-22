@@ -1600,6 +1600,77 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   preenchimento: `--income` é `var(--success)` e `--expense` é
   `var(--destructive)`, e o que separa dinheiro de estado são as superfícies
   `-muted`, que esta barra não consome. A distinção aqui é de vocabulário.
+- **`HistogramSlider` — a faixa de valor sobre uma distribuição.** Um
+  histograma atrás de um slider de dois punhos, com as colunas **dentro** da
+  seleção acesas e as de fora apagadas, e a leitura de mínimo e
+  máximo. **O controle é o histograma**: o `Slider` cobre a mesma caixa das
+  colunas (que ficam `pointer-events-none` por baixo), então clicar em qualquer
+  ponto move um punho, e o trilho e a faixa somem — quem mostra o intervalo são
+  as colunas, e pintar uma barra por cima seria o mesmo dado duas vezes. Apagar
+  a faixa exige sumir com a **cor e a imagem**: `bg-transparent` sozinho não
+  apaga o degradê da variante de marca. **A coluna acende quando cabe inteira entre as
+  duas guias** — contenção, e não sobreposição. A versão por sobreposição
+  acendia a coluna sob o punho **metade para fora** da linha, e com as guias
+  desenhadas o olho lia a borda da seleção num lugar e o corte em outro; com
+  elas na tela, elas são a fronteira. O custo é o inverso: a coluna da ponta só
+  acende quando o punho a ultrapassa por inteiro. **A âncora do arco-íris é aritmética**: as colunas são
+  uma divisão igual conhecida, então `background-size` é `N × 100%` e
+  `background-position-x` é `100i/(N−1)` — sem `ResizeObserver`, ao contrário do
+  `Slider`, onde a largura da faixa é arbitrária. Medir não é reflexo; é o que
+  se usa quando a geometria não se sabe. **As barras não são `ChartSparkline`,
+  e é exceção nomeada**: ela é a primitiva de distribuição decorativa da casa,
+  mas não expõe `<Cell>`, e "barra fora da seleção apaga" é decisão por barra.
+  **A travessia das colunas é opacidade, e não cor.** Cada coluna tem duas
+  camadas — a superfície apagada e a tinta acesa por cima, sempre montada,
+  indo de `opacity-0` a `opacity-100` em `--duration-base`. A versão com
+  `transition-colors` tinha defeito medido: o `transition-property` computado
+  traz `background-color` e **não** `background-image`, então na variante de
+  marca o degradê estalava enquanto a tinta apagada dissolvia em 150ms. Degradê
+  não interpola; e montar e desmontar a camada também não serve, porque não há
+  o que esmaecer num nó que acabou de nascer. Sem escalonamento por índice: uma
+  onda saindo do punho fica atrasada no arraste.
+  **A linha-guia começa na altura do centro do punho, fica na fresta *entre*
+  duas colunas, e se ancora na grade — não no punho.** Ela marca a
+  **fronteira** da seleção, e com a contenção o corte é a aresta entre a última
+  apagada e a primeira acesa; uma linha no eixo de uma coluna diria que o corte
+  passa pelo meio dela, que é o que ele não faz. E presa ao punho ela erraria o
+  vão: o Radix recua o punho meia-largura nas pontas
+  (`left: calc(70% - 2.8px)`), então o centro dele **não** acompanha a grade —
+  medido, **1,73px** de desvio numa coluna de 6,02px. A conta é `index / total`,
+  com erro máximo de **meio pixel** contra a fresta real (o respiro de 1px
+  entra no passo).
+  **E o slider é travado na grade**, que é o que centra punho e guia: não há
+  `step` — o passo é a largura de uma faixa, então o punho só para em fronteira
+  de coluna. Com passo livre isso é impossível: uma linha presa às frestas não
+  tem como estar sob um punho contínuo. Junto vai um **recuo de meio punho**
+  (`inset-x-1.75`) na régua das colunas, porque o centro do punho viaja de 7px
+  a `largura − 7px` e uma grade que encosta nas bordas vive noutro sistema de
+  coordenadas. **E o estado nasce na grade**, senão o punho recebe o valor
+  encaixado e as guias leem o cru, com meio punho de desvio até o primeiro
+  arraste. Medido em seis posições: desvio **0px** em todas. Ela é
+  `pointer-events-none`, para não disputar o arraste com o slider que a cobre,
+  e a altura sai de `--histogram-h`, publicada pelo invólucro. **Quem a torna visível é `mix-blend-difference`, e
+  não um fio em volta**: no escuro `--primary-accent` e `--primary` são a mesma
+  cor, então na variante padrão ela sumia dentro da coluna acesa — e um
+  `outline` de 1px em volta de um fio de 1px é metade da peça sendo moldura. A
+  inversão não escolhe cor nenhuma (escura sobre coluna clara, clara sobre
+  superfície escura), e os 70% de alfa a deixam **parcial**, que é o marcar sem
+  cortar. Ela não transiciona — é posição, não estado.
+  **Toda coluna leva o mesmo tempo entre o neutro e o pintado** (300ms, atraso
+  zero), e quem acende antes é aquela por onde o punho passou antes — ordem que
+  o arraste produz sozinho, e que não se calcula. Houve um escalonamento por
+  distância até a guia e ele **saiu**: calculava uma ordem que já existe. A
+  consequência é dita em vez de escondida: num **salto** não há ordem de
+  passagem, e a seleção dissolve junta.
+  **A leitura é um par termo/valor (`DescriptionList`), e não dois cartões.**
+  Os `StatCard` custavam **70px** de moldura e recuo para duas linhas de
+  texto; como `<dl>` a mesma informação cabe em **41px**, e a semântica
+  fica certa — "Mínimo" é o **termo** de um valor, não o rótulo de um
+  cartão. Mínimo à esquerda e máximo à direita, no mesmo recuo da régua,
+  para cada valor cair sob a ponta a que pertence.
+  O título **não** é da peça (chrome de tela, invariante 1); a leitura é,
+  porque é o estado do controle. Lacuna conhecida: o Radix anuncia o número
+  cru, e o `Slider` não escreve `aria-valuetext`.
 - **`Avatar`**: Radix-based with `size`; keep `data-slot` for tests and form deferrals. Duas versões só: `AvatarImage` (a foto) ou `AvatarFallback` (iniciais escuras sobre a cor chapada de identidade). Sem `variant` de superfície — houve um, enquanto o degradê e o chapado conviveram, e saiu com o degradê. Sem vidro, sem anel, e **uma forma só, o círculo** — `shape="rounded"` saiu na rodada 85, porque canto arredondado é a família do `ColorTile` e da marca de workspace, que identificam coisa e não pessoa. A cor da pessoa vem de `identityToneFor`, nunca de classe montada.
 - **Overlays**: `Dialog` / `Sheet` / `AlertDialog` use `bg-overlay` (not hardcoded `bg-black/10`).
 - **`DialogFooter` empilha ao contrário** (`flex-col-reverse`), para a ação

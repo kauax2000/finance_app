@@ -12215,3 +12215,453 @@ quatro variáveis **com fallback**, o `bg-no-repeat`, o `offsetLeft` sem
 isenta o slider comum. Verificado por mutação: tirar o `MutationObserver` e
 tirar o fallback de uma `var()` derrubam uma asserção cada.
 
+### Rodada 107 — `HistogramSlider`, a faixa de valor sobre uma distribuição
+
+**O pedido.** Uma segunda versão de slider igual à referência do 21st
+(`@ravikatiyar162/range-slider`): histograma atrás, colunas dentro da seleção
+acesas, duas caixas com mínimo e máximo.
+
+**O código da referência não foi copiado, e o motivo é factual.** Os metadados
+trazem `license: ""` (vazia), `license_url: null` e `copyright_notice: null`, e
+a fonte mora em `r2://components-code-private/…` — bucket **privado**, com
+`copyGuard` na API. Isso é diferente dos dois precedentes desta casa, que são
+**MIT com autor nomeado** (o `border-beam` de Jakub Antalik, o `link-button` de
+Hyperiux). Um range slider com histograma é padrão conhecido de filtro de
+preço; a peça foi construída sobre as nossas primitivas a partir do
+comportamento observado na tela.
+
+**A peça é composição, e por isso é organismo.** `Slider` (o alvo de 44px, o
+anel de foco, as setas, os rótulos em pt-BR dos punhos), `StatCard` +
+`StatCardLabel` + `StatCardValue` > `MoneyDisplay` para as caixas. Importar
+`StatCard` já define a camada: quem contém organismo é organismo.
+
+**O controle é o histograma.** A primeira montagem empilhava gráfico e
+controle — as colunas em cima, o slider embaixo —, e o dono pediu o gatilho
+**dentro** das colunas, e não embaixo. Hoje o `Slider` cobre a mesma caixa das
+colunas (que ficam `pointer-events-none` por baixo), então clicar em qualquer
+ponto move um punho, e os punhos pousam no meio da crista. O trilho e a faixa
+somem: quem mostra o intervalo são as colunas, e pintar uma barra por cima
+seria o mesmo dado desenhado duas vezes. **Apagar a faixa exige sumir com a cor
+e a imagem** — `bg-transparent` sozinho não apaga o degradê da variante de
+marca, que é `background-image`.
+
+**A coluna acende por sobreposição, e não pelo centro.** A faixa `i` cobre
+`[min + i·w, min + (i+1)·w)` e acende quando **intersecta** a seleção. É o que
+a faz acender assim que o punho entra nela; pela regra do centro ela só
+acenderia na metade do caminho, e o controle pareceria atrasado em relação ao
+dedo. O fim é **aberto**, senão um punho na fronteira acende as duas vizinhas;
+só a última fecha no `max`, senão o punho no topo não acende a barra que
+encosta. Medido na tela com 40 faixas em [0, 5000] e seleção [500, 3500]:
+primeira ativa **4**, última **27** — exatamente `500/125` e `3500/125 − 1`.
+
+**A âncora do arco-íris é aritmética, e é o contraste com a rodada 106.** Lá a
+mesma ancoragem precisou de `ResizeObserver` + `MutationObserver`, porque a
+largura da faixa preenchida é arbitrária. Aqui as colunas são uma divisão
+**igual e conhecida**, então a posição sai do índice: `background-size` de
+`N × 100%` e `background-position-x` de `100i/(N−1)` — o posicionamento
+percentual do CSS resolvido para este caso (`P%` alinha `P%` da imagem com `P%`
+do elemento, logo `offset = P/100 · (E − W)`; com `E = W/N` e
+`offset = −i·W/N`, sai `P = 100i/(N−1)`). Medido com 64 colunas:
+`background-size: 6400%` e as posições batendo com a conta até a terceira casa,
+com `no-repeat` e nenhum degradê nas inativas. **Medir não é um reflexo**: é o
+que se usa quando a geometria não se sabe.
+
+**As barras não são `ChartSparkline`, e é exceção nomeada.** Ela é a primitiva
+de distribuição decorativa da casa e seria a escolha certa se as barras fossem
+só desenho — mas **não expõe `<Cell>`**, e "barra fora da seleção apaga" é
+exatamente uma decisão por barra. As colunas são elementos próprios por um
+limite medido da primitiva, não por desconhecê-la, e são `aria-hidden` porque
+quem carrega a semântica é o slider.
+
+**O desenho se afinou na tela, em quatro passadas do dono:** colunas mais finas,
+topo em domo (`rounded-t-full` no lugar de um canto de 2px — com a coluna fina,
+o domo faz o conjunto ler como crista e não como cerca de tijolos), gatilho
+dentro das colunas, e colunas mais finas **e grudadas**. A largura da coluna é
+função da contagem e do contêiner, não uma medida cravada: o respiro foi a
+`gap-px` e a demo passou de 40 para **64 faixas**, que é o que deixa a coluna
+em 6px. A distribuição da demo também trocou — a primeira era um decaimento
+liso, que lê como rampa; a de hoje é irregular, como distribuição de verdade.
+
+**A rede.** `histogram-slider.test.ts` cobre só o que é próprio daqui, que é a
+aritmética: a faixa ativa nas bordas (incluindo o fim aberto e a última
+fechando no `max`), o piso da altura (contagem 1 contra máximo 200 não pode
+sair em 0%, e zero continua zero) e a âncora (`i = 0` → 0%, `i = N−1` → 100%,
+`N = 1` sem divisão por zero). O resto é composição, e quem o guarda são os
+testes das peças compostas.
+
+**Ficou por fazer:** o Radix anuncia o valor cru do punho (`1800`), e não
+"R$ 1.800,00". O `Slider` não escreve `aria-valuetext` e não repassa props por
+punho; o conserto é uma prop nele, que é `src/components/ui/` e pede
+autorização. Fica registrado em vez de varrido. E a peça **não tem consumidor
+no app**: o filtro de valor das transações
+(`transactions-filters-panel.tsx:723`) continua com dois `Input money`, e
+trocá-lo exige uma ponte `string` ↔ `[number, number]` no controller mais uma
+fonte real de distribuição — decisão de produto, fora desta rodada por escolha
+do dono.
+
+### Rodada 108 — a linha-guia do punho, e a travessia que deixa de estalar
+
+**O pedido.** Uma linha do punho até o fim das colunas, para ficar visível onde
+o corte está; e melhorar a animação das colunas durante o arraste, "para ficar
+mais integrado".
+
+**O segundo pedido escondia um defeito, e ele era medível.** A coluna carregava
+`transition-colors`, e o `transition-property` computado é `color,
+background-color, border-color, outline-color, text-decoration-color, fill,
+stroke, --tw-gradient-*` — **`background-image` não está na lista**. Na variante
+de marca a tinta ativa *é* um `background-image`, então o degradê aparecia e
+sumia de estalo **enquanto** o `background-color` da coluna apagada dissolvia em
+150ms (o `backgroundColor` de uma coluna de marca ativa é `rgba(0,0,0,0)`). O
+pior dos dois: metade suave, metade pulando.
+
+É a lição da rodada 103 chegando numa peça nova: **degradê não interpola entre
+si e `none`, e quem liga e desliga é uma opacidade.**
+
+**Duas camadas.** A coluna passou a ser a superfície apagada (`--input-fill`,
+sem transição nenhuma) com a tinta acesa num `<span>` por cima, **sempre
+montada**, indo de `opacity-0` a `opacity-100` em `--duration-base` com
+`--ease-out`. Montar e desmontar a camada não serviria: não há o que esmaecer
+num nó que acabou de nascer. E é filho, e não `::before`, porque a âncora do
+arco-íris é `backgroundSize`/`backgroundPositionX` em estilo **inline**, que não
+alcança pseudo-elemento — pelo pseudo seria preciso passar as duas medidas por
+propriedade personalizada só para reencontrá-las do outro lado.
+
+**200ms e não 150:** a 150ms a travessia ainda lê como troca, e o pedido era
+integração.
+
+**Sem onda.** Um escalonamento por índice saindo do punho seria bonito parado e
+**atrasado no arraste** — as colunas ficariam devendo à posição do dedo, que é
+o oposto de integrado. Considerado e recusado.
+
+**A linha mora no `::before` do punho.** O `::after` já é o alvo de toque de
+44px (verificado: `content: ""`, 44px; o `::before` vinha com `content: none`,
+livre). Pendurá-la no punho é o que garante a posição **exata**: o Radix escreve
+`left: calc(10% + 5.6px)` — uma porcentagem com correção de meia-largura de
+punho —, e uma linha posicionada por conta própria erraria pixels nas pontas.
+Ela nasce na borda de baixo (`top-full`) e vale metade do histograma menos o
+raio do punho. Medido: começa em **39** e termina em **64**, que é exatamente o
+fim das colunas.
+
+A altura sai de uma fonte só — o invólucro publica
+`[--histogram-h:--spacing(16)]`, no precedente do `[--card-strip-py:--spacing(3)]`
+do `Card` — e o `-` binário do `calc()` vai escapado (`_-_`), pela regra que o
+`AGENTS.md` já registrava.
+
+**O fio de contraste é o que faz a linha existir, e os tokens dizem por quê:**
+
+| tema | `--primary-accent` (a linha) | `--primary` (a coluna acesa) |
+| --- | --- | --- |
+| escuro | `oklch(0.985)` | `oklch(0.985)` — **a mesma cor** |
+| claro | `oklch(0.145)` | `oklch(0.205)` — quase |
+
+E o punho fica justamente na fronteira, com uma coluna acesa de um lado. Com um
+`outline` de 1px em `--background`, ela se lê sobre qualquer coluna — é o mesmo
+recurso que o punho já usa, preenchimento com anel de contraste.
+
+**Ela não transiciona**, porque tem de acompanhar o dedo no mesmo quadro; quem
+esmaece é a coluna, que é estado, e a linha é posição. E **não veste arco-íris**
+na variante de marca: um fio de 2px corta o degradê num ponto só e sairia de uma
+cor arbitrária, que não é a marca — é uma fatia dela.
+
+**Uma nota de instrumento.** A linha nasceu com `w-px` e, sobre as colunas
+acesas, não dava para afirmar na captura se ela chegava à tela. O teste decisivo
+foi pintá-la de vermelho com contorno verde por injeção de CSS: ela renderizava,
+e o problema era só **força**. Foi para `w-0.5`, e aí se lê. Quando a captura
+não decide, o caminho é tornar o efeito grosseiro de propósito até a pergunta
+virar binária — e não olhar mais forte para o mesmo pixel.
+
+**A rede.** A asserção 4 de `histogram-slider.test.ts` tranca as duas coisas: a
+camada acesa transiciona `opacity` e a coluna **não** volta a escrever
+`transition-colors`; e a linha usa o `::before` do punho e **nunca** o
+`::after` — escrever ali apagaria a área de contato sem erro nenhum, que é o
+jeito silencioso de quebrar isto. Verificado por mutação: trocar a opacidade por
+`transition-colors` e trocar o `before:` por `after:` derrubam uma asserção cada.
+
+### Rodada 109 — as guias mandam, e a onda sai delas
+
+**O pedido**, em quatro partes: linha mais fina e levemente transparente, com
+visibilidade melhor — *"no brand fica bom porém na versão normal não tá
+legal"*; a linha nascendo no **centro** do punho; **só as colunas entre as duas
+guias** acesas; e um fade com **delay** para a animação ficar melhor.
+
+**Por que a linha falhava só na variante padrão, e os tokens dizem.** No escuro
+`--primary-accent` (a linha) e `--primary` (a coluna acesa) são **a mesma cor**,
+`oklch(0.985)` — então na padrão a linha sumia dentro da coluna e só o fio
+escuro em volta aparecia, lendo como um corte sujo. Na marca as colunas são
+coloridas, e por isso lá ela ia bem. O fio de contraste da rodada 108 resolvia o
+caso, mas **um `outline` de 1px em volta de um fio de 1px é metade da peça sendo
+moldura** — e o pedido era justamente afiná-la.
+
+**`mix-blend-difference` substitui o fio, e não escolhe cor nenhuma.** Sobre
+coluna clara o traço sai escuro; sobre a superfície escura, claro. Os 70% de
+alfa fazem a inversão ser **parcial**, que é o "levemente transparente": ela
+marca sem cortar a coluna. Com isso a linha desceu para `w-px` e perdeu o
+`outline`, ficando mais fina *e* mais legível — que era o pedido inteiro.
+
+**As guias viraram a fronteira, e a regra de acender inverteu.** A rodada 107
+tinha escolhido **sobreposição** de propósito, para a coluna da ponta acender
+assim que o punho entrasse nela. Com a linha desenhada na tela isso passou a
+mentir: a coluna sob o punho acendia **metade para fora** da guia, e o olho lia
+a borda da seleção num lugar e o corte em outro. Agora é **contenção** — acende
+quem cabe inteira entre as duas linhas. O custo é o inverso do de lá (a coluna
+da ponta só acende quando o punho a ultrapassa por inteiro), e a troca é o que
+se vê aceso ser exatamente o que as guias delimitam. Uma seleção mais estreita
+que uma faixa não acende nada, e isso é verdade, não buraco.
+
+**A onda sai das guias.** O atraso de cada coluna cresce com a distância até a
+linha mais próxima — 9ms por coluna, **teto de 130ms** —, então a cor corre das
+duas bordas para o meio em vez de o bloco piscar de uma vez. O teto é o que
+separa isto de um defeito: sem ele, o meio de uma seleção larga esperaria
+centenas de milissegundos e ficaria devendo ao dedo, que foi exatamente a razão
+de a rodada 108 ter recusado o escalonamento. E o atraso **só vale acendendo**:
+ao apagar, a seleção sai junta, senão o rastro fica devendo ao punho que já
+passou.
+
+**O atraso quase virou uma regressão de acessibilidade.** O bloco global de
+`prefers-reduced-motion` zera `transition-duration` e **não**
+`transition-delay` — verificado no `globals.css`. Com o atraso em `style`
+inline, quem pede menos movimento trocaria a animação por uma **espera** de até
+130ms: pior que as duas. Por isso ele entra por propriedade personalizada
+(`--bar-delay`) e o par `delay-(--bar-delay) motion-reduce:delay-0` o anula —
+nenhuma classe venceria um inline. Confirmado na folha emitida, e não suposto:
+`.motion-reduce\:delay-0` sai no byte 330801 contra 177831 da base, e **classe
+contra classe quem decide é a ordem de emissão**, não a especificidade.
+
+**Uma nota de método.** A linha, a 1px sobre colunas acesas, não se deixava
+julgar por captura. O que resolveu foi tornar o efeito grosseiro de propósito —
+pintá-la de vermelho com contorno verde por injeção de CSS — até a pergunta
+"ela chega à tela?" virar binária. Ela chegava; faltava força. É a mesma lição
+que a rodada 108 já tinha registrado, e ela se pagou duas vezes.
+
+**A rede.** As asserções 1 e 4 de `histogram-slider.test.ts` foram reescritas
+para a verdade nova — contenção nas bordas (incluindo a seleção estreita demais
+que não acende nada) e o par `delay-(--bar-delay)` + `motion-reduce:delay-0`,
+com a proibição explícita de `transitionDelay:` inline. Verificado por mutação:
+tirar o `motion-reduce` e trocar a contenção por interseção derrubam uma
+asserção cada.
+
+### Rodada 110 — a guia larga o punho e se ancora na coluna
+
+**O relato.** *"A linha não está no meio das colunas."*
+
+**Medido antes de mexer, e o número deu razão ao relato:** a guia caía **dentro**
+da coluna, mas fora do eixo dela — **1,73px** e 0,9px de desvio numa coluna de
+**6,02px**. Numa peça dessa escala, um terço de coluna de erro se vê.
+
+**A causa é estrutural, e estava escrita como virtude.** A rodada 108 pendurou a
+guia no `::before` do punho *justamente* para garantir a posição, com o
+argumento de que o Radix escreve `left: calc(10% + 5.6px)` e uma linha
+posicionada por conta própria erraria pixels. O argumento estava certo sobre o
+mecanismo e **invertido sobre a conclusão**: é exatamente essa correção de
+meia-largura que faz o centro do punho **não** coincidir com o eixo da coluna.
+Presa ao punho, a guia nunca acertaria o meio — ela seguia fielmente uma
+posição que não é a da coluna.
+
+**A guia virou elemento próprio, ancorado na grade das colunas.** A primeira
+versão a pôs no **eixo** da coluna, e o dono corrigiu: *"a linha tem que estar
+exatamente **entre** as colunas"*. E está certo pela semântica, não só pelo
+gosto — a guia marca a **fronteira** da seleção, e com a contenção da rodada
+109 o corte é a aresta entre a última apagada e a primeira acesa. Uma linha no
+eixo diria que o corte passa pelo meio da coluna, que é o que ele não faz.
+
+Então ela pousa na **fresta**: antes da primeira acesa e depois da última.
+Medido: as duas caem dentro do vão de 1px. A conta é `index / total`, e o erro
+contra a fresta real é no máximo **meio pixel** — o respiro entra no passo, e
+corrigi-lo exigiria a fresta em pixels dentro da conta, tirando da `left` a
+porcentagem pura por meio pixel. Sem nenhuma coluna acesa (seleção mais
+estreita que uma faixa), a guia cai na fresta mais próxima do valor, para a
+linha existir mesmo quando não há o que acender.
+
+**O custo, dito:** a guia pode se afastar do punho em até **meia coluna** —
+3,5px com passo de 7px, num punho de 14px, então ela continua por baixo dele. É
+o inverso do custo de antes, e é o lado certo da troca: a linha marca **dado**
+(qual coluna), e o punho é o **controle**.
+
+Ela ficou `pointer-events-none`, porque agora é irmã do slider que a cobre e
+não mais parte dele — sem isso, disputaria o arraste.
+
+**A rede.** A asserção 4 mudou de forma: a guia tem `data-slot` próprio, usa
+`eixoDaBarra(`, e **não** pode voltar a ser pseudo do punho — nem `::before`
+nem `::after`, porque o segundo é o alvo de toque de 44px e escrever ali o
+apagaria sem erro nenhum. Ficam também o `mix-blend-difference`, o
+`pointer-events-none` e o `top-1/2 bottom-0`.
+
+**A lição que vale além desta peça:** um comentário que explica *por que uma
+escolha é a certa* é uma afirmação, e envelhece como qualquer outra. O da
+rodada 108 descrevia corretamente o `calc(10% + 5.6px)` e concluía o oposto do
+que aquele `calc` implica. Foi preciso medir o desvio para ver — a prosa
+sozinha se lia como fundamentada.
+
+### Rodada 111 — o slider trava na grade, e punho e guia param de brigar
+
+**O relato.** "Centralize nas linhas" — o punho e a guia não coincidiam.
+
+**A tensão, dita antes de escolher.** Medido: 1,39px e −0,56px naquele momento,
+mas o pior caso é maior — a guia salta de fresta em fresta (passo 7,02px), então
+ela pode ficar a meia coluna do punho, e nas pontas o recuo de 7px do Radix soma
+a isso. E o ponto que precisava ser dito: **uma linha presa às frestas não pode
+estar sempre sob um punho que anda contínuo.** As duas coisas pedidas em
+rodadas diferentes só coexistem se o slider parar de coluna em coluna. O dono
+escolheu travar na grade.
+
+**Três mudanças que só funcionam juntas.**
+
+1. **O passo é a largura de uma faixa, e `step` saiu da API.** O punho só para
+   em fronteira de coluna. Como API é honesto: num filtro de faixa quem escolhe
+   escolhe **faixas**, e a resolução do histograma já diz qual é a menor delas.
+2. **A régua das colunas recua meio punho (7px) em cada ponta.** O centro do
+   punho do Radix viaja de `7px` a `largura − 7px` — a correção que ele aplica
+   para o punho não sair do trilho. Uma grade que encosta nas bordas vive noutro
+   sistema de coordenadas, e era daí que vinha a parcela do desvio que aparecia
+   nas pontas. Recuada, a grade ocupa **exatamente** a faixa que o punho
+   percorre.
+3. **O estado nasce na grade.** Este foi um defeito meu no meio da rodada, e
+   ele ensina: eu calculei o valor encaixado, passei ao `Slider` — e iniciei o
+   `useState` com o valor **cru**. O punho lia 468,75 e as guias liam 500, e o
+   desvio medido *piorou* para ±6,63px, meio punho exato. Dois consumidores da
+   mesma grandeza com origens diferentes é sempre isso.
+
+**Medido depois, em seis posições seguidas de teclado:** desvio **0px** em
+todas, guia sempre dentro do vão de 1px, e a faixa acesa avançando exatamente
+uma coluna por passo.
+
+**E travar na grade cobra um preço que aparece no dinheiro.** O passo é
+`(max − min) / bins.length`, e se essa conta não fecha redondo os valores saem
+quebrados: com 64 faixas em R$ 0–5.000 o passo vira **R$ 78,125** e a leitura
+saiu `R$ 468,75` — o que num filtro de dinheiro é regressão, não detalhe. A
+regra que ficou: **a contagem de faixas tem de dividir a escala**. A demo chegou a ir
+para 100 faixas (passo de R$ 50, leitura redonda), mas isso afinou a coluna de
+5,8px para 3,35px — efeito colateral que ninguém pediu, apresentado na hora
+como bônus. O dono mandou voltar para **64**, e a demo assume a troca: coluna
+fina e passo de R$ 78,125, com a nota dizendo o preço e as duas saídas (50
+faixas para R$ 100, ou `max` em R$ 6.400 mantendo as 64).
+
+**A rede.** A asserção 5 tranca as três: o passo derivado (`step` não pode
+voltar a ser prop), o `useState(inicialNaGrade)` e o `inset-x-1.75`. Verificado
+por mutação: devolver o estado ao valor cru e zerar o recuo derrubam uma
+asserção cada.
+
+### Rodada 112 — a onda abre, porque o medo estava mal calibrado
+
+**O pedido.** Aumentar o atraso da pintura das colunas, para a transição ficar
+mais bonita.
+
+**A rodada 108 tinha recusado o escalonamento por medo de atraso no arraste, e a
+109 o pôs com passo curto (9ms) e teto baixo (130ms) pelo mesmo medo.** O medo
+não era infundado, mas estava **mal calibrado**, e a pergunta que o corrige é
+*qual* coluna muda de estado:
+
+- **no arraste**, quem acende ou apaga está sempre **junto de uma guia** —
+  distância 0 ou 1 —, então o atraso que se sente é 0 ou um passo. O meio da
+  seleção não muda de estado enquanto se arrasta; ele já está aceso;
+- os valores grandes só alcançam coluna **longe** da guia, e isso só acontece
+  em **salto**: um clique no meio do trilho, uma mudança programática. Ali a
+  onda é o efeito desejado, não uma dívida com o dedo.
+
+Com isso o passo foi a **18ms** e o teto a **320ms**, e o fade de
+`--duration-base` para **`--duration-slow`** — a 200ms a travessia ainda lê como
+troca; a 300 ela lê como dissolução. O dono pediu mais uma vez, e os valores
+fecharam em **30ms** de passo com **teto de 600ms**.
+
+**Medido num salto de 18 colunas**, amostrando a opacidade ao longo do tempo:
+
+| | col 63 | col 60 | col 55 | col 50 | col 46 |
+| --- | --- | --- | --- | --- | --- |
+| 100ms | 0,69 | 0 | 0 | 0 | 0 |
+| 250ms | 1 | 0,94 | 0 | 0 | 0 |
+| 450ms | 1 | 1 | 0,98 | 0,36 | 0 |
+| 700ms | 1 | 1 | 1 | 1 | 0,96 |
+
+A tinta sai da guia e corre para fora, e o conjunto assenta em cerca de 700ms.
+
+O teto **não** saiu, e a guarda de `prefers-reduced-motion` tampouco: com o
+atraso maior, ela passou a valer ainda mais — sem `motion-reduce:delay-0`, quem
+pede menos movimento esperaria agora até 320ms por coluna.
+
+### Rodada 113 — o escalonamento sai: a ordem já existia
+
+**O pedido**, depois de duas rodadas pedindo *mais* atraso: *"todas as colunas
+devem ter o mesmo tempo de transição entre o neutro e o pintado, porém,
+obviamente, o que vai ditar quem vai ascender antes é a ordem que vai sendo
+passado o slider por elas."*
+
+**E isso derruba o escalonamento inteiro, não o ajusta.** As rodadas 109, 112 e
+a primeira metade desta vinham calibrando um atraso por coluna, proporcional à
+distância até a guia, para a cor "sair" das linhas. A frase acima diz que a
+ordem de acender **não é um efeito a produzir** — ela já é um fato do gesto:
+acende antes a coluna por onde o punho passou antes. Calcular um atraso era
+recriar, em código, uma sequência que o arraste já entrega de graça.
+
+Saíram `PASSO_DO_ATRASO`, `TETO_DO_ATRASO`, `atrasoDaBarra`, a variável
+`--bar-delay` e o par `delay-(--bar-delay) motion-reduce:delay-0`. Sobrou uma
+`transition-opacity duration-(--duration-slow)` igual para todas.
+
+**A guarda de movimento reduzido saiu junto, e isso é correto** — ela existia
+*por causa* do atraso (o bloco global zera duração e não atraso). Sem atraso
+nenhum, não há o que anular, e o bloco global sozinho já cobre a duração.
+
+**Medido depois:** as 64 colunas têm um único par de tempos, `0.3s | 0s` — a
+mesma duração e atraso zero em todas. Um passo de teclado no punho acendeu a
+coluna que ele cruzou e deixou a outra ponta intacta.
+
+**A consequência, dita em vez de escondida:** num **salto** — clique longe do
+punho, mudança programática — não há ordem de passagem, e a seleção inteira
+dissolve junta. É o certo pela mesma regra: sem punho passando, não há quem
+venha antes.
+
+**A lição.** Três rodadas calibrando um número (9 → 18 → 30ms, teto 130 → 320 →
+600) sem que ninguém perguntasse se o número devia existir. O pedido de "mais
+delay" foi lido como "aumente o parâmetro", quando o que incomodava era a
+transição ser curta — e a resposta certa era a **duração**, que é o que
+`--duration-slow` já resolvia. Quando um ajuste precisa ser repetido, vale
+duvidar do eixo antes de mexer na escala.
+
+### Rodada 114 — a leitura larga os cartões e vira par termo/valor
+
+**O pedido.** Deixar a parte de baixo mais compacta.
+
+**Os dois `StatCard` cobravam 70px para mostrar duas linhas de texto** — moldura,
+preenchimento, raio e recuo —, numa peça que já tem histograma, trilho e duas
+guias. Era chrome empilhado sobre chrome.
+
+Trocados por um `DescriptionList layout="grid"`, que é o componente certo pela
+**semântica** e não só pelo tamanho: "Mínimo" é o **termo** de "R$ 468,75", não
+o rótulo de um cartão. E o `DescriptionListItem` já traz a regra de par de
+identidade (sem `gap` entre rótulo e valor) de fábrica, que era justamente o que
+o `StatCard` também resolvia — a regra viaja, o cartão não precisava vir junto.
+
+**Medido: 70px → 41px**, 41% a menos, sem perder nada da informação.
+
+**E a leitura passou a apontar para onde pertence.** Mínimo à esquerda, máximo à
+direita, no **mesmo recuo da régua das colunas** (`px-1.75`) — medido, as bordas
+coincidem: 48 contra 48 na esquerda, 472 contra 472 na direita. Cada valor cai
+sob a ponta do trilho a que ele pertence, em vez de flutuar centralizado numa
+caixa que não diz de qual punho está falando.
+
+**A camada não mudou.** A peça deixou de importar `StatCard` (organismo) e
+passou a importar `DescriptionList` (molécula), mas continua `Organisms`: pela
+régua do `LAYER`, quem é **feito de moléculas** é organismo, e ela segue sendo
+uma seção com estrutura própria — histograma, controle e leitura.
+
+### Rodada 115 — a demo pega a saída que a 111 já tinha nomeado
+
+A rodada 111 travou o slider na grade e registrou o preço: com 64 faixas em
+R$ 0–5.000 o passo vira R$ 78,125 e a leitura sai `R$ 468,75`. Ela nomeou as
+duas saídas — 50 faixas para R$ 100, ou `max` em R$ 6.400 mantendo as 64 — e a
+demo ficou pagando o preço por duas rodadas, para não trocar a coluna fina.
+
+O dono pediu a segunda: **`max` em R$ 6.400**. Com 64 faixas o passo vira
+exatamente R$ 100, o `defaultValue` de `[500, 3500]` já cai na grade, e a
+leitura volta a `R$ 500,00` e `R$ 3.500,00` — com a coluna nos mesmos 5,64px e
+o desvio punho↔guia em 0.
+
+Fica a nota de uso, que é o que sobrevive à demo: **a contagem de faixas e o
+`max` decidem juntos o passo em dinheiro**, e quem escolhe um escolhe o outro.
+
+**E a página do catálogo encolheu junto.** As dez notas tinham acumulado 1.178
+palavras ao longo de oito rodadas, narrando cada reviravolta — "a primeira
+versão fazia X", "isto inverte a regra anterior", o passo a passo de cada
+medição. Foram a **565** (−52%), guardando a regra, o número que a sustenta e o
+porquê de não ter sido feito do jeito óbvio. O resto já mora aqui, que é o lugar
+dele: **catálogo é referência, histórico é diário**, e confundir os dois faz a
+página de um componente crescer sem parar.
