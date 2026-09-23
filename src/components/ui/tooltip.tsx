@@ -3,11 +3,33 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Tooltip as TooltipPrimitive } from "radix-ui"
+import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 
 import { cn } from "@/lib/utils"
 import { useViewportWindow } from "@/hooks/use-mobile"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import { menuPanelSurfaceClassName } from "@/lib/menu-classes"
+
+/**
+ * A mola da dica, e ela fica **fora** da escala `--duration-*`/`--ease-*`.
+ *
+ * Aqueles tokens descrevem transição de CSS: uma duração e uma curva. Uma mola
+ * não tem duração — tem rigidez e amortecimento, e o tempo é consequência do
+ * trajeto. É a mesma exceção que a `link-sweep` já abre no `globals.css`.
+ *
+ * Os números são os da referência (`@animate-ui/components-base-tooltip`), lidos
+ * do registry, não uma aproximação.
+ */
+const MOLA = { type: "spring", stiffness: 300, damping: 25 } as const
+
+/**
+ * Se **esta** dica está aberta.
+ *
+ * O `AnimatePresence` precisa do booleano para desmontar depois da saída, e o
+ * Radix só o publica por `onOpenChange` e por `data-state` no DOM. Um contexto
+ * de uma linha é mais barato que ler atributo.
+ */
+const TooltipAbertoContext = React.createContext(false)
 
 function TooltipProvider({
   delayDuration = 0,
@@ -41,14 +63,36 @@ function TooltipProvider({
  */
 function Tooltip({
   disableHoverableContent = true,
+  open,
+  defaultOpen,
+  onOpenChange,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Root>) {
+  // O Radix é quem manda; isto só espelha o estado para o `AnimatePresence` do
+  // conteúdo. `open` continua opcional: passado, ele vence; ausente, o Radix
+  // segue não controlado como sempre foi.
+  const [interno, setInterno] = React.useState(defaultOpen ?? false)
+  const aberto = open ?? interno
+
+  const aoMudar = React.useCallback(
+    (valor: boolean) => {
+      setInterno(valor)
+      onOpenChange?.(valor)
+    },
+    [onOpenChange]
+  )
+
   return (
-    <TooltipPrimitive.Root
-      data-slot="tooltip"
-      disableHoverableContent={disableHoverableContent}
-      {...props}
-    />
+    <TooltipAbertoContext.Provider value={aberto}>
+      <TooltipPrimitive.Root
+        data-slot="tooltip"
+        disableHoverableContent={disableHoverableContent}
+        open={open}
+        defaultOpen={defaultOpen}
+        onOpenChange={aoMudar}
+        {...props}
+      />
+    </TooltipAbertoContext.Provider>
   )
 }
 
@@ -63,8 +107,34 @@ function TooltipTrigger({
  * `sm` desce a 12px e aperta o recuo, para rotular um ícone numa fileira densa:
  * na coluna de ações da `Table` uma caixa de 14px com 12 de recuo saía maior
  * que o botão de 28 que ela nomeia.
+ *
+ * # Sem `text-balance`, e a razão é que a caixa não encolhe atrás dele
+ *
+ * Ele estava aqui, como está no shadcn e na referência do Animate UI — e numa
+ * dica de duas linhas o resultado é uma **caixa que não abraça o próprio
+ * texto**. A ordem é a do CSS, e ela não tem volta: `w-fit` resolve para
+ * `min(max-content, 20rem)`, e como a frase inteira passa do teto a caixa
+ * trava em **320px**; só então o `balance` reparte o texto. Não existe segunda
+ * passada de layout que encolha a caixa até o resultado balanceado.
+ *
+ * Medido, com "Fatura fechada. Lançamentos novos entram na próxima.":
+ *
+ * | `text-wrap` | caixa | linhas | sobra à direita |
+ * | --- | --- | --- | --- |
+ * | `balance` | 320 | 198 + 173 | **98px** |
+ * | `pretty` | 320 | 293 + 78 | 3px |
+ * | `wrap` | 320 | 293 + 78 | 3px |
+ *
+ * Noventa e oito pixels de caixa vazia leem como defeito; uma última linha
+ * curta é tipografia de duas linhas. `pretty` não foi escolhido porque aqui
+ * ele não muda nada — o Chrome devolve a mesma quebra do `wrap` —, e um nome
+ * que não faz diferença é uma promessa a menos.
+ *
+ * Isto vale para **esta** peça. Os outros nove componentes que vestem
+ * `text-balance` não têm o teto mordendo a caixa do mesmo jeito, e ficaram
+ * como estavam.
  */
-const tooltipContentVariants = cva("font-medium text-balance", {
+const tooltipContentVariants = cva("font-medium", {
   variants: {
     size: {
       sm: "px-2 py-1 text-xs",
@@ -115,36 +185,51 @@ function TooltipContent({
   // O portal vai para o `body` da janela ativa. Fora da moldura do catálogo o
   // contexto é `null` e o Radix usa o próprio documento — o app não muda.
   const janela = useViewportWindow()
+  const aberto = React.useContext(TooltipAbertoContext)
+  // A mola é de JavaScript, e o bloco de `prefers-reduced-motion` do
+  // `globals.css` só alcança animação de CSS. Sem isto, a única peça do sistema
+  // que ignora a preferência seria esta.
+  const reduzido = useReducedMotion()
+
+  const fechada = { opacity: 0, scale: reduzido ? 1 : 0.5 }
 
   return (
-    <TooltipPrimitive.Portal container={janela?.document.body}>
-      <TooltipPrimitive.Content
-        data-slot="tooltip-content"
-        data-size={size ?? "md"}
-        sideOffset={sideOffset}
-        collisionPadding={collisionPadding}
-        className={cn(
-          // 20rem é o teto de leitura; o `available-width` é o teto da janela, e
-          // o menor dos dois vence — numa classe só. Com duas (`max-w-xs` e
-          // `max-w-(--radix-…)`) o twMerge apagava a primeira, e a dica perdia o
-          // teto de leitura.
-          "z-(--z-popover) w-fit max-w-[min(20rem,var(--radix-tooltip-content-available-width))] origin-(--radix-tooltip-content-transform-origin)",
-          "max-h-(--radix-tooltip-content-available-height) overflow-y-auto overscroll-contain",
-          menuPanelSurfaceClassName,
-          tooltipContentVariants({ size }),
-          // Entra deslizando do lado do gatilho, o que dá direção ao movimento
-          // em vez de fazer a caixa surgir do nada.
-          "data-[side=bottom]:slide-in-from-top-1 data-[side=left]:slide-in-from-right-1 data-[side=right]:slide-in-from-left-1 data-[side=top]:slide-in-from-bottom-1",
-          "fade-in-0 zoom-in-95 fade-out-0 zoom-out-95",
-          "data-[state=delayed-open]:animate-in data-[state=instant-open]:animate-in data-[state=closed]:animate-out",
-          "animation-duration-(--duration-instant) ease-(--ease-out)",
-          className
-        )}
-        {...props}
-      >
-        {children}
-      </TooltipPrimitive.Content>
-    </TooltipPrimitive.Portal>
+    <AnimatePresence>
+      {aberto && (
+        <TooltipPrimitive.Portal forceMount container={janela?.document.body}>
+          <TooltipPrimitive.Content
+            asChild
+            forceMount
+            data-slot="tooltip-content"
+            data-size={size ?? "md"}
+            sideOffset={sideOffset}
+            collisionPadding={collisionPadding}
+            {...props}
+          >
+            <motion.div
+              key="tooltip-content"
+              initial={fechada}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={fechada}
+              transition={reduzido ? { duration: 0 } : MOLA}
+              className={cn(
+                // 20rem é o teto de leitura; o `available-width` é o teto da
+                // janela, e o menor dos dois vence — numa classe só. Com duas
+                // (`max-w-xs` e `max-w-(--radix-…)`) o twMerge apagava a
+                // primeira, e a dica perdia o teto de leitura.
+                "z-(--z-popover) w-fit max-w-[min(20rem,var(--radix-tooltip-content-available-width))] origin-(--radix-tooltip-content-transform-origin)",
+                "max-h-(--radix-tooltip-content-available-height) overflow-y-auto overscroll-contain",
+                menuPanelSurfaceClassName,
+                tooltipContentVariants({ size }),
+                className
+              )}
+            >
+              {children}
+            </motion.div>
+          </TooltipPrimitive.Content>
+        </TooltipPrimitive.Portal>
+      )}
+    </AnimatePresence>
   )
 }
 

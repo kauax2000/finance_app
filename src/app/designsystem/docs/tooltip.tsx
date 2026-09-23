@@ -50,7 +50,7 @@ export default function TooltipDoc() {
 
       <DocSection
         title="Lado"
-        description="side escolhe de onde ele sai; a entrada desliza a partir do gatilho. O Radix vira o lado quando falta espaço."
+        description="side escolhe de onde ele sai, e a caixa cresce a partir do gatilho — a origem da escala é a que o Radix publica. Ele vira o lado quando falta espaço."
         code={`<TooltipContent side="right">Copiar link</TooltipContent>`}
       >
         {LADOS.map((side) => (
@@ -100,6 +100,12 @@ export default function TooltipDoc() {
           </TooltipContent>
         </Tooltip>
       </DocSection>
+
+      <DocNote title="Ela cresce a partir do gatilho, com mola">
+        A entrada é <code>scale 0,5 → 1</code> com <code>opacity 0 → 1</code>, numa mola de <code>stiffness 300</code> e <code>damping 25</code> — subamortecida de propósito, então ela passa de 1 e volta (medido: 0,992 → <strong>1,0026</strong> → 1,0098). A saída é o mesmo caminho ao contrário. A origem é <code>--radix-tooltip-content-transform-origin</code>, então a caixa nasce do botão e não do próprio centro.
+        <br />
+        Mola não tem duração, e por isso ela fica <strong>fora</strong> da escala <code>--duration-*</code>/<code>--ease-*</code> — a mesma exceção que a <code>link-sweep</code> já abre. Como é movimento de JavaScript, o bloco de <code>prefers-reduced-motion</code> do <code>globals.css</code> não a alcança: quem a desliga é <code>useReducedMotion</code>, e aí a dica só aparece e some.
+      </DocNote>
 
       <DocNote title="A tela funciona sem ele?">
         Se não funciona, o conteúdo está no lugar errado: vira texto na tela, um <code>Popover</code> acionado por toque ou a descrição de um campo.
