@@ -13420,3 +13420,224 @@ duas vezes, porque o que decide é o **computado** — o `background-attachment:
 fixed` do fonte, por exemplo, sai `scroll` no computado. Medir a referência
 rodando custou uma chamada e resolveu o que duas rodadas de leitura não
 resolveram.
+
+### Rodada 122 — a rolagem recalcula o brilho, e as faixas ganham largura
+
+O dono disse que a animação das bordas ainda não estava igual à referência e
+mandou `npx @21st-dev/cli add manuarora700/glowing-effect`. O registry do 21st
+pede autenticação (403), então o CLI não roda sem a chave dele — mas o fonte do
+componente já estava verbatim na primeira mensagem da sessão, e o que decidiu
+foi comparar **as duas rodando**, no bundle ao vivo.
+
+Decisão dele nesta rodada: **o design atual fica** (opacidade 0,5, blur 2, borda
+2px, proximity 50). O que se revisa é **comportamento**. E os quatro blobos
+radiais entram, com cores da marca.
+
+#### O bug: a rolagem não recalculava nada
+
+Medido: rolando **260px com o ponteiro parado**, o alerta ia de `top 255` para
+`-5` — longe do mouse — e o brilho **continuava aceso**, `--active` em `1` e o
+ângulo em `-90`, apontando para onde o ponteiro não estava mais. Ele só voltava
+ao normal no movimento seguinte do mouse.
+
+A causa é uma linha que não foi portada. Na referência:
+
+```js
+const handleScroll = () => handleMove()          // sem evento
+const handleMove = (e?) => { const mouseX = e?.x ?? lastPosition.current.x; … }
+```
+
+Ela guarda a **última posição do ponteiro** e, ao rolar, refaz a conta inteira a
+partir dela. O daqui só remedia a caixa em `scroll`; `--active` e o ângulo
+ficavam parados.
+
+Consertado com a mecânica dela, mais **`capture: true`** — que é a única
+divergência deliberada, e corrige um caso que a referência erra: `scroll` não
+borbulha mas captura, então sem isso a rolagem **dentro de um container** passa
+despercebida e só a da janela conta. É a mesma solução que
+`use-close-on-scroll` já usa nesta casa.
+
+Depois do conserto, com scroll de usuário real: o alerta sai de `top 405` para
+`-95` e `--active` cai de **1 para 0**.
+
+#### Nota de método: a rolagem programática mentiu duas vezes
+
+As duas primeiras verificações do próprio conserto deram **falso negativo**.
+`window.scrollBy()` e `documentElement.scrollTop = …` movem a página mas, neste
+pane automatizado, **não despacharam evento de `scroll` de forma confiável** —
+medido: a página foi de `scrollY 1496` para `1246` e nem `window` nem
+`document`, em captura, receberam nada. Com scroll de entrada real (roda do
+mouse), os dois receberam e o conserto apareceu.
+
+É a terceira vez nesta sessão que o instrumento mente pelo mesmo motivo — antes
+foram o `scroll` sintético disparado à mão e o `style` inline deixado por uma
+sonda anterior. **O que vale é o caminho de entrada real, começando do zero.**
+
+#### O `rAF` daqui coalesce, e o proibido é o laço
+
+O trabalho de cada rajada de `pointermove` passou a ir para **um**
+`requestAnimationFrame`, cancelado no anterior e no unmount. Isso obrigou a
+trocar uma asserção que esta própria sessão havia escrito
+(`not.toMatch(/requestAnimationFrame/)`): o precedente que esta casa recusou —
+no marcador do `Tabs` — é o `rAF` que se **re-agenda** para fazer polling, não
+coalescer um evento num quadro, que é o uso da referência. A asserção nova
+cobra o que separa os dois: **um** ponto de agendamento e um cancelamento (um
+laço não cancela, ele se renova).
+
+Com o `rAF` no lugar, **o cache da caixa saiu**: ler
+`getBoundingClientRect()` uma vez por quadro é barato, e mata a obsolescência de
+**qualquer** origem — um acordeão abrindo, uma imagem carregando, um reflow —,
+não só de rolagem e resize, que era o que o cache cobria.
+
+#### Os quatro blobos, e a largura de faixa
+
+Os quatro `radial-gradient` da referência entraram (`circle`, `at 40% 40%`,
+`at 60% 60%`, `at 40% 60%`), com paradas da marca no lugar dos hexadecimais
+dela, e **antes** do cônico na lista de camadas, como lá. São manchas presas à
+caixa: é o que faz a cor variar por **posição**, e não só pelo ângulo do arco.
+Sem elas o mesmo lado do aviso acendia sempre com as mesmas cores.
+
+E apareceu a conta que explica o aspecto de borrão, que nenhuma das rodadas
+anteriores tinha feito:
+
+| | cores × voltas | largura de faixa | faixas na janela de 80° |
+| --- | --- | --- | --- |
+| referência | 4 × 5 = 20 | **18°** | 4,4 |
+| daqui, antes | 8 × 5 = 40 | **9°** | 8,9 |
+| daqui, agora | 8 × 2,5 = 20 | **18°** | 4,4 |
+
+Copiar o `--repeating-conic-gradient-times: 5` da referência com **oito**
+paradas em vez de quatro dava faixas com **metade da largura** e o dobro da
+contagem — e sob o borrão de 2px elas se misturavam em lama em vez de ler como
+bandas. `--alert-glow-repeat: 2.5` devolve os 18° dela com a paleta daqui.
+**O que importa é a largura de faixa, não o número de voltas**, e essa é a
+lição que o token agora carrega escrita.
+
+### Rodada 123 — o pane não pinta, e a animação vira a da referência de verdade
+
+O dono disse, com ênfase, que **não era o design e sim a animação**, e mandou
+fazer exatamente igual à referência. Duas coisas saíram desta rodada: o port
+literal do mecanismo dela, e a descoberta de que o instrumento de julgamento
+estava quebrado desde o começo.
+
+#### O pane roda a 0,2 fps
+
+Medido, e é a peça que reenquadra as rodadas 119 a 122:
+
+```
+rAF no pane do app:                 0,2 fps  (1 quadro em 2s)
+animação de `transform` (compositor): progride normal
+document.visibilityState:            "visible"
+document.hasFocus():                 true
+```
+
+O pane **não agenda quadros continuamente**. A varredura do arco depende de
+rasterizar `mask-image` a cada quadro — trabalho de main thread —, então
+**nenhum mecanismo pode animar suavemente ali**: nem a transição de CSS que
+estava, nem o `animate()` da referência, nem nada. Só propriedades de
+compositor (`transform`, `opacity`) passam.
+
+Isso explica a série inteira de "continua igual": as três rodadas anteriores
+mudaram cor, largura de faixa, blobos e comportamento de rolagem, e **nenhuma
+delas podia mudar o que se via no pane**, porque o que faltava ali era quadro,
+não código.
+
+Também explica por que toda tentativa de medir suavidade falhou: `setInterval`
+de 120ms disparando a cada ~1000ms, `rAF` amostrando 4 quadros em 3s, e um
+`MutationObserver` registrando **uma** escrita do tween em vez de ~120. Os três
+mediam a mesma starvation.
+
+**Como julgar isto:** abrir `localhost:3000/designsystem/alert` no Chrome
+próprio, onde o `rAF` roda a 60fps. No pane, o arco salta por construção.
+
+#### O port literal
+
+Com o instrumento desacreditado, não havia como sustentar "a minha mecânica é
+equivalente à dela" — que era dedução minha, repetida por três rodadas. Então o
+mecanismo passou a ser o dela:
+
+- sai a `@property --alert-glow-start` e a `transition: … 2s` de CSS; a
+  propriedade volta a ser **não registrada**, como na referência, porque quem
+  interpola é o tween;
+- entra o `animate` do `motion` (já dependência da casa, usada pelo `Tooltip`),
+  com `duration: 2` e `ease: [0.16, 1, 0.3, 1]`, escrevendo a variável no
+  `onUpdate`;
+- **o ângulo atual sai do DOM** (`el.style.getPropertyValue`), e não de um
+  acumulador. Este era um defeito real da versão anterior: um acumulador guarda
+  o **alvo**, não onde a animação está.
+
+Três divergências deliberadas, todas anotadas no arquivo: o módulo **duplo** no
+caminho curto (o da referência devolve valores abaixo de −180 e o arco dá a
+volta pelo lado errado); **parar o tween anterior** (ela não para, e deixa até
+~120 tweens vivos escrevendo a mesma variável — a trajetória é a mesma, porque
+cada tween novo parte do valor atual do DOM); e **movimento reduzido perguntado
+à mão** com `matchMedia`, porque o bloco global encurta *transição* e um tween
+de JS escapa dele — o precedente é o `ThemeToggle` ao trocar transição por
+WAAPI.
+
+#### E os quatro blobos da rodada 122 não pintam nada
+
+Medido nesta rodada: eles são círculos no **interior** da caixa (`radial-gradient(circle, cor 10%, transparent 20%)`,
+raio ~20% da menor dimensão) e o que se vê da peça é só o anel de 2px na
+**aresta**. Eles nunca alcançam o anel — e o mesmo vale na referência, onde o
+raio efetivo é ~44px num cartão de 374×230 contra um anel de 3px na borda. São
+quatro camadas de `background-image` fiéis ao fonte e invisíveis nas duas
+pontas. Ficam, com a nota, porque engrossar a borda ou trocar o anel por
+preenchimento as tornaria visíveis.
+
+### Rodada 124 — o arco nasce arco, e o alvo encosta
+
+Duas coisas, e a primeira é o service worker.
+
+#### Por que nada aparecia no Chrome do dono
+
+Ele reportou que o brilho não aparecia no navegador dele. O código estava certo
+e servido certo — o CSS em `:3000` continha `--alert-glow-repeat: 2.5` e 18
+ocorrências de `alert-glow`, e numa aba nova do pane o efeito ligava. **O que
+estava errado era o Chrome dele estar controlado por um service worker antigo**,
+servindo o precache.
+
+E o próprio repositório já documentava essa falha, em `sw-register.tsx`: *"não
+registrar não é o mesmo que não estar registrado… a rota responde 200, o HTML
+do servidor está certo, e a tela mostra o catálogo de ontem. Foi assim que
+quatro componentes novos 'não apareceram' com tudo no lugar."* O pane é um
+perfil separado, sem SW — daí funcionar aqui e não lá.
+
+**Isso põe em dúvida o feedback das rodadas 119 a 123**: é possível que o dono
+não tenha visto nenhuma delas, o que explica "continua igual" três vezes
+seguidas. A lição operacional: quando algo "não aparece" e o servidor está
+certo, a primeira pergunta é o service worker, não o código.
+
+#### "A linha já aparece inteira em vez de crescer"
+
+Com o cache limpo, o dono descreveu a diferença real com a referência, e era um
+bug — medido e ignorado por mim duas rodadas antes.
+
+`--alert-glow-start` **não tinha valor inicial**. A referência declara
+`"--start": "0"` no style inline; aqui a `@property` dava o `initial-value`, e
+quando ela saiu (rodada 123, o ângulo passou a ser animado por JS) nada repôs.
+Sem valor, `calc((var(--alert-glow-start) - …) * 1deg)` é inválido e
+**`mask-image` cai para `none`** — nenhuma máscara. O que se pintava era o anel
+**inteiro**, e com o `--alert-glow-active` subindo de 0 a 1 em 300ms o anel
+completo *aparecia*, colapsando em arco só quando o tween escrevia o primeiro
+número.
+
+Eu havia medido `mask_e_none: true` em repouso na rodada 123 e **não sinalizei**,
+porque a opacidade era 0 e a peça parecia invisível. O defeito vivia justamente
+na travessia entre 0 e 1.
+
+Com `--alert-glow-start: 0` declarado na utility, o arco existe desde o repouso
+— um segmento curto centrado no **topo**, como na referência — e ao aproximar
+ele **viaja** até o ponteiro. Conferido: `mask-image` sai
+`conic-gradient(from -40deg, …)` em repouso, e não mais `none`.
+
+**É uma falha que não derruba nada**: o CSS é válido, o teste passava, o tipo
+passava. Só o efeito ficava errado. `brand-contour.test.ts` passou a exigir o
+valor inicial.
+
+#### E o alvo encostou
+
+`GLOW_PROXIMIDADE` de 50 para **24**, a pedido: o alvo grande acendia o aviso
+antes de o ponteiro ter intenção de chegar nele. Limiar medido disparando
+`pointermove` a distâncias crescentes da aresta: acende a 10 e 20px, apaga a 30
+e 60. A referência usa 64.

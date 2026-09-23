@@ -322,7 +322,7 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   sancionou, e a mesma que o commit da 100 preservou ("o botão de marca não
   ficou inerte: o halo continua acendendo no cursor"). A referência é o
   `GlowingEffect` da Aceternity, com os números do dono: blur 2, spread 40,
-  proximity 50, borda 2, zona morta 0,01.
+  proximity 24, borda 2, zona morta 0,01.
   **Quatro medições desenham o brilho, e cada uma muda o código.**
   (1) A `@property --alert-glow-start` é **`inherits: true`**, ao contrário das
   outras quatro da casa: ela é lida num **pseudo-elemento**, e pseudo não herda
@@ -368,8 +368,57 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   **O listener do brilho é o único em `document` do design system**, e a razão
   é o `proximity`: o aviso acende com o mouse **perto, não em cima**, e handler
   no próprio elemento não vê o que acontece fora da caixa. Ele só monta com
-  `variant="brand"` e sob `(hover: hover)`, sai no unmount, e a caixa é medida
-  uma vez (remedida em rolagem e resize) em vez de a cada movimento. **No
+  `variant="brand"` e sob `(hover: hover)`, e sai no unmount.
+  **A rolagem recalcula o estado, não só a geometria** — e a falta disso era um
+  bug medido: rolando 260px com o ponteiro parado, a caixa ia de `top 255` para
+  `-5` e o brilho continuava aceso apontando para onde o mouse não estava mais.
+  O conserto é o da referência (`handleScroll = () => handleMove()`, com a
+  última posição guardada), com **`capture: true`** a mais — `scroll` não
+  borbulha mas captura, e sem isso a rolagem **dentro de um container** passa
+  despercebida, que é um caso que a própria referência erra.
+  **O ângulo tem valor inicial (`--alert-glow-start: 0`) na utility, e a falta
+  dele era um bug visível.** A referência declara `"--start": "0"` no style
+  inline; aqui a `@property` dava o `initial-value` e, quando ela saiu, nada
+  repôs. Sem valor o `calc()` é inválido, **`mask-image` cai para `none`** — ou
+  seja, nenhuma máscara — e o que se pinta é o anel **inteiro**: com o
+  `--alert-glow-active` subindo de 0 a 1 em 300ms, o anel completo aparecia e
+  só colapsava em arco quando o tween escrevia o primeiro número. Com 0
+  declarado o arco existe desde o repouso, centrado no topo como na referência,
+  e ao aproximar ele **viaja** até o ponteiro. **A falha não derruba nada** — o
+  CSS é válido, só o efeito fica errado —, e `brand-contour.test.ts` a tranca.
+  **A animação do ângulo é o `animate` do `motion`, portado da referência** —
+  não uma transição de CSS. Havia aqui uma `@property --alert-glow-start`
+  registrada com `transition: … 2s var(--ease-out)`, defendida por três rodadas
+  como equivalente ao tween dela; era **dedução, não medição**, e o dono disse
+  três vezes que a animação não era a da referência. Hoje ela é, por
+  construção: a propriedade volta a ser **não registrada**, como lá, e quem
+  interpola é o tween (`GLOW_DURACAO` 2, `GLOW_EASE` `[0.16, 1, 0.3, 1]`),
+  escrevendo a variável no `onUpdate`. **O ângulo atual sai do DOM**
+  (`el.style.getPropertyValue`), e não de um acumulador — um acumulador guarda
+  o *alvo*, não onde a animação está, que era o defeito da versão anterior.
+  Duas divergências deliberadas do fonte dela: o módulo **duplo** no caminho
+  curto (o dela devolve valores abaixo de −180 e o arco dá a volta pelo lado
+  errado), e **parar o tween anterior** (ela não para, e deixa até ~120 tweens
+  vivos escrevendo a mesma variável; a trajetória é a mesma porque cada tween
+  novo parte do valor atual do DOM). E **movimento reduzido é perguntado à
+  mão**, com `matchMedia`: o bloco global encurta *transição*, e um tween de JS
+  escapa dele — o precedente é o `ThemeToggle` ao trocar transição por WAAPI.
+  **E o `rAF` daqui coalesce, o que não é o laço que esta casa proíbe**: o
+  precedente recusado (no marcador do `Tabs`) é o `rAF` que se **re-agenda**
+  para fazer polling; este agenda um quadro por rajada e o cancela. É ele que
+  torna barato ler `getBoundingClientRect()` a cada quadro em vez de cachear —
+  o cache só se invalidava em `scroll` e `resize`, e a caixa também se move por
+  reflow, por acordeão abrindo, por imagem carregando.
+  **Os quatro blobos radiais da referência estão portados** (`circle`,
+  `at 40% 40%`, `at 60% 60%`, `at 40% 60%`), com paradas da marca, **antes** do
+  cônico na lista de camadas: são manchas presas à caixa, e é o que faz a cor
+  variar por **posição** e não só pelo ângulo do arco.
+  **E a largura de faixa é o que importa, não o número de voltas.** A referência
+  tem 4 cores × 5 voltas = 20 faixas de 18°, e a janela de 80° mostra 4,4
+  delas. Copiar o 5 com as **oito** paradas da marca dava 40 faixas de 9° e 8,9
+  na janela — metade da largura e o dobro da contagem, que sob o borrão de 2px
+  vira lama em vez de banda. `--alert-glow-repeat` é **2,5**: 8 × 2,5 = 20
+  faixas de 18°, a estrutura de banda da referência com a paleta daqui. **No
   telefone não há brilho** — e como ele substituiu a régua do alerta, ali o
   `brand` fica visualmente igual ao `soft` de `tone="default"`. É o custo da
   escolha, e está dito.

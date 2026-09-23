@@ -375,9 +375,14 @@ describe("contorno de marca", () => {
     expect(alerta).not.toContain("before:rounded-full")
 
     // A utility existe, e as quatro decisões medidas estão nela.
+    // A fatia termina na `@utility` seguinte. Ela já terminou no
+    // `@property --alert-glow-start`, e quando esse bloco saiu (o ângulo
+    // passou a ser animado por JS) o `indexOf` devolveu −1, a fatia engoliu o
+    // resto do arquivo e a asserção de ausência casou com outro componente.
+    const iniUtil = CSS.indexOf("@utility alert-glow")
     const util = CSS.slice(
-      CSS.indexOf("@utility alert-glow"),
-      CSS.indexOf("@property --alert-glow-start")
+      iniUtil,
+      CSS.indexOf("@utility ", iniUtil + 20)
     )
     expect(util.length).toBeGreaterThan(0)
 
@@ -416,6 +421,20 @@ describe("contorno de marca", () => {
     expect(corpoMask).toMatch(/transparent,\s*#000,\s*transparent/)
     expect(corpoMask).toMatch(/var\(--alert-glow-spread\) \* 2deg/)
 
+    // **Os quatro blobos da referência**, antes do cônico na lista de camadas.
+    // São manchas presas à caixa: elas fazem a cor variar por **posição**, e
+    // não só pelo ângulo do arco. Sem elas o mesmo lado acende sempre igual.
+    expect(corpoBg.match(/radial-gradient\(/g)?.length).toBe(4)
+    expect(corpoBg.indexOf("radial-gradient")).toBeLessThan(
+      corpoBg.indexOf("repeating-conic-gradient")
+    )
+
+    // A largura de faixa é o que importa, e ela vem do par cores × voltas. A
+    // referência: 4 cores × 5 = 20 faixas de 18°. Com as 8 paradas da marca, 5
+    // voltas dariam 40 faixas de 9° — metade da largura, que sob o borrão vira
+    // lama. 2,5 devolve os 18°.
+    expect(util).toMatch(/--alert-glow-repeat:\s*2\.5/)
+
     // A rampa linear do token não serve aqui: ela não é cônica. As oito
     // paradas da marca continuam sendo a fonte de cor.
     expect(util).not.toMatch(/var\(--brand-rainbow\)/)
@@ -451,25 +470,74 @@ describe("contorno de marca", () => {
     // o proíbe (teste 9).
     expect(util).toMatch(/filter:\s*blur/)
 
-    // **`inherits: true` é carga estrutural.** As outras quatro `@property` da
-    // casa são `inherits: false` porque são lidas no próprio elemento; esta é
-    // lida num pseudo, e pseudo não herda propriedade registrada como
-    // `false` — medido, a opacidade ficava em 0 com a variável valendo 1.
-    const prop = CSS.slice(
-      CSS.indexOf("@property --alert-glow-start"),
-      CSS.indexOf("@property --alert-glow-start") + 200
-    )
-    expect(prop).toMatch(/inherits:\s*true/)
-    expect(prop).toMatch(/syntax:\s*"<number>"/)
+    // **O ângulo é animado por JavaScript, e a propriedade NÃO é registrada** —
+    // exatamente como na referência, que escreve `--start` a cada quadro com o
+    // `animate` do `motion`. Aqui houve uma `@property` registrada com
+    // `transition: … 2s`, defendida por três rodadas como equivalente; era
+    // dedução, não medição, e o dono disse três vezes que não era a animação
+    // dela. Registrar de novo não quebra, mas ressuscita a dúvida.
+    expect(CSS).not.toMatch(/@property --alert-glow-start/)
+    expect(util).not.toMatch(/transition:\s*--alert-glow-start/)
 
-    // O lado React: sem ponteiro fino não monta nada, o listener sai no
-    // unmount, e não há `requestAnimationFrame` em laço (precedente proibido).
+    // **E o ângulo tem valor inicial na utility**, porque a `@property` que o
+    // dava saiu com o registro. Sem ele o `calc()` é inválido, `mask-image`
+    // cai para `none` — nenhuma máscara — e o anel aparece **inteiro** até o
+    // tween escrever o primeiro número. Era o "a linha já aparece inteira em
+    // vez de crescer" do dono, e é uma falha que não derruba nada: o CSS é
+    // válido, o efeito só fica errado.
+    expect(util).toMatch(/--alert-glow-start:\s*0;/)
+
+    // O lado React: sem ponteiro fino não monta nada, e o listener sai no
+    // unmount.
     const src = fonte("alert")
     expect(src).toMatch(/\(hover: hover\)/)
     expect(src).toMatch(/removeEventListener\("pointermove"/)
-    expect(src).not.toMatch(/requestAnimationFrame/)
     // E nada de estado React para a posição: é `setProperty`, como no `Button`.
     expect(src).toMatch(/setProperty\("--alert-glow-start"/)
+
+    // **A animação é a da referência, literalmente**: o `animate` do `motion`,
+    // com a duração e a ease dela, escrevendo a variável no `onUpdate`.
+    expect(src).toMatch(/from "motion\/react"/)
+    expect(src).toMatch(/animate\(atual, atual \+ delta/)
+    expect(src).toMatch(/duration: GLOW_DURACAO/)
+    expect(src).toMatch(/GLOW_DURACAO = 2/)
+    expect(src).toMatch(/GLOW_EASE = \[0\.16, 1, 0\.3, 1\]/)
+    // E o ângulo atual sai do DOM, não de um acumulador — um acumulador guarda
+    // o *alvo*, não onde a animação está.
+    expect(src).toMatch(/getPropertyValue\("--alert-glow-start"\)/)
+    // **Movimento reduzido é perguntado à mão**, porque o bloco global da casa
+    // encurta transição de CSS e um tween de JS escapa dele — o precedente do
+    // `ThemeToggle` ao trocar transição por WAAPI.
+    expect(src).toMatch(/prefers-reduced-motion: reduce/)
+    expect(src).toMatch(/if \(semMovimento\)/)
+    expect(src).not.toMatch(/let angulo/)
+    // O tween anterior para antes do novo, e no unmount: a referência não
+    // para, e deixa ~120 tweens vivos escrevendo a mesma variável.
+    expect(src.match(/tween\?\.stop\(\)/g)?.length).toBe(2)
+
+    // **A rolagem recalcula o estado, e não só a geometria.** Medido antes do
+    // conserto: rolando 260px com o ponteiro parado, a caixa ia de `top 255`
+    // para `-5` e `--alert-glow-active` continuava em `1` — o aviso ficava
+    // aceso apontando para onde o mouse não estava mais. O conserto é o da
+    // referência: guardar a última posição do ponteiro e refazer a conta.
+    expect(src).toMatch(/ultimaX/)
+    expect(src).toMatch(/const aoRolar = \(\) => agendar\(\)/)
+    // E `capture: true`, que é a divergência deliberada: `scroll` não borbulha
+    // mas captura, então sem isto a rolagem **dentro de um container** passa
+    // despercebida — o caso que a própria referência erra.
+    expect(src).toMatch(/addEventListener\("scroll", aoRolar, \{ capture: true/)
+
+    // **`rAF` aqui coalesce, e o precedente proibido é o laço.** O que esta
+    // casa recusou (no marcador do `Tabs`) é o `rAF` que se **re-agenda** para
+    // fazer polling. Coalescer uma rajada de `pointermove` num quadro é outra
+    // coisa, e é o que a referência faz. O que separa os dois: **um** ponto de
+    // agendamento, e um cancelamento — um laço não cancela, ele se renova.
+    expect(src.match(/requestAnimationFrame\(/g)?.length).toBe(1)
+    expect(src).toMatch(/cancelAnimationFrame/)
+    // O tween e o quadro pendentes morrem no unmount, junto dos listeners.
+    expect(src).toMatch(
+      /return \(\) => \{\s*tween\?\.stop\(\)\s*if \(quadro\) cancelAnimationFrame/
+    )
 
     // A barra **não** ganhou nada disso.
     const barra = announcementBarVariants({ variant: "brand" })

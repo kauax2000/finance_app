@@ -308,6 +308,14 @@ export default function AlertDoc() {
           A <strong>1ª</strong> mascarava o <code>--brand-rainbow</code>, que é <em>linear</em>: a janela revelava só o pedaço da rampa naquela aresta e acendia <strong>uma cor</strong> — um borrão teal, que lia como sujeira. A <strong>2ª</strong> corrigiu para cônico mas o girou <em>junto</em> com o arco, e aí ele passou a carregar sempre a mesma sequência de cores e só mudar de lugar. O certo é o cônico <strong>parado</strong> com a janela andando por cima. As duas asserções que separam o certo dos dois erros estão no <code>brand-contour.test.ts</code>, e mutação confirma que cada uma pega o seu.
       </DocNote>
 
+      <DocNote title="A rolagem recalcula o brilho, e isso era um bug">
+          Rolar move a caixa sem mover o ponteiro. Medido antes do conserto: rolando 260px com o mouse parado, o alerta ia de <code>top 255</code> para <code>-5</code> e o brilho <strong>continuava aceso</strong> apontando para onde o ponteiro não estava mais — só voltava ao normal no movimento seguinte. O conserto é o da referência: guardar a última posição do ponteiro e refazer a conta inteira em <code>scroll</code> e <code>resize</code>, não só remedir a geometria. Com <code>capture: true</code> a mais, que é a única divergência deliberada — <code>scroll</code> não borbulha mas captura, e sem isso a rolagem <em>dentro de um container</em> passa despercebida, um caso que a própria referência erra.
+      </DocNote>
+
+      <DocNote title="O rAF aqui coalesce, e o proibido é o laço">
+          O trabalho de cada rajada de <code>pointermove</code> vai para <strong>um</strong> <code>requestAnimationFrame</code>, cancelado no anterior e no unmount. O que esta casa recusou (no marcador do <code>Tabs</code>) é o <code>rAF</code> que se <em>re-agenda</em> para fazer polling — outra coisa. É o que permite ler <code>getBoundingClientRect()</code> a cada quadro em vez de cachear: o cache só se invalidava em <code>scroll</code> e <code>resize</code>, e a caixa também se move por reflow, por acordeão abrindo, por imagem carregando.
+      </DocNote>
+
       <DocNote title="Três medições que o código carrega">
           <strong>A @property é inherits: true</strong>, ao contrário das outras quatro da casa: ela é lida num pseudo-elemento, e pseudo não herda propriedade registrada como <code>false</code> — medido, a opacidade ficava em 0 com a variável valendo 1. <strong>isolate é obrigatório</strong>: sem ele o pseudo de <code>z</code> negativo cai atrás do fundo de um ancestral e some. E <strong>com isolate ele passa a pintar por cima do bg-card</strong>, o que cobriria o texto com sete matizes — por isso o núcleo chapado em <code>padding-box</code>, que faz a região apagada ficar idêntica ao cartão.
       </DocNote>

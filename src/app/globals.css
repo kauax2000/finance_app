@@ -1873,7 +1873,6 @@
 
 
 
-
 /* ── O preenchimento dos outros pesos ──────────────────────────────────────
 
    `secondary`, `tertiary`, `outline` e `destructive` não trocam de cor no
@@ -2179,7 +2178,7 @@
    O arco-íris acendendo na borda do `Alert variant="brand"` conforme o
    ponteiro passa pela tela, com um leve borrão. A referência é o
    `GlowingEffect` da Aceternity, e os números são do dono: blur 2, spread 40,
-   proximity 50, borda 2, zona morta 0,01.
+   proximity 24, borda 2, zona morta 0,01.
 
    **Isto não é o giro da rodada 100.** Lá o degradê rodava sozinho, num laço
    de 12s/6s, e o dono o recusou inteiro; aqui nada se move sem o ponteiro se
@@ -2235,18 +2234,48 @@
    `--link-sweep` já é: a escala `--duration-*` para em 300ms, e a referência
    pede um rastro longo. */
 @utility alert-glow {
-  --alert-glow-follow: 2s;
   --alert-glow-spread: 40;
-  /* Quantas voltas do arco-íris cabem em 360°. O nome e o valor espelham o
-     `--repeating-conic-gradient-times: 5` da referência: lá são 4 cores × 5
-     voltas (faixas de 18°); aqui são 8 × 5 (faixas de 9°, ciclo de 72°), e a
-     janela de 80° mostra ~1,1 ciclo — a mesma razão. */
-  --alert-glow-repeat: 5;
+  /* **O valor inicial do ângulo, e a falta dele era um bug visível.** A
+     referência declara `"--start": "0"` no style inline; aqui havia uma
+     `@property` com `initial-value: 0` e, quando ela saiu (o ângulo passou a
+     ser animado por JS), nada repôs o valor.
+
+     Sem valor, `calc((var(--alert-glow-start) - …) * 1deg)` é inválido, o
+     `mask-image` cai para `none` — **nenhuma máscara** — e o que se pinta é o
+     anel **inteiro**. Com o `--alert-glow-active` subindo de 0 a 1 em 300ms, o
+     anel completo *aparecia* e só colapsava em arco quando o tween escrevia o
+     primeiro número. O dono descreveu exatamente isso: "a linha já aparece
+     inteira em vez de crescer".
+
+     Com 0 declarado, o arco existe desde o repouso (centrado no topo, como na
+     referência) e o que se vê ao aproximar é ele **viajando** até o ponteiro. */
+  --alert-glow-start: 0;
+  /* Quantas voltas do arco-íris cabem em 360°, e o que importa é a **largura
+     de faixa**, não o número de voltas.
+
+     A referência tem `--repeating-conic-gradient-times: 5` com **4** cores:
+     20 faixas de 18°, e a janela de 80° mostra 4,4 delas. Copiar o 5 com as
+     **8** paradas da marca dava 40 faixas de **9°** e 8,9 na janela — metade
+     da largura e o dobro da contagem, que sob o borrão de 2px vira lama em vez
+     de banda. Com 2,5: 8 × 2,5 = 20 faixas de 18° e 4,4 na janela, a estrutura
+     de banda da referência com a paleta daqui. */
+  --alert-glow-repeat: 2.5;
   /* O teto de intensidade, e o botão de volume da peça. O arco nasceu em
      opacidade cheia e saiu berrante ao lado da referência. Mexer aqui muda a
      força; mexer nas paradas mudaria a **cor**, que é o que ele tem de certo. */
   --alert-glow-opacity: 0.5;
-  transition: --alert-glow-start var(--alert-glow-follow) var(--ease-out);
+
+  /* **O ângulo é animado por JavaScript, e não por transição de CSS.** Aqui
+     havia uma `@property --alert-glow-start` registrada com uma
+     `transition: … 2s var(--ease-out)`, e eu defendi por três rodadas que era
+     equivalente ao `animate()` da referência. O dono disse três vezes que a
+     animação não era a dela, e a equivalência era minha dedução, não medição:
+     neste pane nem `setInterval` nem `requestAnimationFrame` amostram de forma
+     confiável (medido: 4 quadros em 3s), então eu não tinha como provar.
+     A referência escreve `--start` a cada quadro com o `animate` do `motion`,
+     e é isso que o `alert.tsx` faz agora — a propriedade volta a ser
+     **não registrada**, exatamente como lá, porque quem interpola é o tween.
+     Registrá-la de novo não quebra nada, mas ressuscita a dúvida. */
 
   &::before {
     content: "";
@@ -2271,6 +2300,36 @@
        recria o defeito. */
     background:
       linear-gradient(var(--card), var(--card)) padding-box,
+      /* **Os quatro blobos da referência**, nas posições dela (`circle`,
+         `at 40% 40%`, `at 60% 60%`, `at 40% 60%`), com paradas da marca no
+         lugar dos quatro hexadecimais. Eles vêm **antes** do cônico, como lá:
+         são manchas presas à caixa, então a cor passa a variar também por
+         **posição**, e não só pelo ângulo do arco. Sem eles o mesmo lado do
+         aviso acende sempre com as mesmas cores. */
+      radial-gradient(
+          circle,
+          var(--brand-magenta) 10%,
+          transparent 20%
+        )
+        border-box,
+      radial-gradient(
+          circle at 40% 40%,
+          var(--brand-amber) 5%,
+          transparent 15%
+        )
+        border-box,
+      radial-gradient(
+          circle at 60% 60%,
+          var(--brand-green) 10%,
+          transparent 20%
+        )
+        border-box,
+      radial-gradient(
+          circle at 40% 60%,
+          var(--brand-blue) 10%,
+          transparent 20%
+        )
+        border-box,
       repeating-conic-gradient(
           from 236.84deg at 50% 50%,
           var(--brand-teal) calc(0.0% / var(--alert-glow-repeat)),
@@ -2312,11 +2371,6 @@
   }
 }
 
-@property --alert-glow-start {
-  syntax: "<number>";
-  inherits: true;
-  initial-value: 0;
-}
 
 /* O campo de marca: o arco-íris ocupando uma **região**, com grão pesado e uma
    vinheta para o preto nos cantos de baixo.
