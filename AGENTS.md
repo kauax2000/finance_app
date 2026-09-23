@@ -303,13 +303,106 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   `rainbow` — preenchido e **parado** em todo tamanho), o campo de marca
   e o `Button variant="brand"`, mais o `Badge variant="brand"` desde a rodada 89
   e os **controles de escolha** — `Checkbox variant="brand"`,
-  `Radio variant="brand"` e `RadioGroupItem variant="brandCard"`. **Há duas
+  `Radio variant="brand"` e `RadioGroupItem variant="brandCard"`, e desde a
+  rodada 118 os dois avisos — `Alert variant="brand"` e
+  `AnnouncementBar variant="brand"`. **Há três
   famílias de peça de marca, e elas quebram por motivos diferentes**: a do
   **contorno** (`Button`, `Badge`, os controles de escolha), em que o degradê
-  vive em 1px de `border-box` sobre um miolo chapado; e a do
+  vive em 1px de `border-box` sobre um miolo chapado; a do
   **preenchimento** (`Progress variant="brand"` e `Slider variant="brand"`), em
   que ele preenche a barra e o que a liberta da invariante 3 é não haver rótulo
-  em cima. `brand-contour.test.ts` tranca as duas.
+  em cima; a da **régua**, um fio na **aresta** do aviso — hoje só 1px na base
+  da `AnnouncementBar`, onde ele **substitui** o fio do `sticky`; e a do
+  **brilho**, no `Alert variant="brand"`, em que a caixa fica neutra em repouso
+  e o arco-íris acende num **arco da borda** conforme o ponteiro passa pela
+  tela, com um borrão de 2px. `brand-contour.test.ts` tranca as quatro.
+  **O brilho não é o giro da rodada 100**, e a diferença é a que a casa já
+  usa: lá o degradê rodava sozinho num laço de 12s/6s e o dono o recusou
+  inteiro; aqui nada se move sem o ponteiro se mover — a forma que a rodada 98
+  sancionou, e a mesma que o commit da 100 preservou ("o botão de marca não
+  ficou inerte: o halo continua acendendo no cursor"). A referência é o
+  `GlowingEffect` da Aceternity, com os números do dono: blur 2, spread 40,
+  proximity 50, borda 2, zona morta 0,01.
+  **Quatro medições desenham o brilho, e cada uma muda o código.**
+  (1) A `@property --alert-glow-start` é **`inherits: true`**, ao contrário das
+  outras quatro da casa: ela é lida num **pseudo-elemento**, e pseudo não herda
+  propriedade registrada como `false` — medido, a `opacity` ficava em 0 com a
+  variável valendo 1. É por isso que o `Button` pode ser `false`: o
+  `primary-wash` mora no próprio elemento.
+  (2) **`z-index` negativo sem `isolate` desaparece** — o pseudo cai atrás do
+  fundo de um ancestral; medido, invisível.
+  (3) **Com `isolate` ele passa a pintar por cima do `bg-card`**, pela ordem de
+  pintura da raiz de empilhamento, e cobriria o texto com sete matizes. A saída
+  é a receita já travada: núcleo chapado em `padding-box` sobre o arco-íris em
+  `border-box`, com o núcleo em `--card`, de modo que a região apagada pela
+  máscara fica **idêntica ao cartão**. O degradê nunca fica sob o texto.
+  (4) **A cor fica parada e a janela é que anda, e é isso que faz o arco trocar
+  de cor conforme viaja** — oliva e âmbar na aresta direita, magenta na
+  esquerda. Medido no bundle ao vivo da referência: o `background-image` dela é
+  um `repeating-conic-gradient(from 236.84deg …)` de ângulo **fixo**, e quem
+  carrega o `--start` é o `mask-image`. **Duas tentativas erraram isto de jeitos
+  opostos**: a primeira mascarava o `--brand-rainbow`, que é *linear*, e a
+  janela acendia sempre a mesma cor naquela aresta; a segunda girou o cônico
+  **junto** com o arco, e ele passou a carregar sempre a mesma sequência e só
+  mudar de lugar. `brand-contour.test.ts` tranca as duas, e mutação confirma
+  que cada asserção pega o seu erro.
+  (5) **A máscara é uma camada só, e a janela é um triângulo puro** — três
+  paradas, opaco no meio, fechando em `spread * 2`, como o `transparent, #fff,
+  transparent 80deg` da referência; com platô no miolo ela lê como bloco aceso
+  e não como brilho. Compor duas continua banido por medição (uma camada `none`
+  num `intersect` apaga a peça): a referência compõe só para recortar o anel, e
+  aqui esse trabalho é do par `padding-box`/`border-box` — onde a máscara apaga
+  aparece o `bg-card`, idêntico ao núcleo. A lista de paradas se repete na
+  utility de propósito (o token é linear, e aqui ela é cônica e repetida
+  `--alert-glow-repeat` vezes), em sRGB, porque num fio de 2px já borrado o
+  oklch não se vê e o par `@supports` custaria duas listas.
+  (6) **A intensidade é um token, `--alert-glow-opacity` (0,5), e o arco tem
+  envelope de alfa.** Em opacidade cheia e com as oito paradas chapadas, o
+  brilho saía berrante ao lado da referência e as pontas cortavam seco — a
+  travessia de `transparent` para o teal acontecia em 12° e lia como aresta,
+  não como brilho. Hoje as duas extremidades entram em 20% e 60% antes do
+  miolo opaco (a referência faz o mesmo pela máscara, `#00000000 → #fff →
+  #00000000`), e o multiplicador baixa a peça inteira. **O volume se mexe no
+  multiplicador, nunca nas paradas**: mexer nas paradas muda a *cor* do arco,
+  que é o que ele tem de certo.
+  **O listener do brilho é o único em `document` do design system**, e a razão
+  é o `proximity`: o aviso acende com o mouse **perto, não em cima**, e handler
+  no próprio elemento não vê o que acontece fora da caixa. Ele só monta com
+  `variant="brand"` e sob `(hover: hover)`, sai no unmount, e a caixa é medida
+  uma vez (remedida em rolagem e resize) em vez de a cada movimento. **No
+  telefone não há brilho** — e como ele substituiu a régua do alerta, ali o
+  `brand` fica visualmente igual ao `soft` de `tone="default"`. É o custo da
+  escolha, e está dito.
+  **A régua existe porque contorno degenera numa faixa de largura total**:
+  esquerda e direita ficam fora da tela e o topo encosta na borda do viewport,
+  sobrando exatamente os dois fios horizontais; e em volta de um parágrafo o
+  contorno lê como enfeite. **Ela usa um token só nas duas orientações**, e
+  isso foi medido contra a previsão oposta: a linha do degradê é
+  `|W·sin θ| + |H·cos θ|`, definida para cobrir a caixa de canto a canto em
+  **qualquer** ângulo, então `--brand-rainbow` a 135° serve a vertical e a
+  horizontal sem override — as duas "correções" candidatas
+  (`background-size: 100% 200%`, com e sem `position: center`) esticam a rampa
+  e a cortam em coral e em violeta. Quem for consertar o ângulo, meça primeiro.
+  **O recuo vertical da régua vem do raio, e é ele que proíbe o degrau `sm` do
+  `Alert`**: num `rounded-xl` de 12px, a 8px do topo a aresta recua 0,69px, mas
+  a 4px recua **3,06px** e um fio de 2px em `start-0` ficaria fora da
+  superfície pintada. Oito pixels é o piso, e numa caixa `sm` de 34px isso
+  deixa 47% de fio — tracinho, não régua. O tipo proíbe o par, porque **não há
+  caso**: `sm` fala com um campo, e a marca fala uma vez por tela.
+  **Nos dois, `tone` é `never` junto de `brand`** (o precedente do `Progress`),
+  e **quem garante que a superfície neutra vence a tonal é o `tailwind-merge`,
+  não a cascata**: medido, pondo as duas classes cruas no mesmo `class` sem
+  passar pelo `cn`, a faixa de marca sai com o texto **azul**, porque
+  `text-foreground` e `text-info-muted-foreground` empatam em (0,1,0) e decide
+  a ordem de emissão do Tailwind. O `cn` remove o perdedor; quem montar as
+  variantes à mão traz o defeito de volta.
+  **O contraste da régua está medido e reportado**: contra `--card`, no escuro
+  as oito paradas passam 3:1 (pior caso violeta 5,35); no claro quatro reprovam
+  (pior caso lima **1,91**), e contra o `--muted` da faixa são cinco (1,60).
+  **Não é um caso de 1.4.11**, e a razão é o papel: quem identifica o aviso é a
+  caixa mais o ícone, e a régua é acento — a categoria do halo do `Badge` e do
+  arco-íris do `Progress`. O caminho de reforço, se ela ler fraca no claro, é o
+  que o `Progress` documenta (leito escuro), e lá foi recusado na tela.
   Arco-íris **sob texto** — num gráfico, num fundo de cartão, preenchendo um
   chip — continua sendo a invariante 3 violada com sete cores de uma vez, e
   sete matizes não têm um contraste só. As peças de marca escapam porque
@@ -805,9 +898,27 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   ele saiu do tipo, porque neste projeto as cinco cores semânticas se chamam
   `tone` em `StatCard`, `Progress`, `Timeline` e `AnnouncementBar`, e o `Alert`
   era o único a discordar. `variant` agora é a **forma** (`soft` com moldura —
-  o padrão — e `plain` tingido sem borda, para dentro de formulário ou
-  diálogo), e `size` é o **corpo** (`sm` | **`md`**), que encolhe texto, respiro
-  e ícone juntos.
+  o padrão —, `plain` tingido sem borda, para dentro de formulário ou
+  diálogo, e **`brand`**, a caixa neutra com a régua de arco-íris na aresta
+  inline-start, para quando quem fala é o produto e não o dado da pessoa), e
+  `size` é o **corpo** (`sm` | **`md`**), que encolhe texto, respiro
+  e ícone juntos. **`brand` não aceita `tone` nem `size="sm"`** — o primeiro
+  por não ter gravidade, o segundo porque `sm` é o aviso que fala com um campo
+  e a marca fala uma vez por tela, no corpo inteiro. **A razão do `sm` mudou na
+  rodada 119**: na 118 ela era geométrica (a régua precisava de 8px de recuo
+  para não encostar no `rounded-xl`, e numa caixa `sm` de 34px sobravam 47% de
+  fio), e com a régua substituída pelo brilho essa razão deixou de existir.
+  Ficou a semântica, que sempre foi a mais forte.
+- **A `AnnouncementBar` ganhou o mesmo eixo** (`variant: "soft" | "brand"`, e a
+  régua dela é 1px na base, substituindo o fio do `sticky`), e os **dois botões
+  dela pagaram a rodada 99 com atraso**: mantinham `hover:bg-current/N` e nunca
+  declaravam `--button-fill-color`, então herdavam o cinza de `--muted` do
+  `tertiary` e o realce pintava duas camadas. No tema claro, onde `--muted` é
+  opaco, os quatro tons convergiam no **mesmo** `235,235,235` — o realce
+  apagava o tom. **Ninguém viu porque a razão de luminância é 1,007–1,078**: o
+  defeito é cromático, e os scripts da casa só medem luminância. Com
+  `currentColor` no disco, 1,16–1,19 no claro e 1,26–1,30 no escuro, e a
+  assimetria de área (15% no ×, 10% na ação) continua.
 - **O raio é do componente, e não da variante.** Ele morava dentro do `variant`
   — `soft` trazia `rounded-xl` e `plain` trazia `rounded-lg` —, e o resultado
   era medível: **14px contra 10px**, dois alertas lado a lado com cantos

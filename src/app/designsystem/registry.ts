@@ -433,8 +433,8 @@ export const REGISTRY: RegistryEntry[] = [
   entry("tooltip", "Tooltip", "Dica curta ancorada a um gatilho.", ui("tooltip"), "Tooltip, TooltipTrigger, TooltipContent"),
 
   // ── Molecules ───────────────────────────────────────────────────────────
-  entry("alert", "Alert", "Aviso dentro do conteúdo.", ui("alert"), "Alert, AlertTitle, AlertDescription, AlertActions"),
-  entry("announcement-bar", "Announcement Bar", "Aviso de largura total sobre o app.", ui("announcement-bar"), "AnnouncementBar, AnnouncementBarContent, AnnouncementBarActions"),
+  entry("alert", "Alert", "Aviso dentro do conteúdo.", ui("alert"), "Alert, AlertTitle, AlertDescription, AlertActions, AlertAction"),
+  entry("announcement-bar", "Announcement Bar", "Aviso de largura total sobre o app.", ui("announcement-bar"), "AnnouncementBar, AnnouncementBarContent, AnnouncementBarActions, AnnouncementBarAction"),
   entry("button-group", "Button Group", "Botões colados que agem como uma unidade.", ui("button-group"), "ButtonGroup"),
   entry("collapsible", "Collapsible", "Bloco que expande e recolhe.", ui("collapsible"), "Collapsible, CollapsibleTrigger, CollapsibleMarker, CollapsibleContent"),
   entry("description-list", "Description List", "Pares termo e valor em telas de detalhe.", ui("description-list"), "DescriptionList, DescriptionListItem, DescriptionTerm, DescriptionDetails"),

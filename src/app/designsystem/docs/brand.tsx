@@ -1,7 +1,15 @@
 "use client"
 
+import { SparklesIcon } from "@heroicons/react/16/solid"
+
 import { AppLogo } from "@/components/layout/app-logo"
 import { AppWordmark } from "@/components/layout/app-wordmark"
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert"
+import { AnnouncementBar } from "@/components/ui/announcement-bar"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
@@ -280,6 +288,37 @@ export default function BrandDoc() {
         </RadioGroup>
       </DocSection>
 
+      <DocSection
+        title="A régua e o brilho dos avisos"
+        description="Alert e AnnouncementBar são as duas superfícies onde o produto fala sobre si mesmo, e a marca entra nelas de dois jeitos. Na faixa é a régua: 1px de arco-íris na base, parado, substituindo o fio do sticky. No alerta é o brilho: a caixa fica neutra em repouso e o arco-íris acende num arco da borda conforme o ponteiro passa, com um leve borrão — passe o mouse perto. Contorno não serve em nenhum dos dois: numa faixa full-bleed ele degenera, e em volta de um parágrafo lê como enfeite. Nenhuma das duas aceita tone. Uma por tela."
+        code={`<Alert variant="brand">…</Alert>
+<AnnouncementBar variant="brand" sticky>…</AnnouncementBar>`}
+        previewClassName="flex-col items-stretch gap-4 p-0"
+      >
+        <AnnouncementBar variant="brand">
+          <SparklesIcon aria-hidden />
+          Uma nova versão está disponível. Recarregue para atualizar.
+        </AnnouncementBar>
+        <div className="px-4 pb-4">
+          <Alert variant="brand">
+            <SparklesIcon />
+            <AlertTitle>O total agora considera as parcelas</AlertTitle>
+            <AlertDescription>
+              Compras parceladas entram no mês em que cada parcela cai.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </DocSection>
+
+      <DocNote title="O brilho não é o giro que foi recusado">
+        <p>
+          A rodada 100 tirou o movimento da marca com nome feio — o degradê girava sozinho, num laço de 12s no splash e 6s sob o cursor. <strong>Este efeito não é aquele</strong>: nada aqui se move sem o ponteiro se mover, que é a forma que a rodada 98 sancionou quando pôs a lava atrás do <code>primary</code>. O que o commit da 100 preservou foi exatamente isto — &ldquo;o botão de marca não ficou inerte: o halo continua acendendo no cursor&rdquo;.
+        </p>
+        <p>
+          Contraste, contra o cartão: no escuro as oito paradas passam 3:1 (pior caso violeta 5,35); no claro quatro reprovam, pior caso lima <strong>1,91</strong> — e 1,60 contra o <code>--muted</code> da faixa. Não é um caso de 1.4.11: quem identifica o aviso é a caixa mais o ícone, e o arco-íris é acento, como o halo do <code>Badge</code> e o arco-íris do <code>Progress</code>. O degradê nunca fica sob texto — na régua ele vive num fio de 1px, e no brilho o núcleo chapado em <code>padding-box</code> o mantém fora do miolo.
+        </p>
+      </DocNote>
+
       <DocNote title="O contorno esmaece, e o conteúdo não pousa no degradê">
         <p>
           Quem liga e desliga a marca é uma <strong>opacidade</strong>, e não a troca da camada: <code>background-image</code> não interpola entre um degradê e <code>none</code>, então pintar e despintar faria o contorno estalar. O miolo é chapado — <code>--primary</code> na caixa, <code>--background</code> no anel, <code>--card</code> no cartão —, então o tique continua branco sobre a tecla e o ponto continua <code>--primary-accent</code> sobre a página: <strong>o mesmo contraste dos controles do sistema</strong>. O degradê só aparece por 1px de borda, e arco-íris sob texto continua proibido.
@@ -288,7 +327,7 @@ export default function BrandDoc() {
 
       <DocNote title="O que não fazer">
         <p>
-          Recolorir o lockup: ele herda a tinta do texto. Arco-íris fora da marca — num chip, num gráfico, num fundo de cartão. Texto corrido direto sobre o campo de marca. Halo ou sombra colorida atrás da letra: foi medido e rejeitado. Colar o <code>AppLogo</code> ao lado do lockup, escrevendo a inicial duas vezes. Declarar <code>width</code> junto de <code>height</code>: a proporção é do traçado.
+          Recolorir o lockup: ele herda a tinta do texto. Arco-íris fora da marca — num chip, num gráfico, num fundo de cartão. Contorno de arco-íris em volta de um parágrafo: em bloco de texto a marca entra por régua na aresta, não emoldurando o que se lê. Texto corrido direto sobre o campo de marca. Halo ou sombra colorida atrás da letra: foi medido e rejeitado. Colar o <code>AppLogo</code> ao lado do lockup, escrevendo a inicial duas vezes. Declarar <code>width</code> junto de <code>height</code>: a proporção é do traçado.
         </p>
       </DocNote>
     </>

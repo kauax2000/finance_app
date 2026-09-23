@@ -28,6 +28,15 @@ import { Button } from "@/components/ui/button"
  * anunciado com polidez, quando ali o papel é `alert`. Quem precisar de outro
  * ainda passa `role` por fora.
  *
+ * ## A marca fala aqui, e por um fio
+ *
+ * `variant="brand"` é a faixa neutra com o arco-íris de 1px na base. Ela existe
+ * porque esta barra e o `Alert` são as duas superfícies onde o produto fala
+ * sobre **si mesmo**, e nenhuma das duas tinha voz: a demonstração do catálogo
+ * anunciava "uma nova versão está disponível" em `tone="info"`, ou seja, o azul
+ * da rampa de **estado** carregando o produto se anunciando. `info` é fato
+ * sobre o dado da pessoa; "temos novidade" não é um estado dela.
+ *
  * ## A altura não depende do botão de fechar
  *
  * Medido antes: **40px sem o ×, 44px com**. O `Button size="xs"` (24) é mais
@@ -78,11 +87,48 @@ const announcementBarVariants = cva(
         true: "sticky top-0 z-(--z-banner) border-b border-current/20",
         false: "",
       },
+      // **A régua de marca.** O arco-íris entra como fio na **aresta** do
+      // aviso, nunca em volta dele: aqui, 1px na base, atravessando a largura
+      // do app. Contorno não serve numa faixa de largura total — esquerda e
+      // direita ficam fora da tela e o topo encosta na borda do viewport,
+      // sobrando exatamente os dois fios horizontais. A régua é a mecânica que
+      // sobrou, e é a mesma do `Alert variant="brand"`, girada.
+      //
+      // **Ele substitui o fio do `sticky`, e não se soma a ele** — daí o
+      // `border-b-0`. E daí este eixo ser declarado **depois** do `sticky`
+      // nesta lista: o `cva` concatena na ordem das chaves e o `tailwind-merge`
+      // resolve por último-vence. Declarado antes, o `border-b` do `sticky`
+      // venceria e a barra sairia com **duas** linhas de 1px empilhadas, uma
+      // cinza e uma de arco-íris. A ordem aqui é carga estrutural, não estilo.
+      //
+      // Pela mesma aritmética, `bg-muted text-foreground` aqui vence o tom que
+      // o `defaultVariants` aplica — e por isso o tipo proíbe `tone` junto de
+      // `brand`, para a tela não escrever uma cor que não pinta.
+      //
+      // `brand-rainbow-image` é obrigatória: é ela que declara
+      // `--brand-rainbow` no elemento, porque o token **não existe em
+      // `:root`** (rodada 86 — um `var()` dentro de um token do `:root` é
+      // substituído lá, não em quem o veste). Sem ela o `background-image` do
+      // fio cai para `none` e a régua desaparece sem erro nenhum.
+      //
+      // O degradê vive num pseudo-elemento de 1px e **nunca sob texto** — sete
+      // matizes não têm um contraste só. Não há halo: o `::after` borrado
+      // sangra 4px e encostaria no conteúdo abaixo da faixa, que é a razão de
+      // o `brandOutline` do `Button` existir. **Uma por tela.**
+      variant: {
+        soft: "",
+        brand: [
+          "brand-rainbow-image relative border-b-0 bg-muted text-foreground",
+          "after:absolute after:inset-x-0 after:bottom-0 after:h-px after:content-['']",
+          "after:bg-(image:--brand-rainbow)",
+        ].join(" "),
+      },
     },
     defaultVariants: {
       tone: "info",
       size: "md",
       sticky: false,
+      variant: "soft",
     },
   }
 )
@@ -95,9 +141,28 @@ const PAPEL_POR_TOM = {
   destructive: "alert",
 } as const
 
+type BarBase = React.ComponentProps<"div"> &
+  VariantProps<typeof announcementBarVariants> & {
+    onDismiss?: () => void
+    dismissLabel?: string
+  }
+
+/**
+ * **`tone` e `variant="brand"` são excludentes**, e o tipo cobra — o
+ * precedente é o `Progress`, que faz o mesmo com `tone`, `bands` e `brand`.
+ *
+ * Os dois respondem à mesma pergunta (que cor tem a faixa) por caminhos
+ * diferentes: `tone` é a gravidade do estado, e a marca não tem gravidade
+ * nenhuma. Aceitar os dois juntos seria aceitar que um não faz nada — e aqui
+ * seria literal, porque o `variant` é declarado depois do `tone` no `cva` e o
+ * `tailwind-merge` apaga a superfície tonal.
+ */
+type AnnouncementBarProps =
+  | (BarBase & { variant?: "soft" })
+  | (BarBase & { variant: "brand"; tone?: never })
+
 function AnnouncementBar({
   className,
-  tone,
   size,
   sticky,
   role,
@@ -105,21 +170,27 @@ function AnnouncementBar({
   dismissLabel = "Dispensar aviso",
   children,
   ...props
-}: React.ComponentProps<"div"> &
-  VariantProps<typeof announcementBarVariants> & {
-    onDismiss?: () => void
-    dismissLabel?: string
-  }) {
+}: AnnouncementBarProps) {
+  const { tone, variant = "soft", ...rest } = props as BarBase & {
+    variant?: "soft" | "brand"
+  }
+
+  // Em `brand` a superfície **é** a neutra, então `data-tone` diz `default` em
+  // vez de repetir o `info` do `defaultVariants`: um atributo de diagnóstico
+  // que mente sobre a cor pintada é pior que nenhum. E marca não interrompe —
+  // o papel cai no `status` do tom neutro pela própria tabela.
+  const tomEfetivo = variant === "brand" ? "default" : (tone ?? "info")
+
   return (
     <div
       data-slot="announcement-bar"
-      data-tone={tone ?? "info"}
-      role={role ?? PAPEL_POR_TOM[tone ?? "info"]}
+      data-tone={tomEfetivo}
+      role={role ?? PAPEL_POR_TOM[tomEfetivo]}
       className={cn(
-        announcementBarVariants({ tone, size, sticky }),
+        announcementBarVariants({ tone, size, sticky, variant }),
         className
       )}
-      {...props}
+      {...rest}
     >
       {children}
       {onDismiss ? (
@@ -146,13 +217,41 @@ function AnnouncementBar({
             // aparecendo — é ele que delimita os 24px e diz onde o alvo começa.
             // No hover o × passa a falar exatamente a língua do botão de ação
             // ao lado (preenchimento fraco + `current/25` de borda).
-            // O `dark:hover:` não é redundante, e a falta dele era um defeito
-            // medido: `.cls:hover:is(.dark *)` é (0,3,0) contra os (0,2,0) de
-            // `.cls:hover`, então o `dark:hover:bg-muted/50` do `tertiary`
-            // vencia estes 15% **no tema escuro** — calado, e só num tema. É a
-            // mesma armadilha que o `ThemeToggle` já pagou.
-            "hover:border-current/25 hover:bg-current/15 dark:hover:bg-current/15",
-            "active:border-current/25 active:bg-current/15 dark:active:bg-current/15",
+            // **E os 15% agora moram no disco da rodada 99, não num fundo
+            // chapado.** Este botão e o `AnnouncementBarAction` ficaram de fora
+            // daquela rodada: mantinham `hover:bg-current/N` e nunca declaravam
+            // `--button-fill-color`, então herdavam o cinza de `--muted` do
+            // `tertiary` e o realce pintava **duas** camadas — a tinta do tom na
+            // caixa toda e um disco cinza crescendo por cima.
+            //
+            // Medido no tema claro, onde `--muted` é opaco (`oklch(0.94 0 0)`):
+            // os quatro tons convergiam no **mesmo** cinza `235,235,235` —
+            // `info` saía de `200,241,255` e `warning` de `255,234,186` para o
+            // mesmo lugar. O realce não realçava o tom, apagava. No escuro o
+            // disco é 50% e o efeito era dessaturação (`warning` de `78,45,0`
+            // para `67,50,28`).
+            //
+            // **Ninguém viu porque a razão de luminância é 1,007–1,078** — o
+            // defeito é cromático, e os scripts da casa só medem luminância. Com
+            // `currentColor` no disco: 1,16–1,19 no claro e 1,26–1,30 no escuro,
+            // a faixa que o `bg-current/10` desta casa sempre registrou.
+            //
+            // O `dark:` não é redundante, e a falta dele era um defeito medido:
+            // `.cls:is(.dark *)` é (0,2,0) contra os (0,1,0) de `.cls`, então a
+            // declaração do `tertiary` sob `dark:` vence esta classe simples no
+            // tema escuro. `currentColor` inverte sozinho, mas a regra que o lê
+            // precisa vencer a do peso. É a mesma armadilha que o `AlertAction`
+            // já pagou duas vezes.
+            "[--button-fill-color:color-mix(in_oklab,currentColor_15%,transparent)]",
+            "dark:[--button-fill-color:color-mix(in_oklab,currentColor_15%,transparent)]",
+            // A borda é a **segunda** alavanca, e fica: é ela que delimita os
+            // 24px e diz onde o alvo começa.
+            "hover:border-current/25 active:border-current/25",
+            // E a tinta do ícone tem de ser presa: o `tertiary` declara
+            // `hover:text-foreground`, que é (0,2,0) contra o (0,1,0) do
+            // `text-current` da base — sem este par, o × trocava a tinta do tom
+            // pelo cinza neutro no cursor.
+            "hover:text-current active:text-current",
             // O alvo cresce por pseudo-elemento, e não por medida: aumentar a
             // caixa devolveria o salto de altura que esta rodada tirou. 10px de
             // cada lado levam os 22 da caixa de padding a 46 (a borda não conta).
@@ -219,8 +318,9 @@ function AnnouncementBarActions({
  *
  * O realce é `current/10`, e não `foreground/10`: os dois são quase iguais no
  * escuro e visivelmente diferentes no claro, e o `AlertAction` — o precedente
- * documentado — usa `current`. O `dark:hover:` é obrigatório pela mesma
- * aritmética escrita no × acima.
+ * documentado — usa `current`. Desde esta rodada ele é o **disco** da rodada 99
+ * e não um fundo chapado, e o par `dark:` é obrigatório pela mesma aritmética
+ * escrita no × acima.
  *
  * **E ele fica mais fraco que o ×, de propósito**: 10% aqui contra 15% lá. O ×
  * é um ícone de 12px numa caixa de 24 sem contorno, e a mesma diferença de cor
@@ -238,8 +338,13 @@ function AnnouncementBarAction({
       size="xs"
       className={cn(
         "border-current/25 bg-transparent text-current",
-        "hover:bg-current/10 hover:text-current dark:hover:bg-current/10",
-        "active:bg-current/10 active:text-current dark:active:bg-current/10",
+        // A cor do disco da rodada 99, na pele da barra — `currentColor` a 10%,
+        // o mesmo tom de antes, agora nascendo sob o ponteiro em vez de chapar
+        // a caixa. O par `dark:` é obrigatório por especificidade, e as
+        // medições que motivaram a troca estão no × acima.
+        "[--button-fill-color:color-mix(in_oklab,currentColor_10%,transparent)]",
+        "dark:[--button-fill-color:color-mix(in_oklab,currentColor_10%,transparent)]",
+        "hover:text-current active:text-current",
         className
       )}
       {...props}

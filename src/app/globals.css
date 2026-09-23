@@ -2174,6 +2174,150 @@
   background-image: var(--brand-rainbow);
 }
 
+/* ── O brilho de marca do aviso ────────────────────────────────────────────
+
+   O arco-íris acendendo na borda do `Alert variant="brand"` conforme o
+   ponteiro passa pela tela, com um leve borrão. A referência é o
+   `GlowingEffect` da Aceternity, e os números são do dono: blur 2, spread 40,
+   proximity 50, borda 2, zona morta 0,01.
+
+   **Isto não é o giro da rodada 100.** Lá o degradê rodava sozinho, num laço
+   de 12s/6s, e o dono o recusou inteiro; aqui nada se move sem o ponteiro se
+   mover — é a forma que a 98 sancionou, a cor ancorada na ponta do mouse.
+
+   Quatro coisas foram medidas antes de escrever, e todas as quatro mudam o
+   código:
+
+   1. **`--alert-glow-start` é `inherits: true`, e isso é carga estrutural.**
+      As quatro `@property` que já existem são `inherits: false` porque são
+      lidas **no próprio elemento** (o `primary-wash` mora no botão). Esta é
+      lida num **pseudo-elemento**, e pseudo não herda propriedade registrada
+      como `inherits: false`: medido, a `opacity` ficava em 0 com a variável
+      valendo 1 no elemento. Quem trocar para `false` apaga o brilho sem
+      quebrar nada.
+
+   2. **`z-index` negativo sem `isolate` desaparece.** O pseudo cai atrás do
+      fundo de um ancestral — medido, invisível na página do catálogo. Por isso
+      a peça exige `isolate` no elemento, e o `Alert` o declara.
+
+   3. **Com `isolate`, o pseudo de `z` negativo pinta POR CIMA do `bg-card`.**
+      É a ordem de pintura da raiz de empilhamento: fundo primeiro, filhos de
+      `z` negativo depois. Sem o núcleo chapado ele cobriria o texto com sete
+      matizes — a invariante 3. A saída é a receita já travada da casa: núcleo
+      em `padding-box` sobre o arco-íris em `border-box`, com o núcleo em
+      `--card`. Onde a máscara apaga, o que se vê é a cor do próprio cartão.
+      **O degradê nunca fica sob o texto, por construção.**
+
+   4. **Não há máscara nenhuma, e o arco É o degradê.** A referência pinta um
+      arco-íris inteiro e recorta uma janela com `mask-composite: intersect` —
+      duas camadas de máscara, que este projeto já baniu por medição
+      (`mask-composite` e `-webkit-mask-composite` são propriedades distintas
+      cuja ordem de emissão o autor não controla, e uma camada `none` num
+      `intersect` apaga a peça). Aqui o degradê **já nasce** transparente →
+      arco-íris → transparente, e girá-lo é mover o arco. Uma propriedade em
+      vez de quatro, e nada para compor.
+
+   5. **O degradê é cônico, e essa foi a correção que fez o efeito aparecer.**
+      A primeira versão mascarava o `--brand-rainbow`, que é **linear a 135°**:
+      a janela revelava só o pedaço da rampa que calhava de estar naquela
+      aresta, então o que acendia era um borrão de **uma cor** — teal à
+      esquerda, lima à direita. Lia como sujeira, não como marca. Num cônico
+      ancorado no mesmo ângulo do arco, as oito paradas cabem **dentro** da
+      janela e o arco carrega a paleta inteira onde quer que ele esteja.
+      É por isso que a lista de paradas se repete aqui em vez de reusar o
+      token: um arco-íris comprimido em 80° não é o mesmo degradê que uma
+      rampa de canto a canto. A interpolação fica em sRGB de propósito — num
+      fio de 2px já borrado, o ganho do oklch não se vê, e o par
+      sRGB/`@supports` do `brand-rainbow-image` custaria duas listas.
+
+   A ease é `--ease-out`, que já é exatamente a `cubic-bezier(0.16, 1, 0.3, 1)`
+   da referência. A duração da perseguição é própria (2s), como o
+   `--link-sweep` já é: a escala `--duration-*` para em 300ms, e a referência
+   pede um rastro longo. */
+@utility alert-glow {
+  --alert-glow-follow: 2s;
+  --alert-glow-spread: 40;
+  /* Quantas voltas do arco-íris cabem em 360°. O nome e o valor espelham o
+     `--repeating-conic-gradient-times: 5` da referência: lá são 4 cores × 5
+     voltas (faixas de 18°); aqui são 8 × 5 (faixas de 9°, ciclo de 72°), e a
+     janela de 80° mostra ~1,1 ciclo — a mesma razão. */
+  --alert-glow-repeat: 5;
+  /* O teto de intensidade, e o botão de volume da peça. O arco nasceu em
+     opacidade cheia e saiu berrante ao lado da referência. Mexer aqui muda a
+     força; mexer nas paradas mudaria a **cor**, que é o que ele tem de certo. */
+  --alert-glow-opacity: 0.5;
+  transition: --alert-glow-start var(--alert-glow-follow) var(--ease-out);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    z-index: -10;
+    border-radius: inherit;
+    border: 2px solid transparent;
+    /* **A cor não gira. Quem gira é a janela.** Esta é a inversão que fez o
+       efeito não ser o da referência por duas rodadas seguidas, e ela foi
+       medida no bundle ao vivo do 21st: lá o `background-image` é um
+       `repeating-conic-gradient(from 236.84deg …)` — ângulo **fixo** — e o
+       `mask-image` é que carrega o `--start`. É por isso que o arco de lá
+       **troca de cor** conforme viaja pela borda: a janela revela faixas
+       diferentes do mesmo arco-íris parado.
+
+       As duas tentativas anteriores erraram isto de jeitos opostos: a primeira
+       mascarava o `--brand-rainbow`, que é **linear**, e a janela revelava
+       sempre a mesma cor naquela aresta; a segunda girou o cônico **junto**
+       com o arco, e aí ele carrega sempre a mesma sequência e só muda de
+       lugar. O `from` daqui é constante de propósito — quem o parametrizar
+       recria o defeito. */
+    background:
+      linear-gradient(var(--card), var(--card)) padding-box,
+      repeating-conic-gradient(
+          from 236.84deg at 50% 50%,
+          var(--brand-teal) calc(0.0% / var(--alert-glow-repeat)),
+          var(--brand-blue) calc(12.5% / var(--alert-glow-repeat)),
+          var(--brand-indigo) calc(25.0% / var(--alert-glow-repeat)),
+          var(--brand-violet) calc(37.5% / var(--alert-glow-repeat)),
+          var(--brand-magenta) calc(50.0% / var(--alert-glow-repeat)),
+          var(--brand-coral) calc(62.5% / var(--alert-glow-repeat)),
+          var(--brand-amber) calc(75.0% / var(--alert-glow-repeat)),
+          var(--brand-green) calc(87.5% / var(--alert-glow-repeat)),
+          var(--brand-teal) calc(100% / var(--alert-glow-repeat))
+        )
+        border-box;
+    filter: blur(2px);
+    opacity: calc(var(--alert-glow-active, 0) * var(--alert-glow-opacity));
+    transition: opacity var(--duration-slow) var(--ease-out);
+    pointer-events: none;
+    /* **Uma camada de máscara, e um triângulo puro** — três paradas, com o
+       opaco no meio, exatamente como a referência (`transparent, #fff,
+       transparent 80deg`). O `mask-composite: intersect` dela serve só para
+       recortar o anel, e aqui esse trabalho é do par `padding-box`/
+       `border-box`: onde a máscara apaga aparece o `bg-card` do próprio
+       alerta, idêntico ao núcleo. Uma camada só é o que esta casa permite — o
+       banimento medido é de **duas** compostas, em que uma `none` apaga a peça.
+       Aqui uma variável indefinida derruba a máscara para `none` e o anel
+       aparece inteiro: falha alto, não calada. */
+    -webkit-mask-image: conic-gradient(
+      from calc((var(--alert-glow-start) - var(--alert-glow-spread)) * 1deg),
+      transparent,
+      #000,
+      transparent calc(var(--alert-glow-spread) * 2deg)
+    );
+    mask-image: conic-gradient(
+      from calc((var(--alert-glow-start) - var(--alert-glow-spread)) * 1deg),
+      transparent,
+      #000,
+      transparent calc(var(--alert-glow-spread) * 2deg)
+    );
+  }
+}
+
+@property --alert-glow-start {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
 /* O campo de marca: o arco-íris ocupando uma **região**, com grão pesado e uma
    vinheta para o preto nos cantos de baixo.
 

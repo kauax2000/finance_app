@@ -2,6 +2,10 @@ import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 
+import { cn } from "@/lib/utils"
+
+import { alertVariants } from "./alert"
+import { announcementBarVariants } from "./announcement-bar"
 import { badgeVariants } from "./badge"
 import { buttonVariants } from "./button"
 import { checkboxVariants } from "./checkbox"
@@ -29,6 +33,13 @@ import { sliderRangeVariants } from "./slider"
  */
 
 const RAIZ = join(process.cwd(), "src/components/ui")
+/** O CSS sem comentários — senão uma asserção de ausência casa com a prosa
+ *  que explica justamente por que aquilo não está lá. */
+const fonteCss = () =>
+  readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8").replace(
+    /\/\*[\s\S]*?\*\//g,
+    " "
+  )
 const fonte = (nome: string) =>
   readFileSync(join(RAIZ, `${nome}.tsx`), "utf8").replace(
     /\/\*[\s\S]*?\*\/|\/\/.*$/gm,
@@ -235,5 +246,234 @@ describe("contorno de marca", () => {
 
     // E um slider comum não paga observador nenhum.
     expect(src).toMatch(/variant !== "brand"/)
+  })
+
+  it("9. a família da régua — `AnnouncementBar`", () => {
+    // A terceira família de peça de marca. O contorno vive em 1px de
+    // `border-box` sobre um núcleo chapado; o preenchimento (`Progress`,
+    // `Slider`) revela o degradê numa barra; a **régua** põe o arco-íris num
+    // fio na **aresta** do aviso — aqui, horizontal, na base da faixa.
+    //
+    // Ela existe porque o contorno degenera numa faixa de largura total:
+    // esquerda e direita saem da tela e o topo encosta na borda do viewport,
+    // sobrando exatamente os dois fios horizontais.
+    //
+    // **O `Alert` saiu desta família na rodada 119** e virou a quarta, a do
+    // brilho — teste 10. A barra ficou, e a razão é a mesma geometria: um arco
+    // correndo pelas quatro bordas de uma faixa full-bleed degenera igual.
+    const barra = announcementBarVariants({ variant: "brand" })
+    const PECAS = { "announcement-bar/brand": barra }
+
+    for (const [nome, classes] of Object.entries(PECAS)) {
+      // Modo de falha nº 2 do cabeçalho deste arquivo: sem esta utility o
+      // token não é declarado no elemento, o `background-image` cai para
+      // `none` e a régua desaparece **sem erro nenhum**.
+      expect(classes.split(/\s+/), nome).toContain("brand-rainbow-image")
+
+      // O degradê mora no pseudo, e nunca no elemento: arco-íris sob texto é a
+      // invariante 3 violada com sete matizes de uma vez, e é o que o fio de
+      // 1–2px evita por construção.
+      const pinturas = classes
+        .split(/\s+/)
+        .filter((c) => c.includes("bg-(image:--brand-rainbow)"))
+      expect(pinturas.length, nome).toBeGreaterThan(0)
+      for (const c of pinturas) {
+        expect(c, nome).toMatch(/^(before|after):/)
+      }
+
+      // Nem contorno nem halo. As duas primeiras absências separam esta
+      // família da do contorno (que sempre traz um núcleo chapado em
+      // `--brand-fill` sob uma camada `border-box`); a terceira é o motivo de o
+      // `brandOutline` existir — o `::after` borrado sangra 4px e encosta no
+      // vizinho, que num aviso é o conteúdo da tela.
+      expect(classes, nome).not.toContain("--brand-fill:")
+      expect(classes, nome).not.toContain("_border-box]")
+      expect(classes, nome).not.toMatch(/blur/)
+    }
+
+    // A geometria: o fio é horizontal, na base, e tem a espessura do fio que
+    // substitui.
+    for (const c of ["after:inset-x-0", "after:bottom-0", "after:h-px"]) {
+      expect(barra.split(/\s+/), c).toContain(c)
+    }
+
+    // **O fio da marca substitui o do `sticky`, e não se soma a ele.** Duas
+    // linhas de 1px empilhadas — uma cinza e uma de arco-íris — é o defeito
+    // que isto evita.
+    expect(barra.split(/\s+/)).toContain("border-b-0")
+
+    // E a ordem das chaves no `cva` é **carga estrutural**, não estilo: o `cva`
+    // concatena na ordem em que os eixos são declarados e o `tailwind-merge`
+    // resolve por último-vence. Com `variant` antes de `sticky`, o `border-b`
+    // do `sticky` venceria o `border-b-0` daqui e o fio cinza voltaria.
+    const src = fonte("announcement-bar")
+    expect(src.indexOf("sticky: {")).toBeGreaterThan(0)
+    expect(src.indexOf("variant: {")).toBeGreaterThan(src.indexOf("sticky: {"))
+
+    // Pelo mesmo mecanismo, a superfície neutra da marca vence a tonal — e é
+    // por isso que os dois tipos proíbem `tone` junto de `brand`, em vez de
+    // deixar a tela escrever uma cor que não pinta. O precedente é o
+    // `Progress`, com `tone`, `bands` e `brand`.
+    for (const nome of ["alert", "announcement-bar"]) {
+      expect(fonte(nome), nome).toMatch(/variant: "brand"; tone\?: never/)
+    }
+
+    // **E quem garante esse "vence" é o `tailwind-merge`, não a cascata.**
+    // Medido: pondo as duas classes cruas no mesmo `class` — sem passar pelo
+    // `cn` —, a faixa de marca saía com o texto **azul**
+    // (`oklch(0.36 0.1 240)`, o `--info-muted-foreground`), porque
+    // `text-foreground` e `text-info-muted-foreground` empatam em (0,1,0) e
+    // quem decide é a ordem de emissão do Tailwind, não a ordem no atributo.
+    // O `cn` **remove** o perdedor, e é essa remoção que a peça depende.
+    // Quem montar as variantes à mão traz o defeito de volta.
+    const barraMesclada = cn(
+      announcementBarVariants({ tone: "info", variant: "brand", sticky: true })
+    ).split(/\s+/)
+    expect(barraMesclada).toContain("text-foreground")
+    expect(barraMesclada).not.toContain("text-info-muted-foreground")
+    expect(barraMesclada).toContain("bg-muted")
+    expect(barraMesclada).not.toContain("bg-info-muted")
+    // O fio cinza do `sticky` tem de ter **desaparecido**, não perdido a
+    // disputa: duas linhas de 1px empilhadas é o defeito.
+    expect(barraMesclada).toContain("border-b-0")
+    expect(barraMesclada).not.toContain("border-b")
+
+    // O mesmo no alerta: o tipo proíbe `tone` em `brand`, e no runtime a
+    // combinação ainda degrada para a superfície neutra em vez de misturar.
+    const alertaMesclado = cn(
+      alertVariants({ tone: "destructive", variant: "brand" })
+    ).split(/\s+/)
+    expect(alertaMesclado).toContain("bg-card")
+    expect(alertaMesclado).not.toContain("bg-destructive-muted")
+    expect(alertaMesclado).not.toContain("text-destructive-muted-foreground")
+  })
+
+  it("10. a família do brilho — `Alert`", () => {
+    // A quarta família: o arco-íris acende num **arco da borda** conforme o
+    // ponteiro passa, com um leve borrão. Ela nasceu da referência
+    // `GlowingEffect` da Aceternity, e **não** é o giro da rodada 100 — lá o
+    // degradê rodava sozinho num laço e o dono o recusou inteiro; aqui nada se
+    // move sem o ponteiro se mover, que é a forma que a rodada 98 sancionou.
+    const alerta = alertVariants({ variant: "brand" })
+    const classes = alerta.split(/\s+/)
+    const CSS = fonteCss()
+
+    // A cor sai do mesmo token das outras peças, e `brand-rainbow-image` é
+    // quem o declara no elemento — sem ela o `background` cai para `none` e o
+    // brilho some sem erro nenhum.
+    expect(classes).toContain("brand-rainbow-image")
+    expect(classes).toContain("alert-glow")
+
+    // **`isolate` é obrigatório, e foi medido.** Sem ele o pseudo de `z`
+    // negativo cai atrás do fundo de um ancestral e não aparece.
+    expect(classes).toContain("isolate")
+
+    // A régua saiu: quem herdar este arquivo não pode achar que as duas
+    // convivem. Uma marca em repouso **e** um arco aceso seriam dois
+    // arco-íris na mesma caixa.
+    expect(alerta).not.toContain("before:w-0.5")
+    expect(alerta).not.toContain("before:rounded-full")
+
+    // A utility existe, e as quatro decisões medidas estão nela.
+    const util = CSS.slice(
+      CSS.indexOf("@utility alert-glow"),
+      CSS.indexOf("@property --alert-glow-start")
+    )
+    expect(util.length).toBeGreaterThan(0)
+
+    // **A cor fica parada e a janela é que anda — e eu errei isto duas vezes.**
+    // Medido no bundle ao vivo da referência (21st): o `background-image` dela
+    // é um `repeating-conic-gradient(from 236.84deg …)`, de ângulo **fixo**, e
+    // quem carrega o `--start` é o `mask-image`. É isso que faz o arco **trocar
+    // de cor** conforme viaja: a janela revela faixas diferentes de um
+    // arco-íris parado.
+    //
+    // A 1ª tentativa mascarava o `--brand-rainbow`, que é **linear**, e a
+    // janela revelava sempre a mesma cor naquela aresta. A 2ª girou o cônico
+    // **junto** com o arco, e aí ele carrega sempre a mesma sequência e só muda
+    // de lugar. As duas asserções abaixo são a invariante que separa o certo
+    // dos dois erros.
+    const corpoBg = util.slice(
+      util.indexOf("background:"),
+      util.indexOf("filter:")
+    )
+    const corpoMask = util.slice(util.indexOf("-webkit-mask-image:"))
+    expect(corpoBg).toContain("repeating-conic-gradient")
+    expect(corpoBg).not.toMatch(/--alert-glow-start/) // a cor NÃO gira
+    expect(corpoMask).toMatch(/--alert-glow-start/) // a janela gira
+
+    // **Uma camada de máscara, e `mask-composite` continua proibido.** A
+    // referência compõe duas (`intersect, intersect`) só para recortar o anel;
+    // aqui esse trabalho é do par `padding-box`/`border-box`, e onde a máscara
+    // apaga aparece o `bg-card` do alerta, idêntico ao núcleo. O banimento
+    // medido é da composição: uma camada `none` num `intersect` apaga a peça.
+    expect(util).not.toMatch(/mask-composite/)
+    expect(corpoMask.match(/conic-gradient/g)?.length).toBe(2) // mask + -webkit
+
+    // A janela é um **triângulo puro**: três paradas, opaco no meio, fechando
+    // em `spread * 2` — o `transparent, #fff, transparent 80deg` da
+    // referência. Com platô no miolo ela lê como bloco aceso, não como brilho.
+    expect(corpoMask).toMatch(/transparent,\s*#000,\s*transparent/)
+    expect(corpoMask).toMatch(/var\(--alert-glow-spread\) \* 2deg/)
+
+    // A rampa linear do token não serve aqui: ela não é cônica. As oito
+    // paradas da marca continuam sendo a fonte de cor.
+    expect(util).not.toMatch(/var\(--brand-rainbow\)/)
+    for (const parada of [
+      "teal",
+      "blue",
+      "indigo",
+      "violet",
+      "magenta",
+      "coral",
+      "amber",
+      "green",
+    ]) {
+      expect(util, parada).toContain(`var(--brand-${parada})`)
+    }
+
+    // A abertura sai do `spread`, e não de medidas soltas.
+    expect(util).toMatch(/--alert-glow-spread/)
+
+    // O núcleo é o **mesmo token** da superfície da variante, e é essa
+    // igualdade que faz a região apagada pela máscara ficar invisível.
+    expect(util).toMatch(/var\(--card\)/)
+    expect(classes).toContain("bg-card")
+
+    // O núcleo chapado em `padding-box` é o que impede o degradê de cobrir o
+    // texto: numa raiz de empilhamento o filho de `z` negativo pinta **por
+    // cima** do fundo do elemento.
+    expect(util).toMatch(/padding-box/)
+    expect(util).toMatch(/border-box/)
+    expect(util).toMatch(/z-index:\s*-10/)
+
+    // O borrão é o efeito, e aqui ele é legítimo — ao contrário da régua, que
+    // o proíbe (teste 9).
+    expect(util).toMatch(/filter:\s*blur/)
+
+    // **`inherits: true` é carga estrutural.** As outras quatro `@property` da
+    // casa são `inherits: false` porque são lidas no próprio elemento; esta é
+    // lida num pseudo, e pseudo não herda propriedade registrada como
+    // `false` — medido, a opacidade ficava em 0 com a variável valendo 1.
+    const prop = CSS.slice(
+      CSS.indexOf("@property --alert-glow-start"),
+      CSS.indexOf("@property --alert-glow-start") + 200
+    )
+    expect(prop).toMatch(/inherits:\s*true/)
+    expect(prop).toMatch(/syntax:\s*"<number>"/)
+
+    // O lado React: sem ponteiro fino não monta nada, o listener sai no
+    // unmount, e não há `requestAnimationFrame` em laço (precedente proibido).
+    const src = fonte("alert")
+    expect(src).toMatch(/\(hover: hover\)/)
+    expect(src).toMatch(/removeEventListener\("pointermove"/)
+    expect(src).not.toMatch(/requestAnimationFrame/)
+    // E nada de estado React para a posição: é `setProperty`, como no `Button`.
+    expect(src).toMatch(/setProperty\("--alert-glow-start"/)
+
+    // A barra **não** ganhou nada disso.
+    const barra = announcementBarVariants({ variant: "brand" })
+    expect(barra).not.toContain("alert-glow")
+    expect(barra).not.toMatch(/blur/)
   })
 })

@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -29,6 +31,17 @@ import { cn } from "@/lib/utils"
  *
  * Onze avisos tonais do app são feitos à mão contra quatro que usam este
  * componente. Isso não é desleixo das telas: é o componente não tendo as peças.
+ *
+ * ## A marca fala aqui, e por um fio
+ *
+ * `variant="brand"` é a caixa neutra com o arco-íris de 2px na aresta
+ * inline-start. Ela existe porque este componente e a `AnnouncementBar` são as
+ * duas superfícies onde o produto fala sobre **si mesmo**, e nenhuma das duas
+ * tinha voz: um "temos novidade" só podia sair de `tone="info"`, o azul da
+ * rampa de **estado**. `info` é fato sobre o dinheiro da pessoa; a novidade não
+ * é um estado dela. A mecânica e as medições estão no valor `brand` do eixo
+ * `variant`, abaixo. **Nasce sem consumidor no app**, por decisão do dono: só
+ * catálogo, como o `Stepper` já está.
  */
 const alertVariants = cva(
   [
@@ -82,11 +95,42 @@ const alertVariants = cva(
        * A forma. `soft` é o aviso com moldura própria — o padrão, e o que se
        * usa solto no conteúdo. `plain` é o mesmo tingido sem borda, para dentro
        * de um formulário ou de um diálogo, onde a moldura já é de outro e mais
-       * uma só acrescenta um retângulo.
+       * uma só acrescenta um retângulo. `brand` é a caixa neutra com a régua de
+       * arco-íris na aresta, para quando quem fala é o produto e não o dado —
+       * e por isso ela não aceita `tone`.
        */
       variant: {
         soft: "border",
         plain: "border-0",
+        /**
+         * **O brilho de marca**: a caixa neutra em repouso, e o arco-íris
+         * acendendo num arco da borda conforme o ponteiro passa pela tela, com
+         * um leve borrão. A referência é o `GlowingEffect` da Aceternity, e os
+         * números são do dono: blur 2, spread 40, proximity 50, borda 2, zona
+         * morta 0,01.
+         *
+         * **Isto não é o giro da rodada 100.** Lá o degradê rodava sozinho,
+         * num laço de 12s/6s, e o dono o recusou inteiro ("péssimo, feio e
+         * horrível"); aqui nada se move sem o ponteiro se mover — a forma que
+         * a rodada 98 sancionou, a cor ancorada na ponta do mouse.
+         *
+         * **Ele substituiu a régua de 2px que esta variante tinha.** O custo
+         * está dito e é real: sem ponteiro não há brilho, então no telefone o
+         * `brand` fica visualmente igual ao `soft` de `tone="default"`.
+         * Devolver a régua como repouso é uma linha, se isso incomodar.
+         *
+         * A mecânica e as quatro medições que a desenharam moram em
+         * `@utility alert-glow`, no `globals.css`. As duas que se veem daqui:
+         * **`isolate` é obrigatório** (sem ele o pseudo de `z` negativo cai
+         * atrás do fundo de um ancestral e some, medido), e o núcleo chapado
+         * em `padding-box` é o que impede o degradê de cobrir o texto, já que
+         * numa raiz de empilhamento o filho de `z` negativo pinta **por cima**
+         * do fundo do elemento.
+         */
+        brand: [
+          "brand-rainbow-image alert-glow isolate",
+          "border border-border bg-card text-card-foreground",
+        ].join(" "),
       },
       size: {
         sm: "px-3 py-2 text-xs [--alert-icon:--spacing(3.5)] has-[>svg]:gap-x-2 [&>svg]:translate-y-px",
@@ -112,24 +156,163 @@ const alertVariants = cva(
  *
  * Continua sobrescrevível: `{...props}` vem depois.
  */
-function Alert({
-  className,
-  tone,
-  variant,
-  size,
-  role,
-  ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof alertVariants>) {
+/** A zona morta no centro, e a folga em volta da caixa. Números do dono. */
+const GLOW_ZONA_MORTA = 0.01
+const GLOW_PROXIMIDADE = 50
+
+/** Junta o ref da medição com o que o consumidor passou. */
+function composeRefs<T>(...refs: Array<React.Ref<T> | undefined>) {
+  return (node: T | null) => {
+    for (const ref of refs) {
+      if (typeof ref === "function") ref(node)
+      else if (ref) (ref as React.RefObject<T | null>).current = node
+    }
+  }
+}
+
+/**
+ * O ponteiro do brilho de marca.
+ *
+ * **Este é o único listener em `document` do design system, e a razão é o
+ * `proximity`.** O `Button` segue o ponteiro com handlers no próprio elemento
+ * (`onPointerMove`), porque a lava dele só existe sob o cursor. Aqui o aviso
+ * tem de acender com o mouse **perto, não em cima** — 50px de folga —, e um
+ * handler local nunca vê o que acontece fora da caixa. O custo é contido: o
+ * listener só monta com `variant="brand"`, e "uma por tela" o mantém em um.
+ *
+ * **Sem ponteiro fino, não monta nada.** A pergunta é `(hover: hover)`, a
+ * mesma que o Tailwind faz nos `hover:` — num telefone o efeito não existe e
+ * também não custa. É por isso que não há par `active:`: não há o que mostrar
+ * no toque, ao contrário de um realce de botão.
+ *
+ * **A caixa é medida uma vez e remedida em rolagem e redimensionamento**, e
+ * não a cada movimento. `getBoundingClientRect` por `pointermove` global força
+ * layout a cada evento — no `Button` isso é barato porque só dispara sobre o
+ * botão; aqui dispararia pela tela inteira.
+ *
+ * **O ângulo acumula em vez de saltar.** Ao cruzar 180° o valor cru pula de
+ * 179 para -179, e uma transição interpolaria o caminho longo — o arco daria a
+ * volta pelo lado errado. A conta envolve a diferença em [-180, 180) com o
+ * módulo duplo, porque o `%` do JavaScript preserva o sinal (a referência erra
+ * isto: `((alvo - atual + 180) % 360) - 180` devolve valores abaixo de -180
+ * quando a diferença é bem negativa).
+ *
+ * Nada de `requestAnimationFrame` em laço, que é precedente proibido nesta
+ * casa, e nada de estado React: a posição vai para o CSS por `setProperty`,
+ * sem re-render, como o `Button` e o marcador do `Tabs` já fazem.
+ */
+function useAlertGlow(ativo: boolean) {
+  const ref = React.useRef<HTMLDivElement | null>(null)
+
+  React.useEffect(() => {
+    if (!ativo) return
+    if (!window.matchMedia("(hover: hover)").matches) return
+    const el = ref.current
+    if (!el) return
+
+    let caixa = el.getBoundingClientRect()
+    let angulo = 0
+    const remedir = () => {
+      caixa = el.getBoundingClientRect()
+    }
+
+    const mover = (e: PointerEvent) => {
+      const { left, top, width, height } = caixa
+      const cx = left + width / 2
+      const cy = top + height / 2
+
+      // A zona morta do centro. Com 0,01 ela é quase nada — fica porque é um
+      // número do dono, e porque é ela que evita o arco girando louco quando o
+      // ponteiro cruza exatamente o centro.
+      if (
+        Math.hypot(e.clientX - cx, e.clientY - cy) <
+        0.5 * Math.min(width, height) * GLOW_ZONA_MORTA
+      ) {
+        el.style.setProperty("--alert-glow-active", "0")
+        return
+      }
+
+      const perto =
+        e.clientX > left - GLOW_PROXIMIDADE &&
+        e.clientX < left + width + GLOW_PROXIMIDADE &&
+        e.clientY > top - GLOW_PROXIMIDADE &&
+        e.clientY < top + height + GLOW_PROXIMIDADE
+
+      el.style.setProperty("--alert-glow-active", perto ? "1" : "0")
+      if (!perto) return
+
+      const alvo =
+        (180 * Math.atan2(e.clientY - cy, e.clientX - cx)) / Math.PI + 90
+      angulo += ((((alvo - angulo + 180) % 360) + 360) % 360) - 180
+      el.style.setProperty("--alert-glow-start", String(angulo))
+    }
+
+    document.addEventListener("pointermove", mover, { passive: true })
+    window.addEventListener("scroll", remedir, { passive: true })
+    window.addEventListener("resize", remedir)
+    return () => {
+      document.removeEventListener("pointermove", mover)
+      window.removeEventListener("scroll", remedir)
+      window.removeEventListener("resize", remedir)
+    }
+  }, [ativo])
+
+  return ref
+}
+
+type AlertBase = React.ComponentProps<"div"> &
+  VariantProps<typeof alertVariants>
+
+/**
+ * **`tone` e `variant="brand"` são excludentes**, e o tipo cobra — o precedente
+ * é o `Progress`, que faz o mesmo com `tone`, `bands` e `brand`.
+ *
+ * Os dois respondem à mesma pergunta (que cor tem o aviso) por caminhos
+ * diferentes: `tone` é a gravidade de um estado do dado da pessoa, e a marca
+ * não tem gravidade nenhuma. Aceitar os dois juntos seria aceitar que um não
+ * faz nada — e aqui seria literal, porque `variant` vem depois de `tone` no
+ * `cva` e o `tailwind-merge` apaga a superfície tonal.
+ *
+ * **E `brand` também não aceita `size="sm"`, por geometria medida.** O recuo
+ * vertical da régua não é escolha: ele vem do `rounded-xl`. Num raio de 12px, a
+ * 8px do topo a aresta da caixa recua 0,69px e a ponta arredondada absorve a
+ * sobra; a 4px ela recua **3,06px**, e um fio de 2px em `start-0` ficaria
+ * inteiramente fora da superfície pintada, flutuando na margem. Ou seja, 8px é
+ * o piso. Numa caixa `sm` de 34px isso deixa 16px de fio — **47% da altura**,
+ * medido, que lê como tracinho e não como régua.
+ *
+ * Reduzir o raio no degrau é o desvio que este arquivo já recusou ("raio
+ * diferente por degrau"), e recortar o fio pelo raio (`overflow-hidden` com
+ * `inset-y-0`) o transforma numa lente de ~10px de miolo cheio na mesma caixa.
+ * Não há geometria boa, e a razão é que **não há caso**: `sm` é o aviso que
+ * fala com um campo, e a marca fala uma vez por tela, no corpo inteiro. O tipo
+ * diz isso em vez de entregar um degrau torto.
+ */
+type AlertProps =
+  | (AlertBase & { variant?: "soft" | "plain" })
+  | (AlertBase & { variant: "brand"; tone?: never; size?: "md" })
+
+function Alert({ className, size, role, ref, ...props }: AlertProps) {
+  const { tone, variant, ...rest } = props as AlertBase
+  const glowRef = useAlertGlow(variant === "brand")
+
+  // Em `brand` a superfície **é** a neutra, e `data-tone` diz isso: é ele que
+  // manda o cinza do `AlertDescription` seguir a superfície em vez da tinta
+  // tonal a 85%. Um atributo que mente sobre a cor pintada é pior que nenhum.
+  const tomEfetivo = variant === "brand" ? "default" : (tone ?? "default")
+
   return (
     <div
       data-slot="alert"
-      data-tone={tone ?? "default"}
+      ref={composeRefs(glowRef, ref)}
+      data-tone={tomEfetivo}
       role={
-        // Só o destrutivo interrompe, como na `AnnouncementBar`.
-        role ?? (tone === "destructive" ? "alert" : "status")
+        // Só o destrutivo interrompe, como na `AnnouncementBar`. Marca não
+        // interrompe, e cai no `status` pela mesma linha.
+        role ?? (tomEfetivo === "destructive" ? "alert" : "status")
       }
       className={cn(alertVariants({ tone, variant, size }), className)}
-      {...props}
+      {...rest}
     />
   )
 }

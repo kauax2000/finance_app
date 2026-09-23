@@ -13004,3 +13004,419 @@ A superfície passou a ser a do **campo**, `bg-input-fill/50` — a mesma de
 O custo está no claro, e é dito: o token é opaco naquele tema por construção, e
 a placa sai a **238** sobre o cartão contra o polegar em 250 — ΔRGB **12**,
 contra os 15 de antes. Conferido na tela a 3×: com a sombra do polegar, sustenta.
+
+### Rodada 118 — a marca ganha voz no aviso, e a barra paga a rodada 99
+
+O pedido foi revisar o `Alert` para o novo branding, e depois juntar a
+`AnnouncementBar`. **Não havia verde a tirar**: os dois já estavam
+brand-neutros — o `Alert` não toca `--primary` em lugar nenhum, a barra pinta
+`bg-muted` no tom neutro, e as duas ações saem de `currentColor`. A adequação
+não era remoção, e foi isso que mudou a pergunta.
+
+O buraco era outro: **os dois avisos são as únicas superfícies do sistema onde
+o produto fala sobre si mesmo, e nenhum dos dois tinha voz.** A prova estava na
+própria demonstração do catálogo, que anunciava "uma nova versão está
+disponível" em `tone="info"` — o azul da rampa de **estado** carregando o
+produto se anunciando. `info` é fato sobre o dinheiro da pessoa; a novidade não
+é um estado dela.
+
+Decisões do dono nesta rodada: a régua nos **dois** componentes; a variante
+**nasce sem consumidor no app** (só catálogo, como o `Stepper` já está); e os
+três consertos de tabela entram junto.
+
+#### A régua é a terceira família de peça de marca
+
+O arco-íris entra como fio na **aresta** do aviso: 2px na borda inline-start do
+`Alert`, 1px na base da `AnnouncementBar`, onde ele **substitui** o fio do
+`sticky`. Ao lado do contorno (`Button`, `Badge`, os controles de escolha) e do
+preenchimento (`Progress`, `Slider`).
+
+**Contorno foi descartado por degenerar.** Numa faixa de largura total,
+esquerda e direita ficam fora da tela e o topo encosta na borda do viewport —
+sobra exatamente o que a régua já é, mais uma linha no topo que não marca nada.
+E em volta de um parágrafo o contorno lê como enfeite, que é o que a página de
+marca trata em "o que não fazer". A régua é a forma que o sistema já nomeia
+para traço fino: a barra lateral de citação.
+
+#### Um token só nas duas orientações, contra a previsão oposta
+
+Previ que um degradê de 135° num fio de 2×60px clamparia as pontas e pediria um
+ângulo próprio ou `background-size`. **Quatro sondas rasterizadas derrubaram a
+previsão**: a linha do degradê é `|W·sin θ| + |H·cos θ|`, definida para cobrir a
+caixa **de canto a canto em qualquer ângulo**. A rampa completa aparece na
+vertical e na horizontal com o mesmo `--brand-rainbow`, sem override.
+
+| sonda | caixa | linha do degradê | resultado |
+| --- | --- | --- | --- |
+| barra, 135° | 1440×1 | 1019px, 145,6 por parada | rampa completa |
+| alerta, 135° | 2×60 | 44px, 6,3 por parada | rampa completa |
+| `background-size: 100% 200%` + center | 2×60 | — | **pior**: corta em coral |
+| `background-size: 100% 200%` sem center | 2×60 | — | **pior**: corta em violeta |
+
+As duas "correções" que eu ia propor saem piores que fazer nada. Ficou escrito
+no componente e na página de marca: **quem for consertar o ângulo, meça
+primeiro.** O ganho prático é que nenhum token novo entrou em `globals.css` — e
+uma segunda lista de oito paradas teria de existir **em dobro**, por causa do
+par sRGB/`@supports` do `brand-rainbow-image`.
+
+#### O raio proíbe o degrau `sm`, e isso é resposta de desenho
+
+O recuo vertical da régua não é escolha: num `rounded-xl` de 12px, a 8px do topo
+a aresta da caixa recua 0,69px e a ponta arredondada absorve a sobra; **a 4px
+ela recua 3,06px**, e um fio de 2px em `start-0` ficaria inteiramente fora da
+superfície pintada, flutuando na margem. Oito pixels é o piso.
+
+Medido no `sm`: caixa de 34px, régua de 16px — **47% da altura**, que lê como
+tracinho. No `md` são 92 de 110 (84%) e 28 de 46 (61%) no mínimo, que ainda é
+régua.
+
+Baixar o raio no degrau é o desvio que o próprio arquivo já recusou, e recortar
+o fio pelo raio (`overflow-hidden` com `inset-y-0`) o transforma numa lente de
+~10px de miolo cheio. **Não há geometria boa porque não há caso**: `sm` é o
+aviso que fala com um campo, e a marca fala uma vez por tela, no corpo inteiro.
+O tipo proíbe o par em vez de entregar um degrau torto — junto de `tone`, pelo
+precedente do `Progress`.
+
+#### Quem faz a marca vencer o tom é o `tailwind-merge`, não a cascata
+
+Medição que quase passou como defeito do componente: pondo as classes da marca
+e do tom cruas no mesmo `class` — sem passar pelo `cn` —, a faixa saía com o
+texto **azul** (`oklch(0.36 0.1 240)`, o `--info-muted-foreground`). O motivo é
+que `text-foreground` e `text-info-muted-foreground` empatam em (0,1,0) e quem
+decide é a **ordem de emissão do Tailwind**, não a ordem no atributo.
+
+No componente real não acontece, porque o `cn` **remove** o perdedor — medido
+no DOM: sobram `bg-muted`, `text-foreground` e `border-b-0`, e nenhuma classe
+tonal. Mas a garantia é a remoção, e não a disputa: quem montar as variantes à
+mão traz o defeito de volta. `brand-contour.test.ts` passou a afirmar o
+resultado **mesclado**, e não só a saída do `cva`.
+
+Pela mesma aritmética, a ordem das chaves no `cva` da barra é carga estrutural:
+`variant` é declarado **depois** de `sticky`, senão o `border-b` do `sticky`
+vence o `border-b-0` da marca e a faixa sai com duas linhas de 1px empilhadas,
+uma cinza e uma de arco-íris.
+
+#### O contraste da régua, reportado
+
+Oito paradas contra as duas superfícies que ela toca:
+
+| | pior | melhor | abaixo de 3:1 |
+| --- | --- | --- | --- |
+| escuro · alerta (`--card`) | violeta **5,35** | lima 13,01 | nenhuma |
+| escuro · barra (`--muted`) | violeta **4,52** | lima 10,98 | nenhuma |
+| claro · alerta (`--card`) | lima **1,91** | violeta 5,37 | teal, azul, âmbar, lima |
+| claro · barra (`--muted`) | lima **1,60** | violeta 4,51 | +coral |
+
+**Não é um caso de 1.4.11, e a razão é o papel.** A norma pede 3:1 para o que
+*identifica* a peça, e quem identifica o aviso é a caixa mais o ícone. A régua é
+acento — a categoria do halo do `Badge` e do arco-íris do `Progress`, que já
+registra cinco de oito paradas reprovando no claro (pior caso 1,42). Conferido
+na tela nos dois temas: no claro o fio é mais delicado, e o contraste cromático
+o sustenta onde a fórmula de luminância não vê. O caminho de reforço, se ele
+ler fraco demais, é o que o `Progress` documenta — leito escuro sob o fio —, e
+lá foi recusado na tela.
+
+#### E os dois botões da barra nunca migraram para o disco da rodada 99
+
+O achado que não tem nada a ver com marca, e apareceu medindo os arquivos.
+`AnnouncementBarAction` e o × de dispensar mantinham `hover:bg-current/10` e
+`/15` e **nunca declaravam `--button-fill-color`** — então herdavam o cinza de
+`--muted` do `tertiary`. Confirmado no DOM: nos dois, a variável resolvia para
+`color-mix(in oklab, oklch(0.269 0 0) 50%, transparent)`.
+
+O realce pintava **duas** camadas: a tinta tonal chapada na caixa toda, e um
+disco cinza crescendo por cima.
+
+| tom | superfície | hover antes | hover depois |
+| --- | --- | --- | --- |
+| claro · info | `200,241,255` | **`235,235,235`** | `180,224,240` |
+| claro · warning | `255,234,186` | **`235,235,235`** | `240,217,167` |
+| claro · success | `206,247,216` | **`235,235,235`** | `185,229,197` |
+| claro · destructive | `255,219,212` | **`235,235,235`** | `245,200,194` |
+
+No tema claro `--muted` é **opaco** (`oklch(0.94 0 0)`), e os quatro tons
+convergiam no **mesmo cinza**: o realce não realçava o tom, apagava. No escuro o
+disco é 50% e o efeito era dessaturação — `warning` ia de `78,45,0` para
+`67,50,28`.
+
+**Ninguém viu porque a razão de luminância é 1,007–1,078** — nada. O defeito é
+**cromático**, e os scripts desta casa só medem luminância; é a nota de método
+que a rodada do `Progress` já registrou, aqui cobrando o preço. Depois do
+conserto, medido no DOM: **1,299** na ação e **1,45** no × (a assimetria de
+área, 10% contra 15%, continua), dentro da faixa que o `bg-current/N` sempre
+registrou nesta casa.
+
+Saiu junto um defeito vizinho no ×: ele carregava só `text-current` (0,1,0)
+contra o `hover:text-foreground` (0,2,0) do `tertiary`, então **trocava a tinta
+do tom pelo cinza neutro no cursor**. O par `hover:text-current
+active:text-current` é o mesmo que o `AlertAction` já tinha.
+
+#### Os dois consertos de tabela
+
+- **`docs/alert.tsx` documentava o `role` errado**: dizia que `destructive` *e*
+  `warning` saem assertivos, e o componente só faz isso com o destrutivo. A
+  documentação estava errada, não o código.
+- **As linhas de import do registry omitiam `AlertAction` e
+  `AnnouncementBarAction`** — a linha que a pessoa copia do catálogo não
+  construía a demonstração "Com ação" que o próprio catálogo publica.
+
+#### O que ficou de fora
+
+Nenhuma tela migrou, por decisão do dono. `globals.css` não foi tocado — a
+medição da geometria tirou a necessidade de token novo. Não entrou script de
+contraste para a régua: ela é acento de 1–2px, e o precedente do `Progress`
+registra os números no histórico sem guarda própria. E o `offline-banner`
+continua posicionando à mão, pelo motivo de sempre: exige sessão autenticada
+para verificar.
+
+`docs/JORNADAS.md` não mudou — nenhuma rota, redirecionamento, destino,
+parâmetro de URL, diálogo, RPC ou navegação global foi tocado.
+
+### Rodada 119 — o arco-íris acende na borda do aviso quando o mouse passa
+
+O pedido: no `Alert variant="brand"`, conforme o mouse passa pela tela, as
+bordas se iluminam com o arco-íris da marca, com um leve blur, como o
+`GlowingEffect` da Aceternity. Números do dono, de uma captura do painel de
+controles da referência: **blur 2, spread 40, proximity 50, borda 2, zona morta
+0,01**. Decisões dele nesta rodada: o brilho **substitui** a régua que a 118
+tinha acabado de pôr no alerta; **só o alerta** (a barra fica com a régua); e o
+efeito mora no componente, não num `GlowingEffect` solto.
+
+#### O precedente, dito antes de escrever
+
+Três recusas do histórico passam perto, e foram postas na mesa antes:
+
+- a **rodada 100**, sobre o degradê que girava — *"não é uma animação que eu
+  quero usar em nenhum lugar de site, está péssimo, feio e horrível"*;
+- o **`border-beam` do 21st** (feixe animado na borda), uma das cinco
+  tentativas recusadas no campo, hoje travada por
+  `field-control-ladder.test.ts`;
+- a **rodada 90**, que montou o `button-colorful` do 21st (arco-íris a
+  `blur(8px)`) e não mandou nada para o código.
+
+**E por que isto não é a repetição de nenhuma das três.** O banimento do
+`border-beam` é escopado aos oito controles de **campo**, e um aviso não é
+campo. A rodada 100 matou o **laço autônomo**, não a reação ao ponteiro — o
+próprio commit dela diz "o botão de marca não ficou inerte: o halo continua
+acendendo no cursor", e o que entrou no lugar do giro foi a lava, que é
+movimento ancorado no mouse. E a rodada 98 **inverteu** a 90 de propósito,
+pondo o arco-íris atrás de uma lâmina no `primary`. O risco que resta é de
+aparência, e essa é decisão de tela.
+
+#### O que não deu para copiar
+
+**`mask-composite` está banido nesta casa, e é medido.** A referência compõe
+duas camadas de máscara (`mask-composite: intersect` mais
+`mask-clip: padding-box, border-box`). O `AGENTS.md` já registrava que
+`mask-composite` e `-webkit-mask-composite` são propriedades distintas cuja
+ordem de emissão o Tailwind não deixa o autor controlar, e que uma camada
+`none` num `intersect` dá alfa zero e **apaga a peça inteira**.
+
+A substituição dispensa a máscara inteira: o `conic-gradient` **já nasce**
+transparente → arco-íris → transparente, e girá-lo por `--alert-glow-start`
+*é* mover o arco. Uma propriedade em vez de quatro, e nada para compor.
+`lucide-react` também não entrou (a regra de ícone é fechada em Heroicons) e
+nenhum componente novo foi criado.
+
+#### E a primeira versão não funcionava — o dono viu antes de mim
+
+Ela mascarava o `--brand-rainbow`, que é **linear a 135°**. A janela revelava
+só o pedaço da rampa que calhava de estar naquela aresta, então o que acendia
+era um borrão de **uma cor**: teal à esquerda, lima à direita. Mecanicamente
+tudo certo — medido, `--alert-glow-active` ia a 1, a opacidade a 1, o ângulo
+perseguia o ponteiro —, e mesmo assim o efeito não existia, porque o que se via
+não lia como marca.
+
+**As minhas duas verificações mentiram, e vale registrar como.** A primeira
+porque eu disparei um `window.dispatchEvent(new Event('scroll'))` à mão no
+mesmo script que depois testou o hover, refrescando um cache que na vida real
+podia estar velho. A segunda porque sondas anteriores tinham deixado
+`--alert-glow-active: 1` **inline** na página: o arco aparecia nos screenshots
+com e sem o efeito ligado, e eu li isso como "funciona". **O teste que valeu
+foi o único que começou com reload e não escreveu variável nenhuma.**
+
+O conserto é o cônico: ancorado no mesmo ângulo do arco, as oito paradas cabem
+**dentro** da janela e a paleta inteira viaja junto. A lista de paradas se
+repete na utility de propósito — um arco-íris comprimido em 80° não é o mesmo
+degradê que uma rampa de canto a canto — e a interpolação fica em sRGB, porque
+num fio de 2px já borrado o ganho do oklch não se vê e o par sRGB/`@supports`
+do `brand-rainbow-image` custaria duas listas.
+
+#### Quatro medições, e cada uma mudou o código
+
+Todas no DOM real do servidor de desenvolvimento, antes de escrever o arquivo.
+
+1. **A `@property` tem de ser `inherits: true`.** As quatro que já existiam são
+   `inherits: false`, e copiá-las teria sido o caminho natural. Medido: com
+   `false`, o **pseudo-elemento não herda** a variável — a `opacity` ficou em
+   `0` com o elemento valendo `1`. O `Button` pode ser `false` porque o
+   `primary-wash` mora **no próprio elemento**; aqui quem lê é o `::before`.
+2. **`z-index: -1` sem `isolate` some.** O pseudo cai atrás do fundo de um
+   ancestral — medido, invisível na página do catálogo. O `Alert` passou a
+   declarar `isolate`.
+3. **Com `isolate`, o pseudo de `z` negativo pinta POR CIMA do `bg-card`.** É a
+   ordem de pintura da raiz de empilhamento, e sem correção o degradê cobriria
+   o texto com sete matizes. A saída é a receita já travada da casa: núcleo
+   chapado em `padding-box` sobre o arco-íris em `border-box`, com o núcleo em
+   `--card` — onde a máscara apaga, o que se vê é a cor do próprio cartão.
+4. **O arco acende onde deve, e a 2px ele some num screenshot reduzido.** Duas
+   leituras saíram em branco antes de o `inset` ser exagerado para conferir; a
+   causa era o screenshot de 1440 chegando a 800. **Quem for conferir isto
+   mede pixel ou emula 1:1** — a olho, num print reduzido, a peça parece morta.
+
+Dois presentes do que já existia: **`--ease-out` já é
+`cubic-bezier(0.16, 1, 0.3, 1)`**, exatamente a ease da referência, e
+`--brand-rainbow` serve de cor do anel sem precisar de uma segunda lista das
+oito paradas — que teria de existir em dobro, pelo par sRGB/`@supports`.
+
+#### O ângulo acumula, e a referência erra essa conta
+
+Ao cruzar 180° o ângulo cru salta de 179 para −179, e uma transição
+interpolaria o caminho longo: o arco daria a volta pelo lado errado. A conta
+envolve a diferença em [−180, 180) **com módulo duplo**, porque o `%` do
+JavaScript preserva o sinal — a referência escreve
+`((alvo - atual + 180) % 360) - 180`, que devolve valores abaixo de −180 quando
+a diferença é bem negativa.
+
+Medido nos dois lados: ponteiro à esquerda → **−449,9**; à direita → **−270,1**.
+A diferença é +179,8°, o caminho **curto**, atravessando o topo.
+
+#### E depois ele estava alto demais
+
+Com o cônico no lugar o efeito passou a existir, e a segunda leitura do dono foi
+que ele destoava da referência: lá o fio é **fraco e fino**, e o daqui saía em
+opacidade cheia com as pontas cortando seco — a travessia de `transparent` para
+o teal acontecia em 12° e a ponta lia como aresta, não como brilho.
+
+Dois ajustes, e a divisão entre eles é a decisão: **`--alert-glow-opacity`
+(0,5) baixa a peça inteira**, e um **envelope de alfa** faz o arco nascer e
+morrer (as extremidades entram em 20% e 60% antes do miolo opaco, que é o que a
+referência consegue pela máscara, `#00000000 → #fff → #00000000`). O miolo fica
+cheio de propósito: baixar as paradas do meio tiraria a **cor** junto com a
+força, e a cor é o que o cônico veio consertar. **Quem for mexer no volume mexe
+no multiplicador, nunca nas paradas.**
+
+#### O único listener em `document` do design system
+
+O `Button` segue o ponteiro com handlers no próprio elemento, porque a lava
+dele só existe sob o cursor. Aqui `proximity: 50` quer dizer que o aviso acende
+com o mouse **perto, não em cima**, e handler local nunca vê o que acontece
+fora da caixa. Então há um listener em `document` — escopado: só monta com
+`variant="brand"`, só sob `(hover: hover)`, sai no unmount, e "uma por tela" o
+mantém em um. **A caixa é medida uma vez** e remedida em rolagem e resize, e
+não a cada movimento: `getBoundingClientRect` por `pointermove` global forçaria
+layout pela tela inteira, o que no `Button` é barato só porque lá o evento
+dispara sobre o botão. Sem `requestAnimationFrame` em laço, que é precedente
+proibido, e sem estado React.
+
+#### A razão do `size="sm"` mudou, e a antiga foi apagada
+
+A 118 proibia `brand` com `sm` por **geometria**: a régua precisava de 8px de
+recuo para não encostar no `rounded-xl`, e numa caixa `sm` de 34px sobravam 16
+de fio, 47% da altura. **Com o brilho, essa razão deixou de existir** — um arco
+na borda funciona em qualquer altura. A proibição fica, agora só pela razão
+semântica, que sempre foi a mais forte: `sm` é o aviso que fala com um campo, e
+a marca fala uma vez por tela. A justificativa velha saiu da documentação em
+vez de ficar apodrecendo ao lado da nova.
+
+#### O custo, dito e não escondido
+
+**No telefone o `Alert variant="brand"` fica sem marca nenhuma.** Não há
+ponteiro, logo não há brilho; e como ele substituiu a régua, o que sobra é a
+caixa neutra, visualmente igual ao `soft` de `tone="default"`. Isso contraria o
+princípio 3 do `PRODUCT.md` ("o telefone é o aparelho, não a versão reduzida"),
+e é a consequência direta da opção escolhida pelo dono entre três. Reverter é
+uma linha: devolver a régua como repouso. Em `prefers-reduced-motion` o bloco
+global corta a transição para 0,01ms e o arco passa a saltar em vez de
+perseguir — seguir o ponteiro continua, porque não é animação nem transição.
+
+#### Os testes
+
+O bloco 9 de `brand-contour.test.ts` **se dividiu**: ele proibia `blur` nas
+duas peças e travava a geometria da régua do alerta por classe exata, então o
+alerta saiu para um bloco 10, "a família do brilho". As asserções novas cobrem
+os dois modos de falha silenciosa medidos — mutação confirmada nos dois: tirar
+`isolate` reprova, e trocar `inherits: true` por `false` reprova.
+
+`docs/JORNADAS.md` não mudou.
+
+### Rodada 120 — a cor fica parada, e quem anda é a janela
+
+O dono gravou a tela e disse: a animação não é a da referência. Mandou também o
+link (`21st.dev/@manuarora700/components/glowing-effect`), e foi ele que
+resolveu — **medi o bundle ao vivo em `cdn.21st.dev`, same-origin**, o mesmo
+caminho que a rodada 90 já tinha usado. O que vale é o CSS computado dela, não
+o código-fonte que o site publica.
+
+#### O que a gravação mostrava
+
+Quatro quadros, extraídos com AVFoundation (não há `ffmpeg` nesta máquina; um
+script Swift de 20 linhas resolve): aos **2,05s** o arco está na aresta direita
+do primeiro cartão, em **oliva e âmbar**; aos **6,15s** na base, em
+**magenta → verde → teal**; aos **9,22s** na direita do segundo cartão, oliva e
+teal; aos **13,32s** na esquerda dele, **magenta**.
+
+**O arco troca de cor conforme viaja.** O nosso mostrava sempre a mesma
+sequência e só mudava de lugar.
+
+#### A inversão, lida do bundle
+
+```
+background-image:  repeating-conic-gradient(from 236.84deg at 50% 50%, …)   ← FIXO
+mask-image:        conic-gradient(from 96.67deg, transparent, #fff, transparent 80deg)
+--start: 136.67    e 136,67 − 40 (spread) = 96,67 → o `from` da máscara
+```
+
+O degradê de cor **nunca gira**; quem gira é a **máscara**. A janela revela
+faixas diferentes de um arco-íris parado, e é daí que vem a troca de cor.
+
+**Duas tentativas erraram isto de jeitos opostos, e as duas são minhas.** A
+rodada 119 começou mascarando o `--brand-rainbow`, que é **linear** — a janela
+revelava só o pedaço da rampa naquela aresta e acendia **uma cor**, um borrão
+teal que lia como sujeira. Corrigi para cônico, mas girei o cônico **junto** com
+o arco e tirei a máscara; com isso ele passou a carregar sempre a mesma ordem de
+cores. O certo é o cônico **parado** com a janela andando por cima.
+
+#### O resto do que o bundle entregou
+
+- **A janela é um triângulo puro**: três paradas (`transparent`, `#fff` no meio,
+  `transparent` em 80°), sem platô. O envelope de alfa que eu tinha posto nas
+  paradas de cor saiu — ele existia para simular o fade que a máscara agora faz
+  de verdade, e os dois juntos dobravam o escurecimento das pontas.
+- **A máscara volta como uma camada só.** A referência compõe duas
+  (`mask-composite: intersect, intersect`) apenas para recortar o anel; aqui
+  esse trabalho já é do par `padding-box`/`border-box`, e onde a máscara apaga
+  aparece o `bg-card` do próprio alerta, idêntico ao núcleo. O banimento desta
+  casa é da **composição**, não da máscara: uma camada `none` num `intersect`
+  apaga a peça.
+- **`--blur` na referência ao vivo é `0px`**, não 2. A foto dos Controls que o
+  dono mandou era a configuração **dele**. Ficou o 2 que ele pediu, e o 0 fica
+  registrado para comparação.
+- **O que já estava certo**: `spread` 40 (janela de 80°), `from = start −
+  spread`, `opacity` em 0,3s, e a perseguição em 2s com
+  `cubic-bezier(0.16, 1, 0.3, 1)` — o `movementDuration` padrão da referência,
+  que por acaso é o `--ease-out` desta casa.
+- `--alert-glow-repeat` (5) espelha o `--repeating-conic-gradient-times` de lá:
+  4 cores × 5 voltas dão faixas de 18°; 8 × 5 dão faixas de 9° e ciclo de 72°,
+  e a janela de 80° mostra ~1,1 ciclo — a mesma razão.
+
+#### O teste que separa o certo dos dois erros
+
+O bloco 10 passou a fatiar a utility em duas partes e afirmar o oposto em cada
+uma: **a cor não pode** casar `--alert-glow-start`, e **a máscara tem** de
+casar. Mutação confirmada nos dois sentidos — girar o cônico junto reprova, e
+tirar a máscara reprova.
+
+Junto saiu um defeito do próprio teste: `fonteCss()` lia o `globals.css` **com
+comentários**, e a asserção `not.toMatch(/mask-composite/)` casava com a prosa
+que explica justamente por que aquilo não está lá. Agora ele tira comentários,
+como o `fonte()` de TSX já fazia.
+
+#### Nota de método, porque me custou três rodadas
+
+**A ferramenta certa era a referência ao vivo, e eu cheguei nela por último.**
+Antes disso eu tinha o código-fonte dela colado na conversa e mesmo assim errei
+duas vezes, porque o que decide é o **computado** — o `background-attachment:
+fixed` do fonte, por exemplo, sai `scroll` no computado. Medir a referência
+rodando custou uma chamada e resolveu o que duas rodadas de leitura não
+resolveram.

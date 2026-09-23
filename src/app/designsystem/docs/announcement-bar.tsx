@@ -6,6 +6,7 @@ import {
   ExclamationTriangleIcon,
   InformationCircleIcon,
   SignalSlashIcon,
+  SparklesIcon,
   UserPlusIcon,
 } from "@heroicons/react/16/solid"
 
@@ -41,7 +42,8 @@ export default function AnnouncementBarDoc() {
         </AnnouncementBar>
         <AnnouncementBar tone="info">
           <InformationCircleIcon aria-hidden />
-          Uma nova versão está disponível. Recarregue para atualizar.
+          O servidor está em manutenção até as 4h. A fila local continua
+          guardando o que você lançar.
         </AnnouncementBar>
         <AnnouncementBar tone="warning">
           <SignalSlashIcon aria-hidden />
@@ -82,6 +84,33 @@ export default function AnnouncementBarDoc() {
       </DocSection>
 
       <DocSection
+        title="Marca"
+        description="A faixa neutra com o arco-íris num fio de 1px na base. É a forma para quando quem fala é o produto — uma novidade, uma versão nova — e não o estado do app. Ela não aceita tone: marca não tem gravidade. Uma por tela."
+        code={`<AnnouncementBar variant="brand" sticky>
+  <SparklesIcon aria-hidden />
+  <AnnouncementBarContent>…</AnnouncementBarContent>
+  <AnnouncementBarActions>
+    <AnnouncementBarAction>Ver as novidades</AnnouncementBarAction>
+  </AnnouncementBarActions>
+</AnnouncementBar>`}
+        previewClassName="flex-col items-stretch gap-3 p-0"
+      >
+        <AnnouncementBar variant="brand">
+          <SparklesIcon aria-hidden />
+          <AnnouncementBarContent>
+            Uma nova versão está disponível. Recarregue para atualizar.
+          </AnnouncementBarContent>
+          <AnnouncementBarActions>
+            <AnnouncementBarAction>Recarregar</AnnouncementBarAction>
+          </AnnouncementBarActions>
+        </AnnouncementBar>
+        <AnnouncementBar variant="brand" size="sm">
+          <SparklesIcon aria-hidden />
+          Faturas de cartão agora fecham sozinhas na data do ciclo.
+        </AnnouncementBar>
+      </DocSection>
+
+      <DocSection
         title="Escada"
         description="md é a faixa do topo do app; sm é a que acompanha uma seção."
         code={`<AnnouncementBar size="sm" tone="info">…</AnnouncementBar>`}
@@ -111,6 +140,14 @@ export default function AnnouncementBarDoc() {
         O × é um ícone de 12px numa caixa de 24 sem contorno, e a mesma diferença de cor em área menor lê como menos. Por isso ele sobe a 15% e mostra o contorno no cursor, enquanto a ação fica em 10%.
       </DocNote>
 
+      <DocNote title="Os dois botões pagaram a rodada 99 com atraso">
+        Eles mantinham <code>hover:bg-current/N</code> e nunca declaravam <code>--button-fill-color</code>, então herdavam o cinza de <code>--muted</code> do <code>tertiary</code>: o realce pintava <strong>duas</strong> camadas — a tinta do tom na caixa toda e um disco cinza por cima. No tema claro, onde <code>--muted</code> é opaco, os quatro tons convergiam no mesmo <code>235,235,235</code>: o realce apagava o tom em vez de realçá-lo. Ninguém viu porque a razão de luminância é <strong>1,007–1,078</strong> — o defeito é cromático, e os scripts da casa só medem luminância. Com <code>currentColor</code> no disco: 1,16–1,19 no claro e 1,26–1,30 no escuro.
+      </DocNote>
+
+      <DocNote title="O fio da marca substitui o do sticky, e a ordem do cva é o mecanismo">
+        Em <code>brand</code> o arco-íris <em>é</em> o fio de baixo, então a variante traz <code>border-b-0</code>. E o eixo <code>variant</code> é declarado <strong>depois</strong> de <code>sticky</code> no <code>cva</code>: a concatenação segue a ordem das chaves e o <code>tailwind-merge</code> resolve por último-vence. Declarado antes, o <code>border-b</code> do <code>sticky</code> venceria e a barra sairia com duas linhas de 1px empilhadas, uma cinza e uma de arco-íris.
+      </DocNote>
+
       <DocNote title="O papel segue o tom">
         <code>destructive</code> é <code>role=&quot;alert&quot;</code>, que interrompe; os outros quatro são <code>status</code>. Para outro papel, passe <code>role</code>.
       </DocNote>
@@ -130,7 +167,14 @@ export default function AnnouncementBarDoc() {
             type: '"default" | "info" | "success" | "warning" | "destructive"',
             default: '"info"',
             description:
-              "A gravidade; default é o aviso sem gravidade.",
+              "A gravidade; default é o aviso sem gravidade. Proibido junto de variant=\"brand\".",
+          },
+          {
+            prop: "variant",
+            type: '"soft" | "brand"',
+            default: '"soft"',
+            description:
+              "A forma: soft leva a superfície do tom; brand é a faixa neutra com a régua de arco-íris na base.",
           },
           {
             prop: "size",
