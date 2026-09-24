@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
+
 import { describe, expect, it } from "vitest"
 
 import {
@@ -5,6 +8,7 @@ import {
   DISCLOSURE_ROW_HEIGHTS,
   disclosureMarkerClassName,
   disclosureLabelClassName,
+  disclosureRevealClassName,
   disclosureRowClassName,
 } from "@/lib/disclosure-classes"
 
@@ -164,5 +168,29 @@ describe("o realce não troca a cor de fundo", () => {
 
   it("o alvo cresce em apontador grosso", () => {
     expect(disclosureRowClassName).toContain("pointer-coarse:min-h-11")
+  })
+
+  /**
+   * O conteúdo sobe em cascata nos **dois** — a mesma interação, o mesmo
+   * movimento. E a regra do texto solto não pode alcançar a `Content` do
+   * `Collapsible`: a animação dela é a de altura, a que o Radix espera para
+   * desmontar.
+   */
+  it("o conteúdo aparece em cascata, nos dois componentes", () => {
+    const ler = (p: string) => readFileSync(join(process.cwd(), p), "utf8")
+    for (const nome of ["accordion", "collapsible"]) {
+      expect(ler(`src/components/ui/${nome}.tsx`), nome).toContain(
+        "disclosureRevealClassName"
+      )
+    }
+    const css = ler("src/app/globals.css")
+    const util = css.indexOf(`@utility ${disclosureRevealClassName} {`)
+    expect(util).toBeGreaterThan(css.indexOf("@utility no-scrollbar"))
+    const bloco = css.slice(util, css.indexOf("@utility", util + 1))
+    expect(bloco).toMatch(/:not\(\[data-slot="collapsible-content"\]\)/)
+    // A abertura anda na mola da casa, e o fechamento não: uma mola até zero
+    // passaria por baixo de zero, e a altura seria cortada seca.
+    expect(bloco).toMatch(/disclosure-rise var\(--duration-spring\) var\(--ease-spring\)/)
+    expect(css).toMatch(/--ease-spring: linear\(/)
   })
 })

@@ -1562,6 +1562,18 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   sem nome contra o que o consumidor pusesse, dois ícones se revezando contra
   `rotate-180` e `rotate-90` escritos à mão, `hover:underline` contra nada, alvo
   de toque em nenhum dos dois.
+- **A divulgação abre numa mola, nos dois** (`@utility disclosure-reveal` e
+  `disclosureMotionClassName`, rodadas 128–129): a altura e o conteúdo andam
+  em `--ease-spring`/`--duration-spring` — a mola da `Tooltip`
+  (`stiffness 300`, `damping 25`) amostrada num `linear()` de CSS, que passa
+  3,8% do alvo e assenta em 500ms. Cada filho sobe 6px, 30ms depois do
+  anterior, com teto de 120ms. **Fechar é curva, não mola**: uma mola até zero
+  passaria por baixo de zero, e a altura seria cortada seca no meio do
+  trajeto. A versão com desfoque e `--ease-out` foi recusada por mecânica. A entrada roda na
+  **montagem**, não por estado, e o Radix espera só a animação da própria
+  `Content`. **Conteúdo só de texto** não tem filho elemento, e aí quem sobe é o
+  envelope — nunca a `Content` do `Collapsible`, cuja animação é a que o Radix
+  espera para desmontar. A espiada (`peek`) não a veste.
 - **A linha de divulgação entrou na escada, e o piso dela é 32.** `md` 32, `lg`
   36, `xl` 40 — os mesmos números que esses nomes têm em `Button`, `Input` e
   `Tabs`. Ela não desce a 28 porque carrega **frase** e não rótulo de botão, e a
@@ -1645,21 +1657,18 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   texto recortado. A saída é a da casa: um `ResizeObserver` num envelope interno
   livre escreve `--collapsible-full`, como `useScrollFade` e o marcador do `Tabs`
   já fazem.
-- **A espiada abre de uma vez, e é limite medido, não esquecimento.** O mesmo
-  recálculo síncrono que o Radix força ao trocar de estado acontece **na mesma
-  passagem** em que o `data-state` vira `open`: as duas alturas nunca aparecem em
-  recálculos diferentes, então não há transição para começar (medido a 16, 40,
-  80, 140 e 260ms — 100px e depois 206px, sem nada no meio). Quatro consertos
-  falharam, e estão no cabeçalho de `collapsible.tsx` para ninguém repetir:
-  `!important` na duração (vence o inline, e o salto continua), envelope externo
-  com `has-data-[state=open]` (o recálculo é do documento inteiro), o
-  `data-medido` do `Command` (resolve a primeira pintura, não a disputa), e Web
-  Animations API a partir de um `MutationObserver` (funciona ao abrir, não ao
-  fechar — e trajeto num sentido só é pior que nenhum). **Não há classe de
-  transição no componente**, para o código não prometer o que não faz. Quem for
-  fechar isso provavelmente precisa não usar a `Collapsible.Content` do Radix em
-  `peek` — sob `forceMount` ela só contribui com o `id` que o `aria-controls` do
-  gatilho aponta.
+- **A espiada desliza, e ela abriu de uma vez por cinco rodadas.** O recálculo
+  síncrono que o Radix força ao trocar de estado acontece **na mesma passagem**
+  em que o `data-state` vira `open`, e com a altura no CSS
+  (`has-[…open]:h-(--collapsible-full)`) as duas alturas nunca apareciam em
+  recálculos diferentes. Quatro consertos falharam, e o que falhava em todos era
+  a caixa mudar **dentro** daquele recálculo. **O conserto (rodada 130) é tirar
+  a altura do CSS**: ela é estilo inline, escrito por `useEspiada`. Um
+  `data-state` novo não muda estilo inline, então o `MutationObserver` lê a
+  altura de antes e anima até o destino com o `animate` do `motion`: abrir na
+  `MOLA` (`lib/spring.ts`, a mesma da `Tooltip`), fechar em 200ms `--ease-out`,
+  e `auto` ao fim da abertura. Medido: 60 → 165 → 161px, com o gatilho
+  descendo junto; fechar leva 160ms. O movimento reduzido é perguntado à mão.
 - **`HoverCard` é um popover que abre com o cursor**, e a superfície dele era uma
   cópia **incompleta** da do `PopoverContent`: faltavam o teto
   (`max-h-(--radix-hover-card-content-available-height)`), a rolagem que o teto

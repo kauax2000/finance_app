@@ -187,6 +187,27 @@ export const disclosureMarkerClassName = [
  * fábrica (200ms `ease-out` do Tailwind) enquanto o `Collapsible` já pedia
  * `--duration-base` com `--ease-out`. Dois componentes com a mesma interação
  * abrindo em curvas diferentes.
+ *
+ * **Abrir é mola, fechar é curva** (rodada 129). A abertura anda em
+ * `--ease-spring`, a mola da `Tooltip` em CSS: passa 3,8% da altura cheia e
+ * volta, que é o que a faz ler como natural. O fechamento fica em
+ * `--ease-out`, porque uma mola até zero passaria por baixo de zero, a altura
+ * negativa é cortada em 0, e o bloco pararia seco no meio do trajeto.
  */
 export const disclosureMotionClassName =
-  "overflow-hidden animation-duration-(--duration-base) ease-(--ease-out)"
+  "overflow-hidden data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring) data-closed:animation-duration-(--duration-base) data-closed:ease-(--ease-out)"
+
+/**
+ * O conteúdo que aparece: cada filho sobe em cascata, na mesma mola da altura,
+ * e esmaece quando o bloco fecha. A receita mora em `@utility
+ * disclosure-reveal`, em `globals.css`, onde a mecânica está escrita.
+ *
+ * Mora aqui pela mesma razão que o resto desta régua: `Accordion` e
+ * `Collapsible` são a mesma interação, e se movem igual.
+ *
+ * **Custo conhecido:** quem já nasce aberto (`defaultValue`, `defaultOpen`)
+ * toca a cascata no carregamento, porque os filhos montam ali — a altura não,
+ * porque o Radix a suprime na montagem. E a espiada do `Collapsible` não a
+ * veste: lá os filhos estão sempre montados, e ela rodaria a cada página.
+ */
+export const disclosureRevealClassName = "disclosure-reveal"

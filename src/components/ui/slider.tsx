@@ -29,7 +29,7 @@ import { cn } from "@/lib/utils"
  *    `defaultValue`: um valor calculado no render congelaria no inicial e
  *    erraria no primeiro arraste.
  * 2. **Mas dá para medir a caixa renderizada**, que é o padrão desta casa —
- *    o marcador do `Tabs`, o `useScrollFade`, o `--collapsible-full`. Medir
+ *    o marcador do `Tabs`, o `useScrollFade`, a espiada do `Collapsible`. Medir
  *    funciona controlado ou não, em qualquer orientação, e não depende de
  *    refazer a conta do valor. É o que o efeito abaixo faz.
  *

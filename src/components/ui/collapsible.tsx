@@ -4,12 +4,15 @@ import { ChevronDownIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Collapsible as CollapsiblePrimitive } from "radix-ui"
+import { animate, type AnimationPlaybackControls } from "motion/react"
 
 import { cn } from "@/lib/utils"
 import {
   disclosureMarkerClassName,
   disclosureMotionClassName,
+  disclosureRevealClassName,
 } from "@/lib/disclosure-classes"
+import { MOLA } from "@/lib/spring"
 
 /**
  * Um bloco que expande — o `Accordion` de um item só, sem a semântica de lista.
@@ -49,9 +52,8 @@ import {
  *    animam de 0 até a variável do Radix, e em `peek` o trajeto não parte de
  *    zero. E a variável não serve de destino: o Radix a calcula lendo a caixa da
  *    própria `Content`, que em `peek` é o nó **preso** à espiada — ele publicava
- *    a espiada como "altura do conteúdo". Ver `useAlturaCheia`, abaixo. A
- *    espiada abre de uma vez, de propósito e por limite medido; a nota antes de
- *    `COLLAPSIBLE_PEEK_SHELL` conta os quatro consertos que falharam.
+ *    a espiada como "altura do conteúdo". Ver `useEspiada`, abaixo, que também
+ *    é quem faz a espiada deslizar: a altura da casca é escrita por JS.
  * 3. **`_-_` em todo `-` binário dentro de `calc()` arbitrário.** O Tailwind
  *    normaliza espaço em torno de `+`, `*` e `/`, mas não pode com `-`, que
  *    seria indistinguível de `--var`. Escrito com espaço literal, a classe é
@@ -157,99 +159,85 @@ const COLLAPSIBLE_PEEK_VAR = {
 } as const
 
 /**
- * **Quem mede não pode ser quem é medido** — e isto foi um defeito de verdade,
+ * **Quem mede não pode ser quem é medido**, e isto foi um defeito de verdade,
  * encontrado no navegador.
  *
- * O Radix descobre a altura do conteúdo lendo a caixa da própria `Content` num
- * efeito de layout, e publica o resultado em
- * `--radix-collapsible-content-height`. Com `peek`, a `Content` é justamente o
- * nó que está **preso** à altura da espiada — então o Radix media a espiada e
- * publicava 100px como "altura do conteúdo". Abrir levava de 100 a 100, e o
- * texto ficava recortado. Medido: `--radix-collapsible-content-height: 100px`
- * contra um `scrollHeight` de 206.
+ * O Radix descobre a altura do conteúdo lendo a caixa da própria `Content`, e
+ * com `peek` a `Content` é o nó **preso** à espiada: ele publicava a espiada
+ * (100px) como "altura do conteúdo", contra um `scrollHeight` de 206. Quem é
+ * medido aqui é um envelope interno, livre de altura.
  *
- * É a mesma família do defeito que o `Accordion` tinha, com a mesma forma: um
- * elemento declarando como altura uma medida que ele próprio produz.
+ * ## E a espiada desliza, porque a altura da casca é escrita por JS
  *
- * A saída é a que o resto da casa já usa quando precisa de uma caixa em CSS —
- * `useScrollFade` e o marcador do `Tabs` fazem igual: **um observador escreve a
- * medida numa variável**. Aqui quem é observado é um envelope interno, livre de
- * altura, e quem lê a variável é a casca presa. Em modo `peek` a variável do
- * Radix não é consultada, e é por isso que ela continuar errada não importa.
+ * Por cinco rodadas a espiada abriu de uma vez. A altura morava no CSS
+ * (`has-[…open]:h-(--collapsible-full)`), e o Radix envolve a troca de estado
+ * num recálculo forçado com `transition-duration: 0s`: a altura nova era
+ * resolvida **na mesma passagem** em que o `data-state` virava `open`, e não
+ * havia transição para começar. Quatro consertos de CSS e de WAAPI falharam, e
+ * o que falhava em todos era a mesma coisa: a caixa mudava **dentro** do
+ * recálculo do Radix, antes de alguém poder lê-la.
+ *
+ * Com a altura como estilo inline escrito aqui, o recálculo não a alcança: um
+ * `data-state` novo não muda estilo inline. Um `MutationObserver` no
+ * `data-state` lê a altura atual da casca (ainda a de antes) e anima até o
+ * destino com o `animate` do `motion`. Abrir é a mola da casa (`MOLA`), e
+ * fechar é o `--ease-out` em `--duration-base` (a regra da rodada 129: uma
+ * mola até a espiada passaria por baixo dela). Ao fim da abertura a altura
+ * volta a `auto`, para um parágrafo que reflua não ser recortado.
+ *
+ * A mola é de JavaScript, e o bloco global de `prefers-reduced-motion` só
+ * alcança CSS. Por isso a preferência é perguntada à mão, como no `Alert`.
  */
-function useAlturaCheia() {
+function useEspiada() {
   return React.useCallback((envelope: HTMLElement | null) => {
     if (!envelope) return
-    // Dois níveis: o pai é a `Content` do Radix, e quem lê `--collapsible-full`
-    // é o envelope externo, que é o avô. Escrever no avô é o que faz a variável
-    // chegar aos dois por herança.
-    const casca = envelope.parentElement?.parentElement
-    if (!casca) return
+    const conteudo = envelope.parentElement
+    const casca = conteudo?.parentElement
+    if (!conteudo || !casca) return
 
-    let anterior = -1
-    const medir = () => {
-      // `scrollHeight` do envelope, e não da casca: a casca está presa e
-      // recortando, então a altura dela é a da espiada, por definição.
-      const altura = Math.round(envelope.scrollHeight)
-      if (altura === anterior) return
-      anterior = altura
-      casca.style.setProperty("--collapsible-full", `${altura}px`)
+    // A espiada vem do degrau, em `rem`, na variável da casca.
+    const espiada = () =>
+      parseFloat(getComputedStyle(casca).getPropertyValue("--collapsible-peek")) *
+      parseFloat(getComputedStyle(document.documentElement).fontSize)
+    const aberto = () => conteudo.dataset.state === "open"
+
+    casca.style.height = aberto() ? "auto" : `${espiada()}px`
+
+    let trajeto: AnimationPlaybackControls | undefined
+    const mo = new MutationObserver(() => {
+      trajeto?.stop()
+      const abre = aberto()
+      const de = casca.getBoundingClientRect().height
+      const para = abre ? envelope.scrollHeight : espiada()
+      const final = abre ? "auto" : `${para}px`
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        casca.style.height = final
+        return
+      }
+      trajeto = animate(
+        casca,
+        { height: [`${de}px`, `${para}px`] },
+        abre ? MOLA : { duration: 0.2, ease: [0.16, 1, 0.3, 1] }
+      )
+      trajeto.finished.then(() => {
+        if (aberto() === abre) casca.style.height = final
+      })
+    })
+    mo.observe(conteudo, { attributes: true, attributeFilter: ["data-state"] })
+
+    return () => {
+      mo.disconnect()
+      trajeto?.stop()
     }
-    medir()
-
-    const ro = new ResizeObserver(medir)
-    ro.observe(envelope)
-    // Os filhos também: um parágrafo que reflui muda a altura do envelope sem
-    // que a caixa **dele** mude em nenhum eixo que o observador da casca veja.
-    for (const filho of Array.from(envelope.children)) ro.observe(filho)
-
-    return () => ro.disconnect()
   }, [])
 }
 
 /**
- * **A espiada abre de uma vez, e isso é um limite conhecido — não um esquecimento.**
- *
- * A altura da espiada não anima, e a causa é a segunda metade do mesmo defeito
- * do `useAlturaCheia`: o Radix envolve a troca de estado num par "carimba
- * `transition-duration: 0s`, força um `getBoundingClientRect()`, devolve o
- * valor", e o recálculo forçado acontece **na mesma passagem** em que o
- * `data-state` vira `open`. A altura nova é resolvida ali, e o navegador nunca
- * vê os dois valores em recálculos diferentes: não há transição para começar.
- *
- * Medido, com a altura amostrada a 16, 40, 80, 140 e 260ms depois do clique:
- * 100px e depois 206px, sem nenhum valor no meio.
- *
- * **Quatro consertos foram tentados, e é isso que torna esta nota útil:**
- *
- * 1. `!important` na duração. Vence o estilo inline — verificado, o
- *    `transition-duration` computado voltou a 0,2s — e o salto continuou. O
- *    problema não é o valor da duração, é o instante em que a altura muda.
- * 2. Mover a altura para um envelope **externo**, que o Radix não manipula,
- *    lendo o estado com `has-data-[state=open]`. O recálculo forçado é do
- *    documento inteiro, e alcança o envelope igual.
- * 3. O `data-medido` do `Command`. Resolve outro problema — suprimir a transição
- *    na **primeira** pintura, antes de haver medida —, não a disputa com um
- *    recálculo síncrono.
- * 4. Animar por Web Animations API a partir de um `MutationObserver` no
- *    `data-state`. Chega a funcionar na abertura (medido: 100 → 146 → 181 → 200
- *    → 206, que é a curva de `--ease-out`), mas não no fechamento: a caixa lida
- *    dentro do callback é assimétrica entre os dois sentidos. Derivar as duas
- *    pontas dos valores declarados em vez de medir a caixa quebrou também a
- *    abertura. Um trajeto que só existe num sentido é pior que nenhum.
- *
- * O que **sai** disto sem trabalho nenhum: `peek` é uma revelação instantânea, e
- * é honesta — não há classe de transição aqui prometendo o que não acontece. A
- * dissolução na base continua sendo o que diz "tem mais", e ela não depende de
- * movimento. Fechar isso de verdade provavelmente passa por não usar a
- * `Collapsible.Content` do Radix em modo `peek` — sob `forceMount` ela não
- * contribui com nada que este componente use, exceto o `id` que o
- * `aria-controls` do gatilho aponta, que é justamente o que impede simplesmente
- * apagá-la.
+ * A casca da espiada. A altura **não** mora aqui: é estilo inline, escrito
+ * por `useEspiada`.
  */
 const COLLAPSIBLE_PEEK_SHELL = [
   "overflow-hidden",
-  "h-(--collapsible-peek) has-[>[data-slot=collapsible-content][data-state=open]]:h-(--collapsible-full)",
 
   // A rampa, **proporcional com teto**. Fixa em 40px ela comia dois terços do
   // degrau `sm`: 40 de rampa num peek de 60 deixa uma linha nítida e duas
@@ -271,7 +259,7 @@ function CollapsibleContent({
 }: React.ComponentProps<typeof CollapsiblePrimitive.Content> &
   VariantProps<typeof collapsibleContentVariants>) {
   const espiando = peek !== "none" && peek != null
-  const medirEnvelope = useAlturaCheia()
+  const medirEnvelope = useEspiada()
 
   const conteudo = (
     <CollapsiblePrimitive.Content
@@ -288,7 +276,7 @@ function CollapsibleContent({
       forceMount={espiando ? true : forceMount}
       className={cn(
         collapsibleContentVariants({ peek }),
-        espiando && "h-full",
+        espiando ? "h-full" : disclosureRevealClassName,
         className
       )}
       {...props}

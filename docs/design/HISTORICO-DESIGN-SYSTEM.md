@@ -13745,3 +13745,79 @@ E a rampa vertical da máscara passou a fechar em **90%** da altura (70% na
 primeira tentativa, que cortava cedo), e não em 100% como na referência: com o fundo transparente, o resto de cor na última
 linha desenhava a aresta de baixo da faixa. O contraste não muda, porque o
 pior caso é medido no topo, onde a máscara vale 1.
+
+### Rodada 128 — o conteúdo da divulgação sobe em cascata
+
+O dono pediu uma animação moderna para o conteúdo do `Collapsible`, e a
+mesma para o `Accordion`, porque os dois são a mesma interação. A altura
+continua nos keyframes do `tw-animate-css`. Por cima dela, `@utility
+disclosure-reveal` faz cada filho subir 6px saindo de um desfoque de 4px e de
+opacidade zero (`--duration-slow`, `--ease-out`), com 40ms entre um filho e o
+seguinte e teto de 160ms. Ao fechar, os filhos afundam 4px e desfocam em
+`--duration-fast`.
+
+**A entrada roda na montagem, e não por estado.** O Radix só monta o conteúdo
+ao abrir, então não é preciso seletor de `data-state=open`. A saída é por
+estado, e ela não prende o fechamento: o Presence espera o `animationend` só
+da própria `Content` (confere o `target`). Medido: o nó desmonta ao fim da
+altura.
+
+**O texto solto quase ficou de fora.** A primeira versão animava `& > *`, e o
+acordeão do catálogo (texto direto no envelope) abria sem animação nenhuma:
+`> *` não alcança nó de texto. A regra `:not(:has(> *))` anima o próprio
+envelope, e exclui a `Content` do `Collapsible`, cuja animação é a de altura.
+
+Medido no navegador: a opacidade vai de 0,55 a 0,91 e a 1 aos 30, 90 e
+500ms, e o desfoque de 1,8px a 0. Os atrasos saem 0, 40, 80, 120, 160 e 160ms.
+Ao fechar, a opacidade está em 0,04 aos 60ms.
+
+Custo: quem nasce aberto (`defaultValue`/`defaultOpen`) toca a cascata no
+carregamento. A espiada não veste a utility.
+
+### Rodada 129 — a divulgação abre numa mola
+
+O dono recusou a rodada 128 por mecânica e pediu o movimento "orgânico e
+natural" dos outros lugares do sistema. O natural da casa é a **mola** da
+`Tooltip` (`stiffness 300`, `damping 25`, no `motion`). Uma curva de Bézier
+chega e para; a mola passa um pouco e volta.
+
+A altura do Radix é animação de keyframes, não de JS, então a mola entrou
+como **`linear()` de CSS**: integrei a equação da mola (massa 1, passo de
+0,1ms) e amostrei 41 pontos. A mola passa **3,8%** do alvo e assenta em
+**500ms** (tolerância de 0,002). Os tokens são `--ease-spring` e
+`--duration-spring`. O `generateLinearEasing` do `motion` travou o
+processo, e a integração à mão dá a mesma curva sem depender dele.
+
+- **Abrir:** a altura e o conteúdo andam na mola. O desfoque saiu, e a
+  cascata encolheu para 30ms, com teto de 120ms.
+- **Fechar:** `--duration-base` com `--ease-out`. Uma mola até zero passaria
+  por baixo de zero, e a altura negativa, cortada em 0, faria o bloco parar
+  seco no meio do trajeto.
+
+Medido no acordeão do catálogo: a altura sai 0,13, 0,43, 0,70, 0,89 e 0,99
+aos 30, 70, 110, 150 e 190ms, chega a **1,037 aos 270ms** e volta a 1,000 aos
+510ms. O fechamento vai a zero em 160ms e desmonta.
+
+### Rodada 130 — a espiada desliza até o fim
+
+O dono pediu que o "Continuar lendo" deslize até o fim, mostrando todo o
+conteúdo. A espiada abria de uma vez desde que nasceu. As quatro tentativas
+registradas no `collapsible.tsx` falharam pela mesma causa: a altura morava
+no CSS, e o recálculo forçado do Radix a resolvia na mesma passagem em que o
+`data-state` virava `open`.
+
+O conserto foi tirar a altura do CSS. `useEspiada` escreve a altura da casca
+como estilo inline, e um `MutationObserver` no `data-state` lê a altura atual,
+que ainda é a de antes, e anima até o destino com o `animate` do `motion`.
+Abrir é a `MOLA` da `Tooltip`, agora em `src/lib/spring.ts` para as duas peças
+dividirem. Fechar é 200ms `--ease-out`, pela regra da rodada 129. Ao fim da
+abertura a altura volta a `auto`, para um parágrafo que reflua não ser
+recortado.
+
+A quarta tentativa (WAAPI a partir de um `MutationObserver`) falhava ao
+fechar porque a caixa lida no callback já era a nova. Com a altura inline,
+não é.
+
+Medido no degrau `sm`: 60, 79, 109, 136, 153, 162 e **165px** (a mola passa
+do alvo) e assenta em 161, com o gatilho descendo de 527 para 627. Fechar vai
+de 161 a 60px em 160ms. A `--collapsible-full` e o `useAlturaCheia` saíram.

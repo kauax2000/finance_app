@@ -12,6 +12,7 @@ import {
   disclosureLabelClassName,
   disclosureMarkerClassName,
   disclosureMotionClassName,
+  disclosureRevealClassName,
   disclosureRowClassName,
   disclosureRowFocusClassName,
   type DisclosureSize,
@@ -230,6 +231,7 @@ function AccordionContent({
           para escrever `--radix-accordion-content-height`. */}
       <div
         className={cn(
+          disclosureRevealClassName,
           "px-(--accordion-px) pt-0 pb-3 text-muted-foreground",
           "[&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-primary-accent [&_a]:active:text-primary-accent",
           "[&_p:not(:last-child)]:mb-3",

@@ -8,19 +8,8 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { cn } from "@/lib/utils"
 import { useViewportWindow } from "@/hooks/use-mobile"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
+import { MOLA } from "@/lib/spring"
 import { menuPanelSurfaceClassName } from "@/lib/menu-classes"
-
-/**
- * A mola da dica, e ela fica **fora** da escala `--duration-*`/`--ease-*`.
- *
- * Aqueles tokens descrevem transição de CSS: uma duração e uma curva. Uma mola
- * não tem duração — tem rigidez e amortecimento, e o tempo é consequência do
- * trajeto. É a mesma exceção que a `link-sweep` já abre no `globals.css`.
- *
- * Os números são os da referência (`@animate-ui/components-base-tooltip`), lidos
- * do registry, não uma aproximação.
- */
-const MOLA = { type: "spring", stiffness: 300, damping: 25 } as const
 
 /**
  * Se **esta** dica está aberta.

@@ -100,24 +100,7 @@ export default function CollapsibleDoc() {
               </code>
               <span className="text-xs text-muted-foreground">{nota}</span>
             </div>
-            <Collapsible className="w-full">
-              <CollapsibleContent
-                peek={degrau}
-                className="text-sm leading-relaxed text-muted-foreground"
-              >
-                {TEXTO_LONGO.map((p) => (
-                  <p key={p} className="not-last:mb-3">
-                    {p}
-                  </p>
-                ))}
-              </CollapsibleContent>
-              <CollapsibleTrigger asChild>
-                <Button variant="link" size="sm" className="px-0">
-                  Continuar lendo
-                  <CollapsibleMarker />
-                </Button>
-              </CollapsibleTrigger>
-            </Collapsible>
+            <PeekDemo peek={degrau} />
           </div>
         ))}
       </DocSection>
@@ -145,8 +128,12 @@ export default function CollapsibleDoc() {
         Sem <code>peek</code>, não: o conteúdo recolhido sai do DOM, e <Kbd keys="mod+f" /> não o encontra. Se precisa ser localizável, não esconda — ou use <code>peek</code>, que mantém o texto montado e na árvore de acessibilidade.
       </DocNote>
 
-      <DocNote title="A espiada abre de uma vez, e isso é um limite conhecido">
-        Em <code>peek</code> a altura não anima: o Radix mede na mesma passagem em que o estado vira aberto, e não sobra transição para começar. O que diz &ldquo;tem mais&rdquo; é a dissolução, que não depende de movimento.
+      <DocNote title="A espiada desliza até o fim">
+        Em <code>peek</code> a caixa desliza da espiada até a altura inteira, na mola da casa, e o gatilho desce junto. Ao fechar, ela volta à espiada numa curva curta. A altura é escrita por JS, e não pelo CSS: com ela no CSS, o Radix a resolvia no mesmo recálculo em que o estado virava aberto, e a espiada saltava.
+      </DocNote>
+
+      <DocNote title="O conteúdo sobe em cascata">
+        A altura e o conteúdo abrem na mesma mola da Tooltip: passam um pouco do alvo e voltam, e cada filho sobe 6px, 30ms depois do anterior. Ao fechar, é uma curva curta, sem mola. É o mesmo movimento do <code>Accordion</code>, e a espiada não o usa: lá o conteúdo já está na tela.
       </DocNote>
 
       <DocNote title="Use CollapsibleMarker">
@@ -161,13 +148,13 @@ export default function CollapsibleDoc() {
  * tem: **o rótulo do gatilho muda com o estado**. "Continuar lendo" depois de
  * aberto seria uma promessa falsa.
  */
-function PeekDemo() {
+function PeekDemo({ peek = "md" }: { peek?: "sm" | "md" | "lg" }) {
   const [open, setOpen] = React.useState(false)
 
   return (
     <Collapsible open={open} onOpenChange={setOpen} className="w-full">
       <CollapsibleContent
-        peek="md"
+        peek={peek}
         className="text-sm leading-relaxed text-muted-foreground"
       >
         {TEXTO_LONGO.map((p) => (

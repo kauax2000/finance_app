@@ -685,6 +685,20 @@
   --duration-slow: 300ms;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-emphasized: cubic-bezier(0.32, 0.72, 0, 1);
+  /* A mola, em CSS. É a mesma da `Tooltip` (`stiffness: 300, damping: 25`,
+     massa 1, no `motion`), integrada numericamente e amostrada em 41 pontos:
+     passa 3,8% do alvo e assenta em 500ms. `linear()` deixa uma animação de
+     keyframes (a altura do Radix, que não é de JS) andar na mesma curva que
+     as molas de JS da casa. A duração é consequência do trajeto, e por isso
+     anda junto da curva. */
+  --duration-spring: 500ms;
+  --ease-spring: linear(
+    0, 0.0213, 0.0761, 0.1533, 0.2438, 0.3403, 0.4373, 0.5309, 0.6182, 0.6973,
+    0.7673, 0.8279, 0.8791, 0.9214, 0.9555, 0.9822, 1.0024, 1.0172, 1.0272,
+    1.0335, 1.0367, 1.0376, 1.0368, 1.0347, 1.0318, 1.0283, 1.0247, 1.021,
+    1.0175, 1.0143, 1.0113, 1.0087, 1.0064, 1.0045, 1.0029, 1.0016, 1.0006,
+    0.9999, 0.9993, 0.999, 1
+  );
 
   /* A dissolução das bordas de uma região rolável. Uma lista cortada em seco
      numa borda lê como lista terminada; estes dois números são o quanto ela tem
@@ -2588,6 +2602,69 @@
     radial-gradient(circle at top center, #000, transparent);
   mask-composite: intersect;
   animation: brand-flow 20s linear infinite;
+}
+
+/* A divulgação (`Accordion` e `Collapsible`) abre numa **mola**: a altura
+   anda em `--ease-spring` (a mola da `Tooltip`, em CSS), e cada filho do
+   conteúdo sobe 6px e aparece na mesma curva, 30ms depois do anterior, com
+   teto de 120ms. A primeira versão (rodada 128) usava desfoque e
+   `--ease-out`, e o dono a achou mecânica: uma curva de Bézier chega e para,
+   e a mola passa um pouco e volta, que é o que o olho lê como natural.
+
+   **A entrada roda na montagem, e não por estado**: o Radix só monta o
+   conteúdo ao abrir, então os filhos nascem animando. A saída é por estado:
+   o Radix mantém o nó com `data-state="closed"` até o `animationend` da
+   própria `Content` (o Presence confere o `target`), e o esmaecer dos filhos
+   (150ms) cabe dentro do trajeto da altura sem prendê-lo.
+
+   `translate`, e não `transform`: propriedade independente, que não atropela
+   um `transform` de quem chama. Movimento reduzido fica com o bloco global. */
+@keyframes disclosure-rise {
+  from {
+    opacity: 0;
+    translate: 0 0.375rem;
+  }
+}
+
+@keyframes disclosure-sink {
+  to {
+    opacity: 0;
+    translate: 0 -0.25rem;
+  }
+}
+
+@utility disclosure-reveal {
+  & > * {
+    animation: disclosure-rise var(--duration-spring) var(--ease-spring) both;
+  }
+  & > :nth-child(2) {
+    animation-delay: 30ms;
+  }
+  & > :nth-child(3) {
+    animation-delay: 60ms;
+  }
+  & > :nth-child(4) {
+    animation-delay: 90ms;
+  }
+  & > :nth-child(n + 5) {
+    animation-delay: 120ms;
+  }
+  &[data-state="closed"] > *,
+  [data-state="closed"] > & > * {
+    animation: disclosure-sink var(--duration-fast) var(--ease-out) both;
+  }
+  /* Conteúdo só de texto — a forma mais comum de um acordeão — não tem filho
+     elemento, e `> *` não alcança nó de texto: sem esta regra ele abria sem
+     animação nenhuma. Aí quem sobe é o próprio envelope. **Nunca a `Content`
+     do `Collapsible`**, que é o nó cuja animação de altura o Radix espera para
+     desmontar; o envelope do `Accordion` é filho dela, e pode. */
+  &:not(:has(> *)):not([data-slot="collapsible-content"]) {
+    animation: disclosure-rise var(--duration-spring) var(--ease-spring) both;
+  }
+  [data-state="closed"]
+    > &:not(:has(> *)):not([data-slot="collapsible-content"]) {
+    animation: disclosure-sink var(--duration-fast) var(--ease-out) both;
+  }
 }
 
 @utility scroll-fade-y {
