@@ -1,6 +1,5 @@
 "use client"
 
-import { CreditCardIcon } from "@heroicons/react/24/outline"
 import { currencyBRL } from "@/lib/formatters"
 import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
 import { useCallback, useEffect, useMemo, useState } from "react"
@@ -38,8 +37,8 @@ import { Button } from "@/components/ui/button"
 import {
     EmptyState,
     EmptyStateActions,
+    EmptyStateCode,
     EmptyStateDescription,
-    EmptyStateIcon,
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import {
@@ -732,11 +731,11 @@ export default function CreditCardDetailPageClient() {
 
     if (notFound || !card) {
         return (
-            <EmptyState className="max-w-md border-border/80 bg-card/40 py-10">
-                <EmptyStateIcon>
-                    <CreditCardIcon aria-hidden />
-                </EmptyStateIcon>
-                <EmptyStateTitle>Cartão não encontrado</EmptyStateTitle>
+            <EmptyState variant="plain" size="lg" className="mx-auto max-w-md">
+                <EmptyStateCode className="-mb-6 text-7xl sm:-mb-8 sm:text-8xl">404</EmptyStateCode>
+                <EmptyStateTitle asChild>
+                    <h1>Cartão não encontrado</h1>
+                </EmptyStateTitle>
                 <EmptyStateDescription>
                     Não há cartão com este identificador nesta carteira ou o link
                     está incorreto.

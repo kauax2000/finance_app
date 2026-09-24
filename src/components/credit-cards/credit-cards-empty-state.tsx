@@ -4,11 +4,10 @@ import {
     EmptyState,
     EmptyStateActions,
     EmptyStateDescription,
-    EmptyStateIcon,
+    EmptyStateGhost,
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { PlusIcon } from "@heroicons/react/16/solid"
-import { CreditCardIcon } from "@heroicons/react/24/outline"
 import { CREDIT_CARDS_EMPTY_BILLING_HINT } from "@/lib/credit-card-billing-copy"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -21,12 +20,12 @@ export function CreditCardsEmptyState({ onAddCard }: CreditCardsEmptyStateProps)
     return (
         <Card padding="none">
             <CardContent
-                className="px-4 py-12 md:py-14"
+                className="p-0"
                 role="status"
                 aria-live="polite"
             >
                 <EmptyState variant="plain" size="lg">
-                    <EmptyStateIcon><CreditCardIcon aria-hidden /></EmptyStateIcon>
+                    <EmptyStateGhost leading="card" trailing="amount" />
                     <EmptyStateTitle>Cadastre seus cartões de crédito</EmptyStateTitle>
                     <EmptyStateDescription>
                         {CREDIT_CARDS_EMPTY_BILLING_HINT}

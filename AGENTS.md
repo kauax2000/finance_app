@@ -1860,6 +1860,30 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   O título **não** é da peça (chrome de tela, invariante 1); a leitura é,
   porque é o estado do controle. Lacuna conhecida: o Radix anuncia o número
   cru, e o `Slider` não escreve `aria-valuetext`.
+- **`EmptyState` — a forma diz a situação** (rodada 131). Primeiro uso é
+  `EmptyStateGhost` (linhas-fantasma neutras da lista que vai existir,
+  subindo num laço) **sem arco-íris** — quatro versões dele ali foram
+  recusadas na tela: um degradê cortado em linha reta atrás dos fantasmas,
+  uma elipse, cinco blobos orbitando e o degradê correndo no contorno das
+  linhas; filtro, período
+  ou lista vazia é `EmptyStateIcon variant="stack"` (leque de três ladrilhos
+  que se abre na `--ease-spring`); não encontrado é `size="page"` +
+  `EmptyStateCode` (o numeral na Ledger, preenchido com o arco-íris e
+  dissolvendo para baixo); erro de runtime é o mesmo, com "Ops!" no lugar do
+  "404" (a marca d'água atrás do título saiu a pedido do dono). **O
+  arco-íris do `EmptyState` mora só no numeral**, onde ele *é* o glifo, `aria-hidden`, com o precedente do
+  wordmark — é a segunda casa da `--font-display` fora do `.page-title`. As
+  props do fantasma são de **forma** (`leading`: tile, card, avatar;
+  `trailing`: amount, date, none), porque domínio é conteúdo de tela. Três
+  medições ficam: **(1)** no degrau `page` o título **nasce `<h1>`** — um
+  server component que passava `<h1>` por `asChild` o entregava ao `Slot` do
+  Radix como referência preguiçosa do RSC, e o título sumia sem erro;
+  **(2)** as animações moram em `@utility` (`empty-state-drift`,
+  `empty-state-sheen`) e não em `animate-[…]`, porque o Tailwind v4 descarta
+  `@keyframes` que nenhuma utility referencia — os fantasmas ficavam
+  parados com `animation-name` computado e a regra ausente; **(3)** o laço
+  não tem emenda porque as linhas são duplicadas e o respiro é margem, não
+  `gap`.
 - **`Avatar`**: Radix-based with `size`; keep `data-slot` for tests and form deferrals. Duas versões só: `AvatarImage` (a foto) ou `AvatarFallback` (iniciais escuras sobre a cor chapada de identidade). Sem `variant` de superfície — houve um, enquanto o degradê e o chapado conviveram, e saiu com o degradê. Sem vidro, sem anel, e **uma forma só, o círculo** — `shape="rounded"` saiu na rodada 85, porque canto arredondado é a família do `ColorTile` e da marca de workspace, que identificam coisa e não pessoa. A cor da pessoa vem de `identityToneFor`, nunca de classe montada.
 - **Overlays**: `Dialog` / `Sheet` / `AlertDialog` use `bg-overlay` (not hardcoded `bg-black/10`).
 - **`DialogFooter` empilha ao contrário** (`flex-col-reverse`), para a ação

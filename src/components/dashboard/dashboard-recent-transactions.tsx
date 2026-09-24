@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/page-section"
 import Link from "next/link"
 import { ArrowTopRightOnSquareIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
-import { ReceiptPercentIcon } from "@heroicons/react/24/outline"
+import { BanknotesIcon, CalendarDaysIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
 import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import type { Transaction } from "@/lib/supabase"
@@ -130,8 +130,10 @@ export function DashboardRecentTransactions({
                             </p>
                         </CardToolbar>
                         <EmptyState variant="plain">
-                            <EmptyStateIcon>
+                            <EmptyStateIcon variant="stack">
+                                <BanknotesIcon aria-hidden />
                                 <ReceiptPercentIcon aria-hidden />
+                                <CalendarDaysIcon aria-hidden />
                             </EmptyStateIcon>
                             <EmptyStateDescription>{emptyMessage}</EmptyStateDescription>
                         </EmptyState>

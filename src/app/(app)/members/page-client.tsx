@@ -25,7 +25,13 @@ import { useTimeout } from "@/hooks/use-timeout"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 import { CheckIcon, DocumentDuplicateIcon, EnvelopeIcon, InformationCircleIcon, LinkIcon, TrashIcon } from "@heroicons/react/16/solid"
-import { EnvelopeIcon as EnvelopeOutlineIcon, UserGroupIcon } from "@heroicons/react/24/outline"
+import {
+    ClockIcon,
+    EnvelopeIcon as EnvelopeOutlineIcon,
+    UserGroupIcon,
+    UserPlusIcon,
+    WalletIcon,
+} from "@heroicons/react/24/outline"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { supabase, WorkspaceInvite, WorkspaceMember } from "@/lib/supabase"
@@ -558,7 +564,11 @@ export default function MembersPage() {
                     aria-live="polite"
                 >
                     <EmptyState variant="plain" size="lg">
-                        <EmptyStateIcon><UserGroupIcon aria-hidden /></EmptyStateIcon>
+                        <EmptyStateIcon variant="stack">
+                            <WalletIcon aria-hidden />
+                            <UserGroupIcon aria-hidden />
+                            <EnvelopeOutlineIcon aria-hidden />
+                        </EmptyStateIcon>
                         <EmptyStateTitle>Nenhuma carteira selecionada</EmptyStateTitle>
                         <EmptyStateDescription>
                             Selecione uma carteira no menu lateral para gerenciar membros e convites.
@@ -938,7 +948,11 @@ export default function MembersPage() {
                                     aria-live="polite"
                                 >
                                     <EmptyState variant="plain" size="lg">
-                                        <EmptyStateIcon><EnvelopeOutlineIcon aria-hidden /></EmptyStateIcon>
+                                        <EmptyStateIcon variant="stack">
+                                            <UserPlusIcon aria-hidden />
+                                            <EnvelopeOutlineIcon aria-hidden />
+                                            <ClockIcon aria-hidden />
+                                        </EmptyStateIcon>
                                         <EmptyStateTitle>Nenhum convite pendente</EmptyStateTitle>
                                         <EmptyStateDescription>
                                             Os convites enviados aparecem aqui até serem aceitos ou expirarem.

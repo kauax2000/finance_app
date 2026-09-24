@@ -514,9 +514,13 @@ function auditFile(absPath, project) {
       // metade dele, ou seja 18/24/28px. Um ícone ali não declara classe de
       // tamanho de propósito, e contá-lo como `size-4` acusava o conjunto `24`,
       // que é justamente o certo.
-      const dentroDeEmptyState = /<EmptyStateIcon\b[^>]*>\s*$/.test(
-        src.slice(Math.max(0, m.index - 200), m.index)
-      )
+      // É ancestral em aberto, e não vizinho imediato: no leque
+      // (`variant="stack"`) os três ícones são irmãos, e só o primeiro vinha
+      // logo depois da tag — o segundo e o terceiro eram acusados.
+      const antesDoPoco = src.slice(Math.max(0, m.index - 400), m.index)
+      const ultPoco = antesDoPoco.lastIndexOf("<EmptyStateIcon")
+      const dentroDeEmptyState =
+        ultPoco !== -1 && !antesDoPoco.slice(ultPoco).includes("</EmptyStateIcon>")
       // Mesma cláusula, outro possúdo: o `ColorTile` crava o corpo do filho
       // pelo **degrau** (`md`/`lg` → `[&>svg]:size-4`, `xl`/`2xl` → `size-5`),
       // e com (0,1,1) ele vence qualquer classe no próprio `svg`. Um ícone ali

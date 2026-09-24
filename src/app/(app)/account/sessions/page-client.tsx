@@ -242,7 +242,7 @@ export default function SessionsPage() {
                                 aria-live="polite"
                             >
                                 <EmptyState variant="plain" size="lg">
-                                    <EmptyStateIcon><CheckCircleIcon className="size-7 text-success" /></EmptyStateIcon>
+                                    <EmptyStateIcon tone="success"><CheckCircleIcon aria-hidden /></EmptyStateIcon>
                                     <EmptyStateTitle>Todas as sessões foram encerradas</EmptyStateTitle>
                                     <EmptyStateDescription>
                                         Você só verá esta sessão ativa neste dispositivo.

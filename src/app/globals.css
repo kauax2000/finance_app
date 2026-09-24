@@ -2667,6 +2667,40 @@
   }
 }
 
+/* O `EmptyState` (rodada 131). `empty-state-drift` é o laço dos fantasmas:
+   as linhas estão duplicadas, então subir metade da altura cai exatamente
+   onde começou. `empty-state-sheen` é o arco-íris deslizando dentro do
+   numeral da página de erro, de ida e volta.
+
+   **As duas moram em `@utility`, e não numa classe `animate-[…]`**: o
+   Tailwind v4 descarta os `@keyframes` que nenhuma utility referencia, e uma
+   classe arbitrária não conta como referência. Medido: com `animate-[…]` o
+   `animation-name` computado era `empty-state-drift` e a regra não existia
+   em folha nenhuma — os fantasmas ficavam parados. */
+@keyframes empty-state-drift {
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes empty-state-sheen {
+  from {
+    background-position: 0% 0;
+  }
+  to {
+    background-position: 100% 0;
+  }
+}
+
+@utility empty-state-drift {
+  animation: empty-state-drift 24s linear infinite;
+}
+
+@utility empty-state-sheen {
+  background-size: 200% 100%;
+  animation: empty-state-sheen 14s ease-in-out infinite alternate;
+}
+
 @utility scroll-fade-y {
   --scroll-fade-top-h: calc(
     var(--scroll-fade-band-h, 0px) +

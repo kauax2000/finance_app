@@ -4,6 +4,7 @@ import {
     EmptyState,
     EmptyStateActions,
     EmptyStateDescription,
+    EmptyStateGhost,
     EmptyStateIcon,
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
@@ -14,7 +15,7 @@ import {
     TablePanelToolbar,
 } from "@/components/ui/table-panel"
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
-import { ArrowPathRoundedSquareIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
+import { ArrowPathRoundedSquareIcon, FunnelIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
@@ -909,7 +910,11 @@ export default function SubscriptionsPageClient() {
                         aria-live="polite"
                     >
                         <EmptyState variant="plain" size="lg">
-                            <EmptyStateIcon><MagnifyingGlassIcon aria-hidden /></EmptyStateIcon>
+                            <EmptyStateIcon variant="stack">
+                                <MagnifyingGlassIcon aria-hidden />
+                                <ArrowPathRoundedSquareIcon aria-hidden />
+                                <FunnelIcon aria-hidden />
+                            </EmptyStateIcon>
                             <EmptyStateTitle>Nenhuma assinatura com esses filtros</EmptyStateTitle>
                             <EmptyStateDescription>
                                 Tente outro status ou ajuste a ordenação.
@@ -931,12 +936,12 @@ export default function SubscriptionsPageClient() {
             ) : (
                 <Card padding="none">
                     <CardContent
-                        className="px-4 py-12 md:py-14"
+                        className="p-0"
                         role="status"
                         aria-live="polite"
                     >
                         <EmptyState variant="plain" size="lg">
-                            <EmptyStateIcon><ArrowPathRoundedSquareIcon aria-hidden /></EmptyStateIcon>
+                            <EmptyStateGhost leading="tile" trailing="date" />
                             <EmptyStateTitle>Cadastre suas assinaturas</EmptyStateTitle>
                             <EmptyStateDescription>
                                 Registre serviços recorrentes para acompanhar valores,

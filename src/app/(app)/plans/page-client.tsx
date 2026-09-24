@@ -3,7 +3,7 @@
 import {
     EmptyState,
     EmptyStateDescription,
-    EmptyStateIcon,
+    EmptyStateGhost,
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { InformationCircleIcon, WrenchIcon } from "@heroicons/react/16/solid"
@@ -13,7 +13,7 @@ import {
     PageSectionTitle,
 } from "@/components/ui/page-section"
 import { SparklesIcon } from "@heroicons/react/20/solid"
-import { ReceiptPercentIcon, SparklesIcon as SparklesOutlineIcon } from "@heroicons/react/24/outline"
+import { SparklesIcon as SparklesOutlineIcon } from "@heroicons/react/24/outline"
 import {
     Badge,
     tagChipWarning,
@@ -160,13 +160,9 @@ export default function PlansPage() {
                                 0 pagamentos
                             </p>
                         </CardToolbar>
-                        <div
-                            className="px-4 py-12 md:py-14"
-                            role="status"
-                            aria-live="polite"
-                        >
+                        <div role="status" aria-live="polite">
                             <EmptyState variant="plain" size="lg">
-                                <EmptyStateIcon><ReceiptPercentIcon aria-hidden /></EmptyStateIcon>
+                                <EmptyStateGhost leading="tile" trailing="amount" />
                                 <EmptyStateTitle>Nenhum pagamento por aqui</EmptyStateTitle>
                                 <EmptyStateDescription>
                                     Quando você assinar um plano pago, suas faturas e recibos vão

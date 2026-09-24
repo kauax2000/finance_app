@@ -325,7 +325,11 @@ export default function ActivityPage() {
                                 aria-live="polite"
                             >
                                 <EmptyState variant="plain" size="lg">
-                                    <EmptyStateIcon><ChartBarIcon aria-hidden /></EmptyStateIcon>
+                                    <EmptyStateIcon variant="stack">
+                                        <ShieldCheckIcon aria-hidden />
+                                        <ChartBarIcon aria-hidden />
+                                        <KeyIcon aria-hidden />
+                                    </EmptyStateIcon>
                                     <EmptyStateTitle>Nenhuma atividade encontrada</EmptyStateTitle>
                                     <EmptyStateDescription>
                                         {filter === "all"

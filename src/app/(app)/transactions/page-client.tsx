@@ -4,11 +4,12 @@ import {
     EmptyState,
     EmptyStateActions,
     EmptyStateDescription,
+    EmptyStateGhost,
     EmptyStateIcon,
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { PlusIcon } from "@heroicons/react/16/solid"
-import { MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
+import { FunnelIcon, MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
 import { formatTransactionDayPtBr } from "@/lib/transaction-date"
 import { ROUTES } from "@/config/navigation"
 import {
@@ -370,7 +371,11 @@ export default function TransactionsPage() {
                         aria-live="polite"
                     >
                         <EmptyState variant="plain" size="lg">
-                            <EmptyStateIcon><MagnifyingGlassIcon aria-hidden /></EmptyStateIcon>
+                            <EmptyStateIcon variant="stack">
+                                <MagnifyingGlassIcon aria-hidden />
+                                <ReceiptPercentIcon aria-hidden />
+                                <FunnelIcon aria-hidden />
+                            </EmptyStateIcon>
                             <EmptyStateTitle>Nenhuma transação com esses filtros</EmptyStateTitle>
                             <EmptyStateDescription>
                                 Tente outro tipo (receita/despesa), ampliar o período ou usar um
@@ -395,12 +400,12 @@ export default function TransactionsPage() {
             ) : (
                 <Card padding="none">
                     <CardContent
-                        className="px-4 py-12 md:py-14"
+                        className="p-0"
                         role="status"
                         aria-live="polite"
                     >
                         <EmptyState variant="plain" size="lg">
-                            <EmptyStateIcon><ReceiptPercentIcon aria-hidden /></EmptyStateIcon>
+                            <EmptyStateGhost leading="tile" trailing="amount" />
                             <EmptyStateTitle>Comece a registrar suas movimentações</EmptyStateTitle>
                             <EmptyStateDescription>
                                 Lance receitas e despesas para ver o histórico aqui e acompanhar

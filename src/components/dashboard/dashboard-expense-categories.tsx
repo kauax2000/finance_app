@@ -18,7 +18,7 @@ import { currencyBRL } from "@/lib/formatters"
 import Link from "next/link"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid"
-import { ReceiptPercentIcon } from "@heroicons/react/24/outline"
+import { ChartPieIcon, ReceiptPercentIcon, TagIcon } from "@heroicons/react/24/outline"
 import {
     ResponsiveContainer,
     PieChart,
@@ -455,7 +455,9 @@ export function DashboardExpenseCategories({
                         </>
                     ) : (
                         <EmptyState variant="plain" className="min-h-[240px]">
-                            <EmptyStateIcon>
+                            <EmptyStateIcon variant="stack">
+                                <TagIcon aria-hidden />
+                                <ChartPieIcon aria-hidden />
                                 <ReceiptPercentIcon aria-hidden />
                             </EmptyStateIcon>
                             <EmptyStateTitle>Nenhuma despesa no período</EmptyStateTitle>

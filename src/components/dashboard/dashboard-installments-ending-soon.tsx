@@ -10,6 +10,11 @@ import {
     PageSectionTitle,
 } from "@/components/ui/page-section"
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid"
+import {
+    CalendarDaysIcon,
+    CheckCircleIcon,
+    CreditCardIcon,
+} from "@heroicons/react/24/outline"
 import { Card, CardContent, CardFooter, CardToolbar } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { MoneyDisplay } from "@/components/ui/money-display"
@@ -19,6 +24,7 @@ import {
     EmptyState,
     EmptyStateActions,
     EmptyStateDescription,
+    EmptyStateIcon,
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { P, Muted } from "@/components/ui/typography"
@@ -193,11 +199,16 @@ export function DashboardInstallmentsEndingSoon({
                     <CardToolbar aria-hidden />
                     <CardContent className="p-0">
                         {endingSoon.length === 0 ? (
-                            <EmptyState className="mx-4 my-6 border-0 bg-transparent py-8">
+                            <EmptyState variant="plain">
+                                <EmptyStateIcon variant="stack">
+                                    <CreditCardIcon aria-hidden />
+                                    <CalendarDaysIcon aria-hidden />
+                                    <CheckCircleIcon aria-hidden />
+                                </EmptyStateIcon>
                                 <EmptyStateTitle>
                                     Nenhuma parcela terminando em breve
                                 </EmptyStateTitle>
-                                <EmptyStateDescription className="mb-4">
+                                <EmptyStateDescription>
                                     Quando um plano estiver com poucas parcelas
                                     ou cobrança próxima, ele aparece aqui.
                                 </EmptyStateDescription>

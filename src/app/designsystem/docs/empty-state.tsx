@@ -1,13 +1,20 @@
 "use client"
 
-import { ExclamationTriangleIcon, MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
-import { PlusIcon } from "@heroicons/react/16/solid"
+import {
+  CreditCardIcon,
+  FunnelIcon,
+  MagnifyingGlassIcon,
+  ReceiptPercentIcon,
+} from "@heroicons/react/24/outline"
+import { ArrowPathIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import {
   EmptyState,
   EmptyStateActions,
+  EmptyStateCode,
   EmptyStateDescription,
+  EmptyStateGhost,
   EmptyStateIcon,
   EmptyStateTitle,
 } from "@/components/ui/empty-state"
@@ -18,25 +25,23 @@ export default function EmptyStateDoc() {
   return (
     <>
       <Usage>
-          O que a tela diz quando não há nada nela. Cada vazio pede um texto e uma ação: <strong>nunca teve</strong> (a primeira ação), <strong>o filtro não achou</strong> (limpar), <strong>deu erro</strong> (tentar de novo). Enquanto o dado chega é <code>Skeleton</code>, não vazio.
+          O que a tela diz quando não há nada nela, e <strong>a forma diz a situação</strong>: <strong>nunca teve</strong> mostra a lista que vai existir (fantasmas), <strong>o filtro não achou</strong> abre um leque, <strong>não encontrado</strong> e <strong>deu erro</strong> ocupam a página com o numeral da marca. Enquanto o dado chega é <code>Skeleton</code>, não vazio.
       </Usage>
 
       <DocSection
         title="Nunca teve"
-        description="A ação primária vai junto: o vazio é o melhor momento para ensinar o que fazer."
-        code={`<EmptyState>
-  <EmptyStateIcon><ReceiptPercentIcon /></EmptyStateIcon>
-  <EmptyStateTitle>Nenhuma transação ainda</EmptyStateTitle>
+        description="O primeiro uso é um convite: os fantasmas mostram a lista que vai aparecer ali. A ação primária vai junto."
+        code={`<EmptyState variant="plain" size="lg">
+  <EmptyStateGhost leading="tile" trailing="amount" />
+  <EmptyStateTitle>Comece a registrar suas movimentações</EmptyStateTitle>
   <EmptyStateDescription>…</EmptyStateDescription>
   <EmptyStateActions><Button>Nova transação</Button></EmptyStateActions>
 </EmptyState>`}
         previewClassName="items-stretch"
       >
-        <EmptyState className="w-full">
-          <EmptyStateIcon>
-            <ReceiptPercentIcon aria-hidden />
-          </EmptyStateIcon>
-          <EmptyStateTitle>Nenhuma transação ainda</EmptyStateTitle>
+        <EmptyState variant="plain" size="lg" className="w-full">
+          <EmptyStateGhost leading="tile" trailing="amount" />
+          <EmptyStateTitle>Comece a registrar suas movimentações</EmptyStateTitle>
           <EmptyStateDescription>
               Lance a primeira e o extrato, os totais do mês e os orçamentos
               começam a se preencher sozinhos.
@@ -51,18 +56,39 @@ export default function EmptyStateDoc() {
       </DocSection>
 
       <DocSection
+        title="Os fantasmas mudam de forma"
+        description="As props são de forma, não de domínio: leading é o que abre a linha (ladrilho, cartão, avatar) e trailing o que a fecha (valor, data, nada)."
+        code={`<EmptyStateGhost leading="card" trailing="amount" />
+<EmptyStateGhost leading="tile" trailing="date" />`}
+        previewClassName="items-stretch gap-6 sm:flex-row"
+      >
+        <EmptyState variant="plain" size="lg" className="w-full">
+          <EmptyStateGhost leading="card" trailing="amount" />
+          <EmptyStateTitle>Cadastre seus cartões de crédito</EmptyStateTitle>
+        </EmptyState>
+        <EmptyState variant="plain" size="lg" className="w-full">
+          <EmptyStateGhost leading="tile" trailing="date" />
+          <EmptyStateTitle>Cadastre suas assinaturas</EmptyStateTitle>
+        </EmptyState>
+      </DocSection>
+
+      <DocSection
         title="O filtro não achou"
-        description="A ação é remover o que causou o vazio: quem filtrou não quer cadastrar, quer ver o que sumiu."
-        code={`<EmptyStateActions>
-  <Button variant="outline">Limpar filtros</Button>
-</EmptyStateActions>`}
+        description="Três ladrilhos em leque, que se abrem sob o cursor na mola da casa. A ação é remover o que causou o vazio: quem filtrou não quer cadastrar, quer ver o que sumiu."
+        code={`<EmptyStateIcon variant="stack">
+  <MagnifyingGlassIcon />
+  <ReceiptPercentIcon />
+  <FunnelIcon />
+</EmptyStateIcon>`}
         previewClassName="items-stretch"
       >
-        <EmptyState className="w-full">
-          <EmptyStateIcon>
+        <EmptyState variant="plain" size="lg" className="w-full">
+          <EmptyStateIcon variant="stack">
             <MagnifyingGlassIcon aria-hidden />
+            <ReceiptPercentIcon aria-hidden />
+            <FunnelIcon aria-hidden />
           </EmptyStateIcon>
-          <EmptyStateTitle>Nada com esses filtros</EmptyStateTitle>
+          <EmptyStateTitle>Nenhuma transação com esses filtros</EmptyStateTitle>
           <EmptyStateDescription>
               Nenhuma transação entre 1 e 7 de março na categoria Mercado.
           </EmptyStateDescription>
@@ -73,27 +99,54 @@ export default function EmptyStateDoc() {
       </DocSection>
 
       <DocSection
-        title="Deu erro"
-        description="Erro é um vazio de outra natureza: use o tone do ícone, não bg-destructive-muted à mão."
-        code={`<EmptyStateIcon tone="destructive">
-  <ExclamationTriangleIcon />
-</EmptyStateIcon>`}
+        title="Não encontrado"
+        description="A página inteira, com o numeral da marca: a serifa do wordmark preenchida com o arco-íris, dissolvendo para baixo até o título pousar na base. O numeral é aria-hidden; quem diz o que houve é o título."
+        code={`<EmptyState variant="plain" size="page">
+  <EmptyStateCode>404</EmptyStateCode>
+  <EmptyStateTitle>Página não encontrada</EmptyStateTitle>
+  …
+</EmptyState>`}
         previewClassName="items-stretch"
       >
-        <EmptyState variant="card" className="w-full">
-          <EmptyStateIcon tone="destructive">
-            <ExclamationTriangleIcon aria-hidden />
-          </EmptyStateIcon>
+        <EmptyState variant="plain" size="page" className="w-full">
+          <EmptyStateCode>404</EmptyStateCode>
           <EmptyStateTitle asChild>
-            <h3>Algo deu errado</h3>
+            <h2>Página não encontrada</h2>
           </EmptyStateTitle>
           <EmptyStateDescription>
-              Não foi possível carregar suas transações. Tente de novo em alguns
+              O endereço pode ter mudado, ou a página foi removida.
+          </EmptyStateDescription>
+          <EmptyStateActions>
+            <Button>Ir para o painel</Button>
+            <Button variant="tertiary">Página inicial</Button>
+          </EmptyStateActions>
+        </EmptyState>
+      </DocSection>
+
+      <DocSection
+        title="Deu erro"
+        description="A mesma composição do 404, com a palavra no lugar do numeral: o Ops! na serifa da marca, dissolvendo até o título pousar na base."
+        code={`<EmptyState variant="plain" size="page">
+  <EmptyStateCode>Ops!</EmptyStateCode>
+  …
+</EmptyState>`}
+        previewClassName="items-stretch overflow-hidden"
+      >
+        <EmptyState variant="plain" size="page" className="w-full">
+          <EmptyStateCode>Ops!</EmptyStateCode>
+          <EmptyStateTitle asChild>
+            <h2>Algo deu errado</h2>
+          </EmptyStateTitle>
+          <EmptyStateDescription>
+              Não foi possível carregar esta tela. Tente de novo em alguns
               instantes.
           </EmptyStateDescription>
           <EmptyStateActions>
-            <Button>Tentar de novo</Button>
-            <Button variant="tertiary">Voltar ao início</Button>
+            <Button>
+              <ArrowPathIcon aria-hidden />
+              Tentar novamente
+            </Button>
+            <Button variant="tertiary">Ir para o painel</Button>
           </EmptyStateActions>
         </EmptyState>
       </DocSection>
@@ -129,7 +182,12 @@ return <Lista itens={itens} />`}
         <Card padding="none" className="w-full">
           <CardToolbar>Fatura de março</CardToolbar>
           <CardContent className="p-0">
-            <EmptyState variant="plain" size="sm">
+            <EmptyState variant="plain" size="md">
+              <EmptyStateIcon variant="stack">
+                <CreditCardIcon aria-hidden />
+                <ReceiptPercentIcon aria-hidden />
+                <MagnifyingGlassIcon aria-hidden />
+              </EmptyStateIcon>
               <EmptyStateTitle>Nenhuma compra nesta fatura</EmptyStateTitle>
               <EmptyStateDescription>
                   O ciclo fecha em 28 de março.
@@ -139,12 +197,20 @@ return <Lista itens={itens} />`}
         </Card>
       </DocSection>
 
+      <DocNote title="O arco-íris mora só no numeral">
+          No primeiro uso não há arco-íris: quatro versões dele — atrás dos fantasmas e no contorno deles — foram recusadas na tela. No numeral das páginas de erro ele <em>é</em> o glifo, como no wordmark, e é <code>aria-hidden</code>, porque não carrega o que houve.
+      </DocNote>
+
+      <DocNote title="O que se move, e o que não">
+          Os fantasmas sobem num laço lento e o numeral do erro desliza a cor. O leque só se move quando a pessoa aponta. Com movimento reduzido, tudo para no primeiro quadro.
+      </DocNote>
+
       <DocNote title="O respiro é do pai, e não dos filhos">
           O <code>gap</code> é do <code>EmptyState</code> e nenhuma peça declara margem. Com margem nos filhos, tirar a descrição mudaria sozinho o respiro entre ícone e título.
       </DocNote>
 
       <DocNote title="O título é um p; asChild quando precisa ser cabeçalho">
-          Um <code>h2</code> fixo entraria na página a cada bloco vazio, inclusive dentro de uma seção que já tem o seu. Quem precisa de cabeçalho usa <code>asChild</code> com o nível certo, como a seção &ldquo;Deu erro&rdquo; acima.
+          Um <code>h2</code> fixo entraria na página a cada bloco vazio, inclusive dentro de uma seção que já tem o seu. Quem precisa de cabeçalho usa <code>asChild</code> com o nível certo. Em <code>size=&quot;page&quot;</code> ele já nasce <code>&lt;h1&gt;</code>, no <code>H1</code> do sistema: um server component que passasse o <code>h1</code> por <code>asChild</code> o entregaria ao <code>Slot</code> como referência preguiçosa, e o título sumiria.
       </DocNote>
 
       <DocNote title="Vazio não é carregando">
@@ -166,10 +232,10 @@ return <Lista itens={itens} />`}
           },
           {
             prop: "size",
-            type: '"sm" | "md" | "lg"',
+            type: '"sm" | "md" | "lg" | "page"',
             default: '"md"',
             description:
-              "Respiro, recuo e a medida do ícone juntos. lg é a página inteira; sm é a célula.",
+              "Respiro, recuo e a medida do ícone juntos. sm é a célula; lg a seção inteira; page a página de erro, com o título na serifa.",
           },
         ]}
       />
@@ -179,9 +245,23 @@ return <Lista itens={itens} />`}
         rows={[
           {
             prop: "EmptyStateIcon",
-            type: 'tone: "default" | "info" | "success" | "warning" | "destructive"',
-            default: '"default"',
-            description: "A medida vem do size do bloco.",
+            type: 'variant: "circle" | "stack"; tone: "default" | "info" | "success" | "warning" | "destructive"',
+            default: '"circle", "default"',
+            description:
+              "stack põe até três filhos em ladrilhos, em leque. A medida vem do size do bloco.",
+          },
+          {
+            prop: "EmptyStateGhost",
+            type: 'leading: "tile" | "card" | "avatar"; trailing: "amount" | "date" | "none"',
+            default: '"tile", "amount"',
+            description:
+              "As linhas da lista que ainda não existe, em laço. aria-hidden.",
+          },
+          {
+            prop: "EmptyStateCode",
+            type: "ComponentProps<'span'>",
+            description:
+              "O numeral ou a palavra da página de erro, preenchido com o arco-íris. aria-hidden.",
           },
           {
             prop: "EmptyStateTitle",

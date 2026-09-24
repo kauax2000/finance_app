@@ -13821,3 +13821,105 @@ não é.
 Medido no degrau `sm`: 60, 79, 109, 136, 153, 162 e **165px** (a mola passa
 do alvo) e assenta em 161, com o gatilho descendo de 527 para 627. Fechar vai
 de 161 a 60px em 160ms. A `--collapsible-full` e o `useAlturaCheia` saíram.
+
+### Rodada 131 — o EmptyState ganha uma forma por situação
+
+Os 27 estados vazios do app eram o mesmo círculo cinza com um ícone. O dono
+pediu um redesign com a cara da marca, e deu quatro referências do 21st:
+
+- **shadcnui-blocks/empty-state-04:** linhas-fantasma da lista rolando atrás
+  do título.
+- **serafimcloud/empty-state:** três ladrilhos de ícone em leque.
+- **efferd/not-found-2:** o "404" enorme dissolvendo para baixo.
+- **nevsky118/not-found:** o "404" gigante como marca d'água atrás de um
+  título grande.
+
+O desenho foi aprovado em AskUserQuestion, com as três peças novas e os
+erros com marca.
+
+| Situação | Forma |
+| --- | --- |
+| primeiro uso | `variant="brand"` + `EmptyStateGhost` |
+| filtro, período, lista vazia | `EmptyStateIcon variant="stack"` |
+| não encontrado | `size="page"` + `EmptyStateCode` (`mask`) |
+| erro de runtime | `size="page"` + `EmptyStateCode variant="watermark"` |
+
+**Telas:**
+- **Marca e fantasmas:** transações, as transações da categoria,
+  assinaturas, contas, cartões, planos e categorias.
+- **Leque:** os quatro "com esses filtros", atividade, os quatro cartões do
+  painel, membros e convites, e o painel de notificações, que era feito à mão.
+- **Página:** o 404 e o fallback de erro.
+- **O resto:**
+  - "cartão não encontrado" usa o numeral num corpo menor;
+  - sessões ganhou `tone="success"` no lugar da cor escrita à mão;
+  - as mensagens por aba de categorias viraram `EmptyState` pequeno;
+  - nos três erros, saiu a moldura `card` recriada à mão, e o segundo botão
+    virou `tertiary`, pela regra de par de ações.
+
+**Três defeitos medidos no caminho:**
+1. **O título do 404 sumia.** O `not-found-shell` é server component e
+   passava `<h1>` por `asChild`: o `Slot` recebia uma referência preguiçosa
+   do RSC, não um elemento, e não renderizava nada. No catálogo, que é
+   cliente, funcionava. Conserto: no degrau `page` o título nasce `<h1>`.
+2. **Os fantasmas não andavam.** Com `animate-[empty-state-drift_…]` o
+   `animation-name` computado era o certo e a regra `@keyframes` não existia
+   em folha nenhuma: o Tailwind v4 descarta keyframes que nenhuma utility
+   referencia. Conserto: `@utility empty-state-drift` e `empty-state-sheen`.
+   Medido depois: `translateY` de −12,5 para −31,8px em 1,5s, e parado com
+   movimento reduzido.
+3. **O auditor acusava a regra G** nos 2º e 3º ícones do leque. Ele só
+   reconhecia o `EmptyStateIcon` como vizinho imediato, e passou a procurar
+   o ancestral em aberto, como já fazia para o `ColorTile`.
+
+Medido no leque: os ladrilhos saem de ±8° em repouso para ±14° e ±8px no
+cursor, e o do meio sobe 6px.
+
+**Correção na mesma rodada: o véu virou brilho.** A primeira versão reusava a
+máscara da AnnouncementBar cortada numa linha reta a 45%, e dentro da caixa
+arredondada ela lia como um painel colorido com borda. O dono pediu o
+arco-íris "pulsando e passando igual o announcement bar". Agora é a
+`@utility empty-state-veil`:
+- o mesmo `brand-flow` (degradê e deslize de 20s);
+- uma elipse que cabe **inteira** na caixa, `44% × 26%` centrada a 28%. A
+  segunda tentativa, `55% × 34%` a 22%, passava do topo e dos lados, e o
+  corte ali redesenhava a borda reta;
+- a opacidade respirando entre 0,55 e 1 em 5s, na mesma lista de `animation`.
+
+**E a elipse virou blobos.** O dono pediu "blobs que se movimentam, não uma
+peça oval". O véu passou a ser cinco manchas radiais (teal, violeta,
+magenta, âmbar, azul) orbitando pela `@property --brand-lava`, que já estava
+registrada. É a mecânica da `brand-lava`, com três diferenças: as manchas
+são translúcidas no `--brand-flow-alpha`, não há chão preto e não há máscara,
+porque cada uma dissolve sozinha. A primeira passada, com raio vertical de
+30%, deixava a de cima passar do topo da caixa e ser cortada reta ali. Com
+raio de 20% (luz até 70% dele) e os centros andando entre 20% e 40%, a luz
+fica entre 6% e 54% da altura. As manchas mudam de lugar entre quadros de 4s.
+
+**E o arco-íris saiu do fundo.** O dono recusou os blobos ("ficou horrível"),
+e numa pergunta com quatro caminhos escolheu **o arco-íris nos fantasmas**.
+As três versões recusadas tinham o mesmo defeito: punham a cor *atrás* das
+linhas, como forma solta. Agora ela corre no contorno de cada linha, pela
+`@utility empty-state-contour`, com a receita da família do contorno: núcleo
+`--card` opaco em `padding-box` sobre um degradê repetido em `border-box`.
+O degradê desliza um período por volta, com `background-size` 200% e período
+de 50% da imagem, e por isso não tem emenda. Cada linha anda numa fase, com
+atraso negativo de 1,3s por índice. A moldura `brand` não pinta mais nada, e
+os fantasmas leem a variante por contexto. Saíram o `empty-state-veil`, o
+`empty-state-pulse` e o uso da `--brand-lava`.
+
+**E o arco-íris saiu do primeiro uso.** O contorno também foi recusado
+("horrível, remova o arco-íris"). Saíram a variante `brand`, a
+`@utility empty-state-contour` e o contexto que a levava aos fantasmas, e as
+sete telas voltaram a `variant="plain"`. Os fantasmas ficam neutros e
+continuam subindo. A marca do `EmptyState` fica só no numeral das páginas de
+erro, que não foi contestado. São quatro recusas seguidas de arco-íris
+naquele lugar: atrás dos fantasmas, como degradê cortado, elipse e blobos, e
+no contorno deles. Quem for tentar de novo deve ler isto antes.
+
+**O "Ops" subiu.** O dono quis o erro de runtime igual ao 404: a palavra
+acima do título, e não como marca d'água atrás dele. O texto virou "Ops!",
+com exclamação, também a pedido dele. O ícone vermelho saiu, porque dois
+elementos acima do título competiam. A variante `watermark` ficou sem
+consumidor e saiu: o `EmptyStateCode` voltou a ter uma forma só, e o degrau
+`page` deixou de precisar de `relative isolate`.

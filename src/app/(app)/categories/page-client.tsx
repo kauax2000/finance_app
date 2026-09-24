@@ -1,5 +1,12 @@
 "use client"
 
+import {
+    EmptyState,
+    EmptyStateActions,
+    EmptyStateDescription,
+    EmptyStateGhost,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
 import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
@@ -52,7 +59,6 @@ import {
   SheetContent,
 } from "@/components/ui/sheet"
 import { PlusIcon } from "@heroicons/react/16/solid"
-import { ChartPieIcon } from "@heroicons/react/24/outline"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
 import { upsertCategoryBudget, deleteCategoryBudgetById } from "@/lib/category-budget-ops"
 import { deleteCategoryById, saveCategory } from "@/lib/categories/mutations"
@@ -740,7 +746,9 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                             ))}
                         </div>
                     ) : (
-                        <p className="text-muted-foreground text-center py-4">Nenhuma categoria de receita</p>
+                        <EmptyState variant="plain" size="sm">
+                            <EmptyStateTitle>Nenhuma categoria de receita</EmptyStateTitle>
+                        </EmptyState>
                     )}
                 </>
             ) : (
@@ -785,20 +793,30 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                             })}
                         </div>
                     ) : (
-                        <p className="text-muted-foreground text-center py-4">Nenhuma categoria de despesa</p>
+                        <EmptyState variant="plain" size="sm">
+                            <EmptyStateTitle>Nenhuma categoria de despesa</EmptyStateTitle>
+                        </EmptyState>
                     )}
                 </>
             )}
 
             {categories.length === 0 && (
-                <Card>
-                    <CardContent className="flex flex-col items-center justify-center py-12">
-                        <ChartPieIcon className="size-12 text-muted-foreground mb-4" />
-                        <p className="text-muted-foreground mb-4">Nenhuma categoria encontrada</p>
-                        <Button onClick={() => openDialog()}>
-                            <PlusIcon className="mr-2 h-4 w-4" />
-                            Criar Primeira Categoria
-                        </Button>
+                <Card padding="none">
+                    <CardContent className="p-0" role="status" aria-live="polite">
+                        <EmptyState variant="plain" size="lg">
+                            <EmptyStateGhost leading="tile" trailing="amount" />
+                            <EmptyStateTitle>Crie suas categorias</EmptyStateTitle>
+                            <EmptyStateDescription>
+                                Categorias agrupam receitas e despesas, e é nelas que os
+                                orçamentos do mês se apoiam.
+                            </EmptyStateDescription>
+                            <EmptyStateActions>
+                                <Button type="button" size="xl" onClick={() => openDialog()}>
+                                    <PlusIcon aria-hidden />
+                                    Criar primeira categoria
+                                </Button>
+                            </EmptyStateActions>
+                        </EmptyState>
                     </CardContent>
                 </Card>
             )}

@@ -23,7 +23,11 @@ import { localYmdFromDate } from "@/lib/transaction-date"
 import { useMemo } from "react"
 import Link from "next/link"
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid"
-import { CreditCardIcon as CreditCardGlyph } from "@heroicons/react/24/outline"
+import {
+    CalendarDaysIcon,
+    CreditCardIcon as CreditCardGlyph,
+    ReceiptPercentIcon,
+} from "@heroicons/react/24/outline"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -248,8 +252,10 @@ export function DashboardOpenInvoices({
                     </CardToolbar>
                     {active.length === 0 ? (
                         <EmptyState variant="plain">
-                            <EmptyStateIcon>
-                                <CreditCardGlyph />
+                            <EmptyStateIcon variant="stack">
+                                <ReceiptPercentIcon aria-hidden />
+                                <CreditCardGlyph aria-hidden />
+                                <CalendarDaysIcon aria-hidden />
                             </EmptyStateIcon>
                             <EmptyStateTitle>Nenhum cartão ativo</EmptyStateTitle>
                             <EmptyStateDescription>

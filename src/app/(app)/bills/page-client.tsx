@@ -4,12 +4,13 @@ import {
     EmptyState,
     EmptyStateActions,
     EmptyStateDescription,
+    EmptyStateGhost,
     EmptyStateIcon,
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { addDaysYmd, compareYmd } from "@/lib/transaction-date"
 import { AdjustmentsHorizontalIcon, PlusIcon } from "@heroicons/react/16/solid"
-import { MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
+import { FunnelIcon, MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
 import { useCallback, useMemo, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
@@ -615,12 +616,12 @@ export default function BillsPageClient() {
             {globalEmpty ? (
                 <Card padding="none">
                     <CardContent
-                        className="px-4 py-12 md:py-14"
+                        className="p-0"
                         role="status"
                         aria-live="polite"
                     >
                         <EmptyState variant="plain" size="lg">
-                            <EmptyStateIcon><ReceiptPercentIcon aria-hidden /></EmptyStateIcon>
+                            <EmptyStateGhost leading="tile" trailing="date" />
                             <EmptyStateTitle>Cadastre suas contas a pagar</EmptyStateTitle>
                             <EmptyStateDescription>
                                 Vencimentos variáveis, lembretes e confirmação do valor ao
@@ -652,7 +653,11 @@ export default function BillsPageClient() {
                         aria-live="polite"
                     >
                         <EmptyState variant="plain" size="lg">
-                            <EmptyStateIcon><MagnifyingGlassIcon aria-hidden /></EmptyStateIcon>
+                            <EmptyStateIcon variant="stack">
+                                <MagnifyingGlassIcon aria-hidden />
+                                <ReceiptPercentIcon aria-hidden />
+                                <FunnelIcon aria-hidden />
+                            </EmptyStateIcon>
                             <EmptyStateTitle>Nenhuma conta com esses filtros</EmptyStateTitle>
                             <EmptyStateDescription>
                                 Tente outro filtro ou limpe para ver tudo.

@@ -1,7 +1,6 @@
 "use client"
 
 import { Container } from "@/components/ui/container"
-import { ExclamationTriangleIcon } from "@heroicons/react/24/outline"
 import { ExclamationTriangleIcon as ExclamationTriangleMicroIcon } from "@heroicons/react/16/solid"
 import { useEffect } from "react"
 
@@ -11,8 +10,8 @@ import { Button } from "@/components/ui/button"
 import {
     EmptyState,
     EmptyStateActions,
+    EmptyStateCode,
     EmptyStateDescription,
-    EmptyStateIcon,
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { Muted } from "@/components/ui/typography"
@@ -41,11 +40,15 @@ export function RouteErrorFallback({ error, retry, variant = "page" }: RouteErro
             }
         >
             <Container size="sm" className="space-y-6">
-                <EmptyState className="w-full border-border/80 bg-card/40 py-10">
-                    <EmptyStateIcon className="bg-destructive-muted text-destructive-muted-foreground">
-                        <ExclamationTriangleIcon aria-hidden />
-                    </EmptyStateIcon>
-                    <EmptyStateTitle>Algo deu errado</EmptyStateTitle>
+                <EmptyState variant="plain" size="page" className="w-full">
+                    <EmptyStateCode>Ops!</EmptyStateCode>
+                    {variant === "page" ? (
+                        <EmptyStateTitle>Algo deu errado</EmptyStateTitle>
+                    ) : (
+                        <EmptyStateTitle asChild>
+                            <h2>Algo deu errado</h2>
+                        </EmptyStateTitle>
+                    )}
                     <EmptyStateDescription>
                         Não foi possível concluir esta ação. Você pode tentar de
                         novo ou voltar ao painel.
@@ -54,7 +57,7 @@ export function RouteErrorFallback({ error, retry, variant = "page" }: RouteErro
                         <Button type="button" variant="primary" onClick={retry}>
                             Tentar novamente
                         </Button>
-                        <Button type="button" variant="outline" asChild>
+                        <Button type="button" variant="tertiary" asChild>
                             <a href={ROUTES.DASHBOARD}>Ir para o painel</a>
                         </Button>
                     </EmptyStateActions>
