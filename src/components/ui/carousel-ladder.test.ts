@@ -6,6 +6,8 @@ import {
   carouselControlPosition,
   carouselControlTouchTarget,
   carouselDefaultGap,
+  carouselEffectClasses,
+  carouselItemHover,
   carouselControlPressFix,
   carouselControlTransition,
   carouselGapClasses,
@@ -208,7 +210,20 @@ describe("escada e caixa do Carousel", () => {
   it("8b. a seta é quadrada de cantos arredondados, sem fundo em repouso", () => {
     // `rounded-full` era a única do repositório; `Calendar` e `Pagination` já
     // entregam `tertiary` + o `rounded-lg` do próprio `Button`.
-    expect(fonte).not.toContain("rounded-full\"")
+    // Desde a rodada 134 há setas redondas, mas só nas aparências que pedem
+    // isso — `glass` sobre foto e `solid` numa barra. A padrão continua quadrada.
+    const controle = fonte.slice(
+      fonte.indexOf("function CarouselControl("),
+      fonte.indexOf("function CarouselPrevious(")
+    )
+    for (const linha of controle
+      .split("\n")
+      .filter((l) => l.includes("rounded-full") && !/^\s*(\/\/|\*)/.test(l))) {
+      expect(linha, "rounded-full fora das aparências redondas").toMatch(
+        /appearance === "(glass|solid)"|menuPanelTintClassName/
+      )
+    }
+    expect(controle).toMatch(/appearance = "tertiary"/)
     expect(fonte).toMatch(/variant = "tertiary"/)
     // Uma função que escolhe entre dois pesos, com um peso só, é constante. Ela
     // não pode voltar como declaração nem como export — citá-la num comentário
@@ -218,7 +233,7 @@ describe("escada e caixa do Carousel", () => {
   })
 
   it("8c. a dissolução é o padrão — é ela que sustenta a seta sem fundo", () => {
-    expect(fonte).toMatch(/fade = true/)
+    expect(fonte).toMatch(/fade: fadeProp = true/)
   })
 
   it("9. o ponto ativo é `primary-accent`, e o alvo cresce de verdade", () => {
@@ -290,5 +305,71 @@ describe("escada e caixa do Carousel", () => {
     const desinscritos = [...fonte.matchAll(/api\.off\("(\w+)"/g)].map((m) => m[1])
     // Era o defeito: `reInit` ficava inscrito para sempre.
     expect(new Set(inscritos)).toStrictEqual(new Set(desinscritos))
+  })
+
+  it("13. os efeitos só leem a variável do driver, e nada transiciona (rodada 134)", () => {
+    const css = readFileSync(new URL("../../app/globals.css", import.meta.url), "utf8")
+    for (const [efeito, classe] of Object.entries(carouselEffectClasses)) {
+      if (efeito === "none") continue
+      const i = css.indexOf(`@utility ${classe} {`)
+      expect(i, `${classe} não existe`).toBeGreaterThan(css.indexOf("@utility no-scrollbar"))
+      const bloco = css.slice(i, css.indexOf("\n}\n", i))
+      expect(bloco, classe).toMatch(/--carousel-slide-[ds]/)
+      expect(bloco, `${classe} transiciona`).not.toMatch(/transition/)
+      // Movimento reduzido zera o que se move.
+      expect(bloco, `${classe} sem movimento reduzido`).toContain("prefers-reduced-motion")
+    }
+    // O driver escreve as duas, e desinscreve o que inscreve (a 12 cobre).
+    expect(fonte).toContain('"--carousel-slide-s"')
+    expect(fonte).toContain('"--carousel-slide-d"')
+  })
+
+  it("14. o acordeão desativa o embla e o índice passa a ser do contexto", () => {
+    expect(fonte).toMatch(/acordeao && \{ active: false \}/)
+    // Sem `overflow-hidden` no item: o anel de foco de quem estiver dentro.
+    expect(fonte).toContain("grow-(--carousel-weight)")
+    expect(fonte).toContain("transition-[flex-grow] duration-(--duration-spring) ease-(--ease-spring)")
+  })
+
+  it("15. a sangria desliga a dissolução e devolve a calha da casca", () => {
+    expect(fonte).toMatch(/const fade = fadeProp && !bleed && !acordeao/)
+    expect(fonte).toContain('bleed && "-mx-4 md:-mx-6"')
+    expect(fonte).toContain('bleed && "px-4 md:px-6"')
+  })
+
+  it("16. o autoplay pausa no cursor, no foco e com a aba escondida — e o relógio é o CSS", () => {
+    const hook = readFileSync(
+      new URL("../../hooks/use-carousel-autoplay.ts", import.meta.url),
+      "utf8"
+    )
+    expect(fonte).toContain('autoplay.pausar("cursor")')
+    expect(fonte).toContain('autoplay.pausar("foco")')
+    expect(hook).toContain('pausar("oculta")')
+    // Movimento reduzido nasce pausado pelo usuário, e não desligado.
+    expect(hook).toMatch(/prefers-reduced-motion: reduce[\s\S]{0,80}pausar\("usuario"\)/)
+    // O relógio do CSS lê o intervalo publicado na raiz e pausa com ela.
+    const css = readFileSync(new URL("../../app/globals.css", import.meta.url), "utf8")
+    const i = css.indexOf("@utility carousel-timer {")
+    const bloco = css.slice(i, css.indexOf("\n}\n", i))
+    expect(bloco).toContain("var(--carousel-autoplay-ms")
+    expect(bloco).toMatch(/\[data-autoplay="paused"\] &[\s\S]*animation-play-state: paused/)
+    expect(fonte).toContain('"--carousel-autoplay-ms"')
+  })
+
+  it("17. o cursor mexe no filho do item, e tem par de toque", () => {
+    expect(carouselItemHover.lift).toMatch(/active:\*:-translate-y-1/)
+    expect(carouselItemHover.zoom).toMatch(/active:\[&_img\]:scale-105/)
+  })
+
+  it("18. passos e miniaturas dizem qual é o atual, sem abas quebradas", () => {
+    const semComentarios = fonte.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, " ")
+    const passos = semComentarios.slice(
+      semComentarios.indexOf("function CarouselSteps("),
+      semComentarios.indexOf("function CarouselThumbs(")
+    )
+    const miniaturas = semComentarios.slice(semComentarios.indexOf("function CarouselThumbs("))
+    expect(passos).toContain('aria-current={ativo ? "step" : undefined}')
+    expect(passos).not.toMatch(/role="tab"/)
+    expect(miniaturas).toContain('aria-current={ativa ? "true" : undefined}')
   })
 })

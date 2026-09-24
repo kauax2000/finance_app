@@ -62,6 +62,9 @@ const cardVariants = cva(
     "has-[>[data-slot=card-note]:last-child]:pb-0",
     "has-[>img:first-child]:pt-0",
     "has-[>img:last-child]:pb-0",
+    // A capa encosta nas bordas como a imagem crua encostava.
+    "has-[>[data-slot=card-media]:first-child]:pt-0",
+    "has-[>[data-slot=card-media]:last-child]:pb-0",
   ],
   {
     variants: {
@@ -385,9 +388,71 @@ function CardNote({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/**
+ * A capa do cartão — a imagem, e opcionalmente o texto sobre ela (rodada 134).
+ *
+ * Nasceu para as galerias do carrossel ("carta com informação em imagem, ou só
+ * imagem"), e mora no `Card` porque serve qualquer cartão com capa.
+ *
+ * **O texto sobre a foto não é o do tema.** Ele pousa num véu `--scrim` (preto
+ * a 62%, subindo da base) com a tinta `--scrim-foreground` (branca), e os dois
+ * são iguais nos dois temas: a foto não muda com o tema, e o texto sobre ela
+ * também não pode.
+ *
+ * A imagem é `object-cover` na proporção pedida; `auto` deixa a altura com
+ * quem chama (`h-full` dentro de um carrossel com altura fixa, por exemplo).
+ * O recorte é da própria capa (`overflow-hidden`), que é o que os efeitos do
+ * carrossel (`parallax`, `zoom`) precisam para a imagem andar dentro dela.
+ */
+const CARD_MEDIA_ASPECT = {
+  video: "aspect-video",
+  square: "aspect-square",
+  portrait: "aspect-[3/4]",
+  auto: "",
+} as const
+
+function CardMedia({
+  src,
+  alt,
+  aspect = "video",
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"div"> & {
+  src: string
+  alt: string
+  aspect?: keyof typeof CARD_MEDIA_ASPECT
+}) {
+  return (
+    <div
+      data-slot="card-media"
+      className={cn(
+        "relative overflow-hidden",
+        CARD_MEDIA_ASPECT[aspect],
+        className
+      )}
+      {...props}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element -- a capa vem de
+          fora do app (URL de quem chama), e o `next/image` exigiria a lista de
+          domínios no `next.config`. */}
+      <img src={src} alt={alt} className="size-full object-cover" />
+      {children ? (
+        <div
+          data-slot="card-media-caption"
+          className="absolute inset-x-0 bottom-0 flex flex-col bg-linear-to-t from-scrim via-scrim/60 to-transparent px-(--card-strip-px,--spacing(4)) pt-12 pb-4 text-scrim-foreground"
+        >
+          {children}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 export {
   Card,
   CardAction,
+  CardMedia,
   CardContent,
   CardDescription,
   CardFooter,

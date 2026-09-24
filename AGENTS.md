@@ -1869,6 +1869,32 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   O título **não** é da peça (chrome de tela, invariante 1); a leitura é,
   porque é o estado do controle. Lacuna conhecida: o Radix anuncia o número
   cru, e o `Slider` não escreve `aria-valuetext`.
+- **`Carousel` — uma biblioteca, e um motor só** (rodada 134). Cada versão é
+  **prop ou peça do mesmo `Carousel`**, nunca um componente paralelo:
+  `effect` (`scale`, `spotlight` — o destaque no centro, que centraliza e liga
+  o `loop` —, `parallax` e `curve`, a galeria curva em CSS e não em WebGL),
+  `autoplay` (ms), `loop`, `bleed` (de borda a borda, sem dissolução) e
+  `layout="accordion"` (itens colapsados que abrem conforme se passa, com o
+  embla inativo e o índice no contexto). Peças: `CarouselToolbar` (setas no
+  topo, embaixo ou em volta dos pontos), `CarouselCaption`,
+  `CarouselPlayPause`, `CarouselSteps`/`CarouselStep` (passos nomeados, em
+  pílula ou em lista com trilho) e `CarouselThumbs`/`CarouselThumb`, todas no
+  `carousel.tsx` e na mesma página — nenhuma se usa sem o `Carousel`. As setas
+  ganharam `placement` (`overlay` | `inline`) e `appearance` (`tertiary` |
+  `glass` sobre foto | `solid` numa barra); os pontos, `variant="pill"`,
+  `placement="overlay"` e `surface="glass"`. **Os efeitos só leem uma
+  variável**: um driver escreve `--carousel-slide-s`/`-d` em cada slide (o
+  método de tween do embla, com o desvio do `loop`), e os
+  `@utility carousel-effect-*` não transicionam nada. **Autoplay só em
+  conteúdo editorial, nunca sobre dado da pessoa**: o hook
+  `useCarouselAutoplay` é próprio (sem plugin), pausa no cursor, no foco, com
+  a aba escondida e pelo `CarouselPlayPause` (obrigatório, WCAG 2.2.2), e com
+  movimento reduzido nasce pausado. O ponto ativo é o temporizador
+  (`@utility carousel-timer`), que pausa junto do relógio. **Tinta sobre foto
+  é `--scrim-foreground`** (branca nos dois temas), sobre o véu `--scrim`: a
+  foto não muda com o tema. A capa é a `CardMedia`, nova no `Card`. Um
+  carrossel de um item por vez leva `fade={false}`: a dissolução apagaria o
+  próprio item visível.
 - **`EmptyState` — a forma diz a situação** (rodada 131). Primeiro uso é
   `EmptyStateGhost` (linhas-fantasma neutras da lista que vai existir,
   subindo num laço) **sem arco-íris** — quatro versões dele ali foram

@@ -464,6 +464,15 @@ function auditFile(absPath, project) {
 
   // ── F. Semântica e acessibilidade ─────────────────────────────────────────
   for (const m of src.matchAll(/<div[^>]*\bonClick=/g)) {
+    // A tag inteira, até o fechamento dela: a `div` que já declara foco
+    // (`tabIndex`) e teclado (`onKeyDown`) cumpre o que a regra pede, e
+    // acusá-la pela forma do texto obrigaria a trocar o elemento sem ganho.
+    // Medido no acordeão do `Carousel`, cujo item é um slide (`role="group"`)
+    // que também se seleciona no clique.
+    const resto = src.slice(m.index)
+    const fim = resto.search(/\n\s*\/?>/)
+    const tag = fim === -1 ? resto.slice(0, 1500) : resto.slice(0, fim)
+    if (/\btabIndex=/.test(tag) && /\bonKeyDown=/.test(tag)) continue
     add("F", m.index, "`<div onClick>` não recebe foco nem responde ao Enter", m[0])
   }
   for (const m of src.matchAll(/<img\b(?![^>]*\balt=)[^>]*>/g)) {

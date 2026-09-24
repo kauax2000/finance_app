@@ -5,9 +5,12 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronUpIcon,
+  PauseIcon,
+  PlayIcon,
 } from "@heroicons/react/16/solid"
 import * as React from "react"
 import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
+import { useCarouselAutoplay } from "@/hooks/use-carousel-autoplay"
 import useEmblaCarousel, {
   type UseEmblaCarouselType,
 } from "embla-carousel-react"
@@ -19,6 +22,8 @@ import {
   scrollFadeViewportClassName,
   scrollFadeViewportXClassName,
 } from "@/lib/scroll-fade-classes"
+import { disclosureRevealClassName } from "@/lib/disclosure-classes"
+import { menuPanelTintClassName } from "@/lib/glass-classes"
 import { cn } from "@/lib/utils"
 
 /**
@@ -161,6 +166,24 @@ import { cn } from "@/lib/utils"
  * `CONTROL_TRANSITION` mata a das remedições posteriores, que efeito nenhum
  * alcança. Nenhum dos dois sozinho fecha o caso.
  *
+ * ## Uma biblioteca, e um motor só (rodada 134)
+ *
+ * O dono pediu uma biblioteca de carrossel a partir de onze referências. Cada
+ * versão é **composição do mesmo motor**, nunca um componente paralelo:
+ *
+ * - `effect` — `scale`, `spotlight` (o cartão em destaque no centro),
+ *   `parallax` e `curve` (a galeria curva, em CSS e não em WebGL). Um driver
+ *   só escreve `--carousel-slide-d` / `-s` em cada slide; os efeitos são
+ *   `@utility carousel-effect-*` que só leem a variável;
+ * - `loop`, `autoplay` (com `CarouselPlayPause` e o ponto-temporizador),
+ *   `bleed` (de borda a borda, sem dissolução) e `layout="accordion"` (os
+ *   itens colapsados que abrem conforme se passa);
+ * - peças satélite: `CarouselToolbar` (setas no topo, embaixo ou em volta dos
+ *   pontos), `CarouselCaption` (a legenda e a ação do item atual),
+ *   `CarouselSteps` (passos nomeados) e `CarouselThumbs` (miniaturas). Moram
+ *   todas neste arquivo e nesta página: nenhuma se usa sem o `Carousel`, e um
+ *   arquivo à parte cobraria do catálogo uma página para um modo.
+ *
  * ## A seta não tem fundo, e a dissolução é o que a sustenta
  *
  * `variant="tertiary"` nos dois modos: nada em repouso, fundo no cursor **e no
@@ -178,6 +201,20 @@ type CarouselPlugin = UseCarouselParameters[1]
 type CarouselOrientation = "horizontal" | "vertical"
 type CarouselControls = "inside" | "outside" | "none"
 type CarouselGap = "none" | "sm" | "md" | "lg"
+type CarouselEffect = "none" | "scale" | "spotlight" | "parallax" | "curve"
+type CarouselLayout = "slide" | "accordion"
+
+/**
+ * Os efeitos, escritos por extenso: o Tailwind varre o código como texto, e
+ * `carousel-effect-${effect}` nunca chegaria à folha.
+ */
+const EFFECT_CLASSES = {
+  none: "",
+  scale: "carousel-effect-scale",
+  spotlight: "carousel-effect-spotlight",
+  parallax: "carousel-effect-parallax",
+  curve: "carousel-effect-curve",
+} as const satisfies Record<CarouselEffect, string>
 
 /** O rótulo da região, quando quem chama não dá um. Ver o cabeçalho. */
 const ROTULO_PADRAO = "Carrossel"
@@ -409,7 +446,34 @@ type CarouselProps = {
    * quando não há transbordo — o motor só liga `data-scroll-fade` nesse caso.
    */
   fade?: boolean
+  /** Volta ao começo depois do último. `spotlight` liga por padrão. */
+  loop?: boolean
+  /**
+   * O movimento dos itens conforme se afastam do centro. `spotlight` também
+   * centraliza (`align: "center"`) e liga o `loop`.
+   */
+  effect?: CarouselEffect
+  /**
+   * Rotação automática, em milissegundos. Só em conteúdo editorial, nunca
+   * sobre dado da pessoa. Pausa sob o cursor, com foco dentro, com a aba
+   * escondida e pelo `CarouselPlayPause`; com movimento reduzido nasce pausada.
+   */
+  autoplay?: number
+  /**
+   * De borda a borda: sem dissolução, e a raiz sangra a calha da casca
+   * (`-mx-4 md:-mx-6`, os números do `Container gutter="page"`), com o
+   * primeiro item alinhado ao conteúdo.
+   */
+  bleed?: boolean
+  /**
+   * `accordion`: os itens ficam lado a lado, colapsados, e o selecionado abre.
+   * O embla fica inativo — o índice é do contexto, e setas, pontos, passos e
+   * teclado funcionam iguais porque leem dele.
+   */
+  layout?: CarouselLayout
 }
+
+type CarouselAutoplay = ReturnType<typeof useCarouselAutoplay>
 
 type CarouselContextProps = {
   carouselRef: ReturnType<typeof useEmblaCarousel>[0]
@@ -425,6 +489,12 @@ type CarouselContextProps = {
   controls: CarouselControls
   gap: CarouselGap
   fade: boolean
+  effect: CarouselEffect
+  layout: CarouselLayout
+  bleed: boolean
+  autoplay: CarouselAutoplay
+  /** O acordeão conta os itens pelo contêiner, que é quem os vê. */
+  registrarTotal: (total: number) => void
 }
 
 const CarouselContext = React.createContext<CarouselContextProps | null>(null)
@@ -463,9 +533,19 @@ function Carousel({
   variant = "plain",
   controls: controlsProp,
   gap = DEFAULT_GAP,
-  fade = true,
+  fade: fadeProp = true,
+  loop,
+  effect = "none",
+  autoplay: intervalo = 0,
+  bleed = false,
+  layout = "slide",
   className,
+  style,
   children,
+  onPointerEnter,
+  onPointerLeave,
+  onFocusCapture,
+  onBlurCapture,
   ...props
 }: React.ComponentProps<"div"> &
   CarouselProps &
@@ -478,14 +558,31 @@ function Carousel({
   const controls: CarouselControls =
     variant === "plain" ? (controlsProp ?? "inside") : "inside"
 
+  const acordeao = layout === "accordion"
+  // Sangria e dissolução não convivem: a rampa apagaria justamente as pontas
+  // que a sangria veio mostrar.
+  const fade = fadeProp && !bleed && !acordeao
+  const loopEfetivo = loop ?? (effect === "spotlight" ? true : undefined)
+
   const [carouselRef, api] = useEmblaCarousel(
-    { ...opts, axis: orientation === "horizontal" ? "x" : "y" },
+    {
+      // 32 e não os 25 do embla: a transição entre itens lia apressada, e a
+      // curva do embla é física — a duração é o que a deixa assentar.
+      duration: 32,
+      ...(effect === "spotlight" && { align: "center" as const }),
+      ...(loopEfetivo !== undefined && { loop: loopEfetivo }),
+      ...opts,
+      axis: orientation === "horizontal" ? "x" : "y",
+      // No acordeão o embla não move nada: quem troca o item é o contexto.
+      ...(acordeao && { active: false }),
+    },
     plugins
   )
   const [canScrollPrev, setCanScrollPrev] = React.useState(false)
   const [canScrollNext, setCanScrollNext] = React.useState(false)
   const [selectedIndex, setSelectedIndex] = React.useState(0)
   const [snapCount, setSnapCount] = React.useState(0)
+  const [total, registrarTotal] = React.useState(0)
 
   const onSelect = React.useCallback((api: CarouselApi) => {
     if (!api) return
@@ -495,12 +592,42 @@ function Carousel({
     setSnapCount(api.scrollSnapList().length)
   }, [])
 
-  const scrollPrev = React.useCallback(() => api?.scrollPrev(), [api])
-  const scrollNext = React.useCallback(() => api?.scrollNext(), [api])
+  const scrollPrev = React.useCallback(() => {
+    if (!acordeao) return api?.scrollPrev()
+    setSelectedIndex((i) => (i > 0 ? i - 1 : loopEfetivo ? total - 1 : i))
+  }, [api, acordeao, loopEfetivo, total])
+  const scrollNext = React.useCallback(() => {
+    if (!acordeao) return api?.scrollNext()
+    setSelectedIndex((i) => (i < total - 1 ? i + 1 : loopEfetivo ? 0 : i))
+  }, [api, acordeao, loopEfetivo, total])
   const scrollTo = React.useCallback(
-    (index: number) => api?.scrollTo(index),
-    [api]
+    (index: number) => {
+      if (!acordeao) return api?.scrollTo(index)
+      setSelectedIndex(Math.max(0, Math.min(index, total - 1)))
+    },
+    [api, acordeao, total]
   )
+
+  // No acordeão, poder avançar é aritmética do índice, e não pergunta ao embla.
+  const podeAnterior = acordeao
+    ? total > 1 && (loopEfetivo || selectedIndex > 0)
+    : canScrollPrev
+  const podeSeguinte = acordeao
+    ? total > 1 && (loopEfetivo || selectedIndex < total - 1)
+    : canScrollNext
+  const contagem = acordeao ? total : snapCount
+
+  // A rotação avança e, no fim sem `loop`, volta ao começo — senão ela
+  // pararia calada no último item com o relógio ainda desenhado.
+  const avancar = React.useCallback(() => {
+    if (podeSeguinte) scrollNext()
+    else scrollTo(0)
+  }, [podeSeguinte, scrollNext, scrollTo])
+  const autoplay = useCarouselAutoplay({
+    intervalo,
+    avancar,
+    chave: selectedIndex,
+  })
 
   const handleKeyDown = React.useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -524,10 +651,10 @@ function Carousel({
         scrollTo(0)
       } else if (event.key === "End") {
         event.preventDefault()
-        scrollTo(Math.max(0, snapCount - 1))
+        scrollTo(Math.max(0, contagem - 1))
       }
     },
-    [orientation, scrollPrev, scrollNext, scrollTo, snapCount]
+    [orientation, scrollPrev, scrollNext, scrollTo, contagem]
   )
 
   React.useEffect(() => {
@@ -536,7 +663,7 @@ function Carousel({
   }, [api, setApi])
 
   React.useEffect(() => {
-    if (!api) return
+    if (!api || acordeao) return
     onSelect(api)
     api.on("reInit", onSelect)
     api.on("select", onSelect)
@@ -549,7 +676,7 @@ function Carousel({
       api.off("select", onSelect)
       api.off("slidesChanged", onSelect)
     }
-  }, [api, onSelect])
+  }, [api, onSelect, acordeao])
 
   return (
     <CarouselContext.Provider
@@ -559,20 +686,61 @@ function Carousel({
         scrollPrev,
         scrollNext,
         scrollTo,
-        canScrollPrev,
-        canScrollNext,
+        canScrollPrev: podeAnterior,
+        canScrollNext: podeSeguinte,
         selectedIndex,
-        snapCount,
+        snapCount: contagem,
         orientation,
         controls,
         gap,
         fade,
+        effect,
+        layout,
+        bleed,
+        autoplay,
+        registrarTotal,
       }}
     >
       <div
         onKeyDownCapture={handleKeyDown}
+        onPointerEnter={(e) => {
+          autoplay.pausar("cursor")
+          onPointerEnter?.(e)
+        }}
+        onPointerLeave={(e) => {
+          autoplay.retomar("cursor")
+          onPointerLeave?.(e)
+        }}
+        onFocusCapture={(e) => {
+          autoplay.pausar("foco")
+          onFocusCapture?.(e)
+        }}
+        onBlurCapture={(e) => {
+          // Só retoma quando o foco sai da região, e não quando anda dentro
+          // dela — de uma seta para um ponto.
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+            autoplay.retomar("foco")
+          }
+          onBlurCapture?.(e)
+        }}
+        style={
+          autoplay.ativo
+            ? ({
+                "--carousel-autoplay-ms": `${intervalo}ms`,
+                ...style,
+              } as React.CSSProperties)
+            : style
+        }
+        data-autoplay={
+          autoplay.ativo ? (autoplay.rodando ? "running" : "paused") : undefined
+        }
+        data-effect={effect === "none" ? undefined : effect}
+        data-layout={layout}
         className={cn(
           carouselVariants({ variant, controls, orientation }),
+          // A calha da casca, devolvida: a raiz sangra até a borda e o trilho
+          // recua o mesmo tanto, para o primeiro item alinhar com o conteúdo.
+          bleed && "-mx-4 md:-mx-6",
           className
         )}
         role="region"
@@ -606,8 +774,19 @@ function CarouselContent({
   children,
   ...props
 }: React.ComponentProps<"div"> & { viewportClassName?: string }) {
-  const { carouselRef, orientation, gap, fade, api } = useCarousel()
+  const {
+    carouselRef,
+    orientation,
+    gap,
+    fade,
+    api,
+    effect,
+    layout,
+    bleed,
+    registrarTotal,
+  } = useCarousel()
   const viewportRef = React.useRef<HTMLDivElement | null>(null)
+  const acordeao = layout === "accordion"
 
   // A âncora das setas é o **centro do viewport**, e não o da raiz — que também
   // carrega os pontos e a contagem. Ver a nota em `CONTROL_POSITION`: sem isto,
@@ -693,11 +872,74 @@ function CarouselContent({
     }
   }, [api, fade, orientation])
 
+  // **O driver dos efeitos.** Um só, para os quatro: ele escreve em cada slide a
+  // distância ao ponto de encaixe atual, em passos — `--carousel-slide-s` com
+  // sinal (direita positiva) e `--carousel-slide-d` sem —, e o CSS decide o que
+  // fazer com ela (`@utility carousel-effect-*`). É o método do exemplo de
+  // tween do próprio embla, inclusive o desvio do `loop`: um slide reposto na
+  // outra ponta pelo `slideLooper` mede a distância pelo lado de lá.
+  //
+  // Nada transiciona: a variável muda a cada quadro de rolagem, e quem suaviza
+  // é o próprio embla.
+  React.useEffect(() => {
+    if (!api || effect === "none" || acordeao) return
+
+    const escrever = () => {
+      const engine = api.internalEngine()
+      const progresso = api.scrollProgress()
+      const snaps = api.scrollSnapList()
+      const nos = api.slideNodes()
+      // Em `loop` os encaixes dividem a volta inteira; sem ele, o intervalo
+      // entre o primeiro e o último. É o que faz "um passo" valer 1.
+      const passos = Math.max(
+        1,
+        engine.options.loop ? snaps.length : snaps.length - 1
+      )
+
+      snaps.forEach((snap, i) => {
+        for (const indice of engine.slideRegistry[i] ?? []) {
+          let diff = snap - progresso
+          if (engine.options.loop) {
+            for (const ponto of engine.slideLooper.loopPoints) {
+              const alvo = ponto.target()
+              if (indice === ponto.index && alvo !== 0) {
+                diff =
+                  Math.sign(alvo) === -1
+                    ? snap - (1 + progresso)
+                    : snap + (1 - progresso)
+              }
+            }
+          }
+          const s = Math.max(-2, Math.min(2, diff * passos))
+          const no = nos[indice]
+          no?.style.setProperty("--carousel-slide-s", s.toFixed(3))
+          no?.style.setProperty("--carousel-slide-d", Math.abs(s).toFixed(3))
+        }
+      })
+    }
+
+    escrever()
+    api.on("scroll", escrever)
+    api.on("reInit", escrever)
+    api.on("slideFocus", escrever)
+    return () => {
+      api.off("scroll", escrever)
+      api.off("reInit", escrever)
+      api.off("slideFocus", escrever)
+    }
+  }, [api, effect, acordeao])
+
   // A posição do item é derivada por quem a conhece — o contêiner —, e não
   // escrita à mão em cada item. É o que a `BreadcrumbList` fez ao assumir os
   // separadores e o `Stepper` ao derivar o `isLast`.
   const itens = React.Children.toArray(children).filter(React.isValidElement)
   const total = itens.length
+
+  // O acordeão não tem encaixes do embla para contar: quem sabe o total é o
+  // contêiner, e ele o publica.
+  React.useEffect(() => {
+    registrarTotal(total)
+  }, [registrarTotal, total])
 
   return (
     <div
@@ -721,6 +963,9 @@ function CarouselContent({
           (orientation === "horizontal"
             ? scrollFadeViewportXClassName
             : scrollFadeViewportClassName),
+        // O recuo da sangria mora no viewport: o primeiro item alinha com o
+        // conteúdo da página, e o resto passa por baixo da calha até a borda.
+        bleed && "px-4 md:px-6",
         viewportClassName
       )}
       data-slot="carousel-content"
@@ -741,15 +986,22 @@ function CarouselContent({
           // É por isso que a altura de um carrossel vertical vai em
           // `viewportClassName`, e não aqui.
           orientation === "horizontal" ? "" : "h-full flex-col",
+          // O acordeão estica os itens na altura do viewport — a altura dele é
+          // de quem chama, em `viewportClassName`.
+          acordeao && "h-full",
           GAP_CLASSES[orientation][gap].track,
+          EFFECT_CLASSES[effect],
           className
         )}
         {...props}
       >
         {itens.map((child, i) =>
-          React.isValidElement<{ "aria-label"?: string }>(child)
+          React.isValidElement<{ "aria-label"?: string; index?: number }>(child)
             ? React.cloneElement(child, {
                 "aria-label": child.props["aria-label"] ?? `${i + 1} de ${total}`,
+                // O índice também é do contêiner: o item o usa para saber se é
+                // o selecionado e, no acordeão, para se selecionar no clique.
+                index: child.props.index ?? i,
               })
             : child
         )}
@@ -758,19 +1010,84 @@ function CarouselContent({
   )
 }
 
-function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
-  const { orientation, gap } = useCarousel()
+/**
+ * A resposta ao cursor, no **filho** do item e não nele: o item carrega a
+ * calha (`pl-*`), e uma sombra nele contornaria a calha junto.
+ *
+ * `lift` e `zoom` não combinam com `effect="curve"` nem `"parallax"`: os dois
+ * efeitos também escrevem `translate`/`scale`, e a transição do cursor
+ * arrastaria o valor que o driver escreve a cada quadro.
+ */
+const ITEM_HOVER = {
+  none: "",
+  lift: [
+    "*:transition-[translate,box-shadow] *:duration-(--duration-base) *:ease-(--ease-out)",
+    "hover:*:-translate-y-1 hover:*:shadow-md active:*:-translate-y-1 active:*:shadow-md",
+  ].join(" "),
+  zoom: [
+    "[&_img]:transition-[scale] [&_img]:duration-(--duration-slow) [&_img]:ease-(--ease-out)",
+    "hover:[&_img]:scale-105 active:[&_img]:scale-105",
+  ].join(" "),
+} as const
+
+function CarouselItem({
+  className,
+  index = 0,
+  hover = "none",
+  onClick,
+  onKeyDown,
+  style,
+  ...props
+}: React.ComponentProps<"div"> & {
+  /** Escrito pelo `CarouselContent`; não precisa ser passado. */
+  index?: number
+  /** A resposta ao cursor e ao toque. */
+  hover?: keyof typeof ITEM_HOVER
+}) {
+  const { orientation, gap, layout, selectedIndex, scrollTo } = useCarousel()
+  const acordeao = layout === "accordion"
+  const selecionado = index === selectedIndex
 
   return (
     <div
       role="group"
       aria-roledescription="slide"
       data-slot="carousel-item"
+      data-selected={selecionado || undefined}
       className={cn(
-        "min-w-0 shrink-0 grow-0 basis-full",
+        acordeao
+          ? // O peso cresce na mola da casa: o selecionado abre para 4 partes
+            // e os outros ficam com uma, colapsados mas visíveis.
+            "min-w-0 basis-0 grow-(--carousel-weight) cursor-pointer transition-[flex-grow] duration-(--duration-spring) ease-(--ease-spring)"
+          : "min-w-0 shrink-0 grow-0 basis-full",
+        acordeao &&
+          "rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/45 focus-visible:ring-inset",
         GAP_CLASSES[orientation][gap].item,
+        ITEM_HOVER[hover],
         className
       )}
+      style={
+        acordeao
+          ? ({
+              "--carousel-weight": selecionado ? 4 : 1,
+              ...style,
+            } as React.CSSProperties)
+          : style
+      }
+      onClick={(e) => {
+        if (acordeao) scrollTo(index)
+        onClick?.(e)
+      }}
+      // No acordeão o item colapsado é um alvo: ele recebe foco e abre com
+      // Enter e Espaço, como o clique. As setas continuam andando pela região.
+      tabIndex={acordeao ? 0 : undefined}
+      onKeyDown={(e) => {
+        if (acordeao && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault()
+          scrollTo(index)
+        }
+        onKeyDown?.(e)
+      }}
       {...props}
     />
   )
@@ -789,8 +1106,22 @@ function CarouselControl({
   // entre dois pesos é uma constante disfarçada. `controls` decide só a posição.
   variant = "tertiary",
   size = "icon-sm",
+  placement = "overlay",
+  appearance = "tertiary",
   ...props
-}: React.ComponentProps<typeof Button> & { direction: "prev" | "next" }) {
+}: React.ComponentProps<typeof Button> & {
+  direction: "prev" | "next"
+  /**
+   * `overlay` pousa sobre as bordas do viewport (o padrão); `inline` é estático,
+   * para morar numa `CarouselToolbar` — no topo, embaixo ou em volta dos pontos.
+   */
+  placement?: "overlay" | "inline"
+  /**
+   * `tertiary` sem fundo (o padrão); `glass`, redonda na tinta flutuante, para
+   * pousar sobre foto; `solid`, redonda e preenchida, para uma barra.
+   */
+  appearance?: "tertiary" | "glass" | "solid"
+}) {
   const {
     orientation,
     controls,
@@ -800,7 +1131,10 @@ function CarouselControl({
     canScrollNext,
   } = useCarousel()
 
-  if (controls === "none") return null
+  // `none` esconde as setas **sobrepostas**; as de uma barra são pedidas à
+  // mão, e quem as pôs lá quer vê-las.
+  if (controls === "none" && placement === "overlay") return null
+  const sobreposta = placement === "overlay"
 
   const anterior = direction === "prev"
   const Icone = anterior
@@ -814,16 +1148,28 @@ function CarouselControl({
   return (
     <Button
       data-slot={anterior ? "carousel-previous" : "carousel-next"}
-      variant={variant}
+      data-appearance={appearance}
+      variant={appearance === "solid" ? "secondary" : variant}
       size={size}
       className={cn(
-        // Sem `rounded-full`: o raio é o do `Button` (`rounded-lg`, 10px), que é
-        // o que `Calendar` e `Pagination` já entregam nas setas delas.
-        "absolute",
+        // Sem `rounded-full` no padrão: o raio é o do `Button` (`rounded-lg`,
+        // 10px), que é o que `Calendar` e `Pagination` já entregam nas setas.
+        sobreposta && "absolute",
         CONTROL_TRANSITION,
-        CONTROL_POSITION[controls][orientation][direction],
-        CONTROL_PRESS_FIX[orientation],
-        CONTROL_TOUCH_TARGET,
+        sobreposta && CONTROL_POSITION[controls === "none" ? "inside" : controls][orientation][direction],
+        sobreposta && CONTROL_PRESS_FIX[orientation],
+        // Na barra as setas são vizinhas: o alvo cresce de verdade, porque um
+        // `::after` de 46px engoliria a do lado — a razão dos pontos.
+        sobreposta ? CONTROL_TOUCH_TARGET : "pointer-coarse:size-11",
+        // Sobre foto, a placa é a tinta flutuante (`background-color`) e o
+        // realce do `tertiary` é o disco (`background-image`): propriedades
+        // diferentes, que compõem em vez de disputar.
+        appearance === "glass" &&
+          cn(menuPanelTintClassName, "rounded-full shadow-sm ring-1 ring-foreground/10"),
+        appearance === "solid" && "rounded-full shadow-xs",
+        // Redonda, apagada em vez de sumir: numa foto ou numa barra, a seta que
+        // some faz a moldura piscar a cada ponta.
+        appearance !== "tertiary" && "disabled:opacity-30",
         // Em `inside` a seta pousa **sobre** o conteúdo, e desabilitada ela não
         // faz nada: no início do trilho a seta anterior ficava por cima do
         // primeiro item, que é o único que está inteiro na tela — medido, o
@@ -834,7 +1180,7 @@ function CarouselControl({
         // evitar, mas manter a caixa deixa a medição do alvo estável. Em
         // `outside` ela continua visível — lá existe calha reservada, e um
         // botão sumindo faria a moldura piscar a cada ponta.
-        controls === "inside" && "disabled:invisible",
+        sobreposta && appearance === "tertiary" && controls === "inside" && "disabled:invisible",
         className
       )}
       disabled={anterior ? !canScrollPrev : !canScrollNext}
@@ -874,14 +1220,28 @@ function CarouselNext(
 function CarouselDots({
   className,
   variant = "dot",
+  placement = "below",
+  surface = "none",
   ...props
-}: React.ComponentProps<"div"> & { variant?: "dot" | "bar" }) {
-  const { snapCount, selectedIndex, scrollTo } = useCarousel()
+}: React.ComponentProps<"div"> & {
+  /**
+   * `dot` pontos; `pill`, o ativo alonga para três vezes a largura, na mola da
+   * casa; `bar`, segmentos que dividem a largura toda.
+   */
+  variant?: "dot" | "bar" | "pill"
+  /** `overlay` pousa sobre a base do viewport, centralizado — para foto. */
+  placement?: "below" | "overlay"
+  /** `glass` dá uma cápsula de vidro atrás dos pontos. */
+  surface?: "none" | "glass"
+}) {
+  const { snapCount, selectedIndex, scrollTo, autoplay } = useCarousel()
 
   // Um item só não tem posição para indicar.
   if (snapCount <= 1) return null
 
   const barra = variant === "bar"
+  const pilula = variant === "pill"
+  const sobreFoto = placement === "overlay"
 
   return (
     <div
@@ -889,15 +1249,24 @@ function CarouselDots({
       aria-label="Escolher item"
       data-slot="carousel-dots"
       data-variant={variant}
+      data-placement={placement}
       className={cn(
         "flex items-center justify-center",
         barra && "w-full gap-1",
+        // Sobre a foto: centralizado na base do viewport, acima do conteúdo.
+        sobreFoto &&
+          "absolute inset-x-0 bottom-2 z-10 mx-auto w-fit",
+        surface === "glass" &&
+          cn(menuPanelTintClassName, "rounded-full px-1 shadow-sm ring-1 ring-foreground/10"),
         className
       )}
       {...props}
     >
       {Array.from({ length: snapCount }, (_, i) => {
         const ativo = i === selectedIndex
+        // O temporizador mora no ativo, e remonta a cada troca (`key`): a
+        // animação recomeça do zero junto com o relógio do `useCarouselAutoplay`.
+        const relogio = ativo && autoplay.ativo
         return (
           <button
             key={i}
@@ -912,29 +1281,50 @@ function CarouselDots({
               "rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/45",
               barra
                 ? "min-w-0 flex-1 py-2 pointer-coarse:py-5"
-                : "size-6 pointer-coarse:size-11"
+                : cn("h-6 pointer-coarse:h-11", pilula && ativo ? "px-1" : "w-6 pointer-coarse:w-11")
             )}
           >
             <span
               aria-hidden="true"
               className={cn(
-                "rounded-full transition-[background-color,width] duration-(--duration-base) ease-(--ease-out)",
-                barra ? "h-1 w-full" : "size-2",
+                "relative overflow-hidden rounded-full",
+                "transition-[background-color,width] duration-(--duration-spring) ease-(--ease-spring)",
+                barra ? "h-1 w-full" : cn("h-2", pilula && ativo ? "w-6" : "w-2"),
                 // O ponto apagado também é um controle, e a 1.4.11 pede 3:1.
                 // Varridos os degraus contra o fundo real nos dois temas, **45%
                 // é o primeiro que passa nos dois** — 3,15 no claro e 4,36 no
                 // escuro, contra 1,78 e 2,22 dos 25% que estavam aqui. O ativo
                 // é `--primary-accent`: 7,66 e 6,14.
                 //
-                // Os degraus são literais, e não montados: varrer com
-                // `bg-foreground/${p}` na sonda devolveu razão 1 em todos, e a
-                // razão é a de sempre — o Tailwind varre o código como texto, e
-                // nenhuma daquelas classes existia na folha.
-                ativo
-                  ? "bg-primary-accent"
-                  : "bg-foreground/45 group-hover/dot:bg-foreground/70 group-active/dot:bg-foreground/70"
+                // **Sobre foto a tinta é a do véu** (`--scrim-foreground`,
+                // branca nos dois temas): o `--foreground` do tema claro é
+                // quase preto, e some numa foto escura.
+                //
+                // Os degraus são literais, e não montados: o Tailwind varre o
+                // código como texto.
+                sobreFoto
+                  ? ativo
+                    ? relogio
+                      ? "bg-scrim-foreground/40"
+                      : "bg-scrim-foreground"
+                    : "bg-scrim-foreground/55 group-hover/dot:bg-scrim-foreground/85 group-active/dot:bg-scrim-foreground/85"
+                  : ativo
+                    ? relogio
+                      ? "bg-primary-accent/30"
+                      : "bg-primary-accent"
+                    : "bg-foreground/45 group-hover/dot:bg-foreground/70 group-active/dot:bg-foreground/70"
               )}
-            />
+            >
+              {relogio ? (
+                <span
+                  key={selectedIndex}
+                  className={cn(
+                    "carousel-timer absolute inset-0 rounded-full",
+                    sobreFoto ? "bg-scrim-foreground" : "bg-primary-accent"
+                  )}
+                />
+              ) : null}
+            </span>
           </button>
         )
       })}
@@ -953,11 +1343,14 @@ function CarouselStatus({
   children,
   ...props
 }: React.ComponentProps<typeof Caption>) {
-  const { selectedIndex, snapCount } = useCarousel()
+  const { selectedIndex, snapCount, autoplay } = useCarousel()
 
   return (
     <Caption
       role="status"
+      // Com a rotação andando, a região viva se cala: anunciar cada troca
+      // automática atropelaria o leitor de tela (APG, carrossel com rotação).
+      aria-live={autoplay.rodando ? "off" : undefined}
       data-slot="carousel-status"
       className={cn("nums", className)}
       {...props}
@@ -967,8 +1360,398 @@ function CarouselStatus({
   )
 }
 
+/**
+ * A barra de controles — o lugar das setas `placement="inline"`, e também dos
+ * pontos, da contagem e do `CarouselPlayPause`.
+ *
+ * Ela não se posiciona: é quem a põe que decide. No `actions` de um
+ * `PageSectionHeader` dentro do `Carousel` ela vira as setas do topo, à
+ * direita do título; depois do conteúdo, as de baixo; com `align="center"` e
+ * os pontos entre as setas, a barra de depoimento.
+ */
+function CarouselToolbar({
+  className,
+  align = "end",
+  ...props
+}: React.ComponentProps<"div"> & { align?: "start" | "center" | "end" }) {
+  return (
+    <div
+      data-slot="carousel-toolbar"
+      className={cn(
+        "flex items-center gap-1.5",
+        align === "start" && "justify-start",
+        align === "center" && "justify-center",
+        align === "end" && "justify-end",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+/**
+ * A legenda do item atual — título, texto e ação — fora do trilho.
+ *
+ * Ela remonta a cada troca (`key`) e entra com a `disclosure-reveal`, a mesma
+ * cascata da divulgação: o texto sobe junto com o item que chegou, e não troca
+ * de estalo. É a legenda com "Ler as notas" da referência do acordeão, e
+ * serve qualquer versão.
+ */
+function CarouselCaption({
+  className,
+  children,
+  ...props
+}: Omit<React.ComponentProps<"div">, "children"> & {
+  children: (index: number) => React.ReactNode
+}) {
+  const { selectedIndex, autoplay } = useCarousel()
+  return (
+    <div
+      data-slot="carousel-caption"
+      aria-live={autoplay.rodando ? "off" : "polite"}
+      className={className}
+      {...props}
+    >
+      <div key={selectedIndex} className={disclosureRevealClassName}>
+        {children(selectedIndex)}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Pausar e retomar a rotação — obrigatório onde há `autoplay` (WCAG 2.2.2).
+ *
+ * O ícone diz o que o botão **faz**, e o rótulo também: pausa quando está
+ * rodando, retoma quando o usuário pausou. As pausas automáticas (cursor,
+ * foco, aba escondida) não mexem nele, senão o botão mudaria de sentido sob o
+ * próprio cursor que foi apertá-lo.
+ */
+function CarouselPlayPause({
+  className,
+  variant = "tertiary",
+  size = "icon-sm",
+  ...props
+}: React.ComponentProps<typeof Button>) {
+  const { autoplay } = useCarousel()
+  if (!autoplay.ativo) return null
+  const pausado = autoplay.pausadoPeloUsuario
+
+  return (
+    <Button
+      type="button"
+      data-slot="carousel-play-pause"
+      variant={variant}
+      size={size}
+      onClick={autoplay.alternar}
+      className={cn("pointer-coarse:size-11", className)}
+      {...props}
+    >
+      {pausado ? <PlayIcon /> : <PauseIcon />}
+      <span className="sr-only">
+        {pausado ? "Retomar a rotação" : "Pausar a rotação"}
+      </span>
+    </Button>
+  )
+}
+
+/**
+ * Os passos nomeados de um carrossel — a navegação que diz **o que** vem, e
+ * não só quantos.
+ *
+ * Duas referências do dono moram aqui: as pílulas numeradas no topo de uma
+ * vitrine ("Step 1 · Step 2 · …") e a lista de serviços com o trilho à
+ * esquerda, em que só o ativo mostra a descrição. São `orientation`
+ * `horizontal` e `vertical` da mesma peça, porque as duas respondem à mesma
+ * pergunta: escolher o item pelo nome.
+ *
+ * ## Botões com `aria-current`, e não abas
+ *
+ * O padrão de "carrossel com abas" da APG pede `tablist` com `tabpanel`, e
+ * aqui os painéis são os slides do embla — `role="group"` com
+ * `aria-roledescription="slide"`. Declarar `role="tab"` sem painel é a posse
+ * ARIA quebrada que o `ButtonGroup` já registra; um grupo de botões com
+ * `aria-current` diz a verdade.
+ *
+ * Tem de morar dentro de um `<Carousel>`: lê e escreve o índice do contexto,
+ * então setas, pontos, teclado e autoplay andam juntos com ele.
+ */
+type StepsContextValue = { orientation: "horizontal" | "vertical" }
+const StepsContext = React.createContext<StepsContextValue>({
+  orientation: "horizontal",
+})
+
+function CarouselSteps({
+  className,
+  orientation = "horizontal",
+  children,
+  ...props
+}: React.ComponentProps<"div"> & { orientation?: "horizontal" | "vertical" }) {
+  const { selectedIndex } = useCarousel()
+  const listaRef = React.useRef<HTMLDivElement | null>(null)
+  const [medido, setMedido] = React.useState(false)
+
+  // O marcador do trilho viaja até o passo ativo — a mecânica do `Tabs`: a
+  // caixa é medida (`offsetTop`/`offsetHeight`, relativos à lista) e escrita
+  // em variáveis, e o marcador transiciona para elas. Antes da primeira
+  // medição ele não transiciona, senão nasceria viajando do topo.
+  useIsomorphicLayoutEffect(() => {
+    const lista = listaRef.current
+    if (!lista || orientation !== "vertical") return
+    const medir = () => {
+      const ativo = lista.querySelector<HTMLElement>(
+        '[data-slot="carousel-step"][aria-current="step"]'
+      )
+      if (!ativo) return
+      lista.style.setProperty("--steps-y", `${ativo.offsetTop}px`)
+      lista.style.setProperty("--steps-h", `${ativo.offsetHeight}px`)
+      setMedido(true)
+    }
+    medir()
+    const observador = new ResizeObserver(medir)
+    observador.observe(lista)
+    for (const passo of lista.children) observador.observe(passo)
+    return () => observador.disconnect()
+  }, [orientation, selectedIndex])
+
+  const vertical = orientation === "vertical"
+
+  return (
+    <StepsContext.Provider value={{ orientation }}>
+      <div
+        ref={listaRef}
+        role="group"
+        aria-label="Passos"
+        data-slot="carousel-steps"
+        data-orientation={orientation}
+        className={cn(
+          vertical
+            ? "relative flex flex-col border-s border-border"
+            : "flex flex-wrap items-center gap-1.5",
+          className
+        )}
+        {...props}
+      >
+        {children}
+        {vertical ? (
+          <span
+            aria-hidden="true"
+            data-slot="carousel-steps-indicator"
+            className={cn(
+              "pointer-events-none absolute -start-px top-0 w-0.5 rounded-full bg-foreground",
+              "translate-y-(--steps-y) h-(--steps-h)",
+              medido &&
+                "transition-[translate,height] duration-(--duration-spring) ease-(--ease-spring)"
+            )}
+          />
+        ) : null}
+      </div>
+    </StepsContext.Provider>
+  )
+}
+
+function CarouselStep({
+  index,
+  label,
+  description,
+  className,
+  onClick,
+  ...props
+}: Omit<React.ComponentProps<"button">, "children"> & {
+  /** A posição do slide que este passo abre. */
+  index: number
+  label: React.ReactNode
+  /** Só na vertical, e só no passo ativo. */
+  description?: React.ReactNode
+}) {
+  const { selectedIndex, scrollTo, autoplay } = useCarousel()
+  const { orientation } = React.useContext(StepsContext)
+  const ativo = index === selectedIndex
+  const numero = String(index + 1).padStart(2, "0")
+
+  if (orientation === "vertical") {
+    return (
+      <button
+        type="button"
+        data-slot="carousel-step"
+        aria-current={ativo ? "step" : undefined}
+        onClick={(e) => {
+          scrollTo(index)
+          onClick?.(e)
+        }}
+        className={cn(
+          "group/step flex w-full items-start gap-3 border-b border-border py-5 ps-6 pe-2 text-start outline-none last:border-b-0",
+          "focus-visible:ring-3 focus-visible:ring-ring/45 focus-visible:ring-inset",
+          className
+        )}
+        {...props}
+      >
+        <span className="nums pt-1.5 text-2xs text-muted-foreground">/{numero}</span>
+        <span className="flex min-w-0 flex-col">
+          <span
+            className={cn(
+              "text-xl font-medium tracking-tight transition-colors duration-(--duration-base) ease-(--ease-out)",
+              ativo
+                ? "text-foreground"
+                : "text-muted-foreground group-hover/step:text-foreground group-active/step:text-foreground"
+            )}
+          >
+            {label}
+          </span>
+          {description ? (
+            // A descrição abre só no ativo: `grid-rows` de 0fr a 1fr anima a
+            // altura sem medir nada, na mola da casa.
+            <span
+              className={cn(
+                "grid transition-[grid-template-rows] duration-(--duration-spring) ease-(--ease-spring)",
+                ativo ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+              )}
+            >
+              <span className="overflow-hidden">
+                <span className="block pt-2 text-sm text-muted-foreground">
+                  {description}
+                </span>
+              </span>
+            </span>
+          ) : null}
+        </span>
+      </button>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      data-slot="carousel-step"
+      aria-current={ativo ? "step" : undefined}
+      onClick={(e) => {
+        scrollTo(index)
+        onClick?.(e)
+      }}
+      className={cn(
+        "group/step relative inline-flex h-8 items-center gap-2 overflow-hidden rounded-full ps-1 pe-3 text-xs font-medium outline-none",
+        "transition-colors duration-(--duration-base) ease-(--ease-out)",
+        "focus-visible:ring-3 focus-visible:ring-ring/45 pointer-coarse:h-11",
+        ativo
+          ? "bg-muted text-foreground"
+          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground active:bg-muted/60 active:text-foreground",
+        className
+      )}
+      {...props}
+    >
+      <span
+        className={cn(
+          "nums grid size-6 place-items-center rounded-full text-2xs",
+          ativo ? "bg-foreground text-background" : "bg-muted text-muted-foreground"
+        )}
+      >
+        {index + 1}
+      </span>
+      {label}
+      {ativo && autoplay.ativo ? (
+        // O relógio do autoplay, como um fio na base da pílula ativa.
+        <span
+          key={selectedIndex}
+          aria-hidden="true"
+          className="carousel-timer absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-foreground/60"
+        />
+      ) : null}
+    </button>
+  )
+}
+
+/**
+ * A tira de miniaturas de uma galeria — a referência do skate: a imagem
+ * grande em cima, e embaixo as miniaturas que a escolhem.
+ *
+ * É um **segundo embla**, livre (`dragFree`), sincronizado com o principal
+ * nos dois sentidos pelo contexto do `Carousel`: escolher uma miniatura rola o
+ * principal, e rolar o principal traz a miniatura ativa para a vista. Quem
+ * põe as setas nas pontas é uma `CarouselToolbar` com `CarouselPrevious` e
+ * `CarouselNext` em `placement="inline"`.
+ *
+ * Arrastar a tira não escolhe a miniatura em que o arrasto termina: o embla 8
+ * cancela sozinho o clique que vem de um arrasto.
+ */
+
+function CarouselThumbs({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"div">) {
+  const { selectedIndex } = useCarousel()
+  const [ref, api] = useEmblaCarousel({
+    containScroll: "keepSnaps",
+    dragFree: true,
+  })
+
+  React.useEffect(() => {
+    api?.scrollTo(selectedIndex)
+  }, [api, selectedIndex])
+
+  return (
+    <div
+      ref={ref}
+      role="group"
+      aria-label="Miniaturas"
+      data-slot="carousel-thumbs"
+      className={cn("min-w-0 flex-1 overflow-hidden", className)}
+      {...props}
+    >
+      {/* O recuo dá lugar ao anel de foco e ao da seleção, que o recorte do
+            viewport cortaria rente à borda. */}
+      <div className="flex gap-2 p-1">{children}</div>
+    </div>
+  )
+}
+
+function CarouselThumb({
+  index,
+  className,
+  onClick,
+  ...props
+}: React.ComponentProps<"button"> & {
+  /** A posição do slide que esta miniatura abre. */
+  index: number
+}) {
+  const { selectedIndex, scrollTo } = useCarousel()
+  const ativa = index === selectedIndex
+
+  return (
+    <button
+      type="button"
+      data-slot="carousel-thumb"
+      aria-label={`Ir para o item ${index + 1}`}
+      aria-current={ativa ? "true" : undefined}
+      onClick={(e) => {
+        scrollTo(index)
+        onClick?.(e)
+      }}
+      className={cn(
+        "h-12 w-16 shrink-0 overflow-hidden rounded-md outline-none",
+        "[&_img]:size-full [&_img]:object-cover",
+        "transition-[opacity,box-shadow] duration-(--duration-base) ease-(--ease-out)",
+        "focus-visible:ring-3 focus-visible:ring-ring/45",
+        ativa
+          ? "opacity-100 ring-2 ring-primary-accent ring-offset-2 ring-offset-background"
+          : "opacity-55 hover:opacity-100 active:opacity-100",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
 export {
   type CarouselApi,
+  type CarouselEffect,
+  CarouselToolbar,
+  CarouselCaption,
+  CarouselPlayPause,
+  CarouselStep,
+  CarouselSteps,
+  CarouselThumb,
+  CarouselThumbs,
   Carousel,
   CarouselContent,
   CarouselItem,
@@ -984,4 +1767,6 @@ export {
   CONTROL_TRANSITION as carouselControlTransition,
   CONTROL_PRESS_FIX as carouselControlPressFix,
   DEFAULT_GAP as carouselDefaultGap,
+  EFFECT_CLASSES as carouselEffectClasses,
+  ITEM_HOVER as carouselItemHover,
 }

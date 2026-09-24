@@ -13975,3 +13975,62 @@ Dois obstáculos medidos antes de escrever:
 
 O `brand-contour.test.ts` ganhou o teste 11 (o `Card` veste o brilho com o
 anel dentro), e o teste 10 passou a ler o hook no arquivo novo.
+
+### Rodada 134 — a biblioteca de carrossel
+
+O dono pediu uma biblioteca de carrossel a partir de onze referências. Os
+pedidos foram:
+- transição melhor e pontos redesenhados;
+- temporizador e rotação automática;
+- destaque no centro;
+- setas no topo com título, e setas embaixo;
+- de borda a borda;
+- cartões colapsados que abrem;
+- um cartão só com passos e setas dentro;
+- hover, cartas de imagem e ações;
+- a galeria curva, com `ogl` na referência;
+- os passos nomeados com conteúdo.
+
+As decisões dele, em AskUserQuestion:
+- autoplay com hook próprio, sem plugin;
+- a curva em CSS 3D e não em WebGL;
+- a `CardMedia` como peça nova;
+- tudo numa rodada.
+
+**Um motor, e as versões são composição.** Nada virou componente paralelo:
+- `Carousel` ganhou `effect`, `loop`, `autoplay`, `bleed` e `layout`;
+- as setas ganharam `placement` e `appearance`;
+- os pontos ganharam `pill`, `overlay` e `glass`, e o temporizador;
+- o item ganhou `hover`;
+- entraram `CarouselToolbar`, `CarouselCaption`, `CarouselPlayPause`,
+  `CarouselSteps`/`Step` e `CarouselThumbs`/`Thumb`.
+
+Passos e miniaturas nasceram em arquivos próprios, e o `taxonomy.test.ts`
+cobrou página para cada um. Como nenhum dos dois se usa sem o `Carousel`,
+eles foram para o `carousel.tsx`.
+
+**Medido ao vivo:**
+- **`spotlight`:** as distâncias saem 0, 1, 2, 2, 2 e 1. Com `loop`, o último
+  slide mede a distância pelo lado esquerdo.
+- **Autoplay:** avança sozinho. Com o cursor em cima, `data-autoplay`
+  vira `paused`, o temporizador fica `animation-play-state: paused` e o
+  índice não avança em 5,6s.
+- **Acordeão:** as larguras vão de 395/105 a 105/395 no clique e nas
+  setas.
+- **Miniaturas:** sincronizam nos dois sentidos.
+- **Passos em lista:** o marcador vai para `--steps-y: 138px`.
+
+**Defeitos achados nas capturas:**
+- a legenda da `CardMedia` usava `--card-px`, que vale 0 no cartão
+  `padding="none"`, e passou a `--card-strip-px`;
+- a dissolução apagava o próprio item nos carrosséis de um item por vez, que
+  passaram a levar `fade={false}`;
+- o arco da `curve` recortava a base dos itens, e o viewport ganhou `pb-12`;
+- os rótulos colapsados do acordeão saíam cortados, e só o aberto mostra
+  texto agora.
+
+**No auditor:**
+- a regra F passou a aceitar a `div` com `onClick` que já declara
+  `tabIndex` e `onKeyDown`, o caso do item do acordeão, que ganhou foco e
+  Enter;
+- o catálogo passou a cobrar par de `--scrim`.

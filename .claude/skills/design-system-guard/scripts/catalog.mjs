@@ -232,7 +232,7 @@ function readTokens(cssPath) {
       marca: group((k) => /^--brand-/.test(k)),
       superficie: group(
         (k) =>
-          /^--(background|foreground|card|popover|muted|accent|secondary|primary|border|input|ring|skeleton|overlay)/.test(
+          /^--(background|foreground|card|popover|muted|accent|secondary|primary|border|input|ring|skeleton|overlay|scrim)/.test(
             k
           ) && !k.includes("sidebar")
       ),

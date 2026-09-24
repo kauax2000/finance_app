@@ -78,6 +78,8 @@
   --color-expense-muted: var(--expense-muted);
   --color-expense-muted-foreground: var(--expense-muted-foreground);
   --color-overlay: var(--overlay);
+  --color-scrim: var(--scrim);
+  --color-scrim-foreground: var(--scrim-foreground);
   --color-skeleton: var(--skeleton);
   --color-input-fill: var(--input-fill);
   --color-chart-income: var(--chart-income);
@@ -371,6 +373,14 @@
      superfícies deste tema já são todas quase-brancas. Clarear é movimento do
      tema escuro; ver o par no `.dark`. */
   --overlay: oklch(0.145 0 0 / 0.4);
+  /* O véu sobre foto (rodada 134): a base escura da `CardMedia` e a tinta
+     branca que pousa sobre ela, nos pontos e nas setas de uma galeria. **Os
+     dois são iguais nos dois temas de propósito**: uma foto não muda com o
+     tema, e o texto sobre ela também não pode — o `--foreground` do claro é
+     quase preto e some numa foto escura. Não é `--overlay`: aquele é o véu
+     dos modais, a 40%, fraco demais para segurar texto. */
+  --scrim: oklch(0 0 0 / 0.62);
+  --scrim-foreground: oklch(1 0 0);
   --shadow-xs-value: 0 1px 1px 0 oklch(0 0 0 / 0.04);
   --shadow-sm-value: 0 1px 2px 0 oklch(0 0 0 / 0.06), 0 1px 1px 0 oklch(0 0 0 / 0.04);
   --shadow-md-value: 0 4px 8px -2px oklch(0 0 0 / 0.08), 0 2px 4px -2px oklch(0 0 0 / 0.04);
@@ -858,6 +868,8 @@
      primary↔card de 47 para 70. Sem isso, o vidro do `Dialog` e o da paleta
      borram um preto chapado e leem como bloco. */
   --overlay: oklch(0 0 0 / 0.4);
+  --scrim: oklch(0 0 0 / 0.62);
+  --scrim-foreground: oklch(1 0 0);
   --shadow-xs-value: 0 1px 1px 0 oklch(0 0 0 / 0.35);
   --shadow-sm-value: 0 1px 2px 0 oklch(0 0 0 / 0.45), 0 1px 1px 0 oklch(0 0 0 / 0.35);
   --shadow-md-value: 0 4px 8px -2px oklch(0 0 0 / 0.55), 0 2px 4px -2px oklch(0 0 0 / 0.4);
@@ -2668,6 +2680,97 @@
   [data-state="closed"]
     > &:not(:has(> *)):not([data-slot="collapsible-content"]) {
     animation: disclosure-sink var(--duration-fast) var(--ease-out) both;
+  }
+}
+
+/* O carrossel (rodada 134). Os efeitos só **leem** as duas variáveis que o
+   driver do `CarouselContent` escreve em cada slide: `--carousel-slide-s`, a
+   distância em passos até o encaixe atual, com sinal (direita positiva), e
+   `--carousel-slide-d`, a mesma sem sinal. Nenhum transiciona — a variável
+   muda a cada quadro de rolagem, e quem suaviza é o embla.
+
+   O alvo é o **filho** do item, e não o item: o item carrega a calha
+   (`pl-*`), e escalá-lo escalaria o vão junto.
+
+   Movimento reduzido zera escala, giro e deslocamento. A opacidade do
+   `spotlight` fica: ela não move nada, e é o que diz qual item é o central. */
+@utility carousel-effect-scale {
+  & > [data-slot="carousel-item"] > * {
+    scale: calc(1 - min(var(--carousel-slide-d, 0), 1) * 0.08);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    & > [data-slot="carousel-item"] > * {
+      scale: none;
+    }
+  }
+}
+
+@utility carousel-effect-spotlight {
+  & > [data-slot="carousel-item"] > * {
+    scale: calc(1 - min(var(--carousel-slide-d, 0), 1) * 0.14);
+    opacity: calc(1 - min(var(--carousel-slide-d, 0), 1) * 0.55);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    & > [data-slot="carousel-item"] > * {
+      scale: none;
+    }
+  }
+}
+
+/* A imagem anda mais devagar que a moldura: ela é ampliada 20% e desliza no
+   sentido contrário ao slide. Quem a recorta é a moldura (`CardMedia` tem
+   `overflow-hidden`). */
+@utility carousel-effect-parallax {
+  & > [data-slot="carousel-item"] img {
+    scale: 1.2;
+    translate: calc(var(--carousel-slide-s, 0) * -8%) 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    & > [data-slot="carousel-item"] img {
+      scale: none;
+      translate: none;
+    }
+  }
+}
+
+/* A galeria curva, em CSS e não em WebGL (decisão do dono): os itens descem
+   num arco conforme se afastam do centro — o quadrado da distância, que é a
+   forma de uma parábola — e giram para acompanhá-lo, como o `bend` da
+   referência (`circular-gallery` com `ogl`). Continua sendo DOM: foco,
+   leitor de tela e tokens do tema alcançam. */
+@utility carousel-effect-curve {
+  & > [data-slot="carousel-item"] > * {
+    translate: 0
+      calc(var(--carousel-slide-d, 0) * var(--carousel-slide-d, 0) * 2.25rem);
+    rotate: calc(var(--carousel-slide-s, 0) * 6deg);
+    transform-origin: center top;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    & > [data-slot="carousel-item"] > * {
+      translate: none;
+      rotate: none;
+    }
+  }
+}
+
+/* O ponto-temporizador: o preenchimento cresce no intervalo do autoplay e
+   pausa junto do relógio do `useCarouselAutoplay`. Em `@utility`, e não em
+   `animate-[…]`: o Tailwind v4 descarta keyframes que nenhuma utility
+   referencia (a lição da rodada 131). */
+@keyframes carousel-timer {
+  from {
+    scale: 0 1;
+  }
+  to {
+    scale: 1 1;
+  }
+}
+
+@utility carousel-timer {
+  transform-origin: left center;
+  animation: carousel-timer var(--carousel-autoplay-ms, 5000ms) linear forwards;
+  [data-autoplay="paused"] & {
+    animation-play-state: paused;
   }
 }
 
