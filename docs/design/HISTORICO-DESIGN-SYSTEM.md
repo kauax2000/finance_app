@@ -14093,3 +14093,48 @@ embaixo perdeu o hover sincronizado com a rosca, que não existe mais.
 - as outras cinco telas com Recharts cru, que continuam no backlog da rodada
   30.
 
+### Rodada 136 — todo gráfico chega e se ajusta
+
+O dono pediu o leque completo de animação do `Chart`: entrada para todos os
+gráficos e movimento quando um filtro troca o dado. Isso reverte a rodada 30,
+cujo `CHART_ANIMATION = false` desligava as nove marcas.
+
+**As duas razões da rodada 30 caíram na leitura do código instalado:**
+- **"O Recharts não olha `prefers-reduced-motion`."** No 3.8, `isAnimationActive`
+  é `'auto'` de fábrica, e o `JavascriptAnimate` faz
+  `isActive = !Global.isSsr && !prefersReducedMotion`.
+- **"A rosca só aparece quando a pessoa rola."** Não há observador de
+  visibilidade nenhum no Recharts. O `Pie` espera 400ms de `animationBegin`,
+  e cada re-render troca o `animationId` e reinicia do zero, gravando o quadro
+  anterior já em t=0. Com `begin: 0`, medido: 0 setores no quadro da
+  remontagem e 5, 5 e 2 aos 100ms, estáveis dali em diante.
+
+**O mecanismo** são três fases por gráfico, e a de entrada é disparada pelo
+`IntersectionObserver`, com uma remontagem única do `ResponsiveContainer`.
+
+**Medido:**
+- **Barra na entrada:** vai de 73 a 204px em ~500ms. A passagem para `idle`,
+  que muda `duration` e `begin`, deixa a barra parada em 204,1.
+- **Troca de filtro:** barra de 336 a 325, segmento de 233 a 277 e miolo de
+  R$ 3.942 a R$ 2.957, monótonos e sem passar do alvo.
+- **Rolagem:** a página inteira rolada termina com 0 caixas em `pending`, de 38.
+- **Movimento reduzido:** o primeiro quadro já é o final.
+- **Faísca:** não entra, e interpola na troca.
+- **Legenda interativa:** a série religada cresce de 0 a 180px.
+
+**Três defeitos achados na medição:**
+1. **A entrada da divisão não se via.** Todos os segmentos subindo o
+   `flex-grow` juntos a partir de 0 mantêm a proporção a cada quadro, e a
+   barra saía pronta. Virou uma revelação da esquerda por `clip-path`.
+2. **A impressão saía em branco.** O `print:data-[reveal=pending]:opacity-100`
+   empata em especificidade com o `opacity-0` e perde pela ordem de emissão:
+   as 46 caixas pendentes ficavam invisíveis. Todo esconder de `pending` passou
+   a morar sob `not-print:`.
+3. **A lint do React Compiler acusava leitura de ref.** O objeto da fase ia
+   para um `ref` e tinha a fase lida no render. A caixa observada passou a
+   receber `observe` e `fase` separados (`ChartRevealBox`).
+
+**Fica para depois:** as cinco telas com Recharts cru não herdam nada disso
+até migrarem para as formas. Três delas escrevem `isAnimationActive={false}` à
+mão.
+

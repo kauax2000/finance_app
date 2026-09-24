@@ -1905,8 +1905,26 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   puxava o verde para o marrom) e `ChartRadar` (perfil contra a média, 3–8
   eixos). `ChartBars` tem `shape="pill"` e `track`; linha e área têm
   `marker="last"`, o último ponto **com valor**; o esqueleto tem
-  `variant="wave"`. As duas únicas coisas que se movem num gráfico são o halo
-  do marcador e a onda, e nenhuma é valor. O tooltip veste a placa flutuante.
+  `variant="wave"`. O tooltip veste a placa flutuante.
+  **Todo gráfico chega e se ajusta** (rodada 136). Ele tem três fases:
+  `pending`, `entering` e `idle`, publicadas em `data-reveal`.
+  - **Entrada:** toca uma vez, quando a caixa entra na tela
+    (`IntersectionObserver`). Até lá o gráfico já está montado com o dado
+    final e invisível, e aparece na impressão.
+  - **Troca de dado:** interpola do quadro anterior.
+  - **Tempos:** entrada em `--duration-spring`, troca em `--duration-slow`,
+    `chart-motion.test.ts` os tranca aos tokens.
+  - **A curva é serena no dado:** as marcas usam `--ease-out`, que não passa do
+    alvo. A mola fica só no que *aparece* (célula, rótulo, legenda).
+  - **Números que contam:** `ChartDonutCenter amount` e os `%` dos anéis e da
+    divisão.
+  - **Faísca:** não entra, só transita.
+  - **Movimento reduzido:** vai direto ao fim. O `'auto'` do Recharts 3.8
+    **respeita** a preferência, ao contrário do que a rodada 30 registrou.
+  - **Rosca:** começa em `animationBegin: 0`. Os 400ms de fábrica, somados a
+    re-renders, eram a rosca vazia da rodada 30.
+  - **Impressão:** todo esconder de `pending` mora sob `not-print:`, porque um
+    `print:…` perde pela ordem de emissão.
   **Arco-íris sob série continua proibido**: a marca encosta pelo
   `Card variant="brand"`, na borda. O cabeçalho (delta, período, KPIs) é
   composição de `Card`, não peça do `Chart`.
