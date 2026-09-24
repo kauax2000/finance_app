@@ -128,7 +128,7 @@ export default function AcceptInvitePageClient() {
                     {/* Era uma caixa montada à mão — `rounded-lg border
                         border-primary/20 bg-primary/5` com um ícone ao lado.
                         É um `Alert`, e o sistema já tem um. */}
-                    <Alert tone="info" variant="plain">
+                    <Alert tone="info">
                         <AlertTitle>
                             Depois de entrar, você volta para cá sozinho.
                         </AlertTitle>
@@ -162,7 +162,7 @@ export default function AcceptInvitePageClient() {
         return (
             <AuthShell title="Convite indisponível">
                 <div className="flex flex-col gap-(--space-block)">
-                    <Alert tone="destructive" variant="plain">
+                    <Alert tone="destructive">
                         <ExclamationCircleIcon />
                         <AlertTitle>{error}</AlertTitle>
                     </Alert>
@@ -193,7 +193,7 @@ export default function AcceptInvitePageClient() {
                 }
             >
                 <div className="flex flex-col gap-(--space-block)">
-                    <Alert tone="success" variant="plain">
+                    <Alert tone="success">
                         <CheckCircleIcon />
                         <AlertTitle>
                             Use o seletor de carteiras no topo da lateral para

@@ -131,12 +131,12 @@ export function LoginForm() {
         >
             <div className="flex flex-col gap-(--space-block)">
                 {reason && !error ? (
-                    <Alert tone="info" variant="plain">
+                    <Alert tone="info">
                         <AlertTitle>{reason}</AlertTitle>
                     </Alert>
                 ) : null}
                 {error ? (
-                    <Alert tone="destructive" variant="plain">
+                    <Alert tone="destructive">
                         <AlertTitle>{error}</AlertTitle>
                     </Alert>
                 ) : null}

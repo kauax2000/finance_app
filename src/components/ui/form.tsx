@@ -494,7 +494,7 @@ function FormRadioGroup({
  *
  * **E não é um `Alert`.** Compor a molécula dentro da molécula reprovaria a
  * asserção 3 da taxonomia — e um erro de formulário é uma frase, não um painel.
- * Quem quer a caixa escreve `<Alert tone="destructive" variant="plain">` na tela.
+ * Quem quer a caixa escreve `<Alert tone="destructive">` na tela.
  */
 function FormError({
   className,

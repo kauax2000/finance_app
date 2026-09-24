@@ -946,10 +946,14 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   `success` | `warning` | `destructive`. **Não existe `variant` para a cor** —
   ele saiu do tipo, porque neste projeto as cinco cores semânticas se chamam
   `tone` em `StatCard`, `Progress`, `Timeline` e `AnnouncementBar`, e o `Alert`
-  era o único a discordar. `variant` agora é a **forma** (`soft` com moldura —
-  o padrão —, `plain` tingido sem borda, para dentro de formulário ou
-  diálogo, e **`brand`**, a caixa neutra com a régua de arco-íris na aresta
-  inline-start, para quando quem fala é o produto e não o dado da pessoa), e
+  era o único a discordar. `variant` agora é a **forma**, e são **duas**:
+  `soft` com moldura — o padrão — e **`brand`**, a caixa neutra com o brilho de
+  arco-íris na borda, para quando quem fala é o produto e não o dado da pessoa.
+  **Havia um `plain`** (tingido sem borda, para dentro de formulário ou diálogo,
+  "onde a moldura já é de outro e mais uma só acrescenta um retângulo"), com 8
+  chamadas em 4 telas de acesso, e ele **saiu a pedido do dono**: o custo é que
+  esses avisos passaram a desenhar a própria borda dentro do formulário, que é
+  o que ele evitava; o caminho de volta é `border-0`. E
   `size` é o **corpo** (`sm` | **`md`**), que encolhe texto, respiro
   e ícone juntos. **`brand` não aceita `tone` nem `size="sm"`** — o primeiro
   por não ter gravidade, o segundo porque `sm` é o aviso que fala com um campo

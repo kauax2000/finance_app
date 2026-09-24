@@ -72,41 +72,6 @@ export default function AlertDoc() {
       </DocSection>
 
       <DocSection
-        title="Forma"
-        description="soft, o padrão, tem moldura para se separar do conteúdo. plain é o mesmo tingido sem borda, para dentro de formulário ou diálogo, onde a moldura já é de outro."
-        code={`<Alert tone="success">…</Alert>                  {/* soft */}
-<Alert tone="success" variant="plain">…</Alert>`}
-        previewClassName="grid grid-cols-1 items-start gap-4 sm:grid-cols-2"
-      >
-        {(
-          [
-            ["soft", "Duas molduras para um bloco." ],
-            ["plain", "Uma moldura, a do formulário."],
-          ] as const
-        ).map(([variant, hint]) => (
-          <div key={variant} className="flex flex-col gap-2">
-            <p className="font-mono text-xs text-muted-foreground">
-              variant=&quot;{variant}&quot;
-            </p>
-            {/* A moldura de mentira é o ponto da seção: `plain` não se explica
-                sozinho no meio da página — ele só faz sentido dentro de algo
-                que já tem borda, e é aí que a borda a mais aparece como borda a
-                mais. */}
-            <div className="rounded-xl border border-border bg-card p-3">
-              <div className="flex flex-col gap-2">
-                <div className="h-8 rounded-lg border border-input bg-input-fill/30" />
-                <Alert tone="success" variant={variant} size="sm">
-                  <CheckCircleIcon />
-                  <AlertTitle>Senha atualizada</AlertTitle>
-                </Alert>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground">{hint}</p>
-          </div>
-        ))}
-      </DocSection>
-
-      <DocSection
         title="Marca"
         description="A caixa neutra em repouso, e o arco-íris acendendo num arco da borda conforme o ponteiro passa pela tela, com um leve borrão. É a forma para quando quem fala é o produto — uma novidade, uma boas-vindas — e não o dinheiro da pessoa. Ela não aceita tone: marca não tem gravidade. Uma por tela. Passe o mouse perto de um destes."
         code={`<Alert variant="brand">
@@ -232,10 +197,10 @@ export default function AlertDoc() {
           },
           {
             prop: "variant",
-            type: '"soft" | "plain" | "brand"',
+            type: '"soft" | "brand"',
             default: '"soft"',
             description:
-              "A forma: soft com moldura; plain sem borda, para dentro de algo que já tem moldura; brand com a régua de arco-íris na aresta — e sem tone.",
+              "A forma: soft com moldura, o padrão; brand com o brilho de arco-íris na borda — e sem tone.",
           },
           {
             prop: "size",
@@ -283,6 +248,10 @@ export default function AlertDoc() {
           },
         ]}
       />
+
+      <DocNote title="Houve um variant=&quot;plain&quot;, e ele saiu">
+          Era o aviso tingido <strong>sem borda</strong>, para dentro de formulário ou diálogo — onde a moldura já é de outro e mais uma só acrescenta um retângulo. Tinha 8 chamadas em 4 telas de acesso e saiu a pedido do dono. O custo está dito: esses avisos passaram a desenhar a própria borda dentro do formulário, que é exatamente o que o <code>plain</code> evitava. O caminho de volta é uma linha (<code>border-0</code>).
+      </DocNote>
 
       <DocNote title="Título sem descrição é permitido; descrição sem título não">
           O título é o resumo que faz o olho decidir se vale ler, e o que o leitor de tela anuncia primeiro. Uma descrição solta perde esse resumo.

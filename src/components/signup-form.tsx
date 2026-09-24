@@ -151,7 +151,7 @@ export function SignupForm() {
                 }
             >
                 {nextPath ? (
-                    <Alert tone="info" variant="plain">
+                    <Alert tone="info">
                         <AlertTitle>
                             Depois de confirmar, você volta para concluir o
                             convite. Se isso não acontecer, entre com o mesmo
@@ -174,7 +174,7 @@ export function SignupForm() {
         >
             <div className="flex flex-col gap-(--space-block)">
                 {error ? (
-                    <Alert tone="destructive" variant="plain">
+                    <Alert tone="destructive">
                         <AlertTitle>{error}</AlertTitle>
                     </Alert>
                 ) : null}

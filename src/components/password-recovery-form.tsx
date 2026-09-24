@@ -198,7 +198,7 @@ export function PasswordRecoveryForm({
     }
 
     const errorAlert = error ? (
-        <Alert tone="destructive" variant="plain">
+        <Alert tone="destructive">
             <AlertTitle>{error}</AlertTitle>
         </Alert>
     ) : null

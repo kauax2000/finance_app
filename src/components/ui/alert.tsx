@@ -23,8 +23,6 @@ import { cn } from "@/lib/utils"
  * - **um tamanho**: o alerta compacto do formulário de cartão vem com
  *   `className="gap-2 px-3 py-2.5"`, título em `text-xs` e descrição em
  *   `text-2xs`, tudo escrito na tela;
- * - **uma forma sem moldura**: quatro formulários de autenticação desenham
- *   `bg-*-muted p-3 rounded-md` sem borda, porque ali já há molduras demais;
  * - **um lugar para a ação**: o dashboard põe um `Button` dentro do
  *   `AlertDescription` com cinco classes de cor escritas à mão
  *   (`border-destructive/40 bg-transparent text-destructive-muted-foreground
@@ -93,16 +91,21 @@ const alertVariants = cva(
           "border-destructive/35 bg-destructive-muted text-destructive-muted-foreground",
       },
       /**
-       * A forma. `soft` é o aviso com moldura própria — o padrão, e o que se
-       * usa solto no conteúdo. `plain` é o mesmo tingido sem borda, para dentro
-       * de um formulário ou de um diálogo, onde a moldura já é de outro e mais
-       * uma só acrescenta um retângulo. `brand` é a caixa neutra com a régua de
-       * arco-íris na aresta, para quando quem fala é o produto e não o dado —
-       * e por isso ela não aceita `tone`.
+       * A forma, e são duas. `soft` é o aviso com moldura própria — o padrão, e
+       * o que se usa em qualquer lugar. `brand` é a caixa neutra com o brilho
+       * de arco-íris na borda, para quando quem fala é o produto e não o dado
+       * — e por isso ela não aceita `tone`.
+       *
+       * **Havia um `plain`**, tingido sem borda, para dentro de formulário ou
+       * diálogo "onde a moldura já é de outro e mais uma só acrescenta um
+       * retângulo". Ele tinha 8 chamadas em 4 telas de acesso e **saiu a pedido
+       * do dono**: o custo é que esses avisos passaram a desenhar a própria
+       * borda dentro do formulário, que é exatamente o que ele evitava. Se o
+       * retângulo a mais incomodar, o caminho de volta é uma linha (`border-0`)
+       * — e a razão de ele ter existido fica escrita aqui.
        */
       variant: {
         soft: "border",
-        plain: "border-0",
         /**
          * **O brilho de marca**: a caixa neutra em repouso, e o arco-íris
          * acendendo num arco da borda conforme o ponteiro passa pela tela, com
@@ -398,7 +401,7 @@ type AlertBase = React.ComponentProps<"div"> &
  * diz isso em vez de entregar um degrau torto.
  */
 type AlertProps =
-  | (AlertBase & { variant?: "soft" | "plain" })
+  | (AlertBase & { variant?: "soft" })
   | (AlertBase & { variant: "brand"; tone?: never; size?: "md" })
 
 function Alert({ className, size, role, ref, ...props }: AlertProps) {

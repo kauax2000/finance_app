@@ -13641,3 +13641,32 @@ valor inicial.
 antes de o ponteiro ter intenção de chegar nele. Limiar medido disparando
 `pointermove` a distâncias crescentes da aresta: acende a 10 e 20px, apaga a 30
 e 60. A referência usa 64.
+
+### Rodada 125 — o `variant="plain"` do `Alert` sai
+
+Pedido do dono, olhando a demonstração da seção "Forma" no catálogo. O eixo
+`variant` do `Alert` passa de três valores para **dois**: `soft` (o padrão, com
+moldura) e `brand` (a caixa neutra com o brilho de arco-íris na borda).
+
+**O que o `plain` era, e por que ele existia.** O aviso tingido **sem borda**,
+para dentro de formulário ou diálogo — a razão escrita no próprio componente
+era que ali "a moldura já é de outro e mais uma só acrescenta um retângulo".
+Ele tinha **8 chamadas em 4 telas de acesso**: `invites/accept` (3),
+`login-form` (2), `signup-form` (2) e `password-recovery-form` (1).
+
+**O custo, dito e não escondido:** essas oito passaram a desenhar a própria
+borda dentro do formulário, que é exatamente o que o `plain` evitava. Se o
+retângulo a mais incomodar na tela, o caminho de volta é uma linha
+(`border-0`), e a razão de ele ter existido ficou escrita no JSDoc do eixo e
+numa nota do catálogo — não se perdeu com o valor.
+
+Saiu junto a seção "Forma" do catálogo, que existia **só** para contrastar
+`soft` com `plain` (com uma moldura de mentira em volta, para o retângulo a
+mais aparecer como retângulo a mais). Com um valor só do lado da moldura ela
+não contrastava nada.
+
+Nota de mecânica: o `plain` de `Card`, `EmptyState`, `PageHeader`, `TabsList`,
+`Menubar`, `Accordion` e `ResizableHandle` **não se mexeu** — o nome é
+compartilhado, o eixo não. E o tipo é que acusou a página do catálogo ainda
+usando o valor removido: `variant={variant}` num `.map` sobre
+`["soft", "plain"]` derrubou o `tsc` antes de qualquer teste.
