@@ -290,7 +290,7 @@ export default function BrandDoc() {
 
       <DocSection
         title="O véu e o brilho dos avisos"
-        description="Alert e AnnouncementBar são as duas superfícies onde o produto fala sobre si mesmo, e a marca entra nelas de dois jeitos. Na faixa é o véu: o arco-íris translúcido atrás do texto, saindo do topo central e deslizando em 20s, no lugar do fio do sticky. No alerta é o brilho: a caixa fica neutra em repouso e o arco-íris acende num arco da borda conforme o ponteiro passa, com um leve borrão — passe o mouse perto. Contorno não serve em nenhum dos dois: numa faixa full-bleed ele degenera, e em volta de um parágrafo lê como enfeite. Nenhuma das duas aceita tone. Uma por tela."
+        description="Alert e AnnouncementBar são as duas superfícies onde o produto fala sobre si mesmo, e a marca entra nelas de dois jeitos. Na faixa é o véu: o arco-íris translúcido atrás do texto, saindo do topo central e deslizando em 20s, no lugar do fio do sticky. No alerta é o brilho: a caixa fica neutra em repouso e o arco-íris acende num arco da borda conforme o ponteiro passa, com um leve borrão — passe o mouse perto. O mesmo brilho veste o Card brand, com o anel dentro da borda (@utility brand-glow e useBrandGlow). Contorno não serve em nenhum dos dois: numa faixa full-bleed ele degenera, e em volta de um parágrafo lê como enfeite. Nenhuma das duas aceita tone. Uma por tela."
         code={`<Alert variant="brand">…</Alert>
 <AnnouncementBar variant="brand" sticky>…</AnnouncementBar>`}
         previewClassName="flex-col items-stretch gap-4 p-0"

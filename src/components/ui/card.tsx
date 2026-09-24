@@ -1,8 +1,11 @@
+"use client"
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { composeRefs, useBrandGlow } from "@/hooks/use-brand-glow"
 import { Muted } from "@/components/ui/typography"
 
 /**
@@ -80,6 +83,33 @@ const cardVariants = cva(
         muted: "border border-border/60 bg-muted text-foreground",
         /** Sem borda e sem preenchimento: só agrupa, onde a superfície já existe. */
         plain: "border border-transparent bg-transparent text-foreground",
+        /**
+         * **O brilho de marca** — o `outline` com a borda que se ilumina num
+         * arco de arco-íris conforme o ponteiro se aproxima, o mesmo do
+         * `Alert variant="brand"` (`@utility brand-glow` e `useBrandGlow`).
+         *
+         * **O recorte deixa 4px de folga**, e isso foi medido duas vezes. O
+         * casco tem `overflow-hidden` para recortar os cantos dos filhos, e o
+         * anel do `Alert` mora 2px **fora** da caixa: recortado ali, sumia
+         * inteiro. Pôr o anel **dentro** da borda o salvou só pela metade — o
+         * borrão de 2px sangra para fora e era cortado, e o arco quase não se
+         * via. A saída é `overflow: clip` com `overflow-clip-margin`: o
+         * conteúdo continua recortado nos cantos, e sobram 4px para o anel e o
+         * borrão. **A folga é `var(--spacing)` cru**, porque o Chrome rejeita
+         * `calc()` nessa propriedade — medido, `calc(var(--spacing)*2)`
+         * computava `0px`. Sem suporte à propriedade, o recorte fica na
+         * borda e o brilho sai tímido, como na primeira versão.
+         *
+         * `isolate` é obrigatório pela mesma medição do `Alert` — sem ele o
+         * pseudo de `z` negativo cai atrás do fundo de um ancestral.
+         *
+         * Uma por tela, como toda peça de marca. Sem ponteiro fino (telefone)
+         * não há brilho, e ela fica igual ao `outline`.
+         */
+        brand: [
+          "brand-rainbow-image brand-glow isolate overflow-clip [overflow-clip-margin:var(--spacing)]",
+          "border border-border bg-card text-card-foreground",
+        ].join(" "),
       },
       /**
        * Uma medida, dois destinos: `--card-px` é o recuo do **corpo** (cabeçalho,
@@ -129,6 +159,7 @@ function Card({
   padding,
   interactive,
   asChild = false,
+  ref,
   ...props
 }: React.ComponentProps<"div"> &
   VariantProps<typeof cardVariants> & {
@@ -136,9 +167,11 @@ function Card({
     asChild?: boolean
   }) {
   const Comp = asChild ? Slot.Root : "div"
+  const glowRef = useBrandGlow(variant === "brand")
   return (
     <Comp
       data-slot="card"
+      ref={composeRefs(glowRef, ref)}
       data-variant={variant ?? "outline"}
       data-padding={padding ?? "md"}
       data-interactive={interactive ? "" : undefined}

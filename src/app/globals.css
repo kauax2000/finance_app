@@ -2207,7 +2207,7 @@
    Quatro coisas foram medidas antes de escrever, e todas as quatro mudam o
    código:
 
-   1. **`--alert-glow-start` é `inherits: true`, e isso é carga estrutural.**
+   1. **`--brand-glow-start` é `inherits: true`, e isso é carga estrutural.**
       As quatro `@property` que já existem são `inherits: false` porque são
       lidas **no próprio elemento** (o `primary-wash` mora no botão). Esta é
       lida num **pseudo-elemento**, e pseudo não herda propriedade registrada
@@ -2253,23 +2253,27 @@
    da referência. A duração da perseguição é própria (2s), como o
    `--link-sweep` já é: a escala `--duration-*` para em 300ms, e a referência
    pede um rastro longo. */
-@utility alert-glow {
-  --alert-glow-spread: 40;
+/* O brilho de marca serve o `Alert` e o `Card` desde a rodada 133 — nasceu
+   como `alert-glow` e virou primitiva da família de marca quando a segunda
+   peça quis a mesma borda. O ponteiro que o move é `useBrandGlow`, em
+   `hooks/use-brand-glow.ts`. */
+@utility brand-glow {
+  --brand-glow-spread: 40;
   /* **O valor inicial do ângulo, e a falta dele era um bug visível.** A
      referência declara `"--start": "0"` no style inline; aqui havia uma
      `@property` com `initial-value: 0` e, quando ela saiu (o ângulo passou a
      ser animado por JS), nada repôs o valor.
 
-     Sem valor, `calc((var(--alert-glow-start) - …) * 1deg)` é inválido, o
+     Sem valor, `calc((var(--brand-glow-start) - …) * 1deg)` é inválido, o
      `mask-image` cai para `none` — **nenhuma máscara** — e o que se pinta é o
-     anel **inteiro**. Com o `--alert-glow-active` subindo de 0 a 1 em 300ms, o
+     anel **inteiro**. Com o `--brand-glow-active` subindo de 0 a 1 em 300ms, o
      anel completo *aparecia* e só colapsava em arco quando o tween escrevia o
      primeiro número. O dono descreveu exatamente isso: "a linha já aparece
      inteira em vez de crescer".
 
      Com 0 declarado, o arco existe desde o repouso (centrado no topo, como na
      referência) e o que se vê ao aproximar é ele **viajando** até o ponteiro. */
-  --alert-glow-start: 0;
+  --brand-glow-start: 0;
   /* Quantas voltas do arco-íris cabem em 360°, e o que importa é a **largura
      de faixa**, não o número de voltas.
 
@@ -2279,14 +2283,14 @@
      da largura e o dobro da contagem, que sob o borrão de 2px vira lama em vez
      de banda. Com 2,5: 8 × 2,5 = 20 faixas de 18° e 4,4 na janela, a estrutura
      de banda da referência com a paleta daqui. */
-  --alert-glow-repeat: 2.5;
+  --brand-glow-repeat: 2.5;
   /* O teto de intensidade, e o botão de volume da peça. O arco nasceu em
      opacidade cheia e saiu berrante ao lado da referência. Mexer aqui muda a
      força; mexer nas paradas mudaria a **cor**, que é o que ele tem de certo. */
-  --alert-glow-opacity: 0.5;
+  --brand-glow-opacity: 0.5;
 
   /* **O ângulo é animado por JavaScript, e não por transição de CSS.** Aqui
-     havia uma `@property --alert-glow-start` registrada com uma
+     havia uma `@property --brand-glow-start` registrada com uma
      `transition: … 2s var(--ease-out)`, e eu defendi por três rodadas que era
      equivalente ao `animate()` da referência. O dono disse três vezes que a
      animação não era a dela, e a equivalência era minha dedução, não medição:
@@ -2334,19 +2338,19 @@
          é desenho nosso. */
       repeating-conic-gradient(
           from 236.84deg at 50% 50%,
-          var(--brand-teal) calc(0.0% / var(--alert-glow-repeat)),
-          var(--brand-blue) calc(12.5% / var(--alert-glow-repeat)),
-          var(--brand-indigo) calc(25.0% / var(--alert-glow-repeat)),
-          var(--brand-violet) calc(37.5% / var(--alert-glow-repeat)),
-          var(--brand-magenta) calc(50.0% / var(--alert-glow-repeat)),
-          var(--brand-coral) calc(62.5% / var(--alert-glow-repeat)),
-          var(--brand-amber) calc(75.0% / var(--alert-glow-repeat)),
-          var(--brand-green) calc(87.5% / var(--alert-glow-repeat)),
-          var(--brand-teal) calc(100% / var(--alert-glow-repeat))
+          var(--brand-teal) calc(0.0% / var(--brand-glow-repeat)),
+          var(--brand-blue) calc(12.5% / var(--brand-glow-repeat)),
+          var(--brand-indigo) calc(25.0% / var(--brand-glow-repeat)),
+          var(--brand-violet) calc(37.5% / var(--brand-glow-repeat)),
+          var(--brand-magenta) calc(50.0% / var(--brand-glow-repeat)),
+          var(--brand-coral) calc(62.5% / var(--brand-glow-repeat)),
+          var(--brand-amber) calc(75.0% / var(--brand-glow-repeat)),
+          var(--brand-green) calc(87.5% / var(--brand-glow-repeat)),
+          var(--brand-teal) calc(100% / var(--brand-glow-repeat))
         )
         border-box;
     filter: blur(2px);
-    opacity: calc(var(--alert-glow-active, 0) * var(--alert-glow-opacity));
+    opacity: calc(var(--brand-glow-active, 0) * var(--brand-glow-opacity));
     transition: opacity var(--duration-slow) var(--ease-out);
     pointer-events: none;
     /* **Uma camada de máscara, e um triângulo puro** — três paradas, com o
@@ -2359,16 +2363,16 @@
        Aqui uma variável indefinida derruba a máscara para `none` e o anel
        aparece inteiro: falha alto, não calada. */
     -webkit-mask-image: conic-gradient(
-      from calc((var(--alert-glow-start) - var(--alert-glow-spread)) * 1deg),
+      from calc((var(--brand-glow-start) - var(--brand-glow-spread)) * 1deg),
       transparent,
       #000,
-      transparent calc(var(--alert-glow-spread) * 2deg)
+      transparent calc(var(--brand-glow-spread) * 2deg)
     );
     mask-image: conic-gradient(
-      from calc((var(--alert-glow-start) - var(--alert-glow-spread)) * 1deg),
+      from calc((var(--brand-glow-start) - var(--brand-glow-spread)) * 1deg),
       transparent,
       #000,
-      transparent calc(var(--alert-glow-spread) * 2deg)
+      transparent calc(var(--brand-glow-spread) * 2deg)
     );
   }
 }

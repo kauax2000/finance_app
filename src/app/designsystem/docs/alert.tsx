@@ -266,11 +266,11 @@ export default function AlertDoc() {
       </DocNote>
 
       <DocNote title="A cor fica parada; quem anda é a janela">
-          É o que faz o arco <strong>trocar de cor</strong> conforme viaja pela borda — na aresta direita ele sai oliva e âmbar, na esquerda magenta. O <code>background</code> é um <code>repeating-conic-gradient</code> de ângulo <em>fixo</em>, e quem carrega o <code>--alert-glow-start</code> é a máscara. Medido no bundle ao vivo da referência, que faz exatamente isso. A máscara é <strong>uma camada só</strong>: a referência compõe duas com <code>mask-composite: intersect</code> para recortar o anel, e aqui esse trabalho é do par <code>padding-box</code>/<code>border-box</code> — onde a máscara apaga aparece o <code>bg-card</code> do próprio alerta, idêntico ao núcleo. Compor duas continua banido: uma camada <code>none</code> num <code>intersect</code> apaga a peça.
+          É o que faz o arco <strong>trocar de cor</strong> conforme viaja pela borda — na aresta direita ele sai oliva e âmbar, na esquerda magenta. O <code>background</code> é um <code>repeating-conic-gradient</code> de ângulo <em>fixo</em>, e quem carrega o <code>--brand-glow-start</code> é a máscara. Medido no bundle ao vivo da referência, que faz exatamente isso. A máscara é <strong>uma camada só</strong>: a referência compõe duas com <code>mask-composite: intersect</code> para recortar o anel, e aqui esse trabalho é do par <code>padding-box</code>/<code>border-box</code> — onde a máscara apaga aparece o <code>bg-card</code> do próprio alerta, idêntico ao núcleo. Compor duas continua banido: uma camada <code>none</code> num <code>intersect</code> apaga a peça.
       </DocNote>
 
       <DocNote title="O volume mora num token, e não nas paradas">
-          O brilho é multiplicado por <code>--alert-glow-opacity</code> (0,5), e o arco tem envelope de alfa: as duas extremidades entram em 20% e 60% antes do miolo opaco, então ele nasce e morre em vez de cortar seco. Em opacidade cheia ele saía berrante ao lado da referência, onde o fio é fraco e fino. <strong>Quem for mexer no volume mexe no multiplicador</strong> — baixar as paradas do meio tiraria a cor junto com a força.
+          O brilho é multiplicado por <code>--brand-glow-opacity</code> (0,5), e o arco tem envelope de alfa: as duas extremidades entram em 20% e 60% antes do miolo opaco, então ele nasce e morre em vez de cortar seco. Em opacidade cheia ele saía berrante ao lado da referência, onde o fio é fraco e fino. <strong>Quem for mexer no volume mexe no multiplicador</strong> — baixar as paradas do meio tiraria a cor junto com a força.
       </DocNote>
 
       <DocNote title="Duas tentativas erradas antes desta, e elas se opõem">

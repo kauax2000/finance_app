@@ -315,9 +315,17 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   rainbow do Fumadocs: o arco-íris translúcido **atrás** do texto, mascarado a
   partir do topo central e deslizando num laço de 20s (`@utility brand-flow`),
   **substituindo** o fio do `sticky`; e a do
-  **brilho**, no `Alert variant="brand"`, em que a caixa fica neutra em repouso
-  e o arco-íris acende num **arco da borda** conforme o ponteiro passa pela
-  tela, com um borrão de 2px. `brand-contour.test.ts` tranca as quatro.
+  **brilho**, no `Alert variant="brand"` e no `Card variant="brand"`, em que a
+  caixa fica neutra em repouso e o arco-íris acende num **arco da borda**
+  conforme o ponteiro passa pela tela, com um borrão de 2px. Desde a rodada
+  133 ele é primitiva de marca: a pintura é a `@utility brand-glow` e o
+  ponteiro é `useBrandGlow` (`hooks/use-brand-glow.ts`). **No `Card` o
+  recorte vira `overflow: clip` com `overflow-clip-margin: var(--spacing)`**
+  (4px de folga para o anel, que fica 2px por fora, e o borrão): com o
+  `overflow-hidden` do casco o anel sumia, e com o anel dentro da borda o
+  borrão era cortado pela metade. `var(--spacing)` cru porque o Chrome rejeita
+  `calc()` nessa propriedade — medido, computava `0px`.
+  `brand-contour.test.ts` tranca as quatro.
   **O brilho não é o giro da rodada 100**, e a diferença é a que a casa já
   usa: lá o degradê rodava sozinho num laço de 12s/6s e o dono o recusou
   inteiro; aqui nada se move sem o ponteiro se mover — a forma que a rodada 98
@@ -326,7 +334,7 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   `GlowingEffect` da Aceternity, com os números do dono: blur 2, spread 40,
   proximity 24, borda 2, zona morta 0,01.
   **Quatro medições desenham o brilho, e cada uma muda o código.**
-  (1) A `@property --alert-glow-start` é **`inherits: true`**, ao contrário das
+  (1) A `@property --brand-glow-start` é **`inherits: true`**, ao contrário das
   outras quatro da casa: ela é lida num **pseudo-elemento**, e pseudo não herda
   propriedade registrada como `false` — medido, a `opacity` ficava em 0 com a
   variável valendo 1. É por isso que o `Button` pode ser `false`: o
@@ -356,9 +364,9 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   aqui esse trabalho é do par `padding-box`/`border-box` — onde a máscara apaga
   aparece o `bg-card`, idêntico ao núcleo. A lista de paradas se repete na
   utility de propósito (o token é linear, e aqui ela é cônica e repetida
-  `--alert-glow-repeat` vezes), em sRGB, porque num fio de 2px já borrado o
+  `--brand-glow-repeat` vezes), em sRGB, porque num fio de 2px já borrado o
   oklch não se vê e o par `@supports` custaria duas listas.
-  (6) **A intensidade é um token, `--alert-glow-opacity` (0,5), e o arco tem
+  (6) **A intensidade é um token, `--brand-glow-opacity` (0,5), e o arco tem
   envelope de alfa.** Em opacidade cheia e com as oito paradas chapadas, o
   brilho saía berrante ao lado da referência e as pontas cortavam seco — a
   travessia de `transparent` para o teal acontecia em 12° e lia como aresta,
@@ -378,18 +386,18 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   última posição guardada), com **`capture: true`** a mais — `scroll` não
   borbulha mas captura, e sem isso a rolagem **dentro de um container** passa
   despercebida, que é um caso que a própria referência erra.
-  **O ângulo tem valor inicial (`--alert-glow-start: 0`) na utility, e a falta
+  **O ângulo tem valor inicial (`--brand-glow-start: 0`) na utility, e a falta
   dele era um bug visível.** A referência declara `"--start": "0"` no style
   inline; aqui a `@property` dava o `initial-value` e, quando ela saiu, nada
   repôs. Sem valor o `calc()` é inválido, **`mask-image` cai para `none`** — ou
   seja, nenhuma máscara — e o que se pinta é o anel **inteiro**: com o
-  `--alert-glow-active` subindo de 0 a 1 em 300ms, o anel completo aparecia e
+  `--brand-glow-active` subindo de 0 a 1 em 300ms, o anel completo aparecia e
   só colapsava em arco quando o tween escrevia o primeiro número. Com 0
   declarado o arco existe desde o repouso, centrado no topo como na referência,
   e ao aproximar ele **viaja** até o ponteiro. **A falha não derruba nada** — o
   CSS é válido, só o efeito fica errado —, e `brand-contour.test.ts` a tranca.
   **A animação do ângulo é o `animate` do `motion`, portado da referência** —
-  não uma transição de CSS. Havia aqui uma `@property --alert-glow-start`
+  não uma transição de CSS. Havia aqui uma `@property --brand-glow-start`
   registrada com `transition: … 2s var(--ease-out)`, defendida por três rodadas
   como equivalente ao tween dela; era **dedução, não medição**, e o dono disse
   três vezes que a animação não era a da referência. Hoje ela é, por
@@ -423,7 +431,7 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   tem 4 cores × 5 voltas = 20 faixas de 18°, e a janela de 80° mostra 4,4
   delas. Copiar o 5 com as **oito** paradas da marca dava 40 faixas de 9° e 8,9
   na janela — metade da largura e o dobro da contagem, que sob o borrão de 2px
-  vira lama em vez de banda. `--alert-glow-repeat` é **2,5**: 8 × 2,5 = 20
+  vira lama em vez de banda. `--brand-glow-repeat` é **2,5**: 8 × 2,5 = 20
   faixas de 18°, a estrutura de banda da referência com a paleta daqui. **No
   telefone não há brilho** — e como ele substituiu a régua do alerta, ali o
   `brand` fica visualmente igual ao `soft` de `tone="default"`. É o custo da
@@ -938,7 +946,8 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   mexeram.
 - **`Card` tem dois eixos, e eles são independentes**: `variant` decide a
   **superfície** (`outline` chapado — o padrão —, `elevated` levantado, `muted`
-  material de segunda ordem, `plain` sem borda nem preenchimento); `padding`
+  material de segunda ordem, `plain` sem borda nem preenchimento, `brand` o
+  `outline` com o brilho de marca na borda — uma por tela); `padding`
   decide o **ritmo interno** (`none` | `sm` | **`md`, o padrão** | `lg`), numa
   medida só que o casco usa para separar os blocos e os slots para recuar.
   **`padding="none"` é o painel** — o corpo sangra até a borda e as tiras

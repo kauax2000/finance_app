@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { alertVariants } from "./alert"
 import { announcementBarVariants } from "./announcement-bar"
 import { badgeVariants } from "./badge"
+import { cardVariants } from "./card"
 import { buttonVariants } from "./button"
 import { checkboxVariants } from "./checkbox"
 import { radioVariants } from "./radio"
@@ -345,7 +346,7 @@ describe("contorno de marca", () => {
     // quem o declara no elemento — sem ela o `background` cai para `none` e o
     // brilho some sem erro nenhum.
     expect(classes).toContain("brand-rainbow-image")
-    expect(classes).toContain("alert-glow")
+    expect(classes).toContain("brand-glow")
 
     // **`isolate` é obrigatório, e foi medido.** Sem ele o pseudo de `z`
     // negativo cai atrás do fundo de um ancestral e não aparece.
@@ -359,10 +360,10 @@ describe("contorno de marca", () => {
 
     // A utility existe, e as quatro decisões medidas estão nela.
     // A fatia termina na `@utility` seguinte. Ela já terminou no
-    // `@property --alert-glow-start`, e quando esse bloco saiu (o ângulo
+    // `@property --brand-glow-start`, e quando esse bloco saiu (o ângulo
     // passou a ser animado por JS) o `indexOf` devolveu −1, a fatia engoliu o
     // resto do arquivo e a asserção de ausência casou com outro componente.
-    const iniUtil = CSS.indexOf("@utility alert-glow")
+    const iniUtil = CSS.indexOf("@utility brand-glow")
     const util = CSS.slice(
       iniUtil,
       CSS.indexOf("@utility ", iniUtil + 20)
@@ -387,8 +388,8 @@ describe("contorno de marca", () => {
     )
     const corpoMask = util.slice(util.indexOf("-webkit-mask-image:"))
     expect(corpoBg).toContain("repeating-conic-gradient")
-    expect(corpoBg).not.toMatch(/--alert-glow-start/) // a cor NÃO gira
-    expect(corpoMask).toMatch(/--alert-glow-start/) // a janela gira
+    expect(corpoBg).not.toMatch(/--brand-glow-start/) // a cor NÃO gira
+    expect(corpoMask).toMatch(/--brand-glow-start/) // a janela gira
 
     // **Uma camada de máscara, e `mask-composite` continua proibido.** A
     // referência compõe duas (`intersect, intersect`) só para recortar o anel;
@@ -402,7 +403,7 @@ describe("contorno de marca", () => {
     // em `spread * 2` — o `transparent, #fff, transparent 80deg` da
     // referência. Com platô no miolo ela lê como bloco aceso, não como brilho.
     expect(corpoMask).toMatch(/transparent,\s*#000,\s*transparent/)
-    expect(corpoMask).toMatch(/var\(--alert-glow-spread\) \* 2deg/)
+    expect(corpoMask).toMatch(/var\(--brand-glow-spread\) \* 2deg/)
 
     // **Nenhum `radial-gradient`, e isso é medição e não esquecimento.** A
     // referência tem quatro aqui; eles foram portados e saíram porque **não
@@ -417,7 +418,7 @@ describe("contorno de marca", () => {
     // referência: 4 cores × 5 = 20 faixas de 18°. Com as 8 paradas da marca, 5
     // voltas dariam 40 faixas de 9° — metade da largura, que sob o borrão vira
     // lama. 2,5 devolve os 18°.
-    expect(util).toMatch(/--alert-glow-repeat:\s*2\.5/)
+    expect(util).toMatch(/--brand-glow-repeat:\s*2\.5/)
 
     // A rampa linear do token não serve aqui: ela não é cônica. As oito
     // paradas da marca continuam sendo a fonte de cor.
@@ -436,7 +437,7 @@ describe("contorno de marca", () => {
     }
 
     // A abertura sai do `spread`, e não de medidas soltas.
-    expect(util).toMatch(/--alert-glow-spread/)
+    expect(util).toMatch(/--brand-glow-spread/)
 
     // O núcleo é o **mesmo token** da superfície da variante, e é essa
     // igualdade que faz a região apagada pela máscara ficar invisível.
@@ -460,8 +461,8 @@ describe("contorno de marca", () => {
     // `transition: … 2s`, defendida por três rodadas como equivalente; era
     // dedução, não medição, e o dono disse três vezes que não era a animação
     // dela. Registrar de novo não quebra, mas ressuscita a dúvida.
-    expect(CSS).not.toMatch(/@property --alert-glow-start/)
-    expect(util).not.toMatch(/transition:\s*--alert-glow-start/)
+    expect(CSS).not.toMatch(/@property --brand-glow-start/)
+    expect(util).not.toMatch(/transition:\s*--brand-glow-start/)
 
     // **E o ângulo tem valor inicial na utility**, porque a `@property` que o
     // dava saiu com o registro. Sem ele o `calc()` é inválido, `mask-image`
@@ -469,15 +470,21 @@ describe("contorno de marca", () => {
     // tween escrever o primeiro número. Era o "a linha já aparece inteira em
     // vez de crescer" do dono, e é uma falha que não derruba nada: o CSS é
     // válido, o efeito só fica errado.
-    expect(util).toMatch(/--alert-glow-start:\s*0;/)
+    expect(util).toMatch(/--brand-glow-start:\s*0;/)
 
     // O lado React: sem ponteiro fino não monta nada, e o listener sai no
     // unmount.
-    const src = fonte("alert")
+    // O hook saiu do `alert.tsx` na rodada 133 (`useBrandGlow`), quando o
+    // `Card` quis a mesma borda. As asserções leem o arquivo dele.
+    const src = readFileSync(join(process.cwd(), "src/hooks/use-brand-glow.ts"), "utf8").replace(
+      /\/\*[\s\S]*?\*\/|\/\/.*$/gm,
+      " "
+    )
+    expect(fonte("alert")).toMatch(/useBrandGlow\(variant === "brand"\)/)
     expect(src).toMatch(/\(hover: hover\)/)
     expect(src).toMatch(/removeEventListener\("pointermove"/)
     // E nada de estado React para a posição: é `setProperty`, como no `Button`.
-    expect(src).toMatch(/setProperty\("--alert-glow-start"/)
+    expect(src).toMatch(/setProperty\("--brand-glow-start"/)
 
     // **A animação é a da referência, literalmente**: o `animate` do `motion`,
     // com a duração e a ease dela, escrevendo a variável no `onUpdate`.
@@ -488,7 +495,7 @@ describe("contorno de marca", () => {
     expect(src).toMatch(/GLOW_EASE = \[0\.16, 1, 0\.3, 1\]/)
     // E o ângulo atual sai do DOM, não de um acumulador — um acumulador guarda
     // o *alvo*, não onde a animação está.
-    expect(src).toMatch(/getPropertyValue\("--alert-glow-start"\)/)
+    expect(src).toMatch(/getPropertyValue\("--brand-glow-start"\)/)
     // **Movimento reduzido é perguntado à mão**, porque o bloco global da casa
     // encurta transição de CSS e um tween de JS escapa dele — o precedente do
     // `ThemeToggle` ao trocar transição por WAAPI.
@@ -501,7 +508,7 @@ describe("contorno de marca", () => {
 
     // **A rolagem recalcula o estado, e não só a geometria.** Medido antes do
     // conserto: rolando 260px com o ponteiro parado, a caixa ia de `top 255`
-    // para `-5` e `--alert-glow-active` continuava em `1` — o aviso ficava
+    // para `-5` e `--brand-glow-active` continuava em `1` — o aviso ficava
     // aceso apontando para onde o mouse não estava mais. O conserto é o da
     // referência: guardar a última posição do ponteiro e refazer a conta.
     expect(src).toMatch(/ultimaX/)
@@ -525,7 +532,22 @@ describe("contorno de marca", () => {
 
     // A barra **não** ganhou nada disso.
     const barra = announcementBarVariants({ variant: "brand" })
-    expect(barra).not.toContain("alert-glow")
+    expect(barra).not.toContain("brand-glow")
     expect(barra).not.toMatch(/blur/)
+  })
+
+  it("11. o Card veste o mesmo brilho, e o recorte deixa folga para o anel", () => {
+    // A segunda peça da família do brilho (rodada 133). O casco tem
+    // `overflow-hidden` para recortar os cantos dos filhos, e o anel mora 2px
+    // **fora** da caixa: recortado ali, sumia. O cartão de marca troca por
+    // `overflow: clip` com 4px de margem — `var(--spacing)` cru, porque o
+    // Chrome rejeita `calc()` nessa propriedade (medido: computava `0px`).
+    const cartao = cn(cardVariants({ variant: "brand" })).split(/\s+/)
+    for (const c of ["brand-rainbow-image", "brand-glow", "isolate", "overflow-clip", "[overflow-clip-margin:var(--spacing)]"]) {
+      expect(cartao, c).toContain(c)
+    }
+    // O `overflow-hidden` da base tem de ter perdido a disputa, não coexistido.
+    expect(cartao).not.toContain("overflow-hidden")
+    expect(fonte("card")).toMatch(/useBrandGlow\(variant === "brand"\)/)
   })
 })

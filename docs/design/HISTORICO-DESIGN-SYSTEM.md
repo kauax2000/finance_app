@@ -13948,3 +13948,30 @@ com ele (delta 0), e quem a separa é o anel e a sombra.
 flutuante para o `command.tsx`. A asserção 23 do `glass.test.ts` inverteu:
 agora ela proíbe a flutuante de voltar a ser alias da barra e proíbe os dois
 arquivos de voltarem.
+
+### Rodada 133 — o Card ganha o brilho de marca, e o brilho vira primitiva
+
+O dono pediu uma versão do `Card` com a borda que se ilumina, igual ao
+`Alert variant="brand"`. O efeito estava preso ao alerta nas duas metades: a
+`@utility alert-glow` e o `useAlertGlow` dentro do `alert.tsx`. As duas
+viraram primitivas da família de marca, **sem mudança de comportamento**: a
+`@utility brand-glow` (variáveis `--brand-glow-*`) e o `useBrandGlow`, em
+`src/hooks/use-brand-glow.ts`, que leva junto o `composeRefs`.
+
+Dois obstáculos medidos antes de escrever:
+- **O `Card` tem `overflow-hidden`**, e o anel do alerta mora 2px **fora** da
+  caixa (`inset: -2px`): ele seria recortado inteiro. A primeira saída pôs o
+  anel **dentro** da borda. Na tela o brilho acendia (`--brand-glow-active`
+  1, opacidade 0,5), mas quase não se via, porque o borrão de 2px sangra para
+  fora e era cortado pela metade. A saída que ficou é trocar o recorte do
+  cartão de marca por `overflow: clip` com `overflow-clip-margin`: o
+  conteúdo continua recortado nos cantos e sobram 4px para o anel. Um
+  detalhe medido: o Chrome rejeita `calc()` nessa propriedade.
+  `calc(var(--spacing)*2)` computava `0px`, e `var(--spacing)` cru computa
+  `4px`.
+- **O hook exige cliente**, e o `card.tsx` não era `"use client"`. Nenhum
+  server component usa `Card asChild`, então virar cliente não reabre o
+  defeito do `Slot` com referência preguiçosa (o do 404 da rodada 131).
+
+O `brand-contour.test.ts` ganhou o teste 11 (o `Card` veste o brilho com o
+anel dentro), e o teste 10 passou a ler o hook no arquivo novo.

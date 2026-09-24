@@ -62,6 +62,29 @@ export default function CardDoc() {
         ))}
       </DocSection>
 
+      <DocSection
+        title="Marca"
+        description="A borda que se ilumina: o arco-íris acende num arco da borda conforme o ponteiro se aproxima, e viaja até ele — o mesmo brilho do Alert brand. Passe o mouse perto do cartão. Uma por tela; no telefone ele fica igual ao outline."
+        code={`<Card variant="brand">
+  <CardHeader>
+    <CardTitle>Saldo do mês</CardTitle>
+    <CardDescription>Entradas menos saídas, até hoje.</CardDescription>
+  </CardHeader>
+  …
+</Card>`}
+        previewClassName="justify-center py-10"
+      >
+        <Card variant="brand" className="w-full max-w-sm">
+          <CardHeader>
+            <CardTitle>Saldo do mês</CardTitle>
+            <CardDescription>Entradas menos saídas, até hoje.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <MoneyDisplay value={8432.15} size="2xl" />
+          </CardContent>
+        </Card>
+      </DocSection>
+
       {/* `items-start`, e não `items-stretch`: com os cartões na altura natural,
           a diferença entre os quatro degraus é a altura — que é o que a seção
           veio mostrar. Esticados, todos terminam na mesma linha e o respiro
@@ -294,10 +317,10 @@ export default function CardDoc() {
         rows={[
           {
             prop: "variant",
-            type: '"outline" | "elevated" | "muted" | "plain"',
+            type: '"outline" | "elevated" | "muted" | "plain" | "brand"',
             default: '"outline"',
             description:
-              "Borda e superfície; nunca o respiro.",
+              "Borda e superfície; nunca o respiro. brand é o outline com a borda que se ilumina perto do ponteiro — uma por tela.",
           },
           {
             prop: "padding",
