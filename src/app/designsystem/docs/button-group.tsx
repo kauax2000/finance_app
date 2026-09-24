@@ -46,7 +46,7 @@ export default function ButtonGroupDoc() {
       </DocSection>
 
       <DocNote title="O grupo manda no raio e na emenda">
-        Os cantos internos são achatados e as bordas vizinhas se sobrepõem em 1px, para a emenda ser um fio só. Em botão cheio, um divisor de <code>currentColor</code> a 20% marca a emenda; em <code>outline</code> e no primário a borda já desenha, e em <code>secondary</code> o vão transparente basta. Não arredonde os filhos por fora. Quem recebe hover ou foco sobe de camada, senão o vizinho recorta o anel.
+        Os cantos internos são achatados e as bordas vizinhas se sobrepõem em 1px, para a emenda ser um fio só. Em botão cheio, um divisor de <code>currentColor</code> a 20% marca a emenda; em <code>outline</code> a borda já desenha, e no primário e no <code>secondary</code> a emenda é um vão transparente de 1px. Não arredonde os filhos por fora. Quem recebe hover ou foco sobe de camada, senão o vizinho recorta o anel.
       </DocNote>
 
       <DocNote title="Não é um seletor">

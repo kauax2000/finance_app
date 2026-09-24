@@ -194,9 +194,10 @@ describe("o primário é chapado, e acende em lava", () => {
     expect(LAVA).not.toMatch(/::(before|after)/)
     const grupo = readFileSync(join(RAIZ, "components/ui/button-group.tsx"), "utf8")
     expect(grupo).toContain("[&>[data-variant=primary]]:before:hidden")
-    // Chapado e sem borda, o primário cai na emenda do `secondary`: o vão
-    // transparente de 1px, e não a sobreposição.
-    expect(grupo).toContain("[&>[data-variant=primary]:not(:first-child)]:ml-px")
+    // O vão de 1px do primário é a **sobreposição**, e não o `ml-px` do
+    // `secondary`: o fundo dele é recortado no `padding-box`, então a borda
+    // transparente de cada lado já é vão, e somada à margem a emenda media 3px.
+    expect(grupo).not.toContain("[&>[data-variant=primary]:not(:first-child)]:ml-px")
   })
 
   it("11. a lava é um vidro sobre as oito paradas da marca, e o vidro é da cor do botão", () => {
