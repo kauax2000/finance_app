@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
 import { useViewportWindow } from "@/hooks/use-mobile"
-import { barSurfaceClassName } from "@/lib/bar-classes"
+import { barSurfaceClassName } from "@/lib/glass-classes"
 import { cn } from "@/lib/utils"
 
 /**

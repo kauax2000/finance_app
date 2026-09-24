@@ -6,7 +6,7 @@ import { Dialog as SheetPrimitive } from "radix-ui"
 import { Drawer as DrawerPrimitive } from "vaul"
 
 import { cn } from "@/lib/utils"
-import { modalSurfaceClassName } from "@/lib/modal-classes"
+import { modalSurfaceClassName } from "@/lib/glass-classes"
 import {
   useIsMobile,
   useViewportModal,

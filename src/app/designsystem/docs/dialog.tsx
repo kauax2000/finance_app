@@ -270,7 +270,7 @@ export default function DialogDoc() {
       />
 
       <DocNote title="A placa é --background de vidro">
-          Ela veste <code>modalSurfaceClassName</code>: <code>--background</code> a 85%, e 40% no escuro onde há borrão — mais aberta que a flutuante (95/60) justamente porque pousa sobre um véu. <code>--popover</code> leria como opaco sobre a página velada, que é a mesma medição que depois tirou <code>--popover</code> da placa flutuante. O borrão vê o véu mais a página, então para um efeito mais visível mexa no véu, não na placa.
+          Ela veste <code>modalSurfaceClassName</code>: <code>--background</code> a 85%, e 40% no escuro onde há borrão — mais aberta que a flutuante (<code>--popover</code> 85/60) justamente porque pousa sobre um véu. <code>--popover</code> leria como opaco sobre a página velada. O borrão vê o véu mais a página, então para um efeito mais visível mexa no véu, não na placa.
       </DocNote>
 
       <DocNote title="O cabeçalho reserva o lugar do ×">

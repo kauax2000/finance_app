@@ -116,7 +116,7 @@ export default function TooltipDoc() {
       </DocNote>
 
       <DocNote title="Veste a superfície de menu, nunca tokens de região">
-        <code>menuPanelSurfaceClassName</code> dá a tinta da barra (<code>--background</code> a 95%, abrindo a 60% onde há borrão), o canto de 10px, o <code>ring-1</code> e o material com guarda de <code>prefers-reduced-transparency</code> — a mesma casca de <code>Popover</code>, <code>Select</code> e menus. Tokens de <code>sidebar</code> num elemento que flutua mudam de cor quando a lateral muda.
+        <code>menuPanelSurfaceClassName</code> dá o <code>--popover</code> (a 85%, abrindo a 60% no escuro onde há borrão), o canto de 10px, o <code>ring-1</code> e o material com guarda de <code>prefers-reduced-transparency</code> — a mesma casca de <code>Popover</code>, <code>Select</code> e menus. Tokens de <code>sidebar</code> num elemento que flutua mudam de cor quando a lateral muda.
       </DocNote>
 
       <DocNote title="O alfa da superfície serve sem ajuste">

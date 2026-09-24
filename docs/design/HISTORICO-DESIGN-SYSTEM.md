@@ -13923,3 +13923,28 @@ com exclamação, também a pedido dele. O ícone vermelho saiu, porque dois
 elementos acima do título competiam. A variante `watermark` ficou sem
 consumidor e saiu: o `EmptyStateCode` voltou a ter uma forma só, e o degrau
 `page` deixou de precisar de `relative isolate`.
+
+### Rodada 132 — a placa flutuante volta ao `--popover`, e as tintas moram juntas
+
+O dono viu o calendário do `DatePicker` (em `/designsystem/field`) e
+perguntou por que as superfícies de sobreposição não estavam mais
+transparentes e com vidro. Medido ao vivo, o vidro estava ligado: o
+`popover-content` computava `blur(24px) saturate(1.5)` e o calendário dentro
+era transparente. O que tinha mudado era a **tinta**. A rodada 9f0ba8a trocou
+a flutuante pela tinta da barra (`--background` 95/60) para a placa se
+separar do cartão, e `--background` é mais escuro que o cartão: na tela a
+placa virou uma chapa escura, sem vidro aparente.
+
+Em AskUserQuestion, o dono escolheu **voltar ao de antes**: `bg-popover/85`,
+com `supports-backdrop-filter:dark:bg-popover/60` e
+`reduced-transparency:bg-popover`. A seta do `HoverCard` voltou aos mesmos
+valores em `fill-*`. O custo foi aceito: sobre um cartão a placa se confunde
+com ele (delta 0), e quem a separa é o anel e a sombra.
+
+**E as tintas passaram a morar juntas.** `bar-classes.ts` e
+`modal-classes.ts` foram apagados, e as três constantes (`barSurfaceClassName`,
+`menuPanelTintClassName` e `modalSurfaceClassName`) ficam lado a lado em
+`glass-classes.ts`, com os mesmos nomes. `menu-classes` reexporta a
+flutuante para o `command.tsx`. A asserção 23 do `glass.test.ts` inverteu:
+agora ela proíbe a flutuante de voltar a ser alias da barra e proíbe os dois
+arquivos de voltarem.

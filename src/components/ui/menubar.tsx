@@ -6,7 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Menubar as MenubarPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
-import { barSurfaceClassName } from "@/lib/bar-classes"
+import { barSurfaceClassName } from "@/lib/glass-classes"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
@@ -94,7 +94,7 @@ const menubarVariants = cva("flex w-fit items-center gap-0.5 rounded-lg p-0.5", 
        * A barra que se sustenta sozinha, sobre a página — e a única com o
        * material do iOS.
        *
-       * Ela veste a régua de barra (`lib/bar-classes`), a mesma do cabeçalho
+       * Ela veste a régua de barra (`lib/glass-classes`), a mesma do cabeçalho
        * fixo: `--background` opaco de base, abrindo a 60% só onde o borrão
        * existe. O painel que ela abre já era vidro; a fileira era tinta
        * chapada, e era essa diferença que se via.

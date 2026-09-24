@@ -1,9 +1,8 @@
-import { readdirSync, readFileSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 
-import { barSurfaceClassName } from "@/lib/bar-classes"
-import { menuPanelTintClassName } from "@/lib/menu-classes"
+import { barSurfaceClassName, menuPanelTintClassName } from "@/lib/glass-classes"
 
 /**
  * As invariantes do vidro.
@@ -281,50 +280,47 @@ describe("a superfície de vidro", () => {
         // o cônico por forma é o marcador da `Timeline`.
     })
 
-    it("23. três superfícies, duas tintas — e a flutuante é a da barra", () => {
+    it("23. três superfícies, três tintas — lado a lado em glass-classes", () => {
         // Uma superfície elevada tem conteúdo passando por baixo — é o lado do
         // `backdrop-filter` da régua dos vidros, e o material é o do cabeçalho.
         //
-        // **A flutuante deixou de ter tinta própria.** Ela era `--popover` a
-        // 85/60 e o material não se via: `--popover` e `--card` são a mesma cor
-        // nos dois temas, então a placa sobre um cartão dava delta **0** em RGB
-        // — medido no app, com um `Select` aberto sobre o cartão de preview.
-        // Vestindo a tinta da barra (`--background`) o delta vai a 24 no escuro
-        // e 9 no claro, e o `--muted-foreground` **sobe** de 6,94 para 7,42.
-        // O argumento é o que `bar-classes` já escrevia da barra: quem define
-        // uma placa é o contraste contra a superfície em que ela pousa.
-        expect(menuPanelTintClassName, "a flutuante não é a barra").toBe(
-            barSurfaceClassName
-        )
-        // Alias e não cópia: duas constantes com os mesmos quatro valores
-        // divergem caladas no primeiro ajuste, e este repositório já pagou a
-        // quarta cópia da mesma forma.
-        expect(SUPERFICIE_FLUTUANTE).toMatch(
+        // **As três tintas moram juntas** (rodada 132): moravam em três
+        // arquivos, uma delas como alias de outra, e foi assim que a flutuante
+        // virou a barra sem ninguém ver as duas lado a lado.
+        expect(existsSync(join(process.cwd(), "src/lib/bar-classes.ts")), "bar-classes voltou").toBe(false)
+        expect(existsSync(join(process.cwd(), "src/lib/modal-classes.ts")), "modal-classes voltou").toBe(false)
+
+        // **A flutuante tem receita própria de novo, e não é a barra.** A
+        // rodada 9f0ba8a a trocou pela tinta da barra (`--background` 95/60)
+        // para ela se separar do cartão; na tela ela virou uma chapa escura sem
+        // vidro, e o dono pediu a de antes de volta: `--popover` a 85, abrindo
+        // a 60 só no escuro.
+        expect(menuPanelTintClassName, "a flutuante voltou a ser a barra").not.toBe(barSurfaceClassName)
+        expect(SUPERFICIE_FLUTUANTE, "a flutuante voltou a ser alias").not.toMatch(
             /menuPanelTintClassName\s*=\s*barSurfaceClassName/
         )
-        expect(SUPERFICIE_FLUTUANTE, "flutuante: token velho").not.toMatch(/bg-popover/)
 
         // A modal continua distinta, e a tela decidiu: ela chegou a ser
         // `--popover` para igualar o DatePicker, e a 60% sobre a página velada
         // compôs acima de tudo atrás e leu como opaca. `--background` afunda no
-        // véu, e é o borrão que a distingue. Ela abre **mais** que a barra
-        // (40 contra 60) porque pousa sobre esse véu.
-        for (const [nome, regua, ancora, aberto] of [
-            ["barra", semComentariosDe("src/lib/bar-classes.ts"), "barSurfaceClassName", /supports-backdrop-filter:bg-background\/(\d+)/],
-            ["modal", semComentariosDe("src/lib/modal-classes.ts"), "modalSurfaceClassName", /supports-backdrop-filter:dark:bg-background\/(\d+)/],
+        // véu, e é o borrão que a distingue.
+        const reguas = semComentariosDe("src/lib/glass-classes.ts")
+        for (const [nome, ancora, token, aberto] of [
+            ["barra", "barSurfaceClassName", "background", /supports-backdrop-filter:bg-background\/(\d+)/],
+            ["flutuante", "menuPanelTintClassName", "popover", /supports-backdrop-filter:dark:bg-popover\/(\d+)/],
+            ["modal", "modalSurfaceClassName", "background", /supports-backdrop-filter:dark:bg-background\/(\d+)/],
         ] as const) {
-            const i = regua.indexOf(`${ancora} = [`)
+            const i = reguas.indexOf(`${ancora} = [`)
             expect(i, `${nome}: régua não achada`).toBeGreaterThan(-1)
-            const receita = regua.slice(i, regua.indexOf("].join(", i))
+            const receita = reguas.slice(i, reguas.indexOf("].join(", i))
             expect(receita, `${nome}: sem material`).toContain("glass-surface")
             // Ancorado na classe de borrão: o variante `supports-backdrop-filter:`
             // contém a string `backdrop-filter` de propósito.
             expect(receita, `${nome}: borrão próprio`).not.toMatch(/\bbackdrop-blur/)
-            expect(receita, `${nome}: sem guarda`).toContain("reduced-transparency:bg-background")
-            expect(receita, `${nome}: token errado`).not.toMatch(/bg-popover/)
+            expect(receita, `${nome}: sem guarda`).toContain(`reduced-transparency:bg-${token}`)
             // A base é o alfa que anda junto do material — é ela o fallback sem
             // `backdrop-filter`, e tem de ser legível sozinha.
-            const base = Number(receita.match(/bg-background\/(\d+) glass-surface/)?.[1])
+            const base = Number(receita.match(new RegExp(`bg-${token}/(\\d+) glass-surface`))?.[1])
             const comBorrao = Number(receita.match(aberto)?.[1])
             expect(base, `${nome}: alfa base`).toBeGreaterThan(0)
             expect(comBorrao, `${nome}: alfa aberto`).toBeGreaterThan(0)
@@ -339,16 +335,15 @@ describe("a superfície de vidro", () => {
         // ponta de uma placa translúcida sai mais escuro que ela.
         const seta = semComentariosDe("src/components/ui/hover-card.tsx")
         for (const classe of [
-            "fill-background/95",
-            "supports-backdrop-filter:fill-background/60",
-            "reduced-transparency:fill-background",
+            "fill-popover/85",
+            "supports-backdrop-filter:dark:fill-popover/60",
+            "reduced-transparency:fill-popover",
         ]) {
             expect(seta, classe).toContain(classe)
         }
-        expect(seta, "seta com o token velho").not.toMatch(/fill-popover/)
         // E os alfas são os mesmos da placa que ela termina.
-        for (const alfa of ["/95", "/60"]) {
-            expect(barSurfaceClassName, alfa).toContain(`bg-background${alfa}`)
+        for (const classe of ["bg-popover/85", "supports-backdrop-filter:dark:bg-popover/60"]) {
+            expect(menuPanelTintClassName, classe).toContain(classe)
         }
     })
 
@@ -778,8 +773,8 @@ describe("a superfície de vidro", () => {
         // a 40%, e a barra é `--background` a 60% **nos dois temas** — porque
         // uma barra tem conteúdo real passando por baixo em qualquer tema. Por
         // isso ela não cabe na asserção 23, que exige o `dark:`.
-        const barra = semComentariosDe("src/lib/bar-classes.ts")
-        const i = barra.indexOf("barSurfaceClassName")
+        const barra = semComentariosDe("src/lib/glass-classes.ts")
+        const i = barra.indexOf("barSurfaceClassName = [")
         const receita = barra.slice(i, barra.indexOf("].join(", i))
 
         expect(receita, "sem material").toContain("glass-surface")

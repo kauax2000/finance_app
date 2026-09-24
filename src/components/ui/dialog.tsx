@@ -6,7 +6,7 @@ import { Dialog as DialogPrimitive } from "radix-ui"
 import { XMarkIcon } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
-import { modalSurfaceClassName } from "@/lib/modal-classes"
+import { modalSurfaceClassName } from "@/lib/glass-classes"
 import { Muted } from "@/components/ui/typography"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
@@ -100,12 +100,12 @@ function DialogOverlay({
  * ## A placa é `--background` de vidro, e o véu é quem mais borra
  *
  * Ela veste `modalSurfaceClassName`: `--background` a 85%, 40% no escuro onde o
- * borrão existe, com o material do iOS — mais aberta que a flutuante (60%),
+ * borrão existe, com o material do iOS — mais aberta que a flutuante (`--popover` a 60%),
  * porque a 60% sobre a página ela lia como fosca. Uma rodada a levou a `--popover` para
  * igualar o DatePicker, e a tela reprovou: a 60% sobre a página velada o
  * `--popover` compõe acima de tudo que está atrás e a placa lê como opaca. O
  * `--background` afunda no véu, e é o borrão que a distingue (ver
- * `lib/modal-classes`).
+ * `lib/glass-classes`).
  *
  * O `backdrop-filter` renderiza aqui, e o que ele vê é o `--overlay` a 40% mais
  * a página: medido, delta 0 sobre um card, 2 sobre a página, 15 sobre um botão

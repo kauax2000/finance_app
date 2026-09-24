@@ -41,52 +41,16 @@
  * O `Dropdown` é justamente o menu que vive em cartão de categoria, cartão de
  * fatura e barra de ferramentas — tudo tocado no telefone.
  */
-import { barSurfaceClassName } from "./bar-classes"
-
-const MENU_TOUCH_TARGET = "pointer-coarse:min-h-11"
+import { menuPanelTintClassName } from "./glass-classes"
 
 /**
- * Só a tinta e o material, sem raio, sombra nem fio — para quem já tem casca
- * própria e só troca o token, como o `CommandDialog` sobre o `DialogContent`.
- *
- * ## Ela **é** a tinta da barra, e isso é o conserto de um vidro invisível
- *
- * Até esta rodada a flutuante tinha receita própria — `--popover` a 85%,
- * abrindo a 60% no escuro. O material estava certo e **não se via**: medido no
- * app, o que está pintado atrás de um `Select` aberto é um `Card` em
- * `oklch(0.205 0 0)`, e `--popover` **é** `oklch(0.205 0 0)`. Sessenta por
- * cento de uma cor sobre ela mesma é ela mesma — delta **0** em RGB. No claro
- * o mesmo, com os dois em branco puro.
- *
- * O argumento de saída já estava escrito em `bar-classes`, para a barra:
- * *"quem define uma barra é o contraste contra a superfície em que ela pousa,
- * e não a elevação"*. Uma placa flutuante pousa em cartão exatamente como uma
- * barra pousa, então a régua da barra serve as duas — e aqui ela é vestida por
- * **alias**, não copiada: este arquivo existe para impedir a quarta cópia da
- * mesma forma, e duas constantes com os mesmos quatro valores divergiriam
- * caladas no primeiro ajuste.
- *
- * Medido, placa sobre um `Card` real (delta RGB / `--muted-foreground`):
- *
- * | | escuro antes | escuro | claro antes | claro |
- * | --- | --- | --- | --- | --- |
- * | com vidro | 0 / 6,94 | **24** / 7,42 | 0 / 4,74 | **9** / 4,62 |
- * | fallback (95%) | — | 36 / 7,62 | — | 15 / **4,54** |
- *
- * No escuro tudo melhora, **inclusive o realce do item** (`accent/60`: 27 →
- * 42). O pior caso da rodada é o 4,54 — claro, sem `backdrop-filter`, sobre
- * cartão —, e é o número que reprova primeiro se alguém subir o alfa base.
- *
- * **Sem ramo `dark:`**, que é a segunda mudança: a barra abre nos dois temas e
- * a flutuante abria só no escuro. O claro ganha pouco (delta 9) e isso é dito
- * em vez de escondido.
- *
- * **E o teto continua o mesmo:** aberta sobre a página nua, sem conteúdo
- * atrás, a placa volta a delta 0 — `--background` sobre `--background`. É o
- * teto do cabeçalho, e a lei que `globals.css` já escreve: borrar cor chapada
- * não desenha nada. O vidro aparece quando há o que borrar.
+ * A tinta da placa mora em `glass-classes`, junto das outras duas de vidro, e
+ * é reexportada daqui porque quem hospeda comando (`command.tsx`) a importa
+ * deste arquivo.
  */
-export const menuPanelTintClassName = barSurfaceClassName
+export { menuPanelTintClassName }
+
+const MENU_TOUCH_TARGET = "pointer-coarse:min-h-11"
 
 /**
  * **A superfície, e só ela** — raio, tinta, sombra e fio, sem geometria, sem
@@ -106,17 +70,14 @@ export const menuPanelTintClassName = barSurfaceClassName
  * ## O material é o do iOS, e a placa é **uma** por superfície
  *
  * Uma superfície flutuante tem conteúdo passando por baixo, então ela é o lado
- * do `backdrop-filter` da régua dos vidros. A tinta é a da **barra**
- * (`menuPanelTintClassName`, que hoje é `barSurfaceClassName`): `--background`
- * a 95% — a base opaca, que é o fallback sem `backdrop-filter` — abrindo a 60%
- * nos dois temas onde o borrão existe, com `glass-surface` (24px e
+ * do `backdrop-filter` da régua dos vidros. A tinta é
+ * `menuPanelTintClassName` (em `glass-classes`): `--popover` a 85%, abrindo a
+ * 60% no escuro onde o borrão existe, com `glass-surface` (24px e
  * `saturate(1.5)`, os mesmos do cabeçalho) e o guarda de
- * `prefers-reduced-transparency`. O porquê de não ser `--popover`, com os
- * números, está no doc da tinta logo acima.
+ * `prefers-reduced-transparency`.
  *
  * `text-foreground` e não `text-popover-foreground`: os dois tokens têm o
- * mesmo valor nos dois temas — a troca é **zero pixel** — e a placa deixou de
- * vestir `--popover`, então nomeá-lo aqui apontaria para o token errado.
+ * mesmo valor nos dois temas — a troca é **zero pixel**.
  *
  * **A regra que entrou depois: uma placa só.** Duas superfícies aninhadas com
  * esta receita — o `Popover` e um `Command` dentro dele — somavam 84% no escuro

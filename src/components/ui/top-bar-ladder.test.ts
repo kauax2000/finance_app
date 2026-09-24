@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 
-import { barSurfaceClassName } from "@/lib/bar-classes"
+import { barSurfaceClassName } from "@/lib/glass-classes"
 import { topBarVariants } from "./top-bar"
 
 /**

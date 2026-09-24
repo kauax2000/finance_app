@@ -263,3 +263,130 @@ export const glassRoundSurfaceClassName = "glass glass-control glass-round"
 /* `GLASS_IDENTITY_TONES` morou aqui: o avatar de vidro. Saiu quando o avatar
  * passou a ter duas versões só (foto, ou iniciais sobre degradê de marca) —
  * ver `components/ui/avatar.tsx`. As medições dele estão no histórico. */
+
+/*
+ * ## As tintas de vidro por papel
+ *
+ * A casa tem três placas de vidro, e elas moram aqui juntas: a **barra**
+ * (conteúdo passando por baixo: o cabeçalho, a fileira de menus), a
+ * **flutuante** (a placa pequena ancorada sobre o conteúdo) e a **modal** (a
+ * placa grande sobre o véu). Moravam em três arquivos — uma delas como alias
+ * de outra —, e é por isso que a flutuante pôde virar a barra sem que ninguém
+ * visse as duas lado a lado. As três vestem a `@utility glass-surface`; o que
+ * as separa é o token e o alfa.
+ */
+
+/**
+ * A superfície de uma **barra de chrome** — a que tem conteúdo passando por
+ * baixo dela.
+ *
+ * A barra é uma das três tintas desta seção, e as três são diferentes de
+ * propósito: a barra (`--background` 95/60), a flutuante (`--popover` 85/60) e
+ * a modal (`--background` 85/40). O material é o mesmo nas três — a
+ * `@utility glass-surface`, dona de uma propriedade só (`backdrop-filter`:
+ * 24px e `saturate(1.5)`, com o guarda de `prefers-reduced-transparency`).
+ *
+ * Ela **não é nova**: é a receita que o cabeçalho do catálogo já rodava, e que
+ * estava escrita à mão lá. Extrair é o precedente das outras duas, e é o que
+ * impede a quarta cópia da mesma forma.
+ *
+ * ## As três escolhas, e por que cada uma diverge
+ *
+ * - **`--background`, e não `--popover`.** No tema escuro `--popover` e `--card`
+ *   são a mesma cor (`oklch(0.205)`): uma barra `--popover` pousada num cartão
+ *   sumiria. Quem define uma barra é o contraste contra a superfície em que ela
+ *   pousa, e não a elevação.
+ * - **95 de base, e não 85.** Sem `backdrop-filter` os 60% deixariam o conteúdo
+ *   passar por trás do rótulo — e o fallback tem de ser legível sozinho. Opaco
+ *   de base; translúcido só onde o borrão existe.
+ * - **Sem `dark:`.** Ao contrário das outras duas, ela abre nos dois temas. No
+ *   claro o efeito é quase nulo (`--background` 250 composto sobre `--card` 255
+ *   dá Δ2), e isso é dito em vez de escondido: no tema claro o vidro quase não
+ *   se paga, e é o mesmo teto que a rodada 47 já mediu.
+ *
+ * ## E ela só desenha onde há o que borrar
+ *
+ * `backdrop-filter` sobre cor chapada não desenha nada — a lei que
+ * `globals.css` escreve. Uma barra sobre um cartão liso sai igual à opaca; o
+ * material aparece quando o conteúdo passa por baixo, que é o caso do
+ * cabeçalho fixo e o da fileira de menus no topo de uma região que rola.
+ */
+export const barSurfaceClassName = [
+  "bg-background/95 glass-surface",
+  "supports-backdrop-filter:bg-background/60",
+  /** A cor sólida é de quem veste — a utility é dona de uma propriedade só. */
+  "reduced-transparency:bg-background",
+].join(" ")
+
+/**
+ * A tinta da **placa flutuante** — `Popover`, `Select`, `DropdownMenu`,
+ * `ContextMenu`, `Menubar`, `HoverCard`, `Tooltip`, `Command` e o calendário
+ * do `DatePicker`. Só a tinta e o material, sem raio, sombra nem fio: quem
+ * quer a casca inteira veste `menuPanelSurfaceClassName`, em `menu-classes`.
+ *
+ * **`--popover` a 85%, abrindo a 60% no escuro onde o borrão existe.** É a
+ * receita de antes da rodada `9f0ba8a`, que a tinha trocado pela da barra
+ * (`--background` 95/60) para a placa se separar do cartão — `--popover` e
+ * `--card` são a mesma cor, e 60% de uma cor sobre ela mesma é ela mesma. A
+ * troca funcionava na medição e lia errado na tela: `--background` é mais
+ * escuro que o cartão, e a placa virava uma chapa escura sem vidro nenhum. O
+ * dono pediu a de antes de volta (rodada 132), sabendo o custo: **sobre um
+ * cartão a placa se confunde com ele**, e quem a separa é o anel e a sombra.
+ */
+export const menuPanelTintClassName = [
+  "bg-popover/85 glass-surface",
+  "supports-backdrop-filter:dark:bg-popover/60",
+  /** A cor sólida é de quem veste — a utility é dona de uma propriedade só. */
+  "reduced-transparency:bg-popover",
+].join(" ")
+
+/**
+ * A superfície das peças modais — uma só, para as quatro. **Não é** a da
+ * superfície flutuante: esta pinta `--background`, aquela `--popover`.
+ *
+ * `Dialog`, `AlertDialog`, `Sheet` e `Drawer` pintam a mesma
+ * placa. Ela já esteve escrita no `cva` do `dialog.tsx` mais `bg-background`
+ * cru nos outros três arquivos, e extrair é o precedente de
+ * [`menuPanelSurfaceClassName`](./menu-classes.ts): classe compartilhada é
+ * `lib/`, sem `cva` (a regra A2 do auditor).
+ *
+ * ## `--background`, e não `--popover` — e a tela é que decidiu
+ *
+ * A flutuante é `--popover` (0.205); esta é `--background` (0.145). Uma rodada
+ * as igualou em `--popover` para "todas ficarem iguais ao DatePicker", e o
+ * resultado foi visto e reprovado: **a placa passou a ler como opaca**. A
+ * conta explica — `--popover` a 60% sobre a página velada (~0.10) compõe para
+ * ~0.16, bem acima de tudo que está atrás, então nada atravessa e o vidro some.
+ * `--background` a 60% compõe para ~0.13, quase o próprio fundo velado: a placa
+ * afunda no véu e o borrão é o que a distingue. Para um modal, que cobre a
+ * página inteira, é este o tom que lê como material; o `--popover` é da
+ * superfície pequena sobre conteúdo. A paleta (`CommandDialog`) é a exceção e
+ * veste o tom do popover por cima — ela é uma superfície de comandos, não um
+ * diálogo.
+ *
+ * ## O material é o do iOS, e aqui ele tem o véu atrás
+ *
+ * E a placa abre mais que a flutuante no escuro — 40% contra 60%. A 60% ela
+ * lia como fosca sobre a página; a tela decidiu, com a sonda a 40% ao lado.
+ *
+ * O `backdrop-filter` renderiza na placa modal (não há wrapper transformado
+ * acima dela), e o que ele vê é o `--overlay` a 40% mais a página: medido,
+ * delta 0 sobre um card, 2 sobre a página, 15 sobre um botão `primary` no
+ * escuro. Quem quiser o efeito mais visível mexe no véu (rodada 52c), não aqui.
+ *
+ * **E nenhuma tira pinta por cima dela.** Cor com alfa não tem "cor cheia"
+ * pintável: um degradê opaco numa tira era mais claro que a
+ * placa a 60% e saía como banda no topo da gaveta — medido. As tiras são
+ * irmãs do corpo, que se mascara sozinho; o fundo delas já é a placa.
+ */
+export const modalSurfaceClassName = [
+  "bg-background/85 glass-surface",
+  // 40% no escuro, e não os 60% da flutuante: a placa modal cobre página quase
+  // uniforme, e a 60% ela lia como fosca — visto na tela, e escolhido contra a
+  // sonda a 40% lado a lado. Medido a 40%: `--muted-foreground` sobre a placa
+  // sobre um botão `primary` dá 5,61, sobre um card 7,57. O claro fica em 85%,
+  // onde 4,38 já é o teto (rodada 51c).
+  "supports-backdrop-filter:dark:bg-background/40",
+  /** A cor sólida é de quem veste — a utility é dona de uma propriedade só. */
+  "reduced-transparency:bg-background",
+].join(" ")

@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Drawer as DrawerPrimitive } from "vaul"
 
 import { cn } from "@/lib/utils"
-import { modalSurfaceClassName } from "@/lib/modal-classes"
+import { modalSurfaceClassName } from "@/lib/glass-classes"
 import { DragHandle } from "@/components/ui/drag-handle"
 import { SHEET_OVERLAY_CLASS } from "@/components/ui/sheet"
 import { useViewportModal, useViewportWindow } from "@/hooks/use-mobile"

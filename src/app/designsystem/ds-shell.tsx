@@ -93,7 +93,7 @@ function DsTopBar() {
   }, [pathname])
 
   // É o `TopBar`: 56px com o fio dentro, `--z-sticky`, e a régua de barra de
-  // `lib/bar-classes` como superfície. Sem calha própria porque o `Container`
+  // `lib/glass-classes` como superfície. Sem calha própria porque o `Container`
   // de dentro já traz a do catálogo.
   return (
     <TopBar size="md" surface="glass" gutter="none">
