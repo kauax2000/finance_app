@@ -303,7 +303,8 @@ const CHART_EASING_POINTS = [0.16, 1, 0.3, 1] as const
 type ChartPhase = "pending" | "entering" | "idle"
 
 type ChartReveal = {
-  ref: React.RefCallback<HTMLElement>
+  /** Pendura na caixa observada. É um callback e não um `ref` de objeto. */
+  observe: React.RefCallback<HTMLElement>
   fase: ChartPhase
   /** `false` na faísca: sem entrada, mas com a troca animada. */
   entrada: boolean
@@ -312,7 +313,7 @@ type ChartReveal = {
 const ChartMotionContext = React.createContext<ChartPhase | null>(null)
 
 /**
- * A fase de um gráfico. Quem chama pendura `ref` na caixa **mais externa** da
+ * A fase de um gráfico. Quem chama pendura `observe` na caixa **mais externa** da
  * forma — na rosca e nos anéis é o envelope que também contém a legenda HTML,
  * para ela entrar junto.
  */
@@ -353,7 +354,7 @@ function useChartReveal({ entrada = true }: { entrada?: boolean } = {}): ChartRe
     return () => window.clearTimeout(t)
   }, [fase])
 
-  return { ref: setEl, fase, entrada }
+  return { observe: setEl, fase, entrada }
 }
 
 /**
@@ -388,10 +389,35 @@ const CHART_TOOLTIP_MOTION = {
 /**
  * A caixa que carrega a fase: invisível em `pending`, e subindo em
  * `--duration-base` quando entra — eixos e grade não animam no Recharts, e é
- * este esmaecer que os traz junto com as marcas. Na impressão ela aparece.
+ * este esmaecer que os traz junto com as marcas.
+ *
+ * **Todo esconder de `pending` mora sob `not-print:`**, e isso é medido: um
+ * `print:…:opacity-100` empata em especificidade com o `opacity-0` e perde
+ * pela ordem de emissão — as 46 caixas pendentes da página saíam em branco
+ * na impressão. Sob `not-print:` a impressão nem vê a regra.
  */
 const chartRevealClassName =
-  "transition-opacity duration-(--duration-base) ease-(--ease-out) data-[reveal=pending]:opacity-0 print:data-[reveal=pending]:opacity-100"
+  "transition-opacity duration-(--duration-base) ease-(--ease-out) not-print:data-[reveal=pending]:opacity-0"
+
+/** O envelope observado das formas cuja legenda HTML mora fora do SVG. */
+function ChartRevealBox({
+  observe,
+  fase,
+  className,
+  ...props
+}: React.ComponentProps<"div"> & {
+  observe: ChartReveal["observe"]
+  fase: ChartPhase
+}) {
+  return (
+    <div
+      ref={observe}
+      data-reveal={fase}
+      className={cn(chartRevealClassName, className)}
+      {...props}
+    />
+  )
+}
 
 const CHART_RAMP_LENGTH = 5
 
@@ -442,6 +468,7 @@ function ChartContainer({
   description,
   overlay,
   motion,
+  observeMotion = true,
   ref,
   ...props
 }: React.ComponentProps<"div"> &
@@ -465,24 +492,28 @@ function ChartContainer({
      */
     overlay?: React.ReactNode
     /**
-     * A fase de quem já é dono dela — as formas curtas, que penduram o `ref`
+     * A fase de quem já é dono dela — as formas curtas, que penduram o `observe`
      * onde querem. Sem ela, a composição livre ganha a própria: o contêiner é
      * a caixa observada, e o gráfico entra quando rola para dentro da tela.
      */
     motion?: ChartReveal
+    /** `false` quando a caixa observada é um envelope por fora — a rosca e os
+     *  anéis, cuja legenda HTML entra junto. */
+    observeMotion?: boolean
   }) {
   const uniqueId = React.useId()
   const chartId = `chart-${id ?? uniqueId.replace(/:/g, "")}`
   const descriptionId = description ? `${chartId}-desc` : undefined
   const propria = useChartReveal({ entrada: !motion })
   const m = motion ?? propria
+  const observar = observeMotion ? m.observe : undefined
   const refs = React.useCallback(
     (el: HTMLDivElement | null) => {
-      if (!motion) propria.ref(el)
+      observar?.(el)
       if (typeof ref === "function") ref(el)
       else if (ref) ref.current = el
     },
-    [motion, propria.ref, ref]
+    [observar, ref]
   )
 
   return (
@@ -857,6 +888,9 @@ function ChartLegendContent({
   // usada solta, ao lado do gráfico.
   const ctx = React.useContext(ChartContext)
   const config = configProp ?? ctx?.config ?? {}
+  // A legenda entra inteira, depois das marcas começarem: ela é o que
+  // *aparece*, e sobe na mola. Solta, fora de qualquer gráfico, não há fase.
+  const fase = React.useContext(ChartMotionContext) ?? "idle"
 
   if (!payload?.length) return null
 
@@ -864,7 +898,12 @@ function ChartLegendContent({
     <div
       data-slot="chart-legend-content"
       className={cn(
-        "flex flex-wrap items-center gap-x-4 gap-y-1.5",
+        // O corpo é da legenda, e não herdado: na rosca e nos anéis ela mora
+        // fora do `ChartContainer`, que é quem declara `text-xs` — e numa grade
+        // sem corpo próprio ela saía no tamanho do texto corrido.
+        "flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs",
+        chartRiseClassName(fase),
+        fase === "entering" && "delay-150",
         align === "start" && "justify-start",
         align === "center" && "justify-center",
         align === "end" && "justify-end",
@@ -1281,7 +1320,6 @@ function ChartArea({
     >
       <ChartContainer
         motion={m}
-        ref={m.ref}
         config={config}
         aspect={aspect}
         label={label}
@@ -1408,7 +1446,6 @@ function ChartLine({
     >
       <ChartContainer
         motion={m}
-        ref={m.ref}
         config={config}
         aspect={aspect}
         label={label}
@@ -1531,7 +1568,6 @@ function ChartBars({
     >
       <ChartContainer
         motion={m}
-        ref={m.ref}
         config={config}
         aspect={aspect}
         label={label}
@@ -1729,13 +1765,14 @@ function ChartDonut({
         o envelope.
       */}
       <ChartMotionContext.Provider value={m.fase}>
-      <div
-        ref={m.ref}
-        data-reveal={m.fase}
-        className={cn("flex w-fit flex-col items-center", chartRevealClassName)}
+      <ChartRevealBox
+        observe={m.observe}
+        fase={m.fase}
+        className="flex w-fit flex-col items-center"
       >
         <ChartContainer
           motion={m}
+          observeMotion={false}
           config={config}
           aspect={proporcao}
           label={label}
@@ -1806,11 +1843,19 @@ function ChartDonut({
             nameKey={nameKey}
           />
         ) : null}
-      </div>
+      </ChartRevealBox>
       </ChartMotionContext.Provider>
     </ChartFrame>
   )
 }
+
+/**
+ * O valor do miolo: texto pronto (`value`), que fica parado — o "76%" do
+ * medidor —, ou número (`amount` + `format`), que conta na entrada e na troca.
+ */
+type ChartDonutCenterValue =
+  | { value: string; amount?: never; format?: never }
+  | { value?: never; amount: number; format?: ChartFormat }
 
 /**
  * O miolo da rosca. Ele chega pelo prop `center` e **não** pelos `children`,
@@ -1824,12 +1869,13 @@ function ChartDonut({
  */
 function ChartDonutCenter({
   value,
+  amount,
+  format = "currency",
   label,
   align = "center",
   className,
   ...props
-}: React.ComponentProps<"div"> & {
-  value: string
+}: React.ComponentProps<"div"> & ChartDonutCenterValue & {
   label?: React.ReactNode
   /**
    * `center` é o furo da rosca. `gauge` apoia o bloco na origem do arco, e
@@ -1860,7 +1906,10 @@ function ChartDonutCenter({
   //
   // Vai em `style` e não em classe porque **classe montada em tempo de
   // execução não existe** — o Tailwind varre o código como texto.
-  const corpo = `min(1.5rem, ${(88 / Math.max(value.length, 1)).toFixed(2)}cqw)`
+  // Com `amount`, a medida sai do texto **final**: a contagem passa por
+  // valores mais curtos, e o corpo não pode encolher e crescer junto.
+  const texto = amount != null ? formatChartValue(amount, format) : (value ?? "")
+  const corpo = `min(1.5rem, ${(88 / Math.max(texto.length, 1)).toFixed(2)}cqw)`
 
   return (
     <div
@@ -1881,7 +1930,7 @@ function ChartDonutCenter({
         className="nums leading-tight font-mono font-semibold text-foreground"
         style={{ fontSize: corpo }}
       >
-        {value}
+        {amount != null ? <ChartNumber value={amount} format={format} /> : value}
       </span>
       {label ? (
         <span
@@ -1913,6 +1962,8 @@ function ChartHtmlRoot({
   config,
   label,
   description,
+  observe,
+  fase,
   className,
   children,
   ...props
@@ -1920,6 +1971,10 @@ function ChartHtmlRoot({
   config: ChartConfig
   label: string
   description?: string
+  /** A fase da forma, quando esta raiz é a caixa observada. Sem ela a raiz é
+   *  neutra — é o caso do calendário, cujo envelope também contém o rodapé. */
+  observe?: ChartReveal["observe"]
+  fase?: ChartPhase
 }) {
   const uniqueId = React.useId()
   const chartId = `chart-${uniqueId.replace(/:/g, "")}`
@@ -1928,12 +1983,14 @@ function ChartHtmlRoot({
   return (
     <ChartContext.Provider value={{ config }}>
       <div
+        ref={observe}
         data-slot="chart"
         data-chart={chartId}
+        data-reveal={fase}
         role="img"
         aria-label={label}
         aria-describedby={descriptionId}
-        className={cn("text-xs", className)}
+        className={cn("text-xs", fase && chartRevealClassName, className)}
         {...props}
       >
         <ChartStyle id={chartId} config={config} />
@@ -1945,6 +2002,82 @@ function ChartHtmlRoot({
         {children}
       </div>
     </ChartContext.Provider>
+  )
+}
+
+/**
+ * O número que conta: de 0 na entrada, do valor anterior na troca. É o que
+ * faz o olho seguir uma mudança de filtro — o miolo da rosca, os `%` dos
+ * anéis e da divisão.
+ *
+ * **Ele escreve por `ref`, e não por estado**: um re-render por quadro, em
+ * cada número de uma página de gráficos, é trabalho que ninguém vê. E o `span`
+ * que conta **não tem filho do React** — trocar `textContent` de um nó que o
+ * React acha que é dele troca o nó de texto por baixo, e a desmontagem depois
+ * tenta remover um filho que não existe mais.
+ *
+ * A caixa é reservada pelo valor **final**, num irmão invisível na mesma
+ * célula da grade, e o leitor de tela ouve só o final (`sr-only`): os
+ * intermediários são `aria-hidden`.
+ */
+function ChartNumber({
+  value,
+  format,
+  step,
+  className,
+}: {
+  value: number
+  format: ChartFormat
+  /** O passo dos intermediários. O padrão é 1 quando o final é inteiro — um
+   *  "3" contando não passa por "2,37". */
+  step?: number
+  className?: string
+}) {
+  const fase = React.useContext(ChartMotionContext) ?? "idle"
+  const reduzido = useReducedMotion()
+  const ref = React.useRef<HTMLSpanElement>(null)
+  const mostrado = React.useRef<number | null>(null)
+  const passo = step ?? (Number.isInteger(value) ? 1 : undefined)
+  const final = formatChartValue(value, format)
+
+  React.useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const escrever = (v: number) => {
+      el.textContent = formatChartValue(passo ? Math.round(v / passo) * passo : v, format)
+    }
+    // Em `pending` a caixa está invisível — e na impressão, visível: o número
+    // é o final, e a contagem de 0 só começa quando a entrada começa.
+    if (fase === "pending") {
+      mostrado.current = null
+      escrever(value)
+      return
+    }
+    const de = fase === "entering" && mostrado.current === null ? 0 : (mostrado.current ?? value)
+    if (reduzido || de === value) {
+      mostrado.current = value
+      escrever(value)
+      return
+    }
+    const controles = animate(de, value, {
+      duration: (fase === "entering" ? CHART_ENTER_MS : CHART_UPDATE_MS) / 1000,
+      ease: CHART_EASING_POINTS,
+      onUpdate: (v) => {
+        mostrado.current = v
+        escrever(v)
+      },
+    })
+    return () => controles.stop()
+  }, [fase, format, passo, reduzido, value])
+
+  return (
+    <span data-slot="chart-number" className={cn("inline-grid", className)}>
+      <span ref={ref} aria-hidden className="col-start-1 row-start-1" />
+      <span aria-hidden className="invisible col-start-1 row-start-1">
+        {final}
+      </span>
+      <span className="sr-only">{final}</span>
+    </span>
   )
 }
 
@@ -1970,6 +2103,36 @@ export function splitPercents(values: number[]): number[] {
     falta -= 1
   }
   return inteiros
+}
+
+/**
+ * O comprimento de um segmento da divisão é **dado**: na troca ele
+ * transiciona em `--ease-out`, que não passa do alvo. O esmaecer do hover
+ * divide a mesma transição.
+ */
+const chartSplitGrowClassName =
+  "transition-[flex-grow,opacity] duration-(--duration-slow) ease-(--ease-out)"
+
+/**
+ * A entrada da divisão é uma **revelação da esquerda**, e não o `flex-grow`
+ * subindo de 0 — medido: todos os segmentos crescendo juntos a partir de zero
+ * mantêm a mesma proporção entre si a cada quadro, e a barra saía pronta no
+ * primeiro. É a entrada da área do Recharts, em CSS.
+ */
+function chartSplitRevealClassName(fase: ChartPhase) {
+  if (fase === "pending") return "not-print:[clip-path:inset(0_100%_0_0)]"
+  return "[clip-path:inset(0)] transition-[clip-path] duration-(--duration-spring) ease-(--ease-out)"
+}
+
+/**
+ * O que **aparece** — rótulo, legenda, item de lista — sobe 4px e acende na
+ * mola da casa. Não é dado, então passar 3,8% do lugar não mente nada.
+ */
+function chartRiseClassName(fase: ChartPhase) {
+  return cn(
+    "transition-[opacity,translate] duration-(--duration-spring) ease-(--ease-spring)",
+    fase === "pending" && "not-print:translate-y-1 not-print:opacity-0"
+  )
 }
 
 /** Abaixo disto o segmento não cabe o próprio rótulo, e ele vai para a legenda. */
@@ -2003,6 +2166,7 @@ function ChartSplit({
    */
   labels?: "below" | "legend"
 }) {
+  const m = useChartReveal()
   const [ativo, setAtivo] = React.useState<number | null>(null)
   const chaves = data.map((d) => String(d[nameKey] ?? ""))
   const valores = data.map((d) => (typeof d[dataKey] === "number" ? (d[dataKey] as number) : 0))
@@ -2030,11 +2194,14 @@ function ChartSplit({
         config={config}
         label={`${label}: ${resumo}`}
         description={description}
+        observe={m.observe}
+        fase={m.fase}
         className={cn("flex w-full flex-col", className)}
       >
+       <ChartMotionContext.Provider value={m.fase}>
         <div
           data-slot="chart-split-bar"
-          className="flex w-full gap-1"
+          className={cn("flex w-full gap-1", chartSplitRevealClassName(m.fase))}
           onPointerLeave={() => setAtivo(null)}
         >
           {chaves.map((k, i) =>
@@ -2042,24 +2209,31 @@ function ChartSplit({
               <div
                 key={k || i}
                 className={cn(
-                  "h-2 min-w-1 rounded-full transition-opacity duration-(--duration-fast)",
+                  "h-2 min-w-1 rounded-full",
+                  chartSplitGrowClassName,
                   ativo !== null && ativo !== i && "opacity-35"
                 )}
                 // `flex-grow` com o valor cru, e não a porcentagem arredondada:
                 // o comprimento é a medida exata, o texto é que arredonda.
-                style={{ flex: `${valores[i]} 1 0`, backgroundColor: cores[i] }}
+                style={{
+                  flex: `${valores[i]} 1 0`,
+                  backgroundColor: cores[i],
+                }}
                 onPointerEnter={() => setAtivo(i)}
               />
             ) : null
           )}
         </div>
         {labels === "below" ? (
-          <div aria-hidden className="flex w-full gap-1 pt-2">
+          <div
+            aria-hidden
+            className={cn("flex w-full gap-1 pt-2", chartRiseClassName(m.fase))}
+          >
             {chaves.map((k, i) =>
               valores[i] > 0 ? (
                 <div
                   key={k || i}
-                  className="flex min-w-1 flex-col"
+                  className={cn("flex min-w-1 flex-col", chartSplitGrowClassName)}
                   style={{ flex: `${valores[i]} 1 0` }}
                 >
                   {pcts[i] >= CHART_SPLIT_LABEL_MIN ? (
@@ -2067,9 +2241,12 @@ function ChartSplit({
                       <span className="truncate font-medium text-foreground">
                         {nome(i)}
                       </span>
-                      <span className="nums truncate font-mono text-muted-foreground">
-                        {pcts[i]}%
-                      </span>
+                      <ChartNumber
+                        value={pcts[i] / 100}
+                        format="percent"
+                        step={0.01}
+                        className="nums truncate font-mono text-muted-foreground"
+                      />
                     </>
                   ) : null}
                 </div>
@@ -2090,6 +2267,7 @@ function ChartSplit({
             }))}
           />
         ) : null}
+       </ChartMotionContext.Provider>
       </ChartHtmlRoot>
     </ChartFrame>
   )
@@ -2177,13 +2355,14 @@ function ChartRadial({
       format={format}
     >
       <ChartMotionContext.Provider value={m.fase}>
-      <div
-        ref={m.ref}
-        data-reveal={m.fase}
-        className={cn("flex w-fit flex-col items-center", chartRevealClassName)}
+      <ChartRevealBox
+        observe={m.observe}
+        fase={m.fase}
+        className="flex w-fit flex-col items-center"
       >
         <ChartContainer
           motion={m}
+          observeMotion={false}
           config={config}
           aspect={aspect}
           label={label}
@@ -2218,7 +2397,16 @@ function ChartRadial({
         {legend ? (
           <ul data-slot="chart-radial-legend" className="grid w-full gap-1.5 pt-3 text-xs">
             {aneis.map((anel, i) => (
-              <li key={anel.nome || i} className="flex items-center gap-2">
+              <li
+                key={anel.nome || i}
+                className={cn("flex items-center gap-2", chartRiseClassName(m.fase))}
+                // Um item atrás do outro, na ordem dos anéis de fora para dentro.
+                style={
+                  m.fase === "entering"
+                    ? { transitionDelay: `${150 + i * CHART_STAGGER_MS}ms` }
+                    : undefined
+                }
+              >
                 <span
                   aria-hidden
                   className="size-2 shrink-0 rounded-xs"
@@ -2231,14 +2419,17 @@ function ChartRadial({
                   {formatChartValue(anel.valor, format)} de{" "}
                   {formatChartValue(anel.teto, format)}
                 </span>
-                <span className="nums w-10 text-right font-mono font-medium text-foreground">
-                  {Math.round(anel.pct)}%
-                </span>
+                <ChartNumber
+                  value={Math.round(anel.pct) / 100}
+                  format="percent"
+                  step={0.01}
+                  className="nums w-10 justify-items-end font-mono font-medium text-foreground"
+                />
               </li>
             ))}
           </ul>
         ) : null}
-      </div>
+      </ChartRevealBox>
       </ChartMotionContext.Provider>
     </ChartFrame>
   )
@@ -2307,6 +2498,21 @@ const chartHeatmapVariants = cva(
   }
 )
 
+/** Quanto a onda da entrada leva para cruzar o calendário, qualquer largura. */
+const CHART_HEAT_SWEEP_MS = 400
+
+/**
+ * A célula **aparece** (opacidade e escala, na mola) — o degrau dela não
+ * cresce, então não há valor para a mola exagerar. Depois da entrada, a troca
+ * de filtro só muda a cor do degrau, no ritmo da atualização.
+ */
+function chartHeatCellClassName(fase: ChartPhase) {
+  if (fase === "pending") return "not-print:scale-50 not-print:opacity-0"
+  if (fase === "entering")
+    return "transition-[opacity,scale] duration-(--duration-spring) ease-(--ease-spring)"
+  return "transition-colors duration-(--duration-slow) ease-(--ease-out)"
+}
+
 const CHART_HEAT_WEEKS = { quarter: 13, year: 53 } as const
 /** Domingo primeiro, como o calendário brasileiro; só três rótulos cabem. */
 const CHART_HEAT_WEEKDAYS = ["", "seg", "", "qua", "", "sex", ""] as const
@@ -2343,6 +2549,7 @@ function ChartHeatmap({
   className?: string
   dataTable?: boolean
 }) {
+  const m = useChartReveal()
   const [lido, setLido] = React.useState<ChartHeatmapDay | null>(null)
   const semanas = CHART_HEAT_WEEKS[range]
 
@@ -2419,7 +2626,12 @@ function ChartHeatmap({
       xFormat="date"
       format={format}
     >
-      <div className={cn(chartHeatmapVariants({ tone, range }), className)}>
+      <ChartMotionContext.Provider value={m.fase}>
+      <ChartRevealBox
+        observe={m.observe}
+        fase={m.fase}
+        className={cn(chartHeatmapVariants({ tone, range }), className)}
+      >
         <ChartHtmlRoot config={{}} label={`${label}. ${resumo}`} description={description}>
           <ScrollFade axis="x">
             <div
@@ -2459,8 +2671,18 @@ function ChartHeatmap({
                       className={cn(
                         "size-(--heat-cell) rounded-xs",
                         CHART_HEAT_LEVEL[dia.nivel],
+                        chartHeatCellClassName(m.fase),
                         lido?.date === dia.date && "ring-2 ring-foreground/60"
                       )}
+                      // A onda da entrada anda por coluna, e cruza a grade
+                      // inteira em 400ms seja um trimestre ou um ano. Fora da
+                      // entrada o atraso é zero: numa troca de filtro a cor
+                      // muda junta, não em onda.
+                      style={
+                        m.fase === "entering"
+                          ? { transitionDelay: `${Math.round(Math.floor(i / 7) * (CHART_HEAT_SWEEP_MS / semanas))}ms` }
+                          : undefined
+                      }
                       onPointerEnter={() => setLido(dia)}
                       onPointerDown={() => setLido(dia)}
                     />
@@ -2472,7 +2694,12 @@ function ChartHeatmap({
             </div>
           </ScrollFade>
         </ChartHtmlRoot>
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        <div
+          className={cn(
+            "flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-muted-foreground",
+            chartRiseClassName(m.fase)
+          )}
+        >
           <output aria-live="polite" className="nums">
             {lido
               ? `${formatChartValue(lido.date, "date")} · ${formatChartValue(lido.value, format)}`
@@ -2486,7 +2713,8 @@ function ChartHeatmap({
             <span className="pl-1">mais</span>
           </div>
         </div>
-      </div>
+      </ChartRevealBox>
+      </ChartMotionContext.Provider>
     </ChartFrame>
   )
 }
@@ -2536,7 +2764,6 @@ function ChartRadar({
     >
       <ChartContainer
         motion={m}
-        ref={m.ref}
         config={config}
         aspect={aspect}
         label={label}
@@ -2647,7 +2874,6 @@ function ChartSparkline({
   return (
     <ChartContainer
       motion={m}
-      ref={m.ref}
       config={config}
       aspect="auto"
       label={label}

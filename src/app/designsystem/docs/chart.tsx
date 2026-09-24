@@ -6,7 +6,7 @@ import {
   ChartBarSquareIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline"
-import { ArrowTrendingUpIcon } from "@heroicons/react/16/solid"
+import { ArrowPathIcon, ArrowTrendingUpIcon } from "@heroicons/react/16/solid"
 
 import {
   ChartArea,
@@ -28,6 +28,8 @@ import {
   ChartSparkline,
   ChartSplit,
   ChartTooltip,
+  CHART_ENTER_MS,
+  CHART_UPDATE_MS,
   ChartTooltipContent,
   ChartXAxis,
   ChartYAxis,
@@ -35,6 +37,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardAction,
@@ -188,6 +191,119 @@ const CONFIG_FATURA = {
   parcelas: { label: "Parcelas e recorrências", color: "var(--chart-3)" },
   compras: { label: "Compras do período", color: "var(--chart-2)" },
 } satisfies ChartConfig
+
+/** Três períodos do mesmo mês a mês, para a troca de filtro ter o que mover. */
+const PERIODOS = {
+  jul: { rotulo: "Julho", fator: [0.7, 1.3, 0.6, 1.1, 0.9], fim: "2026-07-31" },
+  ago: { rotulo: "Agosto", fator: [1, 0.8, 1.2, 0.7, 1.3], fim: "2026-08-31" },
+  set: { rotulo: "Setembro", fator: [1.25, 1, 0.9, 1.4, 0.6], fim: "2026-09-24" },
+} as const
+
+type Periodo = keyof typeof PERIODOS
+
+function dadosDoPeriodo(periodo: Periodo) {
+  const { fator, fim } = PERIODOS[periodo]
+  const categorias = CATEGORIAS.map((c, i) => ({ ...c, valor: Math.round(c.valor * fator[i]) }))
+  const orcamentos = ORCAMENTOS.map((o, i) => ({ ...o, gasto: Math.round(o.gasto * fator[i]) }))
+  const semanas = Array.from({ length: 6 }, (_, i) => ({
+    semana: `S${i + 1}`,
+    saldo: Math.round(2400 + Math.sin(i * fator[i % 5] + fator[0]) * 900 + i * 150 * fator[1]),
+  }))
+  const divisao = DIVISAO.map((d, i) => ({ ...d, valor: Math.round(d.valor * fator[i + 1]) }))
+  const dias = GASTO_DIARIO.map((d, i) => ({ ...d, value: Math.round(d.value * fator[i % 5]) }))
+  return { categorias, orcamentos, semanas, divisao, dias, fim }
+}
+
+/** A troca de filtro, em todas as formas de uma vez. */
+function DemoMovimento() {
+  const [periodo, setPeriodo] = React.useState<Periodo>("set")
+  const [rodada, setRodada] = React.useState(0)
+  const d = dadosDoPeriodo(periodo)
+  const total = d.categorias.reduce((a, c) => a + c.valor, 0)
+
+  return (
+    <div className="flex w-full flex-col gap-6">
+      <div className="flex flex-wrap items-center gap-3">
+        <Tabs value={periodo} onValueChange={(v) => setPeriodo(v as Periodo)}>
+          <TabsList>
+            {(Object.keys(PERIODOS) as Periodo[]).map((k) => (
+              <TabsTrigger key={k} value={k}>
+                {PERIODOS[k].rotulo}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+        <Button variant="tertiary" onClick={() => setRodada((r) => r + 1)}>
+          <ArrowPathIcon />
+          rever a entrada
+        </Button>
+      </div>
+      <div key={rodada} className="grid gap-8 md:grid-cols-2">
+        <ChartBars
+          layout="horizontal"
+          config={CONFIG_CATEGORIAS}
+          data={d.categorias}
+          series={["valor"]}
+          x="nome"
+          label="Gasto por categoria no período"
+          legend={false}
+          className="w-full"
+        />
+        <ChartArea
+          variant="gradient"
+          config={CONFIG_SALDO}
+          data={d.semanas}
+          x="semana"
+          label="Saldo por semana no período"
+          className="w-full"
+        />
+        <div className="flex flex-wrap items-start justify-center gap-8">
+          <ChartDonut
+            config={CONFIG_CATEGORIAS}
+            data={d.categorias}
+            nameKey="nome"
+            dataKey="valor"
+            label="Composição do gasto no período"
+            className="w-44"
+            aspect="square"
+            center={<ChartDonutCenter amount={total} label="no mês" />}
+          />
+          <ChartRadial
+            bands={BUDGET_BANDS}
+            config={CONFIG_ORCAMENTOS}
+            data={d.orcamentos}
+            nameKey="nome"
+            dataKey="gasto"
+            maxKey="teto"
+            label="Orçamento consumido no período"
+            className="w-44"
+          />
+        </div>
+        <div className="flex flex-col gap-6">
+          <ChartSplit
+            config={CONFIG_DIVISAO}
+            data={d.divisao}
+            nameKey="parte"
+            dataKey="valor"
+            label="Gasto do período por tipo"
+          />
+          <ChartHeatmap end={d.fim} data={d.dias} label="Gasto por dia no período" />
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="w-24 shrink-0">faísca</span>
+            <ChartSparkline
+              variant="area"
+              y="saldo"
+              config={CONFIG_SALDO}
+              data={d.semanas}
+              label="Saldo por semana, faísca"
+              className="h-10 max-w-64"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 /** O cartão da referência "Bar Chart", nas peças da casa. */
 function CartaoAno() {
@@ -951,6 +1067,49 @@ const config = {
       </DocSection>
 
       <DocSection
+        title="Movimento"
+        description={
+          <>
+            Todo gráfico <strong>chega</strong> e <strong>se ajusta</strong>. A entrada toca uma vez, quando a caixa rola para dentro da tela: as barras sobem da base, o traço se desenha, as fatias e os anéis varrem, as células do calendário entram em onda, e os números contam de zero. Depois, cada troca de dado interpola do quadro anterior. Troque o período para ver.
+          </>
+        }
+        code={`// Nada a declarar: toda forma já entra e já interpola.
+<ChartDonutCenter amount={total} label="no mês" />  // o miolo que conta
+<ChartDonutCenter value="76%" />                    // texto pronto, parado`}
+        previewClassName="flex-col items-stretch gap-6 p-6"
+      >
+        <DemoMovimento />
+      </DocSection>
+
+      <Group title="Os tempos do movimento" layout="grid">
+        <Spec title="Entrada">
+          <Stack className="gap-2 text-xs text-muted-foreground">
+            <p>
+              <strong className="text-foreground">{CHART_ENTER_MS}ms</strong> (<code>--duration-spring</code>) em <code>--ease-out</code>, com as séries escalonadas a 60ms. Ela é disparada pelo <code>IntersectionObserver</code>. Até lá o gráfico já está montado, com o dado final e invisível, e aparece na impressão.
+            </p>
+          </Stack>
+        </Spec>
+        <Spec title="Troca de dado">
+          <Stack className="gap-2 text-xs text-muted-foreground">
+            <p>
+              <strong className="text-foreground">{CHART_UPDATE_MS}ms</strong> (<code>--duration-slow</code>) em <code>--ease-out</code>. Quem interpola é o Recharts, do quadro anterior. A divisão transiciona o <code>flex-grow</code>, o calendário a cor do degrau, e o número conta do valor antigo.
+            </p>
+          </Stack>
+        </Spec>
+        <Spec title="A curva é serena no dado">
+          <Stack className="gap-2 text-xs text-muted-foreground">
+            <p>
+              <code>--ease-out</code> não passa do alvo: uma barra nunca mostra, nem por um quadro, um valor maior que o real. A mola (<code>--ease-spring</code>) fica para o que <strong className="text-foreground">aparece</strong>: célula, rótulo e legenda.
+            </p>
+          </Stack>
+        </Spec>
+      </Group>
+
+      <DocNote title="Movimento reduzido, impressão e faísca">
+        Com <code>prefers-reduced-motion</code> nada entra e nada interpola: o <code>&apos;auto&apos;</code> do Recharts desliga as marcas, o bloco global corta as transições e o número é escrito direto. A faísca não entra, porque dez numa lista entrando juntas são ruído; ela aparece pronta e só transita quando o dado muda.
+      </DocNote>
+
+      <DocSection
         title="Estado"
         description={`Vazio, carregando e erro têm peça. O esqueleto usa o mesmo aspect do gráfico cheio, para a tela não saltar quando o dado chega. variant="wave" sobe e desce as barras em onda, para o gráfico principal de uma tela: é um laço, então é um por tela, e o movimento reduzido o para.`}
         code={`{carregando ? <ChartSkeleton aspect="wide" />
@@ -1278,7 +1437,7 @@ const config = {
       </DocNote>
 
       <DocNote title="Fora, de propósito">
-        <strong>Sem autoplay e sem animação de entrada</strong>: um valor que se move enquanto a pessoa o lê é hostil. As duas coisas que se movem não são valor: o halo de <code>marker=&quot;last&quot;</code> e o esqueleto em onda. <strong>Sem arco-íris no dado</strong>: a marca encosta no gráfico pelo <code>Card variant=&quot;brand&quot;</code>, na borda. <strong>Sem dois eixos Y</strong>: escalas diferentes são dois gráficos, ou uma indexada à outra. <strong>Sem embrulho para <code>ComposedChart</code></strong>: componha a anatomia.
+        <strong>Sem autoplay</strong>: nenhum valor muda sem o dado mudar. O que se move é a chegada (uma vez, ao entrar na tela) e a troca (quando o filtro muda). Em laço, só o halo de <code>marker=&quot;last&quot;</code> e o esqueleto em onda. <strong>Sem arco-íris no dado</strong>: a marca encosta no gráfico pelo <code>Card variant=&quot;brand&quot;</code>, na borda. <strong>Sem dois eixos Y</strong>: escalas diferentes são dois gráficos, ou uma indexada à outra. <strong>Sem embrulho para <code>ComposedChart</code></strong>: componha a anatomia.
       </DocNote>
     </>
   )
