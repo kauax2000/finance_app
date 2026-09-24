@@ -2808,6 +2808,31 @@
   animation: empty-state-sheen 14s ease-in-out infinite alternate;
 }
 
+/* O `ChartSkeleton variant="wave"` (rodada 135): as barras do esqueleto sobem
+   e descem a partir da base, cada uma um passo atrás da vizinha. Mora em
+   `@utility` pela mesma medição do `EmptyState`, logo acima.
+
+   **É um laço, e o bloco global de movimento reduzido o corta** — ele não está
+   na lista de exceções (`animate-spin`, `animate-pulse`), então com a
+   preferência ligada a animação roda uma passada de 0,01ms e a barra volta à
+   altura de repouso. As alturas continuam diferentes entre si, e isso ainda é
+   um esqueleto de gráfico. */
+@keyframes chart-wave {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.45);
+  }
+}
+
+@utility chart-wave {
+  transform-origin: bottom;
+  animation: chart-wave 1.4s ease-in-out infinite;
+  animation-delay: calc(var(--chart-wave-i, 0) * 110ms);
+}
+
 @utility scroll-fade-y {
   --scroll-fade-top-h: calc(
     var(--scroll-fade-band-h, 0px) +

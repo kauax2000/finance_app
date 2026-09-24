@@ -965,6 +965,88 @@ function ChartFrame({
   )
 }
 
+/**
+ * O último ponto com valor de cada série — o "hoje" de um saldo que o mês
+ * ainda não terminou. Uma série do mês inteiro traz os dias futuros como
+ * `null`, e o último índice do array seria o dia 30, não hoje.
+ */
+function ultimoIndiceComValor(data: Record<string, unknown>[], key: string) {
+  for (let i = data.length - 1; i >= 0; i--) {
+    if (data[i]?.[key] != null) return i
+  }
+  return -1
+}
+
+type ChartDotProps = { cx?: number; cy?: number; index?: number }
+
+/**
+ * O marcador de "hoje": o ponto de 8px da casa, com um halo que pulsa atrás.
+ *
+ * **É a única coisa que se move dentro de um gráfico, e é de propósito.** A
+ * regra "um valor que se move enquanto a pessoa o lê é hostil" continua de
+ * pé: o que pulsa aqui não é valor nenhum, é a marca do ponto em que a série
+ * está agora — o precedente é o `BadgeDot pulse`, "o que acontece agora". E é
+ * `animate-ping` pela mesma razão que lá: o bloco global de movimento reduzido
+ * o corta, e ele não tem a desculpa do spinner.
+ *
+ * **`transform-box: fill-box` é carga estrutural.** Num SVG a origem de uma
+ * transformação é a do sistema de coordenadas do `<svg>`, não a do círculo:
+ * sem ela o `scale(2)` do ping afasta o halo em direção ao canto de baixo e à
+ * direita, e ele pulsa longe do ponto.
+ */
+function ChartMarkerDot({
+  cx,
+  cy,
+  color,
+}: {
+  cx: number
+  cy: number
+  color: string
+}) {
+  return (
+    <g data-slot="chart-marker">
+      <circle
+        cx={cx}
+        cy={cy}
+        r={4}
+        fill={color}
+        className="origin-center animate-ping opacity-75 [transform-box:fill-box]"
+      />
+      <circle
+        cx={cx}
+        cy={cy}
+        r={4}
+        fill={color}
+        stroke="var(--chart-surface)"
+        strokeWidth={2}
+      />
+    </g>
+  )
+}
+
+/**
+ * O `dot` de uma série com `marker="last"`: o marcador no último ponto com
+ * valor, e nos outros o ponto comum (`dots="all"`) ou nada.
+ */
+function chartMarkerDot(ultimo: number, color: string, todos: boolean) {
+  function MarkerDot({ cx, cy, index }: ChartDotProps) {
+    if (cx == null || cy == null) return <g />
+    if (index === ultimo) return <ChartMarkerDot cx={cx} cy={cy} color={color} />
+    if (!todos) return <g />
+    return (
+      <circle
+        cx={cx}
+        cy={cy}
+        r={4}
+        fill={color}
+        stroke="var(--chart-surface)"
+        strokeWidth={2}
+      />
+    )
+  }
+  return MarkerDot
+}
+
 const chartAreaShape = {
   solid: "monotone",
   gradient: "monotone",
@@ -974,6 +1056,7 @@ const chartAreaShape = {
 function ChartArea({
   variant = "solid",
   stacked = false,
+  marker,
   x,
   xFormat = "text",
   config,
@@ -993,6 +1076,8 @@ function ChartArea({
   xFormat?: ChartFormat
   variant?: keyof typeof chartAreaShape
   stacked?: boolean
+  /** O último ponto com valor, marcado e pulsando: o "hoje" da série. */
+  marker?: "last"
 }) {
   const chaves = useSeries(config, series)
   const gradiente = variant === "gradient"
@@ -1065,7 +1150,15 @@ function ChartArea({
               strokeWidth={2}
               fill={gradiente ? `url(#chart-area-${gradienteId}-${key})` : serieColor(key, i, config)}
               fillOpacity={gradiente ? 1 : 0.15}
-              dot={false}
+              dot={
+                marker === "last"
+                  ? chartMarkerDot(
+                      ultimoIndiceComValor(data, key),
+                      serieColor(key, i, config),
+                      false
+                    )
+                  : false
+              }
               activeDot={{
                 r: 4,
                 strokeWidth: 2,
@@ -1089,6 +1182,7 @@ const chartLineShape = {
 function ChartLine({
   variant = "curved",
   dots = "hover",
+  marker,
   x,
   xFormat = "text",
   config,
@@ -1109,6 +1203,8 @@ function ChartLine({
   variant?: keyof typeof chartLineShape
   /** O marcador. `hover` só no ponto ativo — o padrão, e o menos ruidoso. */
   dots?: "none" | "hover" | "all"
+  /** O último ponto com valor, marcado e pulsando: o "hoje" da série. */
+  marker?: "last"
 }) {
   const chaves = useSeries(config, series)
   const mostrarLegenda = legend ?? chaves.length >= 2
@@ -1150,9 +1246,15 @@ function ChartLine({
               // O marcador tem 8px de diâmetro: abaixo disso ele lê como
               // sujeira do traço, não como ponto de dado.
               dot={
-                dots === "all"
-                  ? { r: 4, strokeWidth: 2, stroke: "var(--chart-surface)" }
-                  : false
+                marker === "last"
+                  ? chartMarkerDot(
+                      ultimoIndiceComValor(data, key),
+                      serieColor(key, i, config),
+                      dots === "all"
+                    )
+                  : dots === "all"
+                    ? { r: 4, strokeWidth: 2, stroke: "var(--chart-surface)" }
+                    : false
               }
               activeDot={
                 dots === "none"
@@ -1168,9 +1270,14 @@ function ChartLine({
   )
 }
 
+/** Maior que qualquer meia barra: o Recharts o reduz ao que cabe. */
+const CHART_PILL_RADIUS = 999
+
 function ChartBars({
   layout = "vertical",
   stacked = false,
+  shape = "rounded",
+  track = false,
   x,
   xFormat = "text",
   config,
@@ -1197,9 +1304,29 @@ function ChartBars({
    */
   layout?: "vertical" | "horizontal"
   stacked?: boolean
+  /**
+   * `rounded` arredonda só a ponta (o padrão, e a regra da base reta abaixo).
+   * `pill` arredonda o segmento inteiro — a barra deixa de encostar na linha
+   * do zero e passa a ler como **peça**, que é o desenho de quem mostra poucas
+   * colunas sem eixo Y. No empilhado cada segmento vira uma pílula solta, e o
+   * vão de 2px pintado com `--chart-surface` continua sendo quem as separa.
+   */
+  shape?: "rounded" | "pill"
+  /**
+   * O trilho: a coluna inteira em `--muted` atrás da barra, até o máximo do
+   * eixo. Ele mostra o espaço que sobra — quanto falta para o maior mês —, e é
+   * a primeira série que o desenha, senão o empilhado pintaria um por segmento.
+   */
+  track?: boolean
 }) {
   const chaves = useSeries(config, series)
   const horizontal = layout === "horizontal"
+  // O Recharts limita o raio a meia largura/altura do retângulo, então um raio
+  // grande é a pílula em qualquer tamanho de barra.
+  const pilula = shape === "pill" ? CHART_PILL_RADIUS : null
+  const pontaRaio: [number, number, number, number] = horizontal
+    ? [0, 4, 4, 0]
+    : [4, 4, 0, 0]
   const mostrarLegenda = legend ?? chaves.length >= 2
 
   return (
@@ -1261,11 +1388,19 @@ function ChartBars({
               // levanta a barra da linha do zero, e a base é justamente o que
               // um gráfico de barras usa para dizer a magnitude.
               radius={
-                stacked && i < chaves.length - 1
-                  ? 0
-                  : horizontal
-                    ? [0, 4, 4, 0]
-                    : [4, 4, 0, 0]
+                pilula ?? (stacked && i < chaves.length - 1 ? 0 : pontaRaio)
+              }
+              background={
+                track && i === 0
+                  ? {
+                      fill: "var(--color-muted)",
+                      // O tipo do `background` diz `number`, mas quem o
+                      // desenha é o mesmo `Rectangle` da barra, que aceita os
+                      // quatro cantos — e o trilho precisa da base reta da
+                      // barra, senão os cantos dela sobram para fora dele.
+                      radius: (pilula ?? pontaRaio) as number,
+                    }
+                  : undefined
               }
               // Os 2px de superfície entre segmentos empilhados. Pintados com
               // a cor do fundo e não com transparência: transparente mostraria
@@ -1649,16 +1784,29 @@ function ChartSparkline({
  * carrega o eixo `aspect`: um esqueleto de altura arbitrária faz a tela saltar
  * quando o dado chega.
  */
+const CHART_SKELETON_HEIGHTS = [52, 78, 40, 92, 64, 84, 48]
+
 function ChartSkeleton({
   aspect,
+  variant = "pulse",
   className,
   bars = 7,
   ...props
 }: React.ComponentProps<"div"> &
-  VariantProps<typeof chartContainerVariants> & { bars?: number }) {
+  VariantProps<typeof chartContainerVariants> & {
+    bars?: number
+    /**
+     * `pulse` é o esqueleto da casa, que só respira a tinta. `wave` sobe e
+     * desce as barras em onda — para o gráfico que é a peça principal da tela
+     * e demora, onde um bloco que só pisca não diz que é um gráfico chegando.
+     * Um por tela, pela mesma razão que a marca é uma por tela.
+     */
+    variant?: "pulse" | "wave"
+  }) {
   return (
     <div
       data-slot="chart-skeleton"
+      data-variant={variant}
       aria-hidden
       className={cn(
         chartContainerVariants({ aspect }),
@@ -1667,15 +1815,27 @@ function ChartSkeleton({
       )}
       {...props}
     >
-      {Array.from({ length: bars }, (_, i) => (
-        <Skeleton
-          key={i}
-          className="min-w-0 flex-1 rounded-t-md rounded-b-none"
-          // Alturas fixas e não aleatórias: um esqueleto que muda de desenho a
-          // cada render pisca em toda revalidação.
-          style={{ height: `${[52, 78, 40, 92, 64, 84, 48][i % 7]}%` }}
-        />
-      ))}
+      {Array.from({ length: bars }, (_, i) => {
+        // Alturas fixas e não aleatórias: um esqueleto que muda de desenho a
+        // cada render pisca em toda revalidação.
+        const height = `${CHART_SKELETON_HEIGHTS[i % CHART_SKELETON_HEIGHTS.length]}%`
+        return variant === "wave" ? (
+          // Não é o `Skeleton`: ele traz `animate-pulse`, que disputa a
+          // propriedade `animation` com a onda e ainda tira a barra do corte
+          // do movimento reduzido. A tinta é a mesma.
+          <div
+            key={i}
+            className="chart-wave min-w-0 flex-1 rounded-t-md bg-skeleton"
+            style={{ height, "--chart-wave-i": i } as React.CSSProperties}
+          />
+        ) : (
+          <Skeleton
+            key={i}
+            className="min-w-0 flex-1 rounded-t-md rounded-b-none"
+            style={{ height }}
+          />
+        )
+      })}
     </div>
   )
 }
