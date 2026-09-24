@@ -13670,3 +13670,33 @@ Nota de mecânica: o `plain` de `Card`, `EmptyState`, `PageHeader`, `TabsList`,
 compartilhado, o eixo não. E o tipo é que acusou a página do catálogo ainda
 usando o valor removido: `variant={variant}` num `.map` sobre
 `["soft", "plain"]` derrubou o `tsc` antes de qualquer teste.
+
+### Rodada 126 — os quatro blobos saem, porque não pintavam nada
+
+Eles entraram na rodada 122, portados da referência para fidelidade de cor: os
+quatro `radial-gradient` que ela põe **antes** do cônico (`circle`,
+`at 40% 40%`, `at 60% 60%`, `at 40% 60%`), aqui com paradas da marca. A hipótese
+era que fariam a cor variar por **posição na caixa**, e não só pelo ângulo do
+arco.
+
+**Medido na rodada 124: eles não alcançam o anel.** São círculos no
+**interior** da caixa, com o degradê morrendo em 15–20% do raio, e o que se vê
+desta peça é só o anel de 2px na **aresta**. E vale igual na referência — num
+cartão de 374×230 o raio efetivo é ~44px contra um anel de 3px na borda. São
+decoração que nenhuma das duas mostra.
+
+Ficaram por duas rodadas com a nota de que eram invisíveis, pelo argumento de
+que engrossar a borda ou trocar o anel por preenchimento os tornaria visíveis.
+O dono pediu para tirar, e é a decisão certa: **fidelidade a um trecho que a
+própria referência não mostra é custo sem retorno** — quatro camadas de
+`background-image` que a cada quadro entram na composição do pseudo e não
+produzem pixel.
+
+Conferido depois: as camadas do `::before` passaram de
+`linear-gradient + 4 radial + repeating-conic` para
+`linear-gradient + repeating-conic`, e o arco na tela ficou **idêntico** — que
+é a prova de que eram invisíveis.
+
+O caminho de volta está escrito na utility e no teste: **raio de 60–80% da
+caixa** para cruzarem a aresta. Nesse ponto deixa de ser port e passa a ser
+desenho nosso, e é uma decisão diferente da de portar.

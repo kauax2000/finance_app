@@ -421,13 +421,14 @@ describe("contorno de marca", () => {
     expect(corpoMask).toMatch(/transparent,\s*#000,\s*transparent/)
     expect(corpoMask).toMatch(/var\(--alert-glow-spread\) \* 2deg/)
 
-    // **Os quatro blobos da referência**, antes do cônico na lista de camadas.
-    // São manchas presas à caixa: elas fazem a cor variar por **posição**, e
-    // não só pelo ângulo do arco. Sem elas o mesmo lado acende sempre igual.
-    expect(corpoBg.match(/radial-gradient\(/g)?.length).toBe(4)
-    expect(corpoBg.indexOf("radial-gradient")).toBeLessThan(
-      corpoBg.indexOf("repeating-conic-gradient")
-    )
+    // **Nenhum `radial-gradient`, e isso é medição e não esquecimento.** A
+    // referência tem quatro aqui; eles foram portados e saíram porque **não
+    // pintam nada**: são círculos no interior da caixa (degradê morrendo em
+    // 15–20% do raio) e o que se vê desta peça é só o anel de 2px na aresta.
+    // Vale igual na referência — num cartão de 374×230 o raio efetivo é ~44px
+    // contra um anel de 3px na borda. Repô-las exige raio de 60–80% da caixa,
+    // e aí deixa de ser port.
+    expect(corpoBg).not.toMatch(/radial-gradient/)
 
     // A largura de faixa é o que importa, e ela vem do par cores × voltas. A
     // referência: 4 cores × 5 = 20 faixas de 18°. Com as 8 paradas da marca, 5

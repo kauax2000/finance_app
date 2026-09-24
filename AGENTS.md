@@ -409,10 +409,14 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   torna barato ler `getBoundingClientRect()` a cada quadro em vez de cachear —
   o cache só se invalidava em `scroll` e `resize`, e a caixa também se move por
   reflow, por acordeão abrindo, por imagem carregando.
-  **Os quatro blobos radiais da referência estão portados** (`circle`,
-  `at 40% 40%`, `at 60% 60%`, `at 40% 60%`), com paradas da marca, **antes** do
-  cônico na lista de camadas: são manchas presas à caixa, e é o que faz a cor
-  variar por **posição** e não só pelo ângulo do arco.
+  **Os quatro blobos radiais da referência foram portados e saíram, por
+  medição**: são círculos no **interior** da caixa (degradê morrendo em 15–20%
+  do raio) e o que se vê desta peça é só o anel de 2px na **aresta** — eles
+  nunca o alcançam. Vale igual na referência, onde o raio efetivo é ~44px num
+  cartão de 374×230 contra um anel de 3px. Eram quatro camadas de
+  `background-image` fiéis ao fonte e invisíveis nas duas pontas. Repô-las
+  exige raio de 60–80% da caixa para cruzarem a aresta, e aí não é port, é
+  desenho nosso.
   **E a largura de faixa é o que importa, não o número de voltas.** A referência
   tem 4 cores × 5 voltas = 20 faixas de 18°, e a janela de 80° mostra 4,4
   delas. Copiar o 5 com as **oito** paradas da marca dava 40 faixas de 9° e 8,9

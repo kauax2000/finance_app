@@ -2300,36 +2300,18 @@
        recria o defeito. */
     background:
       linear-gradient(var(--card), var(--card)) padding-box,
-      /* **Os quatro blobos da referência**, nas posições dela (`circle`,
-         `at 40% 40%`, `at 60% 60%`, `at 40% 60%`), com paradas da marca no
-         lugar dos quatro hexadecimais. Eles vêm **antes** do cônico, como lá:
-         são manchas presas à caixa, então a cor passa a variar também por
-         **posição**, e não só pelo ângulo do arco. Sem eles o mesmo lado do
-         aviso acende sempre com as mesmas cores. */
-      radial-gradient(
-          circle,
-          var(--brand-magenta) 10%,
-          transparent 20%
-        )
-        border-box,
-      radial-gradient(
-          circle at 40% 40%,
-          var(--brand-amber) 5%,
-          transparent 15%
-        )
-        border-box,
-      radial-gradient(
-          circle at 60% 60%,
-          var(--brand-green) 10%,
-          transparent 20%
-        )
-        border-box,
-      radial-gradient(
-          circle at 40% 60%,
-          var(--brand-blue) 10%,
-          transparent 20%
-        )
-        border-box,
+      /* **A referência tem quatro `radial-gradient` aqui, e eles não pintam
+         nada.** Foram portados e medidos: são círculos no **interior** da
+         caixa (`circle`, `at 40% 40%`, `at 60% 60%`, `at 40% 60%`, com o
+         degradê morrendo em 15–20% do raio) e o que se vê desta peça é só o
+         anel de 2px na **aresta** — eles nunca o alcançam. Vale igual na
+         referência: num cartão de 374×230 o raio efetivo é ~44px contra um
+         anel de 3px na borda.
+
+         Saíram por isso: quatro camadas de `background-image` fiéis ao fonte e
+         invisíveis nas duas pontas. **Quem for repô-las precisa de raio de
+         60–80% da caixa para cruzarem a aresta** — e aí não é mais um port,
+         é desenho nosso. */
       repeating-conic-gradient(
           from 236.84deg at 50% 50%,
           var(--brand-teal) calc(0.0% / var(--alert-glow-repeat)),
