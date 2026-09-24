@@ -1895,6 +1895,21 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   foto não muda com o tema. A capa é a `CardMedia`, nova no `Card`. Um
   carrossel de um item por vez leva `fade={false}`: a dissolução apagaria o
   próprio item visível.
+- **`Chart` — nove formas, e a marca não entra no dado** (rodada 135). Além
+  de área, linha, barras, rosca e faísca: `ChartSplit` (divisão de um total
+  em 2–4 partes, porcentagens pelo maior resto), `ChartRadial` (um anel por
+  categoria contra o próprio teto; com `bands` a cor é **estado**, os cortes
+  do `Progress`), `ChartHeatmap` (o ritmo por dia; a intensidade é
+  **dinheiro**, cinco degraus de `--chart-expense`/`--chart-income` sobre
+  `--muted`, misturados em **`oklab`** — em `oklch` o matiz 0 do cinza
+  puxava o verde para o marrom) e `ChartRadar` (perfil contra a média, 3–8
+  eixos). `ChartBars` tem `shape="pill"` e `track`; linha e área têm
+  `marker="last"`, o último ponto **com valor**; o esqueleto tem
+  `variant="wave"`. As duas únicas coisas que se movem num gráfico são o halo
+  do marcador e a onda, e nenhuma é valor. O tooltip veste a placa flutuante.
+  **Arco-íris sob série continua proibido**: a marca encosta pelo
+  `Card variant="brand"`, na borda. O cabeçalho (delta, período, KPIs) é
+  composição de `Card`, não peça do `Chart`.
 - **`EmptyState` — a forma diz a situação** (rodada 131). Primeiro uso é
   `EmptyStateGhost` (linhas-fantasma neutras da lista que vai existir,
   subindo num laço) **sem arco-íris** — quatro versões dele ali foram

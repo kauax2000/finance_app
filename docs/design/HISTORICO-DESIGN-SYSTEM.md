@@ -14034,3 +14034,62 @@ eles foram para o `carousel.tsx`.
   `tabIndex` e `onKeyDown`, o caso do item do acordeão, que ganhou foco e
   Enter;
 - o catálogo passou a cobrar par de `--scrim`.
+
+### Rodada 135 — o Chart ganha quatro formas e quatro melhorias
+
+O dono trouxe 13 referências de gráfico e pediu que elas virassem versões do
+`Chart`, adaptadas à marca. Todas entraram em `chart.tsx`, no precedente do
+`Carousel`: uma entrada no registry e uma página só.
+
+**Formas novas:**
+- `ChartSplit`: a divisão de um total, com porcentagens pelo maior resto;
+- `ChartRadial`: anéis de orçamento, com os cortes do `Progress`;
+- `ChartHeatmap`: o calendário de gasto ou de entrada;
+- `ChartRadar`: o perfil do mês contra a média, com a segunda série
+  tracejada.
+
+**Melhorias:**
+- o tooltip veste `menuPanelSurfaceClassName`, e isso fecha a dívida da
+  placa opaca com delta 0 contra o cartão;
+- `ChartBars` ganhou `shape="pill"` e `track`;
+- `ChartLine`/`ChartArea` ganharam `marker="last"`;
+- `ChartSkeleton` ganhou `variant="wave"`.
+
+**A marca não entra no dado.** O arco-íris sob série continua sendo a
+invariante 3 violada sete vezes, e o conic já tinha sido recusado por ler como
+pizza. A marca encosta no gráfico pelo `Card variant="brand"`, na borda.
+
+**A intensidade do calendário é dinheiro**, por decisão do dono: cinco degraus
+de `--chart-expense` ou `--chart-income` sobre `--muted`, cortados nos quartis
+dos dias com valor.
+
+**Medido:**
+- **A mistura saía marrom.** Em `oklch`, `--muted` tem matiz 0 e os degraus
+  do meio de `income` atravessavam o vermelho. Em `oklab` não há matiz a
+  interpolar.
+- **Degrau 4 contra `--card`:** 4,77 e 4,72 no claro, 6,21 e 7,12 no escuro.
+- **Degraus vizinhos:** entre 1,35 e 1,62.
+- **O halo do marcador:** fica centrado no ponto (`transform-box: fill-box`,
+  origem 4px 4px). Sem isso, o `scale` do `ping` parte da origem do `<svg>`.
+- **O tooltip:** `oklab(0.205 0 0 / 0.6)` com `blur(24px)` no escuro.
+- **A 375px:** o ano rola e abre em hoje (`scrollLeft` 578 de 871), sem
+  estouro horizontal da página.
+
+**Duas coisas passaram a se mover dentro do gráfico**, e nenhuma é valor:
+- o halo do ponto de hoje, que usa `animate-ping` pelo precedente do
+  `BadgeDot pulse`;
+- a onda do esqueleto, que é `@utility chart-wave`, depois de `no-scrollbar`.
+
+O bloco global de movimento reduzido corta as duas.
+
+**Consumidor migrado.** A composição da fatura
+(`credit-card-invoice-analytics-panel.tsx`) trocou a rosca de duas fatias com
+`oklch` cravado pela `ChartSplit` na rampa (`--chart-3`/`--chart-2`). A lista
+embaixo perdeu o hover sincronizado com a rosca, que não existe mais.
+
+**Fica para depois:**
+- a ordem da legenda do Recharts, que sai alfabética e não na ordem das
+  séries;
+- as outras cinco telas com Recharts cru, que continuam no backlog da rodada
+  30.
+

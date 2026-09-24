@@ -6,6 +6,7 @@ import {
   ChartBarSquareIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline"
+import { ArrowTrendingUpIcon } from "@heroicons/react/16/solid"
 
 import {
   ChartArea,
@@ -16,12 +17,16 @@ import {
   ChartEmpty,
   ChartError,
   ChartGrid,
+  ChartHeatmap,
   ChartLegend,
   ChartLegendContent,
   ChartLine,
+  ChartRadar,
+  ChartRadial,
   ChartReferenceLine,
   ChartSkeleton,
   ChartSparkline,
+  ChartSplit,
   ChartTooltip,
   ChartTooltipContent,
   ChartXAxis,
@@ -29,7 +34,32 @@ import {
   chartSeriesColor,
   type ChartConfig,
 } from "@/components/ui/chart"
+import { Badge } from "@/components/ui/badge"
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  DescriptionDetails,
+  DescriptionList,
+  DescriptionListItem,
+  DescriptionTerm,
+} from "@/components/ui/description-list"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { BUDGET_BANDS } from "@/lib/budget-bands"
 import { currencyBRL, currencyCompactBRL } from "@/lib/formatters"
+import { addDaysYmd } from "@/lib/transaction-date"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 import { Group, Spec, Stack } from "../ds-kit"
 
@@ -76,6 +106,211 @@ const CONFIG_CONSUMO = {
   Usado: { label: "Usado" },
   Disponível: { label: "Disponível" },
 } satisfies ChartConfig
+
+const ANO = [
+  { mes: "Jan", entradas: 8300, saidas: 6200, investido: 900 },
+  { mes: "Fev", entradas: 8400, saidas: 5600, investido: 1200 },
+  { mes: "Mar", entradas: 8432, saidas: 6218, investido: 1000 },
+  { mes: "Abr", entradas: 8100, saidas: 5100, investido: 1400 },
+  { mes: "Mai", entradas: 9200, saidas: 6900, investido: 800 },
+  { mes: "Jun", entradas: 8600, saidas: 5400, investido: 1600 },
+  { mes: "Jul", entradas: 8800, saidas: 6100, investido: 1100 },
+  { mes: "Ago", entradas: 9400, saidas: 5900, investido: 1800 },
+  { mes: "Set", entradas: 8900, saidas: 4800, investido: 1300 },
+]
+
+const CONFIG_ANO = {
+  entradas: { label: "Entradas", color: "var(--chart-income)" },
+  saidas: { label: "Saídas", color: "var(--chart-expense)" },
+  investido: { label: "Investido", color: "var(--chart-3)" },
+} satisfies ChartConfig
+
+/** O saldo do mês dia a dia — com os dias que ainda não vieram em `null`. */
+const SALDO_DIAS = Array.from({ length: 30 }, (_, i) => {
+  const dia = i + 1
+  const saldo =
+    dia > 24
+      ? null
+      : Math.round(4200 - dia * 95 + Math.sin(dia / 2.3) * 420 + (dia >= 5 ? 1800 : 0))
+  return { dia: String(dia).padStart(2, "0"), saldo }
+})
+
+const ORCAMENTOS = [
+  { nome: "Mercado", gasto: 1420, teto: 1600 },
+  { nome: "Lazer", gasto: 690, teto: 600 },
+  { nome: "Transporte", gasto: 380, teto: 700 },
+  { nome: "Casa", gasto: 510, teto: 600 },
+]
+
+const CONFIG_ORCAMENTOS = {
+  Mercado: { label: "Mercado" },
+  Lazer: { label: "Lazer" },
+  Transporte: { label: "Transporte" },
+  Casa: { label: "Casa" },
+} satisfies ChartConfig
+
+/** Gasto por dia, determinístico: um esqueleto que muda a cada render pisca. */
+const HOJE = "2026-09-24"
+const GASTO_DIARIO = Array.from({ length: 371 }, (_, i) => {
+  const date = addDaysYmd(HOJE, -i)
+  const onda = Math.sin(i * 1.7) * Math.cos(i * 0.37)
+  const value = onda < -0.35 ? 0 : Math.round((onda + 0.4) * 180 + (i % 30 === 5 ? 2400 : 0))
+  return { date, value }
+})
+
+const PERFIL = [
+  { categoria: "Mercado", mes: 1420, media: 1310 },
+  { categoria: "Casa", mes: 510, media: 820 },
+  { categoria: "Transporte", mes: 380, media: 460 },
+  { categoria: "Lazer", mes: 690, media: 420 },
+  { categoria: "Saúde", mes: 210, media: 300 },
+  { categoria: "Assinaturas", mes: 190, media: 180 },
+]
+
+const CONFIG_PERFIL = {
+  mes: { label: "Setembro" },
+  media: { label: "Média de 6 meses" },
+} satisfies ChartConfig
+
+const DIVISAO = [
+  { parte: "fixas", valor: 3120 },
+  { parte: "variaveis", valor: 2310 },
+  { parte: "parcelas", valor: 788 },
+]
+
+const CONFIG_DIVISAO = {
+  fixas: { label: "Fixas" },
+  variaveis: { label: "Variáveis" },
+  parcelas: { label: "Parcelas" },
+} satisfies ChartConfig
+
+const CONFIG_FATURA = {
+  parcelas: { label: "Parcelas e recorrências", color: "var(--chart-3)" },
+  compras: { label: "Compras do período", color: "var(--chart-2)" },
+} satisfies ChartConfig
+
+/** O cartão da referência "Bar Chart", nas peças da casa. */
+function CartaoAno() {
+  const [periodo, setPeriodo] = React.useState("ano")
+  return (
+    <Card className="w-full max-w-md">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          Fluxo do ano
+          <Badge tone="income" size="sm">
+            <ArrowTrendingUpIcon />
+            5,2%
+          </Badge>
+        </CardTitle>
+        <CardDescription>Janeiro a setembro de 2026</CardDescription>
+        <CardAction>
+          <Select value={periodo} onValueChange={setPeriodo}>
+            <SelectTrigger size="sm" aria-label="Período">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ano">Este ano</SelectItem>
+              <SelectItem value="12m">12 meses</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardAction>
+      </CardHeader>
+      <CardContent>
+        <ChartBars
+          shape="pill"
+          track
+          stacked
+          config={CONFIG_ANO}
+          data={ANO}
+          x="mes"
+          label="Entradas, saídas e investido por mês"
+          className="w-full"
+        />
+      </CardContent>
+    </Card>
+  )
+}
+
+/** A referência "BTC" sem o ao vivo: o saldo até hoje, linha ou área. */
+function CartaoSaldo() {
+  const [forma, setForma] = React.useState("linha")
+  const comum = {
+    config: CONFIG_SALDO,
+    data: SALDO_DIAS,
+    x: "dia",
+    marker: "last" as const,
+    label: "Saldo de setembro até hoje",
+    className: "w-full",
+  }
+  return (
+    <Card variant="brand" className="w-full max-w-md">
+      <CardHeader>
+        <CardDescription>Saldo hoje</CardDescription>
+        <CardTitle className="nums font-mono text-2xl">
+          {currencyBRL(SALDO_DIAS[23].saldo ?? 0)}
+        </CardTitle>
+        <CardAction>
+          <Tabs value={forma} onValueChange={setForma}>
+            <TabsList size="sm">
+              <TabsTrigger value="linha">Linha</TabsTrigger>
+              <TabsTrigger value="area">Área</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </CardAction>
+      </CardHeader>
+      <CardContent>
+        {forma === "linha" ? (
+          <ChartLine {...comum} />
+        ) : (
+          <ChartArea {...comum} variant="gradient" />
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+/** A referência "Sleep": a leitura em cima, o gráfico no meio. */
+function CartaoOrcamento() {
+  const gasto = ORCAMENTOS.reduce((a, o) => a + o.gasto, 0)
+  const teto = ORCAMENTOS.reduce((a, o) => a + o.teto, 0)
+  return (
+    <Card className="w-full max-w-sm">
+      <CardHeader>
+        <CardTitle>Orçamentos de setembro</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col items-center gap-4">
+        <DescriptionList className="grid w-full grid-cols-3 text-center">
+          <DescriptionListItem>
+            <DescriptionTerm>Gasto</DescriptionTerm>
+            <DescriptionDetails className="nums font-mono">
+              {currencyCompactBRL(gasto)}
+            </DescriptionDetails>
+          </DescriptionListItem>
+          <DescriptionListItem>
+            <DescriptionTerm>Teto</DescriptionTerm>
+            <DescriptionDetails className="nums font-mono">
+              {currencyCompactBRL(teto)}
+            </DescriptionDetails>
+          </DescriptionListItem>
+          <DescriptionListItem>
+            <DescriptionTerm>Estourou</DescriptionTerm>
+            <DescriptionDetails>1 de 4</DescriptionDetails>
+          </DescriptionListItem>
+        </DescriptionList>
+        <ChartRadial
+          bands={BUDGET_BANDS}
+          config={CONFIG_ORCAMENTOS}
+          data={ORCAMENTOS}
+          nameKey="nome"
+          dataKey="gasto"
+          maxKey="teto"
+          label="Orçamento consumido por categoria"
+          className="w-48"
+        />
+      </CardContent>
+    </Card>
+  )
+}
 
 const ASPECTOS = [
   ["video", "16/9 — o padrão, e a proporção de um painel de dashboard"],
@@ -124,7 +359,7 @@ export default function ChartDoc() {
   return (
     <>
       <Usage>
-        Todo gráfico do app. <strong>A anatomia</strong> — <code>ChartContainer</code>, <code>ChartGrid</code>, os eixos, <code>ChartTooltip</code>, <code>ChartLegend</code> — compõe qualquer gráfico do Recharts; <strong>as cinco formas</strong> — <code>ChartArea</code>, <code>ChartLine</code>, <code>ChartBars</code>, <code>ChartDonut</code>, <code>ChartSparkline</code> — são a forma curta sobre ela. Um número sozinho não é gráfico: é <code>StatCard</code>.
+        Todo gráfico do app. <strong>A anatomia</strong> — <code>ChartContainer</code>, <code>ChartGrid</code>, os eixos, <code>ChartTooltip</code>, <code>ChartLegend</code> — compõe qualquer gráfico do Recharts; <strong>as formas</strong> — <code>ChartArea</code>, <code>ChartLine</code>, <code>ChartBars</code>, <code>ChartDonut</code>, <code>ChartSparkline</code>, e desde a rodada 135 <code>ChartSplit</code>, <code>ChartRadial</code>, <code>ChartHeatmap</code> e <code>ChartRadar</code> — são a forma curta sobre ela. Um número sozinho não é gráfico: é <code>StatCard</code>.
       </Usage>
 
       <DocSection
@@ -256,6 +491,31 @@ const config = {
       </DocNote>
 
       <DocSection
+        title="O ponto de hoje"
+        description={
+          <>
+            <code>marker=&quot;last&quot;</code> marca o último ponto <strong>com valor</strong> de cada série, e um halo pulsa atrás dele. Um mês que ainda não terminou traz os dias futuros em <code>null</code>, e o marcador para em hoje, não no dia 30. Vale em <code>ChartLine</code> e <code>ChartArea</code>.
+          </>
+        }
+        code={`// Dias depois de hoje com saldo: null
+<ChartLine marker="last" x="dia" data={saldoDoMes} … />`}
+        previewClassName="flex-col items-stretch gap-6 p-6"
+      >
+        <ChartLine
+          marker="last"
+          config={CONFIG_SALDO}
+          data={SALDO_DIAS}
+          x="dia"
+          label="Saldo de setembro até hoje"
+          className="w-full max-w-2xl"
+        />
+      </DocSection>
+
+      <DocNote title="A única coisa que se move dentro de um gráfico">
+        Nenhum <strong>valor</strong> se move enquanto a pessoa o lê, e isso continua de pé. O halo não é valor: é a marca do ponto em que a série está agora, e o precedente é o <code>BadgeDot pulse</code>. Ele é <code>animate-ping</code>, então o bloco global de movimento reduzido o corta.
+      </DocNote>
+
+      <DocSection
         title="Barras"
         description={
           <>
@@ -300,6 +560,37 @@ const config = {
       <DocNote title="Os 2px entre segmentos são pintados, não vazados">
         O vão entre barras empilhadas e entre fatias é um <code>stroke</code> de 2px em <code>var(--chart-surface)</code>, que o <code>ChartContainer</code> declara. Com <code>transparent</code> o vão mostraria o segmento de trás.
       </DocNote>
+
+      <DocSection
+        title="Pílula e trilho"
+        description={
+          <>
+            <code>shape=&quot;pill&quot;</code> arredonda o segmento inteiro, para poucas colunas sem eixo que leem como peça; empilhado, cada segmento vira uma pílula solta. <code>track</code> desenha a coluna inteira em <code>--muted</code> atrás, até o máximo: o espaço que sobra.
+          </>
+        }
+        code={`<ChartBars shape="pill" track stacked x="mes" … />`}
+        previewClassName="flex-col items-stretch gap-6 p-6"
+      >
+        <ChartBars
+          shape="pill"
+          track
+          stacked
+          config={CONFIG_ANO}
+          data={ANO}
+          x="mes"
+          label="Entradas, saídas e investido por mês, em pílula com trilho"
+          className="w-full max-w-2xl"
+        />
+        <ChartBars
+          shape="pill"
+          track
+          config={CONFIG_SALDO}
+          data={FLUXO}
+          x="mes"
+          label="Saldo por mês, em pílula com trilho"
+          className="w-full max-w-2xl"
+        />
+      </DocSection>
 
       <DocSection
         title="Rosca"
@@ -362,6 +653,144 @@ const config = {
       <DocNote title="A legenda da rosca é HTML, fora do SVG">
         Dentro do SVG a legenda encolheria o anel e tiraria o miolo do centro. Na rosca ela é HTML ao lado do gráfico, e <code>ChartLegendContent</code> lê o contexto sem exigi-lo.
       </DocNote>
+
+      <DocSection
+        title="Divisão"
+        description={
+          <>
+            <code>ChartSplit</code> divide um total em duas a quatro partes numa barra só. É o que a rosca de duas fatias quer dizer, sem gastar um quadrado. <code>labels=&quot;below&quot;</code> escreve nome e porcentagem sob cada segmento (menos de 12% cai para a legenda); <code>legend</code> põe tudo numa fileira. As porcentagens somam 100 pelo maior resto.
+          </>
+        }
+        code={`<ChartSplit
+  config={config}
+  data={[{ parte: "fixas", valor: 3120 }, …]}
+  nameKey="parte"
+  dataKey="valor"
+  label="Gasto do mês por tipo"
+/>`}
+        previewClassName="flex-col items-stretch gap-8 p-6"
+      >
+        <ChartSplit
+          config={CONFIG_DIVISAO}
+          data={DIVISAO}
+          nameKey="parte"
+          dataKey="valor"
+          label="Gasto do mês por tipo"
+          className="max-w-md"
+        />
+        <ChartSplit
+          labels="legend"
+          config={CONFIG_FATURA}
+          data={[
+            { parte: "parcelas", valor: 1240 },
+            { parte: "compras", valor: 2580 },
+          ]}
+          nameKey="parte"
+          dataKey="valor"
+          label="Composição da fatura"
+          className="max-w-md"
+        />
+      </DocSection>
+
+      <DocSection
+        title="Anéis"
+        description={
+          <>
+            <code>ChartRadial</code> é o <code>Progress</code> dobrado em círculo: um anel por categoria, cada um contra o próprio teto (<code>maxKey</code>). Com <code>bands</code> a cor diz <strong>estado</strong>, com os mesmos cortes do orçamento (<code>BUDGET_BANDS</code>), e o estouro enche o anel e fica vermelho; sem <code>bands</code>, a cor só identifica. Cinco anéis no máximo.
+          </>
+        }
+        code={`<ChartRadial
+  bands={BUDGET_BANDS}
+  config={config}
+  data={orcamentos}
+  nameKey="nome"
+  dataKey="gasto"
+  maxKey="teto"
+  label="Orçamento consumido por categoria"
+/>`}
+        previewClassName="flex-wrap items-start justify-center gap-10 p-6"
+      >
+        <ChartRadial
+          bands={BUDGET_BANDS}
+          config={CONFIG_ORCAMENTOS}
+          data={ORCAMENTOS}
+          nameKey="nome"
+          dataKey="gasto"
+          maxKey="teto"
+          label="Orçamento consumido por categoria, com os cortes"
+          className="w-52"
+        />
+        <ChartRadial
+          config={CONFIG_ORCAMENTOS}
+          data={ORCAMENTOS}
+          nameKey="nome"
+          dataKey="gasto"
+          maxKey="teto"
+          label="Orçamento consumido por categoria, na rampa"
+          className="w-52"
+          center={<ChartDonutCenter value="3" label="no limite" />}
+        />
+      </DocSection>
+
+      <DocSection
+        title="Calendário"
+        description={
+          <>
+            <code>ChartHeatmap</code> mostra o ritmo por dia: uma coluna por semana, domingo em cima. A intensidade é <strong>dinheiro</strong>, em cinco degraus do tom (<code>expense</code> ou <code>income</code>) sobre <code>--muted</code>, cortados nos quartis dos dias com valor, para o dia do aluguel não apagar o resto. O rodapé mostra o dia sob o ponteiro ou o toque.
+          </>
+        }
+        code={`<ChartHeatmap
+  range="quarter"   // ou "year", que rola no telefone
+  tone="expense"
+  data={[{ date: "2026-09-24", value: 84 }, …]}
+  label="Gasto por dia"
+/>`}
+        previewClassName="flex-col items-start gap-8 p-6"
+      >
+        <ChartHeatmap
+          data={GASTO_DIARIO}
+          label="Gasto por dia, últimos três meses"
+          dataTable
+        />
+        <ChartHeatmap
+          range="year"
+          tone="income"
+          data={GASTO_DIARIO}
+          label="Entradas por dia, último ano"
+          className="max-w-full"
+        />
+      </DocSection>
+
+      <DocNote title="As células não são focáveis, de propósito">
+        Um ano são 365 paradas de <code>Tab</code>. Por teclado e leitor de tela, o caminho é o <code>dataTable</code>, e o nome acessível já resume o total e o dia de pico.
+      </DocNote>
+
+      <DocSection
+        title="Perfil"
+        description={
+          <>
+            <code>ChartRadar</code> põe várias categorias ao mesmo tempo, uma por eixo, com duas ou três séries sobrepostas: este mês contra a média. Ele mostra <strong>onde o mês fugiu do normal</strong>, não a magnitude, porque comprimento em eixos que irradiam se compara mal. Use de 3 a 8 eixos. A segunda série é tracejada.
+          </>
+        }
+        code={`<ChartRadar x="categoria" grid="polygon" config={config} data={perfil} … />`}
+        previewClassName="flex-wrap items-start justify-center gap-10 p-6"
+      >
+        <ChartRadar
+          config={CONFIG_PERFIL}
+          data={PERFIL}
+          x="categoria"
+          label="Gasto de setembro contra a média de seis meses"
+          className="w-80"
+        />
+        <ChartRadar
+          grid="circle"
+          config={CONFIG_PERFIL}
+          data={PERFIL}
+          x="categoria"
+          label="Gasto de setembro contra a média de seis meses, grade circular"
+          className="w-80"
+        />
+      </DocSection>
 
       <DocSection
         title="Faísca"
@@ -523,7 +952,7 @@ const config = {
 
       <DocSection
         title="Estado"
-        description="Vazio, carregando e erro têm peça. O esqueleto usa o mesmo aspect do gráfico cheio, para a tela não saltar quando o dado chega."
+        description={`Vazio, carregando e erro têm peça. O esqueleto usa o mesmo aspect do gráfico cheio, para a tela não saltar quando o dado chega. variant="wave" sobe e desce as barras em onda, para o gráfico principal de uma tela: é um laço, então é um por tela, e o movimento reduzido o para.`}
         code={`{carregando ? <ChartSkeleton aspect="wide" />
  : erro       ? <ChartError description={erro} />
  : vazio      ? <ChartEmpty description="Nenhum lançamento entre 1 e 31 de março." />
@@ -531,6 +960,12 @@ const config = {
         previewClassName="flex-col items-stretch gap-6 p-6"
       >
         <ChartSkeleton aspect="wide" className="w-full max-w-2xl" />
+        <ChartSkeleton
+          variant="wave"
+          aspect="wide"
+          bars={14}
+          className="w-full max-w-2xl"
+        />
         <ChartEmpty
           aspect="wide"
           className="max-w-2xl"
@@ -597,7 +1032,7 @@ const config = {
       />
 
       <PropsTable
-        title="As cinco formas"
+        title="As formas"
         rows={[
           {
             prop: "data · config · x · label",
@@ -649,7 +1084,46 @@ const config = {
             prop: "center",
             type: "ReactNode",
             description:
-              "Só na rosca: o `ChartDonutCenter`, como prop porque `children` desce para o SVG.",
+              "Na rosca e nos anéis: o `ChartDonutCenter`, como prop porque `children` desce para o SVG.",
+          },
+          {
+            prop: "shape · track",
+            type: '"rounded" | "pill" · boolean',
+            default: '"rounded" · false',
+            description:
+              "Só nas barras: a pílula inteira e o trilho em `--muted` até o máximo.",
+          },
+          {
+            prop: "marker",
+            type: '"last"',
+            description:
+              "Linha e área: o último ponto com valor, marcado e pulsando.",
+          },
+          {
+            prop: "labels",
+            type: '"below" | "legend"',
+            default: '"below"',
+            description:
+              "Só na divisão: rótulos sob os segmentos, ou numa legenda só.",
+          },
+          {
+            prop: "maxKey · bands",
+            type: "string · [aviso, perigo]",
+            description:
+              "Só nos anéis: o teto de cada anel e os cortes que pintam o estado.",
+          },
+          {
+            prop: "range · tone · end",
+            type: '"quarter" | "year" · "expense" | "income" · YYYY-MM-DD',
+            default: '"quarter" · "expense" · o dia mais recente',
+            description:
+              "Só no calendário. `data` é `{ date, value }[]`.",
+          },
+          {
+            prop: "grid",
+            type: '"polygon" | "circle"',
+            default: '"polygon"',
+            description: "Só no perfil: a forma da grade.",
           },
         ]}
       />
@@ -707,6 +1181,27 @@ const config = {
         A rampa tem cinco degraus; do sexto em diante <code>chartSeriesColor</code> devolve <code>--muted-foreground</code> em vez de repetir <code>--chart-1</code>. Quem tem seis categorias agrega a cauda em &ldquo;Outros&rdquo;: quem tem os dados é quem pode agregar.
       </DocNote>
 
+      <DocSection
+        title="O cartão em volta"
+        description={
+          <>
+            O cabeçalho do gráfico não é peça do <code>Chart</code>: é <code>Card</code> + <code>CardHeader</code>, com o <code>Badge</code> do delta, o <code>Select</code> do período ou as <code>Tabs</code> da forma no <code>CardAction</code>, e a leitura em <code>DescriptionList</code>. O <code>Card variant=&quot;brand&quot;</code> é o único jeito de a marca encostar num gráfico: o brilho fica na borda, nunca no dado. Um por tela.
+          </>
+        }
+        code={`<Card>
+  <CardHeader>
+    <CardTitle>Fluxo do ano <Badge tone="income">5,2%</Badge></CardTitle>
+    <CardAction><Select …/></CardAction>
+  </CardHeader>
+  <CardContent><ChartBars shape="pill" track … /></CardContent>
+</Card>`}
+        previewClassName="flex-wrap items-start justify-center gap-6 p-6"
+      >
+        <CartaoAno />
+        <CartaoSaldo />
+        <CartaoOrcamento />
+      </DocSection>
+
       <Group title="Regras que atravessam telas" layout="grid">
         <Spec title="O que sempre vale">
           <Stack className="gap-2 text-xs text-muted-foreground">
@@ -749,6 +1244,13 @@ const config = {
               teto → <code>variant=&quot;gauge&quot;</code>.
             </p>
             <p>
+              <strong className="text-foreground">Divisão de um total em 2 a 4 partes</strong>{" "}
+              → <code>ChartSplit</code>. <strong className="text-foreground">Cada categoria contra o próprio teto</strong>{" "}
+              → <code>ChartRadial</code>. <strong className="text-foreground">Ritmo por dia</strong>{" "}
+              → <code>ChartHeatmap</code>. <strong className="text-foreground">Perfil contra a média</strong>{" "}
+              → <code>ChartRadar</code>.
+            </p>
+            <p>
               <strong className="text-foreground">Um número só</strong> não é
               gráfico: é <code>StatCard</code>. Com tendência ao lado,{" "}
               <code>ChartSparkline</code>.
@@ -776,7 +1278,7 @@ const config = {
       </DocNote>
 
       <DocNote title="Fora, de propósito">
-        <strong>Sem autoplay e sem animação de entrada</strong>: um valor que se move enquanto a pessoa o lê é hostil. <strong>Sem dois eixos Y</strong>: escalas diferentes são dois gráficos, ou uma indexada à outra. <strong>Sem embrulho para <code>ComposedChart</code></strong>: componha a anatomia.
+        <strong>Sem autoplay e sem animação de entrada</strong>: um valor que se move enquanto a pessoa o lê é hostil. As duas coisas que se movem não são valor: o halo de <code>marker=&quot;last&quot;</code> e o esqueleto em onda. <strong>Sem arco-íris no dado</strong>: a marca encosta no gráfico pelo <code>Card variant=&quot;brand&quot;</code>, na borda. <strong>Sem dois eixos Y</strong>: escalas diferentes são dois gráficos, ou uma indexada à outra. <strong>Sem embrulho para <code>ComposedChart</code></strong>: componha a anatomia.
       </DocNote>
     </>
   )

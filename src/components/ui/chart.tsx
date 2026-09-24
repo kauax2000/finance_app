@@ -2079,12 +2079,17 @@ export function chartHeatLevels(values: number[]): number[] {
  * não existe, o Tailwind varre o código como texto. O tom entra por
  * `--chart-heat`, que a variante publica, e o degrau só mistura mais ou menos
  * dele sobre `--muted` — o mesmo leito do trilho das barras e dos anéis.
+ *
+ * **A mistura é em `oklab`, não em `oklch`**, e foi medido: `--muted` é cinza
+ * com matiz 0, e em `oklch` a interpolação de matiz parte do verde (152) em
+ * direção ao 0 — os degraus do meio de `income` saíam **marrons e oliva**. Em
+ * `oklab` não há matiz a interpolar: o degrau só perde croma rumo ao cinza.
  */
 const CHART_HEAT_LEVEL = [
   "bg-muted",
-  "bg-[color-mix(in_oklch,var(--chart-heat)_25%,var(--color-muted))]",
-  "bg-[color-mix(in_oklch,var(--chart-heat)_50%,var(--color-muted))]",
-  "bg-[color-mix(in_oklch,var(--chart-heat)_75%,var(--color-muted))]",
+  "bg-[color-mix(in_oklab,var(--chart-heat)_25%,var(--color-muted))]",
+  "bg-[color-mix(in_oklab,var(--chart-heat)_50%,var(--color-muted))]",
+  "bg-[color-mix(in_oklab,var(--chart-heat)_75%,var(--color-muted))]",
   "bg-(--chart-heat)",
 ] as const
 
