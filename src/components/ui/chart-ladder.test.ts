@@ -181,18 +181,21 @@ describe("escada e invariantes do Chart", () => {
     expect(regras.length).toBeGreaterThanOrEqual(4)
   })
 
-  it("11. nenhuma marca anima ao montar — foi o que escondia as roscas", () => {
-    // O Recharts anima de fábrica e não olha `prefers-reduced-motion`. Além de
-    // hostil num app de finanças, era um defeito visível: medido, com a
-    // animação ligada as barras e as áreas desenhavam na carga da página e as
-    // roscas **só apareciam quando a pessoa rolava até elas**. Depois: 12
-    // setores presentes sem rolagem nenhuma.
-    expect(CODIGO).toContain("const CHART_ANIMATION = false")
+  it("11. toda marca anima pela fase, e a rosca começa sem espera", () => {
+    // Rodada 136: a rodada 30 desligou a animação por duas razões que a
+    // medição derrubou. O Recharts 3.8 olha `prefers-reduced-motion` (é o
+    // `'auto'` de fábrica), e a rosca vazia vinha do `animationBegin` de 400ms
+    // somado a re-renders que reiniciavam do zero — não de visibilidade.
+    expect(CODIGO).not.toContain("CHART_ANIMATION")
     const marcas = CODIGO.match(/<(Area|Line|Bar|Pie|Radar|RadialBar)\b/g) ?? []
-    const desligadas = CODIGO.match(/isAnimationActive=\{CHART_ANIMATION\}/g) ?? []
-    expect(desligadas.length).toBe(marcas.length)
-    // E nenhuma escreve o booleano à mão, que é como uma marca nova escaparia.
+    const comFase = CODIGO.match(/\{\.\.\.chartMarkMotion\(m\.fase/g) ?? []
+    expect(comFase.length).toBe(marcas.length)
+    // Nenhuma escreve o booleano à mão, que é como uma marca nova escaparia.
     expect(CODIGO).not.toMatch(/isAnimationActive=\{(true|false)\}/)
+    // A rosca e os anéis não escalonam: o `begin` deles é zero.
+    expect(
+      (CODIGO.match(/chartMarkMotion\(m\.fase, 0, \{ stagger: false \}\)/g) ?? []).length
+    ).toBe(2)
   })
 
   it("12. o anel da rosca fica centrado sobre a própria legenda", () => {
@@ -201,7 +204,7 @@ describe("escada e invariantes do Chart", () => {
     // define: medido, 208px de rosca num envelope de 412 saíam 102px fora do
     // centro. O medidor escondia o defeito, porque a legenda de dois itens é
     // mais estreita que o anel.
-    expect(CODIGO).toContain('className="flex w-fit flex-col items-center"')
+    expect(CODIGO).toContain('"flex w-fit flex-col items-center"')
     // `w-fit` é `fit-content` e respeita o espaço disponível — é o que mantém
     // a legenda quebrando linha a 375px em vez de esticar o envelope.
     expect(CODIGO).not.toContain('className="flex w-fit flex-col"')
