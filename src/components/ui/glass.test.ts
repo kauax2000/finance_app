@@ -377,7 +377,7 @@ describe("a superfície de vidro", () => {
         // `Popover`, `HoverCard` e `Tooltip`, com o doc da régua afirmando ter
         // extraído as quatro. A do `Tooltip` ainda divergia — `rounded-md` e
         // `border` contra o `rounded-lg` e o `ring` de todas as outras.
-        for (const nome of ["select", "popover", "hover-card", "command", "tooltip"] as const) {
+        for (const nome of ["select", "popover", "hover-card", "command", "tooltip", "chart"] as const) {
             const src = semComentariosDe(`src/components/ui/${nome}.tsx`)
             expect(src, `${nome} precisa vestir a régua`).toContain("menuPanelSurfaceClassName")
             expect(src, `${nome} tem cópia da superfície`).not.toMatch(

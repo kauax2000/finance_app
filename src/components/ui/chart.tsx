@@ -22,6 +22,7 @@ import {
 } from "recharts"
 
 import { cn } from "@/lib/utils"
+import { menuPanelSurfaceClassName } from "@/lib/menu-classes"
 import {
   currencyBRL,
   currencyCompactBRL,
@@ -525,7 +526,12 @@ function ChartTooltipContent({
     <div
       data-slot="chart-tooltip-content"
       className={cn(
-        "grid min-w-32 items-start gap-1.5 rounded-lg border border-border/80 bg-popover px-2.5 py-1.5 text-xs text-popover-foreground shadow-md",
+        // A placa flutuante da casa — a mesma do `Tooltip`, do `Popover` e dos
+        // menus. Era `bg-popover` opaco com `border`, a última superfície
+        // flutuante com a tinta velha: delta 0 contra o cartão onde o gráfico
+        // mora, e só a sombra a separava dele (rodada 135).
+        "grid min-w-32 items-start gap-1.5 px-2.5 py-1.5 text-xs",
+        menuPanelSurfaceClassName,
         className
       )}
     >
