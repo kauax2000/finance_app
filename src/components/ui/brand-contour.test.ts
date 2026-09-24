@@ -248,59 +248,42 @@ describe("contorno de marca", () => {
     expect(src).toMatch(/variant !== "brand"/)
   })
 
-  it("9. a família da régua — `AnnouncementBar`", () => {
-    // A terceira família de peça de marca. O contorno vive em 1px de
-    // `border-box` sobre um núcleo chapado; o preenchimento (`Progress`,
-    // `Slider`) revela o degradê numa barra; a **régua** põe o arco-íris num
-    // fio na **aresta** do aviso — aqui, horizontal, na base da faixa.
-    //
-    // Ela existe porque o contorno degenera numa faixa de largura total:
-    // esquerda e direita saem da tela e o topo encosta na borda do viewport,
-    // sobrando exatamente os dois fios horizontais.
-    //
-    // **O `Alert` saiu desta família na rodada 119** e virou a quarta, a do
-    // brilho — teste 10. A barra ficou, e a razão é a mesma geometria: um arco
-    // correndo pelas quatro bordas de uma faixa full-bleed degenera igual.
+  it("9. a família do véu — `AnnouncementBar`", () => {
+    // A barra saiu da família da régua (um fio de 1px na base) e virou o véu
+    // do `Banner` rainbow do Fumadocs: o arco-íris translúcido **atrás** do
+    // texto, mascarado a partir do topo central e deslizando em 20s. É a
+    // exceção consciente à invariante 3, paga pelo alfa `--brand-flow-alpha`
+    // e medida em `scripts/tone-contrast.mjs`.
     const barra = announcementBarVariants({ variant: "brand" })
-    const PECAS = { "announcement-bar/brand": barra }
+    const classes = barra.split(/\s+/)
+    const CSS = fonteCss()
 
-    for (const [nome, classes] of Object.entries(PECAS)) {
-      // Modo de falha nº 2 do cabeçalho deste arquivo: sem esta utility o
-      // token não é declarado no elemento, o `background-image` cai para
-      // `none` e a régua desaparece **sem erro nenhum**.
-      expect(classes.split(/\s+/), nome).toContain("brand-rainbow-image")
-
-      // O degradê mora no pseudo, e nunca no elemento: arco-íris sob texto é a
-      // invariante 3 violada com sete matizes de uma vez, e é o que o fio de
-      // 1–2px evita por construção.
-      const pinturas = classes
-        .split(/\s+/)
-        .filter((c) => c.includes("bg-(image:--brand-rainbow)"))
-      expect(pinturas.length, nome).toBeGreaterThan(0)
-      for (const c of pinturas) {
-        expect(c, nome).toMatch(/^(before|after):/)
-      }
-
-      // Nem contorno nem halo. As duas primeiras absências separam esta
-      // família da do contorno (que sempre traz um núcleo chapado em
-      // `--brand-fill` sob uma camada `border-box`); a terceira é o motivo de o
-      // `brandOutline` existir — o `::after` borrado sangra 4px e encosta no
-      // vizinho, que num aviso é o conteúdo da tela.
-      expect(classes, nome).not.toContain("--brand-fill:")
-      expect(classes, nome).not.toContain("_border-box]")
-      expect(classes, nome).not.toMatch(/blur/)
+    // O véu mora num pseudo em `z` negativo, e o `isolate` é o que o mantém
+    // visível: sem raiz de empilhamento própria o pseudo cai atrás do fundo
+    // de um ancestral (barra não `sticky`) e some sem erro nenhum.
+    for (const c of ["isolate", "before:-z-1", "before:inset-0", "before:brand-flow"]) {
+      expect(classes, c).toContain(c)
     }
 
-    // A geometria: o fio é horizontal, na base, e tem a espessura do fio que
-    // substitui.
-    for (const c of ["after:inset-x-0", "after:bottom-0", "after:h-px"]) {
-      expect(barra.split(/\s+/), c).toContain(c)
-    }
+    // A régua saiu: dois arco-íris na mesma faixa seria o defeito.
+    expect(barra).not.toContain("after:bg-(image:--brand-rainbow)")
+    expect(barra).not.toMatch(/blur/)
 
-    // **O fio da marca substitui o do `sticky`, e não se soma a ele.** Duas
-    // linhas de 1px empilhadas — uma cinza e uma de arco-íris — é o defeito
-    // que isto evita.
-    expect(barra.split(/\s+/)).toContain("border-b-0")
+    // A utility existe, com a máscara de duas camadas da referência, e mora
+    // depois de `no-scrollbar` — a faixa `glass-material…no-scrollbar` é
+    // fatiada pelo `glass.test.ts` e reprova utility nova.
+    const util = CSS.indexOf("@utility brand-flow")
+    expect(util).toBeGreaterThan(CSS.indexOf("@utility no-scrollbar"))
+    const bloco = CSS.slice(util, CSS.indexOf("@utility", util + 1))
+    expect(bloco).toMatch(/mask-composite: intersect/)
+    expect(bloco).toMatch(/var\(--brand-flow-alpha\)/)
+    expect(bloco).toMatch(/animation: brand-flow 20s linear infinite/)
+
+    // O alfa é por tema: é ele que segura o contraste do texto.
+    expect(CSS.match(/--brand-flow-alpha:/g)?.length).toBe(2)
+
+    // **O véu substitui o fio do `sticky`, e não se soma a ele.**
+    expect(classes).toContain("border-b-0")
 
     // E a ordem das chaves no `cva` é **carga estrutural**, não estilo: o `cva`
     // concatena na ordem em que os eixos são declarados e o `tailwind-merge`
@@ -331,7 +314,7 @@ describe("contorno de marca", () => {
     ).split(/\s+/)
     expect(barraMesclada).toContain("text-foreground")
     expect(barraMesclada).not.toContain("text-info-muted-foreground")
-    expect(barraMesclada).toContain("bg-muted")
+    expect(barraMesclada).toContain("bg-transparent")
     expect(barraMesclada).not.toContain("bg-info-muted")
     // O fio cinza do `sticky` tem de ter **desaparecido**, não perdido a
     // disputa: duas linhas de 1px empilhadas é o defeito.

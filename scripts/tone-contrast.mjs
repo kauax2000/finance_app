@@ -94,6 +94,27 @@ for (const tema of ["light", "dark"]) {
             return [r, gg, b]
         }
         const out = {}
+        // O véu da `AnnouncementBar variant="brand"`: cada parada da marca, a
+        // página e o texto. A composição com o alfa é feita fora, como a do 85%.
+        const probe = (css) => {
+            const d = document.createElement("div")
+            d.style.cssText = css
+            document.body.appendChild(d)
+            const cor = ler(d)
+            const alfa = parseFloat(getComputedStyle(d).getPropertyValue("--brand-flow-alpha"))
+            d.remove()
+            return { cor, alfa }
+        }
+        out.veu = {
+            page: probe("background:var(--background)").cor,
+            text: probe("background:var(--foreground)").cor,
+            alfa: probe("").alfa,
+            paradas: Object.fromEntries(
+                ["teal", "blue", "indigo", "violet", "magenta", "coral", "amber", "green"].map(
+                    (c) => [c, probe(`background:var(--brand-${c})`).cor]
+                )
+            ),
+        }
         for (const t of tons) {
             out[t] = {
                 surface: ler(palco.querySelector(`[data-probe="${t}-surface"]`)),
@@ -124,6 +145,22 @@ for (const tema of ["light", "dark"]) {
                 ok: razao >= PISO ? "sim" : "NÃO",
             })
         }
+    }
+    // O véu, no alfa **máximo** da máscara (o topo central, fator 1). O texto
+    // se senta no meio da faixa, onde a máscara já vale ~metade: o número aqui
+    // é o teto do tingimento, não o que se vê sob a letra.
+    const { page: pg, text, alfa, paradas } = medidas.veu
+    for (const [cor, rgb] of Object.entries(paradas)) {
+        const fundo = rgb.map((v, i) => v * alfa + pg[i] * (1 - alfa))
+        const razao = +contraste(lum(fundo), lum(text)).toFixed(2)
+        if (razao < PISO) reprovou = true
+        linhas.push({
+            tema,
+            tom: `brand-${cor}`,
+            uso: `AnnouncementBar véu (alfa ${alfa})`,
+            razao,
+            ok: razao >= PISO ? "sim" : "NÃO",
+        })
     }
     await ctx.close()
 }

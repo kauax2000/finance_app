@@ -13700,3 +13700,48 @@ Conferido depois: as camadas do `::before` passaram de
 O caminho de volta está escrito na utility e no teste: **raio de 60–80% da
 caixa** para cruzarem a aresta. Nesse ponto deixa de ser port e passa a ser
 desenho nosso, e é uma decisão diferente da de portar.
+
+### Rodada 127 — a faixa de marca troca a régua pelo véu
+
+Referência: o `Banner` rainbow do Fumadocs (Fuma Nama, MIT), lido no fonte
+(`packages/radix-ui/src/components/banner.tsx`). O dono pediu a
+`AnnouncementBar variant="brand"` mais perto dele. O que foi portado:
+
+- a superfície é a página (`bg-background`), não `bg-muted`;
+- um `::before` em `-z-1` sob `isolate` pinta um
+  `repeating-linear-gradient(70deg, …)` com paradas em `i·50/n %` e a primeira
+  cor repetida no fim, em `background-size: 200% 100%`;
+- a máscara é a da referência: `linear-gradient(to bottom)` **intersect**
+  `radial-gradient(circle at top center)`;
+- o laço é `background-position 0% → 100%`, 20s, linear, infinito.
+
+Decisões do dono, as duas marcadas ⚠️ fora do padrão: **arco-íris sob texto**
+(exceção à invariante 3) e **movimento autônomo** (a rodada 100 recusou o
+giro; a lava já se movia sozinha). O layout **não** mudou: a referência
+centraliza o texto, e aqui ele segue à esquerda, com as ações no fim.
+
+O que ficou de fora: as quatro cores da referência (entram as oito paradas da
+marca) e o `filter: saturate(2)` (as paradas já são saturadas).
+
+**Contraste.** O alfa virou token por tema, `--brand-flow-alpha`, e foi
+calibrado em `scripts/tone-contrast.mjs` contra o `--foreground` no alfa
+máximo da máscara. Com 0,6 nos dois temas, o claro passava (pior 6,93) e o
+escuro reprovava quatro paradas (lima 3,42, âmbar 3,58, teal 4,01, azul
+4,27). Ficou **0,75 no claro** (pior 5,68, magenta) e **0,45 no escuro**
+(pior 5,33, lima). A 0,35 o escuro passava folgado (7,36), mas lia apagado.
+
+Emenda conhecida, herdada da referência: o deslocamento de um ciclo em x
+(largura da caixa) não é exatamente um período do degradê a 70°. A diferença
+é de ~0,17·altura ao longo da linha do degradê, um salto de poucos pixels a
+cada 20s.
+
+Na mesma rodada, a pedido do dono, a faixa perdeu o fundo: `bg-background`
+virou `bg-transparent`, e atrás do véu aparece o que estiver atrás da barra.
+O contraste medido não muda na página (é o `--background` que o script
+compõe); sobre `--card` ou `--muted` a diferença é de um degrau de
+luminosidade, e o pior caso tem folga (5,33 contra o piso de 4,5).
+
+E a rampa vertical da máscara passou a fechar em **90%** da altura (70% na
+primeira tentativa, que cortava cedo), e não em 100% como na referência: com o fundo transparente, o resto de cor na última
+linha desenhava a aresta de baixo da faixa. O contraste não muda, porque o
+pior caso é medido no topo, onde a máscara vale 1.

@@ -246,6 +246,9 @@
   --brand-coral: oklch(0.66 0.2 35);
   --brand-amber: oklch(0.78 0.17 85);
   --brand-green: oklch(0.78 0.18 130);
+  /* O alfa do véu da `AnnouncementBar variant="brand"` (`@utility brand-flow`).
+     Por tema, porque é ele que segura o contraste do texto por cima. */
+  --brand-flow-alpha: 0.75;
   --brand-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1' intercept='0'/%3E%3CfeFuncG type='linear' slope='1' intercept='0'/%3E%3CfeFuncB type='linear' slope='1' intercept='0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.85'/%3E%3C/svg%3E");
   --brand-grain-size: 180px 180px;
   /* A vinheta do campo de marca escurece os cantos em direção ao preto, e não
@@ -780,6 +783,9 @@
   --brand-coral: oklch(0.75 0.18 38);
   --brand-amber: oklch(0.88 0.17 90);
   --brand-green: oklch(0.88 0.18 130);
+  /* O alfa do véu da `AnnouncementBar variant="brand"` (`@utility brand-flow`).
+     Por tema, porque é ele que segura o contraste do texto por cima. */
+  --brand-flow-alpha: 0.45;
   --brand-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1' intercept='0'/%3E%3CfeFuncG type='linear' slope='1' intercept='0'/%3E%3CfeFuncB type='linear' slope='1' intercept='0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.75'/%3E%3C/svg%3E");
   --brand-grain-size: 180px 180px;
   --brand-field-vignette: radial-gradient(
@@ -2535,6 +2541,53 @@
       transparent 100%
     );
   animation: brand-lava 14s linear infinite;
+}
+
+/* O véu da `AnnouncementBar variant="brand"`, portado do `Banner` rainbow do
+   Fumadocs (Fuma Nama, MIT): um degradê repetido a 70°, translúcido, que sai
+   forte do topo central e morre para baixo e para os lados, deslizando em
+   20s. É a **exceção consciente** à invariante 3: o arco-íris fica sob o
+   texto, e o que a paga é o alfa (`--brand-flow-alpha`, por tema), medido em
+   `scripts/tone-contrast.mjs`. E é a segunda peça de marca que se move
+   sozinha, depois da `brand-lava` — o giro da rodada 100 continua fora.
+
+   A máscara são duas camadas em `intersect`, como na referência; as duas são
+   degradê, então nenhuma vira `none` e apaga a peça. Sem `saturate(2)`: as
+   paradas da marca já são saturadas. Movimento reduzido fica com o bloco
+   global, e o quadro parado é o degradê inteiro. */
+@keyframes brand-flow {
+  from {
+    background-position: 0% 0;
+  }
+  to {
+    background-position: 100% 0;
+  }
+}
+
+@utility brand-flow {
+  background-image: repeating-linear-gradient(
+    70deg,
+    oklch(from var(--brand-teal) l c h / var(--brand-flow-alpha)) 0%,
+    oklch(from var(--brand-blue) l c h / var(--brand-flow-alpha)) 6.25%,
+    oklch(from var(--brand-indigo) l c h / var(--brand-flow-alpha)) 12.5%,
+    oklch(from var(--brand-violet) l c h / var(--brand-flow-alpha)) 18.75%,
+    oklch(from var(--brand-magenta) l c h / var(--brand-flow-alpha)) 25%,
+    oklch(from var(--brand-coral) l c h / var(--brand-flow-alpha)) 31.25%,
+    oklch(from var(--brand-amber) l c h / var(--brand-flow-alpha)) 37.5%,
+    oklch(from var(--brand-green) l c h / var(--brand-flow-alpha)) 43.75%,
+    oklch(from var(--brand-teal) l c h / var(--brand-flow-alpha)) 50%
+  );
+  background-size: 200% 100%;
+  /* A rampa vertical fecha em 90%, e não em 100% como na referência: com o
+     fundo transparente, qualquer resto de cor na última linha desenha a aresta
+     de baixo da faixa contra o que vem depois. 90% é o limite medido — desce
+     quase até a base e ainda zera antes dela, nos dois temas e nos dois
+     degraus; 70% cortava cedo demais. */
+  mask-image:
+    linear-gradient(to bottom, #000, transparent 90%),
+    radial-gradient(circle at top center, #000, transparent);
+  mask-composite: intersect;
+  animation: brand-flow 20s linear infinite;
 }
 
 @utility scroll-fade-y {

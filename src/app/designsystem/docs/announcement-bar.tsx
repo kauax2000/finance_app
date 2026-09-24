@@ -85,7 +85,7 @@ export default function AnnouncementBarDoc() {
 
       <DocSection
         title="Marca"
-        description="A faixa neutra com o arco-íris num fio de 1px na base. É a forma para quando quem fala é o produto — uma novidade, uma versão nova — e não o estado do app. Ela não aceita tone: marca não tem gravidade. Uma por tela."
+        description="A faixa sem fundo, com o arco-íris translúcido atrás do texto, saindo forte do topo central e deslizando em 20s — o Banner rainbow do Fumadocs. É a forma para quando quem fala é o produto — uma novidade, uma versão nova — e não o estado do app. Ela não aceita tone: marca não tem gravidade. Uma por tela."
         code={`<AnnouncementBar variant="brand" sticky>
   <SparklesIcon aria-hidden />
   <AnnouncementBarContent>…</AnnouncementBarContent>
@@ -144,8 +144,8 @@ export default function AnnouncementBarDoc() {
         Eles mantinham <code>hover:bg-current/N</code> e nunca declaravam <code>--button-fill-color</code>, então herdavam o cinza de <code>--muted</code> do <code>tertiary</code>: o realce pintava <strong>duas</strong> camadas — a tinta do tom na caixa toda e um disco cinza por cima. No tema claro, onde <code>--muted</code> é opaco, os quatro tons convergiam no mesmo <code>235,235,235</code>: o realce apagava o tom em vez de realçá-lo. Ninguém viu porque a razão de luminância é <strong>1,007–1,078</strong> — o defeito é cromático, e os scripts da casa só medem luminância. Com <code>currentColor</code> no disco: 1,16–1,19 no claro e 1,26–1,30 no escuro.
       </DocNote>
 
-      <DocNote title="O fio da marca substitui o do sticky, e a ordem do cva é o mecanismo">
-        Em <code>brand</code> o arco-íris <em>é</em> o fio de baixo, então a variante traz <code>border-b-0</code>. E o eixo <code>variant</code> é declarado <strong>depois</strong> de <code>sticky</code> no <code>cva</code>: a concatenação segue a ordem das chaves e o <code>tailwind-merge</code> resolve por último-vence. Declarado antes, o <code>border-b</code> do <code>sticky</code> venceria e a barra sairia com duas linhas de 1px empilhadas, uma cinza e uma de arco-íris.
+      <DocNote title="O véu substitui o fio do sticky, e a ordem do cva é o mecanismo">
+        Em <code>brand</code> a faixa não tem fio de baixo — o véu já a separa da página —, então a variante traz <code>border-b-0</code>. E o eixo <code>variant</code> é declarado <strong>depois</strong> de <code>sticky</code> no <code>cva</code>: a concatenação segue a ordem das chaves e o <code>tailwind-merge</code> resolve por último-vence. Declarado antes, o <code>border-b</code> do <code>sticky</code> venceria e a barra sairia com duas linhas de 1px empilhadas, uma cinza e uma de arco-íris.
       </DocNote>
 
       <DocNote title="O papel segue o tom">
@@ -174,7 +174,7 @@ export default function AnnouncementBarDoc() {
             type: '"soft" | "brand"',
             default: '"soft"',
             description:
-              "A forma: soft leva a superfície do tom; brand é a faixa neutra com a régua de arco-íris na base.",
+              "A forma: soft leva a superfície do tom; brand é a faixa sem fundo, com o véu de arco-íris atrás do texto.",
           },
           {
             prop: "size",

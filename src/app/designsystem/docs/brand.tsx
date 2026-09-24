@@ -289,8 +289,8 @@ export default function BrandDoc() {
       </DocSection>
 
       <DocSection
-        title="A régua e o brilho dos avisos"
-        description="Alert e AnnouncementBar são as duas superfícies onde o produto fala sobre si mesmo, e a marca entra nelas de dois jeitos. Na faixa é a régua: 1px de arco-íris na base, parado, substituindo o fio do sticky. No alerta é o brilho: a caixa fica neutra em repouso e o arco-íris acende num arco da borda conforme o ponteiro passa, com um leve borrão — passe o mouse perto. Contorno não serve em nenhum dos dois: numa faixa full-bleed ele degenera, e em volta de um parágrafo lê como enfeite. Nenhuma das duas aceita tone. Uma por tela."
+        title="O véu e o brilho dos avisos"
+        description="Alert e AnnouncementBar são as duas superfícies onde o produto fala sobre si mesmo, e a marca entra nelas de dois jeitos. Na faixa é o véu: o arco-íris translúcido atrás do texto, saindo do topo central e deslizando em 20s, no lugar do fio do sticky. No alerta é o brilho: a caixa fica neutra em repouso e o arco-íris acende num arco da borda conforme o ponteiro passa, com um leve borrão — passe o mouse perto. Contorno não serve em nenhum dos dois: numa faixa full-bleed ele degenera, e em volta de um parágrafo lê como enfeite. Nenhuma das duas aceita tone. Uma por tela."
         code={`<Alert variant="brand">…</Alert>
 <AnnouncementBar variant="brand" sticky>…</AnnouncementBar>`}
         previewClassName="flex-col items-stretch gap-4 p-0"
@@ -315,7 +315,7 @@ export default function BrandDoc() {
           A rodada 100 tirou o movimento da marca com nome feio — o degradê girava sozinho, num laço de 12s no splash e 6s sob o cursor. <strong>Este efeito não é aquele</strong>: nada aqui se move sem o ponteiro se mover, que é a forma que a rodada 98 sancionou quando pôs a lava atrás do <code>primary</code>. O que o commit da 100 preservou foi exatamente isto — &ldquo;o botão de marca não ficou inerte: o halo continua acendendo no cursor&rdquo;.
         </p>
         <p>
-          Contraste, contra o cartão: no escuro as oito paradas passam 3:1 (pior caso violeta 5,35); no claro quatro reprovam, pior caso lima <strong>1,91</strong> — e 1,60 contra o <code>--muted</code> da faixa. Não é um caso de 1.4.11: quem identifica o aviso é a caixa mais o ícone, e o arco-íris é acento, como o halo do <code>Badge</code> e o arco-íris do <code>Progress</code>. O degradê nunca fica sob texto — na régua ele vive num fio de 1px, e no brilho o núcleo chapado em <code>padding-box</code> o mantém fora do miolo.
+          Contraste, contra o cartão: no escuro as oito paradas passam 3:1 (pior caso violeta 5,35); no claro quatro reprovam, pior caso lima <strong>1,91</strong>. Não é um caso de 1.4.11: quem identifica o aviso é a caixa mais o ícone, e o arco-íris é acento, como o halo do <code>Badge</code> e o arco-íris do <code>Progress</code>. No brilho o degradê nunca fica sob texto: o núcleo chapado em <code>padding-box</code> o mantém fora do miolo. O véu da faixa é a <strong>exceção consciente</strong>: ali o arco-íris fica sob o texto, e quem paga é o alfa <code>--brand-flow-alpha</code> (0,75 no claro, 0,45 no escuro), medido contra o <code>--foreground</code> no alfa máximo da máscara — pior caso <strong>5,33</strong> (lima, escuro), em <code>scripts/tone-contrast.mjs</code>.
         </p>
       </DocNote>
 

@@ -311,8 +311,10 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   vive em 1px de `border-box` sobre um miolo chapado; a do
   **preenchimento** (`Progress variant="brand"` e `Slider variant="brand"`), em
   que ele preenche a barra e o que a liberta da invariante 3 é não haver rótulo
-  em cima; a da **régua**, um fio na **aresta** do aviso — hoje só 1px na base
-  da `AnnouncementBar`, onde ele **substitui** o fio do `sticky`; e a do
+  em cima; a do **véu**, na `AnnouncementBar variant="brand"` — o `Banner`
+  rainbow do Fumadocs: o arco-íris translúcido **atrás** do texto, mascarado a
+  partir do topo central e deslizando num laço de 20s (`@utility brand-flow`),
+  **substituindo** o fio do `sticky`; e a do
   **brilho**, no `Alert variant="brand"`, em que a caixa fica neutra em repouso
   e o arco-íris acende num **arco da borda** conforme o ponteiro passa pela
   tela, com um borrão de 2px. `brand-contour.test.ts` tranca as quatro.
@@ -426,7 +428,16 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   telefone não há brilho** — e como ele substituiu a régua do alerta, ali o
   `brand` fica visualmente igual ao `soft` de `tone="default"`. É o custo da
   escolha, e está dito.
-  **A régua existe porque contorno degenera numa faixa de largura total**:
+  **O véu é a exceção consciente à invariante 3, e a segunda peça que se move
+  sozinha** (depois da `brand-lava`), as duas por decisão do dono na rodada
+  127. Quem paga o texto por cima é o alfa `--brand-flow-alpha`, **por tema**
+  (0,75 no claro, 0,45 no escuro — a 0,6 o escuro reprovava com 3,42 na lima),
+  medido em `scripts/tone-contrast.mjs` contra o `--foreground` no alfa
+  **máximo** da máscara: pior caso **5,33**. O volume se mexe no alfa, nunca
+  nas paradas. O `::before` fica em `-z-1` sob `isolate`, que é o que o mantém
+  visível numa barra não `sticky`.
+  **A régua (rodada 118 a 126) existia porque contorno degenera numa faixa de
+  largura total**, e as medições dela ficam:
   esquerda e direita ficam fora da tela e o topo encosta na borda do viewport,
   sobrando exatamente os dois fios horizontais; e em volta de um parágrafo o
   contorno lê como enfeite. **Ela usa um token só nas duas orientações**, e
@@ -966,8 +977,8 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   para não encostar no `rounded-xl`, e numa caixa `sm` de 34px sobravam 47% de
   fio), e com a régua substituída pelo brilho essa razão deixou de existir.
   Ficou a semântica, que sempre foi a mais forte.
-- **A `AnnouncementBar` ganhou o mesmo eixo** (`variant: "soft" | "brand"`, e a
-  régua dela é 1px na base, substituindo o fio do `sticky`), e os **dois botões
+- **A `AnnouncementBar` ganhou o mesmo eixo** (`variant: "soft" | "brand"`, e o
+  `brand` dela é o véu, sem fundo — `bg-transparent`), e os **dois botões
   dela pagaram a rodada 99 com atraso**: mantinham `hover:bg-current/N` e nunca
   declaravam `--button-fill-color`, então herdavam o cinza de `--muted` do
   `tertiary` e o realce pintava duas camadas. No tema claro, onde `--muted` é

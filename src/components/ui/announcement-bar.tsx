@@ -28,14 +28,14 @@ import { Button } from "@/components/ui/button"
  * anunciado com polidez, quando ali o papel é `alert`. Quem precisar de outro
  * ainda passa `role` por fora.
  *
- * ## A marca fala aqui, e por um fio
+ * ## A marca fala aqui, num véu
  *
- * `variant="brand"` é a faixa neutra com o arco-íris de 1px na base. Ela existe
- * porque esta barra e o `Alert` são as duas superfícies onde o produto fala
- * sobre **si mesmo**, e nenhuma das duas tinha voz: a demonstração do catálogo
- * anunciava "uma nova versão está disponível" em `tone="info"`, ou seja, o azul
- * da rampa de **estado** carregando o produto se anunciando. `info` é fato
- * sobre o dado da pessoa; "temos novidade" não é um estado dela.
+ * `variant="brand"` é a faixa sem fundo, com o arco-íris translúcido
+ * **atrás** do texto, saindo forte do topo central e deslizando em 20s — o
+ * `Banner` rainbow do Fumadocs. Ela existe porque esta barra e o `Alert` são
+ * as duas superfícies onde o produto fala sobre **si mesmo**: a demonstração
+ * do catálogo anunciava "uma nova versão está disponível" em `tone="info"`,
+ * ou seja, o azul da rampa de **estado** carregando o produto se anunciando.
  *
  * ## A altura não depende do botão de fechar
  *
@@ -87,40 +87,36 @@ const announcementBarVariants = cva(
         true: "sticky top-0 z-(--z-banner) border-b border-current/20",
         false: "",
       },
-      // **A régua de marca.** O arco-íris entra como fio na **aresta** do
-      // aviso, nunca em volta dele: aqui, 1px na base, atravessando a largura
-      // do app. Contorno não serve numa faixa de largura total — esquerda e
-      // direita ficam fora da tela e o topo encosta na borda do viewport,
-      // sobrando exatamente os dois fios horizontais. A régua é a mecânica que
-      // sobrou, e é a mesma do `Alert variant="brand"`, girada.
+      // **O véu de marca**, e ele substituiu a régua (o fio de 1px na base).
+      // O arco-íris mora num `::before` em `z` negativo, e o `isolate` é o que
+      // o mantém visível: sem raiz de empilhamento própria (barra não
+      // `sticky`), o pseudo cai atrás do fundo de um ancestral e some. Com ela,
+      // a ordem de pintura é a que se quer — fundo da barra, véu, texto.
+      //
+      // **É arco-íris sob texto**, a exceção consciente à invariante 3: o que
+      // a paga é o alfa `--brand-flow-alpha`, medido contra o `--foreground`
+      // em `scripts/tone-contrast.mjs`. A receita mora em `@utility
+      // brand-flow`.
+      //
+      // **Sem fundo** (`bg-transparent`, a pedido do dono): quem aparece atrás
+      // do véu é o que está atrás da faixa. O `bg-transparent` não é
+      // redundante — é ele que o `tailwind-merge` usa para apagar a superfície
+      // tonal do `defaultVariants`.
       //
       // **Ele substitui o fio do `sticky`, e não se soma a ele** — daí o
       // `border-b-0`. E daí este eixo ser declarado **depois** do `sticky`
       // nesta lista: o `cva` concatena na ordem das chaves e o `tailwind-merge`
-      // resolve por último-vence. Declarado antes, o `border-b` do `sticky`
-      // venceria e a barra sairia com **duas** linhas de 1px empilhadas, uma
-      // cinza e uma de arco-íris. A ordem aqui é carga estrutural, não estilo.
+      // resolve por último-vence. A ordem aqui é carga estrutural, não estilo.
       //
-      // Pela mesma aritmética, `bg-muted text-foreground` aqui vence o tom que
-      // o `defaultVariants` aplica — e por isso o tipo proíbe `tone` junto de
-      // `brand`, para a tela não escrever uma cor que não pinta.
-      //
-      // `brand-rainbow-image` é obrigatória: é ela que declara
-      // `--brand-rainbow` no elemento, porque o token **não existe em
-      // `:root`** (rodada 86 — um `var()` dentro de um token do `:root` é
-      // substituído lá, não em quem o veste). Sem ela o `background-image` do
-      // fio cai para `none` e a régua desaparece sem erro nenhum.
-      //
-      // O degradê vive num pseudo-elemento de 1px e **nunca sob texto** — sete
-      // matizes não têm um contraste só. Não há halo: o `::after` borrado
-      // sangra 4px e encostaria no conteúdo abaixo da faixa, que é a razão de
-      // o `brandOutline` do `Button` existir. **Uma por tela.**
+      // Pela mesma aritmética, a superfície daqui vence o tom que o
+      // `defaultVariants` aplica — e por isso o tipo proíbe `tone` junto de
+      // `brand`, para a tela não escrever uma cor que não pinta. **Uma por
+      // tela.**
       variant: {
         soft: "",
         brand: [
-          "brand-rainbow-image relative border-b-0 bg-muted text-foreground",
-          "after:absolute after:inset-x-0 after:bottom-0 after:h-px after:content-['']",
-          "after:bg-(image:--brand-rainbow)",
+          "relative isolate border-b-0 bg-transparent text-foreground",
+          "before:absolute before:inset-0 before:-z-1 before:content-[''] before:brand-flow",
         ].join(" "),
       },
     },
