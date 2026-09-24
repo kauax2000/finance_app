@@ -72,7 +72,7 @@ import { CARD_LIMIT_BANDS } from "@/lib/budget-bands"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import { ArrowTrendingDownIcon, ArrowTrendingUpIcon, CalendarDaysIcon, ChartBarIcon, ChevronUpDownIcon, LightBulbIcon, MinusIcon } from "@heroicons/react/16/solid"
-import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts"
+import { ChartSplit, type ChartConfig } from "@/components/ui/chart"
 import type { CreditCardInvoicePayment } from "@/lib/supabase"
 import { supabase } from "@/lib/supabase"
 import {
@@ -299,17 +299,15 @@ function InvoiceFaturaHeaderStatus({
     )
 }
 
-type SlicePieRow = {
-    key: InvoiceSliceKey
-    label: string
-    value: number
-}
-
-function sliceFillColor(key: InvoiceSliceKey): string {
-    return key === "installments_recurring"
-        ? "oklch(0.62 0.19 295)"
-        : "oklch(0.62 0.18 240)"
-}
+/** As duas partes só se identificam — nenhuma é "boa" ou "ruim" —, então a
+ *  cor vem da rampa neutra do gráfico, e não de um `oklch` escolhido aqui. */
+const SLICE_CHART_CONFIG = {
+    installments_recurring: {
+        label: SLICE_LABEL.installments_recurring,
+        color: "var(--chart-3)",
+    },
+    one_off: { label: SLICE_LABEL.one_off, color: "var(--chart-2)" },
+} satisfies ChartConfig
 
 export function InvoiceCycleSwitcher({
     snapshot,
@@ -723,27 +721,10 @@ export function CreditCardInvoiceAnalyticsPanel({
     const open = analytics.sliceOpen
     const closed = analytics.sliceLastClosed
 
-    const [activeSlice, setActiveSlice] = useState<InvoiceSliceKey | null>(null)
-
-    const slicePieData = useMemo(
-        (): SlicePieRow[] =>
-            SLICE_KEYS.map((k) => ({
-                key: k,
-                label: SLICE_LABEL[k],
-                value: open[k],
-            })),
+    const sliceData = useMemo(
+        () => SLICE_KEYS.map((k) => ({ key: k, value: open[k] })),
         [open]
     )
-
-    const compositionAriaLabel = useMemo(() => {
-        const parts = SLICE_KEYS.map((k) => {
-            const v = open[k]
-            const share =
-                analytics.openTotal > 0 ? (v / analytics.openTotal) * 100 : 0
-            return `${SLICE_LABEL[k]} ${percentPointsBR(share)}%`
-        })
-        return `Composição da fatura: ${parts.join(", ")}`
-    }, [open, analytics.openTotal])
 
     const strongestWeek = analytics.weeklyPattern.strongestWeek
     const strongestWeekTotal =
@@ -944,135 +925,34 @@ export function CreditCardInvoiceAnalyticsPanel({
                                 </p>
                             ) : (
                                 <>
-                                    <div
-                                        className="relative mx-auto flex h-[200px] w-full max-w-[260px] items-center justify-center md:h-[240px] md:max-w-[300px]"
-                                        role="img"
-                                        aria-label={compositionAriaLabel}
-                                    >
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <PieChart>
-                                                <Pie
-                                                    data={slicePieData}
-                                                    dataKey="value"
-                                                    nameKey="label"
-                                                    cx="50%"
-                                                    cy="50%"
-                                                    innerRadius="60%"
-                                                    outerRadius="78%"
-                                                    paddingAngle={1}
-                                                    startAngle={90}
-                                                    endAngle={-270}
-                                                    stroke="var(--card)"
-                                                    strokeWidth={2}
-                                                    isAnimationActive={false}
-                                                    onMouseEnter={(_, i) => {
-                                                        const row = slicePieData[i]
-                                                        setActiveSlice(row?.key ?? null)
-                                                    }}
-                                                    onMouseLeave={() =>
-                                                        setActiveSlice(null)
-                                                    }
-                                                >
-                                                    {slicePieData.map((entry) => (
-                                                        <Cell
-                                                            key={entry.key}
-                                                            fill={sliceFillColor(entry.key)}
-                                                            style={{
-                                                                fillOpacity:
-                                                                    activeSlice === null ||
-                                                                    activeSlice === entry.key
-                                                                        ? 1
-                                                                        : 0.35,
-                                                            }}
-                                                        />
-                                                    ))}
-                                                </Pie>
-                                            </PieChart>
-                                        </ResponsiveContainer>
-                                        <div
-                                            className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-4 text-center"
-                                            aria-hidden
-                                        >
-                                            {activeSlice === null ? (
-                                                <>
-                                                    <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                        Distribuição
-                                                    </p>
-                                                    <p className="mt-1 max-w-[min(11rem,82%)] text-lg font-semibold tabular-nums text-foreground md:text-xl">
-                                                        {currencyBRL(
-                                                            analytics.openTotal
-                                                        )}
-                                                    </p>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <p className="max-w-[min(11rem,82%)] text-xs font-semibold leading-snug text-foreground">
-                                                        {SLICE_LABEL[activeSlice]}
-                                                    </p>
-                                                    <p className="mt-1 text-lg font-semibold tabular-nums text-foreground md:text-xl">
-                                                        {currencyBRL(
-                                                            open[activeSlice]
-                                                        )}
-                                                    </p>
-                                                    <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">
-                                                        {percentPointsBR(
-                                                            analytics.openTotal > 0
-                                                                ? (open[activeSlice] /
-                                                                      analytics.openTotal) *
-                                                                      100
-                                                                : 0
-                                                        )}
-                                                        %
-                                                    </p>
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
+                                    <ChartSplit
+                                        config={SLICE_CHART_CONFIG}
+                                        data={sliceData}
+                                        nameKey="key"
+                                        dataKey="value"
+                                        label="Composição da fatura"
+                                    />
                                     <ul className="space-y-2">
                                         {SLICE_KEYS.map((k) => {
                                             const v = open[k]
                                             const prev = closed[k]
-                                            const share =
-                                                analytics.openTotal > 0
-                                                    ? (v / analytics.openTotal) * 100
-                                                    : 0
                                             return (
                                                 <li key={k}>
                                                     <Item
-                                                        asChild
-                                                        interactive
                                                         size="sm"
-                                                        className="flex-nowrap justify-between gap-3 rounded-md px-2 py-1.5 text-left"
-                                                    >
-                                                    <button
-                                                        type="button"
-                                                        onMouseEnter={() =>
-                                                            setActiveSlice(k)
-                                                        }
-                                                        onMouseLeave={() =>
-                                                            setActiveSlice(null)
-                                                        }
-                                                        onFocus={() => setActiveSlice(k)}
-                                                        onBlur={() =>
-                                                            setActiveSlice(null)
-                                                        }
+                                                        className="flex-nowrap justify-between gap-3 rounded-md px-2 py-1.5"
                                                     >
                                                         <span className="inline-flex min-w-0 items-center gap-2 text-sm font-medium text-foreground">
                                                             <span
                                                                 className="size-2 shrink-0 rounded-full"
                                                                 style={{
                                                                     backgroundColor:
-                                                                        sliceFillColor(k),
+                                                                        SLICE_CHART_CONFIG[k].color,
                                                                 }}
                                                                 aria-hidden
                                                             />
                                                             <span className="min-w-0 truncate">
                                                                 {SLICE_LABEL[k]}
-                                                                <span className="font-normal text-muted-foreground">
-                                                                    {" "}
-                                                                    ·{" "}
-                                                                    {percentPointsBR(share)}%
-                                                                </span>
                                                             </span>
                                                         </span>
                                                         <span className="flex shrink-0 flex-row items-center gap-2 tabular-nums text-sm text-foreground">
@@ -1085,7 +965,6 @@ export function CreditCardInvoiceAnalyticsPanel({
                                                                 {currencyBRL(v)}
                                                             </span>
                                                         </span>
-                                                    </button>
                                                     </Item>
                                                 </li>
                                             )

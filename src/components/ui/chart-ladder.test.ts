@@ -188,7 +188,7 @@ describe("escada e invariantes do Chart", () => {
     // roscas **só apareciam quando a pessoa rolava até elas**. Depois: 12
     // setores presentes sem rolagem nenhuma.
     expect(CODIGO).toContain("const CHART_ANIMATION = false")
-    const marcas = CODIGO.match(/<(Area|Line|Bar|Pie)\b/g) ?? []
+    const marcas = CODIGO.match(/<(Area|Line|Bar|Pie|Radar|RadialBar)\b/g) ?? []
     const desligadas = CODIGO.match(/isAnimationActive=\{CHART_ANIMATION\}/g) ?? []
     expect(desligadas.length).toBe(marcas.length)
     // E nenhuma escreve o booleano à mão, que é como uma marca nova escaparia.

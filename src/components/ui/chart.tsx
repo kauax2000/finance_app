@@ -14,6 +14,12 @@ import {
   LineChart,
   Pie,
   PieChart,
+  PolarAngleAxis,
+  PolarGrid,
+  Radar,
+  RadarChart,
+  RadialBar,
+  RadialBarChart,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -30,8 +36,13 @@ import {
   percentBR,
 } from "@/lib/formatters"
 import {
+  addDaysYmd,
+  compareYmd,
+  formatMonthShortPtBr,
   formatTransactionDayMonthPtBr,
   formatTransactionMonthYearPtBr,
+  localYmdFromDate,
+  parseYmdLocal,
 } from "@/lib/transaction-date"
 import {
   Collapsible,
@@ -46,6 +57,11 @@ import {
   EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { Skeleton } from "@/components/ui/skeleton"
+import { ScrollFade } from "@/components/ui/scroll-fade"
+import {
+  progressToneForBands,
+  type ProgressBands,
+} from "@/components/ui/progress"
 import {
   Table,
   TableBody,
@@ -111,6 +127,7 @@ const chartContainerVariants = cva(
     "[&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50",
     "[&_.recharts-curve.recharts-tooltip-cursor]:stroke-border",
     "[&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border",
+    "[&_.recharts-polar-angle-axis-tick_text]:fill-muted-foreground",
     "[&_.recharts-radial-bar-background-sector]:fill-muted",
     "[&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted/60",
     "[&_.recharts-reference-line_[stroke='#ccc']]:stroke-border",
@@ -928,6 +945,7 @@ function ChartFrame({
   config,
   x,
   xLabel,
+  xFormat,
   format,
   children,
 }: {
@@ -937,6 +955,7 @@ function ChartFrame({
   config: ChartConfig
   x?: string
   xLabel?: string
+  xFormat?: ChartFormat
   format: ChartFormat
   children: React.ReactNode
 }) {
@@ -957,6 +976,7 @@ function ChartFrame({
             config={config}
             x={x}
             xLabel={xLabel}
+            xFormat={xFormat}
             format={format}
           />
         </CollapsibleContent>
@@ -1695,6 +1715,668 @@ function ChartDonutCenter({
   )
 }
 
+/* -------------------------------------------------------------------------
+ * As formas da rodada 135 — divisão, anéis, calendário e perfil
+ * ---------------------------------------------------------------------- */
+
+/**
+ * A raiz das formas que são HTML e não SVG (`ChartSplit`, `ChartHeatmap`).
+ * Elas não passam pelo `ChartContainer` porque ele embrulha os filhos num
+ * `ResponsiveContainer`, que só sabe medir um gráfico do Recharts. O que elas
+ * precisam dele é o resto: o escopo `data-chart` com as `--color-<chave>` do
+ * `config`, o contexto e o nome acessível.
+ */
+function ChartHtmlRoot({
+  config,
+  label,
+  description,
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"div"> & {
+  config: ChartConfig
+  label: string
+  description?: string
+}) {
+  const uniqueId = React.useId()
+  const chartId = `chart-${uniqueId.replace(/:/g, "")}`
+  const descriptionId = description ? `${chartId}-desc` : undefined
+
+  return (
+    <ChartContext.Provider value={{ config }}>
+      <div
+        data-slot="chart"
+        data-chart={chartId}
+        role="img"
+        aria-label={label}
+        aria-describedby={descriptionId}
+        className={cn("text-xs", className)}
+        {...props}
+      >
+        <ChartStyle id={chartId} config={config} />
+        {description ? (
+          <span id={descriptionId} className="sr-only">
+            {description}
+          </span>
+        ) : null}
+        {children}
+      </div>
+    </ChartContext.Provider>
+  )
+}
+
+/**
+ * Porcentagens inteiras que **somam 100**, pelo maior resto. Arredondar cada
+ * parte sozinha escreve "33% · 33% · 33%" para três terços, e numa divisão de
+ * um total a soma exibida é a primeira coisa que a pessoa confere.
+ */
+export function splitPercents(values: number[]): number[] {
+  const positivos = values.map((v) => (Number.isFinite(v) && v > 0 ? v : 0))
+  const total = positivos.reduce((acc, v) => acc + v, 0)
+  if (total === 0) return positivos.map(() => 0)
+  const exatos = positivos.map((v) => (v / total) * 100)
+  const inteiros = exatos.map(Math.floor)
+  let falta = 100 - inteiros.reduce((acc, v) => acc + v, 0)
+  const porResto = exatos
+    .map((v, i) => ({ i, resto: v - Math.floor(v) }))
+    .filter(({ i }) => positivos[i] > 0)
+    .sort((a, b) => b.resto - a.resto || a.i - b.i)
+  for (const { i } of porResto) {
+    if (falta <= 0) break
+    inteiros[i] += 1
+    falta -= 1
+  }
+  return inteiros
+}
+
+/** Abaixo disto o segmento não cabe o próprio rótulo, e ele vai para a legenda. */
+const CHART_SPLIT_LABEL_MIN = 12
+
+/**
+ * A divisão de um total em duas a quatro partes, numa barra só. É a forma
+ * certa quando a pergunta é "quanto de cada" e as partes são poucas: a rosca
+ * responde o mesmo gastando um quadrado inteiro, e com duas fatias ela é um
+ * círculo cortado ao meio.
+ */
+function ChartSplit({
+  labels = "below",
+  nameKey,
+  dataKey,
+  config,
+  data,
+  label,
+  description,
+  format = "currency",
+  className,
+  dataTable,
+}: Omit<ChartFormProps, "series" | "aspect" | "legend" | "tooltip" | "children"> & {
+  nameKey: string
+  dataKey: string
+  /**
+   * `below` escreve nome e porcentagem sob o começo de cada segmento; o que
+   * tem menos de 12% não cabe e cai para uma legenda embaixo, sozinho.
+   * `legend` põe todos numa legenda só — para quando o título do cartão já
+   * carrega o veredito e a barra é o detalhe.
+   */
+  labels?: "below" | "legend"
+}) {
+  const [ativo, setAtivo] = React.useState<number | null>(null)
+  const chaves = data.map((d) => String(d[nameKey] ?? ""))
+  const valores = data.map((d) => (typeof d[dataKey] === "number" ? (d[dataKey] as number) : 0))
+  const pcts = splitPercents(valores)
+  const cores = chaves.map((k, i) => serieColor(k, i, config))
+  const nome = (i: number) => config[chaves[i]]?.label ?? chaves[i]
+  const resumo = chaves
+    .map((_, i) => `${nome(i)} ${pcts[i]}% (${formatChartValue(valores[i], format)})`)
+    .join(", ")
+  const naLegenda = chaves
+    .map((k, i) => i)
+    .filter((i) => valores[i] > 0 && (labels === "legend" || pcts[i] < CHART_SPLIT_LABEL_MIN))
+
+  return (
+    <ChartFrame
+      dataTable={dataTable}
+      data={data}
+      series={[dataKey]}
+      config={config}
+      x={nameKey}
+      xLabel="Parte"
+      format={format}
+    >
+      <ChartHtmlRoot
+        config={config}
+        label={`${label}: ${resumo}`}
+        description={description}
+        className={cn("flex w-full flex-col", className)}
+      >
+        <div
+          data-slot="chart-split-bar"
+          className="flex w-full gap-1"
+          onPointerLeave={() => setAtivo(null)}
+        >
+          {chaves.map((k, i) =>
+            valores[i] > 0 ? (
+              <div
+                key={k || i}
+                className={cn(
+                  "h-2 min-w-1 rounded-full transition-opacity duration-(--duration-fast)",
+                  ativo !== null && ativo !== i && "opacity-35"
+                )}
+                // `flex-grow` com o valor cru, e não a porcentagem arredondada:
+                // o comprimento é a medida exata, o texto é que arredonda.
+                style={{ flex: `${valores[i]} 1 0`, backgroundColor: cores[i] }}
+                onPointerEnter={() => setAtivo(i)}
+              />
+            ) : null
+          )}
+        </div>
+        {labels === "below" ? (
+          <div aria-hidden className="flex w-full gap-1 pt-2">
+            {chaves.map((k, i) =>
+              valores[i] > 0 ? (
+                <div
+                  key={k || i}
+                  className="flex min-w-1 flex-col"
+                  style={{ flex: `${valores[i]} 1 0` }}
+                >
+                  {pcts[i] >= CHART_SPLIT_LABEL_MIN ? (
+                    <>
+                      <span className="truncate font-medium text-foreground">
+                        {nome(i)}
+                      </span>
+                      <span className="nums truncate font-mono text-muted-foreground">
+                        {pcts[i]}%
+                      </span>
+                    </>
+                  ) : null}
+                </div>
+              ) : null
+            )}
+          </div>
+        ) : null}
+        {naLegenda.length ? (
+          <ChartLegendContent
+            aria-hidden
+            align="start"
+            format="percent"
+            payload={naLegenda.map((i) => ({
+              value: chaves[i],
+              dataKey: chaves[i],
+              color: cores[i],
+              payload: { value: pcts[i] / 100 },
+            }))}
+          />
+        ) : null}
+      </ChartHtmlRoot>
+    </ChartFrame>
+  )
+}
+
+/**
+ * A cor de um anel. Com `bands` ela diz **estado** — dentro, perto, estourou —
+ * e por isso usa os tokens de estado e não a rampa: é o único gráfico da casa
+ * em que verde e vermelho significam o que significam, e a invariante 3 fica
+ * do lado certo. Sem `bands`, a cor só identifica a categoria.
+ */
+export function chartRadialColor(
+  pct: number,
+  bands: ProgressBands | undefined,
+  identidade: string
+): string {
+  if (!bands) return identidade
+  return `var(--color-${progressToneForBands(pct, bands)})`
+}
+
+/**
+ * Anéis concêntricos, um por categoria, cada um contra o próprio teto — o
+ * orçamento do mês por categoria. É o `Progress` dobrado em círculo: mesmo
+ * trilho, mesmos cortes (`BUDGET_BANDS`), o mesmo estouro que enche e fica
+ * vermelho. Cinco anéis no máximo, pela regra da sexta série.
+ */
+function ChartRadial({
+  bands,
+  nameKey,
+  dataKey,
+  maxKey,
+  config,
+  data,
+  label,
+  description,
+  format = "currency",
+  aspect = "square",
+  className,
+  legend = true,
+  dataTable,
+  center,
+  children,
+}: Omit<ChartFormProps, "series" | "tooltip"> & {
+  nameKey: string
+  dataKey: string
+  /** O teto de cada anel — o orçamento da categoria. */
+  maxKey: string
+  /** Os cortes de aviso e perigo, em %. Sem eles a cor é a da categoria. */
+  bands?: ProgressBands
+  /** O `ChartDonutCenter`, como na rosca. */
+  center?: React.ReactNode
+}) {
+  const aneis = React.useMemo(
+    () =>
+      data.slice(0, CHART_RAMP_LENGTH).map((linha, i) => {
+        const nome = String(linha[nameKey] ?? "")
+        const valor = typeof linha[dataKey] === "number" ? (linha[dataKey] as number) : 0
+        const teto = typeof linha[maxKey] === "number" ? (linha[maxKey] as number) : 0
+        const pct = teto > 0 ? (valor / teto) * 100 : 0
+        return {
+          nome,
+          valor,
+          teto,
+          pct,
+          // O arco para em 100: o estouro já está na cor e no número.
+          arco: Math.min(pct, 100),
+          cor: chartRadialColor(pct, bands, serieColor(nome, i, config)),
+        }
+      }),
+    [bands, config, data, dataKey, maxKey, nameKey]
+  )
+  // O Recharts desenha o primeiro item no anel de dentro; a leitura é de fora
+  // para dentro, na ordem da legenda.
+  const desenho = React.useMemo(() => [...aneis].reverse(), [aneis])
+
+  return (
+    <ChartFrame
+      dataTable={dataTable}
+      data={data}
+      series={[dataKey, maxKey]}
+      config={config}
+      x={nameKey}
+      xLabel="Categoria"
+      format={format}
+    >
+      <div className="flex w-fit flex-col items-center">
+        <ChartContainer
+          config={config}
+          aspect={aspect}
+          label={label}
+          description={description}
+          className={className}
+          overlay={center}
+          style={{ "--chart-donut-hole": "40%" } as React.CSSProperties}
+        >
+          <RadialBarChart
+            data={desenho}
+            innerRadius="42%"
+            outerRadius="100%"
+            startAngle={90}
+            endAngle={-270}
+            barCategoryGap="22%"
+            accessibilityLayer
+          >
+            <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
+            <RadialBar
+              isAnimationActive={CHART_ANIMATION}
+              dataKey="arco"
+              background
+              cornerRadius={CHART_PILL_RADIUS}
+            >
+              {desenho.map((anel, i) => (
+                <Cell key={anel.nome || i} fill={anel.cor} />
+              ))}
+            </RadialBar>
+            {children}
+          </RadialBarChart>
+        </ChartContainer>
+        {legend ? (
+          <ul data-slot="chart-radial-legend" className="grid w-full gap-1.5 pt-3 text-xs">
+            {aneis.map((anel, i) => (
+              <li key={anel.nome || i} className="flex items-center gap-2">
+                <span
+                  aria-hidden
+                  className="size-2 shrink-0 rounded-xs"
+                  style={{ backgroundColor: anel.cor }}
+                />
+                <span className="min-w-0 flex-1 truncate">
+                  {config[anel.nome]?.label ?? anel.nome}
+                </span>
+                <span className="nums font-mono text-muted-foreground">
+                  {formatChartValue(anel.valor, format)} de{" "}
+                  {formatChartValue(anel.teto, format)}
+                </span>
+                <span className="nums w-10 text-right font-mono font-medium text-foreground">
+                  {Math.round(anel.pct)}%
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
+    </ChartFrame>
+  )
+}
+
+/**
+ * Os degraus do calendário, de 0 a 4. Zero é sempre o dia sem movimento; os
+ * outros quatro são os quartis **dos dias com valor**. Uma escala linear até o
+ * máximo deixaria o mês inteiro no primeiro degrau por causa de um dia só —
+ * o do aluguel.
+ */
+export function chartHeatLevels(values: number[]): number[] {
+  const comValor = values.filter((v) => v > 0).sort((a, b) => a - b)
+  if (!comValor.length) return values.map(() => 0)
+  const quantil = (q: number) =>
+    comValor[Math.min(comValor.length - 1, Math.ceil(q * comValor.length) - 1)]
+  const cortes = [quantil(0.25), quantil(0.5), quantil(0.75)]
+  return values.map((v) => {
+    if (!(v > 0)) return 0
+    if (v <= cortes[0]) return 1
+    if (v <= cortes[1]) return 2
+    if (v <= cortes[2]) return 3
+    return 4
+  })
+}
+
+/**
+ * Os cinco degraus, escritos por extenso: classe montada em tempo de execução
+ * não existe, o Tailwind varre o código como texto. O tom entra por
+ * `--chart-heat`, que a variante publica, e o degrau só mistura mais ou menos
+ * dele sobre `--muted` — o mesmo leito do trilho das barras e dos anéis.
+ */
+const CHART_HEAT_LEVEL = [
+  "bg-muted",
+  "bg-[color-mix(in_oklch,var(--chart-heat)_25%,var(--color-muted))]",
+  "bg-[color-mix(in_oklch,var(--chart-heat)_50%,var(--color-muted))]",
+  "bg-[color-mix(in_oklch,var(--chart-heat)_75%,var(--color-muted))]",
+  "bg-(--chart-heat)",
+] as const
+
+const chartHeatmapVariants = cva(
+  "flex w-full flex-col gap-2 [--heat-cell:calc(var(--spacing)*3)]",
+  {
+    variants: {
+      /**
+       * A intensidade é **dinheiro**, e o tom diz de que lado: `expense` para
+       * o ritmo de gasto, `income` para o de entrada. Não há tom neutro — a
+       * rampa de identidade não é sequencial, e cinco degraus de uma cor de
+       * série diriam "categoria", não "quanto".
+       */
+      tone: {
+        expense: "[--chart-heat:var(--color-chart-expense)]",
+        income: "[--chart-heat:var(--color-chart-income)]",
+      },
+      range: {
+        quarter: "[--heat-cell:calc(var(--spacing)*4)]",
+        year: "",
+      },
+    },
+    defaultVariants: { tone: "expense", range: "quarter" },
+  }
+)
+
+const CHART_HEAT_WEEKS = { quarter: 13, year: 53 } as const
+/** Domingo primeiro, como o calendário brasileiro; só três rótulos cabem. */
+const CHART_HEAT_WEEKDAYS = ["", "seg", "", "qua", "", "sex", ""] as const
+
+type ChartHeatmapDay = { date: string; value: number }
+
+/**
+ * O ritmo por dia — o calendário de gasto. Cada coluna é uma semana, cada
+ * linha um dia da semana, e a tinta sobe em cinco degraus do tom de dinheiro.
+ *
+ * **As células não são focáveis**, de propósito: um ano são 365 paradas de
+ * `Tab`, e isso é hostil. O caminho completo por teclado e leitor de tela é o
+ * `dataTable`; o nome acessível resume o total e o dia de pico.
+ */
+function ChartHeatmap({
+  data,
+  end,
+  range = "quarter",
+  tone,
+  label,
+  description,
+  format = "currency",
+  className,
+  dataTable,
+}: {
+  data: ChartHeatmapDay[]
+  /** O último dia, `YYYY-MM-DD`. O padrão é o dia mais recente de `data`. */
+  end?: string
+  range?: keyof typeof CHART_HEAT_WEEKS
+  tone?: VariantProps<typeof chartHeatmapVariants>["tone"]
+  label: string
+  description?: string
+  format?: ChartFormat
+  className?: string
+  dataTable?: boolean
+}) {
+  const [lido, setLido] = React.useState<ChartHeatmapDay | null>(null)
+  const semanas = CHART_HEAT_WEEKS[range]
+
+  const { colunas, meses, inicio, fim, resumo, comValor } = React.useMemo(() => {
+    const porDia = new Map(data.map((d) => [d.date, d.value]))
+    const ultimo =
+      end ?? data.reduce((acc, d) => (compareYmd(d.date, acc) > 0 ? d.date : acc), data[0]?.date ?? localYmdFromDate(new Date()))
+    const diaDaSemana = parseYmdLocal(ultimo)?.getDay() ?? 0
+    const primeiro = addDaysYmd(ultimo, -diaDaSemana - (semanas - 1) * 7)
+
+    const dias: (ChartHeatmapDay | null)[] = []
+    for (let i = 0; i < semanas * 7; i++) {
+      const date = addDaysYmd(primeiro, i)
+      dias.push(compareYmd(date, ultimo) > 0 ? null : { date, value: porDia.get(date) ?? 0 })
+    }
+    const niveis = chartHeatLevels(dias.map((d) => d?.value ?? 0))
+    const colunas = Array.from({ length: semanas }, (_, s) =>
+      dias.slice(s * 7, s * 7 + 7).map((dia, d) => (dia ? { ...dia, nivel: niveis[s * 7 + d] } : null))
+    )
+
+    // Um rótulo de mês onde o mês da coluna muda — e só se houver três colunas
+    // de espaço desde o anterior, senão "ago" e "set" se sobrepõem.
+    const meses: { coluna: number; nome: string }[] = []
+    let anterior = -1
+    colunas.forEach((col, s) => {
+      const primeiroDia = col[0]
+      if (!primeiroDia) return
+      const mes = primeiroDia.date.slice(0, 7)
+      const mesAnterior = s > 0 ? colunas[s - 1][0]?.date.slice(0, 7) : null
+      if (s === 0 || mes !== mesAnterior) {
+        if (anterior < 0 || s - anterior >= 3) {
+          meses.push({ coluna: s, nome: formatMonthShortPtBr(parseYmdLocal(primeiroDia.date)!) })
+          anterior = s
+        }
+      }
+    })
+
+    const validos = dias.filter((d): d is ChartHeatmapDay => d !== null)
+    const total = validos.reduce((acc, d) => acc + d.value, 0)
+    const pico = validos.reduce<ChartHeatmapDay | null>((acc, d) => (!acc || d.value > acc.value ? d : acc), null)
+    const resumo =
+      pico && pico.value > 0
+        ? `Total ${formatChartValue(total, format)}; maior dia ${formatChartValue(pico.date, "date")}, ${formatChartValue(pico.value, format)}.`
+        : "Sem movimento no período."
+
+    return {
+      colunas,
+      meses,
+      inicio: primeiro,
+      fim: ultimo,
+      resumo,
+      comValor: validos.filter((d) => d.value > 0),
+    }
+  }, [data, end, format, semanas])
+
+  // O ano não cabe no telefone: a grade rola, e abre rolada até hoje, que é
+  // o fim da fileira. O viewport é o pai da grade dentro do `ScrollFade`.
+  const gradeRef = React.useRef<HTMLDivElement>(null)
+  React.useLayoutEffect(() => {
+    const viewport = gradeRef.current?.parentElement
+    if (viewport) viewport.scrollLeft = viewport.scrollWidth
+  }, [semanas])
+
+  const grade = { "--heat-cols": `repeat(${semanas}, var(--heat-cell))` } as React.CSSProperties
+
+  return (
+    <ChartFrame
+      dataTable={dataTable}
+      data={comValor}
+      series={["value"]}
+      config={{ value: { label: "Valor" } }}
+      x="date"
+      xLabel="Dia"
+      xFormat="date"
+      format={format}
+    >
+      <div className={cn(chartHeatmapVariants({ tone, range }), className)}>
+        <ChartHtmlRoot config={{}} label={`${label}. ${resumo}`} description={description}>
+          <ScrollFade axis="x">
+            <div
+              ref={gradeRef}
+              className="grid w-max grid-cols-[auto_auto] gap-x-2 gap-y-1"
+              onPointerLeave={(e) => {
+                // No toque a leitura fica: o dedo sai logo depois de tocar, e
+                // apagar ali seria mostrar o dia por um quadro.
+                if (e.pointerType === "mouse") setLido(null)
+              }}
+            >
+              <span />
+              <div className="grid grid-cols-(--heat-cols) gap-1" style={grade}>
+                {meses.map((m) => (
+                  <span
+                    key={m.coluna}
+                    className="text-2xs whitespace-nowrap text-muted-foreground"
+                    style={{ gridColumnStart: m.coluna + 1 }}
+                  >
+                    {m.nome}
+                  </span>
+                ))}
+              </div>
+              <div className="grid grid-rows-7 gap-1">
+                {CHART_HEAT_WEEKDAYS.map((dia, i) => (
+                  <span key={i} className="flex h-(--heat-cell) items-center text-2xs leading-none text-muted-foreground">
+                    {dia}
+                  </span>
+                ))}
+              </div>
+              <div className="grid grid-flow-col grid-cols-(--heat-cols) grid-rows-7 gap-1" style={grade}>
+                {colunas.flat().map((dia, i) =>
+                  dia ? (
+                    <span
+                      key={dia.date}
+                      data-level={dia.nivel}
+                      className={cn(
+                        "size-(--heat-cell) rounded-xs",
+                        CHART_HEAT_LEVEL[dia.nivel],
+                        lido?.date === dia.date && "ring-2 ring-foreground/60"
+                      )}
+                      onPointerEnter={() => setLido(dia)}
+                      onPointerDown={() => setLido(dia)}
+                    />
+                  ) : (
+                    <span key={`vazio-${i}`} />
+                  )
+                )}
+              </div>
+            </div>
+          </ScrollFade>
+        </ChartHtmlRoot>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-muted-foreground">
+          <output aria-live="polite" className="nums">
+            {lido
+              ? `${formatChartValue(lido.date, "date")} · ${formatChartValue(lido.value, format)}`
+              : `${formatChartValue(inicio, "date")} – ${formatChartValue(fim, "date")}`}
+          </output>
+          <div aria-hidden className="flex items-center gap-1">
+            <span className="pr-1">menos</span>
+            {CHART_HEAT_LEVEL.map((classe) => (
+              <span key={classe} className={cn("size-(--heat-cell) rounded-xs", classe)} />
+            ))}
+            <span className="pl-1">mais</span>
+          </div>
+        </div>
+      </div>
+    </ChartFrame>
+  )
+}
+
+/**
+ * O perfil: várias categorias ao mesmo tempo, uma por eixo, com duas ou três
+ * séries sobrepostas — este mês contra a média. É a forma de "onde o mês
+ * fugiu do normal", e não de magnitude: comparar comprimentos em eixos que
+ * irradiam é impreciso, e quem precisa do número vai às barras.
+ */
+function ChartRadar({
+  grid = "polygon",
+  x,
+  xFormat = "text",
+  config,
+  data,
+  series,
+  label,
+  description,
+  format = "currency",
+  aspect = "square",
+  className,
+  legend,
+  tooltip = true,
+  dataTable,
+  children,
+}: ChartFormProps & {
+  /** A chave do eixo — o nome da categoria em cada ponta. */
+  x: string
+  xFormat?: ChartFormat
+  grid?: "polygon" | "circle"
+}) {
+  const chaves = useSeries(config, series)
+  const mostrarLegenda = legend ?? chaves.length >= 2
+
+  return (
+    <ChartFrame
+      dataTable={dataTable}
+      data={data}
+      series={chaves}
+      config={config}
+      x={x}
+      xLabel="Categoria"
+      xFormat={xFormat}
+      format={format}
+    >
+      <ChartContainer
+        config={config}
+        aspect={aspect}
+        label={label}
+        description={description}
+        className={className}
+      >
+        <RadarChart data={data} outerRadius="70%" accessibilityLayer>
+          <PolarGrid gridType={grid} />
+          <PolarAngleAxis
+            dataKey={x}
+            tickFormatter={(v) => formatChartValue(v, xFormat)}
+          />
+          {tooltip ? (
+            <ChartTooltip content={<ChartTooltipContent format={format} />} />
+          ) : null}
+          {mostrarLegenda ? (
+            <ChartLegend content={<ChartLegendContent />} />
+          ) : null}
+          {chaves.map((key, i) => (
+            <Radar
+              key={key}
+              isAnimationActive={CHART_ANIMATION}
+              dataKey={key}
+              stroke={serieColor(key, i, config)}
+              strokeWidth={1.5}
+              // A segunda série é tracejada: cor não é o único canal, e a
+              // comparação típica é "este mês × a média", que é referência.
+              strokeDasharray={i === 1 ? "4 3" : undefined}
+              fill={serieColor(key, i, config)}
+              fillOpacity={0.12}
+            />
+          ))}
+          {children}
+        </RadarChart>
+      </ChartContainer>
+    </ChartFrame>
+  )
+}
+
 /**
  * A tendência sem eixo, para dentro de um `StatCard` ou de uma linha de lista.
  * Ela não tem grade, nem eixo, nem legenda, e por padrão nem tooltip: uma
@@ -1998,12 +2680,17 @@ export {
   ChartEmpty,
   ChartError,
   ChartGrid,
+  ChartHeatmap,
+  chartHeatmapVariants,
   ChartLegend,
   ChartLegendContent,
   ChartLine,
   ChartReferenceLine,
   ChartSkeleton,
+  ChartRadar,
+  ChartRadial,
   ChartSparkline,
+  ChartSplit,
   ChartStyle,
   ChartTooltip,
   ChartTooltipContent,
