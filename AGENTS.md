@@ -1183,6 +1183,25 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   dropdown sem teto de altura nenhum. O `Dropdown` estava em 21 telas e era o
   mais atrasado; o `Context`, em zero, e era o mais moderno — venceu a régua
   dele, que já concordava com `Select`, `Menubar` e `Popover`.
+- **O realce viaja entre as opções** (rodada 137). Nenhuma linha de lista
+  pinta o próprio fundo de cursor: um indicador só anda por trás delas, na
+  mola da casa (`--ease-spring`, 500ms), em `Command`/`Combobox`, `Select`,
+  nos três menus, no `FormPickerPopover` e no `NavigationMenu`. A primitiva é
+  `useListHighlight` (`hooks/`) + `listHighlightClassName` (`lib/`).
+  - **O contêiner é o pai do indicador**, e ele é posicionado. O indicador é
+    o primeiro filho; as linhas, `relative`, pintam por cima.
+  - **A medida é em coordenadas do conteúdo** (`rect − rect + scrollTop`), e
+    rolar não desalinha.
+  - **Os gatilhos são dois observadores**, que agendam um `rAF` coalescido.
+  - **O estado (`data-state`, `data-tone`) mora no indicador**, nunca em
+    `in-*`.
+  - **Ao voltar, ele nasce na linha** (`jump`) em vez de deslizar de onde
+    apagou.
+  - **Listas só de hover** usam `mode: "pointer"`, e o hook escreve
+    `data-highlighted` na linha, com o ponteiro, o toque e o Tab.
+  - **O que fica na linha:** o `data-open:bg-accent` do sub-gatilho e o
+    `bg-muted` do escolhido no `FormPickerPopover`. São estado, não cursor.
+    `list-highlight.test.ts` tranca o resto.
 - **A linha do menu cresce no toque, não no telefone.** `pointer-coarse:min-h-11`
   leva o item de 28 para 44px quando o **apontador** é grosso — medido nos dois
   ponteiros. A pergunta é sobre o dispositivo e não sobre a largura, pela mesma

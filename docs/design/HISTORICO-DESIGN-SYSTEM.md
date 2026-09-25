@@ -14138,3 +14138,40 @@ cujo `CHART_ANIMATION = false` desligava as nove marcas.
 até migrarem para as formas. Três delas escrevem `isAnimationActive={false}` à
 mão.
 
+### Rodada 137 — o realce viaja entre as opções
+
+O dono pediu que o realce de hover das listas de seleção não aparecesse e
+sumisse de uma linha para a outra, e sim transitasse por trás, com um leve
+atraso orgânico. Ele escolheu a mola da casa e as sete listas.
+
+**Uma primitiva, no molde do marcador do `Tabs`:**
+- `useListHighlight` + `listHighlightClassName`;
+- um nó por lista, medido por `MutationObserver` + `ResizeObserver`, com `rAF`
+  coalescido;
+- o estado escrito no próprio nó.
+
+**O atraso é a física da mola, e não um `transition-delay`**, que travaria as
+setas.
+
+**Medido:**
+- **No `Combobox`**, de "Mercado" a "Casa": 641 → 844 (passa 3,6%) → 837,
+  assentando na linha em ~500ms. As setas levam o realce junto.
+- **No `DropdownMenu`**:
+  - com o ponteiro fora, fica `off`, na opacidade 0 e sem se mover;
+  - ao entrar de novo em "Excluir", o realce nasce lá (top 643 no primeiro
+    quadro, opacidade subindo), com `data-tone=destructive`.
+- **No `Select`**, as setas.
+- **No `FormPickerPopover`**, hover e Tab, com o disco do `tertiary` anulado
+  (`--button-fill-color: transparent`).
+- **No `NavigationMenu`**, 625 → 685 no painel.
+
+**Três coisas que custaram medição ou leitura:**
+1. **O React Compiler proíbe escrever num elemento guardado em `useState`.** O
+   hook virou um `ref` callback com limpeza (React 19).
+2. **O painel do `NavigationMenu` é `<ul>`.** O indicador é um `<li
+   aria-hidden>`, e o rótulo de seção trocou `first:` por "irmão logo depois
+   do indicador".
+3. **O sub-gatilho mantém `data-open:bg-accent`.** Com o ponteiro no submenu,
+   o realce do menu de cima apaga, e é essa cor que diz qual submenu está
+   aberto.
+

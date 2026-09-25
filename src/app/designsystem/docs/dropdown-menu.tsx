@@ -177,6 +177,10 @@ export default function DropdownMenuDoc() {
         </DropdownMenu>
       </DocSection>
 
+      <DocNote title="O realce viaja entre as linhas">
+        A linha em foco não pinta o próprio fundo: o viewport monta um realce só, que anda por trás das linhas na mola da casa e herda o tom de <code>data-variant=&quot;destructive&quot;</code>. É a mesma primitiva do <code>Command</code>, e a página dele tem o detalhe. O <code>data-open</code> do sub-gatilho continua pintando, porque ele marca o submenu aberto quando o ponteiro já está dentro dele.
+      </DocNote>
+
       <DocNote title="size nomeia as larguras que o app repete">
         <code>sm</code> 176, <code>md</code> 192, <code>lg</code> 208,{" "}
         <code>xl</code> 224. Use o degrau em vez de <code>w-*</code> solto;{" "}

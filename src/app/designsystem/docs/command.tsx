@@ -168,6 +168,34 @@ React.useEffect(() => {
         O rótulo é caixa alta com <code>tracking-wider</code>, como o cabeçalho da <code>Table</code>, e fica mais perto da lista que encima. A folga é margem no grupo e pula o primeiro grupo <em>visível</em>: o cmdk esconde grupos sem resultado com <code>hidden</code>, sem tirá-los do DOM.
       </DocNote>
 
+      <DocSection
+        title="O realce viaja"
+        description="Nenhuma linha pinta o próprio fundo. Um realce só anda por trás das linhas seguindo o ponteiro e as setas, na mola da casa: chega um pouco depois do cursor, passa ~4% do alvo e assenta em 500ms. Vale em toda lista de seleção: Command, Combobox, Select, os três menus, o FormPickerPopover e o NavigationMenu."
+        code={`// Nada a declarar: a lista monta o indicador.
+// Para uma lista nova, a primitiva é esta:
+const realce = useListHighlight({ active: "[data-highlighted]" })
+<div className="relative">
+  <span ref={realce} aria-hidden className={listHighlightClassName} />
+  {linhas}
+</div>`}
+        previewClassName="items-stretch"
+      >
+        <Command variant="panel" className="w-full max-w-md">
+          <CommandInput placeholder="Passe o ponteiro ou use as setas…" />
+          <CommandList>
+            <CommandGroup heading="Categorias">
+              {["Mercado", "Transporte", "Restaurantes", "Assinaturas", "Saúde", "Educação"].map((c) => (
+                <CommandItem key={c}>{c}</CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </DocSection>
+
+      <DocNote title="Como o realce chega e sai">
+        Ao sair da lista ele apaga no lugar, sem se mover. Ao voltar, ele <strong>nasce</strong> na linha nova (<code>data-state=&quot;jump&quot;</code>, sem transição de posição por um quadro), em vez de deslizar de onde apagou. A posição é medida em coordenadas do conteúdo, então rolar a lista não o desalinha. O estado mora no próprio indicador, e não em <code>in-*</code>, que compila com <code>:where()</code> e perderia do <code>opacity-0</code>. Com movimento reduzido, ele salta.
+      </DocNote>
+
       <DocNote title="O corpo é o dos menus, os estados não">
         A geometria vem de <code>menuItemGeometryClassName</code>. Os estados ficam aqui porque o cmdk os escreve diferente: a linha ativa é <code>data-selected</code>, e <code>data-disabled=&quot;false&quot;</code> está sempre presente, então a regra por presença dos menus apagaria toda linha.
       </DocNote>

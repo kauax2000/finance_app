@@ -6,6 +6,8 @@ import { ChevronDownIcon } from "@heroicons/react/16/solid"
 import { cva, type VariantProps } from "class-variance-authority"
 import { NavigationMenu as NavigationMenuPrimitive } from "radix-ui"
 
+import { useListHighlight } from "@/hooks/use-list-highlight"
+import { listHighlightClassName } from "@/lib/list-highlight-classes"
 import { cn } from "@/lib/utils"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import {
@@ -395,7 +397,8 @@ const navigationMenuLinkVariants = cva(
   [
     NAVIGATION_MENU_LINK_BASE,
     "rounded-md text-sm pointer-coarse:min-h-11",
-    "hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground",
+    // O fundo do cursor é o realce que viaja no `NavigationMenuPanel`.
+    "hover:text-accent-foreground active:text-accent-foreground",
     "aria-[current=page]:bg-accent/60 aria-[current=page]:font-medium",
   ],
   {
@@ -872,9 +875,17 @@ function NavigationMenuContent({
 function NavigationMenuPanel({
   className,
   columns = 1,
+  children,
   ...props
 }: React.ComponentProps<"ul"> &
   VariantProps<typeof navigationMenuPanelVariants>) {
+  // Os links do painel só têm hover — o modo `pointer` escreve o cursor, e o
+  // realce viaja na grade nas duas direções.
+  const realce = useListHighlight({
+    active: "[data-highlighted]",
+    mode: "pointer",
+    item: '[data-slot="navigation-menu-link"]',
+  })
   return (
     <NavigationMenuPanelContext.Provider value={true}>
       <ul
@@ -882,12 +893,23 @@ function NavigationMenuPanel({
         data-slot="navigation-menu-panel"
         data-columns={columns}
         className={cn(
+          "relative",
           navigationMenuPanelVariants({ columns }),
           scrollFadeViewportClassName,
           className
         )}
         {...props}
-      />
+      >
+        {/* Um `<li>`, porque o pai é `<ul>`; absoluto, ele não ocupa célula
+            da grade. É o primeiro filho — ver o rótulo de seção abaixo. */}
+        <li
+          ref={realce}
+          aria-hidden
+          data-slot="list-highlight"
+          className={listHighlightClassName}
+        />
+        {children}
+      </ul>
     </NavigationMenuPanelContext.Provider>
   )
 }
@@ -902,7 +924,9 @@ function NavigationMenuSectionLabel({
       data-slot="navigation-menu-section-label"
       className={cn(
         menuLabelClassName,
-        "col-span-full pt-2 first:pt-0 [&:not(:first-child)]:mt-1",
+        // O primeiro filho do painel é o realce que viaja, então o "primeiro
+        // rótulo" é o irmão logo depois dele — `first:` nunca casaria mais.
+        "col-span-full mt-1 pt-2 [[data-slot=list-highlight]+&]:mt-0 [[data-slot=list-highlight]+&]:pt-0",
         className
       )}
       {...props}

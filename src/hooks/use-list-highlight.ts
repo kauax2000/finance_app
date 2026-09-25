@@ -43,108 +43,126 @@ export function useListHighlight({
   mode = "attribute",
   item,
 }: UseListHighlightOptions) {
-  const [indicador, setIndicador] = React.useState<HTMLElement | null>(null)
+  // Um `ref` callback com limpeza (React 19): monta quando o indicador entra no
+  // DOM, desmonta quando sai. O elemento não passa por estado — o React
+  // Compiler proíbe escrever num valor devolvido por `useState`, e aqui o
+  // trabalho inteiro é escrever nele.
+  return React.useCallback(
+    (el: HTMLElement | null) => {
+      const host = el?.parentElement
+      if (!el || !host) return
 
-  React.useEffect(() => {
-    const el = indicador
-    const host = el?.parentElement
-    if (!el || !host) return
+      let medida = 0
+      let acender = 0
+      let aceso = false
 
-    let medida = 0
-    let acender = 0
-    let aceso = false
-
-    const apagar = () => {
-      if (!aceso) return
-      aceso = false
-      cancelAnimationFrame(acender)
-      acender = 0
-      el.dataset.state = "off"
-    }
-
-    const medir = () => {
-      medida = 0
-      const alvo = host.querySelector<HTMLElement>(active)
-      if (!alvo || alvo.closest("[hidden]")) return apagar()
-
-      const h = host.getBoundingClientRect()
-      const r = alvo.getBoundingClientRect()
-      el.style.setProperty("--list-highlight-x", `${r.left - h.left + host.scrollLeft - host.clientLeft}px`)
-      el.style.setProperty("--list-highlight-y", `${r.top - h.top + host.scrollTop - host.clientTop}px`)
-      el.style.setProperty("--list-highlight-w", `${r.width}px`)
-      el.style.setProperty("--list-highlight-h", `${r.height}px`)
-      el.dataset.tone = alvo.dataset.variant === "destructive" ? "destructive" : ""
-
-      if (aceso) return
-      // Chegada: a posição entra sem transição, e só o quadro seguinte acende.
-      aceso = true
-      el.dataset.state = "jump"
-      acender = requestAnimationFrame(() => {
+      const apagar = () => {
+        if (!aceso) return
+        aceso = false
+        cancelAnimationFrame(acender)
         acender = 0
-        if (aceso) el.dataset.state = "on"
+        el.dataset.state = "off"
+      }
+
+      const medir = () => {
+        medida = 0
+        const alvo = host.querySelector<HTMLElement>(active)
+        if (!alvo || alvo.closest("[hidden]")) return apagar()
+
+        const h = host.getBoundingClientRect()
+        const r = alvo.getBoundingClientRect()
+        el.style.setProperty(
+          "--list-highlight-x",
+          `${r.left - h.left + host.scrollLeft - host.clientLeft}px`
+        )
+        el.style.setProperty(
+          "--list-highlight-y",
+          `${r.top - h.top + host.scrollTop - host.clientTop}px`
+        )
+        el.style.setProperty("--list-highlight-w", `${r.width}px`)
+        el.style.setProperty("--list-highlight-h", `${r.height}px`)
+        el.dataset.tone =
+          alvo.dataset.variant === "destructive" ? "destructive" : ""
+
+        if (aceso) return
+        // Chegada: a posição entra sem transição, e só o quadro seguinte acende.
+        aceso = true
+        el.dataset.state = "jump"
+        acender = requestAnimationFrame(() => {
+          acender = 0
+          if (aceso) el.dataset.state = "on"
+        })
+      }
+
+      const agendar = () => {
+        if (!medida) medida = requestAnimationFrame(medir)
+      }
+
+      const mo = new MutationObserver(agendar)
+      mo.observe(host, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        attributeFilter: ["data-selected", "data-highlighted", "hidden"],
       })
-    }
+      const ro = new ResizeObserver(agendar)
+      ro.observe(host)
+      host.addEventListener("scroll", agendar, {
+        capture: true,
+        passive: true,
+      })
 
-    const agendar = () => {
-      if (!medida) medida = requestAnimationFrame(medir)
-    }
+      // O modo `pointer`: a lista não tem cursor próprio, e o hook o escreve.
+      let marcada: HTMLElement | null = null
+      const marcar = (linha: HTMLElement | null) => {
+        if (linha === marcada) return
+        marcada?.removeAttribute("data-highlighted")
+        marcada = linha
+        marcada?.setAttribute("data-highlighted", "")
+      }
+      const linhaDe = (alvo: EventTarget | null) => {
+        if (!item || !(alvo instanceof Element)) return null
+        const linha = alvo.closest<HTMLElement>(item)
+        return linha &&
+          host.contains(linha) &&
+          !linha.matches(":disabled,[data-disabled]")
+          ? linha
+          : null
+      }
+      const aoPassar = (e: Event) => {
+        const linha = linhaDe(e.target)
+        if (linha) marcar(linha)
+      }
+      const aoSair = () => marcar(null)
+      const aoPerderFoco = (e: FocusEvent) => {
+        if (
+          !(e.relatedTarget instanceof Node) ||
+          !host.contains(e.relatedTarget)
+        )
+          marcar(null)
+      }
+      if (mode === "pointer") {
+        host.addEventListener("pointerover", aoPassar)
+        host.addEventListener("pointerleave", aoSair)
+        host.addEventListener("focusin", aoPassar)
+        host.addEventListener("focusout", aoPerderFoco)
+      }
 
-    const mo = new MutationObserver(agendar)
-    mo.observe(host, {
-      subtree: true,
-      childList: true,
-      attributes: true,
-      attributeFilter: ["data-selected", "data-highlighted", "hidden"],
-    })
-    const ro = new ResizeObserver(agendar)
-    ro.observe(host)
-    host.addEventListener("scroll", agendar, { capture: true, passive: true })
+      medir()
 
-    // O modo `pointer`: a lista não tem cursor próprio, e o hook o escreve.
-    let marcada: HTMLElement | null = null
-    const marcar = (linha: HTMLElement | null) => {
-      if (linha === marcada) return
-      marcada?.removeAttribute("data-highlighted")
-      marcada = linha
-      marcada?.setAttribute("data-highlighted", "")
-    }
-    const linhaDe = (alvo: EventTarget | null) => {
-      if (!item || !(alvo instanceof Element)) return null
-      const linha = alvo.closest<HTMLElement>(item)
-      return linha && host.contains(linha) && !linha.matches(":disabled,[data-disabled]")
-        ? linha
-        : null
-    }
-    const aoPassar = (e: Event) => {
-      const linha = linhaDe(e.target)
-      if (linha) marcar(linha)
-    }
-    const aoSair = () => marcar(null)
-    const aoPerderFoco = (e: FocusEvent) => {
-      if (!(e.relatedTarget instanceof Node) || !host.contains(e.relatedTarget)) marcar(null)
-    }
-    if (mode === "pointer") {
-      host.addEventListener("pointerover", aoPassar)
-      host.addEventListener("pointerleave", aoSair)
-      host.addEventListener("focusin", aoPassar)
-      host.addEventListener("focusout", aoPerderFoco)
-    }
-
-    medir()
-
-    return () => {
-      mo.disconnect()
-      ro.disconnect()
-      host.removeEventListener("scroll", agendar, { capture: true })
-      host.removeEventListener("pointerover", aoPassar)
-      host.removeEventListener("pointerleave", aoSair)
-      host.removeEventListener("focusin", aoPassar)
-      host.removeEventListener("focusout", aoPerderFoco)
-      marcar(null)
-      cancelAnimationFrame(medida)
-      cancelAnimationFrame(acender)
-    }
-  }, [active, indicador, item, mode])
-
-  return setIndicador
+      return () => {
+        mo.disconnect()
+        ro.disconnect()
+        host.removeEventListener("scroll", agendar, { capture: true })
+        host.removeEventListener("pointerover", aoPassar)
+        host.removeEventListener("pointerleave", aoSair)
+        host.removeEventListener("focusin", aoPassar)
+        host.removeEventListener("focusout", aoPerderFoco)
+        marcar(null)
+        cancelAnimationFrame(medida)
+        cancelAnimationFrame(acender)
+      }
+    },
+    [active, item, mode]
+  )
 }

@@ -5,6 +5,8 @@ import {
   ChevronDownIcon,
 } from "@heroicons/react/16/solid"
 
+import { useListHighlight } from "@/hooks/use-list-highlight"
+import { listHighlightClassName } from "@/lib/list-highlight-classes"
 import { cn } from "@/lib/utils"
 import { Muted } from "@/components/ui/typography"
 import {
@@ -280,13 +282,23 @@ function FormPickerPopoverSearch({
 function FormPickerPopoverList({
   className,
   onWheel,
+  children,
   ...props
 }: React.ComponentProps<"div">) {
+  // A lista não tem cursor próprio — as linhas são botões, e o realce era o
+  // `hover:` de cada um. O modo `pointer` escreve o cursor (ponteiro, toque e
+  // Tab) e o realce viaja entre as linhas como nos menus.
+  const realce = useListHighlight({
+    active: "[data-highlighted]",
+    mode: "pointer",
+    item: '[data-slot="form-picker-popover-item"]',
+  })
   return (
     <div
       ref={useScrollFade()}
       data-slot="form-picker-popover-list"
       className={cn(
+        "relative",
         formPickerListScrollClassName,
         // As duas pontas dissolvem, e o conteúdo passa **por trás** das faixas
         // em vez de parar numa borda — é isso que dá à rampa o que dissolver.
@@ -305,7 +317,15 @@ function FormPickerPopoverList({
         onWheel?.(e)
       }}
       {...props}
-    />
+    >
+      <span
+        ref={realce}
+        aria-hidden
+        data-slot="list-highlight"
+        className={listHighlightClassName}
+      />
+      {children}
+    </div>
   )
 }
 
@@ -338,9 +358,9 @@ function FormPickerPopoverEmpty({
  *
  * `min-h-11` são os 44px de alvo — este é um seletor de toque antes de ser
  * qualquer outra coisa —, e por isso a altura não é um degrau da escada: o
- * `data-size` sai, como no `CalendarDayButton`. O realce tem o par `active:`,
- * porque no telefone `hover:` não existe: as linhas escritas à mão nas telas
- * acendiam no cursor e não respondiam ao dedo, que é a regra **H** do auditor.
+ * `data-size` sai, como no `CalendarDayButton`. O realce do cursor não é da
+ * linha: é o que viaja na `FormPickerPopoverList`, e ele responde ao ponteiro,
+ * ao dedo (o `pointerover` do toque) e ao Tab.
  *
  * **O conteúdo vai num `<span>` próprio, e isso é carga estrutural.** O `Button`
  * embrulha texto cru para aplicar a maiúscula inicial do CTA — e um nome de
@@ -364,7 +384,10 @@ function FormPickerPopoverItem({
       data-selected={selected || undefined}
       className={cn(
         "h-auto min-h-11 w-full justify-start px-3 py-2 text-left font-normal whitespace-normal",
-        "hover:bg-muted/60 active:bg-muted/60",
+        // O realce do cursor é o que viaja na `FormPickerPopoverList`. O disco
+        // do `tertiary` sob o ponteiro somaria um segundo realce na mesma
+        // linha, e sai.
+        "[--button-fill-color:transparent] dark:[--button-fill-color:transparent]",
         selected && "bg-muted font-medium text-foreground",
         className
       )}
