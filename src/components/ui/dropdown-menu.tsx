@@ -5,6 +5,8 @@ import { CheckIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
 import { cva, type VariantProps } from "class-variance-authority"
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui"
 
+import { useListHighlight } from "@/hooks/use-list-highlight"
+import { listHighlightClassName } from "@/lib/list-highlight-classes"
 import { cn } from "@/lib/utils"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
@@ -219,6 +221,7 @@ function DropdownMenuContent({
     /** A faixa de pé, pelas mesmas razões. */
     footer?: React.ReactNode
   }) {
+  const realce = useListHighlight({ active: "[data-highlighted]" })
   const fechouPorRolagem = React.useContext(DropdownMenuScrollCloseContext)
 
   return (
@@ -258,6 +261,12 @@ function DropdownMenuContent({
           data-slot="dropdown-menu-viewport"
           className={cn(menuViewportClassName, scrollFadeViewportClassName)}
         >
+          <span
+            ref={realce}
+            aria-hidden
+            data-slot="list-highlight"
+            className={listHighlightClassName}
+          />
           {children}
         </div>
         {footer ? <div className="shrink-0">{footer}</div> : null}
@@ -384,6 +393,7 @@ function DropdownMenuSubContent({
   collisionPadding = ANCHORED_COLLISION_PADDING,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.SubContent>) {
+  const realce = useListHighlight({ active: "[data-highlighted]" })
   return (
     <DropdownMenuPrimitive.SubContent
       data-slot="dropdown-menu-sub-content"
@@ -396,6 +406,12 @@ function DropdownMenuSubContent({
         data-slot="dropdown-menu-sub-viewport"
         className={cn(menuViewportClassName, scrollFadeViewportClassName)}
       >
+        <span
+          ref={realce}
+          aria-hidden
+          data-slot="list-highlight"
+          className={listHighlightClassName}
+        />
         {children}
       </div>
     </DropdownMenuPrimitive.SubContent>
