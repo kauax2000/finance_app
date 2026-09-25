@@ -1,3 +1,5 @@
+import { listFillClassName, listFillDestructiveClassName } from "@/lib/pointer-fill"
+
 /**
  * A superfície de menu — uma só, para os três menus do projeto e o `Command`.
  *
@@ -180,9 +182,14 @@ export const menuItemGeometryClassName = [
 export const menuItemClassName = [
   "group/menu-item",
   menuItemGeometryClassName,
-  "focus:bg-accent focus:text-accent-foreground",
+  // A linha acende como o link da navegação do catálogo: um disco nasce sob o
+  // ponteiro e preenche a linha (`listFillClassName`). O Radix foca a linha no
+  // ponteiro **e** nas setas — nas setas o disco nasce do centro.
+  listFillClassName,
+  "focus:[--button-fill:100%] focus:text-accent-foreground",
   "data-inset:pl-7",
-  "data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20",
+  "data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:text-destructive",
+  listFillDestructiveClassName,
   "data-disabled:pointer-events-none data-disabled:opacity-50",
   "focus:*:[svg]:text-accent-foreground data-[variant=destructive]:*:[svg]:text-destructive",
 ].join(" ")
@@ -191,8 +198,11 @@ export const menuItemClassName = [
 export const menuSubTriggerClassName = [
   "group/menu-item",
   menuItemGeometryClassName,
-  "focus:bg-accent focus:text-accent-foreground",
-  "data-inset:pl-7 data-open:bg-accent data-open:text-accent-foreground",
+  listFillClassName,
+  // Aberto, o disco fica cheio: o ponteiro já está no submenu, e é isto que
+  // diz qual submenu está aberto.
+  "focus:[--button-fill:100%] focus:text-accent-foreground",
+  "data-inset:pl-7 data-open:[--button-fill:100%] data-open:text-accent-foreground",
   // O mesmo estado das outras linhas: sem ele um submenu desabilitado saía
   // igual ao ativo nos três menus.
   "data-disabled:pointer-events-none data-disabled:opacity-50",
@@ -209,7 +219,8 @@ export const menuIndicatorItemClassName = [
   // O indicador mora à direita: o recuo desse lado cresce. Quem compõe passa
   // por `cn()`, e o `twMerge` guarda o `px-1.5` da geometria com o `pr-8` por cima.
   "pr-8",
-  "focus:bg-accent focus:text-accent-foreground",
+  listFillClassName,
+  "focus:[--button-fill:100%] focus:text-accent-foreground",
   "data-inset:pl-7",
   "data-disabled:pointer-events-none data-disabled:opacity-50",
 ].join(" ")

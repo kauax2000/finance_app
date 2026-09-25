@@ -5,6 +5,7 @@ import { CheckIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Menubar as MenubarPrimitive } from "radix-ui"
 
+import { followPointerFill } from "@/lib/pointer-fill"
 import { cn } from "@/lib/utils"
 import { barSurfaceClassName } from "@/lib/glass-classes"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
@@ -268,6 +269,8 @@ function MenubarContent({
           ref={useScrollFade()}
           data-slot="menubar-viewport"
           className={cn(menuViewportClassName, scrollFadeViewportClassName)}
+          onPointerMove={followPointerFill}
+          onPointerOver={followPointerFill}
         >
           {children}
         </div>
@@ -436,6 +439,8 @@ function MenubarSubContent({
         ref={useScrollFade()}
         data-slot="menubar-sub-viewport"
         className={cn(menuViewportClassName, scrollFadeViewportClassName)}
+        onPointerMove={followPointerFill}
+        onPointerOver={followPointerFill}
       >
         {children}
       </div>

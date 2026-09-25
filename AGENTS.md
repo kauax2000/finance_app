@@ -1183,6 +1183,18 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   dropdown sem teto de altura nenhum. O `Dropdown` estava em 21 telas e era o
   mais atrasado; o `Context`, em zero, e era o mais moderno — venceu a régua
   dele, que já concordava com `Select`, `Menubar` e `Popover`.
+- **A linha de lista acende como o link da navegação do catálogo** (rodada
+  137). O disco do `button-fill` nasce sob o ponteiro e preenche a linha no
+  ritmo do `tertiary` (`--duration-slow`, `--ease-emphasized`). Vale nos três
+  menus, no `Select`, no `Command`/`Combobox` e no painel do `NavigationMenu`.
+  - **A classe é `listFillClassName`** (`lib/pointer-fill`), com a cor
+    `--accent`: o estado final é o realce de sempre.
+  - **O estado acende** com `focus:`, `data-selected:`, `data-open:` ou
+    `hover:[--button-fill:100%]`.
+  - **A posição do ponteiro** é escrita por `followPointerFill`, **delegado no
+    contêiner** da lista. Nas setas o disco nasce do centro.
+  - **O realce que viajava entre as linhas foi tentado e recusado.** Não volte
+    com ele.
 - **A linha do menu cresce no toque, não no telefone.** `pointer-coarse:min-h-11`
   leva o item de 28 para 44px quando o **apontador** é grosso — medido nos dois
   ponteiros. A pergunta é sobre o dispositivo e não sobre a largura, pela mesma

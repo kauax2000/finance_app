@@ -14138,3 +14138,42 @@ cujo `CHART_ANIMATION = false` desligava as nove marcas.
 até migrarem para as formas. Três delas escrevem `isAnimationActive={false}` à
 mão.
 
+### Rodada 137 — a linha de lista acende como o link do catálogo
+
+**Primeiro foi o realce que viaja.** O dono pediu que o hover das listas de
+seleção não piscasse de uma linha para a outra. A primeira resposta foi um nó
+só andando por trás das linhas, na mola da casa, com `useListHighlight`, nas
+sete listas (commits `1fe277b`, `77a6a39`, `3110886`). O dono viu e **não
+gostou**, e tudo foi revertido (`65239b4`).
+
+**O pedido real era o hover da navegação lateral do catálogo.** Os links dela
+(`DsNavLink`) são `Button tertiary`, e acendem pelo disco do `button-fill`
+(rodada 99): ele nasce sob o cursor e preenche a linha em 300ms de
+`--ease-emphasized`.
+
+**As linhas passaram a vestir o mesmo disco.** Ficaram três peças:
+- **`listFillClassName`**, a classe do disco, com a cor `--accent` e o tom
+  destrutivo à parte;
+- **a troca do estado:** `focus:bg-accent` (e `data-selected:`/`hover:`)
+  virou `[--button-fill:100%]`;
+- **`followPointerFill`**, delegado no contêiner de cada lista, que escreve
+  `--button-mx`/`--button-my` na linha sob o ponteiro.
+
+O `FormPickerPopoverItem` já era `tertiary` e não mudou.
+
+**Medido no `DropdownMenu`:**
+- **Crescimento:** 0% → 53% (40ms) → 85% (80ms) → 100% (~320ms), com o centro
+  no ponteiro (`12px 14px`).
+- **Troca de linha:** a velha encolhe (6% aos 120ms) enquanto a nova cresce
+  (94%) do ponto de entrada.
+- **Tom destrutivo:** vem do `color-mix` da `--destructive`.
+- **Sub-gatilho:** com o submenu aberto e o ponteiro dentro dele, continua em
+  100%.
+
+**Nas setas** (`Select` e `Combobox`), o disco nasce do centro (`50% 50%`).
+**Com movimento reduzido**, a linha já está cheia aos 30ms.
+
+**Uma divergência consciente do `Button`:** lá o foco por teclado não
+preenche ("foco não é intenção de clicar"). Numa lista, o foco **é** o cursor,
+e sem o disco a navegação por setas ficaria sem realce.
+
