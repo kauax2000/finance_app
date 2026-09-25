@@ -1,5 +1,3 @@
-import { listFillClassName, listFillDestructiveClassName } from "@/lib/pointer-fill"
-
 /**
  * A superfície de menu — uma só, para os três menus do projeto e o `Command`.
  *
@@ -176,20 +174,26 @@ export const menuItemGeometryClassName = [
 ].join(" ")
 
 /**
+ * O acender da linha: a cor de fundo esmaece em 300ms de `--ease-emphasized`,
+ * na entrada e na saída — o ritmo do link da navegação lateral do catálogo,
+ * medido nele (transparente → `accent/60`, assentando em ~300ms). Sem disco e
+ * sem nada que siga o ponteiro: o realce que viajava entre as linhas e o disco
+ * do `button-fill` foram tentados e recusados na rodada 137.
+ */
+export const menuItemFadeClassName =
+  "transition-colors duration-(--duration-slow) ease-(--ease-emphasized)"
+
+/**
  * A linha. `group/menu-item` é o nome que o atalho procura para acender junto —
  * um nome só, para as duas superfícies.
  */
 export const menuItemClassName = [
   "group/menu-item",
   menuItemGeometryClassName,
-  // A linha acende como o link da navegação do catálogo: um disco nasce sob o
-  // ponteiro e preenche a linha (`listFillClassName`). O Radix foca a linha no
-  // ponteiro **e** nas setas — nas setas o disco nasce do centro.
-  listFillClassName,
-  "focus:[--button-fill:100%] focus:text-accent-foreground",
+  menuItemFadeClassName,
+  "focus:bg-accent focus:text-accent-foreground",
   "data-inset:pl-7",
-  "data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:text-destructive",
-  listFillDestructiveClassName,
+  "data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20",
   "data-disabled:pointer-events-none data-disabled:opacity-50",
   "focus:*:[svg]:text-accent-foreground data-[variant=destructive]:*:[svg]:text-destructive",
 ].join(" ")
@@ -198,11 +202,9 @@ export const menuItemClassName = [
 export const menuSubTriggerClassName = [
   "group/menu-item",
   menuItemGeometryClassName,
-  listFillClassName,
-  // Aberto, o disco fica cheio: o ponteiro já está no submenu, e é isto que
-  // diz qual submenu está aberto.
-  "focus:[--button-fill:100%] focus:text-accent-foreground",
-  "data-inset:pl-7 data-open:[--button-fill:100%] data-open:text-accent-foreground",
+  menuItemFadeClassName,
+  "focus:bg-accent focus:text-accent-foreground",
+  "data-inset:pl-7 data-open:bg-accent data-open:text-accent-foreground",
   // O mesmo estado das outras linhas: sem ele um submenu desabilitado saía
   // igual ao ativo nos três menus.
   "data-disabled:pointer-events-none data-disabled:opacity-50",
@@ -219,8 +221,8 @@ export const menuIndicatorItemClassName = [
   // O indicador mora à direita: o recuo desse lado cresce. Quem compõe passa
   // por `cn()`, e o `twMerge` guarda o `px-1.5` da geometria com o `pr-8` por cima.
   "pr-8",
-  listFillClassName,
-  "focus:[--button-fill:100%] focus:text-accent-foreground",
+  menuItemFadeClassName,
+  "focus:bg-accent focus:text-accent-foreground",
   "data-inset:pl-7",
   "data-disabled:pointer-events-none data-disabled:opacity-50",
 ].join(" ")

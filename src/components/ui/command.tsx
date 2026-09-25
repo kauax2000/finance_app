@@ -5,13 +5,12 @@ import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/16/solid"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Command as CommandPrimitive } from "cmdk"
 
-import { followPointerFill, listFillClassName } from "@/lib/pointer-fill"
 import { cn } from "@/lib/utils"
 import { Caption, P } from "@/components/ui/typography"
 import {
   menuItemGeometryClassName,
   menuSeparatorClassName,
-  menuPanelSurfaceClassName, menuPanelTintClassName } from "@/lib/menu-classes"
+  menuItemFadeClassName, menuPanelSurfaceClassName, menuPanelTintClassName } from "@/lib/menu-classes"
 import {
   scrollFadeBandsClassName,
   scrollFadeBleedClassName,
@@ -493,8 +492,6 @@ function CommandList({
         "data-medido:transition-[height] data-medido:duration-[var(--command-list-transition,0s)] data-medido:ease-(--ease-out)",
         className
       )}
-      onPointerMove={followPointerFill}
-      onPointerOver={followPointerFill}
       {...props}
     />
   )
@@ -683,10 +680,9 @@ function CommandItem({
       className={cn(
         "group/command-item",
         menuItemGeometryClassName,
-        // Acende como o link da navegação do catálogo: o disco nasce sob o
-        // ponteiro (o `CommandList` escreve a posição) e preenche a linha.
-        listFillClassName,
-        "data-selected:[--button-fill:100%] data-selected:text-accent-foreground data-selected:*:[svg]:text-accent-foreground",
+        // O acender dos menus — ver `menuItemFadeClassName`.
+        menuItemFadeClassName,
+        "data-selected:bg-accent data-selected:text-accent-foreground data-selected:*:[svg]:text-accent-foreground",
         // `=true` e não por presença: ver o comentário acima.
         "data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50",
         className

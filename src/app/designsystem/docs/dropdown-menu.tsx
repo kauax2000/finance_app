@@ -178,7 +178,7 @@ export default function DropdownMenuDoc() {
       </DocSection>
 
       <DocNote title="A linha acende como o link do catálogo">
-        O realce da linha em foco é o disco do <code>button-fill</code>, o mesmo da navegação lateral deste catálogo. Ele nasce sob o ponteiro e preenche a linha em 300ms (<code>--ease-emphasized</code>), e encolhe ao sair. O viewport escreve a posição do ponteiro (<code>followPointerFill</code>); nas setas o disco nasce do centro. A cor é <code>--accent</code>, então o estado final é o de sempre. O sub-gatilho aberto fica cheio.
+        A cor de fundo da linha em foco esmaece em 300ms de <code>--ease-emphasized</code>, na entrada e na saída, que é o ritmo medido na navegação lateral deste catálogo. Vale nos três menus, no <code>Select</code>, no <code>Command</code> e no painel do <code>NavigationMenu</code>, por <code>menuItemFadeClassName</code>.
       </DocNote>
 
       <DocNote title="size nomeia as larguras que o app repete">

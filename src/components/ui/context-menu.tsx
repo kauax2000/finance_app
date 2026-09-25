@@ -4,7 +4,6 @@ import * as React from "react"
 import { CheckIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
 import { ContextMenu as ContextMenuPrimitive } from "radix-ui"
 
-import { followPointerFill } from "@/lib/pointer-fill"
 import { cn } from "@/lib/utils"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
@@ -126,8 +125,6 @@ function ContextMenuContent({
           ref={useScrollFade()}
           data-slot="context-menu-viewport"
           className={cn(menuViewportClassName, scrollFadeViewportClassName)}
-          onPointerMove={followPointerFill}
-          onPointerOver={followPointerFill}
         >
           {children}
         </div>
@@ -194,8 +191,6 @@ function ContextMenuSubContent({
         ref={useScrollFade()}
         data-slot="context-menu-sub-viewport"
         className={cn(menuViewportClassName, scrollFadeViewportClassName)}
-        onPointerMove={followPointerFill}
-        onPointerOver={followPointerFill}
       >
         {children}
       </div>

@@ -6,10 +6,10 @@ import { ChevronDownIcon } from "@heroicons/react/16/solid"
 import { cva, type VariantProps } from "class-variance-authority"
 import { NavigationMenu as NavigationMenuPrimitive } from "radix-ui"
 
-import { followPointerFill, listFillClassName } from "@/lib/pointer-fill"
 import { cn } from "@/lib/utils"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import {
+  menuItemFadeClassName,
   menuItemGeometryClassName,
   menuLabelClassName,
   menuPanelSurfaceClassName,
@@ -396,9 +396,9 @@ const navigationMenuLinkVariants = cva(
   [
     NAVIGATION_MENU_LINK_BASE,
     "rounded-md text-sm pointer-coarse:min-h-11",
-    // Acende como o link da navegação do catálogo — o disco sob o ponteiro.
-    listFillClassName,
-    "hover:[--button-fill:100%] hover:text-accent-foreground active:[--button-fill:100%] active:text-accent-foreground",
+    // O acender dos menus — ver `menuItemFadeClassName`.
+    menuItemFadeClassName,
+    "hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground",
     "aria-[current=page]:bg-accent/60 aria-[current=page]:font-medium",
   ],
   {
@@ -889,8 +889,6 @@ function NavigationMenuPanel({
           scrollFadeViewportClassName,
           className
         )}
-        onPointerMove={followPointerFill}
-        onPointerOver={followPointerFill}
         {...props}
       />
     </NavigationMenuPanelContext.Provider>

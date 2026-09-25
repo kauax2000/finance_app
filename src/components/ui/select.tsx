@@ -3,12 +3,7 @@
 import * as React from "react"
 import { Select as SelectPrimitive } from "radix-ui"
 
-import { menuPanelSurfaceClassName } from "@/lib/menu-classes"
-import {
-  followPointerFill,
-  listFillClassName,
-  listFillDestructiveClassName,
-} from "@/lib/pointer-fill"
+import { menuItemFadeClassName, menuPanelSurfaceClassName } from "@/lib/menu-classes"
 import { cn } from "@/lib/utils"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import {
@@ -152,8 +147,6 @@ function SelectContent({
             // tela já tem problema maior.
             "data-[position=popper]:w-full data-[position=popper]:min-w-(--radix-select-trigger-width)"
           )}
-          onPointerMove={followPointerFill}
-          onPointerOver={followPointerFill}
         >
           {children}
         </SelectPrimitive.Viewport>
@@ -195,11 +188,11 @@ function SelectItem({
       data-slot="select-item"
       data-variant={variant}
       className={cn(
-        "relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-2 text-sm outline-hidden pointer-coarse:min-h-11 select-none focus:[--button-fill:100%] focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
-        // O disco do link do catálogo — ver `listFillClassName`.
-        listFillClassName,
+        "relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-2 text-sm outline-hidden pointer-coarse:min-h-11 select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+        // O acender dos menus — ver `menuItemFadeClassName`.
+        menuItemFadeClassName,
         variant === "destructive" &&
-          cn("text-destructive focus:text-destructive [&_svg]:text-destructive", listFillDestructiveClassName),
+          "text-destructive focus:bg-destructive/10 focus:text-destructive [&_svg]:text-destructive",
         className
       )}
       {...props}

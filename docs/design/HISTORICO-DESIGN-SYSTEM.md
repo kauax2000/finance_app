@@ -14140,40 +14140,27 @@ mão.
 
 ### Rodada 137 — a linha de lista acende como o link do catálogo
 
-**Primeiro foi o realce que viaja.** O dono pediu que o hover das listas de
-seleção não piscasse de uma linha para a outra. A primeira resposta foi um nó
-só andando por trás das linhas, na mola da casa, com `useListHighlight`, nas
-sete listas (commits `1fe277b`, `77a6a39`, `3110886`). O dono viu e **não
-gostou**, e tudo foi revertido (`65239b4`).
+O dono pediu que o hover das listas de seleção não piscasse de uma linha para a
+outra. Foram três versões, e só a terceira ficou.
 
-**O pedido real era o hover da navegação lateral do catálogo.** Os links dela
-(`DsNavLink`) são `Button tertiary`, e acendem pelo disco do `button-fill`
-(rodada 99): ele nasce sob o cursor e preenche a linha em 300ms de
-`--ease-emphasized`.
+1. **Um realce que viajava entre as linhas**, na mola da casa (`1fe277b`,
+   `77a6a39`, `3110886`). Recusado e revertido (`65239b4`). O pedido passou a
+   ser "igual à sidebar do catálogo".
+2. **O disco do `button-fill` crescendo sob o ponteiro** (`6816d04`), porque o
+   link do catálogo é um `Button tertiary`. Recusado: "o do sidebar não tem
+   essa animação orgânica". **E ele tinha razão, medido:** no `DsNavLink` o
+   `transition-colors` da tela derruba, pelo `tailwind-merge`, a lista de
+   transição do `tertiary`. O `--button-fill` sai dela, e o disco **salta**
+   para 100% no primeiro quadro. O que se vê é só a cor de fundo esmaecendo:
+   transparente → `accent/60` em 300ms de `--ease-emphasized` (0,32 aos 50ms;
+   0,53 aos 100ms; 0,6 aos 300ms). A segunda versão copiou o componente, e
+   não o que a tela de fato mostrava.
+3. **A que ficou:** `menuItemFadeClassName` =
+   `transition-colors duration-(--duration-slow) ease-(--ease-emphasized)` nas
+   linhas. O fundo continua o de sempre (`bg-accent`). Medido no
+   `DropdownMenu`: 90% da cor aos 100ms e a cor cheia aos 300ms, a mesma curva
+   do catálogo, que está a 88% aos 100ms.
 
-**As linhas passaram a vestir o mesmo disco.** Ficaram três peças:
-- **`listFillClassName`**, a classe do disco, com a cor `--accent` e o tom
-  destrutivo à parte;
-- **a troca do estado:** `focus:bg-accent` (e `data-selected:`/`hover:`)
-  virou `[--button-fill:100%]`;
-- **`followPointerFill`**, delegado no contêiner de cada lista, que escreve
-  `--button-mx`/`--button-my` na linha sob o ponteiro.
-
-O `FormPickerPopoverItem` já era `tertiary` e não mudou.
-
-**Medido no `DropdownMenu`:**
-- **Crescimento:** 0% → 53% (40ms) → 85% (80ms) → 100% (~320ms), com o centro
-  no ponteiro (`12px 14px`).
-- **Troca de linha:** a velha encolhe (6% aos 120ms) enquanto a nova cresce
-  (94%) do ponto de entrada.
-- **Tom destrutivo:** vem do `color-mix` da `--destructive`.
-- **Sub-gatilho:** com o submenu aberto e o ponteiro dentro dele, continua em
-  100%.
-
-**Nas setas** (`Select` e `Combobox`), o disco nasce do centro (`50% 50%`).
-**Com movimento reduzido**, a linha já está cheia aos 30ms.
-
-**Uma divergência consciente do `Button`:** lá o foco por teclado não
-preenche ("foco não é intenção de clicar"). Numa lista, o foco **é** o cursor,
-e sem o disco a navegação por setas ficaria sem realce.
+**A lição:** para copiar o comportamento de uma tela, mede-se a tela, e não o
+componente que ela veste. Uma contra-classe pode mudar o que o componente faz.
 

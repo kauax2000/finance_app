@@ -168,10 +168,6 @@ React.useEffect(() => {
         O rótulo é caixa alta com <code>tracking-wider</code>, como o cabeçalho da <code>Table</code>, e fica mais perto da lista que encima. A folga é margem no grupo e pula o primeiro grupo <em>visível</em>: o cmdk esconde grupos sem resultado com <code>hidden</code>, sem tirá-los do DOM.
       </DocNote>
 
-      <DocNote title="A linha acende como o link do catálogo">
-        A linha ativa (<code>data-selected</code>) acende pelo disco do <code>button-fill</code>: ele nasce sob o ponteiro, que o <code>CommandList</code> escreve, e preenche a linha no ritmo do <code>tertiary</code>. Nas setas ele nasce do centro. O <code>Combobox</code> herda.
-      </DocNote>
-
       <DocNote title="O corpo é o dos menus, os estados não">
         A geometria vem de <code>menuItemGeometryClassName</code>. Os estados ficam aqui porque o cmdk os escreve diferente: a linha ativa é <code>data-selected</code>, e <code>data-disabled=&quot;false&quot;</code> está sempre presente, então a regra por presença dos menus apagaria toda linha.
       </DocNote>

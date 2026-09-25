@@ -5,7 +5,6 @@ import { CheckIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
 import { cva, type VariantProps } from "class-variance-authority"
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui"
 
-import { followPointerFill } from "@/lib/pointer-fill"
 import { cn } from "@/lib/utils"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
@@ -258,8 +257,6 @@ function DropdownMenuContent({
           ref={useScrollFade()}
           data-slot="dropdown-menu-viewport"
           className={cn(menuViewportClassName, scrollFadeViewportClassName)}
-          onPointerMove={followPointerFill}
-          onPointerOver={followPointerFill}
         >
           {children}
         </div>
@@ -398,8 +395,6 @@ function DropdownMenuSubContent({
         ref={useScrollFade()}
         data-slot="dropdown-menu-sub-viewport"
         className={cn(menuViewportClassName, scrollFadeViewportClassName)}
-        onPointerMove={followPointerFill}
-        onPointerOver={followPointerFill}
       >
         {children}
       </div>
