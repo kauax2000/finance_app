@@ -1,7 +1,10 @@
 "use client"
 
 import { Container } from "@/components/ui/container"
-import { ExclamationTriangleIcon as ExclamationTriangleMicroIcon } from "@heroicons/react/16/solid"
+import {
+    ArrowPathIcon,
+    ExclamationTriangleIcon as ExclamationTriangleMicroIcon,
+} from "@heroicons/react/16/solid"
 import { useEffect } from "react"
 
 import { ROUTES } from "@/config/navigation"
@@ -54,7 +57,8 @@ export function RouteErrorFallback({ error, retry, variant = "page" }: RouteErro
                         novo ou voltar ao painel.
                     </EmptyStateDescription>
                     <EmptyStateActions>
-                        <Button type="button" variant="primary" onClick={retry}>
+                        <Button type="button" variant="primary" iconMotion="spin" onClick={retry}>
+                            <ArrowPathIcon aria-hidden />
                             Tentar novamente
                         </Button>
                         <Button type="button" variant="tertiary" asChild>

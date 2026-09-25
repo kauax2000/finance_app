@@ -14164,3 +14164,29 @@ outra. Foram três versões, e só a terceira ficou.
 **A lição:** para copiar o comportamento de uma tela, mede-se a tela, e não o
 componente que ela veste. Uma contra-classe pode mudar o que o componente faz.
 
+### Rodada 138 — o ícone do "tentar novamente" gira
+
+O dono pediu que o ícone do "Tentar novamente" girasse. Ele escolheu a
+meia-volta no hover e um prop no `Button`, e não uma utility que a tela
+vestiria.
+
+**O prop:** `iconMotion: none | spin`, um eixo novo do `cva`. Com `spin`, o
+`svg` do botão transiciona `rotate` na mola e vai a 180° em `hover:` e em
+`active:`. O `active:` é o par de toque, porque `hover:` compila dentro de
+`(hover: hover)`.
+
+**Medido:** 32° → 101° → 158° → 187° (passa 3,7%) → 180° aos ~500ms. O ícone
+volta a `none` ao sair. Com movimento reduzido ele vai a 180° no primeiro
+quadro.
+
+**Onde entrou:**
+- o "Tentar novamente" do `EmptyState` de erro e o do `Alert` no catálogo;
+- o fallback de erro de rota (`route-error-fallback.tsx`), que ganhou o
+  `ArrowPathIcon` que o catálogo já mostrava.
+
+**Onde não entrou:**
+- `global-error.tsx`, que é escrito sem o design system de propósito, porque
+  roda quando o layout raiz caiu;
+- o `AlertAction` do dashboard e o link do seletor de carteira, que não têm
+  ícone.
+

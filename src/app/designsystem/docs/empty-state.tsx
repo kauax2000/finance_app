@@ -142,7 +142,7 @@ export default function EmptyStateDoc() {
               instantes.
           </EmptyStateDescription>
           <EmptyStateActions>
-            <Button>
+            <Button iconMotion="spin">
               <ArrowPathIcon aria-hidden />
               Tentar novamente
             </Button>

@@ -132,7 +132,7 @@ export default function AlertDoc() {
   <AlertTitle>Não foi possível carregar as carteiras</AlertTitle>
   <AlertDescription>A conexão caiu no meio do carregamento.</AlertDescription>
   <AlertActions>
-    <AlertAction>
+    <AlertAction iconMotion="spin">
       <ArrowPathIcon aria-hidden />
       Tentar novamente
     </AlertAction>
@@ -147,7 +147,7 @@ export default function AlertDoc() {
             A conexão caiu no meio do carregamento.
           </AlertDescription>
           <AlertActions>
-            <AlertAction>
+            <AlertAction iconMotion="spin">
               <ArrowPathIcon aria-hidden />
               Tentar novamente
             </AlertAction>

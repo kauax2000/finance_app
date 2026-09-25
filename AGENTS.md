@@ -896,6 +896,11 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   chegou a usá-los — estado de sucesso e de atenção é trabalho do `Badge` e do
   `Alert`, que mantêm os deles. Ação principal segue `type="submit"` dentro de
   `CustomForm`.
+- **`Button iconMotion="spin"`** (rodada 138): o ícone gira meia-volta no
+  cursor e no toque, na mola da casa (`--ease-spring`, 500ms), e volta ao
+  sair. Ele é o do "tentar novamente": o `ArrowPathIcon` é simétrico a 180°,
+  então a meia-volta lê como uma volta inteira. Gira `rotate`, e não
+  `transform`, para não disputar com o `translate` do clique.
 - **Uma escada de controle, para todos**: `xs` 24, `sm` 28, **`md` 32 (o
   padrão)**, `lg` 36, `xl` 40. Falam-na com os mesmos nomes e o mesmo padrão o
   `TabsList` (pela **bandeja**, ver a rodada 13) e o

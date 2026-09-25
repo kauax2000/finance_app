@@ -1,6 +1,6 @@
 "use client"
 
-import { PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { ArrowPathIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { FormSubmit } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
@@ -113,6 +113,21 @@ export default function ButtonDoc() {
       </DocSection>
 
       <DocSection
+        title="O ícone que gira"
+        description="iconMotion=&quot;spin&quot; gira o ícone meia-volta no cursor e no toque, na mola da casa, e ele volta ao sair. É o do tentar novamente: o ArrowPathIcon é simétrico a 180°, e a meia-volta lê como uma volta inteira. Com movimento reduzido, não gira."
+        code={`<Button iconMotion="spin"><ArrowPathIcon aria-hidden />tentar novamente</Button>`}
+      >
+        <Button iconMotion="spin">
+          <ArrowPathIcon aria-hidden />
+          tentar novamente
+        </Button>
+        <Button variant="tertiary" iconMotion="spin">
+          <ArrowPathIcon aria-hidden />
+          atualizar
+        </Button>
+      </DocSection>
+
+      <DocSection
         title="O primário é chapado, e acende em lava sob o cursor"
         description="Em repouso é só o preenchimento. Sob o cursor, o arco-íris da marca acende atrás de um vidro da cor do botão, seguindo o ponteiro. Passe o mouse devagar pelo espécime largo."
         code={`<Button size="xl" className="w-64">continuar</Button>
@@ -186,6 +201,12 @@ export default function ButtonDoc() {
             type: '"xs" | "sm" | "md" | "lg" | "xl" | "icon-xs" | "icon-sm" | "icon-md" | "icon-lg" | "icon-xl"',
             default: '"md"',
             description: "Altura de 24 a 40; icon-* é quadrado.",
+          },
+          {
+            prop: "iconMotion",
+            type: '"none" | "spin"',
+            default: '"none"',
+            description: "spin: o ícone gira meia-volta no cursor e no toque — o do tentar novamente.",
           },
           {
             prop: "asChild",

@@ -214,10 +214,21 @@ const buttonVariants = cva(
         "icon-lg": "size-9",
         "icon-xl": "size-10",
       },
+      // O ícone que gira. `spin` é a meia-volta do "tentar novamente": no
+      // cursor (e no toque, pelo par `active:`) as setas giram 180° na mola da
+      // casa e voltam ao sair. O `ArrowPathIcon` é simétrico a 180°, então a
+      // meia-volta lê como uma volta inteira. É `rotate`, a propriedade
+      // independente do Tailwind v4 — ela não disputa com o `translate` do
+      // clique —, e o bloco global de movimento reduzido corta a transição.
+      iconMotion: {
+        none: "",
+        spin: "[&_svg]:transition-[rotate] [&_svg]:duration-(--duration-spring) [&_svg]:ease-(--ease-spring) hover:[&_svg]:rotate-180 active:[&_svg]:rotate-180",
+      },
     },
     defaultVariants: {
       variant: "primary",
       size: "md",
+      iconMotion: "none",
     },
   }
 )
@@ -240,6 +251,7 @@ function Button({
   className,
   variant = "primary",
   size = "md",
+  iconMotion,
   asChild = false,
   children,
   ...props
@@ -333,7 +345,8 @@ function Button({
       data-slot="button"
       data-variant={variant}
       data-size={size}
-      className={cn(buttonVariants({ variant, size, className }))}
+      data-icon-motion={iconMotion ?? undefined}
+      className={cn(buttonVariants({ variant, size, iconMotion, className }))}
       {...resto}
       {...ponteiro}
     >
