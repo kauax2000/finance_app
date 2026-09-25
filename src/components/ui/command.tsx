@@ -5,8 +5,6 @@ import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/16/solid"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Command as CommandPrimitive } from "cmdk"
 
-import { useListHighlight } from "@/hooks/use-list-highlight"
-import { listHighlightClassName } from "@/lib/list-highlight-classes"
 import { cn } from "@/lib/utils"
 import { Caption, P } from "@/components/ui/typography"
 import {
@@ -441,11 +439,9 @@ function CommandInput({
  */
 function CommandList({
   className,
-  children,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.List>) {
   const [medido, setMedido] = React.useState(false)
-  const realce = useListHighlight({ active: '[cmdk-item][data-selected="true"]' })
 
   React.useEffect(() => {
     let segundo: number | null = null
@@ -494,16 +490,10 @@ function CommandList({
         "h-[min(calc(var(--cmdk-list-height,var(--command-list-ceiling,var(--command-list-max-h)))_+_var(--scroll-fade-band-h)_+_var(--scroll-fade-foot-h)_+_--spacing(2)),var(--command-list-ceiling,var(--command-list-max-h)))]",
         // Só transiciona depois da primeira medida — ver o cabeçalho.
         "data-medido:transition-[height] data-medido:duration-[var(--command-list-transition,0s)] data-medido:ease-(--ease-out)",
-        // O contêiner do realce que viaja é o `[cmdk-list-sizer]`, que o cmdk
-        // desenha por dentro — o indicador mora nele, antes das linhas.
-        "[&>[cmdk-list-sizer]]:relative",
         className
       )}
       {...props}
-    >
-      <span ref={realce} aria-hidden data-slot="list-highlight" className={listHighlightClassName} />
-      {children}
-    </CommandPrimitive.List>
+    />
   )
 }
 
@@ -690,9 +680,7 @@ function CommandItem({
       className={cn(
         "group/command-item",
         menuItemGeometryClassName,
-        // O fundo da linha ativa não é dela: é o realce que viaja, montado no
-        // `CommandList`. A linha só troca a tinta.
-        "data-selected:text-accent-foreground data-selected:*:[svg]:text-accent-foreground",
+        "data-selected:bg-accent data-selected:text-accent-foreground data-selected:*:[svg]:text-accent-foreground",
         // `=true` e não por presença: ver o comentário acima.
         "data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50",
         className

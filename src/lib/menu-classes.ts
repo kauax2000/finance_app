@@ -147,7 +147,7 @@ export const menuSurfaceClassName = [
  * em cada menu, pela razão do bloco acima.
  */
 export const menuViewportClassName =
-  "relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain p-1 outline-hidden"
+  "min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain p-1 outline-hidden"
 
 /**
  * O submenu. Ele **é** a casca — antes divergia dela dentro do mesmo arquivo
@@ -180,12 +180,9 @@ export const menuItemGeometryClassName = [
 export const menuItemClassName = [
   "group/menu-item",
   menuItemGeometryClassName,
-  // O fundo da linha em foco não é dela: é o realce que viaja
-  // (`useListHighlight`), montado no viewport. A linha só troca a tinta, e o
-  // tom destrutivo o realce lê de `data-variant`.
-  "focus:text-accent-foreground",
+  "focus:bg-accent focus:text-accent-foreground",
   "data-inset:pl-7",
-  "data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:text-destructive",
+  "data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20",
   "data-disabled:pointer-events-none data-disabled:opacity-50",
   "focus:*:[svg]:text-accent-foreground data-[variant=destructive]:*:[svg]:text-destructive",
 ].join(" ")
@@ -194,9 +191,7 @@ export const menuItemClassName = [
 export const menuSubTriggerClassName = [
   "group/menu-item",
   menuItemGeometryClassName,
-  // O `data-open` fica: ele marca o submenu aberto quando o ponteiro já está
-  // dentro dele, e ali o realce do menu de cima apagou.
-  "focus:text-accent-foreground",
+  "focus:bg-accent focus:text-accent-foreground",
   "data-inset:pl-7 data-open:bg-accent data-open:text-accent-foreground",
   // O mesmo estado das outras linhas: sem ele um submenu desabilitado saía
   // igual ao ativo nos três menus.
@@ -214,7 +209,7 @@ export const menuIndicatorItemClassName = [
   // O indicador mora à direita: o recuo desse lado cresce. Quem compõe passa
   // por `cn()`, e o `twMerge` guarda o `px-1.5` da geometria com o `pr-8` por cima.
   "pr-8",
-  "focus:text-accent-foreground",
+  "focus:bg-accent focus:text-accent-foreground",
   "data-inset:pl-7",
   "data-disabled:pointer-events-none data-disabled:opacity-50",
 ].join(" ")

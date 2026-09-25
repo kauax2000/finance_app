@@ -5,8 +5,6 @@ import { CheckIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Menubar as MenubarPrimitive } from "radix-ui"
 
-import { useListHighlight } from "@/hooks/use-list-highlight"
-import { listHighlightClassName } from "@/lib/list-highlight-classes"
 import { cn } from "@/lib/utils"
 import { barSurfaceClassName } from "@/lib/glass-classes"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
@@ -255,7 +253,6 @@ function MenubarContent({
   collisionPadding = ANCHORED_COLLISION_PADDING,
   ...props
 }: React.ComponentProps<typeof MenubarPrimitive.Content>) {
-  const realce = useListHighlight({ active: "[data-highlighted]" })
   return (
     <MenubarPortal>
       <MenubarPrimitive.Content
@@ -272,12 +269,6 @@ function MenubarContent({
           data-slot="menubar-viewport"
           className={cn(menuViewportClassName, scrollFadeViewportClassName)}
         >
-          <span
-            ref={realce}
-            aria-hidden
-            data-slot="list-highlight"
-            className={listHighlightClassName}
-          />
           {children}
         </div>
       </MenubarPrimitive.Content>
@@ -434,7 +425,6 @@ function MenubarSubContent({
   collisionPadding = ANCHORED_COLLISION_PADDING,
   ...props
 }: React.ComponentProps<typeof MenubarPrimitive.SubContent>) {
-  const realce = useListHighlight({ active: "[data-highlighted]" })
   return (
     <MenubarPrimitive.SubContent
       data-slot="menubar-sub-content"
@@ -447,12 +437,6 @@ function MenubarSubContent({
         data-slot="menubar-sub-viewport"
         className={cn(menuViewportClassName, scrollFadeViewportClassName)}
       >
-        <span
-          ref={realce}
-          aria-hidden
-          data-slot="list-highlight"
-          className={listHighlightClassName}
-        />
         {children}
       </div>
     </MenubarPrimitive.SubContent>

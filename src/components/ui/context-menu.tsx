@@ -4,8 +4,6 @@ import * as React from "react"
 import { CheckIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
 import { ContextMenu as ContextMenuPrimitive } from "radix-ui"
 
-import { useListHighlight } from "@/hooks/use-list-highlight"
-import { listHighlightClassName } from "@/lib/list-highlight-classes"
 import { cn } from "@/lib/utils"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
@@ -115,7 +113,6 @@ function ContextMenuContent({
   collisionPadding = ANCHORED_COLLISION_PADDING,
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Content>) {
-  const realce = useListHighlight({ active: "[data-highlighted]" })
   return (
     <ContextMenuPrimitive.Portal>
       <ContextMenuPrimitive.Content
@@ -129,12 +126,6 @@ function ContextMenuContent({
           data-slot="context-menu-viewport"
           className={cn(menuViewportClassName, scrollFadeViewportClassName)}
         >
-          <span
-            ref={realce}
-            aria-hidden
-            data-slot="list-highlight"
-            className={listHighlightClassName}
-          />
           {children}
         </div>
       </ContextMenuPrimitive.Content>
@@ -189,7 +180,6 @@ function ContextMenuSubContent({
   collisionPadding = ANCHORED_COLLISION_PADDING,
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.SubContent>) {
-  const realce = useListHighlight({ active: "[data-highlighted]" })
   return (
     <ContextMenuPrimitive.SubContent
       data-slot="context-menu-sub-content"
@@ -202,12 +192,6 @@ function ContextMenuSubContent({
         data-slot="context-menu-sub-viewport"
         className={cn(menuViewportClassName, scrollFadeViewportClassName)}
       >
-        <span
-          ref={realce}
-          aria-hidden
-          data-slot="list-highlight"
-          className={listHighlightClassName}
-        />
         {children}
       </div>
     </ContextMenuPrimitive.SubContent>

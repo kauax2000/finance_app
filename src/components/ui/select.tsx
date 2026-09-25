@@ -4,8 +4,6 @@ import * as React from "react"
 import { Select as SelectPrimitive } from "radix-ui"
 
 import { menuPanelSurfaceClassName } from "@/lib/menu-classes"
-import { useListHighlight } from "@/hooks/use-list-highlight"
-import { listHighlightClassName } from "@/lib/list-highlight-classes"
 import { cn } from "@/lib/utils"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import {
@@ -95,7 +93,6 @@ function SelectContent({
   collisionPadding = ANCHORED_COLLISION_PADDING,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
-  const realce = useListHighlight({ active: "[data-highlighted]" })
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
@@ -126,10 +123,7 @@ function SelectContent({
             // gatilho mas o viewport encolhia para o conteúdo: com um gatilho
             // de largura fixa sobravam dezenas de pixels vazios à direita, e o
             // separador parava no meio do painel.
-            // `relative`: o contêiner do realce que viaja. O Radix já escreve
-            // `position: relative` inline no viewport; a classe diz que isso é
-            // carga estrutural daqui, e não um detalhe dele.
-            "relative w-full p-1",
+            "w-full p-1",
             // **Sem a classe de altura sobre `--radix-select-trigger-height`.**
             // (Escrita assim, sem a sintaxe de utilitário, de propósito: o
             // Tailwind varre **o arquivo inteiro**, comentário incluído, e citar
@@ -154,12 +148,6 @@ function SelectContent({
             "data-[position=popper]:w-full data-[position=popper]:min-w-(--radix-select-trigger-width)"
           )}
         >
-          <span
-            ref={realce}
-            aria-hidden
-            data-slot="list-highlight"
-            className={listHighlightClassName}
-          />
           {children}
         </SelectPrimitive.Viewport>
         <SelectScrollDownButton />
@@ -200,9 +188,9 @@ function SelectItem({
       data-slot="select-item"
       data-variant={variant}
       className={cn(
-        "relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-2 text-sm outline-hidden pointer-coarse:min-h-11 select-none focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+        "relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-2 text-sm outline-hidden pointer-coarse:min-h-11 select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
         variant === "destructive" &&
-          "text-destructive focus:text-destructive [&_svg]:text-destructive",
+          "text-destructive focus:bg-destructive/10 focus:text-destructive [&_svg]:text-destructive",
         className
       )}
       {...props}
