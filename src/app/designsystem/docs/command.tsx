@@ -21,6 +21,7 @@ import {
   CommandItemDescription,
   CommandItemTitle,
   CommandLoading,
+  CommandScope,
 } from "@/components/ui/command"
 import { Kbd } from "@/components/ui/kbd"
 import { Spinner } from "@/components/ui/spinner"
@@ -213,7 +214,29 @@ React.useEffect(() => {
       </DocNote>
 
       <DocNote title="O rodapé mede só a legenda">
-        A pista de dissolução é <code>--command-foot-fade</code>, máscara que não ocupa espaço. A altura depende da presença do rodapé, nunca da rolagem: depender de <code>data-scrollable</code> soma recuo ao conteúdo e a lista fica presa como rolável. <code>scroll-pb</code> cobre a zona inteira, senão a seta deixa o item ativo dentro da dissolução.
+        A altura do rodapé é <code>--scroll-fade-foot-h</code>, publicada pela casca quando o rodapé existe — nunca pela rolagem. Uma versão condicionada a &ldquo;esta lista rola&rdquo; somava recuo ao próprio conteúdo e realimentava a condição: a lista ficava presa como rolável. A dissolução é máscara na lista e não ocupa espaço.
+      </DocNote>
+
+      <DocSection
+        title="Escopo"
+        description="O escopo antes do texto restringe a busca: o nome pintado como o destinatário de um e-mail depois de digitado. Sem ×: com o campo vazio, o primeiro Backspace acende o fundo e o segundo remove o escopo. Quem conta os toques é quem tem o estado."
+        code={`<CommandInput
+  leading={scope ? <CommandScope icon={<Icon />} armed={armado}>{scope}</CommandScope> : null}
+  placeholder={scope ? \`Buscar em \${scope}…\` : "Buscar…"}
+  onKeyDown={(e) => {
+    if (e.key === "Backspace" && !query && scope) {
+      e.preventDefault()
+      armado ? setScope(null) : setArmado(true)
+    } else if (e.key !== "Shift") setArmado(false)
+  }}
+/>`}
+        previewClassName="items-stretch"
+      >
+        <CommandScopeDemo />
+      </DocSection>
+
+      <DocNote title="Movimento: a casca abre na mola, as linhas sobem ao aparecer">
+        O <code>CommandDialog</code> abre em <code>--ease-spring</code> e fecha curto em <code>--ease-out</code>. Cada linha que o cmdk <em>monta</em> — as que passam a casar a busca, e o miolo inteiro numa troca de vista com <code>key</code> — sobe 6px na mola, escalonada por <code>nth-child</code> (<code>command-reveal</code>). Quem liga é a casca, por <code>--command-reveal</code>: no <code>Combobox</code> e na paleta solta a duração é <code>0s</code>, como a transição de altura.
       </DocNote>
 
       <DocNote title="O campo é o mesmo do cabeçalho do catálogo">
@@ -279,9 +302,84 @@ React.useEffect(() => {
             description:
               "O estado de busca assíncrona.",
           },
+          {
+            prop: "CommandInput size",
+            type: '"md" | "lg"',
+            default: '"md"',
+            description:
+              "md (32) é o gatilho do cabeçalho; lg (36) é o campo de uma paleta que é a tela inteira. A faixa de dissolução acompanha.",
+          },
+          {
+            prop: "CommandInput leading",
+            type: "ReactNode",
+            description:
+              "O que fica entre a lupa e o texto — o CommandScope da busca por camada.",
+          },
+          {
+            prop: "CommandScope",
+            type: "{ icon?, armed?, tint?, children }",
+            description:
+              "O escopo pintado como o destinatário de um e-mail: texto e ícone na cor que tint passar (uma parada do arco-íris; violeta por padrão), sem ×. armed acende o fundo — o primeiro Backspace com o campo vazio; o segundo remove.",
+          },
         ]}
       />
     </>
+  )
+}
+
+function CommandScopeDemo() {
+  const [scope, setScope] = React.useState<string | null>("Carteiras")
+  const [query, setQuery] = React.useState("")
+  const [armado, setArmado] = React.useState(false)
+  const itens = scope === "Carteiras"
+    ? ["Nubank", "Itaú", "Dinheiro"]
+    : ["Carteiras", "Cartões", "Configurações"]
+
+  return (
+    <Command variant="panel" autoSelectFirst={false} className="w-full max-w-md">
+      <CommandInput
+        value={query}
+        onValueChange={setQuery}
+        placeholder={scope ? `Buscar em ${scope}…` : "Buscar…"}
+        leading={
+          scope ? (
+            <CommandScope icon={<WalletIcon aria-hidden />} armed={armado}>
+              {scope}
+            </CommandScope>
+          ) : null
+        }
+        onKeyDown={(e) => {
+          if (e.key === "Backspace" && !query && scope) {
+            e.preventDefault()
+            if (armado) {
+              setScope(null)
+              setArmado(false)
+            } else setArmado(true)
+            return
+          }
+          if (armado && e.key !== "Shift") setArmado(false)
+        }}
+      />
+      <CommandList>
+        <CommandEmpty>Nada encontrado.</CommandEmpty>
+        <CommandGroup heading={scope ?? "Ir para"}>
+          {itens.map((item) => (
+            <CommandItem
+              key={item}
+              onSelect={() => {
+                if (!scope && item === "Carteiras") {
+                  setScope(item)
+                  setQuery("")
+                  setArmado(false)
+                }
+              }}
+            >
+              {item}
+            </CommandItem>
+          ))}
+        </CommandGroup>
+      </CommandList>
+    </Command>
   )
 }
 

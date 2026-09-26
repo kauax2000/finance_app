@@ -103,6 +103,8 @@ export type CommandIdleSelection = {
   onValueChange?: (value: string) => void
   onKeyDown?: (event: React.KeyboardEvent<HTMLDivElement>) => void
   onInput?: (event: React.FormEvent<HTMLDivElement>) => void
+  onPointerMoveCapture?: (event: React.PointerEvent<HTMLDivElement>) => void
+  onPointerLeave?: (event: React.PointerEvent<HTMLDivElement>) => void
 }
 
 export function useCommandIdleSelection(ativo: boolean): CommandIdleSelection {
@@ -113,6 +115,8 @@ export function useCommandIdleSelection(ativo: boolean): CommandIdleSelection {
    * próprio `valor`.
    */
   const navegou = React.useRef(false)
+  /** A seleção atual veio do ponteiro, e não do teclado. */
+  const porPonteiro = React.useRef(false)
 
   const voltarAoOcioso = React.useCallback(() => {
     navegou.current = false
@@ -158,14 +162,49 @@ export function useCommandIdleSelection(ativo: boolean): CommandIdleSelection {
         if (bruto == null) return
         event.preventDefault()
         navegou.current = true
+        porPonteiro.current = false
         setValor(bruto)
         return
       }
 
-      if (ehNavegacao(event)) navegou.current = true
+      if (ehNavegacao(event)) {
+        navegou.current = true
+        porPonteiro.current = false
+      }
     },
     []
   )
+
+  /**
+   * O ponteiro também navega — e isto era um defeito medido: o cmdk seleciona
+   * a linha no `pointermove` do item, o `onValueChange` chegava com `navegou`
+   * em `false`, e a seleção era tratada como auto-seleção e devolvida ao
+   * ocioso. **Nenhuma linha acendia no hover.** Em captura, para rodar antes
+   * do handler do item — no borbulhar chegaria depois do `setState` do cmdk.
+   */
+  const onPointerMoveCapture = React.useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if ((event.target as HTMLElement).closest?.("[cmdk-item]")) {
+        navegou.current = true
+        porPonteiro.current = true
+      }
+    },
+    []
+  )
+
+  /**
+   * Sair com o mouse de cima da paleta apaga o realce — só o que o ponteiro
+   * acendeu. Uma seleção feita pelas setas fica, senão o mouse passando por
+   * fora derrubaria o que o teclado escolheu. `pointerleave` não borbulha e
+   * só dispara ao sair do elemento inteiro, então parar sobre o rodapé ou o
+   * campo não apaga nada.
+   */
+  const onPointerLeave = React.useCallback(() => {
+    if (porPonteiro.current) {
+      porPonteiro.current = false
+      voltarAoOcioso()
+    }
+  }, [voltarAoOcioso])
 
   const onInput = React.useCallback(() => {
     // `onInput` e não `onKeyDown`: assim colar e limpar pelo × do campo também
@@ -175,5 +214,5 @@ export function useCommandIdleSelection(ativo: boolean): CommandIdleSelection {
 
   if (!ativo) return {}
 
-  return { value: valor, onValueChange, onKeyDown, onInput }
+  return { value: valor, onValueChange, onKeyDown, onInput, onPointerMoveCapture, onPointerLeave }
 }

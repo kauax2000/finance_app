@@ -14190,3 +14190,123 @@ quadro.
 - o `AlertAction` do dashboard e o link do seletor de carteira, que não têm
   ícone.
 
+
+### Rodada 139 — a paleta do catálogo abre por camadas
+
+O dono pediu que o `⌘K` do catálogo abrisse mostrando só os grupos, cada um
+com ícone, com as últimas pesquisas embaixo; que escolher um grupo pusesse a
+busca "dentro" dele, com um sinal no campo como as skills do Claude; que sem
+grupo a busca trouxesse páginas e histórico; e mais movimento, na língua do
+app. Três decisões foram dele: recentes são **páginas abertas** (não termos),
+os ícones entram também na sidebar, e **Esc sempre fecha**.
+
+**O que entrou no `Command`:** o slot `leading` do `CommandInput`, a peça
+`CommandScope` (o nome pintado como o destinatário de um e-mail depois de
+digitado, no corpo do campo; foi `Badge` por uma rodada, em quatro variações
+de canto, tamanho e recuo, e o dono pediu esta forma), a `@utility
+command-reveal` na lista, e a casca abrindo em `--ease-spring` e fechando em
+`--duration-fast`. O vazio sobe ao montar.
+
+**Quem liga o movimento é a casca.** A utility lê `--command-reveal`, `0s`
+por padrão; só o `CommandDialog` a declara em `--duration-spring`. É o mesmo
+desenho de `--command-list-transition`, e é o que deixa o `Combobox` parado
+(medido: `animation-duration: 0s` nos itens dele).
+
+**Três medições:**
+1. A subida: item 1 de 0 a 1 de opacidade em ~240ms, o quarto ~90ms atrás,
+   assentando em ~500ms, nos dois temas.
+2. **Movimento reduzido cortava a duração e não o atraso**: a quinta linha
+   ficava invisível por 120ms. A utility ganhou o próprio bloco zerando
+   `animation-delay`, como as do `Carousel`.
+3. **Trocar de escopo não digita nada**, e o `useCommandIdleSelection` só
+   volta ao ocioso em `input`: a linha "Organisms" seguia selecionada numa
+   lista que já não a tinha. Um evento `input` sintético no campo, o mesmo
+   truque do ×, devolve o ocioso — medido: zero linhas selecionadas depois
+   do Enter.
+
+**O escopo, na forma final:**
+- **Tinta: uma parada do arco-íris por camada**, por decisão do dono — a
+  marca como tinta de texto fora das peças de marca. Foundations teal, Atoms
+  azul, Molecules violeta, Organisms magenta, Templates coral (`tint` em
+  `category-meta.ts`), na ordem do degradê e pulando âmbar e lima. Passou por
+  `info-muted`, `--info`, `--info` com croma ×1,35 e o violeta para todas.
+  **No claro a luz é fixa em 0,47** e só matiz e croma vêm da parada: crua, a
+  teal dava ~2:1, e a 0,5 teal e azul ficavam em 4,40 e 4,49. Medido em pixel
+  contra o campo:
+
+  | Camada | Claro | Escuro (parada crua) |
+  | --- | --- | --- |
+  | Foundations | 4,97 | 10,43 |
+  | Atoms | 5,07 | 9,70 |
+  | Molecules | 6,34 | 5,20 |
+  | Organisms | 5,50 | 5,93 |
+  | Templates | 6,18 | 6,93 |
+
+- **Sem ×.** Com o campo vazio, o primeiro Backspace **arma** o escopo (o fundo
+  acende a 20% da tinta) e o segundo o remove, voltando às camadas; qualquer
+  tecla desarma. Uma região viva anuncia "Apague de novo para sair de …",
+  porque o fundo não chega ao leitor de tela. O recuo do fundo existe também
+  em repouso, compensado por margem negativa, para acender não empurrar o
+  texto. Medido nos dois temas.
+
+**A dedupe é carga estrutural:** uma página recente sai do grupo da camada
+quando se digita, porque dois itens com o mesmo `value` acendem juntos no
+cmdk. Com a mesma nota, o grupo Recentes fica na frente por ordem de DOM.
+
+**Os recentes ficam abaixo das camadas, uma linha só** — seta (`ArrowUpRightIcon`) e nome, o desenho de "Go to …" que o dono trouxe; a primeira versão os punha em cima, com relógio e a camada em descrição, e ele pediu a troca.
+
+**A busca continua só pelo nome** (decisão anterior); a descrição passou a
+aparecer na linha. As camadas casam também pelo nome em português, por
+`keywords` (nota 0,4): "átomo" acha Atoms.
+
+**O hover não acendia nenhuma linha na paleta, e não era desta rodada.** O cmdk
+seleciona a linha no `pointermove` do item; o `useCommandIdleSelection` recebia
+o `onValueChange` com `navegou` em `false` e o tratava como auto-seleção,
+devolvendo ao ocioso. O hook ganhou `onPointerMoveCapture` — em captura, para
+rodar antes do handler do item — que marca o ponteiro como navegação. Medido:
+a linha sob o ponteiro acende em `--accent`, digitar volta ao ocioso, a seta
+entra na lista. **E sair com o mouse de cima da paleta apaga o realce** — só o
+que o ponteiro acendeu (`onPointerLeave` no hook, guardado por `porPonteiro`);
+uma seleção das setas fica, e parar sobre o rodapé ou o campo não apaga nada,
+porque `pointerleave` só dispara ao sair do elemento inteiro. Medido.
+
+**O campo cresceu a pedido do dono:** `CommandInput` ganhou `size` (`md` 32,
+o padrão e o gatilho do cabeçalho; `lg` 36), e a faixa de
+dissolução acompanha pelo `data-size` do wrapper — um `:has()` de dois
+atributos, que pesa mais que o de um e vence sem depender da ordem. A paleta
+do catálogo veste `lg`. Medido: campo de 36, faixa de 52 (foi 40 com texto de 16px por uma rodada; o dono pediu menor nos dois).
+
+**A linha de camada é horizontal** (nome, contagem na ponta, seta), 36px como a
+de recente: com duas linhas por camada a raiz passava da altura da paleta e
+os recentes nasciam sob a dissolução. A série de ajustes na tela — recentes
+abaixo das camadas com relógio e seta, sem ladrilho atrás do ícone, recuo
+lateral de 8, 12px entre grupos e nas pontas — foi pedida linha a linha pelo
+dono, e cada uma está medida.
+
+**O gatilho do cabeçalho**, a partir de `lg`:
+- **Brilha ao aproximar** — a primitiva `brand-glow` do `Card` e do `Alert`.
+  Ela mora num invólucro, e não no botão: o `::before` fica em `z` negativo
+  sob `isolate`, e no botão pintaria por cima do fundo dele. No invólucro o
+  fundo translúcido do botão pinta por cima do núcleo. Para isso a utility
+  ganhou `--brand-glow-core` (padrão `--card`), e o gatilho declara
+  `--background`, a cor que a barra mostra atrás.
+- **Não pinta o fundo nem acende o texto no hover**: o disco do `tertiary`
+  fica sem cor e o texto fica no cinza do repouso, porque
+  brilho e disco juntos eram demais, a pedido do dono. Abaixo de `lg`, sem
+  brilho, o botão de ícone mantém o disco.
+- **Diz "Busque componentes…"**, e troca por "Clique para buscar" no cursor e no foco
+  de teclado **letra a letra** — medido: a onda cruza a frase em ~500ms, e a
+  largura não muda. **E alinha à esquerda por declaração**: o
+  `<button>` centraliza texto por padrão, e a frase curta ficava centrada na
+  largura da longa, 40px à direita da lupa.
+
+**O gatilho é uma pílula de 32px** (foi a 36 por uma rodada e voltou, a
+pedido do dono), e o `ThemeToggle` ganhou nesse meio-tempo o degrau `lg`: `size` `md` 32 (o padrão) ou `lg` 36. A conta do
+trilho é a mesma — 4 de recuo mais três paradas (28 ou 32), a viagem é uma
+parada por índice, na classe e no `PASSO` da WAAPI — e o alvo de toque fica em
+44 nos dois. Medido: trilho de 100 × 36, peça de 32, faces em 2 · 34 · 66, e
+a peça para em 66 ao ir para o escuro. Na barra do catálogo o dono preferiu
+o degrau menor, e ela voltou a `md`; o `lg` fica no componente.
+
+**Ficou de fora:** `hover-card.tsx` usa `duration-` onde a casa usa
+`animation-duration-*`, notado, não mexido.

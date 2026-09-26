@@ -2334,8 +2334,15 @@
        com o arco, e aí ele carrega sempre a mesma sequência e só muda de
        lugar. O `from` daqui é constante de propósito — quem o parametrizar
        recria o defeito. */
+    /* O núcleo é `--card` por padrão — o `Alert` e o `Card` são cartões. Quem
+       brilha sobre outra superfície declara `--brand-glow-core` com a cor que
+       está atrás dele (o gatilho de busca do catálogo, sobre a barra). */
     background:
-      linear-gradient(var(--card), var(--card)) padding-box,
+      linear-gradient(
+          var(--brand-glow-core, var(--card)),
+          var(--brand-glow-core, var(--card))
+        )
+        padding-box,
       /* **A referência tem quatro `radial-gradient` aqui, e eles não pintam
          nada.** Foram portados e medidos: são círculos no **interior** da
          caixa (`circle`, `at 40% 40%`, `at 60% 60%`, `at 40% 60%`, com o
@@ -2831,6 +2838,40 @@
   transform-origin: bottom;
   animation: chart-wave 1.4s ease-in-out infinite;
   animation-delay: calc(var(--chart-wave-i, 0) * 110ms);
+}
+
+/* As linhas da paleta sobem ao aparecer (rodada 139). É o desenho do
+   `disclosure-reveal` — o mesmo `disclosure-rise`, na mola, escalonado por
+   `nth-child` com teto — aplicado ao que o cmdk **monta**: um item que passa a
+   casar a busca, e o miolo inteiro quando a paleta troca de vista.
+
+   **Quem liga é a casca.** A duração é `--command-reveal`, com `0s` de padrão
+   — o `CommandDialog` a declara em `--duration-spring`; o `Combobox` e a
+   paleta solta numa página ficam paradas, como `--command-list-transition`. */
+@utility command-reveal {
+  & [cmdk-item],
+  & [cmdk-group-heading] {
+    animation: disclosure-rise var(--command-reveal, 0s) var(--ease-spring) both;
+  }
+  & [cmdk-item]:nth-child(2) {
+    animation-delay: 30ms;
+  }
+  & [cmdk-item]:nth-child(3) {
+    animation-delay: 60ms;
+  }
+  & [cmdk-item]:nth-child(4) {
+    animation-delay: 90ms;
+  }
+  & [cmdk-item]:nth-child(n + 5) {
+    animation-delay: 120ms;
+  }
+  /* O bloco global encurta a duração, não o atraso: sem isto a quinta linha
+     ficava invisível por 120ms com a preferência ligada — medido. */
+  @media (prefers-reduced-motion: reduce) {
+    & [cmdk-item] {
+      animation-delay: 0ms;
+    }
+  }
 }
 
 @utility scroll-fade-y {

@@ -66,6 +66,13 @@ describe("o trilho de tema", () => {
         expect(CODIGO).toContain('aria-label="Tema"')
     })
 
+    it("3b. o degrau lg fecha a mesma conta: 100 = 4 + 3 × 32, e a viagem é 32", () => {
+        expect(CODIGO).toContain("h-9 w-25")
+        expect(CODIGO).toMatch(/size-8/)
+        expect(CODIGO).toContain("translate-x-[calc(var(--tt-i)*2rem)]")
+        expect(CODIGO).toContain("const PASSO_LG = 32")
+    })
+
     it("3. a aritmética fecha: 88 = 4 + 3 × 28, e a viagem é o mesmo 28", () => {
         // `w-22` é 88px e `p-0.5` é 2px de cada lado: sobram 84 para três
         // paradas de 28. `size-7` é a peça de 28 que ocupa uma delas.
@@ -74,10 +81,11 @@ describe("o trilho de tema", () => {
         expect(CODIGO).toMatch(/size-7/)
         // O Skeleton de pré-montagem mede o mesmo, senão a linha do menu salta
         // de largura na hidratação.
-        expect(CODIGO).toContain("h-8 w-22 shrink-0 rounded-full")
+        // O esqueleto usa o trilho do degrau, e não um número próprio.
+        expect(CODIGO).toContain('cn(degrau.trilho, "shrink-0 rounded-full", className)')
 
         // A viagem: 1,75rem é 28px, e o repouso sai da variável da raiz.
-        expect(peca(PECA)).toContain("translate-x-[calc(var(--tt-i)*1.75rem)]")
+        expect(CODIGO).toContain("translate-x-[calc(var(--tt-i)*1.75rem)]")
         expect(CODIGO).toContain("const PASSO = 28")
     })
 

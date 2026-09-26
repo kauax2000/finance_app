@@ -21,6 +21,7 @@ import { AppWordmark } from "@/components/layout/app-wordmark"
 import { Container } from "@/components/ui/container"
 import { TopBar } from "@/components/ui/top-bar"
 import { CATEGORY_ORDER, REGISTRY } from "./registry"
+import { CATEGORY_META } from "./category-meta"
 import { DsSearch } from "./ds-search"
 
 /**
@@ -368,7 +369,9 @@ function DsNav() {
         </DsNavLink>
       </div>
 
-      {groups.map((group) => (
+      {groups.map((group) => {
+        const Icon = CATEGORY_META[group.category].Icon
+        return (
         <div
           key={group.category}
           // O grupo era separado só por `gap-5`, e com 88 itens rolando um vão
@@ -376,7 +379,10 @@ function DsNav() {
           // divisão que o olho pega sem procurar.
           className="flex flex-col gap-0.5 border-t border-border pb-5"
         >
-          <h2 className="mb-1 px-2 pt-4 pb-1.5 text-2xs font-semibold tracking-wide text-foreground uppercase">
+          {/* O ícone é o mesmo da paleta (`category-meta`): a camada lê
+              igual na sidebar e no ⌘K. `size-3` para acompanhar o `text-2xs`. */}
+          <h2 className="mb-1 flex items-center gap-1.5 px-2 pt-4 pb-1.5 text-2xs font-semibold tracking-wide text-foreground uppercase">
+            <Icon aria-hidden className="size-3 text-muted-foreground" />
             {group.category}
           </h2>
           {group.items.map((item) => {
@@ -397,7 +403,8 @@ function DsNav() {
             )
           })}
         </div>
-      ))}
+        )
+      })}
     </nav>
   )
 }

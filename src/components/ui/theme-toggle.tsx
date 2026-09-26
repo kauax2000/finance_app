@@ -97,6 +97,32 @@ const indiceDe = (tema: string | undefined) => {
  * repouso é do `--tt-i`, e a animação (com `fill: "none"`) só cobre o trajeto.
  */
 const PASSO = 28
+/** O passo do degrau `lg` (36): três paradas de 32 num trilho de 100. */
+const PASSO_LG = 32
+
+/**
+ * **Dois degraus, na escada de controle** (rodada 139): `md` 32 — o padrão, o
+ * do menu da conta — e `lg` 36, para ficar ao lado de um campo `lg`, como o
+ * gatilho de busca do catálogo. A aritmética é a mesma nos dois: trilho = 4 de
+ * recuo + 3 paradas, e a viagem é uma parada por índice. A área de toque
+ * continua em 44 (o `::after` cresce menos no degrau maior).
+ */
+const DEGRAU = {
+    md: {
+        trilho: "h-8 w-22",
+        toque: "after:-inset-y-1.5",
+        peca: "size-7 translate-x-[calc(var(--tt-i)*1.75rem)]",
+        face: "size-7",
+        passo: PASSO,
+    },
+    lg: {
+        trilho: "h-9 w-25",
+        toque: "after:-inset-y-1",
+        peca: "size-8 translate-x-[calc(var(--tt-i)*2rem)]",
+        face: "size-8",
+        passo: PASSO_LG,
+    },
+} as const
 
 /** O trajeto. A curva da referência: quase parada, dispara, pousa macio. */
 const TRAJETO = { duration: 400, easing: "cubic-bezier(1,0,0.4,1)" }
@@ -198,7 +224,15 @@ const AMPLITUDE_POR_SALTO = [0, 0.11, 0.22]
 const useEfeitoDeLayout =
     typeof window !== "undefined" ? useLayoutEffect : useEffect
 
-export function ThemeToggle({ className }: { className?: string }) {
+export function ThemeToggle({
+    className,
+    size = "md",
+}: {
+    className?: string
+    /** `md` 32 (o padrão) ou `lg` 36, para ficar ao lado de um campo `lg`. */
+    size?: keyof typeof DEGRAU
+}) {
+    const degrau = DEGRAU[size]
     const { theme, setTheme } = useTheme()
     const [montado, setMontado] = useState(false)
 
@@ -269,8 +303,8 @@ export function ThemeToggle({ className }: { className?: string }) {
         const animacoes = [
             peca.animate(
                 [
-                    { translate: `${de * PASSO}px` },
-                    { translate: `${indice * PASSO}px` },
+                    { translate: `${de * degrau.passo}px` },
+                    { translate: `${indice * degrau.passo}px` },
                 ],
                 { ...TRAJETO, fill: "none" },
             ),
@@ -293,12 +327,12 @@ export function ThemeToggle({ className }: { className?: string }) {
         ]
 
         emCurso.current = animacoes.filter((a): a is Animation => Boolean(a))
-    }, [indice, montado])
+    }, [indice, montado, degrau.passo])
 
     if (!montado) {
         return (
             <Skeleton
-                className={cn("h-8 w-22 shrink-0 rounded-full", className)}
+                className={cn(degrau.trilho, "shrink-0 rounded-full", className)}
             />
         )
     }
@@ -331,11 +365,13 @@ export function ThemeToggle({ className }: { className?: string }) {
                 // 7,5% de sobreposição: **28** sobre a página e **40** sobre o
                 // cartão, contra os 38 fixos de antes. No claro o token é opaco por
                 // construção, e a placa continua se comportando como campo.
-                "group/theme relative inline-flex h-8 w-22 shrink-0 items-center rounded-full bg-input-fill/50 p-0.5",
+                "group/theme relative inline-flex shrink-0 items-center rounded-full bg-input-fill/50 p-0.5",
+                degrau.trilho,
                 // O alvo de toque real: a pílula tem 32px de altura, e o
                 // pseudo-elemento a leva aos 44px que um dedo pede sem mexer no
                 // layout de quem a posiciona.
-                "after:absolute after:-inset-x-1 after:-inset-y-1.5 after:content-['']",
+                "after:absolute after:-inset-x-1 after:content-['']",
+                degrau.toque,
                 className,
             )}
             // Ele vive dentro de menus suspensos (conta e menu mobile): sem isto,
@@ -376,13 +412,17 @@ export function ThemeToggle({ className }: { className?: string }) {
                 aria-hidden
                 ref={cabecaRef}
                 data-slot="theme-toggle-thumb"
-                className="pointer-events-none absolute top-0.5 left-0.5 size-7 translate-x-[calc(var(--tt-i)*1.75rem)] rounded-full bg-background shadow-sm"
+                className={cn(
+                    "pointer-events-none absolute top-0.5 left-0.5 rounded-full bg-background shadow-sm",
+                    degrau.peca,
+                )}
             />
             {PARADAS.map((parada) => (
                 <ThemeFace
                     key={parada.valor}
                     parada={parada}
                     ativo={PARADAS[indice].valor === parada.valor}
+                    tamanho={degrau.face}
                 />
             ))}
         </RadioGroupPrimitive.Root>
@@ -405,9 +445,11 @@ export function ThemeToggle({ className }: { className?: string }) {
 function ThemeFace({
     parada,
     ativo,
+    tamanho,
 }: {
     parada: (typeof PARADAS)[number]
     ativo: boolean
+    tamanho: string
 }) {
     const { Solido, Contorno, valor, rotulo } = parada
 
@@ -430,7 +472,8 @@ function ThemeFace({
                 // por cima delas — ele engolia o ponteiro, e a face nunca
                 // recebia `:hover`. Subindo a face, o anel externo do `::after`
                 // continua capturando o que está fora da pílula.
-                "relative z-10 flex size-7 items-center justify-center rounded-full outline-none",
+                "relative z-10 flex items-center justify-center rounded-full outline-none",
+                tamanho,
                 "focus-visible:ring-3 focus-visible:ring-ring/45",
             )}
         >

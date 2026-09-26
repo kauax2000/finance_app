@@ -85,6 +85,9 @@ const commandVariants = cva(
     // vazia de 76px no fim de cada popover.
     scrollFadeBandsClassName,
     "has-[[data-slot=command-input-wrapper]]:[--scroll-fade-band-h:calc(--spacing(8)+--spacing(4))]",
+    // O campo `lg` (36) publica a própria faixa. O `:has()` com dois atributos
+    // pesa mais que o de um, então vence sem depender da ordem de emissão.
+    "has-[[data-slot=command-input-wrapper][data-size=lg]]:[--scroll-fade-band-h:calc(--spacing(9)+--spacing(4))]",
     "has-[[data-slot=command-footer]]:[--scroll-fade-foot-h:--spacing(9)]",
   ],
   {
@@ -157,6 +160,14 @@ function Command({
       onInput={(event) => {
         props.onInput?.(event)
         ocioso.onInput?.(event)
+      }}
+      onPointerMoveCapture={(event) => {
+        props.onPointerMoveCapture?.(event)
+        ocioso.onPointerMoveCapture?.(event)
+      }}
+      onPointerLeave={(event) => {
+        props.onPointerLeave?.(event)
+        ocioso.onPointerLeave?.(event)
       }}
     >
       {children}
@@ -236,6 +247,12 @@ function CommandDialog({
           // remendo para a placa dupla, e a placa dupla saiu.
           "overflow-hidden border-0 p-0",
           menuPanelTintClassName,
+          // **A paleta abre na mola** (rodada 139): ela é algo que *aparece*,
+          // e a casa põe a mola no que aparece. Desce 4px enquanto cresce de
+          // 95%. O fechar fica curto e em `--ease-out`: uma mola até zero
+          // passa por baixo de zero, a lição do `Collapsible`.
+          "data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring) data-open:slide-in-from-top-1",
+          "data-closed:animation-duration-(--duration-fast)",
           className
         )}
         showCloseButton={showCloseButton}
@@ -282,6 +299,9 @@ function CommandDialog({
             // reposiciona quando o conteúdo muda de tamanho, e ali uma altura em
             // movimento faria o painel perseguir o gatilho.
             "[--command-list-transition:var(--duration-base)]",
+            // E só o diálogo faz as linhas subirem ao aparecer — a
+            // `command-reveal` da lista lê esta duração, `0s` por padrão.
+            "[--command-reveal:var(--duration-spring)]",
             // **O `flex-1` saiu**, e não é cosmética: `flex: 1 1 0%` faz o
             // `flex-basis: 0` vencer qualquer `height`, e sem isso a altura
             // derivada da lista — que é o que anima — nunca chegaria ao layout.
@@ -319,9 +339,20 @@ function CommandInput({
   className,
   value,
   onValueChange,
+  leading,
+  size = "md",
   "aria-label": ariaLabel = "Buscar",
   ...props
-}: React.ComponentProps<typeof CommandPrimitive.Input>) {
+}: Omit<React.ComponentProps<typeof CommandPrimitive.Input>, "size"> & {
+  /** O que fica entre a lupa e o texto — o `CommandScope` da busca por camada. */
+  leading?: React.ReactNode
+  /**
+   * `md` (32) é o gatilho do cabeçalho do catálogo, o padrão; `lg` (36) é o
+   * campo de uma paleta que é a tela inteira. Foi 40 com o corpo `base` por
+   * uma rodada, e o dono pediu menor nos dois. A faixa de dissolução acompanha (`data-size` no wrapper).
+   */
+  size?: "md" | "lg"
+}) {
   const temTexto = value != null && String(value).length > 0
 
   return (
@@ -346,6 +377,7 @@ function CommandInput({
       //
       // O `relative z-10` fica: sem ele o campo não pintaria por cima da lista
       // que passa atrás dele.
+      data-size={size}
       className="relative z-10 flex shrink-0 items-center p-2"
     >
       {/* Anel de foco **fora** do diálogo. Na paleta (`CommandDialog`) o campo é
@@ -357,7 +389,8 @@ function CommandInput({
             — e não um campo de formulário. A decisão está registrada acima. */}
         <div
           className={cn(
-            "flex h-8 w-full min-w-0 items-center gap-2 rounded-lg border border-border bg-input-fill/30 px-3",
+            "flex w-full min-w-0 items-center rounded-lg border border-border bg-input-fill/30",
+            size === "lg" ? "h-9 gap-2.5 px-3.5 text-sm" : "h-8 gap-2 px-3 text-sm",
             "has-[input:focus-visible]:border-ring has-[input:focus-visible]:ring-3 has-[input:focus-visible]:ring-ring/45",
             "[[data-slot=dialog-content]_&]:has-[input:focus-visible]:border-border [[data-slot=dialog-content]_&]:has-[input:focus-visible]:ring-0"
           )}
@@ -366,13 +399,14 @@ function CommandInput({
           aria-hidden
           className="size-4 shrink-0 text-muted-foreground opacity-70"
         />
+        {leading}
         <CommandPrimitive.Input
           data-slot="command-input"
           aria-label={ariaLabel}
           value={value}
           onValueChange={onValueChange}
           className={cn(
-            "min-w-0 flex-1 bg-transparent text-sm outline-hidden placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
+            "min-w-0 flex-1 bg-transparent outline-hidden placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
             className
           )}
           {...props}
@@ -397,6 +431,72 @@ function CommandInput({
         ) : null}
       </div>
     </div>
+  )
+}
+
+/**
+ * O escopo da busca — o texto pintado antes do que se digita (rodada 139).
+ *
+ * É o destinatário de um e-mail depois de digitado: o nome e o ícone da camada
+ * pintados em azul, **no mesmo corpo do campo**, como parte do texto. Foi
+ * `Badge` por uma rodada, e o dono pediu esta forma.
+ *
+ * **Não há ×: quem tira o escopo é o Backspace, em dois toques.** Com o campo
+ * vazio, o primeiro toque **arma** o escopo (`armed`) — o fundo acende, como
+ * o destinatário selecionado antes de apagar —, e o segundo o remove. Quem
+ * conta os toques é quem tem o estado; a peça só pinta. Enquanto armado, uma
+ * região viva diz o que o próximo toque faz, porque o fundo sozinho não chega
+ * ao leitor de tela.
+ *
+ * A tinta é **uma parada do arco-íris por escopo** (`tint`), a pedido do
+ * dono: a marca como cor chapada de texto, fora das peças de marca — a
+ * exceção está registrada no histórico. O recuo de 4px vive nos dois estados, compensado por margem
+ * negativa, para acender o fundo não empurrar o texto.
+ */
+function CommandScope({
+  icon,
+  armed = false,
+  tint,
+  children,
+  className,
+  style,
+  ...props
+}: React.ComponentProps<"span"> & {
+  icon?: React.ReactNode
+  /** O primeiro Backspace com o campo vazio: o próximo remove o escopo. */
+  armed?: boolean
+  /** A cor do escopo, um `var(--brand-*)`. Violeta por padrão. */
+  tint?: string
+}) {
+  return (
+    <span
+      data-slot="command-scope"
+      data-armed={armed || undefined}
+      style={tint ? ({ "--command-scope-tint": tint, ...style } as React.CSSProperties) : style}
+      className={cn(
+        // A cor vem de quem chama (`tint`, uma parada do arco-íris; violeta
+        // por padrão). **No claro a luz é fixa em 0,47** e só matiz e croma
+        // vêm da parada: as paradas claras (teal a 0,72) davam ~2:1 contra o
+        // campo, e a 0,5 teal e azul ainda ficavam em 4,40 e 4,49. No escuro
+        // todas passam cruas (pior caso, o violeta, 5,20).
+        "[--command-scope-ink:oklch(from_var(--command-scope-tint,var(--brand-violet))_0.47_c_h)] dark:[--command-scope-ink:var(--command-scope-tint,var(--brand-violet))]",
+        "-mx-1 inline-flex shrink-0 items-center gap-1 rounded-sm px-1 py-0.5 leading-tight font-semibold text-(--command-scope-ink)",
+        "[&_svg:not([class*='size-'])]:size-4",
+        "transition-colors duration-(--duration-base) ease-(--ease-out)",
+        "data-armed:bg-(--command-scope-ink)/20",
+        "animate-in fade-in-0 animation-duration-(--duration-base) ease-(--ease-out)",
+        className
+      )}
+      {...props}
+    >
+      {icon}
+      {children}
+      <span aria-live="polite" className="sr-only">
+        {armed
+          ? `Apague de novo para sair de ${typeof children === "string" ? children : "o escopo"}.`
+          : ""}
+      </span>
+    </span>
   )
 }
 
@@ -461,6 +561,9 @@ function CommandList({
       data-medido={medido || undefined}
       className={cn(
         "no-scrollbar overflow-x-hidden overflow-y-auto p-1 outline-none",
+        // As linhas sobem ao aparecer — só onde a casca declara
+        // `--command-reveal`; `0s` por padrão. Ver a utility em `globals.css`.
+        "command-reveal",
         // A dissolução das duas pontas — âncoras, rampa, máscara e a folga de
         // rolagem. A casca só publica as alturas das faixas; o resto mora aqui,
         // no elemento que de fato rola.
@@ -526,6 +629,8 @@ function CommandEmpty({
         // ao contrário: gap entre coisas diferentes, entrelinha entre as
         // linhas do mesmo dado.
         "[&_button]:mt-4",
+        // O vazio só monta quando a contagem zera, então sobe ao nascer.
+        "animate-in fade-in-0 slide-in-from-bottom-1 animation-duration-(--duration-base) ease-(--ease-out)",
         className
       )}
       {...props}
@@ -841,6 +946,7 @@ export {
   CommandItemTitle,
   CommandList,
   CommandLoading,
+  CommandScope,
   CommandSeparator,
   CommandShortcut,
 }

@@ -780,7 +780,7 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   três faixas do `Card` e do `Dialog`. Escolha-o quando a lista é longa e pede
   busca; `Select` quando é curta, `Combobox` quando cabe numa palavra.
 - **Listas e detalhe**: [`Item`](src/components/ui/item.tsx) para linha de lista (e para o que a `Table` vira no telefone), [`DescriptionList`](src/components/ui/description-list.tsx) para pares termo/valor, [`Timeline`](src/components/ui/timeline.tsx) para histórico, [`Toolbar`](src/components/ui/toolbar.tsx) para a linha de filtros e ações.
-- **Tema**: [`ThemeToggle`](src/components/ui/theme-toggle.tsx) — o trilho de **três** paradas (sistema, claro, escuro), e o único controle de tema. Não escreva outro com `setTheme`. Ele é `radiogroup` e não `switch` desde a rodada 116: três estados não cabem num booleano. O app roda com `enableSystem` e `defaultTheme="system"`.
+- **Tema**: [`ThemeToggle`](src/components/ui/theme-toggle.tsx) — o trilho de **três** paradas (sistema, claro, escuro), e o único controle de tema. Não escreva outro com `setTheme`. Ele é `radiogroup` e não `switch` desde a rodada 116: três estados não cabem num booleano. Tem `size`: `md` 32 (o padrão, o do menu da conta) e `lg` 36 (rodada 139, para ficar ao lado de um campo `lg`) — trilho = 4 + 3 paradas, e a viagem é uma parada por índice nos dois; o alvo de toque é 44 nos dois. O app roda com `enableSystem` e `defaultTheme="system"`.
 - **Carregando**: [`Skeleton`](src/components/ui/skeleton.tsx) para uma tela esperando dado; [`Spinner`](src/components/ui/spinner.tsx) só para ação curta sem fim conhecido.
 - **Borda de região rolável**: a dissolução é uma **primitiva do sistema**, não
   um efeito da paleta de comandos. Ela mora em três camadas — as `@utility`
@@ -792,6 +792,28 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   própria compõe as classes direto, porque um `<div>` interposto quebraria o
   contexto do Radix ou do cmdk.
 - **Busca**: [`Command`](src/components/ui/command.tsx) — a paleta de comandos. O catálogo `/designsystem` é o primeiro consumidor ([`ds-search.tsx`](src/app/designsystem/ds-search.tsx)): gatilho no meio do cabeçalho com o `Kbd` do atalho, `⌘K` e `/` para abrir, e `filter` próprio, porque o padrão do cmdk é difuso e erra em português. O **app** ainda não tem busca global, e é a lacuna que ele preenche.
+  **A paleta do catálogo abre por camadas** (rodada 139): vazia, mostra as
+  cinco camadas com ícone (`category-meta.ts`, o mesmo ícone que encima cada
+  seção da sidebar) e, abaixo delas, as últimas 5 páginas abertas
+  (`recent-pages.ts`, `localStorage`) — uma linha só. Enter numa camada pinta o nome dela na cor da camada — uma parada do
+  arco-íris por camada (`tint`), com luz fixa em 0,47 no tema claro —
+  no campo (`CommandScope`, no slot `leading` do `CommandInput`, como o
+  destinatário de um e-mail) e a busca segue só ali. **Sem ×**: com o campo
+  vazio, o primeiro Backspace acende o fundo do escopo e o segundo o tira; **Esc
+  sempre fecha**. Sem
+  chip, digitar traz camadas (também pelo nome em português, por
+  `keywords`), recentes e páginas — e **uma página recente não se repete no
+  grupo da camada**, porque duas linhas com o mesmo `value` acendem juntas no
+  cmdk. A busca continua casando só o **nome**; a descrição aparece na linha.
+  **O movimento é da casca**: o `CommandDialog` abre na mola e declara
+  `--command-reveal`, que a `@utility command-reveal` da lista lê para fazer
+  cada linha que o cmdk *monta* subir escalonada; `0s` por padrão, então o
+  `Combobox` não se mexe. Trocar de vista remonta o miolo por `key`, e um
+  evento `input` sintético devolve a paleta ao ocioso — trocar o escopo não
+  digita nada. O campo da paleta é `CommandInput size="lg"` (36); `md` (32) continua o padrão, o gatilho do cabeçalho. **E o ponteiro
+  conta como navegação** no modo ocioso
+  (`onPointerMoveCapture` no hook): sem isso a seleção do hover era tratada
+  como auto-seleção e nenhuma linha acendia. `command-reveal.test.ts` tranca.
 
 ### Component rules
 

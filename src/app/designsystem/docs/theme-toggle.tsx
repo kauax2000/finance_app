@@ -19,6 +19,18 @@ export default function ThemeToggleDoc() {
       </DocSection>
 
       <DocSection
+        title="Degraus"
+        description="md (32) é o padrão; lg (36) fica ao lado de um campo lg. A peça, as faces e a viagem crescem juntas."
+        code={`<ThemeToggle />
+<ThemeToggle size="lg" />`}
+      >
+        <div className="flex items-center gap-4">
+          <ThemeToggle />
+          <ThemeToggle size="lg" />
+        </div>
+      </DocSection>
+
+      <DocSection
         title="Numa linha de menu"
         description="A forma do menu da conta: o rótulo à esquerda, o controle empurrado para a borda."
         code={`<div className="flex items-center justify-between gap-3">
@@ -35,6 +47,13 @@ export default function ThemeToggleDoc() {
 
       <PropsTable
         rows={[
+          {
+            prop: "size",
+            type: '"md" | "lg"',
+            default: '"md"',
+            description:
+              "md tem 32 de altura, o do menu da conta; lg tem 36, para ficar ao lado de um campo lg, como o gatilho de busca do catálogo. A área de toque é 44 nos dois.",
+          },
           {
             prop: "className",
             type: "string",
