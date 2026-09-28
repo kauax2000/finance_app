@@ -19,10 +19,42 @@ import {
   tagChipSuccess,
   tagChipUnreadCount,
   tagChipWarning,
+  transactionExpenseTypeRowChip,
+  transactionIncomeTypeRowChip,
+  transactionParceladaRowChip,
 } from "@/components/ui/badge"
+import { Code } from "@/components/ui/code"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 import { Group, Spec, Stack } from "../ds-kit"
+
+const TAMANHOS = [
+  { size: "xs", px: 14, uso: "dentro de outro controle" },
+  { size: "sm", px: 18, uso: "numa linha densa" },
+  { size: "md", px: 22, uso: "o padrão" },
+] as const
+
+const FORMAS = ["soft", "outline", "contrast"] as const
+
+/** Os oito tons, com o rótulo que cada um costuma carregar no app. */
+const TONS = [
+  { tone: "primary", rotulo: "Novo", uso: "a marca em tinta suave; o padrão" },
+  { tone: "neutral", rotulo: "Rascunho", uso: "pendente, sem estado" },
+  { tone: "success", rotulo: "Pago", uso: "concluído, ativo" },
+  { tone: "info", rotulo: "Em análise", uso: "informativo" },
+  { tone: "warning", rotulo: "Vence hoje", uso: "perto do limite" },
+  { tone: "destructive", rotulo: "Atrasado", uso: "cancelado, falhou" },
+  { tone: "income", rotulo: "Receita", uso: "dinheiro que entrou" },
+  { tone: "expense", rotulo: "Despesa", uso: "dinheiro que saiu" },
+] as const
 
 const CHIPS: [string, string, string][] = [
   ["tagChipSuccess", tagChipSuccess, "concluído, pago, ativo"],
@@ -47,14 +79,18 @@ export default function BadgeDoc() {
         code={`<Badge size="xs">xs</Badge>
 <Badge size="sm">sm</Badge>
 <Badge>md</Badge>`}
+        previewClassName="flex-wrap items-end gap-6"
       >
-        <Badge size="xs" tone="neutral">
-          xs
-        </Badge>
-        <Badge size="sm" tone="neutral">
-          sm
-        </Badge>
-        <Badge tone="neutral">md</Badge>
+        {TAMANHOS.map((t) => (
+          <div key={t.size} className="flex flex-col items-center gap-2">
+            <Badge size={t.size} tone="neutral">
+              {t.size}
+            </Badge>
+            <span className="nums text-2xs text-muted-foreground">
+              {t.px}px · {t.uso}
+            </span>
+          </div>
+        ))}
       </DocSection>
 
       <DocNote title="xs é para dentro de outro controle">
@@ -63,62 +99,54 @@ export default function BadgeDoc() {
         linha usa <code>sm</code> ou o padrão.
       </DocNote>
 
-      <DocSection
-        title="Coloração e estado"
-        description="Todas tonais: fundo suave e texto do mesmo matiz. A cor é o estado que o rótulo comunica."
-        code={`<Badge>Padrão</Badge>
-<Badge tone="neutral">Neutro</Badge>
-<Badge tone="success">Pago</Badge>
-<Badge tone="info">Em análise</Badge>
-<Badge tone="warning">Vence hoje</Badge>
-<Badge tone="destructive">Atrasado</Badge>
-<Badge tone="income">Receita</Badge>
-<Badge tone="expense">Despesa</Badge>
-<Badge variant="outline" tone="neutral">Rascunho</Badge>`}
-      >
-        <Badge>Padrão</Badge>
-        <Badge tone="neutral">Neutro</Badge>
-        <Badge tone="success">Pago</Badge>
-        <Badge tone="info">Em análise</Badge>
-        <Badge tone="warning">Vence hoje</Badge>
-        <Badge tone="destructive">Atrasado</Badge>
-        <Badge tone="income">Receita</Badge>
-        <Badge tone="expense">Despesa</Badge>
-        <Badge variant="outline" tone="neutral">Rascunho</Badge>
-      </DocSection>
 
-      <DocSection
-        title="Os dois eixos se cruzam"
-        description="variant é a forma, tone é a cor, e os dois se combinam — inclusive contorno na cor do tom. Na contrast o tom não pinta a superfície: ele fica só no dot."
-        code={`<Badge variant="outline" tone="success">Ativa</Badge>`}
+
+      <Group
+        title="Tom e forma"
+        description="Dois eixos que se cruzam: tone é a cor — o estado que o rótulo comunica — e variant é a forma. soft é o padrão; outline é o contorno na cor do tom; na contrast o tom não pinta a superfície, fica só no ponto."
+        layout="flow"
       >
-        <div className="flex flex-col gap-3">
-          {(["soft", "outline", "contrast"] as const).map((v) => (
-            <div key={v} className="flex flex-wrap items-center gap-2">
-              <code className="w-20 shrink-0 font-mono text-2xs text-muted-foreground">
-                {v}
-              </code>
-              {(
-                [
-                  "primary",
-                  "neutral",
-                  "success",
-                  "info",
-                  "warning",
-                  "destructive",
-                  "income",
-                  "expense",
-                ] as const
-              ).map((t) => (
-                <Badge key={t} variant={v} tone={t}>
-                  {v === "contrast" ? <BadgeDot /> : null}
-                  {t}
-                </Badge>
+        <Spec title="tone × variant" meta="ui/badge.tsx" className="mb-0" bodyClassName="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>tone</TableHead>
+                {FORMAS.map((v) => (
+                  <TableHead key={v}>{v}</TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {TONS.map((t) => (
+                <TableRow key={t.tone}>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <Code variant="inline">{t.tone}</Code>
+                      <span className="text-xs text-muted-foreground">{t.uso}</span>
+                    </div>
+                  </TableCell>
+                  {FORMAS.map((v) => (
+                    <TableCell key={v}>
+                      <Badge variant={v} tone={t.tone}>
+                        {v === "contrast" ? <BadgeDot /> : null}
+                        {t.rotulo}
+                      </Badge>
+                    </TableCell>
+                  ))}
+                </TableRow>
               ))}
-            </div>
-          ))}
-        </div>
-      </DocSection>
+            </TableBody>
+          </Table>
+        </Spec>
+      </Group>
+
+      <DocNote title="tone é a cor; variant é só a forma">
+        O eixo de cor se chama <code>tone</code>, como no <code>Alert</code>, <code>StatCard</code>, <code>Timeline</code>, <code>Progress</code> e <code>AnnouncementBar</code>. Não misture os dois num ternário: &ldquo;ativa&rdquo; e &ldquo;inativa&rdquo; são tons, não uma cor contra um contorno.
+      </DocNote>
+
+      <DocNote title="Dinheiro não é aviso">
+        <code>income</code> e <code>expense</code> são mais saturadas que <code>success</code> e <code>destructive</code> de propósito: num extrato, verde e vermelho são o dado, não um juízo. Receita com o verde de &ldquo;deu certo&rdquo; faz o extrato parecer um painel de alertas.
+      </DocNote>
 
       <DocSection
         title="Ícone"
@@ -195,11 +223,9 @@ export default function BadgeDoc() {
 
       <DocSection
         title="A marca"
-        description="O arco-íris em contorno de 1px e num halo borrado atrás, com o miolo chapado. Uma por tela, pela mesma razão do Button: acento em todo chip deixa de ser acento."
-        code={`<Badge variant="brand">
-  <BadgeDot pulse />
-  Beta
-</Badge>`}
+        description="Um chip neutro — muted, com a tinta do texto — cuja borda acende em arco-íris conforme o ponteiro se aproxima: o mesmo brilho do Alert e do Card. Passe o mouse perto. Para o que é do produto (Beta, Novo, Pro), uma por tela; no telefone não há brilho, e ele fica o chip neutro."
+        code={`<Badge variant="brand">Beta</Badge>`}
+        previewClassName="gap-4 py-10"
       >
         <Badge variant="brand">Beta</Badge>
         <Badge variant="brand" size="sm">
@@ -211,16 +237,8 @@ export default function BadgeDoc() {
         </Badge>
       </DocSection>
 
-      <DocNote title="O texto não pousa no arco-íris, e é isso que torna a peça legítima">
-        Sete matizes não têm um contraste só — é por isso que o <code>AGENTS.md</code> proíbe arco-íris num chip. Aqui o degradê fica na borda de 1px e no halo; o miolo é o preenchimento chapado do <code>primary</code>, então o rótulo tem exatamente o contraste do botão primário. Arco-íris <strong>sob</strong> texto continua proibido.
-      </DocNote>
-
-      <DocNote title="tone é a cor; variant é só a forma">
-        O eixo de cor se chama <code>tone</code>, como no <code>Alert</code>, <code>StatCard</code>, <code>Timeline</code>, <code>Progress</code> e <code>AnnouncementBar</code>. Não misture os dois num ternário: &ldquo;ativa&rdquo; e &ldquo;inativa&rdquo; são tons, não uma cor contra um contorno.
-      </DocNote>
-
-      <DocNote title="Dinheiro não é aviso">
-        <code>income</code> e <code>expense</code> são mais saturadas que <code>success</code> e <code>destructive</code> de propósito: num extrato, verde e vermelho são o dado, não um juízo. Receita com o verde de &ldquo;deu certo&rdquo; faz o extrato parecer um painel de alertas.
+      <DocNote title="O arco-íris nunca pousa sob o texto">
+        Sete matizes não têm um contraste só — é por isso que o <code>AGENTS.md</code> proíbe arco-íris num chip. Aqui o arco vive 2px <strong>fora</strong> da caixa e só aparece com o ponteiro perto; o rótulo fica sempre sobre o <code>muted</code>. O núcleo do anel é a mesma cor (<code>--brand-glow-core:var(--muted)</code>), senão a região que a máscara apaga leria como outra superfície em volta do chip.
       </DocNote>
 
       <Group
@@ -285,6 +303,18 @@ export default function BadgeDoc() {
             </div>
           </Stack>
         </Spec>
+        <Spec title="Pílula de linha" meta="transaction*RowChip">
+          <Stack className="gap-3">
+            <div className="flex flex-wrap gap-2">
+              <span className={transactionIncomeTypeRowChip}>Receita</span>
+              <span className={transactionExpenseTypeRowChip}>Despesa</span>
+              <span className={transactionParceladaRowChip}>Parcelada</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              A coluna &ldquo;Tipo&rdquo; da tabela de transações: casca de 20px (<code>transactionRowChipShell</code>) com a tinta do tom já aplicada.
+            </p>
+          </Stack>
+        </Spec>
       </Group>
 
       <DocNote title="Uma fonte só para a tinta dos chips">
@@ -292,7 +322,7 @@ export default function BadgeDoc() {
       </DocNote>
 
       <DocNote title="tagChipViolet e tagChipSky são apelidos, não cores novas">
-        Os dois apontam para os tokens de <code>info</code> e existem só para não quebrar quem os importa. Não use em código novo.
+        Os dois apontam para os tokens de <code>info</code> e existem só para não quebrar quem os importa: o <code>tagChipViolet</code> não tem mais consumidor, e o <code>tagChipSky</code> ainda está em duas telas (detalhe de assinatura e compra parcelada). Não use em código novo — a troca é por <code>tagChipInfo</code>.
       </DocNote>
 
       <PropsTable
@@ -302,7 +332,7 @@ export default function BadgeDoc() {
             type: '"soft" | "outline" | "contrast" | "brand"',
             default: '"soft"',
             description:
-              "A forma: tinta suave do tom, contorno na cor dele, a pílula grave (onde o tom fica só no dot) ou o arco-íris da marca.",
+              "A forma: tinta suave do tom, contorno na cor dele, a pílula grave (onde o tom fica só no dot) ou o chip neutro com o brilho da marca na borda.",
           },
           {
             prop: "tone",

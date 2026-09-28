@@ -71,7 +71,7 @@ export default function CheckboxDoc() {
       </DocNote>
 
       <DocNote title="Sem halo, porque o ::after já é o alvo de toque">
-        O <code>Button</code> e o <code>Badge</code> desenham a marca em duas camadas: o contorno no <code>::before</code> e um halo borrado no <code>::after</code>. Aqui o <code>::after</code> é o alvo de 44px, e ele não se move — sobra o contorno, que é o precedente do <code>brandOutline</code>. Nesta escala é o certo de qualquer forma: um halo a <code>-inset-1</code> sangra 4px e encosta na linha vizinha de uma lista com <code>gap-3</code>. E o tique continua <code>--primary-foreground</code> sobre <code>--primary</code>: o miolo marcado é chapado, o degradê só aparece por 1px de borda, e o contraste do conteúdo é <strong>o mesmo da caixa do sistema</strong>. Arco-íris sob texto continua proibido.
+        O contorno de marca mora no <code>::before</code>, e um halo borrado exigiria o <code>::after</code>. Aqui o <code>::after</code> é o alvo de 44px, e ele não se move — sobra o contorno, que é o precedente do <code>brandOutline</code>. Nesta escala é o certo de qualquer forma: um halo a <code>-inset-1</code> sangra 4px e encosta na linha vizinha de uma lista com <code>gap-3</code>. E o tique continua <code>--primary-foreground</code> sobre <code>--primary</code>: o miolo marcado é chapado, o degradê só aparece por 1px de borda, e o contraste do conteúdo é <strong>o mesmo da caixa do sistema</strong>. Arco-íris sob texto continua proibido.
       </DocNote>
 
       <DocSection

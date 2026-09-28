@@ -43,11 +43,11 @@ const ESCALA = [
  */
 const FAMILIAS = [
   { nome: "Letra", como: "o degradê preenche o traçado, parado, em todo tamanho", who: ["AppWordmark rainbow", "AppLogo rainbow", "EmptyStateCode"] },
-  { nome: "Contorno", como: "1px de border-box sobre um miolo chapado; o halo borrado só no botão e no badge", who: ["Button brand", "Button brandOutline", "Badge brand", "Checkbox brand", "Radio brand", "RadioGroupItem brandCard"] },
+  { nome: "Contorno", como: "1px de border-box sobre um miolo chapado, sempre aceso", who: ["Button brandOutline", "Checkbox brand", "Radio brand", "RadioGroupItem brandCard"] },
   { nome: "Preenchimento", como: "o degradê é o trilho e a barra o revela — sem rótulo em cima", who: ["Progress brand", "Slider brand", "HistogramSlider brand"] },
-  { nome: "Brilho", como: "um arco da borda acende perto do ponteiro; sem ele, a caixa é neutra", who: ["Alert brand", "Card brand", "a busca do catálogo"] },
+  { nome: "Brilho", como: "um arco da borda acende perto do ponteiro; sem ele, a caixa é neutra", who: ["Alert brand", "Card brand", "Badge brand", "Button brand", "a busca do catálogo"] },
   { nome: "Véu", como: "translúcido atrás do texto, deslizando em 20s — a exceção sob texto", who: ["AnnouncementBar brand"] },
-  { nome: "Lava", como: "blobos de cor atrás de um vidro da cor do botão, só no cursor", who: ["Button primary", "brand-lava"] },
+  { nome: "Lava", como: "blobos de cor transitando dentro da região", who: ["brand-lava"] },
   { nome: "Campo", como: "a região inteira, com grão e vinheta; o texto mora em Card", who: ["brand-field", "as telas de acesso"] },
   { nome: "Feixe", como: "uma linha que corre pela base do campo vazio, esperando a digitação", who: ["CommandDialog"] },
 ]
@@ -236,7 +236,7 @@ export default function BrandDoc() {
 
       <DocNote title="Uma receita só: linear, parada e em oklch">
         <p>
-          O degradê é <code>--brand-rainbow</code>, um <code>linear-gradient</code> a 135° com oito paradas — cada uma um token <code>--brand-*</code>, medido em <code>/designsystem/colors</code> —, composto no próprio elemento pela <code>@utility brand-rainbow-image</code>. Ele interpola <code>in oklch shorter hue</code>: em sRGB a travessia magenta→coral corria 4× mais rápido que o azul e desenhava um fio no campo. <strong>Não gira</strong>: o giro foi recusado na rodada 100, e o movimento da marca é a lava. Na letra não há grão — num traço de poucos pixels ele é sujeira —, e o grão é do campo.
+          O degradê é <code>--brand-rainbow</code>, um <code>linear-gradient</code> a 135° com oito paradas — cada uma um token <code>--brand-*</code>, medido em <code>/designsystem/colors</code> —, composto no próprio elemento pela <code>@utility brand-rainbow-image</code>. Ele interpola <code>in oklch shorter hue</code>: em sRGB a travessia magenta→coral corria 4× mais rápido que o azul e desenhava um fio no campo. <strong>Não gira</strong>: o giro foi recusado na rodada 100; o movimento da marca é a lava. O primário não veste arco-íris. Na letra não há grão — num traço de poucos pixels ele é sujeira —, e o grão é do campo.
         </p>
       </DocNote>
 
@@ -284,18 +284,20 @@ export default function BrandDoc() {
 
       <DocSection
         title="O botão de marca"
-        description="variant=&quot;brand&quot; é a tecla do primary com o arco-íris em volta: um contorno de 1px e um halo borrado atrás. Sob o cursor o halo acende e o preenchimento troca de --brand-fill; o giro saiu do sistema na rodada 100. Um por tela, para o CTA de marca — entrar, começar. O link não tem traço em repouso: no cursor um sublinhado de arco-íris entra pela esquerda, e recolhe para a direita na saída."
+        description="variant=&quot;brand&quot; é o CTA de marca neutro: a borda acende em arco-íris conforme o ponteiro se aproxima — passe o mouse perto. brandOutline é a tecla preta com o arco-íris em 1px, sempre aceso. Um por tela, para entrar e começar. O link não tem traço em repouso: no cursor um sublinhado de arco-íris entra pela esquerda, e recolhe para a direita na saída."
         code={`<Button variant="brand" size="xl">entrar</Button>
+<Button variant="brandOutline" size="xl">começar</Button>
 <Button variant="link">esqueceu a senha?</Button>`}
         previewClassName="items-center gap-6"
       >
         <Button variant="brand" size="xl">entrar</Button>
+        <Button variant="brandOutline" size="xl">começar</Button>
         <Button variant="link">esqueceu a senha?</Button>
       </DocSection>
 
       <DocSection
         title="O chip de marca"
-        description="O Badge veste o contorno e o halo do botão, na escala de um chip: para o que é do produto — Beta, Novo, Pro —, nunca para um dado da pessoa."
+        description="O Badge é da família do brilho: um chip neutro cuja borda acende em arco-íris conforme o ponteiro se aproxima — passe o mouse perto. Para o que é do produto — Beta, Novo, Pro —, nunca para um dado da pessoa."
         code={`<Badge variant="brand">Beta</Badge>`}
       >
         <Badge variant="brand">Beta</Badge>
@@ -306,7 +308,7 @@ export default function BrandDoc() {
 
       <DocSection
         title="Os controles de escolha"
-        description="Checkbox, Radio e o cartão do RadioGroup vestem a marca por contorno, e só quando marcados — desmarcados eles são pixel a pixel os do sistema. O halo do botão não vem junto: nos dois átomos o ::after já é o alvo de toque de 44px, então sobra o contorno, como no brandOutline. Uma por tela."
+        description="Checkbox, Radio e o cartão do RadioGroup vestem a marca por contorno, e só quando marcados — desmarcados eles são pixel a pixel os do sistema. Não há halo: nos dois átomos o ::after já é o alvo de toque de 44px, então sobra o contorno, como no brandOutline. Uma por tela."
         code={`<Checkbox variant="brand" defaultChecked />
 
 <RadioGroup variant="brandCard" defaultValue="pro">

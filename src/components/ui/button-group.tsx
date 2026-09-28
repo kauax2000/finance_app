@@ -49,14 +49,14 @@ export function ButtonGroup({ className, children, ...props }: ButtonGroupProps)
                 "[&>[data-variant=outline]]:before:hidden",
                 // O primário também emenda por um vão transparente de 1px, mas
                 // **sem o `ml-px` do `secondary`**, e é medido: o fundo dele é
-                // recortado no `padding-box` (a `bg-clip-padding` da base e as
-                // camadas da `primary-wash`), então a borda transparente de 1px
+                // recortado no `padding-box` (a `bg-clip-padding` da base), então
+                // a borda transparente de 1px
                 // de cada lado já é vão. Com o `ml-px` a emenda somava borda +
                 // margem + borda = 3px. Com a sobreposição geral de 1px, as duas
                 // bordas caem no mesmo pixel e sobra o fio só.
-                // O `before:hidden` fica porque a lava do primário mora no
-                // `background`, e não num pseudo-elemento, justamente porque
-                // este seletor o esconderia.
+                // O `before:hidden` fica porque o brilho do primário mora no
+                // `box-shadow` do próprio botão, e não num pseudo-elemento,
+                // justamente porque este seletor o esconderia.
                 "[&>[data-variant=primary]]:before:hidden",
                 // O `secondary` não tem borda que desenhe a emenda, e o filete
                 // recuado lia como risco no meio de um bloco. No lugar dele a

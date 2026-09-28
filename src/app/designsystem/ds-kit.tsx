@@ -23,8 +23,9 @@ export function Group({
   title: string
   description?: React.ReactNode
   /**
-   * "masonry" empacota specs pequenos; "grid" dá ar aos grandes; "flow" não
-   * fatia nada — para um grupo cujo conteúdo já governa a própria largura.
+   * "masonry" e "grid" são hoje a mesma grade `auto-fit` (os dois nomes
+   * ficam para não mexer nas 31 chamadas); "flow" não fatia nada — para um
+   * grupo cujo conteúdo já governa a própria largura.
    */
   layout?: "masonry" | "grid" | "flow"
   children: React.ReactNode
@@ -46,13 +47,18 @@ export function Group({
           <PageSectionDescription>{description}</PageSectionDescription>
         ) : null}
       </PageSectionHeader>
+      {/* O grupo sempre ocupa a largura da coluna. As duas grades de antes
+          deixavam colunas vazias à direita: a de colunas (masonry) equilibra
+          por altura, e com um cartão alto e dois baixos empilhava os baixos e
+          largava a terceira coluna; a `grid` cravava três no `xl` mesmo com
+          dois filhos. Agora as duas são `auto-fit`, que colapsa as trilhas
+          vazias e estica as ocupadas. O `mb-4` do `Spec` sai aqui dentro,
+          porque quem espaça as linhas é o `gap`. */}
       <div
         className={
           layout === "flow"
             ? "flex flex-col gap-6"
-            : layout === "grid"
-              ? "grid grid-cols-1 items-start gap-4 md:grid-cols-2 xl:grid-cols-3"
-              : "columns-[19rem] gap-4 [column-fill:_balance]"
+            : "grid grid-cols-[repeat(auto-fit,minmax(min(100%,19rem),1fr))] items-start gap-4 *:mb-0"
         }
       >
         {children}

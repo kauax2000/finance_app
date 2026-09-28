@@ -6,9 +6,10 @@ import { buttonVariants } from "./button"
 import { cn } from "@/lib/utils"
 
 /**
- * O primário é **chapado** (rodada 98) e acende em lava sob o cursor: sem
- * contorno, plinto, luz, véu ou sombra — só o preenchimento —, e no hover o
- * arco-íris da marca atrás de um vidro da cor do botão, focado no ponteiro.
+ * O primário é **cru** (rodada 148): o preenchimento e o hover dos outros
+ * pesos — o disco de `button-fill` na cor de `--primary-hover` —, sem cor e sem
+ * arco-íris. Da rodada 98 à 147 ele acendeu a marca no cursor, e o dono pediu
+ * tudo fora.
  * Ele foi tecla da rodada 78 à 97, e cada asserção aqui tranca ou um pedaço
  * do desenho novo, ou um pedaço da tecla que não pode voltar por engano.
  */
@@ -24,7 +25,6 @@ function bloco(inicio: string) {
 }
 const CLARO = bloco(":root,\n.light {")
 const ESCURO = bloco("\n.dark {")
-const LAVA = bloco("@utility primary-wash {")
 
 /** A claridade de um `oklch(L …)` — ou de um número puro — declarado no bloco. */
 function claridade(blocoCss: string, token: string) {
@@ -41,51 +41,54 @@ function arquivosTsx(dir: string): string[] {
   })
 }
 
-describe("o primário é chapado, e acende em lava", () => {
-  it("1. o cursor não troca o fundo — acende o vidro", () => {
-    // Nenhum `hover:bg-*`: o realce do primário não é cor, é `--button-wash`
-    // subindo a 1. Um alfa sobre a superfície (`bg-primary/90`) clareava num
-    // tema e escurecia no outro, e é o defeito que esta asserção sempre
-    // guardou; agora ela guarda também que o fundo simplesmente não muda.
+describe("o primário é cru", () => {
+  it("1. o hover é o disco dos outros pesos, na cor do hover do primário", () => {
+    // Nenhum `hover:bg-*`: o disco de `button-fill` pinta por cima, como no
+    // `secondary`. Um alfa sobre a superfície (`bg-primary/90`) clareava num
+    // tema e escurecia no outro, e é o defeito que esta asserção sempre guardou.
     expect(PRIMARIO.filter((c) => /^(hover|active):bg-/.test(c))).toStrictEqual([])
     expect(PRIMARIO.join(" ")).not.toMatch(/bg-primary\/\d/)
     expect(PRIMARIO).toContain("bg-primary")
+    expect(PRIMARIO).toContain("button-fill")
+    expect(PRIMARIO).toContain("[--button-fill-color:var(--primary-hover)]")
   })
 
   it("2. nenhuma cor literal — a cor vem de token", () => {
     expect(PRIMARIO.join(" ")).not.toMatch(/oklch\(|rgba?\(|#[0-9a-f]{3}|\bwhite\b|\bblack\b/i)
   })
 
-  it("3. chapado: nem contorno, nem sombra, nem véu na variante", () => {
-    // A tecla era `border-primary-edge` + dois `shadow-(…)` + um
-    // `bg-(image:…)`. Nada disso volta: o único desenho é a utility. O
-    // `border-transparent` é da **base** — a borda de 1px existe para a
+  it("3. cru: nem contorno, nem sombra, nem véu, nem arco-íris", () => {
+    // O `border-transparent` é da **base** — a borda de 1px existe para a
     // geometria de todo peso ficar igual à do `outline`, e não pinta.
     expect(PRIMARIO.filter((c) => /^border-/.test(c) && c !== "border-transparent")).toStrictEqual([])
     expect(PRIMARIO.filter((c) => /shadow-/.test(c))).toStrictEqual([])
     expect(PRIMARIO.filter((c) => /^bg-\(image:/.test(c))).toStrictEqual([])
-    expect(PRIMARIO).toContain("primary-wash")
+    expect(PRIMARIO.join(" ")).not.toMatch(/brand|rainbow|primary-wash|--button-wash/)
   })
 
-  it("4. o vidro afina no cursor, no toque e com o popover aberto", () => {
+  it("4. o disco enche no cursor, no toque e com o popover aberto", () => {
     // Regra H: o toque pinta o mesmo que o cursor. E `aria-expanded` é o
     // realce de quem abriu um menu, como nos outros pesos.
     for (const c of [
-      "hover:[--button-wash:1]",
-      "active:[--button-wash:1]",
-      "aria-expanded:[--button-wash:1]",
+      "hover:[--button-fill:100%]",
+      "active:[--button-fill:100%]",
+      "aria-expanded:[--button-fill:100%]",
     ]) {
       expect(PRIMARIO, c).toContain(c)
     }
   })
 
-  it("5. a órbita pausa em vez de desligar", () => {
-    // Ligar a animação só dentro do `hover:` faria a lava saltar ao ponto
-    // zero a cada entrada — a mesma medição que o `brand` fez com o giro.
-    expect(PRIMARIO).toContain("[animation-play-state:paused]")
-    expect(PRIMARIO).toContain("hover:[animation-play-state:running]")
-    expect(PRIMARIO).toContain("active:[animation-play-state:running]")
-    expect(LAVA).toMatch(/animation:\s*button-lava\s+\d+s\s+linear\s+infinite/)
+  it("5. a lava e o brilho não voltam", () => {
+    // Rodadas 98 a 147: a lava (vidro e blobos seguindo o ponteiro) e depois o
+    // brilho do Shiny Button. Quem repuser um destes está repondo cor num
+    // botão que o dono pediu cru.
+    expect(CSS).not.toMatch(/@utility primary-wash\b/)
+    for (const t of ["--button-wash", "--button-breathe", "--button-lava", "--button-glow-strength", "--button-glass-min", "--button-lava-l"]) {
+      expect(CSS, t).not.toContain(`${t}:`)
+      expect(CSS, t).not.toContain(`@property ${t} `)
+    }
+    const botao = readFileSync(join(RAIZ, "components/ui/button.tsx"), "utf8")
+    expect(botao).not.toMatch(/girarLava|LAVA_STOPS/)
   })
 
   // A duração é afirmada sobre a string **resolvida** pelo `tailwind-merge`, e
@@ -106,6 +109,7 @@ describe("o primário é chapado, e acende em lava", () => {
     // lento da casa com a curva enfática — tokens existentes, nada novo.
     const LENTO = { duracao: "duration-(--duration-slow)", curva: "ease-(--ease-emphasized)" }
     const RITMO_PROPRIO: Partial<Record<string, { duracao: string; curva: string }>> = {
+      primary: LENTO,
       secondary: LENTO,
       tertiary: LENTO,
       outline: LENTO,
@@ -123,11 +127,11 @@ describe("o primário é chapado, e acende em lava", () => {
         expect(classes, variant).not.toMatch(/\bease-(linear|in|in-out)\b/)
       }
     }
-    // O primário restata a lista inteira com `--button-wash` no fim: o
-    // `tailwind-merge` troca a classe de transição, não acrescenta a ela —
-    // e sem a variável na lista o vidro entra de estalo.
+    // O primário restata a lista inteira com `--button-fill` no fim, como os
+    // outros: o `tailwind-merge` troca a classe de transição, não acrescenta —
+    // e sem a variável na lista o disco entra de estalo.
     const primario = cn(buttonVariants({ variant: "primary" }))
-    expect(primario).toMatch(/transition-\[[^\]]*--button-wash\]/)
+    expect(primario).toMatch(/transition-\[[^\]]*--button-fill\]/)
     expect(primario).toMatch(/transition-\[[^\]]*\btranslate\b[^\]]*\]/)
   })
 
@@ -164,95 +168,51 @@ describe("o primário é chapado, e acende em lava", () => {
     expect(culpados).toStrictEqual([])
   })
 
-  it("9. `brand` continua sendo contorno e halo, e não pinta o próprio fundo", () => {
+  it("9. `brand` é o CTA neutro com o brilho na borda, e o fundo não muda no cursor", () => {
     const BRAND = buttonVariants({ variant: "brand" }).split(/\s+/)
-    // Numa raiz de empilhamento o fundo do elemento pinta antes dos filhos de
-    // z negativo: um `bg-primary` aqui ficaria **na frente** do contorno.
-    expect(BRAND).toContain("isolate")
-    expect(BRAND.filter((c) => /^bg-(?!clip-)/.test(c))).toStrictEqual([])
-    // O contorno e o preenchimento vivem no `::before`; o halo, no `::after`.
-    expect(BRAND.some((c) => c.startsWith("before:[background:") && c.includes("--brand-rainbow"))).toBe(true)
-    expect(BRAND).toContain("after:bg-(image:--brand-rainbow)")
-    expect(BRAND).toContain("after:blur-md")
-    // O hover troca a variável que o pseudo lê, e o toque acompanha (regra H).
-    expect(BRAND).toContain("hover:[--brand-fill:var(--primary-hover)]")
-    expect(BRAND).toContain("active:[--brand-fill:var(--primary-hover)]")
-    expect(BRAND).toContain("hover:after:opacity-80")
-    expect(BRAND).toContain("active:after:opacity-80")
+    // A família do brilho (rodada 145): a mesma utility e o mesmo `isolate`
+    // do `Alert`, do `Card` e do `Badge`.
+    for (const c of ["brand-rainbow-image", "brand-glow", "relative", "isolate", "bg-secondary"]) {
+      expect(BRAND, c).toContain(c)
+    }
+    // O núcleo do anel é a cor atrás dele — senão a região que a máscara
+    // apaga leria como outra superfície dentro do botão.
+    expect(BRAND).toContain("[--brand-glow-core:var(--secondary)]")
+    // O halo e a tecla preta do desenho anterior não podem sobreviver ao lado
+    // do brilho: seriam dois arco-íris na mesma caixa.
+    expect(BRAND.join(" ")).not.toMatch(/after:blur|--brand-fill|after:bg-\(image/)
+    // Nenhum hover de fundo: o anel pinta por cima do fundo do elemento, e a
+    // troca sumiria na fatia virada para o ponteiro.
+    expect(BRAND.filter((c) => /^(hover|active):(bg-|\[--button-fill)/.test(c))).toStrictEqual([])
     // O primário veste o arco-íris **pela utility**, atrás do vidro — e não o
-    // degradê do `brand`, que é contorno e halo. As duas peças continuam
-    // sendo coisas diferentes: o `brand` é um CTA de marca por tela, o
-    // primário é o peso de toda ação principal.
+    // do `brand`. As duas peças continuam sendo coisas diferentes: o `brand`
+    // é um CTA de marca por tela, o primário é o peso de toda ação principal.
     expect(PRIMARIO.join(" ")).not.toContain("brand-rainbow")
+  })
+
+  it("9b. `shape=\"pill\"` arredonda 100% e sobe meio degrau de recuo", () => {
+    // O padrão continua o canto do sistema, sem classe nenhuma a mais.
+    expect(buttonVariants({})).not.toContain("rounded-full")
+    expect(buttonVariants({ shape: "pill" })).toContain("rounded-full")
+    // A curva come o canto: o recuo lateral da pílula é meio degrau maior, e
+    // o `twMerge` tem de deixar só ele (o do degrau sai).
+    const RECUO = { xs: "px-2.5", sm: "px-3", md: "px-3.5", lg: "px-4", xl: "px-4.5" } as const
+    for (const [size, px] of Object.entries(RECUO)) {
+      const classes = cn(buttonVariants({ shape: "pill", size: size as keyof typeof RECUO })).split(/\s+/)
+      expect(classes, size).toContain(px)
+      expect(classes.filter((c) => /^px-/.test(c)), size).toStrictEqual([px])
+    }
   })
 
   it("10. nada é pseudo-elemento, e a razão é o `ButtonGroup`", () => {
     // `[&>[data-variant=primary]]:before:hidden` esconderia um `::before`;
     // um `::after` em `z` negativo fica atrás do `background` do elemento.
-    // As cinco camadas da lava são `background-image` do próprio botão.
     expect(PRIMARIO.filter((c) => /^(before|after):/.test(c))).toStrictEqual([])
-    expect(LAVA).not.toMatch(/::(before|after)/)
     const grupo = readFileSync(join(RAIZ, "components/ui/button-group.tsx"), "utf8")
     expect(grupo).toContain("[&>[data-variant=primary]]:before:hidden")
     // O vão de 1px do primário é a **sobreposição**, e não o `ml-px` do
     // `secondary`: o fundo dele é recortado no `padding-box`, então a borda
     // transparente de cada lado já é vão, e somada à margem a emenda media 3px.
     expect(grupo).not.toContain("[&>[data-variant=primary]:not(:first-child)]:ml-px")
-  })
-
-  it("11. a lava é um vidro sobre as oito paradas da marca, e o vidro é da cor do botão", () => {
-    // A camada de cima é o vidro: `--primary` em `color-mix`, centrado no
-    // ponteiro, e é o `--button-wash` que o afina. Se o vidro não lê
-    // `--button-wash`, a variável liga nada.
-    const camadas = LAVA.split("radial-gradient(").length - 1
-    expect(camadas).toBe(9)
-    const vidro = LAVA.slice(LAVA.indexOf("radial-gradient("), LAVA.indexOf("radial-gradient(", LAVA.indexOf("radial-gradient(") + 1))
-    expect(vidro).toContain("var(--primary)")
-    expect(vidro).toContain("var(--button-wash)")
-    expect(vidro).toContain("at var(--button-mx) var(--button-my)")
-    // Os blobs orbitam o ponteiro: cada um lê `--button-mx` e `--button-lava`,
-    // e há um por parada da marca — o arco-íris inteiro, a pedido do dono.
-    const blobs = LAVA.slice(LAVA.indexOf("radial-gradient(", vidro.length))
-    // três leituras por blob: x e y da órbita, e o alfa que respira.
-    expect(blobs.match(/var\(--button-lava\)/g)?.length).toBe(24)
-    for (const parada of ["teal", "blue", "indigo", "violet", "magenta", "coral", "amber", "green"]) {
-      expect(LAVA, parada).toContain(`var(--brand-${parada})`)
-    }
-    // A névoa das bordas é `box-shadow` **interno** ligado pelo wash — em
-    // repouso é transparente, então o botão continua chapado. Ela mora na
-    // utility e nunca numa classe `shadow-*` da variante (asserção 3).
-    expect(LAVA).toMatch(/box-shadow:\s*\n?\s*inset[\s\S]*var\(--button-wash\)/)
-    // Os blobs igualam **claridade e croma** por tema, e os dois são token:
-    // `--button-lava-l` e `--button-lava-c`. A gangorra é de tema — no claro o
-    // botão é preto e o rótulo branco, no escuro o contrário —, então cada
-    // controle custa o oposto em cada um: no claro a claridade é gangorra e o
-    // croma é barato, no escuro a claridade é de graça e o croma é caro (a 0,88
-    // de luz, croma 2,2 reprova com 4,24 contra 5,12 a 2,0). Claridade fixa e
-    // única reprovou (3,95); croma fixo e único deixava os dois temas presos ao
-    // número calibrado para o outro. **Nenhum dos dois pode voltar a ser
-    // literal aqui**, e é isso que a asserção tranca.
-    expect(blobs.match(/oklch\(from var\(--button-blob-[1-8]\) var\(--button-lava-l\) calc\(c \* var\(--button-lava-c\)\) h \/ calc\([^)]*sin\(/g)?.length).toBe(8)
-    // E os quatro controles moram no tema, nunca na utility: declarados nela, o
-    // valor do elemento sombrearia o do tema e os dois voltariam a dividir um
-    // número só.
-    for (const t of ["--button-lava-l", "--button-lava-c", "--button-glass-min", "--button-glass-max"]) {
-      expect(LAVA, t).not.toContain(`${t}:`)
-    }
-    // …e cada um **respira** (o `/ calc(… sin(…))`): sem a opacidade pulsando,
-    // o blob do topo cobre o ponteiro o tempo todo e a cor sob o cursor não
-    // muda — a órbita sozinha só o desloca 24–38px num raio de ~200.
-    // A cor de cada camada é variável com padrão na utility, e o `Button` gira
-    // a atribuição a cada entrada — senão a lava começaria sempre pela camada
-    // de cima, que cobre o ponteiro.
-    for (let k = 1; k <= 8; k++) expect(LAVA).toMatch(new RegExp(`--button-blob-${k}: var\\(--brand-\\w+\\)`))
-    const botao = readFileSync(join(RAIZ, "components/ui/button.tsx"), "utf8")
-    expect(botao).toContain("onPointerEnter")
-    expect(botao).toMatch(/setProperty\(`--button-blob-\$\{k \+ 1\}`/)
-    expect(CLARO).toContain("--button-lava-l:")
-    expect(ESCURO).toContain("--button-lava-l:")
-    expect(claridade(CLARO, "--button-lava-l") < claridade(ESCURO, "--button-lava-l")).toBe(true)
-    // As duas variáveis são tipadas: só variável tipada interpola.
-    expect(CSS).toMatch(/@property --button-wash \{\s*syntax: "<number>"/)
-    expect(CSS).toMatch(/@property --button-lava \{\s*syntax: "<number>"/)
   })
 })

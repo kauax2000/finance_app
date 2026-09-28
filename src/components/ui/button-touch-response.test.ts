@@ -111,13 +111,14 @@ describe("resposta ao toque do Button", () => {
   // origem trocando de lado. A diferença para as rodadas antigas é que agora
   // **não há traço em repouso**: ele nasce da esquerda no cursor e recolhe
   // para a direita na saída.
-  it("5. os quatro pesos que preenchem vestem o disco, e só eles", () => {
+  it("5. os cinco pesos que preenchem vestem o disco, e só eles", () => {
     // O hover é um disco da cor do hover que nasce sob o ponteiro
     // (`@utility button-fill`, rodada 99). Cada peso declara a cor e liga o
     // raio; a transição resolvida pelo `tailwind-merge` tem de carregar
     // `--button-fill` **e** manter `translate`, porque a variante restata a
     // lista da base em vez de acrescentar a ela.
-    for (const variant of ["secondary", "tertiary", "outline", "destructive"] as const) {
+    // O primário entrou na rodada 148, quando ficou cru.
+    for (const variant of ["primary", "secondary", "tertiary", "outline", "destructive"] as const) {
       const cru = buttonVariants({ variant })
       expect(cru, variant).toContain("button-fill")
       expect(cru, variant).toMatch(/\[--button-fill-color:/)

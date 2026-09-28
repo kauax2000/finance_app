@@ -83,8 +83,8 @@ export function composeRefs<T>(...refs: Array<React.Ref<T> | undefined>) {
  * Nada de estado React: a posição vai para o CSS por `setProperty`, sem
  * re-render, como o `Button` e o marcador do `Tabs` já fazem.
  */
-export function useBrandGlow(ativo: boolean) {
-  const ref = React.useRef<HTMLDivElement | null>(null)
+export function useBrandGlow<T extends HTMLElement = HTMLDivElement>(ativo: boolean) {
+  const ref = React.useRef<T | null>(null)
 
   React.useEffect(() => {
     if (!ativo) return

@@ -136,46 +136,21 @@
 
      O primário é a **tecla preta** no claro e a branca no escuro, e a única
      cor do sistema é o arco-íris neon (`--brand-rainbow`): o wordmark, o campo
-     de marca, o `Button variant="brand"` — e, desde a rodada 98, o **hover do
-     primário**, como lava sob um vidro. A rodada 90 tinha recusado arco-íris
-     no primário (texto branco sobre cor cheia: 4,87:1 no cursor); o desenho
-     de agora é outro — o botão é chapado, a cor mora **atrás** de uma lâmina
-     translúcida da própria cor do botão, e o teto é medido por
-     `scripts/primary-wash-contrast.mjs`. Ver `@utility primary-wash`.
+     de marca, o `Button variant="brand"`. **O primário não veste arco-íris**:
+     da rodada 98 à 147 ele o acendeu no cursor (lava atrás de um vidro, depois
+     um brilho subindo da base), e na 148 o dono pediu o botão cru, com o hover
+     dos outros pesos.
 
      **O primário é chapado, e só.** Ele foi tecla da rodada 78 à 97 — contorno
      e plinto em `--primary-edge`, fio de luz em `--primary-highlight`, véu,
      sombra —, e o dono pediu tudo fora: nem relevo, nem profundidade. Os seis
      tokens da tecla saíram com ela, e `button-primary.test.ts` cobra que
-     nenhum volte. `--primary-hover` fica: o `brand` o lê como `--brand-fill`
-     no cursor, e é opaco porque um alfa sobre a superfície clareava num tema e
+     nenhum volte. `--primary-hover` fica: é a cor do disco do hover do
+     primário e do `brandOutline`, e é opaco porque um alfa sobre a superfície clareava num tema e
      escurecia no outro. */
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
   --primary-hover: oklch(0.145 0 0);
-  /* A lava tem três controles, e os três são por tema porque a **gangorra é
-     de tema**. No claro o botão é preto e o rótulo é branco; no escuro,
-     o contrário. Isso inverte o que cada controle custa, e foi varrido:
-
-       claridade  no claro, blob mais claro aparece mais e apaga o rótulo
-                  branco; mais escuro salva o rótulo e some no botão preto.
-                  É a gangorra. **Mas ela compra folga**, e a folga paga os
-                  outros dois: 0,56 → 0,46 rendeu croma quase dobrado e vidro
-                  pela metade, no mesmo contraste.
-       croma      satura sem mexer tanto na luminância — mas não de graça:
-                  a 0,56 de luz, subir o croma de 1,7 para 2,3 já reprovava
-                  (4,39). Acima de ~3 o ganho some, porque a maioria das oito
-                  paradas já bate no limite do sRGB e é recortada.
-       vidro      a lâmina da cor do botão sobre a lava, fina no ponteiro
-                  (`min`) e grossa na borda (`max`). Tirar vidro mostra a
-                  cor e gasta contraste.
-
-     Aqui: 0,46 / 3 / 9%-20%, pior caso **4,72** (piso 4,5). O ponto de partida
-     era 0,56 / 1,7 / 22%-44% em 5,55. */
-  --button-lava-l: 0.46;
-  --button-lava-c: 3;
-  --button-glass-min: 9%;
-  --button-glass-max: 20%;
   /* `--primary` preenche e é medido contra o texto em cima; `--primary-accent`
      é a marca **sobre a página** — texto, ícone, traço. Com a marca preta os
      dois coincidem com `--foreground` nos dois temas, mas o papel continua
@@ -771,27 +746,10 @@
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
   /* A tecla branca, chapada. O rótulo é preto, então "puxar na direção do
-     rótulo" escurece o hover aqui também — e o `primary-wash` põe o vidro na
-     cor do botão, logo aqui ele é um vidro **branco** sobre a lava, que é a
-     imagem que o dono descreveu. */
+     rótulo" escurece o hover aqui também. */
   --primary: oklch(0.985 0 0);
   --primary-foreground: oklch(0.145 0 0);
   --primary-hover: oklch(0.92 0 0);
-  /* Ver a tabela no tema claro. Aqui os sinais trocam, porque o rótulo é
-     preto sobre blobs claros: **claridade sobe o contraste** em vez de gastá-lo
-     (é só afastar o blob do preto do texto), e **croma o gasta**, porque
-     saturar um blob claro o escurece. Medido: a 0,88 de luz, o croma a 2,2
-     reprova com 4,24 enquanto 2,0 dá 5,12 — o degrau é íngreme e é uma parada
-     só da marca que o produz, recortada no limite do sRGB.
-
-     Por isso o escuro leva quase nenhum vidro: 0,87 / 2 / 2%-6%, pior caso
-     5,12 na varredura reduzida. O arco-íris aparece praticamente inteiro, e a
-     razão centro→borda continua 3×, que é o que mantém o foco na ponta do
-     mouse em vez de uma mancha chapada. */
-  --button-lava-l: 0.87;
-  --button-lava-c: 2;
-  --button-glass-min: 2%;
-  --button-glass-max: 6%;
   --primary-accent: oklch(0.985 0 0);
   --primary-muted: oklch(0.269 0 0);
   --primary-muted-foreground: oklch(0.985 0 0);
@@ -1943,181 +1901,6 @@
   );
 }
 
-/* ── A lava do primário ────────────────────────────────────────────────────
-
-   O `Button variant="primary"` é chapado em repouso e, sob o cursor, acende o
-   arco-íris da marca **atrás de um vidro** — a pedido do dono, rodada 98:
-   "a tintura do hover de fundo seja o arco-íris, levemente alguns blobs, como
-   um lava-lamp, focando na ponta do mouse; nas laterais um branco mais
-   aparente e no centro cada vez mais forte; não precisa estar 100%, pode ter
-   um vidro branco na frente".
-
-   **Tudo mora no `background` do próprio botão, e não em pseudo-elemento.**
-   Duas medições decidiram isso: o `ButtonGroup` escreve
-   `[&>[data-variant=primary]]:before:hidden` (um `::before` sumiria calado
-   dentro de um grupo, rodada 97), e um `::after` em `z` negativo fica atrás
-   do `background` do elemento (a medição do `brand`, rodada 83). Camadas de
-   `background-image` não disputam empilhamento com nada.
-
-   **Cinco camadas, de cima para baixo:**
-
-   1. **O vidro** — um `radial-gradient` da cor do botão (`--primary`, então
-      branco no escuro e preto no claro), centrado no ponteiro. Fino no centro
-      (`--button-glass-min`) e grosso na borda (`--button-glass-max`). É ele que
-      faz as duas coisas do pedido de uma vez: "mais forte perto do mouse, mais
-      branco nas laterais" **e** o teto de contraste do rótulo.
-   2–5. **Quatro blobs**, matizes afastados (teal, magenta, âmbar, violeta),
-      cada um centrado no ponteiro mais um deslocamento **orbital** com raio e
-      fase próprios. Uma volta em 8s: a cor respira em vez de girar. Com o
-      cursor parado a lava continua andando; com o cursor andando ela vai junto.
-
-   **Quem liga é `--button-wash`, uma variável tipada** (0 → 1), e não
-   `opacity` — `opacity` apagaria o rótulo. Ela multiplica a transparência do
-   vidro: em 0 o vidro é 100% opaco e o botão é chapado; em 1 ele afina até o
-   teto. Registrada com `@property` pela mesma razão do `--brand-angle`: só
-   variável tipada interpola, e é isso que dá a entrada e a saída suaves com a
-   transição da casa. **Os blobs são sempre pintados** por baixo; é o vidro que
-   os mostra ou esconde.
-
-   **A órbita pausa em vez de desligar** (`animation-play-state`), a decisão do
-   `brand`: ligar só no `hover:` faria a lava saltar ao ponto zero a cada
-   entrada. Movimento reduzido: o bloco global corta a transição (o wash
-   aparece de uma vez) e congela a órbita no quadro 0; seguir o ponteiro não é
-   animação e continua.
-
-   `sin()`/`cos()` são o primeiro uso de trigonometria em CSS neste projeto —
-   Chromium 111+, Safari 15.4+, Firefox 118+ cobrem o PWA. A posição do
-   ponteiro chega em `px` pelo `button.tsx` (`--button-mx`/`--button-my`); sem
-   ponteiro — teclado, primeiro toque — o padrão é o centro. */
-@property --button-wash {
-  syntax: "<number>";
-  inherits: false;
-  initial-value: 0;
-}
-
-@property --button-lava {
-  syntax: "<number>";
-  inherits: false;
-  initial-value: 0;
-}
-
-@keyframes button-lava {
-  to {
-    --button-lava: 1;
-  }
-}
-
-@utility primary-wash {
-  --button-mx: 50%;
-  --button-my: 50%;
-  /* A cor de cada camada é variável, com o padrão intercalado (frio, quente,
-     frio…). O `Button` gira a atribuição a cada entrada do cursor — a pedido do
-     dono, "sempre começar com uma cor diferente do arco-íris": como todos os
-     blobs cobrem o ponteiro, quem lê no ponto de entrada é a camada de cima, e
-     ela seria sempre a mesma. As oito continuam sendo as paradas exatas da
-     marca; só a ordem na pilha muda. */
-  --button-blob-1: var(--brand-teal);
-  --button-blob-2: var(--brand-coral);
-  --button-blob-3: var(--brand-indigo);
-  --button-blob-4: var(--brand-amber);
-  --button-blob-5: var(--brand-magenta);
-  --button-blob-6: var(--brand-green);
-  --button-blob-7: var(--brand-violet);
-  --button-blob-8: var(--brand-blue);
-  /* `--button-glass-min`, `--button-glass-max`, `--button-lava-l` e
-     `--button-lava-c` **não se declaram aqui**: eles moram em `:root` e
-     `.dark`, porque a folga de contraste é de tema e não do componente. Declarados na utility, o valor do
-     elemento sombrearia o do tema e os dois temas voltariam a dividir um
-     número só — que era o estado anterior, e o que mantinha o escuro com um
-     vidro calibrado para o problema do claro. */
-  background-image:
-    radial-gradient(
-      ellipse 110% 220% at var(--button-mx) var(--button-my),
-      color-mix(
-          in oklab,
-          var(--primary)
-            calc(100% - var(--button-wash) * (100% - var(--button-glass-min))),
-          transparent
-        )
-        0%,
-      color-mix(
-          in oklab,
-          var(--primary)
-            calc(100% - var(--button-wash) * (100% - var(--button-glass-max))),
-          transparent
-        )
-        100%
-    ),
-    radial-gradient(
-      ellipse 80% 190% at
-        calc(var(--button-mx) + cos((var(--button-lava) + 0) * 360deg) * 28px)
-        calc(var(--button-my) + sin((var(--button-lava) + 0) * 360deg) * 10px),
-      oklch(from var(--button-blob-1) var(--button-lava-l) calc(c * var(--button-lava-c)) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0) * 360deg), 3))) 0%,
-      transparent 90%
-    ),
-    radial-gradient(
-      ellipse 85% 200% at
-        calc(var(--button-mx) - cos((var(--button-lava) + 0.125) * 360deg) * 36px)
-        calc(var(--button-my) + sin((var(--button-lava) + 0.125) * 360deg) * 12px),
-      oklch(from var(--button-blob-2) var(--button-lava-l) calc(c * var(--button-lava-c)) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0.125) * 360deg), 3))) 0%,
-      transparent 90%
-    ),
-    radial-gradient(
-      ellipse 75% 180% at
-        calc(var(--button-mx) + cos((var(--button-lava) + 0.25) * 360deg) * 32px)
-        calc(var(--button-my) - sin((var(--button-lava) + 0.25) * 360deg) * 9px),
-      oklch(from var(--button-blob-3) var(--button-lava-l) calc(c * var(--button-lava-c)) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0.25) * 360deg), 3))) 0%,
-      transparent 90%
-    ),
-    radial-gradient(
-      ellipse 82% 190% at
-        calc(var(--button-mx) - cos((var(--button-lava) + 0.375) * 360deg) * 24px)
-        calc(var(--button-my) - sin((var(--button-lava) + 0.375) * 360deg) * 14px),
-      oklch(from var(--button-blob-4) var(--button-lava-l) calc(c * var(--button-lava-c)) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0.375) * 360deg), 3))) 0%,
-      transparent 90%
-    ),
-    radial-gradient(
-      ellipse 78% 185% at
-        calc(var(--button-mx) + cos((var(--button-lava) + 0.5) * 360deg) * 30px)
-        calc(var(--button-my) + sin((var(--button-lava) + 0.5) * 360deg) * 11px),
-      oklch(from var(--button-blob-5) var(--button-lava-l) calc(c * var(--button-lava-c)) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0.5) * 360deg), 3))) 0%,
-      transparent 90%
-    ),
-    radial-gradient(
-      ellipse 84% 195% at
-        calc(var(--button-mx) - cos((var(--button-lava) + 0.625) * 360deg) * 34px)
-        calc(var(--button-my) + sin((var(--button-lava) + 0.625) * 360deg) * 10px),
-      oklch(from var(--button-blob-6) var(--button-lava-l) calc(c * var(--button-lava-c)) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0.625) * 360deg), 3))) 0%,
-      transparent 90%
-    ),
-    radial-gradient(
-      ellipse 76% 180% at
-        calc(var(--button-mx) + cos((var(--button-lava) + 0.75) * 360deg) * 26px)
-        calc(var(--button-my) - sin((var(--button-lava) + 0.75) * 360deg) * 13px),
-      oklch(from var(--button-blob-7) var(--button-lava-l) calc(c * var(--button-lava-c)) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0.75) * 360deg), 3))) 0%,
-      transparent 90%
-    ),
-    radial-gradient(
-      ellipse 80% 190% at
-        calc(var(--button-mx) - cos((var(--button-lava) + 0.875) * 360deg) * 38px)
-        calc(var(--button-my) - sin((var(--button-lava) + 0.875) * 360deg) * 12px),
-      oklch(from var(--button-blob-8) var(--button-lava-l) calc(c * var(--button-lava-c)) h / calc(0.12 + 0.88 * pow(0.5 + 0.5 * sin((var(--button-lava) + 0.875) * 360deg), 3))) 0%,
-      transparent 90%
-    );
-  /* A névoa (frost) nas bordas: uma sombra **interna** borrada da cor do
-     botão, que só existe com o wash ligado — a pedido do dono, "um frosty feel
-     nas bordas já que o centro vai ficar mais vivo". Ela mora aqui e não numa
-     classe `shadow-*` da variante, porque em repouso é transparente e o botão
-     continua chapado; e é `box-shadow` porque não disputa com o rótulo nem com
-     o `ButtonGroup`. */
-  box-shadow:
-    inset 0 0 18px 3px
-      color-mix(in oklab, var(--primary) calc(var(--button-wash) * 90%), transparent),
-    inset 0 0 0 1px
-      color-mix(in oklab, var(--primary) calc(var(--button-wash) * 55%), transparent);
-  animation: button-lava 8s linear infinite;
-}
-
 /* ── O arco-íris como material ─────────────────────────────────────────────
 
    Três peças, e a posição delas no arquivo é carga estrutural: `glass.test.ts`
@@ -2131,8 +1914,7 @@
    `Button variant="brand"`. O dono o viu na faixa do catálogo e o recusou
    inteiro — "não é uma animação que eu quero usar em nenhum lugar de site".
    O movimento da marca é a **lava** (`@utility brand-lava`, abaixo): blobos de
-   cor transitando dentro da caixa, que é o que o `primary-wash` já faz no
-   hover do primário desde a 98. Saíram com o giro `--brand-angle`,
+   cor transitando dentro da caixa. Saíram com o giro `--brand-angle`,
    `@keyframes brand-rotate` e `--brand-spin`.
 
    **A interpolação é `in oklch shorter hue`, e isso é o conserto do fio.** Em
@@ -2221,7 +2003,7 @@
 
    1. **`--brand-glow-start` é `inherits: true`, e isso é carga estrutural.**
       As quatro `@property` que já existem são `inherits: false` porque são
-      lidas **no próprio elemento** (o `primary-wash` mora no botão). Esta é
+      lidas **no próprio elemento**. Esta é
       lida num **pseudo-elemento**, e pseudo não herda propriedade registrada
       como `inherits: false`: medido, a `opacity` ficava em 0 com a variável
       valendo 1 no elemento. Quem trocar para `false` apaga o brilho sem
@@ -2461,8 +2243,8 @@
 /* ── A lava da marca ───────────────────────────────────────────────────────
 
    O movimento do arco-íris, no lugar do giro que saiu. Oito blobos — uma
-   parada da marca cada — orbitando dentro da caixa, como a lava do primário
-   (`@utility primary-wash`, rodada 98) faz atrás do rótulo.
+   parada da marca cada — orbitando dentro da caixa, como a lava que o hover
+   do primário teve da rodada 98 à 146 (e que saiu).
 
    **A receita do botão não se transplanta, e isso foi medido antes de
    escrever.** Numa caixa de 468×96 os blobos de lá saem errados por dois
@@ -2475,9 +2257,9 @@
    translúcida, e **não há pulso de alfa**: quem faz a cor mudar é a
    sobreposição andando, que é o que a palavra lava quer dizer.
 
-   **A cor é a parada crua da marca.** Nada de `--button-lava-l` nem de
-   `calc(c * --button-lava-c)`: aqueles existem para segurar o contraste de um
-   **rótulo** sobre a lava, e aqui não há texto — vale a invariante do campo,
+   **A cor é a parada crua da marca.** Nada da claridade e do croma igualados
+   que a lava do primário usava até a rodada 147: aqueles existiam para
+   segurar o contraste de um **rótulo** sobre a lava, e aqui não há texto — vale a invariante do campo,
    nenhum texto corrido mora sobre sete matizes.
 
    **As âncoras avançam da esquerda para a direita na ordem do degradê**, com

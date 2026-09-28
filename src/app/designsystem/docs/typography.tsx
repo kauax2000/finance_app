@@ -277,7 +277,7 @@ export default function TypographyDoc() {
         <Spec title="Quando usar o relativo">
           <Stack className="gap-2 text-xs text-muted-foreground">
             <p>
-              <strong className="text-foreground">Hoje / Ontem</strong> nas
+              <strong className="text-foreground">Hoje / Ontem</strong>{" "}nas
               últimas linhas de um extrato. Depois de uns três dias ele atrapalha:
               &ldquo;há 9 dias&rdquo; obriga a fazer conta.
             </p>

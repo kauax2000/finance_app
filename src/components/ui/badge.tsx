@@ -1,6 +1,9 @@
+"use client"
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
+import { useBrandGlow } from "@/hooks/use-brand-glow"
 import { cn } from "@/lib/utils"
 
 /**
@@ -146,30 +149,31 @@ const badgeVariants = cva(
         // que a referência faz: chip grave, ponto aceso.
         contrast:
           "bg-primary text-primary-foreground dark:bg-secondary dark:text-secondary-foreground",
-        // O arco-íris da marca, no mecanismo do `Button variant="brand"`
-        // reduzido à escala do chip.
+        // **A família do brilho, reduzida à escala do chip** (a do `Alert` e
+        // do `Card`): em repouso é um chip neutro — `muted` com a tinta do
+        // texto e o fio do sistema —, e o arco-íris acende num arco da borda
+        // conforme o ponteiro se aproxima. Até esta rodada ele era a família do
+        // contorno, a tecla preta do `primary` com o degradê em 1px e um halo
+        // borrado sempre aceso; o dono o quis neutro, com a borda acendendo só
+        // de perto.
         //
-        // **O texto nunca pousa no degradê.** O miolo é chapado
-        // (`--brand-fill`), o arco-íris aparece por 1px de borda e por um halo
-        // borrado atrás — então o contraste é o do `primary`, e não uma média
-        // de sete matizes. É o que separa esta peça da proibição do
-        // `AGENTS.md`: arco-íris **sob texto** num chip continua proibido.
+        // `--brand-glow-core` é o `--muted`: o núcleo chapado do anel tem de
+        // ser a cor que está atrás dele, senão a região que a máscara apaga
+        // aparece como outra superfície. `brand-rainbow-image` declara
+        // `--brand-rainbow` no elemento, e `isolate` é o que impede o pseudo de
+        // `z` negativo de cair atrás do fundo de um ancestral — as duas
+        // medições do `Alert`.
         //
-        // `brand-rainbow-image` **não é decoração e não se apaga**: é ela que
-        // declara `--brand-rainbow` no elemento. O degradê saiu do `:root`
-        // porque um `var()` dentro de uma propriedade personalizada é
-        // substituído onde ela é declarada, e ali o `var(--brand-angle)`
-        // congelava. Os dois pseudo-elementos herdam daqui o valor já
-        // substituído.
+        // A intensidade é cheia (`--brand-glow-opacity: 1`, contra 0,5 no
+        // alerta e no cartão): num chip de 22px o arco tem poucos pixels, e a
+        // meia força lia como sujeira na borda. O volume se mexe no
+        // multiplicador, nunca nas paradas.
         //
-        // Três diferenças para o botão, todas de escala: halo a `-inset-0.5`
-        // em vez de `-inset-1`, `blur-sm` em vez de `blur-md`, e **nenhum
-        // estado de cursor** — um badge descreve, não age.
-        //
-        // Uma por tela, pela razão do botão: acento em todo chip deixa de ser
-        // acento.
+        // O texto nunca pousa no degradê: o arco vive 2px **fora** da caixa.
+        // Sem ponteiro fino (telefone) não há brilho, e ele fica o chip neutro.
+        // Uma por tela, como toda peça de marca.
         brand:
-          "brand-rainbow-image relative isolate text-primary-foreground [--brand-fill:var(--primary)] before:absolute before:-inset-px before:-z-10 before:rounded-[inherit] before:border before:border-transparent before:[background:linear-gradient(var(--brand-fill),var(--brand-fill))_padding-box,var(--brand-rainbow)_border-box] after:absolute after:-inset-0.5 after:-z-20 after:rounded-[inherit] after:bg-(image:--brand-rainbow) after:opacity-50 after:blur-sm",
+          "brand-rainbow-image brand-glow relative isolate border-border bg-muted text-foreground [--brand-glow-core:var(--muted)] [--brand-glow-opacity:1]",
       },
       /**
        * A **cor**, com o mesmo nome e os mesmos valores do resto do sistema.
@@ -303,10 +307,12 @@ function BadgeDot({
 }
 
 function Badge({ className, variant, tone, size, ...props }: BadgeProps) {
+  const glowRef = useBrandGlow<HTMLSpanElement>(variant === "brand")
   return (
     // <span>, e não <div>: o chip mora dentro de parágrafo e de linha de texto,
     // e um <div> dentro de <p> é HTML inválido (o React avisa na hidratação).
     <span
+      ref={glowRef}
       data-slot="badge"
       className={cn(badgeVariants({ variant, tone, size }), className)}
       {...props}

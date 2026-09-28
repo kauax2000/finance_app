@@ -14544,3 +14544,140 @@ sobra cai para 4), e o topo continua fixo quando a busca encolhe a lista.
 Medido a 860 e a 700 de altura: 214 e 134px acima e abaixo com a raiz aberta,
 e o topo parado ao buscar.
 
+
+### Rodada 144 — o `Badge` de marca troca de família
+
+O `Badge variant="brand"` era da família do **contorno**: a tecla preta do
+`primary`, o degradê em 1px de `border-box` e um halo borrado atrás, sempre
+aceso. O dono o quis **neutro**, com a borda acendendo só quando o ponteiro
+chega perto — o brilho do `Alert` e do `Card`.
+
+- Em repouso é um chip `muted` com a tinta do texto e o fio do sistema.
+- O arco é o `@utility brand-glow` e o ponteiro é `useBrandGlow`, como nas
+  outras duas peças do brilho. `--brand-glow-core` é `--muted`, a cor que está
+  atrás do anel; com o padrão (`--card`) a região que a máscara apaga leria
+  como outra superfície em volta do chip.
+- A intensidade é cheia, `--brand-glow-opacity: 1` só no chip (o alerta e o
+  cartão seguem em 0,5). Medido lado a lado a 3×: num chip de 22px o arco tem
+  poucos pixels, e a meia força lia como sujeira na borda. O computado confere
+  que a classe vence a declaração da utility (1, não 0,5).
+- O `Badge` virou componente de cliente para chamar o hook. Antes de trocar,
+  conferido: nenhum módulo de servidor consome as constantes `tagChip*` do
+  arquivo (só componentes de cliente e um teste), então elas não viram
+  referências de cliente em lugar nenhum.
+- `useBrandGlow` ganhou um genérico (`<T extends HTMLElement>`, padrão
+  `HTMLDivElement`) para servir um `<span>` sem cast.
+- `brand-contour.test.ts`: o `Badge` saiu das asserções do contorno e entrou na
+  10, a do brilho, que cobra o chip neutro, o núcleo em `--muted` e a ausência
+  do halo.
+
+### Rodada 145 — o `Button` de marca vira neutro, e a pílula entra na forma
+
+**`variant="brand"` troca de família**, como o `Badge` na 144. Era a tecla
+preta do `primary` com o degradê em 1px e um halo borrado sempre aceso; agora
+é a superfície do `secondary` com o fio do sistema, e o arco-íris acende num
+arco da borda conforme o ponteiro chega perto (`brand-glow` + `useBrandGlow`,
+intensidade cheia como no `Badge`).
+
+- **O fundo não muda no cursor, e isso é mecânico, não gosto.** Com `isolate`
+  o anel pinta por cima do fundo do elemento, e o núcleo chapado dele cobre a
+  fatia onde o arco está aceso. O disco do `button-fill` (ou qualquer troca de
+  cor) sumiria justamente na fatia virada para o ponteiro. A resposta ao
+  cursor é o próprio brilho; o clique afunda 1px pela base.
+- Medido: em repouso `--brand-glow-active` 0 e o anel em opacidade 0; com o
+  ponteiro 8px à direita, 1 e 1; com o ponteiro sobre o botão (30%, 50% e 80%
+  da largura), 1. Só o centro exato cai na zona morta do hook (0,01).
+- **`brandOutline` guarda o desenho antigo, sem o halo**: a tecla preta com o
+  arco-íris sempre aceso, para quando a marca não pode depender do ponteiro.
+  Ele não é mais "o brand onde o halo não cabe" — o brand não tem halo.
+- `Button` passa a compor o `ref` de quem chama com o do hook
+  (`composeRefs`), e o hook usa o genérico da 144 (`HTMLButtonElement`).
+
+**`shape` é um eixo novo**: `rounded` (o padrão, o `rounded-lg` da base) e
+`pill` (`rounded-full`). Na pílula o recuo lateral sobe meio degrau por
+variantes compostas — `xs` 10, `sm` 12, `md` 14, `lg` 16, `xl` 18px —, porque
+a curva come o canto e, com o recuo do retângulo, o rótulo fica espremido
+contra ela; o `twMerge` deixa só o recuo da pílula. Nos `icon-*` vira círculo.
+Medido: raio computado de metade da altura e recuo de 14px no `md`.
+
+`button-primary.test.ts` (9 e 9b) e `brand-contour.test.ts` (o `Button brand`
+saiu do contorno e entrou na asserção 10, do brilho) trancam as duas coisas.
+
+### Rodada 146 — a lava do primário fica em três cores, e firme
+
+O dono: o hover e o clique do `primary` viravam "uma mistura de cores ruim de
+ver". Duas causas, as duas na `@utility primary-wash`: **oito cores** passando
+ao mesmo tempo (teal, âmbar e lima ao lado de magenta) e uma opacidade que
+**pulsava de 12% a 100%**, o que embaralhava as camadas o tempo todo.
+
+- **Três cores, vizinhas:** violeta, magenta e coral. Três matizes vizinhos se
+  fundem num degradê, não numa lama. `LAVA_STOPS` no `Button` e a varredura de
+  contraste seguem a mesma lista.
+- **Lado a lado, e não empilhadas:** uma à esquerda do ponteiro (−38%), uma
+  sob ele, uma à direita (+38%). Na primeira tentativa as três cobriam o botão
+  inteiro e, com a opacidade firme, só aparecia a de cima — magenta chapado.
+  Postas lado a lado, as três leem juntas como faixas que acompanham o mouse.
+- **Opacidade firme:** respira só entre 85% e 100%. A órbita fica mais lenta
+  (12s em vez de 8s).
+- **Croma recalibrado:** a 3× (claro) as três estouravam o sRGB e o recorte
+  puxava tudo para o vermelho — o violeta sumia. Varrido: 0,36 / 3 dava 4,77;
+  0,36 / 1,4 dava 8,80; o escolhido, **0,50 / 1,6**, dá **5,47**. No escuro
+  0,87 / 2 saía pastel e lavado; **0,78 / 1,5** dá **5,96**. Piso 4,5, em 112
+  células.
+
+### Rodada 147 — o hover do primário vira o brilho do Shiny Button
+
+O dono trouxe o Shiny Button (21st, `designali-in/shiny-button`) como
+referência para a animação que mostra a cor do `primary`, **sem a borda que
+gira**. A referência tem quatro camadas, e só uma veio:
+
+| Camada | O que faz | Veio? |
+|---|---|---|
+| Borda `conic-gradient` com o ângulo animado | gira sempre; no hover alarga | não — a borda girando, recusada |
+| `::before` de pontos com máscara cônica | gira preso ao mesmo ângulo | não |
+| `::after` shimmer | sempre visível, girando | não |
+| `span::before` com `inset` glow | 0 → 1 no hover, respirando | **sim** |
+
+- **A lava saiu inteira**: o vidro, os blobos, a órbita, o seguir o ponteiro,
+  `girarLava`/`LAVA_STOPS` e os tokens `--button-lava-l`/`-c` e
+  `--button-glass-min`/`-max`. No lugar, `--button-glow-strength` por tema.
+- **No próprio botão, nunca num pseudo**: o `ButtonGroup` esconde o `::before`
+  do primário, e o rótulo só é `<span>` quando o filho é texto.
+- **Portado ao pé da letra, alagava.** Com `inset 0 -1ex 2rem 4px`, num botão
+  de 32–40px o brilho enchia a caixa inteira: na referência o pseudo é 1rem
+  maior que o botão, então a sombra começa fora da borda e só a base aparece.
+  Três geometrias foram comparadas lado a lado nos dois temas; a escolhida
+  troca a folga por **espalhamento negativo** e divide as cores — magenta
+  subindo da base (a sombra da referência), violeta pela esquerda, coral pela
+  direita —, com o centro no preto (branco) do botão.
+- **Respiração**: a escala 1 → 1,2 da referência vira o borrão crescendo 20%
+  (`@property --button-breathe`, 4,5s), pausada em repouso.
+- **Ritmo**: a referência acende em 800ms; sem token para isso, o
+  `--button-wash` usa `--duration-spring` (500ms). A duração é uma lista casada
+  com as propriedades, para o clique de 1px continuar em `--duration-fast`.
+- **Contraste**: o script passou a medir dois botões (o `xl` largo e o `md`) em
+  três fases da respiração — o `md` é o pior, porque o borrão é o mesmo em todo
+  degrau. Força cheia nos dois temas: **7,25** no claro e **9,01** no escuro.
+  A primeira geometria, a que alagava, dava 5,33 e 5,98.
+
+### Rodada 148 — o primário fica cru
+
+O dono pediu o `primary` sem nenhum dos efeitos das últimas rodadas: "cru, com
+o hover padrão igual aos outros botões, sem cores, sem arco-íris".
+
+- **O hover é o dos outros pesos**: o disco de `button-fill` nascendo sob o
+  ponteiro, na cor de `--primary-hover`, em `--duration-slow` com
+  `--ease-emphasized`. O `primary` voltou a `PESOS_COM_PONTEIRO`, porque o
+  disco lê `--button-mx`/`--button-my`.
+- **O fundo continua em `padding-box`** (a `bg-clip-padding` da base), e não em
+  `border-box` como no `secondary`: é o vão de 1px da borda transparente que
+  desenha a emenda do primário no `ButtonGroup`.
+- **Saíram** `@utility primary-wash`, `@property --button-wash`,
+  `@property --button-breathe`, `@keyframes button-breathe`,
+  `--button-glow-strength` nos dois temas e `scripts/primary-wash-contrast.mjs`
+  — sem cor por baixo do rótulo, não há o que medir: o texto fica sobre o
+  preto (o branco) do botão ou sobre `--primary-hover`, que escurece nos dois
+  temas na direção do contraste.
+- `button-primary.test.ts`: os testes do brilho viraram os do disco, e o 5
+  cobra que nem a lava nem o brilho voltem. `button-touch-response.test.ts`
+  conta cinco pesos que preenchem.

@@ -49,9 +49,7 @@ const fonte = (nome: string) =>
 
 /** As classes de cada peça que veste a marca. */
 const PORTADORES = {
-  "button/brand": buttonVariants({ variant: "brand" }),
   "button/brandOutline": buttonVariants({ variant: "brandOutline" }),
-  "badge/brand": badgeVariants({ variant: "brand" }),
   "checkbox/brand": checkboxVariants({ variant: "brand" }),
   "radio/brand": radioVariants({ variant: "brand" }),
   "radio-group/brandCard": radioGroupItemVariants({ variant: "brandCard" }),
@@ -87,9 +85,10 @@ describe("contorno de marca", () => {
     // `::before` a `-z-10` e o esconde. A régua é o estado em que o contorno
     // aparece.
     //
-    // No `Button` e no `Badge` a marca está sempre acesa, então o elemento não
-    // pinta em repouso — nenhum `bg-` sem pseudo.
-    for (const nome of ["button/brand", "button/brandOutline", "badge/brand"] as const) {
+    // No `brandOutline` a marca está sempre acesa, então o elemento não pinta
+    // em repouso — nenhum `bg-` sem pseudo. (O `Badge` e o `Button brand`
+    // saíram desta família: hoje são do brilho, e a asserção 10 os cobra.)
+    for (const nome of ["button/brandOutline"] as const) {
       expect(PORTADORES[nome].split(/\s+/).filter(pinta), nome).toEqual([])
     }
 
@@ -549,5 +548,23 @@ describe("contorno de marca", () => {
     // O `overflow-hidden` da base tem de ter perdido a disputa, não coexistido.
     expect(cartao).not.toContain("overflow-hidden")
     expect(fonte("card")).toMatch(/useBrandGlow\(variant === "brand"\)/)
+
+    // A terceira: o `Badge`, que era do contorno até o dono o querer neutro.
+    // Em repouso é um chip `muted`; o núcleo do anel é a mesma cor, senão a
+    // região que a máscara apaga lê como outra superfície. E o halo sempre
+    // aceso do contorno não pode sobreviver ao lado do brilho.
+    const chip = cn(badgeVariants({ variant: "brand" })).split(/\s+/)
+    for (const c of ["brand-rainbow-image", "brand-glow", "relative", "isolate", "bg-muted", "[--brand-glow-core:var(--muted)]", "[--brand-glow-opacity:1]"]) {
+      expect(chip, c).toContain(c)
+    }
+    expect(chip.join(" ")).not.toMatch(/after:blur|--brand-fill/)
+    expect(fonte("badge")).toMatch(/useBrandGlow<HTMLSpanElement>\(variant === "brand"\)/)
+
+    // A quarta: o `Button brand` (rodada 145), neutro sobre o `secondary`.
+    const botao = cn(buttonVariants({ variant: "brand" })).split(/\s+/)
+    for (const c of ["brand-rainbow-image", "brand-glow", "relative", "isolate", "bg-secondary", "[--brand-glow-core:var(--secondary)]"]) {
+      expect(botao, c).toContain(c)
+    }
+    expect(fonte("button")).toMatch(/useBrandGlow<HTMLButtonElement>\(variant === "brand"\)/)
   })
 })

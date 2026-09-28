@@ -4,6 +4,7 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
+import { composeRefs, useBrandGlow } from "@/hooks/use-brand-glow"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
@@ -30,83 +31,46 @@ const buttonVariants = cva(
       // peso, e nenhuma tela do app chegou a usá-los. Estado de sucesso e de
       // atenção continua sendo trabalho do `Badge` e do `Alert`.
       variant: {
-        // **O primário é chapado, e acende em lava sob o cursor** (rodada 98).
-        // Em repouso é só o preenchimento — sem contorno, plinto, luz, véu ou
-        // sombra: ele foi tecla da rodada 78 à 97 e o dono pediu o relevo
-        // inteiro fora. Sob o cursor, o arco-íris da marca aparece **atrás de
-        // um vidro** da cor do botão, focado na ponta do mouse e drifting como
-        // lava-lamp; a receita inteira mora em `@utility primary-wash`, no
-        // `globals.css`, e o que a variante faz é ligá-la.
+        // **O primário é cru** (rodada 148): o preenchimento preto (branco no
+        // escuro) e o hover dos outros pesos — o disco de `button-fill` nascendo
+        // sob o ponteiro, na cor de `--primary-hover` —, sem cor, sem
+        // arco-íris. Da rodada 98 à 147 ele acendeu a marca no cursor (a lava
+        // atrás de um vidro e depois o brilho do Shiny Button), e o dono pediu
+        // tudo fora.
         //
-        // **Quem liga é `--button-wash`** (uma `@property` tipada, 0 → 1) no
-        // cursor, no toque e com o popover aberto — e não um `hover:bg-*`: o
-        // fundo não troca de cor, o vidro afina. Por isso a lista de
-        // `transition` é restatada inteira com `--button-wash` no fim: o
-        // `tailwind-merge` troca a classe, não acrescenta.
-        //
-        // **A órbita pausa em vez de desligar** (`animation-play-state`), a
-        // decisão do `brand`: ligar a animação só dentro do `hover:` faria a
-        // lava saltar ao ponto zero a cada entrada.
-        //
-        // **Nada aqui é pseudo-elemento.** O `ButtonGroup` esconde o `::before`
-        // do primário, e um `::after` em `z` negativo fica atrás do próprio
-        // `background`. As cinco camadas são `background-image` do elemento.
-        //
-        // A posição do ponteiro chega por `--button-mx`/`--button-my`, escritas
-        // pelo `Button` em `onPointerMove`/`onPointerDown` (ver abaixo).
-        //
-        // **O clique não tem animação própria**: afunda 1px pelo
-        // `active:translate-y-px` da base, como `secondary` e `tertiary`.
+        // O fundo fica recortado no `padding-box` (a `bg-clip-padding` da
+        // base), e não em `border-box` como no `secondary`: é o vão de 1px da
+        // borda transparente que desenha a emenda do primário no `ButtonGroup`.
         // Enviando (`aria-busy`) a opacidade fica cheia, para "salvando" não
         // ler como "desabilitado".
-        //
-        // A rodada 90 recusou arco-íris no primário, e o `AGENTS.md` escrevia
-        // que ele não o veste. O dono pediu de novo com outro desenho — chapado,
-        // texto na cor do sistema, cor atrás de vidro com teto medido por
-        // `scripts/primary-wash-contrast.mjs` — e a decisão é dele.
         primary:
-          "primary-wash bg-primary text-primary-foreground hover:[--button-wash:1] active:[--button-wash:1] aria-expanded:[--button-wash:1] [animation-play-state:paused] hover:[animation-play-state:running] active:[animation-play-state:running] transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-wash] aria-busy:disabled:opacity-100",
-        // A tecla de marca. Três camadas, e a ordem delas é a razão do
-        // arranjo: o botão em si não pinta nada (`isolate` o faz raiz de
-        // empilhamento; a base já traz `border-transparent`), o `::before`
-        // é o preenchimento **e** o contorno — o preto em `padding-box` sobre
-        // o arco-íris em `border-box`, com 1px de borda transparente entre
-        // os dois, que é por onde o arco-íris aparece —, e o `::after` é o
-        // halo: o mesmo degradê, borrado, uma camada abaixo.
+          "button-fill bg-primary text-primary-foreground [--button-fill-color:var(--primary-hover)] hover:[--button-fill:100%] active:[--button-fill:100%] aria-expanded:[--button-fill:100%] transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-fill] duration-(--duration-slow) ease-(--ease-emphasized) aria-busy:disabled:opacity-100",
+        // **O CTA de marca é neutro, e a borda acende de perto** (rodada 145).
+        // Em repouso é a superfície do `secondary` com o fio do sistema; o
+        // arco-íris acende num arco da borda conforme o ponteiro se aproxima e
+        // viaja até ele — a família do brilho, a mesma do `Alert`, do `Card` e
+        // do `Badge` (`@utility brand-glow` + `useBrandGlow`). Até aqui ele era
+        // a tecla preta do `primary` com o degradê em 1px e um halo borrado
+        // sempre aceso; o dono o quis neutro, como o `Badge`.
         //
-        // Por que não `bg-primary` no próprio botão: numa raiz de
-        // empilhamento o fundo do elemento pinta **antes** dos filhos de
-        // `z-index` negativo, então um `::before` a `-z-10` cobriria a tecla
-        // em vez de ficar atrás dela. O preenchimento vai para o pseudo por
-        // isso, e o hover troca a variável que ele lê.
+        // **O fundo não muda no cursor, e é mecânico.** Com `isolate` o anel
+        // (`::before` a `-z-10`) pinta **por cima** do fundo do elemento, e o
+        // núcleo chapado dele cobre a fatia do botão onde o arco está aceso.
+        // Um hover que troca o fundo — o disco do `button-fill` ou uma cor
+        // nova — sumiria justamente na fatia virada para o ponteiro. A
+        // resposta ao cursor é o próprio brilho, e o clique afunda 1px pela
+        // base. `--brand-glow-core` é o `--secondary` pela mesma razão: tem de
+        // ser a cor que está atrás dele.
         //
-        // Sem grão: numa área de 32px o grão é ruído, não textura. Sem a
-        // sombra da tecla: o contorno arco-íris já é a aresta.
-        //
-        // **O contorno não gira mais.** Da rodada 83 à 99 ele carregava
-        // `brand-rainbow-live` com `[--brand-spin:6s]`, pausada em repouso e
-        // correndo sob o cursor. O dono recusou o giro no sistema inteiro, e
-        // ele saiu daqui junto com `--brand-angle` e `--brand-spin`. O botão
-        // **não ficou inerte**: o halo continua acendendo no cursor
-        // (`hover:after:opacity-80`) e o preenchimento continua trocando de
-        // `--brand-fill`. O movimento do arco-íris hoje é a lava — no primário
-        // pela `@utility primary-wash`, em região pela `@utility brand-lava`.
-        //
-        // `brand-rainbow-image` **não é redundante**, e não se apaga: ela é
-        // quem declara `--brand-rainbow` no botão, e os dois pseudo-elementos
-        // herdam daqui o valor já substituído. Um `var()` dentro de uma
-        // propriedade personalizada é resolvido onde ela é **declarada**, e foi
-        // por isso que o degradê desceu do `:root` na rodada 88. Ver
-        // `@utility brand-rainbow-image` em `globals.css`.
+        // Intensidade cheia (`--brand-glow-opacity: 1`), a do `Badge`: numa
+        // caixa de 32px o arco tem poucos pixels. Sem ponteiro fino (telefone)
+        // não há brilho, e o botão fica o neutro. `brand-rainbow-image` declara
+        // `--brand-rainbow` no elemento, e não se apaga. Um por tela.
         brand:
-          "brand-rainbow-image relative isolate text-primary-foreground [--brand-fill:var(--primary)] hover:[--brand-fill:var(--primary-hover)] active:[--brand-fill:var(--primary-hover)] aria-expanded:[--brand-fill:var(--primary-hover)] before:absolute before:-inset-px before:-z-10 before:rounded-[inherit] before:border before:border-transparent before:[background:linear-gradient(var(--brand-fill),var(--brand-fill))_padding-box,var(--brand-rainbow)_border-box] before:transition-[background] before:duration-(--duration-fast) after:absolute after:-inset-1 after:-z-20 after:rounded-[inherit] after:bg-(image:--brand-rainbow) after:opacity-50 after:blur-md after:transition-opacity after:duration-(--duration-fast) hover:after:opacity-80 active:after:opacity-80 aria-busy:disabled:opacity-100",
-        // A mesma tecla de marca **sem o halo**: só o contorno de arco-íris.
-        // É o `brand` para onde ele não cabe — uma barra, um cabeçalho, um par
-        // de ações — porque o halo do `::after` sangra 4px para fora da caixa e
-        // encosta no vizinho.
-        //
-        // Ele não é um degrau a menos na escada: continua fora dela, e
-        // continua **um por tela**. O que muda é quanto espaço ele pede.
+          "brand-rainbow-image brand-glow relative isolate border-border bg-secondary text-secondary-foreground [--brand-glow-core:var(--secondary)] [--brand-glow-opacity:1] aria-busy:disabled:opacity-100",
+        // A tecla preta com o arco-íris em 1px, parada — o desenho que o
+        // `brand` tinha até a rodada 145, sem o halo. Fica para quem quer a
+        // marca sempre acesa num CTA, sem depender do ponteiro.
         brandOutline: "brand-rainbow-image relative isolate text-primary-foreground [--brand-fill:var(--primary)] hover:[--brand-fill:var(--primary-hover)] active:[--brand-fill:var(--primary-hover)] aria-expanded:[--brand-fill:var(--primary-hover)] before:absolute before:-inset-px before:-z-10 before:rounded-[inherit] before:border before:border-transparent before:[background:linear-gradient(var(--brand-fill),var(--brand-fill))_padding-box,var(--brand-rainbow)_border-box] before:transition-[background] before:duration-(--duration-fast) aria-busy:disabled:opacity-100",
 
         // Sem borda visível — e sem o anel vazado que havia antes. O culpado
@@ -220,30 +184,40 @@ const buttonVariants = cva(
       // meia-volta lê como uma volta inteira. É `rotate`, a propriedade
       // independente do Tailwind v4 — ela não disputa com o `translate` do
       // clique —, e o bloco global de movimento reduzido corta a transição.
+      // A forma. `rounded` é o canto do sistema (`rounded-lg`, da base);
+      // `pill` é a borda 100% arredondada. Na pílula o recuo lateral sobe meio
+      // degrau (compostas abaixo): a curva come o canto, e com o recuo do
+      // retângulo o rótulo fica espremido contra ela. Nos `icon-*` a pílula é
+      // um círculo.
+      shape: {
+        rounded: "",
+        pill: "rounded-full",
+      },
       iconMotion: {
         none: "",
         spin: "[&_svg]:transition-[rotate] [&_svg]:duration-(--duration-spring) [&_svg]:ease-(--ease-spring) hover:[&_svg]:rotate-180 active:[&_svg]:rotate-180",
       },
     },
+    compoundVariants: [
+      { shape: "pill", size: "xs", class: "px-2.5" },
+      { shape: "pill", size: "sm", class: "px-3" },
+      { shape: "pill", size: "md", class: "px-3.5" },
+      { shape: "pill", size: "lg", class: "px-4" },
+      { shape: "pill", size: "xl", class: "px-4.5" },
+    ],
     defaultVariants: {
       variant: "primary",
       size: "md",
+      shape: "rounded",
       iconMotion: "none",
     },
   }
 )
 
 /**
- * A ordem padrão da pilha da lava — a mesma da `@utility primary-wash`,
- * intercalando frio e quente para nenhuma família tampar a outra. O `Button`
- * a gira a cada entrada do cursor.
- */
-const LAVA_STOPS = ["teal", "coral", "indigo", "amber", "magenta", "green", "violet", "blue"] as const
-
-/**
- * Quem segue a ponta do mouse: o primário, pela lava, e os quatro pesos que
- * preenchem a partir do ponteiro (rodada 99). `brand`, `brandOutline` e `link`
- * têm o próprio hover e não leem `--button-mx`.
+ * Quem segue a ponta do mouse: os cinco pesos que preenchem a partir do
+ * ponteiro (rodada 99; o primário entrou na 148, quando ficou cru). `brand`,
+ * `brandOutline` e `link` têm o próprio hover.
  */
 const PESOS_COM_PONTEIRO = new Set(["primary", "secondary", "tertiary", "outline", "destructive"])
 
@@ -251,15 +225,18 @@ function Button({
   className,
   variant = "primary",
   size = "md",
+  shape,
   iconMotion,
   asChild = false,
   children,
+  ref,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
   }) {
   const Comp = asChild ? Slot.Root : "button"
+  const glowRef = useBrandGlow<HTMLButtonElement>(variant === "brand")
 
   // A lava do primário e o disco dos outros pesos seguem a ponta do mouse: a posição vai para o CSS como
   // `--button-mx`/`--button-my`, em px relativos à caixa, por `setProperty` —
@@ -276,31 +253,11 @@ function Button({
           el.style.setProperty("--button-my", `${e.clientY - r.top}px`)
         }
       : undefined
-  // E a cada entrada a lava começa por outra cor. Todos os blobs cobrem o
-  // ponteiro, então quem lê no ponto de entrada é a camada de cima da pilha —
-  // fixa no CSS, ela seria sempre a mesma. As oito cores da pilha são
-  // variáveis (`--button-blob-1..8`, padrão intercalado na utility), e aqui a
-  // atribuição gira por um sorteio: as mesmas oito paradas, em outra ordem.
-  //
-  // **Nunca a mesma ordem duas vezes seguidas.** Um sorteio puro repete a
-  // anterior 1 vez em 8, e o pedido é "sempre uma cor diferente": o passo é
-  // sorteado entre 1 e 7 e somado à rotação anterior, guardada no elemento.
-  const girarLava = (el: HTMLElement) => {
-    const anterior = Number(el.dataset.lavaR ?? 0)
-    const passo = 1 + Math.floor(Math.random() * (LAVA_STOPS.length - 1))
-    const r = (anterior + passo) % LAVA_STOPS.length
-    el.dataset.lavaR = String(r)
-    LAVA_STOPS.forEach((_, k) => {
-      const parada = LAVA_STOPS[(k + r) % LAVA_STOPS.length]
-      el.style.setProperty(`--button-blob-${k + 1}`, `var(--brand-${parada})`)
-    })
-  }
   const { onPointerMove, onPointerDown, onPointerEnter, ...resto } = props
   const ponteiro = seguirPonteiro
     ? {
         onPointerEnter: (e: React.PointerEvent<HTMLButtonElement>) => {
           onPointerEnter?.(e)
-          if (variant === "primary") girarLava(e.currentTarget)
           seguirPonteiro(e)
         },
         onPointerMove: (e: React.PointerEvent<HTMLButtonElement>) => {
@@ -344,9 +301,11 @@ function Button({
     <Comp
       data-slot="button"
       data-variant={variant}
+      ref={composeRefs(glowRef, ref)}
       data-size={size}
+      data-shape={shape ?? "rounded"}
       data-icon-motion={iconMotion ?? undefined}
-      className={cn(buttonVariants({ variant, size, iconMotion, className }))}
+      className={cn(buttonVariants({ variant, size, shape, iconMotion, className }))}
       {...resto}
       {...ponteiro}
     >

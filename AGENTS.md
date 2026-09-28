@@ -307,7 +307,7 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   rodada 118 os dois avisos — `Alert variant="brand"` e
   `AnnouncementBar variant="brand"`. **Há três
   famílias de peça de marca, e elas quebram por motivos diferentes**: a do
-  **contorno** (`Button`, `Badge`, os controles de escolha), em que o degradê
+  **contorno** (`Button brandOutline`, os controles de escolha), em que o degradê
   vive em 1px de `border-box` sobre um miolo chapado; a do
   **preenchimento** (`Progress variant="brand"` e `Slider variant="brand"`), em
   que ele preenche a barra e o que a liberta da invariante 3 é não haver rótulo
@@ -315,7 +315,9 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   rainbow do Fumadocs: o arco-íris translúcido **atrás** do texto, mascarado a
   partir do topo central e deslizando num laço de 20s (`@utility brand-flow`),
   **substituindo** o fio do `sticky`; e a do
-  **brilho**, no `Alert variant="brand"` e no `Card variant="brand"`, em que a
+  **brilho**, no `Alert variant="brand"`, no `Card variant="brand"`, no `Button variant="brand"` (rodada 145)
+  e, desde a rodada 144, no `Badge variant="brand"` (chip `muted` em repouso, com
+  `--brand-glow-core:var(--muted)`; era do contorno), em que a
   caixa fica neutra em repouso e o arco-íris acende num **arco da borda**
   conforme o ponteiro passa pela tela, com um borrão de 2px. Desde a rodada
   133 ele é primitiva de marca: a pintura é a `@utility brand-glow` e o
@@ -337,8 +339,7 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   (1) A `@property --brand-glow-start` é **`inherits: true`**, ao contrário das
   outras quatro da casa: ela é lida num **pseudo-elemento**, e pseudo não herda
   propriedade registrada como `false` — medido, a `opacity` ficava em 0 com a
-  variável valendo 1. É por isso que o `Button` pode ser `false`: o
-  `primary-wash` mora no próprio elemento.
+  variável valendo 1. As `false` são lidas no próprio elemento.
   (2) **`z-index` negativo sem `isolate` desaparece** — o pseudo cai atrás do
   fundo de um ancestral; medido, invisível.
   (3) **Com `isolate` ele passa a pintar por cima do `bg-card`**, pela ordem de
@@ -472,7 +473,7 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   as oito paradas passam 3:1 (pior caso violeta 5,35); no claro quatro reprovam
   (pior caso lima **1,91**), e contra o `--muted` da faixa são cinco (1,60).
   **Não é um caso de 1.4.11**, e a razão é o papel: quem identifica o aviso é a
-  caixa mais o ícone, e a régua é acento — a categoria do halo do `Badge` e do
+  caixa mais o ícone, e a régua é acento — a categoria do halo do `Button` e do
   arco-íris do `Progress`. O caminho de reforço, se ela ler fraca no claro, é o
   que o `Progress` documenta (leito escuro), e lá foi recusado na tela.
   Arco-íris **sob texto** — num gráfico, num fundo de cartão, preenchendo um
@@ -541,11 +542,10 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   cursor no botão de marca). O dono o recusou inteiro na rodada 100, e saíram
   com ele `--brand-angle`, `@keyframes brand-rotate`, `--brand-spin` e a
   própria `brand-rainbow-live`. **O movimento da marca é a lava**: blobos de
-  cor transitando dentro da caixa — `primary-wash` no hover do primário, e
-  `brand-lava` em escala de região. E **a receita de uma não serve a outra**:
-  no botão o raio da órbita é `px` e o alfa pulsa, o que numa região faz a lava
-  sair de uma cor só e lavada; na `brand-lava` o raio é `%`, o núcleo é opaco
-  até 38% e não há pulso nenhum — quem muda a cor é a sobreposição andando.
+  cor transitando dentro da caixa, a `brand-lava` em escala de região — o raio
+  é `%`, o núcleo é opaco até 38% e não há pulso nenhum, quem muda a cor é a
+  sobreposição andando. (O hover do primário foi lava até a rodada 146; hoje o
+  primário é cru, ver o `Button`.)
   O degradê interpola **`in oklch shorter hue`**, e isso é o conserto do fio que
   se via cortando o campo: em sRGB a travessia magenta→coral gastava 36,1° de
   matiz a cada 5% da largura contra 9,0° no azul (razão 4,01×), e em oklch o
@@ -839,52 +839,21 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
 
 ### Component rules
 
-- **`Badge`**: `variant` (forma) + `tone` (cor) + `size` (`xs` | `sm` | `md`); as classes de chip moram no próprio `badge.tsx` e não se duplicam fora dele. **`variant` tem quatro valores**: `soft`, `outline`, `contrast` (a pílula grave — `primary` no claro, `secondary` no escuro, **sem inverter**; ali o `tone` não pinta superfície, fica só no dot) e `brand` (o arco-íris em contorno e halo, uma por tela). **`tone` tem oito** — `info` entrou na rodada 89, e ele já era usado sem existir: duas telas escreviam `tone="neutral"` e anulavam a tinta com `tagChipInfo` por `className`. **O respiro e o corpo do ícone são do componente** (`gap-1` na base, `size-2.5` no `xs` e `size-3` nos outros), porque sete telas os escreviam à mão e uma delas usava `mr-1` por não haver `gap` nenhum; o conjunto é sempre `16/solid`. **`BadgeDot` é o ponto de estado**, com `pulse` para o que acontece agora e sem ele para o que só é relatado — a cor sai de `--badge-dot`, que o `tone` publica. Ele é `animate-ping` e **não** `animate-pulse`, de propósito: o bloco global de `prefers-reduced-motion` isenta `spin` e `pulse` do corte, e um ponto decorativo não tem a desculpa do spinner.
+- **`Badge`**: `variant` (forma) + `tone` (cor) + `size` (`xs` | `sm` | `md`); as classes de chip moram no próprio `badge.tsx` e não se duplicam fora dele. **`variant` tem quatro valores**: `soft`, `outline`, `contrast` (a pílula grave — `primary` no claro, `secondary` no escuro, **sem inverter**; ali o `tone` não pinta superfície, fica só no dot) e `brand` (um chip neutro, `muted`, cuja borda acende em arco-íris conforme o ponteiro se aproxima — a família do brilho, com `useBrandGlow`; uma por tela). **`tone` tem oito** — `info` entrou na rodada 89, e ele já era usado sem existir: duas telas escreviam `tone="neutral"` e anulavam a tinta com `tagChipInfo` por `className`. **O respiro e o corpo do ícone são do componente** (`gap-1` na base, `size-2.5` no `xs` e `size-3` nos outros), porque sete telas os escreviam à mão e uma delas usava `mr-1` por não haver `gap` nenhum; o conjunto é sempre `16/solid`. **`BadgeDot` é o ponto de estado**, com `pulse` para o que acontece agora e sem ele para o que só é relatado — a cor sai de `--badge-dot`, que o `tone` publica. Ele é `animate-ping` e **não** `animate-pulse`, de propósito: o bloco global de `prefers-reduced-motion` isenta `spin` e `pulse` do corte, e um ponto decorativo não tem a desculpa do spinner.
 - **`Button` — a hierarquia é uma escada, e ela desce em peso visual**:
   `primary` preenche de preto (branco no escuro), `secondary` preenche de
-  cinza, `tertiary` não preenche nada. **O `primary` é chapado, e acende em
-  lava sob o cursor** (rodada 98): em repouso só o preenchimento — sem contorno,
-  plinto, luz, véu ou sombra; ele foi tecla da rodada 78 à 97 e o dono pediu o
-  relevo inteiro fora, e os seis tokens da tecla saíram com ela. Sob o cursor, o
-  arco-íris da marca aparece **atrás de um vidro da cor do botão** (branco no
-  escuro, preto no claro), focado na ponta do mouse — fino no ponteiro, grosso
-  nas bordas, mais uma **névoa** interna da cor do botão na borda (`box-shadow`
-  ligado pelo wash, transparente em repouso) — com oito blobs, uma parada da
-  marca cada, croma ×1,7 e claridade igualada por tema (`--button-lava-l`),
-  orbitando o ponteiro como lava-lamp e **respirando** (opacidade em `pow(sin, 3)`,
-  fase própria, 0,12 a 1 — sem isso o blob do topo cobre o ponteiro o tempo todo
-  e a cor sob o cursor não muda); a cor de cada camada é variável
-  (`--button-blob-1..8`) e o `Button` gira a ordem a cada `pointerenter` (nunca a mesma duas vezes seguidas), para a
-  lava não começar sempre pela mesma cor — a camada de cima é a que lê sob o
-  ponteiro. A receita
-  mora em `@utility primary-wash` (cinco camadas de `background-image` no
-  próprio botão, **nunca** pseudo-elemento: o `ButtonGroup` esconde o `::before`
-  do primário, e um `::after` em `z` negativo fica atrás do `background`). Quem
-  liga é `--button-wash`, uma `@property` tipada 0 → 1 no cursor, no toque e com
-  o popover aberto — não `opacity`, que apagaria o rótulo, e não `hover:bg-*`: o
-  fundo não muda de cor. A órbita **pausa** em vez de desligar. A posição chega
-  em `--button-mx`/`--button-my`, escritas pelo `Button` por `setProperty`, sem
-  estado. **O clique não tem animação própria**: afunda 1px pela base. **Isto
-  inverte a rodada 90 de propósito**: lá o dono recusou arco-íris no primário
-  (texto branco sobre cor cheia, 4,87:1); aqui o botão é chapado, o texto é o
-  do sistema e a cor fica atrás do vidro — `scripts/primary-wash-contrast.mjs`
-  varre 192 células, piso 4,5. **A lava tem três controles, e os três são token
-  por tema** — `--button-lava-l` (claridade), `--button-lava-c` (croma, que era
-  `1.7` cravado nas oito camadas) e o par `--button-glass-min`/`-max` (a lâmina,
-  que era 22%/44% nos dois temas). São por tema porque **a gangorra é de tema**:
-  no claro o botão é preto e o rótulo branco, no escuro o contrário, e isso
-  inverte o que cada controle custa. No claro a claridade é gangorra pura (blob
-  claro aparece e apaga o texto, blob escuro salva o texto e some no botão) mas
-  **compra folga para os outros dois**; no escuro ela **sobe** o contraste, e é o
-  croma que o gasta, porque saturar um blob claro o escurece — a 0,88 de luz, o
-  croma a 2,2 reprova com 4,24 enquanto 2,0 dá 5,12. Acima de ~3 o croma para de
-  render: as paradas batem no limite do sRGB e são recortadas. Hoje o claro é
-  **0,46 / 3 / 9%–20%** (pior caso **4,72**, de 5,55 quando era 0,56 / 1,7 /
-  22%–44%) e o escuro **0,87 / 2 / 2%–6%** (pior caso **5,12**), e a razão
-  centro→borda segue acima de 2×, que é o que mantém o foco na ponta do mouse
-  em vez de uma mancha chapada. O
-  ritmo continua o da casa (`--duration-fast`, `--ease-out`), com `--button-wash`
-  na lista enumerada de transição. **Os outros quatro pesos que preenchem —
+  cinza, `tertiary` não preenche nada. **O `primary` é cru** (rodada 148): o
+  preenchimento preto (branco no escuro) e o hover dos outros pesos — o disco
+  de `button-fill` na cor de `--primary-hover` —, sem cor e sem arco-íris. Da
+  rodada 78 à 97 ele foi tecla (relevo, plinto, luz; os seis tokens saíram) e
+  da 98 à 147 acendeu a marca no cursor: a lava atrás de um vidro e, na 147, o
+  brilho do Shiny Button subindo da base. O dono pediu tudo fora, e com eles
+  saíram `@utility primary-wash`, `--button-wash`, `--button-breathe`,
+  `--button-glow-strength` e `scripts/primary-wash-contrast.mjs`;
+  `button-primary.test.ts` cobra que não voltem. O fundo continua recortado no
+  `padding-box` (a `bg-clip-padding` da base), e não em `border-box` como no
+  `secondary`: é o vão de 1px da borda transparente que desenha a emenda do
+  primário no `ButtonGroup`. **Os pesos que preenchem — o `primary` e
   `secondary`, `tertiary`, `outline`, `destructive` — não trocam de cor no
   cursor** (rodada 99): a cor do hover preenche o botão num disco que nasce sob o
   ponteiro (`@utility button-fill`, `background-image` com raio em
@@ -923,17 +892,19 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   traço 5,5px abaixo do texto, porque o eixo `size` só declara recuo lateral e
   a caixa de conteúdo tem a altura inteira. `bg-origin-content` é o que mantém
   o traço na largura do **texto** e não do botão. Ver as rodadas 91 a 94.
-  E `brand` é a tecla do `primary` com o arco-íris em
-  volta (contorno de 1px no `::before`, halo no `::after`, o botão em si sem
-  fundo, porque numa raiz de empilhamento o fundo pinta antes dos filhos de
-  `z` negativo). Ele girava uma volta a cada 6s sob o cursor, e o giro saiu na
-  rodada 100; o botão não ficou inerte — o halo continua acendendo no cursor e
-  o preenchimento continua trocando de `--brand-fill`. **`brandOutline` é o mesmo sem o halo**,
-  para onde ele não cabe: o `::after` sangra 4px para fora da caixa e encosta
-  no vizinho numa barra ou num par de ações. Os dois: **um por tela**, para o
-  CTA de marca. O `primary` veste o arco-íris de outro jeito — como
-  lava atrás de um vidro, só no cursor (rodada 98) —, e o `brand` continua
-  sendo contorno e halo, a peça de marca de uma por tela. **Não existe `variant="default"` nem `variant="ghost"`**
+  E `brand` é, desde a rodada 145, o **CTA neutro com o brilho na borda**:
+  superfície do `secondary` com o fio do sistema, e o arco-íris acendendo num
+  arco da borda conforme o ponteiro se aproxima (`@utility brand-glow` +
+  `useBrandGlow`, a família do `Alert`, do `Card` e do `Badge`). **O fundo não
+  muda no cursor, e é mecânico**: com `isolate` o anel pinta por cima do fundo,
+  e um hover de fundo sumiria na fatia virada para o ponteiro. Até a 145 ele
+  era a tecla do `primary` com contorno de 1px e halo borrado, e esse desenho
+  ficou no **`brandOutline`** (sem o halo): a tecla preta com o arco-íris
+  sempre aceso, para quando a marca não pode depender do ponteiro. Os dois:
+  **um por tela**, para o CTA de marca. O `primary` não veste arco-íris
+  (rodada 148).
+  **`shape`** é a forma (`rounded`, o padrão, ou `pill`, 100% arredondado, com
+  meio degrau a mais de recuo lateral; nos `icon-*` vira círculo) — rodada 145. **Não existe `variant="default"` nem `variant="ghost"`**
   — viraram `primary` e `tertiary`, para o nome dizer o degrau; os dois saíram
   do tipo, então o compilador acusa quem os escrever. **`success` e `warning`
   também saíram**: nomeavam um estado, não um peso, e nenhuma tela do app
