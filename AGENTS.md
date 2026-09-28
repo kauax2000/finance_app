@@ -810,7 +810,29 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   cada linha que o cmdk *monta* subir escalonada; `0s` por padrão, então o
   `Combobox` não se mexe. Trocar de vista remonta o miolo por `key`, e um
   evento `input` sintético devolve a paleta ao ocioso — trocar o escopo não
-  digita nada. O campo da paleta é `CommandInput size="lg"` (36); `md` (32) continua o padrão, o gatilho do cabeçalho. **E o ponteiro
+  digita nada. **Campo, placa e legenda são três superfícies** (rodadas 140, 141 e
+  143): a **pilha** é a variante `panel` do `Command`, e é ela que o
+  `CommandDialog`, o `Combobox` e a paleta solta montam; a raiz é uma coluna
+  que não pinta, com a **pílula de busca** em
+  cima (o `CommandInput` lê o `CommandDialogContext` e pinta a própria
+  superfície), a **placa** da lista no meio (um embrulho do `CommandList`,
+  porque a lista é o elemento mascarado; a faixa do topo zera nele) e o
+  `dock` — as três **sem sombra própria**, no mesmo plano (e a pílula leva o
+  **feixe** da rodada 142: o preset `line` do `border-beam` portado para
+  `@utility command-beam`, correndo pela base só com o campo vazio e **só no `CommandDialog`** — exceção
+  nomeada ao campo sem marca, que vale para os oito controles de formulário), com **uma sombra só atrás
+  do conjunto** (`::before` da coluna; `box-shadow`, nunca `filter`, que seria
+  raiz de fundo) — — cápsulas de vidro soltas (`CommandDock`, `CommandDockItem`, o último
+  filho da pilha — não há mais prop `dock`), o padrão novo do iOS. Irmãs porque um ancestral com `backdrop-filter` é raiz
+  de fundo e o borrão das cápsulas não veria a página. São legendas, não
+  botões, e somem no toque. `CommandFooter` e `CommandHint` saíram. Na pilha a linha tem 36 e as peças
+  dela são do componente — `CommandItemIcon` (caixa de 24), `CommandItemMeta`
+  (o lado direito) e `CommandItemArrow` (a seta de ir) —, junto com o recuo
+  de 8 da placa e o respiro dos grupos; a tela não escreve nada disso. O
+  `Combobox` abre a pilha na densidade de dropdown (`density="menu"`:
+  pílula de 32, linhas de 28, o recuo dos menus, 4px entre as peças) num
+  `PopoverContent surface="none"`, o eixo novo
+  do `Popover` (`plate` é o padrão, e nada muda para os outros). O campo da paleta é `CommandInput size="lg"` (36); `md` (32) continua o padrão, o gatilho do cabeçalho. **E o ponteiro
   conta como navegação** no modo ocioso
   (`onPointerMoveCapture` no hook): sem isso a seleção do hover era tratada
   como auto-seleção e nenhuma linha acendia. `command-reveal.test.ts` tranca.

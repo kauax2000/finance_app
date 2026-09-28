@@ -256,6 +256,10 @@ export default function ComboboxDoc() {
         papel: o Enter fica com a lista e não envia o formulário.
       </DocNote>
 
+      <DocNote title="A lista é a pilha do Command">
+        Aberto, o <code>Combobox</code> mostra o mesmo desenho da paleta: a <strong>pílula</strong> de busca — sem o feixe, que é só do diálogo — e a <strong>placa</strong> com a lista, soltas e a 4px uma da outra — com as medidas de um dropdown (<code>density=&quot;menu&quot;</code>): pílula de 32, linhas de 28, o recuo e o respiro dos menus. O popover em volta não pinta (<code>surface=&quot;none&quot;</code>) — placa em volta de placa seria a placa dupla que a régua proíbe. Ele continua ancorado ao gatilho, com a largura dele, e abre com o primeiro valor realçado, como um select.
+      </DocNote>
+
       <DocNote title="Não confundir com FormPickerPopover">
         Aquele resolve <em>onde</em> o painel aparece; este resolve busca,
         teclado e a semântica de listbox.

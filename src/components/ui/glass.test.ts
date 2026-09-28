@@ -357,17 +357,25 @@ describe("a superfície de vidro", () => {
         const base = cva.slice(0, cva.indexOf("variants:"))
         expect(base, "a base do Command pinta").not.toContain("menuPanelSurfaceClassName")
         expect(base, "a base do Command tem tinta").not.toMatch(/\bbg-popover/)
-        expect(cva, "a variante panel perdeu a placa").toMatch(/panel:\s*menuPanelSurfaceClassName/)
-        // E o casco do `CommandDialog` pinta — sem neutralizador nenhum. (O
-        // `bg-transparent` do campo de busca, mais abaixo, é outro elemento.)
+        // Desde a rodada 143 a variante `panel` é a pilha: a raiz não pinta, e
+        // quem pinta são a pílula e a placa (asserções abaixo).
+        expect(cva, "a variante panel voltou a pintar").not.toMatch(/panel:\s*menuPanelSurfaceClassName/)
+        // E o `CommandDialog` não neutraliza nada. Desde a rodada 141 ele é uma
+        // coluna que **não pinta** — e não por um `bg-transparent`, mas por não
+        // declarar fundo nenhum. (O `bg-transparent` do `<input>`, mais abaixo,
+        // é outro elemento.)
         const dialogo = paleta.slice(paleta.indexOf("function CommandDialog"), paleta.indexOf("function CommandInput"))
         expect(dialogo.length, "bloco do CommandDialog não achado").toBeGreaterThan(0)
         expect(dialogo).not.toMatch(/\bbg-transparent\b/)
-        // E pinta o tom do popover, nos três estados da régua — a paleta é uma
-        // superfície de comandos, não um diálogo.
-        // Ele veste a tinta da régua em vez de repetir a string: os três
-        // estados são os da asserção 23, e uma cópia aqui divergiria dela.
-        expect(dialogo).toContain("menuPanelTintClassName")
+        // Quem pinta, no diálogo, são as duas faixas: a pílula de busca e a
+        // placa da lista, cada uma com o tom do popover nos três estados da
+        // régua — a paleta é uma superfície de comandos, não um diálogo. Elas
+        // vestem a tinta da régua em vez de repetir a string: os três estados
+        // são os da asserção 23, e uma cópia aqui divergiria dela.
+        const campo = paleta.slice(paleta.indexOf("function CommandInput"), paleta.indexOf("function CommandScope"))
+        const lista = paleta.slice(paleta.indexOf("function CommandList"), paleta.indexOf("function CommandEmpty"))
+        expect(campo, "a pílula de busca não pinta").toMatch(/naPilha[\s\S]*menuPanelTintClassName/)
+        expect(lista, "a placa da lista não pinta").toMatch(/command-dialog-panel[\s\S]*menuPanelTintClassName/)
         expect(paleta).not.toContain("supports-backdrop-filter:dark:bg-transparent")
         expect(paleta).not.toContain("reduced-transparency:bg-transparent")
     })
@@ -379,7 +387,11 @@ describe("a superfície de vidro", () => {
         // `border` contra o `rounded-lg` e o `ring` de todas as outras.
         for (const nome of ["select", "popover", "hover-card", "command", "tooltip", "chart"] as const) {
             const src = semComentariosDe(`src/components/ui/${nome}.tsx`)
-            expect(src, `${nome} precisa vestir a régua`).toContain("menuPanelSurfaceClassName")
+            // O `command` pinta por peças desde a rodada 143 (a pílula e a
+            // placa da pilha), e veste a **tinta** da régua, que é a metade
+            // da receita que as peças soltas usam.
+            const regua = nome === "command" ? "menuPanelTintClassName" : "menuPanelSurfaceClassName"
+            expect(src, `${nome} precisa vestir a régua`).toContain(regua)
             expect(src, `${nome} tem cópia da superfície`).not.toMatch(
                 /rounded-lg[^"]*bg-popover[^"]*ring-foreground\/10/
             )

@@ -14310,3 +14310,237 @@ o degrau menor, e ela voltou a `md`; o `lg` fica no componente.
 
 **Ficou de fora:** `hover-card.tsx` usa `duration-` onde a casa usa
 `animation-duration-*`, notado, não mexido.
+
+### Rodada 140 — a legenda de teclado sai da paleta
+
+Primeira mudança de uma etapa no `CommandDialog`. As dicas de teclado (↑↓
+navegar, ⌫ voltar, ↵ abrir, esc fechar) moravam num `CommandFooter` dentro da
+placa. O dono pediu que saíssem para baixo do diálogo, no padrão novo do iOS
+da referência: cada uma na sua cápsula de vidro, soltas numa linha. Duas
+decisões foram dele: **são legendas, não botões**, e a disposição é a de
+sempre — navegar à esquerda, abrir e fechar à direita.
+
+**A estrutura mudou, e o motivo é o vidro.** A placa era o próprio
+`DialogContent`, com vidro e `overflow-hidden` no mesmo nó. Uma linha
+embaixo dela ou seria recortada, ou moraria dentro de um elemento com
+`backdrop-filter`, que é **raiz de fundo**: o borrão das cápsulas não
+enxergaria a página. Hoje o `CommandDialog` monta o `Content` do Radix como
+uma **coluna que não pinta** (`data-slot="command-dialog"`), com a placa
+(`command-dialog-panel`) e o `dock` como irmãos. Posição, largura, camada e
+animação são as de antes, e nenhum neutralizador foi escrito — a coluna
+simplesmente não tem fundo, e o `glass.test.ts` 24 passa sem mudança. O
+seletor que apaga o anel de foco do campo dentro do diálogo passou a ler
+`command-dialog`.
+
+**As peças:** `CommandDock` (a linha, `justify-between`, entrando 80ms depois
+da placa na mesma mola, e `pointer-coarse:hidden`, porque no toque não há
+teclado) e `CommandDockItem` (a cápsula, `rounded-full`, 32px, com o vidro
+dos menus). O `CommandFooter` continua para a paleta solta numa página.
+
+**Medido nos dois temas:** a linha fica 8px abaixo da placa e fora dela; as
+cápsulas encostam nas bordas da placa, cada uma com `backdrop-filter`
+próprio; o topo continua fixo ao filtrar, e a linha acompanha a base; dentro
+de uma camada entra "⌫ voltar"; o foco segue preso na paleta, Esc fecha, e
+com `pointer: coarse` a linha some. **Efeito colateral bom:** sem os 36px do
+rodapé, a raiz inteira — camadas e recentes — cabe na placa sem rolar.
+
+### Rodada 141 — o campo de busca vira uma pílula em cima da placa
+
+A segunda mudança da etapa. O dono pediu o campo de busca separado da placa,
+em cima dela, com as pontas 100% arredondadas como o gatilho do cabeçalho. A
+paleta em diálogo virou uma pilha de três superfícies: pílula, placa, legenda.
+
+**Não dava para embrulhar por fora.** O campo e a lista são peças do cmdk,
+filhas da raiz `Command`, e quem as escreve é o consumidor. A placa também
+**não podia** ir para a lista: ela é o elemento mascarado da dissolução, e o
+elemento mascarado não desenha nada — a máscara recortaria fundo, anel e
+sombra junto.
+
+**A saída é um contexto** (`CommandDialogContext`), dado pelo `CommandDialog`:
+- a raiz `Command` vira uma coluna que não pinta (`gap-2`, `overflow-visible`
+  para o anel e a sombra da pílula não serem recortados);
+- o `CommandInput` pinta a própria pílula (`rounded-full`, o vidro dos menus,
+  anel e sombra), sem o recuo da faixa e sem anel de foco;
+- o `CommandList` se embrulha na placa (`command-dialog-panel`) e zera a
+  faixa do topo nela, porque não há mais nada por cima do conteúdo;
+- fora do diálogo nada muda — medido no `Combobox`: canto de 10px, recuo de
+  8px, sem placa própria.
+
+**O teto da lista desconta a pílula e o respiro** (`--command-dialog-h` − 44),
+para a pilha caber na altura de antes. Medido nos dois temas: pílula de 36px
+alinhada às bordas da placa, 8px até a placa e 8px da placa até a legenda,
+cada superfície com `backdrop-filter` próprio, topo fixo ao filtrar, e escopo,
+Backspace duplo, hover e Esc funcionando. O `glass.test.ts` 24 passou a cobrar
+a tinta nas duas faixas, e não mais na casca.
+
+**As três superfícies ficaram sem sombra**, a pedido do dono: elas estão no
+mesmo plano, e a sombra (`shadow-lg` na pílula e na placa, `shadow-md` nas
+cápsulas) dizia que uma flutuava sobre a outra. Quem as separa da página é o
+anel de 1px e o vidro. Depois, com o aval do dono, voltou **uma sombra só,
+atrás das três** (`shadow-xl` num `::before` da coluna, em `z` negativo): o
+conjunto se levanta da página e as peças continuam no mesmo plano. É
+`box-shadow` e não `filter: drop-shadow`, porque um `filter` na coluna seria
+raiz de fundo e apagaria o vidro das três.
+
+**As três peças viraram um conjunto só no código**, com mais respiro: a
+legenda passou a morar **dentro** da raiz `Command`, depois do campo e da
+lista, e a raiz é a coluna das três, com `gap-3` (12px, eram 8). O `max-h`
+saiu da raiz — com a legenda dentro ele encurtaria a lista —, e o teto da
+lista continua descontando 44: com 48 a raiz aberta rolava 4px, medido; com
+44 a pilha cresce 4px e cabe inteira.
+
+**As teclas da legenda perderam a pastilha**, a pedido do dono: dentro de
+uma cápsula, a pastilha do `Kbd` era uma caixa dentro de outra caixa. Quem
+tira é o `CommandDockItem`, por seletor de descendente, e só ali — o `Kbd`
+continua igual no resto do sistema.
+
+### Rodada 142 — o feixe espera a primeira tecla
+
+O dono pediu, para a pílula de busca da paleta, a animação do `BeamSearch` do
+21st (Spectrum UI, sobre o preset `line` do `border-beam` de Jakub Antalík,
+MIT): uma luz viajando pela borda de baixo do campo. A decisão de quando ela
+corre foi dele: **só com o campo vazio**, enquanto espera a pessoa digitar.
+
+**O precedente, dito antes.** O `border-beam` foi uma das cinco tentativas
+recusadas no campo de formulário, e `field-control-ladder.test.ts` proíbe
+marca nos oito controles de campo. O `command.tsx` não está entre eles, e o
+pedido é explícito e desta peça. É uma exceção nomeada, não uma reabertura.
+
+**Portado, não instalado.** O componente de referência pede `border-beam` e
+`lucide-react`; o segundo é proibido pelo ESLint, e o primeiro injeta um
+`<style>` por instância com paletas próprias. O preset `line` é CSS puro, lido
+no fonte (`border-beam@1.4.1`), e virou `@utility command-beam` com cinco
+`@property` e três `@keyframes`, com os números dele: `x` de 0,06 a 0,94 em
+3,1s linear, a largura crescendo no meio, as pontas apagadas e a altura
+respirando em 4s.
+
+**Duas divergências, pelas lições da casa:** a cor é o arco-íris da marca na
+horizontal e **parado**, e quem anda é a máscara (a referência anima
+`hue-rotate`) — o feixe troca de cor enquanto viaja; e **uma máscara por
+pseudo**, sem `mask-composite`: o traço é uma faixa de 1px na base, porque
+onde o feixe acende a base da pílula é reta.
+
+**O liga-desliga é `data-waiting`**, escrito pelo `CommandInput` a partir de
+`useCommandState` do cmdk (vale com o campo controlado ou não). Sem ele a
+animação **pausa no lugar**, e `--command-beam-on` esmaece em 300ms; tirar a
+animação faria o feixe saltar para o começo enquanto apaga. Volumes por tema:
+traço 0,9 e brilho 0,35 no escuro, 0,5 e 0,2 no claro.
+
+**Medido nos dois temas:** vazio, `x` percorre de 0,25 a 0,92 em 2,4s e volta,
+com o traço em 0,90 (escuro) e 0,50 (claro) no meio do trajeto e em 0 nas
+pontas; ao digitar, `data-waiting` sai, a opacidade vai a 0 em ~200ms e a
+animação pausa em `x` 0,40; ao apagar, volta a correr. Com escopo e o campo
+vazio, corre. Com movimento reduzido o traço fica em 0. O `Combobox` não veste
+nada disso.
+
+**A troca do texto do gatilho ficou mais discreta** (ajuste da rodada 139): o
+dono gostou do gesto letra a letra, mas achou que chamava atenção demais, e
+escolheu a onda **por palavra**. São três ou quatro movimentos em vez de
+dezoito: cada palavra desliza 4px (eram 10), sem desfoque, em
+`--duration-slow` com `--ease-out` — sem mola, então não passa do alvo —, 40ms
+depois da anterior. Medido: a primeira palavra chega em ~200ms, a última em
+~300ms, e o deslize nunca passa de 4px.
+
+**E depois ficou orgânica, com frases novas.** O deslize de 4px era discreto
+mas mecânico, e o dono pediu algo mais orgânico. Hoje as frases **trocam de
+foco no mesmo lugar**, como uma lente: a que sai desfoca (3px), cresce 2% e
+some; a que entra vem do desfoque, de 98% e 1px abaixo, até ficar nítida. Cada
+palavra começa 45ms depois da anterior, em `--duration-slow` com
+`--ease-emphasized`. As frases também mudaram: em repouso, **"Buscar
+componentes e tokens…"** (diz o que o catálogo tem, no infinitivo do campo da
+paleta); no hover e no foco, **"Abrir a busca"** (um convite que vale para o
+clique e para o Enter, ao contrário de "Clique para buscar"). Medido: a troca
+cruza em ~250ms, a última palavra nítida em ~450ms, as duas frases cabem no
+campo e a largura não muda.
+
+### Rodada 143 — a pilha vira a linguagem do `Command`
+
+O dono pediu uma revisão completa das outras versões do `Command` com o
+desenho do diálogo como base, e decidiu duas coisas: a paleta solta numa
+página vira a mesma pilha, e o `Combobox` também, inteiro.
+
+**A pilha é a variante `panel`.** Ela era a placa inteira da régua com o
+campo dentro; hoje é a coluna que não pinta, `gap-3`, `overflow-visible`, e
+é ela que liga `--command-reveal`. A raiz provê o contexto (que era
+`CommandDialogContext` e virou `CommandStackContext`) quando é `panel`, e
+quem monta a pilha é o `CommandDialog`, o `ComboboxContent` e quem escrever
+`<Command variant="panel">`. `plain` fica para quem hospeda o `Command` numa
+superfície própria.
+
+**O que a tela escrevia virou componente.** O `ds-search` escrevia à mão a
+linha de 36 (`min-h-9`, três vezes), a caixa de 24 do ícone (três vezes), a
+seta de ir, o lado direito, o recuo de 8 da placa e o respiro dos grupos num
+`div` em volta. Hoje:
+- a linha de 36, o `px-2` da placa e o respiro (16px entre grupos, 4 entre o
+  rótulo e a primeira linha) são da pilha, lidos do contexto;
+- o respiro de cima e de baixo mora **dentro** do conteúdo medido (um
+  `command-list-body` com `py-1.5`), porque o cmdk mede o conteúdo e a
+  altura da lista soma só os recuos que ela conhece — um `py` na lista a faria
+  rolar 12px à toa;
+- `CommandItemIcon`, `CommandItemMeta` e `CommandItemArrow` são peças novas;
+- o campo nasce `lg` (36) na pilha e `md` (32) fora dela.
+
+**A legenda virou filha.** O prop `dock` saiu: `<CommandDock>` é o último
+filho da pilha, no diálogo e fora dele. `CommandFooter` e `CommandHint`
+saíram, sem nenhum consumidor além de uma demo, e a regra do rodapé saiu da
+raiz.
+
+**O `Combobox` abre a pilha num popover que não pinta.** O `PopoverContent`
+ganhou o eixo `surface` — `plate`, o padrão e a placa de sempre, e `none`,
+sem placa, anel, sombra nem recorte. A placa saiu da base do `cva` e foi para
+`plate`. A altura da lista continua sem transição fora do diálogo (num
+popover ela faria o painel perseguir o gatilho), mas as linhas sobem ao
+aparecer.
+
+**Medido nos dois temas:** o diálogo com as mesmas medidas de antes (12px
+entre as peças, linhas de 36, a raiz sem rolar, escopo funcionando); as
+cinco demos de `panel` sem pintar a raiz, com placa, linhas de 36 e pílula e
+legenda onde há; o `Combobox` com o popover transparente, a largura do
+gatilho (224), a pílula a 12px da placa, o feixe aceso com o campo vazio, e
+escolher um valor fechando; um popover comum com a placa de sempre.
+
+**O feixe ficou só no diálogo**, a pedido do dono: na paleta solta e no
+`Combobox` a pílula não acende. Quem liga é um segundo contexto,
+`CommandBeamContext`, provido só pelo `CommandDialog`; a pilha continua a
+mesma nas três.
+
+**O `Combobox` voltou às medidas de dropdown**, a pedido do dono: a pilha
+ganhou o eixo `density` — `palette` (o padrão: pílula de 36, linhas de 36,
+respiro largo, 12px entre as peças) e `menu` (pílula de 32, linhas de 28, o
+recuo de 4 e o respiro dos menus, 4px entre as peças — o afastamento do
+popover até o gatilho; foi 8 por uma rodada). O contexto da pilha
+passou a carregar a densidade, e só a `palette` aplica a linha de 36, o recuo
+de 8 e o respiro dos grupos. Medido: a linha do `Combobox` tem 28 e nasce a
+4px da placa, as mesmas medidas do `DropdownMenu`.
+
+**E o `Combobox` ganhou a sombra do conjunto**, a pedido do dono, para se
+destacar do fundo: a mesma receita do diálogo — um `::before` em `z` negativo
+atrás das duas peças, `box-shadow` e nunca `filter` —, em `shadow-lg`: o
+`shadow-md` dos menus quase não se via no tema claro com as peças soltas.
+
+**A sombra do `Combobox` passou a acompanhar cada peça.** O retângulo único
+atrás do conjunto deixava a aresta reta aparecendo onde a pílula arredonda —
+"a sombra ficou para fora". Hoje são dois pseudo-elementos com a forma exata
+de cada peça (a cápsula da pílula e a placa `rounded-xl`), os dois em `z`
+negativo: pintam abaixo das duas, e a sombra de uma não cai sobre a outra.
+
+**A pílula do `Combobox` ganhou o preenchimento de campo.** Flutuando sobre a
+página, a tinta flutuante sozinha saía no mesmo tom dela — medido, 23 contra
+23 no escuro e 255 contra 255 no claro: a pílula sumia. Na densidade `menu`
+ela leva por cima do vidro uma camada de `--input-fill` a 50% (imagem, para
+não trocar a cor da tinta), e passou a medir o mesmo tom do gatilho que a
+abre: 40 no escuro e 238 no claro. O diálogo não muda — ali a pílula pousa
+sobre o véu, e já se destaca.
+
+**E voltou**, a pedido do dono: a pílula do `Combobox` veste de novo só a
+tinta da placa, igual ao fundo do dropdown. Quem a separa da página é o anel
+de 1px e a sombra com a forma dela.
+
+**A paleta em diálogo ficou centrada de verdade.** O topo era calculado pela
+altura da placa, de quando ela era a caixa inteira; com a pílula e a legenda
+soltas a pilha cheia mede a placa mais 48, e ficava 24px abaixo do meio. Hoje
+`--command-dialog-top` centraliza a pilha cheia (no toque, sem a legenda, a
+sobra cai para 4), e o topo continua fixo quando a busca encolhe a lista.
+Medido a 860 e a 700 de altura: 214 e 134px acima e abaixo com a raiz aberta,
+e o topo parado ao buscar.
+

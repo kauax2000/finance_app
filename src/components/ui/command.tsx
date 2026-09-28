@@ -1,16 +1,16 @@
 "use client"
 
 import * as React from "react"
-import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/16/solid"
+import { ArrowUpRightIcon, MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/16/solid"
 import { cva, type VariantProps } from "class-variance-authority"
-import { Command as CommandPrimitive } from "cmdk"
+import { Command as CommandPrimitive, useCommandState } from "cmdk"
 
 import { cn } from "@/lib/utils"
 import { Caption, P } from "@/components/ui/typography"
 import {
   menuItemGeometryClassName,
   menuSeparatorClassName,
-  menuItemFadeClassName, menuPanelSurfaceClassName, menuPanelTintClassName } from "@/lib/menu-classes"
+  menuItemFadeClassName, menuPanelTintClassName } from "@/lib/menu-classes"
 import {
   scrollFadeBandsClassName,
   scrollFadeBleedClassName,
@@ -18,11 +18,14 @@ import {
 } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
 import { useCommandIdleSelection } from "@/hooks/use-command-idle-selection"
+import { Dialog as DialogPrimitive } from "radix-ui"
 import {
   Dialog,
-  DialogContent,
+  DialogCloseButton,
   DialogDescription,
   DialogHeader,
+  DialogOverlay,
+  DialogPortal,
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -88,7 +91,6 @@ const commandVariants = cva(
     // O campo `lg` (36) publica a própria faixa. O `:has()` com dois atributos
     // pesa mais que o de um, então vence sem depender da ordem de emissão.
     "has-[[data-slot=command-input-wrapper][data-size=lg]]:[--scroll-fade-band-h:calc(--spacing(9)+--spacing(4))]",
-    "has-[[data-slot=command-footer]]:[--scroll-fade-foot-h:--spacing(9)]",
   ],
   {
     variants: {
@@ -103,14 +105,52 @@ const commandVariants = cva(
          * de qualquer superfície futura, sem saber de nenhum deles.
          */
         plain: "[border-radius:inherit]",
-        /** A própria moldura, para a paleta solta numa página — é a placa da
-         *  régua, inteira, porque aqui ninguém a hospeda. */
-        panel: menuPanelSurfaceClassName,
+        /**
+         * **A pilha** (rodada 143): a raiz é uma coluna que não pinta, e cada
+         * peça pinta a sua superfície — a pílula de busca, a placa da lista e
+         * as cápsulas da legenda, a 12px uma da outra, no mesmo plano. É o
+         * desenho que nasceu no `CommandDialog` (rodadas 140–142) e virou a
+         * linguagem da paleta: solta numa página, em diálogo e no `Combobox`.
+         *
+         * Ela já foi a placa inteira da régua com o campo dentro. O
+         * `overflow-visible` devolve o que a base recorta — o anel da pílula
+         * fica **fora** da caixa dela —, e as linhas sobem ao aparecer em toda
+         * a pilha, porque isso não mexe em altura.
+         */
+        panel: "gap-3 overflow-visible [--command-reveal:var(--duration-spring)]",
+      },
+      /**
+       * A densidade da pilha (rodada 143). `palette` é a paleta — pílula de
+       * 36, linhas de 36, respiro largo. `menu` é a pilha com as medidas de
+       * um dropdown — pílula de 32, linhas de 28, o recuo e o respiro dos
+       * menus, 4px entre as peças (o mesmo afastamento do popover até o
+       * gatilho) —, para o `Combobox`, que é um seletor de
+       * valor preso a um campo e não um destino de busca.
+       */
+      density: {
+        palette: "",
+        menu: "gap-1",
       },
     },
-    defaultVariants: { variant: "plain" },
+    defaultVariants: { variant: "plain", density: "palette" },
   }
 )
+
+/**
+ * Se a peça está na **pilha** — um `Command variant="panel"`, que é o que o
+ * `CommandDialog` e o `Combobox` montam (rodadas 141 e 143). Na pilha o campo,
+ * a lista, o grupo e a linha vestem o desenho de três superfícies; em `plain`,
+ * nada muda.
+ */
+const CommandStackContext = React.createContext<"palette" | "menu" | null>(null)
+
+/**
+ * Se a pilha está num `CommandDialog` — o único lugar que acende o **feixe**
+ * da pílula (rodada 142). Na paleta solta e no `Combobox` ele saiu a pedido
+ * do dono (rodada 143): lá a busca é uma peça entre outras da tela, e a luz
+ * correndo chamava atenção para o lugar errado.
+ */
+const CommandBeamContext = React.createContext(false)
 
 /**
  * `autoSelectFirst={false}` faz a paleta abrir **sem nada selecionado** — e o
@@ -130,6 +170,7 @@ const commandVariants = cva(
 function Command({
   className,
   variant,
+  density,
   autoSelectFirst = true,
   children,
   ...props
@@ -139,13 +180,14 @@ function Command({
     autoSelectFirst?: boolean
   }) {
   const resolvida = variant ?? "plain"
+  const pilha = resolvida === "panel" ? (density ?? "palette") : null
   const ocioso = useCommandIdleSelection(!autoSelectFirst)
 
   return (
     <CommandPrimitive
       data-slot="command"
       data-variant={resolvida}
-      className={cn(commandVariants({ variant: resolvida }), className)}
+      className={cn(commandVariants({ variant: resolvida, density }), className)}
       {...props}
       // Os três handlers são **compostos**, e não sobrescritos: um `{...ocioso}`
       // antes de `{...props}` deixaria o `onKeyDown` de quem chama apagar o do
@@ -170,7 +212,9 @@ function Command({
         ocioso.onPointerLeave?.(event)
       }}
     >
-      {children}
+      <CommandStackContext.Provider value={pilha}>
+        {children}
+      </CommandStackContext.Provider>
 
       {/* Sem camadas de borrão. Elas moraram aqui — três `backdrop-filter`
           empilhados por ponta, somados à rampa — e eram a última paleta da casa
@@ -212,6 +256,7 @@ function CommandDialog({
 }: React.ComponentProps<typeof Dialog> & {
   title?: string
   description?: string
+  /** Classes da raiz `Command`, a pilha (não pinta). */
   className?: string
   showCloseButton?: boolean
   /** O que a raiz `Command` precisa receber: `filter`, `shouldFilter`, `loop`. */
@@ -219,99 +264,103 @@ function CommandDialog({
 }) {
   return (
     <Dialog {...props}>
-      <DialogContent
-        className={cn(
-          // `rounded-xl` não se repete: é o padrão de todo `DialogContent`.
-          //
-          // A posição, sim, precisa de conta própria. O casco centraliza pela
-          // altura **real** (`top-1/2` com `-translate-y-1/2`), e numa paleta
-          // isso faz o campo de busca subir e descer sob o cursor a cada tecla,
-          // conforme a lista encolhe. Aqui o topo é fixado onde a caixa
-          // **cheia** começaria — `50% - altura-máxima/2` —, e o que encolhe é
-          // a borda de baixo. O `top-1/3` do shadcn resolvia o mesmo sintoma
-          // chutando um terço; esta conta acerta o centro de verdade.
-          // 24rem, e não 32: a 512px a paleta ocupava metade de uma tela de 867 e
-          // a lista mostrava mais itens do que se lê de uma vez. O teto anterior
-          // — antes de o casco ganhar altura própria — dava 374px no total, e
-          // este fica na mesma vizinhança com um valor da escala.
-          "[--command-dialog-h:min(60dvh,24rem)]",
-          "[--command-dialog-top:calc(50%-var(--command-dialog-h)/2)]",
-          "top-(--command-dialog-top) translate-y-0 max-h-(--command-dialog-h)",
-          // O casco **pinta**, e pinta o tom do popover: a paleta é uma
-          // superfície de comandos, não um diálogo, e o `--background` da régua
-          // modal a deixaria mais escura que os menus. As três classes trocam
-          // só o token — o `twMerge` derruba as da régua uma a uma, variante a
-          // variante. O `Command` de dentro é transparente (variante `plain`),
-          // então há uma placa só. Ele já foi o contrário — casco neutralizado,
-          // `Command` pintando —, com neutralizadores sob variante; era um
-          // remendo para a placa dupla, e a placa dupla saiu.
-          "overflow-hidden border-0 p-0",
-          menuPanelTintClassName,
-          // **A paleta abre na mola** (rodada 139): ela é algo que *aparece*,
-          // e a casa põe a mola no que aparece. Desce 4px enquanto cresce de
-          // 95%. O fechar fica curto e em `--ease-out`: uma mola até zero
-          // passa por baixo de zero, a lição do `Collapsible`.
-          "data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring) data-open:slide-in-from-top-1",
-          "data-closed:animation-duration-(--duration-fast)",
-          className
-        )}
-        showCloseButton={showCloseButton}
-      >
-        {/* O nome acessível mora dentro do `DialogContent`. Fora dele o
-            elemento ficava no fluxo normal da página, e como `DialogHeader`
-            embute `w-full` — que vence o `width: 1px` do `sr-only` —, ele
-            empurrava o documento em 40px e criava rolagem horizontal a 320px. */}
-        <DialogHeader className="sr-only">
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
-        <Command
-          // No diálogo o teto é do **casco**, não da lista: com um teto próprio
-          // a lista somava 448 aos 48 da busca e aos 37 do rodapé, dava 533
-          // contra os 512 do casco, e o `overflow-hidden` **cortava o rodapé** —
-          // medido. Aqui a coluna recebe o mesmo teto do casco e a lista passa
-          // a ocupar só o que sobra entre as duas faixas.
-          //
-          // O seletor de descendente, e não uma classe na lista: a lista solta
-          // numa página não tem altura definida acima dela, e ali `flex-1`
-          // colapsaria o conteúdo.
-          // A paleta abre **sem nada selecionado**. Vem antes do spread para o
-          // consumidor poder voltar atrás por `commandProps`.
-          autoSelectFirst={false}
+      <DialogPortal>
+        <DialogOverlay />
+        {/* **O `Content` é uma coluna que não pinta** (rodada 140): a placa é
+            um filho, e a legenda de teclado (`dock`) é a irmã dela, embaixo.
+            Ele deixou de ser o `DialogContent` porque ali a placa **é** o
+            `Content` — vidro e `overflow-hidden` no mesmo nó —, e uma linha
+            embaixo dela ou seria recortada, ou moraria dentro de um elemento
+            com `backdrop-filter`, que é **raiz de fundo**: o borrão das
+            cápsulas não enxergaria a página. Como irmãs, cada uma borra o que
+            está atrás de si. A posição, a largura e a camada são as da base
+            do `dialogContentVariants`. */}
+        <DialogPrimitive.Content
+          data-slot="command-dialog"
           className={cn(
-            "max-h-(--command-dialog-h)",
-            "[&_[data-slot=command-list]]:max-h-none",
-            "[&_[data-slot=command-list]]:min-h-0",
-            // **O teto da lista, e a transição, são declarados pela casca** — a
-            // mesma regra que este arquivo já segue para as faixas: a casca
-            // publica a medida estrutural, a lista lê.
-            //
-            // **E o teto é o do casco inteiro, não o que sobra das faixas** — o
-            // que parece errado até a conta fechar. A lista mede em `border-box`
-            // e carrega o `pt`/`pb` das faixas, mas `scrollFadeBleedClassName`
-            // cancela os dois com margem negativa: uma caixa de altura `H` ocupa
-            // `H − band − foot` no fluxo. Somando as duas faixas de volta,
-            // `(H − 84) + 48 + 36 = H`. Descontá-las aqui as descontaria duas
-            // vezes, e foi o que a primeira versão fez — a paleta com 7
-            // resultados travava em 300 onde antes media 342.
-            "[--command-list-ceiling:var(--command-dialog-h)]",
-            // Só o diálogo anima. O `Combobox` mora num popover que se
-            // reposiciona quando o conteúdo muda de tamanho, e ali uma altura em
-            // movimento faria o painel perseguir o gatilho.
-            "[--command-list-transition:var(--duration-base)]",
-            // E só o diálogo faz as linhas subirem ao aparecer — a
-            // `command-reveal` da lista lê esta duração, `0s` por padrão.
-            "[--command-reveal:var(--duration-spring)]",
-            // **O `flex-1` saiu**, e não é cosmética: `flex: 1 1 0%` faz o
-            // `flex-basis: 0` vencer qualquer `height`, e sem isso a altura
-            // derivada da lista — que é o que anima — nunca chegaria ao layout.
-            // Com ela, o `Command` e o `DialogContent` encolhem junto.
+            "fixed left-1/2 z-(--z-modal) flex w-full max-w-[calc(100%-2rem)] -translate-x-1/2 flex-col text-sm outline-none sm:max-w-md",
+            // **Uma sombra só, atrás das três superfícies** — pílula, placa e
+            // legenda ficam no mesmo plano, e o que se levanta da página é o
+            // conjunto. Ela mora num `::before` da coluna, em `z` negativo sob
+            // o contexto de empilhamento que o `fixed` + `z-index` já criam:
+            // pinta abaixo das três. É `box-shadow` e não `filter:
+            // drop-shadow`: um `filter` na coluna a tornaria **raiz de fundo**,
+            // e o vidro das três deixaria de enxergar a página. E sombra externa
+            // não pinta dentro da própria caixa, então os vãos de 8px entre as
+            // peças continuam mostrando a página.
+            "before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-2xl before:shadow-xl before:content-['']",
+            // A posição precisa de conta própria. Centralizar pela altura
+            // **real** fazia o campo de busca subir e descer sob o cursor a
+            // cada tecla, conforme a lista encolhe. Aqui o topo é fixado onde a
+            // placa **cheia** começaria — `50% - altura-máxima/2` —, e o que
+            // encolhe é a borda de baixo, com a legenda descendo e subindo
+            // junto. 24rem: a 512px a paleta ocupava metade de uma tela de 867.
+            "[--command-dialog-h:min(60dvh,24rem)]",
+            // **O topo centraliza a pilha cheia, e não só a placa** (rodada
+            // 143). Com a lista no teto a pilha mede a placa mais 48 — a
+            // pílula de 36 e os 12 de respiro, menos os 44 que o teto da lista
+            // já desconta, mais os 12 e os 32 da legenda —, e centralizar só
+            // a placa a deixava 24px abaixo do meio da tela. No toque a
+            // legenda some (`pointer-coarse:hidden`) e a sobra cai para 4.
+            // Com a busca encolhendo a lista, o topo fica onde está e só a
+            // base sobe.
+            "[--command-dialog-stack:calc(var(--command-dialog-h)+--spacing(12))]",
+            "pointer-coarse:[--command-dialog-stack:calc(var(--command-dialog-h)+--spacing(1))]",
+            "[--command-dialog-top:calc(50%-var(--command-dialog-stack)/2)]",
+            "top-(--command-dialog-top)",
+            // **A paleta abre na mola** (rodada 139): ela é algo que *aparece*,
+            // e a casa põe a mola no que aparece. Desce 4px enquanto cresce de
+            // 95%. O fechar fica curto e em `--ease-out`: uma mola até zero
+            // passa por baixo de zero, a lição do `Collapsible`.
+            "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring) data-open:slide-in-from-top-1",
+            "data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-closed:animation-duration-(--duration-fast) data-closed:ease-(--ease-out)"
           )}
-          {...commandProps}
         >
-          {children}
-        </Command>
-      </DialogContent>
+          {/* O nome acessível mora dentro do `Content`. Fora dele o elemento
+              ficava no fluxo normal da página, e como `DialogHeader` embute
+              `w-full` — que vence o `width: 1px` do `sr-only` —, ele empurrava
+              o documento em 40px e criava rolagem horizontal a 320px. */}
+          <DialogHeader className="sr-only">
+            <DialogTitle>{title}</DialogTitle>
+            <DialogDescription>{description}</DialogDescription>
+          </DialogHeader>
+          <CommandBeamContext.Provider value>
+          <Command
+            // **A pilha** — pílula, placa e, se o consumidor puser um
+            // `CommandDock` como último filho, a legenda. O desenho é da
+            // variante `panel`; aqui fica só o que é do diálogo.
+            //
+            // A paleta abre **sem nada selecionado**. Vem antes do spread para
+            // o consumidor poder voltar atrás por `commandProps`.
+            variant="panel"
+            autoSelectFirst={false}
+            className={cn(
+              "[&_[data-slot=command-list]]:max-h-none",
+              "[&_[data-slot=command-list]]:min-h-0",
+              // **O teto da lista, e a transição, são declarados pela casca**
+              // — a casca publica a medida estrutural, a lista lê. O teto é o
+              // da paleta menos 44 (a pílula de 36 e 8 de respiro). Com o
+              // respiro em 12 a pilha cresce 4px, e a raiz aberta — camadas e
+              // dois recentes — continua cabendo sem rolar: descontar 48 a
+              // fazia rolar 4px, medido.
+              "[--command-list-ceiling:calc(var(--command-dialog-h)_-_--spacing(11))]",
+              // Só o diálogo anima a altura. O `Combobox` mora num popover que
+              // se reposiciona quando o conteúdo muda de tamanho, e ali uma
+              // altura em movimento faria o painel perseguir o gatilho.
+              "[--command-list-transition:var(--duration-base)]",
+              className
+              // **Sem `flex-1`**: `flex: 1 1 0%` faz o `flex-basis: 0` vencer
+              // qualquer `height`, e a altura derivada da lista — que é o que
+              // anima — nunca chegaria ao layout.
+            )}
+            {...commandProps}
+          >
+            {children}
+          </Command>
+          </CommandBeamContext.Provider>
+          {showCloseButton ? <DialogCloseButton /> : null}
+        </DialogPrimitive.Content>
+      </DialogPortal>
     </Dialog>
   )
 }
@@ -340,20 +389,31 @@ function CommandInput({
   value,
   onValueChange,
   leading,
-  size = "md",
+  size: sizeProp,
   "aria-label": ariaLabel = "Buscar",
   ...props
 }: Omit<React.ComponentProps<typeof CommandPrimitive.Input>, "size"> & {
   /** O que fica entre a lupa e o texto — o `CommandScope` da busca por camada. */
   leading?: React.ReactNode
   /**
-   * `md` (32) é o gatilho do cabeçalho do catálogo, o padrão; `lg` (36) é o
-   * campo de uma paleta que é a tela inteira. Foi 40 com o corpo `base` por
-   * uma rodada, e o dono pediu menor nos dois. A faixa de dissolução acompanha (`data-size` no wrapper).
+   * `md` (32) é o gatilho do cabeçalho do catálogo; `lg` (36) é a pílula da
+   * pilha, e é o padrão dentro dela. Foi 40 com o corpo `base` por uma rodada,
+   * e o dono pediu menor nos dois. A faixa de dissolução acompanha (`data-size` no wrapper).
    */
   size?: "md" | "lg"
 }) {
   const temTexto = value != null && String(value).length > 0
+  const pilha = React.useContext(CommandStackContext)
+  const naPilha = pilha !== null
+  // Na paleta o campo nasce `lg` (36), a pílula que o dono escolheu; na
+  // densidade de menu e solto, `md` (32).
+  const size = sizeProp ?? (pilha === "palette" ? "lg" : "md")
+  const noDialogo = React.useContext(CommandBeamContext)
+  const comFeixe = naPilha && noDialogo
+  // A busca vazia, lida do cmdk — vale com o campo controlado ou não. É ela que
+  // liga o feixe da pílula: ele corre enquanto o campo espera a primeira tecla.
+  const busca = useCommandState((estado) => estado.search)
+  const esperando = (value != null ? String(value) : busca) === ""
 
   return (
     <div
@@ -378,7 +438,11 @@ function CommandInput({
       // O `relative z-10` fica: sem ele o campo não pintaria por cima da lista
       // que passa atrás dele.
       data-size={size}
-      className="relative z-10 flex shrink-0 items-center p-2"
+      className={cn(
+        "relative z-10 flex shrink-0 items-center",
+        // No diálogo a pílula é solta, sem o recuo da faixa.
+        !naPilha && "p-2"
+      )}
     >
       {/* Anel de foco **fora** do diálogo. Na paleta (`CommandDialog`) o campo é
             autofocado ao abrir, o anel nasceria aceso e nunca apagaria, e quem
@@ -388,11 +452,32 @@ function CommandInput({
             cabeçalho do catálogo que o abriu — `border-border`, sem anel de foco
             — e não um campo de formulário. A decisão está registrada acima. */}
         <div
+          data-waiting={(comFeixe && esperando) || undefined}
           className={cn(
-            "flex w-full min-w-0 items-center rounded-lg border border-border bg-input-fill/30",
+            "flex w-full min-w-0 items-center",
             size === "lg" ? "h-9 gap-2.5 px-3.5 text-sm" : "h-8 gap-2 px-3 text-sm",
-            "has-[input:focus-visible]:border-ring has-[input:focus-visible]:ring-3 has-[input:focus-visible]:ring-ring/45",
-            "[[data-slot=dialog-content]_&]:has-[input:focus-visible]:border-border [[data-slot=dialog-content]_&]:has-[input:focus-visible]:ring-0"
+            naPilha
+              ? // **No diálogo o campo é uma pílula de vidro solta** (rodada
+                // 141), com as pontas de pílula do gatilho do cabeçalho: ele
+                // saiu da placa e pinta a própria superfície, a mesma receita
+                // flutuante da placa e das cápsulas da legenda. **Sem sombra, nas
+                // três**: elas estão no mesmo plano, e sombra diria que uma flutua
+                // sobre a outra — a pedido do dono. Sem anel de foco — o campo
+                // nasce focado, e quem carrega o foco visível é a linha
+                // selecionada.
+                cn(
+                  "rounded-full ring-1 ring-foreground/10",
+                  menuPanelTintClassName,
+                  // O feixe da borda de baixo (rodada 142), aceso por
+                  // `data-waiting` — **só no diálogo** (rodada 143). Ver a
+                  // utility em `globals.css`.
+                  // A pílula veste a **mesma** tinta da placa da lista, em
+                  // toda densidade: no `Combobox` ela chegou a levar o
+                  // preenchimento de campo por cima, e o dono a quis igual ao
+                  // fundo do dropdown (rodada 143).
+                  comFeixe && "command-beam"
+                )
+              : "rounded-lg border border-border bg-input-fill/30 has-[input:focus-visible]:border-ring has-[input:focus-visible]:ring-3 has-[input:focus-visible]:ring-ring/45"
           )}
         >
         <MagnifyingGlassIcon
@@ -539,6 +624,7 @@ function CommandScope({
  */
 function CommandList({
   className,
+  children,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.List>) {
   const [medido, setMedido] = React.useState(false)
@@ -554,7 +640,10 @@ function CommandList({
     }
   }, [])
 
-  return (
+  const pilha = React.useContext(CommandStackContext)
+  const naPilha = pilha !== null
+  const naPaleta = pilha === "palette"
+  const lista = (
     <CommandPrimitive.List
       ref={useScrollFade()}
       data-slot="command-list"
@@ -593,10 +682,45 @@ function CommandList({
         "h-[min(calc(var(--cmdk-list-height,var(--command-list-ceiling,var(--command-list-max-h)))_+_var(--scroll-fade-band-h)_+_var(--scroll-fade-foot-h)_+_--spacing(2)),var(--command-list-ceiling,var(--command-list-max-h)))]",
         // Só transiciona depois da primeira medida — ver o cabeçalho.
         "data-medido:transition-[height] data-medido:duration-[var(--command-list-transition,0s)] data-medido:ease-(--ease-out)",
+        // Na pilha a placa recua 8px dos lados, e não 4: a linha acesa alinha
+        // com as bordas da pílula de busca acima dela.
+        naPaleta && "px-2",
         className
       )}
       {...props}
-    />
+    >
+      {naPaleta ? (
+        // O respiro de cima e de baixo da placa mora **dentro** do conteúdo
+        // medido, e não no recuo da lista: o cmdk mede o conteúdo
+        // (`--cmdk-list-height`), e a altura da lista soma só os recuos que
+        // ela conhece. Um `py` na lista a faria rolar 12px sem precisar.
+        <div data-slot="command-list-body" className="py-1.5">
+          {children}
+        </div>
+      ) : (
+        children
+      )}
+    </CommandPrimitive.List>
+  )
+
+  if (!naPilha) return lista
+
+  // **No diálogo a lista mora numa placa própria** (rodada 141), porque o campo
+  // saiu dela. A placa é um embrulho, e não a lista: a lista é o elemento
+  // mascarado da dissolução, e a máscara recortaria fundo, anel e sombra junto.
+  // A faixa do topo zera aqui — ela existia para o conteúdo passar por baixo do
+  // campo, e agora não há nada por cima. Declarada no embrulho, ela vence o
+  // valor que a raiz publica sem disputar os seletores `has-[…]` de lá.
+  return (
+    <div
+      data-slot="command-dialog-panel"
+      className={cn(
+        "relative flex min-h-0 flex-col overflow-hidden rounded-xl ring-1 ring-foreground/10 [--scroll-fade-band-h:0px]",
+        menuPanelTintClassName
+      )}
+    >
+      {lista}
+    </div>
   )
 }
 
@@ -693,6 +817,7 @@ function CommandGroup({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Group>) {
+  const naPaleta = React.useContext(CommandStackContext) === "palette"
   return (
     <CommandPrimitive.Group
       data-slot="command-group"
@@ -729,6 +854,10 @@ function CommandGroup({
         // segundo grupo visível. `~` casa quem tem **algum** grupo visível
         // antes, que é a pergunta certa.
         "[[cmdk-group]:not([hidden])~&]:mt-2.5",
+        // Na pilha as linhas são de 36, e o respiro cresce junto: 16px entre
+        // grupos e 6px entre o rótulo e a primeira linha (os 2 do rótulo mais
+        // 4 aqui). Margem, pela mesma razão da folga entre grupos.
+        naPaleta && "[[cmdk-group]:not([hidden])~&]:mt-4 [&>[cmdk-group-items]]:mt-1",
         className
       )}
       {...props}
@@ -779,6 +908,7 @@ function CommandItem({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Item>) {
+  const naPaleta = React.useContext(CommandStackContext) === "palette"
   return (
     <CommandPrimitive.Item
       data-slot="command-item"
@@ -790,6 +920,9 @@ function CommandItem({
         "data-selected:bg-accent data-selected:text-accent-foreground data-selected:*:[svg]:text-accent-foreground",
         // `=true` e não por presença: ver o comentário acima.
         "data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50",
+        // Na pilha a linha tem 36, e não os 28 dos menus: a paleta é um
+        // destino de busca, lida uma linha por vez, e não uma lista de ações.
+        naPaleta && "min-h-9",
         className
       )}
       {...props}
@@ -847,49 +980,21 @@ function CommandItemDescription({
 }
 
 /**
- * O rodapé da paleta — a terceira faixa.
+ * O ícone da linha, numa caixa de 24 (rodada 143).
  *
- * É onde vive o que a lista não pode ensinar: as teclas que navegam, o que o
- * Enter faz, o escopo da busca. Numa paleta isso não é enfeite — ela é uma
- * interface de teclado, e sem a legenda a pessoa descobre `↑↓` e `↵` por
- * tentativa. Sangra até as bordas, sem fio nem tinta: quem marca o limite é a
- * lista dissolvendo por baixo.
- *
- * Tinta mais quieta que a lista, porque não é uma das opções.
+ * A caixa é o que alinha o nome da linha na mesma coluna em qualquer grupo —
+ * com ícone de camada, relógio de recente ou nada. O ícone fica cinza e acende
+ * com a linha selecionada; ele mora dentro da caixa, então quem o tinge é o
+ * `group`, e não a regra de filho direto do `CommandItem`.
  */
-function CommandFooter({ className, ...props }: React.ComponentProps<"div">) {
+function CommandItemIcon({ className, ...props }: React.ComponentProps<"span">) {
   return (
-    <div
-      data-slot="command-footer"
+    <span
+      data-slot="command-item-icon"
+      aria-hidden
       className={cn(
-        // **Fade, e não vidro** — e hoje isso vale para as duas pontas, que
-        // aprenderam com esta. Nenhuma delas desenha aresta: o conteúdo se
-        // dissolve e a paleta acaba.
-        //
-        // A caixa mede **só a linha da legenda**. Ela já embutiu a pista de
-        // dissolução (72px = 28 + 44), e era o que produzia ~44px de branco
-        // entre o último item e o texto sempre que se rolava até o fim — no
-        // fim não há conteúdo para dissolver ali. A pista virou
-        // `--command-foot-fade`, que é máscara e não ocupa espaço.
-        //
-        // `pointer-events-none` pelo mesmo motivo que o `ScrollFade` o usa: a
-        // faixa cobre itens roláveis, e não pode comer o clique deles.
-        // **Sem fundo.** Pintar um gradiente aqui foi a versão anterior, e ela
-        // não tinha como integrar: o gradiente terminava em `--popover` cheio
-        // enquanto a superfície em volta é `popover/85`, e 100% sobre uma
-        // página escura é mais **claro** que 85% — o rodapé lia como um bloco
-        // aceso. Nenhuma tinta por cima resolve isso, porque qualquer alfa
-        // somado à casca aumenta a opacidade.
-        //
-        // Quem desaparece agora é o **conteúdo**: a lista leva uma máscara que
-        // apaga os últimos pixels dela. A superfície continua uniforme de ponta
-        // a ponta, e a legenda fica sobre a mesma cor de todo o resto.
-        // `items-center`, e não `items-end`: este último era vestígio da caixa
-        // de 72px, que tinha 44 de pista de dissolução morta em cima. Com 36
-        // fixos ele punha o texto em [12, 28] — 12 acima, 8 abaixo, torto sem
-        // motivo.
-        "pointer-events-none relative z-10 flex shrink-0 items-center justify-between gap-3 px-3 py-2 text-xs text-muted-foreground",
-        "h-(--scroll-fade-foot-h)",
+        "flex size-6 shrink-0 items-center justify-center text-muted-foreground transition-colors duration-(--duration-base) ease-(--ease-out) group-data-selected/command-item:text-accent-foreground",
+        "[&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}
@@ -898,16 +1003,85 @@ function CommandFooter({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 /**
- * Uma dica do rodapé: a tecla e o que ela faz.
- *
- * O `Kbd` fica de fora de propósito — quem chama escolhe entre desenhar a
- * tecla e escrever o nome dela, e a paleta não decide isso pela tela.
+ * O lado direito da linha: uma contagem, uma descrição, a seta (rodada 143).
+ * Empurrado para a ponta, com 16px de folga do nome, e cortando antes de
+ * encostar nele.
  */
-function CommandHint({ className, ...props }: React.ComponentProps<"span">) {
+function CommandItemMeta({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span
-      data-slot="command-hint"
-      className={cn("inline-flex items-center gap-1.5", className)}
+      data-slot="command-item-meta"
+      className={cn("ml-auto flex min-w-0 items-center gap-2 pl-4", className)}
+      {...props}
+    />
+  )
+}
+
+/**
+ * A seta de "ir" (rodada 143): só aparece na linha selecionada, e entra na
+ * diagonal em que aponta. Ela é o que diz que Enter **leva** a algum lugar.
+ */
+function CommandItemArrow({
+  className,
+  ...props
+}: React.ComponentProps<typeof ArrowUpRightIcon>) {
+  return (
+    <ArrowUpRightIcon
+      data-slot="command-item-arrow"
+      aria-hidden
+      className={cn(
+        "ml-auto size-4 shrink-0 -translate-x-0.5 translate-y-0.5 opacity-0 transition-[opacity,translate] duration-(--duration-base) ease-(--ease-out) group-data-selected/command-item:translate-x-0 group-data-selected/command-item:translate-y-0 group-data-selected/command-item:opacity-100",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+/**
+ * A legenda de teclado da pilha — fora da placa, embaixo dela
+ * (rodada 140).
+ *
+ * É o padrão novo do iOS: em vez de uma faixa dentro da caixa, cada dica é uma
+ * **cápsula de vidro solta**, e a linha as distribui como o rodapé distribuía
+ * — navegar à esquerda, abrir e fechar à direita. Mora como irmã da placa, e
+ * não dentro dela, porque um ancestral com `backdrop-filter` é raiz de fundo:
+ * ali o borrão das cápsulas não enxergaria a página.
+ *
+ * **São legendas, não botões**, por decisão do dono: nada acontece ao clicar,
+ * e no toque (`pointer-coarse`) a linha some, porque lá não há teclado. Entra
+ * um instante depois da placa, na mesma mola. Ela é o último filho da pilha,
+ * em qualquer `Command variant="panel"`.
+ */
+function CommandDock({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="command-dock"
+      className={cn(
+        "flex items-center justify-between gap-2 pointer-coarse:hidden",
+        "animate-in fade-in-0 slide-in-from-top-2 animation-duration-(--duration-spring) ease-(--ease-spring) [animation-delay:80ms] fill-mode-both",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+/** Uma cápsula da legenda: a tecla e o que ela faz, no vidro dos menus. */
+function CommandDockItem({ className, ...props }: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="command-dock-item"
+      className={cn(
+        "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs text-muted-foreground ring-1 ring-foreground/10",
+        menuPanelTintClassName,
+        // As teclas sem a pastilha, a pedido do dono: dentro de uma cápsula a
+        // pastilha era uma caixa dentro de outra caixa. A tecla fica só o
+        // glifo, no recuo da cápsula. O seletor de descendente (0,2,0) vence
+        // o `bg-*` e o `dark:bg-*` do `Kbd` sem `!important`.
+        "[&_[data-slot=kbd]]:min-w-0 [&_[data-slot=kbd]]:bg-transparent [&_[data-slot=kbd]]:px-0",
+        className
+      )}
       {...props}
     />
   )
@@ -933,16 +1107,19 @@ export {
   Command,
   commandVariants,
   CommandDialog,
+  CommandDock,
+  CommandDockItem,
   CommandEmpty,
   CommandEmptyDescription,
   CommandEmptyTitle,
-  CommandFooter,
   CommandGroup,
-  CommandHint,
   CommandInput,
   CommandItem,
   CommandItemContent,
+  CommandItemArrow,
   CommandItemDescription,
+  CommandItemIcon,
+  CommandItemMeta,
   CommandItemTitle,
   CommandList,
   CommandLoading,

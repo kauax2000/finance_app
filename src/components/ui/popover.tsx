@@ -112,7 +112,6 @@ function PopoverClose({
 const popoverContentVariants = cva(
   [
     /** Above Sheet overlay/content (`z-(--z-sheet)`); below Toaster (`z-(--z-toast)`). */
-    menuPanelSurfaceClassName,
     "z-(--z-popover) flex w-72 origin-(--radix-popover-content-transform-origin) flex-col text-sm outline-hidden",
     "max-h-(--radix-popover-content-available-height) max-w-(--radix-popover-content-available-width) overflow-y-auto overscroll-contain",
     // Quem declara um corpo rolável **cede a rolagem da casca**. Sem isto o
@@ -140,6 +139,18 @@ const popoverContentVariants = cva(
   ],
   {
     variants: {
+      /**
+       * Quem pinta (rodada 143). `plate` é a placa flutuante da régua — o
+       * padrão, e o que todo popover do app veste. `none` não pinta nada —
+       * sem placa, sem anel, sem sombra, sem recorte —, para o conteúdo que
+       * traz as **próprias** superfícies: a pilha do `Command` no `Combobox`
+       * (pílula de busca e placa, soltas). Placa em volta de placa seria o
+       * "fundo quebrado" que a regra de uma placa por superfície proíbe.
+       */
+      surface: {
+        plate: menuPanelSurfaceClassName,
+        none: "overflow-visible",
+      },
       padding: {
         // O recuo das tiras acompanha o do casco: onde o casco já recua, a tira
         // não recua duas vezes. Em `none` ela vira dona do próprio — e os 12/8
@@ -150,7 +161,7 @@ const popoverContentVariants = cva(
         none: "gap-0 p-0 [--popover-strip-px:--spacing(3)] [--popover-strip-py:--spacing(2)]",
       },
     },
-    defaultVariants: { padding: "default" },
+    defaultVariants: { surface: "plate", padding: "default" },
   },
 );
 
@@ -160,6 +171,7 @@ function PopoverContent({
   sideOffset = 4,
   collisionPadding = ANCHORED_COLLISION_PADDING,
   padding,
+  surface,
   onCloseAutoFocus,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content> &
@@ -216,7 +228,7 @@ function PopoverContent({
             fechouPorRolagem,
             onCloseAutoFocus,
           )}
-          className={cn(popoverContentVariants({ padding }), className)}
+          className={cn(popoverContentVariants({ surface, padding }), className)}
           {...props}
         />
       </PopoverPrimitive.Portal>

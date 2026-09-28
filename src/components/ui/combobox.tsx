@@ -442,17 +442,43 @@ function ComboboxContent({
   commandProps?: React.ComponentProps<typeof Command>
 }) {
   return (
+    // **O popover não pinta, e a paleta dentro dele é a pilha** (rodada 143):
+    // a pílula de busca e a placa da lista, soltas, como no `CommandDialog` —
+    // mas com as medidas de um dropdown (`density="menu"`): pílula de 32,
+    // linhas de 28, o recuo e o respiro dos menus.
+    // Placa do popover em volta da placa da lista seria a placa dupla que a
+    // regra de uma placa por superfície proíbe — por isso `surface="none"`.
     <PopoverContent
       data-slot="combobox-content"
       align={align}
+      surface="none"
       padding="none"
       className={cn(
         "w-(--radix-popover-trigger-width) min-w-48",
+        // **A sombra acompanha a forma de cada peça, e fica atrás das duas.**
+        // Um retângulo único atrás do conjunto deixava a aresta reta dele
+        // aparecendo onde a pílula arredonda — a sombra "ficava para fora",
+        // medido na tela. São dois pseudo-elementos com a forma exata de cada
+        // peça — `::before` a pílula (32 de altura, cápsula), `::after` a
+        // placa (a partir de 36 = 32 + os 4 do respiro, `rounded-xl`) —, os
+        // dois em `z` negativo sob o `isolate`: pintam abaixo **das duas**, e
+        // a sombra de uma nunca cai sobre a outra, o que as manteria em planos
+        // diferentes. `box-shadow` e não `filter`: um `filter` aqui seria raiz
+        // de fundo e apagaria o vidro. `shadow-lg`, porque o `shadow-md` dos
+        // menus quase não se via no tema claro com as peças soltas.
+        //
+        // A altura da pílula mora numa variável e não numa classe `h-*` da
+        // escada: isto é o **contorno da sombra**, não a altura de um
+        // controle — `field-control-ladder.test.ts` proíbe o combobox de
+        // reescrever a escada, e com razão.
+        "relative isolate [--combobox-pill-h:--spacing(8)]",
+        "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:-z-10 before:h-(--combobox-pill-h) before:rounded-full before:shadow-lg before:content-['']",
+        "after:pointer-events-none after:absolute after:inset-x-0 after:top-[calc(var(--combobox-pill-h)+--spacing(1))] after:bottom-0 after:-z-10 after:rounded-xl after:shadow-lg after:content-['']",
         className
       )}
       {...props}
     >
-      <Command filter={commandFilter} {...commandProps}>
+      <Command variant="panel" density="menu" filter={commandFilter} {...commandProps}>
         {children}
       </Command>
     </PopoverContent>

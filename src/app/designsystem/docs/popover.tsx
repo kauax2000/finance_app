@@ -152,6 +152,13 @@ export default function PopoverDoc() {
             description: "Distância entre o gatilho e a camada.",
           },
           {
+            prop: "surface",
+            type: '"plate" | "none"',
+            default: '"plate"',
+            description:
+              "plate é a placa flutuante da régua. none não pinta nada — sem placa, anel, sombra nem recorte —, para o conteúdo que traz as próprias superfícies, como a pilha do Command no Combobox.",
+          },
+          {
             prop: "padding",
             type: '"default" | "none"',
             default: '"default"',

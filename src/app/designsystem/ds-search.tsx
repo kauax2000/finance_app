@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  ArrowUpRightIcon,
-  ClockIcon,
-  MagnifyingGlassIcon,
-} from "@heroicons/react/16/solid";
+import { ClockIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid";
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -15,12 +11,15 @@ import {
   CommandEmpty,
   CommandEmptyDescription,
   CommandEmptyTitle,
-  CommandFooter,
-  CommandHint,
+  CommandDock,
+  CommandDockItem,
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandItemArrow,
   CommandItemDescription,
+  CommandItemIcon,
+  CommandItemMeta,
   CommandItemTitle,
   CommandList,
   CommandScope,
@@ -172,7 +171,6 @@ export function DsSearch() {
       >
         <CommandInput
           ref={inputRef}
-          size="lg"
           autoFocus
           value={query}
           onValueChange={setQuery}
@@ -218,10 +216,7 @@ export function DsSearch() {
           }}
         />
 
-        {/* Recuo lateral de 8, e não os 4 da régua: a linha acesa alinha com
-            as bordas do campo de busca acima dela, em vez de sair 4px para
-            fora. `px-2` só troca o eixo; o vertical continua o da régua. */}
-        <CommandList className="px-2">
+        <CommandList>
           {/* Busca vazia não pode ser beco sem saída: além de dizer o que a
                 busca cobre, ela oferece a volta. */}
           <CommandEmpty>
@@ -259,18 +254,7 @@ export function DsSearch() {
 
           {/* O miolo remonta a cada troca de vista, e é a remontagem que faz as
               linhas subirem (`command-reveal`). */}
-          <div
-            key={scope ?? "root"}
-            // O rótulo do grupo respira antes da primeira linha: 4px a mais
-            // sobre os 2px da régua do `CommandGroup`. Margem na lista de
-            // itens, e não recuo no rótulo, para não disputar com o `pb-0.5`
-            // da régua pela ordem de emissão. E 6px a mais entre grupos, por
-            // `gap` — um grupo escondido pelo cmdk (`hidden`) não conta nele,
-            // então a busca não abre buracos. Linhas continuam coladas. O
-            // mesmo respiro no topo, entre o campo e o primeiro rótulo, e no
-            // fim, entre a última linha e o rodapé.
-            className="flex flex-col gap-1.5 py-1.5 [&_[cmdk-group-items]]:mt-1"
-          >
+          <div key={scope ?? "root"}>
             {scoped && scope ? (
               <CommandGroup heading={scope}>
                 {scoped.map((item) => (
@@ -298,26 +282,17 @@ export function DsSearch() {
                         value={category}
                         keywords={[label]}
                         onSelect={() => entrar(category)}
-                        className="min-h-9"
                       >
-                        {/* A mesma caixa de 24 dos recentes, sem fundo — o
-                            ladrilho saiu a pedido do dono. */}
-                        <span className="flex size-6 shrink-0 items-center justify-center">
-                          <Icon
-                            aria-hidden
-                            className="text-muted-foreground transition-colors duration-(--duration-base) ease-(--ease-out) group-data-selected/command-item:text-accent-foreground"
-                          />
-                        </span>
+                        <CommandItemIcon>
+                          <Icon />
+                        </CommandItemIcon>
                         <CommandItemTitle>{category}</CommandItemTitle>
-                        {/* A contagem vai para a ponta, numa linha só com o
-                            nome — as duas linhas por camada faziam a raiz
-                            passar da altura da paleta. */}
-                        <span className="ml-auto flex items-center gap-2">
+                        <CommandItemMeta>
                           <CommandItemDescription className="nums">
                             {`${total} páginas`}
                           </CommandItemDescription>
-                          <SetaIr />
-                        </span>
+                          <CommandItemArrow />
+                        </CommandItemMeta>
                       </CommandItem>
                     );
                   })}
@@ -332,28 +307,12 @@ export function DsSearch() {
                         key={item.slug}
                         value={item.name}
                         onSelect={() => go(item.slug)}
-                        // Uma linha só, mas não a de menu (28): 36, o degrau
-                        // `lg`, entre o item de menu e a linha de camada (44).
-                        // 44 foi recusado na tela — grande demais para um nome.
-                        className="min-h-9"
                       >
-                        {/* A seta aponta para onde o clique leva: na linha
-                            selecionada ela dá um passo para cima e para a
-                            direita, o mesmo `nudge` do marcador da divulgação. */}
-                        {/* O relógio mora numa caixa de 24, a mesma do ladrilho
-                            da camada: o nome nasce na mesma coluna que o nome da
-                            camada acima, em vez de 8px à esquerda dele. */}
-                        <span className="flex size-6 shrink-0 items-center justify-center">
-                          <ClockIcon
-                            aria-hidden
-                            // A tinta da linha selecionada vem pelo `group`, e não pelo `*:[svg]`
-                            // do `CommandItem`: dentro da caixa de 24 o ícone deixou de ser
-                            // filho direto, e a regra por filho direto parou de alcançá-lo.
-                            className="text-muted-foreground transition-colors duration-(--duration-base) ease-(--ease-out) group-data-selected/command-item:text-accent-foreground"
-                          />
-                        </span>
+                        <CommandItemIcon>
+                          <ClockIcon />
+                        </CommandItemIcon>
                         {item.name}
-                        <SetaIr />
+                        <CommandItemArrow />
                       </CommandItem>
                     ))}
                   </CommandGroup>
@@ -385,49 +344,36 @@ export function DsSearch() {
           </div>
         </CommandList>
 
-        <CommandFooter>
-          <div className="flex items-center gap-3">
-            <CommandHint>
+        {/* A legenda de teclado, em cápsulas soltas embaixo da placa — o último
+            filho da pilha. Navegar fica à esquerda; abrir e fechar andam
+            juntos à direita, porque os dois encerram a interação. */}
+        <CommandDock>
+          <div className="flex items-center gap-2">
+            <CommandDockItem>
               <Kbd>↑</Kbd>
               <Kbd>↓</Kbd>
               navegar
-            </CommandHint>
+            </CommandDockItem>
             {scope ? (
-              <CommandHint className="animate-in fade-in-0 slide-in-from-left-1 animation-duration-(--duration-base) ease-(--ease-out)">
+              <CommandDockItem className="animate-in fade-in-0 slide-in-from-left-1 animation-duration-(--duration-base) ease-(--ease-out)">
                 <Kbd>⌫</Kbd>
                 voltar
-              </CommandHint>
+              </CommandDockItem>
             ) : null}
           </div>
-          {/* Navegar fica à esquerda; abrir e fechar andam juntos à direita,
-              porque os dois encerram a interação e o `justify-between` do
-              rodapé espalharia os três em vez de agrupá-los. */}
-          <div className="flex items-center gap-3">
-            <CommandHint>
+          <div className="flex items-center gap-2">
+            <CommandDockItem>
               <Kbd>↵</Kbd>
               {scope ? "abrir" : "entrar"}
-            </CommandHint>
-            <CommandHint>
+            </CommandDockItem>
+            <CommandDockItem>
               <Kbd>esc</Kbd>
               fechar
-            </CommandHint>
+            </CommandDockItem>
           </div>
-        </CommandFooter>
+        </CommandDock>
       </CommandDialog>
     </>
-  );
-}
-
-/**
- * A seta de "ir" no fim da linha selecionada — camadas e recentes. Só aparece
- * na linha selecionada, e entra na diagonal em que aponta.
- */
-function SetaIr() {
-  return (
-    <ArrowUpRightIcon
-      aria-hidden
-      className="ml-auto -translate-x-0.5 translate-y-0.5 opacity-0 transition-[opacity,translate] duration-(--duration-base) ease-(--ease-out) group-data-selected/command-item:translate-x-0 group-data-selected/command-item:translate-y-0 group-data-selected/command-item:opacity-100"
-    />
   );
 }
 
@@ -447,40 +393,34 @@ function DsPageItem({
 }) {
   const { Icon } = CATEGORY_META[category];
   return (
-    // O desenho das linhas da raiz: uma linha de 36, o ícone na caixa de 24,
-    // o nome, e a descrição na ponta, apagada e cortada, antes da seta.
-    <CommandItem
-      value={name}
-      onSelect={() => onSelect(slug)}
-      className="min-h-9"
-    >
-      <span className="flex size-6 shrink-0 items-center justify-center">
-        <Icon
-          aria-hidden
-          className="text-muted-foreground transition-colors duration-(--duration-base) ease-(--ease-out) group-data-selected/command-item:text-accent-foreground"
-        />
-      </span>
+    <CommandItem value={name} onSelect={() => onSelect(slug)}>
+      <CommandItemIcon>
+        <Icon />
+      </CommandItemIcon>
       <CommandItemTitle className="shrink-0">{name}</CommandItemTitle>
-      <span className="ml-auto flex min-w-0 items-center gap-2 pl-4">
+      <CommandItemMeta>
         <CommandItemDescription>{description}</CommandItemDescription>
-        <SetaIr />
-      </span>
+        <CommandItemArrow />
+      </CommandItemMeta>
     </CommandItem>
   );
 }
 
 /**
- * Uma frase que rola letra a letra quando o gatilho recebe o cursor ou o foco.
+ * Uma frase que se **dissolve** na outra, palavra a palavra, quando o gatilho
+ * recebe o cursor ou o foco.
  *
- * Cada letra é um `inline-block` com o próprio atraso (`--i` × 14ms), e todas
- * andam na mola da casa: a que `sai` sobe 10px e apaga, a que `entra` vem de
- * 10px abaixo. Quem recorta é a própria frase (`overflow-hidden` na linha de
- * 20px), então as letras **rolam** para dentro e para fora da linha em vez de
- * flutuar sobre a barra. Um borrão de 2px no trajeto suaviza a passagem.
+ * O gesto já foi letra a letra rolando (chamava atenção demais) e depois
+ * palavra a palavra deslizando 4px (discreto, mas mecânico). Hoje as duas
+ * frases **ocupam o mesmo lugar e trocam de foco**, como uma lente: a que sai
+ * desfoca e some, a que entra vem do desfoque até ficar nítida, com um
+ * respiro de 1px e escala de 98% → 100%. Cada palavra começa 45ms depois da
+ * anterior, em `--duration-slow` com `--ease-emphasized` — a curva que acelera
+ * cedo e pousa devagar, a do link do catálogo. Não há trajeto a ler, só a
+ * passagem de uma frase para a outra.
  *
  * Com movimento reduzido o bloco global encurta a duração, mas **não o
- * atraso**, e a onda levaria ~250ms para terminar de uma vez só: o atraso é
- * zerado à mão. É a mesma medição da `command-reveal`.
+ * atraso**: ele é zerado à mão, como na `command-reveal`.
  */
 function FraseRolante({
   texto,
@@ -489,23 +429,26 @@ function FraseRolante({
   texto: string;
   papel: "sai" | "entra";
 }) {
-  const repouso =
+  const estado =
     papel === "sai"
-      ? "group-hover/button:-translate-y-2.5 group-hover/button:opacity-0 group-hover/button:blur-[2px] group-focus-visible/button:-translate-y-2.5 group-focus-visible/button:opacity-0 group-focus-visible/button:blur-[2px]"
-      : "translate-y-2.5 opacity-0 blur-[2px] group-hover/button:translate-y-0 group-hover/button:opacity-100 group-hover/button:blur-none group-focus-visible/button:translate-y-0 group-focus-visible/button:opacity-100 group-focus-visible/button:blur-none";
+      ? "group-hover/button:opacity-0 group-hover/button:blur-[3px] group-hover/button:scale-[1.02] group-focus-visible/button:opacity-0 group-focus-visible/button:blur-[3px] group-focus-visible/button:scale-[1.02]"
+      : "translate-y-px scale-[0.98] opacity-0 blur-[3px] group-hover/button:translate-y-0 group-hover/button:scale-100 group-hover/button:opacity-100 group-hover/button:blur-none group-focus-visible/button:translate-y-0 group-focus-visible/button:scale-100 group-focus-visible/button:opacity-100 group-focus-visible/button:blur-none";
+  const palavras = texto.split(" ");
   return (
     <span className="block overflow-hidden whitespace-pre">
-      {Array.from(texto).map((letra, i) => (
-        <span
-          key={i}
-          style={{ "--i": i } as React.CSSProperties}
-          className={cn(
-            "inline-block transition-[opacity,translate,filter] duration-(--duration-spring) ease-(--ease-spring) [transition-delay:calc(var(--i)*14ms)] motion-reduce:[transition-delay:0ms]",
-            repouso,
-          )}
-        >
-          {letra}
-        </span>
+      {palavras.map((palavra, i) => (
+        <React.Fragment key={i}>
+          {i > 0 ? " " : null}
+          <span
+            style={{ "--i": i } as React.CSSProperties}
+            className={cn(
+              "inline-block origin-left transition-[opacity,translate,scale,filter] duration-(--duration-slow) ease-(--ease-emphasized) [transition-delay:calc(var(--i)*45ms)] motion-reduce:[transition-delay:0ms]",
+              estado,
+            )}
+          >
+            {palavra}
+          </span>
+        </React.Fragment>
       ))}
     </span>
   );
@@ -572,8 +515,7 @@ function DsSearchTrigger({ onClick }: { onClick: () => void }) {
         {/* Em repouso o campo diz o que se acha nele; com o cursor (ou o
             foco de teclado) ele vira o convite para a ação. As duas frases
             ocupam a mesma célula da grade, então a largura não pula, e trocam
-            **letra a letra**: a de repouso sobe e some, a do convite sobe de
-            baixo, as duas numa onda da esquerda para a direita (ver
+            **palavra a palavra**, uma se dissolvendo na outra (ver
             `FraseRolante`).
 
             **`text-left` é carga estrutural**: o `<button>` centraliza texto
@@ -584,13 +526,19 @@ function DsSearchTrigger({ onClick }: { onClick: () => void }) {
           aria-hidden
           className="grid min-w-0 text-left max-lg:sr-only [&>*]:col-start-1 [&>*]:row-start-1"
         >
-          <FraseRolante texto="Busque componentes…" papel="sai" />
-          <FraseRolante texto="Clique para buscar" papel="entra" />
+          <FraseRolante texto="Buscar componentes e tokens…" papel="sai" />
+          <FraseRolante texto="Abrir a busca" papel="entra" />
         </span>
         {/* `aria-hidden` porque o atalho já é anunciado pelo
           `aria-keyshortcuts` do próprio botão — repetir a tecla no nome
           acessível diria a mesma coisa duas vezes. */}
-        <Kbd keys="mod+k" aria-hidden className="ml-auto max-lg:hidden" />
+        <Kbd
+          keys="mod+k"
+          aria-hidden
+          // Sem a pastilha, como as teclas da legenda da paleta: dentro de um
+          // campo em pílula ela era uma caixa dentro de outra caixa.
+          className="ml-auto min-w-0 bg-transparent px-0 max-lg:hidden dark:bg-transparent"
+        />
       </Button>
     </div>
   );

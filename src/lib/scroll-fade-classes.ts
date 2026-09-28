@@ -72,7 +72,6 @@
  * ```
  * scrollFadeBandsClassName,
  * "has-[[data-slot=command-input-wrapper]]:[--scroll-fade-band-h:calc(--spacing(8)+--spacing(4))]",
- * "has-[[data-slot=command-footer]]:[--scroll-fade-foot-h:--spacing(9)]",
  * ```
  *
  * O seletor não pode morar aqui porque ele depende do `data-slot` da faixa, e

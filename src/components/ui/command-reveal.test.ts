@@ -16,13 +16,14 @@ describe("as linhas da paleta sobem ao aparecer (rodada 139)", () => {
     expect(bloco).toMatch(/nth-child\(n \+ 5\)/)
   })
 
-  it("a lista veste a utility e só o diálogo liga a duração", () => {
+  it("a lista veste a utility e só a pilha liga a duração", () => {
     const lista = paleta.slice(paleta.indexOf("function CommandList"), paleta.indexOf("function CommandEmpty"))
     expect(lista).toContain('"command-reveal"')
-    const dialogo = paleta.slice(paleta.indexOf("function CommandDialog"), paleta.indexOf("function CommandInput"))
-    expect(dialogo).toContain("[--command-reveal:var(--duration-spring)]")
-    expect(paleta.replace(dialogo, "")).not.toContain("--command-reveal:")
-    expect(fonte("src/components/ui/combobox.tsx")).not.toContain("--command-reveal")
+    // Desde a rodada 143 quem liga é a variante `panel` — a pilha, no diálogo,
+    // solta e no Combobox. `plain` fica em `0s`.
+    const cva = paleta.slice(paleta.indexOf("const commandVariants"), paleta.indexOf("defaultVariants"))
+    expect(cva).toMatch(/panel: "[^"]*\[--command-reveal:var\(--duration-spring\)\]/)
+    expect(paleta.replace(cva, "")).not.toContain("--command-reveal:")
   })
 
   it("o escopo é texto pintado, não Badge, e o campo tem o slot", () => {
