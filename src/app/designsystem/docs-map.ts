@@ -29,7 +29,6 @@ import ContextMenuDoc from "./docs/context-menu"
 import DatePickerDoc from "./docs/date-picker"
 import DescriptionListDoc from "./docs/description-list"
 import DialogDoc from "./docs/dialog"
-import DragHandleDoc from "./docs/drag-handle"
 import DrawerDoc from "./docs/drawer"
 import DropdownMenuDoc from "./docs/dropdown-menu"
 import EmptyStateDoc from "./docs/empty-state"
@@ -119,7 +118,6 @@ export const DOCS: Record<string, ComponentType> = {
   "date-picker": DatePickerDoc,
   "description-list": DescriptionListDoc,
   "dialog": DialogDoc,
-  "drag-handle": DragHandleDoc,
   "drawer": DrawerDoc,
   "dropdown-menu": DropdownMenuDoc,
   "empty-state": EmptyStateDoc,

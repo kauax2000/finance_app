@@ -5,31 +5,48 @@ import { Checkbox as CheckboxPrimitive } from "radix-ui"
 import { CheckIcon, MinusIcon } from "@heroicons/react/16/solid"
 import { cva, type VariantProps } from "class-variance-authority"
 
+import { composeRefs, useBrandGlow } from "@/hooks/use-brand-glow"
 import { cn } from "@/lib/utils"
 
 /**
  * A caixa de escolha booleana.
  *
+ * ## Marcar floresce (rodada 154)
+ *
+ * O preenchimento marcado não troca de cor: ele **floresce do centro**, a
+ * mesma flor do `Button` (`@utility button-bloom`, `--button-bloom` de 0 a 1),
+ * na mola da casa ao marcar e em `--ease-out` ao desmarcar. O tique entra
+ * junto, crescendo de 50%; e como ele tem a cor do fundo desmarcado, é a flor
+ * que o revela. A borda vira `--primary` no mesmo ritmo.
+ *
  * ## O eixo `variant`, e por que ele existe
  *
  * `default` é a caixa do sistema: marcada, ela é a tecla `--primary` com o
- * tique branco. `brand` é a mesma caixa com o arco-íris da marca por contorno —
- * **só quando marcada**. Desmarcada ela é pixel a pixel a `default`, e isso é
- * decisão e não economia: a passagem do fio cinza para o arco-íris *é* a
- * comemoração, e cinco caixas desmarcadas numa lista com cinco anéis de acento
- * deixam de ter acento nenhum. Uma por tela, como as outras peças de marca.
+ * tique branco. `brand` é a mesma caixa com a **borda que acende em
+ * arco-íris conforme o ponteiro se aproxima** (rodada 155) — a família do
+ * brilho, a do `Alert`, do `Card`, do `Badge` e do `Button brand`
+ * (`@utility brand-glow` + `useBrandGlow`). Longe do ponteiro, e no toque, ela
+ * é pixel a pixel a `default`. Uma por tela, como as outras peças de marca.
  *
- * ## `brand` não tem halo, e isso é limite de mecanismo
+ * ## O brilho só pinta a borda, e o `::after` continua sendo o alvo
  *
- * O `Button` e o `Badge` desenham a marca em duas camadas: o contorno no
- * `::before` e um halo borrado no `::after`. Aqui o `::after` **já é o alvo de
- * toque de 44px**, e ele não se move. Sobra o contorno — que foi o do
- * `brandOutline` até a rodada 152, e é o certo nesta escala de qualquer forma: um halo a
- * `-inset-1` sangra 4px e encosta na linha vizinha de uma lista com `gap-3`.
+ * O anel do brilho é recortado na máscara da `brand-glow` (rodada 156): o
+ * meio da caixa nunca é pintado, e o preenchimento marcado, a flor e o hover
+ * aparecem intactos sob o arco. O `::after` segue sendo o alvo de toque de
+ * 44px — o brilho não precisa dele.
  */
 const checkboxVariants = cva(
   [
-    "group peer relative size-4 shrink-0 rounded border border-input bg-background shadow-xs outline-none transition-colors",
+    "group peer relative size-4 shrink-0 rounded border border-input bg-background shadow-xs outline-none",
+    // A flor do marcado: a cor, a variável ligada nos dois estados cheios, e o
+    // ritmo de cada lado — mola ao marcar, `--ease-out` ao desmarcar. A lista
+    // de `transition` enumera a variável; `transition-colors` a deixaria de
+    // fora, e a flor estalaria.
+    "button-bloom [--button-bloom-fill:var(--primary)]",
+    "data-[state=checked]:[--button-bloom:1] data-[state=indeterminate]:[--button-bloom:1]",
+    "transition-[color,background-color,border-color,box-shadow,--button-bloom] duration-(--duration-slow) ease-(--ease-out)",
+    "data-[state=checked]:duration-(--duration-spring) data-[state=checked]:ease-(--ease-spring)",
+    "data-[state=indeterminate]:duration-(--duration-spring) data-[state=indeterminate]:ease-(--ease-spring)",
     // O controle desenhado tem 16px; o pseudo-elemento leva a área de
     // toque aos 44px que um dedo pede, sem mexer no layout. É a mesma
     // técnica do `Switch`. Não substitui envolver o item num `Label`
@@ -39,6 +56,7 @@ const checkboxVariants = cva(
     // assunto de aparência.
     "after:absolute after:-inset-3.5 after:content-['']",
     // O par de toque: `hover:` compila dentro de `@media (hover: hover)`.
+    // Marcada, a flor cobre a caixa, e o realce fica por baixo dela.
     "hover:bg-muted/60 active:bg-muted/60",
     "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/45",
     // O estado inválido do `Radio`, que a caixa não tinha: um termo de uso
@@ -51,39 +69,16 @@ const checkboxVariants = cva(
     variants: {
       variant: {
         default: [
-          "data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
-          "data-[state=indeterminate]:border-primary data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground",
+          "data-[state=checked]:border-primary data-[state=checked]:text-primary-foreground",
+          "data-[state=indeterminate]:border-primary data-[state=indeterminate]:text-primary-foreground",
         ].join(" "),
-        // A receita do `Button variant="brand"`, reduzida ao contorno.
-        //
-        // **O núcleo vai no pseudo, e não no elemento.** Numa raiz de
-        // empilhamento o fundo *e a borda* do elemento pintam **antes** dos
-        // filhos de `z` negativo, então o `::before` a `-z-10` pinta por cima
-        // deles. É a armadilha documentada em `button.tsx`, e aqui ela
-        // trabalha a favor: com o pseudo a `-inset-px` ele cobre a borda
-        // `border-input` inteira, e nada precisa ser anulado — quem liga e
-        // desliga as duas coisas é uma opacidade só.
-        //
-        // **`opacity` e não montar/desmontar a camada:** `background-image`
-        // não interpola entre um degradê e `none`, então trocar a pintura
-        // faria o contorno estalar. Com o pseudo sempre presente, ele esmaece
-        // no `--duration-fast` da casa — o mesmo ritmo do halo do botão.
-        //
-        // **`brand-rainbow-image` não é decoração e não se apaga**: é ela que
-        // declara `--brand-rainbow` no elemento, e o pseudo herda daqui o
-        // valor já substituído. Ver a rodada 88.
-        //
-        // O tique continua `--primary-foreground` sobre `--primary`: o miolo
-        // marcado é chapado, o arco-íris só aparece por 1px de borda, e o
-        // contraste do conteúdo é **o mesmo de hoje**. Arco-íris sob texto
-        // continua proibido.
+        // A borda que acende perto do ponteiro (rodada 155). Intensidade
+        // cheia, a do `Badge` e do `Button`: numa caixa de 16px o arco tem
+        // poucos pixels. As cores do marcado são as da `default`.
         brand: [
-          "brand-rainbow-image isolate [--brand-fill:var(--primary)]",
-          "data-[state=checked]:text-primary-foreground data-[state=indeterminate]:text-primary-foreground",
-          "before:absolute before:-inset-px before:-z-10 before:rounded-[inherit] before:border before:border-transparent",
-          "before:[background:linear-gradient(var(--brand-fill),var(--brand-fill))_padding-box,var(--brand-rainbow)_border-box]",
-          "before:opacity-0 before:transition-opacity before:duration-(--duration-fast)",
-          "data-[state=checked]:before:opacity-100 data-[state=indeterminate]:before:opacity-100",
+          "brand-glow isolate [--brand-glow-opacity:1]",
+          "data-[state=checked]:border-primary data-[state=checked]:text-primary-foreground",
+          "data-[state=indeterminate]:border-primary data-[state=indeterminate]:text-primary-foreground",
         ].join(" "),
       },
     },
@@ -94,11 +89,14 @@ const checkboxVariants = cva(
 function Checkbox({
   className,
   variant,
+  ref,
   ...props
 }: React.ComponentProps<typeof CheckboxPrimitive.Root> &
   VariantProps<typeof checkboxVariants>) {
+  const glowRef = useBrandGlow<HTMLButtonElement>(variant === "brand")
   return (
     <CheckboxPrimitive.Root
+      ref={composeRefs(glowRef, ref)}
       data-slot="checkbox"
       data-variant={variant ?? "default"}
       className={cn(checkboxVariants({ variant }), className)}
@@ -107,11 +105,17 @@ function Checkbox({
       <CheckboxPrimitive.Indicator
         data-slot="checkbox-indicator"
         className={cn(
-          "flex size-full items-center justify-center text-current",
+          // A tinta do tique é a do marcado desde o primeiro quadro, e não
+          // `currentColor`: a cor da raiz faz transição do texto para
+          // `--primary-foreground`, e o tique nascia escuro antes da flor
+          // chegar. Cravado, ele tem a cor do fundo desmarcado e só aparece
+          // quando a flor passa por baixo dele.
+          "flex size-full items-center justify-center text-primary-foreground",
         )}
       >
-        <CheckIcon className="size-3.5 hidden group-data-[state=checked]:block" />
-        <MinusIcon className="size-3.5 hidden group-data-[state=indeterminate]:block" />
+        {/* O tique entra crescendo de 50%, na mesma mola da flor. */}
+        <CheckIcon className="size-3.5 hidden group-data-[state=checked]:block animate-in zoom-in-50 animation-duration-(--duration-spring) ease-(--ease-spring)" />
+        <MinusIcon className="size-3.5 hidden group-data-[state=indeterminate]:block animate-in zoom-in-50 animation-duration-(--duration-spring) ease-(--ease-spring)" />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   )

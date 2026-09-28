@@ -49,7 +49,6 @@ const fonte = (nome: string) =>
 
 /** As classes de cada peça que veste a marca. */
 const PORTADORES = {
-  "checkbox/brand": checkboxVariants({ variant: "brand" }),
   "radio/brand": radioVariants({ variant: "brand" }),
   "radio-group/brandCard": radioGroupItemVariants({ variant: "brandCard" }),
 } as const
@@ -60,6 +59,7 @@ describe("contorno de marca", () => {
       // É `brand-rainbow-image` quem declara a variável no elemento; os
       // pseudo-elementos herdam daqui o valor já substituído. Um `var()` dentro
       // de uma propriedade personalizada resolve onde ela é **declarada**.
+      //
       expect(classes.split(/\s+/), nome).toContain("brand-rainbow-image")
       expect(classes, nome).toContain("--brand-fill:")
       expect(classes, nome).toContain("_border-box]")
@@ -92,11 +92,7 @@ describe("contorno de marca", () => {
     // superfície do sistema — `bg-background` na caixa é o que se **deve** ver
     // enquanto o pseudo está a zero. O que não pode existir é tinta sob o
     // contorno: nenhum `bg-` atrás de um variante de marcado.
-    for (const nome of [
-      "checkbox/brand",
-      "radio/brand",
-      "radio-group/brandCard",
-    ] as const) {
+    for (const nome of ["radio/brand", "radio-group/brandCard"] as const) {
       const sobMarcado = PORTADORES[nome]
         .split(/\s+/)
         .filter((c) => /checked/.test(c))
@@ -110,7 +106,7 @@ describe("contorno de marca", () => {
       // Ele mora na **base** do `cva`, e por isso aparece nas duas variantes.
       const variantes =
         nome === "checkbox"
-          ? [checkboxVariants({ variant: "default" }), PORTADORES["checkbox/brand"]]
+          ? [checkboxVariants({ variant: "default" }), checkboxVariants({ variant: "brand" })]
           : [radioVariants({ variant: "default" }), PORTADORES["radio/brand"]]
       for (const classes of variantes) {
         expect(classes, nome).toContain("after:-inset-3.5")
@@ -127,20 +123,13 @@ describe("contorno de marca", () => {
   })
 
   it("5. o arco-íris só aparece marcado, e ele esmaece", () => {
-    expect(PORTADORES["checkbox/brand"]).toContain(
-      "data-[state=checked]:before:opacity-100"
-    )
     expect(PORTADORES["radio/brand"]).toContain(
       "data-[state=checked]:before:opacity-100"
     )
     expect(PORTADORES["radio-group/brandCard"]).toContain(
       "has-data-checked:before:opacity-100"
     )
-    for (const nome of [
-      "checkbox/brand",
-      "radio/brand",
-      "radio-group/brandCard",
-    ] as const) {
+    for (const nome of ["radio/brand", "radio-group/brandCard"] as const) {
       // Desmarcado é o fio do sistema, e a passagem é uma transição e não um
       // estalo: `background-image` não interpola entre um degradê e `none`, e é
       // por isso que quem liga e desliga é a opacidade.
@@ -386,13 +375,23 @@ describe("contorno de marca", () => {
     expect(corpoBg).not.toMatch(/--brand-glow-start/) // a cor NÃO gira
     expect(corpoMask).toMatch(/--brand-glow-start/) // a janela gira
 
-    // **Uma camada de máscara, e `mask-composite` continua proibido.** A
-    // referência compõe duas (`intersect, intersect`) só para recortar o anel;
-    // aqui esse trabalho é do par `padding-box`/`border-box`, e onde a máscara
-    // apaga aparece o `bg-card` do alerta, idêntico ao núcleo. O banimento
-    // medido é da composição: uma camada `none` num `intersect` apaga a peça.
-    expect(util).not.toMatch(/mask-composite/)
+    // **A máscara recorta o anel, e o meio nunca é pintado** (rodada 156).
+    // Até a 155 o anel vinha com um núcleo chapado em `padding-box`, e a
+    // janela — uma cunha que sai do centro — o mostrava como um feixe: com o
+    // ponteiro perto, de 297 a 4.748 pixels do miolo mudavam. Hoje são três
+    // camadas compostas de baixo para cima: a caixa, menos a `padding-box`
+    // (o anel), intersectado com a janela.
     expect(corpoMask.match(/conic-gradient/g)?.length).toBe(2) // mask + -webkit
+    expect(util).toMatch(/-webkit-mask-clip: border-box, padding-box, border-box;/)
+    expect(util).toMatch(/-webkit-mask-composite: source-in, xor;/)
+    expect(util).toMatch(/\bmask-clip: border-box, padding-box, border-box;/)
+    expect(util).toMatch(/\bmask-composite: intersect, exclude;/)
+    // O risco que baniu a composição era uma camada `none`: a janela é a única
+    // com variável, e o fallback mora no próprio `var()`.
+    expect(corpoMask).toMatch(/var\(--brand-glow-start, 0\)/)
+    expect(corpoMask).not.toMatch(/var\(--brand-glow-start\)/)
+    // E o pseudo não pinta miolo nenhum: só o arco-íris, na `border-box`.
+    expect(corpoBg).not.toMatch(/padding-box|--brand-glow-core|--brand-glow-overlay/)
 
     // A janela é um **triângulo puro**: três paradas, opaco no meio, fechando
     // em `spread * 2` — o `transparent, #fff, transparent 80deg` da
@@ -434,15 +433,11 @@ describe("contorno de marca", () => {
     // A abertura sai do `spread`, e não de medidas soltas.
     expect(util).toMatch(/--brand-glow-spread/)
 
-    // O núcleo é o **mesmo token** da superfície da variante, e é essa
-    // igualdade que faz a região apagada pela máscara ficar invisível.
-    expect(util).toMatch(/var\(--card\)/)
-    expect(classes).toContain("bg-card")
-
-    // O núcleo chapado em `padding-box` é o que impede o degradê de cobrir o
+    // A máscara que recorta o anel é o que impede o degradê de cobrir o
     // texto: numa raiz de empilhamento o filho de `z` negativo pinta **por
     // cima** do fundo do elemento.
-    expect(util).toMatch(/padding-box/)
+    expect(classes).toContain("bg-card")
+    expect(util).not.toMatch(/--brand-glow-core|--brand-glow-overlay/)
     expect(util).toMatch(/border-box/)
     expect(util).toMatch(/z-index:\s*-10/)
 
@@ -550,7 +545,7 @@ describe("contorno de marca", () => {
     // região que a máscara apaga lê como outra superfície. E o halo sempre
     // aceso do contorno não pode sobreviver ao lado do brilho.
     const chip = cn(badgeVariants({ variant: "brand" })).split(/\s+/)
-    for (const c of ["brand-rainbow-image", "brand-glow", "relative", "isolate", "bg-muted", "[--brand-glow-core:var(--muted)]", "[--brand-glow-opacity:1]"]) {
+    for (const c of ["brand-rainbow-image", "brand-glow", "relative", "isolate", "bg-muted", "[--brand-glow-opacity:1]"]) {
       expect(chip, c).toContain(c)
     }
     expect(chip.join(" ")).not.toMatch(/after:blur|--brand-fill/)
@@ -558,9 +553,26 @@ describe("contorno de marca", () => {
 
     // A quarta: o `Button brand` (rodada 145), neutro sobre o `secondary`.
     const botao = cn(buttonVariants({ variant: "brand" })).split(/\s+/)
-    for (const c of ["brand-rainbow-image", "brand-glow", "relative", "isolate", "bg-secondary", "[--brand-glow-core:var(--secondary)]"]) {
+    for (const c of ["brand-rainbow-image", "brand-glow", "relative", "isolate", "bg-secondary"]) {
       expect(botao, c).toContain(c)
     }
     expect(fonte("button")).toMatch(/useBrandGlow<HTMLButtonElement>\(variant === "brand"\)/)
+
+    // A quinta: o `Checkbox brand` (rodada 155; foi do contorno até a 153 e
+    // deslizou na 154). Só o anel acende, e o preenchimento marcado aparece
+    // intacto sob ele.
+    const caixa = cn(checkboxVariants({ variant: "brand" })).split(/\s+/)
+    for (const c of ["brand-glow", "isolate", "[--brand-glow-opacity:1]"]) {
+      expect(caixa, c).toContain(c)
+    }
+    // O `::after` continua sendo o alvo de toque, e nada do contorno sobrou.
+    expect(caixa).toContain("after:-inset-3.5")
+    expect(caixa.join(" ")).not.toMatch(/(^|\s)before:|brand-rainbow-slide|--brand-fill/)
+    expect(fonte("checkbox")).toMatch(/useBrandGlow<HTMLButtonElement>\(variant === "brand"\)/)
+
+    // Nenhuma peça declara mais um núcleo: ele é o que virava o feixe.
+    for (const nome of ["button", "badge", "checkbox", "alert", "card"]) {
+      expect(fonte(nome), nome).not.toMatch(/\[--brand-glow-(core|overlay):/)
+    }
   })
 })

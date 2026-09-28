@@ -470,13 +470,14 @@ function DsSearchTrigger({ onClick }: { onClick: () => void }) {
   // brand), só onde o gatilho é um campo, a partir de `lg`. Ele mora num
   // invólucro, e não no botão: o `::before` do brilho fica em `z` negativo sob
   // `isolate`, e no próprio botão ele pintaria **por cima** do fundo e do disco
-  // de hover do `tertiary`. No invólucro, o fundo translúcido do botão pinta
-  // por cima do núcleo, e o núcleo é o `--background` que a barra mostra atrás.
+  // de hover do `tertiary`. No invólucro, só o anel acende: a máscara recorta
+  // a borda, e o campo atrás aparece intacto (rodada 156 — o núcleo chapado de
+  // antes era o preto da página sobre este campo mais claro, e virava feixe).
   const glowRef = useBrandGlow(true);
   return (
     <div
       ref={glowRef}
-      className="relative isolate flex rounded-full lg:w-full lg:max-w-sm lg:brand-glow [--brand-glow-core:var(--background)]"
+      className="relative isolate flex rounded-full lg:w-full lg:max-w-sm lg:brand-glow"
     >
       <Button
         type="button"

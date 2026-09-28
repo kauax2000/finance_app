@@ -112,9 +112,9 @@ import { cn } from "@/lib/utils"
  * os degraus contra `--background` e chegou ao mesmo piso desta varredura, por
  * caminho independente. Com isso cai o argumento que esta nota fazia, de que a
  * área explicaria alças mais claras: área muda como a cor **lê**, não o que a
- * 1.4.11 **exige**. A tinta é escrita literal aqui: o
- * `drag-handle` é Átomo, mas a asserção 2 do `taxonomy.test.ts` deixa este arquivo
- * — Átomo — importar **um** componente de `ui/`, que tem de ser Átomo. O
+ * 1.4.11 **exige**. A tinta é escrita literal aqui: o `DragHandle` mora no
+ * `drawer.tsx`, um Organismo, e a asserção 2 do `taxonomy.test.ts` deixa este
+ * arquivo — Átomo — importar **um** componente de `ui/`, que tem de ser Átomo. O
  * orçamento inteiro vai para o `Button` do gatilho de colapso. Pela mesma
  * razão, o fio do modo empilhado é uma `div` e **não** um `<Separator>`.
  */

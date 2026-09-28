@@ -6,6 +6,7 @@ import {
   containerSizes,
   containerStacks,
 } from "@/components/ui/container"
+import { Code } from "@/components/ui/code"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 /** A medida de cada degrau, em px. `full` não tem teto. */
@@ -17,12 +18,13 @@ const MEDIDA: Record<keyof typeof containerSizes, number | null> = {
   full: null,
 }
 
-const QUEM_PEDIU: Record<keyof typeof containerSizes, string> = {
-  sm: "as duas cascas de erro",
-  md: "seis das nove cascas do app — o padrão",
+/** Quem usa cada degrau hoje, contado no código (rodada 158). */
+const QUEM_USA: Record<keyof typeof containerSizes, string> = {
+  sm: "as telas de erro e a coluna das telas de acesso (SplitShell)",
+  md: "configurações, conta, membros, planos e o aceite de convite — o padrão",
   lg: "o detalhe de cartão",
-  xl: "a casca deste catálogo",
-  full: "quem já tem largura de fora",
+  xl: "a casca deste catálogo, no topo e no corpo",
+  full: "nenhuma tela ainda — para quem já tem largura de fora",
 }
 
 /**
@@ -45,25 +47,23 @@ export default function ContainerDoc() {
 
       <DocSection
         title="Os degraus"
-        description="Cinco larguras, cada uma com um consumidor. Não há degrau sem tela."
+        description="Cinco larguras. As quatro com teto foram contadas nas telas antes de existir — nenhuma é palpite —, e full é a saída para quem já recebe a largura de fora."
         code={`<Container>…</Container>              {/* md · 576 */}
 <Container size="lg">…</Container>`}
-        previewClassName="flex-col items-stretch gap-3 p-0"
+        previewClassName="flex-col items-stretch gap-3"
       >
         {(
           Object.keys(containerSizes) as (keyof typeof containerSizes)[]
         ).map((name) => (
           <div key={name} className="flex flex-col gap-1">
             <div className="flex flex-wrap items-baseline gap-x-2">
-              <code className="font-mono text-2xs text-foreground">
-                size=&quot;{name}&quot;
-              </code>
-              <code className="font-mono text-2xs text-muted-foreground">
+              <Code>size=&quot;{name}&quot;</Code>
+              <span className="nums text-2xs text-muted-foreground">
                 {containerSizes[name]}
                 {MEDIDA[name] === null ? " · sem teto" : ` · ${MEDIDA[name]}px`}
-              </code>
+              </span>
               <span className="text-2xs text-muted-foreground">
-                {QUEM_PEDIU[name]}
+                {QUEM_USA[name]}
               </span>
             </div>
             <span
@@ -79,7 +79,7 @@ export default function ContainerDoc() {
         description="none é o padrão, porque a casca do app já é dona da calha. page é a gramática que o app renderiza: px-4, e px-6 a partir de 768."
         code={`<Container />                    {/* sem calha — o padrão */}
 <Container gutter="page" />      {/* px-4 md:px-6 */}`}
-        previewClassName="flex-col items-stretch gap-3 p-0"
+        previewClassName="flex-col items-stretch gap-3"
       >
         {(
           Object.keys(containerGutters) as (keyof typeof containerGutters)[]
@@ -90,10 +90,34 @@ export default function ContainerDoc() {
               gutter={name}
               className="border-y border-dashed border-primary-accent/40 py-2"
             >
-              <code className="font-mono text-2xs text-muted-foreground">
+              <Code>
                 gutter=&quot;{name}&quot;
                 {containerGutters[name] ? ` · ${containerGutters[name]}` : ""}
-              </code>
+              </Code>
+            </Container>
+          </div>
+        ))}
+      </DocSection>
+
+      <DocSection
+        title="Dentro da casca do app"
+        description="A moldura tracejada faz o papel da casca do app, que já recua px-4. Sem calha, o conteúdo usa a largura que a casca deixou; com gutter=&quot;page&quot; lá dentro, a calha dobra: o conteúdo perde mais 16px de cada lado no telefone (343px viram 311) e 24px a partir de 768 — aqui, 696 viram 648."
+        code={`{/* dentro da casca do app */}
+<Container>…</Container>               {/* certo */}
+<Container gutter="page">…</Container> {/* calha dobrada */}`}
+        previewClassName="flex-col items-stretch gap-3"
+      >
+        {(["none", "page"] as const).map((gutter) => (
+          <div key={gutter} className="rounded-lg border border-dashed border-border px-4 py-2">
+            <Container size="full" gutter={gutter}>
+              <div className="rounded-md bg-muted px-3 py-2">
+                <Code className="bg-transparent px-0">
+                  gutter=&quot;{gutter}&quot;
+                </Code>
+                <span className="ms-2 text-2xs text-muted-foreground">
+                  {gutter === "none" ? "o conteúdo encosta na calha da casca" : "calha dobrada"}
+                </span>
+              </div>
             </Container>
           </div>
         ))}
@@ -107,9 +131,6 @@ export default function ContainerDoc() {
         É &ldquo;não limite aqui&rdquo;, para quando o contêiner de fora já resolve a largura. Usado como maior degrau, produz linhas de texto que ninguém lê sem perder a vista.
       </DocNote>
 
-      <DocNote title="As classes ficam literais no cva">
-        O Tailwind varre o código como texto, então classe montada em tempo de execução não chega ao CSS. <code>containerSizes</code> e <code>containerGutters</code> existem ao lado do <code>cva</code> para esta página iterar, e <code>page-chrome-ladder.test.ts</code> falha se divergirem.
-      </DocNote>
 
       <DocSection
         title="O ritmo"
@@ -119,15 +140,13 @@ export default function ContainerDoc() {
   <PageSection />
   <PageSection />
 </Container>`}
-        previewClassName="flex-col items-stretch gap-6 p-0"
+        previewClassName="flex-col items-stretch gap-6"
       >
         {(
           Object.keys(containerStacks) as (keyof typeof containerStacks)[]
         ).map((name) => (
           <div key={name} className="flex flex-col gap-1">
-            <code className="font-mono text-2xs text-muted-foreground">
-              stack=&quot;{name}&quot;
-            </code>
+            <Code className="self-start">stack=&quot;{name}&quot;</Code>
             <Container size="full" stack={name}>
               {[1, 2].map((n) => (
                 <div
@@ -147,7 +166,7 @@ export default function ContainerDoc() {
         description="Quatro distâncias com nome, e não uma régua numérica: elas nomeiam as decisões que o sistema já tomou."
         code={`gap-(--space-block)      /* entre blocos */
 gap-(--space-section)    /* entre seções */`}
-        previewClassName="flex-col items-stretch gap-4 p-0"
+        previewClassName="flex-col items-stretch gap-4"
       >
         {[
           {
@@ -177,12 +196,8 @@ gap-(--space-section)    /* entre seções */`}
         ].map((d) => (
           <div key={d.token} className="flex flex-col gap-1">
             <div className="flex flex-wrap items-baseline gap-x-2">
-              <code className="font-mono text-2xs text-foreground">
-                {d.token}
-              </code>
-              <code className="font-mono text-2xs text-muted-foreground">
-                {d.valor}
-              </code>
+              <Code>{d.token}</Code>
+              <span className="nums text-2xs text-muted-foreground">{d.valor}</span>
               <span className="text-2xs text-muted-foreground">{d.o}</span>
             </div>
             {/* A barra é a distância de verdade, e não uma proporção
@@ -205,6 +220,14 @@ gap-(--space-section)    /* entre seções */`}
 
       <DocNote title="Par de identidade: sem gap">
         Nome sobre e-mail, rótulo sobre valor: quando dois textos são <strong>o mesmo dado em duas linhas</strong>, quem os separa é a entrelinha. Não declare <code>gap</code>, nem <code>gap-1</code> — é <code>--space-identity</code>, que vale zero.
+      </DocNote>
+
+      <DocNote title="Onde o app usa">
+        <strong>md</strong> nos layouts de configurações, conta, membros e planos, e no aceite de convite; <strong>lg</strong> no layout do detalhe de cartão; <strong>sm</strong> na tela de não encontrado, no erro de rota e no <code>SplitShell</code>, que as telas de acesso vestem pelo <code>AuthShell</code>; <strong>xl</strong> com <code>gutter=&quot;page&quot;</code> no topo e no corpo deste catálogo, o único lugar sem casca do app por cima. <code>stack=&quot;section&quot;</code> aparece no não encontrado e no <code>SplitShell</code>. O erro de rota ainda escreve o ritmo à mão (<code>space-y-6</code>, 24px, fora da escala) — é o próximo a migrar.
+      </DocNote>
+
+      <DocNote title="As classes ficam literais no cva">
+        O Tailwind varre o código como texto, então classe montada em tempo de execução não chega ao CSS. <code>containerSizes</code>, <code>containerGutters</code> e <code>containerStacks</code> existem ao lado do <code>cva</code> para esta página iterar, e <code>page-chrome-ladder.test.ts</code> falha se qualquer uma divergir — a de ritmo entrou na guarda na rodada 158.
       </DocNote>
 
       <PropsTable

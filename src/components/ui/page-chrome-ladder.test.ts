@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   containerGutters,
   containerSizes,
+  containerStacks,
   containerVariants,
   DEFAULT_CONTAINER_SIZE,
 } from "./container"
@@ -152,6 +153,17 @@ describe("Container", () => {
       if (!esperado) continue
       const cls = containerVariants({
         gutter: gutter as keyof typeof containerGutters,
+      })
+      for (const parte of esperado.split(" ")) {
+        expect(cls.split(" ")).toContain(parte)
+      }
+    }
+    // O ritmo também: a página do `Container` itera esta tabela para desenhar
+    // os exemplos, e ela ficava de fora da guarda (rodada 158).
+    for (const [stack, esperado] of Object.entries(containerStacks)) {
+      if (!esperado) continue
+      const cls = containerVariants({
+        stack: stack as keyof typeof containerStacks,
       })
       for (const parte of esperado.split(" ")) {
         expect(cls.split(" ")).toContain(parte)

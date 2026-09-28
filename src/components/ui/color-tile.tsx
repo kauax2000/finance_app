@@ -18,9 +18,9 @@ import { cn } from "@/lib/utils"
  * `oklch(from var(--tile-color) 0.86 min(c, 0.12) h)`: pega o matiz do que ela
  * escolheu, prende a claridade na faixa da rampa de identidade e **limita** o
  * croma. Medido, o piso não é opinião — com a tinta em
- * `--identity-foreground`, qualquer cor de runtime cai entre **10,63 e 11,74**,
+ * `--identity-foreground`, qualquer cor de runtime cai entre **10,64 e 11,73**,
  * a mesma faixa que as seis identidades do avatar entregam hoje (10,17 a
- * 12,12). Preto, branco e cinza chegam neutros e a 11,2. Não há o que medir por
+ * 12,12). Preto, branco e cinza chegam neutros e a 11,28. Não há o que medir por
  * cor: o contraste é estrutural.
  *
  * **O limite de croma não é cosmético.** Sem ele, magenta cai a 7,70 e o croma

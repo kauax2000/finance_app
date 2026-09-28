@@ -238,7 +238,7 @@ export default function BadgeDoc() {
       </DocSection>
 
       <DocNote title="O arco-íris nunca pousa sob o texto">
-        Sete matizes não têm um contraste só — é por isso que o <code>AGENTS.md</code> proíbe arco-íris num chip. Aqui o arco vive 2px <strong>fora</strong> da caixa e só aparece com o ponteiro perto; o rótulo fica sempre sobre o <code>muted</code>. O núcleo do anel é a mesma cor (<code>--brand-glow-core:var(--muted)</code>), senão a região que a máscara apaga leria como outra superfície em volta do chip.
+        Sete matizes não têm um contraste só — é por isso que o <code>AGENTS.md</code> proíbe arco-íris num chip. Aqui o arco vive 2px <strong>fora</strong> da caixa e só aparece com o ponteiro perto; o rótulo fica sempre sobre o <code>muted</code>. A máscara recorta só o anel, então o chip nunca é pintado por dentro.
       </DocNote>
 
       <Group

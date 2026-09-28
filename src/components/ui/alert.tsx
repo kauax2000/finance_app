@@ -127,8 +127,8 @@ const alertVariants = cva(
          * `@utility brand-glow`, no `globals.css` (e o ponteiro é `useBrandGlow`,
          * em `hooks/use-brand-glow.ts`, que o `Card` também veste). As duas que se veem daqui:
          * **`isolate` é obrigatório** (sem ele o pseudo de `z` negativo cai
-         * atrás do fundo de um ancestral e some, medido), e o núcleo chapado
-         * em `padding-box` é o que impede o degradê de cobrir o texto, já que
+         * atrás do fundo de um ancestral e some, medido), e a máscara que
+         * recorta só o anel é o que impede o degradê de cobrir o texto, já que
          * numa raiz de empilhamento o filho de `z` negativo pinta **por cima**
          * do fundo do elemento.
          */

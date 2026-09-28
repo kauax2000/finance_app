@@ -2,7 +2,7 @@ import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 
-import { dragHandleClassName } from "./drag-handle"
+import { dragHandleClassName } from "./drawer"
 
 /**
  * A régua da alça, trancada.
@@ -93,7 +93,7 @@ describe("régua da alça de arraste", () => {
 
   it("4. nenhuma superfície reimplementa a alça", () => {
     const reimplementam = fontes(UI)
-      .filter((f) => f.nome !== "drag-handle.tsx")
+      .filter((f) => f.nome !== "drawer.tsx")
       .filter((f) => /DrawerPrimitive\.Handle|data-vaul-handle/.test(semComentarios(f.texto)))
     // `sheet.tsx` e `drawer.tsx` escreviam os dois o mesmo elemento, com
     // `data-slot` **diferentes** — `sheet-drag-handle` contra `drawer-handle`.
@@ -112,7 +112,8 @@ describe("régua da alça de arraste", () => {
   })
 
   it("6. um `data-slot` só, e ele é o da peça", () => {
-    const peça = readFileSync(join(UI, "drag-handle.tsx"), "utf8")
+    // A peça mora no `drawer.tsx` desde a rodada 159.
+    const peça = readFileSync(join(UI, "drawer.tsx"), "utf8")
     expect(peça).toContain('data-slot="drag-handle"')
     const antigos = fontes(UI).filter((f) =>
       /data-slot="(?:sheet-drag-handle|drawer-handle)"/.test(f.texto)

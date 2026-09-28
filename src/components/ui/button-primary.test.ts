@@ -196,9 +196,9 @@ describe("o primário é o colorido", () => {
     for (const c of ["brand-rainbow-image", "brand-glow", "relative", "isolate", "bg-secondary"]) {
       expect(BRAND, c).toContain(c)
     }
-    // O núcleo do anel é a cor atrás dele — senão a região que a máscara
-    // apaga leria como outra superfície dentro do botão.
-    expect(BRAND).toContain("[--brand-glow-core:var(--secondary)]")
+    // Sem núcleo (rodada 156): a máscara recorta o anel, e o meio do botão
+    // nunca é pintado — o núcleo chapado era o que virava feixe no centro.
+    expect(BRAND.join(" ")).not.toMatch(/--brand-glow-(core|overlay)/)
     // O halo e a tecla preta do desenho anterior não podem sobreviver ao lado
     // do brilho: seriam dois arco-íris na mesma caixa.
     expect(BRAND.join(" ")).not.toMatch(/after:blur|--brand-fill|after:bg-\(image/)
@@ -241,9 +241,14 @@ describe("o primário é o colorido", () => {
     for (const c of ["isolation: isolate", "&::before", "&::after", "animation: brand-rainbow-slide 2s linear infinite", "background-clip: padding-box, border-box, border-box", "bottom: -20%", "filter: blur(0.8rem)"]) {
       expect(util, c).toContain(c)
     }
-    // O laço fecha na cor em que abre — sem a emenda da referência.
-    const lista = util.slice(util.indexOf("--brand-rainbow-slide:"), util.indexOf(");", util.indexOf("--brand-rainbow-slide:")))
+    // A lista mora na `brand-rainbow-slide` (rodada 154, o `Checkbox` a lê
+    // também), e o laço fecha na cor em que abre — sem a emenda da referência.
+    expect(OUTLINE).toContain("brand-rainbow-slide")
+    const j = CSS.indexOf("@utility brand-rainbow-slide {")
+    expect(j).toBeGreaterThan(-1)
+    const lista = CSS.slice(j, CSS.indexOf("\n}\n", j))
     const cores = [...lista.matchAll(/var\((--brand-[a-z]+)\)/g)].map((m) => m[1])
+    expect(cores.length).toBe(6)
     expect(cores[0]).toBe(cores.at(-1))
     expect(CSS).toMatch(/@keyframes brand-rainbow-slide \{\s*from \{\s*background-position: 0% center;\s*\}\s*to \{\s*background-position: 200% center;/)
   })

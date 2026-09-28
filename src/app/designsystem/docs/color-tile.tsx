@@ -12,9 +12,10 @@ import {
   HomeIcon as HomeMiniIcon,
   ReceiptPercentIcon as ReceiptMiniIcon,
 } from "@heroicons/react/20/solid"
+import { Code } from "@/components/ui/code"
 import { ColorTile } from "@/components/ui/color-tile"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import { TILE_PALETTE as PALETA } from "@/lib/tile-palette"
+import { TILE_PALETTE as PALETA, tileColorFor } from "@/lib/tile-palette"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 const SIZES = ["md", "lg", "xl", "2xl"] as const
@@ -28,6 +29,18 @@ const CATEGORIAS = [
   { cor: "#F5CB70", icone: TruckIcon, nome: "Transporte" },
   { cor: "#D0C4FF", icone: HomeIcon, nome: "Moradia" },
   { cor: "#6EE2FF", icone: BoltIcon, nome: "Energia" },
+] as const
+
+/**
+ * O que o banco pode trazer, passado pela mesma função que o ladrilho usa:
+ * presets antigos dobrados, uma parada da marca e um hexadecimal digitado.
+ */
+const GRAVADOS = [
+  { gravado: "#10B981", origem: "preset antigo de categoria" },
+  { gravado: "#2563EB", origem: "preset antigo de carteira" },
+  { gravado: "#6B7280", origem: "o cinza antigo" },
+  { gravado: "#F5CB70", origem: "parada da marca" },
+  { gravado: "#FF6B00", origem: "digitado no seletor livre" },
 ] as const
 
 /** Os extremos que a paleta livre do workspace permite. */
@@ -67,14 +80,6 @@ export default function ColorTileDoc() {
         </ul>
       </DocSection>
 
-      <DocNote title="O ícone é sólido, no conjunto do tamanho">
-        <code>md</code> e <code>lg</code> desenham o ícone a 16px (<code>16/solid</code>); <code>xl</code> e <code>2xl</code> a 20 (<code>20/solid</code>), pela régua de Iconografia. Um glifo de contorno espremido na caixa apaga a única coisa que distingue uma linha da seguinte antes de se ler o nome.
-      </DocNote>
-
-      <DocNote title="Quem manda no corpo do ícone é o degrau, e não quem chama">
-        <code>[&gt;svg]:size-4</code> é um seletor de descendente (0,1,1) e a classe no próprio <code>svg</code> é 0,1,0: um <code>size-5</code> escrito no ícone computa <strong>16px</strong> do mesmo jeito. Medido. Para trocar a medida, troque o degrau.
-      </DocNote>
-
       <DocSection
         title="Tamanhos"
         description="32, 36, 40 e 44px, com os nomes que o Button e o Input dão às mesmas medidas — ladrilho md ao lado de botão md alinha sem ninguém dizer nada. Só o 2xl alcança os 44px de alvo de toque: use-o quando o ladrilho for clicável."
@@ -93,6 +98,14 @@ export default function ColorTileDoc() {
         ))}
       </DocSection>
 
+      <DocNote title="O ícone é sólido, no conjunto do tamanho">
+        <code>md</code> e <code>lg</code> desenham o ícone a 16px (<code>16/solid</code>); <code>xl</code> e <code>2xl</code> a 20 (<code>20/solid</code>), pela régua de Iconografia. Um glifo de contorno espremido na caixa apaga a única coisa que distingue uma linha da seguinte antes de se ler o nome.
+      </DocNote>
+
+      <DocNote title="Quem manda no corpo do ícone é o degrau, e não quem chama">
+        <code>[&gt;svg]:size-4</code> é um seletor de descendente (0,1,1) e a classe no próprio <code>svg</code> é 0,1,0: um <code>size-5</code> escrito no ícone computa <strong>16px</strong> do mesmo jeito. Medido. Para trocar a medida, troque o degrau.
+      </DocNote>
+
       <DocSection
         title="Superfície chapada, tinta escura — a construção do Avatar"
         description="A cor preenche a caixa e a tinta é sempre a mesma, um valor só nos dois temas. Cores arbitrárias leem como família porque compartilham a claridade e o teto de croma, não o matiz."
@@ -107,7 +120,7 @@ export default function ColorTileDoc() {
       </DocSection>
 
       <DocNote title="A claridade é do sistema; o matiz é da pessoa">
-        A superfície é <code>oklch(from var(--tile-color) 0.86 min(c, 0.12) h)</code>: o matiz vem de quem escolheu, a claridade fica presa na banda da rampa de identidade e o croma tem teto. Com a tinta em <code>--identity-foreground</code>, <strong>qualquer</strong> cor de runtime cai entre 10,63 e 11,74 — a mesma faixa que as seis identidades do <code>Avatar</code> entregam (10,17 a 12,12). Preto, branco e cinza chegam neutros e a 11,2. Não há o que medir por cor: o contraste é estrutural.
+        A superfície é <code>oklch(from var(--tile-color) 0.86 min(c, 0.12) h)</code>: o matiz vem de quem escolheu, a claridade fica presa na banda da rampa de identidade e o croma tem teto. Com a tinta em <code>--identity-foreground</code>, <strong>qualquer</strong> cor de runtime cai entre 10,64 e 11,73 — a mesma faixa que as seis identidades do <code>Avatar</code> entregam (10,17 a 12,12). Preto, branco e cinza chegam neutros e a 11,28. A guarda é <code>scripts/tile-contrast.mjs</code>: 96 células (oito paradas e o neutro, nos quatro degraus e nos dois temas), piso 4,5, e não há o que medir por cor — o contraste é estrutural.
       </DocNote>
 
       <DocNote title="Por que a cor não entra crua, e por que o croma tem teto">
@@ -125,9 +138,7 @@ export default function ColorTileDoc() {
             <ColorTile color={cor}>
               <BanknotesIcon aria-hidden />
             </ColorTile>
-            <code className="w-20 shrink-0 font-mono text-2xs text-muted-foreground">
-              {cor}
-            </code>
+            <Code className="w-20 shrink-0">{cor}</Code>
             <span className="text-xs text-muted-foreground">{rotulo}</span>
           </div>
         ))}
@@ -161,12 +172,38 @@ export default function ColorTileDoc() {
         ))}
       </DocSection>
 
+      <DocSection
+        title="Da cor gravada ao ladrilho"
+        description="O que o banco traz passa por tileColorFor antes de virar a variável do ladrilho — a mesma função, aqui ao vivo. Preset antigo vira a parada de matiz mais próximo; o cinza antigo vira o neutro; parada da marca e cor digitada atravessam intactas."
+        code={`import { tileColorFor } from "@/lib/tile-palette"
+
+tileColorFor("#10B981") // → a parada teal
+tileColorFor("#6B7280") // → null, o ladrilho sem cor
+tileColorFor("#FF6B00") // → "#FF6B00", intacta`}
+        previewClassName="flex-col items-stretch gap-3"
+      >
+        {GRAVADOS.map(({ gravado, origem }) => {
+          const final = tileColorFor(gravado)
+          return (
+            <div key={gravado} className="flex flex-wrap items-center gap-3">
+              <ColorTile color={gravado}>
+                <BanknotesIcon aria-hidden />
+              </ColorTile>
+              <Code>{gravado}</Code>
+              <span className="text-2xs text-muted-foreground">→</span>
+              <Code>{final ?? "null"}</Code>
+              <span className="text-xs text-muted-foreground">{origem}</span>
+            </div>
+          )
+        })}
+      </DocSection>
+
       <DocNote title="O que já está gravado é dobrado na leitura, sem escrever no banco">
         <code>tileColorFor</code> leva cada um dos 22 presets que o produto já ofereceu para a parada de matiz mais próximo — desvio medido de 0,9° a 32,5° —, no precedente de <code>identityToneFor</code>. <strong>O que a pessoa digitou no seletor livre atravessa intacto</strong>, e o cinza legado (<code>#6B7280</code>, croma 0,023) vira o neutro em vez de virar azul, porque num croma daquele o matiz é ruído. A dobra é idempotente, e é isso que permite aplicá-la no ladrilho <em>e</em> na tela de detalhe, onde o gráfico lê a mesma cor crua.
       </DocNote>
 
       <DocNote title="Ausência de cor não é a marca">
-        O padrão foi <code>--primary</code> enquanto o primário era o verde da marca. Com o branding preto e branco ele virou croma 0, e o ladrilho &quot;sem cor&quot; passou a ser a tecla da marca esmaecida sem ninguém mexer no componente — lia como desativado. <code>--muted-foreground</code> é neutro nos dois temas de propósito. O arco-íris <strong>não</strong> entra aqui: ele mora no wordmark, no campo de acesso e nas variantes <code>brand</code> do <code>Button</code> e do <code>Badge</code>, e sob ícone sete matizes não têm um contraste só.
+        O padrão foi <code>--primary</code> enquanto o primário era o verde da marca. Com o branding preto e branco ele virou croma 0, e o ladrilho &quot;sem cor&quot; passou a ser a tecla da marca esmaecida sem ninguém mexer no componente — lia como desativado. <code>--muted-foreground</code> é neutro nos dois temas de propósito. O arco-íris <strong>não</strong> entra como preenchimento: sob um ícone oito paradas não têm um contraste só, e ele mora nas peças de marca (ver <code>/designsystem/brand</code>). Ele entra pela outra ponta — as cores que a pessoa <strong>escolhe</strong> são as oito paradas.
       </DocNote>
 
       <DocNote title="Uma versão só">
@@ -175,6 +212,10 @@ export default function ColorTileDoc() {
 
       <DocNote title="O raio cresce com a caixa">
         8px em <code>md</code> e <code>lg</code>, 10px em <code>xl</code> e <code>2xl</code>. O <code>Avatar</code> já dividiu essa progressão, e deixou de dividir: ele é redondo sempre, porque identifica <strong>pessoa</strong>, e o ladrilho identifica coisa.
+      </DocNote>
+
+      <DocNote title="Onde o app usa">
+        <code>md</code>, o padrão, na lista de gastos por categoria da fatura, no passo de categorias do onboarding e no cabeçalho do detalhe de categoria. <code>lg</code> nos cartões de categoria de receita e despesa e na marca da carteira (<code>WorkspaceBrandMark</code>, no seletor e nas configurações). <code>2xl</code> no topo das contas a pagar — o cartão de resumo, o de pendência e a folha de detalhe. Uma chamada sai da escada: a fatura escreve <code>sm:size-9</code> por cima do <code>md</code>, porque o degrau não é responsivo.
       </DocNote>
 
       <PropsTable

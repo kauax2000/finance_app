@@ -80,7 +80,8 @@ const radioVariants = cva(
         // conviver com um núcleo `--background` deixaria o desmarcado e o
         // marcado em duas superfícies diferentes.
         default: "dark:bg-input-fill/30",
-        // A receita do `Checkbox variant="brand"`, com um núcleo diferente: o
+        // A receita que o `Checkbox variant="brand"` tinha até a rodada 153
+        // (hoje ele desliza e floresce), com um núcleo diferente: o
         // anel marcado **não se preenche** — quem marca é o ponto —, então o
         // `--brand-fill` só precisa ser opaco, para o arco-íris não vazar pelo
         // miolo. Com `transparent` a camada `border-box` aparece no meio e o

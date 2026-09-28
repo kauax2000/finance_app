@@ -24,9 +24,9 @@ import { cn } from "@/lib/utils"
  * uma linha; mantê-lo agora é manter a ficção.
  */
 const containerSizes = {
-  /** 448 — a casca de erro e a de confirmação. */
+  /** 448 — as telas de erro e a coluna das telas de acesso (`SplitShell`). */
   sm: "max-w-md",
-  /** 576 — o padrão, e a largura de seis das nove cascas do app. */
+  /** 576 — o padrão: configurações, conta, membros, planos e o aceite de convite. */
   md: "max-w-xl",
   /** 672 — o detalhe de cartão. */
   lg: "max-w-2xl",

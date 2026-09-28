@@ -28,7 +28,7 @@ const CODIGO = semComentarios(ler("sheet"))
 /** Só o `cva` — o único do arquivo, então o `ds:catalog` lê este. */
 const CVA = CODIGO.slice(
   CODIGO.indexOf("const sheetContentVariants"),
-  CODIGO.indexOf("const SHEET_OVERLAY_CLASS")
+  CODIGO.indexOf("type SheetSurface")
 )
 
 const fatia = (abre: string, fecha: string) =>

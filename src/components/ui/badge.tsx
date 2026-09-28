@@ -157,9 +157,8 @@ const badgeVariants = cva(
         // borrado sempre aceso; o dono o quis neutro, com a borda acendendo só
         // de perto.
         //
-        // `--brand-glow-core` é o `--muted`: o núcleo chapado do anel tem de
-        // ser a cor que está atrás dele, senão a região que a máscara apaga
-        // aparece como outra superfície. `brand-rainbow-image` declara
+        // Só o anel acende: a máscara recorta a borda e o miolo do chip nunca
+        // é pintado (rodada 156). `brand-rainbow-image` declara
         // `--brand-rainbow` no elemento, e `isolate` é o que impede o pseudo de
         // `z` negativo de cair atrás do fundo de um ancestral — as duas
         // medições do `Alert`.
@@ -173,7 +172,7 @@ const badgeVariants = cva(
         // Sem ponteiro fino (telefone) não há brilho, e ele fica o chip neutro.
         // Uma por tela, como toda peça de marca.
         brand:
-          "brand-rainbow-image brand-glow relative isolate border-border bg-muted text-foreground [--brand-glow-core:var(--muted)] [--brand-glow-opacity:1]",
+          "brand-rainbow-image brand-glow relative isolate border-border bg-muted text-foreground [--brand-glow-opacity:1]",
       },
       /**
        * A **cor**, com o mesmo nome e os mesmos valores do resto do sistema.

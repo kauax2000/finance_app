@@ -96,12 +96,6 @@ const LAYER: Record<string, Layer> = {
   "color-tile": "Atoms",
   /** Uma `div` com largura e calha. Indivisível — átomo por decisão do dono. */
   container: "Atoms",
-  /** Uma barra e o alvo de acerto dela. O `<span data-vaul-handle-hitarea>` que
-   *  o vaul injeta é anatomia interna, e não composição — a mesma régua que faz
-   *  o `Slider` átomo com quatro primitivas Radix por dentro. Era Organismo
-   *  enquanto consumia o contexto do `Sheet` para devolver `null`; parou de
-   *  consumir quando voltou a desenhar. */
-  "drag-handle": "Atoms",
   /** Uma superfície e a luz dela. Importa zero componentes e renderiza um
    *  elemento — o mesmo caso do `scroll-fade`, que também é uma casca mais uma
    *  camada de composição. As quatro camadas de `background` são anatomia
@@ -408,7 +402,6 @@ export const REGISTRY: RegistryEntry[] = [
   entry("code", "Code", "Identificador literal dentro do texto.", ui("code"), "Code"),
   entry("color-tile", "Color Tile", "Ladrilho com a cor escolhida pela pessoa.", ui("color-tile"), "ColorTile"),
   entry("container", "Container", "Largura, calha e ritmo do conteúdo.", ui("container"), "Container, containerSizes, containerGutters, containerStacks"),
-  entry("drag-handle", "Drag Handle", "A alça de arraste da gaveta.", ui("drag-handle"), "DragHandle"),
   entry("glass", "Glass", "A superfície de vidro do sistema.", ui("glass"), "Glass"),
   entry("input", "Input", "Campo de uma linha, inclusive de dinheiro.", ui("input"), "Input"),
   entry("input-otp", "Input OTP", "Entrada de código de verificação.", ui("input-otp"), "InputOTP, InputOTPSlot"),

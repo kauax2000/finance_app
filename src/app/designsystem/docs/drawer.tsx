@@ -134,16 +134,52 @@ export default function DrawerDoc() {
         largura.
       </DocNote>
 
-      <DocNote title="A alça é o gesto, e não o desenho dele">
-        A alça é o{" "}
-        <Link href="/designsystem/drag-handle" className="underline">
-          DragHandle
-        </Link>
-        : a própria área de arraste, com 44px de alvo. Ela não fecha no clique,
-        então <code>showHandle</code> só se desliga junto com{" "}
-        <code>dismissible={"{false}"}</code> — alça sem gesto promete o que não
-        existe.
+      <DocSection
+        title="A alça"
+        description="A barra no topo diz isto se arrasta, e é o próprio alvo do gesto: o DragHandle, que mora no drawer.tsx e que o Sheet também veste quando vira gaveta no telefone. Nenhuma tela a escreve. O contorno tracejado é a área de acerto que o vaul injeta, invisível numa gaveta real: 44px no dedo, 20 no mouse. Numa gaveta de cima ela troca de lado sozinha, para a borda que o dedo puxa."
+        code={`// A superfície já a compõe. Numa tela, isto é tudo:
+<DrawerContent>
+  <DialogHeader>…</DialogHeader>
+</DrawerContent>
+
+// só nesta demonstração, para o alvo aparecer
+<DrawerContent className="[&_[data-vaul-handle-hitarea]]:outline-2 …">`}
+      >
+        {(["bottom", "top"] as const).map((direction) => (
+          <Drawer key={direction} direction={direction}>
+            <DrawerTrigger asChild>
+              <Button variant="outline" size="sm">
+                {direction === "bottom" ? "ver a alça e o alvo" : "gaveta de cima"}
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent
+              variant="inset"
+              size="md"
+              className="[&_[data-vaul-handle-hitarea]]:outline-2 [&_[data-vaul-handle-hitarea]]:outline-dashed [&_[data-vaul-handle-hitarea]]:outline-primary-accent"
+            >
+              <DialogHeader>
+                <DialogTitle>
+                  {direction === "bottom" ? "44 no dedo, 20 no mouse" : "A alça troca de lado"}
+                </DialogTitle>
+                <DialogDescription>
+                  {direction === "bottom"
+                    ? "Arraste a alça, ou solte no meio do caminho e veja a gaveta voltar."
+                    : "Ela nasce na borda que o dedo puxa, e sabe disso sozinha."}
+                </DialogDescription>
+              </DialogHeader>
+            </DrawerContent>
+          </Drawer>
+        ))}
+      </DocSection>
+
+      <DocNote title="A alça é da superfície, e é o gesto — não o desenho dele">
+        <code>DrawerContent</code> e o <code>Sheet</code> no telefone a compõem, como compõem a borda e a sombra. Uma tela que escrevesse a própria alça teria duas, e só uma arrastaria. Ela <strong>não fecha no clique</strong>: numa gaveta comum (sem <code>snapPoints</code>, com <code>dismissible</code>) tocar nela é um no-op, e quem fecha é o ×, o véu e o <kbd>Esc</kbd>. Por isso <code>showHandle</code> só se desliga junto com <code>dismissible={"{false}"}</code> — alça sem gesto promete o que não existe. Ela é <code>aria-hidden</code>: um leitor de tela não tem o que fazer com ela, e a superfície sempre traz outra saída.
       </DocNote>
+
+      <DocNote title="Toda medida da alça leva !, e a tinta é 75%">
+        O vaul injeta <code>[data-vaul-handle]</code> numa folha sem camada, e CSS sem camada vence as utilities do Tailwind em qualquer especificidade; só <code>!</code> inverte a ordem, e <code>drawer-drag-handle.test.ts</code> tranca a lista. A tinta é <code>--muted-foreground</code> a 75%, o primeiro degrau que passa nos 3:1 da WCAG 1.4.11 sobre a folha de vidro nos dois temas (a pega do <code>Resizable</code> fica em 70% porque vive entre painéis opacos); cursor e toque vão a 90%, em par. No mouse a área de acerto é 20px, o que o vaul tentou fazer com uma regra inválida — e cabe na folga da alça, por isso o <code>my-2.5</code> dela é estrutural.
+      </DocNote>
+
 
       <DocNote title="Só o eixo vertical">
         <code>direction</code> aceita <code>bottom</code> e <code>top</code>: a
@@ -198,6 +234,12 @@ export default function DrawerDoc() {
             type: "boolean",
             default: "true",
             description: "Desligue só junto com dismissible={false}.",
+          },
+          {
+            prop: "DragHandle · …props",
+            type: "ComponentProps<typeof Drawer.Handle>",
+            description:
+              "Exportada deste arquivo para o Sheet vesti-la. Exige o contexto do vaul: fora de um Drawer.Root, lança. Medida que dispute com a folha do vaul precisa de !.",
           },
         ]}
       />

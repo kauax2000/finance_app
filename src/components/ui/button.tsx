@@ -61,20 +61,19 @@ const buttonVariants = cva(
         // a tecla preta do `primary` com o degradê em 1px e um halo borrado
         // sempre aceso; o dono o quis neutro, como o `Badge`.
         //
-        // **O fundo não muda no cursor, e é mecânico.** Com `isolate` o anel
-        // (`::before` a `-z-10`) pinta **por cima** do fundo do elemento, e o
-        // núcleo chapado dele cobre a fatia do botão onde o arco está aceso.
-        // Um hover que troca o fundo sumiria justamente na fatia virada para
-        // o ponteiro. A resposta ao cursor é o próprio brilho, e o clique afunda 1px pela
-        // base. `--brand-glow-core` é o `--secondary` pela mesma razão: tem de
-        // ser a cor que está atrás dele.
+        // **O fundo não muda no cursor**: a resposta ao cursor é o próprio
+        // brilho, e o clique afunda 1px pela base. Até a rodada 155 isso era
+        // mecânico — o anel trazia um núcleo chapado que cobria a fatia acesa,
+        // e um hover de fundo sumiria nela. Desde a 156 o anel é recortado na
+        // máscara e o meio nunca é pintado, então um hover de fundo passaria a
+        // ser possível; fica a decisão, não a trava.
         //
         // Intensidade cheia (`--brand-glow-opacity: 1`), a do `Badge`: numa
         // caixa de 32px o arco tem poucos pixels. Sem ponteiro fino (telefone)
         // não há brilho, e o botão fica o neutro. `brand-rainbow-image` declara
         // `--brand-rainbow` no elemento, e não se apaga. Um por tela.
         brand:
-          "brand-rainbow-image brand-glow relative isolate border-border bg-secondary text-secondary-foreground [--brand-glow-core:var(--secondary)] [--brand-glow-opacity:1] aria-busy:disabled:opacity-100",
+          "brand-rainbow-image brand-glow relative isolate border-border bg-secondary text-secondary-foreground [--brand-glow-opacity:1] aria-busy:disabled:opacity-100",
         // **O Rainbow Button da Magic UI** (rodada 153): a tecla preta
         // (branca no escuro) com o arco-íris só na borda de baixo e um brilho
         // borrado embaixo, os dois deslizando num laço de 2s — sempre aceso,
@@ -82,7 +81,7 @@ const buttonVariants = cva(
         // `@utility brand-rainbow-button`; aqui fica o miolo (`--brand-fill`),
         // que escurece no cursor, no toque e com o menu aberto.
         brandOutline:
-          "brand-rainbow-button text-primary-foreground [--brand-fill:var(--primary)] hover:[--brand-fill:var(--primary-hover)] active:[--brand-fill:var(--primary-hover)] aria-expanded:[--brand-fill:var(--primary-hover)] aria-busy:disabled:opacity-100",
+          "brand-rainbow-slide brand-rainbow-button text-primary-foreground [--brand-fill:var(--primary)] hover:[--brand-fill:var(--primary-hover)] active:[--brand-fill:var(--primary-hover)] aria-expanded:[--brand-fill:var(--primary-hover)] aria-busy:disabled:opacity-100",
 
         // Sem borda visível — e sem o anel vazado que havia antes. O culpado
         // não era a borda transparente da base, era o `bg-clip-padding` que a

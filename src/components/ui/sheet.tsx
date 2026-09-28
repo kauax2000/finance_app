@@ -12,7 +12,7 @@ import {
   useViewportModal,
   useViewportWindow,
 } from "@/hooks/use-mobile"
-import { DragHandle } from "@/components/ui/drag-handle"
+import { DragHandle, SHEET_OVERLAY_CLASS } from "@/components/ui/drawer"
 
 /**
  * O painel de borda — o ramo desktop da folha.
@@ -120,9 +120,6 @@ const sheetContentVariants = cva(
  * O véu — o mesmo no painel, na gaveta e no `Drawer`. Acima do chrome do
  * telefone (`MobileBottomNav` e FAB estão em `--z-modal`); abaixo do `Toaster`.
  */
-const SHEET_OVERLAY_CLASS =
-  "fixed inset-0 z-(--z-sheet) bg-overlay supports-backdrop-filter:backdrop-blur-xs"
-
 /**
  * Qual superfície está de fato montada.
  *

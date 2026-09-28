@@ -14852,3 +14852,187 @@ lista mais, e `button-primary.test.ts` (9c) tranca a utility, as três camadas, 
 brilho, o laço de 2s e a lista fechada. A página de marca ganhou a décima
 família, "Deslize"; a do contorno ficou com os três controles de escolha, que só
 acendem marcados.
+
+### Rodada 154 — o Checkbox floresce ao marcar, e a marca dele desliza
+
+O dono pediu "a mesma coisa com o checkbox", e escolheu as três leituras: revisar
+a página, levar o florescer dos botões ao marcar, e trocar o contorno parado da
+versão de marca pelo arco-íris deslizando do `brandOutline`.
+
+**Marcar floresce.** O preenchimento marcado deixou de ser `bg-primary`: a caixa
+veste `button-bloom` com `--button-bloom-fill: var(--primary)`, e
+`data-[state=checked]` (e `indeterminate`) liga `--button-bloom`, na mola ao
+marcar e em `--ease-out` ao desmarcar. A lista de `transition` enumera a
+variável; o `transition-colors` da base a deixaria de fora. A borda vira
+`--primary` no mesmo ritmo.
+
+**O tique nascia escuro, medido quadro a quadro.** Ele era `text-current`, e a
+cor da raiz faz transição do texto para `--primary-foreground`: no quadro 0 um
+tique preto a 50% aparecia sobre a caixa ainda branca. Cravado em
+`--primary-foreground`, ele tem a cor do fundo desmarcado e só aparece quando a
+flor passa por baixo. Ele entra com `zoom-in-50` na mesma mola.
+
+**A marca desliza.** O `::before` do `brand` pinta três camadas: a flor
+(`--button-bloom-image`, que a `button-bloom` agora publica numa variável,
+substituída no elemento a cada quadro), `--background` para o miolo ser opaco
+enquanto a flor é pequena, e o arco-íris que desliza em `border-box` com 200% de
+largura e `brand-rainbow-slide 2s`, pausado desmarcado. A lista saiu da
+`brand-rainbow-button` para uma `@utility brand-rainbow-slide`, que o
+`brandOutline` e o `Checkbox` vestem. **O anel é inteiro**, e não só a borda de
+baixo com brilho embaixo: o brilho exigiria o `::after`, que é o alvo de 44px, e
+numa caixa de 16px a metade de baixo de um anel de 1px são poucos pixels.
+
+**A página** ganhou "Marcar floresce" (caixas para marcar), "Selecionar todas"
+(o cabeçalho parcial da tabela de transações e das assinaturas, interativo),
+medidas (caixa 16, tique 14, alvo 44) e "Onde o app usa", conferido no código:
+seleção em massa de transações e assinaturas, filtros de transação e o
+formulário de conta a pagar — todos na caixa do sistema; a de marca não tem
+tela. O texto que citava o `brandOutline` como precedente do contorno foi
+corrigido. `brand-contour.test.ts` cobra a camada deslizante e a flor no miolo, e
+o 9c do `button-primary.test.ts` passou a ler a lista na utility nova — ele
+passava por vazio depois da mudança, e a asserção de seis cores o impede.
+
+### Rodada 155 — o Checkbox de marca veste o brilho
+
+O deslize da 154 durou uma rodada: o dono pediu a versão de marca "com as bordas
+que iluminam como todos os que mexemos nessa sessão" — a família do brilho, a
+do `Alert`, do `Card`, do `Badge` e do `Button brand`. O `Checkbox brand` agora
+é `brand-glow` com `useBrandGlow`, e a borda acende perto do ponteiro,
+**marcada ou não** — a regra "só acende marcado" era do contorno, e o brilho,
+como nas outras peças, é do ponteiro. No toque não há brilho.
+
+**O núcleo não podia ser chapado.** Com `isolate`, o anel do `::before` pinta
+por cima do fundo da caixa, e o núcleo chapado da utility cobriria o
+preenchimento marcado na fatia acesa. A `brand-glow` ganhou uma camada
+opcional, **`--brand-glow-overlay`**, em `padding-box` por cima do núcleo e
+transparente por padrão — as outras quatro peças não mudam. O `Checkbox` põe
+ali a flor do marcado (`--button-bloom-image`) sobre `--background`, e o que
+está atrás do arco é idêntico à caixa, marcada ou não.
+
+**E o núcleo acompanha o hover, medido na tela.** O ponteiro que acende o arco a
+12px da borda já está dentro do alvo de 44px, então a caixa estava em
+`hover:bg-muted/60` enquanto o núcleo seguia `--background`: a fatia acesa
+abria uma janela branca no claro e preta no escuro. Com `hover:` e `active:`
+trocando o núcleo para `muted` a 60% sobre o fundo, a janela sumiu no escuro e
+virou resíduo no claro (a caixa compõe o `muted` sobre o cartão da prévia, e
+não sobre `--background`).
+
+O `::after` continua sendo o alvo de toque. A `brand-rainbow-slide` ficou só com
+o `brandOutline`. `brand-contour.test.ts` tira o `Checkbox` da família do
+contorno e o cobra no teste 10 com as outras quatro, junto da camada nova na
+utility.
+
+### Rodada 156 — o brilho de marca acende só na borda
+
+O dono via, nas peças do brilho, "o feixe de luz surgindo do centro" com a borda
+colorida e **preto no meio**, e pediu a animação só nas bordas.
+
+**A causa.** A janela da `brand-glow` é um `conic-gradient` sem centro
+declarado, ou seja, uma **cunha que sai do centro da caixa**. Dentro dela o
+`::before` pintava, além do arco-íris, um **núcleo chapado** em `padding-box`
+(`--brand-glow-core`, `--card` por padrão; mais o `--brand-glow-overlay` da
+rodada 155), borrado em 2px. O núcleo existia para esconder o arco-íris do
+meio e tinha de bater pixel a pixel com o fundo real de cada peça — e não
+batia. No campo de busca do catálogo, no escuro, o núcleo era `oklch(0.145)` (o
+preto da página) sobre um campo `input-fill/30`, mais claro: a cunha aparecia
+como um feixe preto. Cada peça nova exigia adivinhar a cor de trás, e o
+`Checkbox` já tinha precisado de dois remendos.
+
+**Medido antes**, com Playwright, pixels do miolo (a caixa recuada 3px) que
+mudam entre ponteiro longe e ponteiro perto, em três posições:
+
+| Peça | Claro | Escuro |
+| --- | --- | --- |
+| busca do catálogo | — | 978 |
+| `Button brand` | 404 | 446 |
+| `Badge brand` | 297 | 323 |
+| `Checkbox brand` marcado | 46 | 39 |
+| `Card brand` | 1.536 | 1.663 |
+| `Alert brand` | 4.567 | 4.748 |
+
+**A mudança** é a da referência (`GlowingEffect`): **sem núcleo**, a máscara
+recorta o anel. Três camadas de `mask-image`, compostas de baixo para cima — a
+caixa inteira (`border-box`), menos a `padding-box` (`exclude`), intersectada
+com a janela (`intersect`); no prefixado, `-webkit-mask-composite: source-in,
+xor`. O `background` do pseudo ficou só com o `repeating-conic-gradient`.
+
+**Por que compor deixou de ser proibido.** O banimento era por uma camada `none`
+num `intersect` apagar a peça. A janela é a única camada com variável, e ela lê
+`var(--brand-glow-start, 0)` — o fallback no próprio `var()`, além do valor
+declarado na utility; as duas camadas do anel são literais.
+
+**Medido depois**: **zero** pixel do miolo muda nas seis peças, nos dois temas.
+A conta exclui os cantos arredondados, por onde o anel faz a curva e entra na
+janela de 3px (sem excluir, sobravam 13 a 63 pixels, todos em canto). O
+`Checkbox` desmarcado muda 351 pixels — e a caixa do sistema, sem brilho
+nenhum, muda os mesmos 351: é o hover do alvo de 44px, não o brilho. Numa linha
+no meio do `Button brand` a mudança fica só nos 2px do anel, com ou sem o
+borrão — ele roda antes da máscara e não vaza para dentro.
+
+**Saíram** `--brand-glow-core` (do `Button`, do `Badge`, do `Checkbox` e do
+gatilho da busca), `--brand-glow-overlay` e o remendo de hover do núcleo do
+`Checkbox`. O `Button brand` perdeu a razão **mecânica** para não ter hover de
+fundo; ficou a decisão, sem a trava.
+
+### Rodada 157 — as páginas do Code e do ColorTile revisadas contra o código
+
+**Code.**
+- **Contradição corrigida:** a página mostrava `⌘K` num `Code` enquanto o próprio "Quando usar" dizia que tecla de atalho é `Kbd`. O exemplo virou um caminho de arquivo.
+- **Seções novas:**
+  - "As duas aparências, medidas": `inline` 12px, `--foreground`, sem fundo; `chip` 11px, `--muted-foreground`, `bg-muted`, raio 6px, 6×2 de recuo. Conferido contra `codeVariants` e contra o `[&_code]:text-xs` da prosa em `ds-doc`.
+  - "Code, Kbd ou texto": comando, atalho (`<Kbd keys="mod+k" />`) e rótulo, lado a lado.
+- **Onde se usa, contado:** 56 chamadas em 14 arquivos, 52 nas páginas de documentação, **nenhuma no app**.
+
+**ColorTile.**
+- **Números conferidos com `scripts/tile-contrast.mjs`:** faixa de **10,64 a 11,73**; a página e o componente diziam 10,63 a 11,74, por arredondamento. Os neutros medem **11,28**, e a página dizia 11,2. O `AGENTS.md` foi alinhado.
+- **Seção nova, "Da cor gravada ao ladrilho":** roda o `tileColorFor` de verdade sobre cinco valores — dois presets antigos, o cinza antigo que vira `null`, uma parada da marca e um hexadecimal digitado, que atravessa intacto.
+- **Texto desatualizado corrigido:** a nota "Ausência de cor não é a marca" dizia que o arco-íris mora "no wordmark, no campo de acesso e nas variantes brand do Button e do Badge". Hoje são muitas mais peças, e a nota aponta para `/designsystem/brand`.
+- **Página reorganizada:** as notas sobre o corpo do ícone passaram para depois de "Tamanhos", de quem elas falam. Os extremos usam `Code` em vez de `<code>` com classes à mão.
+- **"Onde o app usa", conferido em cada consumidor:**
+  - `md` na fatura, no onboarding e no detalhe de categoria;
+  - `lg` nos cartões de categoria e na marca da carteira;
+  - `2xl` nas três peças de conta a pagar.
+- **Achado registrado, não corrigido:** a fatura escreve `sm:size-9` por cima do `md`, porque o degrau não é responsivo.
+
+### Rodada 158 — a página do Container revisada contra o código
+
+- **"Cinco larguras, cada uma com um consumidor. Não há degrau sem tela" era falso para o `full`**: nenhuma tela o usa, só a própria página. A descrição diz agora o que é verdade: as quatro com teto foram contadas nas telas, e `full` é a saída para quem já recebe a largura de fora.
+- **A tabela "quem pediu" era a da época da contagem.** Ela virou "quem usa", conferida em cada chamada:
+  - `sm`: as telas de erro e a coluna do `SplitShell`, que as telas de acesso vestem pelo `AuthShell`. Não só "as duas cascas de erro".
+  - `md`: configurações, conta, membros, planos e o aceite de convite. Cinco, não "seis das nove cascas".
+  - Os comentários de `containerSizes` foram alinhados.
+- **A guarda cobria duas das três tabelas.** `page-chrome-ladder.test.ts` conferia `containerSizes` e `containerGutters` contra o `cva`, mas não `containerStacks`, que a página também itera para desenhar os exemplos. Agora confere as três.
+- **Demonstração nova, "Dentro da casca do app":** uma moldura com `px-4` no papel da casca, e dentro dela as duas calhas. Medido: 696px sem calha e 648 com `gutter="page"`, 24px por lado acima de 768. No telefone são 16 por lado, e 343 viram 311. Antes o defeito só era descrito numa nota.
+- **Ajustes de forma:**
+  - `<code>` com classes à mão virou `Code`;
+  - quatro prévias com `p-0` deixavam o conteúdo encostado na moldura;
+  - a nota de implementação desceu para o fim.
+- **Nota nova, "Onde o app usa".** Registra um achado não corrigido: o `route-error-fallback` escreve o ritmo à mão (`space-y-6`, 24px, fora da escala `--space-*`) em vez de `stack`. Migrar muda o respiro daquela tela, e fica para decisão.
+
+### Rodada 159 — o DragHandle deixa de ser uma página
+
+O dono pediu que a alça não tivesse página própria e ficasse incorporada onde é
+usada. Ela continua um componente com nome, mas mora no `drawer.tsx`.
+
+- **O que a regra permitia.** `taxonomy.test.ts` exige entrada **e** página para
+  todo `.tsx` de `ui/`. Um `drag-handle.tsx` sem página reprovaria, e afrouxar a
+  regra por uma peça seria a exceção que ela existe para impedir. A saída foi
+  tirar o arquivo: `DragHandle` e `dragHandleClassName` mudaram, sem mudança de
+  código, para o `drawer.tsx`. Saíram a entrada do registry, a camada em
+  `LAYER` e a página, e o `docs-map` foi regenerado (87 páginas).
+- **Não era um lugar só.** O `DrawerContent` e o `Sheet` no ramo gaveta vestem a
+  alça, e os dois são gavetas do vaul. O `Sheet` passou a importar do
+  `drawer.tsx`.
+- **Sem import circular.** O `drawer.tsx` importava o `SHEET_OVERLAY_CLASS` do
+  `sheet.tsx`, e com a alça os dois se importariam. O véu mudou junto para o
+  `drawer.tsx`, e a dependência corre num sentido só: o `Sheet` importa a alça e
+  o véu da gaveta. O `sheet.tsx` continua reexportando o véu. O
+  `sheet.test.ts` usava a declaração dele como fim da fatia do `cva` e passou a
+  usar `type SheetSurface`.
+- **A documentação virou a seção "A alça" da página do `Drawer`.** Uma
+  demonstração com as duas direções e a área de acerto desenhada — 44px no dedo,
+  20 no mouse —, duas notas com as medições que a página tinha (o `!` contra a
+  folha sem camada do vaul, a tinta a 75% sobre o vidro, o no-op do clique, o
+  `aria-hidden`) e uma linha na tabela de props.
+- **O teste da alça continua**, renomeado para `drawer-drag-handle.test.ts` e
+  lendo do `drawer.tsx`. As seis asserções valem como antes.

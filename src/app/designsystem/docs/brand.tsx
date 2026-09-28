@@ -43,9 +43,9 @@ const ESCALA = [
  */
 const FAMILIAS = [
   { nome: "Letra", como: "o degradê preenche o traçado, parado, em todo tamanho", who: ["AppWordmark rainbow", "AppLogo rainbow", "EmptyStateCode"] },
-  { nome: "Contorno", como: "1px de border-box sobre um miolo chapado, aceso quando marcado", who: ["Checkbox brand", "Radio brand", "RadioGroupItem brandCard"] },
+  { nome: "Contorno", como: "1px de border-box sobre um miolo chapado, aceso quando marcado", who: ["Radio brand", "RadioGroupItem brandCard"] },
   { nome: "Preenchimento", como: "o degradê é o trilho e a barra o revela — sem rótulo em cima", who: ["Progress brand", "Slider brand", "HistogramSlider brand"] },
-  { nome: "Brilho", como: "um arco da borda acende perto do ponteiro; sem ele, a caixa é neutra", who: ["Alert brand", "Card brand", "Badge brand", "Button brand", "a busca do catálogo"] },
+  { nome: "Brilho", como: "só um arco da borda acende perto do ponteiro — o meio nunca é pintado; sem ele, a caixa é neutra", who: ["Alert brand", "Card brand", "Badge brand", "Button brand", "Checkbox brand", "a busca do catálogo"] },
   { nome: "Degradê", como: "cinco paradas florescem do centro da tecla, só no cursor e no toque; em repouso, preto chapado", who: ["Button primary"] },
   { nome: "Deslize", como: "o arco-íris na borda de baixo e brilhando embaixo da tecla, deslizando em 2s — sempre aceso", who: ["Button brandOutline"] },
   { nome: "Véu", como: "translúcido atrás do texto, deslizando em 20s — a exceção sob texto", who: ["AnnouncementBar brand"] },
@@ -310,7 +310,7 @@ export default function BrandDoc() {
 
       <DocSection
         title="Os controles de escolha"
-        description="Checkbox, Radio e o cartão do RadioGroup vestem a marca por contorno, e só quando marcados — desmarcados eles são pixel a pixel os do sistema. Não há halo: nos dois átomos o ::after já é o alvo de toque de 44px, então sobra o contorno, como no brandOutline. Uma por tela."
+        description="O Checkbox veste o brilho: a borda acende conforme o ponteiro se aproxima, marcada ou não. O Radio e o cartão do RadioGroup vestem o contorno, e só marcados — desmarcados são pixel a pixel os do sistema. Nenhum tem halo: nos dois átomos o ::after já é o alvo de toque de 44px. Uma por tela."
         code={`<Checkbox variant="brand" defaultChecked />
 
 <RadioGroup variant="brandCard" defaultValue="pro">
@@ -385,7 +385,7 @@ export default function BrandDoc() {
           A rodada 100 tirou o movimento da marca com nome feio — o degradê girava sozinho, num laço de 12s no splash e 6s sob o cursor. <strong>Este efeito não é aquele</strong>: nada aqui se move sem o ponteiro se mover, que é a forma que a rodada 98 sancionou quando pôs a lava atrás do <code>primary</code>. O que o commit da 100 preservou foi exatamente isto — &ldquo;o botão de marca não ficou inerte: o halo continua acendendo no cursor&rdquo;.
         </p>
         <p>
-          Contraste, contra o cartão: no escuro as oito paradas passam 3:1 (pior caso violeta 5,35); no claro quatro reprovam, pior caso lima <strong>1,91</strong>. Não é um caso de 1.4.11: quem identifica o aviso é a caixa mais o ícone, e o arco-íris é acento, como o halo do <code>Badge</code> e o arco-íris do <code>Progress</code>. No brilho o degradê nunca fica sob texto: o núcleo chapado em <code>padding-box</code> o mantém fora do miolo. O véu da faixa é a <strong>exceção consciente</strong>: ali o arco-íris fica sob o texto, e quem paga é o alfa <code>--brand-flow-alpha</code> (0,75 no claro, 0,45 no escuro), medido contra o <code>--foreground</code> no alfa máximo da máscara — pior caso <strong>5,33</strong> (lima, escuro), em <code>scripts/tone-contrast.mjs</code>.
+          Contraste, contra o cartão: no escuro as oito paradas passam 3:1 (pior caso violeta 5,35); no claro quatro reprovam, pior caso lima <strong>1,91</strong>. Não é um caso de 1.4.11: quem identifica o aviso é a caixa mais o ícone, e o arco-íris é acento, como o halo do <code>Badge</code> e o arco-íris do <code>Progress</code>. No brilho o degradê nunca fica sob texto: a máscara recorta só o anel, e o meio da caixa nunca é pintado. O véu da faixa é a <strong>exceção consciente</strong>: ali o arco-íris fica sob o texto, e quem paga é o alfa <code>--brand-flow-alpha</code> (0,75 no claro, 0,45 no escuro), medido contra o <code>--foreground</code> no alfa máximo da máscara — pior caso <strong>5,33</strong> (lima, escuro), em <code>scripts/tone-contrast.mjs</code>.
         </p>
       </DocNote>
 

@@ -73,7 +73,7 @@ Mermaid (`href` já quebrou um diagrama).
 O design system deste projeto tem três partes, e nenhuma delas se presume de
 memória:
 
-- **Componentes** em [`src/components/ui/`](src/components/ui) — 79 hoje.
+- **Componentes** em [`src/components/ui/`](src/components/ui) — 80 hoje.
 - **Tokens** em [`src/app/globals.css`](src/app/globals.css).
 - **Documentação viva** em `/designsystem`, com uma página por componente e por
   padrão. Sempre disponível em desenvolvimento; em produção, atrás de
@@ -307,8 +307,8 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   rodada 118 os dois avisos — `Alert variant="brand"` e
   `AnnouncementBar variant="brand"`. **Há três
   famílias de peça de marca, e elas quebram por motivos diferentes**: a do
-  **contorno** (os controles de escolha; o `Button brandOutline` até a rodada
-  152), em que o degradê
+  **contorno** (os controles de escolha — o `Checkbox` até a rodada 153, o
+  `Button brandOutline` até a 152), em que o degradê
   vive em 1px de `border-box` sobre um miolo chapado; a do
   **preenchimento** (`Progress variant="brand"` e `Slider variant="brand"`), em
   que ele preenche a barra e o que a liberta da invariante 3 é não haver rótulo
@@ -317,8 +317,8 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   partir do topo central e deslizando num laço de 20s (`@utility brand-flow`),
   **substituindo** o fio do `sticky`; e a do
   **brilho**, no `Alert variant="brand"`, no `Card variant="brand"`, no `Button variant="brand"` (rodada 145)
-  e, desde a rodada 144, no `Badge variant="brand"` (chip `muted` em repouso, com
-  `--brand-glow-core:var(--muted)`; era do contorno), em que a
+  e, desde a rodada 144, no `Badge variant="brand"` (chip `muted` em repouso;
+  era do contorno), e desde a 155 no `Checkbox variant="brand"`, em que a
   caixa fica neutra em repouso e o arco-íris acende num **arco da borda**
   conforme o ponteiro passa pela tela, com um borrão de 2px. Desde a rodada
   133 ele é primitiva de marca: a pintura é a `@utility brand-glow` e o
@@ -344,10 +344,16 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   (2) **`z-index` negativo sem `isolate` desaparece** — o pseudo cai atrás do
   fundo de um ancestral; medido, invisível.
   (3) **Com `isolate` ele passa a pintar por cima do `bg-card`**, pela ordem de
-  pintura da raiz de empilhamento, e cobriria o texto com sete matizes. A saída
-  é a receita já travada: núcleo chapado em `padding-box` sobre o arco-íris em
-  `border-box`, com o núcleo em `--card`, de modo que a região apagada pela
-  máscara fica **idêntica ao cartão**. O degradê nunca fica sob o texto.
+  pintura da raiz de empilhamento, e cobriria o texto com sete matizes. **Desde
+  a rodada 156 quem impede é a máscara, que recorta só o anel**, e o meio da
+  caixa nunca é pintado. Até a 155 a saída foi um núcleo chapado em
+  `padding-box` (`--brand-glow-core`), e ele era o defeito: a janela é uma
+  cunha que sai do **centro**, e o núcleo, que nunca batia pixel a pixel com o
+  fundo real, aparecia nela como um feixe — com o ponteiro perto, de 297 a
+  4.748 pixels do miolo mudavam; no campo de busca do catálogo o núcleo era o
+  preto da página sobre um campo mais claro. Depois: **zero** pixel do miolo
+  muda, nas seis peças e nos dois temas (os cantos arredondados, por onde o
+  anel faz a curva, ficam fora da conta). O degradê nunca fica sob o texto.
   (4) **A cor fica parada e a janela é que anda, e é isso que faz o arco trocar
   de cor conforme viaja** — oliva e âmbar na aresta direita, magenta na
   esquerda. Medido no bundle ao vivo da referência: o `background-image` dela é
@@ -358,13 +364,16 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   **junto** com o arco, e ele passou a carregar sempre a mesma sequência e só
   mudar de lugar. `brand-contour.test.ts` tranca as duas, e mutação confirma
   que cada asserção pega o seu erro.
-  (5) **A máscara é uma camada só, e a janela é um triângulo puro** — três
-  paradas, opaco no meio, fechando em `spread * 2`, como o `transparent, #fff,
-  transparent 80deg` da referência; com platô no miolo ela lê como bloco aceso
-  e não como brilho. Compor duas continua banido por medição (uma camada `none`
-  num `intersect` apaga a peça): a referência compõe só para recortar o anel, e
-  aqui esse trabalho é do par `padding-box`/`border-box` — onde a máscara apaga
-  aparece o `bg-card`, idêntico ao núcleo. A lista de paradas se repete na
+  (5) **A máscara recorta o anel, e a janela é um triângulo puro** — três
+  camadas compostas de baixo para cima: a caixa (`border-box`), menos a
+  `padding-box` (`exclude`), intersectada com a janela (`intersect`; no
+  prefixado, `source-in, xor`). A janela tem três paradas, opaco no meio,
+  fechando em `spread * 2`, como o `transparent, #fff, transparent 80deg` da
+  referência; com platô no miolo ela lê como bloco aceso e não como brilho.
+  **Compor foi banido por medição até a rodada 156** (uma camada `none` num
+  `intersect` apaga a peça), e o risco não se aplica mais: a janela é a única
+  camada com variável e lê `var(--brand-glow-start, 0)`, com o fallback no
+  próprio `var()`. A lista de paradas se repete na
   utility de propósito (o token é linear, e aqui ela é cônica e repetida
   `--brand-glow-repeat` vezes), em sRGB, porque num fio de 2px já borrado o
   oklch não se vê e o par `@supports` custaria duas listas.
@@ -483,6 +492,17 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   nelas o degradê **nunca fica sob o rótulo**: ele vive num contorno de 1px
   (`border-box` sobre um `padding-box` chapado) e num halo borrado
   atrás (`::after`), com o miolo preenchido pelo `primary`. Uma por tela.
+  **O `Checkbox` marcado floresce** (rodada 154): o preenchimento nasce no
+  centro da caixa e se abre na mola (`@utility button-bloom`, a flor do
+  `Button`, com `--button-bloom` ligado em `data-[state=checked]` e
+  `indeterminate`), e o tique entra crescendo de 50% com a tinta do marcado
+  cravada — senão ele nascia escuro antes da flor. **O `Checkbox brand` veste
+  o brilho** (rodada 155, a família do `Alert`, do `Card`, do `Badge` e do
+  `Button brand`, com `useBrandGlow`): a borda acende perto do ponteiro,
+  marcada ou não, e só a borda: a máscara recorta o anel, e o preenchimento,
+  a flor e o hover aparecem intactos sob ele. (Na rodada 155 havia um núcleo
+  com a flor por cima e um remendo de hover; saíram na 156.) O `Radio` e o
+  cartão continuam com o contorno parado.
   **Nos controles de escolha o halo não existe, e o motivo é mecânico**: o
   `::after` dos dois átomos **já é o alvo de toque de 44px** (`after:-inset-3.5`),
   e ele não se move. Sobra o contorno — o precedente do `brandOutline` até a
@@ -494,8 +514,7 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   acento numa lista deixam de ser acento. Quem liga e desliga é uma
   **opacidade** e não a troca da camada — `background-image` não interpola
   entre um degradê e `none`, e pintar e despintar faria o contorno estalar. O
-  núcleo chapado muda por peça (`--primary` na caixa, `--background` no anel,
-  `--card` no cartão) e **tem que ser opaco**: com `transparent` a camada
+  núcleo chapado muda por peça (`--background` no anel, `--card` no cartão) e **tem que ser opaco**: com `transparent` a camada
   `border-box` aparece no miolo e o controle inteiro vira degradê. O cartão de
   marca troca o realce de seleção do `card` em vez de somá-lo, e o rádio dentro
   dele **não** veste `brand` — dois contornos aninhados são "dois anéis na
@@ -770,7 +789,7 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   é `background`), e `glass.test.ts` compara os dois.
   **Nada de `cva` nesses arquivos**: a regra A2 do auditor o reprova fora de
   `components/ui/`.
-- **Cor escolhida pela pessoa**: [`ColorTile`](src/components/ui/color-tile.tsx) para o ladrilho que carrega `categories.color`, `bills.color` ou a marca de um workspace. Se a cor vem do tema e não do banco, é o componente errado — use `bg-muted` ou um `Badge`. **É a construção do `AvatarFallback`**: superfície chapada com a cor, tinta escura por cima, **um valor só nos dois temas**. O que separa os dois é a forma e quem escolhe — o avatar é redondo e o sistema sorteia uma das seis identidades; o ladrilho é de canto arredondado e quem escolhe é a pessoa. **A claridade é do sistema; o matiz é da pessoa**: a superfície é `oklch(from var(--tile-color) 0.86 min(c, 0.12) h)`, e com a tinta em `--identity-foreground` qualquer cor de runtime cai entre **10,63 e 11,74** — a faixa das seis identidades (10,17–12,12). Preto, branco e cinza chegam neutros. **A cor não entra crua, e isso é medido**: chapando a parada da marca como ela é, índigo dá 3,55, violeta 3,21 e magenta 4,09 com tinta escura, e âmbar 1,94, lima 1,83, teal 2,23 e azul 2,42 com tinta branca — nenhuma tinta única serve as oito. Sem o teto de croma, o magenta cai a 7,70 e oito ladrilhos deixam de ler como uma família. `scripts/tile-contrast.mjs` é a guarda: 96 células, piso 4,5, pior caso **10,64**. **A paleta que a pessoa escolhe é a da marca** — `TILE_PALETTE` em [`lib/tile-palette.ts`](src/lib/tile-palette.ts), os oito matizes do arco-íris na banda da identidade, servindo categoria **e** carteira; eram duas listas de hexadecimais crus do Tailwind (dez e doze). `tileColorFor` dobra na leitura os 22 presets legados, sem escrever no banco, no precedente de `identityToneFor`; o que a pessoa digitou no seletor livre atravessa intacto. **Uma versão só**: saíram o verniz, o eixo `glass`, o véu de 12%/18%, o fio e o par por tema. **A escada fala os nomes do sistema**: `md` 32 · `lg` 36 · `xl` 40 · `2xl` 44, e só o `2xl` alcança o alvo de toque. **E quem manda no corpo do ícone é o degrau**: `[&>svg]:size-4` é seletor de descendente (0,1,1) e vence qualquer classe no próprio `svg` (0,1,0) — medido, um `size-5` no ícone computa 16px.
+- **Cor escolhida pela pessoa**: [`ColorTile`](src/components/ui/color-tile.tsx) para o ladrilho que carrega `categories.color`, `bills.color` ou a marca de um workspace. Se a cor vem do tema e não do banco, é o componente errado — use `bg-muted` ou um `Badge`. **É a construção do `AvatarFallback`**: superfície chapada com a cor, tinta escura por cima, **um valor só nos dois temas**. O que separa os dois é a forma e quem escolhe — o avatar é redondo e o sistema sorteia uma das seis identidades; o ladrilho é de canto arredondado e quem escolhe é a pessoa. **A claridade é do sistema; o matiz é da pessoa**: a superfície é `oklch(from var(--tile-color) 0.86 min(c, 0.12) h)`, e com a tinta em `--identity-foreground` qualquer cor de runtime cai entre **10,64 e 11,73** — a faixa das seis identidades (10,17–12,12). Preto, branco e cinza chegam neutros. **A cor não entra crua, e isso é medido**: chapando a parada da marca como ela é, índigo dá 3,55, violeta 3,21 e magenta 4,09 com tinta escura, e âmbar 1,94, lima 1,83, teal 2,23 e azul 2,42 com tinta branca — nenhuma tinta única serve as oito. Sem o teto de croma, o magenta cai a 7,70 e oito ladrilhos deixam de ler como uma família. `scripts/tile-contrast.mjs` é a guarda: 96 células, piso 4,5, pior caso **10,64**. **A paleta que a pessoa escolhe é a da marca** — `TILE_PALETTE` em [`lib/tile-palette.ts`](src/lib/tile-palette.ts), os oito matizes do arco-íris na banda da identidade, servindo categoria **e** carteira; eram duas listas de hexadecimais crus do Tailwind (dez e doze). `tileColorFor` dobra na leitura os 22 presets legados, sem escrever no banco, no precedente de `identityToneFor`; o que a pessoa digitou no seletor livre atravessa intacto. **Uma versão só**: saíram o verniz, o eixo `glass`, o véu de 12%/18%, o fio e o par por tema. **A escada fala os nomes do sistema**: `md` 32 · `lg` 36 · `xl` 40 · `2xl` 44, e só o `2xl` alcança o alvo de toque. **E quem manda no corpo do ícone é o degrau**: `[&>svg]:size-4` é seletor de descendente (0,1,1) e vence qualquer classe no próprio `svg` (0,1,0) — medido, um `size-5` no ícone computa 16px.
 - **Alerts / tabs / forms**: [`Alert`](src/components/ui/alert.tsx), [`Tabs`](src/components/ui/tabs.tsx), [`Textarea`](src/components/ui/textarea.tsx), [`ScrollArea`](src/components/ui/scroll-area.tsx), [`Toggle` / `ToggleGroup`](src/components/ui/toggle.tsx), [`Slider`](src/components/ui/slider.tsx), [`Radio` / `RadioGroup`](src/components/ui/radio-group.tsx) (a forma curta é `FormRadioGroup`), [`Pagination`](src/components/ui/pagination.tsx), [`Collapsible`](src/components/ui/collapsible.tsx), [`Breadcrumb`](src/components/ui/breadcrumb.tsx), [`ChartContainer` + chart helpers](src/components/ui/chart.tsx) for Recharts.
 - **Campos**: [`Field`](src/components/ui/field.tsx) para rótulo + descrição + erro **já ligados — e agora ligados de verdade**: quem escreve `htmlFor`, `id`, `aria-describedby`, `aria-invalid` e `data-invalid` é o `FieldControl`, não a memória de quem escreve a tela. Esta linha afirmava o mesmo antes de o mecanismo existir; ver a rodada 11. [`FieldRow`](src/components/ui/field.tsx) para a linha de dois campos; [`InputGroup`](src/components/ui/input-group.tsx) para campo com ícone ou botão acoplado; [`Combobox`](src/components/ui/combobox.tsx) quando a lista passa de umas dez opções.
 - **Seletor ancorado num campo**:
@@ -1175,8 +1194,10 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   largura. `direction` aceita só `bottom` e `top`: o `[data-vaul-handle]` do
   `vaul` declara `touch-action: pan-y`, então a alça só arrasta na vertical, e
   uma gaveta lateral teria a alça de enfeite outra vez. Borda lateral é o ramo
-  desktop do `Sheet`. A alça é uma peça só — o [`DragHandle`](src/components/ui/drag-handle.tsx) —,
-  que a folha e a gaveta compõem, e todo `!` dela é o que troca o cinza literal
+  desktop do `Sheet`. A alça é uma peça só — o `DragHandle`, que mora no
+  [`drawer.tsx`](src/components/ui/drawer.tsx) desde a rodada 159, sem arquivo
+  nem página próprios, e é documentado na página do `Drawer` —, que a folha e a
+  gaveta compõem (o `Sheet` a importa dali, junto com o véu `SHEET_OVERLAY_CLASS`), e todo `!` dela é o que troca o cinza literal
   e as medidas que o `vaul` injeta numa folha de estilo própria.
 - **A alça é da superfície.** No telefone o `vaul` a desenha e ela **é** a área
   de arraste; no desktop não há alça, porque a folha lateral não se arrasta.

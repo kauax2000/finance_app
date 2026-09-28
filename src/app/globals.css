@@ -1910,12 +1910,16 @@
 }
 
 @utility button-bloom {
-  background-image: radial-gradient(
+  /* A imagem mora numa variável, substituída **aqui**, no elemento, a cada
+     quadro da transição — quem quiser pintá-la noutra camada herda o valor
+     pronto. */
+  --button-bloom-image: radial-gradient(
     ellipse farthest-corner at 50% 50%,
     color-mix(in oklab, var(--button-bloom-fill) calc(var(--button-bloom) * 100%), transparent)
       calc(var(--button-bloom) * 155% - 40%),
     transparent calc(var(--button-bloom) * 115% + 1%)
   );
+  background-image: var(--button-bloom-image);
 }
 
 /* O degradê do primário: a mesma flor, com as cinco paradas da marca num
@@ -1987,9 +1991,12 @@
   }
 }
 
-@utility brand-rainbow-button {
-  position: relative;
-  isolation: isolate;
+/* A lista que desliza, numa utility própria (rodada 154), lida pelo
+   `Button brandOutline`. Ela é
+   declarada **no elemento** pela razão do `brand-rainbow-image`: um `var()`
+   dentro de uma propriedade personalizada resolve onde ela é declarada, e só
+   no elemento o tema já é o certo. Os pseudos herdam o valor pronto. */
+@utility brand-rainbow-slide {
   --brand-rainbow-slide: linear-gradient(
     90deg,
     var(--brand-coral),
@@ -1999,6 +2006,11 @@
     var(--brand-violet),
     var(--brand-coral)
   );
+}
+
+@utility brand-rainbow-button {
+  position: relative;
+  isolation: isolate;
 
   &::before,
   &::after {
@@ -2151,13 +2163,15 @@
 
    3. **Com `isolate`, o pseudo de `z` negativo pinta POR CIMA do `bg-card`.**
       É a ordem de pintura da raiz de empilhamento: fundo primeiro, filhos de
-      `z` negativo depois. Sem o núcleo chapado ele cobriria o texto com sete
-      matizes — a invariante 3. A saída é a receita já travada da casa: núcleo
-      em `padding-box` sobre o arco-íris em `border-box`, com o núcleo em
-      `--card`. Onde a máscara apaga, o que se vê é a cor do próprio cartão.
+      `z` negativo depois. Pintado inteiro, ele cobriria o texto com sete
+      matizes — a invariante 3. Até a rodada 155 a saída foi um núcleo chapado
+      em `padding-box`, e ele virou o feixe no centro (ver o `::before`); desde
+      a 156 a **máscara recorta o anel**, e o meio da caixa nunca é pintado.
       **O degradê nunca fica sob o texto, por construção.**
 
-   4. **Não há máscara nenhuma, e o arco É o degradê.** A referência pinta um
+   4. **(Histórico — revertido na rodada 156, ver a máscara abaixo.)** A
+      referência compõe máscaras, e esta casa as baniu até achar a causa. O
+      texto da época: **Não há máscara nenhuma, e o arco É o degradê.** A referência pinta um
       arco-íris inteiro e recorta uma janela com `mask-composite: intersect` —
       duas camadas de máscara, que este projeto já baniu por medição
       (`mask-composite` e `-webkit-mask-composite` são propriedades distintas
@@ -2252,15 +2266,16 @@
        com o arco, e aí ele carrega sempre a mesma sequência e só muda de
        lugar. O `from` daqui é constante de propósito — quem o parametrizar
        recria o defeito. */
-    /* O núcleo é `--card` por padrão — o `Alert` e o `Card` são cartões. Quem
-       brilha sobre outra superfície declara `--brand-glow-core` com a cor que
-       está atrás dele (o gatilho de busca do catálogo, sobre a barra). */
+    /* **Só o arco-íris, e nenhum miolo** (rodada 156). Até a 155 havia um
+       núcleo chapado em `padding-box` (`--brand-glow-core`, `--card` por
+       padrão, mais a camada `--brand-glow-overlay`) para esconder o arco-íris
+       do meio da caixa, e ele tinha de bater pixel a pixel com o fundo real de
+       cada peça. Não batia: a janela é uma cunha que sai do **centro**, e o
+       núcleo aparecia nela como um feixe — medido com o ponteiro perto, de 297
+       a 4.748 pixels do miolo mudavam, e no campo de busca do catálogo o
+       núcleo era o preto da página sobre um campo mais claro. Quem esconde o
+       meio agora é a máscara (abaixo), e o fundo real aparece sempre. */
     background:
-      linear-gradient(
-          var(--brand-glow-core, var(--card)),
-          var(--brand-glow-core, var(--card))
-        )
-        padding-box,
       /* **A referência tem quatro `radial-gradient` aqui, e eles não pintam
          nada.** Foram portados e medidos: são círculos no **interior** da
          caixa (`circle`, `at 40% 40%`, `at 60% 60%`, `at 40% 60%`, com o
@@ -2290,27 +2305,46 @@
     opacity: calc(var(--brand-glow-active, 0) * var(--brand-glow-opacity));
     transition: opacity var(--duration-slow) var(--ease-out);
     pointer-events: none;
-    /* **Uma camada de máscara, e um triângulo puro** — três paradas, com o
-       opaco no meio, exatamente como a referência (`transparent, #fff,
-       transparent 80deg`). O `mask-composite: intersect` dela serve só para
-       recortar o anel, e aqui esse trabalho é do par `padding-box`/
-       `border-box`: onde a máscara apaga aparece o `bg-card` do próprio
-       alerta, idêntico ao núcleo. Uma camada só é o que esta casa permite — o
-       banimento medido é de **duas** compostas, em que uma `none` apaga a peça.
-       Aqui uma variável indefinida derruba a máscara para `none` e o anel
-       aparece inteiro: falha alto, não calada. */
-    -webkit-mask-image: conic-gradient(
-      from calc((var(--brand-glow-start) - var(--brand-glow-spread)) * 1deg),
-      transparent,
-      #000,
-      transparent calc(var(--brand-glow-spread) * 2deg)
-    );
-    mask-image: conic-gradient(
-      from calc((var(--brand-glow-start) - var(--brand-glow-spread)) * 1deg),
-      transparent,
-      #000,
-      transparent calc(var(--brand-glow-spread) * 2deg)
-    );
+    /* **A máscara recorta o anel, como na referência** (rodada 156): três
+       camadas, compostas de baixo para cima — a caixa inteira (`border-box`),
+       menos a `padding-box` (`exclude`), que deixa só o anel de 2px; e esse
+       anel intersectado com a janela (`intersect`), um triângulo puro de três
+       paradas com o opaco no meio (`transparent, #fff, transparent 80deg`,
+       como lá). O meio da caixa nunca é pintado.
+
+       **Compor era banido por medição, e o motivo não se aplica mais.** Uma
+       camada `none` num `intersect` apagava a peça; a única camada com
+       variável é a janela, e ela lê `var(--brand-glow-start, 0)` com o
+       fallback no próprio `var()`, além do valor declarado acima. As duas do
+       anel são literais. E a versão prefixada tem outros nomes
+       (`source-in, xor`), escrita antes da padrão — numa `@utility` a ordem é
+       a que se escreve, e não a de emissão do Tailwind.
+
+       O borrão de 2px roda **antes** da máscara, então as arestas do anel
+       saem nítidas e ele suaviza as cores ao longo do arco — o mesmo da
+       referência, que também recorta por máscara. */
+    -webkit-mask-image:
+      conic-gradient(
+        from calc((var(--brand-glow-start, 0) - var(--brand-glow-spread)) * 1deg),
+        transparent,
+        #000,
+        transparent calc(var(--brand-glow-spread) * 2deg)
+      ),
+      linear-gradient(#000 0 0),
+      linear-gradient(#000 0 0);
+    -webkit-mask-clip: border-box, padding-box, border-box;
+    -webkit-mask-composite: source-in, xor;
+    mask-image:
+      conic-gradient(
+        from calc((var(--brand-glow-start, 0) - var(--brand-glow-spread)) * 1deg),
+        transparent,
+        #000,
+        transparent calc(var(--brand-glow-spread) * 2deg)
+      ),
+      linear-gradient(#000 0 0),
+      linear-gradient(#000 0 0);
+    mask-clip: border-box, padding-box, border-box;
+    mask-composite: intersect, exclude;
   }
 }
 
