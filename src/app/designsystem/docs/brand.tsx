@@ -10,13 +10,17 @@ import {
   AlertTitle,
 } from "@/components/ui/alert"
 import { AnnouncementBar } from "@/components/ui/announcement-bar"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
+import { Code } from "@/components/ui/code"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Separator } from "@/components/ui/separator"
+import { Progress } from "@/components/ui/progress"
+import { Slider } from "@/components/ui/slider"
 import { Muted } from "@/components/ui/typography"
 import { DocNote, DocSection, Usage } from "../ds-doc"
 import { Group, Spec, SpecimenPanel, Stack } from "../ds-kit"
@@ -32,11 +36,27 @@ const ESCALA = [
   ["xl", "h-10 md:h-11", "40 → 44px", "168 → 185px", "a marca sozinha numa tela inteira — o splash"],
 ]
 
+/**
+ * Onde o arco-íris mora, por mecanismo. Cada família mantém o degradê longe do
+ * que se lê de um jeito diferente, e é por isso que elas não se misturam. As
+ * peças são as que vestem a marca hoje — contadas no código, não desejadas.
+ */
+const FAMILIAS = [
+  { nome: "Letra", como: "o degradê preenche o traçado, parado, em todo tamanho", who: ["AppWordmark rainbow", "AppLogo rainbow", "EmptyStateCode"] },
+  { nome: "Contorno", como: "1px de border-box sobre um miolo chapado; o halo borrado só no botão e no badge", who: ["Button brand", "Button brandOutline", "Badge brand", "Checkbox brand", "Radio brand", "RadioGroupItem brandCard"] },
+  { nome: "Preenchimento", como: "o degradê é o trilho e a barra o revela — sem rótulo em cima", who: ["Progress brand", "Slider brand", "HistogramSlider brand"] },
+  { nome: "Brilho", como: "um arco da borda acende perto do ponteiro; sem ele, a caixa é neutra", who: ["Alert brand", "Card brand", "a busca do catálogo"] },
+  { nome: "Véu", como: "translúcido atrás do texto, deslizando em 20s — a exceção sob texto", who: ["AnnouncementBar brand"] },
+  { nome: "Lava", como: "blobos de cor atrás de um vidro da cor do botão, só no cursor", who: ["Button primary", "brand-lava"] },
+  { nome: "Campo", como: "a região inteira, com grão e vinheta; o texto mora em Card", who: ["brand-field", "as telas de acesso"] },
+  { nome: "Feixe", como: "uma linha que corre pela base do campo vazio, esperando a digitação", who: ["CommandDialog"] },
+]
+
 export default function BrandDoc() {
   return (
     <>
       <Usage>
-        A marca é <strong>preta</strong> — branca no escuro — e o arco-íris neon é o único acento de cor do sistema, reservado a ela. Duas peças, escolhidas pela forma do espaço: numa linha, o <strong>lockup</strong> (<code>AppWordmark</code>); num quadrado, o <strong>símbolo</strong> (<code>AppLogo</code>). Não há terceira montagem — símbolo com o nome ao lado é o que o lockup já é.
+        A marca é <strong>preta</strong> — branca no escuro — e o arco-íris é a única cor dela, reservada a ela. Duas peças, escolhidas pela forma do espaço: numa linha, o <strong>lockup</strong> (<code>AppWordmark</code>); num quadrado, o <strong>símbolo</strong> (<code>AppLogo</code>). O primário do sistema é a mesma tecla preta, e o arco-íris <strong>não</strong> entra nele: um acento em todo botão deixa de ser acento.
       </Usage>
 
       <Group title="As duas peças" layout="grid">
@@ -64,6 +84,41 @@ export default function BrandDoc() {
       </Group>
 
       <DocSection
+        title="Escala"
+        description="A escala do lockup é por altura; a largura vem do viewBox, e o w-auto embutido impede um w-full herdado de esticar a marca."
+        previewClassName="flex-col items-stretch gap-4"
+      >
+        <Stack className="gap-4">
+          {ESCALA.map(([size, cls, altura, largura, uso]) => (
+            <div
+              key={size}
+              className="grid items-center gap-x-4 gap-y-2 sm:grid-cols-[13rem_minmax(0,1fr)]"
+            >
+              {/* Coluna de largura fixa: sem ela cada degrau começa o texto
+                  num x diferente, e a tabela deixa de ler como tabela. */}
+              <span className="flex items-center">
+                <AppWordmark
+                  size={size as "sm" | "md" | "lg" | "xl"}
+                  rainbow
+                  aria-hidden
+                />
+              </span>
+              <div className="flex min-w-0 flex-col">
+                <div className="flex flex-wrap items-baseline gap-x-2">
+                  <Code variant="inline">size=&quot;{size}&quot;</Code>
+                  <Code>{cls}</Code>
+                  <span className="nums text-2xs text-muted-foreground">
+                    {altura} · {largura}
+                  </span>
+                </div>
+                <span className="text-xs text-muted-foreground">{uso}</span>
+              </div>
+            </div>
+          ))}
+        </Stack>
+      </DocSection>
+
+      <DocSection
         title="Cor"
         description="A marca é tinta: os dois ativos são fill=&quot;currentColor&quot; sem classe de cor, e herdam a tinta do texto ao redor — preta no claro, branca no escuro, branca dentro do campo de marca. Nenhuma tela a recolore."
         code={`// Sobre a página: herda --foreground
@@ -87,76 +142,6 @@ export default function BrandDoc() {
           </span>
           <AppWordmark size="lg" />
         </SpecimenPanel>
-      </DocSection>
-
-      <DocNote title="O verde saiu, e o primário virou a tecla preta">
-        <p>
-          <code>--primary</code> preenche de preto (branco no escuro) e continua sendo medido contra o rótulo em cima; <code>--primary-accent</code> continua sendo a marca sobre a página. Com a marca preta os dois coincidem com <code>--foreground</code>, mas o papel não se funde: <code>text-primary</code> segue proibido, porque dentro de uma tecla no escuro ele é branco sobre branco. O arco-íris <strong>não</strong> entra no <code>primary</code> — um acento em todo botão deixa de ser acento.
-        </p>
-      </DocNote>
-
-      <DocSection
-        title="O arco-íris"
-        description="rainbow preenche as letras com o degradê, do mesmo jeito em todo tamanho. O tamanho não decide mais nada aqui: o giro que havia em lg e xl saiu do sistema, e a marca é a mesma peça parada nos quatro degraus."
-        code={`// O splash, o campo de marca
-<AppWordmark size="xl" rainbow />
-<AppLogo size="lg" rainbow />
-
-// A barra
-<AppWordmark size="md" rainbow />`}
-        previewClassName="flex-col items-stretch gap-4"
-      >
-        <SpecimenPanel surface="background" className="items-start gap-6">
-          <AppWordmark size="xl" rainbow />
-          <AppLogo size="lg" rainbow />
-        </SpecimenPanel>
-        <SpecimenPanel surface="card" className="items-start">
-          <AppWordmark size="md" rainbow />
-        </SpecimenPanel>
-      </DocSection>
-
-      <DocNote title="Uma receita só, e por que ela é linear">
-        <p>
-          O degradê é <code>--brand-rainbow</code>, composto pela <code>@utility brand-rainbow-image</code> no próprio elemento (e não no <code>:root</code>, onde o ângulo congelava — rodada 88), e cada parada é um token próprio — <code>--brand-teal</code>, <code>--brand-blue</code>, <code>--brand-indigo</code>, <code>--brand-violet</code>, <code>--brand-magenta</code>, <code>--brand-coral</code>, <code>--brand-amber</code>, <code>--brand-green</code>, medidos em <code>/designsystem/colors</code>. Sete matizes em oito paradas — teal, ciano-azul e azul (um terço da rampa, para o azul não ser só a ponta), violeta, magenta, coral, âmbar, lima: a paleta do ClickUp com o coral no meio, e o verde de volta nas duas pontas por decisão do dono na rodada 84 (a 83 o tinha tirado: a primeira versão de sete paradas lia como bandeira). O verde da marca não é o verde de estado — <code>success</code> fica em 152, a lima em 130 —, com as mesmas matizes nos dois temas e a luminosidade um degrau abaixo no claro (para o preenchimento ler sobre branco) e acima no escuro. É um <code>linear-gradient</code> a 135°, <strong>parado</strong>, e ele interpola <code>in oklch shorter hue</code>. A interpolação é o conserto do fio que se via cortando o campo: em sRGB — o padrão quando o espaço não é declarado — o matiz não corre parelho, e a travessia magenta→coral gastava <strong>36,1° a cada 5%</strong> da largura contra 9,0° no azul (razão 4,01×); em oklch o pico cai para <strong>26,3°</strong>. O que não era a causa, e por isso não se mexeu: o espaçamento das paradas (razão de velocidade perceptual entre segmentos 1,29×) e o gamut (pior perda de croma 0,012). A primeira versão era cônica a partir do centro, e na tela lia como roda de cores: um gráfico de pizza, não neon.
-        </p>
-        <p>
-          O preenchimento é uma <code>div</code> mascarada pelo próprio ativo (<code>mask-[url(/wordmark.svg)]</code>) vestindo <code>brand-rainbow</code>, em todo tamanho — e <strong>sem grão</strong>: num traço de poucos pixels ele não é textura, é sujeira na letra; o grão é do campo de marca. Houve uma versão com halo borrado atrás da letra sólida nos degraus pequenos, e ela foi rejeitada na tela: lia como desregistro de cor, não como luz.
-        </p>
-        <p>
-          <strong>O degradê girava, e o giro saiu.</strong> Da rodada 83 à 99 o ângulo somava <code>--brand-angle</code>, animada por <code>brand-rainbow-live</code>: 12s no lockup e no símbolo em <code>lg</code>/<code>xl</code>, 6s sob o cursor no <code>Button variant=&quot;brand&quot;</code>. O dono o recusou inteiro — <em>não é uma animação que eu quero usar em nenhum lugar de site</em> — e com ele saíram <code>--brand-angle</code>, <code>@keyframes brand-rotate</code> e <code>--brand-spin</code>. O movimento da marca hoje é a <strong>lava</strong>: blobos de cor transitando dentro da caixa, que é o que o <code>primary-wash</code> faz no hover do primário desde a rodada 98 e o que a <code>@utility brand-lava</code> faz em escala de região, medida em <code>/designsystem/colors</code>.
-        </p>
-      </DocNote>
-
-      <DocSection
-        title="Escala"
-        description="A escala do lockup é por altura; a largura vem do viewBox, e o w-auto embutido impede um w-full herdado de esticar a marca."
-        previewClassName="flex-col items-stretch gap-4"
-      >
-        <Stack className="gap-4">
-          {ESCALA.map(([size, cls, altura, largura, uso]) => (
-            <div key={size} className="flex flex-wrap items-center gap-x-4 gap-y-1">
-              {/* Caixa de largura fixa: sem ela cada degrau começa a coluna de
-                  código num x diferente, e a tabela deixa de ler como tabela. */}
-              <span className="flex w-52 shrink-0 items-center">
-                <AppWordmark
-                  size={size as "sm" | "md" | "lg" | "xl"}
-                  rainbow
-                  aria-hidden
-                />
-              </span>
-              <code className="w-24 shrink-0 font-mono text-2xs text-foreground">
-                size=&quot;{size}&quot;
-              </code>
-              <code className="w-24 shrink-0 font-mono text-2xs text-muted-foreground">
-                {cls}
-              </code>
-              <span className="nums w-24 shrink-0 text-2xs text-muted-foreground">
-                {altura} · {largura}
-              </span>
-              <span className="text-xs text-muted-foreground">{uso}</span>
-            </div>
-          ))}
-        </Stack>
       </DocSection>
 
       <DocSection
@@ -201,6 +186,59 @@ export default function BrandDoc() {
       >
         <span className="wordmark text-lg text-foreground">Finance</span>
       </DocSection>
+
+      <Group
+        title="Onde o arco-íris mora"
+        description="Oito famílias, e cada uma tem um mecanismo que mantém o degradê longe do que se lê. Fora delas o arco-íris não entra: nem em chip, nem em gráfico, nem em fundo de cartão."
+        layout="flow"
+      >
+        <Spec title="Família → peças" meta="--brand-rainbow" className="mb-0" bodyClassName="p-0">
+          <dl className="divide-y divide-border">
+            {FAMILIAS.map((f) => (
+              <div
+                key={f.nome}
+                className="grid gap-x-4 gap-y-1 px-4 py-3 sm:grid-cols-[7rem_minmax(0,1fr)]"
+              >
+                <dt className="text-sm font-medium text-foreground">{f.nome}</dt>
+                <dd className="flex min-w-0 flex-col">
+                  <span className="text-xs text-muted-foreground">{f.como}</span>
+                  <span className="mt-1.5 flex flex-wrap gap-1">
+                    {f.who.map((w) => (
+                      <Code key={w}>{w}</Code>
+                    ))}
+                  </span>
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </Spec>
+      </Group>
+
+      <DocSection
+        title="O arco-íris na letra"
+        description="rainbow preenche as letras com o degradê, do mesmo jeito em todo tamanho. O tamanho não decide mais nada aqui: o giro que havia em lg e xl saiu do sistema, e a marca é a mesma peça parada nos quatro degraus."
+        code={`// O splash, o campo de marca
+<AppWordmark size="xl" rainbow />
+<AppLogo size="lg" rainbow />
+
+// A barra
+<AppWordmark size="md" rainbow />`}
+        previewClassName="flex-col items-stretch gap-4"
+      >
+        <SpecimenPanel surface="background" className="items-start gap-6">
+          <AppWordmark size="xl" rainbow />
+          <AppLogo size="lg" rainbow />
+        </SpecimenPanel>
+        <SpecimenPanel surface="card" className="items-start">
+          <AppWordmark size="md" rainbow />
+        </SpecimenPanel>
+      </DocSection>
+
+      <DocNote title="Uma receita só: linear, parada e em oklch">
+        <p>
+          O degradê é <code>--brand-rainbow</code>, um <code>linear-gradient</code> a 135° com oito paradas — cada uma um token <code>--brand-*</code>, medido em <code>/designsystem/colors</code> —, composto no próprio elemento pela <code>@utility brand-rainbow-image</code>. Ele interpola <code>in oklch shorter hue</code>: em sRGB a travessia magenta→coral corria 4× mais rápido que o azul e desenhava um fio no campo. <strong>Não gira</strong>: o giro foi recusado na rodada 100, e o movimento da marca é a lava. Na letra não há grão — num traço de poucos pixels ele é sujeira —, e o grão é do campo.
+        </p>
+      </DocNote>
 
       <DocSection
         title="O campo de marca"
@@ -256,6 +294,17 @@ export default function BrandDoc() {
       </DocSection>
 
       <DocSection
+        title="O chip de marca"
+        description="O Badge veste o contorno e o halo do botão, na escala de um chip: para o que é do produto — Beta, Novo, Pro —, nunca para um dado da pessoa."
+        code={`<Badge variant="brand">Beta</Badge>`}
+      >
+        <Badge variant="brand">Beta</Badge>
+        <Badge variant="brand" size="sm">
+          Novo
+        </Badge>
+      </DocSection>
+
+      <DocSection
         title="Os controles de escolha"
         description="Checkbox, Radio e o cartão do RadioGroup vestem a marca por contorno, e só quando marcados — desmarcados eles são pixel a pixel os do sistema. O halo do botão não vem junto: nos dois átomos o ::after já é o alvo de toque de 44px, então sobra o contorno, como no brandOutline. Uma por tela."
         code={`<Checkbox variant="brand" defaultChecked />
@@ -286,6 +335,23 @@ export default function BrandDoc() {
             Pro — R$ 29/mês
           </RadioGroupItem>
         </RadioGroup>
+      </DocSection>
+
+      <DocNote title="O contorno esmaece, e o conteúdo não pousa no degradê">
+        <p>
+          Quem liga e desliga a marca é uma <strong>opacidade</strong>, e não a troca da camada: <code>background-image</code> não interpola entre um degradê e <code>none</code>, então pintar e despintar faria o contorno estalar. O miolo é chapado — <code>--primary</code> na caixa, <code>--background</code> no anel, <code>--card</code> no cartão —, então o tique continua branco sobre a tecla e o ponto continua <code>--primary-accent</code> sobre a página: <strong>o mesmo contraste dos controles do sistema</strong>. O degradê só aparece por 1px de borda, e arco-íris sob texto continua proibido.
+        </p>
+      </DocNote>
+
+      <DocSection
+        title="O preenchimento"
+        description="Na barra, o arco-íris é o trilho e o valor o revela: a 8% só se vê o teal, e a marca só fica inteira com a barra cheia. Serve a progresso sem limiar — onde há risco, a cor é estado e o eixo é bands."
+        code={`<Progress variant="brand" value={64} />
+<Slider variant="brand" defaultValue={[40]} max={100} aria-label="Meta" />`}
+        previewClassName="flex-col items-stretch gap-5"
+      >
+        <Progress variant="brand" value={64} aria-label="Progresso de exemplo" />
+        <Slider variant="brand" defaultValue={[40]} max={100} aria-label="Meta de exemplo" />
       </DocSection>
 
       <DocSection
@@ -319,15 +385,9 @@ export default function BrandDoc() {
         </p>
       </DocNote>
 
-      <DocNote title="O contorno esmaece, e o conteúdo não pousa no degradê">
-        <p>
-          Quem liga e desliga a marca é uma <strong>opacidade</strong>, e não a troca da camada: <code>background-image</code> não interpola entre um degradê e <code>none</code>, então pintar e despintar faria o contorno estalar. O miolo é chapado — <code>--primary</code> na caixa, <code>--background</code> no anel, <code>--card</code> no cartão —, então o tique continua branco sobre a tecla e o ponto continua <code>--primary-accent</code> sobre a página: <strong>o mesmo contraste dos controles do sistema</strong>. O degradê só aparece por 1px de borda, e arco-íris sob texto continua proibido.
-        </p>
-      </DocNote>
-
       <DocNote title="O que não fazer">
         <p>
-          Recolorir o lockup: ele herda a tinta do texto. Arco-íris fora da marca — num chip, num gráfico, num fundo de cartão. Contorno de arco-íris em volta de um parágrafo: em bloco de texto a marca entra por régua na aresta, não emoldurando o que se lê. Texto corrido direto sobre o campo de marca. Halo ou sombra colorida atrás da letra: foi medido e rejeitado. Colar o <code>AppLogo</code> ao lado do lockup, escrevendo a inicial duas vezes. Declarar <code>width</code> junto de <code>height</code>: a proporção é do traçado.
+          Recolorir o lockup: ele herda a tinta do texto. Arco-íris fora das oito famílias — num chip de dado, num gráfico, num fundo de cartão. Moldura de arco-íris em volta de um parágrafo: em bloco de texto a marca entra pelo brilho na borda, que só acende com o ponteiro. Texto corrido direto sobre o campo de marca. Halo ou sombra colorida atrás da letra: foi medido e rejeitado. Colar o <code>AppLogo</code> ao lado do lockup, escrevendo a inicial duas vezes. Declarar <code>width</code> junto de <code>height</code>: a proporção é do traçado. E duas peças de marca na mesma tela: acento repetido deixa de ser acento.
         </p>
       </DocNote>
     </>

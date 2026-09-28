@@ -1,10 +1,12 @@
 "use client"
 
+import { Code } from "@/components/ui/code"
 import { DocNote, Usage } from "../ds-doc"
 import {
   Group,
   IdentityDiscs,
   Ramp,
+  Spec,
   SurfaceNest,
   SpecimenPanel,
   TokenGrid,
@@ -12,9 +14,31 @@ import {
 } from "../ds-kit"
 
 /**
+ * A pergunta que a tela faz, e o token que responde. A página inteira é a
+ * explicação destas linhas; elas vêm primeiro porque é por elas que se chega.
+ */
+const PAPEIS = [
+  { papel: "O fundo da página, o cartão, a placa flutuante", tokens: ["--background", "--card", "--popover"] },
+  { papel: "Texto que não é o principal", tokens: ["--muted-foreground"] },
+  { papel: "Preenche e carrega um rótulo por cima", tokens: ["--primary"] },
+  { papel: "Texto, ícone ou traço fino de marca", tokens: ["--primary-accent"] },
+  { papel: "O contorno do foco", tokens: ["--ring"] },
+  { papel: "Um aviso: deu certo, atenção, informação, erro", tokens: ["--success", "--warning", "--info", "--destructive"] },
+  { papel: "O chip, o badge e o alerta desse aviso", tokens: ["--*-muted"] },
+  { papel: "Dinheiro que entrou ou saiu", tokens: ["--income", "--expense"] },
+  { papel: "Uma série de gráfico", tokens: ["--chart-1…5"] },
+  { papel: "Uma pessoa", tokens: ["--identity-1…6"] },
+  { papel: "Texto sobre foto", tokens: ["--scrim", "--scrim-foreground"] },
+]
+
+/**
  * A cor é a superfície desta página: cada token é um ladrilho, e nome, token e
  * medição descem para uma legenda quieta. Superfícies e rampa abrem com um
  * espécime maior, porque hierarquia e distinção só se julgam lado a lado.
+ *
+ * A ordem é a de quem escreve uma tela: o chão, o que acende, o que contorna,
+ * o que cobre; depois o que tem significado (estado, dinheiro, série, pessoa);
+ * a marca por último, porque tela nenhuma usa uma parada solta.
  */
 export default function ColorsDoc() {
   return (
@@ -23,16 +47,36 @@ export default function ColorsDoc() {
         Nenhuma cor é escolhida na tela: toda cor vem de um token semântico, escolhido pelo <strong>papel</strong> que cumpre e não pelo tom que tem. Casar por aparência é o que quebra o tema escuro.
       </Usage>
 
+      <Group
+        layout="flow"
+        title="Escolha pelo papel"
+        description="A pergunta é o que a cor faz, não o tom que ela tem hoje — dois tokens iguais hoje podem divergir amanhã. Cada linha é explicada numa seção abaixo."
+      >
+        <Spec title="Papel → token" meta="globals.css" className="mb-0" bodyClassName="p-0">
+          <dl className="divide-y divide-border">
+            {PAPEIS.map((p) => (
+              <div
+                key={p.papel}
+                className="grid gap-x-4 gap-y-1 px-4 py-2.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:items-center"
+              >
+                <dt className="text-sm text-foreground">{p.papel}</dt>
+                <dd className="flex flex-wrap gap-1">
+                  {p.tokens.map((t) => (
+                    <Code key={t}>{t}</Code>
+                  ))}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </Spec>
+      </Group>
+
       <DocNote title="Como ler os ladrilhos">
         Hex e contraste são calculados no navegador, no tema do alternador. Quem sustenta texto (<code>Aa</code>) é medido contra ele — <code>✓</code> é AA, 4,5:1; peça sobre superfície (anel, contorno, série) vai contra o cartão, pelos 3:1 da 1.4.11. A marca âmbar avisa quando o token falha só no outro tema.
       </DocNote>
 
       <DocNote title="Edite em oklch; o hex é para levar a cor embora">
         Os tokens se editam em <code>oklch</code>, em <code>globals.css</code>. O hex é projeção em sRGB para ferramenta externa; token translúcido vem como base mais alpha (<code>#FFFFFF 10%</code>).
-      </DocNote>
-
-      <DocNote title="No claro, os chãos sobre superfície ficam em 0,93–0,94">
-        <code>--secondary</code>, <code>--muted</code>, <code>--accent</code> e <code>--sidebar-accent</code> precisam de degraus maiores no claro: perto do branco a razão da WCAG rende pouco, e mais claro que isso o item ativo empata com a lateral.
       </DocNote>
 
       <Group
@@ -67,11 +111,23 @@ export default function ColorsDoc() {
           <TokenTile name="Accent" token="--accent" onToken="--accent-foreground" />
           <TokenTile name="Secondary" token="--secondary" onToken="--secondary-foreground" />
         </TokenGrid>
+      </Group>
 
-        <TokenGrid label="Primário e foco">
+      <DocNote title="No claro, os chãos sobre superfície ficam em 0,93–0,94">
+        <code>--secondary</code>, <code>--muted</code>, <code>--accent</code> e <code>--sidebar-accent</code> precisam de degraus maiores no claro: perto do branco a razão da WCAG rende pouco, e mais claro que isso o item ativo empata com a lateral.
+      </DocNote>
+
+      <DocNote title="Popover tem a cor do card; o que os separa é a elevação">
+        <code>--popover</code> e <code>--card</code> valem o mesmo nos dois temas: o popover se destaca pela sombra e pelo anel, não por ser mais claro. A placa flutuante chegou a vestir a tinta da barra (<code>--background</code>) para se separar do cartão, e na tela virou uma chapa escura sem vidro; ela voltou ao <code>--popover</code> a 85/60 (rodada 132).
+      </DocNote>
+
+      <Group
+        layout="flow"
+        title="Primário e foco"
+        description="A tecla preta no claro, branca no escuro. Os dois hovers são opacos e puxam na direção do próprio rótulo."
+      >
+        <TokenGrid>
           <TokenTile name="Primary" token="--primary" onToken="--primary-foreground" />
-          {/* O realce e a aresta da tecla preta (branca no escuro). O hover é
-              opaco e puxa na direção do rótulo nos dois temas. */}
           <TokenTile name="Primary (hover)" token="--primary-hover" onToken="--primary-foreground" />
           {/* Dois papéis. `--primary` preenche e por isso é medido contra o
               texto que fica em cima; `--primary-accent` é texto e por isso é
@@ -80,7 +136,22 @@ export default function ColorsDoc() {
               dentro de uma tecla no escuro `text-primary` é branco sobre
               branco. A cor da marca é o arco-íris, em `/designsystem/brand`. */}
           <TokenTile name="Primary (texto)" token="--primary-accent" rule="text" />
+          <TokenTile name="Secondary (hover)" token="--secondary-hover" onToken="--secondary-foreground" />
           <TokenTile name="Ring (foco)" token="--ring" rule="ui" />
+        </TokenGrid>
+      </Group>
+
+      <DocNote title="--primary preenche; --primary-accent é marca sobre o fundo">
+        Cor que carrega o rótulo por cima (botão, checkbox, switch) é <code>--primary</code>; cor que precisa ser vista contra a página (texto, ícone, traço fino ou com alfa) é <code>--primary-accent</code>. Hoje os dois coincidem com <code>--foreground</code>, e o papel não se funde por isso: <code>text-primary</code> segue proibido, porque dentro de uma tecla no escuro ele é branco sobre branco — use <code>text-primary-accent</code>.
+      </DocNote>
+
+      <Group
+        layout="flow"
+        title="Contornos e campos"
+        description="O fio que divide e o campo que se preenche. Quem identifica um campo é o preenchimento, não o contorno."
+      >
+        <TokenGrid>
+          <TokenTile name="Border" token="--border" />
           {/* `--input` está **fora da 1.4.11 por decisão consciente**, e o
               ladrilho reprova de propósito para a decisão ficar visível. Ele
               passou um dia a `oklch(0.62)` (3,49:1) e o dono o devolveu ao fio
@@ -89,84 +160,43 @@ export default function ColorsDoc() {
               identifica o campo, a 1,15 contra a página. Aqui: fill a `/50` a
               1,13 / 1,16 contra a página, fio a 1,16 / 1,12 contra o fill. A
               saída para os 3:1 está no token: 0,62 no claro, 0,55 no escuro. */}
-          <TokenTile name="Border" token="--border" />
           <TokenTile name="Input (borda)" token="--input" rule="ui" />
+          <TokenTile name="Input (fill)" token="--input-fill" />
           <TokenTile name="Skeleton" token="--skeleton" />
-          <TokenTile name="Overlay" token="--overlay" />
         </TokenGrid>
+      </Group>
 
-        <TokenGrid label="Sidebar">
+      <DocNote title="O ladrilho --input reprova de propósito, pela segunda vez">
+        O fio do campo quase não existe — 1,16:1 contra o fill no claro, 1,12 no escuro — e quem identifica o controle é o <strong>preenchimento</strong>, a <code>bg-input-fill/50</code>: 1,13 e 1,16 contra a página. É a conta da referência que o dono trouxe (o <code>border-beam</code> do 21st: 1,11 e 1,15). A 1.4.11 pede 3:1 e o conjunto não cumpre, por decisão. A saída está escrita no token (<code>oklch(0.62)</code> claro, <code>0.55</code> escuro), e quem a tomar mede contra <strong>três</strong> vizinhos — página, cartão e o próprio fill.
+      </DocNote>
+
+      <Group
+        layout="flow"
+        title="Véus"
+        description="O que cobre a tela por baixo de outra coisa. O overlay escurece a página atrás de um diálogo e segue o tema; o scrim segura texto sobre foto, e é o mesmo nos dois temas, porque a foto não muda com o tema."
+      >
+        <TokenGrid columns={2}>
+          <TokenTile name="Overlay" token="--overlay" />
+          <TokenTile name="Scrim" token="--scrim" onToken="--scrim-foreground" sample="Sobre a foto" />
+        </TokenGrid>
+      </Group>
+
+      <Group
+        layout="flow"
+        title="Sidebar"
+        description="A lateral tem superfície, realce, fio e foco próprios; o item ativo precisa de um degrau que não empate com ela."
+      >
+        <TokenGrid>
           <TokenTile name="Sidebar" token="--sidebar" onToken="--sidebar-foreground" />
           <TokenTile
             name="Item ativo e em hover"
             token="--sidebar-accent"
             onToken="--sidebar-accent-foreground"
           />
+          <TokenTile name="Sidebar (borda)" token="--sidebar-border" />
+          <TokenTile name="Sidebar (foco)" token="--sidebar-ring" rule="ui" />
         </TokenGrid>
       </Group>
-
-      <Group
-        layout="flow"
-        title="Marca"
-        description="A marca é preta e branca, e a única cor dela é o arco-íris: oito paradas num degradê parado, a lava que é o movimento delas, e o grão que só o campo de marca veste. Nenhuma tela usa uma parada solta."
-      >
-        <SpecimenPanel className="gap-4">
-          <div className="grid gap-3 sm:grid-cols-[3fr_2fr]">
-            <div className="flex flex-col gap-1.5">
-              <span className="text-2xs font-medium tracking-wide text-muted-foreground uppercase">
-                brand-lava · o movimento
-              </span>
-              <div className="brand-lava h-24 rounded-lg" />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <span className="text-2xs font-medium tracking-wide text-muted-foreground uppercase">
-                brand-field · com grão
-              </span>
-              <div className="brand-field h-24 rounded-lg" />
-            </div>
-          </div>
-          <Ramp
-            label="As paradas"
-            tokens={[
-              { token: "--brand-teal", name: "teal" },
-              { token: "--brand-blue", name: "blue" },
-              { token: "--brand-indigo", name: "indigo" },
-              { token: "--brand-violet", name: "violet" },
-              { token: "--brand-magenta", name: "magenta" },
-              { token: "--brand-coral", name: "coral" },
-              { token: "--brand-amber", name: "amber" },
-              { token: "--brand-green", name: "green" },
-            ]}
-          />
-        </SpecimenPanel>
-
-        <TokenGrid label="Paradas" meta="lidas pelo degradê">
-          <TokenTile name="Brand teal" token="--brand-teal" />
-          <TokenTile name="Brand blue" token="--brand-blue" />
-          <TokenTile name="Brand indigo" token="--brand-indigo" />
-          <TokenTile name="Brand violet" token="--brand-violet" />
-          <TokenTile name="Brand magenta" token="--brand-magenta" />
-          <TokenTile name="Brand coral" token="--brand-coral" />
-          <TokenTile name="Brand amber" token="--brand-amber" />
-          <TokenTile name="Brand green" token="--brand-green" />
-        </TokenGrid>
-      </Group>
-
-      <DocNote title="O arco-íris mora só na marca">
-        <code>--brand-rainbow</code> é o degradê, <strong>parado</strong>, interpolado <code>in oklch shorter hue</code> — em sRGB o matiz corria 4× mais rápido na travessia magenta→coral, e era ela o fio que cortava o campo. O movimento é a <code>@utility brand-lava</code>, a faixa acima. Arco-íris <strong>sob texto</strong> é a invariante 3 com oito cores de uma vez: oito matizes não têm um contraste só. O <code>Button</code> e o <code>Badge variant=&quot;brand&quot;</code> escapam porque neles o degradê vive num contorno de 1px e num halo atrás, nunca sob o rótulo. E a lima <strong>não é o verde de estado</strong>: <code>success</code>, <code>income</code> e <code>chart-1</code> ficam em 152, ela em 130.
-      </DocNote>
-
-      <DocNote title="Popover tem a cor do card; o que os separa é a elevação">
-        <code>--popover</code> e <code>--card</code> valem o mesmo nos dois temas: o popover se destaca pela sombra e pelo anel, não por ser mais claro. A placa flutuante chegou a vestir a tinta da barra (<code>--background</code>) para se separar do cartão, e na tela virou uma chapa escura sem vidro; ela voltou ao <code>--popover</code> a 85/60 (rodada 132).
-      </DocNote>
-
-      <DocNote title="--primary preenche; --primary-accent é marca sobre o fundo">
-        Cor que carrega o rótulo por cima (botão, checkbox, switch) é <code>--primary</code>; cor que precisa ser vista contra a página (texto, ícone, traço fino ou com alfa) é <code>--primary-accent</code>. Hoje os dois coincidem com <code>--foreground</code>, e o papel não se funde por isso: <code>text-primary</code> segue proibido, porque dentro de uma tecla no escuro ele é branco sobre branco — use <code>text-primary-accent</code>.
-      </DocNote>
-
-      <DocNote title="O ladrilho --input reprova de propósito, pela segunda vez">
-        O fio do campo quase não existe — 1,16:1 contra o fill no claro, 1,12 no escuro — e quem identifica o controle é o <strong>preenchimento</strong>, a <code>bg-input-fill/50</code>: 1,13 e 1,16 contra a página. É a conta da referência que o dono trouxe (o <code>border-beam</code> do 21st: 1,11 e 1,15). A 1.4.11 pede 3:1 e o conjunto não cumpre, por decisão. A saída está escrita no token (<code>oklch(0.62)</code> claro, <code>0.55</code> escuro), e quem a tomar mede contra <strong>três</strong> vizinhos — página, cartão e o próprio fill.
-      </DocNote>
 
       <Group
         layout="flow"
@@ -341,6 +371,57 @@ export default function ColorsDoc() {
 
       <DocNote title="identityToneFor traduz a cor gravada">
         <code>identityToneFor</code> dobra as 17 classes de <code>profiles.avatar_color</code> nas seis identidades pela região do matiz, sem migração de dados.
+      </DocNote>
+
+      <Group
+        layout="flow"
+        title="Marca"
+        description="A marca é preta e branca, e a única cor dela é o arco-íris: oito paradas num degradê parado, a lava que é o movimento delas, e o grão que só o campo de marca veste. Nenhuma tela usa uma parada solta."
+      >
+        <SpecimenPanel className="gap-4">
+          <div className="grid gap-3 sm:grid-cols-[3fr_2fr]">
+            <div className="flex flex-col gap-1.5">
+              <span className="text-2xs font-medium tracking-wide text-muted-foreground uppercase">
+                brand-lava · o movimento
+              </span>
+              <div className="brand-lava h-24 rounded-lg" />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <span className="text-2xs font-medium tracking-wide text-muted-foreground uppercase">
+                brand-field · com grão
+              </span>
+              <div className="brand-field h-24 rounded-lg" />
+            </div>
+          </div>
+          <Ramp
+            label="As paradas"
+            tokens={[
+              { token: "--brand-teal", name: "teal" },
+              { token: "--brand-blue", name: "blue" },
+              { token: "--brand-indigo", name: "indigo" },
+              { token: "--brand-violet", name: "violet" },
+              { token: "--brand-magenta", name: "magenta" },
+              { token: "--brand-coral", name: "coral" },
+              { token: "--brand-amber", name: "amber" },
+              { token: "--brand-green", name: "green" },
+            ]}
+          />
+        </SpecimenPanel>
+
+        <TokenGrid label="Paradas" meta="lidas pelo degradê">
+          <TokenTile name="Brand teal" token="--brand-teal" />
+          <TokenTile name="Brand blue" token="--brand-blue" />
+          <TokenTile name="Brand indigo" token="--brand-indigo" />
+          <TokenTile name="Brand violet" token="--brand-violet" />
+          <TokenTile name="Brand magenta" token="--brand-magenta" />
+          <TokenTile name="Brand coral" token="--brand-coral" />
+          <TokenTile name="Brand amber" token="--brand-amber" />
+          <TokenTile name="Brand green" token="--brand-green" />
+        </TokenGrid>
+      </Group>
+
+      <DocNote title="O arco-íris mora só na marca">
+        <code>--brand-rainbow</code> é o degradê, <strong>parado</strong>, interpolado <code>in oklch shorter hue</code> — em sRGB o matiz corria 4× mais rápido na travessia magenta→coral, e era ela o fio que cortava o campo. O movimento é a <code>@utility brand-lava</code>, a faixa acima. Arco-íris <strong>sob texto</strong> é a invariante 3 com oito cores de uma vez: oito matizes não têm um contraste só. O <code>Button</code> e o <code>Badge variant=&quot;brand&quot;</code> escapam porque neles o degradê vive num contorno de 1px e num halo atrás, nunca sob o rótulo. E a lima <strong>não é o verde de estado</strong>: <code>success</code>, <code>income</code> e <code>chart-1</code> ficam em 152, ela em 130.
       </DocNote>
     </>
   )

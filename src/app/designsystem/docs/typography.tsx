@@ -115,15 +115,11 @@ export default function TypographyDoc() {
       </Group>
 
       <DocNote title="A serifa é voz de display, não de título">
-        A Ledger vive só em <code>.page-title</code> e <code>.wordmark</code>. Peso 400 com contraste alto a 16px lê como texto menor e some contra o corpo; título de cartão, de diálogo e de seção segue na sans.
+        A Ledger vive só em <code>.page-title</code> e <code>.wordmark</code>. Peso 400 com contraste alto a 16px lê como texto menor e some contra o corpo; título de cartão, de diálogo e de seção segue na sans. E a família só tem o 400: <code>font-semibold</code> dispara o negrito sintético do navegador e desmonta a serifa, por isso <code>.page-title</code> declara <code>font-weight: 400</code>.
       </DocNote>
 
       <DocNote title=".wordmark é o nome quando ele precisa ser texto">
         Quem apresenta a marca é o lockup SVG de <strong>Marca</strong>. <code>.wordmark</code> serve onde não cabe SVG — assunto de e-mail, título de janela, texto puro.
-      </DocNote>
-
-      <DocNote title="Ledger é peso único, e o 400 não se força">
-        A família só tem o 400. <code>font-semibold</code> dispara o negrito sintético do navegador e desmonta a serifa; por isso <code>.page-title</code> declara <code>font-weight: 400</code>.
       </DocNote>
 
       <Group
@@ -131,30 +127,27 @@ export default function TypographyDoc() {
         layout="grid"
         description="Oito degraus, cada um com um trabalho. Ao lado, .nums — a figura tabular, que trava a largura do dígito para a coluna de valores não dançar."
       >
-        {/* A tabela tem três colunas e duas delas têm largura fixa. Numa célula
-            de um terço do grupo sobram 46px para o uso, e ele quebra em até
-            seis linhas — medido. Ela ocupa a linha inteira no `md` e dois
-            terços no `xl`; o `.nums` ao lado é pequeno e cabe num terço. */}
+        {/* A escada ocupa a linha inteira no `md` e dois terços no `xl`: a
+            amostra do `text-3xl` precisa de largura. O `.nums` ao lado é
+            pequeno e cabe num terço. */}
         <Spec title="Tamanhos" meta="--text-*" className="md:col-span-2">
-          <Stack className="gap-2">
+          <Stack className="gap-3">
             {DEGRAUS.map(([name, size, use]) => (
-              <div
-                key={name}
-                className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5"
-              >
-                <code className="w-32 shrink-0 font-mono text-2xs text-muted-foreground">
-                  {name}
-                </code>
-                <span className="nums w-20 shrink-0 text-2xs text-muted-foreground">
-                  {size}
+              <div key={name} className="flex min-w-0 flex-col">
+                <div className="flex items-baseline gap-2">
+                  <code className="font-mono text-2xs text-muted-foreground">
+                    {name}
+                  </code>
+                  <span className="nums text-2xs text-muted-foreground">
+                    {size}
+                  </span>
+                </div>
+                {/* A amostra no próprio degrau: a escala se julga lado a lado,
+                    e o nome sozinho não diz o quanto um passo sobe. */}
+                <span className={`${name} truncate text-foreground`}>
+                  Fatura fechada em 28 de março
                 </span>
-                {/* O nome e a medida somam 232px com as calhas. Abaixo de `sm`
-                    o cartão tem 311, e o uso ficava com 47 — quatro linhas de
-                    uma palavra, medido. Ele desce para a própria linha, e volta
-                    para o lado assim que houver largura. */}
-                <span className="basis-full text-xs text-muted-foreground sm:basis-auto">
-                  {use}
-                </span>
+                <span className="text-xs text-muted-foreground">{use}</span>
               </div>
             ))}
           </Stack>
@@ -215,6 +208,44 @@ export default function TypographyDoc() {
         <Caption>Valores em reais</Caption>
       </DocSection>
 
+      <PropsTable
+        title="Componentes"
+        rows={[
+          {
+            prop: "H1 … H4",
+            type: "ComponentProps<'h1'…'h4'> & { asChild? }",
+            description:
+              "H1 é a serifa de display; H2–H4 são a sans, sem régua. asChild troca o elemento e mantém o estilo.",
+          },
+          {
+            prop: "Lead",
+            type: "ComponentProps<'p'>",
+            description: "text-lg secundário, para abrir uma tela.",
+          },
+          {
+            prop: "P",
+            type: "ComponentProps<'p'>",
+            description: "text-sm com entrelinha relaxada.",
+          },
+          {
+            prop: "Muted",
+            type: "ComponentProps<'p'>",
+            description:
+              "text-sm na cor secundária — o corpo de P.",
+          },
+          {
+            prop: "Small",
+            type: "ComponentProps<'small'>",
+            description: "text-xs de peso médio, para metadado.",
+          },
+          {
+            prop: "Caption",
+            type: "ComponentProps<'p'>",
+            description: "text-xs secundário — a legenda abaixo de um bloco.",
+          },
+        ]}
+      />
+
       <DocNote title="Na tela, PageHeaderTitle e PageSectionTitle">
         <code>PageHeaderTitle</code> já é o <code>&lt;h1&gt;</code> e <code>PageSectionTitle</code> o <code>&lt;h2&gt;</code>: vestem <code>H1</code> e <code>H2</code> por <code>asChild</code> e trocam só o corpo. Não escreva <code>H1</code> no corpo de uma tela — dois títulos de nível um confundem quem navega por cabeçalhos. <code>H2</code> não traz régua; a régua de seção é <code>PageSection variant=&quot;ruled&quot;</code>.
       </DocNote>
@@ -269,43 +300,6 @@ export default function TypographyDoc() {
         Numa célula sem data, <code>—</code> significa &ldquo;sem dado&rdquo; — o mesmo que o <code>MoneyDisplay</code> desenha para <code>value=&#123;null&#125;</code>. Hífen leria como erro de digitação; branco, como bug.
       </DocNote>
 
-      <PropsTable
-        title="Componentes"
-        rows={[
-          {
-            prop: "H1 … H4",
-            type: "ComponentProps<'h1'…'h4'> & { asChild? }",
-            description:
-              "H1 é a serifa de display; H2–H4 são a sans, sem régua. asChild troca o elemento e mantém o estilo.",
-          },
-          {
-            prop: "Lead",
-            type: "ComponentProps<'p'>",
-            description: "text-lg secundário, para abrir uma tela.",
-          },
-          {
-            prop: "P",
-            type: "ComponentProps<'p'>",
-            description: "text-sm com entrelinha relaxada.",
-          },
-          {
-            prop: "Muted",
-            type: "ComponentProps<'p'>",
-            description:
-              "text-sm na cor secundária — o corpo de P.",
-          },
-          {
-            prop: "Small",
-            type: "ComponentProps<'small'>",
-            description: "text-xs de peso médio, para metadado.",
-          },
-          {
-            prop: "Caption",
-            type: "ComponentProps<'p'>",
-            description: "text-xs secundário — a legenda abaixo de um bloco.",
-          },
-        ]}
-      />
     </>
   )
 }

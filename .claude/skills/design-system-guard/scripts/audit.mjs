@@ -129,6 +129,8 @@ const DRAWN_SVG_FILES = [
   "registered-credit-card-face",
   "spinner",
   "sidebar-toggle-icon",
+  // O gráfico das curvas de easing: desenha o movimento, lido do globals.css.
+  "designsystem/docs/motion",
 ]
 
 /**
