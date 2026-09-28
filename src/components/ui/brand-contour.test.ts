@@ -49,7 +49,6 @@ const fonte = (nome: string) =>
 
 /** As classes de cada peça que veste a marca. */
 const PORTADORES = {
-  "button/brandOutline": buttonVariants({ variant: "brandOutline" }),
   "checkbox/brand": checkboxVariants({ variant: "brand" }),
   "radio/brand": radioVariants({ variant: "brand" }),
   "radio-group/brandCard": radioGroupItemVariants({ variant: "brandCard" }),
@@ -85,12 +84,9 @@ describe("contorno de marca", () => {
     // `::before` a `-z-10` e o esconde. A régua é o estado em que o contorno
     // aparece.
     //
-    // No `brandOutline` a marca está sempre acesa, então o elemento não pinta
-    // em repouso — nenhum `bg-` sem pseudo. (O `Badge` e o `Button brand`
-    // saíram desta família: hoje são do brilho, e a asserção 10 os cobra.)
-    for (const nome of ["button/brandOutline"] as const) {
-      expect(PORTADORES[nome].split(/\s+/).filter(pinta), nome).toEqual([])
-    }
+    // (O `brandOutline` saiu desta família na rodada 153: hoje é o Rainbow
+    // Button, e `button-primary.test.ts` o cobra. O `Badge` e o `Button brand`
+    // saíram antes: são do brilho, e a asserção 10 os cobra.)
 
     // Nos três controles de escolha ela só acende marcada, e desmarcado é a
     // superfície do sistema — `bg-background` na caixa é o que se **deve** ver

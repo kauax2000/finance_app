@@ -54,9 +54,9 @@ export function ButtonGroup({ className, children, ...props }: ButtonGroupProps)
                 // de cada lado já é vão. Com o `ml-px` a emenda somava borda +
                 // margem + borda = 3px. Com a sobreposição geral de 1px, as duas
                 // bordas caem no mesmo pixel e sobra o fio só.
-                // O `before:hidden` fica porque o brilho do primário mora no
-                // `box-shadow` do próprio botão, e não num pseudo-elemento,
-                // justamente porque este seletor o esconderia.
+                // O `before:hidden` fica porque o degradê do primário mora no
+                // `::after`, e não no `::before`, justamente porque este
+                // seletor o esconderia.
                 "[&>[data-variant=primary]]:before:hidden",
                 // O `secondary` não tem borda que desenhe a emenda, e o filete
                 // recuado lia como risco no meio de um bloco. No lugar dele a

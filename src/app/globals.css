@@ -223,6 +223,11 @@
   --brand-coral: oklch(0.66 0.2 35);
   --brand-amber: oklch(0.78 0.17 85);
   --brand-green: oklch(0.78 0.18 130);
+  /* A força do degradê do `Button primary` no cursor (rodada 150). É por tema
+     porque o rótulo muda de lado: no claro ele é branco, e o teal e o azul
+     são as paradas claras — a 80% o rótulo do `salvar` media 4,26. A 0,70 o
+     pior ponto sob o rótulo mede 5,09 (0,75 dava 4,67, rente ao piso de 4,5). */
+  --button-colorful-opacity: 0.7;
   /* O alfa do véu da `AnnouncementBar variant="brand"` (`@utility brand-flow`).
      Por tema, porque é ele que segura o contraste do texto por cima. */
   --brand-flow-alpha: 0.75;
@@ -765,6 +770,9 @@
   --brand-coral: oklch(0.75 0.18 38);
   --brand-amber: oklch(0.88 0.17 90);
   --brand-green: oklch(0.88 0.18 130);
+  /* No escuro o rótulo é escuro sobre paradas claras: a 0,80 da referência o
+     pior ponto mede 7,70. */
+  --button-colorful-opacity: 0.8;
   /* O alfa do véu da `AnnouncementBar variant="brand"` (`@utility brand-flow`).
      Por tema, porque é ele que segura o contraste do texto por cima. */
   --brand-flow-alpha: 0.45;
@@ -1863,42 +1871,170 @@
 
 
 
-/* ── O preenchimento dos outros pesos ──────────────────────────────────────
+/* ── O florescer do hover ──────────────────────────────────────────────────
 
-   `secondary`, `tertiary`, `outline` e `destructive` não trocam de cor no
-   cursor: a cor do hover **preenche** o botão, num disco que nasce sob o
-   ponteiro e cresce até cobrir a caixa — a pedido do dono, rodada 99, e
-   coerente com o primário, que já segue a ponta do mouse pelo mesmo rastreio
-   (`--button-mx`/`--button-my`, escritas pelo `Button`). Ao sair, o disco
-   encolhe de volta para onde o cursor está; no toque, nasce sob o dedo.
+   Todo peso do `Button` que muda de fundo no cursor (rodadas 151 e 152) o faz
+   **florescendo do centro**: a cor nasce pequena e difusa no meio do botão e
+   se abre até as bordas ganhando foco. Na mola da casa (`--ease-spring`,
+   500ms), o leve passar-e-assentar; ao sair, recolhe para o centro em
+   `--duration-slow` com `--ease-out`, sem mola — uma mola até zero passaria de
+   zero.
 
-   É `background-image` do próprio botão, pelas duas restrições já medidas: o
-   `ButtonGroup` usa o `::before` de todo filho como divisor, e um `::after` em
-   `z` negativo fica atrás do `background`. Cada peso declara só a cor
-   (`--button-fill-color`) e liga o raio (`--button-fill`, 0% → 100%).
+   **Um número só anima tudo**: `--button-bloom`, de 0 a 1, é `@property`
+   tipada (só variável tipada interpola) e **`inherits: true`**, porque no
+   primário quem a lê é o `::after` — pseudo não herda propriedade registrada
+   como `false` (medido no brilho da marca). Tamanho, borda e opacidade derivam
+   dela, então andam na mesma curva. Quem liga é o `Button`, em `hover:`,
+   `active:` e, onde o peso realça o menu aberto, `aria-expanded:`; é ele que
+   enumera a variável na `transition`.
 
-   `circle` sem tamanho é `farthest-corner`: o raio do degradê é a distância do
-   centro ao canto mais longe, então **100% cobre a caixa inteira a partir de
-   qualquer ponto**, sem folga. `--button-fill` é `@property` de
-   `<length-percentage>` pela razão de sempre — só variável tipada interpola —,
-   e entra na lista enumerada de `transition` de cada um dos quatro pesos.
+   **Duas pinturas, e o motivo é o `::after`.** Nos pesos chapados
+   (`secondary`, `tertiary`, `outline`, `destructive`) a cor é uma **elipse no
+   próprio fundo** (`@utility button-bloom`): `farthest-corner` cobre a caixa
+   inteira a 100% a partir do centro, e a borda da elipse vai de difusa (40%
+   de rampa) a nítida enquanto ela cresce. Não pode ser pseudo-elemento: o
+   `::after` desses pesos já é o **alvo de toque ampliado** em várias peças
+   (`PageHeader`, `Breadcrumb`, o × da `AnnouncementBar`, as setas do
+   `Carousel`), e o `::before` é o divisor do `ButtonGroup`. No primário as
+   cinco paradas precisam de borrão de verdade, e aí a camada é o `::after`
+   (`@utility button-colorful`) — que o primário não empresta a alvo nenhum.
 
-   Movimento reduzido: o bloco global corta a transição e o disco aparece de
-   uma vez. Foco por teclado não preenche — foco não é intenção de clicar. */
-@property --button-fill {
-  syntax: "<length-percentage>";
-  inherits: false;
-  initial-value: 0%;
+   Cada peso declara só a cor (`--button-bloom-fill`); os alfas do escuro e do
+   `destructive` são **compostos** (`repouso + a·(1 − repouso) = hover`: 11%,
+   12,5%, 29%), porque a elipse pinta por cima do fundo de repouso. Movimento
+   reduzido: o bloco global corta a transição, e a cor aparece de uma vez. */
+@property --button-bloom {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
 }
 
-@utility button-fill {
-  --button-mx: 50%;
-  --button-my: 50%;
+@utility button-bloom {
   background-image: radial-gradient(
-    circle at var(--button-mx) var(--button-my),
-    var(--button-fill-color) var(--button-fill),
-    transparent calc(var(--button-fill) + 1px)
+    ellipse farthest-corner at 50% 50%,
+    color-mix(in oklab, var(--button-bloom-fill) calc(var(--button-bloom) * 100%), transparent)
+      calc(var(--button-bloom) * 155% - 40%),
+    transparent calc(var(--button-bloom) * 115% + 1%)
   );
+}
+
+/* O degradê do primário: a mesma flor, com as cinco paradas da marca num
+   `::after` borrado — nasce comprimido (30% × 60%) e com 16px de borrão, e
+   abre até as bordas com 8px. `isolate` põe o `-z-10` acima do fundo e abaixo
+   do rótulo; `overflow: hidden` recorta o borrão. A força máxima é
+   `--button-colorful-opacity`, por tema e medida contra o rótulo. */
+@utility button-colorful {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -10;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(
+      to right,
+      var(--brand-teal),
+      var(--brand-blue),
+      var(--brand-violet),
+      var(--brand-magenta),
+      var(--brand-coral)
+    );
+    opacity: calc(var(--button-bloom) * var(--button-colorful-opacity));
+    scale: calc(0.3 + 0.7 * var(--button-bloom)) calc(0.6 + 0.4 * var(--button-bloom));
+    filter: blur(calc(16px - 8px * var(--button-bloom)));
+  }
+}
+
+/* ── O arco-íris que desliza por baixo ─────────────────────────────────────
+
+   O `Button brandOutline` (rodada 153) é o **Rainbow Button** da Magic UI
+   (21st, `dillionverma/rainbow-button`, MIT): a tecla chapada com o arco-íris
+   **só na borda de baixo** e um brilho borrado **embaixo** da tecla, os dois
+   deslizando num laço de 2s. É a terceira peça da marca que se move sozinha,
+   depois da `brand-lava` e do véu da `AnnouncementBar` — por pedido do dono.
+
+   - **A borda**, no `::before` (1px, sobre a borda transparente da base): três
+     camadas — o miolo chapado em `padding-box`; a mesma cor cobrindo a
+     `border-box` até a metade e desbotando (60% a 80%, transparente no fim),
+     que é o que esconde o arco-íris em cima e o deixa aparecer embaixo; e o
+     arco-íris em `border-box`, com 200% de largura.
+   - **O brilho**, no `::after`: 60% da largura e 20% da altura, colado abaixo
+     do botão (`bottom: -20%`), com o mesmo arco-íris e 0,8rem de borrão.
+   - **O laço**: `background-position` de 0% a 200%, que com 200% de largura é
+     exatamente um ladrilho. A referência termina no violeta e recomeça no
+     vermelho, e a emenda passa pela borda a cada volta; aqui a lista **fecha
+     no coral**, e o laço não tem emenda.
+   - **As cores são as paradas da marca** mais perto das cinco dela (vermelho,
+     lima, azul, céu, roxo): coral, `green`, azul, teal, violeta.
+   - **Pseudo-elemento, e não o fundo do botão** como na referência: a base do
+     `Button` declara `bg-clip-padding`, e ela disputaria com o recorte de três
+     camadas por ordem de emissão. `isolate` põe os dois `-z-10` acima do fundo
+     e abaixo do rótulo; o miolo lê `--brand-fill`, que o `Button` escurece no
+     cursor.
+
+   Movimento reduzido: o bloco global roda uma passada de 0,01ms, e o laço
+   para no quadro final — que, fechado, é igual ao inicial. */
+@keyframes brand-rainbow-slide {
+  from {
+    background-position: 0% center;
+  }
+  to {
+    background-position: 200% center;
+  }
+}
+
+@utility brand-rainbow-button {
+  position: relative;
+  isolation: isolate;
+  --brand-rainbow-slide: linear-gradient(
+    90deg,
+    var(--brand-coral),
+    var(--brand-green),
+    var(--brand-blue),
+    var(--brand-teal),
+    var(--brand-violet),
+    var(--brand-coral)
+  );
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    z-index: -10;
+    pointer-events: none;
+    background-size: 200% auto;
+    animation: brand-rainbow-slide 2s linear infinite;
+  }
+
+  &::before {
+    inset: -1px;
+    border: 1px solid transparent;
+    border-radius: inherit;
+    background-image:
+      linear-gradient(var(--brand-fill), var(--brand-fill)),
+      linear-gradient(
+        var(--brand-fill) 50%,
+        color-mix(in oklab, var(--brand-fill) 60%, transparent) 80%,
+        transparent
+      ),
+      var(--brand-rainbow-slide);
+    background-clip: padding-box, border-box, border-box;
+    background-origin: border-box;
+  }
+
+  &::after {
+    left: 50%;
+    bottom: -20%;
+    width: 60%;
+    height: 20%;
+    translate: -50% 0;
+    background-image: var(--brand-rainbow-slide);
+    filter: blur(0.8rem);
+  }
 }
 
 /* ── O arco-íris como material ─────────────────────────────────────────────

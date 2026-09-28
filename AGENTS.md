@@ -307,7 +307,8 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   rodada 118 os dois avisos — `Alert variant="brand"` e
   `AnnouncementBar variant="brand"`. **Há três
   famílias de peça de marca, e elas quebram por motivos diferentes**: a do
-  **contorno** (`Button brandOutline`, os controles de escolha), em que o degradê
+  **contorno** (os controles de escolha; o `Button brandOutline` até a rodada
+  152), em que o degradê
   vive em 1px de `border-box` sobre um miolo chapado; a do
   **preenchimento** (`Progress variant="brand"` e `Slider variant="brand"`), em
   que ele preenche a barra e o que a liberta da invariante 3 é não haver rótulo
@@ -484,7 +485,8 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   atrás (`::after`), com o miolo preenchido pelo `primary`. Uma por tela.
   **Nos controles de escolha o halo não existe, e o motivo é mecânico**: o
   `::after` dos dois átomos **já é o alvo de toque de 44px** (`after:-inset-3.5`),
-  e ele não se move. Sobra o contorno — o precedente do `brandOutline` —, e
+  e ele não se move. Sobra o contorno — o precedente do `brandOutline` até a
+  rodada 152 —, e
   nesta escala é o certo de qualquer forma: um halo a `-inset-1` sangra 4px e
   encosta na linha vizinha de uma lista com `gap-3`. **E ele só acende
   marcado**: desmarcado, os três são pixel a pixel os do sistema, porque a
@@ -545,7 +547,7 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   cor transitando dentro da caixa, a `brand-lava` em escala de região — o raio
   é `%`, o núcleo é opaco até 38% e não há pulso nenhum, quem muda a cor é a
   sobreposição andando. (O hover do primário foi lava até a rodada 146; hoje o
-  primário é cru, ver o `Button`.)
+  primário acende um degradê borrado no cursor, ver o `Button`.)
   O degradê interpola **`in oklch shorter hue`**, e isso é o conserto do fio que
   se via cortando o campo: em sRGB a travessia magenta→coral gastava 36,1° de
   matiz a cada 5% da largura contra 9,0° no azul (razão 4,01×), e em oklch o
@@ -842,29 +844,52 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
 - **`Badge`**: `variant` (forma) + `tone` (cor) + `size` (`xs` | `sm` | `md`); as classes de chip moram no próprio `badge.tsx` e não se duplicam fora dele. **`variant` tem quatro valores**: `soft`, `outline`, `contrast` (a pílula grave — `primary` no claro, `secondary` no escuro, **sem inverter**; ali o `tone` não pinta superfície, fica só no dot) e `brand` (um chip neutro, `muted`, cuja borda acende em arco-íris conforme o ponteiro se aproxima — a família do brilho, com `useBrandGlow`; uma por tela). **`tone` tem oito** — `info` entrou na rodada 89, e ele já era usado sem existir: duas telas escreviam `tone="neutral"` e anulavam a tinta com `tagChipInfo` por `className`. **O respiro e o corpo do ícone são do componente** (`gap-1` na base, `size-2.5` no `xs` e `size-3` nos outros), porque sete telas os escreviam à mão e uma delas usava `mr-1` por não haver `gap` nenhum; o conjunto é sempre `16/solid`. **`BadgeDot` é o ponto de estado**, com `pulse` para o que acontece agora e sem ele para o que só é relatado — a cor sai de `--badge-dot`, que o `tone` publica. Ele é `animate-ping` e **não** `animate-pulse`, de propósito: o bloco global de `prefers-reduced-motion` isenta `spin` e `pulse` do corte, e um ponto decorativo não tem a desculpa do spinner.
 - **`Button` — a hierarquia é uma escada, e ela desce em peso visual**:
   `primary` preenche de preto (branco no escuro), `secondary` preenche de
-  cinza, `tertiary` não preenche nada. **O `primary` é cru** (rodada 148): o
-  preenchimento preto (branco no escuro) e o hover dos outros pesos — o disco
-  de `button-fill` na cor de `--primary-hover` —, sem cor e sem arco-íris. Da
-  rodada 78 à 97 ele foi tecla (relevo, plinto, luz; os seis tokens saíram) e
-  da 98 à 147 acendeu a marca no cursor: a lava atrás de um vidro e, na 147, o
-  brilho do Shiny Button subindo da base. O dono pediu tudo fora, e com eles
-  saíram `@utility primary-wash`, `--button-wash`, `--button-breathe`,
-  `--button-glow-strength` e `scripts/primary-wash-contrast.mjs`;
-  `button-primary.test.ts` cobra que não voltem. O fundo continua recortado no
-  `padding-box` (a `bg-clip-padding` da base), e não em `border-box` como no
-  `secondary`: é o vão de 1px da borda transparente que desenha a emenda do
-  primário no `ButtonGroup`. **Os pesos que preenchem — o `primary` e
-  `secondary`, `tertiary`, `outline`, `destructive` — não trocam de cor no
-  cursor** (rodada 99): a cor do hover preenche o botão num disco que nasce sob o
-  ponteiro (`@utility button-fill`, `background-image` com raio em
-  `@property --button-fill`, 0% → 100%; `circle` é `farthest-corner`, então 100%
-  cobre a caixa de qualquer ponto), a `--duration-slow` com `--ease-emphasized` — exceção
-  registrada em `RITMO_PROPRIO`, porque a 150ms/`--ease-out` o disco era um piscar. Cada
-  peso declara só `--button-fill-color`, e
-  os alfas do escuro e do `destructive` são **compostos** (`repouso + a·(1 −
-  repouso) = hover`: 11%, 12,5%, 29%), não copiados. `hover:bg-*` saiu do
-  vocabulário dessas variantes; `AlertAction` põe `currentColor` a 10% na mesma
-  variável. `brand`, `brandOutline` e `link` mantêm o hover próprio. **`tertiary` acende no cursor e no toque** — o par
+  cinza, `tertiary` não preenche nada. **O `primary` é o Button Colorful da
+  Kokonut UI com a cor guardada para a interação** (rodadas 149 a 151, MIT):
+  em repouso, a tecla preta (branca no escuro) **chapada** — a identidade preto
+  e branco —; no cursor, no toque e em `aria-expanded`, um degradê de
+  cinco paradas da marca (`--brand-teal`, `-blue`, `-violet`, `-magenta`,
+  `-coral`) **floresce do centro** até `--button-colorful-opacity` (**0,70 no
+  claro, 0,80 no escuro**): nasce comprimido (30% × 60%) e borrado (16px) e se
+  abre até as bordas ganhando foco (8px), na mola da casa, e recolhe sem mola
+  em `--duration-slow` (rodada 151). A pintura é a `@utility button-colorful`,
+  e **um número só anima tudo**: `@property --button-colorful` (0 → 1,
+  `inherits: true`, porque quem a lê é o `::after`), da qual escala, borrão e
+  opacidade derivam — o `Button` só a liga e enumera na `transition`. A versão da 149 era a referência crua —
+  40% sempre aceso, só o roxo indigo→magenta — e saiu porque punha cor de
+  marca em toda tela (disputando com as peças `brand`) e o roxo de três
+  paradas lia como template, não como o nosso arco-íris. A camada é o **`::after`** —
+  `isolate` a põe acima do fundo e abaixo do rótulo, `overflow-hidden` recorta
+  o borrão de 8px — porque o `ButtonGroup` usa e esconde o `::before`. **É cor
+  sob o rótulo, e é exceção consciente à invariante 3, por decisão do dono**:
+  sob o rótulo aceso, o pior ponto mede **5,09** no claro e 7,70 no escuro
+  (piso 4,5). O claro fica abaixo dos 0,80 da referência por medição: o rótulo
+  é branco, teal e azul são as paradas claras, e a 0,80 o `salvar` media 4,26.
+  **O volume se mexe no token, nunca nas paradas.** Da rodada 78 à 97 ele foi tecla, da 98 à 147 lava e
+  brilho do Shiny Button, e na 148 cru; `button-primary.test.ts` cobra que
+  `primary-wash`, `--button-wash` e companhia não voltem. O fundo continua
+  recortado no `padding-box` (a `bg-clip-padding` da base), e não em
+  `border-box` como no `secondary`: é o vão de 1px da borda transparente que
+  desenha a emenda do primário no `ButtonGroup`. **Os outros pesos com fundo
+  no hover florescem do mesmo jeito** (rodada 152): a cor do hover é uma
+  elipse no próprio fundo (`@utility button-bloom`, `farthest-corner` a partir
+  do centro, com a borda indo de difusa a nítida), na mesma variável e na
+  mesma mola. **Não pode ser pseudo-elemento**: o `::after` desses pesos é o
+  alvo de toque ampliado do `PageHeader`, do `Breadcrumb`, do × da
+  `AnnouncementBar` e das setas do `Carousel`, e o `::before` é o divisor do
+  `ButtonGroup`. Cada peso declara só `--button-bloom-fill` (`secondary`
+  `--secondary-hover`, `tertiary` e `outline` `muted`, `destructive` 11%),
+  com par `dark:` onde o escuro difere, e os alfas são **compostos**
+  (`repouso + a·(1 − repouso) = hover`: 11%, 12,5%, 29%). **Quem muda o realce
+  de um `Button` por fora muda a cor da flor, não o fundo**: `hover:bg-*` numa
+  chamada pinta por baixo da elipse e some — `AlertAction`, a `AnnouncementBar`,
+  o `WorkspaceSwitcher` e os chips de filtro declaram `--button-bloom-fill`; o
+  link da lateral do catálogo zera a flor e mantém o esmaecer, porque linha de
+  lista esmaece (rodada 137). E `transition-colors` numa chamada troca a lista
+  e faz a flor estalar. Da rodada 99 à 148 a cor crescia num disco a partir do
+  ponteiro (`button-fill`), e `button-touch-response.test.ts` cobra que ele
+  não volte. `brand`, `brandOutline` e `link`
+  mantêm o hover próprio. **`tertiary` acende no cursor e no toque** — o par
   `active:` entrou na origem na rodada 29b, porque `hover:` compila dentro de
   `@media (hover: hover)` e sem ele o degrau ficava inerte no dedo. Uma tela tem um `primary` só. Fora da escada, de propósito:
   `outline` é a exceção para quando o controle precisa de contorno próprio e
@@ -899,10 +924,18 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   muda no cursor, e é mecânico**: com `isolate` o anel pinta por cima do fundo,
   e um hover de fundo sumiria na fatia virada para o ponteiro. Até a 145 ele
   era a tecla do `primary` com contorno de 1px e halo borrado, e esse desenho
-  ficou no **`brandOutline`** (sem o halo): a tecla preta com o arco-íris
-  sempre aceso, para quando a marca não pode depender do ponteiro. Os dois:
-  **um por tela**, para o CTA de marca. O `primary` não veste arco-íris
-  (rodada 148).
+  ficou no `brandOutline` até a 152. **Desde a 153 o `brandOutline` é o
+  Rainbow Button da Magic UI** (21st, MIT): a tecla preta (branca no escuro)
+  com o arco-íris **só na borda de baixo** — a camada do miolo cobre a
+  `border-box` até a metade e desbota — e um **brilho borrado embaixo** da
+  tecla (60% × 20%, `bottom: -20%`, 0,8rem de borrão), os dois deslizando num
+  laço de 2s (`@utility brand-rainbow-button`, `::before` e `::after`, e não
+  o fundo do botão, porque a base declara `bg-clip-padding`). A lista de cores
+  **fecha no coral**, então o laço não tem a emenda da referência. Sempre
+  aceso, para quando a marca não pode depender do ponteiro. Os dois:
+  **um por tela**, para o CTA de marca. O `primary` não veste o arco-íris
+  inteiro: veste cinco paradas dele, borradas por dentro e só no cursor
+  (rodada 150).
   **`shape`** é a forma (`rounded`, o padrão, ou `pill`, 100% arredondado, com
   meio degrau a mais de recuo lateral; nos `icon-*` vira círculo) — rodada 145. **Não existe `variant="default"` nem `variant="ghost"`**
   — viraram `primary` e `tertiary`, para o nome dizer o degrau; os dois saíram
@@ -1008,14 +1041,15 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   Ficou a semântica, que sempre foi a mais forte.
 - **A `AnnouncementBar` ganhou o mesmo eixo** (`variant: "soft" | "brand"`, e o
   `brand` dela é o véu, sem fundo — `bg-transparent`), e os **dois botões
-  dela pagaram a rodada 99 com atraso**: mantinham `hover:bg-current/N` e nunca
-  declaravam `--button-fill-color`, então herdavam o cinza de `--muted` do
+  dela pagaram a rodada 99 com atraso**: herdavam o cinza de `--muted` do
   `tertiary` e o realce pintava duas camadas. No tema claro, onde `--muted` é
   opaco, os quatro tons convergiam no **mesmo** `235,235,235` — o realce
   apagava o tom. **Ninguém viu porque a razão de luminância é 1,007–1,078**: o
   defeito é cromático, e os scripts da casa só medem luminância. Com
-  `currentColor` no disco, 1,16–1,19 no claro e 1,26–1,30 no escuro, e a
-  assimetria de área (15% no ×, 10% na ação) continua.
+  `currentColor` na cor da flor (`--button-bloom-fill` a 15% e 10%, com o par
+  `dark:`), 1,16–1,19
+  no claro e 1,26–1,30 no escuro, e a assimetria de área (15% no ×, 10% na
+  ação) continua.
 - **O raio é do componente, e não da variante.** Ele morava dentro do `variant`
   — `soft` trazia `rounded-xl` e `plain` trazia `rounded-lg` —, e o resultado
   era medível: **14px contra 10px**, dois alertas lado a lado com cantos

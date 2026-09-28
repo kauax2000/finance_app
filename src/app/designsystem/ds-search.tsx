@@ -504,9 +504,9 @@ function DsSearchTrigger({ onClick }: { onClick: () => void }) {
           "lg:border-border lg:bg-input-fill/30",
           // No campo largo o hover não pinta o fundo: quem responde à
           // aproximação é o brilho da borda, e os dois juntos eram demais. O
-          // disco do `tertiary` fica sem cor. Abaixo de
-          // `lg`, onde não há brilho, o botão de ícone mantém o disco.
-          "lg:[--button-fill-color:transparent] lg:dark:[--button-fill-color:transparent]",
+          // a flor do `tertiary` fica sem cor. Abaixo de `lg`, onde não há
+          // brilho, o botão de ícone mantém a flor.
+          "lg:[--button-bloom-fill:transparent] lg:dark:[--button-bloom-fill:transparent]",
           // E o texto não acende: a frase troca, a cor fica a do repouso.
           "lg:hover:text-muted-foreground lg:active:text-muted-foreground lg:aria-expanded:text-muted-foreground",
         )}

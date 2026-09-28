@@ -53,17 +53,18 @@ function fundos(classes: string) {
 }
 
 describe("resposta ao toque do Button", () => {
-  it("1. `tertiary` responde ao toque como ao cursor — hoje pelo disco, não pela cor", () => {
+  it("1. `tertiary` responde ao toque como ao cursor — hoje pela flor", () => {
     // Era o item de backlog da rodada 29b: `hover:` compila dentro de
     // `@media (hover: hover)`, e sem o par `active:` o terciário não devolvia
-    // nada ao toque. Desde a rodada 99 o hover dos pesos que preenchem não é
-    // `hover:bg-*` — é o raio do disco (`--button-fill`) subindo a 100% —, e
-    // a regra continua a mesma: o que o cursor liga, o toque liga.
+    // nada ao toque. Desde a rodada 152 o hover dos pesos com fundo é a flor
+    // (`--button-bloom` de 0 a 1), e a regra continua: o que o cursor liga, o
+    // toque liga — na mesma mola.
     const classes = buttonVariants({ variant: "tertiary" })
-    expect(classes).toContain("hover:[--button-fill:100%]")
-    expect(classes).toContain("active:[--button-fill:100%]")
-    expect(classes).not.toMatch(/\bhover:bg-/)
-    expect(classes).not.toMatch(/\bactive:bg-/)
+    expect(classes).toContain("hover:[--button-bloom:1]")
+    expect(classes).toContain("active:[--button-bloom:1]")
+    expect(classes).toContain("hover:ease-(--ease-spring)")
+    expect(classes).toContain("active:ease-(--ease-spring)")
+    expect(classes).not.toMatch(/(^|\s)(hover|active):bg-/)
   })
 
   /**
@@ -111,33 +112,37 @@ describe("resposta ao toque do Button", () => {
   // origem trocando de lado. A diferença para as rodadas antigas é que agora
   // **não há traço em repouso**: ele nasce da esquerda no cursor e recolhe
   // para a direita na saída.
-  it("5. os cinco pesos que preenchem vestem o disco, e só eles", () => {
-    // O hover é um disco da cor do hover que nasce sob o ponteiro
-    // (`@utility button-fill`, rodada 99). Cada peso declara a cor e liga o
-    // raio; a transição resolvida pelo `tailwind-merge` tem de carregar
-    // `--button-fill` **e** manter `translate`, porque a variante restata a
-    // lista da base em vez de acrescentar a ela.
-    // O primário entrou na rodada 148, quando ficou cru.
-    for (const variant of ["primary", "secondary", "tertiary", "outline", "destructive"] as const) {
+  it("5. os pesos com fundo no hover florescem do centro, e o disco do ponteiro não volta", () => {
+    // Rodada 152: a cor nasce no centro e se abre até as bordas
+    // (`@utility button-bloom`, uma elipse no próprio fundo), a mesma flor do
+    // primário. Cada peso declara só a cor, e a transição resolvida pelo
+    // `tailwind-merge` carrega a variável **e** mantém `translate`.
+    for (const variant of ["secondary", "tertiary", "outline", "destructive"] as const) {
       const cru = buttonVariants({ variant })
-      expect(cru, variant).toContain("button-fill")
-      expect(cru, variant).toMatch(/\[--button-fill-color:/)
+      expect(cru, variant).toContain("button-bloom")
+      expect(cru, variant).toMatch(/\[--button-bloom-fill:/)
       const resolvido = cn(cru)
-      expect(resolvido, variant).toMatch(/transition-\[[^\]]*--button-fill\]/)
-      expect(resolvido, variant).toMatch(/transition-\[[^\]]*\btranslate\b[^\]]*\]/)
+      expect(resolvido, variant).toMatch(/transition-\[[^\]]*\btranslate\b[^\]]*--button-bloom\]/)
     }
-    // Quem tinha par `dark:` no hover antigo tem par `dark:` na cor do disco —
-    // e os alfas são compostos, não copiados (o disco pinta sobre o repouso).
-    expect(buttonVariants({ variant: "tertiary" })).toMatch(/dark:\[--button-fill-color:color-mix\(/)
-    expect(buttonVariants({ variant: "outline" })).toMatch(/dark:\[--button-fill-color:color-mix\(/)
-    expect(buttonVariants({ variant: "destructive" })).toMatch(/dark:\[--button-fill-color:color-mix\(/)
-    // `brand`, `brandOutline` e `link` têm hover próprio e não preenchem — decisão do dono.
+    // Onde o escuro tem outro tom, a cor da flor tem par `dark:` — e os alfas
+    // são compostos, não copiados (a elipse pinta sobre o repouso).
+    for (const variant of ["tertiary", "outline", "destructive"] as const) {
+      expect(buttonVariants({ variant }), variant).toMatch(/dark:\[--button-bloom-fill:color-mix\(/)
+    }
+    // `brand`, `brandOutline` e `link` têm o hover próprio.
     for (const variant of ["brand", "brandOutline", "link"] as const) {
-      expect(buttonVariants({ variant }), variant).not.toContain("button-fill")
+      expect(buttonVariants({ variant }), variant).not.toMatch(/button-bloom|button-colorful/)
+    }
+    // Rodadas 99 a 148: o disco que crescia a partir do ponteiro.
+    for (const variant of ["primary", "secondary", "tertiary", "outline", "destructive"] as const) {
+      expect(buttonVariants({ variant }), variant).not.toMatch(/button-fill/)
     }
     const CSS = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
-    expect(CSS).toMatch(/@property --button-fill \{\s*syntax: "<length-percentage>"/)
-    expect(CSS).toMatch(/@utility button-fill \{[\s\S]*radial-gradient\(\s*circle at var\(--button-mx\) var\(--button-my\)/)
+    expect(CSS).toMatch(/@utility button-bloom \{[\s\S]*radial-gradient\(\s*ellipse farthest-corner at 50% 50%/)
+    expect(CSS).not.toMatch(/@property --button-fill\b/)
+    expect(CSS).not.toMatch(/@utility button-fill\b/)
+    const botao = readFileSync(join(process.cwd(), "src/components/ui/button.tsx"), "utf8")
+    expect(botao).not.toMatch(/--button-mx|PESOS_COM_PONTEIRO/)
   })
 
   it("4. `link` não tem traço em repouso, e ele entra pela esquerda", () => {

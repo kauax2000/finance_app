@@ -141,7 +141,7 @@ export default function AnnouncementBarDoc() {
       </DocNote>
 
       <DocNote title="Os dois botões pagaram a rodada 99 com atraso">
-        Eles mantinham <code>hover:bg-current/N</code> e nunca declaravam <code>--button-fill-color</code>, então herdavam o cinza de <code>--muted</code> do <code>tertiary</code>: o realce pintava <strong>duas</strong> camadas — a tinta do tom na caixa toda e um disco cinza por cima. No tema claro, onde <code>--muted</code> é opaco, os quatro tons convergiam no mesmo <code>235,235,235</code>: o realce apagava o tom em vez de realçá-lo. Ninguém viu porque a razão de luminância é <strong>1,007–1,078</strong> — o defeito é cromático, e os scripts da casa só medem luminância. Com <code>currentColor</code> no disco: 1,16–1,19 no claro e 1,26–1,30 no escuro.
+        Eles mantinham <code>hover:bg-current/N</code> e nunca declaravam a cor do realce do <code>tertiary</code> — hoje <code>--button-bloom-fill</code> —, então herdavam o cinza de <code>--muted</code> do <code>tertiary</code>: o realce pintava <strong>duas</strong> camadas — a tinta do tom na caixa toda e o realce cinza por cima. No tema claro, onde <code>--muted</code> é opaco, os quatro tons convergiam no mesmo <code>235,235,235</code>: o realce apagava o tom em vez de realçá-lo. Ninguém viu porque a razão de luminância é <strong>1,007–1,078</strong> — o defeito é cromático, e os scripts da casa só medem luminância. Com <code>currentColor</code> na cor do realce: 1,16–1,19 no claro e 1,26–1,30 no escuro.
       </DocNote>
 
       <DocNote title="O véu substitui o fio do sticky, e a ordem do cva é o mecanismo">

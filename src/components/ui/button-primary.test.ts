@@ -6,12 +6,11 @@ import { buttonVariants } from "./button"
 import { cn } from "@/lib/utils"
 
 /**
- * O primário é **cru** (rodada 148): o preenchimento e o hover dos outros
- * pesos — o disco de `button-fill` na cor de `--primary-hover` —, sem cor e sem
- * arco-íris. Da rodada 98 à 147 ele acendeu a marca no cursor, e o dono pediu
- * tudo fora.
- * Ele foi tecla da rodada 78 à 97, e cada asserção aqui tranca ou um pedaço
- * do desenho novo, ou um pedaço da tecla que não pode voltar por engano.
+ * O primário é o **Button Colorful** da Kokonut UI (rodadas 149 a 151): a
+ * tecla preta (branca no escuro) chapada em repouso, com um degradê borrado de
+ * cinco paradas da marca florescendo do centro no cursor. Ele foi tecla da rodada 78 à 97,
+ * lava e brilho da 98 à 147 e cru na 148; cada asserção aqui tranca ou um
+ * pedaço do desenho novo, ou um pedaço dos antigos que não pode voltar.
  */
 
 const RAIZ = resolve(process.cwd(), "src")
@@ -41,40 +40,69 @@ function arquivosTsx(dir: string): string[] {
   })
 }
 
-describe("o primário é cru", () => {
-  it("1. o hover é o disco dos outros pesos, na cor do hover do primário", () => {
-    // Nenhum `hover:bg-*`: o disco de `button-fill` pinta por cima, como no
-    // `secondary`. Um alfa sobre a superfície (`bg-primary/90`) clareava num
-    // tema e escurecia no outro, e é o defeito que esta asserção sempre guardou.
-    expect(PRIMARIO.filter((c) => /^(hover|active):bg-/.test(c))).toStrictEqual([])
-    expect(PRIMARIO.join(" ")).not.toMatch(/bg-primary\/\d/)
+describe("o primário é o colorido", () => {
+  it("1. em repouso é a tecla chapada; no cursor, no toque e no menu aberto as cores florescem", () => {
     expect(PRIMARIO).toContain("bg-primary")
-    expect(PRIMARIO).toContain("button-fill")
-    expect(PRIMARIO).toContain("[--button-fill-color:var(--primary-hover)]")
+    expect(PRIMARIO).toContain("button-colorful")
+    for (const c of ["hover:[--button-bloom:1]", "active:[--button-bloom:1]", "aria-expanded:[--button-bloom:1]"]) {
+      expect(PRIMARIO, c).toContain(c)
+    }
+    // O fundo não troca — quem responde ao cursor é a camada. E a camada nunca
+    // vem por classe `before:`/`after:` na variante: mora na utility.
+    expect(PRIMARIO.filter((c) => /^(hover|active):bg-/.test(c))).toStrictEqual([])
+    expect(PRIMARIO.filter((c) => /(^|:)(before|after):/.test(c))).toStrictEqual([])
+    expect(PRIMARIO.join(" ")).not.toMatch(/bg-primary\/\d/)
+  })
+
+  it("1a. a utility: a camada é o `::after`, cinco paradas da marca, e um número só anima tudo", () => {
+    const i = CSS.indexOf("@utility button-colorful {")
+    expect(i).toBeGreaterThan(-1)
+    const util = CSS.slice(i, CSS.indexOf("\n}\n", i))
+    for (const c of ["isolation: isolate", "overflow: hidden", "&::after", "z-index: -10"]) {
+      expect(util, c).toContain(c)
+    }
+    // Cinco paradas do arco-íris da marca (rodada 150); o roxo de três
+    // paradas da referência lia como template, não como a nossa marca.
+    for (const t of ["--brand-teal", "--brand-blue", "--brand-violet", "--brand-magenta", "--brand-coral"]) {
+      expect(util, t).toContain(`var(${t})`)
+    }
+    // Escala, borrão e opacidade derivam da mesma variável, e em repouso (0)
+    // a camada está apagada.
+    expect(util).toMatch(/opacity: calc\(var\(--button-bloom\) \* var\(--button-colorful-opacity\)\)/)
+    expect(util).toMatch(/scale: calc\([^;]*var\(--button-bloom\)/)
+    expect(util).toMatch(/filter: blur\(calc\([^;]*var\(--button-bloom\)/)
+    // `inherits: true`: quem lê é o pseudo, e pseudo não herda `false`.
+    expect(CSS).toMatch(/@property --button-bloom \{\s*syntax: "<number>";\s*inherits: true;\s*initial-value: 0;/)
+  })
+
+  it("1b. a força do hover é por tema, e o claro fica abaixo da referência", () => {
+    // No claro o rótulo é branco e o teal e o azul são claros: a 0,80 da
+    // referência o `salvar` media 4,26. O valor mora no token, nunca na classe.
+    const claro = Number(CLARO.match(/--button-colorful-opacity:\s*([\d.]+)/)?.[1])
+    const escuro = Number(ESCURO.match(/--button-colorful-opacity:\s*([\d.]+)/)?.[1])
+    expect(claro).toBeLessThanOrEqual(0.7)
+    expect(escuro).toBeGreaterThan(0)
+    expect(escuro).toBeLessThanOrEqual(0.8)
   })
 
   it("2. nenhuma cor literal — a cor vem de token", () => {
     expect(PRIMARIO.join(" ")).not.toMatch(/oklch\(|rgba?\(|#[0-9a-f]{3}|\bwhite\b|\bblack\b/i)
   })
 
-  it("3. cru: nem contorno, nem sombra, nem véu, nem arco-íris", () => {
+  it("3. nem contorno, nem sombra, nem o arco-íris inteiro", () => {
     // O `border-transparent` é da **base** — a borda de 1px existe para a
     // geometria de todo peso ficar igual à do `outline`, e não pinta.
     expect(PRIMARIO.filter((c) => /^border-/.test(c) && c !== "border-transparent")).toStrictEqual([])
     expect(PRIMARIO.filter((c) => /shadow-/.test(c))).toStrictEqual([])
-    expect(PRIMARIO.filter((c) => /^bg-\(image:/.test(c))).toStrictEqual([])
-    expect(PRIMARIO.join(" ")).not.toMatch(/brand|rainbow|primary-wash|--button-wash/)
+    expect(PRIMARIO.join(" ")).not.toMatch(/brand-rainbow|primary-wash|--button-wash|button-fill/)
   })
 
-  it("4. o disco enche no cursor, no toque e com o popover aberto", () => {
-    // Regra H: o toque pinta o mesmo que o cursor. E `aria-expanded` é o
-    // realce de quem abriu um menu, como nos outros pesos.
-    for (const c of [
-      "hover:[--button-fill:100%]",
-      "active:[--button-fill:100%]",
-      "aria-expanded:[--button-fill:100%]",
-    ]) {
-      expect(PRIMARIO, c).toContain(c)
+  it("4. entra na mola, sai sem ela, e a variável está na lista de transição", () => {
+    const resolvido = cn(buttonVariants({ variant: "primary" }))
+    expect(resolvido).toMatch(/transition-\[[^\]]*\btranslate\b[^\]]*--button-bloom\]/)
+    for (const estado of ["hover", "active", "aria-expanded"]) {
+      expect(PRIMARIO, estado).toContain(`${estado}:duration-(--duration-spring)`)
+      expect(PRIMARIO, estado).toContain(`${estado}:ease-(--ease-spring)`)
     }
   })
 
@@ -98,22 +126,21 @@ describe("o primário é cru", () => {
   // falhar. Foi essa brecha que deixou o `link` mudar de ritmo em silêncio na
   // rodada 91.
   it("6. a transição é enumerada e usa a curva da casa, em todo peso", () => {
-    // Quem foge do ritmo da casa entra aqui, com a razão escrita. Está vazio
-    // desde a rodada 94: o `link` era a única exceção, por causa da varredura
-    // do sublinhado, e ela saiu a pedido do dono — a troca de tinta é
-    // instantânea e não precisa de ritmo nenhum.
+    // Quem foge do ritmo da casa entra aqui, com a razão escrita. Os quatro
+    // pesos que preenchiam entraram na rodada 99, pelo disco de `button-fill`,
+    // e saíram com ele na 149.
     //
-    // **Os quatro pesos que preenchem entraram na rodada 99**: o disco de
-    // `button-fill` com `--ease-out` chegava a 95% do raio em 60ms dos 150
-    // (medido) e lia como um piscar; o dono pediu visível. É o ritmo mais
-    // lento da casa com a curva enfática — tokens existentes, nada novo.
-    const LENTO = { duracao: "duration-(--duration-slow)", curva: "ease-(--ease-emphasized)" }
+    // **O florescer entrou na 151 (primário) e na 152 (os outros pesos com
+    // fundo no hover)**: a saída recolhe em `--duration-slow` com `--ease-out`
+    // — a 150ms a flor se fechava num piscar — e a entrada é a mola da casa
+    // (asserção 4 e `button-touch-response.test.ts`).
+    const FLOR = { duracao: "duration-(--duration-slow)", curva: "ease-(--ease-out)" }
     const RITMO_PROPRIO: Partial<Record<string, { duracao: string; curva: string }>> = {
-      primary: LENTO,
-      secondary: LENTO,
-      tertiary: LENTO,
-      outline: LENTO,
-      destructive: LENTO,
+      primary: FLOR,
+      secondary: FLOR,
+      tertiary: FLOR,
+      outline: FLOR,
+      destructive: FLOR,
     }
     for (const variant of ["primary", "secondary", "tertiary", "outline", "destructive", "link"] as const) {
       const classes = cn(buttonVariants({ variant }))
@@ -127,12 +154,6 @@ describe("o primário é cru", () => {
         expect(classes, variant).not.toMatch(/\bease-(linear|in|in-out)\b/)
       }
     }
-    // O primário restata a lista inteira com `--button-fill` no fim, como os
-    // outros: o `tailwind-merge` troca a classe de transição, não acrescenta —
-    // e sem a variável na lista o disco entra de estalo.
-    const primario = cn(buttonVariants({ variant: "primary" }))
-    expect(primario).toMatch(/transition-\[[^\]]*--button-fill\]/)
-    expect(primario).toMatch(/transition-\[[^\]]*\btranslate\b[^\]]*\]/)
   })
 
   it("7. a tecla não volta: os seis tokens dela não existem em tema nenhum", () => {
@@ -184,9 +205,9 @@ describe("o primário é cru", () => {
     // Nenhum hover de fundo: o anel pinta por cima do fundo do elemento, e a
     // troca sumiria na fatia virada para o ponteiro.
     expect(BRAND.filter((c) => /^(hover|active):(bg-|\[--button-fill)/.test(c))).toStrictEqual([])
-    // O primário veste o arco-íris **pela utility**, atrás do vidro — e não o
-    // do `brand`. As duas peças continuam sendo coisas diferentes: o `brand`
-    // é um CTA de marca por tela, o primário é o peso de toda ação principal.
+    // O primário veste três paradas da marca num degradê próprio, e não o
+    // arco-íris do `brand`: o `brand` é um CTA de marca por tela, o primário é
+    // o peso de toda ação principal.
     expect(PRIMARIO.join(" ")).not.toContain("brand-rainbow")
   })
 
@@ -204,10 +225,35 @@ describe("o primário é cru", () => {
     }
   })
 
-  it("10. nada é pseudo-elemento, e a razão é o `ButtonGroup`", () => {
-    // `[&>[data-variant=primary]]:before:hidden` esconderia um `::before`;
-    // um `::after` em `z` negativo fica atrás do `background` do elemento.
-    expect(PRIMARIO.filter((c) => /^(before|after):/.test(c))).toStrictEqual([])
+  it("9c. `brandOutline` é o Rainbow Button: arco-íris na borda de baixo e brilho embaixo, deslizando", () => {
+    const OUTLINE = buttonVariants({ variant: "brandOutline" }).split(/\s+/)
+    expect(OUTLINE).toContain("brand-rainbow-button")
+    expect(OUTLINE).toContain("[--brand-fill:var(--primary)]")
+    for (const estado of ["hover", "active", "aria-expanded"]) {
+      expect(OUTLINE, estado).toContain(`${estado}:[--brand-fill:var(--primary-hover)]`)
+    }
+    // A pintura mora nos pseudos da utility, e não no fundo do botão: a base
+    // declara `bg-clip-padding`, que disputaria com o recorte de três camadas.
+    expect(OUTLINE.filter((c) => /(^|:)bg-(?!clip)/.test(c))).toStrictEqual([])
+    const i = CSS.indexOf("@utility brand-rainbow-button {")
+    expect(i).toBeGreaterThan(-1)
+    const util = CSS.slice(i, CSS.indexOf("\n}\n", i))
+    for (const c of ["isolation: isolate", "&::before", "&::after", "animation: brand-rainbow-slide 2s linear infinite", "background-clip: padding-box, border-box, border-box", "bottom: -20%", "filter: blur(0.8rem)"]) {
+      expect(util, c).toContain(c)
+    }
+    // O laço fecha na cor em que abre — sem a emenda da referência.
+    const lista = util.slice(util.indexOf("--brand-rainbow-slide:"), util.indexOf(");", util.indexOf("--brand-rainbow-slide:")))
+    const cores = [...lista.matchAll(/var\((--brand-[a-z]+)\)/g)].map((m) => m[1])
+    expect(cores[0]).toBe(cores.at(-1))
+    expect(CSS).toMatch(/@keyframes brand-rainbow-slide \{\s*from \{\s*background-position: 0% center;\s*\}\s*to \{\s*background-position: 200% center;/)
+  })
+
+  it("10. a camada é o `::after`, e a razão é o `ButtonGroup`", () => {
+    // `[&>[data-variant=primary]]:before:hidden` esconderia um `::before`. Um
+    // `::after` em `z` negativo só fica **acima** do fundo do botão dentro da
+    // raiz de empilhamento dele — sem `isolate`, cairia atrás do `background`.
+    // As duas coisas moram na `@utility button-colorful` (asserção 1a).
+    expect(PRIMARIO.filter((c) => /(^|:)before:/.test(c))).toStrictEqual([])
     const grupo = readFileSync(join(RAIZ, "components/ui/button-group.tsx"), "utf8")
     expect(grupo).toContain("[&>[data-variant=primary]]:before:hidden")
     // O vão de 1px do primário é a **sobreposição**, e não o `ml-px` do

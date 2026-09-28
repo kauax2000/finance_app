@@ -23,8 +23,8 @@ import { cn } from "@/lib/utils"
  *
  * O `Button` e o `Badge` desenham a marca em duas camadas: o contorno no
  * `::before` e um halo borrado no `::after`. Aqui o `::after` **já é o alvo de
- * toque de 44px**, e ele não se move. Sobra o contorno — que é o precedente do
- * `brandOutline`, e é o certo nesta escala de qualquer forma: um halo a
+ * toque de 44px**, e ele não se move. Sobra o contorno — que foi o do
+ * `brandOutline` até a rodada 152, e é o certo nesta escala de qualquer forma: um halo a
  * `-inset-1` sangra 4px e encosta na linha vizinha de uma lista com `gap-3`.
  */
 const checkboxVariants = cva(

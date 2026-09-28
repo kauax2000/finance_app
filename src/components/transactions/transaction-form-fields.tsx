@@ -142,7 +142,7 @@ function PaymentMethodChips({
                         variant="tertiary"
                         aria-pressed={selected}
                         className={cn(
-                            "h-auto min-h-8 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold shadow-none transition-colors",
+                            "h-auto min-h-8 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold shadow-none",
                             "focus-visible:ring-2 focus-visible:ring-ring/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                             "border-0 max-md:active:bg-muted/50 max-md:active:opacity-90",
                             selected ? tagChipFilterSelected : tagChipFilterIdle

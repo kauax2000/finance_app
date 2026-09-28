@@ -479,6 +479,10 @@ function DsNavLink({
         // `text-overflow` não se aplica a ele: o `truncate` desce para o filho.
         "min-w-0",
         "rounded-md px-2 text-sm transition-colors",
+        // Contra-classe 8. Linha de lista não floresce: ela esmaece, como os
+        // menus (rodada 137, que recusou cor crescendo em linha). A flor do
+        // `tertiary` fica sem cor, e o realce é o `hover:bg-*` abaixo.
+        "[--button-bloom-fill:transparent] dark:[--button-bloom-fill:transparent]",
         // Em ponteiro grosso o link vai aos 44px que a página
         // /designsystem/touch-safe-area exige. Um catálogo que reprova na própria
         // regra não é fonte de verdade de nada.

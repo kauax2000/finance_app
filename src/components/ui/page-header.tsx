@@ -318,7 +318,7 @@ function PageHeaderBack({
       variant="tertiary"
       size="icon-md"
       className={cn(
-        "relative -ms-2 shrink-0 active:bg-accent",
+        "relative -ms-2 shrink-0",
         // O alvo cresce por pseudo-elemento porque crescer de verdade mudaria a
         // caixa que `--page-title-line` centraliza — a mesma saída do × da
         // `AnnouncementBar` e dos degraus do `Breadcrumb`. A base do absoluto é

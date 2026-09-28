@@ -14681,3 +14681,174 @@ o hover padrão igual aos outros botões, sem cores, sem arco-íris".
 - `button-primary.test.ts`: os testes do brilho viraram os do disco, e o 5
   cobra que nem a lava nem o brilho voltem. `button-touch-response.test.ts`
   conta cinco pesos que preenchem.
+
+### Rodada 149 — o primário vira o Button Colorful, e o disco sai dos outros pesos
+
+O dono trouxe o **Button Colorful** da Kokonut UI (21st, `kokonutd/button-colorful`,
+MIT) como referência do `primary`, e pediu o hover dos outros botões de volta ao
+padrão, sem o "efeito orgânico".
+
+**A referência**, lida do bundle do preview (`cdn.21st.dev/bundled/3.html`, o
+código na página é travado): `bg-zinc-900 dark:bg-zinc-100 overflow-hidden`,
+e uma camada `absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500
+to-pink-500 blur`, a `opacity-40` em repouso e `group-hover:opacity-80`, em
+`transition-opacity duration-500`.
+
+| Referência | Aqui | Por quê |
+| --- | --- | --- |
+| camada filha `<div>` | `::after` do botão | sem JSX novo; o `::before` o `ButtonGroup` esconde |
+| `relative` no conteúdo | `isolate` no botão, camada em `-z-10` | acima do fundo, abaixo do rótulo |
+| indigo-500, purple-500, pink-500 | `--brand-indigo`, `--brand-violet`, `--brand-magenta` | zero literal, luz por tema |
+| `blur` (8px na v3) | `blur-sm` (8px na v4) | o mesmo borrão |
+| `duration-500` | `--duration-spring` (500ms), `--ease-out` | o token da casa com esse tempo |
+| `group-hover:` | `hover:`, `active:`, `aria-expanded:` | regra H, e o menu aberto |
+
+**Contraste**, medido lendo os pixels atrás do rótulo com a camada a 80% (rótulo
+escondido, linha do meio): claro **5,81** no pior ponto da caixa (6,22 no
+miolo), escuro **7,62**. A própria referência reprovaria na ponta rosa (cerca
+de 4,2), mas o rótulo fica no meio. Nenhum token de controle foi preciso.
+
+**O disco sai.** `@utility button-fill`, `@property --button-fill`, o rastreio
+do ponteiro no `Button` (`PESOS_COM_PONTEIRO`, `--button-mx/-my`) e o ritmo
+próprio (`--duration-slow` com `--ease-emphasized`, em `RITMO_PROPRIO`). Os
+pesos voltam a `hover:bg-*` com o par `active:` e o par `dark:hover:`, nos
+valores de antes da rodada 99 — os alfas compostos (11%, 12,5%, 29%) voltam aos
+diretos (20, 30, 50). `AlertAction` e os dois botões da `AnnouncementBar`
+trocam `--button-fill-color` por `hover:bg-current/10` (15 no ×), e o gatilho
+da busca do catálogo segura o hover no fundo de repouso com
+`lg:hover:bg-input-fill/30`.
+
+- `button-primary.test.ts` tranca a camada, as três paradas, o 40/80, o `::after`
+  (nunca `::before`) e o `RITMO_PROPRIO` vazio; `button-touch-response.test.ts`
+  volta a medir os pares `hover:`/`active:` e cobra que o disco não volte.
+- A página de marca ganhou a nona família, "Degradê".
+
+### Rodada 150 — o primário guarda a cor para o cursor
+
+Perguntado se o botão da 149 condizia com o branding, a resposta foi que não, por
+três razões, e o dono pediu as três correções:
+
+1. **Cor de marca em toda tela.** A marca é preta e branca, e a única cor dela é
+   o arco-íris, uma peça por tela. Com o degradê a 40% em repouso, todo primário
+   era cor de marca, e disputava com `Button brand`, `Badge brand` e
+   `Alert brand`. **Agora o repouso é a tecla chapada** (`after:opacity-0`), e a
+   cor sobe no cursor, no toque e em `aria-expanded`.
+2. **Três paradas roxas liam como template.** Indigo → violeta → magenta é só a
+   fatia roxa do arco-íris. **Agora são cinco paradas**: teal, azul, violeta,
+   magenta, coral.
+3. **O repouso turvo.** A 40% sobre o preto o botão parado lia azul-marinho
+   sujo, e o desabilitado virava uma mancha lilás. Com o repouso chapado, os
+   dois voltam ao preto e ao cinza.
+
+**O teal e o azul custaram contraste no claro.** A 0,80 da referência, o rótulo
+branco do `salvar` media **4,26** sobre eles. Varredura sob a caixa do rótulo:
+0,75 → 4,67, **0,70 → 5,09**, 0,65 → 5,60. A força virou token por tema,
+`--button-colorful-opacity`: 0,70 no claro, 0,80 no escuro (7,70). O volume se
+mexe no token, nunca nas paradas.
+
+No `ButtonGroup`, só o segmento sob o cursor acende; em repouso o grupo é uma
+peça preta só.
+
+### Rodada 151 — as cores do primário florescem do centro
+
+O dono pediu uma entrada orgânica para as cores do primário, que até aqui só
+subiam a opacidade.
+
+**O desenho**: o degradê nasce **comprimido e borrado no meio do botão** — 30% da
+largura, 60% da altura, 16px de borrão — e se abre até as bordas ganhando foco
+(8px) enquanto a cor sobe. Comprimidas, as cinco paradas aparecem juntas num
+núcleo pequeno e se desdobram para os lados, que é o que lê como flor e não
+como um fade. **Entra na mola da casa** (`--ease-spring`, 500ms — o leve
+passar-e-assentar) e **sai sem ela**, recolhendo para o centro em
+`--duration-slow` com `--ease-out`: uma mola até zero passaria de zero.
+
+**Um número só anima tudo.** A pintura saiu das classes da variante para a
+`@utility button-colorful`, e a camada lê `--button-colorful` (0 → 1), uma
+`@property <number>` com **`inherits: true`** — quem a lê é o `::after`, e pseudo
+não herda propriedade registrada como `false` (a medição do brilho da marca).
+Escala, borrão e opacidade derivam dela, então andam na mesma curva e ninguém
+chega antes. O `Button` só a liga em `hover:`, `active:` e `aria-expanded:`,
+enumera a variável na `transition` e escolhe o ritmo de cada lado; o primário
+entrou em `RITMO_PROPRIO` pela saída lenta.
+
+Medido quadro a quadro (transição pausada e posicionada pelo Web Animations
+API): a 120ms a variável está em 0,74 — escala 0,82 × 0,90, borrão 10px —, a
+250ms a flor está quase aberta e a 500ms assenta. No pico da mola a opacidade
+passa 3,8% do alvo (0,727 no claro), abaixo dos 0,75 que ainda deixam o rótulo
+em 4,67; no repouso final continua 5,09.
+
+O custo dito: no toque, o `translate` de 1px do clique anda no mesmo ritmo da
+mola, porque a duração é da transição inteira. Em 1px não se nota.
+
+### Rodada 152 — a flor do primário em todos os pesos
+
+O dono pediu a animação do primário "em todas as outras variantes". Ela entrou
+nos quatro pesos que mudam de fundo no hover — `secondary`, `tertiary`,
+`outline`, `destructive` —, cada um na própria cor de hover. `brand`,
+`brandOutline` e `link` mantêm o hover próprio: o `brand` não pode trocar de
+fundo (o anel do brilho pinta por cima), o `brandOutline` já tem o arco-íris no
+`::before`, e o `link` é o traço.
+
+**A mesma flor, outra pintura.** No primário a camada é um `::after` borrado;
+nos outros pesos **não pode ser pseudo-elemento**, e é medido no código: o
+`::after` do `tertiary` já é o alvo de toque ampliado do `PageHeader`
+(`pointer-coarse:after:-inset-2`), do `Breadcrumb`, do × da `AnnouncementBar` e
+das setas do `Carousel` — com `pointer-events: none` e recorte, a flor
+apagaria esses alvos —, e o `::before` é o divisor do `ButtonGroup`. A saída é
+uma **elipse no próprio fundo** (`@utility button-bloom`): `radial-gradient`
+`ellipse farthest-corner` a partir do centro — a 100% cobre a caixa de canto a
+canto —, com a borda indo de 40% de rampa a nítida enquanto cresce e a cor
+subindo de transparente. É o borrão do primário sem `filter`.
+
+**Uma variável para os cinco.** `--button-colorful` virou `--button-bloom`, e as
+duas utilities a leem; o `Button` liga-a pelo `FLORESCER` (cursor e toque, e
+`aria-expanded` onde o peso realçava o menu aberto), com a mola ao entrar e
+`--ease-out` ao sair. Os quatro pesos entraram em `RITMO_PROPRIO`. Medido quadro
+a quadro nos dois temas: a 500ms canto e centro têm o mesmo pixel.
+
+**Quem pintava o hover por fora foi migrado**, porque `hover:bg-*` numa chamada
+pinta por baixo da elipse e some: `AlertAction` e os dois botões da
+`AnnouncementBar` (`currentColor` a 10% e 15%), o `WorkspaceSwitcher` (accent a
+80%, com `group-active:` ligando a flor), os chips de filtro ativos (success a
+20%, onde o toque ia a 25%), a linha de resultado da página inicial do catálogo
+(accent a 50%) e a busca do catálogo (flor transparente no campo largo). O
+`active:bg-accent` do voltar do `PageHeader` saiu — o `tertiary` já responde ao
+toque. **O link da lateral do catálogo não floresce**: ele é linha de lista, e
+a rodada 137 recusou cor crescendo em linha; a flor fica sem cor e o
+esmaecer dele continua. Duas chamadas perderam `transition-colors`, que trocava
+a lista de transição e fazia a flor estalar.
+
+### Rodada 153 — o `brandOutline` vira o Rainbow Button
+
+O dono trouxe o **Rainbow Button** da Magic UI (21st, `dillionverma/rainbow-button`,
+MIT) para o segundo botão de marca, o `brandOutline`: "o arco-íris ficando
+embaixo e movimentando".
+
+**A referência**, lida do bundle do preview (`cdn.21st.dev/bundled/1346.html`):
+três camadas de fundo no próprio botão com `background-size: 200%` e
+`background-clip: padding-box, border-box, border-box` — o miolo chapado, a
+mesma cor cobrindo a borda até 50% e desbotando (60% a 80%, transparente no
+fim), e o arco-íris —, borda transparente de 0,08rem; um `::before` de 60% ×
+20% em `bottom: -20%` com o arco-íris e `blur(0.8rem)`; e `@keyframes rainbow`
+levando `background-position` de 0% a 200% em 2s, linear, sem fim.
+
+| Referência | Aqui | Por quê |
+| --- | --- | --- |
+| camadas no fundo do botão | `::before` com `inset: -1px` sobre a borda da base | a base declara `bg-clip-padding`, que disputaria com o recorte de três camadas por ordem de emissão |
+| brilho no `::before` | brilho no `::after` | o `::before` ficou com a borda |
+| `z-0` | `isolate` e `-z-10` nos dois | acima do fundo, abaixo do rótulo |
+| vermelho, lima, azul, céu, roxo | `--brand-coral`, `-green`, `-blue`, `-teal`, `-violet` | as paradas da marca de matiz mais perto |
+| a lista termina no roxo | a lista **fecha no coral** | a referência tem uma emenda roxo→vermelho passando pela borda a cada volta |
+| `#121213` / `#fff` | `--brand-fill` = `--primary`, `--primary-hover` no cursor | a tecla da casa, que escurece no cursor |
+
+**É a terceira peça da marca que se move sozinha**, depois da `brand-lava` e do
+véu da `AnnouncementBar` — e a regra "o degradê não gira" (rodada 100) continua
+de pé: o arco-íris **desliza**, não gira, e só nesta peça, por pedido do dono.
+Movimento reduzido: o bloco global roda uma passada de 0,01ms, e o laço para no
+quadro final, que com a lista fechada é igual ao inicial.
+
+O `brandOutline` saiu da família do contorno — `brand-contour.test.ts` não o
+lista mais, e `button-primary.test.ts` (9c) tranca a utility, as três camadas, o
+brilho, o laço de 2s e a lista fechada. A página de marca ganhou a décima
+família, "Deslize"; a do contorno ficou com os três controles de escolha, que só
+acendem marcados.

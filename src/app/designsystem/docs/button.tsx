@@ -39,8 +39,8 @@ export default function ButtonDoc() {
       </DocSection>
 
       <DocSection
-        title="O primário é cru"
-        description="Preto no claro, branco no escuro, e o hover dos outros pesos: um disco na cor do hover do primário nascendo sob o ponteiro. Sem cor e sem arco-íris. Enviando, a opacidade fica cheia, para salvando não ler como desabilitado."
+        title="O primário acende a marca no cursor"
+        description="Em repouso, a tecla preta (branca no escuro), chapada. No cursor e no toque, cinco paradas do arco-íris — teal, azul, violeta, magenta e coral — florescem do centro: nascem comprimidas e borradas no meio do botão e se abrem até as bordas, ganhando foco, na mola da casa. Ao sair, recolhem sem mola. É o Button Colorful da Kokonut UI, com a cor guardada para a interação. Enviando, a opacidade fica cheia, para salvando não ler como desabilitado."
         code={`<Button size="xl" className="w-64">continuar</Button>
 <Button>salvar</Button>
 <Button disabled>desabilitado</Button>
@@ -71,7 +71,7 @@ export default function ButtonDoc() {
 
       <DocSection
         title="A marca"
-        description="brand é o CTA de marca: neutro em repouso, com a borda que acende em arco-íris conforme o ponteiro se aproxima — o brilho do Alert, do Card e do Badge. Passe o mouse perto. brandOutline é a tecla preta com o arco-íris em 1px, sempre aceso, para quando a marca não pode depender do ponteiro. Os dois: um por tela."
+        description="brand é o CTA de marca: neutro em repouso, com a borda que acende em arco-íris conforme o ponteiro se aproxima — o brilho do Alert, do Card e do Badge. Passe o mouse perto. brandOutline é a tecla preta com o arco-íris deslizando na borda de baixo e brilhando embaixo dela — o Rainbow Button da Magic UI —, sempre aceso, para quando a marca não pode depender do ponteiro. Os dois: um por tela."
         code={`<Button variant="brand" size="xl">entrar</Button>
 <Button variant="brandOutline" size="xl">começar</Button>`}
         previewClassName="gap-6 py-10"
@@ -85,7 +85,7 @@ export default function ButtonDoc() {
       </DocSection>
 
       <DocNote title="Cada peso responde ao cursor de um jeito">
-        <code>primary</code>, <code>secondary</code>, <code>tertiary</code>, <code>outline</code> e <code>destructive</code> preenchem num disco que nasce sob o ponteiro; <code>brand</code> acende o arco da borda e <strong>não troca o fundo</strong> — o anel pinta por cima dele, e a troca sumiria na fatia virada para o ponteiro; <code>brandOutline</code> escurece a tecla, como o hover do primário faz nos dois temas; e o <code>link</code> desenha o traço. A mecânica está comentada em <code>button.tsx</code> e nas utilities <code>button-fill</code>, <code>brand-glow</code> e <code>link-sweep</code> de <code>globals.css</code>. No toque não há brilho: ele precisa de ponteiro fino, e ali o <code>brand</code> é o botão neutro.
+        <code>primary</code>, <code>secondary</code>, <code>tertiary</code>, <code>outline</code> e <code>destructive</code> <strong>florescem do centro</strong> — a cor do hover nasce pequena e difusa no meio e se abre até as bordas, na mola da casa, e no toque também; no primário ela é o degradê da marca, nos outros a cor de hover do peso; <code>brand</code> acende o arco da borda e <strong>não troca o fundo</strong> — o anel pinta por cima dele, e a troca sumiria na fatia virada para o ponteiro; <code>brandOutline</code> escurece a tecla; e o <code>link</code> desenha o traço. A mecânica está comentada em <code>button.tsx</code> e nas utilities <code>button-bloom</code>, <code>button-colorful</code>, <code>brand-glow</code> e <code>link-sweep</code> de <code>globals.css</code>. No toque não há brilho: ele precisa de ponteiro fino, e ali o <code>brand</code> é o botão neutro.
       </DocNote>
 
       <DocNote title="Duas ações lado a lado: a segunda não preenche">

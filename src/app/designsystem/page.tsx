@@ -297,12 +297,14 @@ export default function DesignSystemIndexPage() {
                                     variant="tertiary"
                                     size="md"
                                     className={cn(
-                                        "group h-auto min-h-10 w-full justify-start gap-3 rounded-md px-2 py-2 font-normal bg-clip-border transition-colors",
-                                        "hover:bg-accent/50 active:bg-accent/50",
-                                        // `--accent` e `--muted` são a mesma cor
-                                        // no escuro hoje; a contra-classe fica
-                                        // para o dia em que divergirem.
-                                        "dark:hover:bg-accent/50"
+                                        "group h-auto min-h-10 w-full justify-start gap-3 rounded-md px-2 py-2 font-normal bg-clip-border",
+                                        // A flor do `tertiary` na cor do
+                                        // accent. `--accent` e `--muted` são a
+                                        // mesma cor no escuro hoje; o par
+                                        // `dark:` vence o do peso por
+                                        // especificidade.
+                                        "[--button-bloom-fill:color-mix(in_oklab,var(--accent)_50%,transparent)]",
+                                        "dark:[--button-bloom-fill:color-mix(in_oklab,var(--accent)_50%,transparent)]"
                                     )}
                                 >
                                 <Link href={`/designsystem/${item.slug}`}>

@@ -213,33 +213,18 @@ function AnnouncementBar({
             // aparecendo — é ele que delimita os 24px e diz onde o alvo começa.
             // No hover o × passa a falar exatamente a língua do botão de ação
             // ao lado (preenchimento fraco + `current/25` de borda).
-            // **E os 15% agora moram no disco da rodada 99, não num fundo
-            // chapado.** Este botão e o `AnnouncementBarAction` ficaram de fora
-            // daquela rodada: mantinham `hover:bg-current/N` e nunca declaravam
-            // `--button-fill-color`, então herdavam o cinza de `--muted` do
-            // `tertiary` e o realce pintava **duas** camadas — a tinta do tom na
-            // caixa toda e um disco cinza crescendo por cima.
             //
-            // Medido no tema claro, onde `--muted` é opaco (`oklch(0.94 0 0)`):
-            // os quatro tons convergiam no **mesmo** cinza `235,235,235` —
-            // `info` saía de `200,241,255` e `warning` de `255,234,186` para o
-            // mesmo lugar. O realce não realçava o tom, apagava. No escuro o
-            // disco é 50% e o efeito era dessaturação (`warning` de `78,45,0`
-            // para `67,50,28`).
+            // **O defeito que esta cor conserta é cromático**: herdando o
+            // `--muted` do `tertiary`, os quatro tons convergiam no **mesmo**
+            // cinza `235,235,235` no tema claro — o realce apagava o tom em
+            // vez de realçá-lo —, e ninguém viu porque a razão de luminância é
+            // 1,007–1,078. Com `currentColor`: 1,16–1,19 no claro e 1,26–1,30
+            // no escuro.
             //
-            // **Ninguém viu porque a razão de luminância é 1,007–1,078** — o
-            // defeito é cromático, e os scripts da casa só medem luminância. Com
-            // `currentColor` no disco: 1,16–1,19 no claro e 1,26–1,30 no escuro,
-            // a faixa que o `bg-current/10` desta casa sempre registrou.
-            //
-            // O `dark:` não é redundante, e a falta dele era um defeito medido:
-            // `.cls:is(.dark *)` é (0,2,0) contra os (0,1,0) de `.cls`, então a
-            // declaração do `tertiary` sob `dark:` vence esta classe simples no
-            // tema escuro. `currentColor` inverte sozinho, mas a regra que o lê
-            // precisa vencer a do peso. É a mesma armadilha que o `AlertAction`
-            // já pagou duas vezes.
-            "[--button-fill-color:color-mix(in_oklab,currentColor_15%,transparent)]",
-            "dark:[--button-fill-color:color-mix(in_oklab,currentColor_15%,transparent)]",
+            // O `dark:` não é redundante: `.cls:is(.dark *)` é (0,2,0) contra
+            // os (0,1,0) de `.cls`, então a cor da flor que o `tertiary`
+            // declara sob `dark:` vence a classe simples no tema escuro.
+            "[--button-bloom-fill:color-mix(in_oklab,currentColor_15%,transparent)] dark:[--button-bloom-fill:color-mix(in_oklab,currentColor_15%,transparent)]",
             // A borda é a **segunda** alavanca, e fica: é ela que delimita os
             // 24px e diz onde o alvo começa.
             "hover:border-current/25 active:border-current/25",
@@ -334,12 +319,9 @@ function AnnouncementBarAction({
       size="xs"
       className={cn(
         "border-current/25 bg-transparent text-current",
-        // A cor do disco da rodada 99, na pele da barra — `currentColor` a 10%,
-        // o mesmo tom de antes, agora nascendo sob o ponteiro em vez de chapar
-        // a caixa. O par `dark:` é obrigatório por especificidade, e as
-        // medições que motivaram a troca estão no × acima.
-        "[--button-fill-color:color-mix(in_oklab,currentColor_10%,transparent)]",
-        "dark:[--button-fill-color:color-mix(in_oklab,currentColor_10%,transparent)]",
+        // A cor da flor na pele da barra — `currentColor` a 10%. O par
+        // `dark:` é obrigatório por especificidade; as medições estão no ×.
+        "[--button-bloom-fill:color-mix(in_oklab,currentColor_10%,transparent)] dark:[--button-bloom-fill:color-mix(in_oklab,currentColor_10%,transparent)]",
         "hover:text-current active:text-current",
         className
       )}

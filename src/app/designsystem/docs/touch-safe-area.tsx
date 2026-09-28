@@ -267,7 +267,7 @@ export default function TouchSafeAreaDoc() {
 {/* certo: o toque recebe a mesma resposta */}
 <div className="group hover:bg-accent active:bg-accent group-active:bg-accent">…</div>`}
       >
-        <Button variant="outline" className="hover:bg-accent active:bg-accent">
+        <Button variant="outline">
           toque ou passe o cursor
         </Button>
       </DocSection>

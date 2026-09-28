@@ -7,6 +7,19 @@ import { Slot } from "radix-ui"
 import { composeRefs, useBrandGlow } from "@/hooks/use-brand-glow"
 import { cn } from "@/lib/utils"
 
+/**
+ * O florescer do hover (rodadas 151 e 152): liga `--button-bloom` no cursor e
+ * no toque, e escolhe o ritmo de cada lado — a mola da casa ao entrar,
+ * `--ease-out` ao sair. A pintura é das `@utility button-bloom` e
+ * `button-colorful`, no `globals.css`. A lista de `transition` é restatada com
+ * a variável no fim, porque o `tailwind-merge` troca a lista da base em vez de
+ * acrescentar.
+ */
+const FLORESCER =
+  "hover:[--button-bloom:1] active:[--button-bloom:1] transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-bloom] duration-(--duration-slow) ease-(--ease-out) hover:duration-(--duration-spring) hover:ease-(--ease-spring) active:duration-(--duration-spring) active:ease-(--ease-spring)"
+/** O mesmo florescer para quem realça também o menu aberto. */
+const FLORESCER_EXPANDIDO = `${FLORESCER} aria-expanded:[--button-bloom:1] aria-expanded:duration-(--duration-spring) aria-expanded:ease-(--ease-spring)`
+
 const buttonVariants = cva(
   "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow,opacity,translate] duration-(--duration-fast) ease-(--ease-out) outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/45 active:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&>[data-slot=button-label]]:first-letter:uppercase [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
@@ -18,33 +31,28 @@ const buttonVariants = cva(
       // `outline` fica de fora da escada de propósito: é a exceção, para
       // quando um controle precisa de contorno próprio (um par de navegação,
       // um filtro que alterna) e nenhum dos três degraus serve. `brand`
-      // também fica de fora: é a mesma tecla do `primary` com o arco-íris da
-      // marca em volta, para **um** CTA de marca por tela — entrar, começar.
-      // O arco-íris não entra no `primary` porque um acento em todo botão
-      // deixa de ser acento — e isso deixou de ser só argumento na rodada 90,
-      // quando três candidatos de primário com arco-íris foram montados ao
-      // vivo, medidos e recusados pelo dono. O número que sobrou: com a
-      // lavagem acesa no cursor o rótulo branco cai a **4,87:1** no tema
-      // claro, contra **18,97** da tecla chapada.
+      // também fica de fora: o CTA neutro com o brilho de marca na borda,
+      // para **um** CTA de marca por tela — entrar, começar.
       //
       // `success` e `warning` foram removidos: nomeavam um estado, não um
       // peso, e nenhuma tela do app chegou a usá-los. Estado de sucesso e de
       // atenção continua sendo trabalho do `Badge` e do `Alert`.
       variant: {
-        // **O primário é cru** (rodada 148): o preenchimento preto (branco no
-        // escuro) e o hover dos outros pesos — o disco de `button-fill` nascendo
-        // sob o ponteiro, na cor de `--primary-hover` —, sem cor, sem
-        // arco-íris. Da rodada 98 à 147 ele acendeu a marca no cursor (a lava
-        // atrás de um vidro e depois o brilho do Shiny Button), e o dono pediu
-        // tudo fora.
+        // **O primário é o "Button Colorful" da Kokonut UI** (21st, MIT;
+        // rodadas 149 a 151), com a cor guardada para a interação: em repouso
+        // ele é a tecla preta (branca no escuro) **chapada** — a identidade
+        // preto e branco —, e no cursor, no toque e com o menu aberto cinco
+        // paradas do arco-íris (teal, azul, violeta, magenta, coral)
+        // **florescem do centro**, comprimidas e borradas, abrindo até as
+        // bordas enquanto ganham foco — o `FLORESCER` de todo peso, com a
+        // pintura da `@utility button-colorful`.
         //
         // O fundo fica recortado no `padding-box` (a `bg-clip-padding` da
         // base), e não em `border-box` como no `secondary`: é o vão de 1px da
         // borda transparente que desenha a emenda do primário no `ButtonGroup`.
         // Enviando (`aria-busy`) a opacidade fica cheia, para "salvando" não
         // ler como "desabilitado".
-        primary:
-          "button-fill bg-primary text-primary-foreground [--button-fill-color:var(--primary-hover)] hover:[--button-fill:100%] active:[--button-fill:100%] aria-expanded:[--button-fill:100%] transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-fill] duration-(--duration-slow) ease-(--ease-emphasized) aria-busy:disabled:opacity-100",
+        primary: `button-colorful bg-primary text-primary-foreground ${FLORESCER_EXPANDIDO} aria-busy:disabled:opacity-100`,
         // **O CTA de marca é neutro, e a borda acende de perto** (rodada 145).
         // Em repouso é a superfície do `secondary` com o fio do sistema; o
         // arco-íris acende num arco da borda conforme o ponteiro se aproxima e
@@ -56,9 +64,8 @@ const buttonVariants = cva(
         // **O fundo não muda no cursor, e é mecânico.** Com `isolate` o anel
         // (`::before` a `-z-10`) pinta **por cima** do fundo do elemento, e o
         // núcleo chapado dele cobre a fatia do botão onde o arco está aceso.
-        // Um hover que troca o fundo — o disco do `button-fill` ou uma cor
-        // nova — sumiria justamente na fatia virada para o ponteiro. A
-        // resposta ao cursor é o próprio brilho, e o clique afunda 1px pela
+        // Um hover que troca o fundo sumiria justamente na fatia virada para
+        // o ponteiro. A resposta ao cursor é o próprio brilho, e o clique afunda 1px pela
         // base. `--brand-glow-core` é o `--secondary` pela mesma razão: tem de
         // ser a cor que está atrás dele.
         //
@@ -68,10 +75,14 @@ const buttonVariants = cva(
         // `--brand-rainbow` no elemento, e não se apaga. Um por tela.
         brand:
           "brand-rainbow-image brand-glow relative isolate border-border bg-secondary text-secondary-foreground [--brand-glow-core:var(--secondary)] [--brand-glow-opacity:1] aria-busy:disabled:opacity-100",
-        // A tecla preta com o arco-íris em 1px, parada — o desenho que o
-        // `brand` tinha até a rodada 145, sem o halo. Fica para quem quer a
-        // marca sempre acesa num CTA, sem depender do ponteiro.
-        brandOutline: "brand-rainbow-image relative isolate text-primary-foreground [--brand-fill:var(--primary)] hover:[--brand-fill:var(--primary-hover)] active:[--brand-fill:var(--primary-hover)] aria-expanded:[--brand-fill:var(--primary-hover)] before:absolute before:-inset-px before:-z-10 before:rounded-[inherit] before:border before:border-transparent before:[background:linear-gradient(var(--brand-fill),var(--brand-fill))_padding-box,var(--brand-rainbow)_border-box] before:transition-[background] before:duration-(--duration-fast) aria-busy:disabled:opacity-100",
+        // **O Rainbow Button da Magic UI** (rodada 153): a tecla preta
+        // (branca no escuro) com o arco-íris só na borda de baixo e um brilho
+        // borrado embaixo, os dois deslizando num laço de 2s — sempre aceso,
+        // para quando a marca não pode depender do ponteiro. A pintura é a
+        // `@utility brand-rainbow-button`; aqui fica o miolo (`--brand-fill`),
+        // que escurece no cursor, no toque e com o menu aberto.
+        brandOutline:
+          "brand-rainbow-button text-primary-foreground [--brand-fill:var(--primary)] hover:[--brand-fill:var(--primary-hover)] active:[--brand-fill:var(--primary-hover)] aria-expanded:[--brand-fill:var(--primary-hover)] aria-busy:disabled:opacity-100",
 
         // Sem borda visível — e sem o anel vazado que havia antes. O culpado
         // não era a borda transparente da base, era o `bg-clip-padding` que a
@@ -83,43 +94,26 @@ const buttonVariants = cva(
         // geometria igual entre as variantes: com `border-0` o rótulo do
         // `secondary` recuava para 12px contra os 13px das outras, e os chips
         // que alternam entre `secondary` e `outline` saltavam 2px ao selecionar.
-        secondary:
-          "button-fill bg-clip-border bg-secondary text-secondary-foreground [--button-fill-color:var(--secondary-hover)] hover:[--button-fill:100%] active:[--button-fill:100%] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-fill] duration-(--duration-slow) ease-(--ease-emphasized)",
-        // **Os quatro pesos que preenchem — este, `secondary`, `outline` e
-        // `destructive` — não trocam de cor no cursor: a cor do hover preenche
-        // o botão num disco que nasce sob o ponteiro** (rodada 99). A receita
-        // é `@utility button-fill`, no `globals.css`; cada peso declara só a
-        // cor (`--button-fill-color`, com par `dark:` onde o hover tinha um) e
-        // liga o raio (`--button-fill`, 0% → 100%) no cursor, no toque e — onde
-        // o expandido pintava — em `aria-expanded`. A lista de `transition` é
-        // restatada com `--button-fill`, porque o `tailwind-merge` troca a
-        // classe em vez de acrescentar.
-        //
-        // **O ritmo é próprio, e é exceção registrada** (`RITMO_PROPRIO` em
-        // `button-primary.test.ts`): `--duration-slow` com `--ease-emphasized`.
-        // Com o ritmo da casa o disco era um piscar — `--ease-out` chega a 95%
-        // do raio em 60ms dos 150, medido —, e o dono pediu para ser visível.
-        // A mesma duração alcança `color` e o `translate` de 1px do clique,
-        // que a 300ms não se nota.
-        //
-        // **Os alfas do escuro e do `destructive` são compostos, não copiados**:
-        // o disco pinta por cima do fundo de repouso, então para o resultado
-        // ser o mesmo hover de antes a conta é `repouso + a·(1 − repouso) =
-        // hover` — `destructive` 0,10 → 0,20 dá 11%, 0,20 → 0,30 dá 12,5%;
-        // `outline` escuro 0,30 → 0,50 dá 29%. Copiar o alfa empilharia duas
-        // camadas e escureceria.
+        secondary: `button-bloom bg-clip-border bg-secondary text-secondary-foreground [--button-bloom-fill:var(--secondary-hover)] ${FLORESCER} aria-expanded:bg-secondary aria-expanded:text-secondary-foreground`,
+        // **O hover floresce do centro, como o do primário** (rodada 152): a
+        // cor do hover nasce pequena e difusa no meio e se abre até as bordas
+        // (`@utility button-bloom`, uma elipse no próprio fundo — o `::after`
+        // destes pesos é o alvo de toque ampliado de várias peças). Cada peso
+        // declara só a cor (`--button-bloom-fill`, com par `dark:` onde o
+        // escuro tem outra); os alfas do escuro e do `destructive` são
+        // **compostos** (`repouso + a·(1 − repouso) = hover`: 11%, 12,5%, 29%),
+        // porque a elipse pinta por cima do repouso. Da rodada 99 à 148 a cor
+        // crescia num disco a partir do ponteiro; na 149 virou a troca seca;
+        // na 152, o florescer do primário.
         //
         // O par `active:` não é redundante com o `hover:`: `hover:` compila
         // dentro de `@media (hover: hover)`, então sem ele **o terciário não
         // devolvia nada ao toque** — em nenhuma das telas que o usam (rodada
         // 29b). O conserto mora aqui e não em cada chamada, que é onde `Toggle`,
         // `Tabs`, `Menubar`, `Item` e `Calendar` já o escreviam à mão.
-        tertiary:
-          "button-fill [--button-fill-color:var(--muted)] dark:[--button-fill-color:color-mix(in_oklab,var(--muted)_50%,transparent)] hover:[--button-fill:100%] hover:text-foreground active:[--button-fill:100%] active:text-foreground aria-expanded:[--button-fill:100%] aria-expanded:text-foreground transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-fill] duration-(--duration-slow) ease-(--ease-emphasized)",
-        outline:
-          "button-fill border-border bg-background [--button-fill-color:var(--muted)] dark:[--button-fill-color:color-mix(in_oklab,var(--input-fill)_29%,transparent)] hover:[--button-fill:100%] hover:text-foreground active:[--button-fill:100%] active:text-foreground aria-expanded:[--button-fill:100%] aria-expanded:text-foreground dark:border-input dark:bg-input-fill/30 transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-fill] duration-(--duration-slow) ease-(--ease-emphasized)",
-        destructive:
-          "button-fill bg-destructive/10 text-destructive-muted-foreground [--button-fill-color:color-mix(in_oklab,var(--destructive)_11%,transparent)] dark:[--button-fill-color:color-mix(in_oklab,var(--destructive)_12.5%,transparent)] hover:[--button-fill:100%] active:[--button-fill:100%] focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-fill] duration-(--duration-slow) ease-(--ease-emphasized)",
+        tertiary: `button-bloom [--button-bloom-fill:var(--muted)] dark:[--button-bloom-fill:color-mix(in_oklab,var(--muted)_50%,transparent)] hover:text-foreground active:text-foreground aria-expanded:text-foreground ${FLORESCER_EXPANDIDO}`,
+        outline: `button-bloom border-border bg-background [--button-bloom-fill:var(--muted)] dark:[--button-bloom-fill:color-mix(in_oklab,var(--input-fill)_29%,transparent)] hover:text-foreground active:text-foreground aria-expanded:text-foreground dark:border-input dark:bg-input-fill/30 ${FLORESCER_EXPANDIDO}`,
+        destructive: `button-bloom bg-destructive/10 text-destructive-muted-foreground [--button-bloom-fill:color-mix(in_oklab,var(--destructive)_11%,transparent)] dark:[--button-bloom-fill:color-mix(in_oklab,var(--destructive)_12.5%,transparent)] focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 ${FLORESCER}`,
         // O link é sublinhado **sempre**: com a marca preta ele tem a cor do
         // texto, e sem o traço nada o distinguia até o cursor passar — o que
         // no toque é nunca. No cursor e no toque o traço **troca de tinta**,
@@ -214,13 +208,6 @@ const buttonVariants = cva(
   }
 )
 
-/**
- * Quem segue a ponta do mouse: os cinco pesos que preenchem a partir do
- * ponteiro (rodada 99; o primário entrou na 148, quando ficou cru). `brand`,
- * `brandOutline` e `link` têm o próprio hover.
- */
-const PESOS_COM_PONTEIRO = new Set(["primary", "secondary", "tertiary", "outline", "destructive"])
-
 function Button({
   className,
   variant = "primary",
@@ -237,39 +224,6 @@ function Button({
   }) {
   const Comp = asChild ? Slot.Root : "button"
   const glowRef = useBrandGlow<HTMLButtonElement>(variant === "brand")
-
-  // A lava do primário e o disco dos outros pesos seguem a ponta do mouse: a posição vai para o CSS como
-  // `--button-mx`/`--button-my`, em px relativos à caixa, por `setProperty` —
-  // sem estado React, sem re-render (o precedente é o marcador do `Tabs`).
-  // `pointerdown` escreve também, para o toque acender onde o dedo pousou.
-  // Os handlers **compõem** com os de quem chama; com `asChild` o `Slot` os
-  // funde no filho e o `currentTarget` é o elemento do consumidor.
-  const seguirPonteiro =
-    variant && PESOS_COM_PONTEIRO.has(variant)
-      ? (e: React.PointerEvent<HTMLElement>) => {
-          const el = e.currentTarget
-          const r = el.getBoundingClientRect()
-          el.style.setProperty("--button-mx", `${e.clientX - r.left}px`)
-          el.style.setProperty("--button-my", `${e.clientY - r.top}px`)
-        }
-      : undefined
-  const { onPointerMove, onPointerDown, onPointerEnter, ...resto } = props
-  const ponteiro = seguirPonteiro
-    ? {
-        onPointerEnter: (e: React.PointerEvent<HTMLButtonElement>) => {
-          onPointerEnter?.(e)
-          seguirPonteiro(e)
-        },
-        onPointerMove: (e: React.PointerEvent<HTMLButtonElement>) => {
-          onPointerMove?.(e)
-          seguirPonteiro(e)
-        },
-        onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => {
-          onPointerDown?.(e)
-          seguirPonteiro(e)
-        },
-      }
-    : { onPointerMove, onPointerDown, onPointerEnter }
 
   // A maiúscula inicial é do design system, não de quem escreve o rótulo — mas
   // `::first-letter` não se aplica a `inline-flex`, e o botão precisa ser flex
@@ -306,8 +260,7 @@ function Button({
       data-shape={shape ?? "rounded"}
       data-icon-motion={iconMotion ?? undefined}
       className={cn(buttonVariants({ variant, size, shape, iconMotion, className }))}
-      {...resto}
-      {...ponteiro}
+      {...props}
     >
       {content}
     </Comp>

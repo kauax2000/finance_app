@@ -43,9 +43,11 @@ const ESCALA = [
  */
 const FAMILIAS = [
   { nome: "Letra", como: "o degradê preenche o traçado, parado, em todo tamanho", who: ["AppWordmark rainbow", "AppLogo rainbow", "EmptyStateCode"] },
-  { nome: "Contorno", como: "1px de border-box sobre um miolo chapado, sempre aceso", who: ["Button brandOutline", "Checkbox brand", "Radio brand", "RadioGroupItem brandCard"] },
+  { nome: "Contorno", como: "1px de border-box sobre um miolo chapado, aceso quando marcado", who: ["Checkbox brand", "Radio brand", "RadioGroupItem brandCard"] },
   { nome: "Preenchimento", como: "o degradê é o trilho e a barra o revela — sem rótulo em cima", who: ["Progress brand", "Slider brand", "HistogramSlider brand"] },
   { nome: "Brilho", como: "um arco da borda acende perto do ponteiro; sem ele, a caixa é neutra", who: ["Alert brand", "Card brand", "Badge brand", "Button brand", "a busca do catálogo"] },
+  { nome: "Degradê", como: "cinco paradas florescem do centro da tecla, só no cursor e no toque; em repouso, preto chapado", who: ["Button primary"] },
+  { nome: "Deslize", como: "o arco-íris na borda de baixo e brilhando embaixo da tecla, deslizando em 2s — sempre aceso", who: ["Button brandOutline"] },
   { nome: "Véu", como: "translúcido atrás do texto, deslizando em 20s — a exceção sob texto", who: ["AnnouncementBar brand"] },
   { nome: "Lava", como: "blobos de cor transitando dentro da região", who: ["brand-lava"] },
   { nome: "Campo", como: "a região inteira, com grão e vinheta; o texto mora em Card", who: ["brand-field", "as telas de acesso"] },
@@ -236,7 +238,7 @@ export default function BrandDoc() {
 
       <DocNote title="Uma receita só: linear, parada e em oklch">
         <p>
-          O degradê é <code>--brand-rainbow</code>, um <code>linear-gradient</code> a 135° com oito paradas — cada uma um token <code>--brand-*</code>, medido em <code>/designsystem/colors</code> —, composto no próprio elemento pela <code>@utility brand-rainbow-image</code>. Ele interpola <code>in oklch shorter hue</code>: em sRGB a travessia magenta→coral corria 4× mais rápido que o azul e desenhava um fio no campo. <strong>Não gira</strong>: o giro foi recusado na rodada 100; o movimento da marca é a lava. O primário não veste arco-íris. Na letra não há grão — num traço de poucos pixels ele é sujeira —, e o grão é do campo.
+          O degradê é <code>--brand-rainbow</code>, um <code>linear-gradient</code> a 135° com oito paradas — cada uma um token <code>--brand-*</code>, medido em <code>/designsystem/colors</code> —, composto no próprio elemento pela <code>@utility brand-rainbow-image</code>. Ele interpola <code>in oklch shorter hue</code>: em sRGB a travessia magenta→coral corria 4× mais rápido que o azul e desenhava um fio no campo. <strong>Não gira</strong>: o giro foi recusado na rodada 100; o movimento da marca é a lava. O primário veste cinco paradas dele — teal, azul, violeta, magenta e coral —, borradas por dentro da tecla, e só no cursor. Na letra não há grão — num traço de poucos pixels ele é sujeira —, e o grão é do campo.
         </p>
       </DocNote>
 
@@ -284,7 +286,7 @@ export default function BrandDoc() {
 
       <DocSection
         title="O botão de marca"
-        description="variant=&quot;brand&quot; é o CTA de marca neutro: a borda acende em arco-íris conforme o ponteiro se aproxima — passe o mouse perto. brandOutline é a tecla preta com o arco-íris em 1px, sempre aceso. Um por tela, para entrar e começar. O link não tem traço em repouso: no cursor um sublinhado de arco-íris entra pela esquerda, e recolhe para a direita na saída."
+        description="variant=&quot;brand&quot; é o CTA de marca neutro: a borda acende em arco-íris conforme o ponteiro se aproxima — passe o mouse perto. brandOutline é a tecla preta com o arco-íris deslizando na borda de baixo e um brilho embaixo, sempre aceso. Um por tela, para entrar e começar. O link não tem traço em repouso: no cursor um sublinhado de arco-íris entra pela esquerda, e recolhe para a direita na saída."
         code={`<Button variant="brand" size="xl">entrar</Button>
 <Button variant="brandOutline" size="xl">começar</Button>
 <Button variant="link">esqueceu a senha?</Button>`}
@@ -389,7 +391,7 @@ export default function BrandDoc() {
 
       <DocNote title="O que não fazer">
         <p>
-          Recolorir o lockup: ele herda a tinta do texto. Arco-íris fora das oito famílias — num chip de dado, num gráfico, num fundo de cartão. Moldura de arco-íris em volta de um parágrafo: em bloco de texto a marca entra pelo brilho na borda, que só acende com o ponteiro. Texto corrido direto sobre o campo de marca. Halo ou sombra colorida atrás da letra: foi medido e rejeitado. Colar o <code>AppLogo</code> ao lado do lockup, escrevendo a inicial duas vezes. Declarar <code>width</code> junto de <code>height</code>: a proporção é do traçado. E duas peças de marca na mesma tela: acento repetido deixa de ser acento.
+          Recolorir o lockup: ele herda a tinta do texto. Arco-íris fora das dez famílias — num chip de dado, num gráfico, num fundo de cartão. Moldura de arco-íris em volta de um parágrafo: em bloco de texto a marca entra pelo brilho na borda, que só acende com o ponteiro. Texto corrido direto sobre o campo de marca. Halo ou sombra colorida atrás da letra: foi medido e rejeitado. Colar o <code>AppLogo</code> ao lado do lockup, escrevendo a inicial duas vezes. Declarar <code>width</code> junto de <code>height</code>: a proporção é do traçado. E duas peças de marca na mesma tela: acento repetido deixa de ser acento.
         </p>
       </DocNote>
     </>
