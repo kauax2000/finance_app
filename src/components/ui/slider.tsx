@@ -2,8 +2,9 @@
 
 import * as React from "react"
 import { Slider as SliderPrimitive } from "radix-ui"
-import { cva, type VariantProps } from "class-variance-authority"
+import { cva } from "class-variance-authority"
 
+import { progressToneForBands, type ProgressBands } from "@/components/ui/progress"
 import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import { cn } from "@/lib/utils"
 
@@ -92,6 +93,11 @@ const sliderRangeVariants = cva(
     variants: {
       variant: {
         default: "bg-primary",
+        // As cores de `bands` (rodada 177) — o tom sai de
+        // `progressToneForBands`, a mesma escada do `Progress`.
+        success: "bg-success",
+        warning: "bg-warning",
+        destructive: "bg-destructive",
         // `brand-rainbow-image` não é decoração: é ela que declara
         // `--brand-rainbow` no elemento. Ver a rodada 88.
         //
@@ -111,8 +117,31 @@ const sliderRangeVariants = cva(
   }
 )
 
+/** O punho mede 14px: o centro dele anda de 7px a `largura − 7px`, e não de 0 a
+ *  100%. Marcas e zonas que precisam cair sob o punho usam esta régua — é a
+ *  conta do Radix (`getThumbInBoundsOffset`), e a do `HistogramSlider`. */
+const sobOPunho = (pct: number) => `calc(7px + (100% - 14px) * ${pct / 100})`
+
+type SliderMark = number | { value: number; label?: React.ReactNode }
+
 /**
  * O trilho de valor contínuo.
+ *
+ * ## As versões da rodada 177
+ *
+ * - **`label` e o valor** — o cabeçalho que o `Progress` tem: o nome à
+ *   esquerda (e ele nomeia os punhos, por `aria-labelledby`) e o valor atual à
+ *   direita, que acompanha o arraste. `format` escreve o número (`percentBR`,
+ *   `currencyBRL`) no cabeçalho, no balão e no `aria-valuetext` de cada punho —
+ *   o leitor de tela passa a ouvir "R$ 1.200,00" e não "1200".
+ * - **`marks`** — traços nos pontos que importam, com rótulo opcional
+ *   embaixo. Caem **sob o centro do punho** (`sobOPunho`), e os que a faixa já
+ *   cobre acendem.
+ * - **`bubble`** — o valor num balão acima do punho enquanto ele é arrastado
+ *   (`:active`, que vale no toque) ou focado pelo teclado.
+ * - **`bands`** — os cortes do `Progress`: a faixa fica verde, âmbar ou
+ *   vermelha conforme o valor, e o trilho mostra as zonas. Não se combina com
+ *   `variant="brand"`.
  *
  * O desenho é uma razão entre duas medidas: o trilho e o punho. A 6px de trilho
  * com 16px de punho a razão era 2,7 — o punho não lia como a ponta da barra, e
@@ -133,17 +162,61 @@ function Slider({
   max = 100,
   variant,
   thumbLabels,
+  label,
+  format,
+  showValue,
+  marks,
+  bubble = false,
+  bands,
+  onValueChange,
   "aria-label": ariaLabel,
   "aria-labelledby": ariaLabelledBy,
   ...props
-}: React.ComponentProps<typeof SliderPrimitive.Root> &
-  VariantProps<typeof sliderRangeVariants> & {
+}: Omit<React.ComponentProps<typeof SliderPrimitive.Root>, "children"> & {
+    /** `default` ou `brand`. As cores de `bands` são do componente. */
+    variant?: "default" | "brand"
     /** Nome de cada punho. Com dois, o padrão é "Valor mínimo" e "Valor máximo". */
     thumbLabels?: string[]
+    /** O nome, no cabeçalho. Ele nomeia os punhos. */
+    label?: React.ReactNode
+    /** Escreve o número: no cabeçalho, no balão e no `aria-valuetext`. */
+    format?: (value: number) => string
+    /** Mostra o valor no cabeçalho. O padrão é mostrar quando há `label`. */
+    showValue?: boolean
+    /** Traços no trilho, com rótulo opcional embaixo. */
+    marks?: SliderMark[]
+    /** O valor num balão sobre o punho, no arraste e no foco de teclado. */
+    bubble?: boolean
+    /** Os dois cortes da escada de cor, em % do total — os do `Progress`. */
+    bands?: ProgressBands
   }) {
   const resolved = value ?? defaultValue
   const thumbCount =
     Array.isArray(resolved) && resolved.length > 0 ? resolved.length : 1
+
+  // O valor atual, controlado ou não: o cabeçalho, o balão, as marcas e as
+  // zonas precisam dele no arraste, e um slider de `defaultValue` não o conta
+  // a ninguém.
+  const [atual, setAtual] = React.useState<number[]>(
+    () => (Array.isArray(resolved) && resolved.length ? [...resolved] : [min])
+  )
+  React.useEffect(() => {
+    if (value) setAtual([...value])
+  }, [value])
+  const escrever = format ?? ((v: number) => String(v))
+  const pct = (v: number) => (max > min ? ((v - min) / (max - min)) * 100 : 0)
+  const baixo = thumbCount > 1 ? Math.min(...atual) : min
+  const alto = Math.max(...atual)
+  // A escada de `bands` só devolve estes três; o tipo do `Progress` é mais largo.
+  const tom =
+    bands && variant !== "brand"
+      ? (progressToneForBands(pct(alto), bands) as "success" | "warning" | "destructive")
+      : undefined
+
+  const labelId = React.useId()
+  const mostrarValor = showValue ?? label != null
+  const marcas = (marks ?? []).map((m) => (typeof m === "number" ? { value: m } : m))
+  const comRotulos = marcas.some((m) => m.label != null)
 
   const trilhoRef = React.useRef<HTMLSpanElement | null>(null)
   const faixaRef = React.useRef<HTMLSpanElement | null>(null)
@@ -207,14 +280,19 @@ function Slider({
           : "Valor máximo"
         : undefined)
 
-  return (
+  const raiz = (
     <SliderPrimitive.Root
       data-slot="slider"
       data-variant={variant ?? "default"}
+      data-tone={tom}
       defaultValue={defaultValue}
       value={value}
       min={min}
       max={max}
+      onValueChange={(v) => {
+        setAtual(v)
+        onValueChange?.(v)
+      }}
       className={cn(
         "relative flex w-full touch-none items-center select-none",
         "data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col",
@@ -241,20 +319,63 @@ function Slider({
           "h-2 data-[orientation=vertical]:h-full data-[orientation=vertical]:w-2"
         )}
       >
+        {/* As zonas de `bands`, atrás da faixa: a de aviso e a de perigo a 30%
+            do tom, como no `Progress`. Em % do trilho, porque a faixa do Radix
+            também é. */}
+        {bands && variant !== "brand"
+          ? (
+              [
+                [bands[0], bands[1], "bg-warning/30"],
+                [bands[1], 100, "bg-destructive/30"],
+              ] as const
+            ).map(([de, ate, cor]) =>
+              ate > de ? (
+                <span
+                  key={cor}
+                  aria-hidden
+                  data-slot="slider-zone"
+                  className={cn("absolute inset-y-0", cor)}
+                  style={{ left: `${de}%`, width: `${Math.min(100, ate) - de}%` }}
+                />
+              ) : null
+            )
+          : null}
         <SliderPrimitive.Range
           ref={faixaRef}
           data-slot="slider-range"
-          className={sliderRangeVariants({ variant })}
+          className={sliderRangeVariants({ variant: variant === "brand" ? "brand" : (tom ?? "default") })}
         />
+        {marcas.map((m) => {
+          const p = pct(m.value)
+          const coberta = m.value >= baixo && m.value <= alto
+          return (
+            <span
+              key={m.value}
+              aria-hidden
+              data-slot="slider-mark"
+              data-covered={coberta ? "" : undefined}
+              className={cn(
+                "pointer-events-none absolute top-1/2 size-1 -translate-x-1/2 -translate-y-1/2 rounded-full transition-colors duration-(--duration-fast)",
+                coberta ? "bg-primary-foreground/70" : "bg-foreground/30"
+              )}
+              style={{ left: sobOPunho(p) }}
+            />
+          )
+        })}
       </SliderPrimitive.Track>
       {Array.from({ length: thumbCount }, (_, index) => (
         <SliderPrimitive.Thumb
           data-slot="slider-thumb"
           key={index}
           aria-label={nomeDoPunho(index)}
-          aria-labelledby={thumbCount === 1 && !ariaLabel ? ariaLabelledBy : undefined}
+          aria-labelledby={
+            thumbCount === 1 && !ariaLabel
+              ? ariaLabelledBy ?? (label != null ? labelId : undefined)
+              : undefined
+          }
+          aria-valuetext={format && atual[index] != null ? format(atual[index]) : undefined}
           className={cn(
-            "relative block size-3.5 shrink-0 rounded-full border border-primary-accent/50 bg-background shadow-sm",
+            "group/thumb relative block size-3.5 shrink-0 rounded-full border border-primary-accent/50 bg-background shadow-sm",
             // 44px de alvo sob um punho de 14 — o mínimo confortável de
             // Mobile e toque. O pseudo-elemento é a mesma saída do `Switch`:
             // ele cresce a área de contato sem crescer o desenho, e por ser
@@ -273,9 +394,69 @@ function Slider({
             // `Input`. Vem por último para vencer o halo.
             "focus-visible:ring-3 focus-visible:ring-ring/45 focus-visible:outline-hidden"
           )}
-        />
+        >
+          {bubble && atual[index] != null ? (
+            // O balão acende no arraste (`:active`, que vale no dedo) e no foco
+            // de teclado — não no foco que o Radix dá ao punho num clique, que
+            // o deixaria aceso depois de soltar.
+            <span
+              aria-hidden
+              data-slot="slider-bubble"
+              className={cn(
+                "pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 translate-y-1 rounded-md bg-foreground px-1.5 py-0.5 text-xs whitespace-nowrap text-background opacity-0 shadow-sm",
+                "nums transition-[opacity,translate] duration-(--duration-fast) ease-(--ease-out)",
+                "group-active/thumb:translate-y-0 group-active/thumb:opacity-100 group-focus-visible/thumb:translate-y-0 group-focus-visible/thumb:opacity-100"
+              )}
+            >
+              {escrever(atual[index])}
+            </span>
+          ) : null}
+        </SliderPrimitive.Thumb>
       ))}
     </SliderPrimitive.Root>
+  )
+
+  // Sem cabeçalho nem rótulos de marca, a peça é a de sempre — nenhuma
+  // chamada muda (o `HistogramSlider` passa `className` à raiz).
+  if (label == null && !mostrarValor && !comRotulos) return raiz
+
+  return (
+    <div data-slot="slider-group" className="flex w-full flex-col gap-2">
+      {label != null || mostrarValor ? (
+        <div data-slot="slider-header" className="flex min-w-0 items-baseline justify-between gap-3 text-sm">
+          {label != null ? (
+            <span id={labelId} className="min-w-0 truncate font-medium text-foreground">
+              {label}
+            </span>
+          ) : (
+            <span />
+          )}
+          {mostrarValor ? (
+            <span aria-hidden className="nums shrink-0 text-muted-foreground">
+              {thumbCount > 1
+                ? `${escrever(baixo)} – ${escrever(alto)}`
+                : escrever(atual[0] ?? min)}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+      {raiz}
+      {comRotulos ? (
+        <div aria-hidden data-slot="slider-mark-labels" className="relative h-4 text-2xs text-muted-foreground">
+          {marcas.map((m) =>
+            m.label != null ? (
+              <span
+                key={m.value}
+                className="nums absolute top-0 -translate-x-1/2 whitespace-nowrap"
+                style={{ left: sobOPunho(pct(m.value)) }}
+              >
+                {m.label}
+              </span>
+            ) : null
+          )}
+        </div>
+      ) : null}
+    </div>
   )
 }
 

@@ -1995,8 +1995,15 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   cartão. Mínimo à esquerda e máximo à direita, no mesmo recuo da régua,
   para cada valor cair sob a ponta a que pertence.
   O título **não** é da peça (chrome de tela, invariante 1); a leitura é,
-  porque é o estado do controle. Lacuna conhecida: o Radix anuncia o número
-  cru, e o `Slider` não escreve `aria-valuetext`.
+  porque é o estado do controle. Os punhos anunciam o valor em reais: o
+  `format` do `Slider` escreve o `aria-valuetext` desde a rodada 177, e fechou a
+  lacuna do número cru.
+- **`Slider` tem cabeçalho, marcas, balão e zonas** (rodada 177): `label`
+  (nomeia os punhos) com o valor atual à direita, `format` (no cabeçalho, no
+  balão e no `aria-valuetext`), `marks` sob o **centro do punho** — que anda
+  de 7px a `largura − 7px`, a régua do Radix —, `bubble` no `:active` e no
+  foco de teclado, e `bands`, os cortes do `Progress` (zonas no trilho, faixa
+  na cor do valor; não com a marca). Sem essas props a peça é a de sempre.
 - **`Skeleton` tem as formas das peças** (rodada 176): `shape` (`block`,
   `text` — a caixa com a entrelinha do corpo e o osso de 0,8em no meio —,
   `circle` na escada do `Avatar`, `tile` na do `ColorTile`, `pill` na do

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/description-list"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Slider } from "@/components/ui/slider"
+import { currencyBRL } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 
 /**
@@ -405,6 +406,10 @@ function HistogramSlider({
           "[&_[data-slot=slider-range]]:bg-none [&_[data-slot=slider-range]]:bg-transparent"
         )}
         aria-label={label}
+        // O leitor de tela ouve o valor em reais, e não o número cru — a
+        // lacuna que esta peça registrava, fechada pelo `format` do `Slider`
+        // (rodada 177).
+        format={(v) => currencyBRL(v)}
         min={min}
         max={max}
         step={passo > 0 ? passo : undefined}

@@ -15635,3 +15635,31 @@ um `div` de 13 linhas, e o app escrevia **403 ossos à mão em 32 arquivos**.
   demonstrações. Voltou, depois do `chart-wave`, e `skeleton.test.ts` agora
   reprova se ela sumir. Nenhuma tela do app usava `shape="text"`, então o
   defeito ficou no catálogo.
+
+### Rodada 177 — o Slider ganha cabeçalho, marcas, balão e zonas
+
+O dono pediu a rodada completa e escolheu as quatro versões. Nenhuma tela usa
+o `Slider` direto; o único consumidor é o `HistogramSlider`.
+
+- **`label` e o valor**: o cabeçalho do `Progress` — o nome à esquerda, que
+  nomeia os punhos por `aria-labelledby`, e o valor atual à direita, que
+  acompanha o arraste (a peça passou a guardar o valor, controlada ou não). A
+  página dizia "o valor precisa aparecer em algum lugar" e não dava como.
+  **`format`** escreve o número no cabeçalho, no balão e no `aria-valuetext`
+  de cada punho. Medido: uma seta leva o cabeçalho e o punho a "85%".
+- **`marks`**: traços no trilho, com rótulo embaixo. **Caem sob o centro do
+  punho**, que anda de 7px a `largura − 7px` (a conta do Radix,
+  `getThumbInBoundsOffset`, a mesma do `HistogramSlider`) —
+  `calc(7px + (100% − 14px) × p)`. Medido: centro do punho e da marca em 513
+  no meio e em 698 no fim. As que a faixa cobre acendem.
+- **`bubble`**: o valor num balão sobre o punho no `:active` (vale no dedo) e
+  no foco **de teclado** — não no foco que o Radix dá ao punho num clique, que
+  o deixaria aceso depois de soltar.
+- **`bands`**: os cortes do `Progress` (`progressToneForBands`), com as zonas
+  a 30% no trilho e a faixa na cor do valor. Medido com `CARD_LIMIT_BANDS`:
+  âmbar em 60 e 40, verde em 20. O `Slider` passou a importar o `Progress` —
+  átomo importando um átomo, o que a taxonomia aceita.
+- **O `HistogramSlider` passa `format={currencyBRL}`**, e os punhos dele são
+  anunciados em reais: a lacuna "o Radix anuncia o número cru" fechou.
+- **Página**: os cinco sliders de marca viraram dois, as quatro notas longas
+  da marca viraram duas, e entrou a tabela de props, que ela não tinha.
