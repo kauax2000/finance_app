@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardNote, CardToolbar } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import {
     Table,
     TableBody,
@@ -65,9 +65,9 @@ function SectionTitleRow({
                     <Skeleton className={titleClassName} />
                 </div>
                 <div className="flex shrink-0 items-center justify-end gap-1">
-                    <Skeleton className="size-8 shrink-0 rounded-md" />
+                    <Skeleton shape="tile" />
                     <Skeleton className="h-8 w-full max-w-36 rounded-md" />
-                    <Skeleton className="size-8 shrink-0 rounded-md" />
+                    <Skeleton shape="tile" />
                 </div>
             </div>
         )
@@ -315,15 +315,7 @@ function RecentTransactionsSkeleton() {
 
 export function CreditCardDetailSkeleton() {
     return (
-        <div
-            className="w-full min-w-0 space-y-6"
-            role="status"
-            aria-busy="true"
-            aria-live="polite"
-            aria-label="Carregando detalhes do cartão"
-        >
-            <span className="sr-only">Carregando detalhes do cartão…</span>
-
+        <SkeletonGroup className="w-full min-w-0 space-y-6" label="Carregando detalhes do cartão…" delay>
             <div className="flex flex-col items-center gap-3">
                 <div className="mx-auto w-full max-w-sm">
                     <Skeleton className="aspect-[1.586] w-full rounded-2xl" />
@@ -338,8 +330,8 @@ export function CreditCardDetailSkeleton() {
                             <Skeleton className="h-4 w-full max-w-48" />
                         </div>
                         <div className="flex shrink-0 items-center gap-1.5 pl-1">
-                            <Skeleton className="h-5 w-14 shrink-0 rounded-full" />
-                            <Skeleton className="size-8 shrink-0 rounded-md" />
+                            <Skeleton shape="pill" />
+                            <Skeleton shape="tile" />
                         </div>
                     </div>
                 </CardHeader>
@@ -354,6 +346,6 @@ export function CreditCardDetailSkeleton() {
                 <InstallmentsBlockSkeleton />
                 <RecentTransactionsSkeleton />
             </div>
-        </div>
+        </SkeletonGroup>
     )
 }

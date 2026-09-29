@@ -6,7 +6,7 @@ import {
     CardNote,
     CardToolbar,
 } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 
 /**
  * O esqueleto da tela de atividade. Ele morava dentro do `page-client`, e um
@@ -14,7 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton"
  */
 export function ActivityPageSkeleton() {
     return (
-        <div className="min-w-0 max-w-full space-y-5" role="status" aria-busy="true">
+        <SkeletonGroup className="min-w-0 max-w-full space-y-5" label="Carregando a atividade da conta…" delay>
             <div className="min-w-0 space-y-4">
                 <div className="flex h-6 min-w-0 items-center">
                     <Skeleton className="h-4 w-36" />
@@ -54,6 +54,6 @@ export function ActivityPageSkeleton() {
                     </CardContent>
                 </Card>
             </div>
-        </div>
+        </SkeletonGroup>
     )
 }

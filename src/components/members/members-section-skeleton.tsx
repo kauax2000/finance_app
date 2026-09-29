@@ -6,14 +6,14 @@ import {
     CardNote,
     CardToolbar,
 } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 
 /**
  * O esqueleto da lista de membros, pelo mesmo motivo dos outros dois.
  */
 export function MembersSectionSkeleton() {
     return (
-        <div className="min-w-0 space-y-4">
+        <SkeletonGroup className="min-w-0 space-y-4" label="Carregando os membros…" delay>
             <div className="flex h-6 min-w-0 items-center">
                 <Skeleton className="h-4 w-24" />
             </div>
@@ -35,11 +35,11 @@ export function MembersSectionSkeleton() {
                                         <div className="min-w-0 flex-1 space-y-2">
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <Skeleton className="h-4 w-28 max-w-full" />
-                                                <Skeleton className="h-5 w-14 shrink-0 rounded-full" />
+                                                <Skeleton shape="pill" />
                                             </div>
                                             <Skeleton className="h-3 w-40 max-w-full" />
                                         </div>
-                                        <Skeleton className="size-8 shrink-0 rounded-md" />
+                                        <Skeleton shape="tile" />
                                     </div>
                                 </div>
                             </li>
@@ -51,6 +51,6 @@ export function MembersSectionSkeleton() {
                     </CardNote>
                 </CardContent>
             </Card>
-        </div>
+        </SkeletonGroup>
     )
 }

@@ -1997,6 +1997,18 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   O título **não** é da peça (chrome de tela, invariante 1); a leitura é,
   porque é o estado do controle. Lacuna conhecida: o Radix anuncia o número
   cru, e o `Slider` não escreve `aria-valuetext`.
+- **`Skeleton` tem as formas das peças** (rodada 176): `shape` (`block`,
+  `text` — a caixa com a entrelinha do corpo e o osso de 0,8em no meio —,
+  `circle` na escada do `Avatar`, `tile` na do `ColorTile`, `pill` na do
+  `Badge`, 14/18/22 medidos) e `size`; `SkeletonText lines` para o
+  parágrafo. **Um movimento só, o pulso**: houve um `shimmer` na mesma rodada
+  e ele saiu a pedido do dono — dois movimentos para o mesmo estado deixam
+  cada tela escolher o seu. A exceção é a `wave` do `ChartSkeleton`, que tem
+  a forma das barras.
+  **O bloco que espera é o `SkeletonGroup`** (`role="status"`, `aria-busy`, o
+  `label` lido e os ossos `aria-hidden`), e o `delay` dele esconde o bloco
+  nos primeiros 300ms por `@starting-style`, sem timer. Os onze esqueletos
+  de página vestem `SkeletonGroup delay`.
 - **`Separator` tem dois eixos e duas formas** (rodada 175): `tone` é o peso
   (`default` estrutura, `soft` arruma o interior de uma superfície) e
   `variant` é o desenho (`solid`, `dashed` — antes de um total —, `fade` —

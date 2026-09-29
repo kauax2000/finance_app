@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
 const GRID_PLACEHOLDER_COUNT = 6
@@ -46,7 +46,7 @@ function seededClassName(seed: number, values: readonly string[]) {
 
 function CategoryIconSkeleton() {
     return (
-        <Skeleton className="size-9 shrink-0 rounded-md" />
+        <Skeleton shape="tile" size="lg" />
     )
 }
 
@@ -73,9 +73,9 @@ function CategoriesToolbarSkeleton({ variant }: { variant: CategoriesPageSkeleto
                 {showMonth ? (
                     <div className="flex w-full min-w-0 items-center justify-between gap-2 md:w-auto md:justify-end md:gap-1.5">
                         <Skeleton className="h-8 w-16 shrink-0 rounded-md" />
-                        <Skeleton className="size-8 shrink-0 rounded-md" />
+                        <Skeleton shape="tile" />
                         <Skeleton className="h-8 max-w-[min(100%,16rem)] min-w-0 flex-1 rounded-md md:w-44 md:flex-none" />
-                        <Skeleton className="size-8 shrink-0 rounded-md" />
+                        <Skeleton shape="tile" />
                     </div>
                 ) : null}
                 <Skeleton className="h-8 w-39 shrink-0 rounded-md" />
@@ -117,7 +117,7 @@ function ExpenseCategoryCardSkeleton({ seed }: { seed: number }) {
 
                     <div className="col-start-3 row-start-1 flex shrink-0 items-center justify-end gap-1.5 self-start">
                         <Skeleton className="h-5 w-16 shrink-0 rounded-full" />
-                        <Skeleton className="size-8 shrink-0 rounded-md" />
+                        <Skeleton shape="tile" />
                     </div>
                 </div>
             </CardToolbar>
@@ -153,7 +153,7 @@ function IncomeCategoryCardSkeleton({ seed }: { seed: number }) {
                     <div className="flex min-w-0 items-center pr-1">
                         <Skeleton className={cn("h-5 max-w-full", titleWidth)} />
                     </div>
-                    <Skeleton className="size-8 shrink-0 rounded-md" />
+                    <Skeleton shape="tile" />
                 </div>
             </CardToolbar>
             <CardContent className="flex flex-1 flex-col gap-3 bg-card pb-3 pt-3">
@@ -191,16 +191,10 @@ export function CategoriesPageGridSkeleton({
     variant = "expense",
 }: Props) {
     return (
-        <div
-            className="min-w-0 max-w-full space-y-3"
-            aria-busy
-            aria-live="polite"
-        >
-            <h2 className="sr-only">{screenReaderLabel}</h2>
-
+        <SkeletonGroup className="min-w-0 max-w-full space-y-3" label={screenReaderLabel} delay>
             <CategoriesToolbarSkeleton variant={variant} />
 
             <CategoryGridSkeleton variant={variant} />
-        </div>
+        </SkeletonGroup>
     )
 }

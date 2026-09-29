@@ -204,7 +204,7 @@ export function CreditCardTileSkeleton() {
                 <div className="min-w-0 flex-1 pr-2">
                     <Skeleton className="h-4 w-full max-w-56" />
                 </div>
-                <Skeleton className="h-5 w-14 shrink-0 rounded-full" />
+                <Skeleton shape="pill" />
             </div>
             <div className="flex flex-col gap-3 px-4 pb-4 pt-3 md:flex-row md:items-stretch md:gap-4">
                 <div className="flex shrink-0 flex-col items-center gap-2">

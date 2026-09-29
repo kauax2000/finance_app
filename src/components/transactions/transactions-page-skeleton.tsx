@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import { Card, CardContent, CardNote } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import {
     Table,
     TableBody,
@@ -180,8 +180,8 @@ function TableSkeleton({ rowCount }: { rowCount: number }) {
                     <div className="flex items-center justify-between gap-3 sm:justify-end">
                         <Skeleton className="h-4 w-28 shrink-0 sm:mr-1" />
                         <div className="flex items-center rounded-lg border border-border/80 bg-background/80 p-0.5 shadow-sm">
-                            <Skeleton className="size-8 shrink-0 rounded-md" />
-                            <Skeleton className="size-8 shrink-0 rounded-md" />
+                            <Skeleton shape="tile" />
+                            <Skeleton shape="tile" />
                         </div>
                     </div>
                 </CardNote>
@@ -194,14 +194,9 @@ export function TransactionsPageSkeleton({
     rowCount = DEFAULT_ROW_COUNT,
 }: TransactionsPageSkeletonProps) {
     return (
-        <div
-            className="min-w-0 max-w-full space-y-3"
-            role="status"
-            aria-busy="true"
-            aria-label="Carregando transações"
-        >
+        <SkeletonGroup className="min-w-0 max-w-full space-y-3" label="Carregando transações…" delay>
             <ToolbarSkeleton />
             <TableSkeleton rowCount={rowCount} />
-        </div>
+        </SkeletonGroup>
     )
 }

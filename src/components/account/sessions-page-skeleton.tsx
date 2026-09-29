@@ -6,14 +6,14 @@ import {
     CardNote,
     CardToolbar,
 } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 
 /**
  * O esqueleto da tela de sessões, pelo mesmo motivo do de atividade.
  */
 export function SessionsPageSkeleton() {
     return (
-        <div className="min-w-0 max-w-full space-y-5" role="status" aria-busy="true">
+        <SkeletonGroup className="min-w-0 max-w-full space-y-5" label="Carregando as sessões…" delay>
             <div className="min-w-0 space-y-4">
                 <div className="flex min-w-0 items-center justify-between gap-4">
                     <div className="flex h-6 min-w-0 items-center">
@@ -60,6 +60,6 @@ export function SessionsPageSkeleton() {
                     </CardContent>
                 </Card>
             </div>
-        </div>
+        </SkeletonGroup>
     )
 }

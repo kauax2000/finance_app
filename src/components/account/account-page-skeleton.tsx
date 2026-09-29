@@ -1,15 +1,10 @@
 import { Card, CardContent, CardNote } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 
 /** Placeholder layout while auth / profile data loads on Minha conta. */
 export function AccountPageSkeleton() {
     return (
-        <div
-            className="min-w-0 max-w-full space-y-5"
-            role="status"
-            aria-busy="true"
-            aria-label="Carregando informações da conta"
-        >
+        <SkeletonGroup className="min-w-0 max-w-full space-y-5" label="Carregando informações da conta…" delay>
             <div className="min-w-0 space-y-4">
                 <div className="flex h-6 min-w-0 items-center">
                     <Skeleton className="h-4 w-16" />
@@ -24,7 +19,7 @@ export function AccountPageSkeleton() {
                                     <Skeleton className="h-3 w-48 max-w-full" />
                                 </div>
                             </div>
-                            <Skeleton className="size-9 shrink-0 rounded-md" />
+                            <Skeleton shape="tile" size="lg" />
                         </div>
                         <CardNote>
                             <Skeleton className="mt-0.5 size-3.5 shrink-0 rounded" />
@@ -63,6 +58,6 @@ export function AccountPageSkeleton() {
                     </CardContent>
                 </Card>
             </div>
-        </div>
+        </SkeletonGroup>
     )
 }

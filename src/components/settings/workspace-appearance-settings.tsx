@@ -39,7 +39,7 @@ function WorkspaceAppearanceSkeleton() {
                             <Skeleton className="size-12 shrink-0 rounded-lg" />
                             <Skeleton className="h-4 w-36 max-w-full" />
                         </div>
-                        <Skeleton className="size-9 shrink-0 rounded-md" />
+                        <Skeleton shape="tile" size="lg" />
                     </div>
                 </CardContent>
             </Card>

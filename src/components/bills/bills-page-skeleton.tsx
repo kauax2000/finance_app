@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
 function ToolbarSkeleton() {
@@ -63,7 +63,7 @@ function CardSkeleton({ seed }: { seed: number }) {
             </CardContent>
             <div className="flex items-center justify-end gap-2 border-t border-border/50 px-4 py-3">
                 <Skeleton className="h-8 w-22 rounded-md" />
-                <Skeleton className="size-8 shrink-0 rounded-md" />
+                <Skeleton shape="tile" />
             </div>
         </Card>
     )
@@ -81,16 +81,11 @@ export function BillsPageSkeleton({
         cards.push(<CardSkeleton key={`card-${i}`} seed={i} />)
     }
     return (
-        <div
-            className="flex flex-col gap-3"
-            role="status"
-            aria-busy="true"
-            aria-label="Carregando contas a pagar"
-        >
+        <SkeletonGroup className="flex flex-col gap-3" label="Carregando contas a pagar…" delay>
             <ToolbarSkeleton />
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {cards}
             </div>
-        </div>
+        </SkeletonGroup>
     )
 }

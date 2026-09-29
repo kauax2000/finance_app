@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import { Card, CardContent, CardNote } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import {
     Table,
     TableBody,
@@ -19,12 +19,12 @@ function HeroSkeleton() {
         <div className="w-full min-w-0 max-w-full space-y-2">
             <div className="flex w-full min-w-0 items-center justify-between gap-2 md:hidden">
                 <div className="flex min-w-0 items-center gap-2">
-                    <Skeleton className="size-8 shrink-0 rounded-md" />
+                    <Skeleton shape="tile" />
                     <Skeleton className="h-5 w-40 max-w-full" />
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
                     <Skeleton className="h-5 w-20 shrink-0 rounded-full" />
-                    <Skeleton className="size-9 shrink-0 rounded-md" />
+                    <Skeleton shape="tile" size="lg" />
                 </div>
             </div>
 
@@ -32,7 +32,7 @@ function HeroSkeleton() {
                 <div className="min-w-0">
                     <div className="flex min-h-10 min-w-0 items-center gap-2.5">
                         <div className="flex min-w-0 max-w-full flex-1 items-center gap-2 overflow-hidden">
-                            <Skeleton className="size-8 shrink-0 rounded-md" />
+                            <Skeleton shape="tile" />
                             <div className="flex min-w-0 items-center gap-2">
                                 <Skeleton className="h-6 w-56 max-w-full" />
                                 <Skeleton className="h-5 w-20 shrink-0 rounded-full" />
@@ -44,14 +44,14 @@ function HeroSkeleton() {
                 <div className="flex min-h-10 min-w-0 max-w-[min(100%,24rem)] items-center justify-end">
                     <div className="flex w-full min-w-0 items-center justify-between gap-2">
                         <Skeleton className="h-8 w-16 shrink-0 rounded-md" />
-                        <Skeleton className="size-8 shrink-0 rounded-md" />
+                        <Skeleton shape="tile" />
                         <Skeleton className="h-8 flex-1 rounded-md" />
-                        <Skeleton className="size-8 shrink-0 rounded-md" />
+                        <Skeleton shape="tile" />
                     </div>
                 </div>
 
                 <div className="flex min-h-10 shrink-0 items-center justify-end">
-                    <Skeleton className="size-9 shrink-0 rounded-md" />
+                    <Skeleton shape="tile" size="lg" />
                 </div>
             </div>
         </div>
@@ -287,13 +287,13 @@ function SummarySkeleton({ categoryType }: { categoryType: CategoryDetailSkeleto
 
 export function CategoryDetailSkeleton({ categoryType = null }: CategoryDetailSkeletonProps) {
     return (
-        <div className="min-w-0 max-w-full space-y-5">
+        <SkeletonGroup className="min-w-0 max-w-full space-y-5" label="Carregando a categoria…" delay>
             <HeroSkeleton />
             <div className="space-y-5">
                 <SummarySkeleton categoryType={categoryType} />
                 <TrendsSkeleton />
                 <EmbeddedTransactionsSkeleton />
             </div>
-        </div>
+        </SkeletonGroup>
     )
 }

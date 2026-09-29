@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 
 const KPI_KEYS = ["resultado", "receitas", "despesas", "faturas"] as const
 const CATEGORY_LIST_KEYS = [
@@ -71,11 +71,11 @@ function DashboardToolbarSkeleton() {
         <div className="hidden min-w-0 max-w-full md:flex md:flex-row md:flex-wrap md:items-center md:justify-end md:gap-3">
             <div className="flex w-full min-w-0 items-center justify-between gap-2 md:w-auto md:justify-end md:gap-1.5">
                 <Skeleton className="h-8 w-20 shrink-0 rounded-md" />
-                <Skeleton className="size-8 shrink-0 rounded-md" />
+                <Skeleton shape="tile" />
                 <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5 md:max-w-64">
                     <Skeleton className="h-8 w-44 rounded-md" />
                 </div>
-                <Skeleton className="size-8 shrink-0 rounded-md" />
+                <Skeleton shape="tile" />
             </div>
         </div>
     )
@@ -176,7 +176,7 @@ function CalendarMobileSkeleton() {
                                 >
                                     <div className="flex min-w-0 flex-1 items-center gap-2">
                                         <Skeleton className="h-4 max-w-40 flex-1 rounded-md" />
-                                        <Skeleton className="h-5 w-14 shrink-0 rounded-full" />
+                                        <Skeleton shape="pill" />
                                     </div>
                                     <Skeleton className="h-4 w-16 shrink-0 rounded-md" />
                                 </div>
@@ -206,7 +206,7 @@ function CalendarDesktopSkeleton() {
                                     >
                                         <div className="flex min-w-0 flex-1 items-center gap-2">
                                             <Skeleton className="h-4 max-w-40 flex-1 rounded-md" />
-                                            <Skeleton className="h-5 w-14 shrink-0 rounded-full" />
+                                            <Skeleton shape="pill" />
                                         </div>
                                         <Skeleton className="h-4 w-17 shrink-0 rounded-md" />
                                     </div>
@@ -331,7 +331,7 @@ function DashboardInvoicesSkeleton() {
                                 <div className="min-w-0 flex-1 space-y-3">
                                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                                         <Skeleton className="h-4 w-full max-w-48 rounded-md" />
-                                        <Skeleton className="h-5 w-14 shrink-0 rounded-full" />
+                                        <Skeleton shape="pill" />
                                     </div>
                                     <Skeleton className="h-3 w-40 max-w-full rounded-md" />
                                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:items-stretch">
@@ -393,14 +393,7 @@ function DashboardInstallmentsSkeleton() {
 
 export function DashboardPageSkeleton() {
     return (
-        <div
-            className="min-w-0 max-w-full space-y-5"
-            role="status"
-            aria-busy="true"
-            aria-live="polite"
-        >
-            <span className="sr-only">Carregando o dashboard…</span>
-
+        <SkeletonGroup className="min-w-0 max-w-full space-y-5" label="Carregando o dashboard…" delay>
             <DashboardToolbarSkeleton />
             <DashboardKpiSkeleton />
             <DashboardCalendarSkeleton />
@@ -414,6 +407,6 @@ export function DashboardPageSkeleton() {
                     </div>
                 </div>
             </div>
-        </div>
+        </SkeletonGroup>
     )
 }

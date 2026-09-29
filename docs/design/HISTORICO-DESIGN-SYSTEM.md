@@ -15579,3 +15579,59 @@ O dono pediu a rodada completa no `Separator` e escolheu as quatro versões.
 - **Página**: horizontal e vertical juntas, peso e desenho num quadro só, e
   uma seção por versão nova com conteúdo do app — a soma da fatura, os dias
   de uma lista, os filtros num cartão.
+
+### Rodada 176 — o Skeleton ganha as formas das peças, o brilho, o texto e o atraso
+
+O dono pediu a rodada completa e escolheu as quatro versões. O `Skeleton` era
+um `div` de 13 linhas, e o app escrevia **403 ossos à mão em 32 arquivos**.
+
+- **`shape` e `size`**: `block`, `text`, `circle` (Avatar: 24 a 56), `tile`
+  (ColorTile: 24 a 44) e `pill` (Badge). As formas mais repetidas eram peças
+  com outro nome — `size-8 shrink-0 rounded-md` 18 vezes é o `ColorTile md`
+  — e viraram `shape`: **23 ladrilhos e 6 pílulas**. A pílula tinha 20px; o
+  `Badge md` mede **22** na tela (xs 14, sm 18), e o osso passou a ter a
+  medida dele. Medido: as treze formas batem com as peças.
+- **`text` tem a entrelinha em volta**: a caixa ocupa `1lh` do corpo em que
+  está e o osso pinta 0,8em no meio, por margem e não por `background-clip`,
+  que deixaria os cantos do pintado retos. A geometria mora em `@utility
+  skeleton-text`: escrita como `h-[0.8em]` ela era valor arbitrário para o
+  auditor, e não há degrau da escala que meça em `em`.
+  `SkeletonText lines` empilha as linhas, a última com 60%. Medido: 20px por
+  linha em `text-sm`, a entrelinha do texto real.
+- **`animation="shimmer"`**: `@utility skeleton-shimmer`, um degradê do tamanho
+  da janela com `background-attachment: fixed`, então **uma faixa só** passa
+  por todos os ossos, em vez de cada um ter a sua fora de fase. O token novo
+  `--skeleton-highlight` (branco a 60% no claro, 7% no escuro) tem par nos dois
+  temas. **Movimento reduzido**: o bloco global isenta `animate-pulse`, e o
+  osso de brilho carrega essa classe sempre, trocando para a faixa só sob
+  `motion-safe:` — quem pede menos movimento vê o pulso.
+- **`SkeletonGroup`**: o contêiner que espera, com `role="status"`,
+  `aria-busy` e o `label` lido; os ossos passaram a ser `aria-hidden`. O
+  `delay` o esconde nos primeiros 300ms por `@starting-style` (medido:
+  opacidade 0 a 30 e a 200ms, 1 a 450ms), sem timer — um dado que chega antes
+  nunca mostra esqueleto. **Os onze esqueletos de página** vestem
+  `SkeletonGroup delay`: nove escreviam o papel à mão, cada um de um jeito
+  (`aria-live`, `aria-label`, `sr-only`, um `h2` escondido), e dois — o
+  detalhe da categoria e os membros — não anunciavam nada.
+- **Não verificado nas telas**, que pedem login.
+- **Página**: as formas numa régua só, o `SkeletonText` ao lado do texto
+  real, a linha de transação montada com as formas, o pulso ao lado do brilho,
+  e a demonstração do atraso com "recarregar".
+- **O brilho ficou mais lento, a pedido do dono**: de 1,8s para 3s. A faixa
+  atravessa duas larguras de janela, e em 1,8s corria ~1.400px/s numa tela
+  de 1280; em 3s, ~850px/s.
+- **E o brilho saiu, a pedido do dono**, na mesma rodada: "por que temos dois
+  padrões?". Nenhuma tela usava o `shimmer` — os onze esqueletos de página
+  pulsavam —, e a prop `animation` deixaria cada tela escolher o seu, com
+  esqueletos vizinhos se mexendo diferente. Saíram a prop do `Skeleton` e do
+  `SkeletonGroup` (e o contexto que a descia), a `@utility
+  skeleton-shimmer`, o `@keyframes` e o token `--skeleton-highlight`. Todo
+  osso pulsa; a `wave` do `ChartSkeleton` fica, porque ali o osso tem a forma
+  das barras.
+- **E a remoção levou junto a linha de texto**: a `@utility skeleton-text`
+  morava entre o comentário do brilho e a utility dele, e o corte apagou o
+  trecho inteiro. A classe continuou nos elementos, a regra deixou de existir,
+  e todo `shape="text"` ficou com altura zero — o dono viu os buracos nas
+  demonstrações. Voltou, depois do `chart-wave`, e `skeleton.test.ts` agora
+  reprova se ela sumir. Nenhuma tela do app usava `shape="text"`, então o
+  defeito ficou no catálogo.

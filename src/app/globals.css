@@ -2793,6 +2793,17 @@
   animation-delay: calc(var(--chart-wave-i, 0) * 110ms);
 }
 
+/* A linha de texto do `Skeleton` (rodada 176): a caixa ocupa a entrelinha do
+   corpo em que está (`1lh`) e o osso pinta 0,8em no meio dela — por margem, e
+   não por `background-clip`, que deixaria retos os cantos do que se pinta.
+   Mede em `em` e `lh` do próprio elemento, então a classe de texto da linha
+   real (`text-sm`) decide a altura sozinha. */
+@utility skeleton-text {
+  height: 0.8em;
+  margin-block: calc((1lh - 0.8em) / 2);
+}
+
+
 /* As linhas da paleta sobem ao aparecer (rodada 139). É o desenho do
    `disclosure-reveal` — o mesmo `disclosure-rise`, na mola, escalonado por
    `nth-child` com teto — aplicado ao que o cmdk **monta**: um item que passa a

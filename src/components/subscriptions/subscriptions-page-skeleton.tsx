@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import { Card, CardContent, CardNote } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import {
     Table,
     TableBody,
@@ -31,7 +31,7 @@ function ToolbarSkeleton() {
                 <Skeleton className="size-10 shrink-0 rounded-md md:hidden" />
             </div>
             <div className="hidden min-w-0 shrink-0 md:flex md:flex-wrap md:items-center md:justify-end md:gap-2">
-                <Skeleton className="size-8 shrink-0 rounded-md" />
+                <Skeleton shape="tile" />
                 <Skeleton className="h-8 w-36 rounded-md" />
                 <Skeleton className="h-8 w-34 rounded-md" />
             </div>
@@ -142,14 +142,9 @@ export function SubscriptionsPageSkeleton({
     rowCount?: number
 }) {
     return (
-        <div
-            className="flex flex-col gap-3"
-            role="status"
-            aria-busy="true"
-            aria-label="Carregando assinaturas"
-        >
+        <SkeletonGroup className="flex flex-col gap-3" label="Carregando assinaturas…" delay>
             <ToolbarSkeleton />
             <TableSkeleton rowCount={rowCount} />
-        </div>
+        </SkeletonGroup>
     )
 }

@@ -1,5 +1,5 @@
 import { CreditCardTileSkeleton } from "@/components/credit-cards/credit-card-tile"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
 const DEFAULT_CARD_COUNT = 4
@@ -28,14 +28,7 @@ export function CreditCardsPageSkeleton({
     }
 
     return (
-        <div
-            className="space-y-4"
-            role="status"
-            aria-busy="true"
-            aria-label="Carregando cartões de crédito"
-        >
-            <span className="sr-only">Carregando cartões de crédito…</span>
-
+        <SkeletonGroup className="space-y-4" label="Carregando cartões de crédito…" delay>
             <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-3">
                 <div
                     className={cn(
@@ -57,6 +50,6 @@ export function CreditCardsPageSkeleton({
             ) : (
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">{tiles}</div>
             )}
-        </div>
+        </SkeletonGroup>
     )
 }
