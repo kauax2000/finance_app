@@ -10,6 +10,7 @@ import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface";
 import { Muted } from "@/components/ui/typography";
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes";
 import { useScrollFade } from "@/hooks/use-scroll-fade";
+import { ScrollFadeArrows } from "@/lib/scroll-fade-arrows";
 import {
   skipFocusAfterScrollClose,
   useCloseOnScroll,
@@ -112,7 +113,7 @@ function PopoverClose({
 const popoverContentVariants = cva(
   [
     /** Above Sheet overlay/content (`z-(--z-sheet)`); below Toaster (`z-(--z-toast)`). */
-    "z-(--z-popover) flex w-72 origin-(--radix-popover-content-transform-origin) flex-col text-sm outline-hidden",
+    "relative z-(--z-popover) flex w-72 origin-(--radix-popover-content-transform-origin) flex-col text-sm outline-hidden",
     "max-h-(--radix-popover-content-available-height) max-w-(--radix-popover-content-available-width) overflow-y-auto overscroll-contain",
     // Quem declara um corpo rolável **cede a rolagem da casca**. Sem isto o
     // popover e o `PopoverBody` rolariam os dois, um dentro do outro. Quem não
@@ -294,17 +295,20 @@ function PopoverHeader({ className, ...props }: React.ComponentProps<"div">) {
  */
 function PopoverBody({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <div
-      ref={useScrollFade()}
-      data-slot="popover-body"
-      className={cn(
-        "min-h-0 flex-1 overflow-y-auto overscroll-contain",
-        "px-(--popover-strip-px)",
-        scrollFadeViewportClassName,
-        className,
-      )}
-      {...props}
-    />
+    <>
+      <div
+        ref={useScrollFade({ arrows: true })}
+        data-slot="popover-body"
+        className={cn(
+          "min-h-0 flex-1 overflow-y-auto overscroll-contain",
+          "px-(--popover-strip-px)",
+          scrollFadeViewportClassName,
+          className,
+        )}
+        {...props}
+      />
+      <ScrollFadeArrows />
+    </>
   );
 }
 

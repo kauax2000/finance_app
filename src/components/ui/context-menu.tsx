@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
+import { ScrollFadeArrows } from "@/lib/scroll-fade-arrows"
 import {
   menuSubSurfaceClassName,
   menuSurfaceClassName,
@@ -122,12 +123,13 @@ function ContextMenuContent({
         {...props}
       >
         <div
-          ref={useScrollFade()}
+          ref={useScrollFade({ arrows: true })}
           data-slot="context-menu-viewport"
           className={cn(menuViewportClassName, scrollFadeViewportClassName)}
         >
           {children}
         </div>
+        <ScrollFadeArrows />
       </ContextMenuPrimitive.Content>
     </ContextMenuPrimitive.Portal>
   )
@@ -188,12 +190,13 @@ function ContextMenuSubContent({
       {...props}
     >
       <div
-        ref={useScrollFade()}
+        ref={useScrollFade({ arrows: true })}
         data-slot="context-menu-sub-viewport"
         className={cn(menuViewportClassName, scrollFadeViewportClassName)}
       >
         {children}
       </div>
+      <ScrollFadeArrows />
     </ContextMenuPrimitive.SubContent>
   )
 }

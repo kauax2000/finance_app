@@ -31,6 +31,7 @@ import {
   scrollFadeViewportClassName,
 } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
+import { ScrollFadeArrows } from "@/lib/scroll-fade-arrows"
 
 /**
  * O seletor ancorado num campo — e agora também o que vai dentro dele.
@@ -283,29 +284,32 @@ function FormPickerPopoverList({
   ...props
 }: React.ComponentProps<"div">) {
   return (
-    <div
-      ref={useScrollFade()}
-      data-slot="form-picker-popover-list"
-      className={cn(
-        formPickerListScrollClassName,
-        // As duas pontas dissolvem, e o conteúdo passa **por trás** das faixas
-        // em vez de parar numa borda — é isso que dá à rampa o que dissolver.
-        //
-        // A dissolução vai aqui e não na constante `formPickerListScrollClassName`
-        // de propósito: as telas importam a constante, e uma delas com máscara
-        // ligada mas sem a casca publicando `band-h` ganharia meio tratamento —
-        // um fade começando 1px abaixo do fio escrito à mão, que são os dois
-        // sinais que o sistema está tentando não ter juntos.
-        scrollFadeViewportClassName,
-        scrollFadeBleedClassName,
-        className
-      )}
-      onWheel={(e) => {
-        e.stopPropagation()
-        onWheel?.(e)
-      }}
-      {...props}
-    />
+    <>
+      <div
+        ref={useScrollFade({ arrows: true })}
+        data-slot="form-picker-popover-list"
+        className={cn(
+          formPickerListScrollClassName,
+          // As duas pontas dissolvem, e o conteúdo passa **por trás** das faixas
+          // em vez de parar numa borda — é isso que dá à rampa o que dissolver.
+          //
+          // A dissolução vai aqui e não na constante `formPickerListScrollClassName`
+          // de propósito: as telas importam a constante, e uma delas com máscara
+          // ligada mas sem a casca publicando `band-h` ganharia meio tratamento —
+          // um fade começando 1px abaixo do fio escrito à mão, que são os dois
+          // sinais que o sistema está tentando não ter juntos.
+          scrollFadeViewportClassName,
+          scrollFadeBleedClassName,
+          className
+        )}
+        onWheel={(e) => {
+          e.stopPropagation()
+          onWheel?.(e)
+        }}
+        {...props}
+      />
+      <ScrollFadeArrows />
+    </>
   )
 }
 

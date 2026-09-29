@@ -15396,3 +15396,81 @@ A demonstração "No telefone ele empilha" saiu — no desktop ela era idêntica
 primeira — e virou nota. Entraram a tabela de props do `ResizablePanel`
 (`minSize`, `maxSize`, `collapsible`, unidades), que faltava, e "Onde o app
 usa": nenhuma tela; o único consumidor é a `Sidebar resizable` do catálogo.
+
+### Rodada 171 — o ScrollFade vira variante do ScrollArea
+
+O dono pediu os dois juntos, com o fade como variação. Eram dois átomos que
+respondiam à mesma pergunta — como uma região rolável avisa que continua —, e
+a página do `ScrollArea` mandava somá-los. Nenhum dos dois tinha tela: o
+`ScrollArea` não tinha consumidor, e o `ScrollFade` tinha um, a grade do
+`ChartHeatmap`.
+
+- **`ScrollArea variant`**: `plain` (a barra, o padrão), `fade` (a máscara),
+  `blur` (máscara + borrão) e `material` (o borrão no lugar da máscara), mais
+  `orientation`, que decide a barra **e** o eixo do fade, e `sides`. A máscara
+  mora no **viewport do Radix**, que é quem rola e não pinta nada (a invariante
+  2); as camadas de borrão e a barra são irmãs dele na raiz, que já é
+  `relative`, e o hook espelha as variáveis nela (`shell`). Medido nos dois
+  temas: `fade` e `blur` com a rampa ligada e `--scroll-fade-end` em 324px,
+  `material` sem máscara, seis camadas de borrão nos dois últimos.
+- O `rounded-[inherit]` do viewport saiu: o elemento mascarado não desenha
+  nada, e o `overflow-hidden` da raiz já recorta o canto.
+- **Na vertical nada truncava, e a ponta direita sumia** — defeito do
+  `ScrollArea` de antes, que ninguém via por falta de consumidor. O Radix
+  embrulha o conteúdo num `<div style="display: table; min-width: 100%">`,
+  que cresce até a largura natural; com o eixo X cortado, "R$ 1.284,60" saía
+  "R$ 1.284,6". Na vertical o invólucro vira bloco (`[&>div]:block!`, com `!`
+  porque o `display` do Radix é inline) e tem a largura do viewport (214 de
+  214px, medido); na horizontal a tabela fica, porque é ela que deixa a
+  fileira crescer.
+- **O `ChartHeatmap` achava o rolável por `parentElement`**, e no Radix há um
+  invólucro `display: table` entre o viewport e o conteúdo. Passou a
+  `closest("[data-radix-scroll-area-viewport]")`. Medido a 390px: abre rolado
+  até hoje, 563 de 563px.
+- **O polegar era `bg-border`**, a cor do fio. Medido contra a página, 45% de
+  `--muted-foreground` dava 1,94 no claro e 2,38 no escuro (a primeira versão
+  desta rodada escreveu 45% "por ler como alça", sem medir); **70% é o
+  primeiro degrau acima de 3:1 nos dois** (3,06 e 4,24), o mesmo da pega do
+  `Resizable`. Ao pousar, tinta cheia. A barra ganhou `z-10` para ficar acima
+  das camadas de borrão.
+- Saíram `scroll-fade.tsx`, a página dele e a entrada do registro: 84
+  páginas, 77 componentes. `scroll-fade.test.ts` lê o `scroll-area.tsx`.
+- **Página**: as quatro variantes lado a lado sobre a mesma lista de
+  categorias (eram sete demonstrações em duas páginas), a horizontal com
+  `sides="end"`, o popover de carteiras, a tinta do material, e "Onde o app
+  usa".
+
+### Rodada 172 — os dropdowns ganham a seta de "tem mais"
+
+O dono pediu, sobre a lista de carteiras num popover: quando houver rolagem,
+uma seta indicando que há mais conteúdo. A dissolução dizia que a lista
+continua; a seta diz **para onde**.
+
+- **`useScrollFade({ arrows: true })`** marca o rolável com
+  `data-scroll-more-start` e `-end` (1px de folga, a de `medir`) e escreve no
+  pai `--scroll-fade-box-top`/`-bottom`, a posição do rolável dentro dele.
+  Opt-in, como o `shell`.
+- **`ScrollFadeArrows`** (`lib/scroll-fade-arrows.tsx`): dois chevrons do
+  `16/solid`, irmãos logo depois do rolável, que acendem por
+  `[data-scroll-more-end] ~ &` e pousam na borda da **lista** — a caixa mais
+  as faixas por onde ela sangra (`--scroll-fade-band-h`, `-foot-h`). Sem
+  isso, no `FormPickerPopover`, a seta de baixo cairia sobre "Cadastrar
+  cartão"; medido, ela para acima do rodapé. Sem altura, sem clique
+  (`pointer-events-none`), `aria-hidden`.
+- **Onde**: `Select`, `DropdownMenu`, `ContextMenu` e `Menubar` (conteúdo e
+  submenu), a pilha do `Command` (paleta e `Combobox`), o
+  `FormPickerPopoverList`, o `PopoverBody` e o `ScrollArea` com a prop nova
+  `arrows` (só na vertical e nas variantes de borda). A superfície dos menus e
+  o `PopoverContent` ganharam `relative`, para as setas terem onde pousar.
+- **Medido**: no popover de carteiras e nos 31 dias do `Select`, ao abrir só
+  a seta de baixo; rolado ao meio, as duas; no fim, só a de cima. Os menus e
+  o `Combobox` usam o mesmo mecanismo, mas nenhuma demonstração deles rola,
+  nem numa janela de 380px — não foram vistos na tela.
+- **A peça não mora em `ui/`**: o `Select` é átomo e já importa o seu único
+  componente (`Caption`); um segundo reprovaria a asserção 2 do
+  `taxonomy.test.ts`. Ela morou por um momento no próprio hook, com o arquivo
+  renomeado para `.tsx`, e o servidor de desenvolvimento, já de pé, continuou
+  procurando o `.ts` e derrubou as páginas: o hook voltou a `.ts`, e a peça
+  foi para `lib/`, ao lado das classes da dissolução.
+- **Não é a volta do `ScrollUpButton` do Radix** que a rodada 166 tirou: lá
+  era uma faixa de 24px que ocupava a lista e rolava ao pousar.

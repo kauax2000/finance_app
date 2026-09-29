@@ -44,7 +44,7 @@ const MATERIAL = semComentarios(
 )
 
 const COMPONENTE = semComentarios(
-  readFileSync("src/components/ui/scroll-fade.tsx", "utf8")
+  readFileSync("src/components/ui/scroll-area.tsx", "utf8")
 )
 const REGUA = semComentarios(
   readFileSync("src/lib/scroll-fade-classes.ts", "utf8")
@@ -72,7 +72,7 @@ describe("a dissolução das bordas", () => {
     // cada consumidor: o rolável primeiro, a peça depois.
     expect(COMPONENTE).toContain('data-slot="scroll-fade-blur"')
     for (const [nome, caminho, ancoraDoRolavel] of [
-      ["scroll-fade", "src/components/ui/scroll-fade.tsx", "ref={ref}"],
+      ["scroll-area", "src/components/ui/scroll-area.tsx", "ref={dissolve ? fadeRef : undefined}"],
       // O diálogo e a folha saíram desta lista na rodada 57, e a paleta na 58:
       // nenhum deles monta mais as camadas — a asserção 16 é quem tranca isso,
       // e a 17 tranca o que ficou no lugar (só a máscara).
@@ -312,7 +312,8 @@ describe("a dissolução das bordas", () => {
     // CSS. O índice desce por custom property inline, e não por classe.
     expect(REGUA).not.toMatch(/`[^`]*\$\{/)
     expect(COMPONENTE).toContain('"--scroll-fade-blur-i"')
-    expect(COMPONENTE).toMatch(/edge\?: "fade" \| "blur" \| "material"/)
+    // O fade é variante do `ScrollArea` desde a rodada 171.
+    expect(COMPONENTE).toMatch(/type ScrollAreaVariant = "plain" \| "fade" \| "blur" \| "material"/)
     expect(COMPONENTE).not.toMatch(/`scroll-fade-blur[^`]*\$\{/)
   })
 
@@ -320,7 +321,7 @@ describe("a dissolução das bordas", () => {
     // A máscara recorta o alfa do elemento inteiro, borda e sombra junto: um
     // retângulo com os cantos apagados e os lados opacos lê como bug de
     // renderização. Mesma varredura mecânica da asserção 10a do carrossel.
-    const i = COMPONENTE.indexOf("ref={ref}")
+    const i = COMPONENTE.indexOf("ref={dissolve ? fadeRef : undefined}")
     expect(i).toBeGreaterThan(-1)
     const bloco = COMPONENTE.slice(i, COMPONENTE.indexOf("{children}", i))
     for (const proibida of ["bg-", "ring-", "rounded-", "shadow-", "border-"]) {
@@ -342,7 +343,7 @@ describe("a dissolução das bordas", () => {
     expect(HOOK).toContain('casca.style.removeProperty("--scroll-fade-start")')
     expect(HOOK).toContain('casca.style.removeProperty("--scroll-fade-end")')
     expect(HOOK).toContain("delete casca.dataset.scrollFade")
-    expect(HOOK).toContain("[axis, sides, shell]")
+    expect(HOOK).toContain("[axis, sides, shell, arrows]")
     // A medição de faixa que a rodada 56 pôs aqui saiu com ela: sem consumidor,
     // era código morto — e um hook que mede layout por conta própria é o tipo
     // de peça que se esquece de tirar.
@@ -390,10 +391,10 @@ describe("a dissolução das bordas", () => {
     // dura: sem faixa a aresta cai no meio da superfície; com faixa medida, a
     // máscara leva o conteúdo ao piso e o borrão fica sem o que borrar; dentro
     // de um casco que já borra, cada aresta vira uma linha de tom. Medido no
-    // diálogo, na folha e por fim na paleta. A peça fica em `scroll-fade.tsx`
-    // para o `edge="blur|material"` de quem não tem casca própria — e só lá.
+    // diálogo, na folha e por fim na paleta. A peça fica em `scroll-area.tsx`
+    // para o `variant="blur|material"` de quem não tem casca própria — e só lá.
     const montam = readdirSync("src/components/ui")
-      .filter((f) => f.endsWith(".tsx") && f !== "scroll-fade.tsx")
+      .filter((f) => f.endsWith(".tsx") && f !== "scroll-area.tsx")
       .filter((f) =>
         semComentarios(readFileSync(`src/components/ui/${f}`, "utf8")).includes(
           "ScrollFadeBlurLayers"
@@ -475,6 +476,34 @@ describe("a dissolução das bordas", () => {
       expect(src, `${nome} portaliza sem container`).toMatch(
         /DrawerPrimitive\.Portal\s+container=\{janela\?\.document\.body\}/
       )
+    }
+  })
+})
+
+describe("as setas de \"tem mais\" dos dropdowns (rodada 172)", () => {
+  const HOOK = semComentarios(readFileSync("src/hooks/use-scroll-fade.ts", "utf8"))
+  const SETAS = semComentarios(readFileSync("src/lib/scroll-fade-arrows.tsx", "utf8"))
+
+  it("1. o hook marca os dois lados e a caixa, só quando pedido", () => {
+    expect(HOOK).toContain("arrows = false")
+    expect(HOOK).toContain('el.toggleAttribute("data-scroll-more-start", pos > 1)')
+    expect(HOOK).toContain('el.toggleAttribute("data-scroll-more-end", rolagemMax - pos > 1)')
+    expect(HOOK).toContain('pai.style.removeProperty("--scroll-fade-box-bottom")')
+  })
+
+  it("2. a seta acende pelo irmão, pousa na lista e não pega clique", () => {
+    expect(SETAS).toContain("[[data-scroll-more-end]~&]:opacity-100")
+    expect(SETAS).toContain("[[data-scroll-more-start]~&]:opacity-100")
+    expect(SETAS).toContain("var(--scroll-fade-foot-h,0px)")
+    expect(SETAS).toContain("pointer-events-none")
+    expect(SETAS).toContain("aria-hidden")
+  })
+
+  it("3. todo dropdown põe as setas logo depois do rolável", () => {
+    for (const nome of ["select", "dropdown-menu", "context-menu", "menubar", "command", "form-picker-popover", "popover", "scroll-area"]) {
+      const src = semComentarios(readFileSync(`src/components/ui/${nome}.tsx`, "utf8"))
+      expect(src, nome).toContain("<ScrollFadeArrows />")
+      expect(src, nome).toMatch(/arrows: (true|naPilha|setas)/)
     }
   })
 })

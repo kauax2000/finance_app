@@ -10,6 +10,7 @@ import { barSurfaceClassName } from "@/lib/glass-classes"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
+import { ScrollFadeArrows } from "@/lib/scroll-fade-arrows"
 import { useCloseOnScroll } from "@/hooks/use-close-on-scroll"
 import {
   menuIndicatorItemClassName,
@@ -265,12 +266,13 @@ function MenubarContent({
         {...props}
       >
         <div
-          ref={useScrollFade()}
+          ref={useScrollFade({ arrows: true })}
           data-slot="menubar-viewport"
           className={cn(menuViewportClassName, scrollFadeViewportClassName)}
         >
           {children}
         </div>
+        <ScrollFadeArrows />
       </MenubarPrimitive.Content>
     </MenubarPortal>
   )
@@ -433,12 +435,13 @@ function MenubarSubContent({
       {...props}
     >
       <div
-        ref={useScrollFade()}
+        ref={useScrollFade({ arrows: true })}
         data-slot="menubar-sub-viewport"
         className={cn(menuViewportClassName, scrollFadeViewportClassName)}
       >
         {children}
       </div>
+      <ScrollFadeArrows />
     </MenubarPrimitive.SubContent>
   )
 }

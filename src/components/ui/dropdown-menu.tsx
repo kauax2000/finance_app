@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
+import { ScrollFadeArrows } from "@/lib/scroll-fade-arrows"
 import {
   skipFocusAfterScrollClose,
   useCloseOnScroll,
@@ -254,12 +255,13 @@ function DropdownMenuContent({
           </div>
         ) : null}
         <div
-          ref={useScrollFade()}
+          ref={useScrollFade({ arrows: true })}
           data-slot="dropdown-menu-viewport"
           className={cn(menuViewportClassName, scrollFadeViewportClassName)}
         >
           {children}
         </div>
+        <ScrollFadeArrows />
         {footer ? <div className="shrink-0">{footer}</div> : null}
       </DropdownMenuPrimitive.Content>
     </DropdownMenuPrimitive.Portal>
@@ -392,12 +394,13 @@ function DropdownMenuSubContent({
       {...props}
     >
       <div
-        ref={useScrollFade()}
+        ref={useScrollFade({ arrows: true })}
         data-slot="dropdown-menu-sub-viewport"
         className={cn(menuViewportClassName, scrollFadeViewportClassName)}
       >
         {children}
       </div>
+      <ScrollFadeArrows />
     </DropdownMenuPrimitive.SubContent>
   )
 }

@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
+import { ScrollFadeArrows } from "@/lib/scroll-fade-arrows"
 import {
   fieldControlHeightClassName,
   fieldControlPaddingClassName,
@@ -113,12 +114,13 @@ function SelectContent({
         collisionPadding={collisionPadding}
         {...props}
       >
-        {/* As setas de rolagem do Radix saíram na rodada 166: a lista longa
-            dissolve nas pontas, como os menus, e a seta seria o segundo sinal
-            para a mesma borda. Quem rola é o viewport, que não pinta nada — a
+        {/* As faixas de rolagem do Radix saíram na rodada 166: a lista longa
+            dissolve nas pontas, como os menus. Desde a 172 a seta volta como
+            indicação (`ScrollFadeArrows`, a pedido do dono), sem ocupar altura
+            nem rolar ao pousar. Quem rola é o viewport, que não pinta nada — a
             invariante 2 da dissolução. */}
         <SelectPrimitive.Viewport
-          ref={useScrollFade()}
+          ref={useScrollFade({ arrows: true })}
           data-position={position}
           className={cn(
             scrollFadeViewportClassName,
@@ -157,6 +159,7 @@ function SelectContent({
         >
           {children}
         </SelectPrimitive.Viewport>
+        <ScrollFadeArrows />
       </SelectPrimitive.Content>
     </SelectPrimitive.Portal>
   )

@@ -73,7 +73,7 @@ Mermaid (`href` já quebrou um diagrama).
 O design system deste projeto tem três partes, e nenhuma delas se presume de
 memória:
 
-- **Componentes** em [`src/components/ui/`](src/components/ui) — 78 hoje.
+- **Componentes** em [`src/components/ui/`](src/components/ui) — 77 hoje.
 - **Tokens** em [`src/app/globals.css`](src/app/globals.css).
 - **Documentação viva** em `/designsystem`, com uma página por componente e por
   padrão. Sempre disponível em desenvolvimento; em produção, atrás de
@@ -811,8 +811,10 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   `scroll-fade-y` / `scroll-fade-x` em [`globals.css`](src/app/globals.css), a
   gramática em [`lib/scroll-fade-classes`](src/lib/scroll-fade-classes.ts) e o
   mecanismo em [`hooks/use-scroll-fade`](src/hooks/use-scroll-fade.ts). O
-  [`ScrollFade`](src/components/ui/scroll-fade.tsx) **consome** a primitiva; ele
-  não é ela, e serve o caso em que ninguém é dono da casca. Quem já tem casca
+  [`ScrollArea`](src/components/ui/scroll-area.tsx) a **consome** pelas
+  variantes `fade`, `blur` e `material` (o `ScrollFade` era um átomo à parte
+  até a rodada 171, e virou essa variante: a máscara mora no viewport do
+  Radix, que rola e não pinta), e serve o caso em que ninguém é dono da casca. Quem já tem casca
   própria compõe as classes direto, porque um `<div>` interposto quebraria o
   contexto do Radix ou do cmdk.
 - **Busca**: [`Command`](src/components/ui/command.tsx) — a paleta de comandos. O catálogo `/designsystem` é o primeiro consumidor ([`ds-search.tsx`](src/app/designsystem/ds-search.tsx)): gatilho no meio do cabeçalho com o `Kbd` do atalho, `⌘K` e `/` para abrir, e `filter` próprio, porque o padrão do cmdk é difuso e erra em português. O **app** ainda não tem busca global, e é a lacuna que ele preenche.
@@ -1512,7 +1514,20 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   para código), e não uma tira. O número que decidiu: o fio dá 1,345:1 contra o
   cartão e a tinta dá 1,053 — **5,5× o trabalho**, e mesmo a 100% a tinta não
   alcança.
-- **Quem recebeu a dissolução, e quem não.** `Command`, `ScrollFade`,
+- **Nos dropdowns, a dissolução ganha a seta de "tem mais"** (rodada 172, a
+  pedido do dono): `ScrollFadeArrows` (`lib/scroll-fade-arrows`) com
+  `useScrollFade({ arrows: true })`, no `Select`, nos três menus e nos
+  submenus, na pilha do `Command` (paleta e `Combobox`), no
+  `FormPickerPopoverList`, no `PopoverBody` e no `ScrollArea arrows`. O hook
+  marca `data-scroll-more-start`/`-end` no rolável e escreve no pai onde ele
+  está (`--scroll-fade-box-top`/`-bottom`); as setas são irmãs logo depois do
+  rolável, acendem por `[data-scroll-more-end] ~ &` e pousam na borda da
+  **lista** somando as faixas de sangramento — senão, no seletor, a de baixo
+  cairia sobre o rodapé. São indicação: sem altura, sem clique, `aria-hidden`.
+  Por isso a superfície dos menus e o `PopoverContent` ganharam `relative`.
+  A peça mora em `lib/` e não em `ui/` porque o `Select` é átomo e já importa
+  o seu único componente (`Caption`).
+- **Quem recebeu a dissolução, e quem não.** `Command`, `ScrollArea` (as variantes de borda),
   `FormPickerPopover` (com as 3 telas migradas para as peças dele), `Sidebar`,
   `Table` (eixo X) e os viewports de `DropdownMenu` / `ContextMenu` / `Menubar`.
   **E o `Dialog`**: o `DialogBody` dissolve nas duas bordas, e **os fios saíram
@@ -1525,8 +1540,8 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   enquanto um `auto` igualmente curto ficava com **dois**. Mesma situação
   visual, dois tratamentos. O diálogo é uma superfície só; o que separa as
   faixas é o respiro, e a dissolução onde há rolagem.
-  **E o `Select`, desde a rodada 166**, no viewport do Radix, com as setas de
-  rolagem fora: o padrão virou `popper`, e ali quem leva o item escolhido à
+  **E o `Select`, desde a rodada 166**, no viewport do Radix, com as faixas de
+  rolagem do Radix fora: o padrão virou `popper`, e ali quem leva o item escolhido à
   vista é o `scrollIntoView`, que respeita o `scroll-padding` da primitiva
   (medido, o 25 reabre a 48px da base, fora dos 44 da zona). O
   `item-aligned` continua abrindo dissolvido, porque escreve `scrollTop` à
@@ -1535,7 +1550,7 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   o apagaria; e o `PopoverContent`, porque ele é ao mesmo tempo casca e
   rolável, e um viewport interno quebraria o `FormPickerPopoverContent`, que
   conta com os filhos serem itens de flex diretos. Ali a resposta é compor um
-  `ScrollFade` dentro, e a página do catálogo demonstra.
+  `ScrollArea variant="fade"` dentro, e a página do catálogo demonstra.
 - **Três invariantes que a primitiva carrega, e as três vieram de bug medido.**
   `data-scroll-fade` só alimenta o que **não** é layout (alimentar `pb` foi a
   histerese da rodada anterior); **o elemento mascarado não desenha nada**, e é

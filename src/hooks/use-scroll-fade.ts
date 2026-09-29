@@ -16,6 +16,14 @@ type UseScrollFadeOptions = {
    * Radix ou do cmdk recebe mutação de atributo que não pediu.
    */
   shell?: boolean
+  /**
+   * Publica, para as setas de `ScrollFadeArrows`, se ainda há conteúdo antes
+   * e depois (`data-scroll-more-start` / `-end` no rolável) e onde o rolável
+   * está dentro do pai (`--scroll-fade-box-top` / `-bottom` no pai) — para a
+   * seta pousar na borda da **lista**, e não na do painel, que pode ter busca
+   * em cima e rodapé embaixo. Opt-in, pela mesma razão do `shell`.
+   */
+  arrows?: boolean
 }
 
 /**
@@ -64,6 +72,7 @@ export function useScrollFade({
   axis = "y",
   sides = "both",
   shell = false,
+  arrows = false,
 }: UseScrollFadeOptions = {}) {
   return React.useCallback(
     (el: HTMLElement | null) => {
@@ -85,8 +94,15 @@ export function useScrollFade({
         return passo
       }
 
+      const pai = arrows ? el.parentElement : null
+
       const pintar = () => {
         const pos = vertical ? el.scrollTop : el.scrollLeft
+        if (arrows) {
+          // 1px de folga, a mesma de `medir`.
+          el.toggleAttribute("data-scroll-more-start", pos > 1)
+          el.toggleAttribute("data-scroll-more-end", rolagemMax - pos > 1)
+        }
         ultimoInicio =
           sides === "end"
             ? ultimoInicio
@@ -105,6 +121,15 @@ export function useScrollFade({
         const ligado = rolagemMax > 1 ? "on" : "off"
         el.dataset.scrollFade = ligado
         if (casca) casca.dataset.scrollFade = ligado
+        if (pai) {
+          // Lido no `ResizeObserver`, depois do layout: a leitura é grátis. As
+          // variáveis só posicionam as setas, que são absolutas — nada de
+          // layout depende delas, então a invariante 1 fica de pé.
+          const a = el.getBoundingClientRect()
+          const b = pai.getBoundingClientRect()
+          pai.style.setProperty("--scroll-fade-box-top", `${a.top - b.top - pai.clientTop}px`)
+          pai.style.setProperty("--scroll-fade-box-bottom", `${b.bottom - a.bottom - pai.clientTop}px`)
+        }
         pintar()
       }
       medir()
@@ -134,6 +159,10 @@ export function useScrollFade({
         ro.disconnect()
         mo.disconnect()
         el.removeEventListener("scroll", pintar)
+        if (pai) {
+          pai.style.removeProperty("--scroll-fade-box-top")
+          pai.style.removeProperty("--scroll-fade-box-bottom")
+        }
         if (casca) {
           casca.style.removeProperty("--scroll-fade-start")
           casca.style.removeProperty("--scroll-fade-end")
@@ -141,6 +170,6 @@ export function useScrollFade({
         }
       }
     },
-    [axis, sides, shell]
+    [axis, sides, shell, arrows]
   )
 }

@@ -134,7 +134,6 @@ const LAYER: Record<string, Layer> = {
   resizable: "Atoms",
   /** Uma casca rolável, e uma máscara. */
   "scroll-area": "Atoms",
-  "scroll-fade": "Atoms",
   /** Um controle. Trigger, content e item são a anatomia dele, não composição
    *  — a mesma conta pela qual o `Slider` é átomo com quatro peças por dentro. */
   select: "Atoms",
@@ -403,8 +402,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("progress", "Progress", "Quanto de um total foi consumido: barra, segmentada ou anel.", ui("progress"), "Progress, ProgressHeader, ProgressLabel, ProgressValue, ProgressFooter, ProgressRing"),
   entry("radio", "Radio", "Uma opção de escolha única.", ui("radio"), "Radio"),
   entry("resizable", "Resizable", "Painéis e colunas de tabela redimensionáveis por arraste.", ui("resizable"), "ResizablePanelGroup, ResizablePanel, ResizableHandle, ResizableColumnHandle"),
-  entry("scroll-area", "Scroll Area", "Área rolável com barra estilizada.", ui("scroll-area"), "ScrollArea, ScrollBar"),
-  entry("scroll-fade", "Scroll Fade", "Área rolável que dissolve o conteúdo nas bordas.", ui("scroll-fade"), "ScrollFade"),
+  entry("scroll-area", "Scroll Area", "Região rolável: a barra desenhada, e as bordas que dissolvem.", ui("scroll-area"), "ScrollArea, ScrollBar"),
   entry("select", "Select", "Lista suspensa de opções predefinidas, desenhada ou do sistema.", ui("select"), "Select, SelectTrigger, SelectItem, NativeSelect"),
   entry("separator", "Separator", "Divisor entre conteúdos.", ui("separator"), "Separator"),
   entry("skeleton", "Skeleton", "Placeholder enquanto o dado carrega.", ui("skeleton"), "Skeleton"),

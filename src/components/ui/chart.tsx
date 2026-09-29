@@ -59,7 +59,7 @@ import {
   EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ScrollFade } from "@/components/ui/scroll-fade"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   progressToneForBands,
   type ProgressBands,
@@ -2606,10 +2606,14 @@ function ChartHeatmap({
   }, [data, end, format, semanas])
 
   // O ano não cabe no telefone: a grade rola, e abre rolada até hoje, que é
-  // o fim da fileira. O viewport é o pai da grade dentro do `ScrollFade`.
+  // o fim da fileira. O viewport do `ScrollArea` não é o pai da grade — o
+  // Radix põe um invólucro `display: table` no meio —, então ele é achado
+  // pelo atributo que o Radix carimba.
   const gradeRef = React.useRef<HTMLDivElement>(null)
   React.useLayoutEffect(() => {
-    const viewport = gradeRef.current?.parentElement
+    const viewport = gradeRef.current?.closest<HTMLElement>(
+      "[data-radix-scroll-area-viewport]"
+    )
     if (viewport) viewport.scrollLeft = viewport.scrollWidth
   }, [semanas])
 
@@ -2633,7 +2637,7 @@ function ChartHeatmap({
         className={cn(chartHeatmapVariants({ tone, range }), className)}
       >
         <ChartHtmlRoot config={{}} label={`${label}. ${resumo}`} description={description}>
-          <ScrollFade axis="x">
+          <ScrollArea orientation="horizontal" variant="fade">
             <div
               ref={gradeRef}
               className="grid w-max grid-cols-[auto_auto] gap-x-2 gap-y-1"
@@ -2692,7 +2696,7 @@ function ChartHeatmap({
                 )}
               </div>
             </div>
-          </ScrollFade>
+          </ScrollArea>
         </ChartHtmlRoot>
         <div
           className={cn(

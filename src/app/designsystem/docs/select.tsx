@@ -249,7 +249,7 @@ export default function SelectDoc() {
 
       <DocSection
         title="Lista longa, mas ordenada"
-        description="Os 31 dias do fechamento do cartão: passando da altura disponível, a lista dissolve nas pontas, como a dos menus, e o dia escolhido reabre fora da zona do fade. Digitar com a lista aberta salta para a opção — “2”, “5” leva ao 25. O tamanho da lista não é o critério; o critério é a pessoa saber o que procura sem ler."
+        description="Os 31 dias do fechamento do cartão: passando da altura disponível, a lista dissolve nas pontas, como a dos menus, com a seta de “tem mais” sobre a borda, e o dia escolhido reabre fora da zona do fade. Digitar com a lista aberta salta para a opção — “2”, “5” leva ao 25. O tamanho da lista não é o critério; o critério é a pessoa saber o que procura sem ler."
         code={`<SelectContent>
   {dias.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
 </SelectContent>`}
@@ -337,8 +337,8 @@ export default function SelectDoc() {
         O padrão é <code>position=&quot;popper&quot;</code>. O <code>item-aligned</code> do Radix sobrepõe o gatilho e ignora <code>collisionPadding</code>, <code>side</code> e <code>sideOffset</code> — o painel sai da tela sem nada o impedir —, e abre com o item escolhido dentro do fade, porque escreve a rolagem à mão. Nenhuma tela o usa.
       </DocNote>
 
-      <DocNote title="A lista dissolve; as setas saíram">
-        O viewport veste a dissolução do sistema (<code>scroll-fade-y</code> e <code>useScrollFade</code>): a zona cresce conforme cada ponta tem o que esconder, e a folga de rolagem conta a zona inteira, então nem o item reaberto nem o da navegação por seta caem no degradê. As setas de rolagem do Radix saíram junto — eram o segundo sinal para a mesma borda, e os menus não as têm.
+      <DocNote title="A lista dissolve, e a seta diz para onde">
+        O viewport veste a dissolução do sistema (<code>scroll-fade-y</code> e <code>useScrollFade</code>): a zona cresce conforme cada ponta tem o que esconder, e a folga de rolagem conta a zona inteira, então nem o item reaberto nem o da navegação por seta caem no degradê. Sobre a borda que dissolve pousa uma seta (<code>ScrollFadeArrows</code>, rodada 172), a mesma de todos os dropdowns: para baixo enquanto há mais embaixo, para cima quando já se rolou. Não são as faixas de rolagem do Radix, que saíram na rodada 166: a seta não ocupa altura, não rola ao pousar e não pega o clique.
       </DocNote>
 
       <DocNote title="O Enter não é do formulário aqui">

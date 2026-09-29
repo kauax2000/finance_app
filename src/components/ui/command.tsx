@@ -17,6 +17,7 @@ import {
   scrollFadeViewportClassName,
 } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
+import { ScrollFadeArrows } from "@/lib/scroll-fade-arrows"
 import { useCommandIdleSelection } from "@/hooks/use-command-idle-selection"
 import { Dialog as DialogPrimitive } from "radix-ui"
 import {
@@ -643,9 +644,12 @@ function CommandList({
   const pilha = React.useContext(CommandStackContext)
   const naPilha = pilha !== null
   const naPaleta = pilha === "palette"
+  // As setas só na pilha, que é a lista suspensa (a paleta e o `Combobox`):
+  // é a placa dela o pai `relative` em que elas pousam.
+  const fadeRef = useScrollFade({ arrows: naPilha })
   const lista = (
     <CommandPrimitive.List
-      ref={useScrollFade()}
+      ref={fadeRef}
       data-slot="command-list"
       data-medido={medido || undefined}
       className={cn(
@@ -720,6 +724,7 @@ function CommandList({
       )}
     >
       {lista}
+      <ScrollFadeArrows />
     </div>
   )
 }
