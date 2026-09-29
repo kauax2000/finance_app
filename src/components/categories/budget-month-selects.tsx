@@ -3,7 +3,7 @@
 import { formatMonthLongPtBr } from "@/lib/transaction-date"
 import { formatYearMonth, parseYearMonth } from "@/lib/budget-month"
 import { cn } from "@/lib/utils"
-import { Label } from "@/components/ui/label"
+import { FieldLegend, FieldSet } from "@/components/ui/field"
 import {
     Select,
     SelectContent,
@@ -86,11 +86,14 @@ export function BudgetMonthSelects({
     const yearTriggerClass = dense ? "h-7 min-w-[4.25rem] tabular-nums" : "min-w-[4.5rem] tabular-nums"
 
     return (
-        <div className={cn("flex flex-col gap-2", className)}>
+        // "Mês e ano" nomeia o par, não um controle: é legenda de conjunto, e
+        // não `<label>` (cada `Select` já tem o próprio `aria-label`). O `mb-2` é
+        // porque a legenda renderizada não é item de flex e o `gap` não a alcança.
+        <FieldSet size="sm" className={cn("gap-2", className)}>
             {showFieldLabels ? (
-                <Label className="text-xs font-medium leading-none text-foreground">
+                <FieldLegend variant="label" className="mb-2 leading-none text-foreground">
                     Mês e ano
-                </Label>
+                </FieldLegend>
             ) : null}
             <div className="flex flex-wrap items-center gap-2">
                 <div className="flex min-w-0 flex-col gap-1">
@@ -148,6 +151,6 @@ export function BudgetMonthSelects({
                     </Select>
                 </div>
             </div>
-        </div>
+        </FieldSet>
     )
 }

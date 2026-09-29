@@ -144,7 +144,8 @@ export function DashboardKpiCards({
                         <MoneyDisplay
                             value={kpiCurrent.expense}
                             tone="expense"
-                            className="text-xl font-semibold leading-tight md:text-2xl"
+                            size="2xl"
+                        className="text-xl leading-tight md:text-2xl"
                         />
                         {/* Os três cards são lançados, para Receitas − Despesas = Resultado.
                             O previsto do mês fica como leitura secundária. */}
@@ -173,7 +174,8 @@ export function DashboardKpiCards({
                     <MoneyDisplay
                         value={kpiCurrent.income}
                         tone="income"
-                        className="text-xl font-semibold leading-tight md:text-2xl"
+                        size="2xl"
+                        className="text-xl leading-tight md:text-2xl"
                     />
                 }
                 badge={
@@ -191,7 +193,8 @@ export function DashboardKpiCards({
                         tone={
                             kpiCurrent.net >= 0 ? "income" : "expense"
                         }
-                        className="text-xl font-semibold leading-tight md:text-2xl"
+                        size="2xl"
+                        className="text-xl leading-tight md:text-2xl"
                     />
                 }
                 badge={
@@ -206,7 +209,8 @@ export function DashboardKpiCards({
                 value={
                     <MoneyDisplay
                         value={totalOpenInvoices}
-                        className="text-xl font-semibold leading-tight text-foreground md:text-2xl"
+                        size="2xl"
+                        className="text-xl leading-tight md:text-2xl"
                     />
                 }
             />

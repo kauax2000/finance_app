@@ -1,5 +1,6 @@
 "use client"
 
+import { Code } from "@/components/ui/code"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { currencyBRL, percentBR, signedCurrencyBRL } from "@/lib/formatters"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
@@ -52,15 +53,15 @@ export default function MoneyDisplayDoc() {
       </DocSection>
 
       <DocSection
-        title="Sinal e forma compacta"
-        description="signed força o + no positivo, para uma coluna em que entrada e saída convivem. compact é para eixo de gráfico e cartão estreito, nunca para o valor que a pessoa vai conferir."
+        title="Sinal"
+        description="signed põe o + no positivo, para uma coluna em que entrada e saída convivem. O negativo leva o menos com ou sem ele; o zero nunca leva sinal."
         code={`<MoneyDisplay value={1234.5} signed tone="income" />
 <MoneyDisplay value={-89.9} signed tone="expense" />
-<MoneyDisplay value={1234567} compact />`}
+<MoneyDisplay value={0} signed />`}
       >
         <MoneyDisplay value={1234.5} signed tone="income" />
         <MoneyDisplay value={-89.9} signed tone="expense" />
-        <MoneyDisplay value={1234567} compact />
+        <MoneyDisplay value={0} signed />
       </DocSection>
 
       <DocSection
@@ -77,7 +78,7 @@ export default function MoneyDisplayDoc() {
 
       <DocSection
         title="Sem valor, e valor compacto"
-        description="null e undefined desenham travessão, não R$ 0,00: “ainda não carregou” e “o saldo é zero” são respostas diferentes. O compacto leva o valor cheio no title e no nome acessível."
+        description="null e undefined desenham travessão, não R$ 0,00: “ainda não carregou” e “o saldo é zero” são respostas diferentes. compact é para eixo de gráfico e cartão estreito, nunca para o valor que a pessoa vai conferir, e leva o valor cheio no title e no nome acessível. Passe o ponteiro."
         code={`<MoneyDisplay value={null} />
 <MoneyDisplay value={1234567} compact />`}
       >
@@ -95,9 +96,9 @@ export default function MoneyDisplayDoc() {
           <Stack className="gap-3">
             {EXEMPLOS.map(([chamada, saida, uso]) => (
               <div key={chamada} className="flex flex-col">
-                <code className="font-mono text-2xs text-muted-foreground">
+                <Code variant="inline" className="text-muted-foreground">
                   {chamada}
-                </code>
+                </Code>
                 <span className="nums text-sm font-medium text-foreground">
                   {saida}
                 </span>
@@ -172,7 +173,11 @@ export default function MoneyDisplayDoc() {
       </DocNote>
 
       <DocNote title="A face muda com o tamanho, e é de propósito">
-        Do <code>sm</code> ao <code>lg</code> o valor é Inter com <code>tabular-nums</code> — dado de linha, que pertence ao texto em volta. Em <code>xl</code> e <code>2xl</code> vira Geist Mono: ali ele é o herói da tela. Mono em todas as linhas de um extrato viraria textura.
+        Do <code>sm</code> ao <code>lg</code> o valor é Inter com <code>tabular-nums</code> — dado de linha, que pertence ao texto em volta. Em <code>xl</code> e <code>2xl</code> vira Geist Mono: ali ele é o herói da tela. Mono em todas as linhas de um extrato viraria textura. <strong>Quem decide é o prop <code>size</code>, e não a classe</strong>: um <code>className=&quot;text-2xl&quot;</code> aumenta a letra e deixa a face em Inter.
+      </DocNote>
+
+      <DocNote title="Onde o app usa">
+        38 chamadas em 18 arquivos, contadas na rodada 164: <code>size=&quot;sm&quot;</code> em 12, <code>tone=&quot;muted&quot;</code> em 5 e o tom calculado (entrada ou saída) em outras 5, <code>signed</code> em 2. <code>compact</code>, <code>mono</code>, <code>currency</code> e as casas decimais não têm chamada. <strong>20 das 38 redimensionam por <code>className</code></strong>, e a consequência é a da nota acima: os quatro valores de topo do painel eram <code>text-xl md:text-2xl</code> sobre o <code>size</code> padrão e saíam em Inter. Hoje eles declaram <code>size=&quot;2xl&quot;</code>, que dá a face, e mantêm a classe, que guarda o <code>text-xl</code> do telefone. Fora dele, 67 chamadas de <code>currencyBRL</code> em 25 arquivos de tela; quase todas são string de verdade (rótulo de gráfico, <code>aria-label</code>, texto de aviso), e quatro renderizam o valor direto no JSX.
       </DocNote>
 
       <PropsTable
@@ -181,8 +186,10 @@ export default function MoneyDisplayDoc() {
           { prop: "tone", type: '"default" | "income" | "expense" | "muted"', default: '"default"', description: "A cor do valor." },
           { prop: "size", type: '"sm" | "md" | "lg" | "xl" | "2xl"', default: '"md"', description: "O tamanho do texto." },
           { prop: "signed", type: "boolean", default: "false", description: "Mostra o + no positivo." },
-          { prop: "compact", type: "boolean", default: "false", description: "1,2 mil em vez de 1.234,50." },
-          { prop: "mono", type: "boolean", default: "xl e 2xl", description: "Força ou desliga a Geist Mono. A figura tabular fica ligada sempre." },
+          { prop: "compact", type: "boolean", default: "false", description: "R$ 1,23 mil em vez de R$ 1.234,50. O valor cheio vai no title e no texto para leitor de tela." },
+          { prop: "mono", type: "boolean", default: "true em xl e 2xl", description: "Força ou desliga a Geist Mono. A figura tabular fica ligada sempre." },
+          { prop: "currency", type: "string", default: '"BRL"', description: "O código ISO da moeda. Em pt-BR: US$ 1.234,50." },
+          { prop: "minimumFractionDigits / maximumFractionDigits", type: "number", default: "2", description: "As casas decimais. O valor é arredondado a centavos antes, qualquer que seja o número." },
         ]}
       />
     </>

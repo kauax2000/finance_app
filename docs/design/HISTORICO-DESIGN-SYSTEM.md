@@ -15149,3 +15149,39 @@ corrigido. `field-control-ladder.test.ts` tranca os valores novos.
   - nota com as medições da pastilha no claro (1,04 sumia, 8,3:1 no glifo);
   - "Onde se usa": só o catálogo;
   - `aria-hidden` na tabela de props.
+
+### Rodada 164 — as páginas do Label e do MoneyDisplay revisadas contra o código
+
+**Label.**
+- **O motivo do rótulo ao lado da caixa estava velho.** A página dizia que sem
+  ele "o checkbox sozinho é alvo pequeno demais"; a caixa tem alvo de 44px
+  pelo `::after` desde antes. O rótulo é o nome e a área a mais.
+- **O desabilitado não estava documentado.** O átomo apaga por
+  `peer-disabled`, que só casa com irmão anterior que carrega `peer`: o
+  `Checkbox` e o `Switch`. Medido: rótulo a 0,5 depois dos dois
+  desabilitados, 1 depois de um habilitado. Um `Input` desabilitado ao lado
+  de um `Label` solto não o apaga; a saída é `Field disabled`.
+- **Página**: demonstração "Desabilitado", o `Switch` ao lado do `Checkbox`,
+  notas sobre o `peer`, a entrelinha zero e onde o app usa, tabela de props.
+- **O "Mês e ano" de `budget-month-selects.tsx` era um `<label>` sem
+  controle ligado**, nomeando o par de `Select` (cada um com `aria-label`
+  próprio). Virou `FieldSet size="sm"` com `FieldLegend variant="label"`. **A
+  legenda renderizada não é item de flex**, então o `gap-2` do `FieldSet` não
+  a alcança: medido, 0px entre ela e os seletores contra os 8 de antes. O
+  `mb-2` na legenda devolve os 8. Vale para todo `FieldSet` com legenda.
+
+**MoneyDisplay.**
+- **A tabela de props descrevia o `compact` errado**: "1,2 mil em vez de
+  1.234,50". A saída é `R$ 1,23 mil` (duas casas sempre). Faltavam
+  `currency` e as casas decimais.
+- **O compacto aparecia em duas seções**. A de sinal passou a mostrar o zero
+  com `signed`, que não leva sinal.
+- **A face é decidida pelo prop `size`, não pela classe.** 20 das 38 chamadas
+  do app redimensionam por `className`, e os quatro valores de topo do painel
+  (`text-xl md:text-2xl` sobre o `size` padrão) saem em Inter, contra a regra
+  de que o herói da tela é Geist Mono. Corrigido com `size="2xl"` nas quatro
+  chamadas, mantendo `text-xl md:text-2xl` na classe: o `tailwind-merge` tira
+  o `text-2xl` do degrau e o telefone continua em `text-xl`, agora em Geist
+  Mono. O `font-semibold` saiu da classe porque o degrau já o traz.
+- **Página**: nota "Onde o app usa" com a contagem, a nota da face explicando
+  o `size`, `Code` no lugar do `<code>` com classes à mão.
