@@ -503,6 +503,12 @@ function TableHead({
       }
       className={cn(
         "h-(--table-head-h) px-(--table-px) text-left align-middle text-(length:--table-head-fs) text-muted-foreground",
+        // A costura de coluna do `Resizable` é absoluta na borda da célula, e a
+        // célula só se posiciona quando ela está dentro, e nenhuma outra tabela
+        // muda (o `sticky` do cabeçalho é do `thead`, não da célula). Sem
+        // `truncate`: o `overflow: hidden` dele cortaria a metade da costura
+        // que passa da borda.
+        "has-[>[data-slot=resizable-column-handle]]:relative",
         labels === "caps" ? "font-semibold tracking-wider uppercase" : "font-medium",
         numeric && TABLE_NUMERIC_HEAD_CLASS,
         selection && TABLE_SELECTION_CLASS,

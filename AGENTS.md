@@ -307,9 +307,9 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   rodada 118 os dois avisos — `Alert variant="brand"` e
   `AnnouncementBar variant="brand"`. **Há três
   famílias de peça de marca, e elas quebram por motivos diferentes**: a do
-  **contorno** (os controles de escolha — o `Checkbox` até a rodada 153, o
-  `Button brandOutline` até a 152), em que o degradê
-  vive em 1px de `border-box` sobre um miolo chapado; a do
+  **contorno** (**extinta na rodada 169** — foi o `Checkbox` até a 153, o
+  `Button brandOutline` até a 152, e o `Radio` e o `brandCard` até a 168), em
+  que o degradê vivia em 1px de `border-box` sobre um miolo chapado; a do
   **preenchimento** (`Progress variant="brand"` e `Slider variant="brand"`), em
   que ele preenche a barra e o que a liberta da invariante 3 é não haver rótulo
   em cima; a do **véu**, na `AnnouncementBar variant="brand"` — o `Banner`
@@ -501,24 +501,21 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   `Button brand`, com `useBrandGlow`): a borda acende perto do ponteiro,
   marcada ou não, e só a borda: a máscara recorta o anel, e o preenchimento,
   a flor e o hover aparecem intactos sob ele. (Na rodada 155 havia um núcleo
-  com a flor por cima e um remendo de hover; saíram na 156.) O `Radio` e o
-  cartão continuam com o contorno parado.
+  com a flor por cima e um remendo de hover; saíram na 156.) **Desde a rodada
+  169 o `Radio brand` e o `RadioGroupItem brandCard` vestem o mesmo brilho**:
+  o rádio com intensidade cheia, como a caixa, e o cartão somando o brilho ao
+  realce de seleção do `card` (antes o contorno o substituía; o brilho acende
+  pelo ponteiro, não pelo estado, e a seleção precisa de sinal próprio).
+  Marcado, o anel do `Radio` passa a `--primary-accent` e o ponto nasce na
+  mola (`zoom-in-0`).
   **Nos controles de escolha o halo não existe, e o motivo é mecânico**: o
   `::after` dos dois átomos **já é o alvo de toque de 44px** (`after:-inset-3.5`),
-  e ele não se move. Sobra o contorno — o precedente do `brandOutline` até a
-  rodada 152 —, e
-  nesta escala é o certo de qualquer forma: um halo a `-inset-1` sangra 4px e
-  encosta na linha vizinha de uma lista com `gap-3`. **E ele só acende
-  marcado**: desmarcado, os três são pixel a pixel os do sistema, porque a
-  passagem do fio cinza para o degradê *é* a comemoração e cinco anéis de
-  acento numa lista deixam de ser acento. Quem liga e desliga é uma
-  **opacidade** e não a troca da camada — `background-image` não interpola
-  entre um degradê e `none`, e pintar e despintar faria o contorno estalar. O
-  núcleo chapado muda por peça (`--background` no anel, `--card` no cartão) e **tem que ser opaco**: com `transparent` a camada
-  `border-box` aparece no miolo e o controle inteiro vira degradê. O cartão de
-  marca troca o realce de seleção do `card` em vez de somá-lo, e o rádio dentro
-  dele **não** veste `brand` — dois contornos aninhados são "dois anéis na
-  mesma caixa". `brand-contour.test.ts` tranca as cinco peças.
+  e ele não se move. Sobra a borda — hoje o brilho, que mora no `::before` —,
+  e nesta escala é o certo de qualquer forma: um halo a `-inset-1` sangra 4px e
+  encosta na linha vizinha de uma lista com `gap-3`. O rádio dentro do
+  `brandCard` **não** veste `brand` — dois brilhos aninhados são "dois anéis
+  na mesma caixa". `brand-contour.test.ts` impede o contorno de voltar e tranca
+  as três peças de escolha no brilho.
   **O campo não veste marca, e isso custou cinco rodadas.** Passaram por ele um
   contorno estático de arco-íris, o `border-beam` do 21st portado em CSS (feixe
   animado), um halo por `box-shadow`, a receita do `Button variant="brand"` com
@@ -1969,6 +1966,18 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   O título **não** é da peça (chrome de tela, invariante 1); a leitura é,
   porque é o estado do controle. Lacuna conhecida: o Radix anuncia o número
   cru, e o `Slider` não escreve `aria-valuetext`.
+- **`Resizable` também redimensiona colunas de tabela** (rodada 170):
+  `useResizableColumns` + `ResizableColumnHandle`, no mesmo `resizable.tsx`,
+  com a costura do `ResizableHandle plain` (nada em repouso, o fio ao pousar
+  na célula, o acento ao pousar e arrastar). **O arraste é nosso, e não da
+  lib**: os painéis dela são flex, e numa tabela quem manda é a célula da
+  primeira linha sob `table-layout: fixed`. Uma coluna fica **sem largura** e
+  absorve a sobra — sem ela a costura escorrega do cursor —, e o piso dela
+  (`fluidMinWidth`, 192px) entra no `min-width` da tabela. O `TableHead` só
+  vira `relative` quando tem uma costura dentro, e **não** trunca (o
+  `overflow: hidden` cortaria a metade dela que passa da borda). Alvo de 10px
+  no mouse e 24 no dedo, e não 44: numa coluna de 88px o alvo cobriria o
+  rótulo e o clique de ordenar arrastaria. `resizable-columns.test.ts` tranca.
 - **`Carousel` — uma biblioteca, e um motor só** (rodada 134). Cada versão é
   **prop ou peça do mesmo `Carousel`**, nunca um componente paralelo:
   `effect` (`scale`, `spotlight` — o destaque no centro, que centraliza e liga

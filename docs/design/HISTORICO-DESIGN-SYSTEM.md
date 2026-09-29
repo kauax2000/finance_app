@@ -15327,3 +15327,72 @@ crédito mostrava o uso **limitado a 100%**; o `ProgressValue` mostra o bruto,
 então um limite estourado passa a dizer 120% e não 100%.
 **Não verificado na tela**: as cinco telas pedem login, e a sessão não entra
 na conta do dono.
+
+### Rodada 169 — o Radio acende e floresce, e a marca dele vira brilho
+
+A mesma rodada do `Checkbox` (153 a 156), no rádio.
+
+**Marcar.** O anel passa de `--input` para `--primary-accent` e o ponto nasce
+na mola da casa (`zoom-in-0`, `--duration-spring`, `--ease-spring`), a entrada
+do tique do `Checkbox`. Medido: `animation-name: enter`, 0,5s, a curva
+`linear()` da mola; o anel marcado mede `oklch(0.145)` no claro e
+`oklch(0.985)` no escuro. O rádio ganhou o par de toque do `Checkbox`
+(`hover:`/`active:` `bg-muted/60`, com o par `dark:hover:`, porque `dark:`
+empata com `hover:` e vence). **Passar o ponteiro sobre o texto do rótulo
+acende o anel**: o Chrome marca o controle rotulado como `:hover` quando o
+`<label>` está em hover, e a linha inteira já é o alvo.
+
+**A marca.** `Radio brand` e `RadioGroupItem brandCard` saíram do contorno
+parado (1px de `border-box` sobre núcleo chapado, aceso só marcado) e vestem o
+brilho: `brand-glow isolate` + `useBrandGlow`, no rádio com intensidade cheia
+como a caixa. **Com isso a família do contorno acabou**: teve cinco peças, e
+`brand-contour.test.ts` (1 e 2) impede a volta.
+- Medido nos dois temas, ponteiro longe × perto em três posições fora do alvo
+  de toque: **zero** pixel muda no miolo do anel (raio de 5,5px), e 187 a 442
+  mudam no anel.
+- **O `brandCard` soma o brilho ao realce do `card`**, que o contorno
+  substituía: o brilho acende pelo ponteiro e não pelo estado, e a seleção
+  precisa de sinal próprio. O arco vive na aresta e a lavagem no miolo, e não
+  disputam, porque a máscara recorta só o anel.
+- O fundo `dark:bg-input-fill/30` subiu para a base: a marca o dividia com a
+  caixa do sistema só quando o contorno cobria o elemento inteiro.
+
+**Páginas.** A do `Radio` ganhou "Marcar acende o anel e faz o ponto nascer",
+a versão de marca no brilho, e "Onde o app usa" (quatro `FormRadioGroup` em
+dois arquivos de transação; nenhum `Radio` à mão, nenhuma marca). A do
+`RadioGroup` e a da marca trocaram o cartão "Grátis / Pro — R$ 29/mês", um
+plano que o produto não tem, pelo "Esta parcela / Plano da compra" do
+formulário de transação; e o "Pix" do cartão virou "PIX", como em
+`lib/payment-methods`. A tabela de famílias da página de marca perdeu a linha
+"Contorno".
+
+### Rodada 170 — a página do Resizable revisada, e ele redimensiona colunas
+
+**Colunas de tabela**, a pedido do dono: `useResizableColumns` e
+`ResizableColumnHandle`, no `resizable.tsx`, e uma classe no `TableHead`.
+- **O arraste é nosso.** Os painéis da lib são flex; numa tabela, quem manda
+  na coluna é a célula da primeira linha sob `table-layout: fixed`. `pointer`
+  com captura e `touch-action: none` (o dedo não rola a tabela), setas de 8px
+  (32 com `Shift`), `Home`/`End` nos limites, `Enter` e duplo-clique voltam ao
+  padrão, e o clique não chega ao botão de ordenar da mesma célula.
+- **Uma coluna fica sem largura e é a folga.** Sem ela, a tabela a 100%
+  repartiria a sobra entre todas e a costura escorregaria do cursor. Medido:
+  arrastar 40px leva a coluna de 88 a 128px e a costura anda os mesmos 40.
+- **Memória com `id`**, lida depois da hidratação (a lição do
+  `useResizableLayout`). Medido: 112px guardados voltam após recarregar.
+- **O `TableHead` só vira `relative` com a costura dentro**
+  (`has-[>[data-slot=resizable-column-handle]]`), e **não trunca**: a
+  primeira versão trazia `truncate`, e o `overflow: hidden` cortaria a metade
+  da costura que passa da borda.
+- **Alvo de 10px no mouse e 24 no dedo**, abaixo dos 44 da casa, e é teto
+  consciente: numa coluna de 88px, 44 cobririam metade do rótulo.
+
+**A página.** Os sete splits quase iguais de "Extrato / Detalhe" em cinza
+viraram cinco demonstrações com conteúdo do app: o extrato ao lado do detalhe
+(`DescriptionList`), já lembrando a proporção; as três costuras num grupo só,
+de quatro painéis; os grupos aninhados, que cobrem a vertical; os limites em
+`rem` (medido: `12rem` dá 192px); o colapso com as categorias; e as colunas.
+A demonstração "No telefone ele empilha" saiu — no desktop ela era idêntica à
+primeira — e virou nota. Entraram a tabela de props do `ResizablePanel`
+(`minSize`, `maxSize`, `collapsible`, unidades), que faltava, e "Onde o app
+usa": nenhuma tela; o único consumidor é a `Sidebar resizable` do catálogo.

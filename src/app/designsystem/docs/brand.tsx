@@ -43,9 +43,8 @@ const ESCALA = [
  */
 const FAMILIAS = [
   { nome: "Letra", como: "o degradê preenche o traçado, parado, em todo tamanho", who: ["AppWordmark rainbow", "AppLogo rainbow", "EmptyStateCode"] },
-  { nome: "Contorno", como: "1px de border-box sobre um miolo chapado, aceso quando marcado", who: ["Radio brand", "RadioGroupItem brandCard"] },
   { nome: "Preenchimento", como: "o degradê é o trilho e a barra o revela — sem rótulo em cima", who: ["Progress brand", "Slider brand", "HistogramSlider brand"] },
-  { nome: "Brilho", como: "só um arco da borda acende perto do ponteiro — o meio nunca é pintado; sem ele, a caixa é neutra", who: ["Alert brand", "Card brand", "Badge brand", "Button brand", "Checkbox brand", "a busca do catálogo"] },
+  { nome: "Brilho", como: "só um arco da borda acende perto do ponteiro — o meio nunca é pintado; sem ele, a caixa é neutra", who: ["Alert brand", "Card brand", "Badge brand", "Button brand", "Checkbox brand", "Radio brand", "RadioGroupItem brandCard", "a busca do catálogo"] },
   { nome: "Degradê", como: "cinco paradas florescem do centro da tecla, só no cursor e no toque; em repouso, preto chapado", who: ["Button primary"] },
   { nome: "Deslize", como: "o arco-íris na borda de baixo e brilhando embaixo da tecla, deslizando em 2s — sempre aceso", who: ["Button brandOutline"] },
   { nome: "Véu", como: "translúcido atrás do texto, deslizando em 20s — a exceção sob texto", who: ["AnnouncementBar brand"] },
@@ -310,12 +309,12 @@ export default function BrandDoc() {
 
       <DocSection
         title="Os controles de escolha"
-        description="O Checkbox veste o brilho: a borda acende conforme o ponteiro se aproxima, marcada ou não. O Radio e o cartão do RadioGroup vestem o contorno, e só marcados — desmarcados são pixel a pixel os do sistema. Nenhum tem halo: nos dois átomos o ::after já é o alvo de toque de 44px. Uma por tela."
+        description="Os três vestem o brilho: a borda acende conforme o ponteiro se aproxima, marcada ou não, e longe dele eles são os do sistema, pixel a pixel. Passe o mouse perto. Nenhum tem halo: nos dois átomos o ::after já é o alvo de toque de 44px. Uma por tela."
         code={`<Checkbox variant="brand" defaultChecked />
 
-<RadioGroup variant="brandCard" defaultValue="pro">
-  <RadioGroupItem value="pro" description="Carteiras ilimitadas.">
-    Pro — R$ 29/mês
+<RadioGroup variant="brandCard" defaultValue="slice">
+  <RadioGroupItem value="slice" description="Só o valor e a data desta.">
+    Esta parcela
   </RadioGroupItem>
 </RadioGroup>`}
         previewClassName="flex-col items-stretch gap-4"
@@ -326,24 +325,24 @@ export default function BrandDoc() {
         </div>
         <RadioGroup
           variant="brandCard"
-          defaultValue="pro"
+          defaultValue="slice"
           className="w-full max-w-sm"
         >
-          <RadioGroupItem value="free" description="Uma carteira, sem histórico.">
-            Grátis
+          <RadioGroupItem value="slice" description="Só o valor e a data desta.">
+            Esta parcela
           </RadioGroupItem>
           <RadioGroupItem
-            value="pro"
-            description="Carteiras ilimitadas e relatórios."
+            value="plan"
+            description="Descrição, categoria e as parcelas futuras."
           >
-            Pro — R$ 29/mês
+            Plano da compra
           </RadioGroupItem>
         </RadioGroup>
       </DocSection>
 
-      <DocNote title="O contorno esmaece, e o conteúdo não pousa no degradê">
+      <DocNote title="Só a borda acende, e o conteúdo não pousa no degradê">
         <p>
-          Quem liga e desliga a marca é uma <strong>opacidade</strong>, e não a troca da camada: <code>background-image</code> não interpola entre um degradê e <code>none</code>, então pintar e despintar faria o contorno estalar. O miolo é chapado — <code>--primary</code> na caixa, <code>--background</code> no anel, <code>--card</code> no cartão —, então o tique continua branco sobre a tecla e o ponto continua <code>--primary-accent</code> sobre a página: <strong>o mesmo contraste dos controles do sistema</strong>. O degradê só aparece por 1px de borda, e arco-íris sob texto continua proibido.
+          A máscara do brilho recorta o anel: o miolo é o fundo real de cada peça, então o tique continua branco sobre a tecla, o ponto continua <code>--primary-accent</code> sobre a página e o cartão selecionado mantém o seu realce — <strong>o mesmo contraste dos controles do sistema</strong>. A família do contorno, que acendia só marcada sobre um miolo chapado, teve cinco peças e perdeu a última na rodada 169. Arco-íris sob texto continua proibido.
         </p>
       </DocNote>
 

@@ -33,7 +33,7 @@ export default function RadioGroupDoc() {
         description="Quando cada opção precisa de explicação. A caixa inteira acende, e a descrição vive dentro do rótulo para continuar clicável."
         code={`<RadioGroup defaultValue="pix" variant="card">
   <RadioGroupItem value="pix" description="Cai na hora, sem taxa.">
-    Pix
+    PIX
   </RadioGroupItem>
   <RadioGroupItem value="cartao" description="Entra na fatura do mês seguinte.">
     Cartão de crédito
@@ -43,7 +43,7 @@ export default function RadioGroupDoc() {
       >
         <RadioGroup defaultValue="pix" variant="card" className="w-full max-w-sm">
           <RadioGroupItem value="pix" description="Cai na hora, sem taxa.">
-            Pix
+            PIX
           </RadioGroupItem>
           <RadioGroupItem
             value="cartao"
@@ -59,40 +59,32 @@ export default function RadioGroupDoc() {
 
       <DocSection
         title="O cartão de marca"
-        description="O mesmo cartão com o arco-íris da marca no lugar do realce de seleção. É onde a marca de fato se vê — 44px de altura dão ao degradê a escala que os 16px do anel não dão. Uma por tela."
-        code={`<RadioGroup defaultValue="pro" variant="brandCard">
-  <RadioGroupItem value="free" description="Uma carteira, sem histórico.">
-    Grátis
+        description="O mesmo cartão, com o mesmo realce de seleção, e a borda que acende em arco-íris conforme o ponteiro se aproxima — o brilho do Card brand. Passe o mouse perto. Uma por tela."
+        code={`<RadioGroup defaultValue="slice" variant="brandCard">
+  <RadioGroupItem value="slice" description="Só o valor e a data desta.">
+    Esta parcela
   </RadioGroupItem>
-  <RadioGroupItem value="pro" description="Carteiras ilimitadas e relatórios.">
-    Pro — R$ 29/mês
+  <RadioGroupItem value="plan" description="Descrição, categoria e as parcelas futuras.">
+    Plano da compra
   </RadioGroupItem>
 </RadioGroup>`}
         previewClassName="flex-col items-stretch"
       >
-        <RadioGroup
-          defaultValue="pro"
-          variant="brandCard"
-          className="w-full max-w-sm"
-        >
-          <RadioGroupItem value="free" description="Uma carteira, sem histórico.">
-            Grátis
+        <RadioGroup defaultValue="slice" variant="brandCard" className="w-full max-w-sm">
+          <RadioGroupItem value="slice" description="Só o valor e a data desta.">
+            Esta parcela
           </RadioGroupItem>
           <RadioGroupItem
-            value="pro"
-            description="Carteiras ilimitadas e relatórios."
+            value="plan"
+            description="Descrição, categoria e as parcelas futuras."
           >
-            Pro — R$ 29/mês
+            Plano da compra
           </RadioGroupItem>
         </RadioGroup>
       </DocSection>
 
-      <DocNote title="A lavagem de 5% sai, e o rádio de dentro não vira marca">
-        Um contorno de arco-íris é sinal de seleção muito mais forte que um véu de 5%, e mantê-lo exigiria achatar <code>primary/5</code> sobre um pai que o componente não conhece. Pela mesma razão o <code>Radio</code> dentro do cartão continua o do sistema: dois contornos de arco-íris aninhados são o defeito de &ldquo;dois anéis na mesma caixa&rdquo; que o cartão já resolve. O anel de foco também continua sendo o do cartão — o <code>ring-3</code> mora fora da caixa de borda, então o contorno não o cobre.
-      </DocNote>
-
-      <DocNote title="O núcleo é --card, e ele é trocável numa linha">
-        O <code>::before</code> a <code>-z-10</code> cobre o fundo <em>e</em> a borda do elemento — numa raiz de empilhamento eles pintam antes dos filhos de <code>z</code> negativo —, então o miolo chapado tem de vir do pseudo. Num cartão de marca que não pouse numa superfície de <code>Card</code>, quem chama escreve <code>[--brand-fill:var(--background)]</code>.
+      <DocNote title="O brilho soma, e o rádio de dentro não vira marca">
+        Até a rodada 168 a marca era um contorno parado que acendia <strong>no lugar</strong> do realce de seleção. O brilho acende pelo ponteiro, e não pelo estado, então quem diz &ldquo;selecionado&rdquo; volta a ser o realce do <code>card</code> — e os dois não disputam: o arco vive na aresta, a lavagem no miolo, porque a máscara recorta só o anel. O <code>Radio</code> de dentro continua o do sistema, porque dois brilhos aninhados são dois anéis na mesma caixa, e o anel de foco continua sendo o do cartão.
       </DocNote>
 
       <DocSection
@@ -156,7 +148,7 @@ export default function RadioGroupDoc() {
       </DocNote>
 
       <DocNote title="A descrição entra no nome, não em aria-describedby">
-        Dentro do rótulo, ela já compõe o nome acessível: &ldquo;Pix, cai na hora, sem taxa&rdquo;. Um <code>aria-describedby</code> para o mesmo texto o faria ser lido duas vezes.
+        Dentro do rótulo, ela já compõe o nome acessível: &ldquo;PIX, cai na hora, sem taxa&rdquo;. Um <code>aria-describedby</code> para o mesmo texto o faria ser lido duas vezes.
       </DocNote>
 
       <DocNote title="O alvo do rádio já é 44px">

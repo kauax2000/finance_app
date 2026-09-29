@@ -593,13 +593,235 @@ function ResizableCollapseTrigger({
   )
 }
 
+/**
+ * # As colunas de uma tabela (rodada 170)
+ *
+ * A mesma costura, no cabeçalho de uma `Table`. **Não é a lib**: os painéis
+ * dela são caixas flex, e uma tabela é `table-layout`, onde quem manda na
+ * largura de uma coluna é a célula da primeira linha. Aqui o arraste é
+ * nosso — `pointer` com captura, as setas do teclado, o duplo-clique —, e o
+ * desenho é o do `ResizableHandle plain`: nada em repouso, o fio ao pousar na
+ * célula, o acento ao pousar na costura e ao arrastar.
+ *
+ * ## Uma coluna fica sem largura, e ela é a folga
+ *
+ * Com `table-layout: fixed`, as colunas com largura declarada medem
+ * exatamente isso e a que **não** tem largura absorve a sobra. É o que faz o
+ * arraste andar com o ponteiro: sem ela, a tabela de 100% redistribuiria a
+ * sobra entre todas e a costura escorregaria do cursor. O piso da folga
+ * (`fluidMinWidth`, 192px) entra no `min-width` da tabela; abaixo dele o
+ * viewport da `Table` rola na horizontal, que é o que ele já faz.
+ */
+type ResizableColumn = {
+  /** A largura inicial, em px. */
+  width: number
+  /** O piso, em px. Padrão 48. */
+  min?: number
+  /** O teto, em px. Padrão sem teto. */
+  max?: number
+}
+
+const COLUMN_MIN = 48
+/** Um passo das setas. `Shift` multiplica por 4. */
+const COLUMN_STEP = 8
+
+function lerLarguras(id: string | undefined): Record<string, number> | null {
+  if (!id) return null
+  try {
+    const bruto = safeLayoutStorage.getItem(`resizable-columns:${id}`)
+    return bruto ? (JSON.parse(bruto) as Record<string, number>) : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * As larguras das colunas, o arraste e a memória.
+ *
+ * Espalhe `tableStyle` na `Table`, `columnStyle(chave)` em cada `TableHead`
+ * redimensionável e `handleProps(chave, rótulo)` num `ResizableColumnHandle`
+ * dentro dele. Com `id`, as larguras são lembradas entre carregamentos — lidas
+ * **depois** da hidratação, pela lição do `useResizableLayout`: o HTML do
+ * servidor não sabe do `localStorage`.
+ */
+function useResizableColumns<K extends string>({
+  id,
+  columns,
+  fluidMinWidth = 192,
+}: {
+  id?: string
+  columns: Record<K, ResizableColumn>
+  fluidMinWidth?: number
+}) {
+  const padrao = React.useMemo(() => {
+    const out = {} as Record<K, number>
+    for (const k of Object.keys(columns) as K[]) out[k] = columns[k].width
+    return out
+  }, [columns])
+  const [larguras, setLarguras] = React.useState<Record<K, number>>(padrao)
+
+  React.useEffect(() => {
+    const guardado = lerLarguras(id)
+    if (guardado) setLarguras((atual) => ({ ...atual, ...guardado }))
+  }, [id])
+
+  const limitar = React.useCallback(
+    (k: K, v: number) => {
+      const c = columns[k]
+      return Math.round(Math.min(c.max ?? Infinity, Math.max(c.min ?? COLUMN_MIN, v)))
+    },
+    [columns]
+  )
+
+  const definir = React.useCallback(
+    (k: K, v: number, salvar: boolean) => {
+      setLarguras((atual) => {
+        const proximo = { ...atual, [k]: limitar(k, v) }
+        if (salvar && id) {
+          safeLayoutStorage.setItem(`resizable-columns:${id}`, JSON.stringify(proximo))
+        }
+        return proximo
+      })
+    },
+    [id, limitar]
+  )
+
+  const soma = (Object.values(larguras) as number[]).reduce((a, b) => a + b, 0)
+
+  return {
+    widths: larguras,
+    tableStyle: {
+      tableLayout: "fixed",
+      minWidth: soma + fluidMinWidth,
+    } satisfies React.CSSProperties,
+    columnStyle: (k: K): React.CSSProperties => ({ width: larguras[k] }),
+    handleProps: (k: K, label: string): ResizableColumnHandleProps => ({
+      label,
+      width: larguras[k],
+      min: columns[k].min ?? COLUMN_MIN,
+      max: columns[k].max,
+      onWidthChange: (v, fim) => definir(k, v, fim),
+      onReset: () => definir(k, columns[k].width, true),
+    }),
+  }
+}
+
+type ResizableColumnHandleProps = {
+  /** O nome da coluna, para o `aria-label` da costura. */
+  label: string
+  width: number
+  min: number
+  max?: number
+  /** `fim` é verdadeiro ao soltar e no teclado: é quando a largura é guardada. */
+  onWidthChange: (width: number, fim: boolean) => void
+  onReset: () => void
+  className?: string
+}
+
+/**
+ * A costura de uma coluna: o `role="separator"` na borda direita do
+ * `TableHead`, que se posiciona sozinho quando ela está dentro dele.
+ *
+ * O alvo é de 10px no mouse e 24px no dedo, centrado na borda — e não os 44
+ * da casa: numa coluna de 88px, 44 de alvo cobririam metade do rótulo, e o
+ * clique de ordenar passaria a arrastar. É o teto consciente desta peça.
+ */
+function ResizableColumnHandle({
+  label,
+  width,
+  min,
+  max,
+  onWidthChange,
+  onReset,
+  className,
+}: ResizableColumnHandleProps) {
+  const inicio = React.useRef<{ x: number; w: number } | null>(null)
+  const [arrastando, setArrastando] = React.useState(false)
+
+  return (
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      aria-label={`Redimensionar a coluna ${label}`}
+      aria-valuenow={width}
+      aria-valuemin={min}
+      aria-valuemax={max}
+      tabIndex={0}
+      data-slot="resizable-column-handle"
+      data-dragging={arrastando ? "" : undefined}
+      className={cn(
+        "absolute inset-y-0 right-0 z-10 w-2.5 translate-x-1/2 cursor-col-resize touch-none outline-hidden select-none pointer-coarse:w-6",
+        // O fio: nada em repouso, a borda ao pousar na célula, o acento ao
+        // pousar na costura, ao focar e ao arrastar. 2px centrados, e só a cor
+        // transiciona — o realce do `ResizableHandle`.
+        "before:absolute before:inset-y-1.5 before:left-1/2 before:w-0.5 before:-translate-x-1/2 before:rounded-full before:bg-transparent before:transition-colors before:duration-(--duration-fast) before:ease-(--ease-out)",
+        "in-[th:hover]:before:bg-border",
+        "hover:before:bg-primary-accent/60 focus-visible:before:bg-primary-accent/60",
+        "data-dragging:before:bg-primary-accent",
+        "focus-visible:ring-3 focus-visible:ring-ring/45",
+        className
+      )}
+      // A costura mora dentro do cabeçalho, e um clique nela não pode chegar ao
+      // botão de ordenar da mesma célula.
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => {
+        if (e.button !== 0) return
+        e.preventDefault()
+        e.stopPropagation()
+        e.currentTarget.setPointerCapture(e.pointerId)
+        inicio.current = { x: e.clientX, w: width }
+        setArrastando(true)
+      }}
+      onPointerMove={(e) => {
+        if (!inicio.current) return
+        onWidthChange(inicio.current.w + e.clientX - inicio.current.x, false)
+      }}
+      onPointerUp={(e) => {
+        if (!inicio.current) return
+        onWidthChange(inicio.current.w + e.clientX - inicio.current.x, true)
+        inicio.current = null
+        setArrastando(false)
+      }}
+      onPointerCancel={() => {
+        inicio.current = null
+        setArrastando(false)
+      }}
+      onDoubleClick={(e) => {
+        e.stopPropagation()
+        onReset()
+      }}
+      onKeyDown={(e) => {
+        const passo = COLUMN_STEP * (e.shiftKey ? 4 : 1)
+        const alvo =
+          e.key === "ArrowLeft"
+            ? width - passo
+            : e.key === "ArrowRight"
+              ? width + passo
+              : e.key === "Home"
+                ? min
+                : e.key === "End" && max != null
+                  ? max
+                  : e.key === "Enter"
+                    ? null
+                    : undefined
+        if (alvo === undefined) return
+        e.preventDefault()
+        if (alvo === null) onReset()
+        else onWidthChange(alvo, true)
+      }}
+    />
+  )
+}
+
 export {
   ResizableCollapseTrigger,
+  ResizableColumnHandle,
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
   resizableHandleVariants,
+  useResizableColumns,
   useResizableLayout,
   useResizablePanel,
 }
-export type { ResizableOrientation }
+export type { ResizableColumn, ResizableOrientation }

@@ -17,11 +17,11 @@ import { sliderRangeVariants } from "./slider"
 /**
  * O contorno de marca, e o que ele não pode virar.
  *
- * Cinco peças desenham o arco-íris da marca por **contorno**: os dois pesos do
- * `Button`, o `Badge`, e agora o `Checkbox`, o `Radio` e o cartão do
- * `RadioGroup`. A receita é uma só — 1px de `border-box` sobre um núcleo
- * chapado em `padding-box` — e ela tem três jeitos conhecidos de quebrar
- * calada:
+ * Cinco peças desenharam o arco-íris da marca por **contorno** — os dois pesos
+ * do `Button`, o `Badge`, o `Checkbox`, o `Radio` e o cartão do `RadioGroup`
+ * —, e desde a rodada 169 nenhuma desenha: todas foram para o brilho, o véu ou
+ * o Rainbow Button. As asserções 1 e 2 impedem a volta. A receita tinha três
+ * jeitos conhecidos de quebrar calada, e o terceiro ainda vale:
  *
  * 1. alguém declara `bg-*` no próprio elemento e o núcleo some, porque numa
  *    raiz de empilhamento o fundo pinta **antes** dos filhos de `z` negativo;
@@ -54,50 +54,26 @@ const PORTADORES = {
 } as const
 
 describe("contorno de marca", () => {
-  it("1. toda peça de marca declara `--brand-rainbow` no próprio elemento", () => {
+  it("1. o contorno parado saiu da casa, e os dois rádios vestem o brilho", () => {
+    // A família do contorno — 1px de `border-box` sobre um núcleo chapado,
+    // acendendo só marcada — teve cinco membros e perdeu o último na rodada
+    // 169: o `Radio brand` e o `brandCard` foram para o brilho, como o
+    // `Checkbox brand` na 155. Duas peças de escolha falando marcas
+    // diferentes era o defeito; o contorno de volta num deles é a regressão.
     for (const [nome, classes] of Object.entries(PORTADORES)) {
-      // É `brand-rainbow-image` quem declara a variável no elemento; os
-      // pseudo-elementos herdam daqui o valor já substituído. Um `var()` dentro
-      // de uma propriedade personalizada resolve onde ela é **declarada**.
-      //
-      expect(classes.split(/\s+/), nome).toContain("brand-rainbow-image")
-      expect(classes, nome).toContain("--brand-fill:")
-      expect(classes, nome).toContain("_border-box]")
+      const lista = classes.split(/\s+/)
+      expect(lista, nome).toContain("brand-glow")
+      expect(lista, nome).toContain("isolate")
+      expect(classes, nome).not.toMatch(/--brand-fill|_border-box\]|brand-rainbow-image/)
+      expect(classes, nome).not.toMatch(/(^|\s)before:/)
     }
   })
 
-  it("2. o núcleo mora no pseudo, e nunca no elemento", () => {
-    // Só conta `bg-` que **pinta**: os modificadores (`bg-clip-padding`,
-    // `bg-origin-*`, posição, repetição) não põem cor nenhuma.
-    const NAO_PINTA =
-      /^bg-(clip|origin|blend|repeat|no-repeat|auto|cover|contain|fixed|local|scroll|top|bottom|left|right|center)/
-    const pinta = (classe: string) =>
-      /(^|:)bg-/.test(classe) &&
-      !/before:|after:/.test(classe) &&
-      !NAO_PINTA.test(classe.replace(/^.*:/, ""))
-
-    for (const [nome, classes] of Object.entries(PORTADORES)) {
-      expect(classes.split(/\s+/), nome).toContain("isolate")
-    }
-
-    // A armadilha de empilhamento: tinta no **próprio elemento** pinta antes do
-    // `::before` a `-z-10` e o esconde. A régua é o estado em que o contorno
-    // aparece.
-    //
-    // (O `brandOutline` saiu desta família na rodada 153: hoje é o Rainbow
-    // Button, e `button-primary.test.ts` o cobra. O `Badge` e o `Button brand`
-    // saíram antes: são do brilho, e a asserção 10 os cobra.)
-
-    // Nos três controles de escolha ela só acende marcada, e desmarcado é a
-    // superfície do sistema — `bg-background` na caixa é o que se **deve** ver
-    // enquanto o pseudo está a zero. O que não pode existir é tinta sob o
-    // contorno: nenhum `bg-` atrás de um variante de marcado.
-    for (const nome of ["radio/brand", "radio-group/brandCard"] as const) {
-      const sobMarcado = PORTADORES[nome]
-        .split(/\s+/)
-        .filter((c) => /checked/.test(c))
-        .filter(pinta)
-      expect(sobMarcado, nome).toEqual([])
+  it("2. no brilho nada pinta sob o arco, e nenhum núcleo volta", () => {
+    // A máscara recorta só o anel (rodada 156); o miolo da peça é o fundo
+    // real, e declarar um núcleo era o que virava feixe.
+    for (const nome of ["radio", "radio-group"]) {
+      expect(fonte(nome), nome).not.toMatch(/\[--brand-glow-(core|overlay):/)
     }
   })
 
@@ -122,41 +98,33 @@ describe("contorno de marca", () => {
     }
   })
 
-  it("5. o arco-íris só aparece marcado, e ele esmaece", () => {
-    expect(PORTADORES["radio/brand"]).toContain(
-      "data-[state=checked]:before:opacity-100"
-    )
-    expect(PORTADORES["radio-group/brandCard"]).toContain(
-      "has-data-checked:before:opacity-100"
-    )
-    for (const nome of ["radio/brand", "radio-group/brandCard"] as const) {
-      // Desmarcado é o fio do sistema, e a passagem é uma transição e não um
-      // estalo: `background-image` não interpola entre um degradê e `none`, e é
-      // por isso que quem liga e desliga é a opacidade.
-      expect(PORTADORES[nome], nome).toContain("before:opacity-0")
-      expect(PORTADORES[nome], nome).toContain("before:transition-opacity")
-      expect(PORTADORES[nome], nome).toContain(
-        "before:duration-(--duration-fast)"
-      )
-    }
+  it("5. o rádio marcado acende o anel e faz o ponto nascer na mola", () => {
+    // Rodada 169: a mesma entrada do tique do `Checkbox`.
+    const base = radioVariants({ variant: "default" })
+    expect(base).toContain("data-[state=checked]:border-primary-accent")
+    expect(fonte("radio")).toMatch(/zoom-in-0 animation-duration-\(--duration-spring\) ease-\(--ease-spring\)/)
+    // E o par `dark:hover:`, sem o qual o realce morre no escuro.
+    expect(base).toContain("dark:hover:bg-muted/60")
   })
 
-  it("6. o cartão de marca troca o realce, e não o soma", () => {
+  it("6. o cartão de marca soma o brilho ao realce do cartão", () => {
+    // Até a 168 o contorno **substituía** o realce de seleção. O brilho acende
+    // pelo ponteiro, e não pelo estado, então quem diz "selecionado" volta a
+    // ser o realce do `card` — e os dois não disputam: arco na aresta, lavagem
+    // no miolo.
     const marca = PORTADORES["radio-group/brandCard"]
     const sistema = radioGroupItemVariants({ variant: "card" })
-    // A lavagem de 5% e o contorno `primary-accent` são o realce do `card`.
-    // Somá-los à marca daria dois sinais de seleção na mesma aresta.
-    expect(sistema).toContain("has-data-checked:border-primary-accent/60")
-    expect(marca).not.toContain("has-data-checked:border-primary-accent")
-    expect(marca).not.toContain("has-data-checked:bg-primary")
-    // E o que os dois cartões dividem continua dividido.
     for (const classe of [
+      "has-data-checked:border-primary-accent/60",
+      "has-data-checked:bg-primary/5",
       "min-h-11",
       "has-[:focus-visible]:ring-3",
       "has-[:disabled]:cursor-not-allowed",
     ]) {
+      expect(sistema, classe).toContain(classe)
       expect(marca, classe).toContain(classe)
     }
+    expect(fonte("radio-group")).toMatch(/useBrandGlow<HTMLLabelElement>\(resolvido === "brandCard"\)/)
   })
 
   it("7. os oito controles de campo seguem sem marca", () => {
@@ -569,8 +537,15 @@ describe("contorno de marca", () => {
     expect(caixa.join(" ")).not.toMatch(/(^|\s)before:|brand-rainbow-slide|--brand-fill/)
     expect(fonte("checkbox")).toMatch(/useBrandGlow<HTMLButtonElement>\(variant === "brand"\)/)
 
+    // A sexta e a sétima: o `Radio brand` e o `brandCard` (rodada 169).
+    const anel = cn(radioVariants({ variant: "brand" })).split(/\s+/)
+    for (const c of ["brand-glow", "isolate", "[--brand-glow-opacity:1]", "after:-inset-3.5"]) {
+      expect(anel, c).toContain(c)
+    }
+    expect(fonte("radio")).toMatch(/useBrandGlow<HTMLButtonElement>\(variant === "brand"\)/)
+
     // Nenhuma peça declara mais um núcleo: ele é o que virava o feixe.
-    for (const nome of ["button", "badge", "checkbox", "alert", "card"]) {
+    for (const nome of ["button", "badge", "checkbox", "alert", "card", "radio", "radio-group"]) {
       expect(fonte(nome), nome).not.toMatch(/\[--brand-glow-(core|overlay):/)
     }
   })

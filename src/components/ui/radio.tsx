@@ -4,6 +4,7 @@ import * as React from "react"
 import { RadioGroup as RadioGroupPrimitive } from "radix-ui"
 import { cva, type VariantProps } from "class-variance-authority"
 
+import { composeRefs, useBrandGlow } from "@/hooks/use-brand-glow"
 import { cn } from "@/lib/utils"
 
 /**
@@ -41,16 +42,35 @@ import { cn } from "@/lib/utils"
  * (`data-checked:` do Tailwind também casa — medido —, mas o atributo que o
  * Radix escreve é `data-state`, e é por ele que se procura no DOM.)
  *
+ * ## Marcar acende o anel e faz o ponto nascer (rodada 169)
+ *
+ * O anel passa de `--input` para `--primary-accent` e o ponto cresce do nada
+ * na mola da casa (`zoom-in-0`, `--ease-spring`) — a mesma entrada do tique do
+ * `Checkbox`. O ponto tem a tinta do anel marcado, então os dois chegam
+ * juntos.
+ *
  * ## O eixo `variant`
  *
- * `brand` é o anel com o arco-íris da marca por contorno, e **só quando
- * marcado** — desmarcado ele é pixel a pixel a `default`. As razões são as do
- * `Checkbox`, e a nota sobre o halo ausente também: o `::after` daqui já é o
- * alvo de toque de 44px, então sobra o contorno. Uma por tela.
+ * `brand` é o anel com a **borda que acende em arco-íris conforme o ponteiro
+ * se aproxima** — a família do brilho (`@utility brand-glow` + `useBrandGlow`),
+ * a do `Checkbox brand` desde a rodada 155. Até a rodada 168 ele era o
+ * contorno parado que só acendia marcado; saiu para as duas peças de escolha
+ * falarem a mesma marca. Longe do ponteiro, e no toque, é pixel a pixel a
+ * `default`. A máscara do brilho recorta só o anel, então o ponto e o fundo
+ * aparecem intactos, e o `::after` continua sendo o alvo de 44px. Uma por tela.
  */
 const radioVariants = cva(
   [
-    "relative aspect-square size-4 shrink-0 rounded-full border border-input text-primary-accent shadow-xs outline-none transition-colors",
+    "relative aspect-square size-4 shrink-0 rounded-full border border-input text-primary-accent shadow-xs outline-none transition-colors duration-(--duration-fast)",
+    // O fundo escurecido do escuro é o da caixa do sistema, e a marca o
+    // divide desde que o brilho recorta só o anel.
+    "dark:bg-input-fill/30",
+    // Marcado, o anel ganha a tinta do ponto.
+    "data-[state=checked]:border-primary-accent",
+    // O par de toque do `Checkbox`: `hover:` compila dentro de
+    // `@media (hover: hover)`. E o par `dark:hover:`, porque `dark:` empata
+    // com `hover:` e é emitido depois — sem ele o realce morre no escuro.
+    "hover:bg-muted/60 active:bg-muted/60 dark:hover:bg-muted/60 dark:active:bg-muted/60",
     // O alvo de toque, igual ao do `Checkbox` e ao do `Switch`: o desenho
     // tem 16px, o tocável tem 44 (16 + 2 × 14). Medido: `inset: -14px`.
     "after:absolute after:-inset-3.5 after:content-['']",
@@ -77,28 +97,10 @@ const radioVariants = cva(
   {
     variants: {
       variant: {
-        // O fundo escurecido do tema escuro é da caixa **do sistema**. A
-        // `brand` não o leva: marcada, o pseudo cobre o elemento inteiro, e
-        // conviver com um núcleo `--background` deixaria o desmarcado e o
-        // marcado em duas superfícies diferentes.
-        default: "dark:bg-input-fill/30",
-        // A receita que o `Checkbox variant="brand"` tinha até a rodada 153
-        // (hoje ele desliza e floresce), com um núcleo diferente: o
-        // anel marcado **não se preenche** — quem marca é o ponto —, então o
-        // `--brand-fill` só precisa ser opaco, para o arco-íris não vazar pelo
-        // miolo. Com `transparent` a camada `border-box` aparece no meio e o
-        // controle inteiro vira degradê.
-        //
-        // O ponto continua `bg-current` lendo `text-primary-accent` da base, e
-        // ele pinta **por cima** do pseudo: um `::before` a `-z-10` entra na
-        // ordem antes dos descendentes em fluxo.
-        brand: [
-          "brand-rainbow-image isolate [--brand-fill:var(--background)]",
-          "before:absolute before:-inset-px before:-z-10 before:rounded-[inherit] before:border before:border-transparent",
-          "before:[background:linear-gradient(var(--brand-fill),var(--brand-fill))_padding-box,var(--brand-rainbow)_border-box]",
-          "before:opacity-0 before:transition-opacity before:duration-(--duration-fast)",
-          "data-[state=checked]:before:opacity-100",
-        ].join(" "),
+        default: "",
+        // A borda que acende perto do ponteiro. Intensidade cheia, a do
+        // `Checkbox brand`: num anel de 16px o arco tem poucos pixels.
+        brand: "brand-glow isolate [--brand-glow-opacity:1]",
       },
     },
     defaultVariants: { variant: "default" },
@@ -108,11 +110,14 @@ const radioVariants = cva(
 function Radio({
   className,
   variant,
+  ref,
   ...props
 }: React.ComponentProps<typeof RadioGroupPrimitive.Item> &
   VariantProps<typeof radioVariants>) {
+  const glowRef = useBrandGlow<HTMLButtonElement>(variant === "brand")
   return (
     <RadioGroupPrimitive.Item
+      ref={composeRefs(glowRef, ref)}
       data-slot="radio"
       data-variant={variant ?? "default"}
       className={cn(radioVariants({ variant }), className)}
@@ -139,7 +144,7 @@ function Radio({
             E `bg-current` em vez de `bg-primary-accent` cravado: dá o mesmo
             pixel, revive a classe do anel em vez de deixá-la morta, e faz
             `<Radio className="text-destructive">` retingir sem tocar aqui. */}
-        <span className="size-2.5 rounded-full bg-current" />
+        <span className="size-2.5 rounded-full bg-current animate-in zoom-in-0 animation-duration-(--duration-spring) ease-(--ease-spring)" />
       </RadioGroupPrimitive.Indicator>
     </RadioGroupPrimitive.Item>
   )
