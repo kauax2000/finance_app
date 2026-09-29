@@ -15725,3 +15725,36 @@ O dono pediu a rodada completa e escolheu as quatro versões.
 - **Página**: a nota que dizia que `--input` voltou à 1.4.11 estava errada (ele
   voltou para fora, por decisão do dono); a linha de configuração passou a ser
   o `Field` horizontal que o app usa, e entrou a tabela de props.
+
+### Rodada 180 — o Textarea mede em linhas, conta caracteres e cresce em todo navegador
+
+O dono pediu a rodada completa e escolheu as quatro versões. Não há versão de
+marca: o campo não veste marca.
+
+- **`rows` não fazia nada.** Com `field-sizing-content` o navegador ignora o
+  atributo — medido, `rows={3}` e `rows={10}` dão a mesma caixa de 38px. O
+  único consumidor do app, as observações de uma conta, passava `rows={3}`.
+  **`minRows` e `maxRows`** dizem a altura em linhas: `calc(n·1lh + 1rem +
+  2px)`, então acompanham o corpo do texto. Medido: piso de 2 linhas 58px,
+  teto de 4 linhas 98px com o conteúdo de 136 rolando.
+- **O teto não dissolve num `Textarea` solto**, e é mecânica: a máscara
+  recorta o elemento inteiro, e o textarea pinta a própria borda e o
+  preenchimento. No `InputGroupTextarea` o grupo pinta e o textarea é
+  transparente, e ali `maxRows` liga `scroll-fade-y` + `useScrollFade`
+  (medido: `data-scroll-fade="on"`, máscara aplicada). Para isso os refs
+  passaram a repassar a limpeza que o React 19 devolve — sem ela o ref seria
+  chamado com `null` e os ouvintes do fade ficariam vivos.
+- **Contador**: com `maxLength`, "n/máx" embaixo à direita, em
+  `--warning-muted-foreground` nos últimos 10% ou 20 caracteres. O número é
+  `aria-hidden`; uma região viva só fala nessa faixa ("Restam 5 caracteres",
+  medido), para não anunciar cada tecla.
+- **Crescer em todo navegador**: onde `CSS.supports("field-sizing",
+  "content")` falha (Firefox, Safari antigo), a altura segue o `scrollHeight`
+  a cada digitação. Verificado só no Chromium, onde o ramo não roda.
+- **`resize`**: `none` por padrão, `vertical` sob pedido. A alça do navegador
+  arrastava nos dois eixos e, arrastada, cravava uma altura que desligava o
+  crescimento.
+- **Telas**: as observações da conta trocam `rows={3}` e um `shadow-xs` que
+  nenhum outro campo tem por `minRows={3} maxRows={8}`.
+- **Página**: nota do ⌘/Ctrl+Enter, a nota da dissolução, o crescimento sem
+  `field-sizing`, o grupo com teto e a tabela de props completa.

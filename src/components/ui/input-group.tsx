@@ -15,7 +15,8 @@ import {
   type FieldControlSize,
 } from "@/lib/field-classes"
 import { Input, type InputBaseProps } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { Textarea, type TextareaProps } from "@/components/ui/textarea"
+import { useScrollFade } from "@/hooks/use-scroll-fade"
 
 /**
  * O grupo é um controle, então ele fala a escada do projeto.
@@ -275,18 +276,40 @@ function InputGroupInput({
 
 function InputGroupTextarea({
   className,
+  ref,
   ...props
-}: React.ComponentProps<"textarea">) {
+}: TextareaProps & { ref?: React.Ref<HTMLTextAreaElement> }) {
   const { controlId } = React.useContext(InputGroupContext)
+  // Com teto, o campo rola, e aqui ele pode dissolver: quem pinta a borda e o
+  // preenchimento é o grupo, e o textarea é transparente — a máscara não apaga
+  // nada que devia ficar (rodada 180).
+  const fadeRef = useScrollFade()
+  const temTeto = props.maxRows !== undefined
+  const setRefs = React.useCallback(
+    (el: HTMLTextAreaElement | null) => {
+      const limparFade = temTeto ? fadeRef(el) : undefined
+      const limparRef = typeof ref === "function" ? ref(el) : undefined
+      if (ref && typeof ref !== "function") ref.current = el
+      return () => {
+        limparFade?.()
+        if (typeof limparRef === "function") limparRef()
+        else if (typeof ref === "function") ref(null)
+        else if (ref) ref.current = null
+      }
+    },
+    [fadeRef, temTeto, ref]
+  )
 
   return (
     <Textarea
+      ref={setRefs}
       // Mesmo contrato do campo de uma linha: o addon de bloco embaixo de um
       // textarea é o `<label>` deste controle.
       id={props.id ?? controlId}
       data-slot="input-group-control"
       className={cn(
         "flex-1 resize-none rounded-none border-0 bg-transparent py-2 shadow-none ring-0 focus-visible:ring-0 disabled:bg-transparent aria-invalid:ring-0 dark:bg-transparent dark:disabled:bg-transparent",
+        temTeto && "scroll-fade-y",
         className
       )}
       {...props}

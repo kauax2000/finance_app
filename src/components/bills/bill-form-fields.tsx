@@ -388,8 +388,8 @@ export function BillFormFields({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Opcional — notas internas."
-                rows={3}
-                className="resize-none shadow-xs"
+                minRows={3}
+                maxRows={8}
             />
         </div>
     )

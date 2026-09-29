@@ -2004,6 +2004,15 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   de 7px a `largura − 7px`, a régua do Radix —, `bubble` no `:active` e no
   foco de teclado, e `bands`, os cortes do `Progress` (zonas no trilho, faixa
   na cor do valor; não com a marca). Sem essas props a peça é a de sempre.
+- **`Textarea` mede em linhas** (rodada 180): `field-sizing-content`
+  **ignora `rows`** (medido: `rows={3}` e `rows={10}` dão a mesma caixa), então
+  a altura é `minRows` / `maxRows` (`lh` + recuo + borda); passado o teto ele
+  rola. **Solto, o teto não dissolve** — a máscara apagaria a borda e o
+  preenchimento que o próprio textarea pinta —, e no `InputGroupTextarea`,
+  onde quem pinta é o grupo, dissolve. `maxLength` traz o contador (âmbar e
+  anunciado só nos últimos 10% ou 20 caracteres; `showCount={false}` desliga),
+  `resize` é `none` (padrão) ou `vertical`, e onde falta `field-sizing` a
+  altura segue o `scrollHeight` por script.
 - **`Switch` tem escada, `pending`, ícones e marca** (rodada 179): `size`
   mede o trilho (`sm` 14×24 · **`md` 18×32** · `lg` 24×44), e
   `size="default"` saiu do tipo. O alvo é **44 de altura** nos três degraus
