@@ -2306,20 +2306,30 @@
     opacity: calc(var(--brand-glow-active, 0) * var(--brand-glow-opacity));
     transition: opacity var(--duration-slow) var(--ease-out);
     pointer-events: none;
-    /* **A máscara recorta o anel, como na referência** (rodada 156): três
-       camadas, compostas de baixo para cima — a caixa inteira (`border-box`),
-       menos a `padding-box` (`exclude`), que deixa só o anel de 2px; e esse
-       anel intersectado com a janela (`intersect`), um triângulo puro de três
+    /* **A máscara recorta o anel** (rodada 156; forma de hoje, rodada 182):
+       **duas** camadas — a janela (`border-box`), um triângulo puro de três
        paradas com o opaco no meio (`transparent, #fff, transparent 80deg`,
-       como lá). O meio da caixa nunca é pintado.
+       como na referência), **menos** a `padding-box` (`subtract`; no
+       prefixado, `source-out`). Sobra o trecho do anel que a janela cobre, e
+       o meio da caixa nunca é pintado.
+
+       **Até a rodada 181 eram três camadas** — a caixa, menos a `padding-box`
+       (`exclude`), intersectada com a janela (`intersect`) —, e o Chrome
+       deixava um resto: com o arco aceso de um lado, o anel inteiro aparecia
+       bem fino do outro, onde a janela vale zero. Medido no `ThemeToggle
+       brand`, arco à esquerda: **253 pixels** da ponta direita mudavam, com
+       diferença de até 59. A janela sozinha não vaza (zero), e a forma de
+       duas camadas também não: zero na direita, zero no miolo, e o arco da
+       esquerda igual (2.401 pixels contra 2.411). Quem voltar a compor três,
+       meça a ponta oposta.
 
        **Compor era banido por medição, e o motivo não se aplica mais.** Uma
        camada `none` num `intersect` apagava a peça; a única camada com
        variável é a janela, e ela lê `var(--brand-glow-start, 0)` com o
-       fallback no próprio `var()`, além do valor declarado acima. As duas do
-       anel são literais. E a versão prefixada tem outros nomes
-       (`source-in, xor`), escrita antes da padrão — numa `@utility` a ordem é
-       a que se escreve, e não a de emissão do Tailwind.
+       fallback no próprio `var()`, além do valor declarado acima. A outra é
+       literal. O prefixado vem antes do padrão — numa `@utility` a ordem é a
+       que se escreve —, e no Chrome os dois são a **mesma** propriedade:
+       `-webkit-mask-image: none` apaga a máscara padrão junto.
 
        O borrão de 2px roda **antes** da máscara, então as arestas do anel
        saem nítidas e ele suaviza as cores ao longo do arco — o mesmo da
@@ -2331,10 +2341,9 @@
         #000,
         transparent calc(var(--brand-glow-spread) * 2deg)
       ),
-      linear-gradient(#000 0 0),
       linear-gradient(#000 0 0);
-    -webkit-mask-clip: border-box, padding-box, border-box;
-    -webkit-mask-composite: source-in, xor;
+    -webkit-mask-clip: border-box, padding-box;
+    -webkit-mask-composite: source-out;
     mask-image:
       conic-gradient(
         from calc((var(--brand-glow-start, 0) - var(--brand-glow-spread)) * 1deg),
@@ -2342,10 +2351,9 @@
         #000,
         transparent calc(var(--brand-glow-spread) * 2deg)
       ),
-      linear-gradient(#000 0 0),
       linear-gradient(#000 0 0);
-    mask-clip: border-box, padding-box, border-box;
-    mask-composite: intersect, exclude;
+    mask-clip: border-box, padding-box;
+    mask-composite: subtract;
   }
 }
 

@@ -364,10 +364,13 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   **junto** com o arco, e ele passou a carregar sempre a mesma sequência e só
   mudar de lugar. `brand-contour.test.ts` tranca as duas, e mutação confirma
   que cada asserção pega o seu erro.
-  (5) **A máscara recorta o anel, e a janela é um triângulo puro** — três
-  camadas compostas de baixo para cima: a caixa (`border-box`), menos a
-  `padding-box` (`exclude`), intersectada com a janela (`intersect`; no
-  prefixado, `source-in, xor`). A janela tem três paradas, opaco no meio,
+  (5) **A máscara recorta o anel, e a janela é um triângulo puro** — duas
+  camadas desde a rodada 182: a janela (`border-box`) **menos** a
+  `padding-box` (`subtract`; no prefixado, `source-out`). Eram três (a caixa,
+  `exclude` da `padding-box`, `intersect` com a janela), e no Chrome elas
+  deixavam o anel inteiro bem fino do lado oposto ao arco — 253 pixels medidos
+  na ponta de um `ThemeToggle brand`; a forma de duas mede zero. No Chrome o
+  prefixado e o padrão são a mesma propriedade. A janela tem três paradas, opaco no meio,
   fechando em `spread * 2`, como o `transparent, #fff, transparent 80deg` da
   referência; com platô no miolo ela lê como bloco aceso e não como brilho.
   **Compor foi banido por medição até a rodada 156** (uma camada `none` num

@@ -346,13 +346,16 @@ describe("contorno de marca", () => {
     // Até a 155 o anel vinha com um núcleo chapado em `padding-box`, e a
     // janela — uma cunha que sai do centro — o mostrava como um feixe: com o
     // ponteiro perto, de 297 a 4.748 pixels do miolo mudavam. Hoje são três
-    // camadas compostas de baixo para cima: a caixa, menos a `padding-box`
-    // (o anel), intersectado com a janela.
+    // camadas: a janela menos a `padding-box` (rodada 182). As três de antes
+    // (caixa, `exclude` da `padding-box`, `intersect` com a janela) deixavam,
+    // no Chrome, o anel inteiro bem fino do lado oposto ao arco — 253 pixels
+    // medidos na ponta de um `ThemeToggle brand`. Esta forma mede zero.
     expect(corpoMask.match(/conic-gradient/g)?.length).toBe(2) // mask + -webkit
-    expect(util).toMatch(/-webkit-mask-clip: border-box, padding-box, border-box;/)
-    expect(util).toMatch(/-webkit-mask-composite: source-in, xor;/)
-    expect(util).toMatch(/\bmask-clip: border-box, padding-box, border-box;/)
-    expect(util).toMatch(/\bmask-composite: intersect, exclude;/)
+    expect(util).toMatch(/-webkit-mask-clip: border-box, padding-box;/)
+    expect(util).toMatch(/-webkit-mask-composite: source-out;/)
+    expect(util).toMatch(/\bmask-clip: border-box, padding-box;/)
+    expect(util).toMatch(/\bmask-composite: subtract;/)
+    expect(util).not.toMatch(/intersect, exclude|source-in, xor/)
     // O risco que baniu a composição era uma camada `none`: a janela é a única
     // com variável, e o fallback mora no próprio `var()`.
     expect(corpoMask).toMatch(/var\(--brand-glow-start, 0\)/)

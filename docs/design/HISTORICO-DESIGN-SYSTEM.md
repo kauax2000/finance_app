@@ -15793,3 +15793,29 @@ O dono pediu a rodada completa e escolheu as quatro versões.
   relógio de 400ms (são 640 e 400; os 240 a mais são o pouso). As nove notas
   longas viraram seis.
 
+### Rodada 182 — o brilho de marca deixa de acender o anel inteiro do lado oposto
+
+O dono viu, no `ThemeToggle brand`: acendendo um lado, o outro ficava com uma
+borda fina das cores, "parecendo um erro".
+
+- **Medido**: arco aceso à esquerda, **253 pixels** da ponta direita mudavam,
+  com diferença de até 59 — o anel inteiro, bem fino, onde a janela vale zero.
+  Isolando as camadas: a janela sozinha **não** vaza (zero); o vazamento vinha
+  da composição de três camadas da rodada 156 (a caixa, `exclude` da
+  `padding-box`, `intersect` com a janela), com ou sem o borrão.
+- **O conserto são duas camadas**: a janela **menos** a `padding-box`
+  (`mask-composite: subtract`; prefixado, `source-out`). Mesmo resultado
+  geométrico, sem o resto: zero na ponta oposta, zero no miolo, e o arco do
+  lado aceso igual (2.401 pixels contra 2.411).
+- **Conferido nas sete peças do brilho, nos dois temas** — `ThemeToggle`,
+  `Switch`, `Checkbox`, `Badge`, `Button`, `Card` e `Alert`: zero pixel muda
+  no lado oposto ao ponteiro. (A primeira leitura do `Checkbox` acusou 643: o
+  ponteiro a 12px caía dentro do alvo de toque de 44px e acendia o hover. A
+  20px, zero.)
+- **Nota de método**: no Chrome `-webkit-mask-image` e `mask-image` são a
+  mesma propriedade. Um teste que escreve `-webkit-mask: none` para "desligar
+  só o prefixado" apaga a máscara inteira, e a medição sai toda errada — foi o
+  que a primeira bateria de variantes fez.
+- `brand-contour.test.ts` passa a exigir as duas camadas e a proibir a volta
+  de `intersect, exclude` / `source-in, xor`.
+
