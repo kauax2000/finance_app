@@ -146,7 +146,9 @@ describe("o foco do campo é o anel do sistema", () => {
     // É o que o dono chamou de "as bordas brancas e pretas", e ele nunca foi
     // reescrito: o que o anulava era o `ring-0` que as constantes de marca
     // carregavam para não cobrir a cor de 1px.
-    for (const token of ["focus-visible:ring-3", "focus-visible:ring-ring/45", "focus-visible:border-ring"]) {
+    // Rodada 162: 30%, mais suave a pedido do dono e fora dos 3:1 por decisão
+    // registrada em `field-classes.ts`. A largura e a cor não mudaram.
+    for (const token of ["focus-visible:ring-3", "focus-visible:ring-ring/30", "focus-visible:border-ring"]) {
       expect(fieldFocusRingClassName.split(/\s+/), token).toContain(token)
     }
     expect(GLOBALS).toMatch(/^\s*--ring: oklch\(0\.145 0 0\);/m)

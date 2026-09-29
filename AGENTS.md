@@ -73,7 +73,7 @@ Mermaid (`href` já quebrou um diagrama).
 O design system deste projeto tem três partes, e nenhuma delas se presume de
 memória:
 
-- **Componentes** em [`src/components/ui/`](src/components/ui) — 80 hoje.
+- **Componentes** em [`src/components/ui/`](src/components/ui) — 79 hoje.
 - **Tokens** em [`src/app/globals.css`](src/app/globals.css).
 - **Documentação viva** em `/designsystem`, com uma página por componente e por
   padrão. Sempre disponível em desenvolvimento; em produção, atrás de
@@ -529,7 +529,13 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   carregavam para não cobrir a cor de 1px.
   `field-control-ladder.test.ts` proíbe a sexta tentativa: nenhum dos oito
   controles pode casar `--brand-`, `field-brand` ou `brand-rainbow`.
-  **O anel é `ring-3` de `--ring` a 45%, e 45 é o piso.** Ele foi 70% até a
+  **O anel do campo é `ring-3` de `--ring` a 30% desde a rodada 162, e fora dos
+  3:1 por decisão do dono** — ele pediu o foco mais suave, com o custo dito:
+  1,99 no claro e 2,53 no escuro, contra as sete superfícies (a versão de 2px
+  foi tentada e voltou a 3px na mesma rodada). É a terceira divergência consciente da
+  1.4.11, a primeira num indicador de foco; a borda de 1px continua na cor cheia
+  de `--ring`, e o caminho de volta é `/45`. Os outros anéis do sistema seguem a
+  45%. **A história do número:** ele foi 70% até a
   rodada 101, e o dono o pediu mais suave — no escuro, 3px de quase-branco a
   70% sobre cartão quase preto leem como marca-texto. Medido contra as **sete**
   superfícies (`background`, `card`, `popover`, `muted`, `secondary`, `accent`,

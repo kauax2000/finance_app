@@ -367,7 +367,7 @@ export function DsSearch() {
               {scope ? "abrir" : "entrar"}
             </CommandDockItem>
             <CommandDockItem>
-              <Kbd>esc</Kbd>
+              <Kbd>Esc</Kbd>
               fechar
             </CommandDockItem>
           </div>

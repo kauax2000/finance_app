@@ -1409,7 +1409,8 @@
 /**
  * A superfície de vidro do sistema. Nasceu na placa flutuante da barra lateral
  * e saiu de lá quando ganhou o segundo caso — a régua é `lib/glass-classes.ts`,
- * e o `Glass` de `components/ui/glass.tsx` é a conveniência que a veste.
+ * e quem a veste compõe as classes de lá. (Houve um componente `Glass`, uma
+ * conveniência que as vestia; saiu na rodada 160 — nenhuma tela o usava.)
  *
  * ## Existem dois vidros nesta casa, e eles não são intercambiáveis
  *

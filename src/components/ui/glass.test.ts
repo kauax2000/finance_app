@@ -692,9 +692,10 @@ describe("a superfície de vidro", () => {
             expect(base(nome)).not.toMatch(/[:\]]bg-transparent|dark:bg-transparent|ring-0\b/)
         }
 
-        // 5. E a peça separada não volta pela porta dos fundos. `glass.tsx` é a
-        //    superfície; qualquer outro `glass-*.tsx` em `ui/` é a forma que
-        //    esta rodada enterrou.
+        // 5. E a peça separada não volta pela porta dos fundos. O vidro é a
+        //    `@utility glass` com a régua de `lib/glass-classes.ts` — o próprio
+        //    `glass.tsx` saiu na rodada 160 —, e qualquer `glass-*.tsx` em `ui/`
+        //    é a forma que esta rodada enterrou.
         const sobrando = readdirSync(join(process.cwd(), "src/components/ui"))
             .filter((f) => f.startsWith("glass-") && f.endsWith(".tsx"))
         expect(sobrando).toEqual([])

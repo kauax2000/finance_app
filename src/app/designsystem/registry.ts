@@ -96,11 +96,6 @@ const LAYER: Record<string, Layer> = {
   "color-tile": "Atoms",
   /** Uma `div` com largura e calha. Indivisível — átomo por decisão do dono. */
   container: "Atoms",
-  /** Uma superfície e a luz dela. Importa zero componentes e renderiza um
-   *  elemento — o mesmo caso do `scroll-fade`, que também é uma casca mais uma
-   *  camada de composição. As quatro camadas de `background` são anatomia
-   *  interna, não peças que alguém compõe de fora. */
-  glass: "Atoms",
   /** **O vidro é modo, e não peça.** Houve cinco entradas aqui —
    *  `glass-button`, `glass-badge`, `glass-avatar`, `glass-checkbox` e
    *  `glass-color-tile` —, cada uma importando **um** átomo e renderizando
@@ -402,7 +397,6 @@ export const REGISTRY: RegistryEntry[] = [
   entry("code", "Code", "Identificador literal dentro do texto.", ui("code"), "Code"),
   entry("color-tile", "Color Tile", "Ladrilho com a cor escolhida pela pessoa.", ui("color-tile"), "ColorTile"),
   entry("container", "Container", "Largura, calha e ritmo do conteúdo.", ui("container"), "Container, containerSizes, containerGutters, containerStacks"),
-  entry("glass", "Glass", "A superfície de vidro do sistema.", ui("glass"), "Glass"),
   entry("input", "Input", "Campo de uma linha, inclusive de dinheiro.", ui("input"), "Input"),
   entry("input-otp", "Input OTP", "Entrada de código de verificação.", ui("input-otp"), "InputOTP, InputOTPSlot"),
   entry("kbd", "Kbd", "Uma tecla ou um atalho.", ui("kbd"), "Kbd"),

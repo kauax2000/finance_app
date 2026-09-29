@@ -16,8 +16,8 @@ import {
     dedo os três degraus de baixo sobem ao piso de 40. Substitui o `size`
     nativo do <input>, que é largura em caracteres e nunca foi usado aqui.
 
-    O alias existe para o nome não sumir da API pública: 53 chamadas do app
-    importam `InputProps`, e a escada agora é a da família inteira. */
+    O alias existe para o nome não sumir da API pública, e a escada agora é a
+    da família inteira. */
 type InputSize = FieldControlSize
 
 /** O campo de texto. `money` ausente ou `false`. */

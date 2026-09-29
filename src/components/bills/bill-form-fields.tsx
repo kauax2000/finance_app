@@ -229,9 +229,9 @@ export function BillFormFields({
                 id="bill-est"
                 label="Valor estimado"
                 optional
-                inputMode="decimal"
+                money
                 value={amountEstimatedStr}
-                onChange={(e) => setAmountEstimatedStr(e.target.value)}
+                onValueChange={setAmountEstimatedStr}
                 placeholder="Ex.: 250,90 — só ajuda nas previsões"
                 description="Não será lançado automaticamente."
             />

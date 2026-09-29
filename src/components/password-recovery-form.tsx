@@ -22,6 +22,7 @@ import {
     InputOTPGroup,
     InputOTPSlot,
 } from "@/components/ui/input-otp"
+import { REGEXP_ONLY_DIGITS } from "input-otp"
 import {
     InputGroup,
     InputGroupAddon,
@@ -312,6 +313,11 @@ export function PasswordRecoveryForm({
                                     id="code"
                                     size="xl"
                                     maxLength={OTP_LENGTH}
+                                    // O código do e-mail é só de dígitos, e a
+                                    // biblioteca aceita qualquer caractere sem
+                                    // `pattern` — no teclado físico uma letra
+                                    // entrava na casa.
+                                    pattern={REGEXP_ONLY_DIGITS}
                                     value={code}
                                     onChange={(value) => {
                                         setCode(value)

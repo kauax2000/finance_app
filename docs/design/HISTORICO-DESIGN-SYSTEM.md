@@ -15036,3 +15036,116 @@ usada. Ela continua um componente com nome, mas mora no `drawer.tsx`.
   `aria-hidden`) e uma linha na tabela de props.
 - **O teste da alça continua**, renomeado para `drawer-drag-handle.test.ts` e
   lendo do `drawer.tsx`. As seis asserções valem como antes.
+
+### Rodada 160 — o componente `Glass` sai
+
+O dono pediu o fim do componente de vidro. O `Glass` (`components/ui/glass.tsx`)
+era conveniência sobre a receita, e **nenhuma tela o usava** — o único consumidor
+era a própria página do catálogo. Saíram o arquivo, a página
+(`/designsystem/glass`), a entrada e a camada no registry, e o `docs-map` foi
+regenerado (86 páginas).
+
+**O vidro continua.** A receita é a `@utility glass` com a régua de
+`lib/glass-classes.ts`, e é ela que a `Sidebar`, o `Tabs`, a `TopBar`, o
+`Carousel`, os menus e a paleta vestem — ninguém passava pelo componente.
+`glass.test.ts` segue trancando a receita; só o comentário da asserção que citava
+o `glass.tsx` mudou.
+
+**Ficou sem consumidor o modo material** (o vidro borrado estilo iOS):
+`GLASS_MATERIALS` em `lib/glass-classes.ts`, as `@utility glass-material*` e os
+tokens `--glass-material-*`. O único caminho até ele era o eixo `material` do
+componente. Ele não foi apagado nesta rodada, por ser decisão à parte; fica
+registrado como código sem uso.
+
+### Rodada 161 — a página do Input revisada contra o código
+
+- **O último campo de dinheiro escrito à mão virou `money`.** A página afirma que
+  todo valor em reais que o app recebe passa pelo modo, e o "Valor estimado" da
+  conta a pagar (`bill-form-fields.tsx`) era um `FormInput` com
+  `inputMode="decimal"` e `onChange` cru — sem máscara e sem renormalização no
+  `onBlur`, as duas coisas que o modo existe para garantir. A troca é segura: a
+  tela já lia o valor com `parseMoneyBrl` e o preenchia com
+  `formatMoneyBrlInput`. Nenhum caminho mudou.
+- **"53 chamadas do app importam `InputProps`"**, no comentário do componente, era
+  falso — um arquivo cita o tipo. A frase saiu.
+- **Duas demonstrações novas, as duas saindo das funções reais**:
+  - "A máscara, tecla a tecla" (`formatMoneyBrlTyping`: `4290` → `42,90`,
+    `123456` → `1.234,56`);
+  - "Ao sair do campo" (`normalizeMoneyBrlOnBlur`: `250` → `250,00`, lido como
+    reais; `1234.5` → `1.234,50`; `R$ 99` → `99,00`; `12,345` → `12,35`;
+    `abc` → vazio). Conferidas por uma sonda antes de escritas.
+- **Notas novas**:
+  - "O contorno quase não existe, e é decisão": o fill identifica o campo, o
+    fio e o fill ficam abaixo da 1.4.11 por decisão registrada, e o anel a 45%
+    mede 3,05 e 4,12;
+  - "Com ícone ou botão acoplado, é `InputGroup`";
+  - "Onde o app usa", contado: `FormInput` 41 em 15 arquivos, `Input` cru 19 em
+    13 e `money` em 16 campos de 10 arquivos.
+
+### Rodada 162 — o campo focado fica mais suave
+
+O dono pediu "a versão active mais suave" na página do Input — o campo focado.
+Perguntado, escolheu duas alavancas: **anel mais fino** e **anel mais claro**. O
+anel do campo (`fieldFocusRingClassName` e o par `fieldGroupFocusRingClassName`
+do `InputGroup`, os oito controles de campo) foi de `ring-3` a 45% para `ring-2`
+a 30% e, visto na tela, **voltou a 3px a pedido dele**: ficou `ring-3` a
+**30%**. A borda de 1px continua indo para `--ring` cheio.
+
+**O custo foi dito antes e medido depois**, contra as sete superfícies nos dois
+temas:
+
+| alfa | pior caso claro | pior caso escuro |
+| --- | --- | --- |
+| 45% (antes) | 3,05 | 4,10 |
+| 35% | 2,30 | 3,05 |
+| **30% (hoje)** | **1,99** | **2,53** |
+| 25% | 1,75 | 2,10 |
+
+É a terceira divergência consciente da 1.4.11, ao lado do contorno de campo e do
+trilho claro do `Progress brand`, e a primeira num indicador de foco. A 2.4.7
+continua atendida: o foco é visível pela borda e pelo anel. O caminho de volta
+é `/45`.
+
+Os outros anéis do sistema (`Button`, `Switch`, `Checkbox`, `Radio`, menus…)
+continuam `ring-3` a 45%, porque o pedido foi o do campo. O `Radio` copiava o
+anel do campo à mão; ele segue o dos controles de escolha, e o comentário foi
+corrigido. `field-control-ladder.test.ts` tranca os valores novos.
+
+### Rodada 163 — as páginas do InputOTP e do Kbd revisadas contra o código
+
+**InputOTP.**
+- **O estado de erro nunca aparecia, medido.** O `aria-invalid` cai no `<input>`
+  do `OTPInput`, que é **irmão** dos grupos no contêiner. O
+  `has-aria-invalid` do `InputOTPGroup` e o `aria-invalid:` do `InputOTPSlot`
+  nunca casavam: marcando o campo inválido, a borda da casa ficava
+  `oklch(0.9)` e o grupo sem anel. É o caso da recuperação de senha, onde o
+  `FieldControl` escreve o `aria-invalid`. Agora o `InputOTP` lê o prop e o
+  desce por contexto, como já descia o `size`; a casa carimba `data-invalid`
+  e o grupo lê `has-data-invalid`. Medido depois: borda `destructive` e anel
+  de 3px no grupo, nos dois temas.
+- **A nota "Passe inputMode e autoComplete" era falsa.** A biblioteca já
+  declara `inputMode="numeric"` e `autoComplete="one-time-code"` por padrão. O
+  que ela **não** faz é restringir a dígitos: sem `pattern`, uma letra do
+  teclado físico entra na casa. A recuperação de senha passou a
+  `pattern={REGEXP_ONLY_DIGITS}`; medido, `a1b2` vira `12`.
+- **O anel da casa ativa** era uma cópia do anel de campo antigo, a 45%, e
+  acompanhou a rodada 162: `ring-3` a 30%.
+- **Página**:
+  - demonstração "Com erro" dentro de um `Field`;
+  - notas novas sobre o erro por contexto e o anel;
+  - "Onde o app usa": só a recuperação de senha;
+  - tabela de props, que a página não tinha;
+  - `Code` no lugar de `<code>` com classes à mão.
+
+**Kbd.**
+- **"A pastilha é `aria-hidden`" era falso para o componente**: quem o põe é a
+  chamada do gatilho da busca. A nota foi reescrita. O componente não o põe de
+  propósito: uma tecla citada numa frase de ajuda é conteúdo.
+- **A legenda da paleta escrevia `<Kbd>esc</Kbd>`**, em minúscula, contra o `Esc`
+  que o `formatKey` e a página usam. Virou `Esc`.
+- **Página**:
+  - demonstração nova "Ao lado de um controle", o padrão real: `Button` com
+    `aria-keyshortcuts` e a pastilha `aria-hidden`;
+  - nota com as medições da pastilha no claro (1,04 sumia, 8,3:1 no glifo);
+  - "Onde se usa": só o catálogo;
+  - `aria-hidden` na tabela de props.

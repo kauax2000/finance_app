@@ -119,9 +119,27 @@ export const fieldSurfaceClassName =
  * deu 3,16 para o 45% no claro, porque olhou o `--card` e parou. A superfície
  * que decide é outra.
  *
- * **O que não mudou, e é de propósito:** a largura (`ring-3` continua sendo o
- * valor do sistema), a cor (`--ring`, quase preto no claro e quase branco no
- * escuro) e a ausência de transição. Esta última é um teto conhecido:
+ * **Rodada 162: 30%, fora da norma por decisão do dono.** Ele pediu o campo
+ * focado mais suave e escolheu mais fino e mais claro, com o custo dito na
+ * pergunta; o mais fino (`ring-2`) voltou a 3px na mesma rodada, a pedido
+ * dele, e ficou só a cor. Medido de novo contra as sete
+ * superfícies:
+ *
+ *     alfa        pior caso claro   pior caso escuro
+ *     35%              2,30              3,05
+ *     30% (hoje)       1,99 ✗            2,53 ✗
+ *     25%              1,75              2,10
+ *
+ * **É a terceira divergência consciente da WCAG 1.4.11 nesta casa**, ao lado do
+ * contorno de campo e do trilho claro do `Progress brand`, e a primeira num
+ * indicador de foco (2.4.7 continua atendida: o foco é visível; o que cai é o
+ * contraste de 3:1 do indicador). O caminho de volta é trocar `/30` por `/45`
+ * — 3,05 e 4,10, a tabela de cima. Os outros anéis do sistema (`Button`,
+ * `Switch`, `Checkbox`, `Radio`…) continuam a 45%: o pedido foi o do campo.
+ *
+ * **O que não mudou, e é de propósito:** a largura (`ring-3`, o valor do
+ * sistema), a cor (`--ring`, quase preto no claro e quase branco no escuro) e
+ * a ausência de transição. Esta última é um teto conhecido:
  * `fieldSurfaceClassName` declara `transition-colors`, que **não cobre
  * `box-shadow`** — então o anel do campo aparece de estalo enquanto o do
  * `Button`, que transiciona `box-shadow`, esmaece. Medido nos dois; o dono
@@ -135,7 +153,7 @@ export const fieldSurfaceClassName =
  * escuro. `field-control-ladder.test.ts` proíbe a sexta tentativa.
  */
 export const fieldFocusRingClassName =
-  "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/45"
+  "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
 
 /**
  * O estado inválido. Vem de `aria-invalid`, escrito por quem chama — o `Field`
@@ -170,7 +188,7 @@ export const fieldDisabledClassName = [
  * mesma caixa é o defeito.
  */
 export const fieldGroupFocusRingClassName =
-  "has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot=input-group-control]:focus-visible]:ring-3 has-[[data-slot=input-group-control]:focus-visible]:ring-ring/45"
+  "has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot=input-group-control]:focus-visible]:ring-3 has-[[data-slot=input-group-control]:focus-visible]:ring-ring/30"
 
 export const fieldGroupInvalidClassName = [
   "has-aria-invalid:border-destructive has-aria-invalid:ring-3 has-aria-invalid:ring-destructive/20",

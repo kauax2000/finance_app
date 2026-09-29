@@ -19,7 +19,20 @@ import { cn } from "@/lib/utils"
  */
 type InputOTPSize = "sm" | "md" | "lg" | "xl"
 
-const InputOTPContext = React.createContext<InputOTPSize>("md")
+/**
+ * O degrau e o erro, descendo do campo para as casas.
+ *
+ * **O erro precisa do contexto, e isso foi medido.** O `aria-invalid` cai no
+ * `<input>` do `OTPInput`, que é **irmão** dos grupos no contêiner, e não
+ * descendente deles. O `has-aria-invalid` do grupo e o `aria-invalid:` da casa
+ * nunca casavam: com o campo marcado inválido (o `FieldControl` da recuperação
+ * de senha faz isso), a borda da casa continuava `oklch(0.9)` e o grupo sem
+ * anel. Rodada 163.
+ */
+const InputOTPContext = React.createContext<{ size: InputOTPSize; invalid: boolean }>({
+  size: "md",
+  invalid: false,
+})
 
 /**
  * `Omit` comum achataria a união de props do `OTPInput` — ele aceita `children`
@@ -57,6 +70,7 @@ function InputOTP({
   className,
   containerClassName,
   size = "md",
+  "aria-invalid": ariaInvalid,
   ...props
 }: OmitDistributivo<React.ComponentProps<typeof OTPInput>, "size"> & {
   containerClassName?: string
@@ -65,8 +79,11 @@ function InputOTP({
   size?: InputOTPSize
 }) {
   return (
-    <InputOTPContext.Provider value={size}>
+    <InputOTPContext.Provider
+      value={{ size, invalid: ariaInvalid === true || ariaInvalid === "true" }}
+    >
       <OTPInput
+        aria-invalid={ariaInvalid}
         data-slot="input-otp"
         data-size={size}
         containerClassName={cn(
@@ -95,7 +112,7 @@ function InputOTPGroup({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="input-otp-group"
       className={cn(
-        "flex items-center rounded-lg has-aria-invalid:border-destructive has-aria-invalid:ring-3 has-aria-invalid:ring-destructive/20 dark:has-aria-invalid:ring-destructive/40",
+        "flex items-center rounded-lg has-data-invalid:ring-3 has-data-invalid:ring-destructive/20 dark:has-data-invalid:ring-destructive/40",
         className
       )}
       {...props}
@@ -110,7 +127,7 @@ function InputOTPSlot({
 }: React.ComponentProps<"div"> & {
   index: number
 }) {
-  const size = React.useContext(InputOTPContext)
+  const { size, invalid } = React.useContext(InputOTPContext)
   const inputOTPContext = React.useContext(OTPInputContext)
   const { char, hasFakeCaret, isActive } = inputOTPContext?.slots[index] ?? {}
 
@@ -118,11 +135,16 @@ function InputOTPSlot({
     <div
       data-slot="input-otp-slot"
       data-active={isActive}
+      data-invalid={invalid || undefined}
       className={cn(
         // `nums` porque isto é uma grade de dígitos: sem figuras tabulares o
         // "1" é mais estreito que o "8", e cada casa centra o próprio glifo
         // num lugar diferente. A 32px passa; a 40 a fileira treme.
-        "nums relative flex items-center justify-center border-y border-r border-input bg-input-fill/30 transition-all outline-none first:rounded-l-lg first:border-l last:rounded-r-lg aria-invalid:border-destructive data-[active=true]:z-10 data-[active=true]:border-ring data-[active=true]:ring-3 data-[active=true]:ring-ring/45 data-[active=true]:aria-invalid:border-destructive data-[active=true]:aria-invalid:ring-destructive/20 dark:data-[active=true]:aria-invalid:ring-destructive/40",
+        //
+        // O anel da casa ativa é o do campo — `ring-3` de `--ring` a 30% desde
+        // a rodada 162, mais suave a pedido do dono e abaixo dos 3:1 por
+        // decisão registrada em `field-classes.ts`.
+        "nums relative flex items-center justify-center border-y border-r border-input bg-input-fill/30 transition-all outline-none first:rounded-l-lg first:border-l last:rounded-r-lg data-invalid:border-destructive data-[active=true]:z-10 data-[active=true]:border-ring data-[active=true]:ring-3 data-[active=true]:ring-ring/30 data-[active=true]:data-invalid:border-destructive data-[active=true]:data-invalid:ring-destructive/20 dark:data-[active=true]:data-invalid:ring-destructive/40",
         slotSizes[size],
         className
       )}
@@ -147,7 +169,7 @@ function InputOTPSeparator({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const size = React.useContext(InputOTPContext)
+  const { size } = React.useContext(InputOTPContext)
 
   return (
     <div

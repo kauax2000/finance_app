@@ -54,7 +54,9 @@ const radioVariants = cva(
     // O alvo de toque, igual ao do `Checkbox` e ao do `Switch`: o desenho
     // tem 16px, o tocável tem 44 (16 + 2 × 14). Medido: `inset: -14px`.
     "after:absolute after:-inset-3.5 after:content-['']",
-    // Byte a byte `fieldFocusRingClassName`. Não é importado de
+    // Era byte a byte `fieldFocusRingClassName` até a rodada 162, quando o anel
+    // do campo ficou mais claro a pedido do dono; o do rádio segue
+    // o dos controles de escolha (`Checkbox`, `Switch`). Não é importado de
     // `field-classes` pela mesma razão que o `Checkbox` e o `Switch` não
     // importam: um controle redondo não veste `fieldSurfaceClassName` —
     // três das quatro declarações dela seriam anuladas (`rounded-lg` →
