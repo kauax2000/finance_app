@@ -67,7 +67,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import { Progress } from "@/components/ui/progress"
+import { Progress, ProgressHeader, ProgressLabel, ProgressValue } from "@/components/ui/progress"
 import { CARD_LIMIT_BANDS } from "@/lib/budget-bands"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
@@ -520,7 +520,9 @@ function InstallmentPlanRowProgressBlock({
     return (
         <div className="mt-2 space-y-1">
             <Progress
-                value={row.pctDone}
+                value={row.paid}
+                max={row.total}
+                segments={row.total}
                 tone="success"
                 size="sm"
                 aria-label={`${row.paid} de ${row.total} parcelas pagas, ${row.remaining} ${row.remaining === 1 ? "restante" : "restantes"}`}
@@ -864,21 +866,17 @@ export function CreditCardInvoiceAnalyticsPanel({
                         </div>
 
                         {openLimitPct != null ? (
-                            <div className="space-y-1.5">
-                                <div className="flex items-center justify-between gap-2 text-xs">
-                                    <span className="font-medium text-muted-foreground">
-                                        Uso do limite estimado
-                                    </span>
-                                    <span className="tabular-nums text-sm font-semibold text-foreground">
-                                        {percentPointsBR(openLimitPct)}%
-                                    </span>
-                                </div>
-                                <Progress
-                                    value={openLimitPct}
-                                    bands={CARD_LIMIT_BANDS}
-                                    aria-label="Uso estimado do limite do cartão na fatura planejada"
-                                />
-                            </div>
+                            <Progress
+                                value={openLimitPct}
+                                bands={CARD_LIMIT_BANDS}
+                                aria-label="Uso estimado do limite do cartão na fatura planejada"
+                                header={
+                                    <ProgressHeader>
+                                        <ProgressLabel>Uso do limite estimado</ProgressLabel>
+                                        <ProgressValue>{percentPointsBR(openLimitPct)}%</ProgressValue>
+                                    </ProgressHeader>
+                                }
+                            />
                         ) : null}
                     </CardContent>
 

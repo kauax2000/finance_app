@@ -58,13 +58,6 @@ function InstallmentPlanCompactRow({
 }) {
     const nextLabelCompact = formatTransactionCompactPtBr(plan.nextBilling)
     const paidCount = Math.max(0, plan.totalInstallments - plan.remainingCount)
-    const pctDone =
-        plan.totalInstallments > 0
-            ? Math.min(
-                  100,
-                  Math.max(0, (paidCount / plan.totalInstallments) * 100),
-              )
-            : 0
     const aria = installmentPlanAriaLabel(plan, cardName)
 
     const content = (
@@ -114,7 +107,9 @@ function InstallmentPlanCompactRow({
                     {paidCount}/{plan.totalInstallments}
                 </Badge>
                 <Progress
-                    value={pctDone}
+                    value={paidCount}
+                    max={plan.totalInstallments}
+                    segments={plan.totalInstallments}
                     tone="success"
                     size="sm"
                     className="min-w-16 flex-1 basis-24"

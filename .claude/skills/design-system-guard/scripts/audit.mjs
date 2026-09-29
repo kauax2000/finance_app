@@ -128,6 +128,8 @@ const DRAWN_SVG_FILES = [
   "credit-card-brand-logos",
   "registered-credit-card-face",
   "spinner",
+  // O anel do `ProgressRing`: a geometria do traço é o valor.
+  "components/ui/progress",
   "sidebar-toggle-icon",
   // O gráfico das curvas de easing: desenha o movimento, lido do globals.css.
   "designsystem/docs/motion",

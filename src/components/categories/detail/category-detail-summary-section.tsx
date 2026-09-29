@@ -22,7 +22,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Category } from "@/lib/supabase"
 import { currencyBRL } from "@/lib/formatters"
-import { Progress } from "@/components/ui/progress"
+import { Progress, ProgressHeader, ProgressLabel, ProgressValue } from "@/components/ui/progress"
 import { BUDGET_BANDS } from "@/lib/budget-bands"
 import { cn } from "@/lib/utils"
 import { deltaTone } from "@/lib/delta-tone"
@@ -359,21 +359,19 @@ function ExpenseBudgetOverviewCard({
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between gap-2 text-2xs text-muted-foreground">
-                                    <span className="min-w-0 truncate">Uso do orçamento</span>
-                                    <span className="shrink-0 tabular-nums font-medium text-foreground">
-                                        {budgetPctReal}%
-                                    </span>
-                                </div>
-                                <Progress
-                                    value={monthTotal}
-                                    max={limit}
-                                    bands={BUDGET_BANDS}
-                                    size="sm"
-                                    aria-label={budgetBarLabel}
-                                />
-                            </div>
+                            <Progress
+                                value={monthTotal}
+                                max={limit}
+                                bands={BUDGET_BANDS}
+                                size="sm"
+                                aria-label={budgetBarLabel}
+                                header={
+                                    <ProgressHeader>
+                                        <ProgressLabel>Uso do orçamento</ProgressLabel>
+                                        <ProgressValue />
+                                    </ProgressHeader>
+                                }
+                            />
                         </>
                     ) : (
                         <div className="space-y-1">

@@ -14,7 +14,7 @@ import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categor
 import { cn } from "@/lib/utils"
 import { ChevronRightIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ColorTile } from "@/components/ui/color-tile"
-import { Progress } from "@/components/ui/progress"
+import { Progress, ProgressFooter, ProgressHeader, ProgressLabel, ProgressValue } from "@/components/ui/progress"
 import { BUDGET_BANDS } from "@/lib/budget-bands"
 import { deltaTone } from "@/lib/delta-tone"
 import { currencyBRL } from "@/lib/formatters"
@@ -285,36 +285,42 @@ export function ExpenseCategoryCard({
                     <div className="space-y-1">
                         {hasBudget ? (
                             <>
-                                <div className="flex items-center justify-between gap-2 text-2xs text-muted-foreground">
-                                    <span className="min-w-0 truncate">{shareInsight}</span>
-                                    <span className="shrink-0 tabular-nums font-medium text-foreground">
-                                        {budgetPctReal}%
-                                    </span>
-                                </div>
                                 <Progress
                                     value={spent}
                                     max={limit}
                                     bands={BUDGET_BANDS}
+                                    size="sm"
                                     aria-label={budgetBarLabel}
+                                    header={
+                                        <ProgressHeader>
+                                            <span className="min-w-0 truncate text-muted-foreground">
+                                                {shareInsight}
+                                            </span>
+                                            <ProgressValue />
+                                        </ProgressHeader>
+                                    }
                                 />
                             </>
                         ) : (
                             <>
-                                <div className="flex items-center justify-between gap-2 text-2xs text-muted-foreground">
-                                    <span className="min-w-0 truncate">
-                                        <span className="font-medium text-foreground/80">
-                                            Sem orçamento
-                                        </span>{" "}
-                                        · Participação
-                                    </span>
-                                    <span className="shrink-0 tabular-nums font-medium text-foreground">
-                                        {sharePct.toFixed(0)}%
-                                    </span>
-                                </div>
-                                <Progress value={sharePct} aria-label={shareBarLabel} />
-                                <p className="text-xs leading-relaxed text-muted-foreground">
-                                    {shareInsight}
-                                </p>
+                                <Progress
+                                    value={sharePct}
+                                    size="sm"
+                                    aria-label={shareBarLabel}
+                                    header={
+                                        <ProgressHeader>
+                                            <span className="min-w-0 truncate text-muted-foreground">
+                                                <ProgressLabel>Sem orçamento</ProgressLabel> · Participação
+                                            </span>
+                                            <ProgressValue />
+                                        </ProgressHeader>
+                                    }
+                                    footer={
+                                        <ProgressFooter>
+                                            <span>{shareInsight}</span>
+                                        </ProgressFooter>
+                                    }
+                                />
                             </>
                         )}
                     </div>

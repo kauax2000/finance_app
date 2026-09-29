@@ -1829,7 +1829,16 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   faz o componente derivar a cor, marcar o limiar na trilha e tratar o estouro;
   `tone` (`default` | `success` | `warning` | `destructive` | `income` |
   `expense`) fica para quem mede algo **sem** escada de risco, e `size` é `sm`
-  6px ou `md` 8px. Os três eixos de cor — `tone`, `bands` e `variant="brand"` —
+  6px ou `md` 8px. **Desde a rodada 167 há quatro versões a mais**: as peças
+  `ProgressHeader` / `ProgressLabel` / `ProgressValue` / `ProgressFooter`, pelas
+  props `header` e `footer` (o rótulo nomeia a barra por `aria-labelledby`,
+  a menos que a chamada traga `aria-label`, e a barra fica entre as duas no
+  DOM), `segments` (casas que acendem cobertas inteiras — parcelas, etapas; acima
+  de 24 a barra volta a ser contínua),
+  `zones` (com `bands`, o trilho pinta a faixa de aviso e a de perigo no lugar
+  do traço do corte) e o `ProgressRing`, o anel de um valor só (32 · 64 · 128,
+  `tone` e `bands`, sem marca). Passos com nome e data continuam sendo a
+  `Timeline`, e um total dividido, o `ChartSplit`. Os três eixos de cor — `tone`, `bands` e `variant="brand"` —
   são **excludentes**, e o tipo cobra: os três respondem à mesma pergunta por
   caminhos diferentes, e aceitar dois juntos é aceitar que um não faz nada.
   Os cortes do app moram em [`lib/budget-bands`](src/lib/budget-bands.ts):

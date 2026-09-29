@@ -110,6 +110,22 @@ describe("Progress", () => {
     expect(FONTE).toContain("1,42")
   })
 
+  it("9. as versões da rodada 167: casa inteira, zonas no lugar do traço, rótulo registrado", () => {
+    // A casa só acende coberta inteira — 7 de 12 são sete, nunca sete e meia.
+    expect(FONTE).toContain("Math.floor((pct / 100) * casas + 1e-9)")
+    // Com zonas o corte já está pintado: o traço sairia como segundo sinal.
+    expect(FONTE).toContain("bands && !zones")
+    // A barra só aponta `aria-labelledby` quando o rótulo existe; apontar para
+    // um `id` ausente deixa o nome vazio.
+    // E um `aria-label` da chamada vence, porque costuma ser o mais rico.
+    expect(FONTE.match(/aria-labelledby=\{[^}]*hasLabel \? labelId : undefined\}/g)).toHaveLength(2)
+    expect(FONTE).toContain('const nomeado = props["aria-label"] != null')
+    // Acima de 24 casas a barra volta a ser contínua.
+    expect(FONTE).toContain("const MAX_CASAS = 24")
+    // O rodapé vai depois da barra no DOM, e não por `order`.
+    expect(FONTE).not.toMatch(/\border-(?:first|last)\b/)
+  })
+
   it("8. nenhuma tela desenha uma barra de progresso à mão", () => {
     // O achado que motivou a rodada: cinco barras de orçamento e de limite
     // feitas com `div` + `bg-muted`, nenhuma sabendo da outra, duas com o mapa

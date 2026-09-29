@@ -42,9 +42,34 @@ const progressVariants = cva(
   }
 )
 
+/**
+ * O preenchimento por tom, em fundo e em traço. Mora fora da `cva` porque três
+ * formas o leem: a barra, a casa da segmentada e o arco do anel, que pinta
+ * `stroke` e não `background`.
+ */
+const TOM_FUNDO = {
+  default: "bg-primary",
+  success: "bg-success",
+  warning: "bg-warning",
+  destructive: "bg-destructive",
+  income: "bg-income",
+  expense: "bg-expense",
+} as const
+
+const TOM_TRACO = {
+  default: "stroke-primary",
+  success: "stroke-success",
+  warning: "stroke-warning",
+  destructive: "stroke-destructive",
+  income: "stroke-income",
+  expense: "stroke-expense",
+} as const
+
 const progressIndicatorVariants = cva(
   cn(
-    "h-full rounded-full",
+    // `relative` põe o preenchimento acima das zonas do trilho, que são
+    // absolutas e vêm antes no DOM.
+    "relative h-full rounded-full",
     // `width` e não `scaleX`: a ponta é `rounded-full`, e escalar distorceria o
     // raio — a mesma medição que o marcador do `Tabs` registrou.
     "transition-[width] duration-(--duration-slow) ease-(--ease-out)"
@@ -63,14 +88,7 @@ const progressIndicatorVariants = cva(
       // superfícies `-muted`, que esta barra não consome. A distinção aqui é de
       // vocabulário, e é assim de propósito até alguém decidir dar valor
       // próprio aos tokens sólidos.
-      tone: {
-        default: "bg-primary",
-        success: "bg-success",
-        warning: "bg-warning",
-        destructive: "bg-destructive",
-        income: "bg-income",
-        expense: "bg-expense",
-      },
+      tone: TOM_FUNDO,
       // Piso de largura para valor pequeno e diferente de zero. A 1% de um
       // trilho de 300px sobram 3px, que sob `rounded-full` viram uma lasca
       // quase invisível — "mal começou" desenhava igual a "não começou". O
@@ -105,7 +123,22 @@ export function progressToneForBands(pct: number, [aviso, perigo]: ProgressBands
 }
 
 type Base = React.ComponentProps<typeof ProgressPrimitive.Root> &
-  VariantProps<typeof progressVariants> & { max?: number }
+  VariantProps<typeof progressVariants> & {
+    max?: number
+    /**
+     * Divide a barra em N casas, cada uma cheia ou vazia: parcelas pagas,
+     * etapas de um fluxo. A casa acende quando o valor a cobre inteira.
+     */
+    segments?: number
+    /**
+     * A linha de cima (`ProgressHeader`) e a de baixo (`ProgressFooter`). São
+     * props, e não filhos reconhecidos pelo tipo: o Fast Refresh troca a
+     * função a cada edição e `c.type === Peca` deixa de bater calado — a
+     * lição do `TablePanel`, trancada em `table-ladder.test.ts`.
+     */
+    header?: React.ReactNode
+    footer?: React.ReactNode
+  }
 
 /**
  * **`tone`, `bands` e `variant="brand"` são excludentes**, e o tipo cobra.
@@ -117,19 +150,72 @@ type Base = React.ComponentProps<typeof ProgressPrimitive.Root> &
  * precedente que o `Combobox` já usa em `multiple`.
  */
 type ProgressProps =
-  | (Base & { tone?: Tom; bands?: never; variant?: "default" })
-  | (Base & { bands: ProgressBands; tone?: never; variant?: "default" })
-  | (Base & { variant: "brand"; tone?: never; bands?: never })
+  | (Base & { tone?: Tom; bands?: never; zones?: never; variant?: "default" })
+  | (Base & {
+      bands: ProgressBands
+      /**
+       * Pinta no trilho a faixa de aviso e a de perigo, para a pessoa ver onde
+       * a barra vai entrar antes de ela chegar lá. Substitui o traço do corte.
+       */
+      zones?: boolean
+      tone?: never
+      variant?: "default"
+    })
+  | (Base & { variant: "brand"; tone?: never; bands?: never; zones?: never })
 
-function Progress({ className, value, max = 100, size, ...props }: ProgressProps) {
-  const { tone, bands, variant = "default", ...rest } = props as Base & {
+/**
+ * O que as peças de texto leem: o rótulo registra o `id` para a barra apontar
+ * `aria-labelledby` (só quando ele existe — apontar para um `id` ausente deixa
+ * o nome vazio, a lição do `PopoverTitle`), e o valor lê a porcentagem.
+ */
+type ProgressContextValue = {
+  labelId: string
+  setHasLabel: (tem: boolean) => void
+  bruto: number
+  size: "sm" | "md" | "lg"
+}
+
+const ProgressContext = React.createContext<ProgressContextValue | null>(null)
+
+/** O `id` do rótulo e o registro dele, para a barra e para o anel. */
+function useProgressLabel() {
+  const labelId = React.useId()
+  const [hasLabel, setHasLabel] = React.useState(false)
+  return { labelId, hasLabel, setHasLabel }
+}
+
+/** O teto da segmentada: acima disso a barra é contínua. */
+const MAX_CASAS = 24
+
+function porcentagem(value: number | null | undefined, max: number) {
+  const bruto = value != null && max > 0 ? (value / max) * 100 : 0
+  return { bruto, pct: Math.min(100, Math.max(0, bruto)) }
+}
+
+function Progress({
+  className,
+  value,
+  max = 100,
+  size,
+  segments,
+  header,
+  footer,
+  ...props
+}: ProgressProps) {
+  const { tone, bands, zones, variant = "default", ...rest } = props as Base & {
     tone?: Tom
     bands?: ProgressBands
+    zones?: boolean
     variant?: "default" | "brand"
   }
 
-  const bruto = value != null && max > 0 ? (value / max) * 100 : 0
-  const pct = Math.min(100, Math.max(0, bruto))
+  const { bruto, pct } = porcentagem(value, max)
+  const { labelId, hasLabel, setHasLabel } = useProgressLabel()
+  const pecas = header != null || footer != null
+  // Um `aria-label` escrito na chamada vence o `ProgressLabel`: ele costuma ser
+  // mais rico que o rótulo visível ("Uso do orçamento na categoria Mercado:
+  // 45% de R$ 800,00"), e `aria-labelledby` o apagaria.
+  const nomeado = props["aria-label"] != null
 
   // O Radix rejeita `value` acima de `max`: ele avisa no console e trata o
   // progresso como indeterminado, o que zera o `aria-valuenow`. Num app de
@@ -168,67 +254,125 @@ function Progress({ className, value, max = 100, size, ...props }: ProgressProps
   // A cesura do limiar: onde o primeiro corte cai, na trilha. Ela precisa ler
   // **antes** de a barra chegar nele — é essa a utilidade — então não pode ser
   // da cor do trilho, que a esconderia enquanto o preenchimento não passa.
-  const cesura = bands && bands[0] > 0 && bands[0] < 100 ? bands[0] : null
+  // Com zonas o corte já está pintado, e o traço seria o segundo sinal.
+  const cesura = bands && !zones && bands[0] > 0 && bands[0] < 100 ? bands[0] : null
 
-  return (
+  // **As casas.** Cada uma acende quando o valor a cobre inteira — 7 de 12
+  // parcelas são sete casas, nunca sete e meia. O `1e-9` absorve o erro de
+  // ponto flutuante de `7 / 12 * 100 / 100 * 12`.
+  //
+  // Acima de 24 a barra volta a ser contínua: um parcelamento de 48 vezes numa
+  // barra de 200px dá casas de 2px entre 47 frestas, que leem como tracejado e
+  // não como contagem.
+  const casas =
+    segments && segments > 1 && segments <= MAX_CASAS ? Math.floor(segments) : null
+  const cheias = casas ? Math.floor((pct / 100) * casas + 1e-9) : 0
+
+  const barra = (
+    <ProgressPrimitive.Root
+      data-slot="progress"
+      data-tone={tomFinal ?? (variant === "brand" ? "brand" : "default")}
+      data-over={excedeu ? "" : undefined}
+      data-segments={casas ?? undefined}
+      className={cn(
+        progressVariants({ size }),
+        "flex-1",
+        // A segmentada não tem trilho contínuo: cada casa é o próprio trilho.
+        casas && "flex overflow-visible rounded-none bg-transparent",
+        casas && (size === "sm" ? "gap-0.5" : "gap-1")
+      )}
+      value={clamped}
+      max={max}
+      aria-labelledby={nomeado ? undefined : hasLabel ? labelId : undefined}
+      // Só quando excede: um `undefined` explícito apagava o texto padrão do Radix.
+      {...(excedeu ? { "aria-valuetext": `${Math.round(bruto)}%` } : {})}
+      {...rest}
+    >
+      {casas ? (
+        Array.from({ length: casas }, (_, i) => {
+          const acesa = i < cheias
+          return (
+            <span
+              key={i}
+              data-slot="progress-segment"
+              data-filled={acesa ? "" : undefined}
+              className={cn(
+                "h-full flex-1 rounded-full bg-input-fill transition-colors duration-(--duration-slow) ease-(--ease-out)",
+                acesa && variant !== "brand" && TOM_FUNDO[tomFinal ?? "default"],
+                // Na marca cada casa mostra a sua fatia do arco-íris: o degradê
+                // tem a largura da barra inteira, e a posição é a da casa — a
+                // conta aritmética do `HistogramSlider`.
+                acesa &&
+                  variant === "brand" &&
+                  "brand-rainbow-image bg-(image:--brand-rainbow) bg-no-repeat"
+              )}
+              style={
+                acesa && variant === "brand"
+                  ? {
+                      backgroundSize: `${casas * 100}% 100%`,
+                      backgroundPosition: `${(i / (casas - 1)) * 100}% 0`,
+                    }
+                  : undefined
+              }
+            />
+          )
+        })
+      ) : (
+        <>
+          {zones && bands ? <ProgressZones bands={bands} /> : null}
+          <ProgressPrimitive.Indicator
+            data-slot="progress-indicator"
+            data-filled={pct > 0 ? "" : undefined}
+            className={cn(
+              progressIndicatorVariants({ tone: tomFinal, size }),
+              // `brand-rainbow-image` não é decoração: é ela que declara
+              // `--brand-rainbow` no elemento. Ver a medição na rodada 88.
+              //
+              // **E aqui mora a divergência da 1.4.11 desta peça.** O arco-íris
+              // contra o trilho do sistema:
+              //
+              //   escuro   pior caso 4,52   as oito paradas passam
+              //   claro    pior caso 1,42   **cinco reprovam** — lima 1,42,
+              //                             âmbar 1,51, teal 1,73, azul 1,87,
+              //                             coral 2,53
+              //
+              // No claro o trilho é `oklch(0.9)` e as paradas das pontas são
+              // quase tão claras quanto ele. Um leito preto levava o pior caso a
+              // 3,91 e foi recusado na tela: a barra de marca não pode destoar
+              // das vizinhas. É a segunda divergência consciente da 1.4.11 desta
+              // casa, ao lado do contorno de campo, e o caminho de volta é uma
+              // declaração — `background-color: oklch(0 0 0)` no trilho, o mesmo
+              // preto de `brand-field` e `brand-lava`.
+              //
+              // Nota de método, porque o número e o olho discordam: a razão da
+              // WCAG é **só de luminância**, e um teal saturado sobre cinza
+              // neutro tem contraste cromático que a fórmula não vê. Explica a
+              // discordância; não a anula — lima e âmbar são frágeis de verdade.
+              variant === "brand" &&
+                "brand-rainbow-image bg-(image:--brand-rainbow) bg-left bg-no-repeat"
+            )}
+            style={{ width: `${pct}%`, ...fundoDaMarca }}
+          />
+          {cesura !== null && (
+            <span
+              data-slot="progress-threshold"
+              aria-hidden
+              className="absolute inset-y-0 w-px bg-foreground/40"
+              style={{ left: `${cesura}%` }}
+            />
+          )}
+        </>
+      )}
+    </ProgressPrimitive.Root>
+  )
+
+  const linha = (
     <div
       data-slot="progress-field"
       data-over={excedeu ? "" : undefined}
-      className={cn("flex w-full items-center gap-1", className)}
+      className={cn("flex w-full items-center gap-1", !pecas && className)}
     >
-      <ProgressPrimitive.Root
-        data-slot="progress"
-        data-tone={tomFinal ?? (variant === "brand" ? "brand" : "default")}
-        data-over={excedeu ? "" : undefined}
-        className={cn(progressVariants({ size }), "flex-1")}
-        value={clamped}
-        max={max}
-        // Só quando excede: um `undefined` explícito apagava o texto padrão do Radix.
-        {...(excedeu ? { "aria-valuetext": `${Math.round(bruto)}%` } : {})}
-        {...rest}
-      >
-        <ProgressPrimitive.Indicator
-          data-slot="progress-indicator"
-          data-filled={pct > 0 ? "" : undefined}
-          className={cn(
-            progressIndicatorVariants({ tone: tomFinal, size }),
-            // `brand-rainbow-image` não é decoração: é ela que declara
-            // `--brand-rainbow` no elemento. Ver a medição na rodada 88.
-            //
-            // **E aqui mora a divergência da 1.4.11 desta peça.** O arco-íris
-            // contra o trilho do sistema:
-            //
-            //   escuro   pior caso 4,52   as oito paradas passam
-            //   claro    pior caso 1,42   **cinco reprovam** — lima 1,42,
-            //                             âmbar 1,51, teal 1,73, azul 1,87,
-            //                             coral 2,53
-            //
-            // No claro o trilho é `oklch(0.9)` e as paradas das pontas são
-            // quase tão claras quanto ele. Um leito preto levava o pior caso a
-            // 3,91 e foi recusado na tela: a barra de marca não pode destoar
-            // das vizinhas. É a segunda divergência consciente da 1.4.11 desta
-            // casa, ao lado do contorno de campo, e o caminho de volta é uma
-            // declaração — `background-color: oklch(0 0 0)` no trilho, o mesmo
-            // preto de `brand-field` e `brand-lava`.
-            //
-            // Nota de método, porque o número e o olho discordam: a razão da
-            // WCAG é **só de luminância**, e um teal saturado sobre cinza
-            // neutro tem contraste cromático que a fórmula não vê. Explica a
-            // discordância; não a anula — lima e âmbar são frágeis de verdade.
-            variant === "brand" &&
-              "brand-rainbow-image bg-(image:--brand-rainbow) bg-left bg-no-repeat"
-          )}
-          style={{ width: `${pct}%`, ...fundoDaMarca }}
-        />
-        {cesura !== null && (
-          <span
-            data-slot="progress-threshold"
-            aria-hidden
-            className="absolute inset-y-0 w-px bg-foreground/40"
-            style={{ left: `${cesura}%` }}
-          />
-        )}
-      </ProgressPrimitive.Root>
+      {barra}
 
       {/* **O excesso transborda, e não divide o trilho.** O trilho continua
           valendo o total sempre, então duas categorias lado a lado continuam
@@ -253,6 +397,233 @@ function Progress({ className, value, max = 100, size, ...props }: ProgressProps
       )}
     </div>
   )
+
+  // Sem peças de texto, a barra é o que sempre foi — nenhuma chamada muda.
+  if (!pecas) return linha
+
+  // O rodapé vai depois da barra **no DOM**, e não por `order`: o leitor de
+  // tela lê na ordem da árvore, e "75%" antes da barra não teria referente.
+  return (
+    <ProgressContext.Provider
+      value={{ labelId, setHasLabel, bruto, size: size ?? "md" }}
+    >
+      <div
+        data-slot="progress-group"
+        className={cn("flex w-full flex-col gap-2", className)}
+      >
+        {header}
+        {linha}
+        {footer}
+      </div>
+    </ProgressContext.Provider>
+  )
 }
 
-export { Progress, progressVariants, progressIndicatorVariants, type ProgressProps }
+/**
+ * As zonas do trilho: a faixa de aviso e a de perigo, pintadas a 30% do tom.
+ * Ficam atrás do preenchimento (que é `relative` e vem depois), então a barra
+ * as cobre conforme avança, e o que sobra à frente é o risco que vem.
+ */
+function ProgressZones({ bands: [aviso, perigo] }: { bands: ProgressBands }) {
+  const faixa = (de: number, ate: number, tom: string) =>
+    ate > de ? (
+      <span
+        aria-hidden
+        data-slot="progress-zone"
+        className={cn("absolute inset-y-0", tom)}
+        style={{ left: `${de}%`, width: `${ate - de}%` }}
+      />
+    ) : null
+  const a = Math.min(100, Math.max(0, aviso))
+  const p = Math.min(100, Math.max(0, perigo))
+  return (
+    <>
+      {faixa(a, p, "bg-warning/30")}
+      {faixa(p, 100, "bg-destructive/30")}
+    </>
+  )
+}
+
+/** A linha de cima, pela prop `header`: o nome à esquerda, o valor, o estado ou um `Badge` à direita. */
+function ProgressHeader({ className, ...props }: React.ComponentProps<"div">) {
+  const ctx = React.useContext(ProgressContext)
+  return (
+    <div
+      data-slot="progress-header"
+      className={cn(
+        "flex min-w-0 items-center justify-between gap-3",
+        ctx?.size === "sm" ? "text-xs" : "text-sm",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+/**
+ * A linha de baixo, mais quieta: o que foi consumido de quanto, a porcentagem.
+ * Entra pela prop `footer` do `Progress`, que a põe depois da barra.
+ */
+function ProgressFooter({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="progress-footer"
+      className={cn(
+        "flex min-w-0 items-center justify-between gap-3 text-xs text-muted-foreground",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+/** O nome da barra. Ele a nomeia: a barra aponta `aria-labelledby` para ele. */
+function ProgressLabel({ className, id, ...props }: React.ComponentProps<"span">) {
+  const ctx = React.useContext(ProgressContext)
+  const setHasLabel = ctx?.setHasLabel
+  React.useLayoutEffect(() => {
+    if (!setHasLabel || id) return
+    setHasLabel(true)
+    return () => setHasLabel(false)
+  }, [setHasLabel, id])
+  return (
+    <span
+      data-slot="progress-label"
+      id={id ?? ctx?.labelId}
+      className={cn("min-w-0 truncate font-medium text-foreground", className)}
+      {...props}
+    />
+  )
+}
+
+/**
+ * O número. Sem filhos, escreve a porcentagem do valor **bruto** — 104% numa
+ * categoria que estourou, e não os 100 que a barra desenha. Com filhos, escreve
+ * o que receber ("2 de 5", "R$ 3.750"). É visual: quem anuncia é a barra.
+ */
+function ProgressValue({ className, children, ...props }: React.ComponentProps<"span">) {
+  const ctx = React.useContext(ProgressContext)
+  return (
+    <span
+      data-slot="progress-value"
+      aria-hidden
+      className={cn("nums shrink-0 text-muted-foreground", className)}
+      {...props}
+    >
+      {children ?? `${Math.round(ctx?.bruto ?? 0)}%`}
+    </span>
+  )
+}
+
+/**
+ * O anel. Sem `ctx.size` de barra: o degrau é o diâmetro (`sm` 32, `md` 64,
+ * `lg` 128) e a espessura acompanha, em unidades do `viewBox` de 100.
+ */
+const RING = {
+  sm: { box: "size-8", traco: 14, texto: "sr-only" },
+  md: { box: "size-16", traco: 10, texto: "text-xs" },
+  lg: { box: "size-32", traco: 8, texto: "text-2xl" },
+} as const
+
+type ProgressRingProps = Omit<
+  React.ComponentProps<typeof ProgressPrimitive.Root>,
+  "children"
+> & {
+  max?: number
+  size?: keyof typeof RING
+  /** O miolo. Sem ele, o anel escreve a porcentagem (menos no `sm`). */
+  children?: React.ReactNode
+} & (
+    | { tone?: Tom; bands?: never }
+    | { bands: ProgressBands; tone?: never }
+  )
+
+/**
+ * **O `Progress` dobrado em círculo, para um valor só** — o que o `ChartRadial`
+ * não é: ele é gráfico de várias categorias, com legenda. Mesmo trilho, mesmos
+ * tons, mesmos cortes e o mesmo estouro (cheio e vermelho, com o número real no
+ * `aria-valuetext`). Não há marca aqui: um arco-íris dobrado em anel troca de
+ * cor pela volta e não diz nada sobre o valor.
+ */
+function ProgressRing({
+  className,
+  value,
+  max = 100,
+  size = "md",
+  tone,
+  bands,
+  children,
+  ...props
+}: ProgressRingProps) {
+  const { bruto, pct } = porcentagem(value, max)
+  const excedeu = value != null && value > max
+  const clamped = value != null ? Math.min(max, Math.max(0, value)) : value
+  const tom: Tom = bands
+    ? excedeu
+      ? "destructive"
+      : progressToneForBands(pct, bands)
+    : (tone ?? "default")
+  const { labelId, hasLabel, setHasLabel } = useProgressLabel()
+  const r = RING[size]
+  const raio = 50 - r.traco / 2
+
+  return (
+    <ProgressContext.Provider value={{ labelId, setHasLabel, bruto, size: size === "lg" ? "md" : "sm" }}>
+      <ProgressPrimitive.Root
+        data-slot="progress-ring"
+        data-tone={tom}
+        data-over={excedeu ? "" : undefined}
+        value={clamped}
+        max={max}
+        aria-labelledby={props["aria-label"] != null ? undefined : hasLabel ? labelId : undefined}
+        {...(excedeu ? { "aria-valuetext": `${Math.round(bruto)}%` } : {})}
+        className={cn("relative inline-grid shrink-0 place-items-center", r.box, className)}
+        {...props}
+      >
+        <svg viewBox="0 0 100 100" aria-hidden className="absolute inset-0 size-full -rotate-90">
+          <circle cx="50" cy="50" r={raio} fill="none" strokeWidth={r.traco} className="stroke-input-fill" />
+          {pct > 0 ? (
+            // `pathLength` 100 faz o traço valer a porcentagem direto. A ponta
+            // redonda dá ao 1% um ponto, como o piso da barra.
+            <circle
+              cx="50"
+              cy="50"
+              r={raio}
+              fill="none"
+              strokeWidth={r.traco}
+              strokeLinecap="round"
+              pathLength={100}
+              strokeDasharray={`${pct} 100`}
+              className={cn(
+                TOM_TRACO[tom],
+                "transition-[stroke-dasharray] duration-(--duration-slow) ease-(--ease-out)"
+              )}
+            />
+          ) : null}
+        </svg>
+        <span
+          data-slot="progress-ring-center"
+          className={cn("relative flex flex-col items-center text-center leading-tight", r.texto)}
+        >
+          {children ?? (
+            <span aria-hidden className="nums font-semibold text-foreground">
+              {Math.round(bruto)}%
+            </span>
+          )}
+        </span>
+      </ProgressPrimitive.Root>
+    </ProgressContext.Provider>
+  )
+}
+
+export {
+  Progress,
+  ProgressFooter,
+  ProgressHeader,
+  ProgressLabel,
+  ProgressRing,
+  ProgressValue,
+  progressVariants,
+  progressIndicatorVariants,
+  type ProgressProps,
+}

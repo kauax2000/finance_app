@@ -400,7 +400,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("kbd", "Kbd", "Uma tecla ou um atalho.", ui("kbd"), "Kbd"),
   entry("label", "Label", "Rótulo acessível ligado a um controle.", ui("label"), "Label"),
   entry("money-display", "Money Display", "Todo valor em reais que o app mostra.", ui("money-display"), "MoneyDisplay"),
-  entry("progress", "Progress", "Barra de progresso com tons de status.", ui("progress"), "Progress"),
+  entry("progress", "Progress", "Quanto de um total foi consumido: barra, segmentada ou anel.", ui("progress"), "Progress, ProgressHeader, ProgressLabel, ProgressValue, ProgressFooter, ProgressRing"),
   entry("radio", "Radio", "Uma opção de escolha única.", ui("radio"), "Radio"),
   entry("resizable", "Resizable", "Painéis redimensionáveis por arraste.", ui("resizable"), "ResizablePanelGroup, ResizablePanel, ResizableHandle"),
   entry("scroll-area", "Scroll Area", "Área rolável com barra estilizada.", ui("scroll-area"), "ScrollArea, ScrollBar"),

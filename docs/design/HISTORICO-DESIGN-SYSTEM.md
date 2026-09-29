@@ -15246,3 +15246,84 @@ antes, o mecanismo é o `scrollIntoView`, que respeita o `scroll-padding` que a
   lança `Cannot read properties of null (reading 'focus')` no
   `useTypeaheadSearch` do Radix — o item ainda não registrou a ref. Reproduzido
   igual **sem** o fade.
+
+### Rodada 167 — o Progress ganha quatro versões, e a página para de se repetir
+
+O dono pediu mais versões, com referências (checklist de primeiros passos,
+fila de arquivos, armazenamento com zona, etapas segmentadas, anel de
+conclusão, passos e linha do tempo, divisão de um total). Mapeadas antes de
+escrever: **passos com nome e data já são a `Timeline`**, na vertical e na
+horizontal; **a divisão Apples/Oranges é o `ChartSplit`**; checklist, fila e
+roadmap são composições. Entraram quatro versões, escolhidas por ele:
+
+- **Cabeçalho e rodapé** (`ProgressHeader`, `ProgressLabel`, `ProgressValue`,
+  `ProgressFooter`). O rótulo se registra e a barra só aponta
+  `aria-labelledby` quando ele existe; o `ProgressValue` escreve a
+  porcentagem **bruta** (104%, não 100) e é `aria-hidden`, porque quem anuncia
+  é a barra. As linhas entram pelas props `header` e `footer`, e a barra fica
+  entre as duas **no DOM**, não por `order`, para o leitor de tela ler "75%"
+  depois dela. A primeira versão separava os filhos por `c.type ===
+  ProgressFooter`, e `table-ladder.test.ts` (26) a reprovou: o Fast Refresh
+  troca a função a cada edição e a comparação deixa de bater calada. Sem as
+  duas props, o `Progress` é o de sempre — nenhuma chamada do app mudou.
+  Cinco barras do app escrevem essa linha à mão; não foram migradas.
+- **`segments`**: a barra em N casas, cada uma acesa quando coberta inteira
+  (`Math.floor`, com `1e-9` contra o erro de ponto flutuante). Medido: 7 de
+  12 acende 7, 2 de 4 acende 2. Na marca cada casa mostra a sua fatia do
+  arco-íris, pela conta aritmética do `HistogramSlider`. É o caso das
+  parcelas pagas, que o app mostra hoje como barra contínua.
+- **`zones`** (só com `bands`): as faixas de aviso e de perigo pintadas no
+  trilho a 30% do tom, atrás do preenchimento (que ganhou `relative`), e o
+  traço do corte sai. Medido no limite do cartão: aviso de 30% a 70%, perigo
+  de 70% a 100%. No orçamento o perigo começa no próprio limite, e só a faixa
+  de aviso aparece.
+- **`ProgressRing`**: o anel de um valor só, no mesmo arquivo e na mesma
+  página. Diâmetro 32 · 64 · 128 (o `sm` não escreve texto), `pathLength` 100
+  para o traço valer a porcentagem, ponta redonda para o 1% ser um ponto, e o
+  mesmo estouro (cheio, `destructive`, número real no `aria-valuetext`). **Sem
+  marca**: um arco-íris dobrado troca de cor pela volta e não diz nada sobre o
+  valor. Não é o `ChartRadial`, que é gráfico de várias categorias. O `<svg>`
+  do anel entrou em `DRAWN_SVG_FILES` do auditor, ao lado do `Spinner`: a
+  geometria do traço é o valor.
+
+**Página.** Uma demonstração por ideia: as quatro barras de "Tons" e as duas
+de "Dinheiro" viraram uma grade só, as quatro barras de marca viraram uma, e
+"Tamanho" e "Começou" viraram uma seção. A tabela de props dizia "arco-íris
+sobre leito preto", que foi recusado; corrigida. O "Limiar" misturava a rampa
+do orçamento com um "Cartão" a 400%; hoje usa `BUDGET_BANDS` e o cartão está
+em "Zonas". Duas composições das referências: a lista de passos num `Card` e a
+fila de importações em linha. Medido nos dois temas: 25 barras, todas com
+nome acessível, e nenhum erro no console.
+
+### Rodada 168 — as telas vestem as peças do Progress
+
+As cinco barras que escreviam à mão a linha de rótulo e porcentagem passaram a
+`header` (e a participação da categoria, também `footer`), e as duas barras de
+parcelas pagas passaram a `segments`:
+
+- `credit-card-tile`, `credit-card-invoice-analytics-panel` (limite),
+  `expense-category-card` (orçamento e participação) e
+  `category-detail-summary-section`: `ProgressHeader` com `ProgressLabel` e
+  `ProgressValue`. Onde o texto da esquerda é uma frase e não um nome (o
+  `shareInsight` do cartão de categoria), ele fica num `span`.
+- `credit-card-invoice-analytics-panel` (parcelas) e
+  `dashboard-installments-ending-soon`: `value={pagas} max={total}
+  segments={total}` no lugar da porcentagem calculada à mão; o `pctDone` do
+  painel inicial saiu.
+
+**Duas regras do componente nasceram da migração.**
+- **O `aria-label` da chamada vence o `ProgressLabel`.** As cinco barras já
+  traziam nomes mais ricos que o rótulo visível ("Uso do orçamento na
+  categoria Mercado: 45% de R$ 800,00"), e o `aria-labelledby` os apagaria.
+- **`segments` acima de 24 volta a ser barra contínua**, e o vão entre as
+  casas é de 2px no `sm`. Um parcelamento de 48 vezes numa barra de 200px
+  daria casas de 2px entre 47 frestas; a do painel inicial mede 96px.
+
+**O que muda na tela, e é do sistema:** o rótulo passa a `font-medium
+text-foreground` e o número a `text-muted-foreground` (era o contrário), o
+corpo sobe de `text-2xs` para `text-xs` no `sm`, e o cartão de categoria passa
+a barra de `md` para `sm`, como o detalhe e o cartão de crédito. O cartão de
+crédito mostrava o uso **limitado a 100%**; o `ProgressValue` mostra o bruto,
+então um limite estourado passa a dizer 120% e não 100%.
+**Não verificado na tela**: as cinco telas pedem login, e a sessão não entra
+na conta do dono.
