@@ -134,7 +134,7 @@ export default function SessionsPage() {
                                 disabled={revoking === "all"}
                             >
                                 {revoking === "all" ? (
-                                    <Spinner className="size-3.5" />
+                                    <Spinner size="sm" />
                                 ) : (
                                     <ArrowRightStartOnRectangleIcon className="size-3.5 opacity-70" />
                                 )}
@@ -218,7 +218,7 @@ export default function SessionsPage() {
                                                         className="shrink-0 text-muted-foreground hover:text-destructive active:text-destructive md:size-icon-xs"
                                                     >
                                                         {revoking === session.id ? (
-                                                            <Spinner className="md:h-3.5 md:w-3.5" />
+                                                            <Spinner className="md:size-3.5" />
                                                         ) : (
                                                             <ArrowRightStartOnRectangleIcon className="h-4 w-4 md:h-3.5 md:w-3.5" />
                                                         )}

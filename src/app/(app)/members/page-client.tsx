@@ -630,7 +630,7 @@ export default function MembersPage() {
                         >
                             {removeTarget && busyMemberId === removeTarget.userId ? (
                                 <>
-                                    <Spinner className="mr-2" />
+                                    <Spinner />
                                     Removendo...
                                 </>
                             ) : (
@@ -817,7 +817,7 @@ export default function MembersPage() {
                                         >
                                             {savingInvite ? (
                                                 <>
-                                                    <Spinner className="mr-2" />
+                                                    <Spinner />
                                                     Enviando...
                                                 </>
                                             ) : (
@@ -913,7 +913,7 @@ export default function MembersPage() {
                                     >
                                         {savingLink ? (
                                             <>
-                                                <Spinner className="mr-2" />
+                                                <Spinner />
                                                 Gerando...
                                             </>
                                         ) : (
@@ -1022,7 +1022,7 @@ export default function MembersPage() {
                                                             }
                                                         >
                                                             {busyResendInviteId === invite.id ? (
-                                                                <Spinner aria-hidden />
+                                                                <Spinner />
                                                             ) : (
                                                                 "Reenviar"
                                                             )}
@@ -1050,7 +1050,7 @@ export default function MembersPage() {
                                                         >
                                                             {busyInviteId === invite.id ? (
                                                                 <>
-                                                                    <Spinner className="mr-1.5" />
+                                                                    <Spinner />
                                                                     Revogando...
                                                                 </>
                                                             ) : (

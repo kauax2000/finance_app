@@ -362,10 +362,7 @@ export function SubscriptionDetailSheet({
                             }
                         >
                             {activeToggleSaving ? (
-                                <Spinner
-                                    className="size-3.5 shrink-0 text-muted-foreground"
-                                    aria-hidden
-                                />
+                                <Spinner size="sm" className="text-muted-foreground" />
                             ) : (
                                 <span className="whitespace-nowrap text-xs text-muted-foreground">
                                     {statusActive ? "Ativa" : "Pausada"}

@@ -2803,6 +2803,29 @@
   margin-block: calc((1lh - 0.8em) / 2);
 }
 
+/* O `Spinner variant="brand"` (rodada 178): um anel em `conic-gradient` da
+   marca, com a cauda transparente — a volta **é** a rotação, então a cor corre
+   pelo anel quando ele gira. O anel é recortado por máscara radial, com 14% do
+   raio de espessura e piso de 2px (o traço da roda comum a 16px). Os
+   `--brand-*` são as paradas do arco-íris, e o anel não carrega texto. */
+@utility spinner-brand {
+  border-radius: 9999px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 8%,
+    var(--brand-teal),
+    var(--brand-blue),
+    var(--brand-violet),
+    var(--brand-magenta),
+    var(--brand-coral)
+  );
+  mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - max(2px, 14%)),
+    #000 calc(100% - max(2px, 14%) + 0.5px)
+  );
+}
+
 
 /* As linhas da paleta sobem ao aparecer (rodada 139). É o desenho do
    `disclosure-reveal` — o mesmo `disclosure-rise`, na mola, escalonado por

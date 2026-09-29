@@ -360,7 +360,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                     >
                         {loading ? (
                             <>
-                                <Spinner className="mr-2" />
+                                <Spinner />
                                 Excluindo...
                             </>
                         ) : (
@@ -405,7 +405,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                     >
                         {loading ? (
                             <>
-                                <Spinner className="mr-2" />
+                                <Spinner />
                                 Excluindo...
                             </>
                         ) : (

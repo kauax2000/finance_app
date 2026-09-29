@@ -72,7 +72,7 @@ export function Toaster({ ...props }: ToasterProps) {
         info: <InformationCircleIcon aria-hidden />,
         warning: <ExclamationTriangleIcon aria-hidden />,
         error: <XCircleIcon aria-hidden />,
-        loading: <Spinner className="size-4" />,
+        loading: <Spinner />,
         close: <XMarkIcon aria-hidden />,
       }}
       toastOptions={{

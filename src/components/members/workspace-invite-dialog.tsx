@@ -334,7 +334,7 @@ export function WorkspaceInviteDialog({
                                                 >
                                                     {savingInvite ? (
                                                         <>
-                                                            <Spinner className="mr-2" />
+                                                            <Spinner />
                                                             Enviando...
                                                         </>
                                                     ) : (
@@ -438,7 +438,7 @@ export function WorkspaceInviteDialog({
                                                 >
                                                     {savingLink ? (
                                                         <>
-                                                            <Spinner className="mr-2" />
+                                                            <Spinner />
                                                             Gerando...
                                                         </>
                                                     ) : (
@@ -559,7 +559,7 @@ export function WorkspaceInviteDialog({
                                             >
                                                 {savingInvite ? (
                                                     <>
-                                                        <Spinner className="mr-2" />
+                                                        <Spinner />
                                                         Enviando...
                                                     </>
                                                 ) : (
@@ -668,7 +668,7 @@ export function WorkspaceInviteDialog({
                                             >
                                                 {savingLink ? (
                                                     <>
-                                                        <Spinner className="mr-2" />
+                                                        <Spinner />
                                                         Gerando...
                                                     </>
                                                 ) : (

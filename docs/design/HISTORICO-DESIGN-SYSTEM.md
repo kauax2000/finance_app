@@ -15663,3 +15663,33 @@ o `Slider` direto; o único consumidor é o `HistogramSlider`.
   anunciados em reais: a lacuna "o Radix anuncia o número cru" fechou.
 - **Página**: os cinco sliders de marca viraram dois, as quatro notas longas
   da marca viraram duas, e entrou a tabela de props, que ela não tinha.
+
+### Rodada 178 — o Spinner vira roda desenhada, com escada, bloco de espera e marca
+
+O dono pediu a rodada completa e escolheu as quatro versões.
+
+- **A roda desenhada**: até aqui o spinner era o `ArrowPathIcon` girando — e no
+  app essa seta **é o "tentar novamente"** (a tela de erro, o
+  `Button iconMotion="spin"`). Um botão salvando e um de atualizar desenhavam o
+  mesmo glifo. Agora é um arco de 25% (`pathLength` 100, `strokeDasharray
+  "25 100"`) sobre um trilho a 20% de `currentColor`, traço de 3 em 24 — a
+  exceção `DRAWN_SVG_FILES` do auditor, que sempre nomeou o spinner.
+- **`size`**: a escada do ícone, `sm` 14 · **`md` 16** · `lg` 20 · `xl` 24 ·
+  `2xl` 32 — os corpos que o app escrevia à mão (`size-3.5`, `size-6`,
+  `size-8`).
+- **`SpinnerBlock`**: a roda com o texto, centrada numa região, e é ele quem
+  anuncia (`role="status"`, `aria-live`). O atraso é o do `SkeletonGroup`,
+  `@starting-style` com `transitionDelay` (300ms por padrão): medido, opacidade
+  0 em 100 e 250ms, 1 em 500ms.
+- **`variant="brand"`**: um anel em `conic-gradient` com cinco paradas da marca
+  e cauda transparente, recortado por máscara radial (`@utility
+  spinner-brand`). Mora na tela de abertura, que trocou o `useState` +
+  `setTimeout` + opacidade por um `SpinnerBlock` de marca com `delay={600}`.
+- **O `label` passa a valer**: sem ele a roda é `aria-hidden`; com ele,
+  `role="status"` com nome. Antes a peça declarava `role` e o `<svg>` do ícone
+  carregava `aria-hidden`, e o papel nunca chegou a ninguém.
+- **Telas**: dez rodas dentro de botões tinham `mr-2` ou `mr-1.5`, somando
+  margem ao `gap` do `Button` — saíram. `size-3.5` virou `size="sm"`, e os
+  `aria-hidden` repetidos saíram.
+- **Correção de página**: ela dizia que o spinner parava com movimento
+  reduzido. O bloco global **isenta** `animate-spin`; ele gira.
