@@ -38,8 +38,9 @@ export default function ComboboxDoc() {
   return (
     <>
       <Usage>
-        Um <code>Select</code> com busca, a partir de umas dez opções: digitar
-        três letras vence rolar procurando. Abaixo disso, <code>Select</code>;
+        Um <code>Select</code> com busca, para quando a pessoa procura um nome
+        — categoria, carteira —: digitar três letras vence rolar procurando.
+        Número, mês ou periodicidade, mesmo com 31 opções, é <code>Select</code>;
         lista longa <em>e</em> painel com rodapé próprio,{" "}
         <code>FormPickerPopover</code>.
       </Usage>

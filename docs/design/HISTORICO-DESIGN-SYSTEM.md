@@ -15185,3 +15185,64 @@ corrigido. `field-control-ladder.test.ts` tranca os valores novos.
   Mono. O `font-semibold` saiu da classe porque o degrau já o traz.
 - **Página**: nota "Onde o app usa" com a contagem, a nota da face explicando
   o `size`, `Code` no lugar do `<code>` com classes à mão.
+
+### Rodada 165 — o NativeSelect muda para a página do Select, e a página é revisada
+
+**A fusão.** `NativeSelect`, `NativeSelectOption` e `NativeSelectOptGroup`
+saíram de `native-select.tsx` para `select.tsx`, no precedente da `DragHandle`
+no `drawer.tsx`: é o mesmo controle com outro motor (o `<select>` do sistema),
+e nenhuma tela o usa — só os controles da página da `Sidebar`. Saíram o
+arquivo, a página, a entrada do registro e a chave do `LAYER`; o catálogo tem
+85 páginas e `ui/` tem 78 componentes. `field-control-ladder.test.ts` e
+`brand-contour.test.ts` passaram a ler o `NativeSelect` dentro de `select.tsx`.
+Medido lado a lado no `md`: altura, fundo, borda, raio, corpo e recuo
+**iguais** aos do `SelectTrigger`.
+
+**A regra das "dez opções" era contradita pelo app, com razão.** O fechamento
+e o vencimento do cartão são `Select` de 31 opções, e o mês do orçamento é de
+12. O Radix salta pela digitação: medido, "25" com a lista aberta leva ao 25.
+O critério virou quem procura: número, mês e periodicidade são `Select`; nome
+lembrado pela metade (categoria, carteira) é `Combobox`. A página do
+`Combobox` e o `AGENTS.md` acompanharam. As páginas do `Calendar` e do
+`DatePicker` mandavam usar `NativeSelect` de 1 a 31 para dia recorrente; o app
+usa `Select`, e elas passaram a dizer isso.
+
+**Página.**
+- "Num campo", com `Field` e `FieldControl`, na periodicidade da assinatura.
+- A escada inteira (`sm` a `xl`), que a página mostrava só em `sm`.
+- A opção desabilitada falava de "plano pago", que o produto não tem; virou o
+  "Cartão de crédito — cadastre um cartão" das formas de pagamento.
+- A opção destrutiva era um menu de ações ("Renomear", "Arquivar") num
+  `Select`, que é o trabalho do `DropdownMenu`; virou uma escolha com
+  consequência ("As transações: apagar junto").
+- As opções do `NativeSelect` vestem `Canvas`/`CanvasText`, e o
+  `next-themes` escreve `color-scheme: dark` na página: medido no escuro,
+  opção `rgb(18,18,18)` com texto branco.
+- Nota de que o `className` do `NativeSelect` veste a casca, e tabela de props.
+
+**Achados, não corrigidos:** doze `SelectItem` do app reescrevem a geometria
+por `className` (`py-2 pl-2 pr-8`, e `py-2.5 pl-3 pr-9` no mês do orçamento);
+o pagamento de conta pinta o gatilho com `bg-background shadow-xs` sobre a
+superfície de campo e usa "— Escolha —" como opção com valor em vez de
+`placeholder`.
+
+### Rodada 166 — a lista longa do Select dissolve nas pontas
+
+O dono pediu os fades no dropdown dos 31 dias. O `Select` estava fora da
+dissolução "por mecanismo": em `item-aligned` o Radix escreve `scrollTop` à
+mão e o item escolhido abriria dentro da zona. Com `popper` como padrão desde
+antes, o mecanismo é o `scrollIntoView`, que respeita o `scroll-padding` que a
+`scroll-fade-y` já declara (a zona inteira + 4px).
+
+- O `SelectPrimitive.Viewport` veste `scrollFadeViewportClassName` e
+  `useScrollFade()`; ele não pinta nada, então vale a invariante 2.
+- `SelectScrollUpButton` e `SelectScrollDownButton` **saíram**, do render e
+  das exportações: nenhuma chamada fora de `select.tsx`, e seriam o segundo
+  sinal para a mesma borda.
+- Medido nos 31 dias: fechado no 10, a zona de baixo liga (`--scroll-fade-end`
+  252) e a de cima fica em 0; rolando 200px as duas abrem; reaberto no 25, o
+  item fica a **48px** da base, fora dos 44 da zona.
+- **Achado, não corrigido**: digitar no mesmo instante em que a lista abre
+  lança `Cannot read properties of null (reading 'focus')` no
+  `useTypeaheadSearch` do Radix — o item ainda não registrou a ref. Reproduzido
+  igual **sem** o fade.

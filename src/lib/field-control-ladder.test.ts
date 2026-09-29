@@ -26,11 +26,11 @@ import {
 
 const DEGRAUS = ["sm", "md", "lg", "xl"] as const satisfies readonly FieldControlSize[]
 
-/** Os oito que vestem a régua. O `Textarea` entra pelo recuo, não pela altura. */
+/** Os oito que vestem a régua, em sete arquivos: o `NativeSelect` mora em
+ *  `select.tsx` desde a rodada 165. O `Textarea` entra pelo recuo, não pela altura. */
 const CONTROLES = [
   "input",
   "textarea",
-  "native-select",
   "select",
   "combobox",
   "date-picker",
@@ -125,7 +125,7 @@ const GLOBALS = readFileSync(new URL("../app/globals.css", import.meta.url), "ut
 
 
 const CASCAS = ["input-group", "select", "combobox", "date-picker", "form-picker-popover"] as const
-const FOLHAS = ["input", "textarea", "native-select"] as const
+const FOLHAS = ["input", "textarea"] as const
 
 describe("o foco do campo é o anel do sistema", () => {
   it("7. nenhum dos oito controles veste marca", () => {

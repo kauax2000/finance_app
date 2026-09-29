@@ -6,6 +6,8 @@ import { Select as SelectPrimitive } from "radix-ui"
 import { menuItemFadeClassName, menuPanelSurfaceClassName } from "@/lib/menu-classes"
 import { cn } from "@/lib/utils"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
+import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
+import { useScrollFade } from "@/hooks/use-scroll-fade"
 import {
   fieldControlHeightClassName,
   fieldControlPaddingClassName,
@@ -16,7 +18,7 @@ import {
   fieldTriggerHoverClassName,
   type FieldControlSize,
 } from "@/lib/field-classes"
-import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/16/solid"
+import { CheckIcon, ChevronDownIcon } from "@heroicons/react/16/solid"
 import { Caption } from "@/components/ui/typography"
 function Select({
   ...props
@@ -111,10 +113,15 @@ function SelectContent({
         collisionPadding={collisionPadding}
         {...props}
       >
-        <SelectScrollUpButton />
+        {/* As setas de rolagem do Radix saíram na rodada 166: a lista longa
+            dissolve nas pontas, como os menus, e a seta seria o segundo sinal
+            para a mesma borda. Quem rola é o viewport, que não pinta nada — a
+            invariante 2 da dissolução. */}
         <SelectPrimitive.Viewport
+          ref={useScrollFade()}
           data-position={position}
           className={cn(
+            scrollFadeViewportClassName,
             // O respiro do painel mora aqui, não no `SelectGroup`. Agrupar é
             // semântica opcional; a lista sem grupo — que é o caso mais comum —
             // ficava colada nas quatro bordas, encostando no canto arredondado.
@@ -150,7 +157,6 @@ function SelectContent({
         >
           {children}
         </SelectPrimitive.Viewport>
-        <SelectScrollDownButton />
       </SelectPrimitive.Content>
     </SelectPrimitive.Portal>
   )
@@ -220,56 +226,109 @@ function SelectSeparator({
   )
 }
 
-function SelectScrollUpButton({
+/**
+ * O `<select>` do sistema, na mesma régua de campo do `SelectTrigger`.
+ *
+ * Mora aqui desde a rodada 165: é o mesmo controle com outro motor (o do
+ * navegador, sem JavaScript e com a roda do iOS), e a página dele é a do
+ * `Select`. O precedente é a `DragHandle` no `drawer.tsx`.
+ *
+ * O `className` veste a **casca** (o `<div>` que carrega o chevron), e o resto
+ * das props vai para o `<select>`: largura e margem se dão por fora.
+ */
+type NativeSelectProps = Omit<React.ComponentProps<"select">, "size"> & {
+  size?: FieldControlSize
+}
+
+function NativeSelect({
   className,
+  size = "md",
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.ScrollUpButton>) {
+}: NativeSelectProps) {
   return (
-    <SelectPrimitive.ScrollUpButton
-      data-slot="select-scroll-up-button"
-      className={cn(
-        // Sem repintar a superfície: com a casca translúcida, um `bg-popover`
-        // opaco aqui vira uma faixa sólida no topo e na base do menu.
-        "z-10 flex cursor-default items-center justify-center py-1 [&_svg:not([class*='size-'])]:size-4",
-        className
-      )}
-      {...props}
+    <div
+      className={cn("group/native-select relative w-fit", className)}
+      data-slot="native-select-wrapper"
+      data-size={size}
     >
-      <ChevronUpIcon
+      <select
+        data-slot="native-select"
+        data-size={size}
+        // A superfície, o anel, o inválido, o desabilitado, o hover de gatilho e
+        // a escada vêm de `field-classes` — a mesma régua do `Input` e do
+        // `SelectTrigger`. Esta linha era a "quinta cópia" do backlog, e trazia
+        // três desvios só dela: `data-[size=sm]:rounded-md` (raio diferente num
+        // degrau, que nenhum outro controle faz), `dark:hover:` sem par `active:`
+        // e só no escuro, e `text-sm` sem a rampa de 16px que evita o zoom do
+        // iOS. Os três saíram. O `disabled:pointer-events-none` fica: é o mesmo
+        // desvio do `Input`, e está documentado lá.
+        className={cn(
+          fieldSurfaceClassName,
+          fieldFocusRingClassName,
+          fieldInvalidClassName,
+          fieldDisabledClassName,
+          fieldTriggerHoverClassName,
+          // `selection:bg-primary selection:text-primary-foreground` saiu: a
+          // regra global de `@layer base` tinge a seleção com o par
+          // `--primary-muted`, de propósito, para não trocar a cor do texto que
+          // ela cobre. Isto a sobrescrevia com o primário cheio, e era o único
+          // controle do app a discordar.
+          // `pl-2.5` saiu junto: eram 10px contra os 12 do `Input`.
+          "w-full min-w-0 appearance-none py-1 select-none placeholder:text-muted-foreground disabled:pointer-events-none data-[size=sm]:py-0.5",
+          fieldControlHeightClassName[size],
+          fieldControlPaddingClassName[size],
+          // A ponta é do chevron, e vem depois do registro.
+          "pr-8"
+        )}
+        {...props}
       />
-    </SelectPrimitive.ScrollUpButton>
+      {/* A opacidade do desabilitado é do `<select>` (pela régua); o chevron,
+          que é irmão, acompanha por conta própria — antes ela estava na casca e
+          se somaria à do controle. */}
+      <ChevronDownIcon
+        className="pointer-events-none absolute top-1/2 right-2.5 size-4 -translate-y-1/2 text-muted-foreground select-none group-has-[select:disabled]/native-select:opacity-50"
+        aria-hidden="true"
+        data-slot="native-select-icon"
+      />
+    </div>
   )
 }
 
-function SelectScrollDownButton({
+function NativeSelectOption({
   className,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.ScrollDownButton>) {
+}: React.ComponentProps<"option">) {
   return (
-    <SelectPrimitive.ScrollDownButton
-      data-slot="select-scroll-down-button"
-      className={cn(
-        // Sem repintar a superfície: com a casca translúcida, um `bg-popover`
-        // opaco aqui vira uma faixa sólida no topo e na base do menu.
-        "z-10 flex cursor-default items-center justify-center py-1 [&_svg:not([class*='size-'])]:size-4",
-        className
-      )}
+    <option
+      data-slot="native-select-option"
+      className={cn("bg-[Canvas] text-[CanvasText]", className)}
       {...props}
-    >
-      <ChevronDownIcon
-      />
-    </SelectPrimitive.ScrollDownButton>
+    />
+  )
+}
+
+function NativeSelectOptGroup({
+  className,
+  ...props
+}: React.ComponentProps<"optgroup">) {
+  return (
+    <optgroup
+      data-slot="native-select-optgroup"
+      className={cn("bg-[Canvas] text-[CanvasText]", className)}
+      {...props}
+    />
   )
 }
 
 export {
+  NativeSelect,
+  NativeSelectOptGroup,
+  NativeSelectOption,
   Select,
   SelectContent,
   SelectGroup,
   SelectItem,
   SelectLabel,
-  SelectScrollDownButton,
-  SelectScrollUpButton,
   SelectSeparator,
   SelectTrigger,
   SelectValue,

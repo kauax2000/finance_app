@@ -49,7 +49,6 @@ import LayersDoc from "./docs/layers"
 import MenubarDoc from "./docs/menubar"
 import MoneyDisplayDoc from "./docs/money-display"
 import MotionDoc from "./docs/motion"
-import NativeSelectDoc from "./docs/native-select"
 import NavigationMenuDoc from "./docs/navigation-menu"
 import PageHeaderDoc from "./docs/page-header"
 import PageSectionDoc from "./docs/page-section"
@@ -137,7 +136,6 @@ export const DOCS: Record<string, ComponentType> = {
   "menubar": MenubarDoc,
   "money-display": MoneyDisplayDoc,
   "motion": MotionDoc,
-  "native-select": NativeSelectDoc,
   "navigation-menu": NavigationMenuDoc,
   "page-header": PageHeaderDoc,
   "page-section": PageSectionDoc,

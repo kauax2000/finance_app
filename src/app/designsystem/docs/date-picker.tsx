@@ -14,7 +14,7 @@ export default function DatePickerDoc() {
       <Usage>
         Escolha de uma data — ou de um intervalo — em popover, em pt-BR. Para dia
         do mês recorrente (vencimento de fatura, dia do salário) o certo é um{" "}
-        <code>NativeSelect</code> de 1 a 31.
+        <code>Select</code> de 1 a 31, como no formulário de cartão.
       </Usage>
 
       <DocSection

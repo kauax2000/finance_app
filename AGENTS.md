@@ -73,7 +73,7 @@ Mermaid (`href` já quebrou um diagrama).
 O design system deste projeto tem três partes, e nenhuma delas se presume de
 memória:
 
-- **Componentes** em [`src/components/ui/`](src/components/ui) — 79 hoje.
+- **Componentes** em [`src/components/ui/`](src/components/ui) — 78 hoje.
 - **Tokens** em [`src/app/globals.css`](src/app/globals.css).
 - **Documentação viva** em `/designsystem`, com uma página por componente e por
   padrão. Sempre disponível em desenvolvimento; em produção, atrás de
@@ -797,7 +797,7 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   `components/ui/`.
 - **Cor escolhida pela pessoa**: [`ColorTile`](src/components/ui/color-tile.tsx) para o ladrilho que carrega `categories.color`, `bills.color` ou a marca de um workspace. Se a cor vem do tema e não do banco, é o componente errado — use `bg-muted` ou um `Badge`. **É a construção do `AvatarFallback`**: superfície chapada com a cor, tinta escura por cima, **um valor só nos dois temas**. O que separa os dois é a forma e quem escolhe — o avatar é redondo e o sistema sorteia uma das seis identidades; o ladrilho é de canto arredondado e quem escolhe é a pessoa. **A claridade é do sistema; o matiz é da pessoa**: a superfície é `oklch(from var(--tile-color) 0.86 min(c, 0.12) h)`, e com a tinta em `--identity-foreground` qualquer cor de runtime cai entre **10,64 e 11,73** — a faixa das seis identidades (10,17–12,12). Preto, branco e cinza chegam neutros. **A cor não entra crua, e isso é medido**: chapando a parada da marca como ela é, índigo dá 3,55, violeta 3,21 e magenta 4,09 com tinta escura, e âmbar 1,94, lima 1,83, teal 2,23 e azul 2,42 com tinta branca — nenhuma tinta única serve as oito. Sem o teto de croma, o magenta cai a 7,70 e oito ladrilhos deixam de ler como uma família. `scripts/tile-contrast.mjs` é a guarda: 96 células, piso 4,5, pior caso **10,64**. **A paleta que a pessoa escolhe é a da marca** — `TILE_PALETTE` em [`lib/tile-palette.ts`](src/lib/tile-palette.ts), os oito matizes do arco-íris na banda da identidade, servindo categoria **e** carteira; eram duas listas de hexadecimais crus do Tailwind (dez e doze). `tileColorFor` dobra na leitura os 22 presets legados, sem escrever no banco, no precedente de `identityToneFor`; o que a pessoa digitou no seletor livre atravessa intacto. **Uma versão só**: saíram o verniz, o eixo `glass`, o véu de 12%/18%, o fio e o par por tema. **A escada fala os nomes do sistema**: `md` 32 · `lg` 36 · `xl` 40 · `2xl` 44, e só o `2xl` alcança o alvo de toque. **E quem manda no corpo do ícone é o degrau**: `[&>svg]:size-4` é seletor de descendente (0,1,1) e vence qualquer classe no próprio `svg` (0,1,0) — medido, um `size-5` no ícone computa 16px.
 - **Alerts / tabs / forms**: [`Alert`](src/components/ui/alert.tsx), [`Tabs`](src/components/ui/tabs.tsx), [`Textarea`](src/components/ui/textarea.tsx), [`ScrollArea`](src/components/ui/scroll-area.tsx), [`Toggle` / `ToggleGroup`](src/components/ui/toggle.tsx), [`Slider`](src/components/ui/slider.tsx), [`Radio` / `RadioGroup`](src/components/ui/radio-group.tsx) (a forma curta é `FormRadioGroup`), [`Pagination`](src/components/ui/pagination.tsx), [`Collapsible`](src/components/ui/collapsible.tsx), [`Breadcrumb`](src/components/ui/breadcrumb.tsx), [`ChartContainer` + chart helpers](src/components/ui/chart.tsx) for Recharts.
-- **Campos**: [`Field`](src/components/ui/field.tsx) para rótulo + descrição + erro **já ligados — e agora ligados de verdade**: quem escreve `htmlFor`, `id`, `aria-describedby`, `aria-invalid` e `data-invalid` é o `FieldControl`, não a memória de quem escreve a tela. Esta linha afirmava o mesmo antes de o mecanismo existir; ver a rodada 11. [`FieldRow`](src/components/ui/field.tsx) para a linha de dois campos; [`InputGroup`](src/components/ui/input-group.tsx) para campo com ícone ou botão acoplado; [`Combobox`](src/components/ui/combobox.tsx) quando a lista passa de umas dez opções.
+- **Campos**: [`Field`](src/components/ui/field.tsx) para rótulo + descrição + erro **já ligados — e agora ligados de verdade**: quem escreve `htmlFor`, `id`, `aria-describedby`, `aria-invalid` e `data-invalid` é o `FieldControl`, não a memória de quem escreve a tela. Esta linha afirmava o mesmo antes de o mecanismo existir; ver a rodada 11. [`FieldRow`](src/components/ui/field.tsx) para a linha de dois campos; [`InputGroup`](src/components/ui/input-group.tsx) para campo com ícone ou botão acoplado; [`Combobox`](src/components/ui/combobox.tsx) quando a pessoa **procura um nome** (categoria, carteira), e não quando a lista cresce — os 31 dias do cartão são `Select`, que salta pela digitação. O `NativeSelect` mora em `select.tsx` desde a rodada 165, e a página dele é a do `Select`.
 - **Seletor ancorado num campo**:
   [`FormPickerPopover`](src/components/ui/form-picker-popover.tsx) e as suas
   faixas — `FormPickerPopoverTrigger` (o gatilho **é** o campo: `outline`,
@@ -1528,9 +1528,12 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   enquanto um `auto` igualmente curto ficava com **dois**. Mesma situação
   visual, dois tratamentos. O diálogo é uma superfície só; o que separa as
   faixas é o respiro, e a dissolução onde há rolagem.
-  **Fora, por mecanismo:** o `Select` — em `position="item-aligned"`
-  o Radix escreve `viewport.scrollTop` à mão para alinhar o item selecionado, e
-  ele abriria dissolvido, sem `scroll-padding` que resolva; o
+  **E o `Select`, desde a rodada 166**, no viewport do Radix, com as setas de
+  rolagem fora: o padrão virou `popper`, e ali quem leva o item escolhido à
+  vista é o `scrollIntoView`, que respeita o `scroll-padding` da primitiva
+  (medido, o 25 reabre a 48px da base, fora dos 44 da zona). O
+  `item-aligned` continua abrindo dissolvido, porque escreve `scrollTop` à
+  mão, e nenhuma tela o usa. **Fora, por mecanismo:** o
   `DropdownMenu variant="panel"` — o cabeçalho é filho do viewport e a máscara
   o apagaria; e o `PopoverContent`, porque ele é ao mesmo tempo casca e
   rolável, e um viewport interno quebraria o `FormPickerPopoverContent`, que

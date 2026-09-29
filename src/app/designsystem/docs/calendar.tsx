@@ -98,7 +98,7 @@ export default function CalendarDoc() {
       <DocNote title="Para dia do mês recorrente, ele é o componente errado">
         &ldquo;Todo dia 5&rdquo; não pertence a nenhum mês, e um calendário
         obriga a escolher um março arbitrário. Ali o certo é um{" "}
-        <code>NativeSelect</code> de 1 a 31.
+        <code>Select</code> de 1 a 31, como o fechamento e o vencimento do cartão.
       </DocNote>
 
       <PropsTable

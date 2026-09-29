@@ -25,7 +25,7 @@ import { Field, FieldControl, FieldLabel } from "@/components/ui/field"
 import {
   NativeSelect,
   NativeSelectOption,
-} from "@/components/ui/native-select"
+} from "@/components/ui/select"
 import {
   ResizableCollapseTrigger,
 } from "@/components/ui/resizable"

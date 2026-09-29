@@ -166,7 +166,6 @@ describe("contorno de marca", () => {
     for (const nome of [
       "input",
       "textarea",
-      "native-select",
       "select",
       "combobox",
       "date-picker",

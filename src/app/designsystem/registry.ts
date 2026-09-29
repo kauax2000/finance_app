@@ -116,8 +116,6 @@ const LAYER: Record<string, Layer> = {
   kbd: "Atoms",
   label: "Atoms",
   "money-display": "Atoms",
-  /** Um `<select>`. `<option>` e `<optgroup>` são o conteúdo dele. */
-  "native-select": "Atoms",
   progress: "Atoms",
   /** O controle inteiro — o anel e o ponto. **Não é especialização de nada**:
    *  ele é a unidade, e quem compõe é o `radio-group`, uma camada acima. É o
@@ -402,13 +400,12 @@ export const REGISTRY: RegistryEntry[] = [
   entry("kbd", "Kbd", "Uma tecla ou um atalho.", ui("kbd"), "Kbd"),
   entry("label", "Label", "Rótulo acessível ligado a um controle.", ui("label"), "Label"),
   entry("money-display", "Money Display", "Todo valor em reais que o app mostra.", ui("money-display"), "MoneyDisplay"),
-  entry("native-select", "Native Select", "O select do sistema, sem JavaScript.", ui("native-select"), "NativeSelect"),
   entry("progress", "Progress", "Barra de progresso com tons de status.", ui("progress"), "Progress"),
   entry("radio", "Radio", "Uma opção de escolha única.", ui("radio"), "Radio"),
   entry("resizable", "Resizable", "Painéis redimensionáveis por arraste.", ui("resizable"), "ResizablePanelGroup, ResizablePanel, ResizableHandle"),
   entry("scroll-area", "Scroll Area", "Área rolável com barra estilizada.", ui("scroll-area"), "ScrollArea, ScrollBar"),
   entry("scroll-fade", "Scroll Fade", "Área rolável que dissolve o conteúdo nas bordas.", ui("scroll-fade"), "ScrollFade"),
-  entry("select", "Select", "Lista suspensa de opções predefinidas.", ui("select"), "Select, SelectTrigger, SelectItem"),
+  entry("select", "Select", "Lista suspensa de opções predefinidas, desenhada ou do sistema.", ui("select"), "Select, SelectTrigger, SelectItem, NativeSelect"),
   entry("separator", "Separator", "Divisor entre conteúdos.", ui("separator"), "Separator"),
   entry("skeleton", "Skeleton", "Placeholder enquanto o dado carrega.", ui("skeleton"), "Skeleton"),
   entry("slider", "Slider", "Valor ou intervalo numérico contínuo.", ui("slider"), "Slider"),
