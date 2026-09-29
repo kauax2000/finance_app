@@ -125,7 +125,7 @@ function PrefRow({
             <FieldControl>
                 <Switch
                     id={id}
-                    className="mt-0.5 shrink-0"
+                    className="mt-0.5"
                     checked={checked}
                     onCheckedChange={onCheckedChange}
                     disabled={disabled}

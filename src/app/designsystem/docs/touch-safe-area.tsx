@@ -95,9 +95,9 @@ const INVISIVEIS = [
   {
     nome: "Switch",
     desenho: "32 × 18",
-    alvo: "56 × 34",
-    classe: "after:-inset-x-3 after:-inset-y-2",
-    area: "-inset-x-3 -inset-y-2",
+    alvo: "54 × 44",
+    classe: "after:-inset-x-3 after:top-1/2 after:h-11 after:-translate-y-1/2",
+    area: "-inset-x-3 top-1/2 h-11 -translate-y-1/2",
     controle: <Switch aria-label="Exemplo" defaultChecked />,
   },
 ];

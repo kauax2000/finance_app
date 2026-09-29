@@ -19,7 +19,6 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -361,17 +360,13 @@ export function SubscriptionDetailSheet({
                                     : "Pausada — sem cobranças novas"
                             }
                         >
-                            {activeToggleSaving ? (
-                                <Spinner size="sm" className="text-muted-foreground" />
-                            ) : (
-                                <span className="whitespace-nowrap text-xs text-muted-foreground">
-                                    {statusActive ? "Ativa" : "Pausada"}
-                                </span>
-                            )}
+                            <span className="whitespace-nowrap text-xs text-muted-foreground">
+                                {statusActive ? "Ativa" : "Pausada"}
+                            </span>
                             <Switch
                                 size="sm"
                                 checked={statusActive}
-                                disabled={activeToggleSaving}
+                                pending={activeToggleSaving}
                                 aria-label={
                                     statusActive
                                         ? "Pausar assinatura"

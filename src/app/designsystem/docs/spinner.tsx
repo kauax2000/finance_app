@@ -109,7 +109,7 @@ export default function SpinnerDoc() {
       </DocNote>
 
       <DocNote title="Onde o app usa">
-        Vinte e cinco rodas: o <code>FormSubmit</code>, o toast de carregamento, os botões de membros, convites, exclusão de conta, perfil e sessões, o interruptor de uma assinatura — e a tela de abertura, que desde a rodada 178 é um <code>SpinnerBlock</code> de marca no lugar de um <code>setTimeout</code> com opacidade trocada. Dez rodas dentro de botões tinham <code>mr-2</code> ou <code>mr-1.5</code>, somando margem ao respiro que o <code>Button</code> já dá; saíram, com os tamanhos à mão (<code>size-3.5</code> virou <code>size=&quot;sm&quot;</code>) e um <code>aria-hidden</code> que repetia o padrão.
+        Vinte e cinco rodas: o <code>FormSubmit</code>, o toast de carregamento, os botões de membros, convites, exclusão de conta, perfil e sessões, o polegar do <code>Switch pending</code> (desde a rodada 179, no interruptor de uma assinatura) — e a tela de abertura, que desde a rodada 178 é um <code>SpinnerBlock</code> de marca no lugar de um <code>setTimeout</code> com opacidade trocada. Dez rodas dentro de botões tinham <code>mr-2</code> ou <code>mr-1.5</code>, somando margem ao respiro que o <code>Button</code> já dá; saíram, com os tamanhos à mão (<code>size-3.5</code> virou <code>size=&quot;sm&quot;</code>) e um <code>aria-hidden</code> que repetia o padrão.
       </DocNote>
 
       <PropsTable

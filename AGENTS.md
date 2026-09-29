@@ -2004,6 +2004,13 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   de 7px a `largura − 7px`, a régua do Radix —, `bubble` no `:active` e no
   foco de teclado, e `bands`, os cortes do `Progress` (zonas no trilho, faixa
   na cor do valor; não com a marca). Sem essas props a peça é a de sempre.
+- **`Switch` tem escada, `pending`, ícones e marca** (rodada 179): `size`
+  mede o trilho (`sm` 14×24 · **`md` 18×32** · `lg` 24×44), e
+  `size="default"` saiu do tipo. O alvo é **44 de altura** nos três degraus
+  (era 34 no `md`). `pending` põe o `Spinner` no polegar e trava sem apagar
+  (`aria-busy`) — não troque o texto de estado por uma roda ao lado; `icons`
+  põe tique e ×; `variant="brand"` é o brilho, a família do `Checkbox` e do
+  `Radio`. O polegar anda na mola da casa.
 - **`Skeleton` tem as formas das peças** (rodada 176): `shape` (`block`,
   `text` — a caixa com a entrelinha do corpo e o osso de 0,8em no meio —,
   `circle` na escada do `Avatar`, `tile` na do `ColorTile`, `pill` na do

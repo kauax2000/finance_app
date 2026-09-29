@@ -15693,3 +15693,35 @@ O dono pediu a rodada completa e escolheu as quatro versões.
   `aria-hidden` repetidos saíram.
 - **Correção de página**: ela dizia que o spinner parava com movimento
   reduzido. O bloco global **isenta** `animate-spin`; ele gira.
+
+### Rodada 179 — o Switch ganha escada, salvando, ícones no polegar e marca
+
+O dono pediu a rodada completa e escolheu as quatro versões.
+
+- **`size`**: `sm` 14×24 · **`md` 18×32** · `lg` 24×44. `size="default"` saiu
+  do tipo, como saiu de `Button`, `Input` e `Select`. O polegar é a altura
+  menos a borda, e a viagem `largura − altura` é o mesmo `calc(100% − 2px)`
+  nos três degraus: uma classe serve a escada. Medido: polegar de 12, 16 e 22,
+  1px da borda nos três.
+- **O alvo era 34px de altura** (`after:-inset-y-2`), 30 no `sm` — abaixo dos
+  44 do `Checkbox` e do `Radio`. Agora é centrado com 44 nos três degraus:
+  46 · 54 · 66 × 44, medidos. A página de toque dizia 56 × 34; os dois números
+  estavam errados (a largura era 54 já antes, porque `-inset-x-3` conta da
+  borda de dentro).
+- **`pending`**: o `Spinner` dentro do polegar, `disabled` do Radix sem a
+  opacidade (`data-disabled:not-aria-busy:opacity-50`) e `aria-busy`. Medido:
+  opacidade 1, `aria-busy="true"`, roda presente; ao fim, volta ao normal. A
+  folha da assinatura trocava o texto "Ativa"/"Pausada" por uma roda ao lado
+  enquanto salvava — o estado sumia justo quando mudava. Agora o texto fica.
+- **`icons`**: tique no ligado, × no desligado, micro (`16/solid`), com a tinta
+  medida contra o polegar nos dois temas (`text-foreground` serve os dois
+  ligados, porque o polegar ligado é `--background` no claro e
+  `--primary-foreground` no escuro).
+- **`variant="brand"`**: o brilho (`brand-glow` + `useBrandGlow`) com
+  intensidade cheia, a do `Checkbox`. O `::after` continua sendo o alvo; o
+  brilho mora no `::before`.
+- **O polegar anda na mola** (`--ease-spring`), e o trilho troca de cor em
+  `--duration-slow`; antes era `transition-all` com a duração padrão.
+- **Página**: a nota que dizia que `--input` voltou à 1.4.11 estava errada (ele
+  voltou para fora, por decisão do dono); a linha de configuração passou a ser
+  o `Field` horizontal que o app usa, e entrou a tabela de props.
