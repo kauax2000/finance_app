@@ -1,33 +1,67 @@
 "use client"
 
 import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { Caption } from "@/components/ui/typography"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+
+const DEGRAUS = ["sm", "md", "lg"] as const
 
 export default function ThemeToggleDoc() {
   return (
     <>
       <Usage>
-        O trilho de tema: <strong>sistema, claro e escuro</strong>. Vale no instante do toque, mas escolhe entre três opções igualmente válidas, então não é um <code>Switch</code> — é um <code>radiogroup</code>, com as três faces desenhadas. Existe <strong>um</strong> no app, no menu da conta; para ligar e desligar algo, use <code>Switch</code>.
+        O trilho de tema: <strong>sistema, claro e escuro</strong>. Vale no instante do toque, mas escolhe entre três opções igualmente válidas, então não é um <code>Switch</code> — é um <code>radiogroup</code>, com as três faces desenhadas. É o único controle de tema: não escreva outro com <code>setTheme</code>. Todas as demonstrações abaixo são o controle de verdade, e trocam o tema do catálogo.
       </Usage>
 
       <DocSection
-        title="Padrão"
-        description="A demonstração é o controle de verdade: tocar aqui troca o tema do catálogo inteiro."
-        code={`<ThemeToggle />`}
+        title="Degraus"
+        description="sm 28 para barras densas, md 32 (o padrão, o do menu da conta) e lg 36, ao lado de um campo lg. A parada é a altura menos 4, a peça viaja uma parada por índice, e o alvo de toque é 44 nos três."
+        code={`<ThemeToggle size="sm" />
+<ThemeToggle />
+<ThemeToggle size="lg" />`}
+        previewClassName="items-end gap-6"
       >
-        <ThemeToggle />
+        {DEGRAUS.map((s) => (
+          <div key={s} className="flex flex-col items-center gap-2">
+            <ThemeToggle size={s} />
+            <Caption>{s}</Caption>
+          </div>
+        ))}
       </DocSection>
 
       <DocSection
-        title="Degraus"
-        description="md (32) é o padrão; lg (36) fica ao lado de um campo lg. A peça, as faces e a viagem crescem juntas."
-        code={`<ThemeToggle />
-<ThemeToggle size="lg" />`}
+        title="Com rótulos"
+        description="labels põe o nome ao lado do ícone, para uma tela de preferências onde o ícone sozinho não basta. As três paradas têm a mesma largura, e a peça estica os mesmos pixels que na versão de ícone — numa pílula larga, proporcionalmente menos."
+        code={`<ThemeToggle labels />`}
+        previewClassName="flex-col items-start gap-4"
       >
-        <div className="flex items-center gap-4">
+        <ThemeToggle labels />
+        <ThemeToggle labels size="sm" />
+      </DocSection>
+
+      <DocSection
+        title="A revelação circular"
+        description="A troca abre num círculo que parte da parada tocada e cobre a tela (View Transitions API): a página velha fica por cima, a nova se revela por baixo, e a peça continua viajando dentro do círculo. É o padrão; reveal={false} troca na hora. Sem suporte no navegador, ou com movimento reduzido, a troca também é na hora."
+        code={`<ThemeToggle />
+<ThemeToggle reveal={false} />`}
+        previewClassName="items-end gap-6"
+      >
+        <div className="flex flex-col items-center gap-2">
           <ThemeToggle />
-          <ThemeToggle size="lg" />
+          <Caption>reveal</Caption>
         </div>
+        <div className="flex flex-col items-center gap-2">
+          <ThemeToggle reveal={false} />
+          <Caption>reveal=&#123;false&#125;</Caption>
+        </div>
+      </DocSection>
+
+      <DocSection
+        title="A versão de marca"
+        description="variant=&quot;brand&quot; é o brilho da família do Switch, do Checkbox e do Badge: a borda do trilho acende em arco-íris conforme o ponteiro se aproxima, e só a borda. Longe do ponteiro, e no toque, é o trilho de sempre. Uma por tela."
+        code={`<ThemeToggle variant="brand" />`}
+      >
+        <ThemeToggle variant="brand" size="lg" />
       </DocSection>
 
       <DocSection
@@ -45,113 +79,48 @@ export default function ThemeToggleDoc() {
         </div>
       </DocSection>
 
-      <PropsTable
-        rows={[
-          {
-            prop: "size",
-            type: '"md" | "lg"',
-            default: '"md"',
-            description:
-              "md tem 32 de altura, o do menu da conta; lg tem 36, para ficar ao lado de um campo lg, como o gatilho de busca do catálogo. A área de toque é 44 nos dois.",
-          },
-          {
-            prop: "className",
-            type: "string",
-            description:
-              "Classes para o trilho — e para o Skeleton que ocupa o lugar dele antes de montar.",
-          },
-        ]}
-      />
+      <DocNote title="Três paradas, na ordem do sistema operacional">
+        <strong>Sistema · Claro · Escuro</strong>, a ordem do menu de tema do macOS. O eixo do trilho <strong>não</strong> significa escuro→claro, e nenhuma posição carrega sentido próprio; quem quiser um eixo reordena <code>PARADAS</code>, e nada mais. Sistema é o padrão do app desde a rodada 116 (<code>defaultTheme=&quot;system&quot;</code>): quem nunca escolheu segue o aparelho.
+      </DocNote>
 
-      <DocNote title="Três paradas, e a ordem é a do sistema operacional">
+      <DocNote title="Uma peça só, esticando em fase com a corrida">
         <p>
-          <strong>Sistema · Claro · Escuro</strong>, a ordem do menu de tema do macOS. A consequência fica dita em vez de escondida: o eixo do trilho <strong>não</strong> significa escuro→claro, então nenhuma posição carrega sentido próprio. Quem quiser um eixo com significado reordena o array <code>PARADAS</code>, e nada mais.
+          Houve três nós — cabeça, rastro e pescoço —, e eles liam como duas bolas. Hoje é <strong>uma</strong> pílula, com a mecânica do <a href="https://21st.dev/community/components?q=glass&amp;preview=%2F%40dennysdionigi%2Fcomponents%2Fapple-liquid-glass-switcher" target="_blank" rel="noreferrer">apple-liquid-glass-switcher</a> (Dennys Dionigi): um trajeto com inércia (<code>cubic-bezier(1, 0, .4, 1)</code>, 400ms), um <strong>esticão</strong> em <code>scale</code> com a origem na borda de trás — a forma estica para a frente — e o volume conservado: esticando em X, ela afina em Y (34,1 × 25,2 no auge).
         </p>
         <p>
-          Sistema é o padrão do app desde esta rodada (<code>defaultTheme=&quot;system&quot;</code>, <code>enableSystem</code>): quem nunca escolheu nada segue o aparelho. Antes recebia escuro sempre.
+          O esticão roda num relógio de <strong>640ms</strong>, contra 400 do trajeto (a versão anterior desta página dizia que eram o mesmo). Os 400 primeiros são o esticão, com o pico em 0,58 do trajeto, perto do pico de velocidade (0,667) — a referência o punha anticorrelacionado, e a forma esticava parada. Os 240 que sobram são o <strong>pouso</strong>: um mergulho só, ancorado na borda da frente. A amplitude é a velocidade — 1,11 num salto de uma parada, 1,22 no de duas —, e o teto é a borda do trilho: 87,7 dos 88px no salto longo.
         </p>
       </DocNote>
 
-      <DocNote title="Uma peça só, esticando — não duas bolas">
-        <p>
-          A primeira versão tinha três nós: uma cabeça, um rastro atrasado e um pescoço ligando os dois, fundidos por serem do mesmo <code>--background</code>. A fusão por cor apaga a costura, mas não faz uma forma só — na tela aquilo lia como <strong>duas bolas transitando</strong>.
-        </p>
-        <p>
-          Hoje é <strong>uma</strong> pílula, e o orgânico vem de três coisas: um trajeto com inércia (<code>cubic-bezier(1, 0, .4, 1)</code> — quase não sai do lugar, dispara, pousa macio), um <strong>esticão</strong> em <code>scale</code> que sobe e volta a 1, e a <strong>origem presa na borda de trás</strong> do movimento, que é o que faz a forma esticar <em>para a frente</em>. A mecânica é a do <a href="https://21st.dev/community/components?q=glass&amp;preview=%2F%40dennysdionigi%2Fcomponents%2Fapple-liquid-glass-switcher" target="_blank" rel="noreferrer">apple-liquid-glass-switcher</a> (Dennys Dionigi), lida do bundle do preview.
-        </p>
-      </DocNote>
-
-      <DocNote title="O esticão anda em fase com a velocidade, e essa é a divergência da referência">
-        <p>
-          A referência põe o pico do esticão no meio do <em>seu</em> relógio — 0,44s de escala contra 0,40s de viagem. Com esta curva de trajeto isso sai <strong>anticorrelacionado</strong>, e foi medido: aos 30% do caminho a escala estava em <strong>1,33</strong> com a velocidade a <strong>6%</strong> do máximo, e aos 70%, com 68% da velocidade, a escala já tinha caído para 1,04. A forma esticava <strong>parada</strong> e atravessava contraída — o contrário do que matéria faz.
-        </p>
-        <p>
-          Aqui os dois relógios são o mesmo (400ms) e o pico fica em <strong>0,58</strong>, perto do pico de velocidade da curva (0,667) e cedo o bastante para o auge não cair em cima da borda do trilho. O perfil é uma meia-senoide de cada lado, e não um triângulo: vértice reto no auge lê como repuxão.
-        </p>
-      </DocNote>
-
-      <DocNote title="O volume se conserva, e a chegada se acomoda">
-        <p>
-          Esticando em X, a forma <strong>afina em Y</strong> — sem isso ela <em>engorda</em> em vez de esticar, e é essa contrafase que separa matéria elástica de uma pílula que cresce. Medido na animação real: no auge a peça vai a <strong>34,1 × 25,2</strong>, e no fundo do pouso a <strong>26,8 × 28,6</strong>.
-        </p>
-        <p>
-          O relógio da escala passa o do trajeto de propósito (640 contra 400ms): os 240 que sobram são o <strong>pouso</strong>, e ele é <strong>um mergulho só</strong> — a forma bate na parada, compacta atrás e relaxa, indo a 26,8 × 28,6 e voltando. Houve uma versão que oscilava três vezes em 160ms e ficava estalada; uma travessia por zero, nenhum repique. E a <strong>origem vira</strong> na chegada: enquanto corre, a forma estica a partir da borda de trás (para a frente); ao chegar, ela se acomoda a partir da borda da frente, para dentro do trilho. A troca cai exatamente onde a escala é 1, então é invisível por construção — e é ela que libera a amplitude do pouso, que presa atrás crescia contra a borda.
-        </p>
-      </DocNote>
-
-      <DocNote title="A amplitude é a velocidade, e o teto é a borda do trilho">
-        <p>
-          As duas viagens duram o mesmo e a longa percorre o dobro — então ela corre ao dobro e estica o dobro: <strong>1,11</strong> num salto de uma parada, <strong>1,22</strong> no de duas. Medido por scrubbing da animação real no salto longo: a largura vai de 28 a <strong>34,2px</strong> no auge e volta a 28, com a borda dianteira chegando no máximo a <strong>87,7</strong> dos 88px do trilho — <strong>0,3px</strong> de folga, simétrica nos dois sentidos.
-        </p>
-        <p>
-          O teto não é gosto. Em 1,26 a forma passa da borda e sai da pílula — e isso não reprova em teste nenhum, só aparece na tela.
-        </p>
+      <DocNote title="Quem desloca é a WAAPI, e o movimento reduzido é perguntado à mão">
+        O next-themes roda com <code>disableTransitionOnChange</code>, que injeta <code>transition: none !important</code> durante a troca. Uma transição de CSS morreria ali; a Web Animations API não é transição e escapa. O repouso é o estilo, e a animação (com <code>fill: &quot;none&quot;</code>) só cobre o trajeto. O preço é que o bloco global de movimento reduzido também não a alcança, e o componente pergunta à mão — como pergunta antes da revelação circular. E a primeira pintura não anima: o conteúdo do menu da conta desmonta ao fechar, e sem essa guarda a peça entraria deslizando a cada abertura.
       </DocNote>
 
       <DocNote title="A bandeja é sobreposição, e não tinta chapada">
-        <p>
-          <code>bg-muted</code> é opaco, e medido ele pintava <strong>38,38,38</strong> tanto na barra do catálogo quanto dentro do painel de um cartão — ignorando o que está atrás. Um trilho de abas vive numa tela conhecida; este controle não: ele mora na barra de vidro, no painel do <code>DropdownMenu</code>, no <code>Popover</code> do telefone e solto num cartão. Chapado, ele lê como um bloco estrangeiro colado sobre o preto do app.
-        </p>
-        <p>
-          A superfície passou a ser a do campo — <code>bg-input-fill/50</code>, a mesma de <code>field-classes</code> —, então a placa lê como o fundo de um <code>Input</code>. No escuro <code>--input-fill</code> é branco a 15%, e a <code>/50</code> são 7,5% de sobreposição: <strong>28</strong> sobre a página e <strong>40</strong> sobre o cartão, contra os 38 fixos de antes. É a divergência consciente do <code>TabsList</code>, que continua chapado porque sabe onde mora.
-        </p>
-      </DocNote>
-
-      <DocNote title="Três faces, não um Switch nu">
-        <p>
-          Num switch nu, &ldquo;marcado&rdquo; não diz qual tema é — e três estados não cabem num booleano. As três faces ficam desenhadas e a cabeça desliza por baixo. A semântica é <code>radiogroup</code>: uma parada de tabulação, as setas passam pelas três, e o valor acompanha o tema na hora, mesmo com a aparência dois quadros atrás.
-        </p>
+        <code>bg-muted</code> pintava 38,38,38 em qualquer fundo, e o controle mora na barra de vidro, no menu, no popover do telefone e em cartão. A superfície é a do campo, <code>bg-input-fill/50</code> — no escuro 28 sobre a página e 40 sobre o cartão. É a divergência consciente do <code>TabsList</code>, que continua chapado porque sabe onde mora.
       </DocNote>
 
       <DocNote title="Antes de montar, um Skeleton do mesmo tamanho">
-        <p>
-          O servidor não sabe o tema, e um palpite faria a cabeça saltar na hidratação. Até montar, o lugar é de um <code>Skeleton</code> de 32×88, a medida do trilho — 4 de recuo mais três paradas de 28.
-        </p>
-      </DocNote>
-
-      <DocNote title="Quem desloca é a Web Animations API, e isso é conserto de defeito">
-        <p>
-          O next-themes roda com <code>disableTransitionOnChange</code>, que injeta <code>* {"{"} transition: none !important {"}"}</code> enquanto troca a classe do tema. A primeira versão fugia disso aplicando a posição <strong>dois <code>requestAnimationFrame</code> depois</strong> — e era frágil por construção: quando o rAF não corre no ritmo esperado, o estado adiado nunca roda e o polegar fica <strong>parado</strong>. Medido: clique, 1400ms de espera, cabeça sem sair do lugar e <code>document.getAnimations()</code> vazio.
-        </p>
-        <p>
-          A WAAPI não é uma transição, então o <code>!important</code> não a alcança. A posição de repouso é aplicada na hora por <code>--tt-i</code>, e o movimento é uma animação explícita do valor antigo para o novo com <code>fill: &quot;none&quot;</code> — o estilo manda no repouso, a animação só cobre o trajeto. Sem adiamento e sem rAF, e o movimento começa <strong>no mesmo quadro</strong> em que o tema troca, em vez de 45ms depois.
-        </p>
-        <p>
-          O preço: o bloco global de <code>prefers-reduced-motion</code> encurta <em>transição</em>, e a WAAPI escapa dele. Por isso a pergunta é feita à mão no componente — e sem movimento não há nada a fazer, porque <code>--tt-i</code> já pôs as três peças no lugar certo. As faces continuam em transição de CSS de propósito: ali o que muda é tinta, e trocar de estalo junto com a página é o compasso certo.
-        </p>
-      </DocNote>
-
-      <DocNote title="Nascer é chegar, não viajar">
-        <p>
-          O gate de montagem leva a parada de 0 para a real, e sem guarda o polegar entra deslizando da esquerda <strong>toda vez que o componente nasce</strong> — no app, a cada abertura do menu da conta, já que o conteúdo de um <code>DropdownMenu</code> desmonta ao fechar. A primeira pintura não anima: ela chega.
-        </p>
+        O servidor não sabe o tema, e um palpite faria a peça saltar na hidratação. Até montar, o lugar é de um <code>Skeleton</code> com a medida do trilho — 4 de recuo mais três paradas —, nos três degraus e com rótulo.
       </DocNote>
 
       <DocNote title="Dois conjuntos de ícone, exceção nomeada">
-        <p>
-          A face apagada é <code>24/outline</code> e a acesa <code>16/solid</code>, ambas a 16px. É exceção à régua de iconografia no auditor: não existe <code>16/outline</code>, e o peso do traço é o sinal que a cor sozinha não entrega num glifo de 16px no tema escuro.
-        </p>
+        A face apagada é <code>24/outline</code> e a acesa <code>16/solid</code>, ambas a 16px: não existe <code>16/outline</code>, e o peso do traço é o sinal que a cor sozinha não entrega num glifo pequeno no tema escuro.
       </DocNote>
+
+      <DocNote title="Onde o app usa">
+        Dois: o menu da conta no desktop (<code>UserMenu</code>) e o do telefone (<code>MobileAccountMenu</code>), os dois na forma de linha de menu, no degrau <code>md</code> e com a revelação circular. O catálogo usa mais dois no cabeçalho. A versão anterior desta página dizia que existia um só no app.
+      </DocNote>
+
+      <PropsTable
+        rows={[
+          { prop: "size", type: '"sm" | "md" | "lg"', default: '"md"', description: "A altura: 28, 32 e 36. O alvo de toque é 44 nos três." },
+          { prop: "labels", type: "boolean", default: "false", description: "Ícone e texto em cada parada." },
+          { prop: "reveal", type: "boolean", default: "true", description: "A troca abre num círculo a partir da parada tocada." },
+          { prop: "variant", type: '"default" | "brand"', default: '"default"', description: "brand é o brilho de arco-íris na borda do trilho. Uma por tela." },
+          { prop: "className", type: "string", description: "Para o trilho — e para o Skeleton que ocupa o lugar dele antes de montar." },
+        ]}
+      />
     </>
   )
 }

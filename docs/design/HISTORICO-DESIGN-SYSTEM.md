@@ -15758,3 +15758,38 @@ marca: o campo não veste marca.
   nenhum outro campo tem por `minRows={3} maxRows={8}`.
 - **Página**: nota do ⌘/Ctrl+Enter, a nota da dissolução, o crescimento sem
   `field-sizing`, o grupo com teto e a tabela de props completa.
+
+### Rodada 181 — o ThemeToggle ganha o degrau sm, rótulos, a revelação circular e marca
+
+O dono pediu a rodada completa e escolheu as quatro versões.
+
+- **A geometria virou uma tabela só**: altura por degrau, parada = altura − 4,
+  trilho = 4 + 3 paradas. Ela desce por estilo inline — é número calculado,
+  e classe montada em tempo de execução não chega ao CSS. Medido: `sm` 76×28,
+  `md` 88×32, `lg` 100×36, alvo de 44 nos três.
+- **`labels`**: ícone e texto, paradas de largura igual (76 · 88 · 100). A
+  amplitude do esticão é multiplicada por `parada de ícone / parada larga`,
+  então a pílula estica os mesmos pixels da versão de ícone — sem isso a de
+  88px esticava 19px e lia como elástico. Com o texto à vista, a face deixa o
+  `aria-label` e o nome é o texto.
+- **`reveal`**, ligado por padrão: a troca abre num círculo a partir da
+  parada tocada (View Transitions API), animando o `clip-path` do
+  `::view-transition-new(root)` em 560ms na curva do brilho. **O `flushSync`
+  é o que faz funcionar**: o next-themes aplica a classe num efeito, e medido,
+  com ele a classe `dark` já está no `<html>` quando a foto nova é tirada. O
+  CSS que tira o esmaecer padrão da API mora em `globals.css`, escopado por
+  `.theme-reveal`, que o componente põe e tira do `<html>` durante a
+  transição. Sem a API, com movimento reduzido ou com `reveal={false}`, troca
+  na hora.
+- **`variant="brand"`**: o brilho (`brand-glow` + `useBrandGlow`) na borda do
+  trilho; o `::after` segue sendo o alvo de toque. **Primeira versão não
+  acendia**, medido com o ponteiro colado: o hook liga o ponteiro num efeito
+  de montagem, e na montagem quem está na tela é o `Skeleton` — o ref é nulo e
+  o efeito não volta a rodar. A condição passou a ser
+  `variant === "brand" && montado`. Vale para qualquer peça de brilho que nasça
+  depois de um portão de montagem.
+- **Página**: ela dizia que existia um controle no app (são dois: o menu da
+  conta no desktop e o do telefone) e que o esticão e o trajeto rodam no mesmo
+  relógio de 400ms (são 640 e 400; os 240 a mais são o pouso). As nove notas
+  longas viraram seis.
+

@@ -2826,6 +2826,19 @@
   );
 }
 
+/* A revelação circular do `ThemeToggle` (rodada 181). A View Transitions API
+   esmaece a foto velha para a nova por padrão; aqui quem revela é o recorte
+   circular que o componente anima no `::view-transition-new(root)`, então o
+   esmaecer sai e a mistura volta ao normal — senão a página nova aparecia
+   translúcida por baixo do círculo. Escopado por `.theme-reveal`, que o
+   componente põe no `<html>` só enquanto a transição dura: outra transição de
+   vista que o app venha a ter não herda nada daqui. */
+.theme-reveal::view-transition-old(root),
+.theme-reveal::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
 
 /* As linhas da paleta sobem ao aparecer (rodada 139). É o desenho do
    `disclosure-reveal` — o mesmo `disclosure-rise`, na mola, escalonado por

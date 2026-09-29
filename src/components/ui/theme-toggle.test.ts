@@ -66,27 +66,28 @@ describe("o trilho de tema", () => {
         expect(CODIGO).toContain('aria-label="Tema"')
     })
 
-    it("3b. o degrau lg fecha a mesma conta: 100 = 4 + 3 × 32, e a viagem é 32", () => {
-        expect(CODIGO).toContain("h-9 w-25")
-        expect(CODIGO).toMatch(/size-8/)
-        expect(CODIGO).toContain("translate-x-[calc(var(--tt-i)*2rem)]")
-        expect(CODIGO).toContain("const PASSO_LG = 32")
-    })
-
-    it("3. a aritmética fecha: 88 = 4 + 3 × 28, e a viagem é o mesmo 28", () => {
-        // `w-22` é 88px e `p-0.5` é 2px de cada lado: sobram 84 para três
-        // paradas de 28. `size-7` é a peça de 28 que ocupa uma delas.
-        expect(CODIGO).toContain("h-8 w-22")
+    it("3. a aritmética fecha nos três degraus: trilho = 4 + 3 paradas, e a viagem é uma parada", () => {
+        // Rodada 181: a geometria é uma tabela só, e desce por estilo inline —
+        // número calculado não pode ser classe, porque classe montada em tempo
+        // de execução não chega ao CSS.
+        expect(CODIGO).toContain("sm: { altura: 28")
+        expect(CODIGO).toContain("md: { altura: 32")
+        expect(CODIGO).toContain("lg: { altura: 36")
+        // A parada é a altura menos o recuo de 2px de cada lado (`p-0.5`).
+        expect(CODIGO).toContain("const face = degrau.altura - 4")
         expect(CODIGO).toContain("p-0.5")
-        expect(CODIGO).toMatch(/size-7/)
+        expect(CODIGO).toContain("const larguraTrilho = 4 + passo * PARADAS.length")
+        // O repouso da peça e a viagem da WAAPI usam o mesmo passo.
+        expect(peca(PECA)).toContain("translate: `${indice * passo}px`")
+        expect(CODIGO).toContain("{ translate: `${indice * passo}px` }")
         // O Skeleton de pré-montagem mede o mesmo, senão a linha do menu salta
         // de largura na hidratação.
-        // O esqueleto usa o trilho do degrau, e não um número próprio.
-        expect(CODIGO).toContain('cn(degrau.trilho, "shrink-0 rounded-full", className)')
+        expect(CODIGO).toContain("style={{ width: larguraTrilho, height: degrau.altura }}")
+    })
 
-        // A viagem: 1,75rem é 28px, e o repouso sai da variável da raiz.
-        expect(CODIGO).toContain("translate-x-[calc(var(--tt-i)*1.75rem)]")
-        expect(CODIGO).toContain("const PASSO = 28")
+    it("3b. com rótulo o esticão tem os mesmos pixels", () => {
+        // Sem a escala, a pílula de 88px esticava 19px e lia como elástico.
+        expect(CODIGO).toContain("* (face / passo)")
     })
 
     it("4. é uma peça só — a regressão que o dono nomeou", () => {
@@ -201,7 +202,7 @@ describe("o trilho de tema", () => {
         expect(CODIGO).not.toContain("requestAnimationFrame")
         expect(peca(PECA)).not.toMatch(/transition-|duration-|ease-|delay-/)
         // A animação não pode sobreviver ao próprio trajeto: quem manda no
-        // repouso é o `--tt-i` no estilo, e por isso `fill` é "none".
+        // repouso é o `translate` inline, e por isso `fill` é "none".
         expect(CODIGO).toContain('fill: "none"')
         // E um salto novo cancela o anterior, senão dois cliques seguidos
         // deixam duas animações disputando a mesma propriedade.
@@ -241,11 +242,13 @@ describe("o trilho de tema", () => {
         expect(raiz).not.toMatch(/bg-muted\b/)
     })
 
-    it("6. o vidro não volta, e a marca não entra", () => {
+    it("6. o vidro não volta, e a marca só entra pelo brilho", () => {
         expect(FONTE).not.toMatch(/glass/i)
-        // O arco-íris foi proposto e recusado na tela: nada de contorno de
-        // marca aqui.
-        expect(FONTE).not.toMatch(/--brand-|brand-rainbow/)
+        // O contorno de arco-íris foi recusado na tela; desde a rodada 181 a
+        // marca entra pelo brilho da família (`variant="brand"`), a pedido do
+        // dono, e só por ele.
+        expect(FONTE).not.toMatch(/brand-rainbow|brand-contour/)
+        expect(CODIGO).toContain('variant === "brand" && "brand-glow isolate')
         // E `glass.test.ts` não pode continuar cobrando um eixo que saiu.
         const GLASS = readFileSync(
             join(process.cwd(), "src/components/ui/glass.test.ts"),
@@ -285,7 +288,7 @@ describe("o trilho de tema", () => {
     it("9. movimento reduzido é perguntado à mão, porque a WAAPI escapa do bloco global", () => {
         // O bloco de `globals.css` encurta **transição**, e a WAAPI não é uma.
         // Então aqui a pergunta é feita no código, e a resposta é não animar:
-        // o `--tt-i` já pôs as três peças no lugar certo, e o estado final
+        // o `translate` inline já pôs a peça no lugar certo, e o estado final
         // chega igual.
         expect(CODIGO).toContain('matchMedia("(prefers-reduced-motion: reduce)")')
     })

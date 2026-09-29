@@ -11,8 +11,10 @@ import {
     SunIcon as SunSolidIcon,
 } from "@heroicons/react/16/solid"
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { flushSync } from "react-dom"
 import { useTheme } from "next-themes"
 import { RadioGroup as RadioGroupPrimitive } from "radix-ui"
+import { composeRefs, useBrandGlow } from "@/hooks/use-brand-glow"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
@@ -94,35 +96,29 @@ const indiceDe = (tema: string | undefined) => {
  * O next-themes roda com `disableTransitionOnChange`, que injeta
  * `* { transition: none !important }` enquanto troca a classe do tema. Uma
  * transição de CSS morre ali; a WAAPI não é uma transição e escapa. A posição de
- * repouso é do `--tt-i`, e a animação (com `fill: "none"`) só cobre o trajeto.
+ * repouso é o `translate` inline, e a animação (com `fill: "none"`) só cobre o trajeto.
  */
-const PASSO = 28
-/** O passo do degrau `lg` (36): três paradas de 32 num trilho de 100. */
-const PASSO_LG = 32
-
 /**
- * **Dois degraus, na escada de controle** (rodada 139): `md` 32 — o padrão, o
- * do menu da conta — e `lg` 36, para ficar ao lado de um campo `lg`, como o
- * gatilho de busca do catálogo. A aritmética é a mesma nos dois: trilho = 4 de
- * recuo + 3 paradas, e a viagem é uma parada por índice. A área de toque
- * continua em 44 (o `::after` cresce menos no degrau maior).
+ * **Três degraus, na escada de controle**: `sm` 28 (rodada 181, para barras
+ * densas), `md` 32 — o padrão, o do menu da conta — e `lg` 36, para ficar ao
+ * lado de um campo `lg`. A aritmética é a mesma nos três: trilho = 4 de recuo
+ * + 3 paradas, a parada é a altura menos 4, e a viagem é uma parada por
+ * índice. A área de toque continua em 44 (o `::after` cresce o que falta).
+ *
+ * **Com `labels` a parada alarga** (rodada 181): ícone e texto não cabem num
+ * círculo, e a parada passa a ter a largura de `LARGURA_COM_ROTULO`, igual nas
+ * três para a viagem continuar sendo uma conta. A geometria desce por estilo
+ * inline, e não por classe, porque ela é número calculado — e classe montada
+ * em tempo de execução não chega ao CSS.
  */
 const DEGRAU = {
-    md: {
-        trilho: "h-8 w-22",
-        toque: "after:-inset-y-1.5",
-        peca: "size-7 translate-x-[calc(var(--tt-i)*1.75rem)]",
-        face: "size-7",
-        passo: PASSO,
-    },
-    lg: {
-        trilho: "h-9 w-25",
-        toque: "after:-inset-y-1",
-        peca: "size-8 translate-x-[calc(var(--tt-i)*2rem)]",
-        face: "size-8",
-        passo: PASSO_LG,
-    },
+    sm: { altura: 28, toque: "after:-inset-y-2" },
+    md: { altura: 32, toque: "after:-inset-y-1.5" },
+    lg: { altura: 36, toque: "after:-inset-y-1" },
 } as const
+
+/** A largura de uma parada com rótulo: "Sistema" no corpo do degrau, e folga. */
+const LARGURA_COM_ROTULO = { sm: 76, md: 88, lg: 100 } as const
 
 /** O trajeto. A curva da referência: quase parada, dispara, pousa macio. */
 const TRAJETO = { duration: 400, easing: "cubic-bezier(1,0,0.4,1)" }
@@ -224,15 +220,47 @@ const AMPLITUDE_POR_SALTO = [0, 0.11, 0.22]
 const useEfeitoDeLayout =
     typeof window !== "undefined" ? useLayoutEffect : useEffect
 
+/**
+ * **A revelação circular** (rodada 181): a troca de tema abre num círculo que
+ * parte da parada tocada e cobre a tela, pela View Transitions API. O navegador
+ * fotografa a página velha, a nova vive por baixo, e o que anima é o recorte
+ * do `::view-transition-new(root)` — o polegar continua viajando dentro dele.
+ * O `flushSync` é o que faz o tema trocar **dentro** do callback, antes da
+ * foto nova. Sem a API, sem a parada, com `reveal={false}` ou com movimento
+ * reduzido, troca como sempre. A curva é a do brilho, que sai rápido e pousa
+ * longo; o CSS que desliga o esmaecer padrão mora em `globals.css`, escopado
+ * por `.theme-reveal` no `<html>` enquanto a transição dura.
+ */
+const REVELACAO = { duration: 560, easing: "cubic-bezier(0.16, 1, 0.3, 1)" }
+
+type DocumentoComTransicao = Document & {
+    startViewTransition?: (cb: () => void) => {
+        ready: Promise<void>
+        finished: Promise<void>
+    }
+}
+
 export function ThemeToggle({
     className,
     size = "md",
+    labels = false,
+    variant = "default",
+    reveal = true,
 }: {
     className?: string
-    /** `md` 32 (o padrão) ou `lg` 36, para ficar ao lado de um campo `lg`. */
+    /** `sm` 28, `md` 32 (o padrão) ou `lg` 36. */
     size?: keyof typeof DEGRAU
+    /** Ícone e texto em cada parada, para uma tela de preferências. */
+    labels?: boolean
+    /** `brand` é o brilho de arco-íris na borda do trilho. Uma por tela. */
+    variant?: "default" | "brand"
+    /** A troca abre num círculo a partir da parada tocada. */
+    reveal?: boolean
 }) {
     const degrau = DEGRAU[size]
+    const face = degrau.altura - 4
+    const passo = labels ? LARGURA_COM_ROTULO[size] : face
+    const larguraTrilho = 4 + passo * PARADAS.length
     const { theme, setTheme } = useTheme()
     const [montado, setMontado] = useState(false)
 
@@ -244,10 +272,57 @@ export function ThemeToggle({
 
     const indice = montado ? indiceDe(theme) : 0
 
+    const raizRef = useRef<HTMLDivElement>(null)
+    // `montado` entra na condição porque o hook liga o ponteiro num efeito,
+    // na montagem: antes dela quem está na tela é o `Skeleton`, o ref é nulo e
+    // o brilho nunca acendia. Medido — sem isso, zero arco com o ponteiro colado.
+    const glowRef = useBrandGlow<HTMLDivElement>(variant === "brand" && montado)
     const cabecaRef = useRef<HTMLSpanElement>(null)
     const anterior = useRef(indice)
     const emCurso = useRef<Animation[]>([])
     const jaPintou = useRef(false)
+
+    const trocar = (valor: Tema) => {
+        const doc = document as DocumentoComTransicao
+        const origem = raizRef.current?.querySelector<HTMLElement>(
+            `[data-parada="${valor}"]`,
+        )
+        if (
+            !reveal ||
+            !origem ||
+            !doc.startViewTransition ||
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ) {
+            setTheme(valor)
+            return
+        }
+        const r = origem.getBoundingClientRect()
+        const x = r.left + r.width / 2
+        const y = r.top + r.height / 2
+        const raio = Math.hypot(
+            Math.max(x, window.innerWidth - x),
+            Math.max(y, window.innerHeight - y),
+        )
+        const html = document.documentElement
+        html.classList.add("theme-reveal")
+        const transicao = doc.startViewTransition(() => {
+            flushSync(() => setTheme(valor))
+        })
+        transicao.ready
+            .then(() => {
+                html.animate(
+                    {
+                        clipPath: [
+                            `circle(0px at ${x}px ${y}px)`,
+                            `circle(${raio}px at ${x}px ${y}px)`,
+                        ],
+                    },
+                    { ...REVELACAO, pseudoElement: "::view-transition-new(root)" },
+                )
+            })
+            .catch(() => {})
+        transicao.finished.finally(() => html.classList.remove("theme-reveal"))
+    }
 
     useEfeitoDeLayout(() => {
         // Antes de montar não há tema conhecido: `indice` é 0 por convenção e o
@@ -275,15 +350,19 @@ export function ThemeToggle({
         emCurso.current = []
 
         // O bloco global de `globals.css` corta transição, e não WAAPI — aqui a
-        // pergunta tem de ser feita à mão. Sem movimento, o `--tt-i` já pôs
-        // tudo no lugar certo: não há nada a fazer.
+        // pergunta tem de ser feita à mão. Sem movimento, o estilo de repouso
+        // já pôs tudo no lugar certo: não há nada a fazer.
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
 
         const peca = cabecaRef.current
         if (!peca) return
 
         const salto = Math.abs(indice - de)
-        const amplitude = AMPLITUDE_POR_SALTO[salto] ?? 0.22
+        // **O esticão é o mesmo em pixels**, com rótulo ou sem: a amplitude é
+        // proporcional à parada de ícone, e uma parada larga estica a mesma
+        // distância em proporção menor. Sem isso a pílula de 88px esticava 19px
+        // e lia como elástico, não como matéria.
+        const amplitude = (AMPLITUDE_POR_SALTO[salto] ?? 0.22) * (face / passo)
         const paraDireita = indice > de
 
         // **As duas origens.** Enquanto corre, a forma estica a partir da borda
@@ -303,8 +382,8 @@ export function ThemeToggle({
         const animacoes = [
             peca.animate(
                 [
-                    { translate: `${de * degrau.passo}px` },
-                    { translate: `${indice * degrau.passo}px` },
+                    { translate: `${de * passo}px` },
+                    { translate: `${indice * passo}px` },
                 ],
                 { ...TRAJETO, fill: "none" },
             ),
@@ -327,26 +406,30 @@ export function ThemeToggle({
         ]
 
         emCurso.current = animacoes.filter((a): a is Animation => Boolean(a))
-    }, [indice, montado, degrau.passo])
+    }, [indice, montado, passo, face])
 
     if (!montado) {
         return (
             <Skeleton
-                className={cn(degrau.trilho, "shrink-0 rounded-full", className)}
+                className={cn("shrink-0 rounded-full", className)}
+                style={{ width: larguraTrilho, height: degrau.altura }}
             />
         )
     }
 
     return (
         <RadioGroupPrimitive.Root
+            ref={composeRefs(raizRef, glowRef)}
             value={PARADAS[indice].valor}
-            onValueChange={(v) => setTheme(v as Tema)}
+            onValueChange={(v) => trocar(v as Tema)}
             orientation="horizontal"
             loop
             aria-label="Tema"
             data-slot="theme-toggle"
+            data-size={size}
+            data-variant={variant}
             data-visual={PARADAS[indice].valor}
-            style={{ "--tt-i": indice } as React.CSSProperties}
+            style={{ width: larguraTrilho, height: degrau.altura }}
             className={cn(
                 // **A bandeja é sobreposição, e não tinta chapada — e isto diverge do
                 // `TabsList` de propósito.**
@@ -366,12 +449,12 @@ export function ThemeToggle({
                 // cartão, contra os 38 fixos de antes. No claro o token é opaco por
                 // construção, e a placa continua se comportando como campo.
                 "group/theme relative inline-flex shrink-0 items-center rounded-full bg-input-fill/50 p-0.5",
-                degrau.trilho,
-                // O alvo de toque real: a pílula tem 32px de altura, e o
-                // pseudo-elemento a leva aos 44px que um dedo pede sem mexer no
-                // layout de quem a posiciona.
+                // O alvo de toque real: o pseudo-elemento leva a pílula aos 44px
+                // que um dedo pede sem mexer no layout de quem a posiciona.
                 "after:absolute after:-inset-x-1 after:content-['']",
                 degrau.toque,
+                // O brilho mora no `::before`; o `::after` segue sendo o alvo.
+                variant === "brand" && "brand-glow isolate [--brand-glow-opacity:1]",
                 className,
             )}
             // Ele vive dentro de menus suspensos (conta e menu mobile): sem isto,
@@ -394,7 +477,7 @@ export function ThemeToggle({
             // escolhe — que é o comportamento de `radiogroup` da WAI-ARIA.
             onFocus={(e) => {
                 const alvo = (e.target as HTMLElement).dataset?.parada
-                if (alvo && alvo !== PARADAS[indice].valor) setTheme(alvo as Tema)
+                if (alvo && alvo !== PARADAS[indice].valor) trocar(alvo as Tema)
             }}
         >
             {/*
@@ -412,17 +495,18 @@ export function ThemeToggle({
                 aria-hidden
                 ref={cabecaRef}
                 data-slot="theme-toggle-thumb"
-                className={cn(
-                    "pointer-events-none absolute top-0.5 left-0.5 rounded-full bg-background shadow-sm",
-                    degrau.peca,
-                )}
+                className="pointer-events-none absolute top-0.5 left-0.5 rounded-full bg-background shadow-sm"
+                style={{ width: passo, height: face, translate: `${indice * passo}px` }}
             />
             {PARADAS.map((parada) => (
                 <ThemeFace
                     key={parada.valor}
                     parada={parada}
                     ativo={PARADAS[indice].valor === parada.valor}
-                    tamanho={degrau.face}
+                    largura={passo}
+                    altura={face}
+                    rotulo={labels}
+                    corpo={size === "lg" ? "text-sm" : "text-xs"}
                 />
             ))}
         </RadioGroupPrimitive.Root>
@@ -445,18 +529,25 @@ export function ThemeToggle({
 function ThemeFace({
     parada,
     ativo,
-    tamanho,
+    largura,
+    altura,
+    rotulo: comRotulo,
+    corpo,
 }: {
     parada: (typeof PARADAS)[number]
     ativo: boolean
-    tamanho: string
+    largura: number
+    altura: number
+    rotulo: boolean
+    corpo: string
 }) {
     const { Solido, Contorno, valor, rotulo } = parada
 
     return (
         <RadioGroupPrimitive.Item
             value={valor}
-            aria-label={rotulo}
+            // Com o texto à vista, o nome é o texto; sem ele, o rótulo.
+            aria-label={comRotulo ? undefined : rotulo}
             data-slot="theme-toggle-face"
             // Lido pelo `onFocus` da raiz: é o valor desta parada, no elemento
             // que recebe o foco.
@@ -472,10 +563,10 @@ function ThemeFace({
                 // por cima delas — ele engolia o ponteiro, e a face nunca
                 // recebia `:hover`. Subindo a face, o anel externo do `::after`
                 // continua capturando o que está fora da pílula.
-                "relative z-10 flex items-center justify-center rounded-full outline-none",
-                tamanho,
+                "relative z-10 flex items-center justify-center gap-1.5 rounded-full outline-none",
                 "focus-visible:ring-3 focus-visible:ring-ring/45",
             )}
+            style={{ width: largura, height: altura }}
         >
             <span
                 className={cn(
@@ -507,6 +598,17 @@ function ThemeFace({
                     )}
                 />
             </span>
+            {comRotulo ? (
+                <span
+                    className={cn(
+                        "font-medium text-muted-foreground transition-colors duration-(--duration-slow) ease-(--ease-emphasized) group-hover/face:text-foreground group-active/face:text-foreground",
+                        corpo,
+                        ativo && "text-foreground",
+                    )}
+                >
+                    {rotulo}
+                </span>
+            ) : null}
         </RadioGroupPrimitive.Item>
     )
 }
