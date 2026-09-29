@@ -1,98 +1,176 @@
 "use client"
 
-import { BoldIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
+import * as React from "react"
+import {
+  BookmarkIcon as BookmarkSolidIcon,
+  EyeSlashIcon as EyeSlashSolidIcon,
+  StarIcon as StarSolidIcon,
+} from "@heroicons/react/16/solid"
+import {
+  BookmarkIcon,
+  EyeSlashIcon,
+  HomeIcon,
+  ShoppingCartIcon,
+  StarIcon,
+  TruckIcon,
+} from "@heroicons/react/24/outline"
+
 import { Toggle } from "@/components/ui/toggle"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Caption } from "@/components/ui/typography"
+import { TILE_PALETTE } from "@/lib/tile-palette"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+
+function DemoAmostras() {
+  const [cor, setCor] = React.useState<string>(TILE_PALETTE[2].hex)
+  return (
+    <ToggleGroup
+      type="single"
+      variant="swatch"
+      size="icon-md"
+      value={cor}
+      onValueChange={setCor}
+      aria-label="Cor da categoria"
+      className="flex-wrap justify-start gap-2"
+    >
+      {TILE_PALETTE.map(({ hex, nome }) => (
+        <ToggleGroupItem key={hex} value={hex} color={hex} aria-label={`Cor ${nome}`} />
+      ))}
+    </ToggleGroup>
+  )
+}
 
 export default function ToggleDoc() {
   return (
     <>
       <Usage>
-        Um <strong>estado</strong> que liga e desliga: esconder valores, fixar uma coluna. Botão faz algo acontecer e volta; o toggle passa a valer e fica. Se só uma opção de um conjunto vale por vez, use <code>ToggleGroup</code>.
+        Um <strong>estado</strong> que liga e desliga: esconder valores, fixar uma coluna, favoritar. Botão faz algo acontecer e volta; o toggle passa a valer e fica. Se uma opção de um conjunto vale por vez — um filtro, uma cor, um ícone —, é o <code>ToggleGroup</code>, que usa estas mesmas peles.
       </Usage>
 
       <DocSection
-        title="Variantes"
-        description="plain, o padrão, não tem cromo em repouso. outline mostra a borda desde o repouso, para o toggle sozinho numa superfície sem outra pista de que ali se clica."
-        code={`<Toggle>Ocultar</Toggle>
-<Toggle variant="outline">Ocultar</Toggle>`}
+        title="Peles e estados"
+        description="plain, o padrão, não tem cromo em repouso; outline mostra a borda desde o repouso, para o toggle sozinho numa superfície sem outra pista de que ali se clica. Desligado é tinta apagada; ligado é tinta cheia sobre o secondary — quem carrega o sinal é o salto de tinta."
+        code={`<Toggle>Ocultar valores</Toggle>
+<Toggle defaultPressed>Ocultar valores</Toggle>
+<Toggle variant="outline">Ocultar valores</Toggle>`}
+        previewClassName="flex-col items-start gap-3"
       >
-        <Toggle aria-label="Negrito">
-          <BoldIcon aria-hidden />
-          plain
-        </Toggle>
-        <Toggle variant="outline" aria-label="Negrito com contorno">
-          <BoldIcon aria-hidden />
-          outline
-        </Toggle>
+        <div className="flex flex-wrap items-center gap-2">
+          <Toggle icon={EyeSlashIcon}>ocultar valores</Toggle>
+          <Toggle icon={EyeSlashIcon} defaultPressed>
+            ocultar valores
+          </Toggle>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Toggle variant="outline" icon={EyeSlashIcon}>
+            ocultar valores
+          </Toggle>
+          <Toggle variant="outline" icon={EyeSlashIcon} defaultPressed>
+            ocultar valores
+          </Toggle>
+          <Toggle variant="outline" icon={EyeSlashIcon} disabled>
+            ocultar valores
+          </Toggle>
+        </div>
       </DocSection>
 
       <DocSection
-        title="Desligado e ligado"
-        description="Desligado é tinta apagada sobre nada; ligado é tinta cheia sobre o secondary. Quem carrega o sinal é o salto de tinta."
-        code={`<Toggle>Em repouso</Toggle>
-<Toggle defaultPressed>Ligado</Toggle>`}
+        title="O ícone acende"
+        description="icon e iconOn: contorno desligado, o par sólido ligado — a convenção das faces do ThemeToggle e das abas da BottomBar. É mais um sinal de estado além da tinta, e continua valendo sem cor. Os dois ficam montados e trocam por opacidade. Toque e veja."
+        code={`import { StarIcon } from "@heroicons/react/24/outline"
+import { StarIcon as StarSolidIcon } from "@heroicons/react/16/solid"
+
+<Toggle icon={StarIcon} iconOn={StarSolidIcon}>favorita</Toggle>`}
       >
-        <Toggle aria-label="Desligado">
-          <EyeSlashIcon aria-hidden />
-          Desligado
+        <Toggle icon={StarIcon} iconOn={StarSolidIcon}>
+          favorita
         </Toggle>
-        <Toggle defaultPressed aria-label="Ligado">
-          <EyeSlashIcon aria-hidden />
-          Ligado
+        <Toggle variant="outline" icon={BookmarkIcon} iconOn={BookmarkSolidIcon} defaultPressed>
+          fixar coluna
         </Toggle>
-        <Toggle variant="outline" aria-label="Desligado com contorno">
-          <EyeSlashIcon aria-hidden />
-          Desligado
-        </Toggle>
-        <Toggle variant="outline" defaultPressed aria-label="Ligado com contorno">
-          <EyeSlashIcon aria-hidden />
-          Ligado
-        </Toggle>
+        <Toggle variant="outline" size="icon-md" icon={EyeSlashIcon} iconOn={EyeSlashSolidIcon} aria-label="Ocultar valores" />
       </DocSection>
 
       <DocSection
-        title="Tamanhos"
-        description="28, 32 e 36 — os degraus e nomes do Button e do Input, então toggle ao lado de campo alinha sem ninguém dizer size."
+        title="Tamanhos, e os degraus de ícone"
+        description="sm 28, md 32 e lg 36 — os nomes do Button e do Input, então toggle ao lado de campo alinha sem ninguém dizer size. Os degraus icon-sm a icon-xl são quadrados (28 a 40), a coluna de ícone do Button, e é o que as grades de ícone da categoria e do workspace usam."
         code={`<Toggle size="sm">sm</Toggle>
-<Toggle>md</Toggle>
-<Toggle size="lg">lg</Toggle>`}
+<Toggle size="icon-lg" icon={HomeIcon} aria-label="Casa" />`}
+        previewClassName="flex-col items-start gap-4"
       >
-        <Toggle variant="outline" size="sm">
-          sm
-        </Toggle>
-        <Toggle variant="outline">md</Toggle>
-        <Toggle variant="outline" size="lg">
-          lg
-        </Toggle>
+        <div className="flex items-end gap-3">
+          {(["sm", "md", "lg"] as const).map((s) => (
+            <div key={s} className="flex flex-col items-center gap-2">
+              <Toggle variant="outline" size={s}>
+                {s}
+              </Toggle>
+              <Caption>{s}</Caption>
+            </div>
+          ))}
+        </div>
+        <div className="flex items-end gap-3">
+          {(["icon-sm", "icon-md", "icon-lg", "icon-xl"] as const).map((s) => (
+            <div key={s} className="flex flex-col items-center gap-2">
+              <Toggle variant="outline" size={s} icon={HomeIcon} aria-label={`Casa ${s}`} />
+              <Caption>{s}</Caption>
+            </div>
+          ))}
+        </div>
       </DocSection>
 
       <DocSection
-        title="Desabilitado"
-        description="Continua visível: o que existe e está indisponível ensina mais ficando na tela. O leitor de tela anuncia aria-pressed nos dois casos."
-        code={`<Toggle disabled>Desabilitado</Toggle>
-<Toggle disabled defaultPressed>Ligado e travado</Toggle>`}
+        title="Pílula"
+        description="shape=&quot;pill&quot;, o eixo do Button: 100% arredondado, com meio degrau a mais de recuo; nos degraus de ícone vira círculo. É a forma dos filtros da tela de atividade."
+        code={`<ToggleGroup type="single" variant="outline" shape="pill" size="sm" defaultValue="todas">
+  <ToggleGroupItem value="todas">Todas (12)</ToggleGroupItem>
+  …
+</ToggleGroup>`}
+        previewClassName="flex-col items-start gap-3"
       >
-        <Toggle disabled>Desabilitado</Toggle>
-        <Toggle disabled defaultPressed>
-          Ligado e travado
-        </Toggle>
+        <ToggleGroup type="single" variant="outline" shape="pill" size="sm" defaultValue="todas" aria-label="Filtrar atividades" className="flex-wrap gap-2">
+          <ToggleGroupItem value="todas">Todas (12)</ToggleGroupItem>
+          <ToggleGroupItem value="transacoes">Transações (8)</ToggleGroupItem>
+          <ToggleGroupItem value="contas">Contas (4)</ToggleGroupItem>
+        </ToggleGroup>
+        <ToggleGroup type="single" variant="outline" shape="pill" size="icon-md" defaultValue="casa" aria-label="Ícone">
+          <ToggleGroupItem value="casa" icon={HomeIcon} aria-label="Casa" />
+          <ToggleGroupItem value="mercado" icon={ShoppingCartIcon} aria-label="Mercado" />
+          <ToggleGroupItem value="transporte" icon={TruckIcon} aria-label="Transporte" />
+        </ToggleGroup>
+      </DocSection>
+
+      <DocSection
+        title="Amostra de cor"
+        description="variant=&quot;swatch&quot; com color: a amostra dos seletores de cor da categoria e do workspace. A superfície é a do ColorTile — a cor na claridade do sistema —, então o que se escolhe é o que o ladrilho vai mostrar. A escolhida ganha contorno e tique, e o estado não depende só do contorno. O nome vai em aria-label: a amostra não tem texto."
+        code={`<ToggleGroup type="single" variant="swatch" size="icon-md" value={cor} onValueChange={setCor}>
+  {TILE_PALETTE.map(({ hex, nome }) => (
+    <ToggleGroupItem key={hex} value={hex} color={hex} aria-label={\`Cor \${nome}\`} />
+  ))}
+</ToggleGroup>`}
+      >
+        <DemoAmostras />
       </DocSection>
 
       <DocNote title="Ele não afunda ao clicar">
-        O <code>active:translate-y-px</code> do <code>Button</code> promete que a peça volta. O toggle não volta — passa a valer —, então não afunda.
+        O <code>active:translate-y-px</code> do <code>Button</code> promete que a peça volta. O toggle não volta — passa a valer —, então não afunda. E a pele sem contorno se chama <code>plain</code>, e não <code>tertiary</code>: o toggle não tem escada de pesos, só peles.
       </DocNote>
 
-      <DocNote title="plain aqui, tertiary lá">
-        No <code>Button</code> o nome é <code>tertiary</code> porque diz um degrau de uma escada de três pesos. O toggle não tem escada, só duas peles, e o nome descreve o cromo.
+      <DocNote title="A amostra pintava outra cor">
+        Os dois seletores pintavam o hexadecimal cru (<code>style=&#123;&#123; backgroundColor: hex &#125;&#125;</code>), e o ladrilho que a cor escolhida vai vestir mostra a mesma cor na claridade do sistema (<code>oklch(from … 0.86 min(c, 0.12) h)</code>). A pessoa escolhia uma cor e via outra. Eram também dois desenhos — um quadrado com anel primário no workspace, um círculo com borda na categoria. Hoje a amostra é uma, e a superfície é a do <code>ColorTile</code>.
+      </DocNote>
+
+      <DocNote title="Onde o app usa">
+        Nenhuma tela usa o <code>Toggle</code> solto; o app o usa pelo <code>ToggleGroup</code>, em cinco grupos. Desde a rodada 183 eles saíram das classes à mão: os filtros da atividade (<code>rounded-full px-3</code>) são <code>shape=&quot;pill&quot;</code>; as duas paletas de cor são <code>variant=&quot;swatch&quot;</code>, e a do workspace deixou de soletrar o hexadecimal no leitor de tela; as grades de ícone (<code>size-9</code> e <code>size-11</code>) são <code>icon-lg</code> e <code>icon-xl</code> — a do workspace passou de 44 para 40, o degrau da escada.
       </DocNote>
 
       <PropsTable
         rows={[
-          { prop: "pressed", type: "boolean", description: "Estado controlado." },
-          { prop: "defaultPressed", type: "boolean", description: "Estado inicial não controlado." },
-          { prop: "variant", type: '"plain" | "outline"', default: '"plain"', description: "Sem cromo nenhum em repouso, ou com contorno desde o repouso." },
-          { prop: "size", type: '"sm" | "md" | "lg"', default: '"md"', description: "Altura: 28, 32 e 36." },
+          { prop: "pressed · defaultPressed", type: "boolean", description: "Controlado ou não." },
+          { prop: "variant", type: '"plain" | "outline" | "swatch"', default: '"plain"', description: "Sem cromo em repouso, com contorno desde o repouso, ou a amostra de cor." },
+          { prop: "size", type: '"sm" | "md" | "lg" | "icon-sm" | "icon-md" | "icon-lg" | "icon-xl"', default: '"md"', description: "28, 32, 36; os de ícone são quadrados de 28 a 40." },
+          { prop: "shape", type: '"rounded" | "pill"', default: '"rounded"', description: "pill arredonda 100% e dá meio degrau de recuo; nos de ícone, círculo." },
+          { prop: "icon · iconOn", type: "HeroIcon", description: "O ícone, e o par sólido que o substitui quando liga." },
+          { prop: "color", type: "string", description: "Com swatch, a cor gravada — a mesma que o ColorTile recebe." },
         ]}
       />
     </>

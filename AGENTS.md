@@ -2007,6 +2007,17 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   de 7px a `largura − 7px`, a régua do Radix —, `bubble` no `:active` e no
   foco de teclado, e `bands`, os cortes do `Progress` (zonas no trilho, faixa
   na cor do valor; não com a marca). Sem essas props a peça é a de sempre.
+- **`Toggle` tem amostra, pílula, degraus de ícone e ícone que acende**
+  (rodada 183), e o `ToggleGroup` herda tudo pelo contexto e pelo item:
+  `variant="swatch"` com `color` é a amostra de cor dos seletores — a
+  superfície do `ColorTile` (`tileColorFor`, claridade do sistema), contorno de
+  `--foreground` e tique na escolhida; **não pinte amostra com
+  `style={{ backgroundColor: hex }}`**, que mostra uma cor e o ladrilho outra.
+  `shape="pill"` é o eixo do `Button`; `size="icon-sm…icon-xl"` são os
+  quadrados de 28 a 40; `icon` + `iconOn` trocam o contorno pelo sólido ao
+  ligar. Nenhuma chamada escreve `rounded-full px-*`, `size-*` ou borda de
+  seleção num `ToggleGroupItem`. No `type="single"` clicar no ativo **não**
+  desmarca: o componente engole a troca para vazio.
 - **`Textarea` mede em linhas** (rodada 180): `field-sizing-content`
   **ignora `rows`** (medido: `rows={3}` e `rows={10}` dão a mesma caixa), então
   a altura é `minRows` / `maxRows` (`lh` + recuo + borda); passado o teto ele

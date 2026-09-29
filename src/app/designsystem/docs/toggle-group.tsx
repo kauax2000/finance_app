@@ -37,11 +37,22 @@ export default function ToggleGroupDoc() {
         </ToggleGroup>
       </DocSection>
 
-      <DocNote title="Seleção única precisa aceitar valor vazio">
-        Com <code>type=&quot;single&quot;</code>, clicar na opção já ativa a
-        desmarca e o valor vira string vazia. Se a tela não tolera &ldquo;nenhum
-        período&rdquo;, trate esse caso — ignorar a desmarcação é melhor que
-        renderizar uma lista vazia sem explicação.
+      <DocNote title="Na seleção única, clicar no ativo não desmarca">
+        O Radix trata o grupo de um valor como um toggle: o segundo clique no
+        item ativo devolveria string vazia e deixaria o grupo sem nenhum. O
+        componente engole essa troca, e em <code>type=&quot;single&quot;</code>{" "}
+        sempre há um escolhido — por isso os filtros do app puderam sair de{" "}
+        <code>role=&quot;tab&quot;</code>. (A versão anterior desta página dizia
+        o contrário.) Em <code>type=&quot;multiple&quot;</code>, esvaziar é uma
+        resposta legítima e passa.
+      </DocNote>
+
+      <DocNote title="As peles são as do Toggle">
+        <code>variant</code>, <code>shape</code> e <code>size</code> descem do
+        grupo para os itens, e cada item também recebe <code>icon</code>,{" "}
+        <code>iconOn</code> e <code>color</code>. A pílula dos filtros, a
+        amostra de cor e os degraus de ícone das grades estão na página do{" "}
+        <code>Toggle</code>.
       </DocNote>
     </>
   )

@@ -4,6 +4,9 @@ import * as React from "react"
 import { Toggle as TogglePrimitive } from "radix-ui"
 import { cva, type VariantProps } from "class-variance-authority"
 
+import { CheckIcon } from "@heroicons/react/16/solid"
+
+import { tileColorFor } from "@/lib/tile-palette"
 import { cn } from "@/lib/utils"
 
 /**
@@ -27,12 +30,33 @@ import { cn } from "@/lib/utils"
  * - **A pele sem contorno não se chama `tertiary`.** No `Button` o nome diz um
  *   degrau de uma escada de três; o toggle não tem escada, tem duas peles, e o
  *   nome descreve o cromo em vez de uma posição que não existe. Ela se chama
- *   `plain`, que é a palavra do sistema para "não desenha nada" — medido,
- *   `plain` estava em 5 componentes contra `plain` em 4 e `bare` em 1.
+ *   `plain`, que é a palavra do sistema para "não desenha nada" (o `Card`, o
+ *   `Tabs`, o `Menubar` e o `Accordion` dizem o mesmo).
+ *
+ * ## As versões da rodada 183
+ *
+ * - **`shape="pill"`** — o eixo do `Button`, com meio degrau a mais de recuo;
+ *   nos degraus de ícone vira círculo. Os filtros da atividade o escreviam à
+ *   mão (`rounded-full px-3`).
+ * - **`size="icon-*"`** — quadrados, 28 · 32 · 36 · 40, como a coluna de
+ *   ícone do `Button`. As grades de ícone escreviam `size-9` e `size-11`.
+ * - **`variant="swatch"` com `color`** — a amostra de cor dos seletores. A
+ *   superfície é a do `ColorTile` (`--tile-color` pela `tileColorFor`, na
+ *   claridade do sistema), então **o que se escolhe é o que se vê** no
+ *   ladrilho; antes a amostra pintava o hex cru e o ladrilho mostrava outra
+ *   cor. Escolhida, ganha o contorno de `--foreground` e um tique — o estado
+ *   não depende só do contorno. Eram dois desenhos à mão, um quadrado com anel
+ *   primário e um círculo com borda.
+ * - **`icon` e `iconOn`** — o ícone acende ao ligar: contorno desligado,
+ *   sólido ligado, a convenção das faces do `ThemeToggle` e das abas da
+ *   `BottomBar`. É prop e não derivação, pela razão da `BottomBar`: a peça não
+ *   tem como saber o sólido de um ícone qualquer. Os dois ficam montados e
+ *   trocam por opacidade, porque o estado pode ser do Radix (não controlado) e
+ *   montar e desmontar não tem o que esmaecer.
  */
 const toggleVariants = cva(
   cn(
-    "inline-flex items-center justify-center gap-2 rounded-lg border border-transparent bg-transparent",
+    "group/toggle inline-flex items-center justify-center gap-2 rounded-lg border border-transparent bg-transparent",
     // Desligado é tinta apagada. É metade do sinal: sem essa diferença de
     // tinta, ligar só acrescentaria um fundo, e o fundo sozinho é a caixa que
     // fazia o controle parecer botão.
@@ -70,6 +94,25 @@ const toggleVariants = cva(
         // nenhuma outra pista de que ali se clica. Sem o `shadow-xs` de antes:
         // sombra é o que levanta a peça da página, e estado não levanta.
         outline: "border-border",
+        // A amostra de cor (rodada 183): a superfície do `ColorTile`, sem
+        // recuo, e o estado é o contorno de `--foreground` afastado 2px mais o
+        // tique. O realce de cinza não vale aqui — a cor é o conteúdo —, e o
+        // `outline` não disputa com o anel de foco, que é `box-shadow`.
+        swatch: [
+          "p-0 text-identity-foreground",
+          "bg-[oklch(from_var(--tile-color)_0.86_min(c,_0.12)_h)]",
+          "hover:bg-[oklch(from_var(--tile-color)_0.86_min(c,_0.12)_h)] active:bg-[oklch(from_var(--tile-color)_0.86_min(c,_0.12)_h)]",
+          "data-[state=on]:bg-[oklch(from_var(--tile-color)_0.86_min(c,_0.12)_h)] data-[state=on]:text-identity-foreground",
+          "data-[state=on]:hover:bg-[oklch(from_var(--tile-color)_0.86_min(c,_0.12)_h)] data-[state=on]:active:bg-[oklch(from_var(--tile-color)_0.86_min(c,_0.12)_h)]",
+          // `outline-solid` explícito: a base declara `outline-none`, e o
+          // `outline-2` só mexe na largura — medido, o estilo computava `none`
+          // e a escolhida saía sem contorno.
+          "data-[state=on]:outline-2 data-[state=on]:outline-solid data-[state=on]:outline-offset-2 data-[state=on]:outline-foreground",
+        ].join(" "),
+      },
+      shape: {
+        rounded: "",
+        pill: "rounded-full",
       },
       // As alturas já eram a escada do projeto — 28, 32, 36 —, só que o degrau
       // do meio se chamava `default`. O nome foi removido de `Button`, `Input`,
@@ -79,29 +122,110 @@ const toggleVariants = cva(
         sm: "h-7 min-w-7 px-1.5 text-xs",
         md: "h-8 min-w-8 px-2",
         lg: "h-9 min-w-9 px-2.5",
+        // A coluna de ícone do `Button`, degrau a degrau (rodada 183).
+        "icon-sm": "size-7 p-0",
+        "icon-md": "size-8 p-0",
+        "icon-lg": "size-9 p-0",
+        "icon-xl": "size-10 p-0 [&_svg:not([class*='size-'])]:size-5",
       },
     },
+    // A pílula ganha meio degrau de recuo, como no `Button`.
+    compoundVariants: [
+      { shape: "pill", size: "sm", class: "px-2.5" },
+      { shape: "pill", size: "md", class: "px-3" },
+      { shape: "pill", size: "lg", class: "px-3.5" },
+    ],
     defaultVariants: {
       variant: "plain",
+      shape: "rounded",
       size: "md",
     },
   }
 )
 
-function Toggle({
-  className,
+type HeroIcon = React.ComponentType<React.ComponentProps<"svg">>
+
+/** O que o toggle e o item do grupo recebem além da primitiva. */
+type ToggleExtras = {
+  /** O ícone desligado — de contorno, se houver `iconOn`. */
+  icon?: HeroIcon
+  /** O ícone ligado, o par sólido: o ícone acende quando o estado liga. */
+  iconOn?: HeroIcon
+  /** Com `variant="swatch"`, a cor gravada — a mesma que o `ColorTile` recebe. */
+  color?: string | null
+}
+
+/** A cor da amostra desce por variável, como no `ColorTile`. */
+function toggleStyle(color: string | null | undefined, style?: React.CSSProperties) {
+  if (color === undefined) return style
+  return {
+    "--tile-color": tileColorFor(color) ?? "var(--muted-foreground)",
+    ...style,
+  } as React.CSSProperties
+}
+
+/**
+ * O miolo, dividido com o `ToggleGroupItem`: o ícone (com o par que acende),
+ * o conteúdo e, na amostra, o tique.
+ */
+function ToggleContent({
   variant,
-  size,
-  ...props
-}: React.ComponentProps<typeof TogglePrimitive.Root> &
-  VariantProps<typeof toggleVariants>) {
+  icon: Icone,
+  iconOn: IconeLigado,
+  children,
+}: ToggleExtras & {
+  variant?: VariantProps<typeof toggleVariants>["variant"]
+  children?: React.ReactNode
+}) {
   return (
-    <TogglePrimitive.Root
-      data-slot="toggle"
-      className={cn(toggleVariants({ variant, size, className }))}
-      {...props}
-    />
+    <>
+      {variant === "swatch" ? (
+        <CheckIcon
+          aria-hidden
+          className="hidden size-4 group-data-[state=on]/toggle:block"
+        />
+      ) : null}
+      {Icone && IconeLigado ? (
+        <span data-slot="toggle-icon" aria-hidden className="relative size-4 shrink-0">
+          <Icone className="absolute inset-0 size-4 transition-opacity duration-(--duration-fast) ease-(--ease-out) group-data-[state=on]/toggle:opacity-0" />
+          <IconeLigado className="absolute inset-0 size-4 opacity-0 transition-opacity duration-(--duration-fast) ease-(--ease-out) group-data-[state=on]/toggle:opacity-100" />
+        </span>
+      ) : Icone ? (
+        <Icone aria-hidden data-slot="toggle-icon" />
+      ) : null}
+      {children}
+    </>
   )
 }
 
-export { Toggle, toggleVariants }
+function Toggle({
+  className,
+  variant,
+  shape,
+  size,
+  icon,
+  iconOn,
+  color,
+  style,
+  children,
+  ...props
+}: React.ComponentProps<typeof TogglePrimitive.Root> &
+  VariantProps<typeof toggleVariants> &
+  ToggleExtras) {
+  return (
+    <TogglePrimitive.Root
+      data-slot="toggle"
+      data-variant={variant ?? "plain"}
+      className={cn(toggleVariants({ variant, shape, size, className }))}
+      style={toggleStyle(color, style)}
+      {...props}
+    >
+      <ToggleContent variant={variant} icon={icon} iconOn={iconOn}>
+        {children}
+      </ToggleContent>
+    </TogglePrimitive.Root>
+  )
+}
+
+export { Toggle, ToggleContent, toggleStyle, toggleVariants }
+export type { ToggleExtras }

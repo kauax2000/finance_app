@@ -5,13 +5,19 @@ import type { VariantProps } from "class-variance-authority"
 import { ToggleGroup as ToggleGroupPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
-import { toggleVariants } from "@/components/ui/toggle"
+import {
+  ToggleContent,
+  toggleStyle,
+  toggleVariants,
+  type ToggleExtras,
+} from "@/components/ui/toggle"
 
 const ToggleGroupContext = React.createContext<
   VariantProps<typeof toggleVariants>
 >({
   size: "md",
   variant: "plain",
+  shape: "rounded",
 })
 
 /**
@@ -32,6 +38,7 @@ const ToggleGroupContext = React.createContext<
 function ToggleGroup({
   className,
   variant,
+  shape,
   size,
   children,
   onValueChange,
@@ -73,7 +80,7 @@ function ToggleGroup({
       className={cn("flex items-center justify-center gap-1", className)}
       {...raiz}
     >
-      <ToggleGroupContext.Provider value={{ variant, size }}>
+      <ToggleGroupContext.Provider value={{ variant, shape, size }}>
         {children}
       </ToggleGroupContext.Provider>
     </ToggleGroupPrimitive.Root>
@@ -84,25 +91,37 @@ function ToggleGroupItem({
   className,
   children,
   variant,
+  shape,
   size,
+  icon,
+  iconOn,
+  color,
+  style,
   ...props
 }: React.ComponentProps<typeof ToggleGroupPrimitive.Item> &
-  VariantProps<typeof toggleVariants>) {
+  VariantProps<typeof toggleVariants> &
+  ToggleExtras) {
   const context = React.useContext(ToggleGroupContext)
+  const pele = variant ?? context.variant
 
   return (
     <ToggleGroupPrimitive.Item
       data-slot="toggle-group-item"
+      data-variant={pele ?? "plain"}
       className={cn(
         toggleVariants({
-          variant: variant ?? context.variant,
+          variant: pele,
+          shape: shape ?? context.shape,
           size: size ?? context.size,
         }),
         className
       )}
+      style={toggleStyle(color, style)}
       {...props}
     >
-      {children}
+      <ToggleContent variant={pele} icon={icon} iconOn={iconOn}>
+        {children}
+      </ToggleContent>
     </ToggleGroupPrimitive.Item>
   )
 }

@@ -30,7 +30,7 @@ import {
     type WorkspaceIconKey,
     WORKSPACE_ICON_LABELS,
 } from "@/lib/workspace-icons"
-import { TILE_WORKSPACE_DEFAULT } from "@/lib/tile-palette"
+import { TILE_PALETTE, TILE_WORKSPACE_DEFAULT } from "@/lib/tile-palette"
 
 type WorkspaceAppearanceFormFieldsProps = {
     name: string
@@ -119,15 +119,19 @@ export function WorkspaceAppearanceFormFields({
                             if (next) onPreviewColorChange(next)
                         }}
                         aria-label="Cor de destaque"
+                        variant="swatch"
+                        size="icon-md"
                         className="flex-wrap gap-2"
                     >
-                        {WORKSPACE_ACCENT_PALETTE.map((hex) => (
+                        {/* A paleta de destaque é a do ladrilho (`TILE_COLORS`),
+                            e com ela vem o nome: a amostra deixa de soletrar
+                            um hexadecimal no leitor de tela, como na categoria. */}
+                        {TILE_PALETTE.map(({ hex, nome }) => (
                             <ToggleGroupItem
                                 key={hex}
                                 value={hex}
-                                className="size-8 min-w-0 rounded-md border-2 border-transparent p-0 data-[state=on]:border-primary data-[state=on]:ring-2 data-[state=on]:ring-primary/30"
-                                style={{ backgroundColor: hex }}
-                                aria-label={`Cor ${hex}`}
+                                color={hex}
+                                aria-label={`Cor ${nome}`}
                             />
                         ))}
                     </ToggleGroup>
@@ -157,7 +161,7 @@ export function WorkspaceAppearanceFormFields({
                 <ToggleGroup
                     type="single"
                     variant="outline"
-                    size="lg"
+                    size="icon-xl"
                     value={icon}
                     onValueChange={(next) => {
                         if (next) onIconChange(next as typeof icon)
@@ -171,7 +175,6 @@ export function WorkspaceAppearanceFormFields({
                             <ToggleGroupItem
                                 key={key}
                                 value={key}
-                                className="size-11"
                                 aria-label={`Ícone ${WORKSPACE_ICON_LABELS[key]}`}
                             >
                                 {createElement(Cmp, {

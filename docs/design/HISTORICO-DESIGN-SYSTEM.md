@@ -15819,3 +15819,37 @@ borda fina das cores, "parecendo um erro".
 - `brand-contour.test.ts` passa a exigir as duas camadas e a proibir a volta
   de `intersect, exclude` / `source-in, xor`.
 
+### Rodada 183 — o Toggle ganha amostra de cor, pílula, degraus de ícone e o ícone que acende
+
+O dono pediu a rodada completa e escolheu as quatro versões. Nenhuma tela usa o
+`Toggle` solto: as cinco chamadas são `ToggleGroup`, e três delas escreviam a
+peça à mão.
+
+- **`variant="swatch"` com `color`**: os seletores de cor da categoria e do
+  workspace eram **dois desenhos** (um círculo com borda de `--foreground`, um
+  quadrado com borda e anel de `--primary`) e os dois pintavam o hex cru por
+  `style`, enquanto o ladrilho que a cor escolhida veste mostra
+  `oklch(from … 0.86 min(c, 0.12) h)`. A amostra agora é uma, com a superfície
+  do `ColorTile` — medido, a mesma cor computada que um ladrilho com o mesmo
+  `--tile-color`: `oklch(0.86 0.079 250.5)` nos dois. A escolhida ganha
+  contorno de `--foreground` afastado 2px e o tique. **O contorno saiu `none`
+  na primeira medição**: a base declara `outline-none`, e o `outline-2` só
+  mexe na largura; `outline-solid` explícito o conserta. A paleta do workspace
+  passou a dizer o nome da cor ao leitor de tela, e não o hexadecimal.
+- **`shape="pill"`**: o eixo do `Button`, com meio degrau de recuo; nos
+  degraus de ícone, círculo. Os filtros da atividade escreviam
+  `rounded-full px-3`.
+- **`size="icon-sm…icon-xl"`**: 28 · 32 · 36 · 40, medidos. As grades de ícone
+  escreviam `size-9` (categoria, que já era `lg` e repetia a medida) e `size-11`
+  (workspace, 44 — passou a 40, o degrau da escada).
+- **`icon` + `iconOn`**: contorno desligado, sólido ligado, trocando por
+  opacidade (medido: `[1, 0]` → `[0, 1]` ao ligar). É prop e não derivação,
+  pela razão da `BottomBar`.
+- O miolo (ícones e tique) e a variável da cor moram em `ToggleContent` e
+  `toggleStyle`, divididos com o `ToggleGroupItem`; o `Toggle` continua átomo
+  sem importar nenhum componente de `ui/`.
+- **Páginas**: a do `Toggle` punha `aria-label` que trocava o nome visível
+  (o toggle escrito "plain" era anunciado como "Negrito" — WCAG 2.5.3); o
+  comentário do componente tinha uma frase truncada. A do `ToggleGroup` dizia
+  que clicar no item ativo desmarca e deixa o valor vazio, e o componente
+  engole essa troca desde que ganhou o guarda — a nota foi invertida.

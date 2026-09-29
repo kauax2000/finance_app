@@ -200,11 +200,13 @@ export function CategoryColorSwatches({
     idPrefix?: string
 }) {
     return (
-        // Escolha única: `ToggleGroup`, com setas e sem desmarcar tudo. A cor
-        // vem por `style`, que vence a tinta do estado ligado; o que marca a
-        // escolhida é a borda.
+        // Escolha única: `ToggleGroup`, com setas e sem desmarcar tudo. A
+        // amostra é a do sistema (`variant="swatch"`): a cor na claridade do
+        // `ColorTile`, e a escolhida com contorno e tique.
         <ToggleGroup
             type="single"
+            variant="swatch"
+            size="icon-md"
             value={value}
             onValueChange={(next) => onChange(next)}
             aria-label="Cor da categoria"
@@ -215,8 +217,7 @@ export function CategoryColorSwatches({
                     key={hex}
                     id={`${idPrefix}-${i}`}
                     value={hex}
-                    className="size-8 min-w-0 rounded-full border-2 border-transparent p-0 data-[state=on]:border-foreground"
-                    style={{ backgroundColor: hex }}
+                    color={hex}
                     /* A paleta passou a ter nome, então a amostra para de
                        soletrar um hexadecimal no leitor de tela. */
                     aria-label={`Cor ${nome}`}
@@ -239,7 +240,7 @@ export function CategoryIconGrid({
         <ToggleGroup
             type="single"
             variant="outline"
-            size="lg"
+            size="icon-lg"
             value={normalized}
             onValueChange={(next) => onChange(next as CategoryIconId)}
             aria-label="Ícone da categoria"
@@ -250,7 +251,6 @@ export function CategoryIconGrid({
                     key={key}
                     value={key}
                     title={CATEGORY_ICON_LABELS[key]}
-                    className="size-9 text-muted-foreground"
                     aria-label={`Ícone ${CATEGORY_ICON_LABELS[key]}`}
                 >
                     <CategoryIconPreview name={key} className="size-4" />

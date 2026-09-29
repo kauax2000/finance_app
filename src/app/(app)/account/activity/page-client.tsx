@@ -241,6 +241,7 @@ export default function ActivityPage() {
                             <ToggleGroup
                                 type="single"
                                 variant="outline"
+                                shape="pill"
                                 size="sm"
                                 value={filter}
                                 onValueChange={(next) => setFilter(next as typeof filter)}
@@ -248,11 +249,7 @@ export default function ActivityPage() {
                                 className="flex-wrap gap-2"
                             >
                                 {filters.map(({ key, label }) => (
-                                    <ToggleGroupItem
-                                        key={key}
-                                        value={key}
-                                        className="rounded-full px-3"
-                                    >
+                                    <ToggleGroupItem key={key} value={key}>
                                         {label} ({activityCounts[key]})
                                     </ToggleGroupItem>
                                 ))}
