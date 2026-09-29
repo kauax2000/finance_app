@@ -67,6 +67,10 @@ const colorTileVariants = cva(
        * Iconografia.
        */
       size: {
+        // O degrau de dentro de uma linha de lista e do gatilho de um campo
+        // (rodada 173): 24px cabem numa opção de `Select` e num gatilho `md`
+        // sem crescer nenhum dos dois. É o `xs` da escada de controle.
+        xs: "size-6 rounded-md [&>svg]:size-3.5",
         md: "size-8 rounded-md [&>svg]:size-4",
         lg: "size-9 rounded-md [&>svg]:size-4",
         xl: "size-10 rounded-lg [&>svg]:size-5",

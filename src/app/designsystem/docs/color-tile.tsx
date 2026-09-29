@@ -18,7 +18,7 @@ import { MoneyDisplay } from "@/components/ui/money-display"
 import { TILE_PALETTE as PALETA, tileColorFor } from "@/lib/tile-palette"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
-const SIZES = ["md", "lg", "xl", "2xl"] as const
+const SIZES = ["xs", "md", "lg", "xl", "2xl"] as const
 
 /**
  * Cores como o banco as guarda: hex escolhido pela pessoa, não token. Desde a
@@ -82,7 +82,7 @@ export default function ColorTileDoc() {
 
       <DocSection
         title="Tamanhos"
-        description="32, 36, 40 e 44px, com os nomes que o Button e o Input dão às mesmas medidas — ladrilho md ao lado de botão md alinha sem ninguém dizer nada. Só o 2xl alcança os 44px de alvo de toque: use-o quando o ladrilho for clicável."
+        description="24, 32, 36, 40 e 44px, com os nomes que o Button e o Input dão às mesmas medidas — ladrilho md ao lado de botão md alinha sem ninguém dizer nada. O xs é o de dentro de uma linha: a opção de um Select e o gatilho md, sem crescer nenhum dos dois. Só o 2xl alcança os 44px de alvo de toque: use-o quando o ladrilho for clicável."
         code={`<ColorTile size="2xl" color={bill.color}>
   <ReceiptPercentIcon aria-hidden />
 </ColorTile>`}
@@ -228,9 +228,9 @@ tileColorFor("#FF6B00") // → "#FF6B00", intacta`}
           },
           {
             prop: "size",
-            type: '"md" | "lg" | "xl" | "2xl"',
+            type: '"xs" | "md" | "lg" | "xl" | "2xl"',
             default: '"md"',
-            description: "32px, 36px, 40px e 44px. Só o 2xl alcança o alvo de toque.",
+            description: "24px, 32px, 36px, 40px e 44px. xs é o de dentro de uma linha de lista; só o 2xl alcança o alvo de toque.",
           },
         ]}
       />

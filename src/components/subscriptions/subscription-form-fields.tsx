@@ -136,14 +136,12 @@ export function SubscriptionFormFields({
                         </FieldControl>
                         <SelectContent
                             align="start"
-                            className="min-w-[var(--radix-select-trigger-width)] p-1"
                             sideOffset={6}
                         >
                             {SUBSCRIPTION_BILLING_OPTIONS.map((o) => (
                                 <SelectItem
                                     key={o.value}
                                     value={o.value}
-                                    className="py-2 pl-2 pr-8"
                                 >
                                     {o.label}
                                 </SelectItem>
@@ -208,12 +206,11 @@ export function SubscriptionFormFields({
                     </FieldControl>
                     <SelectContent
                         align="start"
-                        className="min-w-[var(--radix-select-trigger-width)] p-1"
                         sideOffset={6}
                     >
                         <SelectItem
                             value={SUBSCRIPTION_PAYMENT_NONE}
-                            className="py-2 pl-2 pr-8"
+                            variant="none"
                         >
                             Não informado
                         </SelectItem>
@@ -221,7 +218,6 @@ export function SubscriptionFormFields({
                             <SelectItem
                                 key={o.value}
                                 value={o.value}
-                                className="py-2 pl-2 pr-8"
                             >
                                 {o.label}
                             </SelectItem>
@@ -275,12 +271,10 @@ export function SubscriptionFormFields({
                             </FieldControl>
                             <SelectContent
                                 align="start"
-                                className="min-w-[var(--radix-select-trigger-width)] p-1"
                                 sideOffset={6}
                             >
                                 <SelectItem
                                     value="__pick__"
-                                    className="py-2 pl-2 pr-8"
                                 >
                                     Selecione o cartão
                                 </SelectItem>
@@ -288,7 +282,6 @@ export function SubscriptionFormFields({
                                     <SelectItem
                                         key={c.id}
                                         value={c.id}
-                                        className="py-2 pl-2 pr-8"
                                     >
                                         {c.name} · •••• {c.last_four}
                                     </SelectItem>

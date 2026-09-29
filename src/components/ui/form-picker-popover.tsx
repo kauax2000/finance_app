@@ -208,6 +208,9 @@ function FormPickerPopoverContent({
       padding="none"
       className={cn(
         "flex min-h-0 w-(--radix-popover-trigger-width) max-w-88 flex-col overflow-hidden",
+        // O teto de lista suspensa, com a busca e o rodapé somados: 384px
+        // deixam a lista nos ~288 dos outros dropdowns (rodada 174).
+        "max-h-[min(var(--radix-popover-content-available-height),--spacing(96))]",
         // A casca publica a altura das duas faixas, porque só ela as enxerga
         // como **irmãs** da lista. As duas são condicionais à presença da faixa
         // — sem ela, a zona daquele lado vale zero e a dissolução acontece na

@@ -798,9 +798,9 @@ export function TransactionsFiltersPanel({
                             </FieldControl>
                             <SelectContent
                                 sideOffset={8}
-                                className="max-h-72 p-1"
+                                className="max-h-72"
                             >
-                                <SelectItem value="__any__">Qualquer plano</SelectItem>
+                                <SelectItem value="__any__" variant="none">Qualquer plano</SelectItem>
                                 {installmentPlans.map((p) => (
                                     <SelectItem key={p.id} value={p.id}>
                                         {p.description?.trim() ||
@@ -834,9 +834,9 @@ export function TransactionsFiltersPanel({
                             </FieldControl>
                             <SelectContent
                                 sideOffset={8}
-                                className="max-h-72 p-1"
+                                className="max-h-72"
                             >
-                                <SelectItem value="__any__">
+                                <SelectItem value="__any__" variant="none">
                                     Qualquer assinatura
                                 </SelectItem>
                                 {subscriptions.map((s) => (

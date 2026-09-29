@@ -31,7 +31,7 @@ import {
  * tempo de execução não existe para o scanner, e o CSS dela nunca é gerado.
  */
 const MENUBAR_POPPER =
-  "max-h-(--radix-menubar-content-available-height) max-w-(--radix-menubar-content-available-width) origin-(--radix-menubar-content-transform-origin)"
+  "max-h-[min(var(--radix-menubar-content-available-height),var(--menu-max-h))] max-w-(--radix-menubar-content-available-width) origin-(--radix-menubar-content-transform-origin)"
 
 /**
  * A barra de menus.

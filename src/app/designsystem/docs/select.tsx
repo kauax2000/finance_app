@@ -6,6 +6,7 @@ import {
   TruckIcon,
 } from "@heroicons/react/16/solid"
 
+import { ColorTile } from "@/components/ui/color-tile"
 import { Field, FieldControl, FieldLabel } from "@/components/ui/field"
 import {
   NativeSelect,
@@ -20,6 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Caption } from "@/components/ui/typography"
+import { TILE_COLORS } from "@/lib/tile-palette"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 /** As periodicidades da assinatura, como o formulário as escreve. */
@@ -30,14 +33,16 @@ const PERIODICIDADES = [
   ["weekly", "Semanal"],
 ] as const
 
-/** As formas de pagamento de `lib/payment-methods`. */
+/** As formas de pagamento de `lib/payment-methods`, com uma linha de explicação. */
 const FORMAS = [
-  ["pix", "PIX"],
-  ["ted", "TED / débito em conta"],
-  ["debit_card", "Cartão de débito"],
-  ["credit_card", "Cartão de crédito"],
-  ["cash", "Dinheiro"],
+  ["pix", "PIX", "Cai na hora."],
+  ["ted", "TED / débito em conta", "Sai direto da conta."],
+  ["debit_card", "Cartão de débito", "Sai da conta na compra."],
+  ["credit_card", "Cartão de crédito", "Entra na fatura do cartão."],
+  ["cash", "Dinheiro", "Fora de qualquer conta."],
 ] as const
+
+const CATEGORIAS = ["Alimentação", "Moradia", "Transporte", "Assinaturas", "Lazer"]
 
 const DIAS = Array.from({ length: 31 }, (_, i) => String(i + 1))
 
@@ -45,7 +50,7 @@ export default function SelectDoc() {
   return (
     <>
       <Usage>
-        Escolher um valor de uma lista conhecida, sem digitar. São dois motores com a mesma cara: o <code>Select</code> desenha a lista (ícone, grupos, opção destrutiva) e o <code>NativeSelect</code> entrega o <code>&lt;select&gt;</code> do sistema, com a roda do iOS e sem JavaScript. Quando a pessoa precisa <strong>procurar</strong> um nome, o componente é o <code>Combobox</code>; quando a lista longa ainda pede um rodapé com ação (&ldquo;nova categoria&rdquo;), é o <code>FormPickerPopover</code>.
+        Escolher um valor de uma lista conhecida, sem digitar. São dois motores com a mesma cara: o <code>Select</code> desenha a lista (ícone, cor, grupos, descrição, opção de ausência) e o <code>NativeSelect</code> entrega o <code>&lt;select&gt;</code> do sistema, com a roda do iOS e sem JavaScript. Quando a pessoa precisa <strong>procurar</strong> um nome, o componente é o <code>Combobox</code>; quando a lista longa ainda pede um rodapé com ação (&ldquo;nova categoria&rdquo;), é o <code>FormPickerPopover</code>.
       </Usage>
 
       <DocSection
@@ -84,129 +89,142 @@ export default function SelectDoc() {
       </DocSection>
 
       <DocSection
-        title="Tamanhos"
-        description="A escada de campo: sm 28, md 32 (o padrão), lg 36, xl 40 — os nomes e os números do Input e do Button, então um gatilho ao lado de um botão alinha sem declarar size. No toque, sm, md e lg sobem ao piso de 40."
+        title="Tamanhos e estados"
+        description="A escada de campo — sm 28, md 32 (o padrão), lg 36, xl 40, os nomes e os números do Input e do Button; no toque, sm, md e lg sobem ao piso de 40. Embaixo, os três estados do gatilho: vazio mostra o placeholder, aria-invalid pinta borda e anel de destructive (num Field quem o escreve é o FieldControl), e desabilitado ganha o preenchimento do Input desabilitado."
         code={`<SelectTrigger size="sm">…</SelectTrigger>
-<SelectTrigger>…</SelectTrigger>
-<SelectTrigger size="lg">…</SelectTrigger>
-<SelectTrigger size="xl">…</SelectTrigger>`}
-        previewClassName="items-center"
+<SelectTrigger aria-invalid>…</SelectTrigger>
+<Select disabled>…</Select>`}
+        previewClassName="flex-col items-start gap-4"
       >
-        {(["sm", "md", "lg", "xl"] as const).map((s) => (
-          <Select key={s}>
-            <SelectTrigger size={s} className="w-32" aria-label={`Periodicidade (${s})`}>
-              <SelectValue placeholder={s} />
-            </SelectTrigger>
-            <SelectContent>
-              {PERIODICIDADES.map(([v, l]) => (
-                <SelectItem key={v} value={v}>
-                  {l}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ))}
+        <div className="flex flex-wrap items-center gap-3">
+          {(["sm", "md", "lg", "xl"] as const).map((s) => (
+            <Select key={s}>
+              <SelectTrigger size={s} className="w-32" aria-label={`Periodicidade (${s})`}>
+                <SelectValue placeholder={s} />
+              </SelectTrigger>
+              <SelectContent>
+                {PERIODICIDADES.map(([v, l]) => (
+                  <SelectItem key={v} value={v}>
+                    {l}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          {(
+            [
+              ["Vazio", "Nada escolhido ainda", false, false],
+              ["Com erro", "Escolha uma categoria", true, false],
+              ["Desabilitado", "Indisponível", false, true],
+            ] as const
+          ).map(([rotulo, placeholder, erro, off]) => (
+            <Select key={rotulo} disabled={off}>
+              <SelectTrigger className="w-52" aria-label={rotulo} aria-invalid={erro || undefined}>
+                <SelectValue placeholder={placeholder} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="a">Alimentação</SelectItem>
+              </SelectContent>
+            </Select>
+          ))}
+        </div>
       </DocSection>
 
       <DocSection
-        title="Grupos"
-        description="Grupos com rótulo servem quando as opções vêm de origens diferentes — despesa e receita, por exemplo. O rótulo é o Caption da tipografia, e o separador sangra até a borda do painel."
+        title="Categoria: a cor e a ausência"
+        description="Categoria tem cor, e o ColorTile xs (24px) entra antes do nome, na lista e no gatilho. E a opção de não escolher nada é variant=&quot;none&quot;: esmaecida na lista e no gatilho, sem travessões, com o próprio separador. Escolha “Sem categoria” e veja o gatilho."
+        code={`<SelectContent>
+  <SelectItem value="__none__" variant="none">Sem categoria</SelectItem>
+  {categorias.map((c) => (
+    <SelectItem key={c.id} value={c.id}>
+      <ColorTile size="xs" color={c.color} />
+      {c.name}
+    </SelectItem>
+  ))}
+</SelectContent>`}
+      >
+        <Select defaultValue="Alimentação">
+          <SelectTrigger className="w-60" aria-label="Categoria">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__none__" variant="none">
+              Sem categoria
+            </SelectItem>
+            {CATEGORIAS.map((c, i) => (
+              <SelectItem key={c} value={c}>
+                <ColorTile size="xs" color={TILE_COLORS[i]!} />
+                {c}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </DocSection>
+
+      <DocNote title="A ausência é uma opção, e não o placeholder">
+        Use <code>variant=&quot;none&quot;</code> quando <strong>não escolher</strong> é uma resposta válida que a pessoa pode dar de volta — &ldquo;Sem categoria&rdquo;, &ldquo;Não informado&rdquo;, &ldquo;Qualquer plano&rdquo; num filtro. Quando o campo é obrigatório e ainda está vazio, é o <code>placeholder</code> do <code>SelectValue</code>, com o valor vazio: foi o caso do pagamento de conta, que escrevia &ldquo;— Escolha —&rdquo; como uma opção que depois reprovava. O Radix não aceita item de valor vazio, então a ausência continua um sentinela da tela (<code>&quot;__none__&quot;</code>).
+      </DocNote>
+
+      <DocSection
+        title="Opção com descrição"
+        description="description põe uma linha de explicação embaixo do nome. Ela aparece na lista e fica fora do gatilho, que mostra só o nome — é o que a separa de escrever as duas linhas como filho."
+        code={`<SelectItem value="pix" description="Cai na hora.">PIX</SelectItem>`}
+      >
+        <Select defaultValue="pix">
+          <SelectTrigger className="w-64" aria-label="Forma de pagamento">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {FORMAS.map(([v, l, d]) => (
+              <SelectItem key={v} value={v} description={d}>
+                {l}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </DocSection>
+
+      <DocSection
+        title="Grupos, ícones e as opções que avisam"
+        description="Grupos com rótulo quando as opções vêm de origens diferentes, com o ícone antes do nome quando ele identifica de relance. Ao lado, a opção que existe mas não vale agora — na lista, esmaecida, dizendo por quê — e a escolha sem volta, em vermelho, a variant do DropdownMenu. Escolha, e não ação: um menu de ações é o DropdownMenu."
         code={`<SelectGroup>
   <SelectLabel>Despesa</SelectLabel>
-  <SelectItem value="mercado">Mercado</SelectItem>
+  <SelectItem value="mercado"><ShoppingCartIcon aria-hidden />Mercado</SelectItem>
 </SelectGroup>
-<SelectSeparator />`}
+<SelectItem value="credit_card" disabled>Cartão de crédito — cadastre um cartão</SelectItem>
+<SelectItem value="apagar" variant="destructive">Apagar junto</SelectItem>`}
+        previewClassName="flex-wrap items-center gap-3"
       >
-        <Select>
-          <SelectTrigger className="w-56" aria-label="Categoria">
-            <SelectValue placeholder="Categoria" />
+        <Select defaultValue="mercado">
+          <SelectTrigger className="w-52" aria-label="Categoria com ícone">
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
               <SelectLabel>Despesa</SelectLabel>
-              <SelectItem value="mercado">Mercado</SelectItem>
-              <SelectItem value="transporte">Transporte</SelectItem>
+              <SelectItem value="mercado">
+                <ShoppingCartIcon aria-hidden />
+                Mercado
+              </SelectItem>
+              <SelectItem value="transporte">
+                <TruckIcon aria-hidden />
+                Transporte
+              </SelectItem>
             </SelectGroup>
             <SelectSeparator />
             <SelectGroup>
               <SelectLabel>Receita</SelectLabel>
-              <SelectItem value="salario">Salário</SelectItem>
+              <SelectItem value="salario">
+                <BanknotesIcon aria-hidden />
+                Salário
+              </SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>
-      </DocSection>
-
-      <DocSection
-        title="Com ícone na opção"
-        description="O ícone entra no SelectItem, antes do texto, e sobe junto para o gatilho quando a opção é escolhida. Use só se ele identifica de relance o que o texto não diz."
-        code={`<SelectItem value="mercado">
-  <ShoppingCartIcon aria-hidden />
-  Mercado
-</SelectItem>`}
-      >
-        <Select defaultValue="mercado">
-          <SelectTrigger className="w-56" aria-label="Categoria">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="mercado">
-              <ShoppingCartIcon aria-hidden />
-              Mercado
-            </SelectItem>
-            <SelectItem value="transporte">
-              <TruckIcon aria-hidden />
-              Transporte
-            </SelectItem>
-            <SelectItem value="salario">
-              <BanknotesIcon aria-hidden />
-              Salário
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </DocSection>
-
-      <DocSection
-        title="Estados"
-        description="O gatilho segue os estados do campo: vazio mostra o placeholder em cinza, aria-invalid pinta a borda e o anel de destructive (dentro de um Field quem o escreve é o FieldControl), e desabilitado ganha o preenchimento do Input desabilitado."
-        code={`<SelectTrigger aria-invalid>…</SelectTrigger>
-<Select disabled>…</Select>`}
-        previewClassName="flex-col items-stretch gap-3"
-      >
-        <Select>
-          <SelectTrigger className="w-56" aria-label="Vazio">
-            <SelectValue placeholder="Nada escolhido ainda" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="a">Alimentação</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select>
-          <SelectTrigger className="w-56" aria-invalid aria-label="Com erro">
-            <SelectValue placeholder="Escolha uma categoria" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="a">Alimentação</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select disabled>
-          <SelectTrigger className="w-56" aria-label="Desabilitado">
-            <SelectValue placeholder="Indisponível" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="a">Alimentação</SelectItem>
-          </SelectContent>
-        </Select>
-      </DocSection>
-
-      <DocSection
-        title="Opção desabilitada"
-        description="A opção que existe mas não vale agora fica na lista, esmaecida e sem foco, e diz por quê; some só o que não existe. Aqui, sem cartão cadastrado, não há como pagar no crédito."
-        code={`<SelectItem value="credit_card" disabled>
-  Cartão de crédito — cadastre um cartão
-</SelectItem>`}
-      >
         <Select defaultValue="pix">
-          <SelectTrigger className="w-72" aria-label="Forma de pagamento">
+          <SelectTrigger className="w-72" aria-label="Forma de pagamento, com uma indisponível">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -223,15 +241,6 @@ export default function SelectDoc() {
             )}
           </SelectContent>
         </Select>
-      </DocSection>
-
-      <DocSection
-        title="Opção destrutiva"
-        description="Quando escolher um valor tem consequência sem volta, a opção fica em vermelho — a mesma variant do DropdownMenu e do ContextMenu. É escolha, não ação: um menu de ações é o DropdownMenu."
-        code={`<SelectItem value="apagar" variant="destructive">
-  Apagar junto
-</SelectItem>`}
-      >
         <Select defaultValue="sem-categoria">
           <SelectTrigger className="w-64" aria-label="As transações da categoria">
             <SelectValue />
@@ -249,7 +258,7 @@ export default function SelectDoc() {
 
       <DocSection
         title="Lista longa, mas ordenada"
-        description="Os 31 dias do fechamento do cartão: passando da altura disponível, a lista dissolve nas pontas, como a dos menus, com a seta de “tem mais” sobre a borda, e o dia escolhido reabre fora da zona do fade. Digitar com a lista aberta salta para a opção — “2”, “5” leva ao 25. O tamanho da lista não é o critério; o critério é a pessoa saber o que procura sem ler."
+        description="Os 31 dias do fechamento do cartão: a lista para em 288px, umas nove linhas — o teto de todo dropdown —, dissolve nas pontas, como a dos menus, com a seta de “tem mais” sobre a borda, e o dia escolhido reabre fora da zona do fade. Digitar com a lista aberta salta para a opção — “2”, “5” leva ao 25. O tamanho da lista não é o critério; o critério é a pessoa saber o que procura sem ler."
         code={`<SelectContent>
   {dias.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
 </SelectContent>`}
@@ -274,79 +283,72 @@ export default function SelectDoc() {
 
       <DocSection
         title="O do sistema: NativeSelect"
-        description="O <select> do navegador na mesma régua de campo: superfície, anel, escada e chevron iguais aos do gatilho acima. A lista aberta é a do sistema — a roda no iPhone, o menu do sistema no Mac —, e por isso não leva ícone, opção destrutiva nem painel de vidro."
+        description="O select do navegador na mesma régua de campo: superfície, anel, escada e chevron iguais aos do gatilho — o primeiro é Select, o segundo NativeSelect. A lista aberta é a do sistema (a roda no iPhone, o menu no Mac), e por isso não leva ícone, cor, descrição nem opção destrutiva; optgroup é o grupo dela."
         code={`<NativeSelect defaultValue="5">
   <NativeSelectOption value="5">Dia 5</NativeSelectOption>
-</NativeSelect>`}
-        previewClassName="items-center"
+</NativeSelect>
+<NativeSelectOptGroup label="À vista">…</NativeSelectOptGroup>`}
+        previewClassName="flex-wrap items-end gap-3"
       >
-        <Select defaultValue="5">
-          <SelectTrigger className="w-36" aria-label="Dia do vencimento (Select)">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
+        <div className="flex flex-col gap-1.5">
+          <Caption>Select</Caption>
+          <Select defaultValue="5">
+            <SelectTrigger className="w-36" aria-label="Dia do vencimento (Select)">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[1, 5, 10, 15, 20, 25].map((d) => (
+                <SelectItem key={d} value={String(d)}>
+                  Dia {d}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Caption>NativeSelect</Caption>
+          <NativeSelect aria-label="Dia do vencimento (NativeSelect)" className="w-36" defaultValue="5">
             {[1, 5, 10, 15, 20, 25].map((d) => (
-              <SelectItem key={d} value={String(d)}>
+              <NativeSelectOption key={d} value={String(d)}>
                 Dia {d}
-              </SelectItem>
+              </NativeSelectOption>
             ))}
-          </SelectContent>
-        </Select>
-        <NativeSelect
-          aria-label="Dia do vencimento (NativeSelect)"
-          className="w-36"
-          defaultValue="5"
-        >
-          {[1, 5, 10, 15, 20, 25].map((d) => (
-            <NativeSelectOption key={d} value={String(d)}>
-              Dia {d}
-            </NativeSelectOption>
-          ))}
-        </NativeSelect>
-      </DocSection>
-
-      <DocSection
-        title="NativeSelect com grupos"
-        description="<optgroup> é o grupo do sistema. As opções vestem as cores de sistema (Canvas e CanvasText), que seguem o color-scheme que o tema escreve na página: a lista aberta acompanha o escuro onde o navegador desenha as opções."
-        code={`<NativeSelectOptGroup label="À vista">
-  <NativeSelectOption value="pix">PIX</NativeSelectOption>
-</NativeSelectOptGroup>`}
-      >
-        <NativeSelect aria-label="Forma de pagamento" className="w-64" defaultValue="pix">
-          <NativeSelectOptGroup label="À vista">
-            <NativeSelectOption value="pix">PIX</NativeSelectOption>
-            <NativeSelectOption value="ted">TED / débito em conta</NativeSelectOption>
-            <NativeSelectOption value="cash">Dinheiro</NativeSelectOption>
-          </NativeSelectOptGroup>
-          <NativeSelectOptGroup label="Cartão">
-            <NativeSelectOption value="debit_card">Cartão de débito</NativeSelectOption>
-            <NativeSelectOption value="credit_card">Cartão de crédito</NativeSelectOption>
-          </NativeSelectOptGroup>
-        </NativeSelect>
+          </NativeSelect>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Caption>com optgroup</Caption>
+          <NativeSelect aria-label="Forma de pagamento (NativeSelect)" className="w-60" defaultValue="pix">
+            <NativeSelectOptGroup label="À vista">
+              <NativeSelectOption value="pix">PIX</NativeSelectOption>
+              <NativeSelectOption value="ted">TED / débito em conta</NativeSelectOption>
+              <NativeSelectOption value="cash">Dinheiro</NativeSelectOption>
+            </NativeSelectOptGroup>
+            <NativeSelectOptGroup label="Cartão">
+              <NativeSelectOption value="debit_card">Cartão de débito</NativeSelectOption>
+              <NativeSelectOption value="credit_card">Cartão de crédito</NativeSelectOption>
+            </NativeSelectOptGroup>
+          </NativeSelect>
+        </div>
       </DocSection>
 
       <DocNote title="No NativeSelect, className veste a casca">
-        O componente é um <code>&lt;div&gt;</code> com o <code>&lt;select&gt;</code> e o chevron dentro, e o <code>className</code> vai para o <code>&lt;div&gt;</code>: largura e margem se dão por ele, e o <code>&lt;select&gt;</code> ocupa a casca inteira. Todo o resto — <code>id</code>, <code>value</code>, <code>aria-*</code>, <code>disabled</code> — vai para o <code>&lt;select&gt;</code>.
+        O componente é um <code>&lt;div&gt;</code> com o <code>&lt;select&gt;</code> e o chevron dentro, e o <code>className</code> vai para o <code>&lt;div&gt;</code>: largura e margem se dão por ele. Todo o resto — <code>id</code>, <code>value</code>, <code>aria-*</code>, <code>disabled</code> — vai para o <code>&lt;select&gt;</code>. As opções vestem <code>Canvas</code>/<code>CanvasText</code>, que seguem o <code>color-scheme</code> do tema.
       </DocNote>
 
-      <DocNote title="A superfície flutuante é vidro de verdade">
-        O painel do <code>Select</code> tem conteúdo passando por baixo, então veste a tinta flutuante: <code>--popover</code> a 85%, abrindo a 60% no escuro onde o borrão existe, com a <code>glass-surface</code> (24px de borrão e <code>saturate(1.5)</code>) e o guarda de <code>prefers-reduced-transparency</code>.
-      </DocNote>
-
-      <DocNote title="Abre abaixo do gatilho, com colisão">
-        O padrão é <code>position=&quot;popper&quot;</code>. O <code>item-aligned</code> do Radix sobrepõe o gatilho e ignora <code>collisionPadding</code>, <code>side</code> e <code>sideOffset</code> — o painel sai da tela sem nada o impedir —, e abre com o item escolhido dentro do fade, porque escreve a rolagem à mão. Nenhuma tela o usa.
+      <DocNote title="A opção é do componente, e a lista também">
+        A opção tem <code>py-1</code>, recuo de 8 e 32 à direita para o tique, e sobe a 44px no toque; o painel tem 4px de respiro no viewport e a largura mínima do gatilho. <strong>Nada disso se reescreve na chamada</strong>: doze opções do app escreviam <code>py-2 pl-2 pr-8</code> e perdiam o piso de toque, e oito listas repetiam <code>p-1</code> (que somava 4px ao respiro) e <code>min-w-[var(--radix-select-trigger-width)]</code>. Saíram na rodada 173; o que fica numa chamada é o teto de altura (<code>max-h-*</code>) e o que é do conteúdo (<code>capitalize</code> nos meses, <code>nums</code> nos anos).
       </DocNote>
 
       <DocNote title="A lista dissolve, e a seta diz para onde">
-        O viewport veste a dissolução do sistema (<code>scroll-fade-y</code> e <code>useScrollFade</code>): a zona cresce conforme cada ponta tem o que esconder, e a folga de rolagem conta a zona inteira, então nem o item reaberto nem o da navegação por seta caem no degradê. Sobre a borda que dissolve pousa uma seta (<code>ScrollFadeArrows</code>, rodada 172), a mesma de todos os dropdowns: para baixo enquanto há mais embaixo, para cima quando já se rolou. Não são as faixas de rolagem do Radix, que saíram na rodada 166: a seta não ocupa altura, não rola ao pousar e não pega o clique.
+        O viewport veste a dissolução do sistema: a zona cresce conforme cada ponta tem o que esconder, e a folga de rolagem conta a zona inteira, então nem o item reaberto nem o da navegação por seta caem no degradê. Sobre a borda pousa a seta de todos os dropdowns (<code>ScrollFadeArrows</code>), sem ocupar altura nem pegar clique. O painel veste a tinta flutuante de vidro, e abre em <code>position=&quot;popper&quot;</code>, abaixo do gatilho, com colisão — o <code>item-aligned</code> do Radix sobrepõe o gatilho, ignora a folga e nenhuma tela o usa.
       </DocNote>
 
       <DocNote title="O Enter não é do formulário aqui">
-        Nos dois, o Enter escolhe em vez de enviar. O <code>shouldDeferEnterToWidget</code> do <code>Form</code> reconhece o gatilho pelo <code>data-slot=&quot;select-trigger&quot;</code> e o <code>&lt;select&gt;</code> nativo pela tag.
+        Nos dois, o Enter escolhe em vez de enviar. O <code>shouldDeferEnterToWidget</code> do <code>Form</code> reconhece o gatilho pelo <code>data-slot=&quot;select-trigger&quot;</code> — que o <code>SelectTrigger</code> já escreve, e que o pagamento de conta escrevia de novo à mão — e o <code>&lt;select&gt;</code> nativo pela tag.
       </DocNote>
 
       <DocNote title="Onde o app usa">
-        <code>Select</code>: 18 gatilhos em 7 arquivos — os formulários de conta, assinatura e cartão (os 31 dias de fechamento e de vencimento), o pagamento de conta, os filtros de transação, a bandeira do cartão e o mês e ano do orçamento. <code>NativeSelect</code>: nenhuma tela; só os controles da página da <code>Sidebar</code> no catálogo. Três desvios ficam registrados: doze opções reescrevem a geometria por <code>className</code> (<code>py-2 pl-2 pr-8</code> em dez, <code>py-2.5 pl-3 pr-9</code> no mês do orçamento), contra o <code>py-1</code> e o piso de toque do componente; o pagamento de conta pinta o gatilho com <code>bg-background shadow-xs</code> por cima da superfície de campo; e ali o &ldquo;— Escolha —&rdquo; é uma opção com valor, não o <code>placeholder</code>.
+        <code>Select</code>: 18 gatilhos em 7 arquivos — os formulários de conta, assinatura e cartão (os 31 dias de fechamento e de vencimento), o pagamento de conta, os filtros de transação, a bandeira do cartão e o mês e ano do orçamento. Desde a rodada 173 as sete opções de ausência são <code>variant=&quot;none&quot;</code> (&ldquo;Sem categoria&rdquo;, &ldquo;Não informado&rdquo; nas três formas de pagamento, &ldquo;Qualquer plano&rdquo;, &ldquo;Qualquer assinatura&rdquo;, &ldquo;Nenhuma&rdquo; bandeira), os dois seletores de categoria de conta mostram a cor, e o pagamento de conta perdeu o fundo e a sombra pintados por cima do campo. <code>NativeSelect</code>: nenhuma tela; só os controles da página da <code>Sidebar</code>.
       </DocNote>
 
       <PropsTable
@@ -365,9 +367,14 @@ export default function SelectDoc() {
           },
           {
             prop: "SelectItem variant",
-            type: '"default" | "destructive"',
+            type: '"default" | "destructive" | "none"',
             default: '"default"',
-            description: "destructive para a escolha sem volta.",
+            description: "destructive para a escolha sem volta; none para a ausência, esmaecida e com o próprio separador.",
+          },
+          {
+            prop: "SelectItem description",
+            type: "ReactNode",
+            description: "Uma linha embaixo do nome, só na lista; o gatilho mostra só o nome.",
           },
           {
             prop: "SelectItem disabled",

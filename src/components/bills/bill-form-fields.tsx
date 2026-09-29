@@ -14,6 +14,7 @@ import {
     FieldTitle,
 } from "@/components/ui/field"
 import { useMemo } from "react"
+import { ColorTile } from "@/components/ui/color-tile"
 import {
     Select,
     SelectContent,
@@ -161,9 +162,12 @@ export function BillFormFields({
                         </SelectTrigger>
                     </FieldControl>
                     <SelectContent>
-                        <SelectItem value={BILL_CATEGORY_NONE}>— Sem categoria —</SelectItem>
+                        <SelectItem value={BILL_CATEGORY_NONE} variant="none">
+                            Sem categoria
+                        </SelectItem>
                         {expenseCategories.map((c) => (
                             <SelectItem key={c.id} value={c.id}>
+                                <ColorTile size="xs" color={c.color} />
                                 {c.name}
                             </SelectItem>
                         ))}
@@ -294,7 +298,9 @@ export function BillFormFields({
                         </SelectTrigger>
                     </FieldControl>
                     <SelectContent>
-                        <SelectItem value={BILL_PAYMENT_NONE}>— Não definido —</SelectItem>
+                        <SelectItem value={BILL_PAYMENT_NONE} variant="none">
+                            Não informado
+                        </SelectItem>
                         {paymentMethodOptions().map((o) => (
                             <SelectItem key={o.value} value={o.value}>
                                 {o.label}

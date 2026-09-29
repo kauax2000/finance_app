@@ -97,6 +97,13 @@ const MENU_TOUCH_TARGET = "pointer-coarse:min-h-11"
  */
 export const menuPanelSurfaceClassName = [
   "rounded-lg text-foreground shadow-md ring-1 ring-foreground/10",
+  // **O teto de uma lista suspensa** (rodada 174, a pedido do dono): 288px,
+  // umas nove linhas, o mesmo `--spacing(72)` que a lista do `Command` já
+  // usava. Cada primitiva o lê dentro de um `min()` com a altura disponível
+  // do Radix, e a lista longa rola com a dissolução e a seta de "tem mais".
+  // Quem não é lista (o `DropdownMenu variant="panel"`) o devolve à altura
+  // disponível.
+  "[--menu-max-h:--spacing(72)]",
   menuPanelTintClassName,
 ].join(" ")
 

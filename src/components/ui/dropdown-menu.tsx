@@ -35,7 +35,7 @@ import {
  * com a variável do Radix valendo 318,75px.
  */
 const DROPDOWN_POPPER =
-  "max-h-(--radix-dropdown-menu-content-available-height) max-w-(--radix-dropdown-menu-content-available-width) origin-(--radix-dropdown-menu-content-transform-origin)"
+  "max-h-[min(var(--radix-dropdown-menu-content-available-height),var(--menu-max-h))] max-w-(--radix-dropdown-menu-content-available-width) origin-(--radix-dropdown-menu-content-transform-origin)"
 
 /**
  * O menu de um gatilho.
@@ -172,6 +172,9 @@ const dropdownMenuContentVariants = cva(
         // valendo: ele sangra o recuo da seção e alcança a borda do painel.
         panel: [
           "rounded-xl",
+          // O painel não é lista: cabeçalho de conta e blocos, que não rolam.
+          // O teto das listas suspensas não vale para ele.
+          "[--menu-max-h:100dvh]",
           // O recuo mudou de dono: ele saiu da casca e foi para o viewport, e
           // aqui o painel o cede de novo para o `DropdownMenuSection`.
           "[&>[data-slot=dropdown-menu-viewport]]:p-0",

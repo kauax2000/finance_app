@@ -115,14 +115,12 @@ function CreditCardBillingSection({
                         </FieldControl>
                         <SelectContent
                             align="start"
-                            className="min-w-[var(--radix-select-trigger-width)] p-1"
                             sideOffset={6}
                         >
                             {DAY_OPTIONS.map((d) => (
                                 <SelectItem
                                     key={d}
                                     value={d}
-                                    className="cursor-pointer py-2 pl-2 pr-8"
                                 >
                                     {d}
                                 </SelectItem>
@@ -150,14 +148,12 @@ function CreditCardBillingSection({
                         </FieldControl>
                         <SelectContent
                             align="start"
-                            className="min-w-[var(--radix-select-trigger-width)] p-1"
                             sideOffset={6}
                         >
                             {DAY_OPTIONS.map((d) => (
                                 <SelectItem
                                     key={d}
                                     value={d}
-                                    className="cursor-pointer py-2 pl-2 pr-8"
                                 >
                                     {d}
                                 </SelectItem>

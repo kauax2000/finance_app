@@ -30,7 +30,7 @@ import {
  * com a variável do Radix valendo 318,75px.
  */
 const CONTEXT_POPPER =
-  "max-h-(--radix-context-menu-content-available-height) max-w-(--radix-context-menu-content-available-width) origin-(--radix-context-menu-content-transform-origin)"
+  "max-h-[min(var(--radix-context-menu-content-available-height),var(--menu-max-h))] max-w-(--radix-context-menu-content-available-width) origin-(--radix-context-menu-content-transform-origin)"
 
 /**
  * O menu do botão direito.

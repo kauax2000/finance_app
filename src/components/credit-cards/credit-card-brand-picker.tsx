@@ -187,13 +187,9 @@ export function CreditCardBrandPicker({
                 </SelectTrigger>
                 <SelectContent
                     align="start"
-                    className="min-w-[var(--radix-select-trigger-width)] p-1"
                     sideOffset={6}
                 >
-                    <SelectItem
-                        value={SELECT_NONE}
-                        className="cursor-pointer py-2 pl-2 pr-8"
-                    >
+                    <SelectItem value={SELECT_NONE} variant="none">
                         <BrandRow
                             Logo={PRESET_ROWS[0]!.Logo}
                             label={PRESET_ROWS[0]!.label}
@@ -203,14 +199,12 @@ export function CreditCardBrandPicker({
                         <SelectItem
                             key={row.value}
                             value={row.value}
-                            className="cursor-pointer py-2 pl-2 pr-8"
                         >
                             <BrandRow Logo={row.Logo} label={row.label} />
                         </SelectItem>
                     ))}
                     <SelectItem
                         value={SELECT_OTHER}
-                        className="cursor-pointer py-2 pl-2 pr-8"
                     >
                         <OtherRow label="Outra bandeira" />
                     </SelectItem>

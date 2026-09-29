@@ -104,7 +104,7 @@ function SelectContent({
         className={cn(
           /** Above Sheet overlay/content (`z-(--z-sheet)`); below Toaster (`z-(--z-toast)`). */
           menuPanelSurfaceClassName,
-          "relative z-(--z-popover) max-h-(--radix-select-content-available-height) max-w-(--radix-select-content-available-width) min-w-36 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto duration-(--duration-instant) data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "relative z-(--z-popover) max-h-[min(var(--radix-select-content-available-height),var(--menu-max-h))] max-w-(--radix-select-content-available-width) min-w-36 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto duration-(--duration-instant) data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           position === "popper" &&
             "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
           className,
@@ -183,21 +183,48 @@ function SelectLabel({
  * esse atributo nunca veio junto, então a exceção não tinha como acontecer.
  * É a mesma variant do `DropdownMenuItem` e do `ContextMenuItem`, para os três
  * lugares onde se escolhe uma opção se comportarem igual.
+ *
+ * **`variant="none"` é a opção de ausência** (rodada 173): "Sem categoria",
+ * "Não informado", "Qualquer plano". Oito seletores a escreviam à mão, em
+ * cinco grafias, três delas com travessões em volta ("— Sem categoria —"). Ela
+ * vem esmaecida — na lista **e** no gatilho, porque o `SelectValue` copia o
+ * conteúdo do `ItemText`, e é por isso que a tinta mora num `span` dentro dele
+ * e não no item — e traz o próprio separador, porque ela é a primeira da lista
+ * e não uma opção como as outras. Radix não aceita item de valor vazio, então
+ * o valor continua um sentinela da tela.
+ *
+ * **`description` é a linha de explicação**, fora do `ItemText`: aparece na
+ * lista e não no gatilho, que mostra só o nome.
  */
 function SelectItem({
   className,
   variant = "default",
+  description,
   children,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Item> & {
-  variant?: "default" | "destructive"
+  variant?: "default" | "destructive" | "none"
+  /** Uma linha embaixo do nome, só na lista. */
+  description?: React.ReactNode
 }) {
-  return (
+  const texto = (
+    // `data-slot` e não `className`: o `ItemText` do Radix descarta
+    // `className` e `style`, e só atributos chegam ao `span`.
+    <SelectPrimitive.ItemText data-slot="select-item-text">
+      {variant === "none" ? <span className="text-muted-foreground">{children}</span> : children}
+    </SelectPrimitive.ItemText>
+  )
+  const item = (
     <SelectPrimitive.Item
       data-slot="select-item"
       data-variant={variant}
       className={cn(
-        "relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-2 text-sm outline-hidden pointer-coarse:min-h-11 select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+        "relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-2 text-sm outline-hidden pointer-coarse:min-h-11 select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:not-data-[variant=none]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        // O texto da opção — ícone, ladrilho e nome em linha. Era um seletor
+        // `*:[span]:last:` no item, que casava o último `span` filho; com a
+        // descrição o `ItemText` deixa de ser filho direto, e a regra o acha
+        // pelo `data-slot`, em qualquer profundidade.
+        "**:data-[slot=select-item-text]:flex **:data-[slot=select-item-text]:min-w-0 **:data-[slot=select-item-text]:items-center **:data-[slot=select-item-text]:gap-2",
         // O acender dos menus — ver `menuItemFadeClassName`.
         menuItemFadeClassName,
         variant === "destructive" &&
@@ -211,8 +238,24 @@ function SelectItem({
           <CheckIcon className="pointer-events-none" />
         </SelectPrimitive.ItemIndicator>
       </span>
-      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+      {description ? (
+        // Nome sobre explicação é par de identidade: sem `gap`.
+        <span data-slot="select-item-content" className="flex min-w-0 flex-col">
+          {texto}
+          <span className="text-xs text-muted-foreground">{description}</span>
+        </span>
+      ) : (
+        texto
+      )}
     </SelectPrimitive.Item>
+  )
+
+  if (variant !== "none") return item
+  return (
+    <>
+      {item}
+      <SelectSeparator />
+    </>
   )
 }
 

@@ -109,13 +109,13 @@ export function BudgetMonthSelects({
                             side="bottom"
                             align="start"
                             sideOffset={6}
-                            className="max-h-64 min-w-[calc(var(--radix-select-trigger-width)+0.5rem)] p-1"
+                            className="max-h-64"
                         >
                             {months.map((opt) => (
                                 <SelectItem
                                     key={opt.value}
                                     value={opt.value}
-                                    className="cursor-pointer py-2.5 pl-3 pr-9 text-sm capitalize"
+                                    className="capitalize"
                                 >
                                     {opt.label}
                                 </SelectItem>
@@ -136,13 +136,13 @@ export function BudgetMonthSelects({
                             side="bottom"
                             align="start"
                             sideOffset={6}
-                            className="max-h-56 min-w-[var(--radix-select-trigger-width)] p-1"
+                            className="max-h-56"
                         >
                             {years.map((opt) => (
                                 <SelectItem
                                     key={opt.value}
                                     value={opt.value}
-                                    className="cursor-pointer py-2 pl-3 pr-9 text-sm tabular-nums"
+                                    className="nums"
                                 >
                                     {opt.label}
                                 </SelectItem>

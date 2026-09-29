@@ -15474,3 +15474,72 @@ continua; a seta diz **para onde**.
   foi para `lib/`, ao lado das classes da dissolução.
 - **Não é a volta do `ScrollUpButton` do Radix** que a rodada 166 tirou: lá
   era uma faixa de 24px que ocupava a lista e rolava ao pousar.
+
+### Rodada 173 — o Select ganha a ausência, a cor e a descrição, e as telas param de reescrevê-lo
+
+O dono pediu a rodada completa no `Select`, e escolheu as quatro propostas.
+
+**Opção "nenhum"** (`SelectItem variant="none"`). Oito seletores escreviam a
+ausência à mão, em seis grafias: "— Sem categoria —", "— Não definido —",
+"— Não especificado —", "Não informado", "Qualquer plano"/"Qualquer
+assinatura" e a "Nenhuma" bandeira. Hoje ela sai esmaecida **na lista e no
+gatilho** — o `SelectValue` copia o conteúdo do `ItemText`, então a tinta mora
+num `span` dentro dele — e com o próprio `SelectSeparator`. As três formas de
+pagamento passaram a dizer "Não informado". Medido: `oklch(0.708)` na lista e
+no gatilho, separador logo depois.
+- **A oitava não era ausência**: o "— Escolha —" do pagamento de conta era um
+  `placeholder` disfarçado de opção — ali a categoria é obrigatória, e
+  escolhê-lo reprovava com "Selecione uma categoria.". Virou o `placeholder`
+  "Escolha uma categoria", com o valor vazio.
+
+**Categoria com cor.** `ColorTile` ganhou `size="xs"` (24px, o nome da
+escada) e entra antes do nome da categoria nos seletores da conta e do
+pagamento de conta. Medido: o gatilho `md` continua com 32px, a opção sobe de
+28 para 32.
+
+**Opção com descrição** (`SelectItem description`): uma linha embaixo do
+nome, fora do `ItemText`, então o gatilho mostra só o nome. Medido: a opção
+tem 44px, e o gatilho diz "PIX". Nenhuma tela usa ainda.
+- **O `ItemText` do Radix descarta `className` e `style`** — só atributos
+  chegam ao `span`. Por isso a regra que o dispõe em linha (ícone, ladrilho e
+  nome) era um seletor `*:[span]:last:` no item, que deixava de casar quando
+  o texto ganhava um irmão; ela passou a achar o `ItemText` por
+  `data-slot="select-item-text"`, em qualquer profundidade.
+
+**Os desvios da rodada 165.** Doze opções escreviam `py-2 pl-2 pr-8` (ou
+`py-2.5 pl-3 pr-9 text-sm` no mês) e perdiam o piso de 44px no toque; oito
+listas repetiam `p-1`, que somava 4px ao respiro do viewport, e o `min-w` do
+gatilho, que o viewport já declara. Saíram; ficaram o teto de altura e o que
+é do conteúdo (`capitalize` nos meses, `nums` nos anos). O pagamento de conta
+perdeu `bg-background shadow-xs` nos três gatilhos e o `data-slot` que
+repetia o do componente. **Não verificado nas telas**, que pedem login.
+
+**Página.** Doze seções viraram oito: "Tamanhos" e "Estados" juntos, "Grupos",
+"ícone", "desabilitada" e "destrutiva" numa só, e o `NativeSelect` com e sem
+`optgroup` lado a lado com o `Select`. Entraram "Categoria: a cor e a
+ausência", "Opção com descrição" e a nota de quando a ausência é opção e
+quando é `placeholder`.
+
+### Rodada 174 — os dropdowns ganham um teto de altura
+
+O dono pediu, sobre os 31 dias do `Select`, que abriam com mais de 1.000px:
+o dropdown não pode ficar tão grande, mesmo com muito conteúdo.
+
+- **`--menu-max-h`**, declarado na superfície flutuante
+  (`menuPanelSurfaceClassName`) com `--spacing(72)` — 288px, umas nove linhas,
+  o mesmo teto que a lista do `Command` já usava na paleta e no `Combobox`. O
+  `Select`, o `DropdownMenu`, o `ContextMenu` e o `Menubar` o leem num
+  `min()` com a altura disponível do Radix, então a janela baixa continua
+  mandando quando é menor. A lista longa rola com a dissolução e a seta da
+  rodada 172.
+- **O `FormPickerPopoverContent` para em 384px**: ele soma a busca e o
+  rodapé, e é o que deixa a lista nos mesmos ~288.
+- **O `DropdownMenu variant="panel"` fica de fora**: é o cabeçalho de conta e
+  blocos, que não rolam — ele devolve o teto à altura disponível com
+  `[--menu-max-h:100dvh]`.
+- **Medido**: os 31 dias abrem com 288px (eram ~1.030 numa janela alta), com
+  as duas setas acesas porque o dia escolhido abre no meio; o seletor de
+  cartão, 384; os menus do catálogo continuam abaixo do teto; o painel lê
+  522px de `max-height`, a altura disponível.
+- `anchored-surface.test.ts` (3) passou a aceitar o teto dentro do `min()`,
+  como já aceitava para a largura.

@@ -22,6 +22,7 @@ import {
 import { CustomForm, FormInput } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { DatePicker } from "@/components/ui/date-picker"
+import { ColorTile } from "@/components/ui/color-tile"
 import {
     Select,
     SelectContent,
@@ -233,19 +234,22 @@ export function PayBillDialog({
                 <>
                 <Field>
                     <FieldLabel>Categoria</FieldLabel>
-                    <Select value={categoryId} onValueChange={setCategoryId}>
+                    {/* A categoria é obrigatória aqui: não há opção de ausência, e o
+                        sentinela vira o `placeholder` (valor vazio no Radix). */}
+                    <Select
+                        value={categoryId === CAT_NONE ? "" : categoryId}
+                        onValueChange={setCategoryId}
+                    >
                         <FieldControl>
                             <SelectTrigger
-                                data-slot="select-trigger"
-                                className="bg-background shadow-xs"
                             >
-                                <SelectValue placeholder="Selecione" />
+                                <SelectValue placeholder="Escolha uma categoria" />
                             </SelectTrigger>
                         </FieldControl>
                         <SelectContent>
-                            <SelectItem value={CAT_NONE}>— Escolha —</SelectItem>
                             {categoriesExpense.map((c) => (
                                 <SelectItem key={c.id} value={c.id}>
+                                    <ColorTile size="xs" color={c.color} />
                                     {c.name}
                                 </SelectItem>
                             ))}
@@ -257,15 +261,13 @@ export function PayBillDialog({
                     <Select value={pmOption} onValueChange={setPmOption}>
                         <FieldControl>
                             <SelectTrigger
-                                data-slot="select-trigger"
-                                className="bg-background shadow-xs"
                             >
                                 <SelectValue />
                             </SelectTrigger>
                         </FieldControl>
                         <SelectContent>
-                            <SelectItem value={BILL_PAYMENT_NONE}>
-                                — Não especificado —
+                            <SelectItem value={BILL_PAYMENT_NONE} variant="none">
+                                Não informado
                             </SelectItem>
                             {paymentMethodOptions().map((o) => (
                                 <SelectItem key={o.value} value={o.value}>
@@ -281,8 +283,6 @@ export function PayBillDialog({
                         <Select value={pccId || ""} onValueChange={setPccId}>
                             <FieldControl>
                                 <SelectTrigger
-                                    data-slot="select-trigger"
-                                    className="bg-background shadow-xs"
                                 >
                                     <SelectValue placeholder="Cartão" />
                                 </SelectTrigger>
