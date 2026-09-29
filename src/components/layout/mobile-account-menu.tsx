@@ -31,7 +31,6 @@ import {
     MOBILE_GLASS_ACCOUNT_MENU_CONTENT_CLASSNAME,
     MOBILE_GLASS_MENU_INNER_CLASSNAME,
     MOBILE_GLASS_MENU_ROW_CLASSNAME,
-    MOBILE_GLASS_MENU_SEPARATOR_CLASSNAME,
 } from "@/lib/mobile-glass-surface"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { cn } from "@/lib/utils"
@@ -192,12 +191,7 @@ export function MobileAccountMenu({ children }: MobileAccountMenuProps) {
                             </div>
                         </div>
 
-                        <Separator
-                            className={cn(
-                                "h-px w-full min-w-0 shrink-0",
-                                MOBILE_GLASS_MENU_SEPARATOR_CLASSNAME
-                            )}
-                        />
+                        <Separator tone="soft" />
 
                         <nav
                             className="flex min-h-0 flex-1 flex-col overflow-y-auto px-0"
@@ -228,12 +222,7 @@ export function MobileAccountMenu({ children }: MobileAccountMenuProps) {
                                             )
                                         })}
                                     </div>
-                                    <Separator
-                                        className={cn(
-                                            "h-px w-full min-w-0 shrink-0",
-                                            MOBILE_GLASS_MENU_SEPARATOR_CLASSNAME
-                                        )}
-                                    />
+                                    <Separator tone="soft" />
                                 </>
                             ) : null}
 
@@ -258,12 +247,7 @@ export function MobileAccountMenu({ children }: MobileAccountMenuProps) {
                                 })}
                             </div>
 
-                            <Separator
-                                className={cn(
-                                    "h-px w-full min-w-0 shrink-0",
-                                    MOBILE_GLASS_MENU_SEPARATOR_CLASSNAME
-                                )}
-                            />
+                            <Separator tone="soft" />
 
                             <div className="flex shrink-0 flex-col px-2.5 pt-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom,0px))]">
                                 <Button

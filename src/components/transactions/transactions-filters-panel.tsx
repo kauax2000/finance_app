@@ -46,8 +46,9 @@ import { cn } from "@/lib/utils"
    Ela precisava copiar o prefixo `data-[orientation=horizontal]:` para vencer o
    `w-full` da base — agora a base é classe crua e a daqui ganha sozinha. O
    `opacity-60` virou `tone="soft"`, que é o mesmo peso com nome. */
-const FILTERS_DRAWER_SECTION_DIVIDER_CLASSNAME =
-    "my-2.5 -mx-4 max-w-none w-[calc(100%+2rem)] sm:-mx-5 sm:w-[calc(100%+2.5rem)]"
+// A régua atravessa o recuo da folha pelo `bleed` do `Separator`, que lê
+// `--dialog-px`; aqui fica só o respiro.
+const FILTERS_DRAWER_SECTION_DIVIDER_CLASSNAME = "my-2.5"
 
 function FilterSection({
     title,
@@ -285,7 +286,7 @@ export function TransactionsFiltersPanel({
                         </div>
                     </FilterSection>
 
-                    <Separator tone="soft" className={FILTERS_DRAWER_SECTION_DIVIDER_CLASSNAME} />
+                    <Separator tone="soft" bleed className={FILTERS_DRAWER_SECTION_DIVIDER_CLASSNAME} />
                 </>
             ) : null}
 
@@ -480,6 +481,7 @@ export function TransactionsFiltersPanel({
             {!lockedCategoryId ? (
                 <>
                     <Separator
+                        bleed
                         className={FILTERS_DRAWER_SECTION_DIVIDER_CLASSNAME}
                     />
 
@@ -715,6 +717,7 @@ export function TransactionsFiltersPanel({
                     </FilterSection>
 
                     <Separator
+                        bleed
                         className={FILTERS_DRAWER_SECTION_DIVIDER_CLASSNAME}
                     />
                 </>
@@ -757,7 +760,7 @@ export function TransactionsFiltersPanel({
                 </div>
             </FilterSection>
 
-            <Separator tone="soft" className={FILTERS_DRAWER_SECTION_DIVIDER_CLASSNAME} />
+            <Separator tone="soft" bleed className={FILTERS_DRAWER_SECTION_DIVIDER_CLASSNAME} />
 
             <FilterSection title="Descrição">
                 <SearchInput
@@ -770,7 +773,7 @@ export function TransactionsFiltersPanel({
                 />
             </FilterSection>
 
-            <Separator tone="soft" className={FILTERS_DRAWER_SECTION_DIVIDER_CLASSNAME} />
+            <Separator tone="soft" bleed className={FILTERS_DRAWER_SECTION_DIVIDER_CLASSNAME} />
 
             <FilterSection title="Origem">
                 <div className="space-y-6">

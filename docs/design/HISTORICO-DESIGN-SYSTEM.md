@@ -15543,3 +15543,39 @@ o dropdown não pode ficar tão grande, mesmo com muito conteúdo.
   522px de `max-height`, a altura disponível.
 - `anchored-surface.test.ts` (3) passou a aceitar o teto dentro do `min()`,
   como já aceitava para a largura.
+
+### Rodada 175 — o Separator ganha desenho, borda e rótulo, e as telas param de desenhá-lo
+
+O dono pediu a rodada completa no `Separator` e escolheu as quatro versões.
+
+- **`variant`**: `solid` (o padrão), `dashed` (a linha de extrato antes de
+  um total) e `fade` (some nas pontas; com rótulo, cada metade some na ponta
+  de fora). **O peso passou a morar numa variável** (`--separator-color`),
+  porque os três desenhos o leem de jeitos diferentes — fundo, borda e o meio
+  de um degradê — e assim `tone` e `variant` se combinam sem classe a mais.
+- **`bleed`**: atravessa o recuo da superfície lendo o que ela publica,
+  `--card-px` antes de `--dialog-px` (um cartão dentro de um diálogo tem o
+  recuo dele), ou `--separator-bleed`. Medido num `Card`: a régua vai de 322
+  a 704 num cartão de 321 a 705 (1px de borda). Os cinco separadores dos
+  filtros de transação usavam `-mx-4 w-[calc(100%+2rem)] sm:-mx-5
+  sm:w-[calc(100%+2.5rem)]`, e **erravam no desktop**: a folha recua 16px em
+  toda largura, e o `sm:-mx-5` sangrava 4px a mais, cortados pelo
+  `overflow-hidden`. Hoje é `bleed`.
+- **`children`, o rótulo do meio**: duas meias-réguas e o texto, sem
+  retângulo mascarando uma linha inteira. O `FieldSeparator` passou a
+  compor esta peça em vez de desenhar a própria; medido, 20px de altura e o
+  "ou" entre duas metades, como antes.
+- **As telas**: o painel da fatura e o esqueleto dele desenhavam a régua com
+  `<div role="separator" className="border-t">` (o esqueleto ainda com
+  `aria-hidden` junto, papel e silêncio ao mesmo tempo); viraram `Separator`.
+  O menu da conta no telefone pesava as três réguas com `bg-border/60` pela
+  constante `MOBILE_GLASS_MENU_SEPARATOR_CLASSNAME`; viraram `tone="soft"`
+  (a constante continua servindo os `DropdownMenuSeparator` do app). O menu de
+  workspaces repetia o `decorative`, que é o padrão.
+  `separator.test.ts` tranca as três coisas. **Não verificado nas telas**,
+  que pedem login.
+- **O comentário do componente estava velho**: dizia que o `soft` servia o
+  `Dialog` e o `AlertDialog`, que perderam os fios na dissolução.
+- **Página**: horizontal e vertical juntas, peso e desenho num quadro só, e
+  uma seção por versão nova com conteúdo do app — a soma da fatura, os dias
+  de uma lista, os filtros num cartão.

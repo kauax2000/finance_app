@@ -880,11 +880,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                         ) : null}
                     </CardContent>
 
-                    <div
-                        role="separator"
-                        aria-orientation="horizontal"
-                        className="shrink-0 border-t border-border"
-                    />
+                    <Separator />
 
                     <CardContent className="space-y-5 pb-4 pt-5">
                         <CreditCardInvoiceCategorySpendSection

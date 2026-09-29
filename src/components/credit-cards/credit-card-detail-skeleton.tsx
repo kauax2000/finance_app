@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardNote, CardToolbar } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
     Table,
@@ -146,12 +147,7 @@ function InvoicePanelSkeleton() {
                     </div>
                 </CardContent>
 
-                <div
-                    role="separator"
-                    aria-orientation="horizontal"
-                    className="shrink-0 border-t border-border"
-                    aria-hidden
-                />
+                <Separator />
 
                 <CardContent className="space-y-5 pb-4 pt-5">
                     <CategorySpendSectionSkeleton />

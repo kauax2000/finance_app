@@ -602,31 +602,30 @@ function FieldSeparator({
 }: React.ComponentProps<"div"> & {
   children?: React.ReactNode
 }) {
+  // O rótulo do meio é do `Separator` desde a rodada 175: duas meias-réguas e
+  // o texto entre elas, sem retângulo mascarando o meio de uma linha inteira —
+  // ele pintava `bg-background`, que só acerta direto na página. Aqui ficam só
+  // o corpo do texto e o respiro do campo.
+  if (children) {
+    return (
+      <Separator
+        data-slot="field-separator"
+        data-content
+        className={cn("-my-2 h-5 gap-2 text-sm font-normal", className)}
+        {...(props as React.ComponentProps<typeof Separator>)}
+      >
+        {children}
+      </Separator>
+    )
+  }
   return (
     <div
       data-slot="field-separator"
-      data-content={!!children}
-      className={cn("-my-2 flex h-5 items-center gap-2 text-sm", className)}
+      data-content={false}
+      className={cn("-my-2 flex h-5 items-center", className)}
       {...props}
     >
-      {/* Duas metades de linha com o rótulo entre elas, em vez de uma linha
-          inteira com um retângulo por cima mascarando o meio. O retângulo
-          pintava `bg-background`, que só acerta quando o separador está direto
-          na página: dentro de um cartão, de um `Dialog` ou de um `Sheet` ele
-          desenhava a cor da página sobre outra superfície. Sem fundo não há o
-          que casar, e o separador funciona em qualquer lugar. */}
-      <Separator className="flex-1" />
-      {children && (
-        <>
-          <span
-            className="shrink-0 text-muted-foreground"
-            data-slot="field-separator-content"
-          >
-            {children}
-          </span>
-          <Separator className="flex-1" />
-        </>
-      )}
+      <Separator />
     </div>
   )
 }

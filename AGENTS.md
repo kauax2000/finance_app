@@ -1997,6 +1997,15 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   O título **não** é da peça (chrome de tela, invariante 1); a leitura é,
   porque é o estado do controle. Lacuna conhecida: o Radix anuncia o número
   cru, e o `Slider` não escreve `aria-valuetext`.
+- **`Separator` tem dois eixos e duas formas** (rodada 175): `tone` é o peso
+  (`default` estrutura, `soft` arruma o interior de uma superfície) e
+  `variant` é o desenho (`solid`, `dashed` — antes de um total —, `fade` —
+  entre blocos soltos). O peso mora em `--separator-color`, que os três
+  desenhos leem. `bleed` atravessa o recuo que a superfície publica
+  (`--card-px`, depois `--dialog-px`, ou `--separator-bleed`), e `children`
+  é o rótulo do meio, que o `FieldSeparator` compõe. **Nenhuma tela desenha a
+  régua à mão** (`<div role="separator">`), pesa por alfa (`bg-border/60`)
+  nem sangra com `-mx-*` e `w-[calc(…)]` — `separator.test.ts` tranca.
 - **`Resizable` também redimensiona colunas de tabela** (rodada 170):
   `useResizableColumns` + `ResizableColumnHandle`, no mesmo `resizable.tsx`,
   com a costura do `ResizableHandle plain` (nada em repouso, o fio ao pousar

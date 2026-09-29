@@ -220,7 +220,7 @@ export function WorkspacePickerMenuBody({
                             )
                         })}
                     </div>
-                    <Separator className="my-2" decorative />
+                    <Separator className="my-2" />
                 </>
             ) : null}
 
@@ -307,7 +307,7 @@ export function WorkspacePickerMenuBody({
 
             {showSharedSection ? (
                 <>
-                    <Separator className="my-2" decorative />
+                    <Separator className="my-2" />
                     <p className={sectionTitleClass}>Compartilhados comigo</p>
                     <div
                         className={cn(
@@ -359,7 +359,7 @@ export function WorkspacePickerMenuBody({
                 </div>
             ) : null}
 
-            <Separator className="my-2" decorative />
+            <Separator className="my-2" />
             <div className={cn("py-1", insetX)}>
                 <button
                     type="button"
