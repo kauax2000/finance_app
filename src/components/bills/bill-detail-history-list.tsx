@@ -4,6 +4,7 @@ import { compareYmd } from "@/lib/transaction-date"
 import { billInstancePill, billDaysDeltaLabel } from "@/components/bills/bill-status"
 import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { PaginationMore } from "@/components/ui/pagination"
 import {
     Badge,
 } from "@/components/ui/badge"
@@ -240,19 +241,13 @@ export function BillDetailHistoryList({
                 )}
             </div>
 
-            {filtered.length > shown ? (
-                <div className="pt-1 text-center">
-                    <Button
-                        type="button"
-                        variant="tertiary"
-                        size="sm"
-                        className="text-xs"
-                        onClick={() => setShown((s) => s + PAGE)}
-                    >
-                        Mostrar mais
-                    </Button>
-                </div>
-            ) : null}
+            <PaginationMore
+                shown={Math.min(shown, filtered.length)}
+                total={filtered.length}
+                step={PAGE}
+                onMore={() => setShown((s) => s + PAGE)}
+                className="pt-1"
+            />
         </div>
     )
 }

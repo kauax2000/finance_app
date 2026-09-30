@@ -425,7 +425,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("input-group", "Input Group", "Campo com ícones, texto ou botões acoplados.", ui("input-group"), "InputGroup, InputGroupInput, InputGroupTextarea, InputGroupAddon, InputGroupText, InputGroupButton, InputGroupPasswordToggle, InputGroupSelect"),
   entry("item", "Item", "Linha de lista com mídia, conteúdo e ações.", ui("item"), "ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions, ItemChevron, ItemHeader, ItemFooter, ItemSeparator"),
   entry("kbd-group", "Kbd Group", "Sequência de teclas.", ui("kbd-group"), "KbdGroup"),
-  entry("pagination", "Pagination", "Navegação entre páginas de uma lista.", ui("pagination"), "Pagination, PaginationStatus, PaginationContent, PaginationLink"),
+  entry("pagination", "Pagination", "Navegação entre páginas de uma lista.", ui("pagination"), "Pagination, PaginationStatus, PaginationContent, PaginationLink, PaginationPrevious, PaginationNext, PaginationEllipsis, PaginationMore"),
   entry("radio-group", "Radio Group", "Escolha única entre poucas opções.", ui("radio-group"), "RadioGroup, RadioGroupItem"),
   entry("search-input", "Search Input", "O campo de busca.", ui("search-input"), "SearchInput"),
   entry("toggle-group", "Toggle Group", "Conjunto de toggles: seleção única ou múltipla.", ui("toggle-group"), "ToggleGroup, ToggleGroupItem"),

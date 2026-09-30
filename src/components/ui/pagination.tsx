@@ -10,7 +10,8 @@ import {
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Muted } from "@/components/ui/typography"
+import { Spinner } from "@/components/ui/spinner"
+import { Caption, Muted } from "@/components/ui/typography"
 
 /**
  * Navegação entre páginas de uma lista.
@@ -50,6 +51,19 @@ import { Muted } from "@/components/ui/typography"
  * da raiz (`Pagination > Content > Item > Link`), e `cloneElement` só alcança
  * filho direto. A troca é barata — o `Button` já é módulo cliente e nada aqui
  * tem estado —, mas este arquivo era componente de servidor, e deixou de ser.
+ *
+ * ## Rodada 196
+ *
+ * Nenhuma tela usava este componente: ele só aceitava `href`, e as duas listas
+ * paginadas do app trocam de página por estado. Agora:
+ *
+ * - **por botões** — sem `href`, número e extremo viram `<button>`;
+ * - **fileira gerada** — `page` e `total` montam a janela (`1 … 4 5 6 … 20`),
+ *   com `getHref` (links) ou `onPageChange` (botões);
+ * - **compacta** — abaixo de `sm` os números somem e fica `‹ 2 de 8 ›`, que era
+ *   o defeito aberto desta página (a fileira transbordava a 375px);
+ *   `variant="compact"` a força em qualquer largura;
+ * - **`PaginationMore`** — o "Mostrar mais" com a contagem.
  */
 
 type PaginationSize = "xs" | "sm" | "md" | "lg"
@@ -173,6 +187,27 @@ const paginationSteps = {
 
 const PaginationSizeContext = React.createContext<PaginationSize>("xs")
 
+/**
+ * A janela de páginas: a primeira, a última, a atual e as vizinhas; o resto
+ * vira reticência — e uma reticência que esconderia **uma** página só vira a
+ * página, porque "…" no lugar de um número não economiza nada.
+ */
+function janelaDePaginas(page: number, total: number, vizinhos = 1): (number | "…")[] {
+  const alvo = new Set([1, total])
+  for (let p = page - vizinhos; p <= page + vizinhos; p++) {
+    if (p >= 1 && p <= total) alvo.add(p)
+  }
+  const ordenadas = [...alvo].sort((a, b) => a - b)
+  const janela: (number | "…")[] = []
+  ordenadas.forEach((p, i) => {
+    const anterior = ordenadas[i - 1]
+    if (anterior !== undefined && p - anterior === 2) janela.push(anterior + 1)
+    else if (anterior !== undefined && p - anterior > 2) janela.push("…")
+    janela.push(p)
+  })
+  return janela
+}
+
 /** O degrau da peça: o que ela disser, senão o da raiz, senão `xs`. */
 function usePaginationStep(size?: PaginationSize): PaginationStep {
   const herdado = React.useContext(PaginationSizeContext)
@@ -188,24 +223,112 @@ function Pagination({
   className,
   align = "center",
   size = "xs",
+  variant = "default",
+  page,
+  total,
+  getHref,
+  onPageChange,
+  children,
   ...props
 }: React.ComponentProps<"nav"> & {
   align?: "center" | "between" | "end"
   /** O degrau da fileira inteira. As peças o herdam; `size` nelas sobrescreve. */
   size?: PaginationSize
+  /** `compact`: só `‹ 2 de 8 ›`, em qualquer largura. Pede `page` e `total`. */
+  variant?: "default" | "compact"
+  /** A página atual, a partir de 1. Com `total`, a fileira é gerada. */
+  page?: number
+  total?: number
+  /** Links: o endereço de cada página. */
+  getHref?: (page: number) => string
+  /** Botões: a troca por estado, sem URL. */
+  onPageChange?: (page: number) => void
 }) {
+  const gerada = page !== undefined && total !== undefined
   return (
     <PaginationSizeContext.Provider value={size}>
       <nav
         data-slot="pagination"
         data-align={align}
         data-size={size}
+        data-variant={variant}
         role="navigation"
         aria-label="Paginação"
         className={cn(paginationVariants({ align, size }), className)}
         {...props}
-      />
+      >
+        {children}
+        {gerada ? (
+          <PaginationAuto
+            page={page}
+            total={total}
+            getHref={getHref}
+            onPageChange={onPageChange}
+            compact={variant === "compact"}
+          />
+        ) : null}
+      </nav>
     </PaginationSizeContext.Provider>
+  )
+}
+
+/** "2 de 8": a posição entre as setas, na forma compacta. */
+function PaginationPosition({ page, total }: { page: number; total: number }) {
+  const degrau = usePaginationStep()
+  return (
+    <span
+      data-slot="pagination-position"
+      aria-current="page"
+      className={cn("nums px-1.5 whitespace-nowrap text-muted-foreground", degrau.tipo)}
+    >
+      <span className="font-medium text-foreground">{page}</span> de {total}
+    </span>
+  )
+}
+
+function PaginationAuto({
+  page,
+  total,
+  getHref,
+  onPageChange,
+  compact,
+}: {
+  page: number
+  total: number
+  getHref?: (page: number) => string
+  onPageChange?: (page: number) => void
+  compact: boolean
+}) {
+  const destino = (p: number) =>
+    getHref ? { href: getHref(p) } : { onClick: () => onPageChange?.(p) }
+  const ultima = Math.max(total, 1)
+  return (
+    <PaginationContent>
+      <PaginationItem>
+        <PaginationPrevious {...destino(page - 1)} disabled={page <= 1} />
+      </PaginationItem>
+      {/* No telefone (e sempre, em `compact`) a posição toma o lugar dos
+          números: a fileira de sete peças a 44px transbordava a 375px. */}
+      <PaginationItem className={compact ? undefined : "sm:hidden"}>
+        <PaginationPosition page={page} total={ultima} />
+      </PaginationItem>
+      {compact
+        ? null
+        : janelaDePaginas(page, ultima).map((p, i) => (
+            <PaginationItem key={i} className="max-sm:hidden">
+              {p === "…" ? (
+                <PaginationEllipsis />
+              ) : (
+                <PaginationLink {...destino(p)} isActive={p === page}>
+                  {p}
+                </PaginationLink>
+              )}
+            </PaginationItem>
+          ))}
+      <PaginationItem>
+        <PaginationNext {...destino(page + 1)} disabled={page >= ultima} />
+      </PaginationItem>
+    </PaginationContent>
   )
 }
 
@@ -272,6 +395,9 @@ function PaginationLink({
   ...props
 }: { isActive?: boolean; size?: PaginationSize } & React.ComponentProps<"a">) {
   const degrau = usePaginationStep(size)
+  // Sem `href` é um botão (rodada 196): a lista de estado local troca de
+  // página sem URL, e um `<a>` sem `href` não é focável nem anunciado.
+  const Elemento = props.href === undefined ? "button" : "a"
   // `Button asChild` sobre o `<a>`, e não `buttonVariants()` no `<a>`: a
   // garantia é do componente — o `data-variant`, o embrulho do rótulo, o par
   // `active:` que vier. O `font-medium` que se somava quando ativo saiu: já é a
@@ -300,10 +426,11 @@ function PaginationLink({
         className
       )}
     >
-      <a
+      <Elemento
+        {...(Elemento === "button" ? { type: "button" as const } : {})}
         aria-current={isActive ? "page" : undefined}
         data-active={isActive ? "true" : undefined}
-        {...props}
+        {...(props as React.ComponentProps<"a"> & React.ComponentProps<"button">)}
       />
     </Button>
   )
@@ -337,6 +464,24 @@ function PaginationEdge({
     "pointer-coarse:min-h-11 pointer-coarse:min-w-11",
     className
   )
+
+  // Sem `href`, botão (rodada 196) — e o desabilitado é o do próprio botão,
+  // que sai do foco e do clique sem precisar de `span`.
+  if (props.href === undefined) {
+    return (
+      <Button asChild variant="tertiary" size={degrau.extremo} className={classes}>
+        <button
+          type="button"
+          data-slot="pagination-link"
+          aria-label={ariaLabel}
+          disabled={disabled}
+          {...(props as React.ComponentProps<"button">)}
+        >
+          {children}
+        </button>
+      </Button>
+    )
+  }
 
   if (disabled) {
     return (
@@ -440,9 +585,60 @@ function PaginationEllipsis({
   )
 }
 
+/**
+ * O "Mostrar mais" (rodada 196): o botão com a contagem do que já está à
+ * vista, para a lista que cresce em vez de trocar de página. Some quando tudo
+ * já foi mostrado. `pending` troca o rótulo pelo `Spinner` e marca `aria-busy`
+ * enquanto a próxima leva chega. O histórico de pagamentos da conta escrevia o
+ * botão à mão, sem contagem.
+ */
+function PaginationMore({
+  shown,
+  total,
+  step,
+  onMore,
+  pending = false,
+  className,
+}: {
+  shown: number
+  total: number
+  /** Quantos entram a cada toque; aparece no rótulo. */
+  step?: number
+  onMore: () => void
+  pending?: boolean
+  className?: string
+}) {
+  if (shown >= total) return null
+  const proximos = step ? Math.min(step, total - shown) : null
+  return (
+    <div
+      data-slot="pagination-more"
+      className={cn("flex flex-col items-center gap-1", className)}
+    >
+      <Button
+        type="button"
+        variant="tertiary"
+        size="sm"
+        disabled={pending}
+        aria-busy={pending || undefined}
+        onClick={onMore}
+      >
+        {pending ? <Spinner size="sm" aria-hidden /> : null}
+        {proximos ? "mostrar mais " + proximos : "mostrar mais"}
+      </Button>
+      <Caption className="nums">
+        {shown} de {total}
+      </Caption>
+    </div>
+  )
+}
+
 export {
+  janelaDePaginas,
   Pagination,
   PaginationContent,
+  PaginationMore,
+  PaginationPosition,
   PaginationEdge,
   PaginationEllipsis,
   PaginationItem,

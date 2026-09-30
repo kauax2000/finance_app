@@ -16289,3 +16289,37 @@ O dono pediu a rodada completa e escolheu as quatro versões.
 - **Página**: as legendas das demonstrações eram `span text-2xs
   text-muted-foreground` escritos à mão e viraram `Caption`.
 - Nenhuma tela do app usa o `KbdGroup`; ele vive no catálogo.
+
+### Rodada 196 — o Pagination troca por estado, gera a fileira, compacta no telefone e carrega mais
+
+O dono pediu a rodada completa e escolheu as quatro versões.
+
+- **Nenhuma tela usava o componente**, e a razão era o tipo: ele só aceitava
+  `href`, e as duas listas paginadas do app (a tabela de transações e o
+  detalhe da categoria, que a reusa) trocam de página por estado. Sem `href`,
+  número e extremo viram `<button>`; o extremo desabilitado é `button
+  disabled`, e não o `span role="link"` do modo de links.
+- **Fileira gerada**: `page` + `total` com `getHref` ou `onPageChange`.
+  `janelaDePaginas` guarda a primeira, a última, a atual e as vizinhas, e a
+  reticência que esconderia uma página só vira a página (`1 2 3 4 … 18` e não
+  `1 … 3 4 … 18`). As pontas desabilitam sozinhas. Medido: clicar 6, voltar e
+  ir à 18 atualiza a janela, e na 18 a "Próxima" fica desabilitada.
+- **Compacta no telefone**: o defeito aberto da página — a fileira de sete
+  peças a 44px transbordava a 375px. Na fileira gerada, abaixo de `sm` os
+  números saem e a posição fica entre as setas (`‹ 5 de 18 ›`). Medido a 375px
+  com toque: sem transbordo. `variant="compact"` a força em qualquer largura.
+  A fileira montada à mão não sabe o total e continua com os números.
+- **`PaginationMore`**: rótulo "mostrar mais N" (o que falta, até o passo),
+  contagem "30 de 57" em `Caption`, `pending` com `Spinner` e `aria-busy`, e
+  some quando tudo está à vista. O histórico de pagamentos da conta o veste —
+  era um `Button` com `text-xs` à mão, sem contagem.
+- **A tabela de transações troca de novo**: na rodada 188 ela virou
+  `ButtonGroup` com `ButtonGroupText`; agora é `Pagination size="md"` gerada
+  por estado, com o `PaginationStatus` ao lado. As páginas do `ButtonGroup` e
+  o AGENTS.md foram corrigidos para não citarem mais esse uso.
+- **Um teste antigo pegou uma regressão**: `pagination-ladder.test.ts` proíbe
+  interpolação em template literal no arquivo (classe montada em tempo de
+  execução não existe), e o rótulo do "mostrar mais" usava uma. Virou
+  concatenação.
+- As duas telas pedem login e não foram vistas; as peças foram medidas na
+  página, no desktop e a 375px.

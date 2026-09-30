@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/table-panel"
 import * as React from "react"
 import Link from "next/link"
-import { ArrowPathRoundedSquareIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { ArrowPathRoundedSquareIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import type { Transaction } from "@/lib/supabase"
 import {
     formatTransactionDayPtBr,
@@ -19,7 +19,7 @@ import {
 import { cn } from "@/lib/utils"
 import { ROUTES } from "@/config/navigation"
 import { Button } from "@/components/ui/button"
-import { ButtonGroup, ButtonGroupText } from "@/components/ui/button-group"
+import { Pagination, PaginationStatus } from "@/components/ui/pagination"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
     Table,
@@ -769,7 +769,7 @@ export function TransactionsTable({
 
             {showPaginationFooter ? (
                 <TablePanelFooter className="px-3 sm:gap-4 sm:px-4">
-                <p className="text-xs leading-relaxed text-muted-foreground">
+                <PaginationStatus>
                     {total === 0 ? (
                         "Nenhuma transação nesta página."
                     ) : (
@@ -784,48 +784,18 @@ export function TransactionsTable({
                             </span>
                         </>
                     )}
-                </p>
-                {/* Era um grupo escrito à mão — bandeja com borda e sombra,
-                    setas `tertiary` com `size-8` cravado, e o "Página 2 / 5"
-                    solto do lado de fora. */}
-                <ButtonGroup size="icon-md" className="self-end sm:self-auto">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        disabled={page <= 0 || total === 0}
-                        aria-label="Página anterior"
-                        onClick={() => setPage((p) => Math.max(0, p - 1))}
-                    >
-                        <ChevronLeftIcon aria-hidden />
-                    </Button>
-                    <ButtonGroupText>
-                        {total === 0 ? (
-                            "—"
-                        ) : (
-                            <>
-                                Página
-                                <span className="font-medium text-foreground">
-                                    {page + 1}
-                                </span>
-                                /
-                                <span className="font-medium text-foreground">
-                                    {totalPages}
-                                </span>
-                            </>
-                        )}
-                    </ButtonGroupText>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        disabled={page >= totalPages - 1 || total === 0}
-                        aria-label="Próxima página"
-                        onClick={() =>
-                            setPage((p) => Math.min(totalPages - 1, p + 1))
-                        }
-                    >
-                        <ChevronRightIcon aria-hidden />
-                    </Button>
-                </ButtonGroup>
+                </PaginationStatus>
+                {/* Por estado, sem URL (rodada 196): a fileira é gerada, com os
+                    números no desktop e `‹ 2 de 5 ›` no telefone. Foi um
+                    `ButtonGroup` na rodada 188, e antes uma bandeja à mão. */}
+                <Pagination
+                    align="end"
+                    size="md"
+                    page={page + 1}
+                    total={totalPages}
+                    onPageChange={(p) => setPage(p - 1)}
+                    className="w-auto self-end sm:self-auto"
+                />
             </TablePanelFooter>
             ) : null}
         </TablePanel>

@@ -65,7 +65,7 @@ export default function ButtonGroupDoc() {
 
       <DocSection
         title="Texto no grupo"
-        description="ButtonGroupText é o segmento que não se clica — o “2 de 5” entre as setas, um rótulo antes do seletor. Fundo muted e borda própria, que é o que diz “isto não é botão” ao lado de um contorno. A altura é a da fileira, então ele segue o degrau sem saber qual é. É a paginação da tabela de transações."
+        description="ButtonGroupText é o segmento que não se clica — o “2 de 5” entre as setas, um rótulo antes do seletor. Fundo muted e borda própria, que é o que diz “isto não é botão” ao lado de um contorno. A altura é a da fileira, então ele segue o degrau sem saber qual é."
         code={`<ButtonGroup size="icon-md">
   <Button variant="outline" aria-label="Página anterior"><ChevronLeftIcon aria-hidden /></Button>
   <ButtonGroupText>Página 2 / 5</ButtonGroupText>
@@ -138,7 +138,7 @@ export default function ButtonGroupDoc() {
       </DocNote>
 
       <DocNote title="Onde o app usa">
-        Duas: o botão de nova transação, com o menu dos tipos de lançamento (a seta deixou de escrever <code>w-8 px-0</code> e virou <code>icon-md</code>; a altura continua sendo a da barra, <code>--toolbar-control</code>, 40 no telefone), e desde a rodada 188 a paginação da tabela de transações, que era um grupo escrito à mão — bandeja com borda e sombra, setas <code>tertiary</code> com <code>size-8</code> cravado e o &ldquo;Página 2 / 5&rdquo; do lado de fora.
+        Uma: o botão de nova transação, com o menu dos tipos de lançamento (a seta deixou de escrever <code>w-8 px-0</code> e virou <code>icon-md</code>; a altura continua sendo a da barra, <code>--toolbar-control</code>, 40 no telefone). A paginação da tabela de transações foi um <code>ButtonGroup</code> com <code>ButtonGroupText</code> na rodada 188 e, desde a 196, é o <code>Pagination</code>, que passou a aceitar troca por estado.
       </DocNote>
 
       <PropsTable

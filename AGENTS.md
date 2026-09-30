@@ -231,8 +231,8 @@ segmentado nele**: um `role="group"` entre um `role="tablist"` e suas
 **Desde a rodada 188 o grupo manda no degrau, na orientação, no texto e no
 campo.** `size` desce a todos os botões pelo `ButtonSizeContext` (o do próprio
 botão vence); `orientation="vertical"` empilha e deita a emenda;
-`ButtonGroupText` é o segmento que não se clica, na altura da fileira — a
-paginação da tabela de transações, que era uma bandeja escrita à mão; e um
+`ButtonGroupText` é o segmento que não se clica, na altura da fileira (a
+paginação da tabela o usou até a rodada 196, quando virou `Pagination`); e um
 `Input` colado ocupa a sobra, com o grupo levando os botões aos 40 do dedo.
 
 ### Rodapé de diálogo: uma hierarquia só
@@ -2015,6 +2015,15 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   de 7px a `largura − 7px`, a régua do Radix —, `bubble` no `:active` e no
   foco de teclado, e `bands`, os cortes do `Progress` (zonas no trilho, faixa
   na cor do valor; não com a marca). Sem essas props a peça é a de sempre.
+- **`Pagination` troca por estado, gera a fileira, compacta no telefone e
+  carrega mais** (rodada 196). Sem `href`, número e extremo são `<button>`
+  (o extremo desabilitado é `button disabled`); `page` + `total` com `getHref`
+  ou `onPageChange` montam a janela (`janelaDePaginas`: primeira, última,
+  atual e vizinhas; reticência só quando esconde mais de uma página). Abaixo
+  de `sm` a fileira gerada vira `‹ 2 de 8 ›` — era o defeito aberto do
+  transbordo a 375px —, e `variant="compact"` a força. `PaginationMore` é o
+  "Mostrar mais" com a contagem. A tabela de transações e o histórico da conta
+  o usam; **não escreva paginação com `ButtonGroup`**.
 - **`KbdGroup` diz o gesto** (rodada 195): `mode="sequence"` (passos, o
   leitor de tela ouve "depois"; `separator` põe o › à vista) ou
   `mode="either"` (opções, com / e "ou"). **Duas pastilhas lado a lado sem
