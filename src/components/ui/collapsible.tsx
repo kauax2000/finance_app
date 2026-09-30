@@ -8,27 +8,38 @@ import { animate, type AnimationPlaybackControls } from "motion/react"
 
 import { cn } from "@/lib/utils"
 import {
+  DISCLOSURE_ROW_HEIGHT_CLASS,
+  DISCLOSURE_ROW_HEIGHTS,
+  disclosureLabelClassName,
   disclosureMarkerClassName,
   disclosureMotionClassName,
   disclosureRevealClassName,
+  disclosureRowClassName,
+  disclosureRowFocusClassName,
+  type DisclosureSize,
 } from "@/lib/disclosure-classes"
 import { MOLA } from "@/lib/spring"
+import { composeRefs } from "@/hooks/use-brand-glow"
 
 /**
  * Um bloco que expande — o `Accordion` de um item só, sem a semântica de lista.
  *
  * ## Ele não desenhava nada, e por isso cada tela desenhava um pouco diferente
  *
- * Este arquivo eram três passa-tudo e um `overflow-hidden`. O componente não
- * trazia linha, nem marcador, nem rotação — então os **dois de dois**
- * consumidores reais montaram a linha por conta própria, e montaram diferente:
- * `credit-card-form-fields` gira um `ChevronDown` em 180 num corpo `size-3.5`;
- * a gaveta de código do próprio catálogo gira um `ChevronRight` em 90 no corpo
- * padrão. É o invariante 1 acontecendo dentro do design system.
+ * Este arquivo eram três passa-tudo e um `overflow-hidden`, e cada consumidor
+ * montou a linha por conta própria. `CollapsibleMarker` foi o primeiro
+ * conserto; **`CollapsibleRow`** (rodada 189) é o segundo: a linha inteira,
+ * na régua de [`lib/disclosure-classes`](../../lib/disclosure-classes.ts) que
+ * o `Accordion` veste. As duas telas que escreviam a linha à mão — um `Button
+ * tertiary` com `h-9 w-full justify-between` no formulário de cartão, e um
+ * gatilho cru com `px-4 py-3` no painel da fatura — a vestem.
  *
- * `CollapsibleMarker` é o conserto, e ele não tem opinião nenhuma além da que já
- * está em [`lib/disclosure-classes`](../../lib/disclosure-classes.ts) — a mesma
- * régua que o `Accordion` veste. Um marcador para a casa toda.
+ * ## O estado mora aqui (rodada 189)
+ *
+ * O `Collapsible` controla o Radix e publica `{ open, setOpen }`: é o que deixa
+ * o `CollapsibleLabel` trocar o texto sem `useState` na tela e o conteúdo
+ * `findable` abrir quando o ⌘F o encontra. `open`, `defaultOpen` e
+ * `onOpenChange` funcionam como antes.
  *
  * ## `peek`: o fechado que não é altura zero
  *
@@ -69,10 +80,73 @@ import { MOLA } from "@/lib/spring"
  * projeto, dois componentes com a mesma interação abrindo em curvas diferentes.
  */
 
+type CollapsibleState = {
+  open: boolean
+  setOpen: (open: boolean) => void
+  variant: "plain" | "card"
+}
+
+const CollapsibleContext = React.createContext<CollapsibleState | null>(null)
+
+/**
+ * `card` é a superfície do `Card` (`outline`) — escrita aqui, e não importada:
+ * o `Collapsible` é molécula e o `Card` é organismo, e a taxonomia proíbe o
+ * caminho. Se o `outline` do `Card` mudar, muda aqui. A linha e o conteúdo
+ * recuam pelo `--collapsible-px`, e **não há fio entre eles**: é a regra das
+ * tiras, e o painel da fatura desenhava um `border-t` no conteúdo.
+ */
+const COLLAPSIBLE_CARD =
+  "overflow-hidden rounded-xl border border-border bg-card text-card-foreground [--collapsible-px:--spacing(4)]"
+
 function Collapsible({
+  open: openProp,
+  defaultOpen = false,
+  onOpenChange,
+  variant = "plain",
+  className,
+  ref,
   ...props
-}: React.ComponentProps<typeof CollapsiblePrimitive.Root>) {
-  return <CollapsiblePrimitive.Root data-slot="collapsible" {...props} />
+}: React.ComponentProps<typeof CollapsiblePrimitive.Root> & {
+  /** `card` veste a superfície do `Card`, com a linha e o conteúdo no recuo. */
+  variant?: "plain" | "card"
+}) {
+  const [interno, setInterno] = React.useState(defaultOpen)
+  const open = openProp ?? interno
+  const raiz = React.useRef<HTMLDivElement>(null)
+  const setOpen = React.useCallback(
+    (proximo: boolean) => {
+      // O conteúdo `findable` fechado é `hidden="until-found"`, e o Radix mede
+      // a altura de abrir num efeito de layout que roda **antes** de qualquer
+      // efeito daqui: com o atributo ainda lá, `content-visibility: hidden`
+      // mede 0 e o bloco abre sem trajeto. Por isso ele sai já no pedido.
+      if (proximo) {
+        raiz.current
+          ?.querySelector(":scope > [data-slot=collapsible-content][hidden]")
+          ?.removeAttribute("hidden")
+      }
+      if (openProp === undefined) setInterno(proximo)
+      onOpenChange?.(proximo)
+    },
+    [openProp, onOpenChange]
+  )
+  const estado = React.useMemo(
+    () => ({ open, setOpen, variant }),
+    [open, setOpen, variant]
+  )
+
+  return (
+    <CollapsibleContext value={estado}>
+      <CollapsiblePrimitive.Root
+        data-slot="collapsible"
+        data-variant={variant}
+        ref={composeRefs(raiz, ref)}
+        open={open}
+        onOpenChange={setOpen}
+        className={cn(variant === "card" && COLLAPSIBLE_CARD, className)}
+        {...props}
+      />
+    </CollapsibleContext>
+  )
 }
 
 /**
@@ -116,6 +190,119 @@ function CollapsibleMarker({
       {...props}
     />
   )
+}
+
+/**
+ * A linha inteira como gatilho (rodada 189) — a do `AccordionTrigger`, sem a
+ * semântica de lista: degrau `md`/`lg`/`xl`, rótulo que sublinha, `trailing`
+ * na outra ponta (prop, pela mesma razão de lá: duas `ml-auto` dividem a
+ * sobra), marcador de qualquer lado e 44px no dedo. Num `variant="card"` ela
+ * recua pelo `--collapsible-px`.
+ */
+function CollapsibleRow({
+  className,
+  children,
+  size = "md",
+  markerSide = "end",
+  trailing,
+  ...props
+}: React.ComponentProps<typeof CollapsiblePrimitive.Trigger> & {
+  size?: DisclosureSize
+  markerSide?: "start" | "end"
+  trailing?: React.ReactNode
+}) {
+  const marker = <CollapsibleMarker />
+  return (
+    <CollapsiblePrimitive.Trigger
+      data-slot="collapsible-row"
+      className={cn(
+        disclosureRowClassName,
+        disclosureRowFocusClassName,
+        DISCLOSURE_ROW_HEIGHT_CLASS[DISCLOSURE_ROW_HEIGHTS[size]],
+        "px-(--collapsible-px) py-1.5",
+        className
+      )}
+      {...props}
+    >
+      {markerSide === "start" ? marker : null}
+      <span data-slot="collapsible-row-label" className={disclosureLabelClassName}>
+        {children}
+      </span>
+      {trailing ? (
+        <span className="shrink-0 font-normal text-muted-foreground">{trailing}</span>
+      ) : null}
+      {markerSide === "end" ? marker : null}
+    </CollapsiblePrimitive.Trigger>
+  )
+}
+
+/**
+ * O texto do gatilho que acompanha o estado (rodada 189): "Continuar lendo"
+ * fechado, "Mostrar menos" aberto — depois de aberto a primeira seria uma
+ * promessa falsa. Lê o estado do `Collapsible`, então a tela não guarda
+ * `useState` só para trocar a frase.
+ *
+ * O `data-slot="button-label"` é emprestado de propósito: dentro de um
+ * `Button asChild` é ele que recebe a maiúscula inicial e o traço do `link`,
+ * e um `span` qualquer ficaria sem os dois. Fora de um `Button`, não faz nada.
+ */
+function CollapsibleLabel({
+  open,
+  closed,
+}: {
+  open: React.ReactNode
+  closed: React.ReactNode
+}) {
+  const estado = React.useContext(CollapsibleContext)
+  return <span data-slot="button-label">{estado?.open ? open : closed}</span>
+}
+
+/**
+ * `findable` (rodada 189): o fechado fica no DOM como `hidden="until-found"`.
+ * A busca do navegador o encontra, dispara `beforematch`, e ele abre. O Radix
+ * desta versão (1.1) não tem a opção, então o conteúdo fica montado
+ * (`forceMount`) e o atributo é escrito aqui — **depois** da animação de
+ * fechar, senão `content-visibility: hidden` cortaria o trajeto seco. Os
+ * filhos da cascata também disparam `animationend`, e só o do próprio nó conta.
+ *
+ * Onde `until-found` não existe, o atributo cai no `hidden` comum: o bloco
+ * fecha igual, só não é encontrado.
+ */
+function useEncontravel(ligado: boolean) {
+  const estado = React.useContext(CollapsibleContext)
+  const aberto = estado?.open ?? false
+  const setOpen = estado?.setOpen
+  // O nó por estado, e não por `useRef`: o efeito precisa rodar quando ele
+  // chega, e a tela compõe a própria `ref` com este setter.
+  const [el, setEl] = React.useState<HTMLDivElement | null>(null)
+
+  React.useEffect(() => {
+    if (!ligado || !el) return
+    if (aberto) {
+      el.removeAttribute("hidden")
+      return
+    }
+    const esconder = () => el.setAttribute("hidden", "until-found")
+    // Na montagem não há animação a esperar.
+    if (el.getAnimations().length === 0) {
+      esconder()
+      return
+    }
+    const fim = (e: AnimationEvent) => {
+      if (e.target === el) esconder()
+    }
+    el.addEventListener("animationend", fim)
+    return () => el.removeEventListener("animationend", fim)
+  }, [ligado, aberto, el])
+
+  React.useEffect(() => {
+    if (!ligado || !el || !setOpen) return
+    const achou = () => setOpen(true)
+    el.addEventListener("beforematch", achou)
+    return () => el.removeEventListener("beforematch", achou)
+  }, [ligado, setOpen, el])
+
+  return setEl
 }
 
 /**
@@ -253,13 +440,20 @@ const COLLAPSIBLE_PEEK_SHELL = [
 function CollapsibleContent({
   className,
   peek = "none",
+  findable = false,
   forceMount,
   children,
+  ref,
   ...props
 }: React.ComponentProps<typeof CollapsiblePrimitive.Content> &
-  VariantProps<typeof collapsibleContentVariants>) {
+  VariantProps<typeof collapsibleContentVariants> & {
+    /** Fechado, continua encontrável pelo ⌘F, e abre quando é achado. */
+    findable?: boolean
+  }) {
   const espiando = peek !== "none" && peek != null
   const medirEnvelope = useEspiada()
+  const cartao = React.useContext(CollapsibleContext)?.variant === "card"
+  const refEncontravel = useEncontravel(findable && !espiando)
 
   const conteudo = (
     <CollapsiblePrimitive.Content
@@ -273,10 +467,16 @@ function CollapsibleContent({
       // `isPresent` sempre verdadeiro — então ele **nunca** escreve `hidden` e
       // sempre renderiza os filhos. Verificado no DOM: é por isso que não há
       // nada aqui vencendo um `display: none`.
-      forceMount={espiando ? true : forceMount}
+      forceMount={espiando || findable ? true : forceMount}
+      ref={composeRefs(refEncontravel, ref)}
       className={cn(
         collapsibleContentVariants({ peek }),
         espiando ? "h-full" : disclosureRevealClassName,
+        // No cartão: o recuo dos lados, e o de baixo como pseudo-elemento —
+        // `padding-bottom` no nó que anima a altura deixaria o piso em 16px e
+        // o bloco estalaria no fim do fechamento. O `::after` entra na altura
+        // e a cascata (`& > *`) não o alcança.
+        cartao && "px-(--collapsible-px) after:block after:h-(--collapsible-px) after:content-['']",
         className
       )}
       {...props}
@@ -307,6 +507,8 @@ export {
   collapsibleContentVariants,
   Collapsible,
   CollapsibleContent,
+  CollapsibleLabel,
   CollapsibleMarker,
+  CollapsibleRow,
   CollapsibleTrigger,
 }

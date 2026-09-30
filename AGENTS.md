@@ -2015,6 +2015,17 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   de 7px a `largura − 7px`, a régua do Radix —, `bubble` no `:active` e no
   foco de teclado, e `bands`, os cortes do `Progress` (zonas no trilho, faixa
   na cor do valor; não com a marca). Sem essas props a peça é a de sempre.
+- **`Collapsible` tem a linha, o cartão, o ⌘F e o rótulo que troca** (rodada
+  189). `CollapsibleRow` é o gatilho desenhado na régua do `Accordion`
+  (`md`/`lg`/`xl`, `trailing`, `markerSide`) — **nenhuma tela escreve a linha
+  à mão** num `Button` ou num gatilho cru. `variant="card"` é a superfície do
+  `Card` escrita no próprio arquivo (molécula não importa organismo), sem fio
+  entre linha e conteúdo; o recuo de baixo é `::after`, porque `padding` no nó
+  que anima a altura estala no fim. O `Collapsible` guarda o estado e o
+  publica: `CollapsibleLabel` troca o texto do gatilho, e `findable` deixa o
+  fechado como `hidden="until-found"` — o atributo sai no `setOpen`, **antes**
+  de o Radix medir a altura (senão mede 0), e volta no `animationend` do
+  próprio nó.
 - **`AnnouncementBar` ganhou o ícone do tom, `position`, a entrada e `align`**
   (rodada 187). O ícone tem a API do `Alert` (`icon` troca, `false` tira; o
   offline usa o sinal cortado), e o mesmo teste reprova o `svg` como filho.

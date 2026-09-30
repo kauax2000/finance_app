@@ -17,12 +17,10 @@ import {
 } from "@/lib/credit-card-number"
 import { CREDIT_CARD_BILLING_FORM } from "@/lib/credit-card-billing-copy"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
 import {
     Collapsible,
     CollapsibleContent,
-    CollapsibleMarker,
-    CollapsibleTrigger,
+    CollapsibleRow,
 } from "@/components/ui/collapsible"
 import { FormInput } from "@/components/ui/form"
 import {
@@ -176,18 +174,10 @@ function CreditCardBillingSection({
             <CreditCardBillingFormPreview closingDay={closingDay} dueDay={dueDay} />
 
             <Collapsible className="pt-1">
-                <CollapsibleTrigger asChild>
-                    <Button
-                        type="button"
-                        variant="tertiary"
-                        size="sm"
-                        className="h-9 w-full justify-between gap-2 px-2 text-xs font-medium text-muted-foreground hover:text-foreground active:text-foreground"
-                    >
-                        {CREDIT_CARD_BILLING_FORM.collapsible.trigger}
-                        <CollapsibleMarker />
-                    </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-3 pt-2">
+                <CollapsibleRow>
+                    {CREDIT_CARD_BILLING_FORM.collapsible.trigger}
+                </CollapsibleRow>
+                <CollapsibleContent findable className="space-y-3 pt-2">
                     <div className="space-y-4 text-2xs leading-relaxed text-muted-foreground">
                         {CREDIT_CARD_BILLING_FORM.collapsible.sections.map(
                             (section) => (

@@ -16037,3 +16037,48 @@ O dono pediu a rodada completa e escolheu as quatro versões.
 - **Página**: a nota da emenda misturava "botão cheio com filete" e "primário e
   `secondary` com vão" sem dizer que o cheio que sobra é o `destructive`; a
   demonstração agora mostra os quatro pesos lado a lado.
+
+### Rodada 189 — o Collapsible ganha a linha, o cartão, o ⌘F e o rótulo que troca
+
+O dono pediu a rodada completa e escolheu as quatro versões.
+
+- **`CollapsibleRow`**: o gatilho desenhado com `disclosureRowClassName`,
+  `disclosureRowFocusClassName` e `disclosureLabelClassName`, a régua que só o
+  `Accordion` vestia. Degrau `md`/`lg`/`xl` (32/36/40, medido), `trailing`,
+  `markerSide`, recuo por `--collapsible-px`.
+- **`variant="card"`**: a superfície `outline` do `Card` (`rounded-xl border
+  border-border bg-card`), escrita no arquivo porque o `Collapsible` é molécula
+  e o `Card` é organismo. Linha e conteúdo recuam 16px, **sem fio** entre eles.
+  O recuo de baixo é um `::after` de 16px no conteúdo: `padding-bottom` no nó
+  cuja altura anima deixaria o piso em 16 e o fechamento estalaria no fim; o
+  pseudo entra na altura e a cascata (`& > *`) não o alcança.
+- **O estado passou a morar no `Collapsible`**, que controla o Radix e publica
+  `{ open, setOpen, variant }`; `open`/`defaultOpen`/`onOpenChange` seguem
+  valendo.
+- **`findable`**: o Radix 1.1 não tem `hiddenUntilFound`. O conteúdo fica
+  montado e o componente escreve `hidden="until-found"` no `animationend` do
+  próprio nó (os filhos da cascata também disparam o evento), e o tira no
+  `setOpen(true)`, **antes** do estado mudar: o Radix mede a altura de abrir
+  num efeito de layout de um filho, que roda antes de qualquer efeito do
+  conteúdo, e com o atributo ainda lá `content-visibility: hidden` media 0.
+  `beforematch` abre. Medido: fechado com altura 0 e o texto no DOM; o
+  `beforematch` abre; fechar devolve o atributo; abrir pelo gatilho anima 0 →
+  9 → 22 → 32 → 36 → 37 (a mola passa e volta). O ⌘F real não foi exercitado
+  — o Playwright não aciona a busca do navegador —, e o evento foi simulado.
+  O hook guarda o nó por `useState`, e não por `useRef`: passar um `RefObject`
+  ao `composeRefs` no render acusava "acessar ref durante o render".
+- **`CollapsibleLabel`**: o texto aberto e fechado, pelo estado do contexto.
+  Ele empresta `data-slot="button-label"` para, dentro de um `Button`, ganhar
+  a maiúscula inicial e o traço do `link`. A demonstração do "mostrar mais"
+  deixou de guardar `useState`.
+- **Telas**: o formulário de cartão trocou o `Button tertiary` com `h-9 w-full
+  justify-between gap-2 px-2 text-xs font-medium text-muted-foreground
+  hover:text-foreground` por `CollapsibleRow` (agora `text-sm` na tinta cheia,
+  como toda linha de divulgação); o painel da fatura trocou o cartão à mão
+  (`rounded-xl border-border/70 shadow-sm`), o gatilho cru `px-4 py-3` e o
+  `border-t border-border/60 px-4 pb-4 pt-4` do conteúdo por `variant="card"`
+  com `CollapsibleRow size="xl"`. Os dois são `findable`. As duas telas pedem
+  login e não foram vistas; as peças foram medidas na página.
+- **Página**: a seção "A espiada" repetia o `md` que "Os três degraus" também
+  mostrava — viraram uma; o "Padrão" virou "Com um botão", depois da linha
+  pronta; a nota do ⌘F dizia que só `peek` mantinha o texto montado.

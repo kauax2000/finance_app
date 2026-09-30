@@ -1,14 +1,16 @@
 "use client"
 
-import * as React from "react"
 import { Button } from "@/components/ui/button"
 import {
   Collapsible,
   CollapsibleContent,
+  CollapsibleLabel,
   CollapsibleMarker,
+  CollapsibleRow,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { Kbd } from "@/components/ui/kbd"
+import { MoneyDisplay } from "@/components/ui/money-display"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 const TEXTO_LONGO = [
@@ -34,15 +36,52 @@ export default function CollapsibleDoc() {
       </Usage>
 
       <DocSection
-        title="Padrão"
-        description={
-          <>
-            O gatilho é o primitivo cru de propósito: ele quase sempre veste um{" "}
-            <code>Button</code> por <code>asChild</code>, e cromagem aqui vazaria
-            para dentro dele. Quem quer a linha inteira desenhada usa o{" "}
-            <code>Accordion</code>.
-          </>
-        }
+        title="A linha pronta"
+        description="CollapsibleRow é o gatilho já desenhado, com a régua do Accordion: degrau md, lg ou xl, o rótulo sublinhando no cursor, trailing na outra ponta, o marcador de qualquer lado e 44px no dedo. É o que o formulário de cartão e o painel da fatura vestem."
+        code={`<Collapsible>
+  <CollapsibleRow trailing={<MoneyDisplay value={-612.4} />}>Mercado</CollapsibleRow>
+  <CollapsibleContent>…</CollapsibleContent>
+</Collapsible>`}
+        previewClassName="flex-col items-stretch gap-2"
+      >
+        <Collapsible>
+          <CollapsibleRow trailing={<MoneyDisplay value={-612.4} />}>
+            Mercado
+          </CollapsibleRow>
+          <CollapsibleContent>
+            <p className="pt-1 text-sm text-muted-foreground">
+              14 lançamentos, o maior de R$ 186,00 no dia 12.
+            </p>
+          </CollapsibleContent>
+        </Collapsible>
+        <Collapsible>
+          <CollapsibleRow markerSide="start">Como o ciclo funciona</CollapsibleRow>
+          <CollapsibleContent>
+            <p className="pt-1 text-sm text-muted-foreground">{TEXTO_LONGO[0]}</p>
+          </CollapsibleContent>
+        </Collapsible>
+      </DocSection>
+
+      <DocSection
+        title="Cartão"
+        description="variant=&quot;card&quot; veste a superfície do Card, e a linha e o conteúdo ficam no recuo dele. Não há fio entre a linha e o conteúdo — é a regra das tiras. O recuo de baixo é um pseudo-elemento, e não padding, para o bloco não estalar ao fechar."
+        code={`<Collapsible variant="card">
+  <CollapsibleRow size="xl">Mais sobre este período</CollapsibleRow>
+  <CollapsibleContent>…</CollapsibleContent>
+</Collapsible>`}
+        previewClassName="flex-col items-stretch"
+      >
+        <Collapsible variant="card">
+          <CollapsibleRow size="xl">Mais sobre este período</CollapsibleRow>
+          <CollapsibleContent>
+            <p className="text-sm text-muted-foreground">{TEXTO_LONGO[1]}</p>
+          </CollapsibleContent>
+        </Collapsible>
+      </DocSection>
+
+      <DocSection
+        title="Com um botão"
+        description="CollapsibleTrigger é o primitivo cru de propósito: com asChild ele funde a className no filho, e cromagem aqui vazaria para dentro de todo botão. O marcador vem do CollapsibleMarker, que gira sozinho."
         code={`<Collapsible>
   <CollapsibleTrigger asChild>
     <Button variant="tertiary">
@@ -56,8 +95,8 @@ export default function CollapsibleDoc() {
       >
         <Collapsible className="w-full">
           <CollapsibleTrigger asChild>
-            <Button variant="tertiary" className="gap-1.5">
-              Opções avançadas
+            <Button variant="tertiary">
+              opções avançadas
               <CollapsibleMarker />
             </Button>
           </CollapsibleTrigger>
@@ -70,26 +109,17 @@ export default function CollapsibleDoc() {
       </DocSection>
 
       <DocSection
-        title="A espiada"
-        description={
-          <>
-            Com <code>peek</code>, o fechado vira uma amostra com a base <strong>dissolvendo</strong> — o &ldquo;mostrar mais&rdquo;. É máscara, não véu pintado: alfa não precisa saber a cor do fundo.
-          </>
-        }
+        title="A espiada, e o rótulo que troca"
+        description="Com peek, o fechado vira uma amostra com a base dissolvendo — o “mostrar mais”. Os degraus são alturas de leitura, não da escada de controles. O texto do gatilho é CollapsibleLabel: “Continuar lendo” fechado, “Mostrar menos” aberto, lendo o estado do Collapsible — a tela não guarda useState para trocar a frase."
         code={`<Collapsible>
   <CollapsibleContent peek="md">…</CollapsibleContent>
   <CollapsibleTrigger asChild>
-    <Button variant="link" size="sm">Continuar lendo</Button>
+    <Button variant="link" size="sm">
+      <CollapsibleLabel closed="Continuar lendo" open="Mostrar menos" />
+      <CollapsibleMarker />
+    </Button>
   </CollapsibleTrigger>
 </Collapsible>`}
-        previewClassName="items-stretch"
-      >
-        <PeekDemo />
-      </DocSection>
-
-      <DocSection
-        title="Os três degraus"
-        description="São alturas de leitura, não da escada de controles: abaixo de três linhas a espiada não informa nada além do rótulo do gatilho."
         previewClassName="flex-col items-stretch gap-8"
       >
         {ESPIADAS.map(([degrau, nota]) => (
@@ -105,27 +135,67 @@ export default function CollapsibleDoc() {
         ))}
       </DocSection>
 
+      <DocSection
+        title="Encontrável no ⌘F"
+        description="findable deixa o fechado no DOM como hidden=&quot;until-found&quot;: a busca do navegador o encontra, e ele abre no resultado. Feche o bloco e procure “tangerina”."
+        code={`<CollapsibleContent findable>…</CollapsibleContent>`}
+        previewClassName="flex-col items-stretch"
+      >
+        <Collapsible variant="card">
+          <CollapsibleRow size="lg">Categorias de exemplo</CollapsibleRow>
+          <CollapsibleContent findable>
+            <p className="text-sm text-muted-foreground">
+              Mercado, feira, padaria, hortifrúti — e a tangerina que entrou em
+              Lazer por engano.
+            </p>
+          </CollapsibleContent>
+        </Collapsible>
+      </DocSection>
+
       <PropsTable
-        title="Props · CollapsibleContent"
+        title="Props"
         rows={[
           {
-            prop: "peek",
+            prop: "Collapsible · variant",
+            type: '"plain" | "card"',
+            default: '"plain"',
+            description: "card veste a superfície do Card, com a linha e o conteúdo no recuo.",
+          },
+          {
+            prop: "CollapsibleRow · size",
+            type: '"md" | "lg" | "xl"',
+            default: '"md"',
+            description: "A altura mínima da linha: 32, 36, 40; 44 no dedo.",
+          },
+          {
+            prop: "CollapsibleRow · trailing · markerSide",
+            type: 'ReactNode · "start" | "end"',
+            default: '— · "end"',
+            description: "O que vai na outra ponta, e de que lado fica a seta.",
+          },
+          {
+            prop: "CollapsibleContent · peek",
             type: '"none" | "sm" | "md" | "lg"',
             default: '"none"',
             description:
               "A altura do fechado: em none o conteúdo desmonta e anima de zero; nos degraus ele fica montado e dissolve na base.",
           },
           {
-            prop: "forceMount",
+            prop: "CollapsibleContent · findable",
             type: "boolean",
-            description:
-              "Consequência de peek, não uma segunda decisão; quem passar o seu continua ganhando.",
+            default: "false",
+            description: "Fechado, fica encontrável pelo ⌘F e abre quando é achado.",
+          },
+          {
+            prop: "CollapsibleLabel · open · closed",
+            type: "ReactNode",
+            description: "O texto do gatilho aberto e fechado.",
           },
         ]}
       />
 
-      <DocNote title="O que está fechado ainda existe para a busca do navegador?">
-        Sem <code>peek</code>, não: o conteúdo recolhido sai do DOM, e <Kbd keys="mod+f" /> não o encontra. Se precisa ser localizável, não esconda — ou use <code>peek</code>, que mantém o texto montado e na árvore de acessibilidade.
+      <DocNote title="O que está fechado existe para a busca do navegador?">
+        Sem <code>findable</code> nem <code>peek</code>, não: o conteúdo recolhido sai do DOM, e <Kbd keys="mod+f" /> não o encontra. <code>findable</code> o mantém montado como <code>hidden=&quot;until-found&quot;</code>, e o Radix desta versão não tem a opção — o atributo é escrito pelo componente, depois da animação de fechar, e sai no pedido de abrir, antes de o Radix medir a altura (senão ele mediria 0). Onde o navegador não conhece <code>until-found</code>, o bloco fecha igual e só não é encontrado.
       </DocNote>
 
       <DocNote title="A espiada desliza até o fim">
@@ -136,23 +206,17 @@ export default function CollapsibleDoc() {
         A altura e o conteúdo abrem na mesma mola da Tooltip: passam um pouco do alvo e voltam, e cada filho sobe 6px, 30ms depois do anterior. Ao fechar, é uma curva curta, sem mola. É o mesmo movimento do <code>Accordion</code>, e a espiada não o usa: lá o conteúdo já está na tela.
       </DocNote>
 
-      <DocNote title="Use CollapsibleMarker">
-        O marcador que gira é o mesmo do <code>Accordion</code>. Não monte seta à mão no gatilho: cada consumidor que fez isso fez diferente.
+      <DocNote title="Onde o app usa">
+        Dois: o &ldquo;como funciona o ciclo&rdquo; do formulário de cartão e o &ldquo;Mais sobre este período&rdquo; da fatura, os dois com <code>CollapsibleRow</code> e <code>findable</code> desde a rodada 189. O primeiro era um <code>Button tertiary</code> com <code>h-9 w-full justify-between px-2 text-xs</code>; o segundo, um cartão escrito à mão (<code>rounded-xl border-border/70 shadow-sm</code>) com um gatilho cru e um <code>border-t</code> no conteúdo, e é o <code>variant=&quot;card&quot;</code>. O catálogo usa o marcador na gaveta de código de cada demonstração.
       </DocNote>
     </>
   )
 }
 
-/**
- * O "mostrar mais" completo, porque ele tem uma coisa que o resto da página não
- * tem: **o rótulo do gatilho muda com o estado**. "Continuar lendo" depois de
- * aberto seria uma promessa falsa.
- */
+/** O "mostrar mais" completo: a espiada e o rótulo que troca, sem estado aqui. */
 function PeekDemo({ peek = "md" }: { peek?: "sm" | "md" | "lg" }) {
-  const [open, setOpen] = React.useState(false)
-
   return (
-    <Collapsible open={open} onOpenChange={setOpen} className="w-full">
+    <Collapsible className="w-full">
       <CollapsibleContent
         peek={peek}
         className="text-sm leading-relaxed text-muted-foreground"
@@ -165,7 +229,7 @@ function PeekDemo({ peek = "md" }: { peek?: "sm" | "md" | "lg" }) {
       </CollapsibleContent>
       <CollapsibleTrigger asChild>
         <Button variant="link" size="sm" className="px-0">
-          {open ? "Mostrar menos" : "Continuar lendo"}
+          <CollapsibleLabel closed="Continuar lendo" open="Mostrar menos" />
           <CollapsibleMarker />
         </Button>
       </CollapsibleTrigger>

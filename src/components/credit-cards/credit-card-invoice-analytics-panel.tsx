@@ -4,8 +4,7 @@ import { percentPointsBR } from "@/lib/formatters"
 import {
     Collapsible,
     CollapsibleContent,
-    CollapsibleMarker,
-    CollapsibleTrigger,
+    CollapsibleRow,
 } from "@/components/ui/collapsible"
 import {
     Item,
@@ -898,12 +897,9 @@ export function CreditCardInvoiceAnalyticsPanel({
                 </Card>
             </PageSection>
 
-            <Collapsible className="rounded-xl border border-border/70 bg-card text-card-foreground shadow-sm">
-                <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between gap-2 px-4 py-3 text-left text-sm font-medium">
-                    Mais sobre este período
-                    <CollapsibleMarker className="size-4" />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="border-t border-border/60 px-4 pb-4 pt-4">
+            <Collapsible variant="card">
+                <CollapsibleRow size="xl">Mais sobre este período</CollapsibleRow>
+                <CollapsibleContent findable className="pt-2">
                     <section className="space-y-3 pb-6 text-sm">
                         <div className="flex w-full min-w-0 flex-wrap items-end justify-between gap-x-3 gap-y-1">
                             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
