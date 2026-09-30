@@ -16004,3 +16004,36 @@ O dono pediu a rodada completa e escolheu as quatro versões.
   que rola, com a entrada.
 - **O × perdeu a borda do cursor**, a pedido do dono, como o do `Alert`: fica
   a flor a 15% em `currentColor`.
+
+### Rodada 188 — o ButtonGroup ganha degrau, orientação vertical, texto e campo
+
+O dono pediu a rodada completa e escolheu as quatro versões.
+
+- **`size` no grupo**, pelo `ButtonSizeContext` que o `Button` passou a ler (o
+  `useContext` fica fora do `??`, porque hook não é condicional). O `size` do
+  próprio botão vence. Medido: `sm`, `md` e `lg` dão 28, 32 e 36 nos três
+  filhos sem nenhum deles declarar. O grupo passou a importar o `Button` — é
+  molécula, e agora é feita do átomo que ela junta.
+- **`orientation="vertical"`**: `flex-col`, cantos de cima e de baixo, `-mt-px`
+  e o filete deitado (`before:h-px`); o `secondary` tem o vão de 1px em cima.
+  Medido: passo de 33px no `secondary` (32 + vão) e de 31 no `outline` (32 −
+  sobreposição).
+- **`ButtonGroupText`**: fundo `muted` e borda própria (o filete se esconde
+  nele), altura da fileira por `self-stretch`, corpo que desce com `xs`/`sm`.
+- **Campo no grupo**: o `Input` ocupa a sobra (`flex-1`) e o grupo vira `flex
+  w-full`; no dedo o campo sobe a 40 pela régua de campo e os botões iam ficar
+  em 32 — o grupo iguala (`pointer-coarse:has-[>[data-slot=input]]:*:h-10`).
+  Medido a 375px com toque: 40 e 40. O foco do campo sobe a `z-10`.
+- **Telas**: a paginação da tabela de transações era um grupo escrito à mão
+  (bandeja `border-border/80 bg-background/80 p-0.5 shadow-sm`, setas
+  `tertiary` com `size-8 rounded-md` cravados e `disabled:opacity-40`, e o
+  "Página 2 / 5" solto do lado de fora); virou `ButtonGroup size="icon-md"`
+  com `outline` e `ButtonGroupText`. O botão de nova transação deixou `w-8
+  px-0` e os `h-4 w-4` dos ícones: a seta é `icon-md` com
+  `toolbarIconControlClassName` — no telefone ela passa de 32×40 a 40×40. A
+  altura continua a da barra (`--toolbar-control`), que o `size` do grupo não
+  expressa. As duas telas pedem login e não foram vistas; as peças foram
+  medidas na página.
+- **Página**: a nota da emenda misturava "botão cheio com filete" e "primário e
+  `secondary` com vão" sem dizer que o cheio que sobra é o `destructive`; a
+  demonstração agora mostra os quatro pesos lado a lado.

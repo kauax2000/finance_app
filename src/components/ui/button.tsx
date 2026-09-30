@@ -207,10 +207,18 @@ const buttonVariants = cva(
   }
 )
 
+type ButtonSize = NonNullable<VariantProps<typeof buttonVariants>["size"]>
+
+/**
+ * O degrau que um `ButtonGroup size` desce aos filhos (rodada 188). Um `size`
+ * no próprio botão vence; sem nenhum dos dois, `md`.
+ */
+const ButtonSizeContext = React.createContext<ButtonSize | undefined>(undefined)
+
 function Button({
   className,
   variant = "primary",
-  size = "md",
+  size: sizeProp,
   shape,
   iconMotion,
   asChild = false,
@@ -222,6 +230,8 @@ function Button({
     asChild?: boolean
   }) {
   const Comp = asChild ? Slot.Root : "button"
+  const groupSize = React.useContext(ButtonSizeContext)
+  const size = sizeProp ?? groupSize ?? "md"
   const glowRef = useBrandGlow<HTMLButtonElement>(variant === "brand")
 
   // A maiúscula inicial é do design system, não de quem escreve o rótulo — mas
@@ -266,4 +276,4 @@ function Button({
   )
 }
 
-export { Button, buttonVariants }
+export { Button, ButtonSizeContext, buttonVariants, type ButtonSize }

@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils"
 import { ROUTES } from "@/config/navigation"
 import { Button } from "@/components/ui/button"
+import { ButtonGroup, ButtonGroupText } from "@/components/ui/button-group"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
     Table,
@@ -784,50 +785,47 @@ export function TransactionsTable({
                         </>
                     )}
                 </p>
-                <div className="flex items-center justify-between gap-3 sm:justify-end">
-                    <span className="text-xs tabular-nums text-muted-foreground sm:mr-1">
+                {/* Era um grupo escrito à mão — bandeja com borda e sombra,
+                    setas `tertiary` com `size-8` cravado, e o "Página 2 / 5"
+                    solto do lado de fora. */}
+                <ButtonGroup size="icon-md" className="self-end sm:self-auto">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        disabled={page <= 0 || total === 0}
+                        aria-label="Página anterior"
+                        onClick={() => setPage((p) => Math.max(0, p - 1))}
+                    >
+                        <ChevronLeftIcon aria-hidden />
+                    </Button>
+                    <ButtonGroupText>
                         {total === 0 ? (
                             "—"
                         ) : (
                             <>
-                                Página{" "}
+                                Página
                                 <span className="font-medium text-foreground">
                                     {page + 1}
                                 </span>
-                                <span className="text-border"> / </span>
+                                /
                                 <span className="font-medium text-foreground">
                                     {totalPages}
                                 </span>
                             </>
                         )}
-                    </span>
-                    <div className="flex items-center rounded-lg border border-border/80 bg-background/80 p-0.5 shadow-sm">
-                        <Button
-                            type="button"
-                            variant="tertiary"
-                            size="icon-lg"
-                            className="size-8 rounded-md text-muted-foreground hover:text-foreground active:text-foreground disabled:opacity-40"
-                            disabled={page <= 0 || total === 0}
-                            aria-label="Página anterior"
-                            onClick={() => setPage((p) => Math.max(0, p - 1))}
-                        >
-                            <ChevronLeftIcon className="size-4" />
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="tertiary"
-                            size="icon-lg"
-                            className="size-8 rounded-md text-muted-foreground hover:text-foreground active:text-foreground disabled:opacity-40"
-                            disabled={page >= totalPages - 1 || total === 0}
-                            aria-label="Próxima página"
-                            onClick={() =>
-                                setPage((p) => Math.min(totalPages - 1, p + 1))
-                            }
-                        >
-                            <ChevronRightIcon className="size-4" />
-                        </Button>
-                    </div>
-                </div>
+                    </ButtonGroupText>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        disabled={page >= totalPages - 1 || total === 0}
+                        aria-label="Próxima página"
+                        onClick={() =>
+                            setPage((p) => Math.min(totalPages - 1, p + 1))
+                        }
+                    >
+                        <ChevronRightIcon aria-hidden />
+                    </Button>
+                </ButtonGroup>
             </TablePanelFooter>
             ) : null}
         </TablePanel>

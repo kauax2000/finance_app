@@ -228,6 +228,13 @@ segmentado nele**: um `role="group"` entre um `role="tablist"` e suas
 3". O trilho segmentado do app é `transactionSegmentContainerClassName` +
 `transactionSegmentTabClassName`, e as abas são filhas diretas do `tablist`.
 
+**Desde a rodada 188 o grupo manda no degrau, na orientação, no texto e no
+campo.** `size` desce a todos os botões pelo `ButtonSizeContext` (o do próprio
+botão vence); `orientation="vertical"` empilha e deita a emenda;
+`ButtonGroupText` é o segmento que não se clica, na altura da fileira — a
+paginação da tabela de transações, que era uma bandeja escrita à mão; e um
+`Input` colado ocupa a sobra, com o grupo levando os botões aos 40 do dedo.
+
 ### Rodapé de diálogo: uma hierarquia só
 
 Todo rodapé de `Dialog` e de `AlertDialog` tem a mesma forma, e ela não se
