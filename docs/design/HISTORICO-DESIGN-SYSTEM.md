@@ -16117,3 +16117,41 @@ entrou o `align="end"` no item.
 - **Página**: a demonstração do extrato desenhava um cartão à mão (`rounded-xl
   border px-4 py-3`) e agora é `Card`; entraram o destaque com nota e as três
   colunas com `align="end"`.
+
+### Rodada 191 — o EmptyState ganha as ações no degrau, a versão em linha, o "tudo em dia" e o numeral no degrau
+
+O dono pediu a rodada completa e escolheu as quatro versões.
+
+- **Ações no degrau**: `EmptyStateActions` envolve os filhos no
+  `ButtonSizeContext` da rodada 188. A tabela é a que o app já usava — `sm` e
+  `md` dão `sm` (os vazios dos cartões do painel), `lg` e `page` dão `xl`.
+  Saíram de dez telas `size="xl"`, `size="sm"`, `gap-1.5`, `min-w-[10rem]
+  text-xs` (um `text-xs` num botão `xl`) e os `size-3.5`/`mr-1.5 size-3.5` dos
+  ícones; a de cartões perdeu `size="sm" h-8 gap-2 text-xs`. Mudou de degrau:
+  o cartão não encontrado (`sm` → `xl`) e a 404 (`md` → `xl`), medidos em 40.
+- **`layout="inline"`**: grade de duas colunas com o ícone atravessando as
+  linhas, poço de 32, alinhado à esquerda, declarado depois do `size` para o
+  `tailwind-merge` trocar o respiro. Os dois avisos de cartão (transação e
+  assinatura) o vestem, e o link estilizado à mão no meio da frase virou a
+  ação (`Button variant="link"`); o recuo lateral do `link` saía 22px para
+  dentro do texto e as ações em linha o zeram. **O auditor aprendeu o poço**:
+  ele supunha todo ícone de `EmptyStateIcon` em 24px e acusava o 16/solid
+  certo; agora lê o `layout="inline"` do bloco em aberto, e o tique padrão do
+  próprio `empty-state.tsx`. A regra G segue em zero no projeto.
+- **`variant="done"`**: o círculo nasce na mola (`starting:scale-50`) e o tique
+  (`CheckIcon` 24/outline, o padrão sem filho) se desenha por `clip-path` —
+  sem SVG à mão, então a regra G não abre exceção. Medido: `inset(0 25.8% 0
+  0)` a 220ms, `inset(0)` no fim. O tom padrão do `done` é `success`. As
+  sessões encerradas e as parcelas terminando o vestem.
+- **`EmptyStateCode` no degrau**: `CODE_DEGRAU` guarda corpo e recuo juntos
+  (o recuo é o que faz o título pousar no numeral). O cartão não encontrado
+  deixou `-mb-6 text-7xl sm:-mb-8 sm:text-8xl`.
+- **Página**: "Molduras" dizia mostrar as três e mostrava só `plain` — agora
+  mostra `dashed` e `card` lado a lado; os "quatro estados" desenhavam o
+  esqueleto à mão e vestem `Skeleton shape="circle"` e `SkeletonText`.
+- **Um tropeço desta rodada**: o teste novo foi escrito por cima do
+  `empty-state.test.ts` da rodada 131 (cinco testes), e a contagem caindo de
+  750 para 748 denunciou. O arquivo voltou e os três testes novos entraram
+  nele.
+- A 404 mostra um aviso do Next ("Encountered a script tag while rendering
+  React component") que já existia antes desta rodada.

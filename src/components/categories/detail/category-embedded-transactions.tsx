@@ -483,8 +483,6 @@ export function CategoryEmbeddedTransactions({
                                         <Button
                                             type="button"
                                             variant="outline"
-                                            size="xl"
-                                            className="min-w-[10rem] text-xs"
                                             onClick={() => {
                                                 resetAllFilters()
                                             }}
@@ -511,10 +509,9 @@ export function CategoryEmbeddedTransactions({
                                     <EmptyStateActions>
                                         <Button
                                             type="button"
-                                            size="xl"
                                             onClick={() => openDialog()}
                                         >
-                                            <PlusIcon className="mr-1.5 size-3.5" />
+                                            <PlusIcon aria-hidden />
                                             Nova transação
                                         </Button>
                                     </EmptyStateActions>

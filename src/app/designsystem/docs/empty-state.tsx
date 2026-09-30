@@ -6,7 +6,7 @@ import {
   MagnifyingGlassIcon,
   ReceiptPercentIcon,
 } from "@heroicons/react/24/outline"
-import { ArrowPathIcon, PlusIcon } from "@heroicons/react/16/solid"
+import { ArrowPathIcon, CreditCardIcon as CreditCardMicroIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import {
@@ -18,7 +18,7 @@ import {
   EmptyStateIcon,
   EmptyStateTitle,
 } from "@/components/ui/empty-state"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton, SkeletonText } from "@/components/ui/skeleton"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 export default function EmptyStateDoc() {
@@ -152,6 +152,49 @@ export default function EmptyStateDoc() {
       </DocSection>
 
       <DocSection
+        title="Tudo em dia"
+        description="O vazio que é boa notícia — nenhuma sessão aberta, nenhuma parcela terminando — não usa o leque de um filtro sem resultado. variant=&quot;done&quot; nasce na mola e o tique se desenha da esquerda para a direita, no tom success; sem filho, o tique é o padrão."
+        code={`<EmptyState variant="plain">
+  <EmptyStateIcon variant="done" />
+  <EmptyStateTitle>Todas as sessões foram encerradas</EmptyStateTitle>
+</EmptyState>`}
+        previewClassName="items-stretch"
+      >
+        <EmptyState variant="plain" className="w-full">
+          <EmptyStateIcon variant="done" />
+          <EmptyStateTitle>Todas as sessões foram encerradas</EmptyStateTitle>
+          <EmptyStateDescription>
+              Você só verá esta sessão ativa neste dispositivo.
+          </EmptyStateDescription>
+        </EmptyState>
+      </DocSection>
+
+      <DocSection
+        title="Em linha"
+        description="layout=&quot;inline&quot; é o vazio pequeno, dentro de um formulário: o ícone à esquerda e o texto e a ação à direita, alinhados à esquerda. É o aviso de cartão das telas de transação e de assinatura, cuja ação era um link estilizado à mão no meio da frase."
+        code={`<EmptyState size="sm" layout="inline">
+  <EmptyStateIcon><CreditCardIcon aria-hidden /></EmptyStateIcon>
+  <EmptyStateDescription>Nenhum cartão cadastrado para vincular esta despesa.</EmptyStateDescription>
+  <EmptyStateActions>
+    <Button variant="link" asChild><Link href="/credit-cards">Cadastrar cartão</Link></Button>
+  </EmptyStateActions>
+</EmptyState>`}
+        previewClassName="items-stretch"
+      >
+        <EmptyState size="sm" layout="inline" className="w-full max-w-md">
+          <EmptyStateIcon>
+            <CreditCardMicroIcon aria-hidden />
+          </EmptyStateIcon>
+          <EmptyStateDescription>
+            Nenhum cartão cadastrado para vincular esta despesa.
+          </EmptyStateDescription>
+          <EmptyStateActions>
+            <Button variant="link">cadastrar cartão</Button>
+          </EmptyStateActions>
+        </EmptyState>
+      </DocSection>
+
+      <DocSection
         title="Os quatro estados, na ordem"
         description="Toda tela tem quatro estados: carregando, erro, vazio e com conteúdo. Desenhar só o último deixa a tela incompleta; carregando vem antes de vazio, com esqueleto na forma do conteúdo."
         code={`if (isLoading) return <ListaSkeleton />
@@ -163,11 +206,8 @@ return <Lista itens={itens} />`}
         <div className="flex w-full max-w-sm flex-col gap-3">
           {[0, 1].map((i) => (
             <div key={i} className="flex items-center gap-3">
-              <Skeleton className="size-10 shrink-0 rounded-full" />
-              <div className="min-w-0 flex-1">
-                <Skeleton className="h-4 w-28 max-w-full" />
-                <Skeleton className="mt-1.5 h-3 w-16 max-w-full" />
-              </div>
+              <Skeleton shape="circle" size="md" />
+              <SkeletonText lines={2} className="min-w-0 flex-1" />
             </div>
           ))}
         </div>
@@ -175,10 +215,20 @@ return <Lista itens={itens} />`}
 
       <DocSection
         title="Molduras"
-        description="dashed é o padrão; card é o bloco com superfície; plain não desenha moldura, para dentro de um Card."
-        code={`<EmptyState variant="plain" size="sm">…</EmptyState>`}
-        previewClassName="items-stretch"
+        description="dashed é o padrão; card é o bloco com superfície; plain não desenha moldura, para dentro de um Card — que é o caso de quase todas as telas do app."
+        code={`<EmptyState size="sm">…</EmptyState>
+<EmptyState variant="card" size="sm">…</EmptyState>
+<Card><EmptyState variant="plain">…</EmptyState></Card>`}
+        previewClassName="flex-col items-stretch gap-4"
       >
+        <div className="grid w-full gap-4 sm:grid-cols-2">
+          {(["dashed", "card"] as const).map((v) => (
+            <EmptyState key={v} variant={v} size="sm">
+              <EmptyStateTitle>{v}</EmptyStateTitle>
+              <EmptyStateDescription>Nenhuma compra nesta fatura.</EmptyStateDescription>
+            </EmptyState>
+          ))}
+        </div>
         <Card padding="none" className="w-full">
           <CardToolbar>Fatura de março</CardToolbar>
           <CardContent className="p-0">
@@ -203,6 +253,10 @@ return <Lista itens={itens} />`}
 
       <DocNote title="O que se move, e o que não">
           Os fantasmas sobem num laço lento e o numeral do erro desliza a cor. O leque só se move quando a pessoa aponta. Com movimento reduzido, tudo para no primeiro quadro.
+      </DocNote>
+
+      <DocNote title="O degrau dos botões é do bloco">
+          <code>EmptyStateActions</code> passa o degrau aos botões pelo mesmo contexto do <code>ButtonGroup</code>: <code>sm</code> e <code>md</code> dão <code>sm</code> (o vazio de um cartão do painel), <code>lg</code> e <code>page</code> dão <code>xl</code> (a tela inteira). Sete telas escreviam <code>size=&quot;xl&quot;</code> e o tamanho do ícone à mão, e a de cartões escrevia <code>size=&quot;sm&quot; h-8 text-xs</code>. Um <code>size</code> no botão vence. O numeral de <code>EmptyStateCode</code> também acompanha o bloco, com o recuo que faz o título pousar nele.
       </DocNote>
 
       <DocNote title="O respiro é do pai, e não dos filhos">
@@ -235,7 +289,13 @@ return <Lista itens={itens} />`}
             type: '"sm" | "md" | "lg" | "page"',
             default: '"md"',
             description:
-              "Respiro, recuo e a medida do ícone juntos. sm é a célula; lg a seção inteira; page a página de erro, com o título na serifa.",
+              "Respiro, recuo, a medida do ícone, o degrau dos botões e o corpo do numeral juntos. sm é a célula; lg a seção inteira; page a página de erro, com o título na serifa.",
+          },
+          {
+            prop: "layout",
+            type: '"stack" | "inline"',
+            default: '"stack"',
+            description: "inline põe o ícone à esquerda e o texto e a ação à direita.",
           },
         ]}
       />
@@ -245,10 +305,10 @@ return <Lista itens={itens} />`}
         rows={[
           {
             prop: "EmptyStateIcon",
-            type: 'variant: "circle" | "stack"; tone: "default" | "info" | "success" | "warning" | "destructive"',
+            type: 'variant: "circle" | "stack" | "done"; tone: "default" | "info" | "success" | "warning" | "destructive"',
             default: '"circle", "default"',
             description:
-              "stack põe até três filhos em ladrilhos, em leque. A medida vem do size do bloco.",
+              "stack põe até três filhos em ladrilhos, em leque; done é o tique que se desenha, em success. A medida vem do size do bloco.",
           },
           {
             prop: "EmptyStateGhost",

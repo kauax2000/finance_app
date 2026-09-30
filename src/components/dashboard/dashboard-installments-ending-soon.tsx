@@ -10,11 +10,6 @@ import {
     PageSectionTitle,
 } from "@/components/ui/page-section"
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid"
-import {
-    CalendarDaysIcon,
-    CheckCircleIcon,
-    CreditCardIcon,
-} from "@heroicons/react/24/outline"
 import { Card, CardContent, CardFooter, CardToolbar } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { MoneyDisplay } from "@/components/ui/money-display"
@@ -195,11 +190,7 @@ export function DashboardInstallmentsEndingSoon({
                     <CardContent className="p-0">
                         {endingSoon.length === 0 ? (
                             <EmptyState variant="plain">
-                                <EmptyStateIcon variant="stack">
-                                    <CreditCardIcon aria-hidden />
-                                    <CalendarDaysIcon aria-hidden />
-                                    <CheckCircleIcon aria-hidden />
-                                </EmptyStateIcon>
+                                <EmptyStateIcon variant="done" />
                                 <EmptyStateTitle>
                                     Nenhuma parcela terminando em breve
                                 </EmptyStateTitle>
@@ -212,7 +203,6 @@ export function DashboardInstallmentsEndingSoon({
                                         asChild
                                         type="button"
                                         variant="outline"
-                                        size="sm"
                                     >
                                         <Link href={transactionsHref}>
                                             Ver compras parceladas

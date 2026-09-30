@@ -95,7 +95,6 @@ export function NotificationsPanelEmpty({
                     <Button
                         type="button"
                         variant="outline"
-                        size="sm"
                         onClick={onOpenPreferences}
                     >
                         Preferências de notificação

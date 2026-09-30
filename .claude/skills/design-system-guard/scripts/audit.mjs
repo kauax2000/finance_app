@@ -532,8 +532,15 @@ function auditFile(absPath, project) {
       // logo depois da tag — o segundo e o terceiro eram acusados.
       const antesDoPoco = src.slice(Math.max(0, m.index - 400), m.index)
       const ultPoco = antesDoPoco.lastIndexOf("<EmptyStateIcon")
+      // O próprio `empty-state.tsx` desenha o tique padrão do `done` no poço.
       const dentroDeEmptyState =
-        ultPoco !== -1 && !antesDoPoco.slice(ultPoco).includes("</EmptyStateIcon>")
+        (ultPoco !== -1 && !antesDoPoco.slice(ultPoco).includes("</EmptyStateIcon>")) ||
+        rel.endsWith("components/ui/empty-state.tsx")
+      // Em `layout="inline"` (rodada 191) o poço é 32 e o `svg` 16: o bloco
+      // em aberto mais próximo decide.
+      const antesDoBloco = src.slice(Math.max(0, m.index - 600), m.index)
+      const ultBloco = antesDoBloco.search(/<EmptyState\b[^>]*layout="inline"[^>]*>(?![\s\S]*<EmptyState\b)/)
+      const pocoEmLinha = dentroDeEmptyState && ultBloco !== -1
       // Mesma cláusula, outro possúdo: o `ColorTile` crava o corpo do filho
       // pelo **degrau** (`md`/`lg` → `[&>svg]:size-4`, `xl`/`2xl` → `size-5`),
       // e com (0,1,1) ele vence qualquer classe no próprio `svg`. Um ícone ali
@@ -557,7 +564,9 @@ function auditFile(absPath, project) {
       if (!found && abridorTile && !degrauTile && /\bsize=\{/.test(abridorTile[1])) continue
       const n = found
         ? parseFloat(found[1])
-        : dentroDeEmptyState
+        : pocoEmLinha
+          ? 4
+          : dentroDeEmptyState
           ? 6
           : degrauTile === "xl" || degrauTile === "2xl"
             ? 5

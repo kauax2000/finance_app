@@ -631,14 +631,12 @@ export default function BillsPageClient() {
                             <EmptyStateActions>
                                 <Button
                                     type="button"
-                                    size="xl"
-                                    className="gap-1.5"
                                     onClick={() => {
                                         setEditingBill(null)
                                         setFormOpen(true)
                                     }}
                                 >
-                                    <PlusIcon className="size-3.5" />
+                                    <PlusIcon aria-hidden />
                                     Nova conta
                                 </Button>
                             </EmptyStateActions>
@@ -666,8 +664,6 @@ export default function BillsPageClient() {
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    size="xl"
-                                    className="min-w-[10rem] text-xs"
                                     onClick={resetFilters}
                                 >
                                     Limpar filtros

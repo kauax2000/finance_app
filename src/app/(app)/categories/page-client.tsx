@@ -811,7 +811,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                                 orçamentos do mês se apoiam.
                             </EmptyStateDescription>
                             <EmptyStateActions>
-                                <Button type="button" size="xl" onClick={() => openDialog()}>
+                                <Button type="button" onClick={() => openDialog()}>
                                     <PlusIcon aria-hidden />
                                     Criar primeira categoria
                                 </Button>

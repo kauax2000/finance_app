@@ -1,10 +1,14 @@
 "use client"
 
 import { paymentMethodOptions } from "@/lib/payment-methods"
+import { CreditCardIcon } from "@heroicons/react/16/solid"
 import {
     EmptyState,
+    EmptyStateActions,
     EmptyStateDescription,
+    EmptyStateIcon,
 } from "@/components/ui/empty-state"
+import { Button } from "@/components/ui/button"
 import {
     Field,
     FieldControl,
@@ -235,17 +239,18 @@ export function SubscriptionFormFields({
                         <FieldLabel>Cartão de crédito</FieldLabel>
                     )}
                     {cardSelectOptions.length === 0 ? (
-                        <EmptyState size="sm">
+                        <EmptyState size="sm" layout="inline">
+                            <EmptyStateIcon>
+                                <CreditCardIcon aria-hidden />
+                            </EmptyStateIcon>
                             <EmptyStateDescription>
-                                Cadastre um cartão em{" "}
-                                <Link
-                                    href={creditCardsHref}
-                                    className="font-medium text-foreground underline-offset-2 hover:underline"
-                                >
-                                    Cartões de crédito
-                                </Link>{" "}
-                                para vincular esta assinatura.
+                                Nenhum cartão cadastrado para vincular esta assinatura.
                             </EmptyStateDescription>
+                            <EmptyStateActions>
+                                <Button variant="link" asChild>
+                                    <Link href={creditCardsHref}>Cadastrar cartão</Link>
+                                </Button>
+                            </EmptyStateActions>
                         </EmptyState>
                     ) : (
                         <Select

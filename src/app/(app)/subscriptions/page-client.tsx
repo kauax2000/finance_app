@@ -923,8 +923,6 @@ export default function SubscriptionsPageClient() {
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    size="xl"
-                                    className="min-w-[10rem] text-xs"
                                     onClick={resetFilters}
                                 >
                                     Limpar filtros
@@ -950,11 +948,9 @@ export default function SubscriptionsPageClient() {
                             <EmptyStateActions>
                                 <Button
                                     type="button"
-                                    size="xl"
-                                    className="gap-1.5"
                                     onClick={openCreate}
                                 >
-                                    <PlusIcon className="size-3.5" />
+                                    <PlusIcon aria-hidden />
                                     Nova assinatura
                                 </Button>
                             </EmptyStateActions>

@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs"
+import { readdirSync, readFileSync, statSync } from "node:fs"
 import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
@@ -71,5 +71,41 @@ describe("EmptyState", () => {
     // Nasce `<h1>`: com `asChild` vindo de um server component, o `Slot`
     // recebia uma referência preguiçosa e o título sumia.
     expect(html).toMatch(/^<div[^>]*><h1 /)
+  })
+})
+
+const FONTE = readFileSync(join(process.cwd(), "src/components/ui/empty-state.tsx"), "utf8")
+
+const arquivos = (dir: string): string[] =>
+  readdirSync(dir).flatMap((nome) => {
+    const caminho = join(dir, nome)
+    return statSync(caminho).isDirectory()
+      ? arquivos(caminho)
+      : /\.tsx$/.test(nome)
+        ? [caminho]
+        : []
+  })
+
+describe("EmptyState, rodada 191", () => {
+  it("o degrau dos botões é do bloco, e nenhuma tela o reescreve", () => {
+    expect(FONTE).toContain("<ButtonSizeContext value={ACOES_DEGRAU[size]}>")
+    const culpados = arquivos(join(process.cwd(), "src"))
+      .filter((c) => !c.includes("components/ui/"))
+      .filter((c) =>
+        [...readFileSync(c, "utf8").matchAll(/<EmptyStateActions>([\s\S]*?)<\/EmptyStateActions>/g)].some((m) =>
+          /\bsize="/.test(m[1])
+        )
+      )
+    expect(culpados).toEqual([])
+  })
+
+  it("o tique se desenha por clip-path, com o fim declarado", () => {
+    // `none` não interpola com `inset()`: sem o fim declarado, o tique salta.
+    expect(FONTE).toContain("[&_svg]:[clip-path:inset(0)]")
+    expect(FONTE).toContain("starting:[&_svg]:[clip-path:inset(0_100%_0_0)]")
+  })
+
+  it("o numeral acompanha o bloco", () => {
+    expect(FONTE).toContain("CODE_DEGRAU[size]")
   })
 })

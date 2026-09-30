@@ -23,7 +23,6 @@ import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRightStartOnRectangleIcon, ComputerDesktopIcon, DevicePhoneMobileIcon, GlobeAltIcon } from "@heroicons/react/16/solid"
-import { CheckCircleIcon } from "@heroicons/react/24/outline"
 import { describeEdgeInvokeClientFailure } from "@/lib/edge-errors"
 import { Session, getSessions, revokeSession, revokeAllSessions } from "@/lib/sessions"
 import { formatRelativeTime } from "@/lib/sessions"
@@ -242,7 +241,7 @@ export default function SessionsPage() {
                                 aria-live="polite"
                             >
                                 <EmptyState variant="plain" size="lg">
-                                    <EmptyStateIcon tone="success"><CheckCircleIcon aria-hidden /></EmptyStateIcon>
+                                    <EmptyStateIcon variant="done" />
                                     <EmptyStateTitle>Todas as sessões foram encerradas</EmptyStateTitle>
                                     <EmptyStateDescription>
                                         Você só verá esta sessão ativa neste dispositivo.

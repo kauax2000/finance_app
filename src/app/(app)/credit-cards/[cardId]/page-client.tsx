@@ -732,7 +732,7 @@ export default function CreditCardDetailPageClient() {
     if (notFound || !card) {
         return (
             <EmptyState variant="plain" size="lg" className="mx-auto max-w-md">
-                <EmptyStateCode className="-mb-6 text-7xl sm:-mb-8 sm:text-8xl">404</EmptyStateCode>
+                <EmptyStateCode>404</EmptyStateCode>
                 <EmptyStateTitle asChild>
                     <h1>Cartão não encontrado</h1>
                 </EmptyStateTitle>
@@ -741,7 +741,7 @@ export default function CreditCardDetailPageClient() {
                     está incorreto.
                 </EmptyStateDescription>
                 <EmptyStateActions>
-                    <Button type="button" variant="primary" size="sm" asChild>
+                    <Button type="button" variant="primary" asChild>
                         <Link href={ROUTES.CREDIT_CARDS}>Ver todos os cartões</Link>
                     </Button>
                 </EmptyStateActions>

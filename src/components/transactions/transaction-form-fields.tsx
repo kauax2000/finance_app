@@ -1,9 +1,12 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { CreditCardIcon } from "@heroicons/react/16/solid"
 import {
     EmptyState,
+    EmptyStateActions,
     EmptyStateDescription,
+    EmptyStateIcon,
 } from "@/components/ui/empty-state"
 import {
     Field,
@@ -646,17 +649,18 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                                 <FieldLabel htmlFor="tx-credit-card">Cartão</FieldLabel>
                             )}
                             {activeCards.length === 0 ? (
-                                <EmptyState size="sm">
+                                <EmptyState size="sm" layout="inline">
+                                    <EmptyStateIcon>
+                                        <CreditCardIcon aria-hidden />
+                                    </EmptyStateIcon>
                                     <EmptyStateDescription>
-                                        Cadastre um cartão em{" "}
-                                        <Link
-                                            href={creditCardsHref}
-                                            className="font-medium text-foreground underline-offset-2 hover:underline"
-                                        >
-                                            Cartões de crédito
-                                        </Link>{" "}
-                                        para vincular esta despesa.
+                                        Nenhum cartão cadastrado para vincular esta despesa.
                                     </EmptyStateDescription>
+                                    <EmptyStateActions>
+                                        <Button variant="link" asChild>
+                                            <Link href={creditCardsHref}>Cadastrar cartão</Link>
+                                        </Button>
+                                    </EmptyStateActions>
                                 </EmptyState>
                             ) : (
                                 <Popover

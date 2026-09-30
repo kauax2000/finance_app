@@ -269,7 +269,6 @@ export function DashboardOpenInvoices({
                                 asChild
                                 type="button"
                                 variant="primary"
-                                size="sm"
                                 className="w-full max-w-xs sm:w-auto"
                             >
                                 <Link href={ROUTES.CREDIT_CARDS}>

@@ -2015,6 +2015,15 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   de 7px a `largura − 7px`, a régua do Radix —, `bubble` no `:active` e no
   foco de teclado, e `bands`, os cortes do `Progress` (zonas no trilho, faixa
   na cor do valor; não com a marca). Sem essas props a peça é a de sempre.
+- **`EmptyState` manda no degrau das ações, tem `layout="inline"`, o "tudo em
+  dia" e o numeral no degrau** (rodada 191). `EmptyStateActions` passa o
+  degrau aos botões pelo `ButtonSizeContext` (`sm`/`md` → `sm`, `lg`/`page` →
+  `xl`) — **nenhum botão dentro das ações declara `size`**, e o teste o cobra.
+  `layout="inline"` é o vazio pequeno de formulário (ícone à esquerda, poço de
+  32 com o ícone em 16/solid; o auditor sabe); `EmptyStateIcon variant="done"`
+  é a boa notícia, o tique que se desenha por `clip-path` (o fim `inset(0)` é
+  declarado, porque `none` não interpola); e `EmptyStateCode` acompanha o
+  `size`.
 - **`DescriptionList` tem sobrancelha, destaque, nota, colunas e alinhamento**
   (rodada 190). `term="eyebrow"` é o rótulo em caixa alta de 11px —
   **nenhum `DescriptionTerm` escreve `uppercase` à mão**; ele vem da lista por

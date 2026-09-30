@@ -4,7 +4,10 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
+import { CheckIcon } from "@heroicons/react/24/outline"
+
 import { cn } from "@/lib/utils"
+import { ButtonSizeContext, type ButtonSize } from "@/components/ui/button"
 import { H1, H4, Muted } from "@/components/ui/typography"
 
 /**
@@ -39,6 +42,8 @@ import { H1, H4, Muted } from "@/components/ui/typography"
  * | filtro, período ou lista vazia | `EmptyStateIcon variant="stack"` |
  * | não encontrado | `size="page"` + `EmptyStateCode` ("404") |
  * | erro de runtime | `size="page"` + `EmptyStateCode` ("Ops!") |
+ * | boa notícia (nada a fazer) | `EmptyStateIcon variant="done"` (rodada 191) |
+ * | o vazio pequeno de um formulário | `layout="inline"` (rodada 191) |
  *
  * As referências são o `empty-state-04` do shadcnui-blocks (os fantasmas), o
  * `empty-state` do serafimcloud (o leque) e o `not-found-2` da Efferd (o
@@ -69,39 +74,67 @@ const emptyStateVariants = cva(
         // A página de erro, que ocupa a tela como nas referências.
         page: "gap-4 px-6 py-24 [--empty-state-icon:--spacing(14)]",
       },
+      /**
+       * `inline` (rodada 191): o vazio pequeno, dentro de um formulário ou de
+       * um painel estreito — o ícone à esquerda e o texto e a ação à direita,
+       * alinhados à esquerda. É grade e não `flex-row`: título, descrição e
+       * ações ficam na mesma coluna, e o ícone atravessa as linhas. Declarado
+       * depois do `size`, então o `tailwind-merge` troca o respiro e a medida
+       * do ícone do degrau pelos daqui.
+       */
+      layout: {
+        stack: "",
+        inline: [
+          "grid items-start justify-stretch gap-x-3 gap-y-0.5 p-3 text-left [--empty-state-icon:--spacing(8)]",
+          "has-[>[data-slot=empty-state-icon]]:grid-cols-[auto_1fr]",
+          "[&>[data-slot=empty-state-icon]]:row-span-3",
+          "has-[>[data-slot=empty-state-icon]]:[&>:not([data-slot=empty-state-icon])]:col-start-2",
+        ].join(" "),
+      },
     },
     defaultVariants: {
       variant: "dashed",
       size: "md",
+      layout: "stack",
     },
   }
 )
 
 type EmptyStateSize = NonNullable<VariantProps<typeof emptyStateVariants>["size"]>
+type EmptyStateLayout = NonNullable<VariantProps<typeof emptyStateVariants>["layout"]>
 
 /** O degrau desce por contexto: o título de `page` é outro átomo, não outra classe. */
-const EmptyStateSizeContext = React.createContext<EmptyStateSize>("md")
+const EmptyStateContext = React.createContext<{
+  size: EmptyStateSize
+  layout: EmptyStateLayout
+}>({ size: "md", layout: "stack" })
 
 function EmptyState({
   className,
   variant,
   size,
+  layout,
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof emptyStateVariants>) {
+  const contexto = React.useMemo(
+    () => ({ size: size ?? "md", layout: layout ?? "stack" }),
+    [size, layout]
+  )
   return (
-    <EmptyStateSizeContext.Provider value={size ?? "md"}>
+    <EmptyStateContext value={contexto}>
       <div
         data-slot="empty-state"
         data-variant={variant ?? "dashed"}
         data-size={size ?? "md"}
+        data-layout={layout ?? "stack"}
         className={cn(
           "group/empty-state",
-          emptyStateVariants({ variant, size }),
+          emptyStateVariants({ variant, size, layout }),
           className
         )}
         {...props}
       />
-    </EmptyStateSizeContext.Provider>
+    </EmptyStateContext>
   )
 }
 
@@ -114,6 +147,22 @@ const emptyStateIconVariants = cva(
         // O leque não pinta a própria caixa: quem tem superfície são os
         // ladrilhos. O `tone` fica só na tinta dos ícones.
         stack: "h-(--empty-state-icon)",
+        /**
+         * **Tudo em dia** (rodada 191): o vazio que é boa notícia — nenhuma
+         * sessão aberta, nenhuma parcela terminando. O círculo nasce na mola
+         * (`scale` 50% → 100%) e o tique **se desenha** da esquerda para a
+         * direita, por `clip-path` e não por traço de SVG: o ícone continua
+         * sendo o do Heroicons, e a regra G não abre exceção. Os dois pelo
+         * `@starting-style`, sem timer; o movimento reduzido corta os dois.
+         * O `clip-path` final é declarado (`inset(0)`) porque `none` não
+         * interpola com `inset()`.
+         */
+        done: [
+          "size-(--empty-state-icon) rounded-full",
+          "transition-[scale] duration-(--duration-spring) ease-(--ease-spring) starting:scale-50",
+          "[&_svg]:[clip-path:inset(0)] [&_svg]:transition-[clip-path] [&_svg]:delay-150 [&_svg]:duration-(--duration-slow) [&_svg]:ease-(--ease-out)",
+          "starting:[&_svg]:[clip-path:inset(0_100%_0_0)]",
+        ].join(" "),
       },
       // `route-error-fallback.tsx` pintava `bg-destructive-muted
       // text-destructive-muted-foreground` à mão. Um estado de erro é um estado
@@ -129,6 +178,8 @@ const emptyStateIconVariants = cva(
     // A superfície tonal é só do círculo; no leque, quem tem superfície são
     // os ladrilhos, e o tom fica na tinta.
     compoundVariants: [
+      { variant: "done", tone: "default", className: "bg-muted" },
+      { variant: "done", tone: "success", className: "bg-success-muted" },
       { variant: "circle", tone: "default", className: "bg-muted" },
       { variant: "circle", tone: "info", className: "bg-info-muted" },
       { variant: "circle", tone: "success", className: "bg-success-muted" },
@@ -164,14 +215,18 @@ function EmptyStateIcon({
 }: React.ComponentProps<"div"> &
   VariantProps<typeof emptyStateIconVariants>) {
   const leque = variant === "stack"
+  const feito = variant === "done"
+  // Boa notícia é verde por padrão; quem quiser outro tom passa `tone`.
+  const tom = tone ?? (feito ? "success" : "default")
   return (
     <div
       data-slot="empty-state-icon"
       data-variant={variant ?? "circle"}
-      data-tone={tone ?? "default"}
-      className={cn(emptyStateIconVariants({ variant, tone }), className)}
+      data-tone={tom}
+      className={cn(emptyStateIconVariants({ variant, tone: tom }), className)}
       {...props}
     >
+      {feito && !children ? <CheckIcon aria-hidden /> : null}
       {leque
         ? React.Children.toArray(children)
             .slice(0, 3)
@@ -205,7 +260,7 @@ function EmptyStateTitle({
   asChild = false,
   ...props
 }: React.ComponentProps<"p"> & { asChild?: boolean }) {
-  const size = React.useContext(EmptyStateSizeContext)
+  const { size } = React.useContext(EmptyStateContext)
   // Na página de erro o título é o da tela: o `H1` do sistema, na serifa de
   // `.page-title`, dois degraus acima — o "Page not found" das referências. E
   // ele **nasce `<h1>`**, sem `asChild`, por uma razão medida: um server
@@ -252,19 +307,41 @@ function EmptyStateDescription({
  * parágrafo lê como parte do parágrafo. É a mesma razão de 2 para 1 que separa
  * "outro assunto" de "mesmo assunto" no `HoverCardBody`.
  */
+/**
+ * O degrau dos botões sai do bloco (rodada 191), pelo `ButtonSizeContext` do
+ * `ButtonGroup`: sete telas escreviam `size="xl"` e os tamanhos dos ícones à
+ * mão nos blocos `lg`, e uma escrevia `size="sm" h-8 text-xs`. Os números são
+ * os que o app já usava — `sm` e `md` ficam em `sm` (o vazio de um cartão do
+ * painel), `lg` e `page` em `xl` (a tela inteira). Um `size` no botão vence.
+ */
+const ACOES_DEGRAU: Record<EmptyStateSize, ButtonSize> = {
+  sm: "sm",
+  md: "sm",
+  lg: "xl",
+  page: "xl",
+}
+
 function EmptyStateActions({
   className,
+  children,
   ...props
 }: React.ComponentProps<"div">) {
+  const { size, layout } = React.useContext(EmptyStateContext)
   return (
     <div
       data-slot="empty-state-actions"
       className={cn(
         "mt-1 flex flex-wrap items-center justify-center gap-2",
+        // Em linha, a ação alinha com o texto: o `link` do `Button` traz
+        // recuo lateral, que aqui deixava "Cadastrar cartão" 22px para dentro
+        // da descrição. O seletor de atributo vence a classe do degrau.
+        layout === "inline" && "justify-start [&>[data-variant=link]]:px-0",
         className
       )}
       {...props}
-    />
+    >
+      <ButtonSizeContext value={ACOES_DEGRAU[size]}>{children}</ButtonSizeContext>
+    </div>
   )
 }
 
@@ -355,17 +432,30 @@ function EmptyStateGhost({
 const EMPTY_STATE_CODE = [
   "pointer-events-none select-none font-display leading-none",
   "brand-rainbow-image bg-(image:--brand-rainbow) bg-clip-text text-transparent",
-  "-mb-8 text-8xl sm:-mb-12 sm:text-9xl",
   "empty-state-sheen",
   "[mask-image:linear-gradient(to_bottom,#000_30%,transparent_85%)]",
 ].join(" ")
 
+/**
+ * O corpo do numeral acompanha o bloco (rodada 191). O recuo negativo de baixo
+ * é o que faz o título pousar na base dissolvida, e ele cresce com o corpo —
+ * por isso os dois moram juntos. O cartão não encontrado é `lg` e escrevia os
+ * quatro números à mão.
+ */
+const CODE_DEGRAU: Record<EmptyStateSize, string> = {
+  sm: "-mb-3 text-5xl",
+  md: "-mb-4 text-6xl sm:-mb-6 sm:text-7xl",
+  lg: "-mb-6 text-7xl sm:-mb-8 sm:text-8xl",
+  page: "-mb-8 text-8xl sm:-mb-12 sm:text-9xl",
+}
+
 function EmptyStateCode({ className, ...props }: React.ComponentProps<"span">) {
+  const { size } = React.useContext(EmptyStateContext)
   return (
     <span
       data-slot="empty-state-code"
       aria-hidden
-      className={cn(EMPTY_STATE_CODE, className)}
+      className={cn(EMPTY_STATE_CODE, CODE_DEGRAU[size], className)}
       {...props}
     />
   )

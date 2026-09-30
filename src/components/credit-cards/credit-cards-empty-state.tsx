@@ -34,11 +34,9 @@ export function CreditCardsEmptyState({ onAddCard }: CreditCardsEmptyStateProps)
                         <Button
                             type="button"
                             variant="primary"
-                            size="sm"
-                            className="h-8 gap-2 text-xs"
                             onClick={onAddCard}
                         >
-                            <PlusIcon className="size-4 shrink-0" />
+                            <PlusIcon aria-hidden />
                             Novo cartão
                         </Button>
                     </EmptyStateActions>
