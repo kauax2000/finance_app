@@ -16191,3 +16191,36 @@ certa; as quatro saíram de padrões escritos à mão nas telas.
   empilhado (e no `vertical`), o `*:w-full` do `Field` esticava o `Switch` até
   a coluna — um trilho de 406px. Os filhos diretos esticam, **menos** `switch`,
   `checkbox` e `radio`, que têm medida própria. Medido a 375px: 32×18.
+
+### Rodada 193 — o InputGroup ganha a senha que se mostra, o contador, o carregando e o seletor no começo
+
+O dono pediu a rodada completa e escolheu as quatro versões.
+
+- **Os seis grupos do app eram o mesmo campo de senha**: login, cadastro,
+  redefinição e os três do diálogo de trocar senha, cada um com o botão, o
+  `aria-pressed`, o rótulo que troca, o ícone que troca e um `useState` —
+  ~22 linhas por campo. `InputGroupPasswordToggle` guarda o estado no
+  contexto do grupo, e o `InputGroupInput type="password"` vira `text`
+  sozinho. Medido no `/login`: `password` → `text` no clique, com "Ocultar
+  senha" e `aria-pressed="true"`.
+- **Contador, e um defeito latente**: o `Textarea` com `maxLength` embrulha o
+  campo numa `div` para o contador (rodada 180), e dentro do grupo o textarea
+  deixaria de ser filho direto — o `has-[>textarea]:h-auto` cairia e o grupo
+  travaria na altura de uma linha. Ninguém usava a combinação, e o "0/280" da
+  página era texto fixo. Agora o `InputGroupTextarea` desliga o contador do
+  `Textarea` e põe a contagem num addon `block-end` (sempre visível); o
+  `InputGroupInput` põe na ponta, só perto do teto. A régua dos três
+  contadores (`Textarea`, `FieldCounter`, grupo) virou `lib/char-count`.
+  Medido: textarea de 140 com 108px de altura e "125/140" em âmbar.
+- **`pending`**: `aria-busy` no grupo e o `Spinner` num addon `inline-end`
+  marcado `data-pending`; os outros addons da ponta saem com `hidden`, sem
+  desmontar.
+- **`InputGroupSelect`**: `<select>` nativo (a roda do sistema no telefone),
+  16px no telefone contra o zoom do iOS, emenda na borda de campo. Ele também
+  carrega `data-slot="input-group-control"`, porque é por esse slot que o anel
+  do grupo acende — medido no foco por teclado: o anel de 3px aparece.
+- **Página**: o exemplo de `block-end` era a contagem fixa "0/280", que ensina
+  a escrever o contador à mão; virou uma dica de teclado, e a contagem é o
+  `maxLength`. Entraram a tabela de props e o "onde o app usa".
+- O diálogo de trocar senha, o cadastro e a redefinição usam a mesma peça que
+  foi exercitada no `/login`; não foram abertos um a um.

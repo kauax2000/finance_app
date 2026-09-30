@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
 
 import { supabase } from "@/lib/supabase"
 import { formatAuthErrorMessagePt } from "@/lib/supabase-errors"
@@ -25,9 +24,8 @@ import {
 import { REGEXP_ONLY_DIGITS } from "input-otp"
 import {
     InputGroup,
-    InputGroupAddon,
-    InputGroupButton,
     InputGroupInput,
+    InputGroupPasswordToggle,
 } from "@/components/ui/input-group"
 import {
     Field,
@@ -76,7 +74,6 @@ export function PasswordRecoveryForm({
     const [email, setEmail] = useState("")
     const [code, setCode] = useState("")
     const [password, setPassword] = useState("")
-    const [showPassword, setShowPassword] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
     const [fieldError, setFieldError] = useState<string>()
@@ -211,7 +208,7 @@ export function PasswordRecoveryForm({
                 <FieldControl>
                     <InputGroupInput
                         id="password"
-                        type={showPassword ? "text" : "password"}
+                        type="password"
                         autoComplete="new-password"
                         placeholder="Crie uma senha"
                         value={password}
@@ -222,15 +219,7 @@ export function PasswordRecoveryForm({
                         }}
                     />
                 </FieldControl>
-                <InputGroupAddon align="inline-end">
-                    <InputGroupButton
-                        onClick={() => setShowPassword(!showPassword)}
-                        aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-                        aria-pressed={showPassword}
-                    >
-                        {showPassword ? <EyeSlashIcon /> : <EyeIcon />}
-                    </InputGroupButton>
-                </InputGroupAddon>
+                <InputGroupPasswordToggle />
             </InputGroup>
             {fieldError ? <FieldError>{fieldError}</FieldError> : null}
             {!fieldError && !isPasswordValid(password) ? (

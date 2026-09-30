@@ -2,9 +2,12 @@
 
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+import { ChevronDownIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
+import { pertoDoLimite } from "@/lib/char-count"
 import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 import { Label } from "@/components/ui/label"
 import {
   fieldControlHeightClassName,
@@ -48,25 +51,47 @@ type InputGroupContextValue = {
    * de tela.
    */
   controlId: string
+  /** A senha à mostra (rodada 193): o `InputGroupPasswordToggle` escreve, o campo lê. */
+  revealed: boolean
+  setRevealed: (revealed: boolean) => void
 }
 
 const InputGroupContext = React.createContext<InputGroupContextValue>({
   size: "md",
   controlId: "",
+  revealed: false,
+  setRevealed: () => {},
 })
 
 function InputGroup({
   className,
   size = "md",
+  pending = false,
   children,
   ...props
-}: React.ComponentProps<"div"> & { size?: InputGroupSize }) {
+}: React.ComponentProps<"div"> & {
+  size?: InputGroupSize
+  /**
+   * Algo em andamento (rodada 193) — a busca, a verificação do e-mail. O
+   * `Spinner` toma o lugar do addon da ponta enquanto dura, e o grupo marca
+   * `aria-busy`. O addon escondido continua montado — sai com `hidden`, e não
+   * desmonta —, então um botão ali não perde o estado durante a espera.
+   */
+  pending?: boolean
+}) {
   const controlId = React.useId()
+  const [revealed, setRevealed] = React.useState(false)
+  const contexto = React.useMemo(
+    () => ({ size, controlId, revealed, setRevealed }),
+    [size, controlId, revealed]
+  )
 
   return (
     <div
       data-slot="input-group"
       data-size={size}
+      data-pending={pending || undefined}
+      aria-busy={pending || undefined}
       role="group"
       // A moldura veste a superfície de campo direto (ela não tem `has-`), e
       // os três estados vêm das variantes `Group` da mesma régua — era a "quarta
@@ -88,12 +113,18 @@ function InputGroup({
         // `data-[size=md]:h-8` os dois empatariam, e um textarea dentro do
         // grupo ficaria travado em 32px conforme a ordem de emissão.
         fieldControlHeightClassName[size],
+        pending && "[&>[data-align=inline-end]:not([data-pending])]:hidden",
         className
       )}
       {...props}
     >
-      <InputGroupContext.Provider value={{ size, controlId }}>
+      <InputGroupContext.Provider value={contexto}>
         {children}
+        {pending ? (
+          <InputGroupAddon align="inline-end" data-pending="">
+            <Spinner size="sm" aria-hidden />
+          </InputGroupAddon>
+        ) : null}
       </InputGroupContext.Provider>
     </div>
   )
@@ -250,14 +281,28 @@ function InputGroupText({ className, ...props }: React.ComponentProps<"span">) {
 
 function InputGroupInput({
   className,
+  type,
+  maxLength,
+  onChange,
   ...props
 }: InputBaseProps & React.RefAttributes<HTMLInputElement>) {
-  const { size, controlId } = React.useContext(InputGroupContext)
+  const { size, controlId, revealed } = React.useContext(InputGroupContext)
+  const [digitados, setDigitados] = React.useState(
+    String(props.defaultValue ?? "").length
+  )
+  const contagem = props.value !== undefined ? String(props.value).length : digitados
 
-  return (
+  const campo = (
     <Input
       // O `id` do grupo é o padrão; quem já tem um continua com o seu.
       id={props.id ?? controlId}
+      // A senha à mostra vira texto; o resto do `type` passa intacto.
+      type={type === "password" && revealed ? "text" : type}
+      maxLength={maxLength}
+      onChange={(e) => {
+        setDigitados(e.target.value.length)
+        onChange?.(e)
+      }}
       data-slot="input-group-control"
       // O degrau chega ao campo para o corpo do texto acompanhar a altura —
       // `sm` desce para `text-control-sm` como em qualquer outro campo.
@@ -272,6 +317,119 @@ function InputGroupInput({
       {...props}
     />
   )
+
+  if (maxLength === undefined) return campo
+  return (
+    <>
+      {campo}
+      <InputGroupCount count={contagem} max={maxLength} hideUntilNear />
+    </>
+  )
+}
+
+/**
+ * A contagem do grupo (rodada 193), no addon da ponta: no campo de uma linha
+ * ela só aparece perto do teto, como o `FieldCounter`; no textarea, embaixo e
+ * sempre, como o do `Textarea`. A régua é `lib/char-count`. O número à vista é
+ * `aria-hidden`, e quem fala é a região viva, só perto do teto.
+ */
+function InputGroupCount({
+  count,
+  max,
+  hideUntilNear = false,
+}: {
+  count: number
+  max: number
+  hideUntilNear?: boolean
+}) {
+  const restam = max - count
+  const perto = pertoDoLimite(restam, max)
+  const visivel = perto || !hideUntilNear
+  return (
+    <>
+      {visivel ? (
+        <InputGroupAddon
+          align={hideUntilNear ? "inline-end" : "block-end"}
+          data-slot="input-group-count"
+          className={hideUntilNear ? undefined : "justify-end"}
+        >
+          <InputGroupText
+            aria-hidden
+            className={cn("nums text-xs", perto && "text-warning-muted-foreground")}
+          >
+            {count}/{max}
+          </InputGroupText>
+        </InputGroupAddon>
+      ) : null}
+      <span className="sr-only" aria-live="polite">
+        {perto ? `Restam ${restam} caracteres` : ""}
+      </span>
+    </>
+  )
+}
+
+/**
+ * O olho da senha (rodada 193). O estado mora no grupo, e o
+ * `InputGroupInput type="password"` vira texto sozinho — as quatro telas de
+ * senha escreviam o botão, o `aria-pressed`, o rótulo que troca e um
+ * `useState` por campo, seis vezes.
+ */
+function InputGroupPasswordToggle({
+  showLabel = "Mostrar senha",
+  hideLabel = "Ocultar senha",
+}: {
+  showLabel?: string
+  hideLabel?: string
+}) {
+  const { revealed, setRevealed } = React.useContext(InputGroupContext)
+  return (
+    <InputGroupAddon align="inline-end">
+      <InputGroupButton
+        onClick={() => setRevealed(!revealed)}
+        aria-label={revealed ? hideLabel : showLabel}
+        aria-pressed={revealed}
+      >
+        {revealed ? <EyeSlashIcon /> : <EyeIcon />}
+      </InputGroupButton>
+    </InputGroupAddon>
+  )
+}
+
+/**
+ * O seletor colado no começo do campo (rodada 193) — o DDI de um telefone, a
+ * moeda de um valor. É um `<select>` nativo, pela mesma razão do
+ * `NativeSelect`: no telefone ele abre a roda do sistema. Ele é
+ * `input-group-control` também, então o foco dele acende o anel do grupo; a
+ * emenda com o campo é a borda da direita, na tinta da borda de campo. O texto
+ * tem 16px no telefone, senão o iOS dá zoom ao tocar. Precisa de `aria-label`:
+ * ele não tem rótulo visível.
+ */
+function InputGroupSelect({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"select"> & { "aria-label": string }) {
+  return (
+    <div
+      data-slot="input-group-select"
+      className="relative order-first flex items-center self-stretch border-e border-input"
+    >
+      <select
+        data-slot="input-group-control"
+        className={cn(
+          "h-full cursor-pointer appearance-none bg-transparent ps-3 pe-7 text-base text-foreground outline-none md:text-sm",
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </select>
+      <ChevronDownIcon
+        aria-hidden
+        className="pointer-events-none absolute end-2 size-4 text-muted-foreground"
+      />
+    </div>
+  )
 }
 
 function InputGroupTextarea({
@@ -280,6 +438,10 @@ function InputGroupTextarea({
   ...props
 }: TextareaProps & { ref?: React.Ref<HTMLTextAreaElement> }) {
   const { controlId } = React.useContext(InputGroupContext)
+  const [digitados, setDigitados] = React.useState(
+    String(props.defaultValue ?? "").length
+  )
+  const contagem = props.value !== undefined ? String(props.value).length : digitados
   // Com teto, o campo rola, e aqui ele pode dissolver: quem pinta a borda e o
   // preenchimento é o grupo, e o textarea é transparente — a máscara não apaga
   // nada que devia ficar (rodada 180).
@@ -300,9 +462,13 @@ function InputGroupTextarea({
     [fadeRef, temTeto, ref]
   )
 
-  return (
+  const campo = (
     <Textarea
       ref={setRefs}
+      // O contador do `Textarea` embrulharia o campo numa `div`, e o grupo
+      // deixaria de vê-lo como filho (`has-[>textarea]`): travaria na altura
+      // de uma linha. Aqui a contagem é um addon do grupo (rodada 193).
+      showCount={false}
       // Mesmo contrato do campo de uma linha: o addon de bloco embaixo de um
       // textarea é o `<label>` deste controle.
       id={props.id ?? controlId}
@@ -313,7 +479,20 @@ function InputGroupTextarea({
         className
       )}
       {...props}
+      // Depois do spread, para contar e ainda chamar o da tela.
+      onChange={(e) => {
+        setDigitados(e.target.value.length)
+        props.onChange?.(e)
+      }}
     />
+  )
+
+  if (props.maxLength === undefined) return campo
+  return (
+    <>
+      {campo}
+      <InputGroupCount count={contagem} max={props.maxLength} />
+    </>
   )
 }
 
@@ -321,6 +500,8 @@ export {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
+  InputGroupPasswordToggle,
+  InputGroupSelect,
   InputGroupText,
   InputGroupInput,
   InputGroupTextarea,

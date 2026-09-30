@@ -2015,6 +2015,16 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   de 7px a `largura − 7px`, a régua do Radix —, `bubble` no `:active` e no
   foco de teclado, e `bands`, os cortes do `Progress` (zonas no trilho, faixa
   na cor do valor; não com a marca). Sem essas props a peça é a de sempre.
+- **`InputGroup` tem a senha que se mostra, o contador, o `pending` e o
+  seletor no começo** (rodada 193). `InputGroupPasswordToggle` guarda o estado
+  no grupo e o `InputGroupInput type="password"` vira texto sozinho —
+  **nenhuma tela escreve `? "text" : "password"`**. `maxLength` no
+  `InputGroupTextarea`/`InputGroupInput` põe a contagem num addon (embaixo e
+  sempre; na ponta e só perto do teto), porque o contador do `Textarea`
+  embrulharia o campo e o grupo perderia o `has-[>textarea]`. A régua do
+  contador é `lib/char-count`, uma só para as três peças. `pending` troca o
+  addon da ponta pelo `Spinner` sem desmontá-lo. `InputGroupSelect` é nativo e
+  também é `input-group-control`, para o foco acender o grupo.
 - **`Field` tem cabeçalho, contador, lista de requisitos e linha que não
   empilha** (rodada 192). `FieldHeader` põe o rótulo à esquerda e um link ou
   contador à direita, **fora do `<label>`** (um link dentro dele também

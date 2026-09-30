@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
 
 import { supabase } from "@/lib/supabase"
 import { getSafeInternalNextPath } from "@/lib/auth-return-path"
@@ -19,9 +18,8 @@ import { Muted } from "@/components/ui/typography"
 import { Form, FormInput, FormSubmit } from "@/components/ui/form"
 import {
     InputGroup,
-    InputGroupAddon,
-    InputGroupButton,
     InputGroupInput,
+    InputGroupPasswordToggle,
 } from "@/components/ui/input-group"
 import {
     Field,
@@ -53,7 +51,6 @@ export function SignupForm() {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [fullName, setFullName] = useState("")
-    const [showPassword, setShowPassword] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
     const [success, setSuccess] = useState(false)
@@ -222,7 +219,7 @@ export function SignupForm() {
                             <FieldControl>
                                 <InputGroupInput
                                     id="password"
-                                    type={showPassword ? "text" : "password"}
+                                    type="password"
                                     autoComplete="new-password"
                                     placeholder="Crie uma senha"
                                     value={password}
@@ -235,15 +232,7 @@ export function SignupForm() {
                                     }}
                                 />
                             </FieldControl>
-                            <InputGroupAddon align="inline-end">
-                                <InputGroupButton
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-                                    aria-pressed={showPassword}
-                                >
-                                    {showPassword ? <EyeSlashIcon /> : <EyeIcon />}
-                                </InputGroupButton>
-                            </InputGroupAddon>
+                            <InputGroupPasswordToggle />
                         </InputGroup>
                         {/* O erro só aparece depois do envio; enquanto a pessoa
                             digita, quem fala é a lista — dizer "falta símbolo"

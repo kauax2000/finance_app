@@ -32,11 +32,9 @@ import { CustomForm } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import {
     InputGroup,
-    InputGroupAddon,
-    InputGroupButton,
     InputGroupInput,
+    InputGroupPasswordToggle,
 } from "@/components/ui/input-group"
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
 
 interface ChangePasswordDialogProps {
     open: boolean
@@ -48,9 +46,6 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
     const { user } = useAuth()
     const later = useTimeout()
     const [loading, setLoading] = useState(false)
-    const [showCurrentPassword, setShowCurrentPassword] = useState(false)
-    const [showNewPassword, setShowNewPassword] = useState(false)
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [success, setSuccess] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -145,7 +140,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                     <FieldControl>
                     <InputGroupInput
                         id="current-password"
-                        type={showCurrentPassword ? "text" : "password"}
+                        type="password"
                         value={currentPassword}
                         onChange={(e) => setCurrentPassword(e.target.value)}
                         placeholder="Digite sua senha atual"
@@ -153,15 +148,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         disabled={loading}
                     />
                     </FieldControl>
-                    <InputGroupAddon align="inline-end">
-                        <InputGroupButton
-                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                            aria-label={showCurrentPassword ? "Ocultar senha atual" : "Mostrar senha atual"}
-                            aria-pressed={showCurrentPassword}
-                        >
-                            {showCurrentPassword ? <EyeSlashIcon /> : <EyeIcon />}
-                        </InputGroupButton>
-                    </InputGroupAddon>
+                    <InputGroupPasswordToggle />
                 </InputGroup>
             </Field>
 
@@ -171,7 +158,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                     <FieldControl>
                     <InputGroupInput
                         id="new-password"
-                        type={showNewPassword ? "text" : "password"}
+                        type="password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="Digite a nova senha"
@@ -179,15 +166,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         disabled={loading}
                     />
                     </FieldControl>
-                    <InputGroupAddon align="inline-end">
-                        <InputGroupButton
-                            onClick={() => setShowNewPassword(!showNewPassword)}
-                            aria-label={showNewPassword ? "Ocultar nova senha" : "Mostrar nova senha"}
-                            aria-pressed={showNewPassword}
-                        >
-                            {showNewPassword ? <EyeSlashIcon /> : <EyeIcon />}
-                        </InputGroupButton>
-                    </InputGroupAddon>
+                    <InputGroupPasswordToggle />
                 </InputGroup>
 
                 {/* A lista do cadastro e da redefinição: a mesma política, a
@@ -202,7 +181,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                     <FieldControl>
                     <InputGroupInput
                         id="confirm-password"
-                        type={showConfirmPassword ? "text" : "password"}
+                        type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="Confirme a nova senha"
@@ -210,15 +189,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                         disabled={loading}
                     />
                     </FieldControl>
-                    <InputGroupAddon align="inline-end">
-                        <InputGroupButton
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            aria-label={showConfirmPassword ? "Ocultar confirmação de senha" : "Mostrar confirmação de senha"}
-                            aria-pressed={showConfirmPassword}
-                        >
-                            {showConfirmPassword ? <EyeSlashIcon /> : <EyeIcon />}
-                        </InputGroupButton>
-                    </InputGroupAddon>
+                    <InputGroupPasswordToggle />
                 </InputGroup>
             </Field>
 

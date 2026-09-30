@@ -5,6 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { CheckIcon, MinusIcon } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
+import { pertoDoLimite } from "@/lib/char-count"
 import { Label } from "@/components/ui/label"
 import { Caption, Muted } from "@/components/ui/typography"
 import { Separator } from "@/components/ui/separator"
@@ -678,17 +679,9 @@ function FieldHeader({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 /**
- * Quando o contador acende: nos últimos 10% ou 20 caracteres, o que vier
- * antes. A mesma régua do `Textarea` (rodada 180) — lá o contador é sempre
- * visível e só troca de tinta; aqui ele **só aparece** perto do teto, porque
- * mora ao lado do rótulo, e um "3/40" ali nos primeiros caracteres é ruído.
- */
-function pertoDoLimite(restam: number, max: number) {
-  return restam <= Math.max(20, Math.ceil(max * 0.1))
-}
-
-/**
- * O contador de um campo de uma linha (rodada 192). Visível só perto do teto,
+ * O contador de um campo de uma linha (rodada 192). Visível só perto do teto
+ * (`lib/char-count`: a régua do `Textarea`, que lá é sempre visível e só troca
+ * de tinta; aqui um "3/40" ao lado do rótulo seria ruído),
  * em âmbar, e anunciado uma vez por mudança pela região viva — o número à vista
  * é `aria-hidden`, para não ser lido em cada foco. Vai no `FieldHeader`.
  */

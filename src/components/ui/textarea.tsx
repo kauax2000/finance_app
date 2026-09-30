@@ -3,6 +3,7 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { pertoDoLimite } from "@/lib/char-count"
 import {
   fieldControlPaddingClassName,
   fieldDisabledClassName,
@@ -149,7 +150,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     if (max === undefined || !showCount) return campo
 
     const restam = max - contagem
-    const perto = restam <= Math.max(20, Math.ceil(max * 0.1))
+    const perto = pertoDoLimite(restam, max)
     return (
       <div data-slot="textarea-root" className="flex w-full flex-col gap-1.5">
         {campo}

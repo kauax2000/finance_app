@@ -3,7 +3,6 @@
 import { useMemo, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
 
 import { supabase } from "@/lib/supabase"
 import { formatAuthErrorMessagePt } from "@/lib/supabase-errors"
@@ -16,9 +15,8 @@ import { Form, FormInput, FormSubmit } from "@/components/ui/form"
 import { Muted } from "@/components/ui/typography"
 import {
     InputGroup,
-    InputGroupAddon,
-    InputGroupButton,
     InputGroupInput,
+    InputGroupPasswordToggle,
 } from "@/components/ui/input-group"
 import {
     Field,
@@ -90,7 +88,6 @@ export function LoginForm() {
     const reason = REASONS[searchParams.get("reason") ?? ""]
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
-    const [showPassword, setShowPassword] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
     const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
@@ -193,7 +190,7 @@ export function LoginForm() {
                                 <InputGroupInput
                                     id="password"
                                     ref={passwordInputRef}
-                                    type={showPassword ? "text" : "password"}
+                                    type="password"
                                     autoComplete="current-password"
                                     placeholder="Digite sua senha"
                                     value={password}
@@ -206,15 +203,7 @@ export function LoginForm() {
                                     }}
                                 />
                             </FieldControl>
-                            <InputGroupAddon align="inline-end">
-                                <InputGroupButton
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-                                    aria-pressed={showPassword}
-                                >
-                                    {showPassword ? <EyeSlashIcon /> : <EyeIcon />}
-                                </InputGroupButton>
-                            </InputGroupAddon>
+                            <InputGroupPasswordToggle />
                         </InputGroup>
                         {fieldErrors.password ? (
                             <FieldError>{fieldErrors.password}</FieldError>
