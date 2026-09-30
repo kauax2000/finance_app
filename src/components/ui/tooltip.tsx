@@ -5,6 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Tooltip as TooltipPrimitive } from "radix-ui"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 
+import { Kbd } from "@/components/ui/kbd"
 import { cn } from "@/lib/utils"
 import { useViewportWindow } from "@/hooks/use-mobile"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
@@ -18,7 +19,10 @@ import { menuPanelSurfaceClassName } from "@/lib/menu-classes"
  * Radix só o publica por `onOpenChange` e por `data-state` no DOM. Um contexto
  * de uma linha é mais barato que ler atributo.
  */
-const TooltipAbertoContext = React.createContext(false)
+const TooltipAbertoContext = React.createContext<{
+  aberto: boolean
+  confirmacao: React.ReactNode
+}>({ aberto: false, confirmacao: null })
 
 function TooltipProvider({
   delayDuration = 0,
@@ -55,13 +59,29 @@ function Tooltip({
   open,
   defaultOpen,
   onOpenChange,
+  confirmation,
+  children,
   ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Root>) {
+}: React.ComponentProps<typeof TooltipPrimitive.Root> & {
+  /**
+   * **A confirmação do que o clique fez** (rodada 185): enquanto ela existir,
+   * a dica fica aberta mostrando-a, e ela é anunciada ao leitor de tela. Quem
+   * a liga e desliga é a tela, pelo estado do resultado — `linkCopied ?
+   * "Link copiado" : null` —, e não o clique: uma cópia que falha não pode
+   * confirmar nada.
+   *
+   * Existe porque o Radix **fecha a dica no `pointerdown`** do gatilho, e
+   * medido: o "Copiado" que as duas telas de convite trocavam dentro da dica
+   * nunca chegou a aparecer.
+   */
+  confirmation?: React.ReactNode
+}) {
   // O Radix é quem manda; isto só espelha o estado para o `AnimatePresence` do
   // conteúdo. `open` continua opcional: passado, ele vence; ausente, o Radix
   // segue não controlado como sempre foi.
   const [interno, setInterno] = React.useState(defaultOpen ?? false)
-  const aberto = open ?? interno
+  const confirmando = confirmation != null && confirmation !== false
+  const aberto = confirmando || (open ?? interno)
 
   const aoMudar = React.useCallback(
     (valor: boolean) => {
@@ -72,23 +92,70 @@ function Tooltip({
   )
 
   return (
-    <TooltipAbertoContext.Provider value={aberto}>
+    <TooltipAbertoContext.Provider
+      value={{ aberto, confirmacao: confirmando ? confirmation : null }}
+    >
       <TooltipPrimitive.Root
         data-slot="tooltip"
         disableHoverableContent={disableHoverableContent}
-        open={open}
+        open={confirmando ? true : open}
         defaultOpen={defaultOpen}
         onOpenChange={aoMudar}
         {...props}
-      />
+      >
+        {children}
+      </TooltipPrimitive.Root>
+      {/* A dica é ligada por `aria-describedby`, e mudar a descrição não é
+          anunciado. A confirmação fala por aqui. Absoluta, então não ocupa
+          lugar na linha de quem a contém. */}
+      <span className="sr-only" role="status" aria-live="polite">
+        {confirmando ? confirmation : null}
+      </span>
     </TooltipAbertoContext.Provider>
   )
 }
 
+/**
+ * O gatilho — e ele **alcança um controle desabilitado** (rodada 185).
+ *
+ * Um `<button disabled>` não recebe ponteiro (o `Button` ainda declara
+ * `pointer-events: none` nele) nem foco, então a dica sobre ele nunca abria —
+ * medido: a demonstração "Só o owner remove membros" desta página estava morta.
+ * Com `asChild` e um filho `disabled`, o gatilho vira um `span` focável em
+ * volta dele: o ponteiro passa pelo botão até o `span`, o Tab para no `span`, e
+ * a dica explica por que o controle está desligado. O `aria-label` do filho
+ * sobe para o `span`, senão o leitor de tela focaria um nó sem nome.
+ */
 function TooltipTrigger({
+  asChild,
+  children,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
-  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
+  const filho = React.isValidElement<{ disabled?: boolean; "aria-label"?: string }>(
+    children
+  )
+    ? children
+    : null
+  if (asChild && filho?.props.disabled) {
+    return (
+      <TooltipPrimitive.Trigger data-slot="tooltip-trigger" asChild {...props}>
+        <span
+          data-slot="tooltip-disabled-trigger"
+          tabIndex={0}
+          aria-label={filho.props["aria-label"]}
+          aria-disabled
+          className="inline-flex rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/45"
+        >
+          {filho}
+        </span>
+      </TooltipPrimitive.Trigger>
+    )
+  }
+  return (
+    <TooltipPrimitive.Trigger data-slot="tooltip-trigger" asChild={asChild} {...props}>
+      {children}
+    </TooltipPrimitive.Trigger>
+  )
 }
 
 /**
@@ -129,8 +196,31 @@ const tooltipContentVariants = cva("font-medium", {
       sm: "px-2 py-1 text-xs",
       md: "px-3 py-1.5 text-sm",
     },
+    /**
+     * `plate` (o padrão) é a placa flutuante dos menus. `contrast` (rodada 185)
+     * é a pílula grave — `--primary`, preta no claro e branca no escuro —, sem
+     * vidro nem anel, para o rótulo de ícone que precisa se destacar do que
+     * está atrás. O `Kbd` dentro dela ganha a tinta da pílula.
+     */
+    variant: {
+      plate: "",
+      // Ela **não** veste a placa por baixo: a placa traz
+      // `supports-backdrop-filter:dark:bg-popover/60`, o `glass-surface` e a
+      // variante de transparência reduzida, e cada um venceria o `bg-primary`
+      // num tema ou num ambiente. Anular um por um é o que esta casa chama de
+      // compensar por seletor.
+      contrast: [
+        "rounded-lg bg-primary text-primary-foreground shadow-md",
+        "**:data-[slot=kbd]:bg-primary-foreground/15 **:data-[slot=kbd]:text-primary-foreground",
+        // O par `dark:` não é redundância: o `Kbd` declara `dark:bg-muted` e
+        // `dark:text-muted-foreground`, que empatam com a regra de cima e
+        // venciam pela ordem — medido, a tecla saía cinza-escura sobre a
+        // pílula branca.
+        "dark:**:data-[slot=kbd]:bg-primary-foreground/15 dark:**:data-[slot=kbd]:text-primary-foreground",
+      ].join(" "),
+    },
   },
-  defaultVariants: { size: "md" },
+  defaultVariants: { size: "md", variant: "plate" },
 })
 
 /**
@@ -167,14 +257,22 @@ function TooltipContent({
   sideOffset = 6,
   collisionPadding = ANCHORED_COLLISION_PADDING,
   size,
+  variant,
+  shortcut,
   children,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Content> &
-  VariantProps<typeof tooltipContentVariants>) {
+  VariantProps<typeof tooltipContentVariants> & {
+    /**
+     * O atalho, na grafia do `Kbd` (`"mod+b"`): ⌘ no Mac, Ctrl no resto.
+     * Entra à direita do texto (rodada 185).
+     */
+    shortcut?: string
+  }) {
   // O portal vai para o `body` da janela ativa. Fora da moldura do catálogo o
   // contexto é `null` e o Radix usa o próprio documento — o app não muda.
   const janela = useViewportWindow()
-  const aberto = React.useContext(TooltipAbertoContext)
+  const { aberto, confirmacao } = React.useContext(TooltipAbertoContext)
   // A mola é de JavaScript, e o bloco de `prefers-reduced-motion` do
   // `globals.css` só alcança animação de CSS. Sem isto, a única peça do sistema
   // que ignora a preferência seria esta.
@@ -191,6 +289,7 @@ function TooltipContent({
             forceMount
             data-slot="tooltip-content"
             data-size={size ?? "md"}
+            data-variant={variant ?? "plate"}
             sideOffset={sideOffset}
             collisionPadding={collisionPadding}
             {...props}
@@ -208,12 +307,18 @@ function TooltipContent({
                 // primeira, e a dica perdia o teto de leitura.
                 "z-(--z-popover) w-fit max-w-[min(20rem,var(--radix-tooltip-content-available-width))] origin-(--radix-tooltip-content-transform-origin)",
                 "max-h-(--radix-tooltip-content-available-height) overflow-y-auto overscroll-contain",
-                menuPanelSurfaceClassName,
-                tooltipContentVariants({ size }),
+                variant === "contrast" ? null : menuPanelSurfaceClassName,
+                tooltipContentVariants({ size, variant }),
+                shortcut && confirmacao == null && "flex items-center gap-2",
                 className
               )}
             >
-              {children}
+              {confirmacao ?? (
+                <>
+                  {children}
+                  {shortcut ? <Kbd keys={shortcut} /> : null}
+                </>
+              )}
             </motion.div>
           </TooltipPrimitive.Content>
         </TooltipPrimitive.Portal>

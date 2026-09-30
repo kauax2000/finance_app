@@ -371,7 +371,7 @@ export function WorkspaceInviteDialog({
                                                             className="min-w-0 flex-1 font-mono text-xs"
                                                         />
                                                         <div className="flex shrink-0 items-center gap-2">
-                                                            <Tooltip>
+                                                            <Tooltip confirmation={linkCopied ? "Link copiado" : null}>
                                                                 <TooltipTrigger asChild>
                                                                     <Button
                                                                         type="button"
@@ -388,14 +388,14 @@ export function WorkspaceInviteDialog({
                                                                         }
                                                                     >
                                                                         {linkCopied ? (
-                                                                            <CheckIcon className="h-4 w-4 text-success" />
+                                                                            <CheckIcon className="text-success" />
                                                                         ) : (
-                                                                            <DocumentDuplicateIcon className="h-4 w-4" />
+                                                                            <DocumentDuplicateIcon />
                                                                         )}
                                                                     </Button>
                                                                 </TooltipTrigger>
                                                                 <TooltipContent side="top">
-                                                                    {linkCopied ? "Copiado" : "Copiar"}
+                                                                    Copiar link
                                                                 </TooltipContent>
                                                             </Tooltip>
                                                             {pendingLinkInvite && canManageMembers ? (
@@ -598,7 +598,7 @@ export function WorkspaceInviteDialog({
                                                         className="min-w-0 flex-1 font-mono text-xs"
                                                     />
                                                     <div className="flex shrink-0 items-center gap-2">
-                                                        <Tooltip>
+                                                        <Tooltip confirmation={linkCopied ? "Link copiado" : null}>
                                                             <TooltipTrigger asChild>
                                                                 <Button
                                                                     type="button"
@@ -615,14 +615,14 @@ export function WorkspaceInviteDialog({
                                                                     }
                                                                 >
                                                                     {linkCopied ? (
-                                                                        <CheckIcon className="h-4 w-4 text-success" />
+                                                                        <CheckIcon className="text-success" />
                                                                     ) : (
-                                                                        <DocumentDuplicateIcon className="h-4 w-4" />
+                                                                        <DocumentDuplicateIcon />
                                                                     )}
                                                                 </Button>
                                                             </TooltipTrigger>
                                                             <TooltipContent side="top">
-                                                                {linkCopied ? "Copiado" : "Copiar"}
+                                                                Copiar link
                                                             </TooltipContent>
                                                         </Tooltip>
                                                         {pendingLinkInvite && canManageMembers ? (

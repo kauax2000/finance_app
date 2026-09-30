@@ -1,6 +1,14 @@
 "use client"
 
-import { InformationCircleIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
+import * as React from "react"
+import {
+  CheckIcon,
+  DocumentDuplicateIcon,
+  InformationCircleIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  TrashIcon,
+} from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import {
   Tooltip,
@@ -11,23 +19,45 @@ import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 const LADOS = ["top", "right", "bottom", "left"] as const
 
+function DemoCopiar() {
+  const [copiado, setCopiado] = React.useState(false)
+  return (
+    <Tooltip confirmation={copiado ? "Link copiado" : null}>
+      <TooltipTrigger asChild>
+        <Button
+          variant="outline"
+          size="icon-md"
+          aria-label={copiado ? "Link copiado" : "Copiar link"}
+          onClick={() => {
+            setCopiado(true)
+            window.setTimeout(() => setCopiado(false), 2000)
+          }}
+        >
+          {copiado ? <CheckIcon className="text-success" /> : <DocumentDuplicateIcon />}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>Copiar link</TooltipContent>
+    </Tooltip>
+  )
+}
+
 export default function TooltipDoc() {
   return (
     <>
       <Usage>
-        Um <strong>complemento curto</strong>: o nome de um ícone, o porquê de um botão estar desligado. Nunca informação necessária — no telefone não há hover e ele não aparece. Explicação indispensável vira texto na tela ou um <code>Popover</code>.
+        Um <strong>complemento curto</strong>: o nome de um ícone, o atalho de uma ação, o porquê de um botão estar desligado. Nunca informação necessária — no telefone não há cursor e ele não aparece. Explicação indispensável vira texto na tela ou um <code>Popover</code>; conteúdo que se aponta é o <code>HoverCard</code>.
       </Usage>
 
       <DocSection
-        title="Padrão"
-        description="O TooltipProvider já está no layout raiz; não repita. O gatilho usa asChild para envolver o controle existente, sem acrescentar um focável."
+        title="Padrão, e sobre um controle desabilitado"
+        description="O TooltipProvider já está no layout raiz; não repita. O gatilho usa asChild para envolver o controle existente. Se o filho está disabled, o gatilho o embrulha sozinho num alvo focável — um botão desligado não recebe ponteiro nem foco, e a dica que explica o porquê nunca abria."
         code={`<Tooltip>
   <TooltipTrigger asChild>
-    <Button variant="outline" size="icon-md" aria-label="Sobre o cálculo">
-      <InformationCircleIcon aria-hidden />
+    <Button variant="outline" size="icon-md" aria-label="Excluir" disabled>
+      <TrashIcon aria-hidden />
     </Button>
   </TooltipTrigger>
-  <TooltipContent>Considera só transações efetivadas.</TooltipContent>
+  <TooltipContent>Só o owner remove membros.</TooltipContent>
 </Tooltip>`}
       >
         <Tooltip>
@@ -49,8 +79,73 @@ export default function TooltipDoc() {
       </DocSection>
 
       <DocSection
+        title="A confirmação do clique"
+        description="confirmation: enquanto existir, a dica fica aberta mostrando-a, e ela é anunciada ao leitor de tela. Quem a liga é a tela, pelo resultado da ação — uma cópia que falha não confirma nada. Sem ela o Radix fecha a dica no clique, e o “Copiado” que as telas trocavam dentro da dica nunca aparecia. Clique."
+        code={`<Tooltip confirmation={copiado ? "Link copiado" : null}>
+  <TooltipTrigger asChild>
+    <Button aria-label="Copiar link" onClick={copiar}>…</Button>
+  </TooltipTrigger>
+  <TooltipContent>Copiar link</TooltipContent>
+</Tooltip>`}
+      >
+        <DemoCopiar />
+      </DocSection>
+
+      <DocSection
+        title="Com atalho"
+        description="shortcut, na grafia do Kbd: a tecla entra à direita do texto, com ⌘ no Mac e Ctrl no resto. É o que o botão de recolher a lateral mostra — o ⌘B existia e nada na tela dizia."
+        code={`<TooltipContent shortcut="mod+b">Recolher barra lateral</TooltipContent>`}
+      >
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="tertiary" size="icon-md" aria-label="Buscar">
+              <MagnifyingGlassIcon aria-hidden />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent shortcut="mod+k">Buscar</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="tertiary" size="icon-md" aria-label="Buscar (contraste)">
+              <MagnifyingGlassIcon aria-hidden />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent variant="contrast" shortcut="mod+k">
+            Buscar
+          </TooltipContent>
+        </Tooltip>
+      </DocSection>
+
+      <DocSection
+        title="Contraste e tamanho"
+        description="variant=&quot;contrast&quot; é a pílula grave, preta no claro e branca no escuro, sem vidro: para o rótulo de ícone que precisa se destacar do que está atrás. size=&quot;sm&quot; (12px, recuo menor) rotula ícones em fileira densa, como a coluna de ações da Table; md (14px) é o de uma frase."
+        code={`<TooltipContent variant="contrast">Editar Mercado</TooltipContent>
+<TooltipContent size="sm">Editar Mercado</TooltipContent>`}
+      >
+        {(
+          [
+            ["plate", "md"],
+            ["plate", "sm"],
+            ["contrast", "md"],
+            ["contrast", "sm"],
+          ] as const
+        ).map(([variant, size]) => (
+          <Tooltip key={variant + size}>
+            <TooltipTrigger asChild>
+              <Button variant="tertiary" size="icon-sm" aria-label={`Editar Mercado (${variant}, ${size})`}>
+                <PencilIcon aria-hidden />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent variant={variant} size={size}>
+              Editar Mercado
+            </TooltipContent>
+          </Tooltip>
+        ))}
+      </DocSection>
+
+      <DocSection
         title="Lado"
-        description="side escolhe de onde ele sai, e a caixa cresce a partir do gatilho — a origem da escala é a que o Radix publica. Ele vira o lado quando falta espaço."
+        description="side escolhe de onde ela sai, e a caixa cresce a partir do gatilho — a origem da escala é a que o Radix publica. Ela vira o lado quando falta espaço."
         code={`<TooltipContent side="right">Copiar link</TooltipContent>`}
       >
         {LADOS.map((side) => (
@@ -66,25 +161,8 @@ export default function TooltipDoc() {
       </DocSection>
 
       <DocSection
-        title="Tamanho"
-        description="md (14px) é o padrão, para uma frase. sm (12px, recuo menor) rotula ícones em fileira densa, como a coluna de ações da Table."
-        code={`<TooltipContent size="sm">Editar Mercado</TooltipContent>`}
-      >
-        {(["sm", "md"] as const).map((size) => (
-          <Tooltip key={size}>
-            <TooltipTrigger asChild>
-              <Button variant="tertiary" size="icon-sm" aria-label={`Editar Mercado (${size})`}>
-                <PencilIcon aria-hidden />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent size={size}>Editar Mercado</TooltipContent>
-          </Tooltip>
-        ))}
-      </DocSection>
-
-      <DocSection
         title="Texto que não cabe numa linha"
-        description="max-w-xs quebra e a caixa cresce. Mas se precisa de duas linhas, provavelmente não é tooltip."
+        description="O teto é 20rem (ou a largura disponível, o que for menor), e a caixa cresce para baixo. Mas se precisa de duas linhas, provavelmente não é tooltip."
         code={`<TooltipContent>
   Fatura fechada. Lançamentos novos entram na próxima.
 </TooltipContent>`}
@@ -92,7 +170,7 @@ export default function TooltipDoc() {
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="tertiary" size="sm">
-              Duas linhas
+              duas linhas
             </Button>
           </TooltipTrigger>
           <TooltipContent>
@@ -102,68 +180,32 @@ export default function TooltipDoc() {
       </DocSection>
 
       <DocNote title="Ela cresce a partir do gatilho, com mola">
-        A entrada é <code>scale 0,5 → 1</code> com <code>opacity 0 → 1</code>, numa mola de <code>stiffness 300</code> e <code>damping 25</code> — subamortecida de propósito, então ela passa de 1 e volta (medido: 0,992 → <strong>1,0026</strong> → 1,0098). A saída é o mesmo caminho ao contrário. A origem é <code>--radix-tooltip-content-transform-origin</code>, então a caixa nasce do botão e não do próprio centro.
-        <br />
-        Mola não tem duração, e por isso ela fica <strong>fora</strong> da escala <code>--duration-*</code>/<code>--ease-*</code> — a mesma exceção que a <code>link-sweep</code> já abre. Como é movimento de JavaScript, o bloco de <code>prefers-reduced-motion</code> do <code>globals.css</code> não a alcança: quem a desliga é <code>useReducedMotion</code>, e aí a dica só aparece e some.
-      </DocNote>
-
-      <DocNote title="A tela funciona sem ele?">
-        Se não funciona, o conteúdo está no lugar errado: vira texto na tela, um <code>Popover</code> acionado por toque ou a descrição de um campo.
+        A entrada é <code>scale 0,5 → 1</code> com <code>opacity 0 → 1</code>, numa mola de <code>stiffness 300</code> e <code>damping 25</code> — subamortecida de propósito, então ela passa de 1 e volta. A origem é <code>--radix-tooltip-content-transform-origin</code>, então a caixa nasce do botão. Como é movimento de JavaScript, o bloco global de movimento reduzido não a alcança: quem a desliga é <code>useReducedMotion</code>.
       </DocNote>
 
       <DocNote title="Tooltip não substitui aria-label">
-        Botão só de ícone precisa dos dois. O Radix liga o tooltip por <code>aria-describedby</code>, que complementa o nome acessível e não o cria — sem rótulo, o leitor de tela anuncia &ldquo;botão&rdquo; e mais nada.
+        Botão só de ícone precisa dos dois. O Radix liga a dica por <code>aria-describedby</code>, que complementa o nome e não o cria. E a confirmação não é anunciada por esse caminho — mudar uma descrição não fala nada —, por isso ela tem uma região viva própria.
       </DocNote>
 
-      <DocNote title="Veste a superfície de menu, nunca tokens de região">
-        <code>menuPanelSurfaceClassName</code> dá o <code>--popover</code> (a 85%, abrindo a 60% no escuro onde há borrão), o canto de 10px, o <code>ring-1</code> e o material com guarda de <code>prefers-reduced-transparency</code> — a mesma casca de <code>Popover</code>, <code>Select</code> e menus. Tokens de <code>sidebar</code> num elemento que flutua mudam de cor quando a lateral muda.
+      <DocNote title="A placa é a dos menus, e a pílula não veste a placa">
+        <code>plate</code> veste <code>menuPanelSurfaceClassName</code>, a casca de <code>Popover</code>, <code>Select</code> e menus. <code>contrast</code> não a veste por baixo: a placa traz a tinta de vidro do escuro, o <code>glass-surface</code> e a variante de transparência reduzida, e cada um venceria o <code>--primary</code> num tema ou num ambiente.
       </DocNote>
 
-      <DocNote title="O alfa da superfície serve sem ajuste">
-        O corpo é <code>--foreground</code>, tinta cheia, então passa de 4,5:1 com folga mesmo sobre o preenchimento do botão <code>primary</code>.
+      <DocNote title="Onde o app usa">
+        Na coluna de ações da <code>Table</code> (<code>size=&quot;sm&quot;</code>, o nome de cada ícone), no trilho recolhido da <code>Sidebar</code> e, desde a rodada 185, no botão de recolher a lateral, com o atalho. E no botão de copiar o link de convite, na tela de membros e no diálogo de convite: ele trocava a dica para &ldquo;Copiado&rdquo;, que nunca aparecia porque o clique fecha a dica; hoje é <code>confirmation</code>.
       </DocNote>
 
       <PropsTable
-        title="Props do TooltipContent"
+        title="Props"
         rows={[
-          {
-            prop: "size",
-            type: '"sm" | "md"',
-            default: '"md"',
-            description:
-              "md é 14px, para uma frase; sm é 12px, para rotular ícone em fileira densa.",
-          },
-          {
-            prop: "side",
-            type: '"top" | "right" | "bottom" | "left"',
-            default: '"top"',
-            description: "De onde ele sai. Vira sozinho quando falta espaço.",
-          },
-          {
-            prop: "sideOffset",
-            type: "number",
-            default: "6",
-            description: "Distância até o gatilho.",
-          },
-          {
-            prop: "align",
-            type: '"start" | "center" | "end"',
-            default: '"center"',
-            description: "Alinhamento ao longo do lado escolhido.",
-          },
-          {
-            prop: "collisionPadding",
-            type: "number | Padding",
-            default: "ANCHORED_COLLISION_PADDING (8)",
-            description:
-              "A folga até a borda da janela, de lib/anchored-surface.",
-          },
+          { prop: "Tooltip · confirmation", type: "ReactNode", description: "Enquanto existir, a dica fica aberta mostrando-a, e ela é anunciada. Ligue pelo resultado da ação." },
+          { prop: "TooltipContent · variant", type: '"plate" | "contrast"', default: '"plate"', description: "A placa dos menus, ou a pílula grave." },
+          { prop: "TooltipContent · size", type: '"sm" | "md"', default: '"md"', description: "md é 14px, para uma frase; sm é 12px, para ícone em fileira densa." },
+          { prop: "TooltipContent · shortcut", type: "string", description: 'O atalho, na grafia do Kbd ("mod+b").' },
+          { prop: "TooltipContent · side · align", type: "Radix", default: '"top" · "center"', description: "De onde sai e como se alinha. Vira sozinho quando falta espaço." },
+          { prop: "TooltipContent · sideOffset", type: "number", default: "6", description: "Distância até o gatilho." },
         ]}
       />
-
-      <DocNote title="Ele encolhe antes de encostar">
-        <code>max-w-xs</code> é o teto de leitura; <code>max-w-(--radix-tooltip-content-available-width)</code> é o da janela, e o menor vence — deslocar não resolve o que não cabe. A folga de 8px vem de <code>lib/anchored-surface</code>, como em toda superfície ancorada.
-      </DocNote>
     </>
   )
 }

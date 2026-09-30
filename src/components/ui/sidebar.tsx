@@ -507,25 +507,33 @@ function SidebarTrigger({
   // abrir quando está fechada. No telefone quem conta é o painel. O ícone é um
   // só nos dois estados — o desenho próprio da barra lateral.
   const aberta = isMobile ? openMobile : state === "expanded"
+  const rotulo = aberta ? "Recolher barra lateral" : "Abrir barra lateral"
 
+  // A dica existe pelo atalho (rodada 185): ⌘B / Ctrl+B recolhe a barra desde
+  // sempre, e nada na tela dizia isso. No telefone não há cursor e ela não abre.
   return (
-    <Button
-      data-sidebar="trigger"
-      data-slot="sidebar-trigger"
-      type="button"
-      variant="tertiary"
-      // O degrau padrão: ele mora no `TopBar`, onde todo botão é `md`.
-      size="icon-md"
-      aria-label={aberta ? "Recolher barra lateral" : "Abrir barra lateral"}
-      className={cn(className)}
-      onClick={(event) => {
-        onClick?.(event)
-        toggleSidebar()
-      }}
-      {...props}
-    >
-      <SidebarToggleIcon />
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          data-sidebar="trigger"
+          data-slot="sidebar-trigger"
+          type="button"
+          variant="tertiary"
+          // O degrau padrão: ele mora no `TopBar`, onde todo botão é `md`.
+          size="icon-md"
+          aria-label={rotulo}
+          className={cn(className)}
+          onClick={(event) => {
+            onClick?.(event)
+            toggleSidebar()
+          }}
+          {...props}
+        >
+          <SidebarToggleIcon />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent shortcut={`mod+${SIDEBAR_KEYBOARD_SHORTCUT}`}>{rotulo}</TooltipContent>
+    </Tooltip>
   )
 }
 

@@ -2007,6 +2007,16 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   de 7px a `largura − 7px`, a régua do Radix —, `bubble` no `:active` e no
   foco de teclado, e `bands`, os cortes do `Progress` (zonas no trilho, faixa
   na cor do valor; não com a marca). Sem essas props a peça é a de sempre.
+- **`Tooltip` confirma, alcança o desabilitado, mostra atalho e tem contraste**
+  (rodada 185). **O Radix fecha a dica no `pointerdown`**, então trocar o
+  texto dela no clique ("Copiado") nunca aparece — medido; a confirmação é
+  `<Tooltip confirmation={copiado ? "Link copiado" : null}>`, ligada pelo
+  **resultado** da ação, com região viva própria. **Um `<button disabled>` não
+  abre dica**: o `TooltipTrigger asChild` embrulha sozinho um filho `disabled`
+  num `span` focável e leva o `aria-label` junto. `shortcut` (`"mod+b"`, pela
+  grafia do `Kbd`) põe a tecla à direita — o `SidebarTrigger` mostra ⌘B.
+  `variant="contrast"` é a pílula `--primary` e **não veste a placa por
+  baixo** (a tinta de vidro do escuro venceria).
 - **`Toggle` tem amostra, pílula, degraus de ícone e ícone que acende**
   (rodada 183), e o `ToggleGroup` herda tudo pelo contexto e pelo item:
   `variant="swatch"` com `color` é a amostra de cor dos seletores — a

@@ -15896,3 +15896,35 @@ cores**.
 - **Um erro da rodada 183**: o `toggle.test.ts` usava a flag `/s` de regex,
   que o alvo do `tsc` do projeto não aceita — o `tsc` tinha rodado antes de o
   arquivo existir. O `[^>]` já atravessa linhas, e a flag saiu.
+
+### Rodada 185 — o Tooltip confirma o clique, alcança o desabilitado, mostra o atalho e ganha contraste
+
+O dono pediu a rodada completa e escolheu as quatro versões. Duas delas vieram
+de defeitos medidos antes de propor.
+
+- **O clique fecha a dica.** O Radix fecha o conteúdo no `pointerdown` do
+  gatilho — medido: a dica aberta some depois do clique. As duas telas de
+  convite (membros e o diálogo, três botões de copiar link) trocavam o texto
+  da dica para "Copiado", que **nunca apareceu**. `Tooltip confirmation` força
+  a dica aberta mostrando a confirmação enquanto ela existir, e a anuncia por
+  uma região viva — mudar um `aria-describedby` não fala nada. Quem a liga é
+  a tela, pelo resultado (`linkCopied`, que só vira `true` depois de o
+  `writeText` dar certo); a falha continua no toast. Medido: "Link copiado"
+  aberto depois do clique, anunciado, e fechado depois dos 2s da tela.
+- **Botão desabilitado não abre dica.** A demonstração "Só o owner remove
+  membros" da página estava morta. Com `asChild` e um filho `disabled`, o
+  `TooltipTrigger` o embrulha num `span` focável (`aria-disabled`, com o
+  `aria-label` do filho); o `disabled:pointer-events-none` do `Button` deixa o
+  ponteiro chegar ao `span`. Medido no cursor e no Tab.
+- **`shortcut`**: o `Kbd` à direita do texto, com ⌘ ou Ctrl pela plataforma. O
+  `SidebarTrigger` passa a ter dica com ⌘B — o atalho existia e nada na tela
+  dizia. (O cabeçalho do app pede login, e esse caso não foi visto na tela;
+  a peça é a mesma medida na página.)
+- **`variant="contrast"`**: a pílula `--primary`, sem vidro. Ela **não veste a
+  placa por baixo**: a placa traz `supports-backdrop-filter:dark:bg-popover/60`
+  e o `glass-surface`, que venceriam o `bg-primary`. O `Kbd` dentro dela
+  precisou do par `dark:` — o `dark:bg-muted` do próprio `Kbd` empatava e
+  vencia pela ordem, e a tecla saía cinza-escura sobre a pílula branca.
+- **Página**: as notas citavam `max-w-xs`, que saiu quando o teto virou
+  `min(20rem, largura disponível)`; as seis notas viraram quatro, e os ícones
+  de copiar perderam o `h-4 w-4` que o `Button` já dá.
