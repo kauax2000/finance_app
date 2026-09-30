@@ -43,8 +43,9 @@ import { cn } from "@/lib/utils"
 const colorTileVariants = cva(
   [
     "flex shrink-0 items-center justify-center overflow-hidden",
-    "bg-[oklch(from_var(--tile-color)_0.86_min(c,_0.12)_h)]",
-    "text-identity-foreground",
+    // A superfície e a tinta saem de `tile-vivid` / `tile-soft` (rodada 184),
+    // que publicam as duas variáveis a partir de `--tile-color`.
+    "bg-(--tile-surface) text-(--tile-ink)",
   ].join(" "),
   {
     variants: {
@@ -66,6 +67,15 @@ const colorTileVariants = cva(
        * `size-4` é micro (16/solid) e `size-5` é mini (20/solid), pela régua de
        * Iconografia.
        */
+      /**
+       * **`vivid`** (o padrão): a cor na claridade 0,76 com o croma cheio e a
+       * tinta escura. **`soft`**: quase branca, com o ícone no tom forte do
+       * mesmo matiz. O pastel de antes saiu na rodada 184.
+       */
+      tint: {
+        vivid: "tile-vivid",
+        soft: "tile-soft",
+      },
       size: {
         // O degrau de dentro de uma linha de lista e do gatilho de um campo
         // (rodada 173): 24px cabem numa opção de `Select` e num gatilho `md`
@@ -78,6 +88,7 @@ const colorTileVariants = cva(
       },
     },
     defaultVariants: {
+      tint: "vivid",
       size: "md",
     },
   }
@@ -86,6 +97,7 @@ const colorTileVariants = cva(
 function ColorTile({
   className,
   size,
+  tint,
   color,
   style,
   ...props
@@ -103,7 +115,8 @@ function ColorTile({
     <div
       data-slot="color-tile"
       aria-hidden
-      className={cn(colorTileVariants({ size }), className)}
+      data-tint={tint ?? "vivid"}
+      className={cn(colorTileVariants({ size, tint }), className)}
       // A cor entra uma vez, como variável, e a superfície se deriva dela no
       // CSS. Fazer a conta em JavaScript perderia o `oklch(from …)`, que é o
       // que prende a claridade sem precisar medir cor por cor.

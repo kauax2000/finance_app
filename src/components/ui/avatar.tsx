@@ -4,7 +4,6 @@ import * as React from "react"
 import { Avatar as AvatarPrimitive } from "radix-ui"
 import { cva, type VariantProps } from "class-variance-authority"
 
-import { IDENTITY_TONES } from "@/lib/avatar"
 import { cn } from "@/lib/utils"
 
 /**
@@ -103,10 +102,11 @@ AvatarImage.displayName = "AvatarImage"
 /**
  * As iniciais, e o que se vê enquanto a foto não chega.
  *
- * **Uma cor chapada de identidade, com a tinta escura.** O padrão é a primeira
- * identidade; quem sabe qual pessoa é passa o par de `identityToneFor` por
- * `className` (`cn(tone.surface, tone.ink)`), e o `bg-identity-N` dele vence o
- * padrão no merge.
+ * **Uma cor chapada de identidade, em duas versões** (rodada 184): `tint`
+ * `vivid` (o padrão, a cor cheia com a tinta escura) ou `soft` (quase branca,
+ * com a letra no tom forte da família). O padrão é a primeira identidade;
+ * quem sabe qual pessoa é passa o par de `identityToneFor` por `className`
+ * (`cn(tone.surface, tone.ink)`), que declara a família e vence o padrão.
  *
  * **Isto já foi um degradê, e o que sobrou é este parágrafo.** Por três
  * rodadas a superfície foi uma mancha radial num `::before`, com grão, com um
@@ -139,15 +139,25 @@ AvatarImage.displayName = "AvatarImage"
  */
 const AvatarFallback = React.forwardRef<
   HTMLSpanElement,
-  React.ComponentProps<typeof AvatarPrimitive.Fallback>
->(({ className, ...props }, ref) => (
+  React.ComponentProps<typeof AvatarPrimitive.Fallback> & {
+    /**
+     * `vivid` (o padrão) é a cor de identidade cheia com a tinta escura;
+     * `soft` é quase branca, com a letra no tom forte da mesma família.
+     */
+    tint?: "vivid" | "soft"
+  }
+>(({ className, tint = "vivid", ...props }, ref) => (
   <AvatarPrimitive.Fallback
     ref={ref}
     data-slot="avatar-fallback"
+    data-tint={tint}
     className={cn(
       "flex h-full w-full items-center justify-center font-medium",
-      IDENTITY_TONES[0].surface,
-      IDENTITY_TONES[0].ink,
+      // A primeira identidade é o padrão pelo fallback do `var()`, e não por
+      // uma classe `identity-1`: duas `identity-N` no mesmo elemento seriam
+      // decididas pela ordem de emissão, e a da pessoa perderia para a 1.
+      "bg-[var(--identity-surface,var(--identity-1))] text-identity-foreground",
+      "data-[tint=soft]:bg-[var(--identity-surface-soft,var(--identity-1-soft))] data-[tint=soft]:text-[var(--identity-ink,var(--identity-1-ink))]",
       className
     )}
     {...props}

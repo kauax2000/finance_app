@@ -15853,3 +15853,46 @@ peça à mão.
   comentário do componente tinha uma frase truncada. A do `ToggleGroup` dizia
   que clicar no item ativo desmarca e deixa o valor vazio, e o componente
   engole essa troca desde que ganhou o guarda — a nota foi invertida.
+
+### Rodada 184 — as cores de identidade e de ladrilho deixam de ser pastel, e ganham duas versões
+
+O dono recusou o pastel dos avatares e das amostras: "ou deixe elas bem
+clarinhas ou no tom do arco-íris original". Um comparativo com quatro caminhos
+(clarinhas com tinta neutra, clarinhas com a tinta da cor, as paradas exatas da
+marca, e o arco-íris numa claridade só) foi rasterizado com o contraste de
+cada célula; as paradas exatas reprovavam no magenta (4,2) e trocavam a tinta
+entre branca e escura por cor. O dono escolheu **duas**: o arco-íris vivo e a
+clarinha com a tinta da cor, **como variantes, em todo componente que usa essas
+cores**.
+
+- **Tokens**: `--identity-N` passa a ser a viva (0,76, croma 0,17), e entram
+  `--identity-N-soft` (0,95, 0,05) e `--identity-N-ink` (0,42, 0,13), nos dois
+  blocos de tema, com os mesmos matizes.
+- **Utilities que publicam variáveis, e não pintam**: `identity-N` declara
+  `--identity-surface`, `--identity-surface-soft` e `--identity-ink`;
+  `tile-vivid` e `tile-soft` declaram `--tile-surface` e `--tile-ink` a partir
+  de `--tile-color`. Quem pinta é o componente, com `bg-(--…)`. Pintar na
+  utility faria o `hover:bg-muted` do `Toggle` disputar com ela por ordem de
+  emissão — grupos que o `tailwind-merge` não sabe que conflitam.
+- **O croma do ladrilho vivo é um degrau**: `clamp(0, (c − 0,02) × 10, 0,2)`.
+  Os hexadecimais gravados vão de 0,079 (índigo) a 0,12 de croma, e a marca de
+  0,13 a 0,28 — nenhum multiplicador único leva um ao outro. Com o degrau,
+  qualquer cor com matiz vai ao croma cheio e cinza continua cinza.
+- **O padrão do `AvatarFallback` é por fallback do `var()`**, e não por uma
+  classe `identity-1`: duas `identity-N` no mesmo elemento seriam decididas
+  por ordem de emissão, e a da pessoa perderia para a 1. `IDENTITY_TONES` passa
+  a ser `identity-N bg-(--identity-surface)`, que continua pintando sozinho nos
+  dois `div` que não são avatar (o painel e o diálogo de perfil).
+- **`tint` em três componentes**: `AvatarFallback`, `ColorTile` e o `Toggle` /
+  `ToggleGroup` com `variant="swatch"`. O padrão é `vivid` em todos, e nenhuma
+  tela do app foi mudada para `soft`.
+- **Medido**: avatar viva 7,44–8,95 e suave 6,50–7,68; ladrilho viva 6,66–9,44
+  e suave 6,48–7,64 (192 células), nos dois temas.
+- **Os dois scripts de contraste mediam errado depois da troca**:
+  `identity-contrast.mjs` trocava `bg-identity-N` na classe do clone, que não
+  existe mais, e mediu a família 1 seis vezes — 7,65 em todas, sem acusar
+  nada. Ele passou a trocar `identity-N`, a medir as duas versões e a ler a
+  tinta de cada clone; o `tile-contrast.mjs` também mede as duas.
+- **Um erro da rodada 183**: o `toggle.test.ts` usava a flag `/s` de regex,
+  que o alvo do `tsc` do projeto não aceita — o `tsc` tinha rodado antes de o
+  arquivo existir. O `[^>]` já atravessa linhas, e a flag saiu.

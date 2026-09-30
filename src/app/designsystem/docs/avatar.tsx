@@ -97,24 +97,34 @@ export default function AvatarDoc() {
 
       <Group
         title="Seis identidades"
-        description="Uma cor chapada por pessoa, uma família cada, com os matizes de 42° a 100° uns dos outros — é o que distingue seis pessoas num relance. Um valor só nos dois temas, e a tinta é sempre a escura."
+        description="Uma cor chapada por pessoa, uma família cada, com os matizes de 42° a 100° uns dos outros — é o que distingue seis pessoas num relance. Cada família tem duas versões: a viva (tint=&quot;vivid&quot;, o padrão), a cor cheia com a tinta escura, e a suave (tint=&quot;soft&quot;), quase branca com a letra no tom forte da mesma família. Um valor só nos dois temas."
         layout="flow"
       >
-        <Spec title="As cores" meta="--identity-1…6" className="mb-0">
+        <Spec title="As cores" meta="--identity-1…6 · -soft · -ink" className="mb-0">
           <div className="grid grid-cols-3 gap-4 sm:grid-cols-6">
             {IDENTIDADES.map((id, i) => (
               <div key={id.nome} className="flex flex-col items-center gap-2">
-                <Avatar size="xl">
-                  <AvatarFallback
-                    className={cn(IDENTITY_TONES[i].surface, IDENTITY_TONES[i].ink)}
-                  >
-                    {id.nome.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="flex gap-2">
+                  <Avatar size="xl">
+                    <AvatarFallback
+                      className={cn(IDENTITY_TONES[i].surface, IDENTITY_TONES[i].ink)}
+                    >
+                      {id.nome.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <Avatar size="xl">
+                    <AvatarFallback
+                      tint="soft"
+                      className={cn(IDENTITY_TONES[i].surface, IDENTITY_TONES[i].ink)}
+                    >
+                      {id.nome.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
                 <div className="flex flex-col items-center">
                   <span className="text-xs font-medium text-foreground">{id.nome}</span>
                   <Code variant="inline" className="text-2xs text-muted-foreground">
-                    bg-identity-{i + 1}
+                    identity-{i + 1}
                   </Code>
                   <span className="nums text-2xs text-muted-foreground">{id.matiz}°</span>
                 </div>
@@ -244,7 +254,13 @@ const tone = identityToneFor(profile.avatar_color, email)
             prop: "AvatarFallback · className",
             type: "string",
             default: "identidade 1",
-            description: "Recebe cn(tone.surface, tone.ink) de identityToneFor.",
+            description: "Recebe cn(tone.surface, tone.ink) de identityToneFor: a classe identity-N declara a família.",
+          },
+          {
+            prop: "AvatarFallback · tint",
+            type: '"vivid" | "soft"',
+            default: '"vivid"',
+            description: "vivid é a cor cheia com a tinta escura (7,44 a 8,95:1); soft é quase branca, com a letra no tom forte da família (6,50 a 7,68:1).",
           },
           {
             prop: "AvatarFallback · delayMs",

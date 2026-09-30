@@ -21,12 +21,13 @@ import { Caption } from "@/components/ui/typography"
 import { TILE_PALETTE } from "@/lib/tile-palette"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
-function DemoAmostras() {
+function DemoAmostras({ tint }: { tint?: "vivid" | "soft" }) {
   const [cor, setCor] = React.useState<string>(TILE_PALETTE[2].hex)
   return (
     <ToggleGroup
       type="single"
       variant="swatch"
+      tint={tint}
       size="icon-md"
       value={cor}
       onValueChange={setCor}
@@ -141,14 +142,17 @@ import { StarIcon as StarSolidIcon } from "@heroicons/react/16/solid"
 
       <DocSection
         title="Amostra de cor"
-        description="variant=&quot;swatch&quot; com color: a amostra dos seletores de cor da categoria e do workspace. A superfície é a do ColorTile — a cor na claridade do sistema —, então o que se escolhe é o que o ladrilho vai mostrar. A escolhida ganha contorno e tique, e o estado não depende só do contorno. O nome vai em aria-label: a amostra não tem texto."
+        description="variant=&quot;swatch&quot; com color: a amostra dos seletores de cor da categoria e do workspace. A superfície é a do ColorTile — a cor na claridade do sistema, viva ou suave (tint) —, então o que se escolhe é o que o ladrilho vai mostrar. A escolhida ganha contorno e tique, e o estado não depende só do contorno. O nome vai em aria-label: a amostra não tem texto."
         code={`<ToggleGroup type="single" variant="swatch" size="icon-md" value={cor} onValueChange={setCor}>
   {TILE_PALETTE.map(({ hex, nome }) => (
     <ToggleGroupItem key={hex} value={hex} color={hex} aria-label={\`Cor \${nome}\`} />
   ))}
 </ToggleGroup>`}
       >
-        <DemoAmostras />
+        <div className="flex flex-col gap-3">
+          <DemoAmostras />
+          <DemoAmostras tint="soft" />
+        </div>
       </DocSection>
 
       <DocNote title="Ele não afunda ao clicar">
@@ -171,6 +175,7 @@ import { StarIcon as StarSolidIcon } from "@heroicons/react/16/solid"
           { prop: "shape", type: '"rounded" | "pill"', default: '"rounded"', description: "pill arredonda 100% e dá meio degrau de recuo; nos de ícone, círculo." },
           { prop: "icon · iconOn", type: "HeroIcon", description: "O ícone, e o par sólido que o substitui quando liga." },
           { prop: "color", type: "string", description: "Com swatch, a cor gravada — a mesma que o ColorTile recebe." },
+          { prop: "tint", type: '"vivid" | "soft"', default: '"vivid"', description: "Com swatch, a versão da cor: a do ColorTile." },
         ]}
       />
     </>

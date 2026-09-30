@@ -425,11 +425,15 @@
      de ficar na borda e não no meio —, caso alguma delas volte.
 
      **Os matizes ficam de 42° a 100° uns dos outros** (58, 100, 175, 230, 275,
-     318), que é o que distingue seis pessoas à primeira vista. A luminosidade
-     é 0,84–0,88 e o croma 0,10–0,12: pastel, porque a primeira versão de todas
-     tinha as pontas em 0,5 com letra branca e o dono a devolveu na tela —
-     "feio". É um valor só nos dois temas, porque a referência já era sobre
-     fundo preto: o pastel lê sobre o cartão claro e sobre o escuro.
+     318), que é o que distingue seis pessoas à primeira vista. **Desde a
+     rodada 184 são duas versões, e o pastel saiu** — o dono o recusou: "ou bem
+     clarinhas ou no tom do arco-íris". A **viva** (`--identity-N`, a padrão) é
+     uma claridade só, 0,76, com croma 0,17 e a tinta escura; a **suave**
+     (`--identity-N-soft`) é quase branca, 0,95 e croma 0,05, com a letra no
+     tom forte do mesmo matiz (`--identity-N-ink`, 0,42 e 0,13). Medido: a viva
+     vai de 7,4 a 8,9:1, a suave de 6,5 a 7,7:1. (A primeira versão de todas,
+     com as pontas em 0,5 e letra branca, também foi recusada — "feio".) Um
+     valor só nos dois temas.
 
      **Agora que são cor e não degradê, elas entram no `@theme inline`** como
      `--color-identity-N`, e a tela escreve `bg-identity-N`. Enquanto foram
@@ -437,12 +441,24 @@
      que saiu junto. Contraste medido por `scripts/identity-contrast.mjs`, e
      ele é folgado: **pior caso 10,17:1** contra o piso AA de 4,5. Os números
      estão em `/designsystem/avatar`. */
-  --identity-1: oklch(0.85 0.11 58); /* ember */
-  --identity-2: oklch(0.88 0.11 100); /* gold */
-  --identity-3: oklch(0.85 0.10 175); /* grove */
-  --identity-4: oklch(0.84 0.10 230); /* ocean */
-  --identity-5: oklch(0.84 0.11 275); /* iris */
-  --identity-6: oklch(0.85 0.12 318); /* bloom */
+  --identity-1: oklch(0.76 0.17 58); /* ember */
+  --identity-2: oklch(0.76 0.17 100); /* gold */
+  --identity-3: oklch(0.76 0.17 175); /* grove */
+  --identity-4: oklch(0.76 0.17 230); /* ocean */
+  --identity-5: oklch(0.76 0.17 275); /* iris */
+  --identity-6: oklch(0.76 0.17 318); /* bloom */
+  --identity-1-soft: oklch(0.95 0.05 58);
+  --identity-2-soft: oklch(0.95 0.05 100);
+  --identity-3-soft: oklch(0.95 0.05 175);
+  --identity-4-soft: oklch(0.95 0.05 230);
+  --identity-5-soft: oklch(0.95 0.05 275);
+  --identity-6-soft: oklch(0.95 0.05 318);
+  --identity-1-ink: oklch(0.42 0.13 58);
+  --identity-2-ink: oklch(0.42 0.13 100);
+  --identity-3-ink: oklch(0.42 0.13 175);
+  --identity-4-ink: oklch(0.42 0.13 230);
+  --identity-5-ink: oklch(0.42 0.13 275);
+  --identity-6-ink: oklch(0.42 0.13 318);
   --identity-foreground: oklch(0.22 0 0);
   /* Osso de skeleton: `muted` some em telas de baixo gamut, então é um degrau
      abaixo dele, no mesmo matiz.
@@ -859,12 +875,24 @@
   --chart-expense: var(--expense);
   /* Ver a nota no tema claro: o mesmo chip pastel nos dois temas — a
      referência era sobre preto. */
-  --identity-1: oklch(0.85 0.11 58); /* ember */
-  --identity-2: oklch(0.88 0.11 100); /* gold */
-  --identity-3: oklch(0.85 0.10 175); /* grove */
-  --identity-4: oklch(0.84 0.10 230); /* ocean */
-  --identity-5: oklch(0.84 0.11 275); /* iris */
-  --identity-6: oklch(0.85 0.12 318); /* bloom */
+  --identity-1: oklch(0.76 0.17 58); /* ember */
+  --identity-2: oklch(0.76 0.17 100); /* gold */
+  --identity-3: oklch(0.76 0.17 175); /* grove */
+  --identity-4: oklch(0.76 0.17 230); /* ocean */
+  --identity-5: oklch(0.76 0.17 275); /* iris */
+  --identity-6: oklch(0.76 0.17 318); /* bloom */
+  --identity-1-soft: oklch(0.95 0.05 58);
+  --identity-2-soft: oklch(0.95 0.05 100);
+  --identity-3-soft: oklch(0.95 0.05 175);
+  --identity-4-soft: oklch(0.95 0.05 230);
+  --identity-5-soft: oklch(0.95 0.05 275);
+  --identity-6-soft: oklch(0.95 0.05 318);
+  --identity-1-ink: oklch(0.42 0.13 58);
+  --identity-2-ink: oklch(0.42 0.13 100);
+  --identity-3-ink: oklch(0.42 0.13 175);
+  --identity-4-ink: oklch(0.42 0.13 230);
+  --identity-5-ink: oklch(0.42 0.13 275);
+  --identity-6-ink: oklch(0.42 0.13 318);
   --identity-foreground: oklch(0.22 0 0);
   --skeleton: oklch(0.3 0 0);
   --shadow-xl-value: 0 24px 48px -12px oklch(0 0 0 / 0.7);
@@ -2845,6 +2873,62 @@
 .theme-reveal::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
+}
+
+/* **As cores de identidade e de ladrilho têm duas versões** (rodada 184): a
+   **viva**, uma claridade só com o croma da marca e a tinta escura, e a
+   **suave**, quase branca com a letra no tom forte do mesmo matiz. O pastel de
+   antes (0,85, croma 0,10–0,12) saiu a pedido do dono.
+
+   As utilities **publicam variáveis**, e o componente pinta com
+   `bg-(--tile-surface) text-(--tile-ink)`. Pintar direto na utility faria o
+   `hover:bg-muted` do `Toggle` disputar com ela por ordem de emissão — duas
+   regras de grupos que o `tailwind-merge` não sabe que conflitam. Por
+   variável, os dois são `bg-*` e o merge resolve.
+
+   **No ladrilho a claridade e o croma são do sistema, e o matiz é da pessoa.**
+   O croma do vivo é `clamp(0, (c − 0,02) × 10, 0,2)`: qualquer cor com matiz
+   vai ao croma cheio, e cinza continua cinza — um multiplicador só não serve,
+   porque os hexadecimais gravados vão de 0,079 (índigo) a 0,12 de croma, e a
+   marca de 0,13 a 0,28. Acima do gamute o navegador limita, que é a versão
+   mais saturada daquele matiz naquela claridade. */
+@utility tile-vivid {
+  --tile-surface: oklch(from var(--tile-color) 0.76 clamp(0, (c - 0.02) * 10, 0.2) h);
+  --tile-ink: var(--identity-foreground);
+}
+@utility tile-soft {
+  --tile-surface: oklch(from var(--tile-color) 0.95 min(c, 0.05) h);
+  --tile-ink: oklch(from var(--tile-color) 0.42 clamp(0, (c - 0.02) * 10, 0.13) h);
+}
+@utility identity-1 {
+  --identity-surface: var(--identity-1);
+  --identity-surface-soft: var(--identity-1-soft);
+  --identity-ink: var(--identity-1-ink);
+}
+@utility identity-2 {
+  --identity-surface: var(--identity-2);
+  --identity-surface-soft: var(--identity-2-soft);
+  --identity-ink: var(--identity-2-ink);
+}
+@utility identity-3 {
+  --identity-surface: var(--identity-3);
+  --identity-surface-soft: var(--identity-3-soft);
+  --identity-ink: var(--identity-3-ink);
+}
+@utility identity-4 {
+  --identity-surface: var(--identity-4);
+  --identity-surface-soft: var(--identity-4-soft);
+  --identity-ink: var(--identity-4-ink);
+}
+@utility identity-5 {
+  --identity-surface: var(--identity-5);
+  --identity-surface-soft: var(--identity-5-soft);
+  --identity-ink: var(--identity-5-ink);
+}
+@utility identity-6 {
+  --identity-surface: var(--identity-6);
+  --identity-surface-soft: var(--identity-6-soft);
+  --identity-ink: var(--identity-6-ink);
 }
 
 

@@ -18,6 +18,7 @@ const ToggleGroupContext = React.createContext<
   size: "md",
   variant: "plain",
   shape: "rounded",
+  tint: "vivid",
 })
 
 /**
@@ -39,6 +40,7 @@ function ToggleGroup({
   className,
   variant,
   shape,
+  tint,
   size,
   children,
   onValueChange,
@@ -80,7 +82,7 @@ function ToggleGroup({
       className={cn("flex items-center justify-center gap-1", className)}
       {...raiz}
     >
-      <ToggleGroupContext.Provider value={{ variant, shape, size }}>
+      <ToggleGroupContext.Provider value={{ variant, shape, tint, size }}>
         {children}
       </ToggleGroupContext.Provider>
     </ToggleGroupPrimitive.Root>
@@ -92,6 +94,7 @@ function ToggleGroupItem({
   children,
   variant,
   shape,
+  tint,
   size,
   icon,
   iconOn,
@@ -112,6 +115,7 @@ function ToggleGroupItem({
         toggleVariants({
           variant: pele,
           shape: shape ?? context.shape,
+          tint: tint ?? context.tint,
           size: size ?? context.size,
         }),
         className

@@ -21,15 +21,17 @@ describe("o toggle", () => {
     // A base declara `outline-none`, e `outline-2` só mexe na largura: sem o
     // estilo explícito a escolhida saía sem contorno (medido, `none`).
     expect(TOGGLE).toContain("data-[state=on]:outline-solid")
-    // E a superfície é a do `ColorTile`, não o hex cru.
-    expect(TOGGLE).toContain("bg-[oklch(from_var(--tile-color)_0.86_min(c,_0.12)_h)]")
+    // E a superfície é a do `ColorTile` (rodada 184: `tile-vivid` e
+    // `tile-soft` publicam a variável), não o hex cru.
+    expect(TOGGLE).toContain("p-0 bg-(--tile-surface) text-(--tile-ink)")
+    expect(TOGGLE).toContain('vivid: "tile-vivid"')
   })
 
   it("nenhuma tela pinta amostra à mão num item de grupo", () => {
     // Os dois seletores pintavam o hex cru por `style`, e o ladrilho mostrava
     // outra cor. Quem precisa de amostra usa `variant="swatch"` com `color`.
     const culpados = arquivos(join(process.cwd(), "src")).filter((f) =>
-      /<ToggleGroupItem\b[^>]*style=\{\{\s*backgroundColor/s.test(readFileSync(f, "utf8"))
+      /<ToggleGroupItem\b[^>]*style=\{\{\s*backgroundColor/.test(readFileSync(f, "utf8"))
     )
     expect(culpados).toEqual([])
   })

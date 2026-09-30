@@ -22,8 +22,10 @@
 // que é a de texto, porque lá o conteúdo são iniciais. Medir a mais custa nada
 // e mantém as duas comparáveis.
 //
-// Quem mexer na claridade de 0,86, no teto de croma de 0,12 ou na tinta remede
-// aqui.
+// Desde a rodada 184 são duas versões, `tile-vivid` (0,76, croma cheio, tinta
+// escura) e `tile-soft` (0,95, a tinta no tom forte do matiz), e as duas são
+// medidas — o clone troca a classe da versão. Quem mexer em claridade, croma
+// ou tinta de qualquer uma delas remede aqui.
 import { chromium } from "playwright"
 
 const PISO = 4.5
@@ -82,12 +84,15 @@ for (const tema of ["light", "dark"]) {
             palco.id = "palco"
             palco.style.cssText =
                 "position:fixed;left:0;top:0;z-index:99999;display:flex;flex-wrap:wrap;gap:16px;padding:16px;background:var(--background)"
+            for (const tint of ["vivid", "soft"])
             for (let i = 0; i < cores.length; i++) {
                 for (const [nome, cls] of Object.entries(tamanhos)) {
                     const no = modelo.cloneNode(true)
-                    no.className = no.className.replace(/\bsize-\d+\b/, cls)
+                    no.className = no.className
+                        .replace(/\bsize-\d+\b/, cls)
+                        .replace(/\btile-(vivid|soft)\b/, `tile-${tint}`)
                     no.style.setProperty("--tile-color", cores[i].valor)
-                    no.dataset.probe = `${i}-${nome}`
+                    no.dataset.probe = `${tint}-${i}-${nome}`
                     palco.appendChild(no)
                 }
             }
@@ -115,9 +120,10 @@ for (const tema of ["light", "dark"]) {
     )
     await page.waitForTimeout(400)
 
+    for (const tint of ["vivid", "soft"])
     for (let i = 0; i < CORES.length; i++) {
         for (const nome of Object.keys(TAMANHOS)) {
-            const probe = `${i}-${nome}`
+            const probe = `${tint}-${i}-${nome}`
             const png = await page.locator(`[data-probe="${probe}"]`).screenshot()
             const razao = await page.evaluate(
                 async ([b64, fg]) => {
@@ -165,6 +171,7 @@ for (const tema of ["light", "dark"]) {
             if (razao < PISO) reprovou = true
             linhas.push({
                 tema,
+                tint,
                 cor: CORES[i].nome,
                 degrau: nome,
                 razao,
@@ -184,11 +191,11 @@ const pior = piorDe(linhas)
 // sozinha.
 for (const tema of ["light", "dark"]) {
     const p = piorDe(linhas.filter((l) => l.tema === tema))
-    console.log(`${tema.padEnd(5)} pior: ${p.razao.toFixed(2)}:1   (${p.cor}, ${p.degrau})`)
+    console.log(`${tema.padEnd(5)} pior: ${p.razao.toFixed(2)}:1   (${p.cor}, ${p.degrau}, ${p.tint})`)
 }
 console.log(
     `\n${linhas.length} células   pior caso: ${pior.razao.toFixed(2)}:1 ` +
-        `(${pior.cor}, ${pior.degrau}, ${pior.tema})   piso: ${PISO}:1`
+        `(${pior.cor}, ${pior.degrau}, ${pior.tema}, ${pior.tint})   piso: ${PISO}:1`
 )
 if (reprovou) {
     console.error("\nReprovou: alguma célula ficou abaixo do piso da WCAG 1.4.11.")

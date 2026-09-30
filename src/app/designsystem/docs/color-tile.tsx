@@ -107,20 +107,25 @@ export default function ColorTileDoc() {
       </DocNote>
 
       <DocSection
-        title="Superfície chapada, tinta escura — a construção do Avatar"
-        description="A cor preenche a caixa e a tinta é sempre a mesma, um valor só nos dois temas. Cores arbitrárias leem como família porque compartilham a claridade e o teto de croma, não o matiz."
+        title="Duas versões — a construção do Avatar"
+        description="tint=&quot;vivid&quot; (o padrão) é a cor na claridade 0,76 com o croma cheio e a tinta escura; tint=&quot;soft&quot; é quase branca (0,95), com o ícone no tom forte do mesmo matiz. Um valor só nos dois temas, e as cores arbitrárias leem como família porque compartilham a claridade e o croma, não o matiz."
         code={`<ColorTile color="#B7E18C" />
-<ColorTile color="#F5CB70" />`}
+<ColorTile color="#B7E18C" tint="soft" />`}
+        previewClassName="flex-col items-start gap-3"
       >
-        {CATEGORIAS.map(({ cor, icone: Icone, nome }) => (
-          <ColorTile key={nome} color={cor}>
-            <Icone aria-hidden />
-          </ColorTile>
+        {(["vivid", "soft"] as const).map((tint) => (
+          <div key={tint} className="flex flex-wrap gap-2">
+            {CATEGORIAS.map(({ cor, icone: Icone, nome }) => (
+              <ColorTile key={nome} color={cor} tint={tint}>
+                <Icone aria-hidden />
+              </ColorTile>
+            ))}
+          </div>
         ))}
       </DocSection>
 
-      <DocNote title="A claridade é do sistema; o matiz é da pessoa">
-        A superfície é <code>oklch(from var(--tile-color) 0.86 min(c, 0.12) h)</code>: o matiz vem de quem escolheu, a claridade fica presa na banda da rampa de identidade e o croma tem teto. Com a tinta em <code>--identity-foreground</code>, <strong>qualquer</strong> cor de runtime cai entre 10,64 e 11,73 — a mesma faixa que as seis identidades do <code>Avatar</code> entregam (10,17 a 12,12). Preto, branco e cinza chegam neutros e a 11,28. A guarda é <code>scripts/tile-contrast.mjs</code>: 96 células (oito paradas e o neutro, nos quatro degraus e nos dois temas), piso 4,5, e não há o que medir por cor — o contraste é estrutural.
+      <DocNote title="A claridade e o croma são do sistema; o matiz é da pessoa">
+        A viva é <code>oklch(from var(--tile-color) 0.76 clamp(0, (c − 0,02) × 10, 0,2) h)</code>: qualquer cor com matiz vai ao croma cheio, e cinza continua cinza. Um multiplicador só não serve, porque os hexadecimais gravados vão de 0,079 (índigo) a 0,12 de croma. A suave é <code>0.95 min(c, 0.05)</code>, com a tinta em <code>0.42</code> no mesmo matiz. Medido em <code>scripts/tile-contrast.mjs</code>, 192 células (as duas versões, oito paradas e os extremos, quatro degraus, dois temas): a viva vai de <strong>6,66 a 9,44</strong> e a suave de <strong>6,48 a 7,64</strong>, piso 4,5. Até a rodada 183 havia uma versão só, pastel (0,86 e croma até 0,12), e o dono a recusou.
       </DocNote>
 
       <DocNote title="Por que a cor não entra crua, e por que o croma tem teto">
@@ -206,8 +211,8 @@ tileColorFor("#FF6B00") // → "#FF6B00", intacta`}
         O padrão foi <code>--primary</code> enquanto o primário era o verde da marca. Com o branding preto e branco ele virou croma 0, e o ladrilho &quot;sem cor&quot; passou a ser a tecla da marca esmaecida sem ninguém mexer no componente — lia como desativado. <code>--muted-foreground</code> é neutro nos dois temas de propósito. O arco-íris <strong>não</strong> entra como preenchimento: sob um ícone oito paradas não têm um contraste só, e ele mora nas peças de marca (ver <code>/designsystem/brand</code>). Ele entra pela outra ponta — as cores que a pessoa <strong>escolhe</strong> são as oito paradas.
       </DocNote>
 
-      <DocNote title="Uma versão só">
-        Ele já foi lustrado (degradê branco, borda clara, sombra, <code>backdrop-blur</code>), já teve um eixo <code>glass</code>, e por muitas rodadas foi um véu de 12%/18% sobre o cartão com a tinta e o fio normalizados e um par de valores por tema. Tudo isso saiu: sobrou uma superfície e uma tinta. O mesmo arco do <code>Avatar</code>, que largou o vidro, o anel de arco-íris, o degradê, o grão e o ponto de luz — e agora os dois são a mesma construção, separados pela forma e por quem escolhe a cor.
+      <DocNote title="Duas versões, e nenhum enfeite">
+        Ele já foi lustrado (degradê branco, borda clara, sombra, <code>backdrop-blur</code>), já teve um eixo <code>glass</code>, e por muitas rodadas foi um véu de 12%/18% sobre o cartão. Tudo isso saiu: sobrou uma superfície e uma tinta, hoje em duas versões — a viva e a suave —, as mesmas do <code>Avatar</code> e da amostra do <code>Toggle</code>. Os dois são a mesma construção, separados pela forma e por quem escolhe a cor.
       </DocNote>
 
       <DocNote title="O raio cresce com a caixa">
@@ -225,6 +230,12 @@ tileColorFor("#FF6B00") // → "#FF6B00", intacta`}
             type: "string | null | undefined",
             default: "var(--muted-foreground)",
             description: "A cor gravada no banco, em qualquer notação do CSS. Vazia ou só espaços cai no cinza do sistema.",
+          },
+          {
+            prop: "tint",
+            type: '"vivid" | "soft"',
+            default: '"vivid"',
+            description: "vivid é a cor cheia com a tinta escura; soft é quase branca, com o ícone no tom forte do matiz.",
           },
           {
             prop: "size",

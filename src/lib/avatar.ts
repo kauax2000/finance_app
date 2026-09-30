@@ -46,18 +46,19 @@ const LEGACY_AVATAR_CLASSES = [
  * `globals.css`) e a tinta é sempre a escura. Opaco por natureza: avatares que
  * se sobrepõem em pilha não mostram o de baixo.
  *
- * **É uma classe de fundo comum, e já foi mais complicado.** Enquanto a
- * identidade era um degradê, isto declarava variáveis em vez de pintar,
- * porque quem pintava era um pseudo-elemento. Apagado o degradê, o fundo
- * voltou para o próprio elemento e a indireção saiu junto.
+ * **A superfície publica as variáveis da família e pinta a viva** (rodada
+ * 184): `identity-N` declara `--identity-surface`, `--identity-surface-soft` e
+ * `--identity-ink`, e `bg-(--identity-surface)` pinta. Quem veste a suave é o
+ * `AvatarFallback tint="soft"`, lendo as outras duas — por isso a classe
+ * continua pintando sozinha num `div` que não é avatar.
  */
 export const IDENTITY_TONES = [
-    { surface: "bg-identity-1", ink: "text-identity-foreground" },
-    { surface: "bg-identity-2", ink: "text-identity-foreground" },
-    { surface: "bg-identity-3", ink: "text-identity-foreground" },
-    { surface: "bg-identity-4", ink: "text-identity-foreground" },
-    { surface: "bg-identity-5", ink: "text-identity-foreground" },
-    { surface: "bg-identity-6", ink: "text-identity-foreground" },
+    { surface: "identity-1 bg-(--identity-surface)", ink: "text-identity-foreground" },
+    { surface: "identity-2 bg-(--identity-surface)", ink: "text-identity-foreground" },
+    { surface: "identity-3 bg-(--identity-surface)", ink: "text-identity-foreground" },
+    { surface: "identity-4 bg-(--identity-surface)", ink: "text-identity-foreground" },
+    { surface: "identity-5 bg-(--identity-surface)", ink: "text-identity-foreground" },
+    { surface: "identity-6 bg-(--identity-surface)", ink: "text-identity-foreground" },
 ] as const
 
 export type IdentityTone = (typeof IDENTITY_TONES)[number]

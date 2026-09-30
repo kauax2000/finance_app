@@ -99,11 +99,10 @@ const toggleVariants = cva(
         // tique. O realce de cinza não vale aqui — a cor é o conteúdo —, e o
         // `outline` não disputa com o anel de foco, que é `box-shadow`.
         swatch: [
-          "p-0 text-identity-foreground",
-          "bg-[oklch(from_var(--tile-color)_0.86_min(c,_0.12)_h)]",
-          "hover:bg-[oklch(from_var(--tile-color)_0.86_min(c,_0.12)_h)] active:bg-[oklch(from_var(--tile-color)_0.86_min(c,_0.12)_h)]",
-          "data-[state=on]:bg-[oklch(from_var(--tile-color)_0.86_min(c,_0.12)_h)] data-[state=on]:text-identity-foreground",
-          "data-[state=on]:hover:bg-[oklch(from_var(--tile-color)_0.86_min(c,_0.12)_h)] data-[state=on]:active:bg-[oklch(from_var(--tile-color)_0.86_min(c,_0.12)_h)]",
+          "p-0 bg-(--tile-surface) text-(--tile-ink)",
+          "hover:bg-(--tile-surface) active:bg-(--tile-surface)",
+          "data-[state=on]:bg-(--tile-surface) data-[state=on]:text-(--tile-ink)",
+          "data-[state=on]:hover:bg-(--tile-surface) data-[state=on]:active:bg-(--tile-surface)",
           // `outline-solid` explícito: a base declara `outline-none`, e o
           // `outline-2` só mexe na largura — medido, o estilo computava `none`
           // e a escolhida saía sem contorno.
@@ -113,6 +112,12 @@ const toggleVariants = cva(
       shape: {
         rounded: "",
         pill: "rounded-full",
+      },
+      // A versão da amostra (rodada 184): as utilities só publicam
+      // `--tile-surface` e `--tile-ink`, então fora do `swatch` não pintam nada.
+      tint: {
+        vivid: "tile-vivid",
+        soft: "tile-soft",
       },
       // As alturas já eram a escada do projeto — 28, 32, 36 —, só que o degrau
       // do meio se chamava `default`. O nome foi removido de `Button`, `Input`,
@@ -138,6 +143,7 @@ const toggleVariants = cva(
     defaultVariants: {
       variant: "plain",
       shape: "rounded",
+      tint: "vivid",
       size: "md",
     },
   }
@@ -202,6 +208,7 @@ function Toggle({
   className,
   variant,
   shape,
+  tint,
   size,
   icon,
   iconOn,
@@ -216,7 +223,7 @@ function Toggle({
     <TogglePrimitive.Root
       data-slot="toggle"
       data-variant={variant ?? "plain"}
-      className={cn(toggleVariants({ variant, shape, size, className }))}
+      className={cn(toggleVariants({ variant, shape, tint, size, className }))}
       style={toggleStyle(color, style)}
       {...props}
     >
