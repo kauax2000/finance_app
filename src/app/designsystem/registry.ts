@@ -421,7 +421,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("collapsible", "Collapsible", "Bloco que expande e recolhe.", ui("collapsible"), "Collapsible, CollapsibleTrigger, CollapsibleRow, CollapsibleMarker, CollapsibleLabel, CollapsibleContent"),
   entry("description-list", "Description List", "Pares termo e valor em telas de detalhe.", ui("description-list"), "DescriptionList, DescriptionListItem, DescriptionTerm, DescriptionDetails, DescriptionHint"),
   entry("empty-state", "Empty State", "O que a tela mostra quando está vazia — e a forma diz a situação.", ui("empty-state"), "EmptyState, EmptyStateIcon, EmptyStateGhost, EmptyStateCode, EmptyStateTitle, EmptyStateActions"),
-  entry("field", "Field", "Rótulo, controle, ajuda e erro ligados.", ui("field"), "Field, FieldControl, FieldLabel, FieldDescription, FieldError, FieldGroup, FieldRow, FieldSet, FieldLegend, FieldSeparator"),
+  entry("field", "Field", "Rótulo, controle, ajuda e erro ligados.", ui("field"), "Field, FieldControl, FieldLabel, FieldHeader, FieldCounter, FieldDescription, FieldChecklist, FieldError, FieldGroup, FieldRow, FieldSet, FieldLegend, FieldSeparator"),
   entry("input-group", "Input Group", "Campo com ícones, texto ou botões acoplados.", ui("input-group"), "InputGroup, InputGroupInput"),
   entry("item", "Item", "Linha de lista com mídia, conteúdo e ações.", ui("item"), "ItemGroup, Item, ItemContent, ItemActions"),
   entry("kbd-group", "Kbd Group", "Sequência de teclas.", ui("kbd-group"), "KbdGroup"),

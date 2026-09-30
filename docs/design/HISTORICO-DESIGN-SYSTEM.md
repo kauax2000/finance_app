@@ -16155,3 +16155,39 @@ O dono pediu a rodada completa e escolheu as quatro versões.
   nele.
 - A 404 mostra um aviso do Next ("Encountered a script tag while rendering
   React component") que já existia antes desta rodada.
+
+### Rodada 192 — o Field ganha o cabeçalho, o contador, a lista de requisitos e a linha que não empilha
+
+O dono pediu a rodada completa e escolheu as quatro versões. A página estava
+certa; as quatro saíram de padrões escritos à mão nas telas.
+
+- **`FieldHeader`**: o login (`div flex items-center justify-between` com o
+  "Esqueceu a senha?") e o nome da carteira (o mesmo em `items-baseline`, com
+  o contador) viraram a peça. Linha de base, e o vizinho fora do `<label>`.
+  Medido no `/login`: o `for` do rótulo segue `password`.
+- **`FieldCounter`**: aparece nos últimos 10% ou 20 caracteres, em âmbar, com
+  o número `aria-hidden` e a região viva dizendo quantos restam — a régua do
+  `Textarea` (rodada 180), que lá é sempre visível e só troca de tinta. O
+  contador do nome da carteira aparecia a 20 do teto, em cinza, sem anúncio.
+  Medido: 34/40 visível, "Casa" sem contador.
+- **`FieldChecklist`**: a lista viva, com `checklistId` no contexto do `Field`
+  e somada ao `aria-describedby` pelo `FieldControl`, depois da descrição e
+  antes do erro. O `PasswordRequirements` do cadastro e da redefinição passou
+  a vesti-la, e o diálogo de trocar senha, que tinha **a própria lista**
+  (`ReqRow`, um componente declarado na tela, com um sexto item "senha forte"
+  que repetia a conjunção dos outros cinco — o mesmo que a rodada do cadastro
+  já tinha tirado) **e a própria cópia da política** (a interface, o
+  `checkPasswordRequirements` e o `isPasswordValid`, iguais aos de
+  `lib/password-policy`), passou a usar os dois compartilhados. Medido no
+  `/register`: o `aria-describedby` do campo aponta para a lista.
+- **`FieldRow stack={false}`**: a validade do cartão (MM/AAAA) era `grid
+  grid-cols-2 gap-3`. O padrão continua empilhando; a exceção é para o par
+  curto. Medido a 375px: a linha padrão com 1 coluna, a `stack={false}` com 2.
+- **O teste da rodada é `field-versions.test.ts`, um arquivo novo** — o
+  `field-size-ladder.test.ts` existente ficou intacto.
+- O diálogo de trocar senha e o nome da carteira pedem login e não foram
+  vistos; as peças foram medidas na página, no `/login` e no `/register`.
+- **Defeito visto pelo dono na página**: no `orientation="responsive"`
+  empilhado (e no `vertical`), o `*:w-full` do `Field` esticava o `Switch` até
+  a coluna — um trilho de 406px. Os filhos diretos esticam, **menos** `switch`,
+  `checkbox` e `radio`, que têm medida própria. Medido a 375px: 32×18.

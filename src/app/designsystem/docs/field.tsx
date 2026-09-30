@@ -5,11 +5,14 @@ import * as React from "react"
 
 import {
   Field,
+  FieldChecklist,
   FieldContent,
   FieldControl,
+  FieldCounter,
   FieldDescription,
   FieldError,
   FieldGroup,
+  FieldHeader,
   FieldLabel,
   FieldLegend,
   FieldRow,
@@ -30,10 +33,19 @@ import { RadioGroup } from "@/components/ui/radio-group"
 import { Switch } from "@/components/ui/switch"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
+const REGRAS = [
+  { id: "len", label: "8+ caracteres", test: (p: string) => p.length >= 8 },
+  { id: "low", label: "minúscula", test: (p: string) => /[a-z]/.test(p) },
+  { id: "up", label: "maiúscula", test: (p: string) => /[A-Z]/.test(p) },
+  { id: "dig", label: "número", test: (p: string) => /\d/.test(p) },
+]
+
 export default function FieldDoc() {
   const [primeiraEm, setPrimeiraEm] = React.useState<Date | undefined>(
     new Date(2026, 3, 5)
   )
+  const [nome, setNome] = React.useState("Casa na praia — despesas divididas")
+  const [senha, setSenha] = React.useState("financa1")
 
   return (
     <>
@@ -150,12 +162,13 @@ export default function FieldDoc() {
 
       <DocSection
         title="Uma linha de dois campos"
-        description="FieldRow empilha no telefone e divide em duas colunas a partir de sm. Não escreva a grade à mão: é onde os campos esquecem de empilhar."
+        description="FieldRow empilha no telefone e divide em duas colunas a partir de sm. Não escreva a grade à mão: é onde os campos esquecem de empilhar. stack={false} é para o par curto que continua lado a lado no telefone — MM/AAAA, DDD/número —, e não para dois selects de 160px."
         code={`<FieldRow>
   <Field>…</Field>
   <Field>…</Field>
-</FieldRow>`}
-        previewClassName="flex-col items-stretch"
+</FieldRow>
+<FieldRow stack={false}>…MM / AAAA…</FieldRow>`}
+        previewClassName="flex-col items-stretch gap-6"
       >
         <FieldRow className="w-full max-w-md">
           <Field>
@@ -171,6 +184,88 @@ export default function FieldDoc() {
             </FieldControl>
           </Field>
         </FieldRow>
+        <FieldRow stack={false} className="w-full max-w-60">
+          <Field>
+            <FieldLabel>Mês</FieldLabel>
+            <FieldControl>
+              <Input placeholder="MM" inputMode="numeric" maxLength={2} />
+            </FieldControl>
+          </Field>
+          <Field>
+            <FieldLabel>Ano</FieldLabel>
+            <FieldControl>
+              <Input placeholder="AAAA" inputMode="numeric" maxLength={4} />
+            </FieldControl>
+          </Field>
+        </FieldRow>
+      </DocSection>
+
+      <DocSection
+        title="Rótulo com ação, e o contador"
+        description="FieldHeader põe o rótulo à esquerda e um link ou um contador à direita, na linha de base. O vizinho fica fora do label: clicado dentro dele, também focaria o campo. FieldCounter só aparece nos últimos 10% ou 20 caracteres, em âmbar, e é anunciado — a régua do contador do Textarea. Digite até perto de 40."
+        code={`<Field>
+  <FieldHeader>
+    <FieldLabel>Senha</FieldLabel>
+    <Link href="/forgot-password">Esqueceu a senha?</Link>
+  </FieldHeader>
+  <FieldControl><Input type="password" /></FieldControl>
+</Field>
+
+<Field>
+  <FieldHeader>
+    <FieldLabel>Nome</FieldLabel>
+    <FieldCounter value={nome} max={40} />
+  </FieldHeader>
+  <FieldControl><Input value={nome} maxLength={40} … /></FieldControl>
+</Field>`}
+        previewClassName="flex-col items-stretch"
+      >
+        <FieldGroup className="w-full max-w-sm">
+          <Field>
+            <FieldHeader>
+              <FieldLabel>Senha</FieldLabel>
+              <Link
+                href="/designsystem/field"
+                className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground active:text-foreground"
+              >
+                Esqueceu a senha?
+              </Link>
+            </FieldHeader>
+            <FieldControl>
+              <Input type="password" placeholder="Digite sua senha" />
+            </FieldControl>
+          </Field>
+          <Field>
+            <FieldHeader>
+              <FieldLabel>Nome da carteira</FieldLabel>
+              <FieldCounter value={nome} max={40} />
+            </FieldHeader>
+            <FieldControl>
+              <Input value={nome} maxLength={40} onChange={(e) => setNome(e.target.value)} />
+            </FieldControl>
+          </Field>
+        </FieldGroup>
+      </DocSection>
+
+      <DocSection
+        title="Lista de requisitos"
+        description="FieldChecklist é a lista viva de regras: ✓ atendido, – falta. Ela é descrição do controle (o FieldControl a soma ao aria-describedby), a região viva é educada e cada item diz o próprio estado ao leitor de tela. É a lista da senha no cadastro, na redefinição e no diálogo de trocar senha."
+        code={`<FieldChecklist
+  title="Requisitos da senha"
+  items={REGRAS.map((r) => ({ id: r.id, label: r.label, met: r.test(senha) }))}
+/>`}
+        previewClassName="flex-col items-stretch"
+      >
+        <Field className="w-full max-w-sm">
+          <FieldLabel>Nova senha</FieldLabel>
+          <FieldControl>
+            <Input value={senha} onChange={(e) => setSenha(e.target.value)} />
+          </FieldControl>
+          <FieldChecklist
+            title="Requisitos da senha"
+            items={REGRAS.map((r) => ({ id: r.id, label: r.label, met: r.test(senha) }))}
+          />
+        </Field>
       </DocSection>
 
       <DocSection
@@ -351,6 +446,10 @@ export default function FieldDoc() {
         O addon acima é exemplo de unidade. <code>&lt;Input money&gt;</code> resolve máscara, teclado e conversão, que um <code>R$</code> acoplado deixaria para a tela; com rótulo e erro ligados, <code>&lt;FormInput money&gt;</code>.
       </DocNote>
 
+      <DocNote title="Onde o app usa">
+        Em 27 arquivos. Desde a rodada 192: o login tem o &ldquo;Esqueceu a senha?&rdquo; num <code>FieldHeader</code>, o nome da carteira tem o <code>FieldCounter</code> (que era um <code>span</code> escrito à mão), a validade do cartão é <code>FieldRow stack=&#123;false&#125;</code> (era <code>grid grid-cols-2 gap-3</code>), e as três telas de senha dividem o <code>FieldChecklist</code> — o diálogo de trocar senha tinha a própria lista, um <code>ReqRow</code> declarado na tela, com um sexto item que repetia os outros cinco, e a própria cópia da política.
+      </DocNote>
+
       <DocNote title="Field não é o formulário">
         Quem cuida do envio e do comportamento do <kbd>Enter</kbd> é o{" "}
         <code>Form</code>. <code>Field</code> cuida de um campo. Os dois se
@@ -421,8 +520,23 @@ export default function FieldDoc() {
           },
           {
             prop: "FieldRow",
+            type: "{ stack?: boolean }",
+            description: "Dois campos lado a lado a partir de sm, empilhando antes; stack={false} não empilha.",
+          },
+          {
+            prop: "FieldHeader",
             type: "div",
-            description: "Dois campos lado a lado a partir de sm. Empilha antes.",
+            description: "O rótulo à esquerda e um link ou contador à direita, fora do <label>.",
+          },
+          {
+            prop: "FieldCounter",
+            type: "{ value: string; max: number }",
+            description: "O contador que aparece perto do teto, em âmbar, anunciado.",
+          },
+          {
+            prop: "FieldChecklist",
+            type: "{ items: { label; met }[]; title? }",
+            description: "A lista viva de regras, somada ao aria-describedby do controle.",
           },
           {
             prop: "FieldSet / FieldLegend",

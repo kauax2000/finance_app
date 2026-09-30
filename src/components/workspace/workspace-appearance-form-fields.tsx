@@ -17,6 +17,8 @@ import {
 import {
     Field,
     FieldControl,
+    FieldCounter,
+    FieldHeader,
     FieldLabel,
     FieldLegend,
     FieldSet,
@@ -81,18 +83,12 @@ export function WorkspaceAppearanceFormFields({
             </Item>
 
             <Field>
-                <div className="flex items-baseline justify-between gap-2">
+                <FieldHeader>
                     <FieldLabel>Nome</FieldLabel>
                     {/* O `maxLength` truncava calado: o campo simplesmente parava
-                        de aceitar tecla. A contagem só aparece perto do teto,
-                        porque um contador sempre visível é ruído nos 100
-                        primeiros caracteres. */}
-                    {name.length >= NOME_MAX - 20 ? (
-                        <span className="nums text-2xs text-muted-foreground">
-                            {name.length}/{NOME_MAX}
-                        </span>
-                    ) : null}
-                </div>
+                        de aceitar tecla. O contador só aparece perto do teto. */}
+                    <FieldCounter value={name} max={NOME_MAX} />
+                </FieldHeader>
                 <FieldControl>
                     <Input
                         id={nameId}

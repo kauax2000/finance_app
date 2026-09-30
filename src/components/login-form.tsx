@@ -24,6 +24,7 @@ import {
     Field,
     FieldControl,
     FieldError,
+    FieldHeader,
     FieldLabel,
 } from "@/components/ui/field"
 
@@ -172,7 +173,7 @@ export function LoginForm() {
                         deixa o `<label for>` apontando para algo que não é
                         rotulável. */}
                     <Field>
-                        <div className="flex items-center justify-between gap-2">
+                        <FieldHeader>
                             <FieldLabel>Senha</FieldLabel>
                             {/* Sublinhado **sempre**, não só no cursor: é o
                                 link que alguém procura justamente por estar
@@ -186,7 +187,7 @@ export function LoginForm() {
                             >
                                 Esqueceu a senha?
                             </Link>
-                        </div>
+                        </FieldHeader>
                         <InputGroup size="xl">
                             <FieldControl>
                                 <InputGroupInput

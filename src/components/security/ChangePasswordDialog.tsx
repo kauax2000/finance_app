@@ -2,14 +2,12 @@
 
 import { useTimeout } from "@/hooks/use-timeout"
 import {
-    Card,
-} from "@/components/ui/card"
-import {
     Field,
     FieldControl,
     FieldLabel,
 } from "@/components/ui/field"
-import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy"
+import { isPasswordValid } from "@/lib/password-policy"
+import { PasswordRequirements } from "@/components/auth/password-requirements"
 import { useState } from "react"
 import { useAuth } from "@/components/providers"
 import { supabase } from "@/lib/supabase"
@@ -38,58 +36,11 @@ import {
     InputGroupButton,
     InputGroupInput,
 } from "@/components/ui/input-group"
-import { CheckIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
-import { cn } from "@/lib/utils"
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
 
 interface ChangePasswordDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
-}
-
-interface PasswordRequirements {
-    hasMinLength: boolean
-    hasLowercase: boolean
-    hasUppercase: boolean
-    hasDigit: boolean
-    hasSymbol: boolean
-}
-
-function checkPasswordRequirements(password: string): PasswordRequirements {
-    return {
-        hasMinLength: password.length >= MIN_PASSWORD_LENGTH,
-        hasLowercase: /[a-z]/.test(password),
-        hasUppercase: /[A-Z]/.test(password),
-        hasDigit: /\d/.test(password),
-        hasSymbol: /[!@#$%^&*(),.?":{}|<>]/.test(password),
-    }
-}
-
-function isPasswordValid(requirements: PasswordRequirements): boolean {
-    return Object.values(requirements).every(Boolean)
-}
-
-function ReqRow({
-    met,
-    label,
-}: {
-    met: boolean
-    label: string
-}) {
-    return (
-        <div
-            className={cn(
-                "flex items-center gap-1.5 text-xs",
-                met ? "text-success" : "text-muted-foreground",
-            )}
-        >
-            {met ? (
-                <CheckIcon className="size-3 shrink-0" aria-hidden />
-            ) : (
-                <span className="size-3 shrink-0 rounded-full border border-current" aria-hidden />
-            )}
-            {label}
-        </div>
-    )
 }
 
 export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialogProps) {
@@ -107,8 +58,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
     const [newPassword, setNewPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
 
-    const passwordRequirements = checkPasswordRequirements(newPassword)
-    const passwordIsValid = isPasswordValid(passwordRequirements)
+    const passwordIsValid = isPasswordValid(newPassword)
 
     const resetForm = () => {
         setCurrentPassword("")
@@ -240,16 +190,10 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                     </InputGroupAddon>
                 </InputGroup>
 
-                {newPassword.length > 0 ? (
-                    <Card variant="muted" padding="sm" className="grid grid-cols-2 gap-1.5 px-3">
-                        <ReqRow met={passwordRequirements.hasMinLength} label="8+ caracteres" />
-                        <ReqRow met={passwordRequirements.hasLowercase} label="minúscula" />
-                        <ReqRow met={passwordRequirements.hasUppercase} label="maiúscula" />
-                        <ReqRow met={passwordRequirements.hasDigit} label="número" />
-                        <ReqRow met={passwordRequirements.hasSymbol} label="símbolo" />
-                        <ReqRow met={passwordIsValid} label="senha forte" />
-                    </Card>
-                ) : null}
+                {/* A lista do cadastro e da redefinição: a mesma política, a
+                    mesma peça. Havia aqui um `ReqRow` próprio, com um sexto
+                    item ("senha forte") que só repetia os outros cinco. */}
+                <PasswordRequirements password={newPassword} />
             </Field>
 
             <Field>

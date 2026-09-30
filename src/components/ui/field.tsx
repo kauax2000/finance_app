@@ -2,10 +2,11 @@
 
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+import { CheckIcon, MinusIcon } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
-import { Muted } from "@/components/ui/typography"
+import { Caption, Muted } from "@/components/ui/typography"
 import { Separator } from "@/components/ui/separator"
 
 /**
@@ -111,15 +112,18 @@ type FieldContextValue = {
   controlId: string
   labelId: string
   descriptionId: string
+  checklistId: string
   errorId: string
   invalid: boolean
   hasControl: boolean
   hasDescription: boolean
+  hasChecklist: boolean
   hasError: boolean
   setHasControl: (present: boolean) => void
   /** O `id` explícito do controle, quando quem chama escreveu um. */
   setExplicitControlId: (id: string | null) => void
   setHasDescription: (present: boolean) => void
+  setHasChecklist: (present: boolean) => void
   setHasError: (present: boolean) => void
 }
 
@@ -227,8 +231,17 @@ function FieldGroup({
 function FieldRow({
   className,
   size,
+  stack = true,
   ...props
-}: React.ComponentProps<"div"> & { size?: FieldSize }) {
+}: React.ComponentProps<"div"> & {
+  size?: FieldSize
+  /**
+   * `false` (rodada 192): os dois continuam lado a lado no telefone. Para o
+   * par **curto** — MM/AAAA, DDD/número —, e não para dois selects de 160px:
+   * esses são o defeito que esta peça existe para empilhar.
+   */
+  stack?: boolean
+}) {
   const resolved = useFieldSize(size)
   return (
     <FieldSizeContext.Provider value={resolved}>
@@ -236,7 +249,8 @@ function FieldRow({
         data-slot="field-row"
         data-size={resolved}
         className={cn(
-          "@container/field-group grid w-full gap-4 sm:grid-cols-2",
+          "@container/field-group grid w-full gap-4",
+          stack ? "sm:grid-cols-2" : "grid-cols-2",
           className
         )}
         {...props}
@@ -245,18 +259,29 @@ function FieldRow({
   )
 }
 
+/**
+ * Os filhos diretos esticam até a largura do campo, **menos** os controles de
+ * medida própria (`Switch`, `Checkbox`, `Radio`). A classe é escrita por
+ * extenso, uma vez, porque o Tailwind varre o fonte como texto.
+ */
+const ESTICA_FILHOS =
+  "*:not-data-[slot=switch]:not-data-[slot=checkbox]:not-data-[slot=radio]:w-full"
+
 const fieldVariants = cva(
   "group/field flex w-full gap-2 data-[invalid=true]:text-destructive",
   {
     variants: {
       orientation: {
-        vertical: "flex-col *:w-full [&>.sr-only]:w-auto",
+        // `*:w-full` estica o controle até a coluna — menos os que têm medida
+        // própria: um `Switch` esticado virava um trilho de 406px (visto na
+        // página, com o `responsive` empilhado).
+        vertical: `flex-col ${ESTICA_FILHOS} [&>.sr-only]:w-auto`,
         horizontal:
           "flex-row items-center has-[>[data-slot=field-content]]:items-start *:data-[slot=field-label]:flex-auto *:data-[slot=field-title]:flex-auto has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px",
         // Exige `FieldGroup` / `FieldSet` / `FieldRow` em volta — ver o
         // cabeçalho do arquivo. Um contêiner não consulta a si mesmo.
         responsive:
-          "flex-col *:w-full @md/field-group:flex-row @md/field-group:items-center @md/field-group:*:w-auto @md/field-group:has-[>[data-slot=field-content]]:items-start @md/field-group:*:data-[slot=field-label]:flex-auto @md/field-group:*:data-[slot=field-title]:flex-auto [&>.sr-only]:w-auto @md/field-group:has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px",
+          `flex-col ${ESTICA_FILHOS} @md/field-group:flex-row @md/field-group:items-center @md/field-group:*:w-auto @md/field-group:has-[>[data-slot=field-content]]:items-start @md/field-group:*:data-[slot=field-label]:flex-auto @md/field-group:*:data-[slot=field-title]:flex-auto [&>.sr-only]:w-auto @md/field-group:has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px`,
       },
     },
     defaultVariants: {
@@ -302,6 +327,7 @@ function Field({
   const resolvedSize = useFieldSize(size)
   const [hasControl, setHasControl] = React.useState(false)
   const [hasDescription, setHasDescription] = React.useState(false)
+  const [hasChecklist, setHasChecklist] = React.useState(false)
   const [hasError, setHasError] = React.useState(false)
   const [explicitControlId, setExplicitControlId] = React.useState<string | null>(null)
 
@@ -314,17 +340,20 @@ function Field({
       controlId: explicitControlId ?? `${reactId}-control`,
       labelId: `${reactId}-label`,
       descriptionId: `${reactId}-description`,
+      checklistId: `${reactId}-checklist`,
       errorId: `${reactId}-error`,
       invalid: isInvalid,
       hasControl,
       hasDescription,
+      hasChecklist,
       hasError,
       setHasControl,
       setExplicitControlId,
       setHasDescription,
+      setHasChecklist,
       setHasError,
     }),
-    [reactId, explicitControlId, isInvalid, hasControl, hasDescription, hasError]
+    [reactId, explicitControlId, isInvalid, hasControl, hasDescription, hasChecklist, hasError]
   )
 
   return (
@@ -410,6 +439,7 @@ function FieldControl({ children }: { children: React.ReactNode }) {
   const describedBy = [
     childProps["aria-describedby"] as string | undefined,
     field.hasDescription ? field.descriptionId : undefined,
+    field.hasChecklist ? field.checklistId : undefined,
     field.hasError ? field.errorId : undefined,
   ]
     .filter(Boolean)
@@ -631,6 +661,126 @@ function FieldSeparator({
 }
 
 /**
+ * O rótulo e o que mora à direita dele (rodada 192) — o "Esqueceu a senha?" do
+ * login, o contador do nome da carteira. Duas telas escreviam a `div` à mão.
+ * O vizinho fica **fora** do `<label>`: um link dentro dele, ao ser clicado,
+ * também focaria o campo. Linha de base, porque rótulo e link têm corpos
+ * diferentes.
+ */
+function FieldHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="field-header"
+      className={cn("flex items-baseline justify-between gap-2", className)}
+      {...props}
+    />
+  )
+}
+
+/**
+ * Quando o contador acende: nos últimos 10% ou 20 caracteres, o que vier
+ * antes. A mesma régua do `Textarea` (rodada 180) — lá o contador é sempre
+ * visível e só troca de tinta; aqui ele **só aparece** perto do teto, porque
+ * mora ao lado do rótulo, e um "3/40" ali nos primeiros caracteres é ruído.
+ */
+function pertoDoLimite(restam: number, max: number) {
+  return restam <= Math.max(20, Math.ceil(max * 0.1))
+}
+
+/**
+ * O contador de um campo de uma linha (rodada 192). Visível só perto do teto,
+ * em âmbar, e anunciado uma vez por mudança pela região viva — o número à vista
+ * é `aria-hidden`, para não ser lido em cada foco. Vai no `FieldHeader`.
+ */
+function FieldCounter({
+  value,
+  max,
+  className,
+}: {
+  value: string
+  max: number
+  className?: string
+}) {
+  const restam = max - value.length
+  const perto = pertoDoLimite(restam, max)
+  return (
+    <>
+      {perto ? (
+        <span
+          data-slot="field-counter"
+          aria-hidden
+          className={cn("nums text-xs text-warning-muted-foreground", className)}
+        >
+          {value.length}/{max}
+        </span>
+      ) : null}
+      <span className="sr-only" aria-live="polite">
+        {perto ? `Restam ${restam} caracteres` : ""}
+      </span>
+    </>
+  )
+}
+
+/**
+ * A lista viva de regras (rodada 192): ✓ atendido, – falta, em duas colunas.
+ * Ela é **descrição** do controle — o `FieldControl` soma o `id` dela ao
+ * `aria-describedby` —, e a região viva é educada, porque ela acompanha a
+ * digitação e não interrompe. O texto escondido diz o estado de cada regra,
+ * já que a cor e o ícone não chegam ao leitor de tela.
+ *
+ * Existia duas vezes: `PasswordRequirements` (cadastro e redefinição) e um
+ * `ReqRow` declarado dentro do diálogo de trocar senha, com um sexto item
+ * ("senha forte") que só repetia a conjunção dos outros cinco.
+ */
+function FieldChecklist({
+  items,
+  title,
+  className,
+}: {
+  items: ReadonlyArray<{ id?: string; label: React.ReactNode; met: boolean }>
+  title?: React.ReactNode
+  className?: string
+}) {
+  const field = React.useContext(FieldContext)
+  const setHasChecklist = field?.setHasChecklist
+
+  React.useEffect(() => {
+    if (!setHasChecklist) return
+    setHasChecklist(true)
+    return () => setHasChecklist(false)
+  }, [setHasChecklist])
+
+  return (
+    <div
+      data-slot="field-checklist"
+      id={field?.checklistId}
+      className={cn("flex flex-col gap-2", className)}
+    >
+      {title ? <Caption>{title}</Caption> : null}
+      <ul className="grid grid-cols-2 gap-x-3 gap-y-1" aria-live="polite">
+        {items.map((item, i) => {
+          const Icon = item.met ? CheckIcon : MinusIcon
+          return (
+            <li
+              key={item.id ?? i}
+              data-met={item.met || undefined}
+              className={cn(
+                "flex items-center gap-1.5 text-xs text-muted-foreground",
+                "data-met:text-success-muted-foreground"
+              )}
+            >
+              <Icon aria-hidden className="size-3 shrink-0" />
+              <span>{item.label}</span>
+              <span className="sr-only">{item.met ? " — atendido" : " — falta"}</span>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
+/**
  * A mensagem de erro. Ela **é** o que torna o campo inválido: renderizá-la
  * carimba `data-invalid` no `Field` e `aria-invalid` no controle. O app
  * escrevia os dois fatos à mão, em três dialetos de tipografia —
@@ -706,11 +856,14 @@ function FieldError({
 
 export {
   Field,
+  FieldChecklist,
   FieldContent,
   FieldControl,
+  FieldCounter,
   FieldDescription,
   FieldError,
   FieldGroup,
+  FieldHeader,
   FieldLabel,
   FieldLegend,
   FieldRow,

@@ -2015,6 +2015,15 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   de 7px a `largura − 7px`, a régua do Radix —, `bubble` no `:active` e no
   foco de teclado, e `bands`, os cortes do `Progress` (zonas no trilho, faixa
   na cor do valor; não com a marca). Sem essas props a peça é a de sempre.
+- **`Field` tem cabeçalho, contador, lista de requisitos e linha que não
+  empilha** (rodada 192). `FieldHeader` põe o rótulo à esquerda e um link ou
+  contador à direita, **fora do `<label>`** (um link dentro dele também
+  focaria o campo). `FieldCounter` só aparece nos últimos 10% ou 20
+  caracteres, com a régua do contador do `Textarea`. `FieldChecklist` é a
+  lista viva de regras, **somada ao `aria-describedby`** do controle — as três
+  telas de senha a dividem, e nenhuma tela declara `ReqRow`.
+  `FieldRow stack={false}` é para o par curto (MM/AAAA), não para dois
+  selects.
 - **`EmptyState` manda no degrau das ações, tem `layout="inline"`, o "tudo em
   dia" e o numeral no degrau** (rodada 191). `EmptyStateActions` passa o
   degrau aos botões pelo `ButtonSizeContext` (`sm`/`md` → `sm`, `lg`/`page` →

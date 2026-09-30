@@ -6,6 +6,7 @@ import {
     FieldControl,
     FieldLabel,
     FieldLegend,
+    FieldRow,
     FieldSet,
 } from "@/components/ui/field"
 import { useMemo } from "react"
@@ -269,7 +270,7 @@ export function CreditCardFormFields({
                 <FieldLegend variant="label" className="text-foreground">
                     Validade do cartão
                 </FieldLegend>
-                <div className="grid grid-cols-2 gap-3">
+                <FieldRow stack={false}>
                     <FormInput
                         id={`${idPrefix}-exp-m`}
                         label="Mês"
@@ -298,7 +299,7 @@ export function CreditCardFormFields({
                         placeholder="AAAA"
                         className="text-sm tabular-nums"
                     />
-                </div>
+                </FieldRow>
             </FieldSet>
             <FormInput
                 money
