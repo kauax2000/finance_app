@@ -146,12 +146,12 @@ function InvoiceRow({
                     <div className="min-w-0 w-full">
                         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:items-stretch">
                             <div className="min-w-0">
-                                <DescriptionList className="gap-0">
-                                    <DescriptionListItem className="flex flex-col gap-2 min-[480px]:flex-row min-[480px]:items-baseline min-[480px]:justify-between">
-                                        <DescriptionTerm className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+                                <DescriptionList layout="inline" term="eyebrow">
+                                    <DescriptionListItem>
+                                        <DescriptionTerm>
                                             Total do cartão
                                         </DescriptionTerm>
-                                        <DescriptionDetails className="text-xl font-semibold tabular-nums tracking-tight min-[480px]:text-right">
+                                        <DescriptionDetails size="xl">
                                             {currencyBRL(committedTotal)}
                                         </DescriptionDetails>
                                     </DescriptionListItem>
@@ -178,20 +178,22 @@ function InvoiceRow({
                                 ) : null}
                             </div>
 
-                            <DescriptionList className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-col sm:gap-2">
+                            {/* Dois lado a lado no telefone, empilhados ao lado do total a
+                                partir de `sm` — o inverso do `grid` padrão. */}
+                            <DescriptionList layout="grid" columns={2} term="eyebrow" className="min-w-0 gap-2 sm:grid-cols-1">
                                 <DescriptionListItem>
-                                    <DescriptionTerm className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+                                    <DescriptionTerm>
                                         Fechamento
                                     </DescriptionTerm>
-                                    <DescriptionDetails className="mt-0.5 truncate font-medium">
+                                    <DescriptionDetails className="truncate font-medium">
                                         {snap ? formatDatePtBr(snap.close) : "—"}
                                     </DescriptionDetails>
                                 </DescriptionListItem>
                                 <DescriptionListItem>
-                                    <DescriptionTerm className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+                                    <DescriptionTerm>
                                         Vencimento
                                     </DescriptionTerm>
-                                    <DescriptionDetails className="mt-0.5 truncate font-medium">
+                                    <DescriptionDetails className="truncate font-medium">
                                         {snap ? formatDatePtBr(snap.dueEstimate) : "—"}
                                     </DescriptionDetails>
                                 </DescriptionListItem>

@@ -16082,3 +16082,38 @@ O dono pediu a rodada completa e escolheu as quatro versões.
 - **Página**: a seção "A espiada" repetia o `md` que "Os três degraus" também
   mostrava — viraram uma; o "Padrão" virou "Com um botão", depois da linha
   pronta; a nota do ⌘F dizia que só `peek` mantinha o texto montado.
+
+### Rodada 190 — o DescriptionList ganha sobrancelha, destaque, nota, colunas e alinhamento
+
+O dono escolheu as quatro versões propostas "e o que mais achar importante":
+entrou o `align="end"` no item.
+
+- **O que as telas escreviam à mão**: o rótulo em caixa alta (`text-2xs
+  uppercase tracking-wide text-muted-foreground`) em sete termos, em três pesos
+  (`medium`, `semibold`, e sem caixa alta no cartão); o valor grande em
+  `text-base`/`text-xl font-semibold`; a nota miúda em `text-2xs`; e as
+  colunas por `className` (`grid-cols-2`, `grid-cols-3`), contra o
+  `sm:grid-cols-2` do componente.
+- **`term="eyebrow"`**, aplicado pela `<dl>` num seletor de um nível (`[&>*>
+  [data-slot=description-term]]`), e não por contexto: o painel de acesso é
+  server component. O `Caption` do termo declara `text-xs`, e o seletor
+  (0,2,0) vence a classe dele. Medido: 11px, caixa alta, peso 500, e o termo
+  de uma lista `caption` na mesma página segue 12px.
+- **`size="xl"`** no valor (20px semibold, `tracking-tight`) e
+  **`DescriptionHint`**, que desfaz o peso e o espaçamento do degrau —
+  medido: nota a 11px, peso 400, sobre um valor de 600.
+- **`columns={2|3}`** e **`align="end"`**. O painel de faturas tem a grade
+  inversa (duas colunas no telefone, uma a partir de `sm`), e fica com
+  `columns={2}` mais `sm:grid-cols-1` — o teste proíbe só a sobrescrita sem
+  degrau.
+- **Telas**: cartão de crédito, painel da fatura (hábitos e tickets, que
+  também perderam o `space-y-1` entre termo e valor — o par de identidade não
+  tem gap), as duas contas a pagar, o painel de faturas do início (o total
+  deixou a quebra em 480px escrita à mão pelo `layout="inline"`, que quebra em
+  640px), o resumo da categoria, o painel de acesso e o `HistogramSlider`. O
+  termo do cartão era `text-2xs font-medium` sem caixa alta e passou a
+  sobrancelha, como os outros. Medido a 375px no `/login`: duas colunas.
+  As outras telas pedem login e não foram vistas.
+- **Página**: a demonstração do extrato desenhava um cartão à mão (`rounded-xl
+  border px-4 py-3`) e agora é `Card`; entraram o destaque com nota e as três
+  colunas com `align="end"`.

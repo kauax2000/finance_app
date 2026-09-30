@@ -260,9 +260,9 @@ function ExpenseBudgetOverviewCard({
                 <CardContent className="space-y-4 p-3 md:p-4">
                     {hasBudget ? (
                         <>
-                            <DescriptionList className="gap-0 md:hidden">
-                                <DescriptionListItem className="flex w-full items-center justify-between gap-2">
-                                    <DescriptionTerm className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+                            <DescriptionList term="eyebrow" className="md:hidden">
+                                <DescriptionListItem className="flex items-center justify-between gap-2">
+                                    <DescriptionTerm>
                                         Limite
                                     </DescriptionTerm>
                                     <DescriptionDetails className="text-2xs font-medium">

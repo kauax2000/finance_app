@@ -433,7 +433,8 @@ function HistogramSlider({
       <DescriptionList
         layout="grid"
         size="sm"
-        className="grid-cols-2 gap-0 px-1.75"
+        columns={2}
+        className="gap-0 px-1.75"
       >
         <DescriptionListItem>
           <DescriptionTerm>{minLabel}</DescriptionTerm>
@@ -441,7 +442,7 @@ function HistogramSlider({
             <MoneyDisplay value={atual[0]} size="md" />
           </DescriptionDetails>
         </DescriptionListItem>
-        <DescriptionListItem className="text-right">
+        <DescriptionListItem align="end">
           <DescriptionTerm>{maxLabel}</DescriptionTerm>
           <DescriptionDetails size="lg">
             <MoneyDisplay value={atual[1]} size="md" />

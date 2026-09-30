@@ -117,16 +117,12 @@ export function AuthBrandPanel() {
                 que é o arranjo que a tese recusa.
 
                 A grade de dois por dois cabe em 375px e carrega valor. Ela é
-                `DescriptionList`, que é exatamente o par termo/valor, e o
-                `grid-cols-2` local vence o `sm:grid-cols-2` do componente
-                porque aqui as duas colunas valem **antes** de 640px. */}
+                `DescriptionList`, que é exatamente o par termo/valor, com
+                `columns={2}` porque aqui as duas colunas valem **antes** de
+                640px. */}
             <Card padding="sm" className="mt-4 lg:hidden">
                 <CardContent>
-                    <DescriptionList
-                        layout="grid"
-                        size="sm"
-                        className="grid-cols-2 gap-x-6"
-                    >
+                    <DescriptionList layout="grid" size="sm" columns={2}>
                         <DescriptionListItem>
                             <DescriptionTerm>Carteira</DescriptionTerm>
                             {/* `currencyBRL` e não `MoneyDisplay`: o `<dd>` já

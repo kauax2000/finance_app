@@ -1,7 +1,9 @@
 "use client"
 
+import { Card, CardContent } from "@/components/ui/card"
 import {
   DescriptionDetails,
+  DescriptionHint,
   DescriptionList,
   DescriptionListItem,
   DescriptionTerm,
@@ -88,37 +90,73 @@ export default function DescriptionListDoc() {
 </DescriptionList>`}
         previewClassName="items-stretch"
       >
-        <DescriptionList
-          layout="inline"
-          divided
-          className="w-full max-w-sm rounded-xl border border-border px-4 py-3"
-        >
-          {[
-            ["Compras do período", 1284.6],
-            ["Parcelamentos", 197.7],
-            ["Encargos", 0],
-          ].map(([term, value]) => (
-            <DescriptionListItem key={term}>
-              <DescriptionTerm>{term}</DescriptionTerm>
-              <DescriptionDetails>
-                <MoneyDisplay value={value as number} />
-              </DescriptionDetails>
-            </DescriptionListItem>
-          ))}
+        <Card className="w-full max-w-sm">
+          <CardContent>
+            <DescriptionList layout="inline" divided>
+              {[
+                ["Compras do período", 1284.6],
+                ["Parcelamentos", 197.7],
+                ["Encargos", 0],
+              ].map(([term, value]) => (
+                <DescriptionListItem key={term}>
+                  <DescriptionTerm>{term}</DescriptionTerm>
+                  <DescriptionDetails>
+                    <MoneyDisplay value={value as number} />
+                  </DescriptionDetails>
+                </DescriptionListItem>
+              ))}
+              <DescriptionListItem>
+                <DescriptionTerm>Total da fatura</DescriptionTerm>
+                <DescriptionDetails size="lg">
+                  <MoneyDisplay value={-1482.3} tone="expense" />
+                </DescriptionDetails>
+              </DescriptionListItem>
+            </DescriptionList>
+          </CardContent>
+        </Card>
+      </DocSection>
+
+      <DocSection
+        title="Rótulo em caixa alta, valor de destaque e nota"
+        description="term=&quot;eyebrow&quot; põe os rótulos em caixa alta, 11px e espaçados — a sobrancelha dos painéis. size=&quot;xl&quot; no valor é o número da tela. DescriptionHint é a linha miúda que explica o valor, dentro do <dd>: o leitor de tela a lê como parte da definição."
+        code={`<DescriptionList layout="grid" term="eyebrow">
+  <DescriptionListItem>
+    <DescriptionTerm>Ticket médio</DescriptionTerm>
+    <DescriptionDetails size="xl">
+      R$ 86,40
+      <DescriptionHint>Valor médio por despesa na fatura aberta.</DescriptionHint>
+    </DescriptionDetails>
+  </DescriptionListItem>
+</DescriptionList>`}
+        previewClassName="items-stretch"
+      >
+        <DescriptionList layout="grid" term="eyebrow" className="w-full max-w-md">
           <DescriptionListItem>
-            <DescriptionTerm>Total da fatura</DescriptionTerm>
-            <DescriptionDetails size="lg">
-              <MoneyDisplay value={-1482.3} tone="expense" />
+            <DescriptionTerm>Ticket médio</DescriptionTerm>
+            <DescriptionDetails size="xl">
+              <MoneyDisplay value={86.4} />
+              <DescriptionHint>Valor médio por despesa na fatura aberta.</DescriptionHint>
+            </DescriptionDetails>
+          </DescriptionListItem>
+          <DescriptionListItem>
+            <DescriptionTerm>Ticket mediano</DescriptionTerm>
+            <DescriptionDetails size="xl">
+              <MoneyDisplay value={41.9} />
+              <DescriptionHint>Metade das despesas ficou abaixo deste valor.</DescriptionHint>
             </DescriptionDetails>
           </DescriptionListItem>
         </DescriptionList>
       </DocSection>
 
       <DocSection
-        title="Em grade"
-        description="Duas colunas a partir de sm, para detalhes com muitos campos."
-        code={`<DescriptionList layout="grid">…</DescriptionList>`}
-        previewClassName="items-stretch"
+        title="Em grade, e as colunas"
+        description="grid reparte os pares em duas colunas a partir de sm. columns fixa o número de colunas em qualquer largura — o painel de acesso tem dois por dois já no telefone. align=&quot;end&quot; encosta o par à direita."
+        code={`<DescriptionList layout="grid">…</DescriptionList>
+<DescriptionList layout="grid" columns={3}>
+  …
+  <DescriptionListItem align="end">…</DescriptionListItem>
+</DescriptionList>`}
+        previewClassName="flex-col items-stretch gap-8"
       >
         <DescriptionList layout="grid" className="w-full max-w-md">
           {[
@@ -137,6 +175,20 @@ export default function DescriptionListDoc() {
             </DescriptionListItem>
           ))}
         </DescriptionList>
+        <DescriptionList layout="grid" columns={3} size="sm" className="w-full max-w-md">
+          <DescriptionListItem>
+            <DescriptionTerm>Pago em 90 dias</DescriptionTerm>
+            <DescriptionDetails><MoneyDisplay value={1240} /></DescriptionDetails>
+          </DescriptionListItem>
+          <DescriptionListItem>
+            <DescriptionTerm>Pendente</DescriptionTerm>
+            <DescriptionDetails><MoneyDisplay value={310} /></DescriptionDetails>
+          </DescriptionListItem>
+          <DescriptionListItem align="end">
+            <DescriptionTerm>Próxima</DescriptionTerm>
+            <DescriptionDetails>12/05</DescriptionDetails>
+          </DescriptionListItem>
+        </DescriptionList>
       </DocSection>
 
       <DocNote title="O layout se declara uma vez">
@@ -151,6 +203,14 @@ export default function DescriptionListDoc() {
         O <code>gap</code> do componente fica entre um par e o próximo, nunca
         dentro do par: rótulo sobre valor é o mesmo dado em duas linhas, e quem
         os separa é a entrelinha.
+      </DocNote>
+
+      <DocNote title="O rótulo em caixa alta vem da lista, e não do termo">
+          <code>term=&quot;eyebrow&quot;</code> é aplicado pela <code>&lt;dl&gt;</code>, num seletor que desce um nível só: o painel de acesso é server component, e ler contexto no termo o obrigaria a virar cliente. O <code>Caption</code> do termo declara <code>text-xs</code>, e o seletor da lista tem mais especificidade que uma classe — é o que vence. Não escreva <code>text-2xs uppercase tracking-wide</code> num <code>DescriptionTerm</code>.
+      </DocNote>
+
+      <DocNote title="Onde o app usa">
+          Em oito telas: o cartão e a fatura (o total planejado, os hábitos de consumo, os tickets), as duas contas a pagar, o painel de faturas, o resumo da categoria, o painel de acesso e o <code>HistogramSlider</code>. Desde a rodada 190 nenhuma escreve o rótulo em caixa alta, o valor em <code>font-semibold</code>, a nota em <code>text-2xs</code> nem as colunas por <code>className</code>. O painel de faturas trocou a quebra em 480px, escrita à mão, pelo <code>layout=&quot;inline&quot;</code>, que quebra em 640px.
       </DocNote>
 
       <DocNote title="Figuras tabulares de fábrica">
@@ -180,6 +240,17 @@ export default function DescriptionListDoc() {
             description:
               "Fio entre os pares; ignorado em grid.",
           },
+          {
+            prop: "term",
+            type: '"caption" | "eyebrow"',
+            default: '"caption"',
+            description: "eyebrow põe os rótulos em caixa alta, 11px e espaçados.",
+          },
+          {
+            prop: "columns",
+            type: "2 | 3",
+            description: "Só em grid: as colunas em qualquer largura.",
+          },
         ]}
       />
 
@@ -188,9 +259,9 @@ export default function DescriptionListDoc() {
         rows={[
           {
             prop: "DescriptionListItem",
-            type: 'layout?: "stacked" | "inline" | "grid"',
-            default: "herdado",
-            description: "Sobrescrita local, para a linha que foge do padrão.",
+            type: 'layout? · align?: "start" | "end"',
+            default: 'herdado · "start"',
+            description: "Sobrescrita local do layout; end encosta o par à direita.",
           },
           {
             prop: "DescriptionTerm",
@@ -199,10 +270,15 @@ export default function DescriptionListDoc() {
           },
           {
             prop: "DescriptionDetails",
-            type: 'size?: "sm" | "lg"',
+            type: 'size?: "sm" | "lg" | "xl"',
             default: '"sm"',
             description:
-              "O valor, com .nums; lg é a linha do total.",
+              "O valor, com .nums; lg é a linha do total, xl o número da tela.",
+          },
+          {
+            prop: "DescriptionHint",
+            type: "ComponentProps<'span'>",
+            description: "A linha miúda que explica o valor, dentro do <dd>.",
           },
         ]}
       />

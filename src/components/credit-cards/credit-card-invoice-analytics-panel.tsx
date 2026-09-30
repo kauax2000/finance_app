@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/button"
 import {
     DescriptionDetails,
+    DescriptionHint,
     DescriptionList,
     DescriptionListItem,
     DescriptionTerm,
@@ -968,14 +969,14 @@ export function CreditCardInvoiceAnalyticsPanel({
                         <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                             Hábitos de consumo
                         </h3>
-                        <DescriptionList layout="grid" className="gap-2 text-xs">
-                            <DescriptionListItem className="space-y-1">
-                                <DescriptionTerm className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        <DescriptionList layout="grid" term="eyebrow" className="gap-2">
+                            <DescriptionListItem>
+                                <DescriptionTerm>
                                     Dias úteis
                                 </DescriptionTerm>
                                 {/* A fatia fica na linha do valor, dentro da definição. */}
-                                <DescriptionDetails className="flex items-baseline justify-between gap-2">
-                                    <span className="text-base font-semibold leading-snug">
+                                <DescriptionDetails size="lg" className="flex items-baseline justify-between gap-2">
+                                    <span>
                                         {currencyBRL(
                                             analytics.weekdayWeekend.weekdayTotal
                                         )}
@@ -985,13 +986,13 @@ export function CreditCardInvoiceAnalyticsPanel({
                                     </span>
                                 </DescriptionDetails>
                             </DescriptionListItem>
-                            <DescriptionListItem className="space-y-1">
-                                <DescriptionTerm className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            <DescriptionListItem>
+                                <DescriptionTerm>
                                     Fim de semana
                                 </DescriptionTerm>
                                 {/* A fatia fica na linha do valor, dentro da definição. */}
-                                <DescriptionDetails className="flex items-baseline justify-between gap-2">
-                                    <span className="text-base font-semibold leading-snug">
+                                <DescriptionDetails size="lg" className="flex items-baseline justify-between gap-2">
+                                    <span>
                                         {currencyBRL(
                                             analytics.weekdayWeekend.weekendTotal
                                         )}
@@ -1046,35 +1047,31 @@ export function CreditCardInvoiceAnalyticsPanel({
                             </Badge>
                         </div>
 
-                        <DescriptionList layout="grid" className="gap-2 text-xs">
-                            <DescriptionListItem className="space-y-1">
-                                <DescriptionTerm className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        <DescriptionList layout="grid" term="eyebrow" className="gap-2">
+                            <DescriptionListItem>
+                                <DescriptionTerm>
                                     Ticket médio
                                 </DescriptionTerm>
-                                <DescriptionDetails className="space-y-1">
-                                    <span className="block text-base font-semibold leading-snug">
-                                        {analytics.meanTicket != null
-                                            ? currencyBRL(analytics.meanTicket)
-                                            : "—"}
-                                    </span>
-                                    <span className="block text-2xs leading-snug text-muted-foreground">
+                                <DescriptionDetails size="lg">
+                                    {analytics.meanTicket != null
+                                        ? currencyBRL(analytics.meanTicket)
+                                        : "—"}
+                                    <DescriptionHint>
                                         Valor médio por despesa na fatura aberta.
-                                    </span>
+                                    </DescriptionHint>
                                 </DescriptionDetails>
                             </DescriptionListItem>
-                            <DescriptionListItem className="space-y-1">
-                                <DescriptionTerm className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            <DescriptionListItem>
+                                <DescriptionTerm>
                                     Ticket mediano
                                 </DescriptionTerm>
-                                <DescriptionDetails className="space-y-1">
-                                    <span className="block text-base font-semibold leading-snug">
-                                        {analytics.medianTicket != null
-                                            ? currencyBRL(analytics.medianTicket)
-                                            : "—"}
-                                    </span>
-                                    <span className="block text-2xs leading-snug text-muted-foreground">
+                                <DescriptionDetails size="lg">
+                                    {analytics.medianTicket != null
+                                        ? currencyBRL(analytics.medianTicket)
+                                        : "—"}
+                                    <DescriptionHint>
                                         Metade das despesas ficou abaixo deste valor.
-                                    </span>
+                                    </DescriptionHint>
                                 </DescriptionDetails>
                             </DescriptionListItem>
                         </DescriptionList>

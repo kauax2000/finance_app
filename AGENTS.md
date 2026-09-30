@@ -2015,6 +2015,15 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   de 7px a `largura − 7px`, a régua do Radix —, `bubble` no `:active` e no
   foco de teclado, e `bands`, os cortes do `Progress` (zonas no trilho, faixa
   na cor do valor; não com a marca). Sem essas props a peça é a de sempre.
+- **`DescriptionList` tem sobrancelha, destaque, nota, colunas e alinhamento**
+  (rodada 190). `term="eyebrow"` é o rótulo em caixa alta de 11px —
+  **nenhum `DescriptionTerm` escreve `uppercase` à mão**; ele vem da lista por
+  um seletor de um nível, sem contexto, porque o painel de acesso é server
+  component. `DescriptionDetails size="xl"` é o número da tela;
+  `DescriptionHint` é a nota miúda **dentro** do `<dd>`; `columns={2|3}` fixa
+  a grade em qualquer largura (nenhuma lista sobrescreve `grid-cols-*`); e
+  `DescriptionListItem align="end"` encosta o par à direita.
+  `description-list.test.ts` tranca as duas proibições.
 - **`Collapsible` tem a linha, o cartão, o ⌘F e o rótulo que troca** (rodada
   189). `CollapsibleRow` é o gatilho desenhado na régua do `Accordion`
   (`md`/`lg`/`xl`, `trailing`, `markerSide`) — **nenhuma tela escreve a linha

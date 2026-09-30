@@ -395,7 +395,7 @@ function CartaoOrcamento() {
         <CardTitle>Orçamentos de setembro</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-4">
-        <DescriptionList className="grid w-full grid-cols-3 text-center">
+        <DescriptionList layout="grid" columns={3} className="w-full text-center">
           <DescriptionListItem>
             <DescriptionTerm>Gasto</DescriptionTerm>
             <DescriptionDetails className="nums font-mono">

@@ -3,6 +3,7 @@
 import { currencyBRL } from "@/lib/formatters"
 import {
     DescriptionDetails,
+    DescriptionHint,
     DescriptionList,
     DescriptionListItem,
     DescriptionTerm,
@@ -109,20 +110,18 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                     {snapshot ? (
                         <>
                             <div className="flex flex-col gap-2">
-                                <DescriptionList className="gap-0">
+                                <DescriptionList term="eyebrow">
                                     <DescriptionListItem>
-                                        <DescriptionTerm className="text-2xs font-medium text-muted-foreground">
+                                        <DescriptionTerm>
                                             Fatura aberta (planejada)
                                         </DescriptionTerm>
-                                        <DescriptionDetails>
-                                            <p className="mt-0.5 text-base font-semibold tabular-nums text-foreground">
-                                                {currencyBRL(
-                                                    snapshot.committedOpenTotal
-                                                )}
-                                            </p>
+                                        <DescriptionDetails size="lg">
+                                            {currencyBRL(
+                                                snapshot.committedOpenTotal
+                                            )}
                                             {(snapshot.projectedOpenInstallmentsTotal ?? 0) >
                                             0 ? (
-                                                <p className="mt-1 text-2xs leading-snug text-muted-foreground">
+                                                <DescriptionHint>
                                                     Total registrado{" "}
                                                     {currencyBRL(snapshot.openTotal)}
                                                     {" · "}
@@ -130,7 +129,7 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                                                     {currencyBRL(
                                                         snapshot.projectedOpenInstallmentsTotal
                                                     )}
-                                                </p>
+                                                </DescriptionHint>
                                             ) : null}
                                         </DescriptionDetails>
                                     </DescriptionListItem>

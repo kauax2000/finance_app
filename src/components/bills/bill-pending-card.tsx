@@ -199,9 +199,9 @@ export function BillPendingCard({
                 </CardToolbar>
 
                 <CardContent className="space-y-3 px-4 pb-4 pt-3">
-                    <DescriptionList className="gap-0">
+                    <DescriptionList term="eyebrow">
                         <DescriptionListItem>
-                            <DescriptionTerm className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            <DescriptionTerm>
                                 Valor estimado
                             </DescriptionTerm>
                             <DescriptionDetails>
