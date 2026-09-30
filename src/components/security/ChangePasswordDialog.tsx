@@ -38,7 +38,7 @@ import {
     InputGroupButton,
     InputGroupInput,
 } from "@/components/ui/input-group"
-import { CheckCircleIcon, CheckIcon, ExclamationTriangleIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
+import { CheckIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
 import { cn } from "@/lib/utils"
 
 interface ChangePasswordDialogProps {
@@ -280,13 +280,11 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
 
             {error ? (
                 <Alert tone="destructive" size="sm">
-                    <ExclamationTriangleIcon />
-                    <AlertTitle className="break-words">{error}</AlertTitle>
+                    <AlertTitle>{error}</AlertTitle>
                 </Alert>
             ) : null}
             {success ? (
                 <Alert tone="success" size="sm">
-                    <CheckCircleIcon />
                     <AlertTitle>Senha alterada com sucesso!</AlertTitle>
                 </Alert>
             ) : null}

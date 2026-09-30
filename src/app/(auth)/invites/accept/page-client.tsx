@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { CheckCircleIcon, ExclamationCircleIcon } from "@heroicons/react/16/solid"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
@@ -163,7 +162,6 @@ export default function AcceptInvitePageClient() {
             <AuthShell title="Convite indisponível">
                 <div className="flex flex-col gap-(--space-block)">
                     <Alert tone="destructive">
-                        <ExclamationCircleIcon />
                         <AlertTitle>{error}</AlertTitle>
                     </Alert>
                     <Button asChild variant="tertiary" size="xl" className="w-full">
@@ -194,7 +192,6 @@ export default function AcceptInvitePageClient() {
             >
                 <div className="flex flex-col gap-(--space-block)">
                     <Alert tone="success">
-                        <CheckCircleIcon />
                         <AlertTitle>
                             Use o seletor de carteiras no topo da lateral para
                             alternar entre Pessoal e esta carteira.

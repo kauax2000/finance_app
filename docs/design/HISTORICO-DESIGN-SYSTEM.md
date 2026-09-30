@@ -15928,3 +15928,48 @@ de defeitos medidos antes de propor.
 - **Página**: as notas citavam `max-w-xs`, que saiu quando o teto virou
   `min(20rem, largura disponível)`; as seis notas viraram quatro, e os ícones
   de copiar perderam o `h-4 w-4` que o `Button` já dá.
+
+### Rodada 186 — o Alert traz o ícone do tom, dispensa, põe a ação na linha e entra suave
+
+O dono pediu a rodada completa e escolheu as quatro versões.
+
+- **O ícone é do tom.** Seis telas escreviam o `svg` como filho, cada uma
+  escolhendo: o destrutivo saía triângulo em cinco (o do `warning`) e círculo
+  com × no catálogo, e as telas de acesso (login, cadastro, recuperação,
+  convite) não tinham ícone nenhum. Hoje `info` ⓘ, `success` ✓, `warning` ⚠,
+  `destructive` ⊗ e `brand` ✦ vêm sozinhos; `default` fica sem. `icon` troca,
+  `icon={false}` tira. `alert-icon.test.ts` reprova o `svg` escrito como filho
+  em qualquer `.tsx` de `src/`. Medido: um `svg` por alerta nos 13 da página, e
+  o aviso de sessão encerrada do login com o ícone.
+- **Dispensar**: `onDismiss` põe o × no canto, com a receita do × da
+  `AnnouncementBar` (flor em `currentColor`, alvo de 46 no dedo; sem a borda no cursor, a pedido do dono). O
+  texto recua pela presença (`pe-10`, `pe-8` no `sm`), como o título do
+  `Dialog`. Medido: centro do × igual ao centro da primeira linha (0px). Nenhuma
+  tela usa.
+- **Ação na linha**: `AlertActions placement="inline"`. **A primeira versão não
+  funcionou, e a razão é regra de CSS**: `@md/alert:grid-cols-*` no próprio
+  alerta nunca casava, porque uma container query não enxerga o próprio
+  contêiner. A grade ganha a terceira coluna `auto` sempre que há ação na
+  linha, e quem pergunta a largura são os filhos: estreita, a ação atravessa
+  texto e `auto` (que mede 0) e desce ao pé; larga, ocupa a `auto`. Com a
+  terceira coluna, uma peça sem coluna declarada cairia nela por
+  auto-posicionamento, então título, descrição e ações leem
+  `--alert-text-col` (2 com ícone, 1 sem) em vez do `col-start-2` condicional.
+  O contêiner só existe com a ação na linha (`inline-size` num pai que encolhe
+  ao conteúdo levaria o alerta a 0). O respiro título→descrição passou de
+  `gap-y-0.5` a margem da descrição, para a linha vazia da ação não somar 2px.
+  Medido: o erro do painel foi de 96 para 68px, com a ação centrada no texto
+  (0px); a 375px ela fica 14px abaixo da descrição.
+- **Entrada**: `starting:opacity-0 starting:translate-y-1`, sem prop e sem
+  timer. Medido: opacidade 0 → 0,42 → 0,86 → 0,99 em 160ms.
+- **`wrap-break-word`** no título e na descrição; três diálogos escreviam
+  `break-words` no título, e a tela de erro na descrição.
+- **Página**: a nota "Três medições" dizia que a `@property
+  --brand-glow-start` é `inherits: true` e que um núcleo chapado protege o
+  texto — a propriedade não é registrada desde a troca pelo tween, e o núcleo
+  saiu na 156. O AGENTS.md repetia a primeira (medição 1). As seis notas do
+  mecanismo do brilho foram para a página `brand`, que é a da primitiva; o
+  alerta fica com os dois custos que são dele. As demonstrações da marca
+  foram de duas para uma, e "Sem ícone" virou a seção do ícone. O cabeçalho
+  do `alert.tsx` ainda descrevia a régua de 2px, e o tipo justificava a
+  proibição do `sm` pela geometria dela.

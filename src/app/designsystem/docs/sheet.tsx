@@ -1,6 +1,5 @@
 "use client"
 
-import { InformationCircleIcon } from "@heroicons/react/16/solid"
 import Link from "next/link"
 
 import {
@@ -53,7 +52,6 @@ export default function SheetDoc() {
    */
   const avisoDeGaveta = (
     <Alert tone="info" className="w-full">
-      <InformationCircleIcon />
       <AlertTitle>Nesta largura, a folha é uma gaveta</AlertTitle>
       <AlertDescription>
         Abaixo de 768px o <code>Sheet</code> é uma gaveta, e seria ela que você

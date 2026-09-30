@@ -203,7 +203,6 @@ function CreditCardBillingSection({
                         )}
                     </div>
                     <Alert tone="info" size="sm">
-                        <InformationCircleIcon aria-hidden />
                         <AlertTitle>
                             {CREDIT_CARD_BILLING_FORM.results.title}
                         </AlertTitle>

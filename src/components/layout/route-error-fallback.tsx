@@ -1,10 +1,7 @@
 "use client"
 
 import { Container } from "@/components/ui/container"
-import {
-    ArrowPathIcon,
-    ExclamationTriangleIcon as ExclamationTriangleMicroIcon,
-} from "@heroicons/react/16/solid"
+import { ArrowPathIcon } from "@heroicons/react/16/solid"
 import { useEffect } from "react"
 
 import { ROUTES } from "@/config/navigation"
@@ -67,11 +64,8 @@ export function RouteErrorFallback({ error, retry, variant = "page" }: RouteErro
                     </EmptyStateActions>
                 </EmptyState>
                 <Alert tone="destructive" className="w-full">
-                    {/* O alerta desenha o ícone a 16px (`--alert-icon`), e o do
-                        bloco vazio sai a 24 — conjuntos diferentes, de propósito. */}
-                    <ExclamationTriangleMicroIcon />
                     <AlertTitle>Detalhes técnicos</AlertTitle>
-                    <AlertDescription className="break-words font-mono text-xs">
+                    <AlertDescription className="font-mono text-xs">
                         {/* A mensagem crua é para quem desenvolve; em produção
                             fica só o código, que casa com o log do servidor. */}
                         {process.env.NODE_ENV === "development"

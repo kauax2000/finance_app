@@ -27,7 +27,7 @@ import {
 import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ArrowPathIcon, CheckCircleIcon, ExclamationTriangleIcon, PhotoIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { ArrowPathIcon, ExclamationTriangleIcon, PhotoIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { getInitials, cn } from "@/lib/utils"
 import { createActivity } from "@/lib/activity"
 import { identityToneFor } from "@/lib/avatar"
@@ -402,14 +402,12 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
 
             {errorMessage && (
                 <Alert tone="destructive" size="sm">
-                    <ExclamationTriangleIcon />
-                    <AlertTitle className="break-words">{errorMessage}</AlertTitle>
+                    <AlertTitle>{errorMessage}</AlertTitle>
                 </Alert>
             )}
             {successMessage && (
                 <Alert tone="success" size="sm">
-                    <CheckCircleIcon />
-                    <AlertTitle className="break-words">{successMessage}</AlertTitle>
+                    <AlertTitle>{successMessage}</AlertTitle>
                 </Alert>
             )}
         </div>

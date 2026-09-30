@@ -2,6 +2,14 @@
 
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+import {
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
+  SparklesIcon,
+  XCircleIcon,
+  XMarkIcon,
+} from "@heroicons/react/16/solid"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -31,20 +39,49 @@ import { composeRefs, useBrandGlow } from "@/hooks/use-brand-glow"
  * Onze avisos tonais do app são feitos à mão contra quatro que usam este
  * componente. Isso não é desleixo das telas: é o componente não tendo as peças.
  *
- * ## A marca fala aqui, e por um fio
+ * ## A marca fala aqui, pelo brilho
  *
- * `variant="brand"` é a caixa neutra com o arco-íris de 2px na aresta
- * inline-start. Ela existe porque este componente e a `AnnouncementBar` são as
- * duas superfícies onde o produto fala sobre **si mesmo**, e nenhuma das duas
- * tinha voz: um "temos novidade" só podia sair de `tone="info"`, o azul da
- * rampa de **estado**. `info` é fato sobre o dinheiro da pessoa; a novidade não
- * é um estado dela. A mecânica e as medições estão no valor `brand` do eixo
- * `variant`, abaixo. **Nasce sem consumidor no app**, por decisão do dono: só
- * catálogo, como o `Stepper` já está.
+ * `variant="brand"` é a caixa neutra com o brilho de arco-íris na borda. Ela
+ * existe porque este componente e a `AnnouncementBar` são as duas superfícies
+ * onde o produto fala sobre **si mesmo**, e nenhuma das duas tinha voz: um
+ * "temos novidade" só podia sair de `tone="info"`, o azul da rampa de
+ * **estado**. `info` é fato sobre o dinheiro da pessoa; a novidade não é um
+ * estado dela. **Nasce sem consumidor no app**, por decisão do dono.
+ *
+ * ## O ícone é do tom (rodada 186)
+ *
+ * Cada tom traz o seu (`TONE_ICON`), e a tela não escreve `<svg>` como filho:
+ * seis telas escreviam o ícone à mão, cada uma escolhendo um — o destrutivo
+ * saía triângulo em cinco e círculo com × no catálogo — e as telas de acesso
+ * não tinham ícone nenhum. `icon={false}` tira; um nó troca.
+ * `alert-icon.test.ts` impede o ícone de voltar como filho.
  */
 const alertVariants = cva(
   [
-    "group/alert relative grid w-full items-start gap-y-0.5",
+    // Sem `gap-y`: o respiro entre título e descrição é margem da descrição
+    // (ver `AlertDescription`), para a ação `inline` poder ocupar duas linhas
+    // sem que uma linha vazia some 2px num aviso só de título.
+    "group/alert relative grid w-full items-start",
+    // A ação na linha (`AlertActions placement="inline"`) mora numa terceira
+    // coluna, `auto`, que existe sempre que ela existe: uma container query
+    // **não enxerga o próprio contêiner**, então quem pergunta a largura do
+    // alerta são os filhos (medido: `@md/alert:grid-cols-*` no alerta nunca
+    // casava). Estreita, a ação atravessa as duas colunas e a `auto` mede 0.
+    // O contêiner só existe com ela: `inline-size` tira do conteúdo o poder
+    // de medir a caixa, e um alerta num pai que encolhe ao conteúdo cairia a 0.
+    "has-[>[data-placement=inline]]:@container/alert",
+    "has-[>[data-placement=inline]]:grid-cols-[1fr_auto]",
+    "has-[>svg]:has-[>[data-placement=inline]]:grid-cols-[var(--alert-icon)_1fr_auto]",
+    // A coluna do texto, que as três peças leem. Com a terceira coluna, uma
+    // peça sem coluna declarada cairia na `auto` por auto-posicionamento.
+    "[--alert-text-col:1] has-[>svg]:[--alert-text-col:2]",
+    // O × não ocupa célula (é `absolute`); o texto recua para não passar
+    // por baixo dele — pela presença, como o título do `Dialog`.
+    "has-[>[data-slot=alert-dismiss]]:pe-10 data-[size=sm]:has-[>[data-slot=alert-dismiss]]:pe-8",
+    // A entrada (rodada 186): quem surge no meio de um formulário — o erro do
+    // login, o sucesso num diálogo — esmaece subindo 4px, sem JS. O bloco
+    // global de movimento reduzido encurta a transição, e ele aparece na hora.
+    "transition-[opacity,translate] duration-(--duration-base) ease-(--ease-out) starting:translate-y-1 starting:opacity-0",
     // A coluna do ícone deixou de ser um número fixo (`calc(var(--spacing)*4)`)
     // e virou a mesma medida que o ícone: uma variável, declarada pelo `size`,
     // que a grade e o `svg` leem. Antes, mudar o corpo do ícone exigia lembrar
@@ -162,7 +199,27 @@ const alertVariants = cva(
  * Continua sobrescrevível: `{...props}` vem depois.
  */
 type AlertBase = React.ComponentProps<"div"> &
-  VariantProps<typeof alertVariants>
+  VariantProps<typeof alertVariants> & {
+    /** O ícone. Padrão: o do tom (nenhum em `default`); `false` tira. */
+    icon?: React.ReactNode | false
+    /** Põe o × no canto; quem chama desmonta o aviso. */
+    onDismiss?: () => void
+    dismissLabel?: string
+  }
+
+/**
+ * Um por tom, todos `16/solid` (o alerta desenha a 14 e 16px). O destrutivo é
+ * o círculo com ×, e não o triângulo do `warning`: com os dois iguais, só a
+ * cor separava "atenção" de "falhou".
+ */
+const TONE_ICON = {
+  default: null,
+  info: <InformationCircleIcon />,
+  success: <CheckCircleIcon />,
+  warning: <ExclamationTriangleIcon />,
+  destructive: <XCircleIcon />,
+  brand: <SparklesIcon />,
+} as const
 
 /**
  * **`tone` e `variant="brand"` são excludentes**, e o tipo cobra — o precedente
@@ -174,26 +231,27 @@ type AlertBase = React.ComponentProps<"div"> &
  * faz nada — e aqui seria literal, porque `variant` vem depois de `tone` no
  * `cva` e o `tailwind-merge` apaga a superfície tonal.
  *
- * **E `brand` também não aceita `size="sm"`, por geometria medida.** O recuo
- * vertical da régua não é escolha: ele vem do `rounded-xl`. Num raio de 12px, a
- * 8px do topo a aresta da caixa recua 0,69px e a ponta arredondada absorve a
- * sobra; a 4px ela recua **3,06px**, e um fio de 2px em `start-0` ficaria
- * inteiramente fora da superfície pintada, flutuando na margem. Ou seja, 8px é
- * o piso. Numa caixa `sm` de 34px isso deixa 16px de fio — **47% da altura**,
- * medido, que lê como tracinho e não como régua.
- *
- * Reduzir o raio no degrau é o desvio que este arquivo já recusou ("raio
- * diferente por degrau"), e recortar o fio pelo raio (`overflow-hidden` com
- * `inset-y-0`) o transforma numa lente de ~10px de miolo cheio na mesma caixa.
- * Não há geometria boa, e a razão é que **não há caso**: `sm` é o aviso que
- * fala com um campo, e a marca fala uma vez por tela, no corpo inteiro. O tipo
- * diz isso em vez de entregar um degrau torto.
+ * **E `brand` também não aceita `size="sm"`.** Até a rodada 118 a razão era
+ * geométrica — a régua de 2px precisava de 8px de recuo para não sair do
+ * `rounded-xl` —, e ela saiu com a régua. Fica a semântica, que sempre foi a
+ * mais forte: `sm` é o aviso que fala com um campo, e a marca fala uma vez por
+ * tela, no corpo inteiro.
  */
 type AlertProps =
   | (AlertBase & { variant?: "soft" })
   | (AlertBase & { variant: "brand"; tone?: never; size?: "md" })
 
-function Alert({ className, size, role, ref, ...props }: AlertProps) {
+function Alert({
+  className,
+  size,
+  role,
+  ref,
+  children,
+  icon,
+  onDismiss,
+  dismissLabel = "Dispensar aviso",
+  ...props
+}: AlertProps) {
   const { tone, variant, ...rest } = props as AlertBase
   const glowRef = useBrandGlow(variant === "brand")
 
@@ -201,12 +259,15 @@ function Alert({ className, size, role, ref, ...props }: AlertProps) {
   // manda o cinza do `AlertDescription` seguir a superfície em vez da tinta
   // tonal a 85%. Um atributo que mente sobre a cor pintada é pior que nenhum.
   const tomEfetivo = variant === "brand" ? "default" : (tone ?? "default")
+  const iconNode =
+    icon === false ? null : (icon ?? TONE_ICON[variant === "brand" ? "brand" : tomEfetivo])
 
   return (
     <div
       data-slot="alert"
       ref={composeRefs(glowRef, ref)}
       data-tone={tomEfetivo}
+      data-size={size ?? "md"}
       role={
         // Só o destrutivo interrompe, como na `AnnouncementBar`. Marca não
         // interrompe, e cai no `status` pela mesma linha.
@@ -214,7 +275,33 @@ function Alert({ className, size, role, ref, ...props }: AlertProps) {
       }
       className={cn(alertVariants({ tone, variant, size }), className)}
       {...rest}
-    />
+    >
+      {iconNode}
+      {children}
+      {onDismiss ? (
+        <Button
+          data-slot="alert-dismiss"
+          type="button"
+          variant="tertiary"
+          size="icon-xs"
+          onClick={onDismiss}
+          aria-label={dismissLabel}
+          className={cn(
+            // Centrado na primeira linha: (respiro + entrelinha/2) − 12.
+            "absolute end-2.5 top-2.5 group-data-[size=sm]/alert:end-1.5 group-data-[size=sm]/alert:top-1",
+            // A receita do × da `AnnouncementBar` sem a borda do cursor (a
+            // pedido do dono): flor em `currentColor`, tinta presa no cursor,
+            // alvo de 46 no dedo por pseudo-elemento.
+            "text-current",
+            "[--button-bloom-fill:color-mix(in_oklab,currentColor_15%,transparent)] dark:[--button-bloom-fill:color-mix(in_oklab,currentColor_15%,transparent)]",
+            "hover:text-current active:text-current",
+            "pointer-coarse:after:absolute pointer-coarse:after:-inset-3 pointer-coarse:after:content-['']"
+          )}
+        >
+          <XMarkIcon aria-hidden />
+        </Button>
+      ) : null}
+    </div>
   )
 }
 
@@ -222,18 +309,21 @@ function Alert({ className, size, role, ref, ...props }: AlertProps) {
  * O resumo — a linha que o olho lê para decidir se continua, e a primeira que o
  * leitor de tela anuncia.
  *
- * `col-start-2` passou a depender de existir um ícone. Ele era incondicional, e
- * num alerta sem `svg` a grade tem uma coluna só: a linha ia parar numa segunda
- * coluna implícita, de largura zero, e funcionava por acidente da especificação
- * de grid. Agora a regra diz o que quer dizer.
+ * A coluna é a do texto, `--alert-text-col` (2 com ícone, 1 sem), e ela é
+ * declarada sempre: com a ação na linha a grade ganha uma terceira coluna, e
+ * uma peça sem coluna cairia nela por auto-posicionamento. Antes era
+ * `col-start-2` condicionado ao ícone — e antes disso incondicional, caindo
+ * numa coluna implícita de largura zero, por acidente da especificação.
  */
 function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="alert-title"
       className={cn(
-        "font-heading font-medium tracking-tight text-balance",
-        "group-has-[>svg]/alert:col-start-2",
+        // `wrap-break-word`: a mensagem de erro do servidor pode ser uma
+        // palavra só (um e-mail, um código); três telas o escreviam à mão.
+        "font-heading font-medium tracking-tight text-balance wrap-break-word",
+        "col-start-(--alert-text-col)",
         className
       )}
       {...props}
@@ -254,8 +344,10 @@ function AlertDescription({ className, ...props }: React.ComponentProps<"div">) 
     <div
       data-slot="alert-description"
       className={cn(
-        "text-current/85 group-data-[tone=default]/alert:text-muted-foreground",
-        "group-has-[>svg]/alert:col-start-2",
+        "text-current/85 group-data-[tone=default]/alert:text-muted-foreground wrap-break-word",
+        // O respiro sob o título (era o `gap-y-0.5` do alerta).
+        "[[data-slot=alert-title]~&]:mt-0.5",
+        "col-start-(--alert-text-col)",
         "[&_p]:leading-relaxed",
         className
       )}
@@ -280,13 +372,28 @@ function AlertDescription({ className, ...props }: React.ComponentProps<"div">) 
  * garantir, e "compensar geometria por seletor é sintoma de que falta uma
  * peça" — a peça era o botão.
  */
-function AlertActions({ className, ...props }: React.ComponentProps<"div">) {
+function AlertActions({
+  className,
+  placement = "block",
+  ...props
+}: React.ComponentProps<"div"> & {
+  /**
+   * `block` no pé, sob o texto; `inline` à direita dele, para o aviso curto —
+   * e desce para o pé quando o **alerta** tem menos de 28rem.
+   */
+  placement?: "block" | "inline"
+}) {
   return (
     <div
       data-slot="alert-actions"
+      data-placement={placement}
       className={cn(
-        "mt-3 flex flex-wrap items-center gap-2",
-        "group-has-[>svg]/alert:col-start-2",
+        "mt-3.5 flex flex-wrap items-center gap-2",
+        "col-start-(--alert-text-col)",
+        // Estreita, atravessa o texto e a coluna `auto` (que então mede 0);
+        // larga, ocupa só a `auto`, ao lado do título e da descrição.
+        "data-[placement=inline]:col-[var(--alert-text-col)/-1]",
+        "@md/alert:data-[placement=inline]:col-[-2/-1] @md/alert:data-[placement=inline]:row-[1/span_2] @md/alert:data-[placement=inline]:mt-0 @md/alert:data-[placement=inline]:self-center @md/alert:data-[placement=inline]:ps-3",
         className
       )}
       {...props}

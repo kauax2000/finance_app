@@ -337,10 +337,11 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   `GlowingEffect` da Aceternity, com os números do dono: blur 2, spread 40,
   proximity 24, borda 2, zona morta 0,01.
   **Quatro medições desenham o brilho, e cada uma muda o código.**
-  (1) A `@property --brand-glow-start` é **`inherits: true`**, ao contrário das
-  outras quatro da casa: ela é lida num **pseudo-elemento**, e pseudo não herda
-  propriedade registrada como `false` — medido, a `opacity` ficava em 0 com a
-  variável valendo 1. As `false` são lidas no próprio elemento.
+  (1) **As variáveis do brilho são lidas num pseudo-elemento, e por isso não
+  podem ser `@property` com `inherits: false`** — medido, a `opacity` ficava em
+  0 com a variável valendo 1. Hoje nenhuma é registrada (o ângulo é do tween,
+  ver abaixo), e variável não registrada sempre herda; quem registrar uma de
+  novo a declara `inherits: true`.
   (2) **`z-index` negativo sem `isolate` desaparece** — o pseudo cai atrás do
   fundo de um ancestral; medido, invisível.
   (3) **Com `isolate` ele passa a pintar por cima do `bg-card`**, pela ordem de
@@ -2007,6 +2008,16 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   de 7px a `largura − 7px`, a régua do Radix —, `bubble` no `:active` e no
   foco de teclado, e `bands`, os cortes do `Progress` (zonas no trilho, faixa
   na cor do valor; não com a marca). Sem essas props a peça é a de sempre.
+- **`Alert` traz o ícone do tom, dispensa, põe a ação na linha e entra suave**
+  (rodada 186). **Nenhuma chamada escreve o `svg` como filho**: cada tom traz
+  o seu (`destructive` é o círculo com ×, não o triângulo do `warning`),
+  `default` não tem, `icon` troca e `icon={false}` tira — `alert-icon.test.ts`
+  reprova. `onDismiss` é o × da `AnnouncementBar` no canto; o alerta não se
+  esconde sozinho. `AlertActions placement="inline"` põe a ação à direita
+  quando o **alerta** tem 28rem ou mais. **Uma container query não enxerga o
+  próprio contêiner**: a grade do alerta não pode perguntar a largura dele, e
+  quem decide são os filhos, lendo `--alert-text-col`. Todo alerta entra
+  esmaecendo 4px (`starting:`), e o título quebra palavra longa sozinho.
 - **`Tooltip` confirma, alcança o desabilitado, mostra atalho e tem contraste**
   (rodada 185). **O Radix fecha a dica no `pointerdown`**, então trocar o
   texto dela no clique ("Copiado") nunca aparece — medido; a confirmação é

@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/form"
 import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
-import { CheckCircleIcon, ExclamationTriangleIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { CheckCircleIcon, TrashIcon } from "@heroicons/react/16/solid"
 
 import { CheckCircleIcon as CheckCircleOutlineIcon } from "@heroicons/react/24/outline"
 const DATA_LOSS_ITEMS = [
@@ -247,7 +247,6 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
         <DialogBody>
             <div className="space-y-3">
                 <Alert tone="destructive" size="sm">
-                    <ExclamationTriangleIcon />
                     <AlertTitle>Atenção</AlertTitle>
                     <AlertDescription>
                         Não será possível recuperar sua conta nem os dados abaixo.
@@ -343,8 +342,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
 
                     {error ? (
                         <Alert tone="destructive" size="sm">
-                            <ExclamationTriangleIcon />
-                            <AlertTitle className="break-words">{error}</AlertTitle>
+                            <AlertTitle>{error}</AlertTitle>
                         </Alert>
                     ) : null}
                 </div>

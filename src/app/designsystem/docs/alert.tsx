@@ -1,13 +1,8 @@
 "use client"
 
-import {
-  ArrowPathIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
-  SparklesIcon,
-  XCircleIcon,
-} from "@heroicons/react/16/solid"
+import * as React from "react"
+import Link from "next/link"
+import { ArrowPathIcon, LockClosedIcon } from "@heroicons/react/16/solid"
 
 import {
   Alert,
@@ -16,53 +11,80 @@ import {
   AlertDescription,
   AlertTitle,
 } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+
+function DemoDispensar() {
+  const [aberto, setAberto] = React.useState(true)
+  return aberto ? (
+    <Alert tone="info" onDismiss={() => setAberto(false)}>
+      <AlertTitle>Parcelas futuras não entram no total</AlertTitle>
+      <AlertDescription>
+        O total considera só o que já foi lançado neste mês.
+      </AlertDescription>
+    </Alert>
+  ) : (
+    <Button variant="tertiary" size="sm" onClick={() => setAberto(true)}>
+      mostrar o aviso de novo
+    </Button>
+  )
+}
+
+function DemoEntrada() {
+  const [erro, setErro] = React.useState(false)
+  return (
+    <div className="flex w-full max-w-sm flex-col gap-3">
+      <Button variant="secondary" size="sm" className="self-start" onClick={() => setErro((v) => !v)}>
+        {erro ? "limpar o erro" : "entrar com a senha errada"}
+      </Button>
+      {erro ? (
+        <Alert tone="destructive">
+          <AlertTitle>E-mail ou senha incorretos.</AlertTitle>
+        </Alert>
+      ) : null}
+    </div>
+  )
+}
 
 export default function AlertDoc() {
   return (
     <>
       <Usage>
-          Mensagem que fica na tela porque é sobre <strong>o conteúdo dela</strong>. Confirmação do que acabou de acontecer é <code>toast</code>; aviso sobre o app inteiro é <code>AnnouncementBar</code>. Três eixos que não se misturam: <code>tone</code> é a cor, <code>variant</code> a forma, <code>size</code> o corpo. Quando quem fala é o produto e não o dado, a forma é <code>brand</code>.
+          Mensagem que fica na tela porque é sobre <strong>o conteúdo dela</strong>. Confirmação do que acabou de acontecer é <code>toast</code>; aviso sobre o app inteiro é <code>AnnouncementBar</code>. Três eixos que não se misturam: <code>tone</code> é a cor (e o ícone), <code>variant</code> a forma, <code>size</code> o corpo. Quando quem fala é o produto e não o dado, a forma é <code>brand</code>.
       </Usage>
 
       <DocSection
         title="Tom"
-        description="Cinco tons, tonais e nunca sólidos — o alerta explica, não interrompe. Título e descrição levam a tinta do tom; só o default tem descrição cinza, porque a superfície é neutra."
+        description="Cinco tons, tonais e nunca sólidos — o alerta explica, não interrompe. Cada tom traz o seu ícone, e título e descrição levam a tinta dele; o default não tem ícone e tem a descrição cinza, porque a superfície é neutra."
         code={`<Alert tone="warning">
-  <ExclamationTriangleIcon />
   <AlertTitle>Orçamento perto do limite</AlertTitle>
   <AlertDescription>Mercado está em 88%.</AlertDescription>
 </Alert>`}
         previewClassName="flex-col items-stretch gap-3"
       >
         <Alert>
-          <InformationCircleIcon />
           <AlertTitle>Padrão</AlertTitle>
           <AlertDescription>
             Sem cor: o aviso é neutro e não pede ação.
           </AlertDescription>
         </Alert>
         <Alert tone="info">
-          <InformationCircleIcon />
           <AlertTitle>Parcelas futuras não entram</AlertTitle>
           <AlertDescription>
             O total considera só o que já foi lançado neste mês.
           </AlertDescription>
         </Alert>
         <Alert tone="success">
-          <CheckCircleIcon />
           <AlertTitle>Fatura paga</AlertTitle>
           <AlertDescription>Registrada em 05/04.</AlertDescription>
         </Alert>
         <Alert tone="warning">
-          <ExclamationTriangleIcon />
           <AlertTitle>Orçamento perto do limite</AlertTitle>
           <AlertDescription>
             Mercado está em 88% com 9 dias restantes.
           </AlertDescription>
         </Alert>
         <Alert tone="destructive">
-          <XCircleIcon />
           <AlertTitle>Não foi possível sincronizar</AlertTitle>
           <AlertDescription>
             As alterações ficaram salvas no aparelho e sobem quando a conexão
@@ -72,66 +94,51 @@ export default function AlertDoc() {
       </DocSection>
 
       <DocSection
-        title="Marca"
-        description="A caixa neutra em repouso, e o arco-íris acendendo num arco da borda conforme o ponteiro passa pela tela, com um leve borrão. É a forma para quando quem fala é o produto — uma novidade, uma boas-vindas — e não o dinheiro da pessoa. Ela não aceita tone: marca não tem gravidade. Uma por tela. Passe o mouse perto de um destes."
-        code={`<Alert variant="brand">
-  <SparklesIcon />
-  <AlertTitle>O total agora considera as parcelas</AlertTitle>
-  <AlertDescription>…</AlertDescription>
-  <AlertActions>
-    <AlertAction>Ver o que mudou</AlertAction>
-  </AlertActions>
-</Alert>`}
-        previewClassName="flex-col items-stretch gap-4"
+        title="O ícone"
+        description="O do tom vem sozinho: ⓘ, ✓, ⚠ e o círculo com × — o destrutivo não é o triângulo do warning, senão só a cor separaria atenção de falha. icon troca por outro nó; icon={false} tira, e o texto começa na borda do respiro. Não escreva o svg como filho."
+        code={`<Alert tone="info" icon={<LockClosedIcon />}>…</Alert>
+<Alert tone="info" icon={false}>…</Alert>`}
+        previewClassName="flex-col items-stretch gap-3"
       >
-        <Alert variant="brand">
-          <SparklesIcon />
-          <AlertTitle>O total agora considera as parcelas</AlertTitle>
+        <Alert tone="info" icon={<LockClosedIcon />}>
+          <AlertTitle>Modo de leitura</AlertTitle>
           <AlertDescription>
-            Compras parceladas passam a entrar no mês em que cada parcela cai, e
-            não no da compra.
+            Você entrou por um convite de visualização e não pode editar.
           </AlertDescription>
-          <AlertActions>
-            <AlertAction>Ver o que mudou</AlertAction>
-          </AlertActions>
         </Alert>
-        <Alert variant="brand">
-          <SparklesIcon />
-          <AlertTitle>Agora dá para convidar alguém para a carteira</AlertTitle>
+        <Alert tone="info" icon={false}>
+          <AlertTitle>Modo de leitura</AlertTitle>
+          <AlertDescription>
+            Você entrou por um convite de visualização e não pode editar.
+          </AlertDescription>
         </Alert>
       </DocSection>
 
       <DocSection
         title="Corpo"
-        description="md fala com a tela; sm fala com um campo, colado ao controle que explica. O degrau encolhe texto, respiro e ícone juntos."
+        description="md fala com a tela; sm fala com um campo, colado ao controle que explica. O degrau encolhe texto, respiro e ícone juntos. Uma linha só não precisa de descrição."
         code={`<Alert tone="info">…</Alert>            {/* md */}
 <Alert tone="info" size="sm">…</Alert>`}
         previewClassName="flex-col items-stretch gap-3"
       >
         <Alert tone="info">
-          <InformationCircleIcon />
           <AlertTitle>O dia de fechamento não é o de vencimento</AlertTitle>
           <AlertDescription>
             Compras após o fechamento entram na fatura seguinte.
           </AlertDescription>
         </Alert>
         <Alert tone="info" size="sm">
-          <InformationCircleIcon />
           <AlertTitle>O dia de fechamento não é o de vencimento</AlertTitle>
-          <AlertDescription>
-            Compras após o fechamento entram na fatura seguinte.
-          </AlertDescription>
         </Alert>
       </DocSection>
 
       <DocSection
         title="Com ação"
-        description="A saída fica em AlertActions, no pé e alinhada ao texto. AlertAction não declara cor: sai de currentColor e serve os cinco tons."
+        description="AlertActions no pé, alinhada ao texto, é o padrão. placement=&quot;inline&quot; põe a ação à direita, para o aviso curto de uma saída só — e ela desce para o pé quando o alerta tem menos de 28rem, perguntando à largura dele e não à da janela. AlertAction não declara cor: sai de currentColor e serve os cinco tons."
         code={`<Alert tone="destructive">
-  <XCircleIcon />
   <AlertTitle>Não foi possível carregar as carteiras</AlertTitle>
   <AlertDescription>A conexão caiu no meio do carregamento.</AlertDescription>
-  <AlertActions>
+  <AlertActions placement="inline">
     <AlertAction iconMotion="spin">
       <ArrowPathIcon aria-hidden />
       Tentar novamente
@@ -141,12 +148,11 @@ export default function AlertDoc() {
         previewClassName="flex-col items-stretch gap-3"
       >
         <Alert tone="destructive">
-          <XCircleIcon />
           <AlertTitle>Não foi possível carregar as carteiras</AlertTitle>
           <AlertDescription>
             A conexão caiu no meio do carregamento.
           </AlertDescription>
-          <AlertActions>
+          <AlertActions placement="inline">
             <AlertAction iconMotion="spin">
               <ArrowPathIcon aria-hidden />
               Tentar novamente
@@ -154,7 +160,6 @@ export default function AlertDoc() {
           </AlertActions>
         </Alert>
         <Alert tone="warning">
-          <ExclamationTriangleIcon />
           <AlertTitle>Orçamento de Mercado em 88%</AlertTitle>
           <AlertDescription>
             Faltam 9 dias para o mês virar.
@@ -167,22 +172,47 @@ export default function AlertDoc() {
       </DocSection>
 
       <DocSection
-        title="Sem ícone"
-        description="O ícone é opcional: sem svg o alerta é de uma coluna só, e o texto começa na borda do respiro."
-        code={`<Alert tone="info">
-  <AlertTitle>Sem ícone</AlertTitle>
-  <AlertDescription>…</AlertDescription>
-</Alert>`}
+        title="Dispensar"
+        description="onDismiss põe o × no canto, na tinta do tom e com alvo de 46px no dedo — o mesmo da AnnouncementBar. O alerta não se esconde sozinho: quem chama o desmonta, e decide se lembra da escolha. Para o aviso explicativo que a pessoa já leu; um erro não se dispensa, se conserta."
+        code={`<Alert tone="info" onDismiss={() => setAberto(false)}>…</Alert>`}
         previewClassName="flex-col items-stretch gap-3"
       >
-        <Alert tone="info">
-          <AlertTitle>Modo de leitura</AlertTitle>
+        <DemoDispensar />
+      </DocSection>
+
+      <DocSection
+        title="A entrada"
+        description="O alerta que surge — o erro do login, o sucesso num diálogo — esmaece subindo 4px, por @starting-style e sem timer. Com movimento reduzido ele aparece na hora. Não há prop: todo alerta entra assim."
+        code={`{erro ? (
+  <Alert tone="destructive">
+    <AlertTitle>{erro}</AlertTitle>
+  </Alert>
+) : null}`}
+      >
+        <DemoEntrada />
+      </DocSection>
+
+      <DocSection
+        title="Marca"
+        description="A caixa neutra em repouso, e o arco-íris acendendo num arco da borda conforme o ponteiro passa pela tela. É a forma para quando quem fala é o produto — uma novidade, uma boas-vindas — e não o dinheiro da pessoa. O ícone dela é o ✦. Ela não aceita tone nem size=&quot;sm&quot;. Uma por tela; passe o mouse perto."
+        code={`<Alert variant="brand">
+  <AlertTitle>O total agora considera as parcelas</AlertTitle>
+  <AlertDescription>…</AlertDescription>
+  <AlertActions>
+    <AlertAction>Ver o que mudou</AlertAction>
+  </AlertActions>
+</Alert>`}
+        previewClassName="flex-col items-stretch"
+      >
+        <Alert variant="brand">
+          <AlertTitle>O total agora considera as parcelas</AlertTitle>
           <AlertDescription>
-            Você entrou por um convite de visualização e não pode editar.
+            Compras parceladas passam a entrar no mês em que cada parcela cai, e
+            não no da compra.
           </AlertDescription>
-        </Alert>
-        <Alert tone="info" size="sm">
-          <AlertTitle>Uma linha só não precisa de descrição.</AlertTitle>
+          <AlertActions>
+            <AlertAction>Ver o que mudou</AlertAction>
+          </AlertActions>
         </Alert>
       </DocSection>
 
@@ -200,7 +230,7 @@ export default function AlertDoc() {
             type: '"soft" | "brand"',
             default: '"soft"',
             description:
-              "A forma: soft com moldura, o padrão; brand com o brilho de arco-íris na borda — e sem tone.",
+              "A forma: soft com moldura, o padrão; brand com o brilho de arco-íris na borda — sem tone e sem sm.",
           },
           {
             prop: "size",
@@ -208,6 +238,20 @@ export default function AlertDoc() {
             default: '"md"',
             description:
               "O corpo; sm é o aviso que fala com um campo.",
+          },
+          {
+            prop: "icon",
+            type: "ReactNode | false",
+            default: "o do tom",
+            description:
+              "Troca o ícone; false tira. default não tem.",
+          },
+          {
+            prop: "onDismiss · dismissLabel",
+            type: '() => void · string',
+            default: '— · "Dispensar aviso"',
+            description:
+              "Põe o × no canto; quem chama desmonta o alerta.",
           },
           {
             prop: "role",
@@ -226,7 +270,7 @@ export default function AlertDoc() {
             prop: "AlertTitle",
             type: "div",
             description:
-              "O resumo, a primeira linha que o leitor de tela anuncia.",
+              "O resumo, a primeira linha que o leitor de tela anuncia. Quebra palavra longa sozinho.",
           },
           {
             prop: "AlertDescription",
@@ -235,10 +279,11 @@ export default function AlertDoc() {
               "O detalhe, na tinta do alerta a 85%.",
           },
           {
-            prop: "AlertActions",
-            type: "div",
+            prop: "AlertActions · placement",
+            type: '"block" | "inline"',
+            default: '"block"',
             description:
-              "A linha da saída, no pé e alinhada ao texto.",
+              "A linha da saída: no pé, alinhada ao texto, ou à direita dele num alerta de 28rem ou mais.",
           },
           {
             prop: "AlertAction",
@@ -249,6 +294,10 @@ export default function AlertDoc() {
         ]}
       />
 
+      <DocNote title="O ícone era escolhido por quem chamava">
+          Seis telas escreviam o <code>svg</code> como filho, e cada uma escolhia: o destrutivo saía triângulo em cinco (o mesmo do <code>warning</code>) e círculo com × no catálogo, e as telas de acesso — login, cadastro, recuperação, convite — não tinham ícone nenhum. Desde a rodada 186 o ícone é do tom, e <code>alert-icon.test.ts</code> reprova o <code>svg</code> escrito como filho. O mesmo teste cobra o <code>break-words</code> que três diálogos escreviam no título: a mensagem do servidor pode ser uma palavra só, e quem a quebra é o <code>AlertTitle</code>.
+      </DocNote>
+
       <DocNote title="Houve um variant=&quot;plain&quot;, e ele saiu">
           Era o aviso tingido <strong>sem borda</strong>, para dentro de formulário ou diálogo — onde a moldura já é de outro e mais uma só acrescenta um retângulo. Tinha 8 chamadas em 4 telas de acesso e saiu a pedido do dono. O custo está dito: esses avisos passaram a desenhar a própria borda dentro do formulário, que é exatamente o que o <code>plain</code> evitava. O caminho de volta é uma linha (<code>border-0</code>).
       </DocNote>
@@ -257,40 +306,16 @@ export default function AlertDoc() {
           O título é o resumo que faz o olho decidir se vale ler, e o que o leitor de tela anuncia primeiro. Uma descrição solta perde esse resumo.
       </DocNote>
 
-      <DocNote title="No telefone não há brilho, e isso é o custo da escolha">
-          O efeito depende de ponteiro, então ele não existe em aparelho de toque — e como o brilho <strong>substituiu</strong> a régua de 2px que esta variante tinha, o que sobra no telefone é a caixa neutra, visualmente igual ao <code>soft</code> de <code>tone=&quot;default&quot;</code>. Nada é montado ali: a pergunta é <code>(hover: hover)</code>, a mesma que o Tailwind faz nos <code>hover:</code>, e sem ela o listener não nasce. Devolver a régua como repouso é uma linha, se a ausência incomodar.
-      </DocNote>
-
-      <DocNote title="brand não tem degrau sm — e a razão mudou">
-          Na rodada 118 a proibição era <em>geométrica</em>: a régua precisava de 8px de recuo para não encostar no <code>rounded-xl</code>, e numa caixa <code>sm</code> de 34px sobravam 47% de fio. <strong>Essa razão deixou de existir</strong> com a régua — um arco na borda funciona em qualquer altura. O que fica é a razão semântica, que sempre foi a mais forte: <code>sm</code> é o aviso que fala com um campo, e a marca fala uma vez por tela, no corpo inteiro. O tipo continua proibindo o par, agora por isso e só por isso.
-      </DocNote>
-
-      <DocNote title="A cor fica parada; quem anda é a janela">
-          É o que faz o arco <strong>trocar de cor</strong> conforme viaja pela borda — na aresta direita ele sai oliva e âmbar, na esquerda magenta. O <code>background</code> é um <code>repeating-conic-gradient</code> de ângulo <em>fixo</em>, e quem carrega o <code>--brand-glow-start</code> é a máscara. Medido no bundle ao vivo da referência, que faz exatamente isso. A máscara <strong>recorta o anel</strong>, como na referência: a janela menos a <code>padding-box</code> — e o meio nunca é pintado. (Até a rodada 181 eram três camadas, a caixa menos a <code>padding-box</code> intersectada com a janela, e o Chrome deixava o anel inteiro bem fino do lado oposto ao arco.) Até a rodada 155 havia aqui um núcleo chapado no lugar do recorte, e a janela, que sai do centro, o mostrava como um feixe escuro. O risco que tinha banido a composição (uma camada <code>none</code> num <code>intersect</code>) não se aplica: a janela lê <code>var(--brand-glow-start, 0)</code>, com o fallback no próprio <code>var()</code>.
-      </DocNote>
-
-      <DocNote title="O volume mora num token, e não nas paradas">
-          O brilho é multiplicado por <code>--brand-glow-opacity</code> (0,5), e o arco tem envelope de alfa: as duas extremidades entram em 20% e 60% antes do miolo opaco, então ele nasce e morre em vez de cortar seco. Em opacidade cheia ele saía berrante ao lado da referência, onde o fio é fraco e fino. <strong>Quem for mexer no volume mexe no multiplicador</strong> — baixar as paradas do meio tiraria a cor junto com a força.
-      </DocNote>
-
-      <DocNote title="Duas tentativas erradas antes desta, e elas se opõem">
-          A <strong>1ª</strong> mascarava o <code>--brand-rainbow</code>, que é <em>linear</em>: a janela revelava só o pedaço da rampa naquela aresta e acendia <strong>uma cor</strong> — um borrão teal, que lia como sujeira. A <strong>2ª</strong> corrigiu para cônico mas o girou <em>junto</em> com o arco, e aí ele passou a carregar sempre a mesma sequência de cores e só mudar de lugar. O certo é o cônico <strong>parado</strong> com a janela andando por cima. As duas asserções que separam o certo dos dois erros estão no <code>brand-contour.test.ts</code>, e mutação confirma que cada uma pega o seu.
-      </DocNote>
-
-      <DocNote title="A rolagem recalcula o brilho, e isso era um bug">
-          Rolar move a caixa sem mover o ponteiro. Medido antes do conserto: rolando 260px com o mouse parado, o alerta ia de <code>top 255</code> para <code>-5</code> e o brilho <strong>continuava aceso</strong> apontando para onde o ponteiro não estava mais — só voltava ao normal no movimento seguinte. O conserto é o da referência: guardar a última posição do ponteiro e refazer a conta inteira em <code>scroll</code> e <code>resize</code>, não só remedir a geometria. Com <code>capture: true</code> a mais, que é a única divergência deliberada — <code>scroll</code> não borbulha mas captura, e sem isso a rolagem <em>dentro de um container</em> passa despercebida, um caso que a própria referência erra.
-      </DocNote>
-
-      <DocNote title="O rAF aqui coalesce, e o proibido é o laço">
-          O trabalho de cada rajada de <code>pointermove</code> vai para <strong>um</strong> <code>requestAnimationFrame</code>, cancelado no anterior e no unmount. O que esta casa recusou (no marcador do <code>Tabs</code>) é o <code>rAF</code> que se <em>re-agenda</em> para fazer polling — outra coisa. É o que permite ler <code>getBoundingClientRect()</code> a cada quadro em vez de cachear: o cache só se invalidava em <code>scroll</code> e <code>resize</code>, e a caixa também se move por reflow, por acordeão abrindo, por imagem carregando.
-      </DocNote>
-
-      <DocNote title="Três medições que o código carrega">
-          <strong>A @property é inherits: true</strong>, ao contrário das outras quatro da casa: ela é lida num pseudo-elemento, e pseudo não herda propriedade registrada como <code>false</code> — medido, a opacidade ficava em 0 com a variável valendo 1. <strong>isolate é obrigatório</strong>: sem ele o pseudo de <code>z</code> negativo cai atrás do fundo de um ancestral e some. E <strong>com isolate ele passa a pintar por cima do bg-card</strong>, o que cobriria o texto com sete matizes — por isso o núcleo chapado em <code>padding-box</code>, que faz a região apagada ficar idêntica ao cartão.
+      <DocNote title="O brilho da marca é a primitiva, e mora na página dela">
+          <code>brand</code> veste <code>@utility brand-glow</code> e <code>useBrandGlow</code>, os mesmos do <code>Card</code>, do <code>Badge</code>, do <code>Button</code> e dos controles de escolha; o mecanismo e as medições estão em <Link href="/designsystem/brand">Brand</Link>. Dois custos são do alerta: <strong>no telefone não há brilho</strong> — como ele substituiu a régua de 2px, o que sobra é a caixa neutra, igual ao <code>soft</code> de <code>tone=&quot;default&quot;</code> com o ✦ —, e <strong>não há degrau <code>sm</code></strong>: na rodada 118 a razão era a geometria da régua, que saiu com ela; fica a semântica (<code>sm</code> fala com um campo, a marca fala uma vez por tela).
       </DocNote>
 
       <DocNote title="Use AlertAction, e não pinte o botão">
           <code>AlertAction</code> é um <code>Button</code> <code>tertiary</code> <code>size=&quot;sm&quot;</code> cuja borda, tinta e realce saem de <code>currentColor</code>: trocar o tom do aviso troca o botão junto. Escrever <code>border-destructive/40</code> ali é reimportar a paleta para dentro da tela.
+      </DocNote>
+
+      <DocNote title="Onde o app usa">
+          Em doze telas. Os erros e sucessos dos formulários de acesso e dos diálogos de conta (<code>destructive</code> e <code>success</code>, muitos em <code>sm</code>), o aviso de fatura no formulário de cartão (<code>info</code> <code>sm</code>), os dois neutros de permissão em membros e notificações, os detalhes técnicos da tela de erro, e o erro de carteiras do painel — desde a rodada 186 com a ação na linha. Nenhuma tela usa <code>brand</code> nem <code>onDismiss</code>.
       </DocNote>
 
       <DocNote title="Alert, AnnouncementBar e toast não se substituem">

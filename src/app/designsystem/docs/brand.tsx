@@ -370,7 +370,6 @@ export default function BrandDoc() {
         </AnnouncementBar>
         <div className="px-4 pb-4">
           <Alert variant="brand">
-            <SparklesIcon />
             <AlertTitle>O total agora considera as parcelas</AlertTitle>
             <AlertDescription>
               Compras parceladas entram no mês em que cada parcela cai.
@@ -385,6 +384,30 @@ export default function BrandDoc() {
         </p>
         <p>
           Contraste, contra o cartão: no escuro as oito paradas passam 3:1 (pior caso violeta 5,35); no claro quatro reprovam, pior caso lima <strong>1,91</strong>. Não é um caso de 1.4.11: quem identifica o aviso é a caixa mais o ícone, e o arco-íris é acento, como o halo do <code>Badge</code> e o arco-íris do <code>Progress</code>. No brilho o degradê nunca fica sob texto: a máscara recorta só o anel, e o meio da caixa nunca é pintado. O véu da faixa é a <strong>exceção consciente</strong>: ali o arco-íris fica sob o texto, e quem paga é o alfa <code>--brand-flow-alpha</code> (0,75 no claro, 0,45 no escuro), medido contra o <code>--foreground</code> no alfa máximo da máscara — pior caso <strong>5,33</strong> (lima, escuro), em <code>scripts/tone-contrast.mjs</code>.
+        </p>
+      </DocNote>
+
+      <DocNote title="O mecanismo do brilho: a cor fica parada, quem anda é a janela">
+        <p>
+          É o que faz o arco <strong>trocar de cor</strong> conforme viaja pela borda — na aresta direita ele sai oliva e âmbar, na esquerda magenta. O <code>background</code> do pseudo é um <code>repeating-conic-gradient</code> de ângulo <em>fixo</em>, e quem carrega <code>--brand-glow-start</code> é a máscara, como no bundle ao vivo da referência (o <code>GlowingEffect</code> da Aceternity). A máscara recorta o anel em duas camadas: a janela menos a <code>padding-box</code> (<code>subtract</code>). Eram três até a rodada 181, e o Chrome deixava o anel inteiro bem fino do lado oposto ao arco; até a 155 havia um núcleo chapado no lugar do recorte, e a janela, que sai do centro, o mostrava como um feixe escuro.
+        </p>
+        <p>
+          <strong>Duas tentativas erradas vieram antes, e elas se opõem.</strong> A primeira mascarava o <code>--brand-rainbow</code>, que é linear, e a janela acendia sempre a mesma cor naquela aresta; a segunda girou o cônico junto com o arco, que passou a carregar sempre a mesma sequência e só mudar de lugar. <code>brand-contour.test.ts</code> separa o certo dos dois erros.
+        </p>
+        <p>
+          <strong>O volume mora num token</strong>, <code>--brand-glow-opacity</code> (0,5), e o arco tem envelope de alfa: as pontas entram em 20% e 60% antes do miolo opaco. Mexer nas paradas mudaria a cor, que é o que ele tem de certo.
+        </p>
+      </DocNote>
+
+      <DocNote title="O ponteiro: rolagem, um quadro por rajada, e isolate">
+        <p>
+          <strong>A rolagem recalcula o estado</strong>, não só a geometria: rolando 260px com o mouse parado, a caixa ia de <code>top 255</code> para <code>-5</code> e o brilho continuava aceso apontando para onde o ponteiro não estava. O hook guarda a última posição e refaz a conta em <code>scroll</code> (com <code>capture: true</code>, que pega a rolagem dentro de um container — um caso que a referência erra) e em <code>resize</code>.
+        </p>
+        <p>
+          <strong>O <code>rAF</code> coalesce, e o proibido é o laço</strong>: cada rajada de <code>pointermove</code> vira um quadro, cancelado no seguinte e no unmount. O que esta casa recusou, no marcador do <code>Tabs</code>, é o <code>rAF</code> que se re-agenda para fazer polling. É ele que torna barato ler <code>getBoundingClientRect()</code> a cada quadro — a caixa também se move por reflow.
+        </p>
+        <p>
+          <strong><code>isolate</code> é obrigatório</strong>: sem ele o pseudo de <code>z</code> negativo cai atrás do fundo de um ancestral e some. Com ele o pseudo pinta por cima do fundo da peça, e é a máscara, que recorta só o anel, que mantém o texto fora do degradê. <code>--brand-glow-start</code> não é registrada (<code>@property</code>): ela foi, por três rodadas, e quem anima o ângulo hoje é o tween do <code>motion</code>.
         </p>
       </DocNote>
 

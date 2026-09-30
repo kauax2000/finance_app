@@ -2,7 +2,6 @@
 
 import { useCallback, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
-import { ExclamationTriangleIcon } from "@heroicons/react/16/solid"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import {
@@ -275,10 +274,9 @@ export default function DashboardPageClient() {
     if (workspaceError) {
         return (
             <Alert tone="destructive">
-                <ExclamationTriangleIcon />
                 <AlertTitle>Não foi possível carregar as carteiras</AlertTitle>
                 <AlertDescription>{workspaceError}</AlertDescription>
-                <AlertActions>
+                <AlertActions placement="inline">
                     <AlertAction onClick={() => void refreshWorkspaces()}>
                         Tentar novamente
                     </AlertAction>
