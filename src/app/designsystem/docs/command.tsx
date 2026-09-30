@@ -25,6 +25,7 @@ import {
   CommandDockItem,
 } from "@/components/ui/command"
 import { Kbd } from "@/components/ui/kbd"
+import { KbdGroup } from "@/components/ui/kbd-group"
 import { Spinner } from "@/components/ui/spinner"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
@@ -89,8 +90,7 @@ export default function CommandDoc() {
           </CommandList>
           <CommandDock>
             <CommandDockItem>
-              <Kbd>↑</Kbd>
-              <Kbd>↓</Kbd>
+              <KbdGroup mode="either" keys={["up", "down"]} />
               navegar
             </CommandDockItem>
             <CommandDockItem>
@@ -432,8 +432,7 @@ function CommandDialogDemo() {
         </CommandList>
         <CommandDock>
           <CommandDockItem>
-            <Kbd>↑</Kbd>
-            <Kbd>↓</Kbd>
+            <KbdGroup mode="either" keys={["up", "down"]} />
             navegar
           </CommandDockItem>
           <CommandDockItem>

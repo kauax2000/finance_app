@@ -16261,3 +16261,31 @@ certa; as versões saíram de doze telas que reescreviam o componente por
   props como um `<svg>` à mão; o texto mudou.
 - As telas do app pedem login e não foram vistas; as peças foram medidas na
   página, incluindo a 360px.
+
+### Rodada 195 — o KbdGroup diz o gesto: sequência, alternativa, e a tecla que acende
+
+O dono pediu a rodada completa e escolheu as quatro versões.
+
+- **Defeito**: cada passo de `keys` passava só por `formatKey`, que não conhece
+  modificadora — `["mod+k", "s"]`, o atalho de dois tempos do VS Code, sairia
+  com o texto "mod+k". O passo com modificadora (ou com `+`) agora vai para o
+  `Kbd keys`, que resolve ⌘ ou Ctrl pela plataforma. Medido: "⌘K depois S".
+- **Contradição**: a regra do grupo diz que pastilhas lado a lado são
+  sequência, e a legenda da paleta do catálogo (e a página do `Command`)
+  escreviam `<Kbd>↑</Kbd><Kbd>↓</Kbd>` com o sentido de "↑ ou ↓".
+  `mode="either"` põe um / entre as opções; as três ocorrências o vestem.
+- **O leitor de tela ouve o gesto**: um `sr-only` " depois " entre os passos
+  e " ou " entre as opções, com ou sem separador à vista. `separator` põe o ›
+  na sequência, para quem não conhece a convenção. Com `children` os
+  separadores entram igual.
+- **`live`**: escuta `keydown`/`keyup` só quando ligado. Na sequência acende o
+  progresso (errar volta ao começo, ou ao primeiro passo se a tecla errada for
+  ele), apaga 600ms depois de completa e 1,5s depois de parada; nas
+  alternativas acende a tecla descida. A pastilha acesa é `--primary`, por um
+  seletor do grupo com mais especificidade que o `dark:bg-muted` do `Kbd` (um
+  `data-lit:` empataria com ele). Medido com teclado real: G acende, H
+  completa, tudo apaga; ↑ acende a seta; `oklch(0.205)` no claro e
+  `oklch(0.985)` no escuro.
+- **Página**: as legendas das demonstrações eram `span text-2xs
+  text-muted-foreground` escritos à mão e viraram `Caption`.
+- Nenhuma tela do app usa o `KbdGroup`; ele vive no catálogo.

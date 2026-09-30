@@ -25,6 +25,7 @@ import {
   CommandScope,
 } from "@/components/ui/command";
 import { Kbd } from "@/components/ui/kbd";
+import { KbdGroup } from "@/components/ui/kbd-group";
 import { useBrandGlow } from "@/hooks/use-brand-glow";
 import { CATEGORY_META } from "./category-meta";
 import type { Category } from "./ds-doc";
@@ -350,8 +351,7 @@ export function DsSearch() {
         <CommandDock>
           <div className="flex items-center gap-2">
             <CommandDockItem>
-              <Kbd>↑</Kbd>
-              <Kbd>↓</Kbd>
+              <KbdGroup mode="either" keys={["up", "down"]} />
               navegar
             </CommandDockItem>
             {scope ? (

@@ -2015,6 +2015,14 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   de 7px a `largura − 7px`, a régua do Radix —, `bubble` no `:active` e no
   foco de teclado, e `bands`, os cortes do `Progress` (zonas no trilho, faixa
   na cor do valor; não com a marca). Sem essas props a peça é a de sempre.
+- **`KbdGroup` diz o gesto** (rodada 195): `mode="sequence"` (passos, o
+  leitor de tela ouve "depois"; `separator` põe o › à vista) ou
+  `mode="either"` (opções, com / e "ou"). **Duas pastilhas lado a lado sem
+  grupo leem como sequência** — a legenda da paleta escrevia ↑ ↓ assim, e hoje
+  é `mode="either"`. Um passo pode ser acorde (`["mod+k", "s"]`), resolvido
+  pelo `Kbd keys`. `live` acende as pastilhas com o teclado (o progresso da
+  sequência, a tecla descida das alternativas) e só escuta o teclado quando
+  ligado.
 - **`Item` tem a linha rente, a selecionada, a seta e só quebra com faixa**
   (rodada 194). `variant="flush"` é a linha de um `Card padding="none"` (sem
   borda nem canto, recuo de 16px); `selected` é a linha atual, com o contorno
