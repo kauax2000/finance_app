@@ -18,8 +18,9 @@ import { usePwaShellOptional } from "@/components/pwa/pwa-shell-context"
  * definição, degradado — o app está funcionando pela metade, e a cor dizia que
  * estava tudo normal. `warning` é o que o estado é.
  *
- * **O posicionamento continua `fixed`, e não `sticky`.** A variante `sticky` do
- * componente existe e seria melhor aqui — em fluxo, a barra empurra o conteúdo
+ * **O posicionamento continua `fixed`, e não `sticky`** — desde a rodada 187
+ * pelo `position="fixed"` do componente, que traz a camada e o fio; só o `top`
+ * é daqui. O `sticky` seria melhor aqui — em fluxo, a barra empurra o conteúdo
  * em vez de cobrir a primeira linha dele. Mas esta faixa é irmã do shell e
  * passa por baixo de um cabeçalho fixo no telefone (daí o
  * `--mobile-header-offset`), e trocar o modo de posicionamento é uma mudança de
@@ -33,9 +34,10 @@ export function OfflineBanner() {
   return (
     <AnnouncementBar
       tone="warning"
-      className="fixed inset-x-0 top-[var(--mobile-header-offset)] z-(--z-banner) border-b border-current/20 md:top-0"
+      position="fixed"
+      icon={<SignalSlashIcon />}
+      className="top-(--mobile-header-offset) md:top-0"
     >
-      <SignalSlashIcon aria-hidden />
       Você está offline. Alterações serão sincronizadas quando a conexão voltar.
     </AnnouncementBar>
   )

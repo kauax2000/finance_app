@@ -2,9 +2,10 @@ import { readFileSync, readdirSync, statSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 
-/** O alerta, trancado na rodada 186. */
+/** O alerta (rodada 186) e a faixa (rodada 187). */
 
 const ALERT = readFileSync(join(process.cwd(), "src/components/ui/alert.tsx"), "utf8")
+const BARRA = readFileSync(join(process.cwd(), "src/components/ui/announcement-bar.tsx"), "utf8")
 
 const arquivos = (dir: string): string[] =>
   readdirSync(dir).flatMap((nome) => {
@@ -25,12 +26,21 @@ describe("o alerta", () => {
   it("o ícone é do tom, e nenhuma chamada o escreve como filho", () => {
     // Seis telas escolhiam o ícone à mão, e o destrutivo saía triângulo em
     // cinco e círculo no catálogo. Quem quer outro passa `icon`.
-    const filho = /<Alert\b[^>]*>\s*(?:\{\/\*[\s\S]*?\*\/\}\s*)?<[A-Z]\w*Icon\b/
+    // Vale para a `AnnouncementBar` desde a rodada 187, com a mesma API.
+    const filho = /<(?:Alert|AnnouncementBar)\b[^>]*>\s*(?:\{\/\*[\s\S]*?\*\/\}\s*)?<[A-Z]\w*Icon\b/
     const culpados = TELAS.filter(({ texto }) => filho.test(texto)).map(
       ({ caminho }) => caminho
     )
     expect(culpados).toEqual([])
     expect(ALERT).toContain("destructive: <XCircleIcon />")
+    expect(BARRA).toContain("destructive: <XCircleIcon />")
+  })
+
+  it("a faixa centralizada tira o × do fluxo, e a marca não perde o sticky", () => {
+    expect(BARRA).toContain("group-data-[align=center]/announcement:absolute")
+    // O `relative` do véu é do `static`: na marca ele vencia o `sticky`.
+    expect(BARRA).toContain('static: "relative')
+    expect(BARRA).not.toMatch(/"relative isolate/)
   })
 
   it("a quebra da palavra longa é do título, não da tela", () => {

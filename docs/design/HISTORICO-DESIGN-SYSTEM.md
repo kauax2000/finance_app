@@ -15973,3 +15973,34 @@ O dono pediu a rodada completa e escolheu as quatro versões.
   foram de duas para uma, e "Sem ícone" virou a seção do ícone. O cabeçalho
   do `alert.tsx` ainda descrevia a régua de 2px, e o tipo justificava a
   proibição do `sm` pela geometria dela.
+
+### Rodada 187 — a AnnouncementBar ganha o ícone do tom, a posição fixa, a entrada e o centro
+
+O dono pediu a rodada completa e escolheu as quatro versões.
+
+- **Ícone do tom**, com a API do `Alert` da rodada 186: `info` ⓘ, `success` ✓,
+  `warning` ⚠, `destructive` ⊗, `brand` ✦, `default` sem; `icon` troca e
+  `icon={false}` tira. O `OfflineBanner` passa o sinal cortado por `icon`.
+  `alert-icon.test.ts` passou a cobrir as duas peças.
+- **`position`** (`static` | `sticky` | `fixed`) no lugar do booleano
+  `sticky`. O `fixed` traz `inset-x-0 top-0`, `--z-banner` e o fio do tom — as
+  quatro classes que o `OfflineBanner` escrevia —, e ele fica com o `top` do
+  cabeçalho do telefone. **Defeito achado no caminho**: o `relative` que o véu
+  de marca pede morava na variante `brand`, declarada depois do `sticky`, e o
+  `tailwind-merge` o deixava vencer — `variant="brand" sticky` nunca prendeu.
+  O `relative` passou para o `static`; `sticky` e `fixed` já posicionam.
+  `brand-contour.test.ts` cobra o `sticky` na barra de marca mesclada.
+- **Entrada**: esmaece e desce por `starting:`, a altura inteira em `sticky` e
+  `fixed`, 4px no fluxo. Medido: `translate` de −100% a `none` e opacidade de
+  0 a 1 em ~200ms.
+- **`align="center"`**: texto e ações juntos no meio; o × sai do fluxo
+  (`absolute`, a 12px da borda) e o recuo fica simétrico (`px-11`). Medido: o
+  miolo centrado com 0,01px de desvio, o × no eixo da barra.
+- **Página**: o cabeçalho dizia "dispensável por padrão" (o × só existe com
+  `onDismiss`); o `AnnouncementBarAction` dizia ser "o disco da rodada 99" (o
+  disco saiu na 148, é a flor); a nota do véu falava em "uma linha cinza e uma
+  de arco-íris" (a régua saiu na 127). As notas de fio, realce e offline se
+  fundiram; `success` entrou nos tons; a posição tem demonstração numa caixa
+  que rola, com a entrada.
+- **O × perdeu a borda do cursor**, a pedido do dono, como o do `Alert`: fica
+  a flor a 15% em `currentColor`.

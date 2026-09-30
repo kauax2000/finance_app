@@ -242,8 +242,8 @@ describe("contorno de marca", () => {
     // resolve por último-vence. Com `variant` antes de `sticky`, o `border-b`
     // do `sticky` venceria o `border-b-0` daqui e o fio cinza voltaria.
     const src = fonte("announcement-bar")
-    expect(src.indexOf("sticky: {")).toBeGreaterThan(0)
-    expect(src.indexOf("variant: {")).toBeGreaterThan(src.indexOf("sticky: {"))
+    expect(src.indexOf("position: {")).toBeGreaterThan(0)
+    expect(src.indexOf("variant: {")).toBeGreaterThan(src.indexOf("position: {"))
 
     // Pelo mesmo mecanismo, a superfície neutra da marca vence a tonal — e é
     // por isso que os dois tipos proíbem `tone` junto de `brand`, em vez de
@@ -262,7 +262,7 @@ describe("contorno de marca", () => {
     // O `cn` **remove** o perdedor, e é essa remoção que a peça depende.
     // Quem montar as variantes à mão traz o defeito de volta.
     const barraMesclada = cn(
-      announcementBarVariants({ tone: "info", variant: "brand", sticky: true })
+      announcementBarVariants({ tone: "info", variant: "brand", position: "sticky" })
     ).split(/\s+/)
     expect(barraMesclada).toContain("text-foreground")
     expect(barraMesclada).not.toContain("text-info-muted-foreground")
@@ -272,6 +272,10 @@ describe("contorno de marca", () => {
     // disputa: duas linhas de 1px empilhadas é o defeito.
     expect(barraMesclada).toContain("border-b-0")
     expect(barraMesclada).not.toContain("border-b")
+    // E ela continua **presa**: o `relative` que o véu pedia morava na marca e
+    // vencia o `sticky` pelo mesmo último-vence (rodada 187).
+    expect(barraMesclada).toContain("sticky")
+    expect(barraMesclada).not.toContain("relative")
 
     // O mesmo no alerta: o tipo proíbe `tone` em `brand`, e no runtime a
     // combinação ainda degrada para a superfície neutra em vez de misturar.

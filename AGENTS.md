@@ -2008,6 +2008,15 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   de 7px a `largura − 7px`, a régua do Radix —, `bubble` no `:active` e no
   foco de teclado, e `bands`, os cortes do `Progress` (zonas no trilho, faixa
   na cor do valor; não com a marca). Sem essas props a peça é a de sempre.
+- **`AnnouncementBar` ganhou o ícone do tom, `position`, a entrada e `align`**
+  (rodada 187). O ícone tem a API do `Alert` (`icon` troca, `false` tira; o
+  offline usa o sinal cortado), e o mesmo teste reprova o `svg` como filho.
+  **`sticky` virou `position`** (`static` | `sticky` | `fixed`), e o `fixed`
+  traz a camada e o fio que o `OfflineBanner` escrevia à mão — ele fica só
+  com o `top`. **O `relative` do véu mora no `static`**: na variante `brand`
+  ele vencia o `sticky` no `tailwind-merge`, e a faixa de marca presa nunca
+  prendeu. Ao aparecer ela esmaece descendo (a altura inteira presa, 4px no
+  fluxo). `align="center"` leva texto e ações ao meio e tira o × do fluxo.
 - **`Alert` traz o ícone do tom, dispensa, põe a ação na linha e entra suave**
   (rodada 186). **Nenhuma chamada escreve o `svg` como filho**: cada tom traz
   o seu (`destructive` é o círculo com ×, não o triângulo do `warning`),

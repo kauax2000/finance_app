@@ -1,6 +1,13 @@
 "use client"
 
-import { XMarkIcon } from "@heroicons/react/16/solid"
+import {
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
+  SparklesIcon,
+  XCircleIcon,
+  XMarkIcon,
+} from "@heroicons/react/16/solid"
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -12,15 +19,16 @@ import { Button } from "@/components/ui/button"
  * offline, convite pendente, manutenção programada.
  *
  * Não é um `Alert`. O Alert fica dentro do conteúdo e fala de uma coisa da tela;
- * este atravessa o topo do app e fala de estado global. Dispensável por padrão,
- * porque um aviso permanente que não se pode fechar vira ruído em uma semana.
+ * este atravessa o topo do app e fala de estado global. Dispensável sempre que
+ * o estado permitir (`onDismiss`), porque um aviso permanente que não se pode
+ * fechar vira ruído em uma semana.
  *
  * ## O ícone não é enfeite
  *
  * Ela não tinha nenhum, em nenhum dos cinco tons — a gravidade era dita **só
- * pela cor**, que é exatamente o que o `Alert` resolve com um ícone. A mecânica
- * é a de lá: o ícone entra como filho direto, medido por variável, e o espaço
- * se adapta por `has-[…]`. Sem sub-componente novo.
+ * pela cor**. Desde a rodada 187 cada tom traz o seu, com a API do `Alert`:
+ * `icon` troca (o offline usa o sinal cortado), `icon={false}` tira, e a tela
+ * não escreve o `svg` como filho.
  *
  * ## O papel segue o tom
  *
@@ -46,7 +54,11 @@ import { Button } from "@/components/ui/button"
  */
 const announcementBarVariants = cva(
   [
-    "flex w-full items-center gap-3 text-sm",
+    "group/announcement flex w-full items-center gap-3 text-sm",
+    // A entrada (rodada 187): esmaece e desce — da altura inteira quando
+    // presa ao topo, 4px em fluxo (ver `position`). Sem JS; o bloco global de
+    // movimento reduzido encurta a transição.
+    "transition-[opacity,translate] duration-(--duration-base) ease-(--ease-out) starting:opacity-0",
     "[&>svg]:size-(--announcement-icon) [&>svg]:shrink-0 [&>svg]:text-current",
   ],
   {
@@ -77,15 +89,35 @@ const announcementBarVariants = cva(
         sm: "min-h-9 px-3 py-1.5 text-xs [--announcement-icon:--spacing(3.5)]",
         md: "min-h-11 px-4 py-2 [--announcement-icon:--spacing(4)]",
       },
-      // O que o `offline-banner` montava à mão em quatro classes. A camada tem
-      // nome na escala — `--z-banner`, 30 — e ela existe para isto.
-      sticky: {
+      // Onde a faixa mora. Era o booleano `sticky`, e o `offline-banner`
+      // montava o `fixed` à mão em quatro classes. A camada tem nome na
+      // escala — `--z-banner`, 30 — e ela existe para isto.
+      //
+      // **O `relative` do `static` não é enfeite**: o véu de marca é um
+      // pseudo `absolute` e precisa de um ancestral posicionado. Ele morava
+      // na variante `brand`, e ali **vencia o `sticky` no `tailwind-merge`**
+      // (mesmo grupo, último vence) — `variant="brand" sticky` nunca prendeu.
+      // `sticky` e `fixed` já são posicionados.
+      position: {
+        static: "relative starting:-translate-y-1",
         // O fio de baixo herda o tom. Era `border-border/50` — cinza sobre
         // superfície colorida, a mesma família do texto cinza que o `Alert`
         // documenta e reverteu. `current/20` é uma linha só para os cinco tons,
         // e é a decisão que o `AlertActions` já registra.
-        true: "sticky top-0 z-(--z-banner) border-b border-current/20",
-        false: "",
+        sticky:
+          "sticky top-0 z-(--z-banner) border-b border-current/20 starting:-translate-y-full",
+        // Presa à janela: o `top` é de quem chama quando há outra barra fixa
+        // acima (o offline passa por baixo do cabeçalho do telefone).
+        fixed:
+          "fixed inset-x-0 top-0 z-(--z-banner) border-b border-current/20 starting:-translate-y-full",
+      },
+      // O anúncio de produto ("Nova versão · Ver novidades") centraliza; o
+      // aviso de estado lê da borda. O × sai do fluxo e o recuo fica
+      // simétrico, senão ele empurraria o miolo meio botão para o lado.
+      align: {
+        start: "",
+        center:
+          "justify-center text-center has-[>[data-slot=announcement-bar-dismiss]]:px-11",
       },
       // **O véu de marca**, e ele substituiu a régua (o fio de 1px na base).
       // O arco-íris mora num `::before` em `z` negativo, e o `isolate` é o que
@@ -104,7 +136,7 @@ const announcementBarVariants = cva(
       // tonal do `defaultVariants`.
       //
       // **Ele substitui o fio do `sticky`, e não se soma a ele** — daí o
-      // `border-b-0`. E daí este eixo ser declarado **depois** do `sticky`
+      // `border-b-0`. E daí este eixo ser declarado **depois** do `position`
       // nesta lista: o `cva` concatena na ordem das chaves e o `tailwind-merge`
       // resolve por último-vence. A ordem aqui é carga estrutural, não estilo.
       //
@@ -115,7 +147,7 @@ const announcementBarVariants = cva(
       variant: {
         soft: "",
         brand: [
-          "relative isolate border-b-0 bg-transparent text-foreground",
+          "isolate border-b-0 bg-transparent text-foreground",
           "before:absolute before:inset-0 before:-z-1 before:content-[''] before:brand-flow",
         ].join(" "),
       },
@@ -123,7 +155,8 @@ const announcementBarVariants = cva(
     defaultVariants: {
       tone: "info",
       size: "md",
-      sticky: false,
+      position: "static",
+      align: "start",
       variant: "soft",
     },
   }
@@ -139,9 +172,21 @@ const PAPEL_POR_TOM = {
 
 type BarBase = React.ComponentProps<"div"> &
   VariantProps<typeof announcementBarVariants> & {
+    /** O ícone. Padrão: o do tom (nenhum em `default`); `false` tira. */
+    icon?: React.ReactNode | false
     onDismiss?: () => void
     dismissLabel?: string
   }
+
+/** Os mesmos do `Alert`, e pela mesma razão: o destrutivo não é o triângulo. */
+const TONE_ICON = {
+  default: null,
+  info: <InformationCircleIcon />,
+  success: <CheckCircleIcon />,
+  warning: <ExclamationTriangleIcon />,
+  destructive: <XCircleIcon />,
+  brand: <SparklesIcon />,
+} as const
 
 /**
  * **`tone` e `variant="brand"` são excludentes**, e o tipo cobra — o
@@ -160,8 +205,10 @@ type AnnouncementBarProps =
 function AnnouncementBar({
   className,
   size,
-  sticky,
+  position,
+  align,
   role,
+  icon,
   onDismiss,
   dismissLabel = "Dispensar aviso",
   children,
@@ -176,21 +223,26 @@ function AnnouncementBar({
   // que mente sobre a cor pintada é pior que nenhum. E marca não interrompe —
   // o papel cai no `status` do tom neutro pela própria tabela.
   const tomEfetivo = variant === "brand" ? "default" : (tone ?? "info")
+  const iconNode =
+    icon === false ? null : (icon ?? TONE_ICON[variant === "brand" ? "brand" : tomEfetivo])
 
   return (
     <div
       data-slot="announcement-bar"
       data-tone={tomEfetivo}
+      data-align={align ?? "start"}
       role={role ?? PAPEL_POR_TOM[tomEfetivo]}
       className={cn(
-        announcementBarVariants({ tone, size, sticky, variant }),
+        announcementBarVariants({ tone, size, position, align, variant }),
         className
       )}
       {...rest}
     >
+      {iconNode}
       {children}
       {onDismiss ? (
         <Button
+          data-slot="announcement-bar-dismiss"
           type="button"
           variant="tertiary"
           size="icon-xs"
@@ -201,6 +253,9 @@ function AnnouncementBar({
             // com `AnnouncementBarContent` quanto com um texto solto como
             // filho, que é como as chamadas mais curtas a escrevem.
             "relative -me-1 ms-auto shrink-0 text-current",
+            // Centralizada, o × sai do fluxo e fica na borda, na mesma
+            // distância (o `-me-1` sobre o `px-4` dá 12).
+            "group-data-[align=center]/announcement:absolute group-data-[align=center]/announcement:end-3 group-data-[align=center]/announcement:me-0",
             // **O realce dele é mais forte que o do botão de ação, e não é
             // capricho.** Medido no escuro, `current/10` dá contraste 1,23–1,29
             // contra o fundo — o hover do `Button tertiary` do app dá 1,11 e o
@@ -209,10 +264,9 @@ function AnnouncementBar({
             // sem contorno tem um quarto da superfície de um botão de texto, e
             // a mesma diferença de cor lê como menos.
             //
-            // Daí as duas alavancas: 15% em vez de 10%, e o contorno
-            // aparecendo — é ele que delimita os 24px e diz onde o alvo começa.
-            // No hover o × passa a falar exatamente a língua do botão de ação
-            // ao lado (preenchimento fraco + `current/25` de borda).
+            // Daí os 15% em vez de 10%. Havia uma segunda alavanca, o contorno
+            // `current/25` no cursor, e ela saiu a pedido do dono (rodada 187),
+            // junto com a do × do `Alert`.
             //
             // **O defeito que esta cor conserta é cromático**: herdando o
             // `--muted` do `tertiary`, os quatro tons convergiam no **mesmo**
@@ -225,9 +279,6 @@ function AnnouncementBar({
             // os (0,1,0) de `.cls`, então a cor da flor que o `tertiary`
             // declara sob `dark:` vence a classe simples no tema escuro.
             "[--button-bloom-fill:color-mix(in_oklab,currentColor_15%,transparent)] dark:[--button-bloom-fill:color-mix(in_oklab,currentColor_15%,transparent)]",
-            // A borda é a **segunda** alavanca, e fica: é ela que delimita os
-            // 24px e diz onde o alvo começa.
-            "hover:border-current/25 active:border-current/25",
             // E a tinta do ícone tem de ser presa: o `tertiary` declara
             // `hover:text-foreground`, que é (0,2,0) contra o (0,1,0) do
             // `text-current` da base — sem este par, o × trocava a tinta do tom
@@ -260,7 +311,13 @@ function AnnouncementBarContent({
   return (
     <div
       data-slot="announcement-bar-content"
-      className={cn("min-w-0 flex-1 text-pretty", className)}
+      className={cn(
+        "min-w-0 flex-1 text-pretty",
+        // Centralizada, o texto não ocupa a sobra: ele e as ações vão juntos
+        // para o meio.
+        "group-data-[align=center]/announcement:flex-none",
+        className
+      )}
       {...props}
     />
   )
@@ -284,7 +341,11 @@ function AnnouncementBarActions({
   return (
     <div
       data-slot="announcement-bar-actions"
-      className={cn("ms-auto flex shrink-0 items-center gap-1.5", className)}
+      className={cn(
+        "ms-auto flex shrink-0 items-center gap-1.5",
+        "group-data-[align=center]/announcement:ms-0",
+        className
+      )}
       {...props}
     />
   )
@@ -299,8 +360,8 @@ function AnnouncementBarActions({
  *
  * O realce é `current/10`, e não `foreground/10`: os dois são quase iguais no
  * escuro e visivelmente diferentes no claro, e o `AlertAction` — o precedente
- * documentado — usa `current`. Desde esta rodada ele é o **disco** da rodada 99
- * e não um fundo chapado, e o par `dark:` é obrigatório pela mesma aritmética
+ * documentado — usa `current`. O realce é a **flor** do `tertiary`
+ * (`--button-bloom-fill`), e o par `dark:` é obrigatório pela mesma aritmética
  * escrita no × acima.
  *
  * **E ele fica mais fraco que o ×, de propósito**: 10% aqui contra 15% lá. O ×

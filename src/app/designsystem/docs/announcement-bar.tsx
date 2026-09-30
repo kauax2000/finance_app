@@ -3,10 +3,7 @@
 import * as React from "react"
 import {
   ArrowPathIcon,
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
   SignalSlashIcon,
-  SparklesIcon,
   UserPlusIcon,
 } from "@heroicons/react/16/solid"
 
@@ -17,7 +14,17 @@ import {
   AnnouncementBarContent,
 } from "@/components/ui/announcement-bar"
 import { Button } from "@/components/ui/button"
+import { P } from "@/components/ui/typography"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+
+const PARAGRAFOS = [
+  "Mercado — R$ 412,80 em 14 lançamentos.",
+  "Transporte — R$ 186,00 em 9 lançamentos.",
+  "Casa — R$ 1.940,00 em 4 lançamentos.",
+  "Lazer — R$ 238,50 em 6 lançamentos.",
+  "Saúde — R$ 96,40 em 2 lançamentos.",
+  "Assinaturas — R$ 189,90 em 6 lançamentos.",
+]
 
 export default function AnnouncementBarDoc() {
   return (
@@ -30,9 +37,8 @@ export default function AnnouncementBarDoc() {
 
       <DocSection
         title="Tons"
-        description="O ícone entra como filho direto, e é medido pelo size da barra. Sem ele, a gravidade é dita só pela cor."
+        description="Cada tom traz o seu ícone — ⓘ, ✓, ⚠ e o círculo com × —, os mesmos do Alert; o default fica sem. Sem ícone, a gravidade seria dita só pela cor."
         code={`<AnnouncementBar tone="warning">
-  <ExclamationTriangleIcon aria-hidden />
   Você está offline. As alterações sobem quando a conexão voltar.
 </AnnouncementBar>`}
         previewClassName="flex-col items-stretch gap-3 p-0"
@@ -41,26 +47,40 @@ export default function AnnouncementBarDoc() {
           Manutenção programada para domingo, das 2h às 4h.
         </AnnouncementBar>
         <AnnouncementBar tone="info">
-          <InformationCircleIcon aria-hidden />
           O servidor está em manutenção até as 4h. A fila local continua
           guardando o que você lançar.
         </AnnouncementBar>
+        <AnnouncementBar tone="success">
+          Convite aceito. Ana já vê as transações deste workspace.
+        </AnnouncementBar>
         <AnnouncementBar tone="warning">
-          <SignalSlashIcon aria-hidden />
           Você está offline. As alterações ficam no aparelho e sobem quando a
           conexão voltar.
         </AnnouncementBar>
         <AnnouncementBar tone="destructive">
-          <ExclamationTriangleIcon aria-hidden />
           Sua assinatura expirou. Os dados continuam salvos, mas em modo leitura.
         </AnnouncementBar>
       </DocSection>
 
       <DocSection
-        title="Com ação"
-        description="Para o caso canônico — “você está offline, tentar de novo”. O botão não declara cor: tertiary com currentColor serve os cinco tons."
-        code={`<AnnouncementBar tone="warning">
-  <SignalSlashIcon aria-hidden />
+        title="O ícone"
+        description="icon troca o do tom por um que diz o assunto — o offline usa o sinal cortado; icon={false} tira. Não escreva o svg como filho."
+        code={`<AnnouncementBar tone="warning" icon={<SignalSlashIcon />}>…</AnnouncementBar>
+<AnnouncementBar tone="info" icon={false}>…</AnnouncementBar>`}
+        previewClassName="flex-col items-stretch gap-3 p-0"
+      >
+        <AnnouncementBar tone="warning" icon={<SignalSlashIcon />}>
+          Você está offline. As alterações sobem quando a conexão voltar.
+        </AnnouncementBar>
+        <AnnouncementBar tone="info" icon={false}>
+          O servidor está em manutenção até as 4h.
+        </AnnouncementBar>
+      </DocSection>
+
+      <DocSection
+        title="Com ação, e dispensável"
+        description="O botão não declara cor: tertiary com currentColor serve os cinco tons. onDismiss põe o ×; sem ela, a faixa precisa sumir sozinha quando o estado mudar."
+        code={`<AnnouncementBar tone="warning" icon={<SignalSlashIcon />}>
   <AnnouncementBarContent>Você está offline.</AnnouncementBarContent>
   <AnnouncementBarActions>
     <AnnouncementBarAction>Tentar de novo</AnnouncementBarAction>
@@ -68,8 +88,7 @@ export default function AnnouncementBarDoc() {
 </AnnouncementBar>`}
         previewClassName="flex-col items-stretch gap-3 p-0"
       >
-        <AnnouncementBar tone="warning">
-          <SignalSlashIcon aria-hidden />
+        <AnnouncementBar tone="warning" icon={<SignalSlashIcon />}>
           <AnnouncementBarContent>
             Você está offline. Tentando reconectar…
           </AnnouncementBarContent>
@@ -84,42 +103,64 @@ export default function AnnouncementBarDoc() {
       </DocSection>
 
       <DocSection
-        title="Marca"
-        description="A faixa sem fundo, com o arco-íris translúcido atrás do texto, saindo forte do topo central e deslizando em 20s — o Banner rainbow do Fumadocs. É a forma para quando quem fala é o produto — uma novidade, uma versão nova — e não o estado do app. Ela não aceita tone: marca não tem gravidade. Uma por tela."
-        code={`<AnnouncementBar variant="brand" sticky>
-  <SparklesIcon aria-hidden />
-  <AnnouncementBarContent>…</AnnouncementBarContent>
+        title="Centralizada"
+        description="align=&quot;center&quot; leva o texto e as ações juntos para o meio — a forma do anúncio de produto. O × sai do fluxo e fica na borda, com o recuo simétrico, senão empurraria o miolo meio botão para o lado."
+        code={`<AnnouncementBar variant="brand" align="center" onDismiss={dispensar}>
+  <AnnouncementBarContent>Uma nova versão está disponível.</AnnouncementBarContent>
   <AnnouncementBarActions>
-    <AnnouncementBarAction>Ver as novidades</AnnouncementBarAction>
+    <AnnouncementBarAction>Ver novidades</AnnouncementBarAction>
   </AnnouncementBarActions>
 </AnnouncementBar>`}
         previewClassName="flex-col items-stretch gap-3 p-0"
       >
-        <AnnouncementBar variant="brand">
-          <SparklesIcon aria-hidden />
+        <AnnouncementBar variant="brand" align="center" onDismiss={() => {}}>
           <AnnouncementBarContent>
-            Uma nova versão está disponível. Recarregue para atualizar.
+            Uma nova versão está disponível.
           </AnnouncementBarContent>
           <AnnouncementBarActions>
-            <AnnouncementBarAction>Recarregar</AnnouncementBarAction>
+            <AnnouncementBarAction>Ver novidades</AnnouncementBarAction>
           </AnnouncementBarActions>
         </AnnouncementBar>
-        <AnnouncementBar variant="brand" size="sm">
-          <SparklesIcon aria-hidden />
-          Faturas de cartão agora fecham sozinhas na data do ciclo.
+        <AnnouncementBar tone="info" align="center" size="sm">
+          Manutenção programada para domingo, das 2h às 4h.
         </AnnouncementBar>
       </DocSection>
 
       <DocSection
+        title="Marca"
+        description="A faixa sem fundo, com o arco-íris translúcido atrás do texto, saindo forte do topo central e deslizando em 20s — o Banner rainbow do Fumadocs. É a forma para quando quem fala é o produto e não o estado do app; o ícone dela é o ✦. Não aceita tone: marca não tem gravidade. Uma por tela."
+        code={`<AnnouncementBar variant="brand" position="sticky">…</AnnouncementBar>`}
+        previewClassName="flex-col items-stretch gap-3 p-0"
+      >
+        <AnnouncementBar variant="brand">
+          <AnnouncementBarContent>
+            Faturas de cartão agora fecham sozinhas na data do ciclo.
+          </AnnouncementBarContent>
+          <AnnouncementBarActions>
+            <AnnouncementBarAction>Ver o que mudou</AnnouncementBarAction>
+          </AnnouncementBarActions>
+        </AnnouncementBar>
+      </DocSection>
+
+      <DocSection
+        title="Posição, e a entrada"
+        description="position=&quot;static&quot; fica no fluxo; sticky prende no topo de quem rola; fixed prende à janela — as duas na camada --z-banner, com o fio do tom. Ao aparecer, a faixa esmaece e desce: a altura inteira quando presa, 4px no fluxo. Role a caixa, e derrube a conexão."
+        code={`<AnnouncementBar position="sticky">…</AnnouncementBar>
+<AnnouncementBar position="fixed" className="top-(--mobile-header-offset) md:top-0">…</AnnouncementBar>`}
+        previewClassName="flex-col items-stretch p-0"
+      >
+        <EntradaDemo />
+      </DocSection>
+
+      <DocSection
         title="Escada"
-        description="md é a faixa do topo do app; sm é a que acompanha uma seção."
+        description="md é a faixa do topo do app; sm é a que acompanha uma seção. O ícone acompanha o corpo do texto."
         code={`<AnnouncementBar size="sm" tone="info">…</AnnouncementBar>`}
         previewClassName="flex-col items-stretch gap-3 p-0"
       >
         {(["sm", "md"] as const).map((s) => (
           <AnnouncementBar key={s} size={s} tone="info">
-            <InformationCircleIcon aria-hidden />
-            size=&ldquo;{s}&rdquo; — o ícone acompanha o corpo do texto.
+            size=&ldquo;{s}&rdquo;
           </AnnouncementBar>
         ))}
       </DocSection>
@@ -129,35 +170,27 @@ export default function AnnouncementBarDoc() {
       </DocNote>
 
       <DocNote title="Tons do Alert; o neutro pinta muted">
-        Os quatro tons leem os mesmos tokens <code>-muted</code> do <code>Alert</code>. O <code>default</code> usa fundo <code>--muted</code>, porque <code>--card</code> numa faixa de topo quase some contra a página, e texto no foreground cheio — o tom sem cor não pode ter o texto mais fraco.
+        Os quatro tons leem os mesmos tokens <code>-muted</code> do <code>Alert</code>. O <code>default</code> usa fundo <code>--muted</code>, porque <code>--card</code> numa faixa de topo quase some contra a página, e texto no foreground cheio — o tom sem cor não pode ter o texto mais fraco. O fio de <code>sticky</code> e <code>fixed</code> é <code>current/20</code>, uma linha para os cinco tons: fio cinza sobre superfície colorida lê como acidente.
       </DocNote>
 
-      <DocNote title="O fio do sticky herda o tom">
-        É <code>current/20</code>, uma linha para os cinco tons: fio cinza sobre superfície colorida lê como acidente.
+      <DocNote title="O realce dos botões é a tinta do tom">
+        Os dois declaram a cor da flor do <code>tertiary</code> em <code>currentColor</code>. Herdando o <code>--muted</code>, os quatro tons convergiam no mesmo <code>235,235,235</code> no tema claro — o realce apagava o tom —, e ninguém viu porque a razão de luminância é <strong>1,007–1,078</strong>: o defeito é cromático, e os scripts da casa só medem luminância. O × sobe a 15%, sem contorno, contra 10% da ação: é um ícone de 12px numa caixa de 24, e a mesma diferença de cor em área menor lê como menos.
       </DocNote>
 
-      <DocNote title="O realce do × é mais forte que o do botão de ação">
-        O × é um ícone de 12px numa caixa de 24 sem contorno, e a mesma diferença de cor em área menor lê como menos. Por isso ele sobe a 15% e mostra o contorno no cursor, enquanto a ação fica em 10%.
-      </DocNote>
-
-      <DocNote title="Os dois botões pagaram a rodada 99 com atraso">
-        Eles mantinham <code>hover:bg-current/N</code> e nunca declaravam a cor do realce do <code>tertiary</code> — hoje <code>--button-bloom-fill</code> —, então herdavam o cinza de <code>--muted</code> do <code>tertiary</code>: o realce pintava <strong>duas</strong> camadas — a tinta do tom na caixa toda e o realce cinza por cima. No tema claro, onde <code>--muted</code> é opaco, os quatro tons convergiam no mesmo <code>235,235,235</code>: o realce apagava o tom em vez de realçá-lo. Ninguém viu porque a razão de luminância é <strong>1,007–1,078</strong> — o defeito é cromático, e os scripts da casa só medem luminância. Com <code>currentColor</code> na cor do realce: 1,16–1,19 no claro e 1,26–1,30 no escuro.
-      </DocNote>
-
-      <DocNote title="O véu substitui o fio do sticky, e a ordem do cva é o mecanismo">
-        Em <code>brand</code> a faixa não tem fio de baixo — o véu já a separa da página —, então a variante traz <code>border-b-0</code>. E o eixo <code>variant</code> é declarado <strong>depois</strong> de <code>sticky</code> no <code>cva</code>: a concatenação segue a ordem das chaves e o <code>tailwind-merge</code> resolve por último-vence. Declarado antes, o <code>border-b</code> do <code>sticky</code> venceria e a barra sairia com duas linhas de 1px empilhadas, uma cinza e uma de arco-íris.
+      <DocNote title="O véu substitui o fio, e a ordem do cva é o mecanismo">
+        Em <code>brand</code> a faixa não tem fio de baixo — o véu já a separa da página —, então a variante traz <code>border-b-0</code>. E o eixo <code>variant</code> é declarado <strong>depois</strong> de <code>position</code>: o <code>cva</code> concatena na ordem das chaves e o <code>tailwind-merge</code> resolve por último-vence; declarado antes, o fio do <code>sticky</code> voltaria sob o véu. O mesmo último-vence era um defeito até a rodada 187: o <code>relative</code> que o véu pede morava na marca e vencia o <code>sticky</code>, então a faixa de marca presa ao topo nunca prendeu. Hoje ele é do <code>static</code>.
       </DocNote>
 
       <DocNote title="O papel segue o tom">
         <code>destructive</code> é <code>role=&quot;alert&quot;</code>, que interrompe; os outros quatro são <code>status</code>. Para outro papel, passe <code>role</code>.
       </DocNote>
 
-      <DocNote title="Dispensável por padrão">
-        Aviso permanente que não se fecha vira cenário e deixa de avisar. Se o estado é bloqueante, omita <code>onDismiss</code> — e a barra precisa sumir sozinha quando o estado mudar, como faz o <code>OfflineBanner</code>.
+      <DocNote title="Dispensável quando o estado deixa">
+        Aviso permanente que não se fecha vira cenário e deixa de avisar, então dê <code>onDismiss</code> a todo aviso que a pessoa pode ignorar. Se o estado é bloqueante, omita — e a barra precisa sumir sozinha quando o estado mudar, como faz o <code>OfflineBanner</code>.
       </DocNote>
 
-      <DocNote title="Offline é um quinto estado, e este app tem">
-        Com a fila de mutações local existe &ldquo;salvo aqui, ainda não sincronizado&rdquo;: não é erro nem sucesso, e a tela precisa dizer. Quem diz é esta barra, no <code>offline-banner</code>, e o <code>sync-status-chip</code>.
+      <DocNote title="Onde o app usa">
+        Uma: o <code>OfflineBanner</code>, com <code>tone=&quot;warning&quot;</code>, o sinal cortado e <code>position=&quot;fixed&quot;</code> — ele escrevia as quatro classes do <code>fixed</code> à mão, e fica só com o <code>top</code>, porque no telefone passa por baixo do cabeçalho. Offline é um quinto estado neste app, com a fila de mutações local: &ldquo;salvo aqui, ainda não sincronizado&rdquo;, que não é erro nem sucesso. Quem o diz é esta barra e o <code>sync-status-chip</code>.
       </DocNote>
 
       <PropsTable
@@ -177,28 +210,35 @@ export default function AnnouncementBarDoc() {
               "A forma: soft leva a superfície do tom; brand é a faixa sem fundo, com o véu de arco-íris atrás do texto.",
           },
           {
+            prop: "icon",
+            type: "ReactNode | false",
+            default: "o do tom",
+            description: "Troca o ícone; false tira. default não tem.",
+          },
+          {
+            prop: "position",
+            type: '"static" | "sticky" | "fixed"',
+            default: '"static"',
+            description:
+              "No fluxo, presa ao topo de quem rola, ou presa à janela — as duas últimas na camada --z-banner.",
+          },
+          {
+            prop: "align",
+            type: '"start" | "center"',
+            default: '"start"',
+            description: "center leva texto e ações ao meio; o × fica na borda.",
+          },
+          {
             prop: "size",
             type: '"sm" | "md"',
             default: '"md"',
             description: "Respiro, corpo do texto e medida do ícone, juntos.",
           },
           {
-            prop: "sticky",
-            type: "boolean",
-            default: "false",
-            description:
-              "Prende no topo, na camada --z-banner.",
-          },
-          {
-            prop: "onDismiss",
-            type: "() => void",
-            description: "Sem ela, o botão de fechar não aparece.",
-          },
-          {
-            prop: "dismissLabel",
-            type: "string",
-            default: '"Dispensar aviso"',
-            description: "O aria-label do botão de fechar.",
+            prop: "onDismiss · dismissLabel",
+            type: "() => void · string",
+            default: '— · "Dispensar aviso"',
+            description: "Sem onDismiss, o botão de fechar não aparece.",
           },
         ]}
       />
@@ -216,7 +256,7 @@ export default function AnnouncementBarDoc() {
             prop: "AnnouncementBarActions",
             type: "ComponentProps<'div'>",
             description:
-              "A fileira de ações, na borda.",
+              "A fileira de ações, na borda (no meio, com align=\"center\").",
           },
           {
             prop: "AnnouncementBarAction",
@@ -235,16 +275,42 @@ function DismissDemo() {
 
   if (!visivel) {
     return (
-      <Button variant="outline" size="sm" onClick={() => setVisivel(true)}>
-        Mostrar de novo
+      <Button variant="tertiary" size="sm" className="mx-4 mb-4 self-start" onClick={() => setVisivel(true)}>
+        mostrar de novo
       </Button>
     )
   }
 
   return (
-    <AnnouncementBar tone="success" onDismiss={() => setVisivel(false)}>
-      <UserPlusIcon aria-hidden />
+    <AnnouncementBar
+      tone="success"
+      icon={<UserPlusIcon />}
+      onDismiss={() => setVisivel(false)}
+    >
       Convite aceito. Ana já vê as transações deste workspace.
     </AnnouncementBar>
+  )
+}
+
+function EntradaDemo() {
+  const [offline, setOffline] = React.useState(false)
+  return (
+    <div className="flex flex-col gap-3 p-4">
+      <Button variant="secondary" size="sm" className="self-start" onClick={() => setOffline((v) => !v)}>
+        {offline ? "voltar a conexão" : "derrubar a conexão"}
+      </Button>
+      <div className="h-44 overflow-y-auto rounded-lg border border-border">
+        {offline ? (
+          <AnnouncementBar tone="warning" position="sticky" size="sm" icon={<SignalSlashIcon />}>
+            Você está offline.
+          </AnnouncementBar>
+        ) : null}
+        <div className="flex flex-col gap-3 p-4">
+          {PARAGRAFOS.map((t) => (
+            <P key={t}>{t}</P>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
