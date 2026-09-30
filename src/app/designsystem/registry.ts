@@ -423,7 +423,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("empty-state", "Empty State", "O que a tela mostra quando está vazia — e a forma diz a situação.", ui("empty-state"), "EmptyState, EmptyStateIcon, EmptyStateGhost, EmptyStateCode, EmptyStateTitle, EmptyStateActions"),
   entry("field", "Field", "Rótulo, controle, ajuda e erro ligados.", ui("field"), "Field, FieldControl, FieldLabel, FieldHeader, FieldCounter, FieldDescription, FieldChecklist, FieldError, FieldGroup, FieldRow, FieldSet, FieldLegend, FieldSeparator"),
   entry("input-group", "Input Group", "Campo com ícones, texto ou botões acoplados.", ui("input-group"), "InputGroup, InputGroupInput, InputGroupTextarea, InputGroupAddon, InputGroupText, InputGroupButton, InputGroupPasswordToggle, InputGroupSelect"),
-  entry("item", "Item", "Linha de lista com mídia, conteúdo e ações.", ui("item"), "ItemGroup, Item, ItemContent, ItemActions"),
+  entry("item", "Item", "Linha de lista com mídia, conteúdo e ações.", ui("item"), "ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions, ItemChevron, ItemHeader, ItemFooter, ItemSeparator"),
   entry("kbd-group", "Kbd Group", "Sequência de teclas.", ui("kbd-group"), "KbdGroup"),
   entry("pagination", "Pagination", "Navegação entre páginas de uma lista.", ui("pagination"), "Pagination, PaginationStatus, PaginationContent, PaginationLink"),
   entry("radio-group", "Radio Group", "Escolha única entre poucas opções.", ui("radio-group"), "RadioGroup, RadioGroupItem"),

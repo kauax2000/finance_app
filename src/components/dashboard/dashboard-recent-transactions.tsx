@@ -8,6 +8,7 @@ import {
 import { useMemo } from "react"
 import {
     Item,
+    ItemChevron,
 } from "@/components/ui/item"
 import {
     PageSection,
@@ -15,7 +16,7 @@ import {
     PageSectionTitle,
 } from "@/components/ui/page-section"
 import Link from "next/link"
-import { ArrowTopRightOnSquareIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
+import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid"
 import { BanknotesIcon, CalendarDaysIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
 import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -210,7 +211,8 @@ export function DashboardRecentTransactions({
                                         <Item
                                             asChild
                                             interactive
-                                            className="flex-nowrap gap-3 rounded-none border-0 px-4 py-3 text-left"
+                                            variant="flush"
+                                            className="gap-3"
                                         >
                                         <button
                                             type="button"
@@ -308,10 +310,7 @@ export function DashboardRecentTransactions({
                                                     size="lg"
                                                     className="shrink-0 font-semibold"
                                                 />
-                                                <ChevronRightIcon
-                                                    className="size-4 shrink-0 text-muted-foreground/70"
-                                                    aria-hidden
-                                                />
+                                                <ItemChevron />
                                             </div>
                                         </button>
                                         </Item>

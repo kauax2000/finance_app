@@ -2015,6 +2015,15 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   de 7px a `largura − 7px`, a régua do Radix —, `bubble` no `:active` e no
   foco de teclado, e `bands`, os cortes do `Progress` (zonas no trilho, faixa
   na cor do valor; não com a marca). Sem essas props a peça é a de sempre.
+- **`Item` tem a linha rente, a selecionada, a seta e só quebra com faixa**
+  (rodada 194). `variant="flush"` é a linha de um `Card padding="none"` (sem
+  borda nem canto, recuo de 16px); `selected` é a linha atual, com o contorno
+  do cartão de escolha e `aria-current` — **destaque de passagem não é
+  seleção**; `ItemChevron` anda 2px só numa linha `interactive`, por variável
+  (`--item-nudge`), porque variante empilhada no mesmo ancestral não casa. A
+  linha **não quebra** sem `ItemHeader`/`ItemFooter` e alinha à esquerda de
+  fábrica: **nenhuma tela escreve `flex-nowrap` nem `text-left` num `Item`**, e
+  o teste o cobra. O título quebra, para um `Badge` descer inteiro.
 - **`InputGroup` tem a senha que se mostra, o contador, o `pending` e o
   seletor no começo** (rodada 193). `InputGroupPasswordToggle` guarda o estado
   no grupo e o `InputGroupInput type="password"` vira texto sozinho —

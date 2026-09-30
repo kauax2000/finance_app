@@ -285,7 +285,7 @@ function PaymentDayEventsListContent({
                             asChild
                             interactive
                             size="sm"
-                            className="flex-nowrap justify-between gap-3 rounded-md border-0 px-2 py-2 text-left"
+                            className="justify-between gap-3 rounded-md border-0 px-2 py-2"
                         >
                         <button
                             type="button"
@@ -566,7 +566,7 @@ export function DashboardPaymentsCalendar({
                                                     interactive
                                                     variant="outline"
                                                     size="sm"
-                                                    className="flex-nowrap justify-between gap-2 border-border/60 px-2 py-2 text-left"
+                                                    className="justify-between gap-2 border-border/60 px-2 py-2"
                                                 >
                                                 <button
                                                     type="button"
@@ -683,7 +683,7 @@ export function DashboardPaymentsCalendar({
                                                     interactive
                                                     variant="outline"
                                                     size="sm"
-                                                    className="flex-nowrap justify-between gap-2 border-border/60 px-2 py-2 text-left"
+                                                    className="justify-between gap-2 border-border/60 px-2 py-2"
                                                 >
                                                 <button
                                                     type="button"

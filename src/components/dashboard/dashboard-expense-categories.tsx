@@ -375,7 +375,7 @@ export function DashboardExpenseCategories({
                                                     interactive
                                                     size="sm"
                                                     className={cn(
-                                                        "block px-2 py-2 text-left",
+                                                        "block px-2 py-2",
                                                         isActive &&
                                                             activeKey !== null &&
                                                             "border-border/80 bg-muted/40",

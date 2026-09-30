@@ -80,7 +80,7 @@ function PreviewShell({
     className?: string
 }) {
     return (
-        <Item variant="outline" size="sm" className={cn("min-w-0 flex-nowrap", className)}>
+        <Item variant="outline" size="sm" className={cn("min-w-0", className)}>
             {children}
         </Item>
     )

@@ -32,7 +32,6 @@ import {
     toastError,
     toastPageFetchError,
 } from "@/lib/toast"
-import { cn } from "@/lib/utils"
 
 export default function SessionsPage() {
     const router = useRouter()
@@ -164,12 +163,8 @@ export default function SessionsPage() {
                                             ela tinha não respondia a nada, e saiu. */}
                                         <Item
                                             variant="outline"
-                                            className={cn(
-                                                "block p-3 sm:p-3.5",
-                                                session.is_current
-                                                    ? "border-primary-accent/30 bg-primary/5"
-                                                    : "border-border/80",
-                                            )}
+                                            selected={session.is_current}
+                                            className="block p-3 sm:p-3.5"
                                         >
                                             <div className="flex items-start justify-between gap-3">
                                                 <div className="flex min-w-0 flex-1 items-center gap-2.5">

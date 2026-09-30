@@ -16224,3 +16224,40 @@ O dono pediu a rodada completa e escolheu as quatro versões.
   `maxLength`. Entraram a tabela de props e o "onde o app usa".
 - O diálogo de trocar senha, o cadastro e a redefinição usam a mesma peça que
   foi exercitada no `/login`; não foram abertos um a um.
+
+### Rodada 194 — o Item ganha a linha rente, a selecionada, a seta e deixa de quebrar sem faixa
+
+O dono pediu a rodada completa e escolheu as quatro versões. A página estava
+certa; as versões saíram de doze telas que reescreviam o componente por
+`className`.
+
+- **Não quebra por padrão**: a base era `flex-wrap`, e seis linhas escreviam
+  `flex-nowrap`; sete linhas-botão escreviam `text-left`. Agora a linha só
+  quebra com `ItemHeader`/`ItemFooter` (que são `basis-full`), `text-start`
+  vem de fábrica e o `ItemContent` ganhou `min-w-0` para o título truncar em
+  vez de empurrar as ações. **O efeito colateral foi visto e consertado na
+  mesma rodada**: a 360px um `Badge` dentro do `ItemTitle` era espremido em três
+  linhas; o título ganhou `flex-wrap` e o selo desce inteiro.
+- **`variant="flush"`**: sem borda nem canto, com `px-4` e o `py` do degrau por
+  `compoundVariants` (que vêm depois e vencem o recuo do `size`). Medido: o
+  título da linha alinha com o do `CardToolbar` (1px), e num `divided` o fio
+  continua. As transações recentes e as parcelas do painel deixaram
+  `rounded-none border-0 px-4 py-3`.
+- **`selected`**: `--primary-accent` a 60% e `--primary` a 5/10%, a receita do
+  cartão de escolha do `FieldLabel`, com `aria-current`. A sessão atual a
+  escrevia a **30%**, abaixo dos 3:1. A categoria acesa no painel de despesas
+  **não** entrou: ela acende porque o ponteiro está na legenda do gráfico, e
+  `aria-current` ali mentiria.
+- **`ItemChevron`**: parada em `--muted-foreground`, e numa linha
+  `interactive` ela ganha a tinta cheia e anda 2px. A primeira versão usava
+  `group-hover/item`, e andaria também na linha que não navega; como
+  `group-hover` + `group-data-[interactive]` no mesmo ancestral não casa (a
+  medição do alternador de tema), o `interactive` publica `--item-nudge` e
+  `--item-chevron`, e a seta os lê. Medido: `0px`/`oklch(0.5)` em repouso,
+  `2px`/`oklch(0.145)` no cursor. As transações recentes (a seta a 70%) e as
+  categorias da fatura (com a própria animação por `group/row`) a vestem.
+- **Página**: entraram a linha rente num cartão, a sessão selecionada e a seta
+  na linha que navega. O auditor leu o texto `ComponentProps<svg>` da tabela de
+  props como um `<svg>` à mão; o texto mudou.
+- As telas do app pedem login e não foram vistas; as peças foram medidas na
+  página, incluindo a 360px.

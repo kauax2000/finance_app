@@ -2,6 +2,8 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
+import { ChevronRightIcon } from "@heroicons/react/16/solid"
+
 import { cn } from "@/lib/utils"
 import { Muted } from "@/components/ui/typography"
 import { Separator } from "@/components/ui/separator"
@@ -26,13 +28,31 @@ import { Separator } from "@/components/ui/separator"
  * `Command` já teve que enterrar.
  */
 const itemVariants = cva(
-  "group/item flex w-full flex-wrap items-center rounded-lg border text-sm transition-colors duration-(--duration-instant) outline-none",
+  [
+    "group/item flex w-full items-center rounded-lg border text-start text-sm transition-colors duration-(--duration-instant) outline-none",
+    // **Só quebra quando há faixa** (rodada 194): `ItemHeader` e
+    // `ItemFooter` ocupam a largura toda (`basis-full`) e precisam descer de
+    // linha; sem eles, conteúdo e ações ficam lado a lado e o título trunca.
+    // Era `flex-wrap` sempre, e seis linhas do app o desligavam à mão — a ação
+    // caía embaixo do título numa tela estreita. E `text-start` de fábrica:
+    // sete linhas-botão escreviam `text-left`, porque o `<button>` centraliza.
+    "flex-nowrap has-[>[data-slot=item-header]]:flex-wrap has-[>[data-slot=item-footer]]:flex-wrap",
+  ].join(" "),
   {
     variants: {
       variant: {
         plain: "border-transparent",
         outline: "border-border",
         muted: "border-transparent bg-muted/50",
+        /**
+         * **Rente** (rodada 194): a linha que ocupa um `Card padding="none"`,
+         * sem borda nem canto, com o recuo de 16px da tira do cartão — o
+         * mesmo que o `CardToolbar` usa, então título e linhas alinham. Três
+         * listas do app escreviam `rounded-none border-0 px-4 py-3`. Num
+         * `ItemGroup divided` o fio continua, porque a borda é transparente e
+         * não zerada.
+         */
+        flush: "rounded-none border-transparent",
       },
       size: {
         sm: "gap-2 px-2.5 py-2",
@@ -47,14 +67,38 @@ const itemVariants = cva(
       // ele não existia em caso nenhum.
       //
       // Agora é explícito, como o `interactive` que o `Card` já documenta.
+      /**
+       * A linha atual ou escolhida (rodada 194): o contorno e o fundo do
+       * cartão de escolha do `FieldLabel` — `--primary-accent` a 60%, o
+       * primeiro degrau que alcança 3:1 de traço nos dois temas, e `--primary`
+       * a 5%/10%. Vem com `aria-current`. A sessão atual e a categoria em foco
+       * escreviam as próprias classes, e a primeira a 30%, abaixo da norma.
+       */
+      selected: {
+        true: "border-primary-accent/60 bg-primary/5 dark:bg-primary/10",
+        false: "",
+      },
       interactive: {
-        true: "cursor-pointer hover:bg-muted active:bg-muted focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/45 pointer-coarse:min-h-11",
+        true: [
+          "cursor-pointer hover:bg-muted active:bg-muted focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/45 pointer-coarse:min-h-11",
+          // O que a `ItemChevron` lê: só a linha que navega a faz andar. Uma
+          // variante empilhada (`group-hover` + `group-data-[interactive]`)
+          // apontaria para o mesmo ancestral e não casaria com nada — a
+          // medição do alternador de tema; a saída é a variável.
+          "hover:[--item-nudge:--spacing(0.5)] active:[--item-nudge:--spacing(0.5)] hover:[--item-chevron:var(--color-foreground)] active:[--item-chevron:var(--color-foreground)]",
+        ].join(" "),
         false: "",
       },
     },
+    compoundVariants: [
+      { variant: "flush", size: "sm", className: "px-4 py-2" },
+      { variant: "flush", size: "md", className: "px-4 py-3" },
+      { variant: "flush", size: "lg", className: "px-4 py-3.5" },
+    ],
     defaultVariants: {
       variant: "plain",
       size: "md",
+      selected: false,
       interactive: false,
     },
   }
@@ -155,6 +199,7 @@ function Item({
   variant = "plain",
   size = "md",
   interactive = false,
+  selected = false,
   asChild = false,
   ...props
 }: React.ComponentProps<"div"> &
@@ -166,7 +211,9 @@ function Item({
       data-variant={variant}
       data-size={size}
       data-interactive={interactive ? "true" : undefined}
-      className={cn(itemVariants({ variant, size, interactive, className }))}
+      data-selected={selected || undefined}
+      aria-current={selected ? "true" : undefined}
+      className={cn(itemVariants({ variant, size, interactive, selected, className }))}
       {...props}
     />
   )
@@ -217,7 +264,9 @@ function ItemContent({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="item-content"
       className={cn(
-        "flex flex-1 flex-col gap-0 [&+[data-slot=item-content]]:flex-none",
+        // `min-w-0`: sem ele, numa linha que não quebra, um título longo
+        // empurraria as ações para fora em vez de truncar.
+        "flex min-w-0 flex-1 flex-col gap-0 [&+[data-slot=item-content]]:flex-none",
         className
       )}
       {...props}
@@ -232,7 +281,10 @@ function ItemTitle({ className, ...props }: React.ComponentProps<"div">) {
       className={cn(
         // Sem `line-clamp-1`: medido, o `flex` vencia o `-webkit-box` e o corte nunca
         // acontecia. Quem precisa cortar põe o texto num `span` com `truncate`.
-        "flex w-fit items-center gap-2 text-sm leading-snug font-medium underline-offset-4",
+        // `flex-wrap`: numa linha que não quebra (rodada 194) o título
+        // encolhe, e um `Badge` dentro dele era espremido em três linhas — medido
+        // a 360px, "Vence em 3 dias". Assim ele desce inteiro.
+        "flex w-fit flex-wrap items-center gap-x-2 gap-y-0.5 text-sm leading-snug font-medium underline-offset-4",
         className
       )}
       {...props}
@@ -289,8 +341,31 @@ function ItemFooter({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/**
+ * A seta da linha que navega (rodada 194): apagada em repouso, e no cursor e
+ * no toque **de uma linha `interactive`** ela ganha a tinta cheia e anda 2px
+ * no sentido do clique — a língua do marcador da divulgação. Numa linha que
+ * não navega ela fica parada. Duas telas a escreviam à mão, uma a 70% e outra
+ * com a própria animação. Decorativa: quem diz para onde vai é a linha.
+ */
+function ItemChevron({ className, ...props }: React.ComponentProps<typeof ChevronRightIcon>) {
+  return (
+    <ChevronRightIcon
+      data-slot="item-chevron"
+      aria-hidden
+      className={cn(
+        "size-4 shrink-0 transition-[translate,color] duration-(--duration-base) ease-(--ease-out)",
+        "translate-x-(--item-nudge,0px) text-(--item-chevron,var(--color-muted-foreground))",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
 export {
   Item,
+  ItemChevron,
   ItemMedia,
   ItemContent,
   ItemActions,

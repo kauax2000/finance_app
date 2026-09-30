@@ -931,7 +931,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                                 <li key={k}>
                                                     <Item
                                                         size="sm"
-                                                        className="flex-nowrap justify-between gap-3 rounded-md px-2 py-1.5"
+                                                        className="justify-between gap-3 rounded-md px-2 py-1.5"
                                                     >
                                                         <span className="inline-flex min-w-0 items-center gap-2 text-sm font-medium text-foreground">
                                                             <span
@@ -1143,7 +1143,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                             <Item
                                                 asChild
                                                 interactive
-                                                className="block rounded-[inherit] border-0 px-3 py-2.5 text-left"
+                                                className="block rounded-[inherit] border-0 px-3 py-2.5"
                                             >
                                             <button
                                                 type="button"

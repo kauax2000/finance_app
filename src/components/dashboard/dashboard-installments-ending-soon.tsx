@@ -123,7 +123,7 @@ function InstallmentPlanCompactRow({
     if (onSelect) {
         return (
             <li className="list-none">
-                <Item asChild interactive className="block rounded-none border-0 px-4 py-3 text-left">
+                <Item asChild interactive variant="flush" className="block">
                     <button
                         type="button"
                         aria-label={aria}

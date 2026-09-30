@@ -3,10 +3,10 @@
 import { ChartTooltip } from "@/components/ui/chart"
 import {
     Item,
+    ItemChevron,
 } from "@/components/ui/item"
 import { percentPointsBR } from "@/lib/formatters"
 import Link from "next/link"
-import { ChevronRightIcon } from "@heroicons/react/16/solid"
 import { useEffect, useMemo, useRef, useState } from "react"
 import {
     Cell,
@@ -326,15 +326,10 @@ export function CreditCardInvoiceCategorySpendSection({
                                                 tone={c.categoryId == null ? "muted" : undefined}
                                                 className="font-semibold sm:text-base"
                                             />
-                                            <ChevronRightIcon
-                                                className={cn(
-                                                    "size-4 shrink-0 text-muted-foreground transition-transform",
-                                                    c.categoryId != null &&
-                                                        "group-hover/row:translate-x-0.5 group-active/row:translate-x-0.5 group-hover/row:text-foreground group-active/row:text-foreground",
-                                                    c.categoryId == null &&
-                                                        "text-muted-foreground/50",
-                                                )}
-                                                aria-hidden
+                                            {/* Sem categoria a linha não navega, e a
+                                                seta fica parada e mais apagada. */}
+                                            <ItemChevron
+                                                className={c.categoryId == null ? "opacity-50" : undefined}
                                             />
                                         </div>
                                 </div>
