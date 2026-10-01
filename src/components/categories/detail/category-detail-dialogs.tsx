@@ -1,25 +1,25 @@
 "use client"
 
-import { useIsMobile } from "@/hooks/use-mobile"
 import {
     Card,
 } from "@/components/ui/card"
-import {
-  Sheet,
-  SheetContent,
-} from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogBody,
-  DialogCloseButton,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { CustomForm, FormInput } from "@/components/ui/form"
+import {
+    CustomForm,
+    FormCancel,
+    FormInput,
+    FormSubmit,
+} from "@/components/ui/form"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -90,18 +90,12 @@ export function CategoryDetailDialogs({
     deleteDeleting,
     onDeleteConfirm,
 }: CategoryDetailDialogsProps) {
-    const isMobile = useIsMobile()
     const { period_start: periodStart, period_end: periodEnd } = periodBoundsFromYearMonth(yearMonth)
 
     const editDescription =
         editType === "expense"
             ? "Atualize o nome, o tipo, a aparência e o orçamento do mês selecionado desta categoria."
             : "Atualize o nome, o tipo e a aparência desta categoria."
-
-    const handleEditOpenChange = (open: boolean) => {
-        if (!open && (editSaving || editBudgetRemoving)) return
-        onEditDialogOpenChange(open)
-    }
 
     const editFields = (
         <div className="space-y-4 py-4">
@@ -155,57 +149,43 @@ export function CategoryDetailDialogs({
 
     return (
         <>
-            {isMobile ? (
-                <Sheet open={editDialogOpen} onOpenChange={handleEditOpenChange}>
-                    <SheetContent
-                        side="bottom"
-                        fillMobileViewport
+            {/* Diálogo no desktop, gaveta alta no telefone (`surface="auto"`).
+                Salvando ou removendo o orçamento, o `pending` segura todo
+                pedido de fechar. `fixed` nas duas larguras: o formulário é
+                longo, e na gaveta é o `DialogBody` que rola. */}
+            <Dialog
+                surface="auto"
+                pending={editSaving || editBudgetRemoving}
+                open={editDialogOpen}
+                onOpenChange={onEditDialogOpenChange}
+            >
+                <DialogContent layout="fixed">
+                    <DialogHeader>
+                        <DialogTitle>Editar categoria</DialogTitle>
+                        <DialogDescription>{editDescription}</DialogDescription>
+                    </DialogHeader>
+                    <CustomForm
+                        pending={editSaving}
+                        onSubmit={onEditSubmit}
+                        className="flex min-h-0 flex-1 flex-col"
                     >
-                        <DialogHeader>
-                            <DialogTitle>Editar categoria</DialogTitle>
-                            <DialogDescription>{editDescription}</DialogDescription>
-                        </DialogHeader>
-                        <CustomForm
-                            onSubmit={onEditSubmit}
-                            className="flex min-h-0 flex-1 flex-col"
-                        >
-                            <DialogBody>
-                                {editFields}
-                            </DialogBody>
-                            <DialogFooter className="flex-col">
-                                <Button
-                                    type="submit"
-                                    disabled={editSaving || editBudgetRemoving}
-                                    size="xl" className="w-full"
-                                >
-                                    {editSaving ? "Salvando…" : "Salvar"}
-                                </Button>
-                            </DialogFooter>
-                        </CustomForm>
-                    <DialogCloseButton />
-                    </SheetContent>
-                </Sheet>
-            ) : (
-                <Dialog open={editDialogOpen} onOpenChange={handleEditOpenChange}>
-                    <DialogContent>
-                        <CustomForm onSubmit={onEditSubmit}>
-                            <DialogHeader>
-                                <DialogTitle>Editar categoria</DialogTitle>
-                                <DialogDescription>{editDescription}</DialogDescription>
-                            </DialogHeader>
+                        <DialogBody>
                             {editFields}
-                            <DialogFooter>
-                                <Button type="button" variant="outline" onClick={() => onEditDialogOpenChange(false)}>
-                                    Cancelar
-                                </Button>
-                                <Button type="submit" disabled={editSaving || editBudgetRemoving}>
-                                    {editSaving ? "Salvando…" : "Salvar"}
-                                </Button>
-                            </DialogFooter>
-                        </CustomForm>
-                    </DialogContent>
-                </Dialog>
-            )}
+                        </DialogBody>
+                        <DialogFooter>
+                            <DialogClose asChild>
+                                <FormCancel>Cancelar</FormCancel>
+                            </DialogClose>
+                            <FormSubmit
+                                pendingLabel="Salvando…"
+                                disabled={editBudgetRemoving}
+                            >
+                                Salvar
+                            </FormSubmit>
+                        </DialogFooter>
+                    </CustomForm>
+                </DialogContent>
+            </Dialog>
 
             <AlertDialog pending={deleteDeleting} open={deleteDialogOpen} onOpenChange={onDeleteDialogOpenChange}>
                 <AlertDialogContent>

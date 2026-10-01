@@ -3,23 +3,16 @@
 import { useState } from "react"
 import { useWorkspace } from "@/components/workspace-provider"
 import { WorkspaceAppearanceFormFields } from "@/components/workspace/workspace-appearance-form-fields"
-import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogBody,
-  DialogCloseButton,
+  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
-  DialogHeaderRow,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Sheet,
-  SheetContent,
-} from "@/components/ui/sheet"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { CustomForm } from "@/components/ui/form"
+import { CustomForm, FormCancel, FormSubmit } from "@/components/ui/form"
 import { randomWorkspaceAccentColor, type WorkspaceIconKey } from "@/lib/workspace-icons"
 
 export type ProjectFormDialogProps = {
@@ -32,7 +25,6 @@ export function ProjectFormDialog({
     open,
     onOpenChange,
 }: ProjectFormDialogProps) {
-    const isMobile = useIsMobile()
     const { createWorkspace, error: contextError } = useWorkspace()
 
     const [name, setName] = useState("")
@@ -43,8 +35,8 @@ export function ProjectFormDialog({
     const [submitting, setSubmitting] = useState(false)
     const [localError, setLocalError] = useState<string | null>(null)
 
+    // Enquanto cria, o `pending` do `Dialog` já segura todo pedido de fechar.
     const handleOpenChange = (next: boolean) => {
-        if (!next && submitting) return
         if (!next) {
             setLocalError(null)
         }
@@ -75,73 +67,43 @@ export function ProjectFormDialog({
 
     const displayError = localError ?? contextError
 
-    const innerForm = (
-        <CustomForm
-            onSubmit={(e) => void handleSubmit(e)}
-            className="flex min-h-0 flex-1 flex-col"
-        >
-            <DialogBody>
-                <WorkspaceAppearanceFormFields
-                    name={name}
-                    onNameChange={setName}
-                    icon={icon}
-                    onIconChange={setIcon}
-                    previewColor={previewColor}
-                    onPreviewColorChange={setPreviewColor}
-                    displayError={displayError}
-                    idPrefix="project-dialog-create"
-                    previewHint="Esta cor identifica a carteira na barra lateral e nos menus."
-                />
-            </DialogBody>
-            {isMobile ? (
-                <DialogFooter className="flex-col">
-                    <Button type="submit" disabled={submitting} size="xl" className="w-full">
-                        {submitting ? "Criando…" : "Criar carteira"}
-                    </Button>
-                </DialogFooter>
-            ) : (
-                <DialogFooter>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => handleOpenChange(false)}
-                        disabled={submitting}
-                    >
-                        Cancelar
-                    </Button>
-                    <Button type="submit" disabled={submitting}>
-                        {submitting ? "Criando…" : "Criar carteira"}
-                    </Button>
-                </DialogFooter>
-            )}
-        </CustomForm>
-    )
-
-    if (isMobile) {
-        return (
-            <Sheet open={open} onOpenChange={handleOpenChange}>
-                <SheetContent
-                    side="bottom"
-                    fillMobileViewport
-                >
-                    <DialogHeader>
-                        <DialogHeaderRow endAdornment={<DialogCloseButton placement="inline" disabled={submitting} />}>
-                            <DialogTitle>Nova carteira</DialogTitle>
-                        </DialogHeaderRow>
-                    </DialogHeader>
-                    {innerForm}
-                </SheetContent>
-            </Sheet>
-        )
-    }
-
+    // Diálogo no desktop, gaveta alta no telefone (`surface="auto"`).
     return (
-        <Dialog open={open} onOpenChange={handleOpenChange}>
+        <Dialog
+            surface="auto"
+            pending={submitting}
+            open={open}
+            onOpenChange={handleOpenChange}
+        >
             <DialogContent layout="fixed">
                 <DialogHeader>
                     <DialogTitle>Nova carteira</DialogTitle>
                 </DialogHeader>
-                {innerForm}
+                <CustomForm
+                    pending={submitting}
+                    onSubmit={(e) => void handleSubmit(e)}
+                    className="flex min-h-0 flex-1 flex-col"
+                >
+                    <DialogBody>
+                        <WorkspaceAppearanceFormFields
+                            name={name}
+                            onNameChange={setName}
+                            icon={icon}
+                            onIconChange={setIcon}
+                            previewColor={previewColor}
+                            onPreviewColorChange={setPreviewColor}
+                            displayError={displayError}
+                            idPrefix="project-dialog-create"
+                            previewHint="Esta cor identifica a carteira na barra lateral e nos menus."
+                        />
+                    </DialogBody>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <FormCancel>Cancelar</FormCancel>
+                        </DialogClose>
+                        <FormSubmit pendingLabel="Criando…">Criar carteira</FormSubmit>
+                    </DialogFooter>
+                </CustomForm>
             </DialogContent>
         </Dialog>
     )

@@ -1,7 +1,6 @@
 "use client"
 
-import { CustomForm } from "@/components/ui/form"
-import { Button } from "@/components/ui/button"
+import { CustomForm, FormSubmit } from "@/components/ui/form"
 import { cn } from "@/lib/utils"
 import {
   DialogBody,
@@ -48,17 +47,17 @@ export function TransactionFormSurface({
     scrollClassName,
 }: TransactionFormSurfaceProps) {
     const footer = showFooter ? (
-        <Button
-            type="submit"
+        <FormSubmit
             size="sm"
+            pendingLabel="Salvando…"
             className={cn(
                 variant === "dialog-mobile" && "h-10 w-full",
                 variant === "detail-sheet" && "max-sm:h-10 max-sm:w-full"
             )}
             disabled={submitDisabled}
         >
-            {saving ? "Salvando..." : "Salvar"}
-        </Button>
+            Salvar
+        </FormSubmit>
     ) : null
 
     const formPickersOpen =
@@ -86,6 +85,7 @@ export function TransactionFormSurface({
                     {formDescription}
                 </DialogDescription>
                 <CustomForm
+                    pending={saving}
                     onSubmit={handleSubmit}
                     className="flex min-h-0 flex-1 flex-col"
                 >
@@ -105,6 +105,7 @@ export function TransactionFormSurface({
     if (variant === "detail-sheet") {
         return (
             <CustomForm
+                pending={saving}
                 onSubmit={handleSubmit}
                 className="flex min-h-0 flex-1 flex-col"
             >
@@ -130,6 +131,7 @@ export function TransactionFormSurface({
 
     return (
         <CustomForm
+            pending={saving}
             onSubmit={handleSubmit}
             className="flex min-h-0 flex-1 flex-col overflow-hidden"
         >

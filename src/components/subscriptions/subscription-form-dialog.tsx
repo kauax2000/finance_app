@@ -5,11 +5,6 @@ import {
     Dialog,
     DialogContent,
 } from "@/components/ui/dialog"
-import {
-    Sheet,
-    SheetContent,
-} from "@/components/ui/sheet"
-import { useIsMobile } from "@/hooks/use-mobile"
 import { SubscriptionFormSurface } from "@/components/subscriptions/subscription-form-surface"
 import { useSubscriptionForm } from "@/components/subscriptions/use-subscription-form"
 import type { ExpenseCategoryOption } from "@/components/subscriptions/subscription-form-shared"
@@ -41,8 +36,6 @@ export function SubscriptionFormDialog({
     saving,
     onSave,
 }: SubscriptionFormDialogProps) {
-    const isMobile = useIsMobile()
-
     const {
         handleSubmit,
         fieldsProps,
@@ -64,48 +57,18 @@ export function SubscriptionFormDialog({
         onClose: () => onOpenChange(false),
     })
 
-    if (isMobile) {
-        return (
-            <Sheet
-                open={open}
-                onOpenChange={(next) => {
-                    if (!next && saving) return
-                    onOpenChange(next)
-                }}
-            >
-                <SheetContent
-                    side="bottom"
-                    fillMobileViewport
-                    className="flex w-full flex-col gap-0 overflow-hidden rounded-t-2xl px-0 pt-0 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]"
-                >
-                    <SubscriptionFormSurface
-                        variant="dialog-mobile"
-                        handleSubmit={handleSubmit}
-                        fieldsProps={fieldsProps}
-                        formTitle={formTitle}
-                        formDescription={formDescription}
-                        showFooter={showFooter}
-                        submitDisabled={submitDisabled}
-                        submitLabel={submitLabel}
-                        saving={saving}
-                        onCancel={() => onOpenChange(false)}
-                    />
-                </SheetContent>
-            </Sheet>
-        )
-    }
-
+    // Diálogo no desktop, gaveta alta no telefone (`surface="auto"`). Enquanto
+    // salva, o `pending` segura todo pedido de fechar.
     return (
         <Dialog
+            surface="auto"
+            pending={saving}
             open={open}
-            onOpenChange={(next) => {
-                if (!next && saving) return
-                onOpenChange(next)
-            }}
+            onOpenChange={onOpenChange}
         >
             <DialogContent layout="fixed">
                 <SubscriptionFormSurface
-                    variant="dialog-desktop"
+                    variant="dialog"
                     handleSubmit={handleSubmit}
                     fieldsProps={fieldsProps}
                     formTitle={formTitle}
@@ -114,7 +77,6 @@ export function SubscriptionFormDialog({
                     submitDisabled={submitDisabled}
                     submitLabel={submitLabel}
                     saving={saving}
-                    onCancel={() => onOpenChange(false)}
                 />
             </DialogContent>
         </Dialog>

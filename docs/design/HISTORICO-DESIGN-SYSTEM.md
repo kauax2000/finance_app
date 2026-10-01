@@ -17008,3 +17008,46 @@ O dono escolheu todas as versões propostas e as quatro migrações.
   vive sob `:where()`. A saída é `date-picker-wilt` (150ms, sem mola) — e o
   Radix a espera: `closed` com a animação rodando, depois desmontado. Com
   movimento reduzido, duração e atrasos vão a zero.
+
+### Rodada 211 — o Dialog vira gaveta no telefone, trava enquanto salva, protege o rascunho e ganha passos, ícone, ação à esquerda e tela cheia
+
+O dono escolheu todas as versões e as quatro migrações.
+
+- **Contado antes**: 18 `DialogContent` no app, 14 em `fixed`, 1 sem o ×,
+  nenhum rodapé anulado com `mx-0` — os comentários diziam 13/25, 6/25 e
+  "sete telas anulam". E **17 telas trocavam `Dialog` por `Sheet` à mão**
+  com `isMobile`, com as classes da folha em três grafias; o "Salvando…" era
+  um ternário escrito à mão em 22 lugares, e o Cancelar saía `outline`.
+- **`surface="auto"`**: a raiz monta o `Sheet` no telefone e o conteúdo, o
+  `SheetContent` — sem ciclo, porque o `sheet.tsx` não importa o
+  `dialog.tsx`. Medido a 375 com toque: gaveta, alça, título ligado.
+- **`pending`** e **`dirty` + `confirmDiscard`**: um `pedir` na raiz recebe
+  todo pedido de fechar. Medido: alterar e apertar Esc perguntou; Esc na
+  pergunta fechou só ela; "descartar" fechou; salvando, Esc e véu não
+  fecharam, o × e o Cancelar ficaram desabilitados, `aria-busy`, e o diálogo
+  fechou sozinho ao terminar; na gaveta, tocar fora alterado perguntou. A
+  pergunta é a primitiva `AlertDialog` do Radix, em `--z-sheet`: o
+  `AlertDialog` da casa importa este arquivo.
+- **`DialogSteps`**: alturas medidas nos três passos, 576/576/576. A barra
+  corria por baixo do × (visto na captura) e passou a desviar dele como o
+  título: depois, a barra termina em 820 e o × começa em 824.
+- **`DialogMedia`**: ícone e título com o mesmo centro (348/348), descrição
+  a partir da borda do ícone. A folha de instalar no iPhone escrevia o ícone
+  dentro do título com `gap-2`, e migrou.
+- **`size="full"`**: 1216×796 numa janela de 1280×860.
+- **Cabeçalho sem `gap`**: título `leading-snug`, a base do título encosta
+  no topo da descrição (369/369).
+- **O piso de toque do rodapé**: a migração tirou o `h-10 w-full` que as
+  telas escreviam no ramo do telefone, e os botões caíram a 32. Ele foi para
+  o `DialogFooter` (`pointer-coarse:[&_button]:min-h-10`); medido a 375, 40 de
+  altura e a largura toda.
+- **As migrações** (três agentes, arquivos separados): as 17 telas viraram um
+  `Dialog` só; os rodapés usam `FormCancel` e `FormSubmit pendingLabel`; a
+  exclusão de conta e o assistente de categorias ganharam `DialogSteps` — o
+  assistente **não** virou diálogo, porque é um cartão na página e isso
+  mudaria a jornada. O rascunho do lançamento compara uma fotografia dos
+  campos escritos; a primeira versão incluía a aba e o tipo, e trocar a aba
+  de um formulário vazio fazia perguntar — saíram. Mudança de jornada: 5b no
+  `JORNADAS.md` e no Atlas, republicado; os quatro diagramas mudados nesta
+  sessão passam no parser do Mermaid. **As telas do app não foram vistas no
+  navegador** — pedem login.

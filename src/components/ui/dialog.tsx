@@ -2,7 +2,10 @@
 
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
-import { Dialog as DialogPrimitive } from "radix-ui"
+import {
+  AlertDialog as AlertDialogPrimitive,
+  Dialog as DialogPrimitive,
+} from "radix-ui"
 import { XMarkIcon } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
@@ -10,7 +13,15 @@ import { modalSurfaceClassName } from "@/lib/glass-classes"
 import { Muted } from "@/components/ui/typography"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 
 /**
  * O recuo que desvia do botão de fechar.
@@ -32,15 +43,180 @@ import { Button } from "@/components/ui/button"
 const DIALOG_CLOSE_RESERVE =
   "pe-[max(0px,calc(var(--dialog-close)-var(--dialog-px)))]"
 
+/**
+ * ## Rodada 211
+ *
+ * - **`surface="auto"`**: abaixo de 768px o diálogo vira a gaveta do `Sheet`
+ *   (arrastável, com a área segura), com a mesma API — gatilho, conteúdo,
+ *   fechar e cromagem. Dezessete telas escreviam o par `Dialog`/`Sheet` à mão,
+ *   cada uma com um `if (isMobile)` e as classes da folha em três grafias. É
+ *   possível pelo mesmo motivo que a cromagem serve os dois: as três
+ *   superfícies são a mesma primitiva do Radix.
+ * - **`pending`**: enquanto salva, Esc, véu, ×, Cancelar e o arraste da gaveta
+ *   não fecham, e o casco marca `aria-busy` — o `pending` do `AlertDialog`,
+ *   que já segurava o Esc. O botão de enviar continua sendo o `FormSubmit`.
+ * - **`dirty` + `confirmDiscard`**: fechar um formulário alterado pergunta
+ *   "Descartar alterações?" antes. A pergunta usa a primitiva do Radix, e não o
+ *   `AlertDialog` da casa, porque ele importa este arquivo.
+ * - **`DialogSteps`**, **`DialogMedia`**, **`DialogFooter start`** e
+ *   **`size="full"`**: ver cada peça.
+ * - **O título e a descrição deixaram de ter `gap`** — par de identidade, a
+ *   regra da casa. Quem os separa é a entrelinha do título (`leading-snug`).
+ */
+type DialogEstado = {
+  /** No telefone, com `surface="auto"`: a gaveta do `Sheet`. */
+  gaveta: boolean
+  pending: boolean
+}
+
+const DialogEstadoContext = React.createContext<DialogEstado>({
+  gaveta: false,
+  pending: false,
+})
+
+type ConfirmDiscard = boolean | { title?: string; description?: string }
+
 function Dialog({
+  surface = "dialog",
+  pending = false,
+  dirty = false,
+  confirmDiscard = false,
+  open: openProp,
+  defaultOpen,
+  onOpenChange,
+  children,
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />
+}: React.ComponentProps<typeof DialogPrimitive.Root> & {
+  /** `auto`: diálogo no desktop, gaveta no telefone. */
+  surface?: "dialog" | "auto"
+  /** Salvando: nada fecha o diálogo até acabar. */
+  pending?: boolean
+  /** O formulário tem alterações não salvas. */
+  dirty?: boolean
+  /** Com `dirty`, fechar pergunta antes. `true` usa os textos padrão. */
+  confirmDiscard?: ConfirmDiscard
+}) {
+  const isMobile = useIsMobile()
+  const gaveta = surface === "auto" && isMobile
+  const controlado = openProp !== undefined
+  const [interno, setInterno] = React.useState(defaultOpen ?? false)
+  const open = controlado ? openProp : interno
+  const [perguntando, setPerguntando] = React.useState(false)
+
+  const mudar = (proximo: boolean) => {
+    if (!controlado) setInterno(proximo)
+    onOpenChange?.(proximo)
+  }
+  // Todo pedido de fechar passa por aqui: Esc, véu, ×, `DialogClose` e o
+  // arraste da gaveta. Fechar por fora — o `open` que a tela controla — não.
+  const pedir = (proximo: boolean) => {
+    if (proximo) return mudar(true)
+    if (pending) return
+    if (dirty && confirmDiscard) {
+      setPerguntando(true)
+      return
+    }
+    mudar(false)
+  }
+
+  const estado = React.useMemo(() => ({ gaveta, pending }), [gaveta, pending])
+  const textos = typeof confirmDiscard === "object" ? confirmDiscard : {}
+
+  return (
+    <DialogEstadoContext.Provider value={estado}>
+      {gaveta ? (
+        <Sheet open={open} onOpenChange={pedir} {...props}>
+          {children}
+        </Sheet>
+      ) : (
+        <DialogPrimitive.Root
+          data-slot="dialog"
+          open={open}
+          onOpenChange={pedir}
+          {...props}
+        >
+          {children}
+        </DialogPrimitive.Root>
+      )}
+      {confirmDiscard ? (
+        <ConfirmarDescarte
+          open={perguntando}
+          onOpenChange={setPerguntando}
+          title={textos.title}
+          description={textos.description}
+          onDiscard={() => {
+            setPerguntando(false)
+            mudar(false)
+          }}
+        />
+      ) : null}
+    </DialogEstadoContext.Provider>
+  )
+}
+
+/**
+ * "Descartar alterações?" — a confirmação de fechar um formulário alterado.
+ * Mora na camada da folha (`--z-sheet`) e depois dela no DOM, para ficar por
+ * cima tanto de um diálogo quanto de uma gaveta. Esc fecha só ela.
+ */
+function ConfirmarDescarte({
+  open,
+  onOpenChange,
+  onDiscard,
+  title = "Descartar alterações?",
+  description = "O que foi preenchido aqui não será salvo.",
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onDiscard: () => void
+  title?: string
+  description?: string
+}) {
+  return (
+    <AlertDialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+      <AlertDialogPrimitive.Portal>
+        <AlertDialogPrimitive.Overlay
+          data-slot="dialog-discard-overlay"
+          className="fixed inset-0 z-(--z-sheet) bg-overlay animation-duration-(--duration-base) data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0"
+        />
+        <AlertDialogPrimitive.Content
+          data-slot="dialog-discard"
+          className={cn(
+            dialogContentVariants({ size: "sm", layout: "auto" }),
+            "z-(--z-sheet)"
+          )}
+        >
+          <div className="flex flex-col text-left">
+            <AlertDialogPrimitive.Title className="font-heading text-base leading-snug font-medium text-balance">
+              {title}
+            </AlertDialogPrimitive.Title>
+            <AlertDialogPrimitive.Description asChild>
+              <Muted className="text-pretty">{description}</Muted>
+            </AlertDialogPrimitive.Description>
+          </div>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <AlertDialogPrimitive.Cancel asChild>
+              <Button type="button" variant="tertiary">
+                continuar editando
+              </Button>
+            </AlertDialogPrimitive.Cancel>
+            <AlertDialogPrimitive.Action asChild>
+              <Button type="button" variant="destructive" onClick={onDiscard}>
+                descartar
+              </Button>
+            </AlertDialogPrimitive.Action>
+          </div>
+        </AlertDialogPrimitive.Content>
+      </AlertDialogPrimitive.Portal>
+    </AlertDialogPrimitive.Root>
+  )
 }
 
 function DialogTrigger({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
+  const { gaveta } = React.useContext(DialogEstadoContext)
+  if (gaveta) return <SheetTrigger {...props} />
   return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
 }
 
@@ -50,10 +226,20 @@ function DialogPortal({
   return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
 }
 
+/** Enquanto salva, fechar fica desabilitado — com `asChild`, no botão filho. */
 function DialogClose({
+  disabled,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Close>) {
-  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
+  const { gaveta, pending } = React.useContext(DialogEstadoContext)
+  const Comp = gaveta ? SheetClose : DialogPrimitive.Close
+  return (
+    <Comp
+      data-slot="dialog-close"
+      disabled={pending || disabled}
+      {...props}
+    />
+  )
 }
 
 function DialogOverlay({
@@ -83,15 +269,16 @@ function DialogOverlay({
  * E o que elas montavam no lugar não existia aqui: **32 corpos roláveis**
  * escritos à mão (`min-h-0 flex-1 overflow-y-auto`), **16 cabeçalhos** que
  * precisam dizer `shrink-0 px-6` toda vez, em cinco grafias, e um rodapé que
- * **sete chamadas anulam com `mx-0 mb-0 mt-0`** — porque o `-mx-4 -mb-4` daqui
- * pressupõe um `p-4` no casco, e o casco delas é `p-0`. O rodapé de fábrica não
- * estava só apertado: ele estava **quebrado** para a forma dominante do app.
+ * sete chamadas anulavam com `mx-0 mb-0 mt-0` — porque o `-mx-4 -mb-4` daqui
+ * pressupunha um `p-4` no casco, e o casco delas é `p-0`. (Contado na rodada
+ * 211: nenhuma chamada anula mais o rodapé.)
  *
  * Então o eixo virou o que as telas já separavam: **`layout`**.
  *
  * - `auto` — a altura vem do conteúdo. Confirmação curta, um campo, um aviso.
  * - `fixed` — a altura é teto, e o corpo rola entre um cabeçalho e um rodapé
- *   parados. É o formulário em diálogo, e são 13 das 25 telas.
+ *   parados. É o formulário em diálogo — 14 dos 18 diálogos do app, contados
+ *   na rodada 211.
  *
  * E **`size`** deixou de ser um `sm:max-w-*` escrito na tela: o padrão é `md`,
  * que é o que 17 das 19 chamadas explícitas pediam e o que o `AlertDialog` já
@@ -150,20 +337,27 @@ const dialogContentVariants = cva(
         md: "sm:max-w-md",
         lg: "sm:max-w-lg",
         xl: "sm:max-w-xl",
+        // Tela cheia (rodada 211): a janela com 2rem de margem, para conteúdo
+        // largo. Com `fixed` a altura é a da janela, e não o teto.
+        full: "sm:max-w-[calc(100%-4rem)] [--dialog-max-h:calc(100dvh-2rem)] sm:[--dialog-max-h:calc(100dvh-4rem)]",
       },
       layout: {
         // `--dialog-bleed` é quanto o rodapé precisa recuar para alcançar a
-        // borda. Ele é uma **variável**, e não uma regra `group-data-*`, por um
-        // motivo prático: as sete telas que ainda anulam o rodapé com `mx-0`
-        // continuam vencendo por `tailwind-merge`, porque `mx-0` e
-        // `-mx-(--dialog-bleed)` disputam a mesma propriedade. Como regra de
-        // grupo, o recuo negativo teria especificidade maior e voltaria por
-        // cima delas — quebrando exatamente as telas que a mudança veio servir.
+        // borda. Ele é uma **variável**, e não uma regra `group-data-*`, para
+        // quem anular o rodapé com `mx-0` vencer por `tailwind-merge` — as
+        // duas classes disputam a mesma propriedade.
         auto: "grid gap-4 p-(--dialog-px) [--dialog-bleed:--spacing(6)]",
-        fixed:
+        fixed: [
           "flex max-h-(--dialog-max-h) flex-col gap-0 overflow-hidden p-0 [--dialog-bleed:0px]",
+          // Com passos, a janela não muda de altura de um passo para outro:
+          // ela ocupa o teto, e quem rola é o corpo.
+          "has-[[data-slot=dialog-steps]]:h-(--dialog-max-h)",
+        ].join(" "),
       },
     },
+    compoundVariants: [
+      { size: "full", layout: "fixed", className: "h-(--dialog-max-h)" },
+    ],
     defaultVariants: {
       size: "md",
       layout: "auto",
@@ -182,12 +376,35 @@ function DialogContent({
   VariantProps<typeof dialogContentVariants> & {
     showCloseButton?: boolean
   }) {
+  const { gaveta, pending } = React.useContext(DialogEstadoContext)
+
+  // No telefone, com `surface="auto"`: a gaveta do `Sheet`. A largura não
+  // vale ali, e a gaveta alta é a do formulário (`fixed`), a da tela cheia e a
+  // dos passos — esta por classe, porque só o DOM sabe que há passos.
+  if (gaveta) {
+    return (
+      <SheetContent
+        fillMobileViewport={layout === "fixed" || size === "full"}
+        aria-busy={pending || undefined}
+        className={cn(
+          "has-[[data-slot=dialog-steps]]:h-(--sheet-drawer-h)",
+          className
+        )}
+        {...props}
+      >
+        {children}
+        {showCloseButton ? <DialogCloseButton /> : null}
+      </SheetContent>
+    )
+  }
+
   return (
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Content
         data-slot="dialog-content"
         data-layout={layout ?? "auto"}
+        aria-busy={pending || undefined}
         className={cn(
           dialogContentVariants({ size, layout }),
           showCloseButton && "[--dialog-close:--spacing(11)]",
@@ -198,18 +415,7 @@ function DialogContent({
         {...props}
       >
         {children}
-        {showCloseButton && (
-          <DialogPrimitive.Close data-slot="dialog-close" asChild>
-            <Button
-              variant="tertiary"
-              className="absolute top-3 right-3"
-              size="icon-sm"
-            >
-              <XMarkIcon />
-              <span className="sr-only">Fechar</span>
-            </Button>
-          </DialogPrimitive.Close>
-        )}
+        {showCloseButton ? <DialogCloseButton /> : null}
       </DialogPrimitive.Content>
     </DialogPortal>
   )
@@ -266,7 +472,17 @@ function DialogHeader({
         // duas colunas, ele centralizava numa coluna de 188px que termina a
         // 131px da borda direita: um eixo que não é o de nada. Um cabeçalho
         // de diálogo é o mesmo cabeçalho nas duas larguras.
-        "flex w-full min-w-0 shrink-0 flex-col gap-2 text-left",
+        // **Sem `gap`** (rodada 211): título sobre descrição é par de
+        // identidade, e quem os separa é a entrelinha do título. Os passos
+        // trazem o próprio respiro.
+        "flex w-full min-w-0 shrink-0 flex-col text-left",
+        // Com o ícone, ele vai na linha do título e a descrição atravessa a
+        // largura embaixo — a grade do `AlertDialogHeader`.
+        "has-[>[data-slot=dialog-media]]:grid has-[>[data-slot=dialog-media]]:grid-cols-[auto_minmax(0,1fr)] has-[>[data-slot=dialog-media]]:gap-x-2",
+        // Incondicionais, como no `AlertDialogHeader`: sem ícone o cabeçalho é
+        // flex, e `col-*` não faz nada nele.
+        "[&>[data-slot=dialog-title]]:col-start-2",
+        "[&>:not([data-slot=dialog-media]):not([data-slot=dialog-title])]:col-span-2",
         // **Sem tinta, e o motivo é medido.** A tira chegou a pintar um degradê
         // (`from-popover` → transparente) para "a cor cheia encostar na
         // dissolução". Sobre a placa translúcida isso é impossível: a placa é
@@ -328,6 +544,7 @@ function DialogCloseButton({
   ...props
 }: React.ComponentProps<typeof Button> &
   VariantProps<typeof dialogCloseButtonVariants> & { label?: string }) {
+  const { pending } = React.useContext(DialogEstadoContext)
   return (
     <DialogPrimitive.Close asChild>
       <Button
@@ -335,6 +552,7 @@ function DialogCloseButton({
         type="button"
         variant="tertiary"
         size="icon-sm"
+        disabled={pending || props.disabled}
         className={cn(dialogCloseButtonVariants({ placement }), className)}
         {...props}
       >
@@ -406,17 +624,23 @@ function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
  * no layout que tem recuo**. Em `fixed` o casco é `p-0` e não há o que anular.
  *
  * O tingido também saiu. Era `bg-muted/50`, e sete das nove chamadas o
- * trocavam por `bg-background`: o rodapé de um diálogo já está separado por um
- * fio e pelo peso dos botões, e a faixa cinza só acrescentava um terceiro
- * sinal para a mesma divisão.
+ * trocavam por `bg-background`: o peso dos botões já separa o rodapé, e a
+ * faixa cinza só acrescentava outro sinal para a mesma divisão. (O fio que
+ * aqui se dizia separar o rodapé também saiu, numa rodada depois.)
+ *
+ * **`start`** (rodada 211) é a ação que fica do outro lado — "Excluir",
+ * "Voltar" —, encostada à esquerda no desktop e, pelo `flex-col-reverse`,
+ * embaixo de tudo no telefone.
  */
 function DialogFooter({
   className,
   showCloseButton = false,
+  start,
   children,
   ...props
 }: React.ComponentProps<"div"> & {
   showCloseButton?: boolean
+  start?: React.ReactNode
 }) {
   return (
     <div
@@ -432,18 +656,31 @@ function DialogFooter({
         // O par do cabeçalho: sem tinta, pelo mesmo motivo escrito lá.
         "-mx-(--dialog-bleed) -mb-(--dialog-bleed)",
         "px-(--dialog-px) py-4 sm:flex-row sm:justify-end",
+        // **No dedo, os botões do rodapé sobem a 40**, o piso de toque da casa.
+        // As telas o escreviam à mão (`h-10 w-full`) só no ramo do telefone;
+        // com um diálogo só nas duas larguras (rodada 211), o piso é daqui. A
+        // pergunta é sobre o apontador, como na escada de campo.
+        "pointer-coarse:[&_button]:min-h-10",
         className
       )}
       {...props}
     >
+      {start ? (
+        <div
+          data-slot="dialog-footer-start"
+          className="flex flex-col-reverse gap-2 sm:me-auto sm:flex-row"
+        >
+          {start}
+        </div>
+      ) : null}
       {/* Cancelar vem antes da ação: à esquerda no desktop e, com o
           `flex-col-reverse`, embaixo no telefone. */}
       {showCloseButton && (
-        <DialogPrimitive.Close asChild>
+        <DialogClose asChild>
           <Button type="button" variant="tertiary">
             Cancelar
           </Button>
-        </DialogPrimitive.Close>
+        </DialogClose>
       )}
       {children}
     </div>
@@ -458,7 +695,9 @@ function DialogTitle({
     <DialogPrimitive.Title
       data-slot="dialog-title"
       className={cn(
-        "min-w-0 font-heading text-base leading-none font-medium text-balance",
+        // `leading-snug`, e não `leading-none`: sem `gap` no cabeçalho, é a
+        // entrelinha do título que o separa da descrição.
+        "min-w-0 font-heading text-base leading-snug font-medium text-balance",
         // O × é `absolute` e não reserva lugar nenhum: sem isto, um título
         // longo passa por baixo dele — 16px medidos, e não é hipótese.
         //
@@ -498,6 +737,68 @@ function DialogDescription({
   )
 }
 
+/**
+ * O ícone do título (rodada 211), na linha dele e na cor dele, sem poço — o
+ * `AlertDialogMedia` sem os tons. Vai dentro do `DialogHeader`, antes do
+ * título; a descrição passa embaixo, na largura toda.
+ */
+function DialogMedia({
+  className,
+  ...props
+}: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="dialog-media"
+      aria-hidden
+      className={cn(
+        "col-start-1 flex shrink-0 self-center text-foreground [&>svg]:size-4",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+/**
+ * "Passo 2 de 3", com a barra segmentada (rodada 211). Vai dentro do
+ * `DialogHeader`, antes do título. Com ela, um diálogo `fixed` ocupa o teto
+ * de altura, e a janela não pula quando o passo troca.
+ */
+function DialogSteps({
+  current,
+  total,
+  labels,
+  className,
+}: {
+  /** O passo atual, a partir de 0. */
+  current: number
+  total: number
+  /** O nome de cada passo, mostrado ao lado da contagem. */
+  labels?: string[]
+  className?: string
+}) {
+  const nome = labels?.[current]
+  const texto = `Passo ${current + 1} de ${total}${nome ? ` · ${nome}` : ""}`
+  return (
+    <div
+      data-slot="dialog-steps"
+      // Desvia do × como o título desvia: a barra é a primeira linha do
+      // cabeçalho, e corria por baixo do botão — medido na demonstração.
+      className={cn("flex flex-col gap-1.5 pb-3", DIALOG_CLOSE_RESERVE, className)}
+    >
+      <Progress
+        value={((current + 1) / total) * 100}
+        segments={total}
+        size="sm"
+        aria-label={texto}
+      />
+      <p className="text-xs text-muted-foreground nums" aria-hidden>
+        {texto}
+      </p>
+    </div>
+  )
+}
+
 export {
   Dialog,
   DialogBody,
@@ -508,8 +809,10 @@ export {
   DialogFooter,
   DialogHeader,
   DialogHeaderRow,
+  DialogMedia,
   DialogOverlay,
   DialogPortal,
+  DialogSteps,
   DialogTitle,
   DialogTrigger,
   dialogContentVariants,

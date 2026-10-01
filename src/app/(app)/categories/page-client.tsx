@@ -32,7 +32,7 @@ import {
     type WorkspaceSubscription,
 } from "@/lib/supabase"
 import { Card, CardContent, CardMessage } from "@/components/ui/card"
-import { CustomForm, FormInput } from "@/components/ui/form"
+import { CustomForm, FormInput, FormSubmit } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { CategoryDeleteAlertBody } from "@/components/categories/category-delete-alert-body"
 import { CategoriesToolbar, MonthNav } from "@/components/categories/categories-toolbar"
@@ -47,17 +47,12 @@ import {
 import {
   Dialog,
   DialogBody,
-  DialogCloseButton,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Sheet,
-  SheetContent,
-} from "@/components/ui/sheet"
 import { PlusIcon } from "@heroicons/react/16/solid"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
 import { upsertCategoryBudget, deleteCategoryBudgetById } from "@/lib/category-budget-ops"
@@ -86,8 +81,6 @@ import {
     shiftYearMonth,
 } from "@/lib/budget-month"
 import { buildCategoryCommitmentsForMonth } from "@/lib/category-commitments"
-import { cn } from "@/lib/utils"
-import { useIsMobile } from "@/hooks/use-mobile"
 
 export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNew?: boolean }) {
     const pathname = usePathname()
@@ -148,7 +141,6 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     const [editBudgetRemoving, setEditBudgetRemoving] = useState(false)
     const { confirm: confirmAction, dialog: confirmDialog } = useConfirmDialog()
     const [saving, setSaving] = useState(false)
-    const isMobile = useIsMobile()
     const subrouteLabels = useDashboardCategoriesSubrouteLabels(pathname)
     const categoriesChrome = useMemo(
         () => ({
@@ -584,11 +576,6 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
           ? "Adicione uma categoria. Se for despesa, você pode já definir o limite do mês selecionado."
           : "Adicione uma nova categoria"
 
-    const onSheetOpenChange = (next: boolean) => {
-        if (!next && (saving || editBudgetRemoving)) return
-        setDialogOpen(next)
-    }
-
     const categoryFormFields = (
         <div className="space-y-4 py-4">
             <FormInput
@@ -664,67 +651,39 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 budgetMonthYm={budgetMonthYm}
                 onBudgetMonthYmChange={handleBudgetMonthYmChange}
             />
-            {isMobile ? (
-                <Sheet open={dialogOpen} onOpenChange={onSheetOpenChange}>
-                    <SheetContent
-                        side="bottom"
-                        fillMobileViewport
-                        className={cn(
-                            "sm:mx-auto sm:max-w-lg",
-                        )}
+            {/* Diálogo no desktop, gaveta alta no telefone (`surface="auto"`).
+                Enquanto salva ou remove o orçamento, nada fecha. */}
+            <Dialog
+                surface="auto"
+                pending={saving || editBudgetRemoving}
+                open={dialogOpen}
+                onOpenChange={setDialogOpen}
+            >
+                <DialogContent layout="fixed">
+                    <DialogHeader>
+                        <DialogTitle>{sheetTitle}</DialogTitle>
+                        <DialogDescription>{sheetDescription}</DialogDescription>
+                    </DialogHeader>
+                    <CustomForm
+                        pending={saving}
+                        onSubmit={handleSubmit}
+                        className="flex min-h-0 flex-1 flex-col"
                     >
-                        <DialogHeader>
-                            <DialogTitle>{sheetTitle}</DialogTitle>
-                            <DialogDescription>{sheetDescription}</DialogDescription>
-                        </DialogHeader>
-                        <CustomForm
-                            onSubmit={handleSubmit}
-                            className="flex min-h-0 flex-1 flex-col"
-                        >
-                            <DialogBody>
-                                {categoryFormFields}
-                            </DialogBody>
-                            <DialogFooter className="flex-col">
-                                <Button
-                                    type="submit"
-                                    disabled={saving || editBudgetRemoving}
-                                    size="sm"
-                                    className="h-10 w-full"
-                                >
-                                    {saving ? "Salvando..." : "Salvar"}
-                                </Button>
-                            </DialogFooter>
-                        </CustomForm>
-                    <DialogCloseButton />
-                    </SheetContent>
-                </Sheet>
-            ) : (
-                <Dialog open={dialogOpen} onOpenChange={onSheetOpenChange}>
-                    <DialogContent layout="fixed">
-                        <DialogHeader>
-                            <DialogTitle>{sheetTitle}</DialogTitle>
-                            <DialogDescription>{sheetDescription}</DialogDescription>
-                        </DialogHeader>
-                        <CustomForm
-                            onSubmit={handleSubmit}
-                            className="flex min-h-0 flex-1 flex-col"
-                        >
-                            <DialogBody className="pb-2">
-                                {categoryFormFields}
-                            </DialogBody>
-                            <DialogFooter>
-                                <Button
-                                    type="submit"
-                                    size="sm"
-                                    disabled={saving || editBudgetRemoving}
-                                >
-                                    {saving ? "Salvando..." : "Salvar"}
-                                </Button>
-                            </DialogFooter>
-                        </CustomForm>
-                    </DialogContent>
-                </Dialog>
-            )}
+                        <DialogBody className="pb-2">
+                            {categoryFormFields}
+                        </DialogBody>
+                        <DialogFooter>
+                            <FormSubmit
+                                size="sm"
+                                disabled={editBudgetRemoving}
+                                pendingLabel="Salvando…"
+                            >
+                                Salvar
+                            </FormSubmit>
+                        </DialogFooter>
+                    </CustomForm>
+                </DialogContent>
+            </Dialog>
 
             {filterType === "income" ? (
                 <>

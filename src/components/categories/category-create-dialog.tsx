@@ -15,22 +15,22 @@ import {
 import {
     TransactionFormTypeSegment,
 } from "@/components/transactions/transaction-type-segment"
-import { CustomForm, FormInput } from "@/components/ui/form"
-import { Button } from "@/components/ui/button"
+import {
+    CustomForm,
+    FormCancel,
+    FormInput,
+    FormSubmit,
+} from "@/components/ui/form"
 import {
   Dialog,
   DialogBody,
-  DialogCloseButton,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Sheet,
-  SheetContent,
-} from "@/components/ui/sheet"
 import { supabase } from "@/lib/supabase"
 import { upsertCategoryBudget } from "@/lib/category-budget-ops"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
@@ -44,7 +44,6 @@ import { invokeEdgeJson } from "@/lib/edge-invoke"
 import {
     dispatchFinanceCategoriesMutated,
 } from "@/lib/workspace-data-events"
-import { useIsMobile } from "@/hooks/use-mobile"
 
 export type CategoryCreateDialogProps = {
     open: boolean
@@ -72,7 +71,6 @@ export function CategoryCreateDialog({
     const [icon, setIcon] = React.useState<CategoryIconId>(CATEGORY_ICONS[0])
     const [editBudgetAmount, setEditBudgetAmount] = React.useState("")
     const [saving, setSaving] = React.useState(false)
-    const isMobile = useIsMobile()
 
     const resetForm = React.useCallback(() => {
         setName("")
@@ -219,50 +217,22 @@ export function CategoryCreateDialog({
         </div>
     )
 
-    const onSheetOpenChange = (next: boolean) => {
-        if (!next && saving) return
-        onOpenChange(next)
-    }
-
-    if (isMobile) {
-        return (
-            <Sheet open={open} onOpenChange={onSheetOpenChange}>
-                <SheetContent side="bottom" fillMobileViewport>
-                    <DialogHeader>
-                        <DialogTitle>Nova categoria</DialogTitle>
-                        <DialogDescription>{description}</DialogDescription>
-                    </DialogHeader>
-                    <CustomForm
-                        onSubmit={handleSubmit}
-                        className="flex min-h-0 flex-1 flex-col"
-                    >
-                        <DialogBody>
-                            {fieldsBlock}
-                        </DialogBody>
-                        <DialogFooter className="flex-col">
-                            <Button
-                                type="submit"
-                                disabled={saving}
-                                size="xl" className="w-full"
-                            >
-                                {saving ? "Salvando..." : "Salvar"}
-                            </Button>
-                        </DialogFooter>
-                    </CustomForm>
-                <DialogCloseButton />
-                </SheetContent>
-            </Sheet>
-        )
-    }
-
+    // Diálogo no desktop, gaveta alta no telefone (`surface="auto"`). Enquanto
+    // salva, o `pending` segura todo pedido de fechar.
     return (
-        <Dialog open={open} onOpenChange={onSheetOpenChange}>
+        <Dialog
+            surface="auto"
+            pending={saving}
+            open={open}
+            onOpenChange={onOpenChange}
+        >
             <DialogContent layout="fixed">
                 <DialogHeader>
                     <DialogTitle>Nova categoria</DialogTitle>
                     <DialogDescription>{description}</DialogDescription>
                 </DialogHeader>
                 <CustomForm
+                    pending={saving}
                     onSubmit={handleSubmit}
                     className="flex min-h-0 flex-1 flex-col"
                 >
@@ -270,18 +240,10 @@ export function CategoryCreateDialog({
                         {fieldsBlock}
                     </DialogBody>
                     <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onOpenChange(false)}
-                            disabled={saving}
-                        >
-                            Cancelar
-                        </Button>
-                        <Button type="submit" size="sm" disabled={saving}>
-                            {saving ? "Salvando..." : "Salvar"}
-                        </Button>
+                        <DialogClose asChild>
+                            <FormCancel>Cancelar</FormCancel>
+                        </DialogClose>
+                        <FormSubmit pendingLabel="Salvando…">Salvar</FormSubmit>
                     </DialogFooter>
                 </CustomForm>
             </DialogContent>

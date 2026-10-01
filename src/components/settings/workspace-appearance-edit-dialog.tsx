@@ -3,23 +3,17 @@
 import { useEffect, useState } from "react"
 import { useWorkspace } from "@/components/workspace-provider"
 import { WorkspaceAppearanceFormFields } from "@/components/workspace/workspace-appearance-form-fields"
-import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogBody,
-  DialogCloseButton,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Sheet,
-  SheetContent,
-} from "@/components/ui/sheet"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { CustomForm } from "@/components/ui/form"
+import { CustomForm, FormCancel, FormSubmit } from "@/components/ui/form"
 import type { Workspace } from "@/lib/supabase"
 import {
     isWorkspaceIconKey,
@@ -38,7 +32,6 @@ export function WorkspaceAppearanceEditDialog({
     onOpenChange,
     workspace,
 }: WorkspaceAppearanceEditDialogProps) {
-    const isMobile = useIsMobile()
     const { updateWorkspace, error: contextError } = useWorkspace()
 
     const [name, setName] = useState("")
@@ -59,8 +52,8 @@ export function WorkspaceAppearanceEditDialog({
         // eslint-disable-next-line react-hooks/exhaustive-deps -- seed when opening or switching edited workspace id
     }, [open, workspace?.id])
 
+    // Enquanto salva, o `pending` do `Dialog` já segura todo pedido de fechar.
     const handleOpenChange = (next: boolean) => {
-        if (!next && submitting) return
         if (!next) {
             setLocalError(null)
         }
@@ -98,72 +91,18 @@ export function WorkspaceAppearanceEditDialog({
 
     const displayError = localError ?? contextError
 
-    const innerForm = workspace ? (
-        <CustomForm
-            onSubmit={(e) => void handleSubmit(e)}
-            className="flex min-h-0 flex-1 flex-col"
-        >
-            <DialogBody>
-                <WorkspaceAppearanceFormFields
-                    name={name}
-                    onNameChange={setName}
-                    icon={icon}
-                    onIconChange={setIcon}
-                    previewColor={previewColor}
-                    onPreviewColorChange={setPreviewColor}
-                    displayError={displayError}
-                    idPrefix="settings-workspace-edit-dialog"
-                    previewHint="Esta cor identifica esta carteira na barra lateral e nos menus."
-                />
-            </DialogBody>
-            {isMobile ? (
-                <DialogFooter className="flex-col">
-                    <Button type="submit" disabled={submitting} size="xl" className="w-full">
-                        {submitting ? "Salvando…" : "Salvar alterações"}
-                    </Button>
-                </DialogFooter>
-            ) : (
-                <DialogFooter>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => handleOpenChange(false)}
-                        disabled={submitting}
-                    >
-                        Cancelar
-                    </Button>
-                    <Button type="submit" disabled={submitting}>
-                        {submitting ? "Salvando…" : "Salvar alterações"}
-                    </Button>
-                </DialogFooter>
-            )}
-        </CustomForm>
-    ) : null
-
     if (!workspace) {
         return null
     }
 
-    if (isMobile) {
-        return (
-            <Sheet open={open} onOpenChange={handleOpenChange}>
-                <SheetContent
-                    side="bottom"
-                    fillMobileViewport
-                >
-                    <DialogHeader>
-                        <DialogTitle>Editar carteira</DialogTitle>
-                        <DialogDescription>Altere nome, ícone e cor de destaque da carteira.</DialogDescription>
-                    </DialogHeader>
-                    {innerForm}
-                <DialogCloseButton />
-                </SheetContent>
-            </Sheet>
-        )
-    }
-
+    // Diálogo no desktop, gaveta alta no telefone (`surface="auto"`).
     return (
-        <Dialog open={open} onOpenChange={handleOpenChange}>
+        <Dialog
+            surface="auto"
+            pending={submitting}
+            open={open}
+            onOpenChange={handleOpenChange}
+        >
             <DialogContent layout="fixed">
                 <DialogHeader>
                     <DialogTitle>Editar carteira</DialogTitle>
@@ -171,7 +110,31 @@ export function WorkspaceAppearanceEditDialog({
                         Altere nome, ícone e cor de destaque da carteira.
                     </DialogDescription>
                 </DialogHeader>
-                {innerForm}
+                <CustomForm
+                    pending={submitting}
+                    onSubmit={(e) => void handleSubmit(e)}
+                    className="flex min-h-0 flex-1 flex-col"
+                >
+                    <DialogBody>
+                        <WorkspaceAppearanceFormFields
+                            name={name}
+                            onNameChange={setName}
+                            icon={icon}
+                            onIconChange={setIcon}
+                            previewColor={previewColor}
+                            onPreviewColorChange={setPreviewColor}
+                            displayError={displayError}
+                            idPrefix="settings-workspace-edit-dialog"
+                            previewHint="Esta cor identifica esta carteira na barra lateral e nos menus."
+                        />
+                    </DialogBody>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <FormCancel>Cancelar</FormCancel>
+                        </DialogClose>
+                        <FormSubmit pendingLabel="Salvando…">Salvar alterações</FormSubmit>
+                    </DialogFooter>
+                </CustomForm>
             </DialogContent>
         </Dialog>
     )

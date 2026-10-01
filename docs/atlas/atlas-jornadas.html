@@ -279,7 +279,7 @@
   <dl class="meta">
     <div><dt>Base</dt><dd>Leitura do código</dd></div>
     <div><dt>Branch</dt><dd>finance-app-2.0</dd></div>
-    <div><dt>Data</dt><dd>1 out 2026 · busca global, botão direito e período</dd></div>
+    <div><dt>Data</dt><dd>1 out 2026 · busca global, botão direito, período e rascunho</dd></div>
     <div><dt>Conteúdo</dt><dd>10 jornadas · 14 fluxogramas · 4 lacunas</dd></div>
     <div><dt>Fonte versionada</dt><dd><code>docs/JORNADAS.md</code></dd></div>
   </dl>
@@ -868,6 +868,7 @@ flowchart TD
         <li><div><strong>Criar.</strong> O formulário muda com o tipo. Despesa no crédito exige escolher um cartão; parcelada pede o número de parcelas e se o valor é total ou por parcela.</div></li>
         <li><div><strong>Depois de salvar.</strong> O backend avisa os outros membros e confere o orçamento da categoria e os alertas do cartão. Sem conexão, o lançamento entra na fila.</div></li>
         <li><div><strong>Editar e excluir.</strong> Numa parcela, a pessoa escolhe entre editar só ela ou o plano todo. Excluir uma parcela cancela a compra parcelada inteira.</div></li>
+        <li><div><strong>Rascunho protegido.</strong> Fechar o formulário com algo preenchido pergunta "Descartar alterações?" antes; salvar fecha direto, e enquanto salva nada fecha. Trocar só a aba ou o tipo não conta como alteração.</div></li>
         <li><div><strong>Botão direito.</strong> Na linha, o botão direito (ou o toque longo) abre Abrir, Editar, Selecionar e Excluir — as mesmas ações dos botões da linha, que continuam. Sobre uma linha selecionada, o menu age na seleção inteira: "Excluir 3 lançamentos".</div></li>
       </ol>
       <figure>
@@ -941,7 +942,11 @@ flowchart TD
     saveTx --&gt;|"sucesso"| after[("Edges notify-transaction-created, evaluate-budgets, evaluate-credit-card-alerts")]
     after --&gt; toast(["Transação criada; listas recarregam"])
     savePlan --&gt;|"sucesso"| toastPlan(["Compra parcelada registrada"])
-    open --&gt;|"Cancelar"| closed(["Fecha e descarta"])
+    open --&gt;|"Cancelar, Esc ou fora, sem alterações"| closed(["Fecha e descarta"])
+    open --&gt;|"fechar com alterações"| discard(["Descartar alterações?"])
+    discard --&gt;|"Descartar"| closed
+    discard --&gt;|"Continuar editando"| open
+    saveTx -.-&gt;|"salvando: nada fecha"| open
 
     detail(["Detalhe da transação"]) --&gt; view(["Valor, data, categoria, forma, dica da fatura"])
     view --&gt;|"é parcela"| planInfo(["Parcela k de n, total, lançado, restante"])
@@ -963,14 +968,14 @@ flowchart TD
     classDef decision fill:#2a2415,stroke:#e2b85e,color:#f3e6c6
     classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
     classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
-    class open,expense,income,inst,catPick,cardPick,disabled,queued,keep,toast,toastPlan,closed,detail,view,planInfo,editForm,scope,updated,confirm,deleted,cancelled,queuedDel dialog
+    class open,expense,income,inst,catPick,cardPick,disabled,queued,keep,toast,toastPlan,closed,discard,detail,view,planInfo,editForm,scope,updated,confirm,deleted,cancelled,queuedDel dialog
     class type,editWhat,isInst decision
     class saveTx,savePlan,after,delTx,cascade backend
     class G9,G6,G8 journey</pre></div>
         <figcaption><strong>Figura 5b · Criar, editar e excluir</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
-      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Parâmetros</td><td>Lidos e gravados na URL; <code>new</code> e <code>txn</code> são consumidos e removidos</td><td><code>src/lib/transactions-list-search-params.ts</code></td></tr><tr><td>Formulário</td><td>Um componente para criar, e o mesmo campo a campo na edição</td><td><code>src/components/transactions/transaction-form-dialog.tsx</code>, <code>transaction-form-use.tsx</code></td></tr><tr><td>Parcelada</td><td>RPC <code>create_workspace_installment_plan</code>; editar o plano não muda parcelas já lançadas</td><td><code>src/components/transactions/transaction-form-persistence.ts</code></td></tr><tr><td>Detalhe</td><td>Mesmo painel no Painel, em Cartões e em Categorias</td><td><code>src/components/transactions/transaction-detail-sheet.tsx</code></td></tr><tr><td>Exclusão</td><td>Parcela cancela o plano inteiro por <code>delete_workspace_installment_plan_cascade</code></td><td><code>src/lib/transactions/mutations.ts</code></td></tr><tr><td>Offline</td><td>Criar e excluir entram na fila; pagar conta exige conexão</td><td><code>src/lib/offline/</code></td></tr><tr><td>Enter</td><td>O <code>Enter</code> na busca do seletor não salva a transação</td><td><code>shouldDeferEnterToWidget</code> em <code>src/components/ui/form.tsx</code></td></tr><tr><td>Período personalizado</td><td>Um <code>DatePicker</code> de intervalo com <code>confirm</code>: as pontas ficam em rascunho até Aplicar, Limpar tira o filtro, Cancelar e Esc descartam. Era um formulário à parte (<code>transactions-date-range-form.tsx</code>, removido)</td><td><code>src/components/transactions/transactions-filters-panel.tsx</code></td></tr><tr><td>Botão direito na linha</td><td>Atalho das ações da linha (os botões da coluna Ações continuam); sobre uma linha selecionada age na seleção inteira (<code>contextMenuTargets</code>); linhas projetadas não têm menu</td><td><code>TransactionRowContextMenu</code> em <code>src/components/transactions/transactions-table.tsx</code></td></tr></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Parâmetros</td><td>Lidos e gravados na URL; <code>new</code> e <code>txn</code> são consumidos e removidos</td><td><code>src/lib/transactions-list-search-params.ts</code></td></tr><tr><td>Formulário</td><td>Um componente para criar, e o mesmo campo a campo na edição</td><td><code>src/components/transactions/transaction-form-dialog.tsx</code>, <code>transaction-form-use.tsx</code></td></tr><tr><td>Parcelada</td><td>RPC <code>create_workspace_installment_plan</code>; editar o plano não muda parcelas já lançadas</td><td><code>src/components/transactions/transaction-form-persistence.ts</code></td></tr><tr><td>Detalhe</td><td>Mesmo painel no Painel, em Cartões e em Categorias</td><td><code>src/components/transactions/transaction-detail-sheet.tsx</code></td></tr><tr><td>Exclusão</td><td>Parcela cancela o plano inteiro por <code>delete_workspace_installment_plan_cascade</code></td><td><code>src/lib/transactions/mutations.ts</code></td></tr><tr><td>Offline</td><td>Criar e excluir entram na fila; pagar conta exige conexão</td><td><code>src/lib/offline/</code></td></tr><tr><td>Rascunho</td><td>Fechar o formulário alterado (Cancelar, Esc, toque fora, ×, arrastar a gaveta) pergunta "Descartar alterações?"; salvar fecha sem perguntar. Trocar só a aba ou o tipo não conta como alteração. Enquanto salva, nada fecha (<code>Dialog pending</code>)</td><td><code>isDirty</code> em <code>src/components/transactions/transaction-form-use.tsx</code>, <code>src/components/transactions/transaction-form-dialog.tsx</code></td></tr><tr><td>Enter</td><td>O <code>Enter</code> na busca do seletor não salva a transação</td><td><code>shouldDeferEnterToWidget</code> em <code>src/components/ui/form.tsx</code></td></tr><tr><td>Período personalizado</td><td>Um <code>DatePicker</code> de intervalo com <code>confirm</code>: as pontas ficam em rascunho até Aplicar, Limpar tira o filtro, Cancelar e Esc descartam. Era um formulário à parte (<code>transactions-date-range-form.tsx</code>, removido)</td><td><code>src/components/transactions/transactions-filters-panel.tsx</code></td></tr><tr><td>Botão direito na linha</td><td>Atalho das ações da linha (os botões da coluna Ações continuam); sobre uma linha selecionada age na seleção inteira (<code>contextMenuTargets</code>); linhas projetadas não têm menu</td><td><code>TransactionRowContextMenu</code> em <code>src/components/transactions/transactions-table.tsx</code></td></tr></tbody></table></div>
     </section>
 
     <section class="block" id="j6">

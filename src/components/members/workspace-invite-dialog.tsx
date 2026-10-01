@@ -24,17 +24,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
   Dialog,
-  DialogCloseButton,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-    Sheet,
-    SheetContent,
-} from "@/components/ui/sheet"
-import { useIsMobile } from "@/hooks/use-mobile"
 import {
     Tooltip,
     TooltipContent,
@@ -80,7 +75,6 @@ export function WorkspaceInviteDialog({
     workspaceId,
     canManageMembers,
 }: WorkspaceInviteDialogProps) {
-    const isMobile = useIsMobile()
     const later = useTimeout()
     const [invites, setInvites] = React.useState<WorkspaceInvite[]>([])
     const [inviteEmail, setInviteEmail] = React.useState("")
@@ -282,473 +276,246 @@ export function WorkspaceInviteDialog({
         setBusyInviteId(null)
     }
 
+    // Diálogo no desktop, gaveta alta no telefone (`surface="auto"`). O corpo
+    // rola entre o cabeçalho e a borda: é o `DialogBody` do `layout="fixed"`.
     return (
         <>
             {revokeConfirmDialog}
-            {isMobile ? (
-                <Sheet open={open} onOpenChange={onOpenChange}>
-                    <SheetContent
-                        side="bottom"
-                        fillMobileViewport
-                    >
-                        <DialogHeader>
-                            <DialogTitle>Novo membro</DialogTitle>
-                            <DialogDescription>Convide por e-mail ou gere um link de convite para esta carteira.</DialogDescription>
-                        </DialogHeader>
-                        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-                            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-2">
-                                {!canManageMembers ? (
-                                    <p className="text-sm text-muted-foreground">
-                                        Apenas o proprietário da carteira pode enviar convites.
-                                    </p>
-                                ) : (
-                                    <>
-                                        <CustomForm
-                                            className="space-y-2"
-                                            onSubmit={(e) => {
-                                                e.preventDefault()
-                                                void handleInvite()
-                                            }}
+            <Dialog surface="auto" open={open} onOpenChange={onOpenChange}>
+                <DialogContent layout="fixed">
+                    <DialogHeader>
+                        <DialogTitle>Novo membro</DialogTitle>
+                        <DialogDescription>
+                            Convide por e-mail ou gere um link de convite para esta carteira.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogBody className="space-y-4">
+                        {!canManageMembers ? (
+                            <p className="text-sm text-muted-foreground">
+                                Apenas o proprietário da carteira pode enviar convites.
+                            </p>
+                        ) : (
+                            <>
+                                <CustomForm
+                                    className="space-y-2"
+                                    onSubmit={(e) => {
+                                        e.preventDefault()
+                                        void handleInvite()
+                                    }}
+                                >
+                                    <Field>
+                                    <FieldLabel>E-mail</FieldLabel>
+                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                        <FieldControl>
+                                        <Input
+                                            id="global-invite-email"
+                                            value={inviteEmail}
+                                            onChange={(e) =>
+                                                setInviteEmail(e.target.value)
+                                            }
+                                            placeholder="email@exemplo.com"
+                                            disabled={savingInvite}
+                                            className="sm:flex-1"
+                                        />
+                                        </FieldControl>
+                                        <Button
+                                            type="submit"
+                                            disabled={
+                                                savingInvite || !inviteEmail.trim()
+                                            }
+                                            className="sm:shrink-0"
                                         >
-                                            <Field>
-                                            <FieldLabel>E-mail</FieldLabel>
-                                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                                                <FieldControl>
-                                                <Input
-                                                    id="global-invite-email"
-                                                    value={inviteEmail}
-                                                    onChange={(e) =>
-                                                        setInviteEmail(e.target.value)
-                                                    }
-                                                    placeholder="email@exemplo.com"
-                                                    disabled={savingInvite}
-                                                    className="sm:flex-1"
-                                                />
-                                                </FieldControl>
-                                                <Button
-                                                    type="submit"
-                                                    disabled={
-                                                        savingInvite || !inviteEmail.trim()
-                                                    }
-                                                    className="sm:shrink-0"
-                                                >
-                                                    {savingInvite ? (
-                                                        <>
-                                                            <Spinner />
-                                                            Enviando...
-                                                        </>
-                                                    ) : (
-                                                        "Convidar"
-                                                    )}
-                                                </Button>
-                                            </div>
-                                            </Field>
-                                        </CustomForm>
-
-                                        <Card variant="muted" padding="sm" className="gap-2 px-3">
-                                            <div className="flex items-center gap-2">
-                                                <LinkIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                                <p className="text-sm font-medium">Link de convite</p>
-                                            </div>
-                                            <p className="text-xs text-muted-foreground">
-                                                Qualquer pessoa com conta no app pode aceitar enquanto o convite
-                                                estiver pendente.
-                                            </p>
-{pendingLinkInvite && !effectiveLinkUrl ? (
-    <p className="text-xs text-muted-foreground">
-        Já existe um link ativo. Por segurança ele só aparece na hora em que é gerado:
-        gere um novo para copiar (o anterior deixa de valer).
-    </p>
-) : null}
-                                            {loadingInvites ? (
-                                                <p className="text-xs text-muted-foreground">Carregando…</p>
-                                            ) : effectiveLinkUrl ? (
-                                                <div className="space-y-1.5 pt-1">
-                                                    <div className="flex min-w-0 flex-row items-center gap-2">
-                                                        <Input
-                                                            readOnly
-                                                            value={effectiveLinkUrl}
-                                                            className="min-w-0 flex-1 font-mono text-xs"
-                                                        />
-                                                        <div className="flex shrink-0 items-center gap-2">
-                                                            <Tooltip confirmation={linkCopied ? "Link copiado" : null}>
-                                                                <TooltipTrigger asChild>
-                                                                    <Button
-                                                                        type="button"
-                                                                        variant="outline"
-                                                                        size="icon-lg"
-                                                                        className="shrink-0"
-                                                                        aria-label={
-                                                                            linkCopied
-                                                                                ? "Link copiado"
-                                                                                : "Copiar link"
-                                                                        }
-                                                                        onClick={() =>
-                                                                            void copyPersistedLink()
-                                                                        }
-                                                                    >
-                                                                        {linkCopied ? (
-                                                                            <CheckIcon className="text-success" />
-                                                                        ) : (
-                                                                            <DocumentDuplicateIcon />
-                                                                        )}
-                                                                    </Button>
-                                                                </TooltipTrigger>
-                                                                <TooltipContent side="top">
-                                                                    Copiar link
-                                                                </TooltipContent>
-                                                            </Tooltip>
-                                                            {pendingLinkInvite && canManageMembers ? (
-                                                                <Button
-                                                                    type="button"
-                                                                    variant="destructive"
-                                                                    size="sm"
-                                                                    className="h-8 shrink-0"
-                                                                    disabled={
-                                                                        busyInviteId === pendingLinkInvite.id
-                                                                    }
-                                                                    onClick={() =>
-                                                                        void handleRevokeInvite(
-                                                                            pendingLinkInvite.id,
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    {busyInviteId === pendingLinkInvite.id ? (
-                                                                        <Spinner />
-                                                                    ) : (
-                                                                        "Excluir link"
-                                                                    )}
-                                                                </Button>
-                                                            ) : null}
-                                                        </div>
-                                                    </div>
-                                                    {linkInviteExpiresAt ? (
-                                                        <p className="text-xs text-muted-foreground">
-                                                            {formatLinkInviteExpiresAt(linkInviteExpiresAt)}
-                                                        </p>
-                                                    ) : null}
-                                                </div>
+                                            {savingInvite ? (
+                                                <>
+                                                    <Spinner />
+                                                    Enviando...
+                                                </>
                                             ) : (
-                                                <Button
-                                                    type="button"
-                                                    variant="secondary"
-                                                    disabled={savingLink}
-                                                    onClick={() => void handleCreateLinkInvite()}
-                                                    className="w-full sm:w-auto"
-                                                >
-                                                    {savingLink ? (
-                                                        <>
-                                                            <Spinner />
-                                                            Gerando...
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <LinkIcon className="mr-2 h-4 w-4" />
-                                                            Gerar link de convite
-                                                        </>
-                                                    )}
-                                                </Button>
+                                                "Convidar"
                                             )}
-                                        </Card>
+                                        </Button>
+                                    </div>
+                                    </Field>
+                                </CustomForm>
 
-                                        {invites.filter((i) => i.invited_email != null).length > 0 ? (
-                                            <div className="grid gap-2">
-                                                <p className="text-xs font-medium text-muted-foreground">
-                                                    Convites por e-mail
-                                                </p>
-                                                {invites
-                                                    .filter((invite) => invite.invited_email != null)
-                                                    .map((invite) => (
-                                                        <Item key={invite.id} variant="outline" size="sm">
-                                                            <ItemMedia variant="icon">
-                                                                <EnvelopeIcon className="text-muted-foreground" />
-                                                            </ItemMedia>
-                                                            <ItemContent className="min-w-0">
-                                                                <span className="truncate">
-                                                                        {invite.invited_email}
-                                                                </span>
-                                                            </ItemContent>
-                                                            <ItemActions className="gap-1">
-                                                                    <Button
-    aria-label={`Reenviar convite para ${invite.invited_email}`}
-                                                                        type="button"
-                                                                        variant="outline"
-                                                                        size="sm"
-                                                                        disabled={
-                                                                            busyResendInviteId === invite.id ||
-                                                                            busyInviteId === invite.id
-                                                                        }
-                                                                        onClick={() =>
-                                                                            void handleResendInvite(invite.id)
-                                                                        }
-                                                                    >
-                                                                        {busyResendInviteId === invite.id ? (
-                                                                            <Spinner />
-                                                                        ) : (
-                                                                            <PaperAirplaneIcon className="h-4 w-4" />
-                                                                        )}
-                                                                    </Button>
-                                                                    <Button
-    aria-label={`Revogar convite para ${invite.invited_email}`}
-                                                                        type="button"
-                                                                        variant="destructive"
-                                                                        size="sm"
-                                                                        disabled={busyInviteId === invite.id}
-                                                                        onClick={() =>
-                                                                            void handleRevokeInvite(invite.id)
-                                                                        }
-                                                                    >
-                                                                        Revogar
-                                                                    </Button>
-                                                            </ItemActions>
-                                                        </Item>
-                                                    ))}
-                                            </div>
-                                        ) : null}
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    <DialogCloseButton />
-                    </SheetContent>
-                </Sheet>
-            ) : (
-                <Dialog open={open} onOpenChange={onOpenChange}>
-                    <DialogContent className="flex max-h-[min(90dvh,32rem)] flex-col gap-0 overflow-hidden">
-                        <DialogHeader>
-                            <DialogTitle>Novo membro</DialogTitle>
-                            <DialogDescription>
-                                Convide por e-mail ou gere um link de convite para esta carteira.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-2">
-                            {!canManageMembers ? (
-                                <p className="text-sm text-muted-foreground">
-                                    Apenas o proprietário da carteira pode enviar convites.
-                                </p>
-                            ) : (
-                                <>
-                                    <CustomForm
-                                        className="space-y-2"
-                                        onSubmit={(e) => {
-                                            e.preventDefault()
-                                            void handleInvite()
-                                        }}
-                                    >
-                                        <Field>
-                                        <FieldLabel>E-mail</FieldLabel>
-                                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                                            <FieldControl>
-                                            <Input
-                                                id="global-invite-email"
-                                                value={inviteEmail}
-                                                onChange={(e) =>
-                                                    setInviteEmail(e.target.value)
-                                                }
-                                                placeholder="email@exemplo.com"
-                                                disabled={savingInvite}
-                                                className="sm:flex-1"
-                                            />
-                                            </FieldControl>
-                                            <Button
-                                                type="submit"
-                                                disabled={
-                                                    savingInvite || !inviteEmail.trim()
-                                                }
-                                                className="sm:shrink-0"
-                                            >
-                                                {savingInvite ? (
-                                                    <>
-                                                        <Spinner />
-                                                        Enviando...
-                                                    </>
-                                                ) : (
-                                                    "Convidar"
-                                                )}
-                                            </Button>
-                                        </div>
-                                        </Field>
-                                    </CustomForm>
-
-                                    <Card variant="muted" padding="sm" className="gap-2 px-3">
-                                        <div className="flex items-center gap-2">
-                                            <LinkIcon className="h-4 w-4 text-muted-foreground shrink-0" />
-                                            <p className="text-sm font-medium">Link de convite</p>
-                                        </div>
-                                        <p className="text-xs text-muted-foreground">
-                                            Qualquer pessoa com conta no app pode aceitar enquanto o
-                                            convite estiver pendente.
-                                        </p>
+                                <Card variant="muted" padding="sm" className="gap-2 px-3">
+                                    <div className="flex items-center gap-2">
+                                        <LinkIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                                        <p className="text-sm font-medium">Link de convite</p>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                        Qualquer pessoa com conta no app pode aceitar enquanto o
+                                        convite estiver pendente.
+                                    </p>
 {pendingLinkInvite && !effectiveLinkUrl ? (
-    <p className="text-xs text-muted-foreground">
-        Já existe um link ativo. Por segurança ele só aparece na hora em que é gerado:
-        gere um novo para copiar (o anterior deixa de valer).
-    </p>
+<p className="text-xs text-muted-foreground">
+    Já existe um link ativo. Por segurança ele só aparece na hora em que é gerado:
+    gere um novo para copiar (o anterior deixa de valer).
+</p>
 ) : null}
-                                        {loadingInvites ? (
-                                            <p className="text-xs text-muted-foreground">
-                                                Carregando…
-                                            </p>
-                                        ) : effectiveLinkUrl ? (
-                                            <div className="space-y-1.5 pt-1">
-                                                <div className="flex min-w-0 flex-row items-center gap-2">
-                                                    <Input
-                                                        readOnly
-                                                        value={effectiveLinkUrl}
-                                                        className="min-w-0 flex-1 font-mono text-xs"
-                                                    />
-                                                    <div className="flex shrink-0 items-center gap-2">
-                                                        <Tooltip confirmation={linkCopied ? "Link copiado" : null}>
-                                                            <TooltipTrigger asChild>
-                                                                <Button
-                                                                    type="button"
-                                                                    variant="outline"
-                                                                    size="icon-lg"
-                                                                    className="shrink-0"
-                                                                    aria-label={
-                                                                        linkCopied
-                                                                            ? "Link copiado"
-                                                                            : "Copiar link"
-                                                                    }
-                                                                    onClick={() =>
-                                                                        void copyPersistedLink()
-                                                                    }
-                                                                >
-                                                                    {linkCopied ? (
-                                                                        <CheckIcon className="text-success" />
-                                                                    ) : (
-                                                                        <DocumentDuplicateIcon />
-                                                                    )}
-                                                                </Button>
-                                                            </TooltipTrigger>
-                                                            <TooltipContent side="top">
-                                                                Copiar link
-                                                            </TooltipContent>
-                                                        </Tooltip>
-                                                        {pendingLinkInvite && canManageMembers ? (
+                                    {loadingInvites ? (
+                                        <p className="text-xs text-muted-foreground">
+                                            Carregando…
+                                        </p>
+                                    ) : effectiveLinkUrl ? (
+                                        <div className="space-y-1.5 pt-1">
+                                            <div className="flex min-w-0 flex-row items-center gap-2">
+                                                <Input
+                                                    readOnly
+                                                    value={effectiveLinkUrl}
+                                                    className="min-w-0 flex-1 font-mono text-xs"
+                                                />
+                                                <div className="flex shrink-0 items-center gap-2">
+                                                    <Tooltip confirmation={linkCopied ? "Link copiado" : null}>
+                                                        <TooltipTrigger asChild>
                                                             <Button
                                                                 type="button"
-                                                                variant="destructive"
-                                                                size="sm"
-                                                                className="h-8 shrink-0"
-                                                                disabled={
-                                                                    busyInviteId === pendingLinkInvite.id
+                                                                variant="outline"
+                                                                size="icon-lg"
+                                                                className="shrink-0"
+                                                                aria-label={
+                                                                    linkCopied
+                                                                        ? "Link copiado"
+                                                                        : "Copiar link"
                                                                 }
                                                                 onClick={() =>
-                                                                    void handleRevokeInvite(
-                                                                        pendingLinkInvite.id,
+                                                                    void copyPersistedLink()
+                                                                }
+                                                            >
+                                                                {linkCopied ? (
+                                                                    <CheckIcon className="text-success" />
+                                                                ) : (
+                                                                    <DocumentDuplicateIcon />
+                                                                )}
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="top">
+                                                            Copiar link
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                    {pendingLinkInvite && canManageMembers ? (
+                                                        <Button
+                                                            type="button"
+                                                            variant="destructive"
+                                                            size="sm"
+                                                            className="h-8 shrink-0"
+                                                            disabled={
+                                                                busyInviteId === pendingLinkInvite.id
+                                                            }
+                                                            onClick={() =>
+                                                                void handleRevokeInvite(
+                                                                    pendingLinkInvite.id,
+                                                                )
+                                                            }
+                                                        >
+                                                            {busyInviteId ===
+                                                            pendingLinkInvite.id ? (
+                                                                <Spinner />
+                                                            ) : (
+                                                                "Excluir link"
+                                                            )}
+                                                        </Button>
+                                                    ) : null}
+                                                </div>
+                                            </div>
+                                            {linkInviteExpiresAt ? (
+                                                <p className="text-xs text-muted-foreground">
+                                                    {formatLinkInviteExpiresAt(
+                                                        linkInviteExpiresAt,
+                                                    )}
+                                                </p>
+                                            ) : null}
+                                        </div>
+                                    ) : (
+                                        <Button
+                                            type="button"
+                                            variant="secondary"
+                                            disabled={savingLink}
+                                            onClick={() => void handleCreateLinkInvite()}
+                                            className="w-full sm:w-auto"
+                                        >
+                                            {savingLink ? (
+                                                <>
+                                                    <Spinner />
+                                                    Gerando...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <LinkIcon className="h-4 w-4 mr-2" />
+                                                    Gerar link de convite
+                                                </>
+                                            )}
+                                        </Button>
+                                    )}
+                                </Card>
+
+                                {invites.filter((i) => i.invited_email != null).length > 0 ? (
+                                    <div className="grid gap-2">
+                                        <p className="text-xs font-medium text-muted-foreground">
+                                            Convites por e-mail
+                                        </p>
+                                        {invites
+                                            .filter((invite) => invite.invited_email != null)
+                                            .map((invite) => (
+                                                <Item key={invite.id} variant="outline" size="sm">
+                                                    <ItemMedia variant="icon">
+                                                        <EnvelopeIcon className="text-muted-foreground" />
+                                                    </ItemMedia>
+                                                    <ItemContent className="min-w-0">
+                                                        <span className="truncate">
+                                                                {invite.invited_email}
+                                                        </span>
+                                                    </ItemContent>
+                                                    <ItemActions className="gap-1">
+                                                            <Button
+aria-label={`Reenviar convite para ${invite.invited_email}`}
+                                                                type="button"
+                                                                variant="outline"
+                                                                size="sm"
+                                                                disabled={
+                                                                    busyResendInviteId ===
+                                                                        invite.id ||
+                                                                    busyInviteId === invite.id
+                                                                }
+                                                                onClick={() =>
+                                                                    void handleResendInvite(
+                                                                        invite.id,
                                                                     )
                                                                 }
                                                             >
-                                                                {busyInviteId ===
-                                                                pendingLinkInvite.id ? (
+                                                                {busyResendInviteId ===
+                                                                invite.id ? (
                                                                     <Spinner />
                                                                 ) : (
-                                                                    "Excluir link"
+                                                                    <PaperAirplaneIcon className="h-4 w-4" />
                                                                 )}
                                                             </Button>
-                                                        ) : null}
-                                                    </div>
-                                                </div>
-                                                {linkInviteExpiresAt ? (
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {formatLinkInviteExpiresAt(
-                                                            linkInviteExpiresAt,
-                                                        )}
-                                                    </p>
-                                                ) : null}
-                                            </div>
-                                        ) : (
-                                            <Button
-                                                type="button"
-                                                variant="secondary"
-                                                disabled={savingLink}
-                                                onClick={() => void handleCreateLinkInvite()}
-                                                className="w-full sm:w-auto"
-                                            >
-                                                {savingLink ? (
-                                                    <>
-                                                        <Spinner />
-                                                        Gerando...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <LinkIcon className="h-4 w-4 mr-2" />
-                                                        Gerar link de convite
-                                                    </>
-                                                )}
-                                            </Button>
-                                        )}
-                                    </Card>
-
-                                    {invites.filter((i) => i.invited_email != null).length > 0 ? (
-                                        <div className="grid gap-2">
-                                            <p className="text-xs font-medium text-muted-foreground">
-                                                Convites por e-mail
-                                            </p>
-                                            {invites
-                                                .filter((invite) => invite.invited_email != null)
-                                                .map((invite) => (
-                                                    <Item key={invite.id} variant="outline" size="sm">
-                                                        <ItemMedia variant="icon">
-                                                            <EnvelopeIcon className="text-muted-foreground" />
-                                                        </ItemMedia>
-                                                        <ItemContent className="min-w-0">
-                                                            <span className="truncate">
-                                                                    {invite.invited_email}
-                                                            </span>
-                                                        </ItemContent>
-                                                        <ItemActions className="gap-1">
-                                                                <Button
-    aria-label={`Reenviar convite para ${invite.invited_email}`}
-                                                                    type="button"
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    disabled={
-                                                                        busyResendInviteId ===
-                                                                            invite.id ||
-                                                                        busyInviteId === invite.id
-                                                                    }
-                                                                    onClick={() =>
-                                                                        void handleResendInvite(
-                                                                            invite.id,
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    {busyResendInviteId ===
-                                                                    invite.id ? (
-                                                                        <Spinner />
-                                                                    ) : (
-                                                                        <PaperAirplaneIcon className="h-4 w-4" />
-                                                                    )}
-                                                                </Button>
-                                                                <Button
-    aria-label={`Revogar convite para ${invite.invited_email}`}
-                                                                    type="button"
-                                                                    variant="destructive"
-                                                                    size="sm"
-                                                                    disabled={
-                                                                        busyInviteId === invite.id
-                                                                    }
-                                                                    onClick={() =>
-                                                                        void handleRevokeInvite(
-                                                                            invite.id,
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    Revogar
-                                                                </Button>
-                                                        </ItemActions>
-                                                    </Item>
-                                                ))}
-                                        </div>
-                                    ) : null}
-                                </>
-                            )}
-                        </div>
-                    </DialogContent>
-                </Dialog>
-            )}
+                                                            <Button
+aria-label={`Revogar convite para ${invite.invited_email}`}
+                                                                type="button"
+                                                                variant="destructive"
+                                                                size="sm"
+                                                                disabled={
+                                                                    busyInviteId === invite.id
+                                                                }
+                                                                onClick={() =>
+                                                                    void handleRevokeInvite(
+                                                                        invite.id,
+                                                                    )
+                                                                }
+                                                            >
+                                                                Revogar
+                                                            </Button>
+                                                    </ItemActions>
+                                                </Item>
+                                            ))}
+                                    </div>
+                                ) : null}
+                            </>
+                        )}
+                    </DialogBody>
+                </DialogContent>
+            </Dialog>
         </>
     )
 }

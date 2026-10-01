@@ -1,10 +1,10 @@
 "use client"
 
-import { CustomForm } from "@/components/ui/form"
-import { Button } from "@/components/ui/button"
+import { CustomForm, FormCancel, FormSubmit } from "@/components/ui/form"
 import { cn } from "@/lib/utils"
 import {
   DialogBody,
+  DialogClose,
   DialogCloseButton,
   DialogDescription,
   DialogFooter,
@@ -18,10 +18,13 @@ import {
 } from "@/components/subscriptions/subscription-form-fields"
 
 
-export type SubscriptionFormSurfaceVariant =
-    | "dialog-desktop"
-    | "dialog-mobile"
-    | "detail-sheet"
+/**
+ * `dialog` é o miolo do `SubscriptionFormDialog` — um só nas duas larguras,
+ * porque a casca (`surface="auto"`) é quem vira gaveta no telefone. Os dois
+ * miolos de antes só diferiam no botão de largura total, e o rodapé do
+ * diálogo já empilha no telefone.
+ */
+export type SubscriptionFormSurfaceVariant = "dialog" | "detail-sheet"
 
 export type SubscriptionFormSurfaceProps = {
     variant: SubscriptionFormSurfaceVariant
@@ -33,7 +36,8 @@ export type SubscriptionFormSurfaceProps = {
     submitDisabled: boolean
     submitLabel: string
     saving: boolean
-    onCancel: () => void
+    /** Só na folha de detalhe: cancelar volta à vista. No diálogo, fecha. */
+    onCancel?: () => void
     scrollClassName?: string
 }
 
@@ -50,65 +54,24 @@ export function SubscriptionFormSurface({
     onCancel,
     scrollClassName,
 }: SubscriptionFormSurfaceProps) {
-    const footer = showFooter ? (
-        <>
-            {variant === "dialog-desktop" || variant === "detail-sheet" ? (
-                <Button
-                    type="button"
-                    variant="tertiary"
-                    size="sm"
-                    className={cn(
-                        variant === "detail-sheet" && "max-sm:hidden"
-                    )}
-                    onClick={onCancel}
-                    disabled={saving}
-                >
-                    Cancelar
-                </Button>
-            ) : null}
-            <Button
-                type="submit"
-                size="sm"
-                className={cn(
-                    variant === "dialog-mobile" && "h-10 w-full",
-                    variant === "detail-sheet" &&
-                        "max-sm:h-11 max-sm:w-full max-sm:text-base"
-                )}
-                disabled={submitDisabled}
-            >
-                {submitLabel}
-            </Button>
-        </>
-    ) : null
-
-
-    if (variant === "dialog-mobile") {
-        return (
-            <>
-                <DialogHeader>
-                    <DialogTitle>{formTitle}</DialogTitle>
-                    <DialogDescription>{formDescription}</DialogDescription>
-                </DialogHeader>
-                <CustomForm
-                    onSubmit={handleSubmit}
-                    className="flex min-h-0 flex-1 flex-col"
-                >
-                    <DialogBody className={scrollClassName}>
-                        <SubscriptionFormFields {...fieldsProps} />
-                    </DialogBody>
-                    {showFooter ? (
-                        <DialogFooter className="flex-col">
-                            {footer}
-                        </DialogFooter>
-                    ) : null}
-                </CustomForm>
-            </>
-        )
-    }
+    const submit = (
+        <FormSubmit
+            pendingLabel="Salvando…"
+            className={cn(
+                variant === "detail-sheet" &&
+                    "max-sm:h-11 max-sm:w-full max-sm:text-base"
+            )}
+            size={variant === "detail-sheet" ? "sm" : undefined}
+            disabled={submitDisabled}
+        >
+            {submitLabel}
+        </FormSubmit>
+    )
 
     if (variant === "detail-sheet") {
         return (
             <CustomForm
+                pending={saving}
                 onSubmit={handleSubmit}
                 className="flex min-h-0 flex-1 flex-col"
             >
@@ -123,7 +86,14 @@ export function SubscriptionFormSurface({
                 </DialogBody>
                 {showFooter ? (
                     <DialogFooter className="flex-col">
-                        {footer}
+                        <FormCancel
+                            size="sm"
+                            className="max-sm:hidden"
+                            onClick={onCancel}
+                        >
+                            Cancelar
+                        </FormCancel>
+                        {submit}
                     </DialogFooter>
                 ) : null}
             </CustomForm>
@@ -132,8 +102,9 @@ export function SubscriptionFormSurface({
 
     return (
         <CustomForm
+            pending={saving}
             onSubmit={handleSubmit}
-            className="flex max-h-[min(90dvh,36rem)] flex-col"
+            className="flex min-h-0 flex-1 flex-col"
         >
             <DialogHeader>
                 <DialogTitle>{formTitle}</DialogTitle>
@@ -146,7 +117,10 @@ export function SubscriptionFormSurface({
             </DialogBody>
             {showFooter ? (
                 <DialogFooter>
-                    {footer}
+                    <DialogClose asChild>
+                        <FormCancel>Cancelar</FormCancel>
+                    </DialogClose>
+                    {submit}
                 </DialogFooter>
             ) : null}
         </CustomForm>

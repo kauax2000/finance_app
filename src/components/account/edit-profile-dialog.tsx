@@ -6,25 +6,20 @@ import { useAuth } from "@/components/providers"
 import {
   Dialog,
   DialogBody,
-  DialogCloseButton,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogHeaderRow,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Sheet,
-  SheetContent,
-} from "@/components/ui/sheet"
-import { useIsMobile } from "@/hooks/use-mobile"
 import { Alert, AlertTitle } from "@/components/ui/alert"
 import {
     CustomForm,
+    FormCancel,
     FormInput,
+    FormSubmit,
 } from "@/components/ui/form"
-import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ArrowPathIcon, ExclamationTriangleIcon, PhotoIcon, TrashIcon } from "@heroicons/react/16/solid"
@@ -38,7 +33,6 @@ type EditProfileDialogProps = {
 }
 
 export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps) {
-    const isMobile = useIsMobile()
     const { user, profile, profileReady, updateProfile, updateEmail, uploadAvatar } = useAuth()
 
     const [editName, setEditName] = useState("")
@@ -75,8 +69,8 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
         }
     }, [open, user, userName])
 
+    // Enquanto salva, o `pending` do `Dialog` já segura todo pedido de fechar.
     const handleOpenChange = (next: boolean) => {
-        if (!next && saving) return
         if (!next) {
             setSuccessMessage(null)
             setErrorMessage(null)
@@ -413,79 +407,14 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
         </div>
     )
 
-    const profileForm = (
-        <CustomForm
-            onSubmit={handleProfileFormSubmit}
-            className="flex min-h-0 flex-1 flex-col"
-        >
-            <DialogBody>
-                {profileFormFields}
-            </DialogBody>
-
-            {isMobile ? (
-                <DialogFooter className="flex-col">
-                    {!successMessage && (
-                        <Button type="submit" disabled={saving} size="xl" className="w-full">
-                            {saving ? (
-                                <>
-                                    <Spinner />
-                                    Salvando...
-                                </>
-                            ) : (
-                                "Salvar"
-                            )}
-                        </Button>
-                    )}
-                </DialogFooter>
-            ) : (
-                <DialogFooter>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleOpenChange(false)}
-                        disabled={saving}
-                    >
-                        {successMessage ? "Fechar" : "Cancelar"}
-                    </Button>
-                    {!successMessage && (
-                        <Button type="submit" size="sm" disabled={saving}>
-                            {saving ? (
-                                <>
-                                    <Spinner />
-                                    Salvando...
-                                </>
-                            ) : (
-                                "Salvar"
-                            )}
-                        </Button>
-                    )}
-                </DialogFooter>
-            )}
-        </CustomForm>
-    )
-
-    if (isMobile) {
-        return (
-            <Sheet open={open} onOpenChange={handleOpenChange}>
-                <SheetContent
-                    side="bottom"
-                    fillMobileViewport
-                >
-                    <DialogHeader>
-                        <DialogHeaderRow endAdornment={<DialogCloseButton placement="inline" disabled={saving} />}>
-                            <DialogTitle>Editar perfil</DialogTitle>
-                            <DialogDescription>Atualize suas informações pessoais</DialogDescription>
-                        </DialogHeaderRow>
-                    </DialogHeader>
-                    {profileForm}
-                </SheetContent>
-            </Sheet>
-        )
-    }
-
+    // Diálogo no desktop, gaveta alta no telefone (`surface="auto"`).
     return (
-        <Dialog open={open} onOpenChange={handleOpenChange}>
+        <Dialog
+            surface="auto"
+            pending={saving}
+            open={open}
+            onOpenChange={handleOpenChange}
+        >
             <DialogContent layout="fixed">
                 <DialogHeader>
                     <DialogTitle>Editar perfil</DialogTitle>
@@ -493,7 +422,28 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                         Atualize suas informações pessoais
                     </DialogDescription>
                 </DialogHeader>
-                {profileForm}
+                <CustomForm
+                    pending={saving}
+                    onSubmit={handleProfileFormSubmit}
+                    className="flex min-h-0 flex-1 flex-col"
+                >
+                    <DialogBody>
+                        {profileFormFields}
+                    </DialogBody>
+
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <FormCancel size="sm">
+                                {successMessage ? "Fechar" : "Cancelar"}
+                            </FormCancel>
+                        </DialogClose>
+                        {!successMessage && (
+                            <FormSubmit size="sm" pendingLabel="Salvando…">
+                                Salvar
+                            </FormSubmit>
+                        )}
+                    </DialogFooter>
+                </CustomForm>
             </DialogContent>
         </Dialog>
     )

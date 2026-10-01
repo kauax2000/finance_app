@@ -8,7 +8,8 @@ import {
 } from "@/components/ui/field"
 import {
   Dialog,
-  DialogCloseButton,
+  DialogBody,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -16,11 +17,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
-  Sheet,
-  SheetContent,
-} from "@/components/ui/sheet"
-import { CustomForm, FormInput } from "@/components/ui/form"
-import { Button } from "@/components/ui/button"
+    CustomForm,
+    FormCancel,
+    FormInput,
+    FormSubmit,
+} from "@/components/ui/form"
 import { DatePicker } from "@/components/ui/date-picker"
 import { ColorTile } from "@/components/ui/color-tile"
 import {
@@ -42,7 +43,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { useIsMobile } from "@/hooks/use-mobile"
 import { toastError } from "@/lib/toast"
 import { supabase } from "@/lib/supabase"
 import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
@@ -88,7 +88,6 @@ export function PayBillDialog({
     setSaving,
     onPaid,
 }: PayBillDialogProps) {
-    const isMobile = useIsMobile()
     const [amountStr, setAmountStr] = useState("")
     const [paidYmd, setPaidYmd] = useState(() => localYmdFromDate(new Date()))
     const [categoryId, setCategoryId] = useState(CAT_NONE)
@@ -133,18 +132,6 @@ export function PayBillDialog({
         input?.kind === "virtual_cc"
             ? "A fatura fica marcada como paga. Nenhuma despesa é criada: as compras já estão lançadas no cartão."
             : "Informe o valor real pago. Será criada uma despesa com ele."
-
-    const headerBlock = isMobile ? (
-        <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
-    ) : (
-        <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
-    )
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -204,211 +191,170 @@ export function PayBillDialog({
 
     if (!input) return null
 
-    const formInner = (
-        <CustomForm
-            onSubmit={(ev) => void handleSubmit(ev)}
-            className="flex min-h-0 flex-1 flex-col"
-        >
-            {headerBlock}
-
-            <div className="scrollbar-thin flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 sm:px-6">
-                {input.kind === "regular" ? (
-                    <FormInput
-                        money
-                        mono
-                        label="Valor pago"
-                        value={amountStr}
-                        onValueChange={(v) => setAmountStr(v)}
-                        placeholder="R$ 0,00"
-                    />
-                ) : (
-                    <p className="text-sm text-muted-foreground">
-                        Valor da fatura:{" "}
-                        <span className="nums font-medium text-foreground">
-                            {currencyBRL(input.virtual.amount_estimated)}
-                        </span>
-                    </p>
-                )}
-                <Field>
-                    <FieldLabel>Data do pagamento</FieldLabel>
-                    <FieldControl>
-                        <DatePicker
-                            value={
-                                parseYmdLocal(paidYmd.slice(0, 10)) ??
-                                new Date()
-                            }
-                            onChange={(d) =>
-                                setPaidYmd(
-                                    d ? localYmdFromDate(d) : localYmdFromDate(new Date()),
-                                )
-                            }
-                            displayStyle="relative"
-                            presets
-                        />
-                    </FieldControl>
-                </Field>
-                {input.kind === "regular" ? (
-                <>
-                <Field>
-                    <FieldLabel>Categoria</FieldLabel>
-                    {/* A categoria é obrigatória aqui: não há opção de ausência, e o
-                        sentinela vira o `placeholder` (valor vazio). Combobox, e
-                        não Select: a pessoa procura a categoria pelo nome. */}
-                    <Combobox
-                        value={categoryId === CAT_NONE ? "" : categoryId}
-                        onValueChange={setCategoryId}
-                    >
-                        <ComboboxField>
-                            <FieldControl>
-                                <ComboboxTrigger>
-                                    <ComboboxValue
-                                        placeholder="Escolha uma categoria"
-                                        media={
-                                            categoriaEscolhida ? (
-                                                <ColorTile size="xs" color={categoriaEscolhida.color} />
-                                            ) : undefined
-                                        }
-                                    >
-                                        {categoriaEscolhida?.name}
-                                    </ComboboxValue>
-                                </ComboboxTrigger>
-                            </FieldControl>
-                        </ComboboxField>
-                        <ComboboxContent>
-                            <ComboboxInput placeholder="Buscar categoria…" />
-                            <ComboboxList>
-                                <ComboboxEmpty>
-                                    Nenhuma categoria com esse nome.
-                                </ComboboxEmpty>
-                                <ComboboxGroup>
-                                    {categoriesExpense.map((c) => (
-                                        <ComboboxItem
-                                            key={c.id}
-                                            value={c.id}
-                                            media={<ColorTile size="xs" color={c.color} />}
-                                        >
-                                            {c.name}
-                                        </ComboboxItem>
-                                    ))}
-                                </ComboboxGroup>
-                            </ComboboxList>
-                        </ComboboxContent>
-                    </Combobox>
-                </Field>
-                <Field>
-                    <FieldLabel>Forma de pagamento</FieldLabel>
-                    <Select value={pmOption} onValueChange={setPmOption}>
-                        <FieldControl>
-                            <SelectTrigger
-                            >
-                                <SelectValue />
-                            </SelectTrigger>
-                        </FieldControl>
-                        <SelectContent>
-                            <SelectItem value={BILL_PAYMENT_NONE} variant="none">
-                                Não informado
-                            </SelectItem>
-                            {paymentMethodOptions().map((o) => (
-                                <SelectItem key={o.value} value={o.value}>
-                                    {o.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </Field>
-                {pmOption === "credit_card" ? (
-                    <Field>
-                        <FieldLabel>Cartão</FieldLabel>
-                        <Select value={pccId || ""} onValueChange={setPccId}>
-                            <FieldControl>
-                                <SelectTrigger
-                                >
-                                    <SelectValue placeholder="Cartão" />
-                                </SelectTrigger>
-                            </FieldControl>
-                            <SelectContent>
-                                {creditCards.map((c) => (
-                                    <SelectItem key={c.id} value={c.id}>
-                                        {c.name} · {c.last_four}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </Field>
-                ) : null}
-                <FormInput
-                    id="pay-desc"
-                    label="Descrição no extrato"
-                    value={desc}
-                    onChange={(e) => setDesc(e.target.value)}
-                />
-                </>
-                ) : null}
-            </div>
-
-            {isMobile ? (
-                <DialogFooter className="gap-3 sm:flex-col">
-                    <Button type="submit" disabled={saving} className="w-full">
-                        {input.kind === "virtual_cc" ? "Marcar como paga" : "Registrar pagamento"}
-                    </Button>
-                    <Button
-                        type="button"
-                        variant="tertiary"
-                        className="w-full"
-                        disabled={saving}
-                        onClick={() => onOpenChange(false)}
-                    >
-                        Cancelar
-                    </Button>
-                </DialogFooter>
-            ) : (
-                <DialogFooter className="gap-3">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => onOpenChange(false)}
-                        disabled={saving}
-                    >
-                        Cancelar
-                    </Button>
-                    <Button type="submit" disabled={saving}>
-                        {input.kind === "virtual_cc" ? "Marcar como paga" : "Registrar pagamento"}
-                    </Button>
-                </DialogFooter>
-            )}
-        </CustomForm>
-    )
-
-    if (isMobile) {
-        return (
-            <Sheet
-                open={open}
-                onOpenChange={(v) => {
-                    if (!v && saving) return
-                    onOpenChange(v)
-                }}
-            >
-                <SheetContent
-                    side="bottom"
-                    fillMobileViewport
-                >
-                    {formInner}
-                <DialogCloseButton />
-                </SheetContent>
-            </Sheet>
-        )
-    }
-
+    // Diálogo no desktop, gaveta alta no telefone (`surface="auto"`). Enquanto
+    // salva, o `pending` segura todo pedido de fechar.
     return (
         <Dialog
+            surface="auto"
+            pending={saving}
             open={open}
-            onOpenChange={(v) => {
-                if (!v && saving) return
-                onOpenChange(v)
-            }}
+            onOpenChange={onOpenChange}
         >
             <DialogContent layout="fixed">
-                {formInner}
+                <CustomForm
+                    pending={saving}
+                    onSubmit={(ev) => void handleSubmit(ev)}
+                    className="flex min-h-0 flex-1 flex-col"
+                >
+                    <DialogHeader>
+                        <DialogTitle>{title}</DialogTitle>
+                        <DialogDescription>{description}</DialogDescription>
+                    </DialogHeader>
+
+                    <DialogBody className="scrollbar-thin flex flex-col gap-4">
+                        {input.kind === "regular" ? (
+                            <FormInput
+                                money
+                                mono
+                                label="Valor pago"
+                                value={amountStr}
+                                onValueChange={(v) => setAmountStr(v)}
+                                placeholder="R$ 0,00"
+                            />
+                        ) : (
+                            <p className="text-sm text-muted-foreground">
+                                Valor da fatura:{" "}
+                                <span className="nums font-medium text-foreground">
+                                    {currencyBRL(input.virtual.amount_estimated)}
+                                </span>
+                            </p>
+                        )}
+                        <Field>
+                            <FieldLabel>Data do pagamento</FieldLabel>
+                            <FieldControl>
+                                <DatePicker
+                                    value={
+                                        parseYmdLocal(paidYmd.slice(0, 10)) ??
+                                        new Date()
+                                    }
+                                    onChange={(d) =>
+                                        setPaidYmd(
+                                            d ? localYmdFromDate(d) : localYmdFromDate(new Date()),
+                                        )
+                                    }
+                                    displayStyle="relative"
+                                    presets
+                                />
+                            </FieldControl>
+                        </Field>
+                        {input.kind === "regular" ? (
+                        <>
+                        <Field>
+                            <FieldLabel>Categoria</FieldLabel>
+                            {/* A categoria é obrigatória aqui: não há opção de ausência, e o
+                                sentinela vira o `placeholder` (valor vazio). Combobox, e
+                                não Select: a pessoa procura a categoria pelo nome. */}
+                            <Combobox
+                                value={categoryId === CAT_NONE ? "" : categoryId}
+                                onValueChange={setCategoryId}
+                            >
+                                <ComboboxField>
+                                    <FieldControl>
+                                        <ComboboxTrigger>
+                                            <ComboboxValue
+                                                placeholder="Escolha uma categoria"
+                                                media={
+                                                    categoriaEscolhida ? (
+                                                        <ColorTile size="xs" color={categoriaEscolhida.color} />
+                                                    ) : undefined
+                                                }
+                                            >
+                                                {categoriaEscolhida?.name}
+                                            </ComboboxValue>
+                                        </ComboboxTrigger>
+                                    </FieldControl>
+                                </ComboboxField>
+                                <ComboboxContent>
+                                    <ComboboxInput placeholder="Buscar categoria…" />
+                                    <ComboboxList>
+                                        <ComboboxEmpty>
+                                            Nenhuma categoria com esse nome.
+                                        </ComboboxEmpty>
+                                        <ComboboxGroup>
+                                            {categoriesExpense.map((c) => (
+                                                <ComboboxItem
+                                                    key={c.id}
+                                                    value={c.id}
+                                                    media={<ColorTile size="xs" color={c.color} />}
+                                                >
+                                                    {c.name}
+                                                </ComboboxItem>
+                                            ))}
+                                        </ComboboxGroup>
+                                    </ComboboxList>
+                                </ComboboxContent>
+                            </Combobox>
+                        </Field>
+                        <Field>
+                            <FieldLabel>Forma de pagamento</FieldLabel>
+                            <Select value={pmOption} onValueChange={setPmOption}>
+                                <FieldControl>
+                                    <SelectTrigger
+                                    >
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                </FieldControl>
+                                <SelectContent>
+                                    <SelectItem value={BILL_PAYMENT_NONE} variant="none">
+                                        Não informado
+                                    </SelectItem>
+                                    {paymentMethodOptions().map((o) => (
+                                        <SelectItem key={o.value} value={o.value}>
+                                            {o.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </Field>
+                        {pmOption === "credit_card" ? (
+                            <Field>
+                                <FieldLabel>Cartão</FieldLabel>
+                                <Select value={pccId || ""} onValueChange={setPccId}>
+                                    <FieldControl>
+                                        <SelectTrigger
+                                        >
+                                            <SelectValue placeholder="Cartão" />
+                                        </SelectTrigger>
+                                    </FieldControl>
+                                    <SelectContent>
+                                        {creditCards.map((c) => (
+                                            <SelectItem key={c.id} value={c.id}>
+                                                {c.name} · {c.last_four}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </Field>
+                        ) : null}
+                        <FormInput
+                            id="pay-desc"
+                            label="Descrição no extrato"
+                            value={desc}
+                            onChange={(e) => setDesc(e.target.value)}
+                        />
+                        </>
+                        ) : null}
+                    </DialogBody>
+
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <FormCancel>Cancelar</FormCancel>
+                        </DialogClose>
+                        <FormSubmit>
+                            {input.kind === "virtual_cc" ? "Marcar como paga" : "Registrar pagamento"}
+                        </FormSubmit>
+                    </DialogFooter>
+                </CustomForm>
             </DialogContent>
         </Dialog>
     )

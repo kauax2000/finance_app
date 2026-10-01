@@ -26,7 +26,7 @@ import {
     isPostgrestRelationMissingError,
 } from "@/lib/supabase-errors"
 import { toastError, toastSuccess, toastWarning } from "@/lib/toast"
-import { CustomForm } from "@/components/ui/form"
+import { CustomForm, FormCancel, FormSubmit } from "@/components/ui/form"
 import {
     Card,
     CardDescription,
@@ -55,19 +55,13 @@ import {
 import {
   Dialog,
   DialogBody,
-  DialogCloseButton,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogHeaderRow,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Sheet,
-  SheetContent,
-} from "@/components/ui/sheet"
-import { useIsMobile } from "@/hooks/use-mobile"
 import { TransactionDetailSheet } from "@/components/transactions/transaction-detail-sheet"
 import type {
     InstallmentPlanUpdatePayload,
@@ -111,7 +105,6 @@ import { ROUTES, transactionsHrefForCreditCard } from "@/config/navigation"
 import { usePageChromeSlot } from "@/components/layout/page-chrome-provider"
 
 export default function CreditCardDetailPageClient() {
-    const isMobile = useIsMobile()
     const router = useRouter()
     const rawParams = useParams()
     const cardIdParam = rawParams.cardId
@@ -750,72 +743,20 @@ export default function CreditCardDetailPageClient() {
         )
     }
 
-    const editDialog = isMobile ? (
-        <Sheet
-            open={editingOpen}
-            onOpenChange={(open) => {
-                if (!open && editSaving) return
-                if (!open && !editSaving) closeEdit()
-            }}
-        >
-            <SheetContent
-                side="bottom"
-                fillMobileViewport
-            >
-                <DialogHeader>
-                    <DialogHeaderRow endAdornment={<DialogCloseButton placement="inline" disabled={editSaving} />}>
-                        <DialogTitle>Editar cartão</DialogTitle>
-                    </DialogHeaderRow>
-                </DialogHeader>
-                <CustomForm
-                    onSubmit={handleSaveEdit}
-                    className="flex min-h-0 flex-1 flex-col"
-                >
-                    <DialogBody>
-                        <div className="space-y-3 pb-2">
-                            <CreditCardFormFields
-                                formKey={`edit-detail-${card.id}-${editFormKey}`}
-                                idPrefix="cc-detail-edit"
-                                name={editName}
-                                onNameChange={setEditName}
-                                cardNumber={editCardNumber}
-                                onCardNumberChange={setEditCardNumber}
-                                savedLastFour={card.last_four}
-                                closingDay={editClosingDay}
-                                onClosingDayChange={setEditClosingDay}
-                                dueDay={editDueDay}
-                                onDueDayChange={setEditDueDay}
-                                creditLimit={editCreditLimit}
-                                onCreditLimitChange={setEditCreditLimit}
-                                expiryMonth={editExpiryMonth}
-                                onExpiryMonthChange={setEditExpiryMonth}
-                                expiryYear={editExpiryYear}
-                                onExpiryYearChange={setEditExpiryYear}
-                            />
-                        </div>
-                    </DialogBody>
-                    <DialogFooter className="flex-col">
-                        <Button
-                            type="submit"
-                            size="sm"
-                            className="h-10 w-full"
-                            disabled={editSaving}
-                        >
-                            {editSaving ? "Salvando…" : "Salvar"}
-                        </Button>
-                    </DialogFooter>
-                </CustomForm>
-            </SheetContent>
-        </Sheet>
-    ) : (
+    // Diálogo no desktop, gaveta alta no telefone (`surface="auto"`). Enquanto
+    // salva, o `pending` segura todo pedido de fechar.
+    const editDialog = (
         <Dialog
+            surface="auto"
+            pending={editSaving}
             open={editingOpen}
             onOpenChange={(open) => {
-                if (!open && !editSaving) closeEdit()
+                if (!open) closeEdit()
             }}
         >
             <DialogContent layout="fixed">
                 <CustomForm
+                    pending={editSaving}
                     onSubmit={handleSaveEdit}
                     className="flex min-h-0 flex-1 flex-col"
                 >
@@ -849,17 +790,10 @@ export default function CreditCardDetailPageClient() {
                         </div>
                     </DialogBody>
                     <DialogFooter className="sm:gap-3">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => closeEdit()}
-                            disabled={editSaving}
-                        >
-                            Cancelar
-                        </Button>
-                        <Button type="submit" disabled={editSaving}>
-                            {editSaving ? "Salvando…" : "Salvar"}
-                        </Button>
+                        <DialogClose asChild>
+                            <FormCancel>Cancelar</FormCancel>
+                        </DialogClose>
+                        <FormSubmit pendingLabel="Salvando…">Salvar</FormSubmit>
                     </DialogFooter>
                 </CustomForm>
             </DialogContent>

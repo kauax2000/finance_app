@@ -6,10 +6,6 @@ import {
     Dialog,
     DialogContent,
 } from "@/components/ui/dialog"
-import {
-    Sheet,
-    SheetContent,
-} from "@/components/ui/sheet"
 import { TransactionFormSurface } from "@/components/transactions/transaction-form-surface"
 import { useTransactionForm } from "@/components/transactions/transaction-form-use"
 import type { TransactionFormKind } from "@/components/transactions/transaction-type-segment"
@@ -69,6 +65,7 @@ export function TransactionFormDialog({
         formDescription,
         showFooter,
         submitDisabled,
+        isDirty,
     } = useTransactionForm({
         active: open,
         saving,
@@ -85,34 +82,25 @@ export function TransactionFormDialog({
         onClose: () => onOpenChange(false),
     })
 
-    if (isMobile) {
-        return (
-            <Sheet open={open} onOpenChange={onOpenChange}>
-                <SheetContent
-                    side="bottom"
-                    fillMobileViewport
-                    className="flex w-full flex-col gap-0 overflow-hidden rounded-t-2xl px-0 pt-0 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]"
-                >
-                    <TransactionFormSurface
-                        variant="dialog-mobile"
-                        handleSubmit={handleSubmit}
-                        fieldsProps={fieldsProps}
-                        formTitle={formTitle}
-                        formDescription={formDescription}
-                        showFooter={showFooter}
-                        submitDisabled={submitDisabled}
-                        saving={saving}
-                    />
-                </SheetContent>
-            </Sheet>
-        )
-    }
-
+    // Uma casca só: diálogo no desktop, gaveta alta no telefone. O
+    // `isMobile` sobra só para o miolo, que no telefone esconde a descrição
+    // (`sr-only`) e trava a rolagem com um seletor aberto.
+    //
+    // Salvar com sucesso fecha pelo `onClose` do hook, que chama o
+    // `onOpenChange` da tela direto — fora do `Dialog` —, e por isso não
+    // pergunta "Descartar alterações?".
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog
+            surface="auto"
+            pending={saving}
+            dirty={isDirty}
+            confirmDiscard
+            open={open}
+            onOpenChange={onOpenChange}
+        >
             <DialogContent layout="fixed" showCloseButton={false}>
                 <TransactionFormSurface
-                    variant="dialog-desktop"
+                    variant={isMobile ? "dialog-mobile" : "dialog-desktop"}
                     handleSubmit={handleSubmit}
                     fieldsProps={fieldsProps}
                     formTitle={formTitle}

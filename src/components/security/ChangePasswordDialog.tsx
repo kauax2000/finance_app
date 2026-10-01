@@ -15,21 +15,14 @@ import { createActivity } from "@/lib/activity"
 import {
   Dialog,
   DialogBody,
-  DialogCloseButton,
+  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
-  DialogHeaderRow,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Sheet,
-  SheetContent,
-} from "@/components/ui/sheet"
-import { useIsMobile } from "@/hooks/use-mobile"
 import { Alert, AlertTitle } from "@/components/ui/alert"
-import { CustomForm } from "@/components/ui/form"
-import { Button } from "@/components/ui/button"
+import { CustomForm, FormCancel, FormSubmit } from "@/components/ui/form"
 import {
     InputGroup,
     InputGroupInput,
@@ -42,7 +35,6 @@ interface ChangePasswordDialogProps {
 }
 
 export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialogProps) {
-    const isMobile = useIsMobile()
     const { user } = useAuth()
     const later = useTimeout()
     const [loading, setLoading] = useState(false)
@@ -63,8 +55,8 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
         setSuccess(false)
     }
 
+    // Enquanto altera, o `pending` do `Dialog` já segura todo pedido de fechar.
     const handleOpenChange = (next: boolean) => {
-        if (!next && loading) return
         if (!next) {
             resetForm()
         }
@@ -206,66 +198,40 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
         </div>
     )
 
-    const passwordForm = (
-        <CustomForm onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-            <DialogBody>
-                {passwordFieldsBody}
-            </DialogBody>
-
-            {isMobile ? (
-                <DialogFooter className="flex-col">
-                    {!success ? (
-                        <Button type="submit" disabled={loading} size="xl" className="w-full">
-                            {loading ? "Alterando..." : "Alterar senha"}
-                        </Button>
-                    ) : null}
-                </DialogFooter>
-            ) : (
-                <DialogFooter>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleOpenChange(false)}
-                        disabled={loading}
-                    >
-                        {success ? "Fechar" : "Cancelar"}
-                    </Button>
-                    {!success ? (
-                        <Button type="submit" size="sm" disabled={loading}>
-                            {loading ? "Alterando..." : "Alterar senha"}
-                        </Button>
-                    ) : null}
-                </DialogFooter>
-            )}
-        </CustomForm>
-    )
-
-    if (isMobile) {
-        return (
-            <Sheet open={open} onOpenChange={handleOpenChange}>
-                <SheetContent
-                    side="bottom"
-                    fillMobileViewport
-                >
-                    <DialogHeader>
-                        <DialogHeaderRow endAdornment={<DialogCloseButton placement="inline" disabled={loading} />}>
-                            <DialogTitle>Alterar senha</DialogTitle>
-                        </DialogHeaderRow>
-                    </DialogHeader>
-                    {passwordForm}
-                </SheetContent>
-            </Sheet>
-        )
-    }
-
+    // Diálogo no desktop, gaveta alta no telefone (`surface="auto"`).
     return (
-        <Dialog open={open} onOpenChange={handleOpenChange}>
+        <Dialog
+            surface="auto"
+            pending={loading}
+            open={open}
+            onOpenChange={handleOpenChange}
+        >
             <DialogContent layout="fixed">
                 <DialogHeader>
                     <DialogTitle>Alterar senha</DialogTitle>
                 </DialogHeader>
-                {passwordForm}
+                <CustomForm
+                    pending={loading}
+                    onSubmit={handleSubmit}
+                    className="flex min-h-0 flex-1 flex-col"
+                >
+                    <DialogBody>
+                        {passwordFieldsBody}
+                    </DialogBody>
+
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <FormCancel size="sm">
+                                {success ? "Fechar" : "Cancelar"}
+                            </FormCancel>
+                        </DialogClose>
+                        {!success ? (
+                            <FormSubmit size="sm" pendingLabel="Alterando…">
+                                Alterar senha
+                            </FormSubmit>
+                        ) : null}
+                    </DialogFooter>
+                </CustomForm>
             </DialogContent>
         </Dialog>
     )

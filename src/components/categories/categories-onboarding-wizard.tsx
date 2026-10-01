@@ -18,23 +18,18 @@ import { supabase, type Category } from "@/lib/supabase"
 import { Card, CardMessage, CardNote } from "@/components/ui/card"
 import { ColorTile } from "@/components/ui/color-tile"
 import { Button } from "@/components/ui/button"
-import { CustomForm, FormInput } from "@/components/ui/form"
+import { CustomForm, FormCancel, FormInput, FormSubmit } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import {
   Dialog,
   DialogBody,
-  DialogCloseButton,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogSteps,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Sheet,
-  SheetContent,
-} from "@/components/ui/sheet"
-import { useIsMobile } from "@/hooks/use-mobile"
 import {
     CATEGORY_COLORS,
     CategoryAppearanceFields,
@@ -73,6 +68,7 @@ const STEP0_FORM_ID = "categories-onboarding-income-form"
 const STEP_FORM_ID = "categories-onboarding-budgets-form"
 const ADD_CATEGORY_FORM_ID = "categories-onboarding-add-category-form"
 const EDIT_CATEGORY_FORM_ID = "categories-onboarding-edit-category-form"
+const REVIEW_FORM_ID = "categories-onboarding-review-form"
 
 const DEFAULT_EXPENSE_SHARES: Record<string, number> = {
     Alimentação: 0.22,
@@ -90,21 +86,8 @@ function sortCategories(a: Category, b: Category): number {
     return a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })
 }
 
-function StepDots({ step, total }: { step: number; total: number }) {
-    return (
-        <div className="flex items-center gap-1.5" aria-hidden>
-            {Array.from({ length: total }, (_, i) => (
-                <span
-                    key={i}
-                    className={cn(
-                        "h-1.5 rounded-full transition-all duration-200",
-                        i === step ? "w-6 bg-primary" : "w-1.5 bg-muted-foreground/25",
-                    )}
-                />
-            ))}
-        </div>
-    )
-}
+/** O nome de cada passo, na contagem do `DialogSteps`. */
+const STEP_LABELS = ["Renda", "Categorias", "Revisão"]
 
 type PanelProps = {
     stepIndex: number
@@ -139,14 +122,11 @@ function OnboardingDialogPanel({
             aria-modal="false"
             aria-labelledby={titleId}
         >
-            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border/80 px-4 py-2.5 sm:px-5">
-                <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    {stepIndex + 1}/{stepCount}
-                </span>
-                <StepDots step={stepIndex} total={stepCount} />
-            </div>
-
             <div className="shrink-0 space-y-1 border-b border-border/80 px-4 py-3 sm:px-5">
+                {/* A contagem e a barra segmentada do diálogo, no lugar do "1/3"
+                    com os pontos escritos à mão. O painel não é um `Dialog` (mora
+                    na página), mas a peça é só marcação e serve igual. */}
+                <DialogSteps current={stepIndex} total={stepCount} labels={STEP_LABELS} />
                 <h2 id={titleId} className="text-base font-semibold leading-snug tracking-tight">
                     {title}
                 </h2>
@@ -181,7 +161,6 @@ export function CategoriesOnboardingWizard({
     onFinished,
     onCategoriesUpdated,
 }: Props) {
-    const isMobile = useIsMobile()
     const [step, setStep] = useState(0)
     const [monthlyIncome, setMonthlyIncome] = useState("")
     const [amountByCategoryId, setAmountByCategoryId] = useState<Record<string, string>>({})
@@ -581,66 +560,25 @@ export function CategoriesOnboardingWizard({
     return (
         <div className={CATEGORIES_ONBOARDING_OUTER_CLASS}>
             {confirmDialog}
-            {isMobile ? (
-                <Sheet open={addOpen} onOpenChange={handleAddOpenChange}>
-                    <SheetContent
-                        side="bottom"
-                        fillMobileViewport
+            {/* Um diálogo só: `surface="auto"` faz dele a gaveta do telefone, e
+                `pending` segura o fechar enquanto a categoria é gravada. */}
+            <Dialog surface="auto" open={addOpen} onOpenChange={handleAddOpenChange} pending={crudBusy}>
+                <DialogContent layout="fixed">
+                    <DialogHeader>
+                        <DialogTitle>Nova categoria</DialogTitle>
+                        <DialogDescription>
+                            Defina nome, tipo, cor e ícone. Orçamentos ficam no passo seguinte para
+                            despesas.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <CustomForm
+                        id={ADD_CATEGORY_FORM_ID}
+                        pending={crudBusy}
+                        className="flex min-h-0 flex-1 flex-col"
+                        onSubmit={(ev) => void handleAddSubmit(ev)}
                     >
-                        <DialogHeader>
-                            <DialogTitle>Nova categoria</DialogTitle>
-                            <DialogDescription>Defina nome, tipo, cor e ícone. Orçamentos ficam no passo seguinte para despesas.</DialogDescription>
-                        </DialogHeader>
-                        <CustomForm
-                            id={ADD_CATEGORY_FORM_ID}
-                            className="flex min-h-0 flex-1 flex-col"
-                            onSubmit={(ev) => void handleAddSubmit(ev)}
-                        >
-                            <DialogBody>
-                                <div className="space-y-4 py-2">
-                                    <FormInput
-                                        id="onb-add-name"
-                                        label="Nome"
-                                        value={addName}
-                                        onChange={(e) => setAddName(e.target.value)}
-                                        placeholder="Ex: Alimentação"
-                                        required
-                                        disabled={crudBusy}
-                                    />
-                                    <TransactionFormTypeSegment
-                                        value={addType}
-                                        onChange={setAddType}
-                                        disabled={crudBusy}
-                                    />
-                                    <CategoryAppearanceFields
-                                        color={addColor}
-                                        onColorChange={setAddColor}
-                                        icon={addIcon}
-                                        onIconChange={setAddIcon}
-                                    />
-                                </div>
-                            </DialogBody>
-                            <DialogFooter className="flex-col">
-                                <Button type="submit" disabled={crudBusy} size="xl" className="w-full">
-                                    {crudBusy ? "Salvando…" : "Criar"}
-                                </Button>
-                            </DialogFooter>
-                        </CustomForm>
-                    <DialogCloseButton />
-                    </SheetContent>
-                </Sheet>
-            ) : (
-                <Dialog open={addOpen} onOpenChange={handleAddOpenChange}>
-                    <DialogContent className="sm:max-w-md">
-                        <CustomForm id={ADD_CATEGORY_FORM_ID} onSubmit={(ev) => void handleAddSubmit(ev)}>
-                            <DialogHeader>
-                                <DialogTitle>Nova categoria</DialogTitle>
-                                <DialogDescription>
-                                    Defina nome, tipo, cor e ícone. Orçamentos ficam no passo seguinte para
-                                    despesas.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4 py-2">
+                        <DialogBody>
+                            <div className="space-y-4">
                                 <FormInput
                                     id="onb-add-name"
                                     label="Nome"
@@ -662,113 +600,38 @@ export function CategoriesOnboardingWizard({
                                     onIconChange={setAddIcon}
                                 />
                             </div>
-                            <DialogFooter>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    disabled={crudBusy}
-                                    onClick={() => setAddOpen(false)}
-                                >
-                                    Cancelar
-                                </Button>
-                                <Button type="submit" disabled={crudBusy}>
-                                    {crudBusy ? "Salvando…" : "Criar"}
-                                </Button>
-                            </DialogFooter>
-                        </CustomForm>
-                    </DialogContent>
-                </Dialog>
-            )}
+                        </DialogBody>
+                        <DialogFooter>
+                            <FormCancel onClick={() => setAddOpen(false)}>Cancelar</FormCancel>
+                            <FormSubmit pendingLabel="Salvando…">Criar</FormSubmit>
+                        </DialogFooter>
+                    </CustomForm>
+                </DialogContent>
+            </Dialog>
 
-            {isMobile ? (
-                <Sheet
-                    open={editOpen && Boolean(editCategoryId)}
-                    onOpenChange={handleEditSheetOpenChange}
-                >
-                    <SheetContent
-                        side="bottom"
-                        fillMobileViewport
-                    >
-                        <DialogHeader>
-                            <DialogTitle>Editar categoria</DialogTitle>
-                            <DialogDescription>Ajuste nome, tipo, cor e ícone. Para despesas, defina também o limite deste mês.</DialogDescription>
-                        </DialogHeader>
-                        {editCategoryId ? (
-                            <CustomForm
-                                id={EDIT_CATEGORY_FORM_ID}
-                                onSubmit={(ev) => void handleEditSubmit(ev)}
-                                className="flex min-h-0 flex-1 flex-col"
-                            >
-                                <DialogBody>
-                                    <div className="space-y-3 py-1">
-                                        <FormInput
-                                            id="onb-edit-name"
-                                            label="Nome"
-                                            value={editName}
-                                            onChange={(e) => setEditName(e.target.value)}
-                                            className="text-sm"
-                                            required
-                                            disabled={crudBusy}
-                                        />
-                                        <TransactionFormTypeSegment
-                                            value={editType}
-                                            onChange={setEditType}
-                                            disabled={crudBusy}
-                                        />
-                                        <CategoryAppearanceFields
-                                            color={editColor}
-                                            onColorChange={setEditColor}
-                                            icon={editIcon}
-                                            onIconChange={setEditIcon}
-                                        />
-                                        {editType === "expense" ? (
-                                            <FormInput
-                                                money
-                                                label="Limite no mês (R$)"
-                                                placeholder="0,00"
-                                                title="Valor em reais (ex.: 1.500,00)"
-                                                value={amountByCategoryId[editCategoryId] ?? ""}
-                                                onValueChange={(masked) =>
-                                                    setAmountByCategoryId((prev) => ({
-                                                        ...prev,
-                                                        [editCategoryId]: masked,
-                                                    }))
-                                                }
-                                                disabled={crudBusy}
-                                            />
-                                        ) : null}
-                                    </div>
-                                </DialogBody>
-                                <DialogFooter className="flex-col">
-                                    <Button type="submit" disabled={crudBusy} size="xl" className="w-full">
-                                        {crudBusy ? "Salvando…" : "Salvar"}
-                                    </Button>
-                                </DialogFooter>
-                            </CustomForm>
-                        ) : null}
-                    <DialogCloseButton />
-                    </SheetContent>
-                </Sheet>
-            ) : (
-                <Dialog
-                    open={editOpen && Boolean(editCategoryId)}
-                    onOpenChange={handleEditSheetOpenChange}
-                >
-                    <DialogContent className="sm:max-w-md">
-                        {editCategoryId ? (
-                            <CustomForm
-                                id={EDIT_CATEGORY_FORM_ID}
-                                onSubmit={(ev) => void handleEditSubmit(ev)}
-                                className="space-y-4"
-                            >
-                                <DialogHeader>
-                                    <DialogTitle>Editar categoria</DialogTitle>
-                                    <DialogDescription>
-                                        Ajuste nome, tipo, cor e ícone. Para despesas, defina também o limite
-                                        deste mês.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <div className="space-y-3 py-1">
+            <Dialog
+                surface="auto"
+                open={editOpen && Boolean(editCategoryId)}
+                onOpenChange={handleEditSheetOpenChange}
+                pending={crudBusy}
+            >
+                <DialogContent layout="fixed">
+                    <DialogHeader>
+                        <DialogTitle>Editar categoria</DialogTitle>
+                        <DialogDescription>
+                            Ajuste nome, tipo, cor e ícone. Para despesas, defina também o limite
+                            deste mês.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {editCategoryId ? (
+                        <CustomForm
+                            id={EDIT_CATEGORY_FORM_ID}
+                            pending={crudBusy}
+                            onSubmit={(ev) => void handleEditSubmit(ev)}
+                            className="flex min-h-0 flex-1 flex-col"
+                        >
+                            <DialogBody>
+                                <div className="space-y-3">
                                     <FormInput
                                         id="onb-edit-name"
                                         label="Nome"
@@ -806,24 +669,15 @@ export function CategoriesOnboardingWizard({
                                         />
                                     ) : null}
                                 </div>
-                                <DialogFooter>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        disabled={crudBusy}
-                                        onClick={() => closeEditDialog()}
-                                    >
-                                        Cancelar
-                                    </Button>
-                                    <Button type="submit" disabled={crudBusy}>
-                                        {crudBusy ? "Salvando…" : "Salvar"}
-                                    </Button>
-                                </DialogFooter>
-                            </CustomForm>
-                        ) : null}
-                    </DialogContent>
-                </Dialog>
-            )}
+                            </DialogBody>
+                            <DialogFooter>
+                                <FormCancel onClick={() => closeEditDialog()}>Cancelar</FormCancel>
+                                <FormSubmit pendingLabel="Salvando…">Salvar</FormSubmit>
+                            </DialogFooter>
+                        </CustomForm>
+                    ) : null}
+                </DialogContent>
+            </Dialog>
 
             <OnboardingDialogPanel
                 stepIndex={step}
@@ -863,12 +717,14 @@ export function CategoriesOnboardingWizard({
                         ) : null}
                         {step === 1 ? (
                             <>
+                                {/* A forma do `DialogFooter start`: "Voltar" encostado à
+                                    esquerda no desktop e embaixo no telefone. */}
                                 <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                                     <Button
                                         type="button"
-                                        variant="outline"
+                                        variant="tertiary"
                                         size="sm"
-                                        className="w-full sm:w-auto"
+                                        className="w-full sm:me-auto sm:w-auto"
                                         disabled={busy || crudBusy}
                                         onClick={() => setStep(0)}
                                     >
@@ -895,32 +751,23 @@ export function CategoriesOnboardingWizard({
                             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                                 <Button
                                     type="button"
-                                    variant="outline"
+                                    variant="tertiary"
                                     size="sm"
-                                    className="w-full sm:w-auto"
+                                    className="w-full sm:me-auto sm:w-auto"
                                     disabled={busy}
                                     onClick={() => setStep(1)}
                                 >
                                     Voltar
                                 </Button>
-                                <Button
-                                    type="button"
+                                <FormSubmit
+                                    form={REVIEW_FORM_ID}
+                                    pending={busy}
+                                    pendingLabel="Salvando…"
                                     size="sm"
                                     className="w-full sm:w-auto"
-                                    disabled={busy}
-                                    onClick={() =>
-                                        void completeOnboarding(
-                                            expenseCategories.some((c) => {
-                                                const raw = (amountByCategoryId[c.id] ?? "").trim()
-                                                const amt =
-                                                    raw === "" ? null : parseMoneyBrl(raw)
-                                                return amt !== null && amt > 0
-                                            }),
-                                        )
-                                    }
                                 >
-                                    {busy ? "Salvando…" : "Concluir"}
-                                </Button>
+                                    Concluir
+                                </FormSubmit>
                             </div>
                         ) : null}
                     </div>
@@ -1033,7 +880,23 @@ export function CategoriesOnboardingWizard({
                 ) : null}
 
                 {step === 2 ? (
-                    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                    // Um formulário para o "Concluir" ser o `FormSubmit` do rodapé,
+                    // com o andamento dele; não há campo aqui.
+                    <CustomForm
+                        id={REVIEW_FORM_ID}
+                        pending={busy}
+                        onSubmit={(e) => {
+                            e.preventDefault()
+                            void completeOnboarding(
+                                expenseCategories.some((c) => {
+                                    const raw = (amountByCategoryId[c.id] ?? "").trim()
+                                    const amt = raw === "" ? null : parseMoneyBrl(raw)
+                                    return amt !== null && amt > 0
+                                }),
+                            )
+                        }}
+                        className="flex min-h-0 flex-1 flex-col overflow-hidden"
+                    >
                         {/* Poço de rolagem à mão de propósito, como as duas listas do
                             passo 1: o `overflow-hidden` do `Card` recortaria a rolagem. */}
                         <div className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain rounded-xl border border-border/50 bg-muted/10 p-2">
@@ -1085,7 +948,7 @@ export function CategoriesOnboardingWizard({
                             </Card>
                         ) : null}
                         </div>
-                    </div>
+                    </CustomForm>
                 ) : null}
             </OnboardingDialogPanel>
 

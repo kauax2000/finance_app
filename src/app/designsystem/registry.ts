@@ -444,7 +444,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("command", "Command", "Paleta de comandos com busca.", ui("command"), "Command, CommandDialog, CommandInput, CommandList, CommandGroup, CommandItem, CommandHighlight, CommandPages, CommandPage, CommandSplit, CommandPreview, CommandDock"),
   entry("context-menu", "Context Menu", "O mesmo menu, aberto pelo botão direito, pelo toque longo e por Shift+F10.", ui("context-menu"), "ContextMenu, ContextMenuContent, ContextMenuHeader, ContextMenuItem, contextMenuTargets"),
   entry("date-picker", "Date Picker", "Campo de data, intervalo ou mês — popover no desktop, gaveta no telefone.", ui("date-picker"), "DatePicker, MonthGrid"),
-  entry("dialog", "Dialog", "Janela modal.", ui("dialog"), "Dialog, DialogContent, DialogBody, DialogFooter"),
+  entry("dialog", "Dialog", "Janela modal — e gaveta no telefone, com surface=\"auto\".", ui("dialog"), "Dialog, DialogContent, DialogHeader, DialogMedia, DialogSteps, DialogBody, DialogFooter"),
   entry("drawer", "Drawer", "Gaveta arrastável, com física de toque.", ui("drawer"), "Drawer, DrawerContent, DrawerTrigger"),
   entry("dropdown-menu", "Dropdown Menu", "Menu de ações, com checkbox, radio e submenu.", ui("dropdown-menu"), "DropdownMenu, DropdownMenuItem"),
   entry("form", "Form", "Formulário, suas peças e o Enter.", ui("form"), "Form, FormInput, FormTextarea, FormRadioGroup, FormError, FormActions, FormCancel, FormSubmit"),

@@ -1,8 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ShareIcon } from "@heroicons/react/16/solid"
-import { DevicePhoneMobileIcon } from "@heroicons/react/20/solid"
+import { DevicePhoneMobileIcon, ShareIcon } from "@heroicons/react/16/solid"
 import {
   Sheet,
   SheetContent,
@@ -11,6 +10,7 @@ import {
   DialogCloseButton,
   DialogDescription,
   DialogHeader,
+  DialogMedia,
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -44,10 +44,12 @@ export function InstallPwaSheet({ open, onOpenChange }: InstallPwaSheetProps) {
                 className="gap-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]"
             >
                 <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                        <DevicePhoneMobileIcon className="size-5" aria-hidden />
-                        Instalar no iPhone
-                    </DialogTitle>
+                    {/* O ícone na linha do título é o `DialogMedia` (rodada 211):
+                        ele morava dentro do próprio título, com um `gap-2`. */}
+                    <DialogMedia>
+                        <DevicePhoneMobileIcon aria-hidden />
+                    </DialogMedia>
+                    <DialogTitle>Instalar no iPhone</DialogTitle>
                     <DialogDescription>
                         Use o Finance como app na tela inicial, sem a barra do Safari.
                     </DialogDescription>

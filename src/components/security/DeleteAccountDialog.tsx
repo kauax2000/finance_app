@@ -12,25 +12,20 @@ import { supabase, type WorkspaceDeleteImpact } from "@/lib/supabase"
 import {
   Dialog,
   DialogBody,
-  DialogCloseButton,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogMedia,
+  DialogSteps,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Sheet,
-  SheetContent,
-} from "@/components/ui/sheet"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
     CustomForm,
     FormInput,
+    FormSubmit,
 } from "@/components/ui/form"
-import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
 import { CheckCircleIcon, TrashIcon } from "@heroicons/react/16/solid"
 
@@ -53,7 +48,6 @@ interface DeleteAccountDialogProps {
 }
 
 export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogProps) {
-    const isMobile = useIsMobile()
     const { user, deleteAccount } = useAuth()
     const router = useRouter()
     const later = useTimeout()
@@ -167,53 +161,29 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
           ? "Esta ação é irreversível."
           : "Digite seu email e senha para confirmar a exclusão."
 
-    const stickyHeader = (
+    // Um cabeçalho só para as duas superfícies: `surface="auto"` faz do mesmo
+    // diálogo a gaveta do telefone. Os passos somem na tela de sucesso, que não
+    // é um passo — é o fim do fluxo.
+    const header = (
         <DialogHeader>
-            <>
-            <DialogTitle
-            className={cn(
-            "flex items-center gap-2 font-heading text-base font-medium leading-tight",
-            success
-            ? undefined
-            : step === "warning"
-            ? "text-destructive"
-            : undefined,
+            {success ? null : (
+                <DialogSteps
+                    current={step === "warning" ? 0 : 1}
+                    total={2}
+                    labels={["Aviso", "Confirmação"]}
+                />
             )}
-            >
-            {success ? (
-            <CheckCircleIcon className="h-5 w-5 shrink-0 text-success" aria-hidden />
-            ) : (
-            <TrashIcon className="h-5 w-5 shrink-0" aria-hidden />
-            )}
-            {title}
-            </DialogTitle>
-            <DialogDescription className="mt-1 text-sm text-muted-foreground">
-            {description}
-            </DialogDescription>
-            </>
-        </DialogHeader>
-    )
-
-
-    const headerDesktop = (
-        <DialogHeader>
-            <DialogTitle
+            <DialogMedia
                 className={
-                    success
-                        ? "flex items-center gap-2"
-                        : step === "warning"
-                          ? "flex items-center gap-2 text-destructive"
-                          : "flex items-center gap-2"
+                    success ? "text-success" : step === "warning" ? "text-destructive" : undefined
                 }
             >
-                {success ? (
-                    <CheckCircleIcon className="h-5 w-5 shrink-0 text-success" aria-hidden />
-                ) : (
-                    <TrashIcon className="h-5 w-5 shrink-0" aria-hidden />
-                )}
+                {success ? <CheckCircleIcon /> : <TrashIcon />}
+            </DialogMedia>
+            <DialogTitle className={!success && step === "warning" ? "text-destructive" : undefined}>
                 {title}
             </DialogTitle>
-            <DialogDescription className="text-xs leading-snug">{description}</DialogDescription>
+            <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
     )
 
@@ -230,14 +200,10 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
         </DialogBody>
     )
 
-    const footerSuccess = isMobile ? null : (
+    // Sozinho, o botão é `secondary` — a regra do par não se aplica.
+    const footerSuccess = (
         <DialogFooter>
-            <Button
-                type="button"
-                variant="outline"
-                className="w-full sm:w-auto"
-                onClick={() => handleOpenChange(false)}
-            >
+            <Button type="button" variant="secondary" onClick={() => handleOpenChange(false)}>
                 Fechar
             </Button>
         </DialogFooter>
@@ -295,25 +261,22 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
         </DialogBody>
     )
 
-    const footerWarning = isMobile ? (
-        <DialogFooter className="flex-col">
-            <Button type="button" variant="destructive" size="xl" className="w-full" onClick={handleContinue}>
-                Continuar
-            </Button>
-        </DialogFooter>
-    ) : (
-        <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
-                Cancelar
-            </Button>
-            <Button type="button" variant="destructive" onClick={handleContinue}>
+    // Cancelar (`tertiary`, pelo `showCloseButton`) e a ação que o passo propõe.
+    // "Continuar" ainda não exclui nada: o `destructive` fica para o último passo.
+    const footerWarning = (
+        <DialogFooter showCloseButton>
+            <Button type="button" onClick={handleContinue}>
                 Continuar
             </Button>
         </DialogFooter>
     )
 
     const bodyConfirm = (
-        <CustomForm onSubmit={handleDeleteFormSubmit} className="flex min-h-0 flex-1 flex-col">
+        <CustomForm
+            onSubmit={handleDeleteFormSubmit}
+            pending={loading}
+            className="flex min-h-0 flex-1 flex-col"
+        >
             <DialogBody>
                 <div className="space-y-4">
                     {/* O "não confere" era um `<p>` solto, sem `aria-invalid` e sem
@@ -348,132 +311,50 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                 </div>
             </DialogBody>
 
-            {isMobile ? (
-                <DialogFooter className="flex-col">
-                    <Button
-                        type="submit"
-                        variant="destructive"
-                        size="xl" className="w-full"
-                        disabled={loading || !emailsMatch || !password}
-                    >
-                        {loading ? (
-                            <>
-                                <Spinner />
-                                Excluindo...
-                            </>
-                        ) : (
-                            <>
-                                <TrashIcon className="mr-2 h-4 w-4" />
-                                Excluir conta
-                            </>
-                        )}
-                    </Button>
+            <DialogFooter
+                start={
                     <Button
                         type="button"
-                        variant="outline"
-                        className="w-full"
+                        variant="tertiary"
+                        disabled={loading}
                         onClick={() => {
                             setStep("warning")
                             setError(null)
                         }}
-                        disabled={loading}
                     >
                         Voltar
                     </Button>
-                </DialogFooter>
-            ) : (
-                <DialogFooter>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                            setStep("warning")
-                            setError(null)
-                        }}
-                        disabled={loading}
-                    >
-                        Voltar
-                    </Button>
-                    <Button
-                        type="submit"
-                        variant="destructive"
-                        size="sm"
-                        disabled={loading || !emailsMatch || !password}
-                    >
-                        {loading ? (
-                            <>
-                                <Spinner />
-                                Excluindo...
-                            </>
-                        ) : (
-                            <>
-                                <TrashIcon className="mr-2 h-4 w-4" />
-                                Excluir conta
-                            </>
-                        )}
-                    </Button>
-                </DialogFooter>
-            )}
+                }
+            >
+                <FormSubmit
+                    variant="destructive"
+                    pendingLabel="Excluindo…"
+                    disabled={!emailsMatch || !password}
+                >
+                    <TrashIcon />
+                    Excluir conta
+                </FormSubmit>
+            </DialogFooter>
         </CustomForm>
     )
 
-    const shellDesktop = (
-        <>
-            {headerDesktop}
-            {success ? (
-                <>
-                    {bodySuccess}
-                    {footerSuccess}
-                </>
-            ) : step === "warning" ? (
-                <>
-                    {bodyWarning}
-                    {footerWarning}
-                </>
-            ) : (
-                bodyConfirm
-            )}
-        </>
-    )
-
-    const shellMobile = (
-        <>
-            {stickyHeader}
-            {success ? (
-                <>
-                    {bodySuccess}
-                    {footerSuccess}
-                </>
-            ) : step === "warning" ? (
-                <>
-                    {bodyWarning}
-                    {footerWarning}
-                </>
-            ) : (
-                bodyConfirm
-            )}
-        </>
-    )
-
-    if (isMobile) {
-        return (
-            <Sheet open={open} onOpenChange={handleOpenChange}>
-                <SheetContent
-                    side="bottom"
-                    fillMobileViewport
-                >
-                    {shellMobile}
-                <DialogCloseButton />
-                </SheetContent>
-            </Sheet>
-        )
-    }
-
     return (
-        <Dialog open={open} onOpenChange={handleOpenChange}>
+        <Dialog surface="auto" open={open} onOpenChange={handleOpenChange} pending={loading}>
             <DialogContent layout="fixed">
-                {shellDesktop}
+                {header}
+                {success ? (
+                    <>
+                        {bodySuccess}
+                        {footerSuccess}
+                    </>
+                ) : step === "warning" ? (
+                    <>
+                        {bodyWarning}
+                        {footerWarning}
+                    </>
+                ) : (
+                    bodyConfirm
+                )}
             </DialogContent>
         </Dialog>
     )

@@ -5,8 +5,9 @@ jornada tem um fluxograma, as regras técnicas que decidem os caminhos e as
 lacunas encontradas no código. Foi escrito lendo o código em 2026-09-17, na
 branch `finance-app-2.0`, e a navegação global foi revista em 2026-10-01,
 quando entrou a busca (⌘K), junto com o menu do botão direito nas linhas de
-lançamento, nos cartões de categoria e nas contas pendentes, e com o seletor
-de período que confirma no próprio popover. Quando uma tela mudar de caminho, atualize o
+lançamento, nos cartões de categoria e nas contas pendentes, com o seletor
+de período que confirma no próprio popover, e com o rascunho protegido do
+formulário de lançamento. Quando uma tela mudar de caminho, atualize o
 diagrama dela.
 
 ## Como ler os diagramas
@@ -463,7 +464,11 @@ flowchart TD
     saveTx -->|"sucesso"| after[("Edges notify-transaction-created, evaluate-budgets, evaluate-credit-card-alerts")]
     after --> toast(["Transação criada; listas recarregam"])
     savePlan -->|"sucesso"| toastPlan(["Compra parcelada registrada"])
-    open -->|"Cancelar"| closed(["Fecha e descarta"])
+    open -->|"Cancelar, Esc ou fora, sem alterações"| closed(["Fecha e descarta"])
+    open -->|"fechar com alterações"| discard(["Descartar alterações?"])
+    discard -->|"Descartar"| closed
+    discard -->|"Continuar editando"| open
+    saveTx -.->|"salvando: nada fecha"| open
 
     detail(["Detalhe da transação"]) --> view(["Valor, data, categoria, forma, dica da fatura"])
     view -->|"é parcela"| planInfo(["Parcela k de n, total, lançado, restante"])
@@ -491,6 +496,7 @@ flowchart TD
 | Detalhe | Mesmo painel no Painel, em Cartões e em Categorias | `src/components/transactions/transaction-detail-sheet.tsx` |
 | Exclusão | Parcela cancela o plano inteiro por `delete_workspace_installment_plan_cascade` | `src/lib/transactions/mutations.ts` |
 | Offline | Criar e excluir entram na fila; pagar conta exige conexão | `src/lib/offline/` |
+| Rascunho | Fechar o formulário alterado (Cancelar, Esc, toque fora, ×, arrastar a gaveta) pergunta "Descartar alterações?"; salvar fecha sem perguntar. Trocar só a aba ou o tipo não conta como alteração. Enquanto salva, nada fecha (`Dialog pending`) | `isDirty` em `src/components/transactions/transaction-form-use.tsx`, `src/components/transactions/transaction-form-dialog.tsx` |
 | Enter | O `Enter` na busca do seletor não salva a transação | `shouldDeferEnterToWidget` em `src/components/ui/form.tsx` |
 | Período personalizado | Um `DatePicker` de intervalo com `confirm`: as pontas ficam em rascunho até Aplicar, Limpar tira o filtro, Cancelar e Esc descartam. Era um formulário à parte (`transactions-date-range-form.tsx`, removido) | `src/components/transactions/transactions-filters-panel.tsx` |
 | Botão direito na linha | Atalho das ações da linha (os botões da coluna Ações continuam); sobre uma linha selecionada age na seleção inteira (`contextMenuTargets`); linhas projetadas não têm menu | `TransactionRowContextMenu` em `src/components/transactions/transactions-table.tsx` |

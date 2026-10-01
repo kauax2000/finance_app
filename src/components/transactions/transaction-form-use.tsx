@@ -47,6 +47,45 @@ function recurringModeFromTransaction(
     return "once"
 }
 
+/**
+ * A fotografia que o `isDirty` compara: só o que a pessoa **escreveu ou
+ * escolheu** como dado. A aba (`formKind`), o tipo, o modo de valor da parcela
+ * e o escopo da edição ficam de fora — trocá-los num formulário vazio é
+ * navegar, e não pode fazer o fechar perguntar "Descartar alterações?".
+ */
+function fotografar(r: Rascunho): string {
+    return JSON.stringify([
+        r.amount,
+        r.description,
+        r.categoryId,
+        r.date,
+        r.recurringMode,
+        r.paymentMethod,
+        r.paymentCreditCardId,
+        r.installmentTotal,
+        r.installmentPerAmount,
+        r.installmentCount,
+    ])
+}
+
+/** Os campos do formulário, na ordem da fotografia. */
+type Rascunho = {
+    formKind: TransactionFormKind
+    type: "income" | "expense"
+    amount: string
+    description: string
+    categoryId: string
+    date: string
+    recurringMode: RecurringMode
+    paymentMethod: PaymentMethod | null
+    paymentCreditCardId: string
+    installmentValueMode: "total" | "per_installment"
+    installmentTotal: string
+    installmentPerAmount: string
+    installmentCount: string
+    installmentEditScope: "slice" | "plan"
+}
+
 export type UseTransactionFormArgs = {
     active: boolean
     saving: boolean
@@ -119,61 +158,77 @@ export function useTransactionForm({
     const planRef = editingTransaction?.installment_plan ?? null
     const planIsActive = planRef?.is_active === true
 
+    // A fotografia do rascunho ao abrir: `isDirty` compara o formulário com
+    // ela, para o diálogo perguntar antes de descartar o que foi preenchido.
+    const [snapshot, setSnapshot] = useState<string | null>(null)
+
     /* eslint-disable react-hooks/set-state-in-effect -- hydrate form fields when opening for edit or create */
     useEffect(() => {
-        if (!active) return
-        if (editingTransaction) {
-            setType(editingTransaction.type)
-            setFormKind(
-                editingTransaction.type === "income" ? "income" : "expense"
-            )
-            setAmount(formatMoneyBrlInput(editingTransaction.amount))
-            setDescription(editingTransaction.description || "")
-            setCategoryId(editingTransaction.category_id || "")
-            setDate(localYmdFromDate(new Date(editingTransaction.date)))
-            setRecurringMode(
-                recurringModeFromTransaction(
-                    editingTransaction.is_recurring,
-                    editingTransaction.recurring_interval
-                )
-            )
-            setPaymentMethod(
-                editingTransaction.type === "expense"
-                    ? (editingTransaction.payment_method ?? null)
-                    : null
-            )
-            setPaymentCreditCardId(
-                editingTransaction.payment_credit_card_id || ""
-            )
-            setInstallmentEditScope("slice")
-            const p = editingTransaction.installment_plan
-            if (p) {
-                setInstallmentValueMode("total")
-                setInstallmentTotal(formatMoneyBrlInput(totalPurchaseFromPlan(p)))
-                setInstallmentPerAmount(formatMoneyBrlInput(p.installment_amount))
-                setInstallmentCount(String(p.total_installments))
-            } else {
-                setInstallmentValueMode("total")
-                setInstallmentTotal("")
-                setInstallmentPerAmount("")
-                setInstallmentCount("12")
-            }
-        } else {
-            setFormKind(defaultLaunchKind)
-            setType(defaultLaunchKind === "income" ? "income" : "expense")
-            setAmount("")
-            setDescription("")
-            setCategoryId("")
-            setDate(localYmdFromDate(new Date()))
-            setRecurringMode("once")
-            setPaymentMethod(null)
-            setPaymentCreditCardId("")
-            setInstallmentValueMode("total")
-            setInstallmentTotal("")
-            setInstallmentPerAmount("")
-            setInstallmentCount("12")
-            setInstallmentEditScope("slice")
+        if (!active) {
+            setSnapshot(null)
+            return
         }
+        const p = editingTransaction?.installment_plan
+        const v: Rascunho = editingTransaction
+            ? {
+                  formKind:
+                      editingTransaction.type === "income" ? "income" : "expense",
+                  type: editingTransaction.type,
+                  amount: formatMoneyBrlInput(editingTransaction.amount),
+                  description: editingTransaction.description || "",
+                  categoryId: editingTransaction.category_id || "",
+                  date: localYmdFromDate(new Date(editingTransaction.date)),
+                  recurringMode: recurringModeFromTransaction(
+                      editingTransaction.is_recurring,
+                      editingTransaction.recurring_interval
+                  ),
+                  paymentMethod:
+                      editingTransaction.type === "expense"
+                          ? (editingTransaction.payment_method ?? null)
+                          : null,
+                  paymentCreditCardId:
+                      editingTransaction.payment_credit_card_id || "",
+                  installmentValueMode: "total",
+                  installmentTotal: p
+                      ? formatMoneyBrlInput(totalPurchaseFromPlan(p))
+                      : "",
+                  installmentPerAmount: p
+                      ? formatMoneyBrlInput(p.installment_amount)
+                      : "",
+                  installmentCount: p ? String(p.total_installments) : "12",
+                  installmentEditScope: "slice",
+              }
+            : {
+                  formKind: defaultLaunchKind,
+                  type: defaultLaunchKind === "income" ? "income" : "expense",
+                  amount: "",
+                  description: "",
+                  categoryId: "",
+                  date: localYmdFromDate(new Date()),
+                  recurringMode: "once",
+                  paymentMethod: null,
+                  paymentCreditCardId: "",
+                  installmentValueMode: "total",
+                  installmentTotal: "",
+                  installmentPerAmount: "",
+                  installmentCount: "12",
+                  installmentEditScope: "slice",
+              }
+        setFormKind(v.formKind)
+        setType(v.type)
+        setAmount(v.amount)
+        setDescription(v.description)
+        setCategoryId(v.categoryId)
+        setDate(v.date)
+        setRecurringMode(v.recurringMode)
+        setPaymentMethod(v.paymentMethod)
+        setPaymentCreditCardId(v.paymentCreditCardId)
+        setInstallmentValueMode(v.installmentValueMode)
+        setInstallmentTotal(v.installmentTotal)
+        setInstallmentPerAmount(v.installmentPerAmount)
+        setInstallmentCount(v.installmentCount)
+        setInstallmentEditScope(v.installmentEditScope)
+        setSnapshot(fotografar(v))
     }, [active, editingTransaction, defaultLaunchKind])
     /* eslint-enable react-hooks/set-state-in-effect */
 
@@ -541,6 +596,25 @@ export function useTransactionForm({
                 isInstallmentPlanEdit ||
                 type === "expense"))
 
+    const atual: Rascunho = {
+        formKind,
+        type,
+        amount,
+        description,
+        categoryId,
+        date,
+        recurringMode,
+        paymentMethod,
+        paymentCreditCardId,
+        installmentValueMode,
+        installmentTotal,
+        installmentPerAmount,
+        installmentCount,
+        installmentEditScope,
+    }
+    const isDirty =
+        active && snapshot !== null && fotografar(atual) !== snapshot
+
     return {
         handleSubmit,
         fieldsProps,
@@ -548,5 +622,6 @@ export function useTransactionForm({
         formDescription,
         showFooter,
         submitDisabled,
+        isDirty,
     }
 }

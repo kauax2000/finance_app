@@ -4,24 +4,17 @@ import { parseMoneyBrl } from "@/lib/money-brl"
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import type { User } from "@supabase/supabase-js"
-import { CustomForm } from "@/components/ui/form"
-import { Button } from "@/components/ui/button"
+import { CustomForm, FormCancel, FormSubmit } from "@/components/ui/form"
 import {
   Dialog,
   DialogBody,
-  DialogCloseButton,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogHeaderRow,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Sheet,
-  SheetContent,
-} from "@/components/ui/sheet"
-import { useIsMobile } from "@/hooks/use-mobile"
 import { CreditCardFormFields } from "@/components/credit-cards/credit-card-form-fields"
 import { parseExpiryFields } from "@/components/credit-cards/credit-card-form-shared"
 import { toastError, toastSuccess, toastWarning } from "@/lib/toast"
@@ -43,7 +36,6 @@ export function CreditCardCreateDialog({
     workspaceId,
 }: CreditCardCreateDialogProps) {
     const router = useRouter()
-    const isMobile = useIsMobile()
     const [createFormKey, setCreateFormKey] = React.useState(0)
     const [saving, setSaving] = React.useState(false)
 
@@ -154,72 +146,25 @@ export function CreditCardCreateDialog({
         router.refresh()
     }
 
+    // Enquanto salva, o `pending` do `Dialog` já segura todo pedido de fechar.
     const handleDismiss = (next: boolean) => {
-        if (!next && saving) return
         onOpenChange(next)
-        if (!next && !saving) resetCreateForm()
+        if (!next) resetCreateForm()
     }
 
     if (!user || !workspaceId) return null
 
-    if (isMobile) {
-        return (
-            <Sheet open={open} onOpenChange={handleDismiss}>
-                <SheetContent
-                    side="bottom"
-                    fillMobileViewport
-                >
-                    <DialogHeader>
-                        <DialogHeaderRow endAdornment={<DialogCloseButton placement="inline" disabled={saving} />}>
-                            <DialogTitle>Cadastro de cartão</DialogTitle>
-                        </DialogHeaderRow>
-                    </DialogHeader>
-                    <CustomForm
-                        onSubmit={handleCreate}
-                        className="flex min-h-0 flex-1 flex-col"
-                    >
-                        <DialogBody>
-                            <div className="space-y-3 pb-2">
-                                <CreditCardFormFields
-                                    formKey={`create-global-${createFormKey}`}
-                                    idPrefix="cc-global-new"
-                                    name={name}
-                                    onNameChange={setName}
-                                    cardNumber={cardNumber}
-                                    onCardNumberChange={setCardNumber}
-                                    closingDay={closingDay}
-                                    onClosingDayChange={setClosingDay}
-                                    dueDay={dueDay}
-                                    onDueDayChange={setDueDay}
-                                    creditLimit={creditLimit}
-                                    onCreditLimitChange={setCreditLimit}
-                                    expiryMonth={expiryMonth}
-                                    onExpiryMonthChange={setExpiryMonth}
-                                    expiryYear={expiryYear}
-                                    onExpiryYearChange={setExpiryYear}
-                                />
-                            </div>
-                        </DialogBody>
-                        <DialogFooter className="flex-col">
-                            <Button
-                                type="submit"
-                                size="sm"
-                                className="h-10 w-full"
-                                disabled={saving}
-                            >
-                                {saving ? "Salvando…" : "Cadastrar"}
-                            </Button>
-                        </DialogFooter>
-                    </CustomForm>
-                </SheetContent>
-            </Sheet>
-        )
-    }
-
+    // Diálogo no desktop, gaveta alta no telefone (`surface="auto"`).
     return (
-        <Dialog open={open} onOpenChange={handleDismiss}>
+        <Dialog
+            surface="auto"
+            pending={saving}
+            open={open}
+            onOpenChange={handleDismiss}
+        >
             <DialogContent layout="fixed">
                 <CustomForm
+                    pending={saving}
                     onSubmit={handleCreate}
                     className="flex min-h-0 flex-1 flex-col"
                 >
@@ -253,17 +198,10 @@ export function CreditCardCreateDialog({
                         </div>
                     </DialogBody>
                     <DialogFooter className="sm:gap-3">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => handleDismiss(false)}
-                            disabled={saving}
-                        >
-                            Cancelar
-                        </Button>
-                        <Button type="submit" disabled={saving}>
-                            {saving ? "Salvando…" : "Cadastrar"}
-                        </Button>
+                        <DialogClose asChild>
+                            <FormCancel>Cancelar</FormCancel>
+                        </DialogClose>
+                        <FormSubmit pendingLabel="Salvando…">Cadastrar</FormSubmit>
                     </DialogFooter>
                 </CustomForm>
             </DialogContent>

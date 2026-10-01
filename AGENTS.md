@@ -1138,7 +1138,7 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   padrão** | `lg` 512 | `xl` 576) e `layout` é quem manda na altura — `auto` (o
   conteúdo, com o respiro no casco) ou **`fixed`** (a janela, com o corpo
   rolando em `DialogBody` entre cabeçalho e rodapé parados). `fixed` é a forma
-  de 13 das 25 chamadas do app, e era escrita à mão em cinco classes no casco
+  de 14 dos 18 diálogos do app (contados na rodada 211; eram 13 de 25), e era escrita à mão em cinco classes no casco
   mais três em cada corpo rolável. **Não escreva `min-h-0 flex-1
   overflow-y-auto` à mão**: é `DialogBody`, e o `min-h-0` é o que falha calado —
   sem ele o diálogo cresce até sair da tela em vez de rolar.
@@ -1252,7 +1252,8 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   só para isso) foi absorvido junto com o resto do chrome de folha. A reserva de
   espaço no título vem de **haver** um ×, detectada por
   `has-[>[data-slot=dialog-close-button]]`, não de um prop. O `DialogContent`
-  mantém o `showCloseButton`: lá a conta se inverte (só 6 de 25 o desligam),
+  mantém o `showCloseButton`: lá a conta se inverte (só 1 de 18 o desliga,
+  contado na rodada 211; eram 6 de 25),
   porque um diálogo é curto e o conteúdo não rola por baixo do botão.
 - **Um `Popover` é um `role="dialog"`, e ele precisa de nome.** O
   `Popover.Content` do Radix carimba o papel e **nunca escreve
@@ -2365,6 +2366,26 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   **Arco-íris sob série continua proibido**: a marca encosta pelo
   `Card variant="brand"`, na borda. O cabeçalho (delta, período, KPIs) é
   composição de `Card`, não peça do `Chart`.
+- **`Dialog` vira gaveta no telefone, trava enquanto salva, protege o
+  rascunho e ganhou passos, ícone, ação à esquerda e tela cheia** (rodada
+  211). **`<Dialog surface="auto">`** é o diálogo no desktop e a gaveta do
+  `Sheet` abaixo de 768px, com a mesma API e a mesma cromagem (`fixed` e
+  `full` viram a gaveta alta). **Não escreva `if (isMobile)` trocando
+  `Dialog` por `Sheet`**: dezessete telas faziam isso, cada uma com as classes
+  da folha numa grafia, e migraram. `pending` trava Esc, véu, ×, `DialogClose`
+  e o arraste; `dirty` + `confirmDiscard` pergunta "Descartar alterações?"
+  (a pergunta usa a primitiva do Radix, porque o `AlertDialog` importa o
+  `dialog.tsx`) — fechar por código, depois de salvar, não pergunta. **Todo
+  pedido de fechar passa por um só lugar** (`pedir`, na raiz). `DialogSteps`
+  (passo N de M, barra segmentada; com ele o `fixed` ocupa o teto e a janela
+  não pula), `DialogMedia` (o ícone na linha do título), `DialogFooter start`
+  e `size="full"`. **O cabeçalho não tem `gap`**: título sobre descrição é par
+  de identidade, e o título passou a `leading-snug`. **No dedo os botões do
+  rodapé sobem a 40** (`pointer-coarse:[&_button]:min-h-10`) — as telas o
+  escreviam à mão só no ramo do telefone. Os formulários usam `FormCancel`
+  (era `outline`) e `FormSubmit pendingLabel`, nunca um ternário "Salvando…".
+  O rascunho do lançamento compara só o que se escreve: trocar a aba ou o
+  tipo não pergunta. `dialog-versions.test.ts` tranca.
 - **`DatePicker` ganhou atalhos, o Hoje, marcadores, o rótulo relativo, o
   campo digitável, o mês, a gaveta e a confirmação** (rodada 210).
   `presets` (dias numa data — o `Calendar` ganhou o atalho de dia —,

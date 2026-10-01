@@ -10,7 +10,7 @@ import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { createCreditCard } from "@/lib/credit-cards/mutations"
 import { toastError, toastSuccess, toastWarning } from "@/lib/toast"
-import { CustomForm } from "@/components/ui/form"
+import { CustomForm, FormCancel, FormSubmit } from "@/components/ui/form"
 import {
     Card,
     CardDescription,
@@ -35,19 +35,13 @@ import { cn } from "@/lib/utils"
 import {
   Dialog,
   DialogBody,
-  DialogCloseButton,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogHeaderRow,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Sheet,
-  SheetContent,
-} from "@/components/ui/sheet"
-import { useIsMobile } from "@/hooks/use-mobile"
 import { CreditCardFormFields } from "@/components/credit-cards/credit-card-form-fields"
 import { parseExpiryFields } from "@/components/credit-cards/credit-card-form-shared"
 import { resolveCreditCardForSave } from "@/lib/credit-card-number"
@@ -72,7 +66,6 @@ const CreditCardsHistoryChart = dynamic(
 
 export default function CreditCardsPageClient() {
     const queryClient = useQueryClient()
-    const isMobile = useIsMobile()
     const router = useRouter()
     const pathname = usePathname()
     const searchParams = useSearchParams()
@@ -372,127 +365,62 @@ export default function CreditCardsPageClient() {
                 />
             )}
 
-            {isMobile ? (
-                <Sheet
-                    open={createOpen}
-                    onOpenChange={(o) => {
-                        if (!o && saving) return
-                        if (o) setCreateFormKey((k) => k + 1)
-                        setCreateOpen(o)
-                        if (!o && !saving) resetCreateForm()
-                    }}
-                >
-                    <SheetContent
-                        side="bottom"
-                        fillMobileViewport
+            {/* Diálogo no desktop, gaveta alta no telefone (`surface="auto"`).
+                Enquanto salva, o `pending` segura todo pedido de fechar. */}
+            <Dialog
+                surface="auto"
+                pending={saving}
+                open={createOpen}
+                onOpenChange={(o) => {
+                    if (o) setCreateFormKey((k) => k + 1)
+                    setCreateOpen(o)
+                    if (!o) resetCreateForm()
+                }}
+            >
+                <DialogContent layout="fixed">
+                    <CustomForm
+                        pending={saving}
+                        onSubmit={handleCreate}
+                        className="flex min-h-0 flex-1 flex-col"
                     >
                         <DialogHeader>
-                            <DialogHeaderRow endAdornment={<DialogCloseButton placement="inline" disabled={saving} />}>
-                                <DialogTitle>Cadastro de cartão</DialogTitle>
-                            </DialogHeaderRow>
+                            <DialogTitle>Cadastro de cartão</DialogTitle>
+                            <DialogDescription>
+                                Dados para identificar o cartão nas despesas (não armazenamos o
+                                número completo).
+                            </DialogDescription>
                         </DialogHeader>
-                        <CustomForm
-                            onSubmit={handleCreate}
-                            className="flex min-h-0 flex-1 flex-col"
-                        >
-                            <DialogBody>
-                                <div className="space-y-3 pb-2">
-                                    <CreditCardFormFields
-                                        formKey={`create-${createFormKey}`}
-                                        idPrefix="cc-new"
-                                        name={name}
-                                        onNameChange={setName}
-                                        cardNumber={cardNumber}
-                                        onCardNumberChange={setCardNumber}
-                                        closingDay={closingDay}
-                                        onClosingDayChange={setClosingDay}
-                                        dueDay={dueDay}
-                                        onDueDayChange={setDueDay}
-                                        creditLimit={creditLimit}
-                                        onCreditLimitChange={setCreditLimit}
-                                        expiryMonth={expiryMonth}
-                                        onExpiryMonthChange={setExpiryMonth}
-                                        expiryYear={expiryYear}
-                                        onExpiryYearChange={setExpiryYear}
-                                    />
-                                </div>
-                            </DialogBody>
-                            <DialogFooter className="flex-col">
-                                <Button
-                                    type="submit"
-                                    size="sm"
-                                    className="h-10 w-full"
-                                    disabled={saving}
-                                >
-                                    {saving ? "Salvando…" : "Cadastrar"}
-                                </Button>
-                            </DialogFooter>
-                        </CustomForm>
-                    </SheetContent>
-                </Sheet>
-            ) : (
-                <Dialog
-                    open={createOpen}
-                    onOpenChange={(o) => {
-                        if (o) setCreateFormKey((k) => k + 1)
-                        setCreateOpen(o)
-                        if (!o && !saving) resetCreateForm()
-                    }}
-                >
-                    <DialogContent layout="fixed">
-                        <CustomForm
-                            onSubmit={handleCreate}
-                            className="flex min-h-0 flex-1 flex-col"
-                        >
-                            <DialogHeader>
-                                <DialogTitle>Cadastro de cartão</DialogTitle>
-                                <DialogDescription>
-                                    Dados para identificar o cartão nas despesas (não armazenamos o
-                                    número completo).
-                                </DialogDescription>
-                            </DialogHeader>
-                            <DialogBody>
-                                <div className="space-y-3 pb-2">
-                                    <CreditCardFormFields
-                                        formKey={`create-${createFormKey}`}
-                                        idPrefix="cc-new"
-                                        name={name}
-                                        onNameChange={setName}
-                                        cardNumber={cardNumber}
-                                        onCardNumberChange={setCardNumber}
-                                        closingDay={closingDay}
-                                        onClosingDayChange={setClosingDay}
-                                        dueDay={dueDay}
-                                        onDueDayChange={setDueDay}
-                                        creditLimit={creditLimit}
-                                        onCreditLimitChange={setCreditLimit}
-                                        expiryMonth={expiryMonth}
-                                        onExpiryMonthChange={setExpiryMonth}
-                                        expiryYear={expiryYear}
-                                        onExpiryYearChange={setExpiryYear}
-                                    />
-                                </div>
-                            </DialogBody>
-                            <DialogFooter className="sm:gap-3">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => {
-                                        setCreateOpen(false)
-                                        resetCreateForm()
-                                    }}
-                                    disabled={saving}
-                                >
-                                    Cancelar
-                                </Button>
-                                <Button type="submit" disabled={saving}>
-                                    {saving ? "Salvando…" : "Cadastrar"}
-                                </Button>
-                            </DialogFooter>
-                        </CustomForm>
-                    </DialogContent>
-                </Dialog>
-            )}
+                        <DialogBody>
+                            <div className="space-y-3 pb-2">
+                                <CreditCardFormFields
+                                    formKey={`create-${createFormKey}`}
+                                    idPrefix="cc-new"
+                                    name={name}
+                                    onNameChange={setName}
+                                    cardNumber={cardNumber}
+                                    onCardNumberChange={setCardNumber}
+                                    closingDay={closingDay}
+                                    onClosingDayChange={setClosingDay}
+                                    dueDay={dueDay}
+                                    onDueDayChange={setDueDay}
+                                    creditLimit={creditLimit}
+                                    onCreditLimitChange={setCreditLimit}
+                                    expiryMonth={expiryMonth}
+                                    onExpiryMonthChange={setExpiryMonth}
+                                    expiryYear={expiryYear}
+                                    onExpiryYearChange={setExpiryYear}
+                                />
+                            </div>
+                        </DialogBody>
+                        <DialogFooter className="sm:gap-3">
+                            <DialogClose asChild>
+                                <FormCancel>Cancelar</FormCancel>
+                            </DialogClose>
+                            <FormSubmit pendingLabel="Salvando…">Cadastrar</FormSubmit>
+                        </DialogFooter>
+                    </CustomForm>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
