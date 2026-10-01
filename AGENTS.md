@@ -786,7 +786,10 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   `DatePicker`, `FormPickerPopoverTrigger` e, pelas variantes `Group`, o
   `InputGroup` vestem, mais a **altura com o piso de toque** e o **recuo** — e
   [`command-filter`](src/lib/command-filter.ts) — a busca por substring sem
-  acento, graduada, que a paleta do catálogo e o `Combobox` dividem — e
+  acento, graduada, que a paleta do catálogo e o `Combobox` dividem —,
+  [`search-field-classes`](src/lib/search-field-classes.ts) — a pílula de
+  busca que o `SearchInput`, o `CommandInput` e o gatilho do cabeçalho vestem
+  (rodada 198) — e
   as **três tintas de vidro**, que moram juntas em
   [`glass-classes`](src/lib/glass-classes.ts) desde a rodada 132, cada uma com o
   nome do papel: a **barra** (`barSurfaceClassName`, `--background` 95/60), a
@@ -865,11 +868,13 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   botões, e somem no toque. `CommandFooter` e `CommandHint` saíram. Na pilha a linha tem 36 e as peças
   dela são do componente — `CommandItemIcon` (caixa de 24), `CommandItemMeta`
   (o lado direito) e `CommandItemArrow` (a seta de ir) —, junto com o recuo
-  de 8 da placa e o respiro dos grupos; a tela não escreve nada disso. O
-  `Combobox` abre a pilha na densidade de dropdown (`density="menu"`:
-  pílula de 32, linhas de 28, o recuo dos menus, 4px entre as peças) num
-  `PopoverContent surface="none"`, o eixo novo
-  do `Popover` (`plate` é o padrão, e nada muda para os outros). O campo da paleta é `CommandInput size="lg"` (36); `md` (32) continua o padrão, o gatilho do cabeçalho. **E o ponteiro
+  de 8 da placa e o respiro dos grupos; a tela não escreve nada disso. **O
+  `Combobox` saiu da pilha na rodada 198**: é a placa do popover com a
+  pílula (`SearchInput surface="plate"`, pelo `CommandInput surface="plate"`)
+  e a lista dentro — pílula de 32 a 8px das bordas, linhas de 32, 8px
+  embaixo —, a forma do `SearchInput` num popover, que o dono pediu "exatamente
+  a mesma". A `density="menu"` e o `PopoverContent surface="none"` ficaram sem
+  consumidor no app. O campo da paleta é `CommandInput size="lg"` (36); `md` (32) continua o padrão, o gatilho do cabeçalho. **E o ponteiro
   conta como navegação** no modo ocioso
   (`onPointerMoveCapture` no hook): sem isso a seleção do hover era tratada
   como auto-seleção e nenhuma linha acendia. `command-reveal.test.ts` tranca.
@@ -1260,9 +1265,9 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   de limpar (`::-webkit-search-cancel-button`) em azul do sistema, na medida do
   sistema, sem conhecer o tema escuro nem a escada de controles. A semântica
   fica — é ela que dá a tecla "Buscar" no teclado do iOS —, mas o desenho é
-  suprimido com `appearance-none` e o botão é nosso, um `InputGroupButton` no
-  addon `inline-end`, que só aparece quando há texto. Vale para qualquer campo
-  de busca do app, não só para este.
+  suprimido com `appearance-none` e o botão é nosso — o × redondo da pílula
+  de busca, que só aparece quando há texto. Vale para qualquer campo de busca
+  do app: é o `SearchInput`.
 - **A raiz do seletor é quem sabe do telefone.** `modal={isMobile}` vem de
   fábrica — sem isso, rolar a lista arrasta a folha que a contém, e o dedo não
   distingue as duas. As três telas tomavam essa decisão sozinhas, com a mesma
@@ -1528,7 +1533,8 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
 - **Nos dropdowns, a dissolução ganha a seta de "tem mais"** (rodada 172, a
   pedido do dono): `ScrollFadeArrows` (`lib/scroll-fade-arrows`) com
   `useScrollFade({ arrows: true })`, no `Select`, nos três menus e nos
-  submenus, na pilha do `Command` (paleta e `Combobox`), no
+  submenus, na pilha do `Command` (a paleta), no `Combobox` (`CommandList
+  arrows`, desde que saiu da pilha), no
   `FormPickerPopoverList`, no `PopoverBody` e no `ScrollArea arrows`. O hook
   marca `data-scroll-more-start`/`-end` no rolável e escreve no pai onde ele
   está (`--scroll-fade-box-top`/`-bottom`); as setas são irmãs logo depois do
@@ -2024,6 +2030,25 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   transbordo a 375px —, e `variant="compact"` a força. `PaginationMore` é o
   "Mostrar mais" com a contagem. A tabela de transações e o histórico da conta
   o usam; **não escreva paginação com `ButtonGroup`**.
+- **A busca é uma pílula só, em três peças** (rodada 198). O `SearchInput`,
+  o `CommandInput` (no `CommandDialog`, no `Combobox` e solto) e o gatilho do
+  cabeçalho do catálogo vestem [`lib/search-field-classes`](src/lib/search-field-classes.ts):
+  a forma (pílula), a escada (28 · 32 · 36 · 40), as duas superfícies —
+  `field` (`border-border` + `input-fill/30`, na página) e `plate` (a tinta
+  flutuante + anel de 1px, dentro de painel) —, a lupa a 70%, o × redondo e a
+  tecla sem pastilha. **O `CommandInput` é o `SearchInput`**: ele o monta com
+  o `Command.Input` do cmdk como filho (o `Slot` funde classes e `ref`), então
+  o `Combobox` e a paleta têm a mesma pílula, o mesmo × e o mesmo anel —
+  menos na paleta, que nasce focada e desliga o anel (`focusRing`) e o piso
+  de toque (`touchFloor`). Só o gatilho do cabeçalho, que é um `<button>`,
+  veste a receita em vez do componente. `search-field.test.ts` cobra. **Uma constante não se prefixa**: por isso o
+  gatilho do cabeçalho são dois botões (ícone abaixo de `lg`, pílula a partir
+  dele), e não um que muda por `lg:`. O `SearchInput` deixou de compor o
+  `InputGroup` e ganhou `surface="plate"` (o `FormPickerPopoverSearch` e o
+  filtro de categoria o vestem), `shortcut` (a tecla à direita e o atalho que
+  foca; sem modificadora, não dispara dentro de campo de texto),
+  `variant="brand"` (só em `field`) e `pending`. **Nenhuma busca é `<Input
+  type="search">` nem pílula escrita à mão.**
 - **`RadioGroup` tem ficha, nota na linha, valor na ponta e ícone** (rodada
   197). `variant="chip"` é a escolha em pílulas, na superfície dos chips de
   filtro do `Badge` (o rádio fica `sr-only`, e a semântica continua de rádio);

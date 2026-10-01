@@ -27,6 +27,13 @@ import {
 import { Kbd } from "@/components/ui/kbd";
 import { KbdGroup } from "@/components/ui/kbd-group";
 import { useBrandGlow } from "@/hooks/use-brand-glow";
+import {
+  searchFieldIconClassName,
+  searchFieldShapeClassName,
+  searchFieldShortcutClassName,
+  searchFieldSizeClassName,
+  searchFieldSurfaceClassName,
+} from "@/lib/search-field-classes";
 import { CATEGORY_META } from "./category-meta";
 import type { Category } from "./ds-doc";
 import { gravarRecente, lerRecentes } from "./recent-pages";
@@ -466,81 +473,77 @@ function FraseRolante({
  * o tema — e teclado físico, ali, não costuma haver.
  */
 function DsSearchTrigger({ onClick }: { onClick: () => void }) {
-  // O brilho de marca ao aproximar (a primitiva do `Card` e do `Alert`
-  // brand), só onde o gatilho é um campo, a partir de `lg`. Ele mora num
-  // invólucro, e não no botão: o `::before` do brilho fica em `z` negativo sob
-  // `isolate`, e no próprio botão ele pintaria **por cima** do fundo e do disco
-  // de hover do `tertiary`. No invólucro, só o anel acende: a máscara recorta
-  // a borda, e o campo atrás aparece intacto (rodada 156 — o núcleo chapado de
-  // antes era o preto da página sobre este campo mais claro, e virava feixe).
+  // O brilho de marca ao aproximar, só na pílula. Ele mora num invólucro, e
+  // não no botão: o `::before` do brilho fica em `z` negativo sob `isolate`,
+  // e no próprio botão ele pintaria **por cima** do fundo e da flor do
+  // `tertiary`. No invólucro, só o anel acende.
   const glowRef = useBrandGlow(true);
+  const comum = {
+    type: "button" as const,
+    onClick,
+    "aria-haspopup": "dialog" as const,
+    "aria-keyshortcuts": "Meta+K Control+K",
+    "aria-label": "Buscar no design system",
+  };
   return (
-    <div
-      ref={glowRef}
-      className="relative isolate flex rounded-full lg:w-full lg:max-w-sm lg:brand-glow"
-    >
+    <>
+      {/* No telefone, um ícone entre ícones: contorno ali desenhava uma caixa
+          em volta de um botão ao lado de um switch sem caixa nenhuma. São dois
+          botões, e não um que muda de cara por `lg:`, porque a pílula veste a
+          receita de `lib/search-field-classes` (rodada 198) — e uma constante
+          não se prefixa: `lg:` montado em tempo de execução não existe. Só um
+          aparece por vez, então o leitor de tela ouve um. */}
       <Button
-        type="button"
-        // `tertiary` é a base, e o contorno entra só no desktop. No telefone ele
-        // é um ícone entre outros ícones: contorno ali desenhava uma caixa em
-        // volta de um botão ao lado de um switch sem caixa nenhuma.
-        //
-        // No desktop ele finge ser um campo de busca, então usa a altura de campo
-        // — `md`, 32 — e não a de botão de ícone que tinha antes. Foi 36 por
-        // uma rodada, e o dono o quis de volta em 32.
+        {...comum}
         variant="tertiary"
         size="icon-md"
-        onClick={onClick}
-        aria-haspopup="dialog"
-        aria-keyshortcuts="Meta+K Control+K"
-        aria-label="Buscar no design system"
-        className={cn(
-          // Pílula, a pedido do dono. O invólucro do brilho acompanha, porque o
-          // anel herda o raio dele (`border-radius: inherit`).
-          "rounded-full text-muted-foreground",
-          // O ponto de virada é `lg`, o mesmo em que a busca sai do meio da
-          // barra: campo largo só existe onde há meio para centralizá-lo.
-          "max-lg:size-8 max-lg:px-0",
-          "lg:h-8 lg:w-full lg:justify-start lg:gap-2 lg:px-3 lg:font-normal",
-          "lg:border-border lg:bg-input-fill/30",
-          // No campo largo o hover não pinta o fundo: quem responde à
-          // aproximação é o brilho da borda, e os dois juntos eram demais. O
-          // a flor do `tertiary` fica sem cor. Abaixo de `lg`, onde não há
-          // brilho, o botão de ícone mantém a flor.
-          "lg:[--button-bloom-fill:transparent] lg:dark:[--button-bloom-fill:transparent]",
-          // E o texto não acende: a frase troca, a cor fica a do repouso.
-          "lg:hover:text-muted-foreground lg:active:text-muted-foreground lg:aria-expanded:text-muted-foreground",
-        )}
+        className="rounded-full text-muted-foreground lg:hidden"
       >
-        <MagnifyingGlassIcon className="shrink-0 opacity-70" aria-hidden />
-        {/* Em repouso o campo diz o que se acha nele; com o cursor (ou o
-            foco de teclado) ele vira o convite para a ação. As duas frases
-            ocupam a mesma célula da grade, então a largura não pula, e trocam
-            **palavra a palavra**, uma se dissolvendo na outra (ver
-            `FraseRolante`).
-
-            **`text-left` é carga estrutural**: o `<button>` centraliza texto
-            por padrão do navegador, e a frase curta ficava centrada na largura
-            da longa — medido, "Buscar" nascia 40px à direita da lupa. O nome
-            acessível é o `aria-label` do botão. */}
-        <span
-          aria-hidden
-          className="grid min-w-0 text-left max-lg:sr-only [&>*]:col-start-1 [&>*]:row-start-1"
-        >
-          <FraseRolante texto="Buscar componentes e tokens…" papel="sai" />
-          <FraseRolante texto="Abrir a busca" papel="entra" />
-        </span>
-        {/* `aria-hidden` porque o atalho já é anunciado pelo
-          `aria-keyshortcuts` do próprio botão — repetir a tecla no nome
-          acessível diria a mesma coisa duas vezes. */}
-        <Kbd
-          keys="mod+k"
-          aria-hidden
-          // Sem a pastilha, como as teclas da legenda da paleta: dentro de um
-          // campo em pílula ela era uma caixa dentro de outra caixa.
-          className="ml-auto min-w-0 bg-transparent px-0 max-lg:hidden dark:bg-transparent"
-        />
+        <MagnifyingGlassIcon className="opacity-70" aria-hidden />
       </Button>
-    </div>
+      <div
+        ref={glowRef}
+        className="relative isolate hidden w-full rounded-full brand-glow lg:flex"
+      >
+        <Button
+          {...comum}
+          variant="tertiary"
+          className={cn(
+            // A pílula de busca: a forma, o degrau `md` (32) e a superfície de
+            // campo, as mesmas do `SearchInput` e do campo do `Command`.
+            searchFieldShapeClassName,
+            searchFieldSizeClassName.md,
+            searchFieldSurfaceClassName.field,
+            "w-full justify-start font-normal text-muted-foreground",
+            // O hover não pinta o fundo: quem responde à aproximação é o
+            // brilho da borda, e os dois juntos eram demais.
+            "[--button-bloom-fill:transparent] dark:[--button-bloom-fill:transparent]",
+            // E o texto não acende: a frase troca, a cor fica a do repouso.
+            "hover:text-muted-foreground active:text-muted-foreground aria-expanded:text-muted-foreground",
+          )}
+        >
+          <MagnifyingGlassIcon className={searchFieldIconClassName} aria-hidden />
+          {/* Em repouso o campo diz o que se acha nele; com o cursor (ou o
+              foco de teclado) ele vira o convite para a ação. As duas frases
+              ocupam a mesma célula da grade, então a largura não pula, e trocam
+              **palavra a palavra** (ver `FraseRolante`).
+
+              **`text-left` é carga estrutural**: o `<button>` centraliza texto
+              por padrão do navegador, e a frase curta ficava centrada na largura
+              da longa — medido, "Buscar" nascia 40px à direita da lupa. */}
+          <span
+            aria-hidden
+            className="grid min-w-0 text-left [&>*]:col-start-1 [&>*]:row-start-1"
+          >
+            <FraseRolante texto="Buscar componentes e tokens…" papel="sai" />
+            <FraseRolante texto="Abrir a busca" papel="entra" />
+          </span>
+          {/* `aria-hidden` porque o atalho já é anunciado pelo
+              `aria-keyshortcuts` — a tecla sem pastilha, a de todo campo de
+              busca. */}
+          <Kbd keys="mod+k" aria-hidden className={searchFieldShortcutClassName} />
+        </Button>
+      </div>
+    </>
   );
 }

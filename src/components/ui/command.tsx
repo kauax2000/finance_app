@@ -1,10 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { ArrowUpRightIcon, MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/16/solid"
+import { ArrowUpRightIcon } from "@heroicons/react/16/solid"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Command as CommandPrimitive, useCommandState } from "cmdk"
 
+import { SearchInput } from "@/components/ui/search-input"
 import { cn } from "@/lib/utils"
 import { Caption, P } from "@/components/ui/typography"
 import {
@@ -29,7 +30,6 @@ import {
   DialogPortal,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
 /**
  * O eixo é a **moldura**, e não só o raio.
  *
@@ -371,10 +371,10 @@ function CommandDialog({
  *
  * ## O campo é o mesmo do cabeçalho do catálogo
  *
- * `h-8` (o degrau `md`), `rounded-lg`, `border-border` e `bg-input-fill/30` —
- * as mesmas medidas do gatilho de busca que fica no alto da página. Quem abre
- * a paleta vem de clicar naquele campo; encontrar outro desenho do outro lado
- * do gesto quebra a continuidade.
+ * A pílula, a escada, a lupa e o × vêm de `lib/search-field-classes`, a
+ * receita que o gatilho do cabeçalho e o `SearchInput` também vestem (rodada
+ * 198). Quem abre a paleta vem de clicar naquele campo; encontrar outro
+ * desenho do outro lado do gesto quebra a continuidade.
  *
  * ## A superfície é uma só, e é a da casca
  *
@@ -391,6 +391,7 @@ function CommandInput({
   onValueChange,
   leading,
   size: sizeProp,
+  surface,
   "aria-label": ariaLabel = "Buscar",
   ...props
 }: Omit<React.ComponentProps<typeof CommandPrimitive.Input>, "size"> & {
@@ -402,8 +403,13 @@ function CommandInput({
    * e o dono pediu menor nos dois. A faixa de dissolução acompanha (`data-size` no wrapper).
    */
   size?: "md" | "lg"
+  /**
+   * A superfície da pílula. Na pilha é `plate`; fora dela, `field` — menos
+   * quando o `Command` mora numa placa flutuante (o `Combobox`), que pede
+   * `plate`.
+   */
+  surface?: "field" | "plate"
 }) {
-  const temTexto = value != null && String(value).length > 0
   const pilha = React.useContext(CommandStackContext)
   const naPilha = pilha !== null
   // Na paleta o campo nasce `lg` (36), a pílula que o dono escolheu; na
@@ -415,107 +421,74 @@ function CommandInput({
   // liga o feixe da pílula: ele corre enquanto o campo espera a primeira tecla.
   const busca = useCommandState((estado) => estado.search)
   const esperando = (value != null ? String(value) : busca) === ""
+  // Sem dono, o texto mora aqui (rodada 198): o × do `SearchInput` precisa
+  // saber se há texto e poder limpá-lo, e o `Combobox` não controla a busca.
+  // O conteúdo de um popover desmonta ao fechar, então ela recomeça vazia.
+  const [interno, setInterno] = React.useState("")
+  const controlado = value !== undefined
+  const texto = controlado ? value : interno
+  const mudar = (proximo: string) => {
+    if (!controlado) setInterno(proximo)
+    onValueChange?.(proximo)
+  }
 
   return (
     <div
       data-slot="command-input-wrapper"
-      // `relative z-10` e o vidro próprio: a faixa deixa de ser irmã da lista
-      // e passa a ficar **sobre** ela, do jeito que o `<header>` do catálogo
-      // fica sobre a página. É o que faz o conteúdo rolar por trás do campo em
-      // vez de parar embaixo dele.
-      //
-      // **Sem fio e sem tinta.** É o que o rodapé sempre foi, e pela mesma
-      // razão: quem marca o limite é o conteúdo sumindo, não uma superfície
-      // cobrindo. A primeira tentativa tirou só o fio e manteve o vidro, e o
-      // resultado continuava lendo como duas faixas — porque **era**: a faixa
-      // repintava a placa (`bg-popover/85`) sobre um casco que já a tinha, e
-      // dois 85% empilhados dão 97,75%. No tema escuro `--popover` é mais claro
-      // que a página, então a faixa era um retângulo **mais claro** com uma
-      // aresta na base. É a mesma aritmética que tirou a placa do `Command`
-      // hospedado: tinta sobre a casca é uma segunda superfície. O
-      // `backdrop-blur` saiu junto, senão a borda do borrão desenharia a mesma
-      // linha sozinha.
-      //
-      // O `relative z-10` fica: sem ele o campo não pintaria por cima da lista
-      // que passa atrás dele.
+      // `relative z-10`: a faixa fica **sobre** a lista, do jeito que o
+      // `<header>` do catálogo fica sobre a página — o conteúdo rola por trás
+      // do campo em vez de parar embaixo dele. **Sem fio e sem tinta**: quem
+      // marca o limite é o conteúdo sumindo. Uma versão repintava a placa
+      // aqui, e dois 85% empilhados davam 97,75% — um retângulo mais claro
+      // com aresta na base, no escuro.
       data-size={size}
       className={cn(
         "relative z-10 flex shrink-0 items-center",
-        // No diálogo a pílula é solta, sem o recuo da faixa.
+        // Na pilha a pílula é solta, sem o recuo da faixa.
         !naPilha && "p-2"
       )}
     >
-      {/* Anel de foco **fora** do diálogo. Na paleta (`CommandDialog`) o campo é
-            autofocado ao abrir, o anel nasceria aceso e nunca apagaria, e quem
-            carrega o foco visível é a linha selecionada — ali ele some. No
-            `Command` solto e no `Combobox` quem chega por teclado precisa vê-lo. */}
-        {/* Não veste `field-classes` de propósito: este campo imita o gatilho do
-            cabeçalho do catálogo que o abriu — `border-border`, sem anel de foco
-            — e não um campo de formulário. A decisão está registrada acima. */}
-        <div
-          data-waiting={(comFeixe && esperando) || undefined}
-          className={cn(
-            "flex w-full min-w-0 items-center",
-            size === "lg" ? "h-9 gap-2.5 px-3.5 text-sm" : "h-8 gap-2 px-3 text-sm",
-            naPilha
-              ? // **No diálogo o campo é uma pílula de vidro solta** (rodada
-                // 141), com as pontas de pílula do gatilho do cabeçalho: ele
-                // saiu da placa e pinta a própria superfície, a mesma receita
-                // flutuante da placa e das cápsulas da legenda. **Sem sombra, nas
-                // três**: elas estão no mesmo plano, e sombra diria que uma flutua
-                // sobre a outra — a pedido do dono. Sem anel de foco — o campo
-                // nasce focado, e quem carrega o foco visível é a linha
-                // selecionada.
-                cn(
-                  "rounded-full ring-1 ring-foreground/10",
-                  menuPanelTintClassName,
-                  // O feixe da borda de baixo (rodada 142), aceso por
-                  // `data-waiting` — **só no diálogo** (rodada 143). Ver a
-                  // utility em `globals.css`.
-                  // A pílula veste a **mesma** tinta da placa da lista, em
-                  // toda densidade: no `Combobox` ela chegou a levar o
-                  // preenchimento de campo por cima, e o dono a quis igual ao
-                  // fundo do dropdown (rodada 143).
-                  comFeixe && "command-beam"
-                )
-              : "rounded-lg border border-border bg-input-fill/30 has-[input:focus-visible]:border-ring has-[input:focus-visible]:ring-3 has-[input:focus-visible]:ring-ring/45"
-          )}
-        >
-        <MagnifyingGlassIcon
-          aria-hidden
-          className="size-4 shrink-0 text-muted-foreground opacity-70"
-        />
-        {leading}
+      {/* **O campo é o `SearchInput`** (rodada 198), com o `Command.Input` do
+          cmdk como filho — o cmdk precisa do campo dele para filtrar a lista.
+          Na pilha (o `CommandDialog` e o `Combobox`) é a superfície `plate`,
+          solto é a `field`.
+
+          Na paleta não há anel nem piso de toque: o campo é autofocado ao
+          abrir, o anel nasceria aceso e nunca apagaria — quem carrega o foco
+          visível é a linha selecionada —, e a pilha tem medidas próprias (o
+          teto da lista desconta a pílula de 36). No `Combobox` e solto, quem
+          chega por teclado vê o anel do campo. */}
+      <SearchInput
+        surface={surface ?? (naPilha ? "plate" : "field")}
+        size={size}
+        focusRing={pilha !== "palette"}
+        // Sem piso de toque em nenhum lugar: a altura da faixa de busca é
+        // publicada pela raiz (`--scroll-fade-band-h`, 32 + 16), e a pílula
+        // crescendo no dedo a deixaria 8px por baixo da lista.
+        touchFloor={false}
+        leading={leading}
+        value={texto}
+        onClear={(event) => {
+          mudar("")
+          // Limpar pelo × não dispara `input` no campo, e a raiz lê `onInput`
+          // para voltar ao estado ocioso. O evento sai do botão, e não do
+          // `<input>`, para não reentrar no `onChange` com o texto velho.
+          event.currentTarget.dispatchEvent(new Event("input", { bubbles: true }))
+        }}
+        // O feixe da borda de baixo (rodada 142), aceso por `data-waiting` —
+        // **só no diálogo** (rodada 143). Ver a utility em `globals.css`.
+        className={cn(comFeixe && "command-beam")}
+        rootProps={{ "data-waiting": (comFeixe && esperando) || undefined } as React.ComponentProps<"div">}
+      >
         <CommandPrimitive.Input
           data-slot="command-input"
           aria-label={ariaLabel}
-          value={value}
-          onValueChange={onValueChange}
-          className={cn(
-            "min-w-0 flex-1 bg-transparent outline-hidden placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
-            className
-          )}
+          value={texto}
+          onValueChange={mudar}
+          className={cn("disabled:opacity-50", className)}
           {...props}
         />
-        {onValueChange && temTexto ? (
-          <Button
-            type="button"
-            variant="tertiary"
-            size="icon-xs"
-            aria-label="Limpar busca"
-            className="-mr-1.5 shrink-0"
-            onClick={(event) => {
-              onValueChange("")
-              // Limpar pelo × não dispara `input` no campo, e a raiz lê `onInput`
-              // para voltar ao estado ocioso. O evento sai do botão, e não do
-              // `<input>`, para não reentrar no `onChange` com o texto velho.
-              event.currentTarget.dispatchEvent(new Event("input", { bubbles: true }))
-            }}
-          >
-            <XMarkIcon aria-hidden />
-          </Button>
-        ) : null}
-      </div>
+      </SearchInput>
     </div>
   )
 }
@@ -626,8 +599,15 @@ function CommandScope({
 function CommandList({
   className,
   children,
+  arrows,
   ...props
-}: React.ComponentProps<typeof CommandPrimitive.List>) {
+}: React.ComponentProps<typeof CommandPrimitive.List> & {
+  /**
+   * As setas de "tem mais" (rodada 172). Na pilha vêm sempre; fora dela, quem
+   * é lista suspensa as pede — o `Combobox`, desde que saiu da pilha.
+   */
+  arrows?: boolean
+}) {
   const [medido, setMedido] = React.useState(false)
 
   React.useEffect(() => {
@@ -646,7 +626,8 @@ function CommandList({
   const naPaleta = pilha === "palette"
   // As setas só na pilha, que é a lista suspensa (a paleta e o `Combobox`):
   // é a placa dela o pai `relative` em que elas pousam.
-  const fadeRef = useScrollFade({ arrows: naPilha })
+  const setas = arrows ?? naPilha
+  const fadeRef = useScrollFade({ arrows: setas })
   const lista = (
     <CommandPrimitive.List
       ref={fadeRef}
@@ -707,7 +688,16 @@ function CommandList({
     </CommandPrimitive.List>
   )
 
-  if (!naPilha) return lista
+  // Fora da pilha, as setas pousam na raiz do `Command`, que é `relative`.
+  if (!naPilha)
+    return setas ? (
+      <>
+        {lista}
+        <ScrollFadeArrows />
+      </>
+    ) : (
+      lista
+    )
 
   // **No diálogo a lista mora numa placa própria** (rodada 141), porque o campo
   // saiu dela. A placa é um embrulho, e não a lista: a lista é o elemento

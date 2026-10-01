@@ -257,8 +257,8 @@ export default function ComboboxDoc() {
         papel: o Enter fica com a lista e não envia o formulário.
       </DocNote>
 
-      <DocNote title="A lista é a pilha do Command">
-        Aberto, o <code>Combobox</code> mostra o mesmo desenho da paleta: a <strong>pílula</strong> de busca — sem o feixe, que é só do diálogo — e a <strong>placa</strong> com a lista, soltas e a 4px uma da outra — com as medidas de um dropdown (<code>density=&quot;menu&quot;</code>): pílula de 32, linhas de 28, o recuo e o respiro dos menus. O popover em volta não pinta (<code>surface=&quot;none&quot;</code>) — placa em volta de placa seria a placa dupla que a régua proíbe. Ele continua ancorado ao gatilho, com a largura dele, e abre com o primeiro valor realçado, como um select.
+      <DocNote title="Uma placa, com a busca dentro">
+        Aberto, o <code>Combobox</code> é a placa do popover com a <strong>pílula</strong> de busca e a lista <strong>dentro</strong> dela — a forma do <code>SearchInput surface=&quot;plate&quot;</code> num popover, que a página do <code>SearchInput</code> demonstra, medida a medida: a pílula de 32 a 8px das bordas, linhas de 32 com o texto a 16px, 8px embaixo. A pílula é o próprio <code>SearchInput</code>, com o anel de foco e o × de limpar. O <code>Command</code> de dentro não pinta — placa em volta de placa seria a placa dupla que a régua proíbe. Até a rodada 197 ele foi a pilha da paleta (pílula e placa soltas); o dono quis a busca dentro. Ele continua ancorado ao gatilho, com a largura dele, e abre com o primeiro valor realçado, como um select.
       </DocNote>
 
       <DocNote title="Não confundir com FormPickerPopover">

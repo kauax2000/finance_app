@@ -16371,3 +16371,83 @@ O dono pediu a rodada completa e escolheu as quatro versões.
 - O formulário de transação pede login e não foi visto; as peças foram
   medidas na página, nos dois temas e a 375px com toque.
 
+### Rodada 198 — a busca é uma pílula só: SearchInput, CommandInput e o gatilho do cabeçalho
+
+O dono pediu o `SearchInput` reformulado a partir das buscas que já usava — o
+gatilho do cabeçalho do catálogo, o `CommandDialog` e o `Combobox` —, tudo
+padronizado, e escolheu as quatro versões.
+
+- **As três referências concordavam por cópia, e o `SearchInput` discordava.**
+  O gatilho e a pílula da paleta escreviam à mão a mesma forma (pílula, lupa a
+  70%, `gap-2`/`px-3` no 32, `gap-2.5`/`px-3.5` no 36); o `SearchInput` era um
+  `InputGroup`, caixa `rounded-lg` de formulário. A receita foi para
+  `lib/search-field-classes` e os três a vestem. Medido depois: gatilho e
+  `SearchInput` com a mesma altura (32), o mesmo raio, o mesmo fio e o mesmo
+  preenchimento, lupa a 13px da borda nos dois; a paleta em 36, lupa a 14.
+- **Nenhum pode ser o outro**: o gatilho é um `<button>`, o campo da paleta é o
+  `Command.Input` do cmdk, e o `SearchInput` é um `<input>`. Divide-se a régua,
+  no precedente de `menu-classes` e `field-classes`.
+- **O gatilho do cabeçalho virou dois botões.** Ele mudava de cara por `lg:` (a
+  pílula só a partir de `lg`, ícone abaixo), e uma constante não se prefixa —
+  `lg:` montado em tempo de execução não existe. Hoje é o ícone com
+  `lg:hidden` e a pílula com `hidden lg:flex`, e só um aparece por vez (medido
+  a 375px: um gatilho visível).
+- **O `CommandInput` solto mudou um pouco**: era `rounded-lg` com o anel de
+  foco a 45%, e passou à pílula com o anel de campo (30%, a decisão da rodada
+  162). O × dos dois ficou redondo, como a pílula.
+- **`surface="plate"`**: a pílula de vidro da pilha, para dentro de painel
+  flutuante. O `FormPickerPopoverSearch` (os seletores de categoria da
+  transação e da assinatura) e a busca de categoria do filtro de transações a
+  vestem — era um campo preenchido sobre a placa, a segunda superfície que o
+  dono já tinha tirado do `Combobox` na rodada 143.
+- **`shortcut`**: a tecla à direita sem pastilha (a do gatilho) e o atalho que
+  foca e seleciona o campo, com `aria-keyshortcuts`. Sem modificadora ele não
+  dispara com o foco num campo de texto. Medido na página com `F` (⌘K e `/`
+  são da paleta do catálogo): F foca, e digitar `ff` no campo escreve `ff`.
+  Com texto, o lugar é do ×.
+- **`variant="brand"`**: o brilho do gatilho, só na superfície `field`; o tipo
+  proíbe com `plate`. **`pending`**: o `Spinner` no lugar da lupa e
+  `aria-busy`, sem mudar a altura (medido, 32).
+- **No dedo**: os quatro degraus sobem a 40 e o texto fica em 16px (sem zoom
+  do iOS), medido a 375px com toque.
+- **Dois testes antigos liam o texto do `CommandInput`** procurando a tinta da
+  placa escrita ali (`command-dock` e a asserção 24 do `glass`). Eles agora
+  seguem a indireção: o campo veste `searchFieldSurfaceClassName.plate`, e a
+  receita importa `menuPanelTintClassName` da régua.
+- O filtro de transações pede login e não foi visto; as peças foram medidas na
+  página do catálogo, no cabeçalho, no `Combobox` e no `Command`, nos dois
+  temas e a 375px.
+- **O `Combobox` ainda não era o `SearchInput`** — o dono apontou na tela: a
+  pílula dele dividia a receita, mas não o componente, e por isso não tinha o
+  anel de foco nem o ×. A divisão por régua tinha parado cedo demais: o
+  `Command.Input` do cmdk não pode ser trocado por outro `<input>`, mas pode
+  ser **filho** do `SearchInput`, que o recebe por `Slot`. Agora o
+  `CommandInput` monta o `SearchInput` (`surface` `plate` na pilha, `field`
+  solto), com quatro props para ele: `leading` (o escopo), `focusRing` (a
+  paleta o desliga), `touchFloor` (a pilha o desliga — o teto da lista
+  desconta a pílula de 36) e `rootProps` (o `data-waiting` do feixe). O
+  `onClear` passou a receber o evento, para o × da paleta disparar o `input`
+  que devolve a paleta ao ocioso. E o `CommandInput` guarda o texto quando
+  ninguém o controla — o `Combobox` não controla, e sem isso o × nunca
+  aparecia. Medido no `Combobox`: a pílula é o `search-input` `plate`, filtra
+  8 → 2 com "sa", o × limpa, volta às 8 e devolve o foco, e o anel acende com
+  o campo focado. Na paleta: sem anel, o feixe apaga ao digitar e volta ao
+  limpar, e o escopo entra e sai pelo Backspace como antes.
+- **O dropdown do `Combobox` ficou igual ao popover da demonstração**, a
+  pedido do dono ("exatamente o mesmo"): uma placa só, a do popover, com a
+  pílula e a lista dentro. Até aqui ele era a pilha da paleta (rodada 143):
+  pílula e placa soltas, o popover sem pintar, uma sombra por peça. Agora o
+  `Command` de dentro é `plain`, o `CommandInput` ganhou `surface` (o
+  `Combobox` pede `plate`), a lista recua 8px (`px-2 pb-2`) e a linha tem 32
+  (`py-1.5`, e não `min-h-8`: `field-control-ladder.test.ts` reprovou o
+  `h-8` como degrau escrito à mão, e a linha não é degrau). A primeira linha
+  nascia 4px abaixo da demonstração — a folga do recuo da dissolução —, e
+  ela passou para baixo, com a mesma soma na altura da lista. Medido nos dois
+  temas: placa de raio 10 com a mesma tinta, pílula em 8/8 com 32, linhas em
+  48, 80, 112 com o texto a 16px — os mesmos números da demonstração. As
+  setas de "tem mais", que só a pilha ligava, vieram por `CommandList
+  arrows`. O piso de toque saiu do `CommandInput` em todo lugar: a raiz
+  publica a altura da faixa de busca (32 + 16), e a pílula a 40 no dedo
+  ficaria 8px por baixo da lista. `density="menu"` e `PopoverContent
+  surface="none"` ficaram sem consumidor no app.
+

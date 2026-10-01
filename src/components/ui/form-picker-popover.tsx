@@ -244,6 +244,10 @@ function FormPickerPopoverContent({
  * no seletor de categoria da nova transação. O `SearchInput` devolve o foco ao
  * campo.
  *
+ * Desde a rodada 198 ele veste `surface="plate"`: a pílula de vidro da
+ * pilha do `Command`, a mesma do `Combobox`. Dentro da placa flutuante, um
+ * campo preenchido era uma segunda superfície sobre ela.
+ *
  * `className` continua indo para o `<input>`, como sempre foi aqui — por isso
  * ele chega como `inputClassName`.
  *
@@ -255,7 +259,7 @@ function FormPickerPopoverSearch({
   size = "lg",
   placeholder = "Buscar…",
   ...props
-}: React.ComponentProps<typeof SearchInput>) {
+}: Omit<React.ComponentProps<typeof SearchInput>, "surface" | "variant">) {
   return (
     <div
       data-slot="form-picker-popover-search"
@@ -265,6 +269,7 @@ function FormPickerPopoverSearch({
       className="relative z-10 shrink-0 p-3 pb-2"
     >
       <SearchInput
+        surface="plate"
         size={size}
         placeholder={placeholder}
         inputClassName={className}

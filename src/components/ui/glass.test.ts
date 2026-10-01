@@ -374,7 +374,12 @@ describe("a superfície de vidro", () => {
         // são os da asserção 23, e uma cópia aqui divergiria dela.
         const campo = paleta.slice(paleta.indexOf("function CommandInput"), paleta.indexOf("function CommandScope"))
         const lista = paleta.slice(paleta.indexOf("function CommandList"), paleta.indexOf("function CommandEmpty"))
-        expect(campo, "a pílula de busca não pinta").toMatch(/naPilha[\s\S]*menuPanelTintClassName/)
+        // A tinta chega pela receita da busca (rodada 198), que a importa da régua.
+        expect(campo, "a pílula de busca não pinta").toMatch(/<SearchInput\s+surface=\{surface \?\? \(naPilha \? "plate" : "field"\)\}/)
+        expect(
+            readFileSync(join(process.cwd(), "src/lib/search-field-classes.ts"), "utf8"),
+            "a receita veste a tinta da régua"
+        ).toMatch(/import \{ menuPanelTintClassName \} from "@\/lib\/glass-classes"[\s\S]*plate: `[^`]*\$\{menuPanelTintClassName\}`/)
         expect(lista, "a placa da lista não pinta").toMatch(/command-dialog-panel[\s\S]*menuPanelTintClassName/)
         expect(paleta).not.toContain("supports-backdrop-filter:dark:bg-transparent")
         expect(paleta).not.toContain("reduced-transparency:bg-transparent")

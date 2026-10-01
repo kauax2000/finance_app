@@ -16,8 +16,13 @@ describe("a pilha: pílula, placa e legenda (rodadas 140–143)", () => {
     // A raiz provê o contexto quando é `panel`, e a variante é a coluna.
     expect(paleta).toContain('const pilha = resolvida === "panel" ? (density ?? "palette") : null')
     expect(paleta).toContain("<CommandStackContext.Provider value={pilha}>")
-    // O Combobox é a pilha com as medidas de um dropdown.
-    expect(fonte("src/components/ui/combobox.tsx")).toContain('density="menu"')
+    // O Combobox **saiu da pilha** na rodada 198: uma placa só, a do popover,
+    // com a pílula `plate` e a lista dentro — a forma do `SearchInput` num
+    // popover, que o dono pediu "exatamente a mesma".
+    const combobox = fonte("src/components/ui/combobox.tsx")
+    expect(combobox).not.toContain('variant="panel"')
+    expect(combobox).not.toContain('surface="none"')
+    expect(combobox).toMatch(/<CommandInput[\s\S]*surface="plate"/)
     expect(paleta).toMatch(/naPaleta && "min-h-9"/)
     expect(paleta).toMatch(/panel: "gap-3 overflow-visible/)
     // A placa é da lista, num embrulho: a lista é o elemento mascarado, e a
@@ -27,12 +32,17 @@ describe("a pilha: pílula, placa e legenda (rodadas 140–143)", () => {
     expect(lista).toContain("[--scroll-fade-band-h:0px]")
     // E o campo é uma pílula de vidro solta.
     const campo = paleta.slice(paleta.indexOf("function CommandInput"), paleta.indexOf("function CommandScope"))
-    expect(campo).toMatch(/naPilha[\s\S]*rounded-full[\s\S]*menuPanelTintClassName/)
-    // O popover do Combobox não pinta: a pilha traz as próprias superfícies.
+    // Desde a rodada 198 a pílula é o `SearchInput`, na superfície `plate`
+    // dentro da pilha; a receita é que é pílula e vidro.
+    expect(campo).toMatch(/<SearchInput\s+surface=\{surface \?\? \(naPilha \? "plate" : "field"\)\}/)
+    expect(fonte("src/components/ui/search-input.tsx")).toContain("searchFieldSurfaceClassName[surface]")
+    const receita = fonte("src/lib/search-field-classes.ts")
+    expect(receita).toMatch(/searchFieldShapeClassName = "[^"]*rounded-full/)
+    expect(receita).toMatch(/plate: `[^`]*\$\{menuPanelTintClassName\}`/)
+    // O popover do Combobox pinta a placa da régua, e o `Command` de dentro não.
     const popover = fonte("src/components/ui/popover.tsx")
     expect(popover).toMatch(/plate: menuPanelSurfaceClassName/)
     expect(popover).toMatch(/defaultVariants: \{ surface: "plate"/)
-    expect(fonte("src/components/ui/combobox.tsx")).toContain('surface="none"')
   })
 
   it("cada cápsula tem o próprio vidro, e a linha some no toque", () => {

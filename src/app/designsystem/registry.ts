@@ -186,7 +186,9 @@ const LAYER: Record<string, Layer> = {
    *  rótulo continuar do lado de fora, escrito à mão por quem chama, como
    *  estava. */
   "radio-group": "Molecules",
-  /** Especializa o `InputGroup` — lupa e ×. Molécula sobre molécula. */
+  /** A pílula de busca: `Button` (o ×), `Kbd` (o atalho) e `Spinner`
+   *  (`pending`). Até a rodada 198 especializava o `InputGroup`; a pílula não é
+   *  o grupo de campo, e passou a compor os átomos direto. */
   "search-input": "Molecules",
   "toggle-group": "Molecules",
 
@@ -427,7 +429,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("kbd-group", "Kbd Group", "Sequência de teclas.", ui("kbd-group"), "KbdGroup"),
   entry("pagination", "Pagination", "Navegação entre páginas de uma lista.", ui("pagination"), "Pagination, PaginationStatus, PaginationContent, PaginationLink, PaginationPrevious, PaginationNext, PaginationEllipsis, PaginationMore"),
   entry("radio-group", "Radio Group", "Escolha única entre poucas opções — em linha, em cartão, em ladrilho ou em fichas.", ui("radio-group"), "RadioGroup, RadioGroupItem"),
-  entry("search-input", "Search Input", "O campo de busca.", ui("search-input"), "SearchInput"),
+  entry("search-input", "Search Input", "O campo de busca — a pílula do cabeçalho e da paleta.", ui("search-input"), "SearchInput"),
   entry("toggle-group", "Toggle Group", "Conjunto de toggles: seleção única ou múltipla.", ui("toggle-group"), "ToggleGroup, ToggleGroupItem"),
 
   // ── Organisms ──────────────────────────────────────────────────────────

@@ -442,43 +442,21 @@ function ComboboxContent({
   commandProps?: React.ComponentProps<typeof Command>
 }) {
   return (
-    // **O popover não pinta, e a paleta dentro dele é a pilha** (rodada 143):
-    // a pílula de busca e a placa da lista, soltas, como no `CommandDialog` —
-    // mas com as medidas de um dropdown (`density="menu"`): pílula de 32,
-    // linhas de 28, o recuo e o respiro dos menus.
-    // Placa do popover em volta da placa da lista seria a placa dupla que a
-    // regra de uma placa por superfície proíbe — por isso `surface="none"`.
+    // **Uma placa só** (rodada 198, a pedido do dono): o popover pinta a
+    // placa flutuante, e a pílula de busca e a lista moram **dentro** dela —
+    // a forma do `SearchInput surface="plate"` num popover, que o catálogo
+    // demonstra. Da rodada 143 à 197 ele foi a pilha do `CommandDialog`
+    // (pílula e placa soltas, o popover sem pintar, uma sombra por peça).
+    // O `Command` de dentro não pinta (`plain`): placa em volta de placa é a
+    // placa dupla que a régua proíbe.
     <PopoverContent
       data-slot="combobox-content"
       align={align}
-      surface="none"
       padding="none"
-      className={cn(
-        "w-(--radix-popover-trigger-width) min-w-48",
-        // **A sombra acompanha a forma de cada peça, e fica atrás das duas.**
-        // Um retângulo único atrás do conjunto deixava a aresta reta dele
-        // aparecendo onde a pílula arredonda — a sombra "ficava para fora",
-        // medido na tela. São dois pseudo-elementos com a forma exata de cada
-        // peça — `::before` a pílula (32 de altura, cápsula), `::after` a
-        // placa (a partir de 36 = 32 + os 4 do respiro, `rounded-xl`) —, os
-        // dois em `z` negativo sob o `isolate`: pintam abaixo **das duas**, e
-        // a sombra de uma nunca cai sobre a outra, o que as manteria em planos
-        // diferentes. `box-shadow` e não `filter`: um `filter` aqui seria raiz
-        // de fundo e apagaria o vidro. `shadow-lg`, porque o `shadow-md` dos
-        // menus quase não se via no tema claro com as peças soltas.
-        //
-        // A altura da pílula mora numa variável e não numa classe `h-*` da
-        // escada: isto é o **contorno da sombra**, não a altura de um
-        // controle — `field-control-ladder.test.ts` proíbe o combobox de
-        // reescrever a escada, e com razão.
-        "relative isolate [--combobox-pill-h:--spacing(8)]",
-        "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:-z-10 before:h-(--combobox-pill-h) before:rounded-full before:shadow-lg before:content-['']",
-        "after:pointer-events-none after:absolute after:inset-x-0 after:top-[calc(var(--combobox-pill-h)+--spacing(1))] after:bottom-0 after:-z-10 after:rounded-xl after:shadow-lg after:content-['']",
-        className
-      )}
+      className={cn("w-(--radix-popover-trigger-width) min-w-48", className)}
       {...props}
     >
-      <Command variant="panel" density="menu" filter={commandFilter} {...commandProps}>
+      <Command filter={commandFilter} {...commandProps}>
         {children}
       </Command>
     </PopoverContent>
@@ -493,6 +471,8 @@ function ComboboxInput({
   return (
     <CommandInput
       data-slot="combobox-input"
+      // A pílula de vidro dentro da placa, como no popover da demonstração.
+      surface="plate"
       placeholder={placeholder}
       className={className}
       {...props}
@@ -519,7 +499,12 @@ function ComboboxList({
     <CommandList
       id={listId}
       data-slot="combobox-list"
-      className={className}
+      arrows
+      // 8px dos lados e embaixo, o recuo da pílula: a linha acesa alinha com
+      // as bordas dela. Em cima a linha nasce rente à faixa da pílula (sem os
+      // 4px de folga da dissolução), que passam para baixo — a altura da lista
+      // soma os mesmos 8.
+      className={cn("px-2 pt-(--scroll-fade-band-h) pb-2", className)}
       {...props}
     />
   )
@@ -549,8 +534,18 @@ function ComboboxLoading({
   return <CommandLoading data-slot="combobox-loading" {...props} />
 }
 
-function ComboboxGroup({ ...props }: React.ComponentProps<typeof CommandGroup>) {
-  return <CommandGroup data-slot="combobox-group" {...props} />
+function ComboboxGroup({
+  className,
+  ...props
+}: React.ComponentProps<typeof CommandGroup>) {
+  return (
+    <CommandGroup
+      data-slot="combobox-group"
+      // O cabeçalho no recuo da linha (`px-2`).
+      className={cn("**:[[cmdk-group-heading]]:px-2", className)}
+      {...props}
+    />
+  )
 }
 
 function ComboboxSeparator({
@@ -592,7 +587,10 @@ function ComboboxItem({
         toggle(next)
         onSelect?.(next)
       }}
-      className={cn("pr-8", className)}
+      // A linha de 32 com 8px de recuo — a do popover da demonstração —, e
+      // `pr-8` para o tique. Os 32 saem do `py-1.5` sobre a entrelinha de 20,
+      // e não de um `h-*`: a linha não é um degrau da escada de controles.
+      className={cn("px-2 py-1.5 pr-8", className)}
       {...props}
     >
       {children}

@@ -29,7 +29,8 @@ describe("o feixe da pílula de busca espera a primeira tecla (rodada 142)", () 
   it("só a pílula do diálogo veste o feixe, e liga pelo campo vazio", () => {
     const campo = paleta.slice(paleta.indexOf("function CommandInput"), paleta.indexOf("function CommandScope"))
     expect(campo).toContain('comFeixe && "command-beam"')
-    expect(campo).toContain("data-waiting={(comFeixe && esperando) || undefined}")
+    // O `data-waiting` vai à pílula, que desde a rodada 198 é o `SearchInput`.
+    expect(campo).toContain('rootProps={{ "data-waiting": (comFeixe && esperando) || undefined }')
     expect(campo).toContain("useCommandState")
     // Só o `CommandDialog` provê o contexto do feixe: a paleta solta e o
     // `Combobox` são a pilha, mas sem a luz (rodada 143, a pedido do dono).

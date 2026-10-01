@@ -543,6 +543,7 @@ export function TransactionsFiltersPanel({
                                             </Button>
                                         </div>
                                         <SearchInput
+                                            surface="plate"
                                             placeholder="Buscar categoria…"
                                             value={categoryQuery}
                                             onChange={(e) =>
