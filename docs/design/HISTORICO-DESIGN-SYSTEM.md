@@ -16451,3 +16451,43 @@ padronizado, e escolheu as quatro versões.
   ficaria 8px por baixo da lista. `density="menu"` e `PopoverContent
   surface="none"` ficaram sem consumidor no app.
 
+### Rodada 199 — o ToggleGroup ganha a bandeja segmentada, a ficha, a contagem e as partes iguais
+
+O dono pediu a rodada completa e escolheu as quatro versões.
+
+- **O seletor de período das transações era escrito à mão nas duas formas**
+  (`transactions-date-presets.tsx`): um `role="group"` de `Button
+  aria-pressed`, a ficha com as constantes `tagChipFilter` e a bandeja com
+  `bg-background shadow-sm` e uma sombra em `rgb()` cru no escuro. Virou
+  `ToggleGroup type="single"`, com setas e o escolhido anunciado como rádio.
+  **A pergunta da rodada errou num ponto**: ela dizia que a bandeja era "o
+  seletor de período da tabela", e a bandeja (`variant="compact"`) não tem
+  tela — o único uso é a folha de filtros, com as fichas. As duas formas
+  migraram.
+- **`variant="segmented"`**: a bandeja, com o marcador que desliza — a
+  mecânica do `Tabs` (`ResizeObserver` mais `MutationObserver` em
+  `data-state`, `offsetLeft` relativo à trilha, `--toggle-indicator-*`) e a
+  superfície do marcador do `Tabs solid`. A bandeja é o item mais 4px (`sm`
+  faz 32). Sem medida — servidor, primeira pintura — a escolhida se pinta
+  sozinha. Nenhuma escolhida vale (o período personalizado), e o marcador
+  some. Medido: o marcador a 9px do destino aos 60ms e encaixado (Δx 0, Δw
+  0) depois; clicar no ativo não desmarca; com `shape="pill"` a bandeja e o
+  marcador viram pílula.
+- **`variant="chip"`**, no `Toggle` e no grupo: a superfície da ficha do
+  `RadioGroup`, com o foco em `outline` porque o anel de 1px da escolha já é
+  `ring`. `toggle-group-versions.test.ts` cobra a igualdade com o `Badge`.
+- **`count`**: a contagem tabular no peso normal, sem opacidade (a tinta
+  apagada a 70% cairia abaixo de 4,5:1). **A primeira versão dizia
+  "Transações8" ao leitor de tela** — o `textContent` do item, medido, colava
+  o rótulo ao número, porque o respiro era só o `gap`. Um espaço de texto
+  antes do número resolve, e num flex ele não ocupa lugar (medido: o vão
+  continua 8px, e o nome passou a ser "Transações 8"). Os filtros da
+  atividade o usam no lugar de "(8)".
+- **`stretch`**: partes iguais. Medido a 375px: 95px cada, sem transbordo.
+- A página trocou a demonstração de PIX/Cartão/Dinheiro por uma só seção de
+  "uma ou várias" e ganhou as quatro versões, as notas "Segmentado não é
+  Tabs" e "Onde o app usa" e as tabelas de props. A pílula da página do
+  `Toggle` passou a usar `count`.
+- A folha de filtros e a atividade pedem login e não foram vistas; as peças
+  foram medidas na página, nos dois temas e a 375px.
+

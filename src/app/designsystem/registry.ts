@@ -430,7 +430,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("pagination", "Pagination", "Navegação entre páginas de uma lista.", ui("pagination"), "Pagination, PaginationStatus, PaginationContent, PaginationLink, PaginationPrevious, PaginationNext, PaginationEllipsis, PaginationMore"),
   entry("radio-group", "Radio Group", "Escolha única entre poucas opções — em linha, em cartão, em ladrilho ou em fichas.", ui("radio-group"), "RadioGroup, RadioGroupItem"),
   entry("search-input", "Search Input", "O campo de busca — a pílula do cabeçalho e da paleta.", ui("search-input"), "SearchInput"),
-  entry("toggle-group", "Toggle Group", "Conjunto de toggles: seleção única ou múltipla.", ui("toggle-group"), "ToggleGroup, ToggleGroupItem"),
+  entry("toggle-group", "Toggle Group", "Conjunto de toggles: seleção única ou múltipla, em fichas ou numa bandeja segmentada.", ui("toggle-group"), "ToggleGroup, ToggleGroupItem"),
 
   // ── Organisms ──────────────────────────────────────────────────────────
   entry("accordion", "Accordion", "Seções expansíveis.", ui("accordion"), "Accordion, AccordionItem, AccordionTrigger, AccordionContent"),

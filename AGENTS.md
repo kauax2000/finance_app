@@ -2049,6 +2049,17 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   foca; sem modificadora, não dispara dentro de campo de texto),
   `variant="brand"` (só em `field`) e `pending`. **Nenhuma busca é `<Input
   type="search">` nem pílula escrita à mão.**
+- **`ToggleGroup` tem a bandeja, a ficha, a contagem e as partes iguais**
+  (rodada 199). `variant="segmented"` é o trilho `bg-muted` com **um marcador
+  só que desliza** até a escolhida — a mecânica e a superfície do `Tabs
+  solid`, e a escolhida se pinta sozinha antes da primeira medida; é escolha
+  de **valor**, e quando a opção troca o painel continua sendo `Tabs`.
+  `variant="chip"` (também no `Toggle`) é a ficha de filtro, classe a classe
+  `tagChipNeutral` e `tagChipFilterSelected`. `count` põe a contagem ao lado
+  do rótulo, tabular e com um espaço de verdade antes — sem ele o nome
+  acessível saía "Transações8". `stretch` divide a largura. **Nenhuma
+  escolha única é `Button aria-pressed` escrito à mão**: o seletor de período
+  das transações era, nas duas formas.
 - **`RadioGroup` tem ficha, nota na linha, valor na ponta e ícone** (rodada
   197). `variant="chip"` é a escolha em pílulas, na superfície dos chips de
   filtro do `Badge` (o rádio fica `sr-only`, e a semântica continua de rádio);

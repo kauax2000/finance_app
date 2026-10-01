@@ -249,8 +249,12 @@ export default function ActivityPage() {
                                 className="flex-wrap gap-2"
                             >
                                 {filters.map(({ key, label }) => (
-                                    <ToggleGroupItem key={key} value={key}>
-                                        {label} ({activityCounts[key]})
+                                    <ToggleGroupItem
+                                        key={key}
+                                        value={key}
+                                        count={activityCounts[key]}
+                                    >
+                                        {label}
                                     </ToggleGroupItem>
                                 ))}
                             </ToggleGroup>

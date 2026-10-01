@@ -2,8 +2,7 @@
 
 import { localYmdFromDate } from "@/lib/transaction-date"
 import * as React from "react"
-import { Button } from "@/components/ui/button"
-import { tagChipFilterIdle, tagChipFilterSelected } from "@/components/ui/badge"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { cn } from "@/lib/utils"
 
 export type TransactionsDatePresetKey =
@@ -79,75 +78,49 @@ export function TransactionsDatePresets({
         onChange({ preset: key, from, to })
     }
 
+    // Escolha única de período: `ToggleGroup`, com setas e o escolhido
+    // anunciado (rodada 199). Eram botões de alternar escritos à mão nas duas
+    // formas, com as cores do chip e uma sombra crua. Nenhum aceso é um estado válido — o
+    // intervalo personalizado —, e tocar no aceso não desmarca.
+    const comum = {
+        type: "single" as const,
+        value: value ?? "",
+        onValueChange: (next: string) =>
+            applyPreset(next as TransactionsDatePresetKey),
+        "aria-label": "Filtros rápidos de período",
+    }
+
     if (variant === "comfortable") {
         return (
-            <div
-                className={cn(
-                    "flex flex-wrap gap-1.5",
-                    className
-                )}
-                role="group"
-                aria-label="Filtros rápidos de período"
+            <ToggleGroup
+                {...comum}
+                variant="chip"
+                size="sm"
+                className={cn("flex-wrap justify-start gap-1.5", className)}
             >
-                {PRESETS.map((p) => {
-                    const selected = value === p.key
-                    return (
-                        <Button
-                            key={p.key}
-                            type="button"
-                            variant="tertiary"
-                            size="xs"
-                            aria-pressed={selected}
-                            className={cn(
-                                "h-7 rounded-full px-2.5 text-2xs font-semibold shadow-none",
-                                selected ? tagChipFilterSelected : tagChipFilterIdle
-                            )}
-                            onClick={() => applyPreset(p.key)}
-                            title={p.sheetLabel}
-                        >
-                            {p.sheetLabel}
-                        </Button>
-                    )
-                })}
-            </div>
+                {PRESETS.map((p) => (
+                    <ToggleGroupItem key={p.key} value={p.key}>
+                        {p.sheetLabel}
+                    </ToggleGroupItem>
+                ))}
+            </ToggleGroup>
         )
     }
 
-    // Fica à mão de propósito, e não virou `Tabs` com os quatro trilhos de
-    // filtro: isto é um grupo de alternância (`role="group"` + `aria-pressed`)
-    // que aplica um período e some quando o intervalo é personalizado, não uma
-    // escolha entre visões. `Tabs` anunciaria abas sem painel para um atalho.
+    // A bandeja da barra: o segmentado, com o marcador que desliza.
     return (
-        <div
-            className={cn(
-                "inline-flex h-8 shrink-0 items-stretch gap-0.5 rounded-lg bg-muted/60 p-0.5 ring-1 ring-border/60 dark:bg-muted/40",
-                className
-            )}
-            role="group"
-            aria-label="Filtros rápidos de período"
+        <ToggleGroup
+            {...comum}
+            variant="segmented"
+            size="sm"
+            className={cn("shrink-0", className)}
         >
-            {PRESETS.map((p) => {
-                const selected = value === p.key
-                return (
-                    <Button
-                        key={p.key}
-                        type="button"
-                        size="sm"
-                        variant="tertiary"
-                        aria-pressed={selected}
-                        className={cn(
-                            "h-full min-h-0 px-2.5 text-xs font-medium shadow-none",
-                            selected
-                                ? "relative z-[1] border border-border/80 bg-background text-foreground shadow-sm dark:bg-card dark:shadow-[0_1px_2px_0_rgb(0_0_0/0.35)]"
-                                : "border border-transparent text-muted-foreground hover:bg-transparent hover:text-foreground"
-                        )}
-                        onClick={() => applyPreset(p.key)}
-                    >
-                        {p.label}
-                    </Button>
-                )
-            })}
-        </div>
+            {PRESETS.map((p) => (
+                <ToggleGroupItem key={p.key} value={p.key} title={p.sheetLabel}>
+                    {p.label}
+                </ToggleGroupItem>
+            ))}
+        </ToggleGroup>
     )
 }
 

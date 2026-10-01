@@ -53,6 +53,16 @@ import { cn } from "@/lib/utils"
  *   tem como saber o sólido de um ícone qualquer. Os dois ficam montados e
  *   trocam por opacidade, porque o estado pode ser do Radix (não controlado) e
  *   montar e desmontar não tem o que esmaecer.
+ *
+ * ## As versões da rodada 199
+ *
+ * - **`variant="chip"`** — a ficha de filtro, classe a classe a superfície dos
+ *   chips do `Badge` (`tagChipNeutral` desligada, `tagChipFilterSelected`
+ *   ligada) e a mesma da ficha do `RadioGroup`. A folha de filtros das
+ *   transações a escrevia à mão, num `Button aria-pressed`.
+ * - **`count`** — a contagem ao lado do rótulo, em algarismos tabulares e no
+ *   peso normal: "Transações 8". Entra no nome acessível, porque é texto. Os
+ *   filtros da atividade a escreviam como "(8)" dentro do rótulo.
  */
 const toggleVariants = cva(
   cn(
@@ -108,6 +118,18 @@ const toggleVariants = cva(
           // e a escolhida saía sem contorno.
           "data-[state=on]:outline-2 data-[state=on]:outline-solid data-[state=on]:outline-offset-2 data-[state=on]:outline-foreground",
         ].join(" "),
+        // A ficha (rodada 199). Repouso e escolha são `tagChipNeutral` e
+        // `tagChipFilterSelected` do `Badge`, reescritas sob o estado — uma
+        // constante não se prefixa; `toggle.test.ts` cobra a igualdade. O
+        // foco é `outline`, porque o anel de 1px da escolha já é `ring`.
+        chip: [
+          "rounded-full text-xs font-semibold",
+          "bg-muted text-muted-foreground",
+          "hover:bg-muted hover:text-foreground active:bg-muted active:text-foreground",
+          "data-[state=on]:bg-primary-muted data-[state=on]:text-primary-muted-foreground data-[state=on]:ring-1 data-[state=on]:ring-primary-accent/25 dark:data-[state=on]:ring-primary-accent/40",
+          "data-[state=on]:hover:bg-primary-muted data-[state=on]:active:bg-primary-muted",
+          "focus-visible:border-transparent focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-ring",
+        ].join(" "),
       },
       shape: {
         rounded: "",
@@ -139,6 +161,10 @@ const toggleVariants = cva(
       { shape: "pill", size: "sm", class: "px-2.5" },
       { shape: "pill", size: "md", class: "px-3" },
       { shape: "pill", size: "lg", class: "px-3.5" },
+      // A ficha é pílula por natureza, com o mesmo meio degrau de recuo.
+      { variant: "chip", size: "sm", class: "px-2.5" },
+      { variant: "chip", size: "md", class: "px-3" },
+      { variant: "chip", size: "lg", class: "px-3.5" },
     ],
     defaultVariants: {
       variant: "plain",
@@ -159,6 +185,8 @@ type ToggleExtras = {
   iconOn?: HeroIcon
   /** Com `variant="swatch"`, a cor gravada — a mesma que o `ColorTile` recebe. */
   color?: string | null
+  /** A contagem ao lado do rótulo — "Transações 8" (rodada 199). */
+  count?: React.ReactNode
 }
 
 /** A cor da amostra desce por variável, como no `ColorTile`. */
@@ -178,8 +206,9 @@ function ToggleContent({
   variant,
   icon: Icone,
   iconOn: IconeLigado,
+  count,
   children,
-}: ToggleExtras & {
+}: Omit<ToggleExtras, "color"> & {
   variant?: VariantProps<typeof toggleVariants>["variant"]
   children?: React.ReactNode
 }) {
@@ -200,6 +229,19 @@ function ToggleContent({
         <Icone aria-hidden data-slot="toggle-icon" />
       ) : null}
       {children}
+      {count != null ? (
+        <>
+          {/* O espaço é para o nome acessível: sem ele o leitor de tela ouvia
+              "Transações8" (medido no `textContent`). Num flex, um texto só de
+              espaço não ocupa lugar — o respiro visual é o `gap`. */}
+          {" "}
+          {/* No peso normal: o rótulo é o nome, o número é o tamanho dele. Sem
+              opacidade — a tinta apagada a 70% cairia abaixo de 4,5:1. */}
+          <span data-slot="toggle-count" className="font-normal tabular-nums">
+            {count}
+          </span>
+        </>
+      ) : null}
     </>
   )
 }
@@ -213,6 +255,7 @@ function Toggle({
   icon,
   iconOn,
   color,
+  count,
   style,
   children,
   ...props
@@ -227,7 +270,7 @@ function Toggle({
       style={toggleStyle(color, style)}
       {...props}
     >
-      <ToggleContent variant={variant} icon={icon} iconOn={iconOn}>
+      <ToggleContent variant={variant} icon={icon} iconOn={iconOn} count={count}>
         {children}
       </ToggleContent>
     </TogglePrimitive.Root>
