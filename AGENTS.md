@@ -831,7 +831,7 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   Radix, que rola e não pinta), e serve o caso em que ninguém é dono da casca. Quem já tem casca
   própria compõe as classes direto, porque um `<div>` interposto quebraria o
   contexto do Radix ou do cmdk.
-- **Busca**: [`Command`](src/components/ui/command.tsx) — a paleta de comandos. O catálogo `/designsystem` é o primeiro consumidor ([`ds-search.tsx`](src/app/designsystem/ds-search.tsx)): gatilho no meio do cabeçalho com o `Kbd` do atalho, `⌘K` e `/` para abrir, e `filter` próprio, porque o padrão do cmdk é difuso e erra em português. O **app** ainda não tem busca global, e é a lacuna que ele preenche.
+- **Busca**: [`Command`](src/components/ui/command.tsx) — a paleta de comandos. O catálogo `/designsystem` é o primeiro consumidor ([`ds-search.tsx`](src/app/designsystem/ds-search.tsx)): gatilho no meio do cabeçalho com o `Kbd` do atalho, `⌘K` e `/` para abrir, e `filter` próprio, porque o padrão do cmdk é difuso e erra em português. Desde a rodada 208 o **app** também tem a sua: [`app-command-palette.tsx`](src/components/layout/app-command-palette.tsx), aberta pela lupa da barra do topo e por ⌘K em qualquer tela, com as telas da navegação, as ações do "+ Adicionar" (os mesmos ganchos) e as sub-páginas de categorias e cartões — mudança de jornada, registrada em `docs/JORNADAS.md` e no Atlas.
   **A paleta do catálogo abre por camadas** (rodada 139): vazia, mostra as
   cinco camadas com ícone (`category-meta.ts`, o mesmo ícone que encima cada
   seção da sidebar) e, abaixo delas, as últimas 5 páginas abertas
@@ -2365,6 +2365,23 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   **Arco-íris sob série continua proibido**: a marca encosta pelo
   `Card variant="brand"`, na borda. O cabeçalho (delta, período, KPIs) é
   composição de `Card`, não peça do `Chart`.
+- **`Command` ganhou sub-páginas, destaque, pré-visualização, contagem,
+  atalhos, recentes, busca no servidor e a gaveta** (rodada 208).
+  `CommandPages` + `CommandPage` + `useCommandPages` são as sub-páginas: o
+  campo lê a pilha sozinho (a trilha é o `CommandScope`, o texto esvazia a cada
+  passo, Backspace com o campo vazio volta **em dois toques**, o gesto do
+  escopo). `CommandHighlight` acende o trecho sem acento; `CommandGroup count`
+  conta no DOM do grupo, porque o cmdk desmonta o que não casa e não expõe a
+  contagem por grupo. `CommandItem shortcut` mostra a tecla e dispara **só com
+  o foco na própria paleta** (duas paletas não disputam a tecla); evite
+  `mod+n/t/w`, que o Chrome não deixa cancelar. `CommandSplit` +
+  `CommandPreview` com `CommandDialog size="lg"`. **No telefone o
+  `CommandDialog` é gaveta** (`Drawer`). Os ganchos `useCommandRecents` e
+  `useCommandSearch` moram em `hooks/`, e o casar de atalho saiu do
+  `SearchInput` para `lib/shortcut` — uma regra para os dois. **O `Combobox`
+  não monta mais a pilha** (rodada 198): a página e quatro comentários diziam
+  que sim, e `density="menu"` está sem consumidor. `command-versions.test.ts`
+  tranca.
 - **`Combobox` ganhou o que o filtro de transações escrevia à mão** (rodada
   207). `ComboboxItem` tem `media` (o `ColorTile size="xs"`), `description` e
   `variant="none"` — a ausência, esmaecida e, em `multiple`, **exclusiva** nos

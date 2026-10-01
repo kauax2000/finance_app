@@ -14,6 +14,7 @@ import {
   CommandDock,
   CommandDockItem,
   CommandGroup,
+  CommandHighlight,
   CommandInput,
   CommandItem,
   CommandItemArrow,
@@ -22,11 +23,15 @@ import {
   CommandItemMeta,
   CommandItemTitle,
   CommandList,
+  CommandPage,
+  CommandPages,
   CommandScope,
+  useCommandPages,
 } from "@/components/ui/command";
 import { Kbd } from "@/components/ui/kbd";
 import { KbdGroup } from "@/components/ui/kbd-group";
 import { useBrandGlow } from "@/hooks/use-brand-glow";
+import { useCommandRecents } from "@/hooks/use-command-recents";
 import {
   searchFieldIconClassName,
   searchFieldShapeClassName,
@@ -36,7 +41,6 @@ import {
 } from "@/lib/search-field-classes";
 import { CATEGORY_META } from "./category-meta";
 import type { Category } from "./ds-doc";
-import { gravarRecente, lerRecentes } from "./recent-pages";
 import { CATEGORY_ORDER, REGISTRY, getEntry } from "./registry";
 
 /**
@@ -50,16 +54,14 @@ import { CATEGORY_ORDER, REGISTRY, getEntry } from "./registry";
  * **Ela abre por camadas** (rodada 139). Vazia, mostra as cinco camadas e as
  * últimas páginas abertas; escolher uma camada põe um chip no campo e a busca
  * segue só ali. Sem chip, digitar traz camadas, recentes e páginas que batem.
+ *
+ * **Desde a rodada 208 cada camada é uma sub-página** (`CommandPages`): a pilha,
+ * o Backspace em dois toques e o campo que esvazia a cada passo são do
+ * componente, e esta tela só diz o que cada página mostra.
  */
 export function DsSearch() {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
-  const [query, setQuery] = React.useState("");
-  const [scope, setScope] = React.useState<Category | null>(null);
-  const [recent, setRecent] = React.useState<string[]>([]);
-  /** O primeiro Backspace com o campo vazio arma o escopo; o segundo sai. */
-  const [armado, setArmado] = React.useState(false);
-  const inputRef = React.useRef<HTMLInputElement>(null);
 
   /**
    * `⌘K` e `/` abrem a paleta.
@@ -88,78 +90,13 @@ export function DsSearch() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  /**
-   * Fechar zera a busca e o escopo; abrir lê os recentes.
-   *
-   * Reabrir com o texto anterior parece memória útil e não é: o resultado que
-   * aparece é o de uma pergunta que já foi respondida, e a pessoa reabriu
-   * justamente para fazer outra. O que vale lembrar é o **destino** — as
-   * páginas abertas —, e ele é lido aqui, num efeito, e não no render: o
-   * `localStorage` não existe no servidor, e ler os dois lados com getters
-   * diferentes foi o desencontro de hidratação do `Resizable`.
-   *
-   * O reset mora num efeito sobre `open`, e não em cada botão, porque há cinco
-   * jeitos de fechar isto — Esc, o clique fora, o atalho de novo, escolher um
-   * item e o botão — e a versão por botão esqueceria pelo menos um.
-   */
-  React.useEffect(() => {
-    if (open) {
-      setRecent(lerRecentes().filter((slug) => getEntry(slug)));
-      return;
-    }
-    setQuery("");
-    setScope(null);
-  }, [open]);
-
-  /**
-   * Trocar de vista devolve a paleta ao estado ocioso.
-   *
-   * O `useCommandIdleSelection` só volta ao ocioso em `input`, e trocar o
-   * escopo não digita nada: a linha "Organisms" que acabou de ser escolhida
-   * continuaria como valor selecionado de uma lista que já não a tem. É o
-   * mesmo evento sintético que o × do campo dispara.
-   */
-  React.useEffect(() => {
-    inputRef.current?.dispatchEvent(new Event("input", { bubbles: true }));
-    setArmado(false);
-  }, [scope]);
-
-  const go = React.useCallback(
+  const navegar = React.useCallback(
     (slug: string) => {
-      gravarRecente(slug);
       setOpen(false);
       router.push(`/designsystem/${slug}`);
     },
     [router],
   );
-
-  const entrar = React.useCallback((category: Category) => {
-    setScope(category);
-    setQuery("");
-  }, []);
-
-  const sair = React.useCallback(() => setScope(null), []);
-
-  const scoped = scope ? REGISTRY.filter((e) => e.category === scope) : null;
-
-  /**
-   * Uma página recente não se repete no grupo da camada. É o que mantém o
-   * `value` de cada linha único no cmdk — duas linhas com o mesmo valor
-   * acendem juntas. Vazia, a paleta mostra as camadas e, abaixo, os recentes;
-   * com texto, quem bate melhor sobe — o cmdk ordena os grupos pela nota.
-   */
-  const recentes = recent.flatMap((slug) => {
-    const entry = getEntry(slug);
-    return entry ? [entry] : [];
-  });
-  const groups = CATEGORY_ORDER.map((category) => ({
-    category,
-    items: REGISTRY.filter(
-      (e) => e.category === category && !recent.includes(e.slug),
-    ),
-  })).filter((g) => g.items.length > 0);
-
-  const ScopeIcon = scope ? CATEGORY_META[scope].Icon : null;
 
   return (
     <>
@@ -177,212 +114,276 @@ export function DsSearch() {
           filter: commandFilter,
         }}
       >
-        <CommandInput
-          ref={inputRef}
-          autoFocus
-          value={query}
-          onValueChange={setQuery}
-          // A busca casa só com o nome da página: descrição e texto do corpo
-          // traziam páginas que apenas mencionavam o que se procurava.
-          //
-          // O placeholder diz o que se acha, e não repete o que já está na
-          // tela: na raiz, que a busca cobre páginas **e** camadas; no escopo,
-          // o nome da camada já está pintado ao lado, então ele diz o tamanho
-          // do que sobrou para filtrar.
-          placeholder={
-            scoped
-              ? `Filtrar ${scoped.length} páginas…`
-              : "Buscar uma página ou camada…"
-          }
-          aria-label={
-            scope
-              ? `Buscar nas ${scoped?.length ?? 0} páginas de ${scope}`
-              : "Buscar uma página ou camada"
-          }
-          leading={
-            scope && ScopeIcon ? (
-              <CommandScope
-                icon={<ScopeIcon aria-hidden />}
-                armed={armado}
-                tint={CATEGORY_META[scope].tint}
-              >
-                {scope}
-              </CommandScope>
-            ) : null
-          }
-          onKeyDown={(event) => {
-            // Backspace com o campo vazio, em dois toques: o primeiro arma o
-            // escopo (o fundo acende), o segundo o remove — o destinatário de
-            // um e-mail. Qualquer outra tecla desarma.
-            if (event.key === "Backspace" && !query && scope) {
-              event.preventDefault();
-              if (armado) sair();
-              else setArmado(true);
-              return;
-            }
-            if (armado && event.key !== "Shift") setArmado(false);
-          }}
-        />
-
-        <CommandList>
-          {/* Busca vazia não pode ser beco sem saída: além de dizer o que a
-                busca cobre, ela oferece a volta. */}
-          <CommandEmpty>
-            <CommandEmptyTitle>
-              {scope
-                ? `Nada em ${scope} para "${query}".`
-                : `Nada encontrado para "${query}".`}
-            </CommandEmptyTitle>
-            <CommandEmptyDescription>
-              {scope
-                ? `A busca cobre o nome das ${scoped?.length ?? 0} páginas desta camada.`
-                : `A busca cobre o nome de cada uma das ${REGISTRY.length} páginas.`}
-            </CommandEmptyDescription>
-            <div className="flex gap-2">
-              {scope ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={sair}
-                >
-                  Buscar em tudo
-                </Button>
-              ) : null}
-              <Button
-                type="button"
-                variant="tertiary"
-                size="sm"
-                onClick={() => setQuery("")}
-              >
-                Limpar busca
-              </Button>
-            </div>
-          </CommandEmpty>
-
-          {/* O miolo remonta a cada troca de vista, e é a remontagem que faz as
-              linhas subirem (`command-reveal`). */}
-          <div key={scope ?? "root"}>
-            {scoped && scope ? (
-              <CommandGroup heading={scope}>
-                {scoped.map((item) => (
-                  <DsPageItem
-                    key={item.slug}
-                    slug={item.slug}
-                    name={item.name}
-                    description={item.description}
-                    category={item.category}
-                    onSelect={go}
-                  />
-                ))}
-              </CommandGroup>
-            ) : (
-              <>
-                <CommandGroup heading="Camadas">
-                  {CATEGORY_ORDER.map((category) => {
-                    const { Icon, label } = CATEGORY_META[category];
-                    const total = REGISTRY.filter(
-                      (e) => e.category === category,
-                    ).length;
-                    return (
-                      <CommandItem
-                        key={category}
-                        value={category}
-                        keywords={[label]}
-                        onSelect={() => entrar(category)}
-                      >
-                        <CommandItemIcon>
-                          <Icon />
-                        </CommandItemIcon>
-                        <CommandItemTitle>{category}</CommandItemTitle>
-                        <CommandItemMeta>
-                          <CommandItemDescription className="nums">
-                            {`${total} páginas`}
-                          </CommandItemDescription>
-                          <CommandItemArrow />
-                        </CommandItemMeta>
-                      </CommandItem>
-                    );
-                  })}
-                </CommandGroup>
-
-                {/* Abaixo das camadas, uma linha só por página — o desenho de
-                    "Go to …" que o dono trouxe: a seta e o nome. */}
-                {recentes.length > 0 ? (
-                  <CommandGroup heading="Recentes">
-                    {recentes.map((item) => (
-                      <CommandItem
-                        key={item.slug}
-                        value={item.name}
-                        onSelect={() => go(item.slug)}
-                      >
-                        <CommandItemIcon>
-                          <ClockIcon />
-                        </CommandItemIcon>
-                        {item.name}
-                        <CommandItemArrow />
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                ) : null}
-
-                {/* As páginas só entram quando há o que buscar: vazia, a
-                    paleta é as camadas e os recentes. */}
-                {query
-                  ? groups.map((group) => (
-                      <CommandGroup
-                        key={group.category}
-                        heading={group.category}
-                      >
-                        {group.items.map((item) => (
-                          <DsPageItem
-                            key={item.slug}
-                            slug={item.slug}
-                            name={item.name}
-                            description={item.description}
-                            category={item.category}
-                            onSelect={go}
-                          />
-                        ))}
-                      </CommandGroup>
-                    ))
-                  : null}
-              </>
-            )}
-          </div>
-        </CommandList>
-
-        {/* A legenda de teclado, em cápsulas soltas embaixo da placa — o último
-            filho da pilha. Navegar fica à esquerda; abrir e fechar andam
-            juntos à direita, porque os dois encerram a interação. */}
-        <CommandDock>
-          <div className="flex items-center gap-2">
-            <CommandDockItem>
-              <KbdGroup mode="either" keys={["up", "down"]} />
-              navegar
-            </CommandDockItem>
-            {scope ? (
-              <CommandDockItem className="animate-in fade-in-0 slide-in-from-left-1 animation-duration-(--duration-base) ease-(--ease-out)">
-                <Kbd>⌫</Kbd>
-                voltar
-              </CommandDockItem>
-            ) : null}
-          </div>
-          <div className="flex items-center gap-2">
-            <CommandDockItem>
-              <Kbd>↵</Kbd>
-              {scope ? "abrir" : "entrar"}
-            </CommandDockItem>
-            <CommandDockItem>
-              <Kbd>Esc</Kbd>
-              fechar
-            </CommandDockItem>
-          </div>
-        </CommandDock>
+        {/* Fechar zera a busca, o escopo e a pilha sem efeito nenhum: o
+            conteúdo do diálogo desmonta ao fechar, e o estado mora nele.
+            Reabrir com o texto anterior parece memória útil e não é — o que
+            vale lembrar é o **destino**, e ele fica nos recentes. */}
+        <CommandPages>
+          <DsPaleta onNavigate={navegar} />
+        </CommandPages>
       </CommandDialog>
     </>
   );
 }
+
+/** O miolo da paleta, dentro das sub-páginas: o campo, a lista e a legenda. */
+function DsPaleta({ onNavigate }: { onNavigate: (slug: string) => void }) {
+  const [query, setQuery] = React.useState("");
+  const pages = useCommandPages();
+  const scope = pages.current as Category | undefined;
+  // Mesma chave da versão anterior (`recent-pages.ts`), para quem já tinha
+  // recentes não os perder. O gancho lê ao montar, e o miolo monta a cada
+  // abertura — então a lista é a do momento, e não a do primeiro render.
+  const { recents, add } = useCommandRecents("ds:recentes");
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  /**
+   * Trocar de página devolve a paleta ao estado ocioso.
+   *
+   * O `useCommandIdleSelection` só volta ao ocioso em `input`, e o campo
+   * esvazia por estado, sem digitar nada: a linha "Organisms" que acabou de
+   * ser escolhida sairia da lista, e o cmdk selecionaria a primeira da página
+   * nova como se alguém tivesse navegado até ela. É o mesmo evento sintético
+   * que o × do campo dispara.
+   */
+  React.useEffect(() => {
+    inputRef.current?.dispatchEvent(new Event("input", { bubbles: true }));
+  }, [scope]);
+
+  const go = (slug: string) => {
+    add(slug);
+    onNavigate(slug);
+  };
+
+  const entrar = (category: Category) => {
+    const { Icon } = CATEGORY_META[category];
+    pages.push({ id: category, label: category, icon: <Icon aria-hidden /> });
+  };
+
+  const scoped = scope ? REGISTRY.filter((e) => e.category === scope) : null;
+
+  /**
+   * Uma página recente não se repete no grupo da camada. É o que mantém o
+   * `value` de cada linha único no cmdk — duas linhas com o mesmo valor
+   * acendem juntas. Vazia, a paleta mostra as camadas e, abaixo, os recentes;
+   * com texto, quem bate melhor sobe — o cmdk ordena os grupos pela nota.
+   */
+  const recentes = recents.flatMap((slug) => {
+    const entry = getEntry(slug);
+    return entry ? [entry] : [];
+  });
+  const groups = CATEGORY_ORDER.map((category) => ({
+    category,
+    items: REGISTRY.filter(
+      (e) => e.category === category && !recents.includes(e.slug),
+    ),
+  })).filter((g) => g.items.length > 0);
+
+  const ScopeIcon = scope ? CATEGORY_META[scope].Icon : null;
+
+  return (
+    <>
+      <CommandInput
+        ref={inputRef}
+        autoFocus
+        value={query}
+        onValueChange={setQuery}
+        // A busca casa só com o nome da página: descrição e texto do corpo
+        // traziam páginas que apenas mencionavam o que se procurava.
+        //
+        // O placeholder diz o que se acha, e não repete o que já está na
+        // tela: na raiz, que a busca cobre páginas **e** camadas; no escopo,
+        // o nome da camada já está pintado ao lado, então ele diz o tamanho
+        // do que sobrou para filtrar.
+        placeholder={
+          scoped
+            ? `Filtrar ${scoped.length} páginas…`
+            : "Buscar uma página ou camada…"
+        }
+        aria-label={
+          scope
+            ? `Buscar nas ${scoped?.length ?? 0} páginas de ${scope}`
+            : "Buscar uma página ou camada"
+        }
+        // A trilha que as sub-páginas desenham sozinhas não tem `tint`; a
+        // camada pinta o escopo na cor dela, então ele vem daqui — o estado
+        // armado continua sendo o da pilha.
+        leading={
+          scope && ScopeIcon ? (
+            <CommandScope
+              icon={<ScopeIcon aria-hidden />}
+              armed={pages.armed}
+              tint={CATEGORY_META[scope].tint}
+            >
+              {scope}
+            </CommandScope>
+          ) : null
+        }
+      />
+
+      <CommandList>
+        {/* Busca vazia não pode ser beco sem saída: além de dizer o que a
+              busca cobre, ela oferece a volta. */}
+        <CommandEmpty>
+          <CommandEmptyTitle>
+            {scope
+              ? `Nada em ${scope} para "${query}".`
+              : `Nada encontrado para "${query}".`}
+          </CommandEmptyTitle>
+          <CommandEmptyDescription>
+            {scope
+              ? `A busca cobre o nome das ${scoped?.length ?? 0} páginas desta camada.`
+              : `A busca cobre o nome de cada uma das ${REGISTRY.length} páginas.`}
+          </CommandEmptyDescription>
+          <div className="flex gap-2">
+            {scope ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={pages.reset}
+              >
+                Buscar em tudo
+              </Button>
+            ) : null}
+            <Button
+              type="button"
+              variant="tertiary"
+              size="sm"
+              onClick={() => setQuery("")}
+            >
+              Limpar busca
+            </Button>
+          </div>
+        </CommandEmpty>
+
+        {/* Cada página remonta ao entrar, e é a remontagem que faz as linhas
+            subirem (`command-reveal`). */}
+        <CommandPage>
+          <CommandGroup heading="Camadas">
+            {CATEGORY_ORDER.map((category) => {
+              const { Icon, label } = CATEGORY_META[category];
+              const total = REGISTRY.filter(
+                (e) => e.category === category,
+              ).length;
+              return (
+                <CommandItem
+                  key={category}
+                  value={category}
+                  keywords={[label]}
+                  onSelect={() => entrar(category)}
+                >
+                  <CommandItemIcon>
+                    <Icon />
+                  </CommandItemIcon>
+                  <CommandItemTitle>
+                    <CommandHighlight>{category}</CommandHighlight>
+                  </CommandItemTitle>
+                  <CommandItemMeta>
+                    <CommandItemDescription className="nums">
+                      {`${total} páginas`}
+                    </CommandItemDescription>
+                    <CommandItemArrow />
+                  </CommandItemMeta>
+                </CommandItem>
+              );
+            })}
+          </CommandGroup>
+
+          {/* Abaixo das camadas, uma linha só por página — o desenho de
+              "Go to …" que o dono trouxe: a seta e o nome. */}
+          {recentes.length > 0 ? (
+            <CommandGroup heading="Recentes">
+              {recentes.map((item) => (
+                <CommandItem
+                  key={item.slug}
+                  value={item.name}
+                  onSelect={() => go(item.slug)}
+                >
+                  <CommandItemIcon>
+                    <ClockIcon />
+                  </CommandItemIcon>
+                  <CommandHighlight>{item.name}</CommandHighlight>
+                  <CommandItemArrow />
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          ) : null}
+
+          {/* As páginas só entram quando há o que buscar: vazia, a paleta é
+              as camadas e os recentes. Com texto, cada camada diz quantas
+              bateram. */}
+          {query
+            ? groups.map((group) => (
+                <CommandGroup
+                  key={group.category}
+                  heading={group.category}
+                  count
+                >
+                  {group.items.map((item) => (
+                    <DsPageItem
+                      key={item.slug}
+                      slug={item.slug}
+                      name={item.name}
+                      description={item.description}
+                      category={item.category}
+                      onSelect={go}
+                    />
+                  ))}
+                </CommandGroup>
+              ))
+            : null}
+        </CommandPage>
+
+        {CATEGORY_ORDER.map((category) => (
+          <CommandPage key={category} id={category}>
+            <CommandGroup heading={category} count={Boolean(query)}>
+              {REGISTRY.filter((e) => e.category === category).map((item) => (
+                <DsPageItem
+                  key={item.slug}
+                  slug={item.slug}
+                  name={item.name}
+                  description={item.description}
+                  category={item.category}
+                  onSelect={go}
+                />
+              ))}
+            </CommandGroup>
+          </CommandPage>
+        ))}
+      </CommandList>
+
+      {/* A legenda de teclado, em cápsulas soltas embaixo da placa — o último
+          filho da pilha. Navegar fica à esquerda; abrir e fechar andam
+          juntos à direita, porque os dois encerram a interação. */}
+      <CommandDock>
+        <div className="flex items-center gap-2">
+          <CommandDockItem>
+            <KbdGroup mode="either" keys={["up", "down"]} />
+            navegar
+          </CommandDockItem>
+          {scope ? (
+            <CommandDockItem className="animate-in fade-in-0 slide-in-from-left-1 animation-duration-(--duration-base) ease-(--ease-out)">
+              <Kbd>⌫</Kbd>
+              voltar
+            </CommandDockItem>
+          ) : null}
+        </div>
+        <div className="flex items-center gap-2">
+          <CommandDockItem>
+            <Kbd>↵</Kbd>
+            {scope ? "abrir" : "entrar"}
+          </CommandDockItem>
+          <CommandDockItem>
+            <Kbd>Esc</Kbd>
+            fechar
+          </CommandDockItem>
+        </div>
+      </CommandDock>
+    </>
+  );
+}
+
 
 /** Uma página nos resultados: o ícone da camada, o nome e a descrição. */
 function DsPageItem({
@@ -404,7 +405,9 @@ function DsPageItem({
       <CommandItemIcon>
         <Icon />
       </CommandItemIcon>
-      <CommandItemTitle className="shrink-0">{name}</CommandItemTitle>
+      <CommandItemTitle className="shrink-0">
+        <CommandHighlight>{name}</CommandHighlight>
+      </CommandItemTitle>
       <CommandItemMeta>
         <CommandItemDescription>{description}</CommandItemDescription>
         <CommandItemArrow />

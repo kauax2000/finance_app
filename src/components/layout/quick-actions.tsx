@@ -34,7 +34,12 @@ const FIXED_TRANSACTION_ACTIONS: ReadonlyArray<{
     { mode: "income", label: "Receitas" },
 ]
 
-function useQuickCreateTransaction() {
+/**
+ * As duas portas do "+ Adicionar": o formulário global da casca, ou a tela com
+ * `?new=` quando a casca não está montada. Exportadas porque a paleta (⌘K)
+ * oferece as mesmas ações e tem de entrar pelas mesmas portas.
+ */
+export function useQuickCreateTransaction() {
     const shell = useGlobalShellDialogsOptional()
     const router = useRouter()
 
@@ -58,7 +63,7 @@ function useQuickCreateTransaction() {
     )
 }
 
-function useQuickCreateSubscription() {
+export function useQuickCreateSubscription() {
     const shell = useGlobalShellDialogsOptional()
     const router = useRouter()
 

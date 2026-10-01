@@ -6,6 +6,7 @@ import { Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 import { composeRefs, useBrandGlow } from "@/hooks/use-brand-glow"
+import { ariaShortcut, isEditableTarget, matchShortcut } from "@/lib/shortcut"
 import {
   searchFieldClearClassName,
   searchFieldCoarseClassName,
@@ -107,39 +108,6 @@ type SearchInputProps = Omit<React.ComponentProps<"input">, "size"> & {
     | { surface: Extract<SearchFieldSurface, "plate">; variant?: "default" }
   )
 
-/** `"mod+k"` → `"Meta+K Control+K"`, a grafia do `aria-keyshortcuts`. */
-function paraAria(atalho: string) {
-  const partes = atalho.split("+").map((p) => p.trim())
-  const tecla = partes.pop()!
-  const fim = tecla.length === 1 ? tecla.toUpperCase() : tecla
-  const mods = partes.map((p) =>
-    /^shift$/i.test(p) ? "Shift" : /^(alt|opt)$/i.test(p) ? "Alt" : p.toLowerCase()
-  )
-  const com = (mod: string) => [...mods.map((m) => (m === "mod" ? mod : m)), fim].join("+")
-  return mods.includes("mod") ? `${com("Meta")} ${com("Control")}` : com("")
-}
-
-/**
- * Se a tecla é o atalho. `mod` aceita ⌘ ou Ctrl; sem modificadora pedida,
- * nenhuma pode estar descida — senão ⌘S salvaria e focaria a busca. O Shift
- * não reprova: em muitos teclados a `/` pede Shift.
- */
-function casaAtalho(atalho: string, e: KeyboardEvent) {
-  const partes = atalho.toLowerCase().split("+").map((p) => p.trim())
-  const tecla = partes.pop()
-  const comMod = partes.includes("mod")
-  if (comMod !== (e.metaKey || e.ctrlKey)) return false
-  if (partes.includes("alt") !== e.altKey) return false
-  return e.key.toLowerCase() === tecla
-}
-
-function editavel(alvo: EventTarget | null) {
-  return (
-    alvo instanceof HTMLElement &&
-    (alvo.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(alvo.tagName))
-  )
-}
-
 function SearchInput({
   className,
   inputClassName,
@@ -171,9 +139,9 @@ function SearchInput({
     if (!shortcut) return
     const comMod = /(^|\+)mod\+/i.test(shortcut)
     const aoTeclar = (e: KeyboardEvent) => {
-      if (e.defaultPrevented || !casaAtalho(shortcut, e)) return
+      if (e.defaultPrevented || !matchShortcut(shortcut, e)) return
       // Sem modificadora, a tecla é texto quando o foco está num campo.
-      if (!comMod && editavel(e.target)) return
+      if (!comMod && isEditableTarget(e.target)) return
       e.preventDefault()
       campo.current?.focus()
       campo.current?.select()
@@ -221,7 +189,7 @@ function SearchInput({
         type={type}
         autoComplete={autoComplete}
         placeholder={placeholder}
-        aria-keyshortcuts={shortcut ? paraAria(shortcut) : undefined}
+        aria-keyshortcuts={shortcut ? ariaShortcut(shortcut) : undefined}
         className={cn(
           searchFieldInputClassName,
           // A rampa que impede o zoom do iOS ao focar, a do campo de

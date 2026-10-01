@@ -16874,3 +16874,47 @@ foram escolhidas (ficou de fora o limite de escolhas).
 - **A página**: a altura virou uma demo com segmentado, a busca sem acento
   entrou no padrão, e entraram as seções de mídia, ausência, várias com
   fichas e ações, criar, recentes e campo que digita.
+
+### Rodada 208 — o Command ganha sub-páginas, destaque, pré-visualização, atalhos, recentes, busca no servidor, a gaveta, e o app ganha a busca global
+
+O pedido: a mesma rodada para o `Command`, com as dez versões escolhidas pelo
+dono — inclusive a **busca global do app**, que o `AGENTS.md` registrava como
+"a lacuna que ele preenche".
+
+- **`CommandPages` + `CommandPage` + `useCommandPages`**: a pilha mora num
+  contexto, e o `CommandInput` a lê sozinho — a trilha vira o `CommandScope`,
+  o texto esvazia a cada passo, e o Backspace com o campo vazio volta em
+  **dois toques**, o gesto que o dono escolheu para o escopo na rodada 139.
+  Medido: Enter em "Tema" pôs "Tema" no campo e esvaziou o texto; o primeiro
+  Backspace armou, o segundo voltou à raiz.
+- **`CommandHighlight`**: letra a letra sobre o original, cada letra sem
+  acento — os índices ficam alinhados; letra que vire duas desliga o
+  destaque em vez de acender o trecho errado. "saude" acende "Saúde". A
+  primeira demo achou "Carteiras" com "sa": era o filtro difuso padrão do
+  cmdk, e a demo passou a usar o `commandFilter`.
+- **`CommandGroup count`**: o cmdk desmonta as linhas que não casam e não
+  expõe contagem por grupo; um `MutationObserver` conta no DOM do grupo.
+- **`CommandItem shortcut`**: dispara só com o foco dentro da própria raiz
+  (`[cmdk-root]`). Medido: ⌘E e Alt+N executaram as duas linhas. O casar de
+  tecla saiu do `SearchInput` para `lib/shortcut` (`matchShortcut`,
+  `ariaShortcut`, `isEditableTarget`).
+- **`CommandSplit` + `CommandPreview`** e **`CommandDialog size="lg"`**: a
+  pré-visualização lê `useCommandState(s => s.value)`; é região nomeada e não
+  viva, porque o `aria-activedescendant` já anuncia a linha.
+- **Gaveta no telefone**: o `CommandDialog` com `useIsMobile` monta o
+  `Drawer`, com o `DialogTitle` ligado (medido: "Paleta de comandos").
+- **`useCommandRecents`** e **`useCommandSearch`** em `hooks/`. Medido: os
+  recentes voltaram depois de recarregar; trocar a busca rápido ("far" →
+  "ac") não deixou a resposta velha vencer.
+- **Afirmações falsas corrigidas**: a página e quatro comentários diziam que o
+  `Combobox` monta a pilha `panel` e usa `density="menu"` — ele saiu na 198.
+- **A busca do catálogo** passou para `CommandPages` (o escopo tingido entra
+  por `leading`, a pilha continua sendo dos componentes) e para
+  `useCommandRecents("ds:recentes")`, na mesma chave; `recent-pages.ts` saiu.
+  Verificada no navegador: camadas, escopo, dois Backspaces, recentes, Esc.
+- **A busca global do app** (`app-command-palette.tsx`, montada no
+  `AppHeader`): Recentes, Ir para (a navegação e o menu da conta), Procurar
+  (categorias e cartões em sub-página, do cache das consultas que a casca já
+  faz) e Ações (os ganchos do "+ Adicionar"). É mudança de jornada:
+  `JORNADAS.md` e o Atlas ganharam o caminho, e o Atlas foi republicado. **Não
+  foi vista no navegador** — as telas do app pedem login.

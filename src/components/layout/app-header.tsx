@@ -1,5 +1,10 @@
 "use client"
 
+import * as React from "react"
+import {
+    AppCommandPalette,
+    AppSearchButton,
+} from "@/components/layout/app-command-palette"
 import { NotificationBellLink } from "@/components/layout/notification-bell-link"
 import { PageHeaderBack } from "@/components/ui/page-header"
 import { SidebarTrigger } from "@/components/ui/sidebar"
@@ -73,6 +78,10 @@ type AppHeaderProps = {
  */
 export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
     const chromeSlot = usePageChromeState()
+    // A busca tem um gatilho em cada árvore e uma paleta só, que também abre
+    // por ⌘K. Ela mora aqui porque a barra existe em toda tela da casca.
+    const [searchOpen, setSearchOpen] = React.useState(false)
+    const openSearch = () => setSearchOpen(true)
 
     const mobileTitle =
         chromeSlot?.title ?? defaultMobileTitle(pathname, titleMode)
@@ -92,6 +101,7 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                 <TopBarTitle>{mobileTitle}</TopBarTitle>
                 <TopBarActions>
                     {chromeSlot?.dateFilter}
+                    <AppSearchButton onClick={openSearch} />
                     <NotificationBellLink />
                 </TopBarActions>
             </div>
@@ -108,9 +118,13 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                     )}
                 </TopBarContent>
                 <TopBarActions>
+                    <AppSearchButton onClick={openSearch} />
                     <NotificationBellLink />
                 </TopBarActions>
             </div>
+
+            {/* Portalizada: não ocupa lugar na linha do `TopBar`. */}
+            <AppCommandPalette open={searchOpen} onOpenChange={setSearchOpen} />
         </TopBar>
     )
 }

@@ -1,6 +1,15 @@
 "use client"
 
-import { Cog6ToothIcon, CreditCardIcon, PlusIcon, WalletIcon } from "@heroicons/react/16/solid"
+import {
+  ArrowDownTrayIcon,
+  Cog6ToothIcon,
+  CreditCardIcon,
+  MoonIcon,
+  PlusIcon,
+  SunIcon,
+  SwatchIcon,
+  WalletIcon,
+} from "@heroicons/react/16/solid"
 import * as React from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,7 +32,23 @@ import {
   CommandScope,
   CommandDock,
   CommandDockItem,
+  CommandHighlight,
+  CommandPage,
+  CommandPages,
+  CommandPreview,
+  CommandSplit,
+  useCommandPages,
 } from "@/components/ui/command"
+import {
+  DescriptionDetails,
+  DescriptionList,
+  DescriptionListItem,
+  DescriptionTerm,
+} from "@/components/ui/description-list"
+import { MoneyDisplay } from "@/components/ui/money-display"
+import { useCommandRecents } from "@/hooks/use-command-recents"
+import { useCommandSearch } from "@/hooks/use-command-search"
+import { commandFilter } from "@/lib/command-filter"
 import { Kbd } from "@/components/ui/kbd"
 import { KbdGroup } from "@/components/ui/kbd-group"
 import { Spinner } from "@/components/ui/spinner"
@@ -103,7 +128,7 @@ export default function CommandDoc() {
 
       <DocSection
         title="Como diálogo (⌘K ou Ctrl+K)"
-        description="A mesma pilha num diálogo: topo fixo, a lista que cresce e encolhe, uma sombra só atrás do conjunto."
+        description="A mesma pilha num diálogo: topo fixo, a lista que cresce e encolhe, uma sombra só atrás do conjunto. No telefone ela é uma gaveta de baixo, com a busca em cima do teclado — estreite a janela e abra de novo."
         code={`<CommandDialog open={open} onOpenChange={setOpen}>
   <CommandInput placeholder="Buscar…" />
   <CommandList>…</CommandList>
@@ -187,6 +212,91 @@ export default function CommandDoc() {
       </DocSection>
 
       <DocSection
+        title="Sub-páginas"
+        description="CommandPages guarda a pilha e o campo a lê: Enter em Tema abre a lista dentro da paleta, a trilha aparece no campo, o texto esvazia, e o Backspace com o campo vazio volta em dois toques — o primeiro acende a trilha, o segundo sai. CommandPage mostra o que é da página atual; sem id, é a raiz."
+        code={`<Command variant="panel">
+  <CommandPages>
+    <CommandInput placeholder="Buscar…" />
+    <CommandList>
+      <CommandPage>
+        <ItemQueAbre />   {/* useCommandPages().push({ id: "tema", label: "Tema" }) */}
+      </CommandPage>
+      <CommandPage id="tema">
+        <CommandItem>Claro</CommandItem>
+      </CommandPage>
+    </CommandList>
+  </CommandPages>
+</Command>`}
+        previewClassName="items-stretch"
+      >
+        <SubPaginasDemo />
+      </DocSection>
+
+      <DocSection
+        title="Destaque e contagem"
+        description="CommandHighlight põe em negrito o trecho que casou, sem acento dos dois lados — digite saude. CommandGroup count diz no rótulo quantas linhas casaram, e atualiza com a busca."
+        code={`<CommandGroup heading="Categorias" count>
+  <CommandItem>
+    <CommandHighlight>Saúde</CommandHighlight>
+  </CommandItem>
+</CommandGroup>`}
+        previewClassName="items-stretch"
+      >
+        <DestaqueDemo />
+      </DocSection>
+
+      <DocSection
+        title="Atalhos que executam"
+        description="shortcut na linha mostra a tecla na ponta e dispara a ação com o foco na paleta, sem precisar achar a linha. Clique no campo e aperte a tecla. Evite as teclas que o navegador reserva (⌘N, ⌘T, ⌘W): o Chrome não deixa cancelá-las."
+        code={`<CommandItem shortcut="mod+e" onSelect={exportar}>Exportar CSV</CommandItem>`}
+        previewClassName="items-stretch"
+      >
+        <AtalhosDemo />
+      </DocSection>
+
+      <DocSection
+        title="Pré-visualização ao lado"
+        description="CommandSplit põe a lista e o CommandPreview lado a lado; a pré-visualização lê a linha realçada e mostra o detalhe dela. No CommandDialog, size=&quot;lg&quot; dá a largura. Abaixo de md ela some. Ande com as setas pela lista."
+        code={`<CommandDialog size="lg">
+  <CommandInput />
+  <CommandSplit>
+    <CommandList>…</CommandList>
+    <CommandPreview empty="Escolha uma fatura">
+      {(valor) => <DetalheDaFatura id={valor} />}
+    </CommandPreview>
+  </CommandSplit>
+</CommandDialog>`}
+        previewClassName="items-stretch"
+      >
+        <PreviaDemo />
+      </DocSection>
+
+      <DocSection
+        title="Recentes com memória"
+        description="useCommandRecents guarda as últimas escolhas por chave no localStorage — destinos, não termos — e devolve a lista para um grupo no topo com o campo vazio. Escolha algumas linhas e recarregue a página."
+        code={`const { recents, add } = useCommandRecents("app:busca")
+<CommandItem onSelect={(v) => { add(v); ir(v) }}>…</CommandItem>`}
+        previewClassName="items-stretch"
+      >
+        <RecentesDemo />
+      </DocSection>
+
+      <DocSection
+        title="Busca no servidor"
+        description="useCommandSearch espera a digitação parar (250ms), mostra o carregando, cancela a consulta velha pelo signal e não deixa resposta atrasada sobrescrever a nova. A raiz vai com shouldFilter desligado: quem filtra é o servidor. Aqui o servidor é fingido, com 600ms de resposta."
+        code={`const { query, setQuery, results, loading } = useCommandSearch(
+  (q, signal) => fetch(\`/api/busca?q=\${q}\`, { signal }).then((r) => r.json())
+)
+<Command shouldFilter={false}>
+  <CommandInput value={query} onValueChange={setQuery} />
+  <CommandList>{loading ? <CommandLoading>…</CommandLoading> : …}</CommandList>
+</Command>`}
+        previewClassName="items-stretch"
+      >
+        <ServidorDemo />
+      </DocSection>
+
+      <DocSection
         title="Escopo"
         description="O escopo antes do texto restringe a busca: o nome pintado como o destinatário de um e-mail depois de digitado. Sem ×: com o campo vazio, o primeiro Backspace acende o fundo e o segundo remove o escopo. Quem conta os toques é quem tem o estado."
         code={`<CommandInput
@@ -205,7 +315,7 @@ export default function CommandDoc() {
       </DocSection>
 
       <DocNote title="Três superfícies no mesmo plano">
-        Em <code>variant=&quot;panel&quot;</code> — solta, no <code>CommandDialog</code> e no <code>Combobox</code> — a raiz é uma coluna que não pinta, e cada peça pinta a sua: em cima a <strong>pílula</strong> de busca (o <code>SearchInput surface=&quot;plate&quot;</code>, com o campo do cmdk dentro; na paleta sem anel de foco, porque ela nasce focada), no meio a <strong>placa</strong> com a lista, embaixo as <strong>cápsulas</strong> da legenda (<code>CommandDock</code>, o último filho), a 12px uma da outra e sem sombra própria. É o padrão novo do iOS. As peças sabem que estão na pilha por um contexto. A placa é um embrulho da lista, porque a lista é o elemento mascarado e a máscara recortaria a placa junto. E elas são irmãs porque um ancestral com <code>backdrop-filter</code> é raiz de fundo: o borrão de quem estivesse dentro não enxergaria a página. No diálogo uma sombra só fica atrás do conjunto.
+        Em <code>variant=&quot;panel&quot;</code> — solta e no <code>CommandDialog</code> — a raiz é uma coluna que não pinta, e cada peça pinta a sua: em cima a <strong>pílula</strong> de busca (o <code>SearchInput surface=&quot;plate&quot;</code>, com o campo do cmdk dentro; na paleta sem anel de foco, porque ela nasce focada), no meio a <strong>placa</strong> com a lista, embaixo as <strong>cápsulas</strong> da legenda (<code>CommandDock</code>, o último filho), a 12px uma da outra e sem sombra própria. É o padrão novo do iOS. As peças sabem que estão na pilha por um contexto. A placa é um embrulho da lista, porque a lista é o elemento mascarado e a máscara recortaria a placa junto. E elas são irmãs porque um ancestral com <code>backdrop-filter</code> é raiz de fundo: o borrão de quem estivesse dentro não enxergaria a página. No diálogo uma sombra só fica atrás do conjunto.
       </DocNote>
 
       <DocNote title="Grupos se separam por respiro e rótulo, nunca por fio">
@@ -254,14 +364,14 @@ export default function CommandDoc() {
             type: '"plain" | "panel"',
             default: '"plain"',
             description:
-              "panel é a pilha — pílula, placa e legenda soltas; o CommandDialog e o Combobox a montam. plain não pinta nada, para quem hospeda o Command numa superfície própria.",
+              "panel é a pilha — pílula, placa e legenda soltas; o CommandDialog e a paleta solta a montam. plain não pinta nada, para quem hospeda o Command numa superfície própria — o Combobox, desde a rodada 198.",
           },
           {
             prop: "density",
             type: '"palette" | "menu"',
             default: '"palette"',
             description:
-              "Só em panel. palette é a paleta: pílula de 36, linhas de 36, respiro largo, 12px entre as peças. menu são as medidas de um dropdown — pílula de 32, linhas de 28, o recuo e o respiro dos menus, 4px entre as peças —, e é o que o Combobox usa.",
+              "Só em panel. palette é a paleta: pílula de 36, linhas de 36, respiro largo, 12px entre as peças. menu são as medidas de um dropdown — pílula de 32, linhas de 28, o recuo e o respiro dos menus, 4px entre as peças. Foi a do Combobox até ele sair da pilha; hoje não tem consumidor.",
           },
           {
             prop: "autoSelectFirst",
@@ -318,6 +428,44 @@ export default function CommandDoc() {
             type: "ComponentProps<typeof Command.Loading>",
             description:
               "O estado de busca assíncrona.",
+          },
+          {
+            prop: "CommandPages / CommandPage / useCommandPages",
+            type: "onPageChange · id · { push, pop, reset, current, stack }",
+            description:
+              "As sub-páginas: a pilha, o conteúdo de cada página (sem id é a raiz) e o gancho que abre e volta. O campo lê a pilha sozinho.",
+          },
+          {
+            prop: "CommandHighlight",
+            type: "children: string",
+            description: "O trecho que casou em negrito, sem acento dos dois lados.",
+          },
+          {
+            prop: "CommandGroup count",
+            type: "boolean",
+            description: "Quantas linhas casaram, no rótulo do grupo.",
+          },
+          {
+            prop: "CommandItem shortcut",
+            type: "string",
+            description: "A tecla na ponta, e a ação disparada por ela com o foco na paleta.",
+          },
+          {
+            prop: "CommandSplit / CommandPreview",
+            type: "div / children(valor) · empty",
+            description: "A lista e o detalhe da linha realçada lado a lado; a pré-visualização some abaixo de md.",
+          },
+          {
+            prop: "CommandDialog size",
+            type: '"md" | "lg"',
+            default: '"md"',
+            description: "lg é a paleta larga, para a pré-visualização. No telefone o diálogo é gaveta, em qualquer tamanho.",
+          },
+          {
+            prop: "useCommandRecents / useCommandSearch",
+            type: "hooks/",
+            description:
+              "A memória das últimas escolhas (localStorage, por chave) e a busca no servidor que espera, cancela e descarta resposta velha.",
           },
         ]}
       />
@@ -442,5 +590,291 @@ function CommandDialogDemo() {
         </CommandDock>
       </CommandDialog>
     </>
+  )
+}
+
+function ItemQueAbre({
+  id,
+  label,
+  icon,
+}: {
+  id: string
+  label: string
+  icon: React.ReactNode
+}) {
+  const paginas = useCommandPages()
+  return (
+    <CommandItem onSelect={() => paginas.push({ id, label, icon })}>
+      <CommandItemIcon>{icon}</CommandItemIcon>
+      {label}…
+      <CommandItemArrow />
+    </CommandItem>
+  )
+}
+
+function SubPaginasDemo() {
+  const [escolha, setEscolha] = React.useState<string | null>(null)
+  return (
+    <div className="flex w-full max-w-md flex-col gap-2">
+      <Command variant="panel" autoSelectFirst={false}>
+        <CommandPages>
+          <CommandInput placeholder="Buscar ação…" />
+          <CommandList>
+            <CommandEmpty>Nada encontrado.</CommandEmpty>
+            <CommandPage>
+              <CommandGroup heading="Preferências">
+                <ItemQueAbre id="tema" label="Tema" icon={<SwatchIcon />} />
+                <ItemQueAbre id="carteira" label="Carteira" icon={<WalletIcon />} />
+              </CommandGroup>
+            </CommandPage>
+            <CommandPage id="tema">
+              <CommandGroup heading="Tema">
+                {[
+                  ["Claro", SunIcon],
+                  ["Escuro", MoonIcon],
+                ].map(([nome, Icone]) => {
+                  const I = Icone as typeof SunIcon
+                  return (
+                    <CommandItem key={nome as string} onSelect={() => setEscolha(`Tema: ${nome as string}`)}>
+                      <CommandItemIcon>
+                        <I />
+                      </CommandItemIcon>
+                      {nome as string}
+                    </CommandItem>
+                  )
+                })}
+              </CommandGroup>
+            </CommandPage>
+            <CommandPage id="carteira">
+              <CommandGroup heading="Carteira">
+                {["Pessoal", "Casa", "Empresa"].map((nome) => (
+                  <CommandItem key={nome} onSelect={() => setEscolha(`Carteira: ${nome}`)}>
+                    <CommandItemIcon>
+                      <WalletIcon />
+                    </CommandItemIcon>
+                    {nome}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandPage>
+          </CommandList>
+        </CommandPages>
+      </Command>
+      <p className="text-xs text-muted-foreground" aria-live="polite">
+        {escolha ?? "Abra Tema ou Carteira, e volte com Backspace duas vezes."}
+      </p>
+    </div>
+  )
+}
+
+const CATEGORIAS_BUSCA = [
+  ["Saúde", "saude"],
+  ["Saneamento", "saneamento"],
+  ["Mercado", "mercado"],
+  ["Educação", "educacao"],
+  ["Lazer", "lazer"],
+] as const
+
+function DestaqueDemo() {
+  return (
+    // O filtro do projeto — substring sem acento —, que é o que o destaque
+    // espelha. O padrão do cmdk é difuso: "sa" achava "Carteiras".
+    <Command variant="panel" filter={commandFilter} autoSelectFirst={false} className="w-full max-w-md">
+      <CommandInput placeholder="Tente saude ou ca…" />
+      <CommandList>
+        <CommandEmpty>Nada encontrado.</CommandEmpty>
+        <CommandGroup heading="Categorias" count>
+          {CATEGORIAS_BUSCA.map(([nome, valor]) => (
+            <CommandItem key={valor} value={valor} keywords={[nome]}>
+              <CommandHighlight>{nome}</CommandHighlight>
+            </CommandItem>
+          ))}
+        </CommandGroup>
+        <CommandGroup heading="Telas" count>
+          {["Carteiras", "Cartões", "Configurações"].map((nome) => (
+            <CommandItem key={nome}>
+              <CommandHighlight>{nome}</CommandHighlight>
+            </CommandItem>
+          ))}
+        </CommandGroup>
+      </CommandList>
+    </Command>
+  )
+}
+
+function AtalhosDemo() {
+  const [feito, setFeito] = React.useState<string | null>(null)
+  return (
+    <div className="flex w-full max-w-md flex-col gap-2">
+      <Command variant="panel" autoSelectFirst={false}>
+        <CommandInput placeholder="Clique aqui e aperte a tecla…" />
+        <CommandList>
+          <CommandGroup heading="Ações">
+            <CommandItem shortcut="mod+e" onSelect={() => setFeito("Exportou o CSV")}>
+              <CommandItemIcon>
+                <ArrowDownTrayIcon />
+              </CommandItemIcon>
+              Exportar CSV
+            </CommandItem>
+            <CommandItem shortcut="alt+n" onSelect={() => setFeito("Abriu a nova transação")}>
+              <CommandItemIcon>
+                <PlusIcon />
+              </CommandItemIcon>
+              Nova transação
+            </CommandItem>
+          </CommandGroup>
+        </CommandList>
+      </Command>
+      <p className="text-xs text-muted-foreground" aria-live="polite">
+        {feito ?? "Nenhuma ação ainda."}
+      </p>
+    </div>
+  )
+}
+
+const FATURAS = [
+  { id: "nubank", nome: "Nubank", valor: 1482.3, fecha: "3 de outubro", vence: "10 de outubro", compras: 23 },
+  { id: "itau", nome: "Itaú Black", valor: 894.15, fecha: "28 de setembro", vence: "5 de outubro", compras: 12 },
+  { id: "inter", nome: "Inter", valor: 320, fecha: "15 de outubro", vence: "22 de outubro", compras: 4 },
+]
+
+function PreviaDemo() {
+  return (
+    <Command variant="panel" autoSelectFirst className="w-full max-w-3xl">
+      <CommandInput placeholder="Buscar fatura…" />
+      <CommandSplit>
+        <CommandList>
+          <CommandEmpty>Nada encontrado.</CommandEmpty>
+          <CommandGroup heading="Faturas abertas">
+            {FATURAS.map((f) => (
+              <CommandItem key={f.id} value={f.id} keywords={[f.nome]}>
+                <CommandItemIcon>
+                  <CreditCardIcon />
+                </CommandItemIcon>
+                {f.nome}
+                <CommandItemArrow />
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        </CommandList>
+        <CommandPreview empty={<p className="text-muted-foreground">Escolha uma fatura.</p>}>
+          {(valor) => {
+            const f = FATURAS.find((x) => x.id === valor)
+            if (!f) return null
+            return (
+              <>
+                <p className="font-medium">{f.nome}</p>
+                <MoneyDisplay value={-f.valor} size="xl" tone="expense" />
+                <DescriptionList>
+                  <DescriptionListItem>
+                    <DescriptionTerm>Fecha</DescriptionTerm>
+                    <DescriptionDetails>{f.fecha}</DescriptionDetails>
+                  </DescriptionListItem>
+                  <DescriptionListItem>
+                    <DescriptionTerm>Vence</DescriptionTerm>
+                    <DescriptionDetails>{f.vence}</DescriptionDetails>
+                  </DescriptionListItem>
+                  <DescriptionListItem>
+                    <DescriptionTerm>Compras</DescriptionTerm>
+                    <DescriptionDetails>{f.compras}</DescriptionDetails>
+                  </DescriptionListItem>
+                </DescriptionList>
+              </>
+            )
+          }}
+        </CommandPreview>
+      </CommandSplit>
+    </Command>
+  )
+}
+
+const TELAS = ["Dashboard", "Transações", "Categorias", "Cartões", "Contas a pagar", "Assinaturas"]
+
+function RecentesDemo() {
+  const { recents, add, clear } = useCommandRecents("ds:demo-command-recentes")
+  const [busca, setBusca] = React.useState("")
+  return (
+    <div className="flex w-full max-w-md flex-col gap-2">
+      <Command variant="panel" autoSelectFirst={false}>
+        <CommandInput value={busca} onValueChange={setBusca} placeholder="Buscar tela…" />
+        <CommandList>
+          <CommandEmpty>Nada encontrado.</CommandEmpty>
+          {!busca && recents.length > 0 ? (
+            <CommandGroup heading="Recentes">
+              {recents.map((tela) => (
+                <CommandItem key={`recente-${tela}`} value={`recente:${tela}`} keywords={[tela]} onSelect={() => add(tela)}>
+                  {tela}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          ) : null}
+          <CommandGroup heading="Telas">
+            {TELAS.map((tela) => (
+              <CommandItem key={tela} onSelect={() => add(tela)}>
+                {tela}
+                <CommandItemArrow />
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        </CommandList>
+      </Command>
+      <Button variant="tertiary" size="sm" className="self-start" onClick={clear} disabled={recents.length === 0}>
+        esquecer os recentes
+      </Button>
+    </div>
+  )
+}
+
+const TRANSACOES = [
+  "Mercado Pão de Açúcar",
+  "Uber para o aeroporto",
+  "Netflix",
+  "Farmácia São Paulo",
+  "Aluguel de outubro",
+  "Restaurante japonês",
+  "Posto Shell",
+  "Academia",
+]
+
+/** O servidor fingido: 600ms de resposta, e respeita o cancelamento. */
+function buscarTransacoes(consulta: string, signal: AbortSignal): Promise<string[]> {
+  return new Promise((resolver, rejeitar) => {
+    const t = setTimeout(() => {
+      const q = consulta.toLowerCase()
+      resolver(TRANSACOES.filter((x) => x.toLowerCase().includes(q)))
+    }, 600)
+    signal.addEventListener("abort", () => {
+      clearTimeout(t)
+      rejeitar(new DOMException("cancelada", "AbortError"))
+    })
+  })
+}
+
+function ServidorDemo() {
+  const { query, setQuery, results, loading } = useCommandSearch(buscarTransacoes)
+  return (
+    <Command variant="panel" shouldFilter={false} autoSelectFirst={false} className="w-full max-w-md">
+      <CommandInput value={query} onValueChange={setQuery} placeholder="Buscar transação no servidor…" />
+      <CommandList>
+        {loading ? (
+          <CommandLoading>
+            <Spinner />
+            Buscando…
+          </CommandLoading>
+        ) : query.trim() && results.length === 0 ? (
+          <CommandEmpty>Nenhuma transação com esse nome.</CommandEmpty>
+        ) : !query.trim() ? (
+          <p className="px-2 py-6 text-center text-sm text-muted-foreground">Digite para buscar.</p>
+        ) : (
+          <CommandGroup heading="Transações">
+            {results.map((r) => (
+              <CommandItem key={r} value={r}>
+                <CommandHighlight>{r}</CommandHighlight>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        )}
+      </CommandList>
+    </Command>
   )
 }

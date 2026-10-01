@@ -3,7 +3,8 @@
 O mapa de tudo o que uma pessoa faz no app, dividido em onze jornadas. Cada
 jornada tem um fluxograma, as regras técnicas que decidem os caminhos e as
 lacunas encontradas no código. Foi escrito lendo o código em 2026-09-17, na
-branch `finance-app-2.0`. Quando uma tela mudar de caminho, atualize o
+branch `finance-app-2.0`, e a navegação global foi revista em 2026-10-01,
+quando entrou a busca (⌘K). Quando uma tela mudar de caminho, atualize o
 diagrama dela.
 
 ## Como ler os diagramas
@@ -270,8 +271,8 @@ flowchart TD
 
 ## 3. Navegação e ações globais
 
-O que está disponível em qualquer tela: a casca, o "+" de adicionar e as
-notificações.
+O que está disponível em qualquer tela: a casca, o "+" de adicionar, a busca
+(⌘K) e as notificações.
 
 ```mermaid
 %%{init: {"theme": "dark"}}%%
@@ -299,6 +300,16 @@ flowchart TD
     add -->|"Assinatura"| subForm(("G8 Formulário de assinatura"))
     add -.->|"formulário global indisponível"| fallback["/transactions?new= ou /subscriptions?new=1"]
 
+    topbar(["Barra do topo: lupa"]) -->|"clicar"| palette(["Paleta de busca: Recentes, Ir para, Procurar, Ações"])
+    shell -->|"⌘K ou Ctrl+K"| palette
+    palette -->|"Ir para ou Recentes"| nav1
+    palette -->|"Ir para: as mesmas telas da lateral, Minha conta, Planos"| nav8
+    palette -->|"Ações: Nova despesa, parcelada, receita, assinatura"| add
+    palette -->|"Categorias…"| catPage(["Lista de categorias da carteira"]) --> catDetail["/categories/id"]
+    palette -->|"Cartões…"| cardPage(["Lista de cartões"]) --> cardDetail["/credit-cards/id"]
+    catPage -->|"Backspace duas vezes"| palette
+    cardPage -->|"Backspace duas vezes"| palette
+
     bell(["Sino de notificações"]) -->|"clicar"| read[("Marca como lida")] --> dest{"Tipo da notificação"}
     dest -->|"href explícito"| explicit["Rota do metadata.href"]
     dest -->|"category_created"| n1["/categories"]
@@ -321,6 +332,7 @@ flowchart TD
 |---|---|---|
 | Itens de navegação | Lateral e mobile vêm de configuração, não de JSX solto | `src/config/navigation.ts`, `src/config/mobile-navigation.ts` |
 | Formulários globais | Transação e assinatura montados uma vez na casca; salvar invalida as listas abertas | `src/components/layout/global-shell-dialogs-provider.tsx` |
+| Busca global (⌘K) | Montada uma vez no `AppHeader`, com a lupa nas duas árvores da barra; no telefone abre como gaveta. As telas vêm de `navigation.ts` e `account-menu-links.ts`; as ações chamam os mesmos ganchos do "+ Adicionar" (`useQuickCreateTransaction`, `useQuickCreateSubscription`); categorias e cartões leem o cache de `useCategoriesQuery` e `useCreditCardsQuery`, as mesmas consultas da casca. Os recentes ficam no `localStorage` (`app:busca`) | `src/components/layout/app-command-palette.tsx`, `src/components/layout/app-header.tsx` |
 | Destino da notificação | `metadata.href` seguro vence; senão, o tipo decide. Espelha o servidor para o push | `src/lib/notification-href.ts`, `supabase/functions/_shared/notification-types.ts` |
 | Notificações no servidor | Edges `dispatch-notifications`, `evaluate-budgets`, `evaluate-credit-card-alerts`, `evaluate-bills-reminders`, `credit-card-calendar-alerts`, `notify-transaction-created` | `supabase/functions/` |
 | Push | Edges `push-subscribe` e `push-unsubscribe` | `supabase/functions/` |

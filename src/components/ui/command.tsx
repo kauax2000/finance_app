@@ -6,7 +6,11 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Command as CommandPrimitive, useCommandState } from "cmdk"
 
 import { SearchInput } from "@/components/ui/search-input"
+import { Kbd } from "@/components/ui/kbd"
+import { Drawer, DrawerContent } from "@/components/ui/drawer"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
+import { ariaShortcut, matchShortcut } from "@/lib/shortcut"
 import { Caption, P } from "@/components/ui/typography"
 import {
   menuItemGeometryClassName,
@@ -46,9 +50,27 @@ import {
  * | solta numa página | **ninguém** — era o buraco |
  * | dentro de um `CommandDialog` | o `DialogContent` |
  *
- * `plain` é o padrão porque é o caso do `Combobox`, o único consumidor de
- * produto: ali uma segunda borda dentro do anel do popover desenharia duas
- * linhas a 1px de distância.
+ * `plain` é o padrão porque é o caso do `Combobox`: ali uma segunda borda
+ * dentro do anel do popover desenharia duas linhas a 1px de distância.
+ *
+ * ## Rodada 208: o que a paleta ainda deixava para quem chama
+ *
+ * - `CommandPages` + `CommandPage` + `useCommandPages` — as sub-páginas:
+ *   Enter num item abre uma lista dentro da paleta, a trilha aparece no campo
+ *   (o `CommandScope`) e o Backspace com o campo vazio volta em dois toques,
+ *   como o escopo sempre fez. O campo esvazia a cada passo.
+ * - `CommandHighlight` — o trecho que casou em negrito, sem acento dos dois
+ *   lados, como o `commandFilter`.
+ * - `CommandSplit` + `CommandPreview` — a coluna da linha selecionada, ao lado
+ *   da lista (o `CommandDialog size="lg"` dá a largura); some abaixo de `md`.
+ * - `CommandGroup count` — quantas linhas casaram, no rótulo do grupo.
+ * - `CommandItem shortcut` — a tecla na ponta, e a ação disparada por ela com
+ *   o foco na paleta, sem precisar achar a linha.
+ * - No telefone o `CommandDialog` é uma **gaveta** de baixo (o `Drawer`), com
+ *   a busca em cima do teclado.
+ * - Os ganchos `useCommandRecents` (a memória das últimas escolhas) e
+ *   `useCommandSearch` (a busca no servidor que espera, cancela e não deixa
+ *   resposta velha vencer) moram em `hooks/`.
  *
  * `inline` saiu do tipo. Não é renomeação cosmética — o nome dizia *onde* e não
  * *o quê*, e era por isso que ele não respondia sobre a borda.
@@ -125,8 +147,8 @@ const commandVariants = cva(
        * 36, linhas de 36, respiro largo. `menu` é a pilha com as medidas de
        * um dropdown — pílula de 32, linhas de 28, o recuo e o respiro dos
        * menus, 4px entre as peças (o mesmo afastamento do popover até o
-       * gatilho) —, para o `Combobox`, que é um seletor de
-       * valor preso a um campo e não um destino de busca.
+       * gatilho). Foi a do `Combobox` até a rodada 198, quando ele saiu da
+       * pilha; hoje não tem consumidor.
        */
       density: {
         palette: "",
@@ -139,9 +161,9 @@ const commandVariants = cva(
 
 /**
  * Se a peça está na **pilha** — um `Command variant="panel"`, que é o que o
- * `CommandDialog` e o `Combobox` montam (rodadas 141 e 143). Na pilha o campo,
- * a lista, o grupo e a linha vestem o desenho de três superfícies; em `plain`,
- * nada muda.
+ * `CommandDialog` e a paleta solta montam (rodadas 141 e 143; o `Combobox`
+ * saiu dela na 198). Na pilha o campo, a lista, o grupo e a linha vestem o
+ * desenho de três superfícies; em `plain`, nada muda.
  */
 const CommandStackContext = React.createContext<"palette" | "menu" | null>(null)
 
@@ -253,6 +275,7 @@ function CommandDialog({
   className,
   showCloseButton = false,
   commandProps,
+  size = "md",
   ...props
 }: React.ComponentProps<typeof Dialog> & {
   title?: string
@@ -262,7 +285,48 @@ function CommandDialog({
   showCloseButton?: boolean
   /** O que a raiz `Command` precisa receber: `filter`, `shouldFilter`, `loop`. */
   commandProps?: Omit<React.ComponentProps<typeof Command>, "children">
+  /**
+   * `lg` (rodada 208) é a paleta larga, para a pré-visualização ao lado
+   * (`CommandSplit` + `CommandPreview`). No telefone não faz diferença: lá é
+   * gaveta.
+   */
+  size?: "md" | "lg"
 }) {
+  const isMobile = useIsMobile()
+
+  // **No telefone a paleta é gaveta** (rodada 208): o diálogo centrado ficava
+  // atrás do teclado, e a casa já resolve superfície ancorada no telefone com
+  // o `vaul`. A busca fica em cima, colada no teclado; a legenda (`dock`) já
+  // some no toque. O título continua sendo o `DialogTitle`: o `vaul` é o
+  // mesmo `Dialog` do Radix, e ele o encontra.
+  if (isMobile) {
+    return (
+      <Drawer {...props}>
+        <DrawerContent
+          data-slot="command-drawer"
+          className="px-3 pb-[max(--spacing(3),env(safe-area-inset-bottom))]"
+        >
+          <DialogHeader className="sr-only">
+            <DialogTitle>{title}</DialogTitle>
+            <DialogDescription>{description}</DialogDescription>
+          </DialogHeader>
+          <Command
+            variant="panel"
+            autoSelectFirst={false}
+            className={cn(
+              "gap-2 pt-1",
+              "[--command-list-ceiling:min(60dvh,24rem)]",
+              className
+            )}
+            {...commandProps}
+          >
+            {children}
+          </Command>
+        </DrawerContent>
+      </Drawer>
+    )
+  }
+
   return (
     <Dialog {...props}>
       <DialogPortal>
@@ -280,6 +344,7 @@ function CommandDialog({
           data-slot="command-dialog"
           className={cn(
             "fixed left-1/2 z-(--z-modal) flex w-full max-w-[calc(100%-2rem)] -translate-x-1/2 flex-col text-sm outline-none sm:max-w-md",
+            size === "lg" && "sm:max-w-3xl",
             // **Uma sombra só, atrás das três superfícies** — pílula, placa e
             // legenda ficam no mesmo plano, e o que se levanta da página é o
             // conjunto. Ela mora num `::before` da coluna, em `z` negativo sob
@@ -366,6 +431,91 @@ function CommandDialog({
   )
 }
 
+/* -------------------------------------------------------------------------
+ * Sub-páginas (rodada 208)
+ * ---------------------------------------------------------------------- */
+
+type CommandPageEntry = { id: string; label: string; icon?: React.ReactNode }
+
+type CommandPagesValue = {
+  /** A pilha de páginas abertas; vazia é a raiz. */
+  stack: CommandPageEntry[]
+  /** A página atual, ou `undefined` na raiz. */
+  current: string | undefined
+  push: (page: CommandPageEntry) => void
+  pop: () => void
+  reset: () => void
+  /** O primeiro Backspace com o campo vazio: o próximo volta. */
+  armed: boolean
+  setArmed: (armed: boolean) => void
+}
+
+const CommandPagesContext = React.createContext<CommandPagesValue | null>(null)
+
+/**
+ * As sub-páginas da paleta. Não desenha nada: embrulha o conteúdo de um
+ * `Command` (o campo e a lista) e guarda a pilha. O campo lê a pilha sozinho —
+ * a trilha vira o `CommandScope` dele, o Backspace com o campo vazio volta em
+ * dois toques e o texto esvazia a cada passo —, e cada `CommandPage` mostra o
+ * que é seu.
+ *
+ * É o mecanismo que o escopo da busca do catálogo fazia à mão, com o mesmo
+ * gesto: o dono escolheu dois toques para tirar o escopo (rodada 139), e a
+ * sub-página é o mesmo gesto, então ela não ganha outro.
+ */
+function CommandPages({
+  children,
+  onPageChange,
+}: {
+  children: React.ReactNode
+  /** A página atual mudou — para quem quer gravar recente ou medir. */
+  onPageChange?: (page: string | undefined) => void
+}) {
+  const [stack, setStack] = React.useState<CommandPageEntry[]>([])
+  const [armed, setArmed] = React.useState(false)
+  const avisar = React.useRef(onPageChange)
+  React.useEffect(() => {
+    avisar.current = onPageChange
+  })
+
+  const value = React.useMemo<CommandPagesValue>(() => {
+    const mudar = (proxima: CommandPageEntry[]) => {
+      setStack(proxima)
+      setArmed(false)
+      avisar.current?.(proxima.at(-1)?.id)
+    }
+    return {
+      stack,
+      current: stack.at(-1)?.id,
+      push: (page) => mudar([...stack, page]),
+      pop: () => mudar(stack.slice(0, -1)),
+      reset: () => mudar([]),
+      armed,
+      setArmed,
+    }
+  }, [stack, armed])
+
+  return <CommandPagesContext.Provider value={value}>{children}</CommandPagesContext.Provider>
+}
+
+/** A pilha das sub-páginas, para o item que abre uma (`push`) ou volta. */
+function useCommandPages() {
+  const ctx = React.useContext(CommandPagesContext)
+  if (!ctx) throw new Error("useCommandPages precisa estar dentro de <CommandPages>")
+  return ctx
+}
+
+/**
+ * O conteúdo de uma página: aparece só quando ela é a atual. Sem `id`, é a
+ * raiz. Remonta a cada troca, e é isso que faz as linhas subirem ao entrar
+ * (`command-reveal`), como na troca de vista do catálogo.
+ */
+function CommandPage({ id, children }: { id?: string; children: React.ReactNode }) {
+  const { current } = useCommandPages()
+  if (current !== id) return null
+  return <React.Fragment key={id ?? "raiz"}>{children}</React.Fragment>
+}
+
 /**
  * A faixa de busca — vidro, e o campo com a mesma linguagem do cabeçalho.
  *
@@ -393,6 +543,7 @@ function CommandInput({
   size: sizeProp,
   surface,
   "aria-label": ariaLabel = "Buscar",
+  onKeyDown,
   ...props
 }: Omit<React.ComponentProps<typeof CommandPrimitive.Input>, "size"> & {
   /** O que fica entre a lupa e o texto — o `CommandScope` da busca por camada. */
@@ -432,6 +583,28 @@ function CommandInput({
     onValueChange?.(proximo)
   }
 
+  // As sub-páginas: a trilha é o escopo do campo, o texto esvazia a cada
+  // passo, e o Backspace com o campo vazio volta em dois toques.
+  const paginas = React.useContext(CommandPagesContext)
+  const profundidade = paginas?.stack.length ?? 0
+  const mudarRef = React.useRef(mudar)
+  React.useEffect(() => {
+    mudarRef.current = mudar
+  })
+  React.useEffect(() => {
+    if (paginas) mudarRef.current("")
+    // Só quando a página muda — não a cada render do contexto.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profundidade])
+  const topo = paginas?.stack.at(-1)
+  const escopo =
+    leading ??
+    (topo ? (
+      <CommandScope icon={topo.icon} armed={paginas?.armed}>
+        {topo.label}
+      </CommandScope>
+    ) : null)
+
   return (
     <div
       data-slot="command-input-wrapper"
@@ -450,8 +623,9 @@ function CommandInput({
     >
       {/* **O campo é o `SearchInput`** (rodada 198), com o `Command.Input` do
           cmdk como filho — o cmdk precisa do campo dele para filtrar a lista.
-          Na pilha (o `CommandDialog` e o `Combobox`) é a superfície `plate`,
-          solto é a `field`.
+          Na pilha (o `CommandDialog` e a paleta solta) é a superfície `plate`;
+          solto é a `field`, menos no `Combobox`, que pede `plate` porque mora
+          numa placa flutuante.
 
           Na paleta não há anel nem piso de toque: o campo é autofocado ao
           abrir, o anel nasceria aceso e nunca apagaria — quem carrega o foco
@@ -466,7 +640,7 @@ function CommandInput({
         // publicada pela raiz (`--scroll-fade-band-h`, 32 + 16), e a pílula
         // crescendo no dedo a deixaria 8px por baixo da lista.
         touchFloor={false}
-        leading={leading}
+        leading={escopo}
         value={texto}
         onClear={(event) => {
           mudar("")
@@ -485,6 +659,17 @@ function CommandInput({
           aria-label={ariaLabel}
           value={texto}
           onValueChange={mudar}
+          onKeyDown={(e) => {
+            onKeyDown?.(e)
+            if (e.defaultPrevented || !paginas || profundidade === 0) return
+            if (e.key === "Backspace" && !texto) {
+              e.preventDefault()
+              if (paginas.armed) paginas.pop()
+              else paginas.setArmed(true)
+              return
+            }
+            if (paginas.armed && e.key !== "Shift") paginas.setArmed(false)
+          }}
           className={cn("disabled:opacity-50", className)}
           {...props}
         />
@@ -624,8 +809,8 @@ function CommandList({
   const pilha = React.useContext(CommandStackContext)
   const naPilha = pilha !== null
   const naPaleta = pilha === "palette"
-  // As setas só na pilha, que é a lista suspensa (a paleta e o `Combobox`):
-  // é a placa dela o pai `relative` em que elas pousam.
+  // As setas só na pilha, que é a lista suspensa (a paleta): é a placa dela o
+  // pai `relative` em que elas pousam. O `Combobox` as pede por `arrows`.
   const setas = arrows ?? naPilha
   const fadeRef = useScrollFade({ arrows: setas })
   const lista = (
@@ -798,7 +983,9 @@ function CommandLoading({
     <CommandPrimitive.Loading
       data-slot="command-loading"
       className={cn(
-        "flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground",
+        // O cmdk embrulha os filhos num `<div aria-hidden>` próprio: é nele
+        // que a roda e o texto ficam lado a lado, não na raiz.
+        "flex justify-center py-6 text-sm text-muted-foreground [&>div]:flex [&>div]:items-center [&>div]:gap-2",
         className
       )}
       {...props}
@@ -810,11 +997,49 @@ function CommandLoading({
 
 function CommandGroup({
   className,
+  count = false,
+  heading,
   ...props
-}: React.ComponentProps<typeof CommandPrimitive.Group>) {
+}: React.ComponentProps<typeof CommandPrimitive.Group> & {
+  /**
+   * Quantas linhas casaram, no rótulo (rodada 208): "Transações · 12". O cmdk
+   * não expõe a contagem por grupo — ele desmonta as linhas que não casam —,
+   * então ela é contada no DOM do próprio grupo, a cada mudança dele.
+   */
+  count?: boolean
+}) {
   const naPaleta = React.useContext(CommandStackContext) === "palette"
+  const ref = React.useRef<HTMLDivElement | null>(null)
+  const [quantas, setQuantas] = React.useState<number | null>(null)
+  React.useEffect(() => {
+    const no = ref.current
+    if (!count || !no) return
+    const contar = () => setQuantas(no.querySelectorAll("[cmdk-item]").length)
+    contar()
+    const observador = new MutationObserver(contar)
+    observador.observe(no, { childList: true, subtree: true })
+    return () => observador.disconnect()
+  }, [count])
+
   return (
     <CommandPrimitive.Group
+      ref={ref}
+      heading={
+        count && heading != null ? (
+          <>
+            {heading}
+            {quantas != null ? (
+              // A contagem não é rótulo: sai da caixa alta e do espaçamento.
+              <span data-slot="command-group-count" className="nums font-normal tracking-normal normal-case">
+                {" · "}
+                {quantas}
+              </span>
+            ) : null}
+          </>
+        ) : (
+          heading
+        )
+      }
       data-slot="command-group"
       className={cn(
         // O recuo do cabeçalho acompanha o do item (`px-1.5`), e não `px-2`: com o
@@ -901,11 +1126,46 @@ function CommandSeparator({
  */
 function CommandItem({
   className,
+  shortcut,
+  children,
   ...props
-}: React.ComponentProps<typeof CommandPrimitive.Item>) {
+}: React.ComponentProps<typeof CommandPrimitive.Item> & {
+  /**
+   * A tecla que dispara a linha (rodada 208), na grafia do `Kbd`
+   * (`"mod+e"`, `"alt+n"`). Ela aparece na ponta e funciona com o foco na
+   * paleta — o diálogo aberto, ou a paleta solta focada —, sem precisar achar
+   * a linha. Evite as do navegador (`mod+n`, `mod+t`, `mod+w`): o Chrome não
+   * deixa cancelá-las.
+   */
+  shortcut?: string
+}) {
   const naPaleta = React.useContext(CommandStackContext) === "palette"
+  const ref = React.useRef<HTMLDivElement | null>(null)
+  const selecionar = React.useRef(props.onSelect)
+  React.useEffect(() => {
+    selecionar.current = props.onSelect
+  })
+  const valor = props.value
+
+  React.useEffect(() => {
+    if (!shortcut) return
+    const aoTeclar = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || !matchShortcut(shortcut, e)) return
+      // Só com o foco dentro desta paleta: duas paletas numa página não
+      // disputam a mesma tecla.
+      const raiz = ref.current?.closest("[cmdk-root]")
+      if (!raiz || !raiz.contains(document.activeElement)) return
+      e.preventDefault()
+      selecionar.current?.(valor ?? "")
+    }
+    document.addEventListener("keydown", aoTeclar)
+    return () => document.removeEventListener("keydown", aoTeclar)
+  }, [shortcut, valor])
+
   return (
     <CommandPrimitive.Item
+      ref={ref}
+      aria-keyshortcuts={shortcut ? ariaShortcut(shortcut) : undefined}
       data-slot="command-item"
       className={cn(
         "group/command-item",
@@ -921,7 +1181,126 @@ function CommandItem({
         className
       )}
       {...props}
+    >
+      {children}
+      {shortcut ? (
+        <CommandShortcut>
+          <Kbd keys={shortcut} />
+        </CommandShortcut>
+      ) : null}
+    </CommandPrimitive.Item>
+  )
+}
+
+/**
+ * O trecho que casou, em negrito (rodada 208). Sem acento dos dois lados, como
+ * o `commandFilter`: "saude" acende "Saú" em "Saúde". Exportada para teste.
+ *
+ * A comparação anda letra a letra sobre o texto original, e cada letra perde o
+ * acento sozinha — é o que mantém os índices alinhados. Uma letra que vire
+ * duas ao perder o acento (rara em português) desliga o destaque, em vez de
+ * acender o trecho errado.
+ */
+export function highlightParts(texto: string, busca: string): { text: string; match: boolean }[] {
+  const consulta = semAcento(busca.trim())
+  if (!consulta) return [{ text: texto, match: false }]
+  const letras = [...texto].map(semAcento)
+  if (letras.some((l) => l.length !== 1)) return [{ text: texto, match: false }]
+  const i = letras.join("").indexOf(consulta)
+  if (i < 0) return [{ text: texto, match: false }]
+  const original = [...texto]
+  const partes = [
+    { text: original.slice(0, i).join(""), match: false },
+    { text: original.slice(i, i + consulta.length).join(""), match: true },
+    { text: original.slice(i + consulta.length).join(""), match: false },
+  ]
+  return partes.filter((p) => p.text !== "")
+}
+
+function semAcento(s: string) {
+  return s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase()
+}
+
+function CommandHighlight({ children, className }: { children: string; className?: string }) {
+  const busca = useCommandState((estado) => estado.search)
+  return (
+    <>
+      {highlightParts(children, busca).map((parte, i) =>
+        parte.match ? (
+          <mark
+            key={i}
+            data-slot="command-highlight"
+            className={cn("bg-transparent font-semibold text-inherit", className)}
+          >
+            {parte.text}
+          </mark>
+        ) : (
+          <React.Fragment key={i}>{parte.text}</React.Fragment>
+        )
+      )}
+    </>
+  )
+}
+
+/**
+ * A lista e a pré-visualização lado a lado (rodada 208). O `CommandDialog
+ * size="lg"` dá a largura; abaixo de `md` a pré-visualização some e a lista
+ * ocupa tudo.
+ */
+function CommandSplit({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="command-split"
+      className={cn(
+        "flex min-h-0 items-stretch gap-3",
+        "*:data-[slot=command-dialog-panel]:min-w-0 *:data-[slot=command-dialog-panel]:flex-1",
+        "*:data-[slot=command-list]:min-w-0 *:data-[slot=command-list]:flex-1",
+        className
+      )}
+      {...props}
     />
+  )
+}
+
+/**
+ * O detalhe da linha selecionada, numa placa ao lado da lista (rodada 208).
+ * Ela lê o valor realçado do cmdk e chama `children` com ele; sem linha
+ * realçada (a paleta ociosa), mostra `empty`. É uma região nomeada e não uma
+ * região viva: a linha realçada já é anunciada pelo
+ * `aria-activedescendant`, e repetir o detalhe a cada seta atropelaria o
+ * leitor de tela.
+ */
+function CommandPreview({
+  children,
+  empty = null,
+  className,
+}: {
+  children: (value: string) => React.ReactNode
+  /** O que mostrar sem linha realçada. */
+  empty?: React.ReactNode
+  className?: string
+}) {
+  const valor = useCommandState((estado) => estado.value)
+  const naPilha = React.useContext(CommandStackContext) !== null
+  return (
+    <div
+      data-slot="command-preview"
+      role="region"
+      aria-label="Pré-visualização"
+      className={cn(
+        "hidden w-72 shrink-0 flex-col gap-3 overflow-y-auto p-4 text-sm md:flex",
+        naPilha && cn("rounded-xl ring-1 ring-foreground/10", menuPanelTintClassName),
+        className
+      )}
+    >
+      {valor ? (
+        <div key={valor} className="flex flex-col gap-3 animate-in fade-in-0 animation-duration-(--duration-base) ease-(--ease-out)">
+          {children(valor)}
+        </div>
+      ) : (
+        empty
+      )}
+    </div>
   )
 }
 
@@ -1102,6 +1481,12 @@ export {
   Command,
   commandVariants,
   CommandDialog,
+  CommandHighlight,
+  CommandPage,
+  CommandPages,
+  CommandPreview,
+  CommandSplit,
+  useCommandPages,
   CommandDock,
   CommandDockItem,
   CommandEmpty,

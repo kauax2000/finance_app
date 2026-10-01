@@ -1,0 +1,79 @@
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
+import { describe, expect, it } from "vitest"
+
+import { highlightParts } from "./command"
+import { ariaShortcut, matchShortcut } from "@/lib/shortcut"
+import { rememberRecent } from "@/hooks/use-command-recents"
+
+/** A rodada 208: as versões novas do `Command`. */
+
+const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
+const CODIGO = fonte("src/components/ui/command.tsx")
+
+const tecla = (key: string, mods: Partial<Record<"metaKey" | "ctrlKey" | "altKey", boolean>> = {}) => ({
+  key,
+  metaKey: false,
+  ctrlKey: false,
+  altKey: false,
+  ...mods,
+})
+
+describe("as versões do Command", () => {
+  it("o destaque acha o trecho sem acento dos dois lados, e não inventa", () => {
+    expect(highlightParts("Saúde", "saude")).toEqual([{ text: "Saúde", match: true }])
+    expect(highlightParts("Mercado", "erc")).toEqual([
+      { text: "M", match: false },
+      { text: "erc", match: true },
+      { text: "ado", match: false },
+    ])
+    expect(highlightParts("Educação", "cacao")).toEqual([
+      { text: "Edu", match: false },
+      { text: "cação", match: true },
+    ])
+    expect(highlightParts("Lazer", "xyz")).toEqual([{ text: "Lazer", match: false }])
+    expect(highlightParts("Lazer", "  ")).toEqual([{ text: "Lazer", match: false }])
+  })
+
+  it("o atalho é um só para o SearchInput e o CommandItem", () => {
+    expect(matchShortcut("mod+e", tecla("e", { metaKey: true }))).toBe(true)
+    expect(matchShortcut("mod+e", tecla("e", { ctrlKey: true }))).toBe(true)
+    expect(matchShortcut("mod+e", tecla("e"))).toBe(false)
+    // Sem modificadora pedida, nenhuma pode estar descida.
+    expect(matchShortcut("/", tecla("/", { metaKey: true }))).toBe(false)
+    expect(matchShortcut("alt+n", tecla("n", { altKey: true }))).toBe(true)
+    expect(ariaShortcut("mod+k")).toBe("Meta+K Control+K")
+    expect(fonte("src/components/ui/search-input.tsx")).toContain('from "@/lib/shortcut"')
+    expect(fonte("src/components/ui/search-input.tsx")).not.toMatch(/function casaAtalho/)
+  })
+
+  it("os recentes guardam destinos, sem duplicata, o último primeiro, no teto", () => {
+    expect(rememberRecent(["a", "b", "c"], "b", 5)).toEqual(["b", "a", "c"])
+    expect(rememberRecent(["a", "b", "c"], "d", 3)).toEqual(["d", "a", "b"])
+  })
+
+  it("a busca no servidor descarta a resposta de uma consulta cancelada", () => {
+    const codigo = fonte("src/hooks/use-command-search.ts")
+    expect(codigo).toContain("controle.abort()")
+    expect(codigo.match(/if \(controle\.signal\.aborted\) return/g)?.length).toBe(2)
+  })
+
+  it("as sub-páginas: Backspace em dois toques, e o campo esvazia a cada passo", () => {
+    expect(CODIGO).toMatch(/e\.key === "Backspace" && !texto[\s\S]*?if \(paginas\.armed\) paginas\.pop\(\)\s*else paginas\.setArmed\(true\)/)
+    expect(CODIGO).toMatch(/if \(paginas\) mudarRef\.current\(""\)[\s\S]*?\}, \[profundidade\]\)/)
+  })
+
+  it("o atalho da linha só dispara com o foco na própria paleta", () => {
+    expect(CODIGO).toContain('const raiz = ref.current?.closest("[cmdk-root]")')
+    expect(CODIGO).toContain("raiz.contains(document.activeElement)")
+  })
+
+  it("no telefone o diálogo é gaveta, e o título continua ligado", () => {
+    expect(CODIGO).toMatch(/if \(isMobile\) \{[\s\S]*?<Drawer \{\.\.\.props\}>[\s\S]*?<DialogTitle>\{title\}<\/DialogTitle>/)
+  })
+
+  it("nenhum comentário ou doc diz mais que o Combobox monta a pilha", () => {
+    expect(CODIGO).not.toMatch(/o `CommandDialog` e o `Combobox` montam/)
+    expect(fonte("src/app/designsystem/docs/command.tsx")).not.toMatch(/o CommandDialog e o Combobox a montam/)
+  })
+})
