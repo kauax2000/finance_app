@@ -7,8 +7,10 @@ import {
   AreaChart,
   Bar,
   BarChart,
+  Brush,
   CartesianGrid,
   Cell,
+  LabelList,
   Legend,
   Line,
   LineChart,
@@ -25,6 +27,8 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  useActiveTooltipDataPoints,
+  useActiveTooltipLabel,
 } from "recharts"
 
 import { animate, useReducedMotion } from "motion/react"
@@ -100,6 +104,23 @@ import {
  * registraram: a resposta não é reclassificar o componente, é fazer o
  * componente ser o que o nome promete.
  *
+ * ## Rodada 206: o que o dashboard ainda escrevia à mão
+ *
+ * - Formas: `ChartWaterfall` (a cascata do saldo, com barras de faixa) e
+ *   `ChartBarList` (o ranking em lista HTML, que é texto e não imagem).
+ * - Barras: `signed` (o saldo cruzando o zero, income acima e expense
+ *   abaixo), `valueLabels` (o valor na ponta; empilhado, o total) e
+ *   `selected` + `onSelect` (clicar seleciona; setas e Enter também — o
+ *   gráfico vira `role="group"` e anuncia a seleção).
+ * - Rosca: a fatia ativa (tooltip ou lista acendem uma, o miolo passa a ser
+ *   dela), `legend="list"` (valor e % ao lado do anel) e `bands` no `gauge`
+ *   (o arco usado pinta o estado, o resto é trilho).
+ * - Área e linha: `brush` (o recorte de período), `delta` (a variação contra o
+ *   ponto anterior no tooltip, também nas barras) e `config.dashed` (a série
+ *   projetada ou de referência, tracejada).
+ * - `ChartAnnotation`: o fio vertical com rótulo num ponto do tempo.
+ * - O tooltip da rosca escreve a fatia em % do total.
+ *
  * ## As duas camadas
  *
  * **A anatomia** (`ChartContainer`, `ChartGrid`, `ChartXAxis`, `ChartYAxis`,
@@ -107,7 +128,9 @@ import {
  * livre: quem monta um `ComposedChart` compõe estas peças.
  *
  * **As formas** (`ChartArea`, `ChartLine`, `ChartBars`, `ChartDonut`,
- * `ChartSparkline`) são a forma curta sobre a anatomia, como `FormInput` é
+ * `ChartSparkline`, e depois `ChartSplit`, `ChartRadial`, `ChartHeatmap`,
+ * `ChartRadar`, `ChartWaterfall` e `ChartBarList`) são a forma curta sobre a
+ * anatomia, como `FormInput` é
  * sobre `Field` + `Input`. Elas cobram `label` — o nome acessível — porque a
  * forma curta pode cobrar e a composição livre não pode.
  */
@@ -135,6 +158,10 @@ const chartContainerVariants = cva(
     "[&_.recharts-reference-line_[stroke='#ccc']]:stroke-border",
     "[&_.recharts-dot[stroke='#fff']]:stroke-transparent",
     "[&_.recharts-sector[stroke='#fff']]:stroke-transparent",
+    // O recorte de período (rodada 206): o Brush do Recharts nasce com o
+    // texto preto e a moldura `#fff` — os tokens da casa entram por aqui.
+    "[&_.recharts-brush-texts_text]:fill-muted-foreground",
+    "[&_.recharts-brush-traveller_rect]:fill-muted-foreground",
     // O anel de foco. A versão anterior escrevia `outline-hidden` em
     // `.recharts-layer`, `.recharts-sector` e `.recharts-surface` — e o que
     // isso apagava era o foco de teclado que o `accessibilityLayer` do
@@ -186,6 +213,12 @@ export type ChartConfig = {
   [key: string]: {
     label?: React.ReactNode
     icon?: React.ComponentType<{ className?: string }>
+    /**
+     * A série tracejada (rodada 206): a projeção que continua o real — o saldo
+     * até o fim do mês — ou a referência — a média. O traço é o segundo canal:
+     * cor sozinha não diz "isto ainda não aconteceu".
+     */
+    dashed?: boolean
   } & (
     | { color?: string; theme?: never }
     | { color?: never; theme: Record<keyof typeof THEMES, string> }
@@ -426,8 +459,8 @@ const CHART_RAMP_LENGTH = 5
  * novo — ela vira "Outros", e quem agrega é quem tem os dados. O que este
  * resolvedor garante é que ele **não minta**: do sexto em diante a cor é
  * `--muted-foreground`, que lê como "não identificado", em vez de repetir
- * `--chart-1` e dar duas fatias da mesma cor. `credit-cards-history-chart.tsx`
- * hoje faz `BAR_COLORS[idx % 5]` e é exatamente o defeito que isto evita.
+ * `--chart-1` e dar duas fatias da mesma cor. O `credit-cards-history-chart`
+ * fazia `BAR_COLORS[idx % 5]`, que é exatamente esse defeito, até a rodada 206.
  */
 export function chartSeriesColor(index: number): string {
   return index < CHART_RAMP_LENGTH
@@ -469,6 +502,7 @@ function ChartContainer({
   overlay,
   motion,
   observeMotion = true,
+  interactive = false,
   ref,
   ...props
 }: React.ComponentProps<"div"> &
@@ -477,9 +511,9 @@ function ChartContainer({
     children: React.ComponentProps<typeof ResponsiveContainer>["children"]
     /**
      * O nome acessível. Um `<svg>` sem nome é anunciado como "imagem" e nada
-     * mais — a mesma medição que o `Popover` e o `resizable` já pagaram. Só
-     * **um** dos oito gráficos do app tem um hoje. Ele é opcional aqui porque
-     * a composição livre não pode cobrar; as cinco formas curtas cobram.
+     * mais — a mesma medição que o `Popover` e o `resizable` já pagaram. Ele
+     * é opcional aqui porque a composição livre não pode cobrar; todas as
+     * formas curtas cobram.
      */
     label?: string
     /** Uma frase sobre o que o gráfico mostra, ligada por `aria-describedby`. */
@@ -500,6 +534,12 @@ function ChartContainer({
     /** `false` quando a caixa observada é um envelope por fora — a rosca e os
      *  anéis, cuja legenda HTML entra junto. */
     observeMotion?: boolean
+    /**
+     * O gráfico **recebe** ação (barra que seleciona, recorte de período). Aí
+     * o papel deixa de ser `img` — `img` torna os filhos apresentacionais, e
+     * o que se aperta sumiria para o leitor de tela — e passa a `group`.
+     */
+    interactive?: boolean
   }) {
   const uniqueId = React.useId()
   const chartId = `chart-${id ?? uniqueId.replace(/:/g, "")}`
@@ -525,7 +565,7 @@ function ChartContainer({
         data-chart={chartId}
         data-aspect={aspect ?? "video"}
         data-reveal={m.fase}
-        role={label ? "img" : undefined}
+        role={label ? (interactive ? "group" : "img") : undefined}
         aria-label={label}
         aria-describedby={descriptionId}
         className={cn(
@@ -655,6 +695,8 @@ function ChartTooltipContent({
   color,
   nameKey,
   labelKey,
+  delta,
+  share,
 }: React.ComponentProps<"div"> & {
   active?: boolean
   payload?: TooltipPayloadItem[]
@@ -689,6 +731,14 @@ function ChartTooltipContent({
   totalLabel?: string
   nameKey?: string
   labelKey?: string
+  /**
+   * A variação contra o ponto anterior (rodada 206): "+12% vs. fev". O
+   * tooltip só recebe o ponto ativo, então quem sabe o anterior é a série
+   * inteira — as formas a passam com a chave do eixo.
+   */
+  delta?: { data: Record<string, unknown>[]; x: string; xFormat?: ChartFormat }
+  /** O total da rosca: cada fatia ganha a porcentagem dele ao lado do valor. */
+  share?: number
 }) {
   const { config } = useChart()
 
@@ -806,11 +856,26 @@ function ChartTooltipContent({
                       </span>
                     </div>
                     {item.value !== undefined ? (
-                      <span className="nums font-mono font-medium text-foreground">
-                        {formatChartValue(item.value, format)}
+                      <span className="flex items-baseline gap-1.5">
+                        <span className="nums font-mono font-medium text-foreground">
+                          {formatChartValue(item.value, format)}
+                        </span>
+                        {share && typeof item.value === "number" ? (
+                          <span className="nums font-mono text-muted-foreground">
+                            {formatChartValue(item.value / share, "percent")}
+                          </span>
+                        ) : null}
                       </span>
                     ) : null}
                   </div>
+                  {delta && typeof item.value === "number" ? (
+                    <ChartTooltipDelta
+                      delta={delta}
+                      row={item.payload}
+                      dataKey={String(item.dataKey ?? "")}
+                      value={item.value}
+                    />
+                  ) : null}
                 </>
               )}
             </div>
@@ -826,6 +891,39 @@ function ChartTooltipContent({
         ) : null}
       </div>
     </div>
+  )
+}
+
+/**
+ * A variação contra o ponto anterior, numa linha miúda sob o valor. O sinal é
+ * escrito (`+`/`−`) e a tinta é neutra: subir é bom no saldo e ruim no gasto,
+ * e o tooltip não sabe qual dos dois a série é.
+ */
+function ChartTooltipDelta({
+  delta,
+  row,
+  dataKey,
+  value,
+}: {
+  delta: NonNullable<React.ComponentProps<typeof ChartTooltipContent>["delta"]>
+  row: Record<string, unknown> | undefined
+  dataKey: string
+  value: number
+}) {
+  const i = row ? delta.data.indexOf(row) : -1
+  const anterior = i > 0 ? delta.data[i - 1] : undefined
+  const base = anterior?.[dataKey]
+  if (typeof base !== "number" || base === 0) return null
+  const variacao = (value - base) / Math.abs(base)
+  const sinal = variacao > 0 ? "+" : variacao < 0 ? "−" : ""
+  return (
+    <span data-slot="chart-tooltip-delta" className="basis-full ps-4.5 text-2xs text-muted-foreground">
+      <span className="nums font-mono">
+        {sinal}
+        {formatChartValue(Math.abs(variacao), "percent")}
+      </span>{" "}
+      vs. {formatChartValue(anterior?.[delta.x], delta.xFormat ?? "text")}
+    </span>
   )
 }
 
@@ -930,6 +1028,14 @@ function ChartLegendContent({
           <>
             {itemConfig?.icon && !hideIcon ? (
               <itemConfig.icon />
+            ) : itemConfig?.dashed ? (
+              // A série tracejada é traço na legenda também: dois quadrados da
+              // mesma cor não dizem qual das duas é a projeção.
+              <span
+                aria-hidden
+                className="w-3 shrink-0 border-t-2 border-dashed"
+                style={{ borderColor: item.color }}
+              />
             ) : (
               <span
                 aria-hidden
@@ -1094,6 +1200,47 @@ function ChartReferenceLine({
   )
 }
 
+/**
+ * Uma anotação no eixo do tempo (rodada 206): o fio vertical num ponto do
+ * eixo X, com o rótulo no topo — "salário", "fechamento da fatura". É a
+ * `ChartReferenceLine` com `x`, mais o rótulo que o Recharts desenharia preto
+ * e no meio do fio. Entra como filho de qualquer forma cartesiana.
+ *
+ * O rótulo é texto do SVG e não chega ao leitor de tela pelo `role="img"`:
+ * quem tem anotação que importa a escreve também no `description`.
+ */
+function ChartAnnotation({
+  x,
+  label,
+  tone = "average",
+  ...props
+}: Omit<React.ComponentProps<typeof ReferenceLine>, "label" | "x"> & {
+  /** O valor do eixo X onde a marca pousa — o mesmo do `x` dos dados. */
+  x: string | number
+  label: string
+  tone?: keyof typeof chartReferenceTone
+}) {
+  return (
+    <ReferenceLine
+      x={x}
+      stroke={chartReferenceTone[tone]}
+      strokeDasharray="3 3"
+      strokeWidth={1}
+      label={(p: { viewBox?: { x?: number; y?: number } }) => (
+        <text
+          data-slot="chart-annotation-label"
+          x={(p.viewBox?.x ?? 0) + 4}
+          y={(p.viewBox?.y ?? 0) + 10}
+          className="fill-muted-foreground text-2xs"
+        >
+          {label}
+        </text>
+      )}
+      {...props}
+    />
+  )
+}
+
 /* -------------------------------------------------------------------------
  * As formas
  * ---------------------------------------------------------------------- */
@@ -1137,7 +1284,7 @@ function serieColor(key: string, index: number, config: ChartConfig): string {
 }
 
 /**
- * O casco das cinco formas. Ele não desenha nada quando `dataTable` está
+ * O casco das formas. Ele não desenha nada quando `dataTable` está
  * desligado — sem invólucro, sem `gap`, sem nó a mais na árvore.
  */
 function ChartFrame({
@@ -1269,6 +1416,40 @@ function chartMarkerDot(ultimo: number, color: string, todos: boolean) {
   return MarkerDot
 }
 
+/** O traço da série tracejada: a projeção e a referência (`config.dashed`). */
+const CHART_DASH = "5 4"
+
+function tracejada(config: ChartConfig, key: string) {
+  return config[key]?.dashed === true
+}
+
+/**
+ * O recorte de período (rodada 206), para série longa: a faixa de baixo
+ * escolhe o trecho, e o gráfico desenha só ele. `true` abre nos últimos 12
+ * pontos; um número abre nos últimos N. É o `Brush` do Recharts com a
+ * moldura e o fundo dos tokens — o texto e as alças vêm do `ChartContainer`.
+ */
+function chartBrush(
+  data: Record<string, unknown>[],
+  x: string,
+  xFormat: ChartFormat,
+  brush: boolean | number | undefined
+) {
+  if (!brush || data.length < 2) return null
+  const janela = typeof brush === "number" ? brush : 12
+  return (
+    <Brush
+      dataKey={x}
+      height={24}
+      travellerWidth={8}
+      startIndex={Math.max(0, data.length - janela)}
+      stroke="var(--color-border)"
+      fill="var(--chart-surface)"
+      tickFormatter={(v) => formatChartValue(v, xFormat)}
+    />
+  )
+}
+
 const chartAreaShape = {
   solid: "monotone",
   gradient: "monotone",
@@ -1292,6 +1473,8 @@ function ChartArea({
   legend,
   tooltip = true,
   dataTable,
+  delta = false,
+  brush,
   children,
 }: ChartFormProps & {
   x: string
@@ -1300,6 +1483,10 @@ function ChartArea({
   stacked?: boolean
   /** O último ponto com valor, marcado e pulsando: o "hoje" da série. */
   marker?: "last"
+  /** O tooltip mostra a variação contra o ponto anterior. */
+  delta?: boolean
+  /** O recorte de período: `true` abre nos últimos 12 pontos, um número nos últimos N. */
+  brush?: boolean | number
 }) {
   const m = useChartReveal()
   const chaves = useSeries(config, series)
@@ -1325,6 +1512,7 @@ function ChartArea({
         label={label}
         description={description}
         className={className}
+        interactive={!!brush}
       >
         <AreaChart data={data} accessibilityLayer>
           {gradiente ? (
@@ -1358,7 +1546,13 @@ function ChartArea({
           {tooltip ? (
             <ChartTooltip
               {...CHART_TOOLTIP_MOTION}
-              content={<ChartTooltipContent format={format} total={stacked} />}
+              content={
+                <ChartTooltipContent
+                  format={format}
+                  total={stacked}
+                  delta={delta ? { data, x, xFormat } : undefined}
+                />
+              }
             />
           ) : null}
           {mostrarLegenda ? (
@@ -1373,8 +1567,11 @@ function ChartArea({
               stackId={stacked ? "a" : undefined}
               stroke={serieColor(key, i, config)}
               strokeWidth={2}
+              strokeDasharray={tracejada(config, key) ? CHART_DASH : undefined}
               fill={gradiente ? `url(#chart-area-${gradienteId}-${key})` : serieColor(key, i, config)}
-              fillOpacity={gradiente ? 1 : 0.15}
+              // A projeção é só o traço: volume embaixo de algo que ainda não
+              // aconteceu leria como dinheiro que já está lá.
+              fillOpacity={tracejada(config, key) ? 0 : gradiente ? 1 : 0.15}
               dot={
                 marker === "last"
                   ? chartMarkerDot(
@@ -1391,6 +1588,7 @@ function ChartArea({
               }}
             />
           ))}
+          {chartBrush(data, x, xFormat, brush)}
           {children}
         </AreaChart>
       </ChartContainer>
@@ -1421,8 +1619,14 @@ function ChartLine({
   legend,
   tooltip = true,
   dataTable,
+  delta = false,
+  brush,
   children,
 }: ChartFormProps & {
+  /** O tooltip mostra a variação contra o ponto anterior. */
+  delta?: boolean
+  /** O recorte de período: `true` abre nos últimos 12 pontos, um número nos últimos N. */
+  brush?: boolean | number
   x: string
   xFormat?: ChartFormat
   variant?: keyof typeof chartLineShape
@@ -1451,13 +1655,22 @@ function ChartLine({
         label={label}
         description={description}
         className={className}
+        interactive={!!brush}
       >
         <LineChart data={data} accessibilityLayer>
           <ChartGrid />
           <ChartXAxis dataKey={x} format={xFormat} />
           <ChartYAxis format={axisFormatFor(format)} />
           {tooltip ? (
-            <ChartTooltip {...CHART_TOOLTIP_MOTION} content={<ChartTooltipContent format={format} />} />
+            <ChartTooltip
+              {...CHART_TOOLTIP_MOTION}
+              content={
+                <ChartTooltipContent
+                  format={format}
+                  delta={delta ? { data, x, xFormat } : undefined}
+                />
+              }
+            />
           ) : null}
           {mostrarLegenda ? (
             <ChartLegend content={<ChartLegendContent />} />
@@ -1470,6 +1683,7 @@ function ChartLine({
               type={chartLineShape[variant]}
               stroke={serieColor(key, i, config)}
               strokeWidth={2}
+              strokeDasharray={tracejada(config, key) ? CHART_DASH : undefined}
               // O marcador tem 8px de diâmetro: abaixo disso ele lê como
               // sujeira do traço, não como ponto de dado.
               dot={
@@ -1480,7 +1694,9 @@ function ChartLine({
                       dots === "all"
                     )
                   : dots === "all"
-                    ? { r: 4, strokeWidth: 2, stroke: "var(--chart-surface)" }
+                    ? // O miolo é a cor da série: sem `fill`, o Recharts pinta o
+                      // ponto de branco, e ele abria um buraco no traço.
+                      { r: 4, strokeWidth: 2, stroke: "var(--chart-surface)", fill: serieColor(key, i, config) }
                     : false
               }
               activeDot={
@@ -1490,6 +1706,7 @@ function ChartLine({
               }
             />
           ))}
+          {chartBrush(data, x, xFormat, brush)}
           {children}
         </LineChart>
       </ChartContainer>
@@ -1499,6 +1716,24 @@ function ChartLine({
 
 /** Maior que qualquer meia barra: o Recharts o reduz ao que cabe. */
 const CHART_PILL_RADIUS = 999
+
+/**
+ * O rótulo ativo do tooltip, publicado para fora do SVG. É o que liga a
+ * seleção de barra ao teclado: o `accessibilityLayer` anda pelas barras com
+ * as setas movendo o tooltip, e o Enter do contêiner seleciona o rótulo que
+ * este componente leu. Precisa morar **dentro** do gráfico — o gancho lê o
+ * estado do Recharts.
+ */
+function ChartActiveLabel({ onChange }: { onChange: (label: unknown) => void }) {
+  const ativo = useActiveTooltipLabel()
+  React.useEffect(() => {
+    onChange(ativo)
+  }, [ativo, onChange])
+  return null
+}
+
+/** O apagado do que não está selecionado — o mesmo degrau da divisão. */
+const CHART_DIM_OPACITY = 0.35
 
 function ChartBars({
   layout = "vertical",
@@ -1518,8 +1753,32 @@ function ChartBars({
   legend,
   tooltip = true,
   dataTable,
+  signed = false,
+  valueLabels = false,
+  selected,
+  onSelect,
+  delta = false,
   children,
 }: ChartFormProps & {
+  /**
+   * Barras com sinal (rodada 206): o saldo mês a mês cruzando o zero. Acima,
+   * `--chart-income`; abaixo, `--chart-expense`; e a linha do zero desenhada,
+   * porque o lado dela é o segundo canal — cor não é o único. O eixo de valor
+   * passa a incluir o negativo. Uma série.
+   */
+  signed?: boolean
+  /** O valor escrito na ponta de cada barra, comprimido como o eixo. Empilhado, o total. */
+  valueLabels?: boolean
+  /** O valor de `x` da barra selecionada. As outras apagam. */
+  selected?: string | null
+  /**
+   * Clicar numa barra a seleciona, e clicar de novo solta (`null`). Pelo
+   * teclado: as setas andam pelas barras e Enter seleciona. Com ele, o
+   * gráfico é `role="group"` e anuncia a seleção numa região viva.
+   */
+  onSelect?: (x: string | null) => void
+  /** O tooltip mostra a variação contra o ponto anterior. */
+  delta?: boolean
   x: string
   xFormat?: ChartFormat
   /**
@@ -1555,7 +1814,29 @@ function ChartBars({
   const pontaRaio: [number, number, number, number] = horizontal
     ? [0, 4, 4, 0]
     : [4, 4, 0, 0]
-  const mostrarLegenda = legend ?? chaves.length >= 2
+  const mostrarLegenda = legend ?? (!signed && chaves.length >= 2)
+  // O rótulo que o teclado alcançou, para o Enter selecionar.
+  const ativoRef = React.useRef<unknown>(undefined)
+  const lerAtivo = React.useCallback((v: unknown) => {
+    ativoRef.current = v
+  }, [])
+  const alternar = (valor: unknown) => {
+    if (!onSelect || valor == null) return
+    const chave = String(valor)
+    onSelect(chave === selected ? null : chave)
+  }
+  // O eixo de valor inclui o negativo: com sinal, a base `[0, auto]` cortaria
+  // os meses no vermelho fora do gráfico. `auto` nos dois lados, e não funções
+  // de mínimo e máximo: com funções o Recharts não arredonda, e o eixo saía
+  // com degraus de `−R$ 20` e `R$ 1,18 mil`. Quem garante o zero no domínio é
+  // a linha do zero, com `ifOverflow="extendDomain"`.
+  const dominioComSinal = ["auto", "auto"]
+  const corDaBarra = (key: string, i: number, linha: Record<string, unknown>) =>
+    signed
+      ? Number(linha[key] ?? 0) < 0
+        ? "var(--color-chart-expense)"
+        : "var(--color-chart-income)"
+      : serieColor(key, i, config)
 
   return (
     <ChartFrame
@@ -1571,8 +1852,29 @@ function ChartBars({
         config={config}
         aspect={aspect}
         label={label}
-        description={description}
+        description={
+          onSelect
+            ? `${description ? `${description} ` : ""}Use as setas para percorrer e Enter para selecionar.`
+            : description
+        }
         className={className}
+        interactive={!!onSelect}
+        onKeyDown={
+          onSelect
+            ? (e) => {
+                if (e.key !== "Enter" && e.key !== " ") return
+                e.preventDefault()
+                alternar(ativoRef.current)
+              }
+            : undefined
+        }
+        overlay={
+          onSelect ? (
+            <span className="sr-only" aria-live="polite">
+              {selected ? `${formatChartValue(selected, xFormat)} selecionado` : ""}
+            </span>
+          ) : undefined
+        }
       >
         <BarChart
           data={data}
@@ -1583,7 +1885,11 @@ function ChartBars({
           <ChartGrid vertical={horizontal} horizontal={!horizontal} />
           {horizontal ? (
             <>
-              <ChartXAxis type="number" format={axisFormatFor(format)} />
+              <ChartXAxis
+                type="number"
+                format={axisFormatFor(format)}
+                domain={signed ? (dominioComSinal as never) : undefined}
+              />
               <ChartYAxis
                 type="category"
                 dataKey={x}
@@ -1594,14 +1900,31 @@ function ChartBars({
           ) : (
             <>
               <ChartXAxis dataKey={x} format={xFormat} />
-              <ChartYAxis format={axisFormatFor(format)} />
+              <ChartYAxis
+                format={axisFormatFor(format)}
+                domain={signed ? (dominioComSinal as never) : undefined}
+              />
             </>
           )}
+          {signed ? (
+            horizontal ? (
+              <ChartReferenceLine x={0} tone="zero" ifOverflow="extendDomain" />
+            ) : (
+              <ChartReferenceLine y={0} tone="zero" ifOverflow="extendDomain" />
+            )
+          ) : null}
+          {onSelect ? <ChartActiveLabel onChange={lerAtivo} /> : null}
           {tooltip ? (
             <ChartTooltip
               {...CHART_TOOLTIP_MOTION}
               cursor={{ fillOpacity: 0.5 }}
-              content={<ChartTooltipContent format={format} total={stacked} />}
+              content={
+                <ChartTooltipContent
+                  format={format}
+                  total={stacked}
+                  delta={delta ? { data, x, xFormat } : undefined}
+                />
+              }
             />
           ) : null}
           {mostrarLegenda ? (
@@ -1637,7 +1960,44 @@ function ChartBars({
               // o segmento de trás.
               stroke={stacked ? "var(--chart-surface)" : undefined}
               strokeWidth={stacked ? 2 : undefined}
-            />
+              onClick={
+                onSelect
+                  ? (entrada: { payload?: Record<string, unknown> }) =>
+                      alternar(entrada.payload?.[x])
+                  : undefined
+              }
+              style={onSelect ? { cursor: "pointer" } : undefined}
+            >
+              {signed || selected != null
+                ? data.map((linha, j) => (
+                    <Cell
+                      key={String(linha[x] ?? j)}
+                      fill={corDaBarra(key, i, linha)}
+                      fillOpacity={
+                        selected != null && String(linha[x]) !== selected
+                          ? CHART_DIM_OPACITY
+                          : 1
+                      }
+                    />
+                  ))
+                : null}
+              {valueLabels && (!stacked || i === chaves.length - 1) ? (
+                <LabelList
+                  position={horizontal ? "right" : "top"}
+                  offset={6}
+                  className="fill-foreground"
+                  fontSize={11}
+                  // Empilhado, o rótulo é o total da coluna, na ponta do último
+                  // segmento — um rótulo por segmento empilharia números.
+                  valueAccessor={(entrada: { payload?: Record<string, unknown> }) =>
+                    stacked
+                      ? chaves.reduce((acc, k) => acc + Number(entrada.payload?.[k] ?? 0), 0)
+                      : (entrada.payload?.[key] as number)
+                  }
+                  formatter={(v: unknown) => formatChartValue(v, axisFormatFor(format))}
+                />
+              ) : null}
+            </Bar>
           ))}
           {children}
         </BarChart>
@@ -1647,6 +2007,28 @@ function ChartBars({
 }
 
 const chartDonutThickness = { sm: 0.72, md: 0.62, lg: 0.48 } as const
+
+/**
+ * A fatia sob o tooltip, publicada para fora do SVG — é o que acende a rosca
+ * ativa pelo ponteiro **e** pelo teclado, porque o `accessibilityLayer` move
+ * o mesmo tooltip. O ponto chega como o Recharts o guarda; o nome é o que
+ * casa com a linha de `data`.
+ */
+function ChartActiveSlice({
+  nameKey,
+  onChange,
+}: {
+  nameKey: string
+  onChange: (nome: string | null) => void
+}) {
+  const pontos = useActiveTooltipDataPoints() as Record<string, unknown>[] | undefined
+  const ponto = pontos?.[0]
+  const nome = ponto == null ? null : String(ponto[nameKey] ?? "")
+  React.useEffect(() => {
+    onChange(nome)
+  }, [nome, onChange])
+  return null
+}
 
 /**
  * O medidor tem geometria própria, e ela saiu de três medidas.
@@ -1686,8 +2068,32 @@ function ChartDonut({
   tooltip = true,
   dataTable,
   center,
+  bands,
+  active,
+  onActiveChange,
   children,
-}: Omit<ChartFormProps, "series"> & {
+}: Omit<ChartFormProps, "series" | "legend"> & {
+  /**
+   * A fatia acesa, pelo nome (`nameKey`), quando quem chama tem a própria
+   * lista — a da fatura, em que cada linha é um link e a lista do componente
+   * não serve. Com ela, a tela acende a fatia pousando na linha dela.
+   */
+  active?: string | null
+  /** A fatia que o ponteiro ou o teclado acendeu no gráfico, para a tela acender a linha. */
+  onActiveChange?: (nome: string | null) => void
+  /**
+   * `true` é a fileira embaixo (o padrão a partir de duas fatias); `list` é a
+   * lista ao lado do anel (rodada 206), com o valor e a porcentagem de cada
+   * fatia — a que o dashboard de categorias escrevia à mão. Abaixo de `sm` ela
+   * desce para baixo do anel.
+   */
+  legend?: boolean | "list"
+  /**
+   * Os cortes de aviso e perigo, só no `gauge` (rodada 206): o arco usado
+   * pinta o **estado** — os mesmos tokens e cortes do `Progress` e dos anéis
+   * — e o resto vira o trilho em `--muted`. Sem eles, o medidor pinta a rampa.
+   */
+  bands?: ProgressBands
   /**
    * `donut` deixa o miolo livre para o total (é a forma dos três donuts do
    * app); `pie` fecha o miolo; `gauge` é o meio-círculo de progresso contra
@@ -1717,14 +2123,60 @@ function ChartDonut({
     [data, nameKey]
   )
   const mostrarLegenda = legend ?? data.length >= 2
+  const emLista = legend === "list"
+
+  // A rosca ativa (rodada 206): o tooltip (ponteiro e teclado) e a lista
+  // acendem uma fatia, as outras apagam, e o miolo passa a mostrá-la.
+  const [ativoGrafico, setAtivoGraficoLocal] = React.useState<string | null>(null)
+  const [ativoLista, setAtivoLista] = React.useState<number | null>(null)
+  const setAtivoGrafico = React.useCallback(
+    (nome: string | null) => {
+      setAtivoGraficoLocal(nome)
+      onActiveChange?.(nome)
+    },
+    [onActiveChange]
+  )
+  const indiceAtivo =
+    ativoLista ??
+    (ativoGrafico != null
+      ? chaves.indexOf(ativoGrafico)
+      : active != null
+        ? chaves.indexOf(active)
+        : -1)
+  const ativo = indiceAtivo >= 0 ? indiceAtivo : null
+  const valores = React.useMemo(
+    () => data.map((d) => (typeof d[dataKey] === "number" ? (d[dataKey] as number) : 0)),
+    [data, dataKey]
+  )
+  const total = valores.reduce((acc, v) => acc + v, 0)
+  const pcts = React.useMemo(() => splitPercents(valores), [valores])
+  // O medidor com faixas: o usado no estado, o resto no trilho.
+  const pctUsado = total > 0 ? (valores[0] / total) * 100 : 0
+  const corDaFatia = (i: number) =>
+    medidor && bands
+      ? i === 0
+        ? chartRadialColor(pctUsado, bands, serieColor(chaves[0], 0, config))
+        : "var(--color-muted)"
+      : serieColor(chaves[i], i, config)
 
   // Quem chama escreve `<ChartDonutCenter value="76%" />` sem saber que o
   // medidor ancora diferente: a variante é do `ChartDonut`, então é ele que
   // injeta. Mesmo recurso que o `Button` e o `Stepper` usam com `asChild`.
-  const centro =
+  const centroFixo =
     medidor && React.isValidElement<{ align?: "center" | "gauge" }>(center)
       ? React.cloneElement(center, { align: "gauge" })
       : center
+  // Com uma fatia acesa, o miolo da rosca passa a ser dela.
+  const centro =
+    center && ativo != null && !medidor ? (
+      <ChartDonutCenter
+        amount={valores[ativo]}
+        format={format}
+        label={config[chaves[ativo]]?.label ?? chaves[ativo]}
+      />
+    ) : (
+      centroFixo
+    )
 
   // A legenda da rosca é HTML ao lado do gráfico, e não a `<Legend>` do
   // Recharts. Dentro do SVG ela reserva espaço encolhendo o anel, e o centro
@@ -1736,10 +2188,15 @@ function ChartDonut({
       data.map((linha, i) => ({
         value: chaves[i],
         dataKey: chaves[i],
-        color: serieColor(chaves[i], i, config),
+        color:
+          medidor && bands
+            ? i === 0
+              ? chartRadialColor(pctUsado, bands, serieColor(chaves[0], 0, config))
+              : "var(--color-muted)"
+            : serieColor(chaves[i], i, config),
         payload: linha,
       })),
-    [chaves, config, data]
+    [bands, chaves, config, data, medidor, pctUsado]
   )
 
   return (
@@ -1768,7 +2225,11 @@ function ChartDonut({
       <ChartRevealBox
         observe={m.observe}
         fase={m.fase}
-        className="flex w-fit flex-col items-center"
+        className={cn(
+          "flex flex-col items-center",
+          emLista ? "w-full gap-4 sm:flex-row sm:gap-8" : "w-fit"
+        )}
+        onPointerLeave={() => setAtivoLista(null)}
       >
         <ChartContainer
           motion={m}
@@ -1777,7 +2238,7 @@ function ChartDonut({
           aspect={proporcao}
           label={label}
           description={description}
-          className={className}
+          className={cn(emLista && "shrink-0", className)}
           overlay={centro}
           style={
             {
@@ -1807,10 +2268,12 @@ function ChartDonut({
                     format={format}
                     nameKey={nameKey}
                     hideLabel
+                    share={total}
                   />
                 }
               />
             ) : null}
+            <ChartActiveSlice nameKey={nameKey} onChange={setAtivoGrafico} />
             <Pie
               {...chartMarkMotion(m.fase, 0, { stagger: false })}
               data={data}
@@ -1829,14 +2292,56 @@ function ChartDonut({
               {data.map((_, i) => (
                 <Cell
                   key={chaves[i] || i}
-                  fill={serieColor(chaves[i], i, config)}
+                  fill={corDaFatia(i)}
+                  fillOpacity={ativo != null && ativo !== i ? CHART_DIM_OPACITY : 1}
+                  className="transition-[fill-opacity] duration-(--duration-base) ease-(--ease-out)"
                 />
               ))}
             </Pie>
             {children}
           </PieChart>
         </ChartContainer>
-        {mostrarLegenda ? (
+        {mostrarLegenda && emLista ? (
+          <ul
+            data-slot="chart-donut-legend"
+            className="grid w-full min-w-0 gap-1 text-xs sm:flex-1"
+          >
+            {data.map((_, i) => (
+              <li
+                key={chaves[i] || i}
+                data-active={ativo === i || undefined}
+                className={cn(
+                  "flex items-center gap-2 rounded-md px-1.5 py-1",
+                  "transition-[opacity,background-color] duration-(--duration-base) ease-(--ease-out)",
+                  ativo === i && "bg-muted",
+                  ativo != null && ativo !== i && "opacity-60",
+                  chartRiseClassName(m.fase)
+                )}
+                style={
+                  m.fase === "entering"
+                    ? { transitionDelay: `${150 + i * CHART_STAGGER_MS}ms` }
+                    : undefined
+                }
+                onPointerEnter={() => setAtivoLista(i)}
+              >
+                <span
+                  aria-hidden
+                  className="size-2 shrink-0 rounded-xs"
+                  style={{ backgroundColor: corDaFatia(i) }}
+                />
+                <span className="min-w-0 flex-1 truncate">
+                  {config[chaves[i]]?.label ?? chaves[i]}
+                </span>
+                <span className="nums font-mono text-foreground">
+                  {formatChartValue(valores[i], format)}
+                </span>
+                <span className="nums w-9 text-right font-mono text-muted-foreground">
+                  {pcts[i]}%
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : mostrarLegenda ? (
           <ChartLegendContent
             config={config}
             payload={legendaPayload}
@@ -2807,6 +3312,312 @@ function ChartRadar({
   )
 }
 
+/* -------------------------------------------------------------------------
+ * As formas da rodada 206 — cascata e ranking
+ * ---------------------------------------------------------------------- */
+
+/** Um degrau da cascata. `total` é um saldo desenhado do zero; sem `value`, o acumulado. */
+export type ChartWaterfallStep = { name: string; value?: number; total?: boolean }
+
+/**
+ * Os degraus da cascata, com a faixa de cada barra (`[de, até]`) e o saldo
+ * acumulado depois dela. Um `total` sem valor fecha no acumulado — o saldo
+ * final se escreve sozinho. Exportada para teste.
+ */
+export function waterfallSteps(data: ChartWaterfallStep[]) {
+  let acumulado = 0
+  return data.map((d) => {
+    if (d.total) {
+      const v = d.value ?? acumulado
+      acumulado = v
+      return {
+        name: d.name,
+        value: v,
+        faixa: [Math.min(0, v), Math.max(0, v)] as [number, number],
+        acumulado,
+        tipo: "total" as const,
+      }
+    }
+    const v = d.value ?? 0
+    const de = acumulado
+    acumulado += v
+    return {
+      name: d.name,
+      value: v,
+      faixa: [Math.min(de, acumulado), Math.max(de, acumulado)] as [number, number],
+      acumulado,
+      tipo: v < 0 ? ("down" as const) : ("up" as const),
+    }
+  })
+}
+
+const CHART_WATERFALL_COLOR = {
+  up: "var(--color-chart-income)",
+  down: "var(--color-chart-expense)",
+  // O saldo não é entrada nem saída: neutro, para não ler como um dos dois.
+  total: "var(--color-muted-foreground)",
+} as const
+
+const CHART_WATERFALL_CONFIG = {
+  up: { label: "Entrada" },
+  down: { label: "Saída" },
+  total: { label: "Saldo" },
+} satisfies ChartConfig
+
+/** O tooltip da cascata: o degrau com sinal e o saldo depois dele. */
+function ChartWaterfallTooltip({
+  active,
+  payload,
+  format,
+}: {
+  active?: boolean
+  payload?: { payload?: ReturnType<typeof waterfallSteps>[number] }[]
+  format: ChartFormat
+}) {
+  const d = payload?.[0]?.payload
+  if (!active || !d) return null
+  const sinal = d.tipo === "total" ? "" : d.value < 0 ? "−" : "+"
+  return (
+    <div
+      data-slot="chart-tooltip-content"
+      className={cn("grid min-w-32 gap-1.5 px-2.5 py-1.5 text-xs", menuPanelSurfaceClassName)}
+    >
+      <div className="font-medium">{d.name}</div>
+      <div className="flex items-center justify-between gap-3 leading-none">
+        <span className="text-muted-foreground">{CHART_WATERFALL_CONFIG[d.tipo].label}</span>
+        <span className="nums font-mono font-medium text-foreground">
+          {sinal}
+          {formatChartValue(Math.abs(d.value), format)}
+        </span>
+      </div>
+      {d.tipo !== "total" ? (
+        <div className="flex items-center justify-between gap-3 border-t border-border/60 pt-1.5 leading-none">
+          <span className="text-muted-foreground">Saldo depois</span>
+          <span className="nums font-mono font-medium text-foreground">
+            {formatChartValue(d.acumulado, format)}
+          </span>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+/**
+ * A cascata do saldo (rodada 206): do saldo inicial ao final, passando por
+ * cada entrada que o sobe e cada saída que o desce. Cada barra flutua da
+ * altura em que a anterior terminou — é uma barra de faixa do Recharts
+ * (`dataKey` devolvendo `[de, até]`), o que deixa o saldo cruzar o zero sem
+ * a pilha de barras transparentes que se costuma usar. A cor diz o sentido e
+ * a posição também: cor não é o único canal.
+ */
+function ChartWaterfall({
+  data,
+  label,
+  description,
+  format = "currency",
+  aspect,
+  className,
+  legend = true,
+  tooltip = true,
+  valueLabels = false,
+  dataTable,
+  children,
+}: {
+  data: ChartWaterfallStep[]
+  label: string
+  description?: string
+  format?: ChartFormat
+  aspect?: VariantProps<typeof chartContainerVariants>["aspect"]
+  className?: string
+  /** Entrada, saída e saldo. Ligada: as três cores precisam de nome. */
+  legend?: boolean
+  tooltip?: boolean
+  /** O degrau escrito na ponta de cada barra, com sinal e comprimido. */
+  valueLabels?: boolean
+  dataTable?: boolean
+  children?: React.ReactNode
+}) {
+  const m = useChartReveal()
+  const degraus = React.useMemo(() => waterfallSteps(data), [data])
+
+  return (
+    <ChartFrame
+      dataTable={dataTable}
+      data={degraus}
+      series={["value", "acumulado"]}
+      config={{ value: { label: "Degrau" }, acumulado: { label: "Saldo depois" } }}
+      x="name"
+      xLabel="Etapa"
+      format={format}
+    >
+      <ChartMotionContext.Provider value={m.fase}>
+        <ChartRevealBox observe={m.observe} fase={m.fase} className="flex w-full flex-col">
+          <ChartContainer
+            motion={m}
+            observeMotion={false}
+            config={CHART_WATERFALL_CONFIG}
+            aspect={aspect}
+            label={label}
+            description={description}
+            className={className}
+          >
+            <BarChart data={degraus} accessibilityLayer barCategoryGap="18%">
+              <ChartGrid />
+              <ChartXAxis dataKey="name" />
+              <ChartYAxis
+                format={axisFormatFor(format)}
+                domain={[(min: number) => Math.min(0, min), "auto"] as never}
+              />
+              <ChartReferenceLine y={0} tone="zero" />
+              {tooltip ? (
+                <ChartTooltip
+                  {...CHART_TOOLTIP_MOTION}
+                  cursor={{ fillOpacity: 0.5 }}
+                  content={<ChartWaterfallTooltip format={format} />}
+                />
+              ) : null}
+              {/* A ponta arredonda e a base não, como em toda barra da casa:
+                  o saldo (`total`) nasce na linha do zero, e um degrau
+                  flutuante não ganha nada com a base redonda. */}
+              <Bar {...chartMarkMotion(m.fase)} dataKey="faixa" radius={[4, 4, 0, 0]}>
+                {degraus.map((d, i) => (
+                  <Cell key={`${d.name}-${i}`} fill={CHART_WATERFALL_COLOR[d.tipo]} />
+                ))}
+                {valueLabels ? (
+                  <LabelList
+                    position="top"
+                    offset={6}
+                    className="fill-foreground"
+                    fontSize={11}
+                    valueAccessor={(entrada: { payload?: ReturnType<typeof waterfallSteps>[number] }) => {
+                      const d = entrada.payload
+                      if (!d) return ""
+                      const sinal = d.tipo === "total" ? "" : d.value < 0 ? "−" : "+"
+                      return `${sinal}${formatChartValue(Math.abs(d.value), axisFormatFor(format))}`
+                    }}
+                  />
+                ) : null}
+              </Bar>
+              {children}
+            </BarChart>
+          </ChartContainer>
+          {legend ? (
+            <ChartLegendContent
+              config={CHART_WATERFALL_CONFIG}
+              payload={(["up", "down", "total"] as const).map((k) => ({
+                value: k,
+                dataKey: k,
+                color: CHART_WATERFALL_COLOR[k],
+              }))}
+            />
+          ) : null}
+        </ChartRevealBox>
+      </ChartMotionContext.Provider>
+    </ChartFrame>
+  )
+}
+
+/**
+ * O ranking em lista (rodada 206): nome e valor numa linha, a barra
+ * proporcional embaixo. É o "maiores gastos" e o "top categorias" — e é
+ * **texto de verdade**: o nome quebra em vez de cortar, o leitor de tela lê a
+ * lista como lista (a raiz é `figure`, e não `img`), e o valor conta na
+ * entrada como os outros números do gráfico.
+ *
+ * A barra nunca fica sob o texto, e a cor é uma só (`--chart-1`) a menos que o
+ * `config` dê cor por nome: a ordem é o ranking, e cor que muda com o ranking
+ * é cor seguindo a posição, não a entidade. A ordem é de quem chama.
+ */
+function ChartBarList({
+  data,
+  nameKey,
+  dataKey,
+  config = {},
+  label,
+  description,
+  format = "currency",
+  share = false,
+  className,
+}: {
+  data: Record<string, unknown>[]
+  nameKey: string
+  dataKey: string
+  config?: ChartConfig
+  label: string
+  description?: string
+  format?: ChartFormat
+  /** A porcentagem do total ao lado do valor (somando 100, pelo maior resto). */
+  share?: boolean
+  className?: string
+}) {
+  const m = useChartReveal()
+  const valores = data.map((d) => (typeof d[dataKey] === "number" ? (d[dataKey] as number) : 0))
+  const maximo = Math.max(0, ...valores)
+  const pcts = splitPercents(valores)
+
+  return (
+    <ChartHtmlRoot
+      role="figure"
+      data-slot="chart-bar-list"
+      config={config}
+      label={label}
+      description={description}
+      observe={m.observe}
+      fase={m.fase}
+      className={cn("w-full text-sm", className)}
+    >
+      <ChartMotionContext.Provider value={m.fase}>
+        <ul className="grid gap-3">
+          {data.map((linha, i) => {
+            const nome = String(linha[nameKey] ?? "")
+            return (
+              <li key={nome || i} className="grid gap-1.5">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="min-w-0 break-words">{config[nome]?.label ?? nome}</span>
+                  <span className="flex shrink-0 items-baseline gap-2">
+                    <ChartNumber
+                      value={valores[i]}
+                      format={format}
+                      className="nums font-mono font-medium text-foreground"
+                    />
+                    {share ? (
+                      <span className="nums w-9 text-right font-mono text-xs text-muted-foreground">
+                        {pcts[i]}%
+                      </span>
+                    ) : null}
+                  </span>
+                </div>
+                <div aria-hidden className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className={cn(
+                      "h-full w-(--bar-w) rounded-full transition-[width] ease-(--ease-out)",
+                      m.fase === "pending"
+                        ? "not-print:w-0"
+                        : m.fase === "entering"
+                          ? "duration-(--duration-spring)"
+                          : "duration-(--duration-slow)"
+                    )}
+                    style={
+                      {
+                        "--bar-w": `${maximo > 0 ? (Math.max(0, valores[i]) / maximo) * 100 : 0}%`,
+                        backgroundColor: serieColor(nome, 0, config),
+                        transitionDelay:
+                          m.fase === "entering"
+                            ? `${Math.min(i, CHART_STAGGER_MAX) * CHART_STAGGER_MS}ms`
+                            : undefined,
+                      } as React.CSSProperties
+                    }
+                  />
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+      </ChartMotionContext.Provider>
+    </ChartHtmlRoot>
+  )
+}
+
 /**
  * A tendência sem eixo, para dentro de um `StatCard` ou de uma linha de lista.
  * Ela não tem grade, nem eixo, nem legenda, e por padrão nem tooltip: uma
@@ -3103,7 +3914,9 @@ function getPayloadConfigFromPayload(
 
 export {
   chartContainerVariants,
+  ChartAnnotation,
   ChartArea,
+  ChartBarList,
   ChartBars,
   ChartContainer,
   ChartDataTable,
@@ -3126,6 +3939,7 @@ export {
   ChartStyle,
   ChartTooltip,
   ChartTooltipContent,
+  ChartWaterfall,
   ChartXAxis,
   ChartYAxis,
   useChart,

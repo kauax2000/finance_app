@@ -16761,3 +16761,65 @@ lista) —, então tudo foi verificado na página do catálogo.
   segmentado; o "Padrão" subiu para o topo; todo carrossel da página ganhou
   `aria-label`. Verificada a 1280 e a 375 no tema claro, e a galeria e a
   tela cheia no escuro — sem erros no console e sem transbordo.
+
+### Rodada 206 — o Chart ganha a cascata, o ranking, o sinal, a seleção, a rosca ativa, o recorte e a projeção
+
+O pedido: a mesma rodada para o `Chart`, com as doze versões escolhidas pelo
+dono. Ao contrário do `Carousel`, aqui havia o que migrar: quatro telas
+montavam o gráfico à mão.
+
+- **`ChartWaterfall`**: barras de faixa do Recharts (`dataKey` devolvendo
+  `[de, até]`), e não a pilha de barra transparente + barra visível, que quebra
+  quando o saldo cruza o zero. `waterfallSteps` calcula as faixas e o
+  acumulado; um `total` sem `value` fecha no acumulado. Medido: os rótulos
+  saem `+R$ 8,43 mil`, `−R$ 2,6 mil`… e o final `R$ 2,53 mil`, que é a soma.
+  A ponta arredonda e a base não, como em toda barra (a primeira versão
+  arredondava as quatro, e a asserção 6 do `chart-ladder` pegou).
+- **`ChartBarList`**: o ranking em lista HTML sobre o `ChartHtmlRoot` com
+  `role="figure"` — o `img` tornaria o texto apresentacional. A barra fica
+  embaixo do nome, nunca sob ele, e anda por `--bar-w` com `not-print:w-0` na
+  espera (estilo inline não entende `not-print:`).
+- **`ChartBars signed`**: a primeira versão passava funções de mínimo e máximo
+  ao domínio, e o eixo saía com `−R$ 20` e `R$ 1,18 mil`. Com `auto` nos dois
+  lados e a linha do zero em `ifOverflow="extendDomain"`, ele sai
+  `−R$ 650 · R$ 0 · R$ 650 · R$ 1,3 mil`.
+- **`valueLabels`**: `LabelList` com `valueAccessor`; empilhado, só o último
+  segmento leva rótulo, e ele é o total da coluna.
+- **`selected` + `onSelect`**: `Cell` por barra com `fillOpacity` 0,35 fora da
+  seleção. O teclado passa por `useActiveTooltipLabel()` num filho do gráfico:
+  as setas do `accessibilityLayer` movem o tooltip, e o Enter do contêiner
+  seleciona o rótulo ativo. Medido: duas setas a partir do foco e Enter
+  selecionaram "Dez". **Não há `aria-pressed`**, que a proposta prometia: barra
+  é SVG e não botão; a seleção é anunciada numa região viva e o gráfico passa
+  a `role="group"` (com `img`, o que se aperta seria apresentacional). Um
+  primeiro teste falhou por deixar o ponteiro sobre o gráfico — o tooltip do
+  ponteiro vence o do teclado, e o Enter soltava a barra sob o mouse.
+- **A rosca ativa**: `useActiveTooltipDataPoints()` num filho do `PieChart`
+  publica a fatia sob o tooltip — ponteiro e teclado —, as outras apagam e o
+  miolo vira `ChartDonutCenter amount` da fatia. `legend="list"` acende pela
+  linha. `active`/`onActiveChange` entraram depois da migração da fatura, que
+  tem lista própria (cada linha é link) e perdia a sincronia linha ↔ fatia.
+- **`bands` no medidor**: o usado em `chartRadialColor`, o resto em `--muted`.
+  Medido com `CARD_LIMIT_BANDS`: 24% verde, 52% âmbar, 82% vermelho.
+- **`delta`, `share`, `brush`, `dashed`, `ChartAnnotation`**: a variação vem da
+  série inteira (o tooltip só recebe o ponto ativo); a fatia em % entra em toda
+  rosca; o `Brush` ganhou os tokens no `ChartContainer`; a série tracejada é
+  traço também na legenda (eram dois quadrados iguais) e sem volume na área.
+- **Defeito antigo achado na verificação**: `dots="all"` na linha não dava
+  `fill` ao ponto, o Recharts o pintava de branco e cada ponto abria um buraco
+  no traço — já estava na página, no exemplo de linha reta.
+- **Afirmações falsas corrigidas**: "obrigatório nas cinco formas" (são onze),
+  "só um dos oito gráficos do app tem nome" e o comentário que citava o
+  `BAR_COLORS[idx % 5]` do histórico de cartões.
+- **As telas**: o histórico de contas (tooltip sem `format` — **o valor saía
+  sem `R$`** —, eixos crus e casca de cartão à mão), o histórico de faturas
+  por cartão (tooltip à mão, `height={300}`, `BAR_COLORS[idx % 5]`; 403 → 284
+  linhas), a rosca do dashboard (tooltip, miolo e lista à mão; 475 → 137,
+  agora `legend="list"`) e a da fatura (379 → ~200, com a lista de links da
+  tela e a sincronia por `active`). Duas mudanças visíveis ficam ditas: a
+  lista do dashboard mostra as fatias (cinco e "Outras") e não mais todas as
+  categorias, e o histórico de faturas mostra a legenda só a partir de dois
+  cartões. As telas pedem login e não foram vistas; o teste confere o fonte.
+- **A página**: área, linha, barras, rosca, divisão, anéis, calendário,
+  perfil, proporção e estado viraram uma demo com segmentado; entraram as doze
+  seções novas. Verificada a 1280 e a 375, sem erros e sem transbordo.

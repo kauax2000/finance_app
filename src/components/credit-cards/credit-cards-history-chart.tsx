@@ -1,27 +1,22 @@
 "use client"
 
 import {
-    ChartLegendContent,
+    ChartBars,
+    ChartEmpty,
     ChartTooltip,
+    ChartTooltipContent,
+    CHART_UPDATE_MS,
     chartSeriesColor,
+    type ChartConfig,
 } from "@/components/ui/chart"
-import { CreditCardIcon } from "@heroicons/react/16/solid"
+import { CreditCardIcon } from "@heroicons/react/24/outline"
 import {
     PageSection,
     PageSectionHeader,
     PageSectionTitle,
 } from "@/components/ui/page-section"
 import { formatYearMonthShortPtBr } from "@/lib/transaction-date"
-import { currencyBRL, currencyCompactBRL } from "@/lib/formatters"
 import { useMemo } from "react"
-import {
-    ResponsiveContainer,
-    BarChart,
-    CartesianGrid,
-    XAxis,
-    YAxis,
-    Bar,
-} from "recharts"
 
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import { MoneyDisplay } from "@/components/ui/money-display"
@@ -33,22 +28,6 @@ import {
     previousStatementCloseBefore,
     statementCloseOnOrBefore,
 } from "@/lib/credit-card-billing"
-
-/**
- * A rampa neutra do design system: cinco matizes que só identificam séries,
- * sem dizer nada sobre estado. Eram seis hex que não acompanhavam o tema.
- * O acesso é por módulo, então o número de faixas não precisa bater.
- */
-/**
- * A rampa é do sistema, e o `% 5` que morava aqui mentia: com seis cartões,
- * o sexto saía com a cor do primeiro. `chartSeriesColor` devolve
- * `--muted-foreground` do sexto em diante, que é dizer "este não é dos cinco".
- */
-
-/** O que `hexToRgba` fazia, sem exigir que a cor seja hex. */
-function alpha(color: string, pct: number): string {
-    return `color-mix(in oklab, ${color} ${pct}%, transparent)`
-}
 
 export type CreditCardHistoryRow = Record<string, string | number | boolean | undefined>
 
@@ -88,65 +67,6 @@ function buildCardInvoiceSeries(
     }
 
     return out
-}
-
-function CreditCardsHistoryTooltip({
-    active,
-    label,
-    payload,
-    cards,
-}: {
-    active?: boolean
-    label?: string
-    payload?: { dataKey?: string; value?: number; payload?: CreditCardHistoryRow }[]
-    cards: CreditCardRow[]
-}) {
-    if (!active || !payload?.length) return null
-    const row = payload[0]?.payload as CreditCardHistoryRow | undefined
-    if (!row) return null
-
-    return (
-        <div className="min-w-[12rem] rounded-lg border border-border/80 bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md">
-            <p className="mb-1.5 border-b border-border/60 pb-1 font-medium text-foreground">
-                {label ?? (typeof row.label === "string" ? row.label : "")}
-            </p>
-            <ul className="space-y-1.5">
-                {cards.map((c, idx) => {
-                    const v = row[c.id]
-                    const num = typeof v === "number" ? v : 0
-                    const openKey = `${c.id}_open`
-                    const isOpen = row[openKey] === true
-                    const color = chartSeriesColor(idx)
-                    return (
-                        <li
-                            key={c.id}
-                            className="flex items-center justify-between gap-3 tabular-nums"
-                        >
-                            <span className="flex min-w-0 items-center gap-1.5">
-                                <span
-                                    className="size-2 shrink-0 rounded-full"
-                                    style={{ backgroundColor: alpha(color, 75) }}
-                                    aria-hidden
-                                />
-                                <span className="truncate text-muted-foreground">
-                                    {c.name}
-                                    {isOpen ? (
-                                        <span className="text-2xs text-warning-muted-foreground">
-                                            {" "}
-                                            (aberta)
-                                        </span>
-                                    ) : null}
-                                </span>
-                            </span>
-                            <span className="shrink-0 font-medium">
-                                {currencyBRL(num)}
-                            </span>
-                        </li>
-                    )
-                })}
-            </ul>
-        </div>
-    )
 }
 
 export function CreditCardsHistoryChart({
@@ -230,31 +150,27 @@ export function CreditCardsHistoryChart({
         }
     }, [cards, transactions, installmentPlans, today, monthsBack])
 
-    const yDomain = useMemo(() => {
-        let max = 0
-        for (const row of chartData) {
-            for (const c of cards) {
-                const v = row[c.id]
-                if (typeof v === "number") max = Math.max(max, v)
-            }
-        }
-        if (max <= 0) return undefined
-        const pad = max * 0.06 || 1
-        return [0, max + pad] as [number, number]
-    }, [chartData, cards])
+    // A chave da série é o id do cartão, e o nome entra como rótulo: um nome
+    // como "Cartão Nubank" viraria token de CSS, e dois cartões com o mesmo
+    // nome dividiriam a cor. A cor segue a ordem do cartão, não o ranking —
+    // do sexto em diante, `--muted-foreground` em vez de repetir a primeira.
+    const config = useMemo<ChartConfig>(
+        () =>
+            Object.fromEntries(
+                cards.map((c, i) => [c.id, { label: c.name, color: chartSeriesColor(i) }])
+            ),
+        [cards]
+    )
+    const series = useMemo(() => cards.map((c) => c.id), [cards])
 
     if (cards.length === 0) {
         return (
-            <Card padding="none" className="relative">
-                <CardContent className="flex min-h-[280px] flex-col items-center justify-center gap-2 px-4 py-10 text-center">
-                    <div className="flex size-12 items-center justify-center rounded-full bg-muted/60">
-                        <CreditCardIcon className="h-6 w-6 text-muted-foreground" aria-hidden />
-                    </div>
-                    <p className="text-sm text-muted-foreground">Nenhum cartão ativo</p>
-                    <p className="max-w-sm text-xs text-muted-foreground">
-                        Cadastre um cartão para ver o histórico de faturas.
-                    </p>
-                </CardContent>
+            <Card padding="none">
+                <ChartEmpty
+                    icon={<CreditCardIcon aria-hidden />}
+                    title="Nenhum cartão ativo"
+                    description="Cadastre um cartão para ver o histórico de faturas."
+                />
             </Card>
         )
     }
@@ -263,23 +179,6 @@ export function CreditCardsHistoryChart({
         <PageSection>
             <PageSectionHeader>
                 <PageSectionTitle>Histórico de faturas</PageSectionTitle>
-                {/* A legenda mora no cabeçalho, fora do gráfico — como a da rosca
-                    —, então o `payload` é montado aqui, com a mesma tinta a 75%
-                    que as barras usam. Ela vem **abaixo** do título, e não como
-                    `actions`: a coluna de ações tem a largura do conteúdo, e com
-                    seis nomes longos a legenda levava o título a 0px no telefone. */}
-                {chartData.length > 0 && hasAnyValue ? (
-                    <ChartLegendContent
-                        align="start"
-                        verticalAlign="top"
-                        className="gap-x-3 gap-y-1 pt-1 pb-0 text-2xs text-muted-foreground"
-                        payload={cards.map((c, idx) => ({
-                            value: c.name,
-                            dataKey: c.id,
-                            color: alpha(chartSeriesColor(idx), 75),
-                        }))}
-                    />
-                ) : null}
             </PageSectionHeader>
 
             <Card padding="none" className="relative">
@@ -329,71 +228,53 @@ export function CreditCardsHistoryChart({
                         )}
                     </CardToolbar>
 
-                    <div className="relative min-h-[300px] p-4">
+                    <div className="p-4">
                         {chartData.length > 0 && hasAnyValue ? (
-                            <ResponsiveContainer width="100%" height={300}>
-                                <BarChart
-                                    data={chartData}
-                                    margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
-                                    barCategoryGap="18%"
-                                >
-                                    <CartesianGrid
-                                        strokeDasharray="3 3"
-                                        className="stroke-border/40"
-                                    />
-                                    <XAxis
-                                        dataKey="label"
-                                        tickLine={false}
-                                        className="text-2xs text-muted-foreground"
-                                        interval="preserveStartEnd"
-                                    />
-                                    <YAxis
-                                        width={48}
-                                        tickLine={false}
-                                        className="text-2xs text-muted-foreground"
-                                        domain={yDomain}
-                                        tickFormatter={(v) => currencyCompactBRL(Number(v))}
-                                    />
-                                    <ChartTooltip
-                                        content={
-                                            <CreditCardsHistoryTooltip cards={cards} />
-                                        }
-                                        cursor={{
-                                            fill: "color-mix(in oklch, var(--muted) 35%, transparent)",
-                                        }}
-                                    />
-                                    {cards.map((c, idx) => {
-                                        const color = chartSeriesColor(idx)
-                                        return (
-                                            <Bar
-                                                key={c.id}
-                                                dataKey={c.id}
-                                                name={c.name}
-                                                fill={alpha(color, 65)}
-                                                radius={[3, 3, 0, 0]}
-                                                activeBar={{
-                                                    fill: alpha(color, 85),
-                                                }}
-                                            />
-                                        )
-                                    })}
-                                </BarChart>
-                            </ResponsiveContainer>
+                            <ChartBars
+                                config={config}
+                                series={series}
+                                data={chartData}
+                                x="label"
+                                label="Histórico de faturas por cartão, mês a mês"
+                                // O tooltip é escrito aqui, e não o da forma, só pelo
+                                // cabeçalho: ele diz qual fatura do mês ainda está
+                                // aberta — o valor que ainda cresce, e que os
+                                // indicadores acima deixam de fora.
+                                tooltip={false}
+                            >
+                                <ChartTooltip
+                                    animationDuration={CHART_UPDATE_MS}
+                                    cursor={{ fillOpacity: 0.5 }}
+                                    content={
+                                        <ChartTooltipContent
+                                            format="currency"
+                                            labelFormatter={(rotulo, itens) => {
+                                                const linha = itens[0]?.payload
+                                                const abertas = cards
+                                                    .filter((c) => linha?.[`${c.id}_open`] === true)
+                                                    .map((c) => c.name)
+                                                return abertas.length > 0 ? (
+                                                    <>
+                                                        {String(rotulo ?? "")}
+                                                        <span className="font-normal text-muted-foreground">
+                                                            {" "}
+                                                            · aberta: {abertas.join(", ")}
+                                                        </span>
+                                                    </>
+                                                ) : (
+                                                    String(rotulo ?? "")
+                                                )
+                                            }}
+                                        />
+                                    }
+                                />
+                            </ChartBars>
                         ) : (
-                            <div className="flex h-[300px] flex-col items-center justify-center gap-2 px-4 text-center">
-                                <div className="flex size-12 items-center justify-center rounded-full bg-muted/60">
-                                    <CreditCardIcon
-                                        className="h-6 w-6 text-muted-foreground"
-                                        aria-hidden
-                                    />
-                                </div>
-                                <p className="text-sm text-muted-foreground">
-                                    Nenhuma fatura no período
-                                </p>
-                                <p className="max-w-sm text-xs text-muted-foreground">
-                                    Quando houver lançamentos no cartão, o histórico aparece aqui.
-                                </p>
-                            </div>
+                            <ChartEmpty
+                                icon={<CreditCardIcon aria-hidden />}
+                                title="Nenhuma fatura no período"
+                                description="Quando houver lançamentos no cartão, o histórico aparece aqui."
+                            />
                         )}
                     </div>
                 </CardContent>

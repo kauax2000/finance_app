@@ -9,7 +9,9 @@ import {
 import { ArrowPathIcon, ArrowTrendingUpIcon } from "@heroicons/react/16/solid"
 
 import {
+  ChartAnnotation,
   ChartArea,
+  ChartBarList,
   ChartBars,
   ChartContainer,
   ChartDonut,
@@ -31,6 +33,7 @@ import {
   CHART_ENTER_MS,
   CHART_UPDATE_MS,
   ChartTooltipContent,
+  ChartWaterfall,
   ChartXAxis,
   ChartYAxis,
   chartSeriesColor,
@@ -60,7 +63,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BUDGET_BANDS } from "@/lib/budget-bands"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Caption } from "@/components/ui/typography"
+import { BUDGET_BANDS, CARD_LIMIT_BANDS } from "@/lib/budget-bands"
 import { currencyBRL, currencyCompactBRL } from "@/lib/formatters"
 import { addDaysYmd } from "@/lib/transaction-date"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
@@ -187,10 +192,372 @@ const CONFIG_DIVISAO = {
   parcelas: { label: "Parcelas" },
 } satisfies ChartConfig
 
-const CONFIG_FATURA = {
-  parcelas: { label: "Parcelas e recorrências", color: "var(--chart-3)" },
-  compras: { label: "Compras do período", color: "var(--chart-2)" },
+/** O saldo real até hoje e a projeção até o fim do mês, encontrando-se em hoje. */
+const SALDO_PROJETADO = SALDO_DIAS.map((d, i) => ({
+  dia: d.dia,
+  saldo: d.saldo,
+  projecao:
+    i < 23
+      ? null
+      : i === 23
+        ? d.saldo
+        : Math.round((SALDO_DIAS[23].saldo ?? 0) - (i - 23) * 140),
+}))
+
+const CONFIG_PROJECAO = {
+  saldo: { label: "Saldo", color: "var(--chart-1)" },
+  projecao: { label: "Projeção", color: "var(--chart-1)", dashed: true },
 } satisfies ChartConfig
+
+/** Dois anos de saldo, para o recorte de período ter o que recortar. */
+const DOIS_ANOS = Array.from({ length: 24 }, (_, i) => {
+  const ano = 2024 + Math.floor(i / 12)
+  const mes = String((i % 12) + 1).padStart(2, "0")
+  return {
+    mes: `${ano}-${mes}-01`,
+    saldo: Math.round(1600 + Math.sin(i / 2.2) * 700 + i * 45),
+  }
+})
+
+/** O saldo do mês, com meses no vermelho. */
+const SALDO_MENSAL = [
+  { mes: "Abr", saldo: 1480 },
+  { mes: "Mai", saldo: -620 },
+  { mes: "Jun", saldo: 940 },
+  { mes: "Jul", saldo: -210 },
+  { mes: "Ago", saldo: 1730 },
+  { mes: "Set", saldo: 860 },
+]
+
+const CASCATA = [
+  { name: "Início", value: 2140, total: true },
+  { name: "Salário", value: 8432 },
+  { name: "Moradia", value: -2600 },
+  { name: "Mercado", value: -1840 },
+  { name: "Cartão", value: -3120 },
+  { name: "Lazer", value: -480 },
+  { name: "Final", total: true },
+]
+
+const MAIORES_GASTOS = [
+  { nome: "Aluguel do apartamento da Vila Mariana", valor: 2600 },
+  { nome: "Mercado", valor: 1840 },
+  { nome: "Fatura do cartão de crédito (parcelas)", valor: 1240 },
+  { nome: "Transporte", valor: 620 },
+  { nome: "Lazer", valor: 480 },
+]
+
+/**
+ * O segmentado das demonstrações: uma demo por eixo, trocando o valor, no
+ * lugar de uma cópia do gráfico para cada valor.
+ */
+function Segmentado<T extends string>({
+  rotulo,
+  valores,
+  valor,
+  onChange,
+}: {
+  rotulo: string
+  valores: readonly T[]
+  valor: T
+  onChange: (v: T) => void
+}) {
+  return (
+    <ToggleGroup
+      type="single"
+      variant="segmented"
+      size="sm"
+      value={valor}
+      onValueChange={(v) => v && onChange(v as T)}
+      aria-label={rotulo}
+      className="self-start"
+    >
+      {valores.map((v) => (
+        <ToggleGroupItem key={v} value={v} className="font-mono">
+          {v}
+        </ToggleGroupItem>
+      ))}
+    </ToggleGroup>
+  )
+}
+
+function DemoArea() {
+  const [v, setV] = React.useState<"solid" | "gradient" | "stepped">("solid")
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <Segmentado rotulo="Variante" valores={["solid", "gradient", "stepped"] as const} valor={v} onChange={setV} />
+      {v === "stepped" ? (
+        <ChartArea
+          variant="stepped"
+          stacked
+          config={CONFIG_FLUXO}
+          data={FLUXO}
+          x="mes"
+          label="Entradas e saídas empilhadas, em degraus"
+          className="w-full max-w-2xl"
+        />
+      ) : (
+        <ChartArea
+          variant={v}
+          config={CONFIG_SALDO}
+          data={FLUXO}
+          x="mes"
+          label={`Saldo por mês, área ${v === "solid" ? "chapada" : "em degradê"}`}
+          className="w-full max-w-2xl"
+        />
+      )}
+    </div>
+  )
+}
+
+function DemoLinha() {
+  const [v, setV] = React.useState<"curved" | "straight" | "stepped">("curved")
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <Segmentado rotulo="Variante" valores={["curved", "straight", "stepped"] as const} valor={v} onChange={setV} />
+      <ChartLine
+        variant={v}
+        dots={v === "straight" ? "all" : "hover"}
+        config={CONFIG_FLUXO}
+        data={FLUXO}
+        x="mes"
+        label="Entradas e saídas por mês"
+        className="w-full max-w-2xl"
+      />
+    </div>
+  )
+}
+
+function DemoBarras() {
+  const [v, setV] = React.useState<"agrupadas" | "empilhadas" | "horizontal">("agrupadas")
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <Segmentado rotulo="Forma" valores={["agrupadas", "empilhadas", "horizontal"] as const} valor={v} onChange={setV} />
+      {v === "horizontal" ? (
+        <ChartBars
+          layout="horizontal"
+          config={CONFIG_CATEGORIAS}
+          data={CATEGORIAS}
+          series={["valor"]}
+          x="nome"
+          label="Gasto por categoria"
+          legend={false}
+          className="w-full max-w-2xl"
+        />
+      ) : (
+        <ChartBars
+          stacked={v === "empilhadas"}
+          config={CONFIG_FLUXO}
+          data={FLUXO}
+          x="mes"
+          label={`Entradas e saídas por mês, barras ${v}`}
+          className="w-full max-w-2xl"
+        />
+      )}
+    </div>
+  )
+}
+
+function DemoSelecao() {
+  const [mes, setMes] = React.useState<string | null>("Mar")
+  const linha = FLUXO.find((f) => f.mes === mes)
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <ChartBars
+        config={CONFIG_FLUXO}
+        data={FLUXO}
+        x="mes"
+        label="Entradas e saídas por mês"
+        selected={mes}
+        onSelect={setMes}
+        className="w-full max-w-2xl"
+      />
+      <Caption aria-hidden>
+        {linha
+          ? `${linha.mes}: entradas ${currencyBRL(linha.entradas)}, saídas ${currencyBRL(linha.saidas)}.`
+          : "Nenhum mês selecionado — o resto da tela mostraria o período inteiro."}
+      </Caption>
+    </div>
+  )
+}
+
+function DemoRosca() {
+  const [v, setV] = React.useState<"donut" | "pie" | "gauge">("donut")
+  return (
+    <div className="flex w-full flex-col items-center gap-4">
+      <Segmentado rotulo="Variante" valores={["donut", "pie", "gauge"] as const} valor={v} onChange={setV} />
+      {v === "gauge" ? (
+        <ChartDonut
+          variant="gauge"
+          config={CONFIG_CONSUMO}
+          data={CONSUMO}
+          nameKey="nome"
+          dataKey="valor"
+          label="Limite do cartão consumido"
+          className="w-52"
+          center={<ChartDonutCenter value="76%" label="do limite" />}
+        />
+      ) : (
+        <ChartDonut
+          variant={v}
+          config={CONFIG_CATEGORIAS}
+          data={CATEGORIAS}
+          nameKey="nome"
+          dataKey="valor"
+          label="Gasto por categoria"
+          className="w-52"
+          aspect="square"
+          center={
+            v === "donut" ? <ChartDonutCenter amount={TOTAL_CATEGORIAS} label="no mês" /> : undefined
+          }
+        />
+      )}
+    </div>
+  )
+}
+
+/** Os três estados do limite do cartão: abaixo de 30%, até 70%, acima. */
+const MEDIDOR = { folga: 1200, "atenção": 2600, perigo: 4100 } as const
+const LIMITE = 5000
+
+function DemoMedidorFaixas() {
+  const [v, setV] = React.useState<keyof typeof MEDIDOR>("atenção")
+  const usado = MEDIDOR[v]
+  const pct = Math.round((usado / LIMITE) * 100)
+  return (
+    <div className="flex w-full flex-col items-center gap-4">
+      <Segmentado rotulo="Uso" valores={["folga", "atenção", "perigo"] as const} valor={v} onChange={setV} />
+      <ChartDonut
+        variant="gauge"
+        bands={CARD_LIMIT_BANDS}
+        config={CONFIG_CONSUMO}
+        data={[
+          { nome: "Usado", valor: usado },
+          { nome: "Disponível", valor: Math.max(0, LIMITE - usado) },
+        ]}
+        nameKey="nome"
+        dataKey="valor"
+        label="Limite do cartão consumido"
+        className="w-52"
+        center={<ChartDonutCenter value={`${pct}%`} label="do limite" />}
+      />
+    </div>
+  )
+}
+
+function DemoDivisao() {
+  const [v, setV] = React.useState<"below" | "legend">("below")
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <Segmentado rotulo="Rótulos" valores={["below", "legend"] as const} valor={v} onChange={setV} />
+      <ChartSplit
+        labels={v}
+        config={CONFIG_DIVISAO}
+        data={DIVISAO}
+        nameKey="parte"
+        dataKey="valor"
+        label="Gasto do mês por tipo"
+        className="max-w-md"
+      />
+    </div>
+  )
+}
+
+function DemoAneis() {
+  const [v, setV] = React.useState<"com cortes" | "na rampa">("com cortes")
+  return (
+    <div className="flex w-full flex-col items-center gap-4">
+      <Segmentado rotulo="Cor" valores={["com cortes", "na rampa"] as const} valor={v} onChange={setV} />
+      <ChartRadial
+        bands={v === "com cortes" ? BUDGET_BANDS : undefined}
+        config={CONFIG_ORCAMENTOS}
+        data={ORCAMENTOS}
+        nameKey="nome"
+        dataKey="gasto"
+        maxKey="teto"
+        label={`Orçamento consumido por categoria, ${v}`}
+        className="w-52"
+        center={v === "na rampa" ? <ChartDonutCenter value="3" label="no limite" /> : undefined}
+      />
+    </div>
+  )
+}
+
+function DemoCalendario() {
+  const [v, setV] = React.useState<"quarter" | "year">("quarter")
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <Segmentado rotulo="Período" valores={["quarter", "year"] as const} valor={v} onChange={setV} />
+      <ChartHeatmap
+        range={v}
+        tone={v === "year" ? "income" : "expense"}
+        data={GASTO_DIARIO}
+        label={v === "year" ? "Entradas por dia, último ano" : "Gasto por dia, últimos três meses"}
+        dataTable={v === "quarter"}
+        className="max-w-full"
+      />
+    </div>
+  )
+}
+
+function DemoPerfil() {
+  const [v, setV] = React.useState<"polygon" | "circle">("polygon")
+  return (
+    <div className="flex w-full flex-col items-center gap-4">
+      <Segmentado rotulo="Grade" valores={["polygon", "circle"] as const} valor={v} onChange={setV} />
+      <ChartRadar
+        grid={v}
+        config={CONFIG_PERFIL}
+        data={PERFIL}
+        x="categoria"
+        label="Gasto de setembro contra a média de seis meses"
+        className="w-80"
+      />
+    </div>
+  )
+}
+
+function DemoProporcao() {
+  const [v, setV] = React.useState<(typeof ASPECTOS)[number][0]>("video")
+  const dica = ASPECTOS.find(([nome]) => nome === v)?.[1]
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <Segmentado rotulo="Proporção" valores={ASPECTOS.map(([nome]) => nome)} valor={v} onChange={setV} />
+      <Caption>{dica}</Caption>
+      {v === "auto" ? (
+        <div className="h-10 w-full max-w-sm rounded-md border border-dashed border-border" />
+      ) : (
+        <ChartSkeleton aspect={v} bars={5} className="w-full max-w-sm" />
+      )}
+    </div>
+  )
+}
+
+function DemoEstado() {
+  const [v, setV] = React.useState<"pulse" | "wave" | "vazio" | "erro">("pulse")
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <Segmentado rotulo="Estado" valores={["pulse", "wave", "vazio", "erro"] as const} valor={v} onChange={setV} />
+      {v === "pulse" || v === "wave" ? (
+        <ChartSkeleton variant={v} aspect="wide" bars={v === "wave" ? 14 : 7} className="w-full max-w-2xl" />
+      ) : v === "vazio" ? (
+        <ChartEmpty
+          aspect="wide"
+          className="max-w-2xl"
+          icon={<ChartBarSquareIcon />}
+          description="Nenhum lançamento entre 1 e 31 de março."
+        />
+      ) : (
+        <ChartError
+          aspect="wide"
+          className="max-w-2xl"
+          icon={<ExclamationTriangleIcon />}
+          description="Tente de novo em alguns segundos."
+        />
+      )}
+    </div>
+  )
+}
 
 /** Três períodos do mesmo mês a mês, para a troca de filtro ter o que mover. */
 const PERIODOS = {
@@ -475,7 +842,7 @@ export default function ChartDoc() {
   return (
     <>
       <Usage>
-        Todo gráfico do app. <strong>A anatomia</strong> — <code>ChartContainer</code>, <code>ChartGrid</code>, os eixos, <code>ChartTooltip</code>, <code>ChartLegend</code> — compõe qualquer gráfico do Recharts; <strong>as formas</strong> — <code>ChartArea</code>, <code>ChartLine</code>, <code>ChartBars</code>, <code>ChartDonut</code>, <code>ChartSparkline</code>, e desde a rodada 135 <code>ChartSplit</code>, <code>ChartRadial</code>, <code>ChartHeatmap</code> e <code>ChartRadar</code> — são a forma curta sobre ela. Um número sozinho não é gráfico: é <code>StatCard</code>.
+        Todo gráfico do app. <strong>A anatomia</strong> — <code>ChartContainer</code>, <code>ChartGrid</code>, os eixos, <code>ChartTooltip</code>, <code>ChartLegend</code> — compõe qualquer gráfico do Recharts; <strong>as formas</strong> — <code>ChartArea</code>, <code>ChartLine</code>, <code>ChartBars</code>, <code>ChartDonut</code>, <code>ChartSparkline</code>, <code>ChartSplit</code>, <code>ChartRadial</code>, <code>ChartHeatmap</code>, <code>ChartRadar</code>, e desde a rodada 206 <code>ChartWaterfall</code> e <code>ChartBarList</code> — são a forma curta sobre ela, e cobram o nome acessível. Um número sozinho não é gráfico: é <code>StatCard</code>.
       </Usage>
 
       <DocSection
@@ -544,30 +911,7 @@ const config = {
 />  {/* variant="solid", format="currency", os dois de fábrica */}`}
         previewClassName="flex-col items-stretch gap-6 p-6"
       >
-        <ChartArea
-          config={CONFIG_SALDO}
-          data={FLUXO}
-          x="mes"
-          label="Saldo por mês, área chapada"
-          className="w-full max-w-2xl"
-        />
-        <ChartArea
-          variant="gradient"
-          config={CONFIG_SALDO}
-          data={FLUXO}
-          x="mes"
-          label="Saldo por mês, área em degradê"
-          className="w-full max-w-2xl"
-        />
-        <ChartArea
-          variant="stepped"
-          stacked
-          config={CONFIG_FLUXO}
-          data={FLUXO}
-          x="mes"
-          label="Entradas e saídas empilhadas, em degraus"
-          className="w-full max-w-2xl"
-        />
+        <DemoArea />
       </DocSection>
 
       <DocNote title="Legenda a partir da segunda série">
@@ -584,22 +928,7 @@ const config = {
         code={`<ChartLine variant="straight" dots="all" … />`}
         previewClassName="flex-col items-stretch gap-6 p-6"
       >
-        <ChartLine
-          config={CONFIG_FLUXO}
-          data={FLUXO}
-          x="mes"
-          label="Entradas e saídas por mês, linha curva"
-          className="w-full max-w-2xl"
-        />
-        <ChartLine
-          variant="straight"
-          dots="all"
-          config={CONFIG_FLUXO}
-          data={FLUXO}
-          x="mes"
-          label="Entradas e saídas por mês, linha reta com marcadores"
-          className="w-full max-w-2xl"
-        />
+        <DemoLinha />
       </DocSection>
 
       <DocNote title="O marcador tem 8px, e o anel dele é a superfície">
@@ -626,6 +955,78 @@ const config = {
           className="w-full max-w-2xl"
         />
       </DocSection>
+      <DocSection
+        title="Série projetada"
+        description={
+          <>
+            <code>dashed: true</code> no <code>config</code> traça a série tracejada: a projeção que continua o real — o saldo até o fim do mês — ou uma referência, como a média. Na área ela é só o traço: volume embaixo do que ainda não aconteceu leria como dinheiro que já está lá. As duas séries se encontram em hoje.
+          </>
+        }
+        code={`const config = {
+  saldo: { label: "Saldo", color: "var(--chart-1)" },
+  projecao: { label: "Projeção", color: "var(--chart-1)", dashed: true },
+} satisfies ChartConfig`}
+        previewClassName="items-stretch p-6"
+      >
+        <ChartLine
+          marker="last"
+          config={CONFIG_PROJECAO}
+          data={SALDO_PROJETADO}
+          x="dia"
+          label="Saldo de setembro até hoje e a projeção até o fim do mês"
+          className="w-full max-w-2xl"
+        />
+      </DocSection>
+
+      <DocSection
+        title="Anotações no tempo"
+        description={
+          <>
+            <code>ChartAnnotation</code> é o fio vertical com rótulo num ponto do eixo X — o salário, o fechamento da fatura. Entra como filho de qualquer forma cartesiana. O rótulo é texto do SVG: o que importa ao leitor de tela vai também no <code>description</code>.
+          </>
+        }
+        code={`<ChartArea x="dia" … description="Salário no dia 5; a fatura fecha no dia 15.">
+  <ChartAnnotation x="05" label="Salário" />
+  <ChartAnnotation x="15" label="Fechamento" />
+</ChartArea>`}
+        previewClassName="items-stretch p-6"
+      >
+        <ChartArea
+          variant="gradient"
+          config={CONFIG_SALDO}
+          data={SALDO_DIAS}
+          x="dia"
+          label="Saldo de setembro dia a dia"
+          description="Salário no dia 5; a fatura fecha no dia 15."
+          className="w-full max-w-2xl"
+        >
+          <ChartAnnotation x="05" label="Salário" />
+          <ChartAnnotation x="15" label="Fechamento" />
+        </ChartArea>
+      </DocSection>
+
+      <DocSection
+        title="Recorte de período"
+        description={
+          <>
+            <code>brush</code> põe a faixa de recorte embaixo de uma série longa: as alças escolhem o trecho, e o gráfico desenha só ele. <code>true</code> abre nos últimos 12 pontos; um número, nos últimos N. Com ele o gráfico recebe ação, e passa de <code>img</code> a <code>group</code>.
+          </>
+        }
+        code={`<ChartArea brush x="mes" xFormat="month" data={doisAnos} … />`}
+        previewClassName="items-stretch p-6"
+      >
+        <ChartArea
+          brush
+          variant="gradient"
+          config={CONFIG_SALDO}
+          data={DOIS_ANOS}
+          x="mes"
+          xFormat="month"
+          label="Saldo mês a mês, últimos dois anos"
+          className="w-full max-w-2xl"
+        />
+      </DocSection>
+
 
       <DocNote title="A única coisa que se move dentro de um gráfico">
         Nenhum <strong>valor</strong> se move enquanto a pessoa o lê, e isso continua de pé. O halo não é valor: é a marca do ponto em que a série está agora, e o precedente é o <code>BadgeDot pulse</code>. Ele é <code>animate-ping</code>, então o bloco global de movimento reduzido o corta.
@@ -642,31 +1043,7 @@ const config = {
 <ChartBars stacked x="mes" … />`}
         previewClassName="flex-col items-stretch gap-6 p-6"
       >
-        <ChartBars
-          config={CONFIG_FLUXO}
-          data={FLUXO}
-          x="mes"
-          label="Entradas e saídas por mês, barras agrupadas"
-          className="w-full max-w-2xl"
-        />
-        <ChartBars
-          stacked
-          config={CONFIG_FLUXO}
-          data={FLUXO}
-          x="mes"
-          label="Entradas e saídas por mês, barras empilhadas"
-          className="w-full max-w-2xl"
-        />
-        <ChartBars
-          layout="horizontal"
-          config={CONFIG_CATEGORIAS}
-          data={CATEGORIAS}
-          series={["valor"]}
-          x="nome"
-          label="Gasto por categoria"
-          legend={false}
-          className="w-full max-w-2xl"
-        />
+        <DemoBarras />
       </DocSection>
 
       <DocNote title="A ponta arredonda e a base não">
@@ -697,22 +1074,89 @@ const config = {
           label="Entradas, saídas e investido por mês, em pílula com trilho"
           className="w-full max-w-2xl"
         />
+      </DocSection>
+      <DocSection
+        title="Barras com sinal"
+        description={
+          <>
+            <code>signed</code>: o saldo mês a mês cruzando o zero. Acima em <code>--chart-income</code>, abaixo em <code>--chart-expense</code>, e a linha do zero desenhada — o lado dela é o segundo canal. O eixo passa a incluir o negativo. Uma série.
+          </>
+        }
+        code={`<ChartBars signed config={config} data={saldoMensal} x="mes" label="Saldo do mês" />`}
+        previewClassName="items-stretch p-6"
+      >
         <ChartBars
-          shape="pill"
-          track
+          signed
           config={CONFIG_SALDO}
-          data={FLUXO}
+          data={SALDO_MENSAL}
           x="mes"
-          label="Saldo por mês, em pílula com trilho"
+          label="Saldo de cada mês, positivo ou negativo"
           className="w-full max-w-2xl"
         />
       </DocSection>
 
       <DocSection
+        title="Rótulos de valor"
+        description={
+          <>
+            <code>valueLabels</code> escreve o valor na ponta da barra, comprimido como o eixo — para poucas colunas, onde ler o número vale mais que comparar alturas. Empilhado, o rótulo é o total da coluna.
+          </>
+        }
+        code={`<ChartBars valueLabels shape="pill" x="mes" … />`}
+        previewClassName="items-stretch p-6"
+      >
+        <ChartBars
+          valueLabels
+          stacked
+          config={CONFIG_FLUXO}
+          data={FLUXO}
+          x="mes"
+          label="Entradas e saídas por mês, com o total"
+          className="w-full max-w-2xl"
+        />
+      </DocSection>
+
+      <DocSection
+        title="Selecionar barra"
+        description={
+          <>
+            <code>selected</code> + <code>onSelect</code>: clicar num mês o seleciona e as outras barras apagam, para o resto da tela filtrar; clicar de novo solta. Pelo teclado, as setas andam pelas barras e Enter seleciona. O gráfico vira <code>role=&quot;group&quot;</code> e anuncia a seleção numa região viva.
+          </>
+        }
+        code={`const [mes, setMes] = useState<string | null>(null)
+<ChartBars selected={mes} onSelect={setMes} x="mes" … />`}
+        previewClassName="items-stretch p-6"
+      >
+        <DemoSelecao />
+      </DocSection>
+
+      <DocSection
+        title="Variação no tooltip"
+        description={
+          <>
+            <code>delta</code> põe no tooltip a variação contra o ponto anterior — &quot;+12% vs. Fev&quot;. A tinta é neutra e o sinal é escrito: subir é bom no saldo e ruim no gasto, e o tooltip não sabe qual dos dois a série é. Em área, linha e barras.
+          </>
+        }
+        code={`<ChartLine delta x="mes" … />`}
+        previewClassName="items-stretch p-6"
+      >
+        <ChartLine
+          delta
+          dots="all"
+          config={CONFIG_FLUXO}
+          data={FLUXO}
+          x="mes"
+          label="Entradas e saídas por mês, com a variação no tooltip"
+          className="w-full max-w-2xl"
+        />
+      </DocSection>
+
+
+      <DocSection
         title="Rosca"
         description={
           <>
-            A composição de um total. <code>donut</code> deixa o miolo para o valor, <code>pie</code> o fecha, e <code>gauge</code> é o progresso contra um teto — limite de cartão, orçamento. <code>thickness</code> muda a espessura do anel.
+            A composição de um total. <code>donut</code> deixa o miolo para o valor, <code>pie</code> o fecha, e <code>gauge</code> é o progresso contra um teto. Pouse ou foque numa fatia: as outras apagam, e o miolo passa a mostrar a fatia — nome e valor, contando. O tooltip escreve a fatia em % do total.
           </>
         }
         code={`<ChartDonut
@@ -725,42 +1169,44 @@ const config = {
 />`}
         previewClassName="flex-wrap items-start justify-center gap-8 p-6"
       >
+        <DemoRosca />
+      </DocSection>
+      <DocSection
+        title="Legenda em lista"
+        description={
+          <>
+            <code>legend=&quot;list&quot;</code> põe a legenda ao lado do anel com o valor e a porcentagem de cada fatia — as porcentagens somam 100. Pousar numa linha acende a fatia. Abaixo de <code>sm</code> a lista desce para baixo do anel.
+          </>
+        }
+        code={`<ChartDonut legend="list" center={<ChartDonutCenter amount={total} label="no mês" />} … />`}
+        previewClassName="items-stretch p-6"
+      >
         <ChartDonut
+          legend="list"
           config={CONFIG_CATEGORIAS}
           data={CATEGORIAS}
           nameKey="nome"
           dataKey="valor"
           label="Gasto por categoria"
-          className="w-52"
+          className="w-44"
           aspect="square"
-          center={
-            <ChartDonutCenter
-              value={currencyBRL(TOTAL_CATEGORIAS)}
-              label="no mês"
-            />
-          }
-        />
-        <ChartDonut
-          variant="pie"
-          config={CONFIG_CATEGORIAS}
-          data={CATEGORIAS}
-          nameKey="nome"
-          dataKey="valor"
-          label="Gasto por categoria, pizza"
-          className="w-52"
-          aspect="square"
-        />
-        <ChartDonut
-          variant="gauge"
-          config={CONFIG_CONSUMO}
-          data={CONSUMO}
-          nameKey="nome"
-          dataKey="valor"
-          label="Limite do cartão consumido"
-          className="w-52"
-          center={<ChartDonutCenter value="76%" label="do limite" />}
+          center={<ChartDonutCenter amount={TOTAL_CATEGORIAS} label="no mês" />}
         />
       </DocSection>
+
+      <DocSection
+        title="Medidor com faixas"
+        description={
+          <>
+            <code>bands</code> no <code>gauge</code>: o arco usado pinta o <strong>estado</strong> com os cortes do limite de cartão (<code>CARD_LIMIT_BANDS</code>, 30 e 70) ou do orçamento — os mesmos tokens do <code>Progress</code> e dos anéis —, e o resto vira trilho em <code>--muted</code>.
+          </>
+        }
+        code={`<ChartDonut variant="gauge" bands={CARD_LIMIT_BANDS} data={[{ nome: "Usado", valor }, { nome: "Disponível", valor: resto }]} … />`}
+        previewClassName="items-stretch p-6"
+      >
+        <DemoMedidorFaixas />
+      </DocSection>
+
 
       <DocNote title="O miolo chega por `center`, e a caixa dele é a que tem tamanho">
         <code>children</code> desce para dentro do SVG, onde uma <code>&lt;div&gt;</code> não renderiza; por isso o miolo é prop, e entra pelo <code>overlay</code> do <code>ChartContainer</code>, a caixa que tem tamanho.
@@ -786,26 +1232,7 @@ const config = {
 />`}
         previewClassName="flex-col items-stretch gap-8 p-6"
       >
-        <ChartSplit
-          config={CONFIG_DIVISAO}
-          data={DIVISAO}
-          nameKey="parte"
-          dataKey="valor"
-          label="Gasto do mês por tipo"
-          className="max-w-md"
-        />
-        <ChartSplit
-          labels="legend"
-          config={CONFIG_FATURA}
-          data={[
-            { parte: "parcelas", valor: 1240 },
-            { parte: "compras", valor: 2580 },
-          ]}
-          nameKey="parte"
-          dataKey="valor"
-          label="Composição da fatura"
-          className="max-w-md"
-        />
+        <DemoDivisao />
       </DocSection>
 
       <DocSection
@@ -826,25 +1253,52 @@ const config = {
 />`}
         previewClassName="flex-wrap items-start justify-center gap-10 p-6"
       >
-        <ChartRadial
-          bands={BUDGET_BANDS}
-          config={CONFIG_ORCAMENTOS}
-          data={ORCAMENTOS}
-          nameKey="nome"
-          dataKey="gasto"
-          maxKey="teto"
-          label="Orçamento consumido por categoria, com os cortes"
-          className="w-52"
+        <DemoAneis />
+      </DocSection>
+
+      <DocSection
+        title="Cascata"
+        description={
+          <>
+            <code>ChartWaterfall</code> leva do saldo inicial ao final passando por cada entrada que o sobe e cada saída que o desce: cada barra flutua de onde a anterior terminou. Um degrau <code>total</code> é saldo, desenhado do zero e neutro; sem <code>value</code>, ele fecha no acumulado. O tooltip diz o degrau e o saldo depois dele.
+          </>
+        }
+        code={`<ChartWaterfall
+  data={[
+    { name: "Início", value: 2140, total: true },
+    { name: "Salário", value: 8432 },
+    { name: "Moradia", value: -2600 },
+    { name: "Final", total: true },
+  ]}
+  label="Do saldo inicial ao final de setembro"
+/>`}
+        previewClassName="items-stretch p-6"
+      >
+        <ChartWaterfall
+          valueLabels
+          data={CASCATA}
+          label="Do saldo inicial ao final de setembro"
+          className="w-full max-w-2xl"
         />
-        <ChartRadial
-          config={CONFIG_ORCAMENTOS}
-          data={ORCAMENTOS}
+      </DocSection>
+
+      <DocSection
+        title="Ranking em lista"
+        description={
+          <>
+            <code>ChartBarList</code> é o &quot;maiores gastos&quot;: nome e valor numa linha, a barra proporcional embaixo. É texto de verdade — o nome quebra em vez de cortar, e o leitor de tela lê uma lista. Uma cor só, porque a ordem é o ranking; <code>share</code> soma a porcentagem do total. A ordem é de quem chama.
+          </>
+        }
+        code={`<ChartBarList data={maiores} nameKey="nome" dataKey="valor" share label="Maiores gastos de setembro" />`}
+        previewClassName="items-stretch p-6"
+      >
+        <ChartBarList
+          share
+          data={MAIORES_GASTOS}
           nameKey="nome"
-          dataKey="gasto"
-          maxKey="teto"
-          label="Orçamento consumido por categoria, na rampa"
-          className="w-52"
-          center={<ChartDonutCenter value="3" label="no limite" />}
+          dataKey="valor"
+          label="Maiores gastos de setembro"
+          className="max-w-md"
         />
       </DocSection>
 
@@ -863,18 +1317,7 @@ const config = {
 />`}
         previewClassName="flex-col items-start gap-8 p-6"
       >
-        <ChartHeatmap
-          data={GASTO_DIARIO}
-          label="Gasto por dia, últimos três meses"
-          dataTable
-        />
-        <ChartHeatmap
-          range="year"
-          tone="income"
-          data={GASTO_DIARIO}
-          label="Entradas por dia, último ano"
-          className="max-w-full"
-        />
+        <DemoCalendario />
       </DocSection>
 
       <DocNote title="As células não são focáveis, de propósito">
@@ -891,21 +1334,7 @@ const config = {
         code={`<ChartRadar x="categoria" grid="polygon" config={config} data={perfil} … />`}
         previewClassName="flex-wrap items-start justify-center gap-10 p-6"
       >
-        <ChartRadar
-          config={CONFIG_PERFIL}
-          data={PERFIL}
-          x="categoria"
-          label="Gasto de setembro contra a média de seis meses"
-          className="w-80"
-        />
-        <ChartRadar
-          grid="circle"
-          config={CONFIG_PERFIL}
-          data={PERFIL}
-          x="categoria"
-          label="Gasto de setembro contra a média de seis meses, grade circular"
-          className="w-80"
-        />
+        <DemoPerfil />
       </DocSection>
 
       <DocSection
@@ -945,28 +1374,7 @@ const config = {
         code={`<ChartArea aspect="wide" … />`}
         previewClassName="flex-col items-stretch gap-5 p-6"
       >
-        {ASPECTOS.map(([nome, dica]) => (
-          <div key={nome} className="flex items-start gap-4">
-            <div className="w-24 shrink-0">
-              <code className="font-mono text-xs text-foreground">{nome}</code>
-            </div>
-            {nome === "auto" ? (
-              <div className="flex min-w-0 flex-1 items-center gap-4">
-                <div className="h-10 w-40 shrink-0 rounded-md border border-dashed border-border" />
-                <span className="text-xs text-muted-foreground">{dica}</span>
-              </div>
-            ) : (
-              <div className="flex min-w-0 flex-1 items-start gap-4">
-                <ChartSkeleton
-                  aspect={nome}
-                  bars={5}
-                  className="w-40 shrink-0"
-                />
-                <span className="text-xs text-muted-foreground">{dica}</span>
-              </div>
-            )}
-          </div>
-        ))}
+        <DemoProporcao />
       </DocSection>
 
       <DocSection
@@ -1118,25 +1526,7 @@ const config = {
  : <ChartArea … />}`}
         previewClassName="flex-col items-stretch gap-6 p-6"
       >
-        <ChartSkeleton aspect="wide" className="w-full max-w-2xl" />
-        <ChartSkeleton
-          variant="wave"
-          aspect="wide"
-          bars={14}
-          className="w-full max-w-2xl"
-        />
-        <ChartEmpty
-          aspect="wide"
-          className="max-w-2xl"
-          icon={<ChartBarSquareIcon />}
-          description="Nenhum lançamento entre 1 e 31 de março."
-        />
-        <ChartError
-          aspect="wide"
-          className="max-w-2xl"
-          icon={<ExclamationTriangleIcon />}
-          description="Tente de novo em alguns segundos."
-        />
+        <DemoEstado />
       </DocSection>
 
       <DocSection
@@ -1179,13 +1569,20 @@ const config = {
             prop: "label",
             type: "string",
             description:
-              "O nome acessível (`role=\"img\"` e `aria-label`), obrigatório nas cinco formas.",
+              "O nome acessível (`aria-label`), obrigatório em todas as formas curtas. O papel é `img`; com `interactive`, `group`.",
           },
           {
             prop: "description",
             type: "string",
             description:
               "Uma frase sobre o que o gráfico mostra, ligada por `aria-describedby` num `sr-only`.",
+          },
+          {
+            prop: "interactive",
+            type: "boolean",
+            default: "false",
+            description:
+              "O gráfico recebe ação (seleção, recorte): o papel passa de `img` a `group`. As formas ligam sozinhas.",
           },
         ]}
       />
@@ -1284,6 +1681,68 @@ const config = {
             default: '"polygon"',
             description: "Só no perfil: a forma da grade.",
           },
+          {
+            prop: "signed · valueLabels",
+            type: "boolean · boolean",
+            description:
+              "Só nas barras: o saldo cruzando o zero (income acima, expense abaixo) e o valor na ponta (empilhado, o total).",
+          },
+          {
+            prop: "selected · onSelect",
+            type: "string | null · (x) => void",
+            description:
+              "Só nas barras: a barra selecionada e a troca. Clique, setas e Enter; as outras apagam.",
+          },
+          {
+            prop: "delta",
+            type: "boolean",
+            default: "false",
+            description: "Área, linha e barras: a variação contra o ponto anterior no tooltip.",
+          },
+          {
+            prop: "brush",
+            type: "boolean | number",
+            description: "Área e linha: o recorte de período, aberto nos últimos 12 (ou N) pontos.",
+          },
+          {
+            prop: "legend (rosca)",
+            type: 'boolean | "list"',
+            description: "`list` põe a legenda ao lado do anel, com valor e %.",
+          },
+          {
+            prop: "bands (rosca)",
+            type: "[aviso, perigo]",
+            description: "Só no `gauge`: o arco usado pinta o estado e o resto vira trilho.",
+          },
+          {
+            prop: "config[chave].dashed",
+            type: "boolean",
+            description: "A série tracejada — projeção ou referência. Na área, só o traço.",
+          },
+        ]}
+      />
+
+      <PropsTable
+        title="ChartWaterfall, ChartBarList e ChartAnnotation"
+        rows={[
+          {
+            prop: "ChartWaterfall data",
+            type: "{ name, value?, total? }[]",
+            description:
+              "Os degraus. `total` é saldo desenhado do zero; sem `value`, fecha no acumulado. `valueLabels` escreve cada degrau com sinal.",
+          },
+          {
+            prop: "ChartBarList",
+            type: "data · nameKey · dataKey · share",
+            description:
+              "O ranking em lista HTML: nome que quebra, barra embaixo, valor que conta; `share` soma a % do total.",
+          },
+          {
+            prop: "ChartAnnotation",
+            type: "x · label · tone",
+            default: 'tone "average"',
+            description: "O fio vertical com rótulo num ponto do eixo X. Filho de qualquer forma cartesiana.",
+          },
         ]}
       />
 
@@ -1310,6 +1769,12 @@ const config = {
             default: "false",
             description:
               "A linha de soma no rodapé do tooltip; empilhado, as formas a ligam sozinhas.",
+          },
+          {
+            prop: "delta · share",
+            type: "{ data, x, xFormat? } · number",
+            description:
+              "A variação contra o ponto anterior, e a fatia em % de um total. As formas os passam sozinhas.",
           },
           {
             prop: "interactive · hiddenSeries · onToggle",

@@ -2365,6 +2365,27 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   **Arco-íris sob série continua proibido**: a marca encosta pelo
   `Card variant="brand"`, na borda. O cabeçalho (delta, período, KPIs) é
   composição de `Card`, não peça do `Chart`.
+- **`Chart` ganhou o que o dashboard ainda escrevia à mão** (rodada 206).
+  Formas: `ChartWaterfall` (a cascata do saldo — barras de **faixa**
+  `[de, até]`, que cruzam o zero sem pilha transparente; `total` é saldo,
+  neutro, e sem `value` fecha no acumulado) e `ChartBarList` (o ranking em
+  **lista HTML**: `role="figure"` e não `img`, o nome quebra em vez de cortar,
+  uma cor só porque a ordem é o ranking). Barras: `signed` (income acima,
+  expense abaixo, a linha do zero com `ifOverflow="extendDomain"` — domínio
+  `auto`, porque com funções de mínimo e máximo o Recharts não arredonda os
+  degraus), `valueLabels` (empilhado, o total) e `selected` + `onSelect`
+  (as outras apagam a 0,35; setas e Enter pelo `useActiveTooltipLabel`).
+  Rosca: a fatia ativa (tooltip — ponteiro e teclado — ou lista; o miolo passa
+  a ser dela), `active`/`onActiveChange` para a tela que tem lista própria,
+  `legend="list"` e `bands` no `gauge`. Área e linha: `brush`, `delta` (também
+  nas barras) e `config.dashed` (a projeção: traço no gráfico **e** na
+  legenda, e sem volume na área). `ChartAnnotation` é o fio com rótulo num
+  ponto do tempo. **Gráfico que recebe ação é `role="group"`**, nunca `img`
+  (`interactive` no `ChartContainer`). **O ponto da linha tem `fill`**: sem ele
+  o Recharts o pintava de branco e ele abria buraco no traço. Nenhuma tela
+  monta tooltip de gráfico à mão nem usa `ResponsiveContainer` cru, e
+  `ChartTooltipContent` sem `format` escreve número, não dinheiro —
+  `chart-versions.test.ts` tranca.
 - **`EmptyState` — a forma diz a situação** (rodada 131). Primeiro uso é
   `EmptyStateGhost` (linhas-fantasma neutras da lista que vai existir,
   subindo num laço) **sem arco-íris** — quatro versões dele ali foram

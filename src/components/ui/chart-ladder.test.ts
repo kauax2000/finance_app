@@ -247,11 +247,13 @@ describe("escada e invariantes do Chart", () => {
     expect(CODIGO).toContain('React.cloneElement(center, { align: "gauge" })')
   })
 
-  it("10. as cinco formas curtas cobram o nome acessível", () => {
+  it("10. as formas curtas cobram o nome acessível", () => {
     // `label` é obrigatório em `ChartFormProps` — sem `?`. A composição livre
     // (`ChartContainer`) não cobra, porque ela não pode.
     expect(CODIGO).toMatch(/type ChartFormProps = \{[\s\S]*?\n {2}label: string\n/)
     expect(CODIGO).toMatch(/ {4}label\?: string\n/)
-    expect(CODIGO).toContain('role={label ? "img" : undefined}')
+    // `img` quando só se lê; `group` quando o gráfico recebe ação (rodada
+    // 206) — `img` tornaria apresentacional o que se aperta.
+    expect(CODIGO).toContain('role={label ? (interactive ? "group" : "img") : undefined}')
   })
 })

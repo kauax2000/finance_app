@@ -1,22 +1,19 @@
 "use client"
 
-import { currencyCompactBRL } from "@/lib/formatters"
 import { formatTransactionDayMonthPtBr } from "@/lib/transaction-date"
 import { useMemo } from "react"
-import {
-    Bar,
-    CartesianGrid,
-    ComposedChart,
-    Line,
-    ReferenceLine,
-    XAxis,
-    YAxis,
-} from "recharts"
+import { Bar, ComposedChart, Line } from "recharts"
 import type { BillInstance } from "@/lib/supabase"
+import { Card } from "@/components/ui/card"
 import {
     ChartContainer,
+    ChartGrid,
+    ChartReferenceLine,
     ChartTooltip,
     ChartTooltipContent,
+    ChartXAxis,
+    ChartYAxis,
+    type ChartConfig,
 } from "@/components/ui/chart"
 import {
     StatCard,
@@ -26,9 +23,9 @@ import {
 import { MoneyDisplay } from "@/components/ui/money-display"
 
 const chartCfg = {
-    paid: { label: "Pago", color: "var(--chart-3)" },
-    avg: { label: "Média", color: "var(--muted-foreground)" },
-} satisfies import("@/components/ui/chart").ChartConfig
+    paid: { label: "Valor pago", color: "var(--chart-3)" },
+    avg6: { label: "Média móvel", color: "var(--muted-foreground)" },
+} satisfies ChartConfig
 
 export function BillHistoryAnalytics({ instances }: { instances: BillInstance[] }) {
     const paidDescending = useMemo(() => {
@@ -141,52 +138,35 @@ export function BillHistoryAnalytics({ instances }: { instances: BillInstance[] 
                 </StatCard>
             </div>
 
-            <div className="rounded-xl border border-border/80 bg-card p-2 sm:p-3">
-                <ChartContainer config={chartCfg} className="aspect-[16/10] md:aspect-video">
-                    <ComposedChart
-                        data={chartData}
-                        margin={{ left: -8, right: 8 }}
-                    >
-                        <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                        <XAxis
-                            dataKey="label"
-                            tick={{ fontSize: 10 }}
-                            tickLine={false}
-                            axisLine={false}
-                        />
-                        <YAxis
-                            width={52}
-                            tick={{ fontSize: 10 }}
-                            tickLine={false}
-                            axisLine={false}
-                            tickFormatter={(v) => currencyCompactBRL(Number(v))}
-                        />
+            <Card padding="sm">
+                <ChartContainer
+                    config={chartCfg}
+                    label="Valor pago nos últimos pagamentos, com a média móvel"
+                >
+                    <ComposedChart data={chartData} accessibilityLayer>
+                        <ChartGrid />
+                        <ChartXAxis dataKey="label" />
+                        <ChartYAxis />
                         <ChartTooltip
                             cursor={false}
-                            content={<ChartTooltipContent />}
+                            content={<ChartTooltipContent format="currency" />}
                         />
-                        <ReferenceLine
-                            y={averages.avg6}
-                            stroke="var(--border)"
-                            strokeDasharray="4 4"
-                        />
+                        <ChartReferenceLine y={averages.avg6} tone="average" />
                         <Bar
                             dataKey="paid"
                             fill="var(--color-paid)"
                             radius={[4, 4, 0, 0]}
-                            name="Valor pago"
                         />
                         <Line
                             type="monotone"
                             dataKey="avg6"
-                            stroke="var(--color-avg)"
+                            stroke="var(--color-avg6)"
                             strokeWidth={2}
                             dot={false}
-                            name="Média móvel"
                         />
                     </ComposedChart>
                 </ChartContainer>
-            </div>
+            </Card>
         </section>
     )
 }
